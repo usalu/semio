@@ -550,14 +550,16 @@ export function classifyElementsBoardIconSelectorMode(raw: string): ElementsBoar
 
 // #endregion 🏷️IconSelectorMode
 
-/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
+/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions`; Barnes–Hut repulsion when body count exceeds `pairwiseRepulsionMaxBodies`). */
 export interface BoardForceGraphLayoutOptions {
+	barnesHutTheta?: number;
 	centerX?: number;
 	centerY?: number;
 	gravity?: number;
 	idealEdgeLength?: number;
 	iterations?: number;
 	maxSpeed?: number;
+	pairwiseRepulsionMaxBodies?: number;
 	randomSeed?: number;
 	repulsionStrength?: number;
 	springStrength?: number;
@@ -586,7 +588,7 @@ export interface BoardRedrawLayoutOptions {
 	};
 }
 
-/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); pure scalar math in Rust (no layout linear-algebra crate). */
+/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); Barnes–Hut repulsion beyond `pairwiseRepulsionMaxBodies`, else exact pairwise. */
 export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
 	const out = boardRedrawLayoutFixtureJson(
 		JSON.stringify(fixture),
@@ -3621,6 +3623,9 @@ export class BoardRenderer {
 		surface.tabIndex = 0;
 		surface.style.touchAction = "none";
 		this.boardPointerBridgeUsesWindowCapture = boardRendererUsesWindowPointerCaptureBridge();
+		if (this.canvas) {
+			this.canvas.dataset.boardPointerBridge = this.boardPointerBridgeUsesWindowCapture ? "window" : "surface";
+		}
 		surface.addEventListener("contextmenu", this.handleContextMenu as EventListener);
 		if (this.boardPointerBridgeUsesWindowCapture) {
 			globalThis.addEventListener("pointerdown", this.handleWindowPointerDownCapture as EventListener, true);
@@ -3652,6 +3657,9 @@ export class BoardRenderer {
 			surface.removeEventListener("wheel", this.handleWheel as EventListener);
 		}
 		this.boardPointerBridgeUsesWindowCapture = false;
+		if (this.canvas) {
+			delete this.canvas.dataset.boardPointerBridge;
+		}
 		if (surface) {
 			surface.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
 			surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
@@ -5008,7 +5016,7 @@ if (boardVitest) {
 	});
 
 	describe("board force graph layout", () => {
-		it("spreads linked nodes using wasm+nalgebra layout", () => {
+		it("spreads linked nodes using wasm force layout", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
@@ -5062,6 +5070,77 @@ if (boardVitest) {
 		it("throws on invalid fixture schema from wasm", () => {
 			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
 			expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
+		});
+
+		it("spreads a dense graph under Barnes–Hut repulsion (wasm)", () => {
+			const nodes = Array.from({ length: 28 }, (_, k) => ({
+				handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: `n${k}:h0` }],
+				id: `n${k}`,
+				radius: 8,
+				shape: "circle" as const,
+				x: (k % 7) * 11,
+				y: Math.floor(k / 7) * 11,
+			}));
+			const edges = Array.from({ length: 27 }, (_, k) => ({
+				id: `e${k}`,
+				source: `n${k}:h0`,
+				target: `n${k + 1}:h0`,
+			}));
+			const fixture: BoardFixtureV1 = { camera: { x: 0, y: 0, zoom: 1 }, edges, nodes, schema: "elements.board.fixture/v1" };
+			const laid = layoutBoardFixtureForceGraph(fixture, {
+				barnesHutTheta: 0.68,
+				gravity: 0.015,
+				idealEdgeLength: 95,
+				iterations: 200,
+				pairwiseRepulsionMaxBodies: 8,
+				randomSeed: 303,
+				repulsionStrength: 5500,
+				springStrength: 0.048,
+			});
+			const xs = laid.nodes.map((n) => (n as { x: number }).x);
+			const ys = laid.nodes.map((n) => (n as { y: number }).y);
+			for (let i = 0; i < xs.length; i++) {
+				expect(Number.isFinite(xs[i])).toBe(true);
+				expect(Number.isFinite(ys[i])).toBe(true);
+			}
+			expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(35);
+			expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(25);
+		});
+
+		it("passes Barnes–Hut options through redraw wasm path", () => {
+			const nodes = Array.from({ length: 18 }, (_, k) => ({
+				handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: `n${k}:h0` }],
+				id: `n${k}`,
+				radius: 7,
+				shape: "circle" as const,
+				x: (k % 6) * 10,
+				y: Math.floor(k / 6) * 10,
+			}));
+			const edges = Array.from({ length: 17 }, (_, k) => ({
+				id: `e${k}`,
+				source: `n${k}:h0`,
+				target: `n${k + 1}:h0`,
+			}));
+			const fixture: BoardFixtureV1 = { camera: { x: 0, y: 0, zoom: 1 }, edges, nodes, schema: "elements.board.fixture/v1" };
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
+				forceGraph: {
+					barnesHutTheta: 0.75,
+					gravity: 0.012,
+					idealEdgeLength: 88,
+					iterations: 160,
+					pairwiseRepulsionMaxBodies: 6,
+					randomSeed: 404,
+					repulsionStrength: 5200,
+					springStrength: 0.05,
+				},
+				mode: "force-graph",
+				randomSeed: 404,
+				redrawHandlesAfter: false,
+			});
+			for (const n of laid.nodes) {
+				expect(Number.isFinite((n as { x: number }).x)).toBe(true);
+				expect(Number.isFinite((n as { y: number }).y)).toBe(true);
+			}
 		});
 	});
 

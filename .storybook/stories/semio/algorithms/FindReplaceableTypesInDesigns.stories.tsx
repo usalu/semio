@@ -18,6 +18,7 @@ import {
 } from "@semio/algorithms";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { within } from "storybook/test";
 import * as React from "react";
 
 import { NakaginCapsuleTowerCopySelection } from "@semio/assets";
@@ -211,4 +212,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => <FindReplaceableTypesInDesignsFrame />,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText(/Find Replaceable Types In Designs/i, { timeout: 120_000 });
+  },
 };

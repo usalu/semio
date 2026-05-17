@@ -1,0 +1,11 @@
+{
+  "title": "Board Force Graph Clean Refactor",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Clean refactor of force_graph in elements_board lib.rs: nested barnes_hut module with QuadTree, shared pairwise repulsion helper, extracted simulation step functions; no new filesystem modules.",
+  "summary": "Refactored `force_graph` in `lib.rs`: nested `mod barnes_hut` with `Cell` + `QuadTree` API (`build`, `repulsion_on_body`), shared `pairwise_repulsion_on_i_from_j`, and extracted `add_repulsion_forces` / `add_spring_forces` / `add_gravity_toward` / `integrate_velocity_and_positions` under subregions ForceGraphRepulsion vs ForceGraphIntegration. Main iteration loop is a short pipeline. Crate header now documents nested mods (still single file). Ran `cargo test -p elements_board` (57) and board vitest (74).",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪9b5ce85c97cd42a08012084d9073cd5a"
+  ]
+}

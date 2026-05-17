@@ -7,6 +7,7 @@
 
 import type { Design } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { within } from "storybook/test";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
@@ -82,4 +83,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <ClusterFrame /> };
+export const Default: Story = {
+  render: () => <ClusterFrame />,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText(/Cluster/i, { timeout: 120_000 });
+  },
+};

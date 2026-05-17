@@ -5755,9 +5755,28 @@ pub mod vcs {
 
         /// @emoji 📦 Golden `Checkpoint.kit` / `KitReadPointInput.checkpointId` — WIP parent checkpoint resolves like `TheKit.kit`; alternative tip like `Alternative.kit`; otherwise graph `initialKit` until per-checkpoint edit slices exist.
         pub async fn materialized_kit_for_checkpoint_id(self: &Arc<Self>, checkpoint_id: &Id) -> Result<Arc<Kit>, SemioError> {
-            let in_graph = self.checkpoints.read().await.iter().any(|c| &c.id == checkpoint_id);
-            let in_alt = self.alternatives.read().await.iter().any(|a| a.checkpoints.read().await.iter().any(|c| &c.id == checkpoint_id));
-            if !in_graph && !in_alt {
+            let mut found = false;
+            for c in self.checkpoints.read().await.iter() {
+                if &c.id == checkpoint_id {
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                for a in self.alternatives.read().await.iter() {
+                    let cps = a.checkpoints.read().await;
+                    for c in cps.iter() {
+                        if &c.id == checkpoint_id {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if found {
+                        break;
+                    }
+                }
+            }
+            if !found {
                 return Err(SemioError::not_found("Checkpoint", checkpoint_id.as_str()));
             }
             if self.the_kit_parent_checkpoint.read().await.upgrade().as_ref().map(|p| &p.id) == Some(checkpoint_id) {

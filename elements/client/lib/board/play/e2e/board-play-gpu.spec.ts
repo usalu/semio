@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/e2e/board-play-gpu.spec.ts — Asserts WebGPU raster path paints (not an empty canvas).
+// 💻 elements/client/lib/board/play/e2e/board-play-gpu.spec.ts — Asserts WebGPU raster path paints, wheel reaches WASM, and screenshot bytes change after zoom.
 // #endregion 🧲Header
 
 import { expect, test } from "@playwright/test";
@@ -141,5 +141,44 @@ test.describe("board play", () => {
 			await expect(c).toHaveAttribute("data-board-raster", "gpu");
 			await expect(c).toHaveAttribute("data-board-surface-state", "ready");
 		}
+	});
+
+	test("GPU canvas pixels and zoom change after wheel over canvas (interaction + repaint)", async ({ page }, testInfo) => {
+		const adapterOk = await page.evaluate(async () => {
+			const gpu = globalThis.navigator?.gpu;
+			if (!gpu) return false;
+			const adapter = await gpu.requestAdapter();
+			return adapter != null;
+		});
+		if (!adapterOk) {
+			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
+		}
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		const canvas = page.locator('[data-testid="board-canvas"]').first();
+		await expect(canvas).toBeVisible({ timeout: 120_000 });
+		await expect
+			.poll(async () => await canvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+			.toBe("ready");
+		await expect(canvas).toHaveAttribute("data-board-pointer-bridge", "window");
+		const beforeZoom = await canvas.getAttribute("data-board-zoom");
+		expect(beforeZoom).not.toBeNull();
+		const box = await canvas.boundingBox();
+		expect(box).not.toBeNull();
+		const cx = box!.x + box!.width * 0.5;
+		const cy = box!.y + box!.height * 0.5;
+		await page.mouse.move(cx, cy);
+		const shotBefore = await canvas.screenshot();
+		await page.mouse.wheel(0, -600);
+		await expect.poll(async () => await canvas.getAttribute("data-board-zoom")).not.toBe(beforeZoom);
+		await expect
+			.poll(
+				async () => {
+					const shotAfter = await canvas.screenshot();
+					return !Buffer.from(shotBefore).equals(Buffer.from(shotAfter));
+				},
+				{ timeout: 60_000 },
+			)
+			.toBe(true);
 	});
 });

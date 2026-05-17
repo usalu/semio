@@ -8,6 +8,7 @@
 import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/react";
 import { Design as DesignEntity, Kit } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { within } from "storybook/test";
 import * as React from "react";
 
 import { SemioDiagram } from "@semio/ui";
@@ -277,12 +278,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const playCopyPaste = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  await within(canvasElement).findByText(/Copy\s*&\s*Paste/i, { timeout: 120_000 });
+};
+
 export const WithoutCoordinate: Story = {
   args: { mode: "without" },
   render: (args) => <CopyAndPasteFrame {...args} />,
+  play: playCopyPaste,
 };
 
 export const WithCoordinate: Story = {
   args: { mode: "with" },
   render: (args) => <CopyAndPasteFrame {...args} />,
+  play: playCopyPaste,
 };

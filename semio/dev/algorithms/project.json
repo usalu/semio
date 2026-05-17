@@ -33,7 +33,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/dev/algorithms",
-        "command": "bunx vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts",
+        "command": "bunx vitest run --config ./vitest.config.ts",
         "forwardAllArgs": true
       }
     }

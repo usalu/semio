@@ -7,6 +7,7 @@
 
 import type { Design, DesignDiff } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { within } from "storybook/test";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
@@ -77,4 +78,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <FlattenFrame /> };
+export const Default: Story = {
+  render: () => <FlattenFrame />,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText(/Flatten/i, { timeout: 120_000 });
+  },
+};

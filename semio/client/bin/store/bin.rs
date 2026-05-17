@@ -1,4 +1,4 @@
-//! 🏪 `semio-store`: HTTP GraphQL sidecar over native [`semio::worker::ParentStore`] (same schema as WASM `KitStoreHandle`).
+//! 🏪 `semio-store`: HTTP GraphQL sidecar over native [`semio::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
 
 //#region 🏪State
 
@@ -139,10 +139,21 @@ struct GraphqlRequestBody {
 
 fn is_mutation_request(body: &str) -> std::result::Result<bool, String> {
     let parsed: GraphqlRequestBody = serde_json::from_str(body).map_err(|e| format!("invalid graphql json: {e}"))?;
-    let operation = parsed.query.lines().map(str::trim).find(|line| !line.is_empty() && !line.starts_with('#')).unwrap_or_default();
-    Ok(operation.starts_with("mutation") || operation.starts_with("subscription"))
+    for line in parsed.query.lines() {
+        let t = line.trim();
+        if t.is_empty() || t.starts_with('#') {
+            continue;
+        }
+        let head = t.split_whitespace().next().unwrap_or("");
+        if head.eq_ignore_ascii_case("fragment") {
+            continue;
+        }
+        return Ok(head.eq_ignore_ascii_case("mutation") || head.eq_ignore_ascii_case("subscription"));
+    }
+    Ok(false)
 }
 
+/// @emoji 🌐 GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `semio::gql::graphql_request_from_json_str`).
 async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl IntoResponse {
     let (rt, installed): (Arc<ParentStore>, bool) = {
         let l = state.runtime.lock().await;
@@ -356,14 +367,84 @@ mod tests {
 
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
-        let q2 = post_gql(&client, &base, "{ store { wip { theKit { kit { name } } } } }", None).await?;
+        const Q_MAT: &str = r#"{
+  store {
+    wip {
+      initialKit { name }
+      theKit { kit { name } }
+      checkpoints {
+        edges {
+          node {
+            initial { name }
+            kit { name }
+          }
+        }
+      }
+    }
+  }
+}"#;
+        let q2 = post_gql(&client, &base, Q_MAT, None).await?;
         if q2.get("errors").is_some() {
             return Err(format!("query: {q2}").into());
         }
-        let name = q2.pointer("/data/store/wip/theKit/kit/name").and_then(|n| n.as_str()).ok_or("kit.name")?;
-        assert_eq!(name, "RenamedKit");
+        assert_eq!(q2.pointer("/data/store/wip/initialKit/name").and_then(|n| n.as_str()), Some("SeedName"), "initialKit stays install baseline");
+        assert_eq!(q2.pointer("/data/store/wip/theKit/kit/name").and_then(|n| n.as_str()), Some("RenamedKit"), "theKit.kit materialized head");
+        assert_eq!(
+            q2.pointer("/data/store/wip/checkpoints/edges/0/node/initial/name").and_then(|n| n.as_str()),
+            Some("SeedName"),
+            "checkpoint.initial is graph baseline"
+        );
+        assert_eq!(
+            q2.pointer("/data/store/wip/checkpoints/edges/0/node/kit/name").and_then(|n| n.as_str()),
+            Some("RenamedKit"),
+            "checkpoint.kit matches wip parent anchor materialization"
+        );
 
         server.abort();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn sidecar_preview_reads_wip_materialization_without_install() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let (server, base) = spawn_server().await?;
+        let client = reqwest::Client::new();
+        const Q_PREVIEW: &str = r#"query WipKit {
+  store {
+    wip {
+      initialKit { name }
+      theKit { kit { name } }
+      checkpoints {
+        edges {
+          node {
+            initial { name }
+            kit { name }
+          }
+        }
+      }
+    }
+  }
+}"#;
+        let body = json!({ "query": Q_PREVIEW, "operationName": "WipKit" });
+        let r = client.post(format!("{base}/graphql")).json(&body).send().await?;
+        assert_eq!(r.status(), reqwest::StatusCode::OK);
+        let v: Value = r.json().await?;
+        assert!(v.get("errors").is_none(), "preview wip query errors: {v:?}");
+        assert_eq!(v.pointer("/data/store/wip/initialKit/name").and_then(|n| n.as_str()), Some("the kit"));
+        assert_eq!(v.pointer("/data/store/wip/theKit/kit/name").and_then(|n| n.as_str()), Some("the kit"));
+        assert_eq!(v.pointer("/data/store/wip/checkpoints/edges/0/node/initial/name").and_then(|n| n.as_str()), Some("the kit"));
+        assert_eq!(v.pointer("/data/store/wip/checkpoints/edges/0/node/kit/name").and_then(|n| n.as_str()), Some("the kit"));
+        server.abort();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn sidecar_graphql_detects_mutation_after_leading_comment_and_fragment() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let q = "# prelude\nfragment X on Query { __typename }\nmutation { session { start } }";
+        let body = serde_json::to_string(&json!({ "query": q }))?;
+        assert!(is_mutation_request(&body)?);
+        let q2 = "# only\nquery { __typename }";
+        let body2 = serde_json::to_string(&json!({ "query": q2 }))?;
+        assert!(!is_mutation_request(&body2)?);
         Ok(())
     }
 }

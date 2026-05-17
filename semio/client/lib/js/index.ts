@@ -45,6 +45,60 @@ function unwrapGraphqlData<TData>(response: GraphqlEnvelope<TData>): TData {
   throw new Error("graphql: no data in response");
 }
 
+type GraphqlWireKind = "query" | "mutation" | "subscription";
+
+/** @emoji 🔍 SDL operation keyword after leading whitespace and full-line {@code #} comments. */
+function graphqlWireOperationKind(document: string): GraphqlWireKind | null {
+  let rest = document.trimStart();
+  for (;;) {
+    if (rest.startsWith("#")) {
+      const nl = rest.indexOf("\n");
+      if (nl === -1) return null;
+      rest = rest.slice(nl + 1).trimStart();
+      continue;
+    }
+    break;
+  }
+  const m = rest.match(/^(query|mutation|subscription)\b/);
+  if (m?.[1] === "query" || m?.[1] === "mutation" || m?.[1] === "subscription") return m[1] as GraphqlWireKind;
+  return null;
+}
+
+/** @emoji 🛑 Enforces golden-schema split: {@code Query} vs {@code Mutation} vs {@code Subscription} roots only. */
+function assertGraphqlWireKind(document: string, kind: GraphqlWireKind): void {
+  const found = graphqlWireOperationKind(document);
+  if (found !== kind) throw new Error(`graphql: expected ${kind}, got ${found ?? "unknown"}`);
+}
+
+/** @emoji 🧵 Canonical GraphQL-over-HTTP POST object: {@code query}, {@code variables}, {@code operationName} always present on the wire. */
+type GraphqlWirePostBody = Readonly<{
+  query: string;
+  variables: JsonObject;
+  operationName: string | null;
+}>;
+
+/** @emoji 🧵 Supplies omitted {@code variables} / {@code operationName} so JSON bodies always carry the full triple. */
+function normalizeGraphqlWirePostBody(body: {
+  readonly query: string;
+  readonly variables?: JsonObject;
+  readonly operationName?: string | null;
+}): GraphqlWirePostBody {
+  return {
+    query: body.query,
+    variables: body.variables ?? {},
+    operationName: body.operationName === undefined ? null : body.operationName,
+  };
+}
+
+/** @emoji 🧵 {@link JSON.stringify} of {@link normalizeGraphqlWirePostBody} for execute/subscribe transports. */
+function graphqlWirePostBodyJson(body: {
+  readonly query: string;
+  readonly variables?: JsonObject;
+  readonly operationName?: string | null;
+}): string {
+  return JSON.stringify(normalizeGraphqlWirePostBody(body));
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   if (!ms || ms <= 0) return p;
   return new Promise((resolve, reject) => {
@@ -231,13 +285,39 @@ type KitStoreInnerTransport = WorkerStringTransport | InlineTransport | HttpStri
 export class GqlTransport {
   constructor(private readonly inner: KitStoreInnerTransport) { }
 
-  async executeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string }, timeoutMs: number): Promise<GraphqlEnvelope<JsonValue>> {
-    const json = await withTimeout(this.inner.execute(JSON.stringify(body)), timeoutMs, "graphql");
+  private async executeWireJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    const json = await withTimeout(this.inner.execute(graphqlWirePostBodyJson(body)), timeoutMs, "graphql");
     return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
   }
 
-  async subscribeJson(body: { readonly query: string; readonly variables?: JsonObject }, onEvent: (env: GraphqlEnvelope<JsonValue>) => void): Promise<void> {
-    await this.inner.subscribe(JSON.stringify(body), (eventJson) => {
+  /** @emoji 📖 POST wire aligned with {@code type Query} in {@code schema.golden.graphql}. */
+  async executeQueryJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    assertGraphqlWireKind(body.query, "query");
+    return this.executeWireJson(body, timeoutMs);
+  }
+
+  /** @emoji ✍️ POST wire aligned with {@code type Mutation} in {@code schema.golden.graphql}. */
+  async executeMutationJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    assertGraphqlWireKind(body.query, "mutation");
+    return this.executeWireJson(body, timeoutMs);
+  }
+
+  /** @emoji 📡 Subscribe wire aligned with {@code type Subscription} in {@code schema.golden.graphql}. */
+  async subscribeJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    onEvent: (env: GraphqlEnvelope<JsonValue>) => void,
+  ): Promise<void> {
+    assertGraphqlWireKind(body.query, "subscription");
+    await this.inner.subscribe(graphqlWirePostBodyJson(body), (eventJson) => {
       try {
         onEvent(parseJsonValue(eventJson) as GraphqlEnvelope<JsonValue>);
       } catch {
@@ -424,8 +504,12 @@ function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitRea
   return jsonObjectField(jsonObjectField(wip, "theKit"), "kit");
 }
 
-async function executeGraphql(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<GraphqlEnvelope<JsonValue>> {
-  const json = await withTimeout(handle.execute(JSON.stringify(body)), timeoutMs ?? 0, "graphql");
+async function executeGraphql(
+  handle: { execute(requestJson: string): Promise<string> },
+  body: { query: string; variables?: JsonObject; operationName?: string | null },
+  timeoutMs?: number,
+): Promise<GraphqlEnvelope<JsonValue>> {
+  const json = await withTimeout(handle.execute(graphqlWirePostBodyJson(body)), timeoutMs ?? 0, "graphql");
   return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
 }
 
@@ -643,7 +727,7 @@ async function readNodeSelection<T>(
   parse: (node: JsonObject | undefined) => T,
 ): Promise<T> {
   const data = unwrapGraphqlData(
-    await executeSessionGraphql(entity.session, {
+    await executeSessionReadGraphql(entity.session, {
       query: `query($id: ID!) { node(id: $id) { ... on ${typename} { ${selection} } } }`,
       variables: { id: entity.id },
     }),
@@ -827,7 +911,7 @@ function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: str
 }
 
 /**
- * @emoji 🧭 Target {@code Session}: owns GraphQL transport and only tracks command IDs for operation correlation.
+ * @emoji 🧭 Target {@code Session}: owns GraphQL transport and only tracks command IDs for {@code Subscription.operation} correlation; {@link EventBus} emits {@code commandSucceeded} only (no duplicate event-kind payloads).
  */
 export class Session {
   private readonly timeoutMs: number;
@@ -860,17 +944,15 @@ export class Session {
     const id = String(operation?.["id"] ?? "");
     if (id === "" || !this.commandIds.has(id)) return;
     this.commandIds.delete(id);
-    this.bus.emit({ kind: "operation", payload: operation } as unknown as JsonValue);
     this.bus.emit({ kind: "commandSucceeded", payload: operation } as unknown as JsonValue);
   }
 
   private startSubscriptionLoop(): void {
     if (this.gqlLoopRunning) return;
     this.gqlLoopRunning = true;
-    void this.innerTransport
-      .subscribe(JSON.stringify({ query: KIT_EVENT_STREAM_SUBSCRIPTION }), (eventJson: string) => {
+    void this.gql
+      .subscribeJson({ query: KIT_EVENT_STREAM_SUBSCRIPTION }, (msg) => {
         try {
-          const msg = parseJsonValue(eventJson) as GraphqlEnvelope<JsonObject>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
           const subscriptionData = msg.data;
           if (subscriptionData == null || typeof subscriptionData !== "object") return;
@@ -884,15 +966,28 @@ export class Session {
       });
   }
 
-  private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<GraphqlEnvelope<JsonValue>> {
+  private async readEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
     this.ensureAlive();
+    assertGraphqlWireKind(body.query, "query");
     return executeGraphql(this.handle, body, this.timeoutMs);
+  }
+
+  private async mutateEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
+    this.ensureAlive();
+    assertGraphqlWireKind(body.query, "mutation");
+    return executeGraphql(this.handle, body, this.timeoutMs);
+  }
+
+  /** @emoji 🧾 Applies a mutation envelope and registers emitted operation ids for {@code Subscription.operation}. */
+  mutationReceipt(env: GraphqlEnvelope<JsonValue>): SetResult {
+    this.ensureAlive();
+    return this.trackCommandResult(env);
   }
 
   /** @emoji 🧾 Reads a selection inside a specific store's scoped {@code kit { … }} through GraphQL. */
   async readKitInnerForStore(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = kitReadSelectionDocument(theKitReadPoint, inner);
-    const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
     return kitReadSelectionFromData(data, theKitReadPoint, storeId);
   }
 
@@ -907,7 +1002,7 @@ export class Session {
   /** @emoji 🧾 Reads a selection inside a specific target {@code Store} edge. */
   async readStoreInnerForId(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = sessionStoreSelectionDocument(inner);
-    const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
     return sessionStoreNodeFromData(data, storeId);
   }
 
@@ -916,7 +1011,7 @@ export class Session {
     this.ensureAlive();
     if (changeId == null || kitSelection == null) throw new Error("store id is required for store-scoped mutation");
     const { query, variables } = scopedKitMutationBody(storeId, changeId, kitSelection);
-    const env = await this.gqlRun({ query, variables });
+    const env = await this.mutateEnvelope({ query, variables });
     return this.trackCommandResult(env);
   }
 
@@ -925,7 +1020,7 @@ export class Session {
   }
 
   private async sessionStoreIds(): Promise<readonly string[]> {
-    const data = unwrapGraphqlData(await this.gqlRun({ query: `query { session { stores { edges { cursor } } } }` })) as JsonValue;
+    const data = unwrapGraphqlData(await this.readEnvelope({ query: `query { session { stores { edges { cursor } } } }` })) as JsonValue;
     return sessionStoreEdges(data).map(sessionStoreEdgeId).filter((id) => id !== "");
   }
 
@@ -944,7 +1039,7 @@ export class Session {
 
   private async remoteProviderUrls(): Promise<readonly string[]> {
     const data = unwrapGraphqlData(
-      await this.gqlRun({ query: `query { session { remoteProviders { edges { node { url } } } } }` }),
+      await this.readEnvelope({ query: `query { session { remoteProviders { edges { node { url } } } } }` }),
     ) as JsonObject;
     const session = jsonObjectField(data, "session");
     const edges = jsonObjectField(session, "remoteProviders")?.["edges"];
@@ -985,7 +1080,7 @@ export class Session {
   async ensureChangeId(storeId?: string): Promise<string> {
     this.ensureAlive();
     if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped change");
-    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId } })) as JsonObject;
+    const data = unwrapGraphqlData(await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId } })) as JsonObject;
     const sess = data["session"] as JsonObject | undefined;
     const store = sess?.["store"] as JsonObject | undefined;
     const tk = store?.["theKit"] as JsonObject | undefined;
@@ -997,7 +1092,7 @@ export class Session {
   async saveChange(storeId?: string): Promise<void> {
     this.ensureAlive();
     if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped save");
-    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId } })) as JsonObject;
+    const data = unwrapGraphqlData(await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId } })) as JsonObject;
     const id = String(((data["session"] as JsonObject | undefined)?.["store"] as JsonObject | undefined)?.["theKit"] == null ? "" : (((data["session"] as JsonObject)["store"] as JsonObject)["theKit"] as JsonObject)["save"] ?? "");
     this.trackCommandId(id);
   }
@@ -1008,13 +1103,13 @@ export class Session {
 
   async createCheckpoint(storeId: string, message: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId } });
     return this.trackCommandResult(env);
   }
 
   async startAlternative(storeId: string, name?: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({
+    const env = await this.mutateEnvelope({
       query:
         name == null
           ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative } } }`
@@ -1026,7 +1121,7 @@ export class Session {
 
   async integrateAlternative(storeId: string, alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({
+    const env = await this.mutateEnvelope({
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } } }`,
       variables: { storeId },
     });
@@ -1037,7 +1132,7 @@ export class Session {
     this.ensureAlive();
     const url = hubUrl ?? "";
     const h = hubUrl == null ? "null" : gqlString(hubUrl);
-    const env = await this.gqlRun({
+    const env = await this.mutateEnvelope({
       query: `mutation { session { remoteProvider(url: ${gqlString(url)}) { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
     });
     return this.trackCommandResult(env);
@@ -1045,19 +1140,19 @@ export class Session {
 
   async logout(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { remoteProvider(url: "") { logout } } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { remoteProvider(url: "") { logout } } }` });
     return this.trackCommandResult(env);
   }
 
   async sessionStart(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { start } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { start } }` });
     return this.trackCommandResult(env);
   }
 
   async sessionEnd(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { end } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { end } }` });
     return this.trackCommandResult(env);
   }
 
@@ -1067,14 +1162,14 @@ export class Session {
 
   async detachBackbone(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId } });
     return this.trackCommandResult(env);
   }
 
   /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the given store command scope. */
   async backboneSyncNow(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId } });
     return this.trackCommandResult(env);
   }
 
@@ -1082,7 +1177,7 @@ export class Session {
   async backboneStatus(storeId: string): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
     const data = unwrapGraphqlData(
-      await this.gqlRun({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` }),
+      await this.readEnvelope({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` }),
     ) as JsonObject;
     const st = sessionStoreNodeFromData(data, storeId);
     return {
@@ -1387,11 +1482,18 @@ export class Kit extends Entity {
 }
 //#endregion 📦Kit
 
-function executeSessionGraphql(
+function executeSessionReadGraphql(
   session: Session,
-  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
+  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
-  return (session as unknown as { gqlRun(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).gqlRun(body);
+  return (session as unknown as { readEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).readEnvelope(body);
+}
+
+function executeSessionWriteGraphql(
+  session: Session,
+  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
+): Promise<GraphqlEnvelope<JsonValue>> {
+  return (session as unknown as { mutateEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).mutateEnvelope(body);
 }
 
 //#region 🧬VcsEntities
@@ -1487,19 +1589,19 @@ export class Store extends Entity {
   }
 
   async detachBackbone(): Promise<SetResult> {
-    const env = await executeSessionGraphql(this.session, {
+    const env = await executeSessionWriteGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`,
       variables: { storeId: this.id },
     });
-    return gqlOkFromEnvelope(env);
+    return this.session.mutationReceipt(env);
   }
 
   async syncBackbone(): Promise<SetResult> {
-    const env = await executeSessionGraphql(this.session, {
+    const env = await executeSessionWriteGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`,
       variables: { storeId: this.id },
     });
-    return gqlOkFromEnvelope(env);
+    return this.session.mutationReceipt(env);
   }
 }
 
@@ -1528,16 +1630,16 @@ export abstract class Provider extends Entity {
   }
 
   async createBackbone(uri: string): Promise<SetResult> {
-    const env = await executeSessionGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
-    return gqlOkFromEnvelope(env);
+    const env = await executeSessionWriteGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
+    return this.session.mutationReceipt(env);
   }
 
   async attachBackbone(storeId: string): Promise<SetResult> {
-    const env = await executeSessionGraphql(this.session, {
+    const env = await executeSessionWriteGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) } } }`,
       variables: { storeId },
     });
-    return gqlOkFromEnvelope(env);
+    return this.session.mutationReceipt(env);
   }
 
   async ensureBackboneAttached(storeId: string, uri: string): Promise<SetResult> {
@@ -1558,7 +1660,7 @@ export class LocalProvider extends Provider {
   }
 
   protected async providerNode(inner: string): Promise<JsonObject | null> {
-    const data = unwrapGraphqlData(await executeSessionGraphql(this.session, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await executeSessionReadGraphql(this.session, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
     return jsonObjectField(jsonObjectField(data, "session"), "localProvider");
   }
 }
@@ -1574,7 +1676,7 @@ export class RemoteProvider extends Provider {
 
   protected override async providerNode(inner: string): Promise<JsonObject | null> {
     const data = unwrapGraphqlData(
-      await executeSessionGraphql(this.session, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
+      await executeSessionReadGraphql(this.session, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
     ) as JsonObject;
     const edges = jsonObjectField(jsonObjectField(data, "session"), "remoteProviders")?.["edges"];
     if (!Array.isArray(edges)) return null;
@@ -1587,15 +1689,15 @@ export class RemoteProvider extends Provider {
 
   async login(username: string, passwordHash: string, hubUrl?: string | null): Promise<SetResult> {
     const h = hubUrl == null ? "null" : gqlString(hubUrl);
-    const env = await executeSessionGraphql(this.session, {
+    const env = await executeSessionWriteGraphql(this.session, {
       query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
     });
-    return gqlOkFromEnvelope(env);
+    return this.session.mutationReceipt(env);
   }
 
   async logout(): Promise<SetResult> {
-    const env = await executeSessionGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
-    return gqlOkFromEnvelope(env);
+    const env = await executeSessionWriteGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
+    return this.session.mutationReceipt(env);
   }
 }
 
@@ -1899,7 +2001,7 @@ export class Conflict extends Entity {
 
   async reasons(): Promise<readonly string[]> {
     const data = unwrapGraphqlData(
-      await executeSessionGraphql(this.session, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+      await executeSessionReadGraphql(this.session, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
@@ -1909,7 +2011,7 @@ export class Conflict extends Entity {
 
   private async authoritativeChangeId(): Promise<string> {
     const data = unwrapGraphqlData(
-      await executeSessionGraphql(this.session, {
+      await executeSessionReadGraphql(this.session, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1921,7 +2023,7 @@ export class Conflict extends Entity {
 
   private async wipChangeId(): Promise<string> {
     const data = unwrapGraphqlData(
-      await executeSessionGraphql(this.session, {
+      await executeSessionReadGraphql(this.session, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -3727,6 +3829,23 @@ export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOpt
 if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
   describe("semio/js", () => {
+    it("graphql wire kinds match golden operation roots", () => {
+      expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
+      expect(graphqlWireOperationKind("mutation { session { start } }")).toBe("mutation");
+      expect(graphqlWireOperationKind("subscription { operation { id } }")).toBe("subscription");
+      expect(() => assertGraphqlWireKind("mutation { session { start } }", "query")).toThrow(/expected query/);
+    });
+    it("graphql wire post json always carries query variables operationName", () => {
+      const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
+      const o = JSON.parse(raw) as Record<string, unknown>;
+      expect(Object.keys(o).sort()).toEqual(["operationName", "query", "variables"]);
+      expect(o["query"]).toBe("query Q { __typename }");
+      expect(o["variables"]).toEqual({});
+      expect(o["operationName"]).toBe(null);
+      expect(
+        JSON.parse(graphqlWirePostBodyJson({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" })) as Record<string, unknown>,
+      ).toEqual({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" });
+    });
     it("read and write", () => {
       // 
     });

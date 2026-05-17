@@ -9861,9 +9861,7 @@ type Mutation {
 # limits emissions to updates of that scalar.
 type Subscription {
   # Subscription
-  # Events
   session: Session!
-  # Commands
   operation: Operation!
 }
 

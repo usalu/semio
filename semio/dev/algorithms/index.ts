@@ -408,6 +408,9 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("semio-algorithms public surface", () => {
+    it("exports async kit runners used by semio algorithm stories", () => {
+      expect([flattenDesign, flatDesign, flattenedDesign, deletePieces, dragPieces, movePieces, copyDesign, pasteDesign].every((f) => typeof f === "function")).toBe(true);
+    });
     it("exposes only rs-backed story helpers and no native adapter API", () => {
       const publicHelperNames = ["flattenDesign", "flatDesign", "flattenedDesign", "deletePieces", "dragPieces", "movePieces", "copyDesign", "pasteDesign"];
       expect(publicHelperNames.every((name) => !name.toLowerCase().includes("native"))).toBe(true);

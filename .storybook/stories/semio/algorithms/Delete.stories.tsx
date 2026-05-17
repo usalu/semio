@@ -8,6 +8,7 @@
 import type { Design, DesignDiff, DesignPlain } from "@semio/react";
 import { Design as DesignEntity } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { within } from "storybook/test";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
@@ -113,4 +114,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <DeleteFrame /> };
+export const Default: Story = {
+  render: () => <DeleteFrame />,
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText(/Delete/i, { timeout: 120_000 });
+  },
+};

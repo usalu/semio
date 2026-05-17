@@ -1,4 +1,4 @@
-//! 🎛️ Single-source board crate: vector geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (no sibling `src/` modules).
+//! 🎛️ Single-source board crate: vector geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (nested `mod` blocks only; no extra `.rs` files).
 #![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
 
 pub use vello_svg::usvg;
@@ -631,6 +631,12 @@ mod force_graph {
 		pub max_speed: f64,
 		#[serde(default = "default_random_seed")]
 		pub random_seed: u64,
+		/// Barnes–Hut opening angle θ (`width / distance`); smaller is more accurate, larger is faster.
+		#[serde(default = "default_barnes_hut_theta")]
+		pub barnes_hut_theta: f64,
+		/// Use exact O(n²) repulsion when the visible body count is at most this (tiny graphs / tests).
+		#[serde(default = "default_pairwise_repulsion_max_bodies")]
+		pub pairwise_repulsion_max_bodies: u32,
 	}
 
 	fn default_iterations() -> u32 {
@@ -660,6 +666,12 @@ mod force_graph {
 	fn default_random_seed() -> u64 {
 		0x5eedfaced0u64
 	}
+	fn default_barnes_hut_theta() -> f64 {
+		0.78
+	}
+	fn default_pairwise_repulsion_max_bodies() -> u32 {
+		56
+	}
 
 	impl Default for ForceGraphLayoutOptions {
 		fn default() -> Self {
@@ -675,6 +687,8 @@ mod force_graph {
 				velocity_damping: default_velocity_damping(),
 				max_speed: default_max_speed(),
 				random_seed: default_random_seed(),
+				barnes_hut_theta: default_barnes_hut_theta(),
+				pairwise_repulsion_max_bodies: default_pairwise_repulsion_max_bodies(),
 			}
 		}
 	}
@@ -701,6 +715,354 @@ mod force_graph {
 		}
 		obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(32.0)
 	}
+
+	// #region 🔖ForceGraphRepulsion
+	/// 📐 Repulsive acceleration on body `i` from body `j` (shared by pairwise sweep and Barnes–Hut leaves).
+	#[inline]
+	fn pairwise_repulsion_on_i_from_j(
+		i: usize,
+		j: usize,
+		positions: &[Vec2],
+		radii: &[f64],
+		cool: f64,
+		k_rep: f64,
+	) -> Vec2 {
+		let delta = positions[j] - positions[i];
+		let dist = delta.norm().max(1e-4);
+		let rep = k_rep * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
+		(delta / dist) * (-rep)
+	}
+
+	mod barnes_hut {
+		use super::{pairwise_repulsion_on_i_from_j, Vec2};
+
+		const NO_CHILD: u32 = u32::MAX;
+
+		/// 🌌 Quadtree cell: empty leaf, occupied leaf, or internal node with four children.
+		#[derive(Clone, Debug)]
+		struct Cell {
+			min_x: f64,
+			min_y: f64,
+			max_x: f64,
+			max_y: f64,
+			body: Option<usize>,
+			children: [u32; 4],
+			com: Vec2,
+			mass: f64,
+			max_r: f64,
+		}
+
+		/// 🌲 Point quadtree for one repulsion pass over a fixed body set.
+		pub(super) struct QuadTree {
+			cells: Vec<Cell>,
+		}
+
+		#[inline]
+		fn is_internal(c: &Cell) -> bool {
+			c.children[0] != NO_CHILD
+		}
+
+		#[inline]
+		fn cell_width(c: &Cell) -> f64 {
+			(c.max_x - c.min_x).max(c.max_y - c.min_y)
+		}
+
+		#[inline]
+		fn point_in_cell(px: f64, py: f64, c: &Cell) -> bool {
+			px >= c.min_x && px <= c.max_x && py >= c.min_y && py <= c.max_y
+		}
+
+		fn quadrant_bounds(min_x: f64, min_y: f64, max_x: f64, max_y: f64, q: usize) -> (f64, f64, f64, f64) {
+			let mx = (min_x + max_x) * 0.5;
+			let my = (min_y + max_y) * 0.5;
+			match q {
+				0 => (min_x, min_y, mx, my),
+				1 => (mx, min_y, max_x, my),
+				2 => (min_x, my, mx, max_y),
+				3 => (mx, my, max_x, max_y),
+				_ => (min_x, min_y, max_x, max_y),
+			}
+		}
+
+		#[inline]
+		fn quadrant_index(px: f64, py: f64, mx: f64, my: f64) -> usize {
+			let east = if px >= mx { 1usize } else { 0 };
+			let north = if py >= my { 2usize } else { 0 };
+			east + north
+		}
+
+		fn empty_leaf(min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Cell {
+			Cell {
+				min_x,
+				min_y,
+				max_x,
+				max_y,
+				body: None,
+				children: [NO_CHILD; 4],
+				com: Vec2::ZERO,
+				mass: 0.0,
+				max_r: 0.0,
+			}
+		}
+
+		fn subdivide_leaf(tree: &mut Vec<Cell>, ni: usize) {
+			let (min_x, min_y, max_x, max_y) = (tree[ni].min_x, tree[ni].min_y, tree[ni].max_x, tree[ni].max_y);
+			let mut ch = [NO_CHILD; 4];
+			for q in 0..4usize {
+				let (a, b, c, d) = quadrant_bounds(min_x, min_y, max_x, max_y, q);
+				let idx = tree.len();
+				tree.push(empty_leaf(a, b, c, d));
+				ch[q] = idx as u32;
+			}
+			tree[ni].body = None;
+			tree[ni].children = ch;
+			tree[ni].mass = 0.0;
+			tree[ni].com = Vec2::ZERO;
+			tree[ni].max_r = 0.0;
+		}
+
+		fn aggregate(tree: &mut Vec<Cell>, ni: usize) {
+			if !is_internal(&tree[ni]) {
+				return;
+			}
+			let mut m = 0.0f64;
+			let mut sx = 0.0f64;
+			let mut sy = 0.0f64;
+			let mut mxr = 0.0f64;
+			let ch = tree[ni].children;
+			for q in 0..4usize {
+				let chn = &tree[ch[q] as usize];
+				m += chn.mass;
+				sx += chn.com.x * chn.mass;
+				sy += chn.com.y * chn.mass;
+				mxr = mxr.max(chn.max_r);
+			}
+			if m > 0.0 {
+				sx /= m;
+				sy /= m;
+			}
+			tree[ni].mass = m;
+			tree[ni].com = Vec2::new(sx, sy);
+			tree[ni].max_r = mxr;
+		}
+
+		fn insert(tree: &mut Vec<Cell>, ni: usize, idx: usize, pos: Vec2, r: f64, positions: &[Vec2], radii: &[f64]) {
+			if is_internal(&tree[ni]) {
+				let mx = (tree[ni].min_x + tree[ni].max_x) * 0.5;
+				let my = (tree[ni].min_y + tree[ni].max_y) * 0.5;
+				let q = quadrant_index(pos.x, pos.y, mx, my);
+				let ci = tree[ni].children[q] as usize;
+				insert(tree, ci, idx, pos, r, positions, radii);
+				aggregate(tree, ni);
+				return;
+			}
+			if tree[ni].mass <= 0.0 && tree[ni].body.is_none() {
+				tree[ni].body = Some(idx);
+				tree[ni].com = pos;
+				tree[ni].mass = 1.0;
+				tree[ni].max_r = r;
+				return;
+			}
+			if let Some(ex) = tree[ni].body {
+				if ex == idx {
+					return;
+				}
+				let p_ex = positions[ex];
+				let r_ex = radii[ex];
+				subdivide_leaf(tree, ni);
+				insert(tree, ni, ex, p_ex, r_ex, positions, radii);
+				insert(tree, ni, idx, pos, r, positions, radii);
+			}
+		}
+
+		fn square_bounds(positions: &[Vec2]) -> (f64, f64, f64, f64) {
+			let mut min_x = f64::INFINITY;
+			let mut min_y = f64::INFINITY;
+			let mut max_x = f64::NEG_INFINITY;
+			let mut max_y = f64::NEG_INFINITY;
+			for p in positions {
+				min_x = min_x.min(p.x);
+				min_y = min_y.min(p.y);
+				max_x = max_x.max(p.x);
+				max_y = max_y.max(p.y);
+			}
+			if !min_x.is_finite() || !max_x.is_finite() {
+				return (-1.0, -1.0, 1.0, 1.0);
+			}
+			let pad = 1e-3f64;
+			let w = ((max_x - min_x).max(max_y - min_y) + pad * 2.0).max(1e-6);
+			let cx = (min_x + max_x) * 0.5;
+			let cy = (min_y + max_y) * 0.5;
+			let h = w * 0.5;
+			(cx - h, cy - h, cx + h, cy + h)
+		}
+
+		fn repulsion_rec(
+			cells: &[Cell],
+			ni: usize,
+			i: usize,
+			p_i: Vec2,
+			r_i: f64,
+			theta: f64,
+			cool: f64,
+			k_rep: f64,
+			positions: &[Vec2],
+			radii: &[f64],
+		) -> Vec2 {
+			let node = &cells[ni];
+			if node.mass <= 0.0 {
+				return Vec2::ZERO;
+			}
+			if !is_internal(node) {
+				if let Some(j) = node.body {
+					if j == i {
+						return Vec2::ZERO;
+					}
+					return pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
+				}
+				return Vec2::ZERO;
+			}
+			let width = cell_width(node);
+			let delta_c = node.com - p_i;
+			let d = delta_c.norm().max(1e-6);
+			if point_in_cell(p_i.x, p_i.y, node) {
+				let mut acc = Vec2::ZERO;
+				for q in 0..4usize {
+					let c = node.children[q];
+					if c != NO_CHILD {
+						acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
+					}
+				}
+				return acc;
+			}
+			if width / d < theta {
+				let rep = k_rep * cool * (r_i * node.max_r).max(1.0) / (d * d);
+				return (p_i - node.com) / d * rep;
+			}
+			let mut acc = Vec2::ZERO;
+			for q in 0..4usize {
+				let c = node.children[q];
+				if c != NO_CHILD {
+					acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
+				}
+			}
+			acc
+		}
+
+		impl QuadTree {
+			pub(super) fn build(positions: &[Vec2], radii: &[f64]) -> Self {
+				let (a, b, c, d) = square_bounds(positions);
+				let mut cells = vec![empty_leaf(a, b, c, d)];
+				for i in 0..positions.len() {
+					insert(&mut cells, 0, i, positions[i], radii[i], positions, radii);
+				}
+				Self { cells }
+			}
+
+			pub(super) fn repulsion_on_body(
+				&self,
+				i: usize,
+				positions: &[Vec2],
+				radii: &[f64],
+				theta: f64,
+				cool: f64,
+				k_rep: f64,
+			) -> Vec2 {
+				repulsion_rec(
+					&self.cells,
+					0,
+					i,
+					positions[i],
+					radii[i],
+					theta,
+					cool,
+					k_rep,
+					positions,
+					radii,
+				)
+			}
+		}
+	}
+
+	fn add_repulsion_forces(
+		forces: &mut [Vec2],
+		positions: &[Vec2],
+		radii: &[f64],
+		n: usize,
+		cool: f64,
+		k_rep: f64,
+		theta: f64,
+		pair_cap: usize,
+	) {
+		if n <= pair_cap {
+			for i in 0..n {
+				for j in (i + 1)..n {
+					let f = pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
+					forces[i] += f;
+					forces[j] -= f;
+				}
+			}
+		} else {
+			let tree = barnes_hut::QuadTree::build(positions, radii);
+			for i in 0..n {
+				forces[i] += tree.repulsion_on_body(i, positions, radii, theta, cool, k_rep);
+			}
+		}
+	}
+	// #endregion
+
+	// #region 🔖ForceGraphIntegration
+	fn add_spring_forces(
+		forces: &mut [Vec2],
+		positions: &[Vec2],
+		edge_pairs: &[(usize, usize)],
+		ideal_len: f64,
+		spring_k: f64,
+		cool: f64,
+	) {
+		for &(i, j) in edge_pairs {
+			let delta = positions[j] - positions[i];
+			let dist = delta.norm().max(1e-4);
+			let dir = delta / dist;
+			let displacement = dist - ideal_len;
+			let f = dir * (spring_k * cool * displacement);
+			forces[i] += f;
+			forces[j] -= f;
+		}
+	}
+
+	fn add_gravity_toward(forces: &mut [Vec2], positions: &[Vec2], gx: f64, gy: f64, gamma: f64, cool: f64) {
+		if gamma <= 0.0 {
+			return;
+		}
+		let g = gamma * cool;
+		for i in 0..forces.len() {
+			let to_c = Vec2::new(gx - positions[i].x, gy - positions[i].y);
+			forces[i] += to_c * g;
+		}
+	}
+
+	fn integrate_velocity_and_positions(
+		positions: &mut [Vec2],
+		velocities: &mut [Vec2],
+		forces: &[Vec2],
+		dt_base: f64,
+		cool: f64,
+		damping: f64,
+		v_max: f64,
+	) {
+		let dt = dt_base * cool.sqrt();
+		for i in 0..positions.len() {
+			let mut v = (velocities[i] + forces[i] * dt) * damping;
+			let spd = v.norm();
+			if spd > v_max {
+				v *= v_max / spd;
+			}
+			velocities[i] = v;
+			positions[i] += v * dt;
+		}
+	}
+	// #endregion
 
 	pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
 		let Some(root) = fixture.as_object_mut() else {
@@ -857,43 +1219,29 @@ mod force_graph {
 		for iter in 0..iters {
 			let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
 			let mut forces = vec![Vec2::ZERO; n];
-			for i in 0..n {
-				for j in (i + 1)..n {
-					let delta = positions[j] - positions[i];
-					let dist = delta.norm().max(1e-4);
-					let rep = opts.repulsion_strength * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
-					let dir = delta / dist;
-					let f = dir * rep;
-					forces[i] -= f;
-					forces[j] += f;
-				}
-			}
-			for &(i, j) in &edge_pairs {
-				let delta = positions[j] - positions[i];
-				let dist = delta.norm().max(1e-4);
-				let dir = delta / dist;
-				let displacement = dist - k;
-				let f = dir * (opts.spring_strength * cool * displacement);
-				forces[i] += f;
-				forces[j] -= f;
-			}
-			if opts.gravity > 0.0 {
-				let g = opts.gravity * cool;
-				for i in 0..n {
-					let to_c = Vec2::new(gx - positions[i].x, gy - positions[i].y);
-					forces[i] += to_c * g;
-				}
-			}
-			let dt = opts.time_step * cool.sqrt();
-			for i in 0..n {
-				let mut v = (velocities[i] + forces[i] * dt) * opts.velocity_damping;
-				let spd = v.norm();
-				if spd > opts.max_speed {
-					v *= opts.max_speed / spd;
-				}
-				velocities[i] = v;
-				positions[i] += v * dt;
-			}
+			let theta = opts.barnes_hut_theta.clamp(0.2, 1.35);
+			let pair_cap = opts.pairwise_repulsion_max_bodies.max(4) as usize;
+			add_repulsion_forces(
+				&mut forces,
+				&positions,
+				&radii,
+				n,
+				cool,
+				opts.repulsion_strength,
+				theta,
+				pair_cap,
+			);
+			add_spring_forces(&mut forces, &positions, &edge_pairs, k, opts.spring_strength, cool);
+			add_gravity_toward(&mut forces, &positions, gx, gy, opts.gravity, cool);
+			integrate_velocity_and_positions(
+				&mut positions,
+				&mut velocities,
+				&forces,
+				opts.time_step,
+				cool,
+				opts.velocity_damping,
+				opts.max_speed,
+			);
 		}
 		for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
 			let Some(node) = nodes.get_mut(raw_idx) else {
@@ -7524,6 +7872,167 @@ mod force_graph_tests {
 	fn force_graph_rejects_bad_schema() {
 		let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
 		assert!(err.contains("schema"));
+	}
+
+	#[test]
+	fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
+		let mut nodes = Vec::new();
+		let mut edges = Vec::new();
+		for k in 0..64 {
+			let id = format!("n{k}");
+			nodes.push(json!({
+				"id": id,
+				"x": (k % 8) as f64 * 12.0,
+				"y": (k / 8) as f64 * 12.0,
+				"radius": 8.0,
+				"handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "board.port" }]
+			}));
+			if k > 0 {
+				let prev = format!("n{}", k - 1);
+				edges.push(json!({
+					"id": format!("e{k}"),
+					"source": format!("{prev}:h0"),
+					"target": format!("{id}:h0")
+				}));
+			}
+		}
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": nodes,
+			"edges": edges
+		});
+		let opts = json!({
+			"iterations": 180,
+			"idealEdgeLength": 90.0,
+			"repulsionStrength": 6000.0,
+			"springStrength": 0.05,
+			"gravity": 0.01,
+			"randomSeed": 91,
+			"barnesHutTheta": 0.72,
+			"pairwiseRepulsionMaxBodies": 12
+		});
+		let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		for row in parsed["nodes"].as_array().unwrap() {
+			let x = row["x"].as_f64().unwrap();
+			let y = row["y"].as_f64().unwrap();
+			assert!(x.is_finite() && y.is_finite());
+		}
+		let xs: Vec<f64> = parsed["nodes"].as_array().unwrap().iter().map(|r| r["x"].as_f64().unwrap()).collect();
+		let ys: Vec<f64> = parsed["nodes"].as_array().unwrap().iter().map(|r| r["y"].as_f64().unwrap()).collect();
+		let x_span = xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) - xs.iter().copied().fold(f64::INFINITY, f64::min);
+		let y_span = ys.iter().copied().fold(f64::NEG_INFINITY, f64::max) - ys.iter().copied().fold(f64::INFINITY, f64::min);
+		assert!(x_span > 40.0 && y_span > 35.0, "expected BH layout to spread graph, x_span={x_span} y_span={y_span}");
+	}
+
+	#[test]
+	fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
+		let mut nodes = Vec::new();
+		let mut edges = Vec::new();
+		for k in 0..36 {
+			let id = format!("n{k}");
+			nodes.push(json!({
+				"id": id,
+				"x": (k % 6) as f64 * 9.0,
+				"y": (k / 6) as f64 * 9.0,
+				"radius": 6.5,
+				"handles": [{ "id": format!("{id}:h0"), "angle": 0.0, "handleKind": "board.port" }]
+			}));
+			if k > 0 {
+				let prev = format!("n{}", k - 1);
+				edges.push(json!({
+					"id": format!("e{k}"),
+					"source": format!("{prev}:h0"),
+					"target": format!("{id}:h0")
+				}));
+			}
+		}
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": nodes,
+			"edges": edges
+		});
+		let opts = json!({
+			"iterations": 120,
+			"idealEdgeLength": 88.0,
+			"repulsionStrength": 5400.0,
+			"springStrength": 0.047,
+			"gravity": 0.013,
+			"randomSeed": 4041,
+			"barnesHutTheta": 0.55,
+			"pairwiseRepulsionMaxBodies": 8
+		});
+		let s = fixture.to_string();
+		let o = opts.to_string();
+		let out_a = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+		let out_b = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+		assert_eq!(out_a, out_b, "BH path must be bitwise reproducible for identical inputs");
+	}
+
+	#[test]
+	fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{ "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
+				{ "id": "b", "x": 3.0, "y": 1.0, "radius": 30.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "board.port" }] },
+				{ "id": "c", "x": -2.0, "y": 4.0, "radius": 28.0, "handles": [{ "id": "c:h0", "angle": 1.0, "handleKind": "board.port" }] }
+			],
+			"edges": [
+				{ "id": "e1", "source": "a:h0", "target": "b:h0" },
+				{ "id": "e2", "source": "b:h0", "target": "c:h0" }
+			]
+		});
+		let opts = json!({
+			"iterations": 90,
+			"idealEdgeLength": 110.0,
+			"repulsionStrength": 6200.0,
+			"springStrength": 0.042,
+			"gravity": 0.011,
+			"randomSeed": 909,
+			"pairwiseRepulsionMaxBodies": 80
+		});
+		let s = fixture.to_string();
+		let o = opts.to_string();
+		let out_a = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+		let out_b = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+		assert_eq!(out_a, out_b);
+	}
+
+	#[test]
+	fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{ "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }] },
+				{ "id": "b", "x": 5.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "b:h0", "angle": 3.14, "handleKind": "board.port" }] },
+				{ "id": "c", "x": 2.0, "y": 8.0, "radius": 18.0, "handles": [{ "id": "c:h0", "angle": 0.0, "handleKind": "board.port" }] }
+			],
+			"edges": [
+				{ "id": "e1", "source": "a:h0", "target": "b:h0" },
+				{ "id": "e2", "source": "b:h0", "target": "c:h0" }
+			]
+		});
+		let opts = json!({
+			"iterations": 40,
+			"idealEdgeLength": 100.0,
+			"repulsionStrength": 5000.0,
+			"springStrength": 0.05,
+			"gravity": 0.01,
+			"randomSeed": 3,
+			"barnesHutTheta": 500.0,
+			"pairwiseRepulsionMaxBodies": 2
+		});
+		let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		for row in parsed["nodes"].as_array().unwrap() {
+			assert!(row["x"].as_f64().unwrap().is_finite());
+			assert!(row["y"].as_f64().unwrap().is_finite());
+		}
 	}
 
 	#[test]
