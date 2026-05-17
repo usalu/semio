@@ -1562,6 +1562,11 @@ mod board_icon_codec {
 	use typst::syntax::{FileId, Source, VirtualPath};
 	use typst::utils::LazyHash;
 
+	// #region 🖼️EmojiFontBytes
+	// Apache-2.0 subset of Noto Color Emoji (board `rs/assets/`); must be registered in the Typst `FontBook` or `emoji:` icons render as tofu.
+	static BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
+	// #endregion 🖼️EmojiFontBytes
+
 	#[derive(Debug)]
 	pub enum BoardResolvedIcon {
 		None,
@@ -1618,6 +1623,16 @@ mod board_icon_codec {
 					} else {
 						break;
 					}
+				}
+			}
+			let emoji_blob = Bytes::new(BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET);
+			let mut idx = 0u32;
+			loop {
+				if let Some(f) = Font::new(emoji_blob.clone(), idx) {
+					out.push(f);
+					idx = idx.saturating_add(1);
+				} else {
+					break;
 				}
 			}
 			out
@@ -1698,7 +1713,7 @@ mod board_icon_codec {
 				return BoardResolvedIcon::None;
 			}
 			let wrapped = format!(
-				"#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt)\n{em}"
+				"#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt, font: \"Noto Color Emoji\")\n{em}"
 			);
 			return match board_typst_markup_to_svg(&wrapped) {
 				Some(s) => BoardResolvedIcon::SvgPlain(s),
@@ -6427,6 +6442,32 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_indirect_ring_stays_hit_testable_after_starting_link() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let ha = h.handles.get("a:h0").unwrap().clone();
+		let ring = h.indirect_handle_world_pos(&ha).unwrap();
+		let s0 = h.world_to_screen(ring);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		assert!(matches!(h.interaction, Interaction::LinkAtSourceHandle { .. }));
+		assert!(h.selection.len() >= 2);
+		let ring_pt = h.indirect_handle_world_pos(&ha).unwrap();
+		let pick = h.resolve_hit_world(h.screen_to_world(h.world_to_screen(ring_pt)));
+		assert_eq!(pick.as_deref(), Some("a:h0"));
+		let far = h.world_to_screen(Point::new(200.0, 0.0));
+		h.pointer_move_screen(far.x, far.y);
+		assert!(matches!(h.interaction, Interaction::LinkDragSnap { .. }));
+		let ring2 = h.indirect_handle_world_pos(&ha).unwrap();
+		let pick2 = h.resolve_hit_world(h.screen_to_world(h.world_to_screen(ring2)));
+		assert_eq!(pick2.as_deref(), Some("a:h0"));
+	}
+
+	#[test]
 	fn board_host_indirect_ring_screen_gap_matches_css_px_across_zoom() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
@@ -7007,6 +7048,22 @@ mod force_graph_tests {
 		match r {
 			super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
 				assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
+			}
+			other => panic!("unexpected resolution: {other:?}"),
+		}
+	}
+
+	#[test]
+	fn board_icon_codec_resolves_emoji_prefix_without_tofu() {
+		let r = super::board_icon_codec::board_resolve_icon_kind("emoji:☺");
+		match r {
+			super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+				assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
+				assert!(
+					!s.contains('\u{fffd}'),
+					"expected no U+FFFD replacement in emoji SVG, got {}",
+					&s[..s.len().min(400)]
+				);
 			}
 			other => panic!("unexpected resolution: {other:?}"),
 		}

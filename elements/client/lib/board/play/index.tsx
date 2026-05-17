@@ -298,6 +298,8 @@ interface BoardPlayShellValue {
 	/** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
+	/** @emoji 📷 Mirrors the **active** pane’s imperative camera (wheel/pan) into {@link boardPlayPaneCamerasBaseline} so shell state matches the viewport before redraw / ease. */
+	syncBaselineFromViewportCamera: (cam: CameraState) => void;
 	boardSelectionMethod: BoardSelectionMethod;
 	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
 	boardSelectionMode: BoardSelectionMode;
@@ -972,6 +974,7 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
 
 function BoardOverviewPane(): ReactElement {
 	const {
+		activePaneId,
 		boardGridSnapEnabled,
 		boardSelectionMethod,
 		boardSelectionMode,
@@ -980,6 +983,7 @@ function BoardOverviewPane(): ReactElement {
 		handleCanvasFixtureDrop,
 		camerasByPane,
 		selectionByPane,
+		syncBaselineFromViewportCamera,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-overview";
 	const camera = camerasByPane[paneId];
@@ -994,6 +998,7 @@ function BoardOverviewPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
+				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -1010,6 +1015,7 @@ function BoardOverviewPane(): ReactElement {
 
 function BoardDetailPane(): ReactElement {
 	const {
+		activePaneId,
 		boardGridSnapEnabled,
 		boardSelectionMethod,
 		boardSelectionMode,
@@ -1018,6 +1024,7 @@ function BoardDetailPane(): ReactElement {
 		handleCanvasFixtureDrop,
 		camerasByPane,
 		selectionByPane,
+		syncBaselineFromViewportCamera,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-detail";
 	const camera = camerasByPane[paneId];
@@ -1031,6 +1038,7 @@ function BoardDetailPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
+				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -1047,6 +1055,7 @@ function BoardDetailPane(): ReactElement {
 
 function BoardSelectionPane(): ReactElement {
 	const {
+		activePaneId,
 		boardGridSnapEnabled,
 		boardSelectionMethod,
 		boardSelectionMode,
@@ -1055,6 +1064,7 @@ function BoardSelectionPane(): ReactElement {
 		handleCanvasFixtureDrop,
 		camerasByPane,
 		selectionByPane,
+		syncBaselineFromViewportCamera,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-selection";
 	const camera = camerasByPane[paneId];
@@ -1068,6 +1078,7 @@ function BoardSelectionPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
+				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -2210,6 +2221,24 @@ function BoardPlayInner(): ReactElement {
 	/** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
 	const nodesRedrawEaseGenerationRef = useRef(0);
 
+	const syncBaselineFromViewportCamera = useCallback((cam: CameraState) => {
+		if (boardRedrawPlayingRef.current) {
+			return;
+		}
+		if (suppressCameraBasisSyncRef.current) {
+			return;
+		}
+		if (cameraDisplayOverrideRef.current !== null) {
+			return;
+		}
+		const c = { x: cam.x, y: cam.y, zoom: cam.zoom };
+		setBoardPlayPaneCamerasBaseline({
+			"board-detail": { ...c },
+			"board-overview": { ...c },
+			"board-selection": { ...c },
+		});
+	}, []);
+
 	useEffect(() => {
 		if (boardRedrawPlaying) {
 			return;
@@ -2609,6 +2638,7 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionTargets,
 			boardGridSnapEnabled,
 			camerasByPane,
+			syncBaselineFromViewportCamera,
 			fixture,
 			forceLayoutFullIterations,
 			forceLayoutGravity,
@@ -2659,6 +2689,7 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionTargets,
 			boardGridSnapEnabled,
 			camerasByPane,
+			syncBaselineFromViewportCamera,
 			fixture,
 			forceLayoutFullIterations,
 			forceLayoutGravity,
