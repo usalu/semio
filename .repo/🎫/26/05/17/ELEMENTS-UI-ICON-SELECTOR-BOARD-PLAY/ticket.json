@@ -1,0 +1,10 @@
+{
+  "title": "Elements Ui Icon Selector Board Play",
+  "emoji": "🎛️",
+  "status": "open",
+  "description": "Add @elements/ui IconSelector for board icon strings ($ math, data: mime, emoji, raw vector). File picker + previews. Wire into board play Detail inspector (node + handle iconKind). Export classify helper from @elements/board + Vitest.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪315b89783a16477a9fa5df16c72e4a64"
+  ]
+}

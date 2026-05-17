@@ -40,7 +40,6 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
-	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -203,9 +202,6 @@ function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPa
 
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
 const BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
-
-/** @emoji ⏱️ After one-shot “Redraw nodes”, shell cameras ease to bbox fit (first third hold, last two thirds smooth). */
-const BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS = 1800;
 
 /** @emoji 📷 Linear blend toward bbox-fit cameras each fixture commit while redraw play is on (damped follow). */
 const BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND = 0.22;
@@ -2144,8 +2140,6 @@ function BoardPlayInner(): ReactElement {
 	const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const suppressCameraBasisSyncRef = useRef(false);
 	const cameraPlayEndAnimRafRef = useRef<number | null>(null);
-	const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
-	const pendingNodesRedrawCameraEaseRef = useRef(false);
 	const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const lastPlayingForCameraEaseRef = useRef(false);
 
@@ -2173,11 +2167,6 @@ function BoardPlayInner(): ReactElement {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
 			}
-			if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-				cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-				boardPlayNodesRedrawCameraAnimRafRef.current = null;
-			}
-			pendingNodesRedrawCameraEaseRef.current = false;
 			setCameraDisplayOverrideByPane(null);
 			suppressCameraBasisSyncRef.current = false;
 			cameraBasisFixtureRef.current = fixture;
@@ -2193,11 +2182,6 @@ function BoardPlayInner(): ReactElement {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
 			}
-			if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-				cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-				boardPlayNodesRedrawCameraAnimRafRef.current = null;
-			}
-			pendingNodesRedrawCameraEaseRef.current = false;
 		}
 		prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
 	}, [boardRedrawPlaying, fixture]);
@@ -2229,10 +2213,6 @@ function BoardPlayInner(): ReactElement {
 					cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 					cameraPlayEndAnimRafRef.current = null;
 				}
-				if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-					cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-					boardPlayNodesRedrawCameraAnimRafRef.current = null;
-				}
 			};
 		}
 		if (!lastPlayingForCameraEaseRef.current) {
@@ -2249,11 +2229,6 @@ function BoardPlayInner(): ReactElement {
 		cameraBasisFixtureRef.current = snapshotFixture;
 		const to = triptychCamerasFromFixture(snapshotFixture);
 		suppressCameraBasisSyncRef.current = true;
-		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-			boardPlayNodesRedrawCameraAnimRafRef.current = null;
-		}
-		pendingNodesRedrawCameraEaseRef.current = false;
 		setCameraDisplayOverrideByPane(from);
 
 		const total = BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS;
@@ -2292,59 +2267,6 @@ function BoardPlayInner(): ReactElement {
 	}, [boardRedrawPlaying]);
 
 	const camerasByPane = cameraDisplayOverrideByPane ?? boardPlayPaneCamerasBaseline;
-
-	useLayoutEffect(() => {
-		if (boardRedrawPlaying) {
-			return;
-		}
-		if (suppressCameraBasisSyncRef.current) {
-			return;
-		}
-		if (cameraDisplayOverrideByPane !== null) {
-			return;
-		}
-		if (!pendingNodesRedrawCameraEaseRef.current) {
-			return;
-		}
-		pendingNodesRedrawCameraEaseRef.current = false;
-		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-			boardPlayNodesRedrawCameraAnimRafRef.current = null;
-		}
-		const snapshotFixture = fixtureRef.current;
-		const from: Record<BoardPlayPaneId, CameraState> = {
-			"board-detail": { ...boardPlayPaneCamerasBaseline["board-detail"] },
-			"board-overview": { ...boardPlayPaneCamerasBaseline["board-overview"] },
-			"board-selection": { ...boardPlayPaneCamerasBaseline["board-selection"] },
-		};
-		const to = triptychCamerasFromFixture(snapshotFixture);
-		const total = BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
-		const holdEnd = total / 3;
-		const animSpan = total - holdEnd;
-		const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
-		const tickInner = () => {
-			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-			const elapsed = now - t0;
-			if (elapsed >= total) {
-				const endCameras = blendTriptychCameras(from, to, 1);
-				setBoardPlayPaneCamerasBaseline(endCameras);
-				boardPlayNodesRedrawCameraAnimRafRef.current = null;
-				return;
-			}
-			if (elapsed >= holdEnd) {
-				const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
-				setBoardPlayPaneCamerasBaseline(blendTriptychCameras(from, to, u));
-			}
-			boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
-		};
-		boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
-		return () => {
-			if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-				cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-				boardPlayNodesRedrawCameraAnimRafRef.current = null;
-			}
-		};
-	}, [boardRedrawPlaying, cameraDisplayOverrideByPane, fixture]);
 
 	const redrawPlayingRef = useRef(false);
 	const redrawProgressiveEpochRef = useRef(0);
@@ -2389,14 +2311,9 @@ function BoardPlayInner(): ReactElement {
 	}, [patchFixture]);
 
 	const applyBoardRedrawOnce = useCallback(() => {
-		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-			boardPlayNodesRedrawCameraAnimRafRef.current = null;
-		}
-		pendingNodesRedrawCameraEaseRef.current = true;
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
-		patchFixture((prev) => {
-			const laidOut = layoutBoardFixtureRedrawNodes(
+		patchFixture((prev) =>
+			layoutBoardFixtureRedrawNodes(
 				prev,
 				boardPlayRedrawLayoutOpts(
 					activePaneId,
@@ -2411,9 +2328,8 @@ function BoardPlayInner(): ReactElement {
 					treeLayoutDirection,
 					boardRedrawHandlesAfterNodes,
 				),
-			);
-			return { ...laidOut, camera: { ...prev.camera } };
-		});
+			),
+		);
 	}, [
 		activePaneId,
 		boardRedrawHandlesAfterNodes,
