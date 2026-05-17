@@ -1,0 +1,10 @@
+{
+  "title": "Indirect Connect Ring And Handle Polish",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Board indirect-connect ring: keep ring gap constant in CSS px vs zoom; draw indirect handles with secondary theme colors (not selected/primary) but same stroke weight as normal handles; indirect handle radius = 0.8 of node extent (circle radius or half min rect side). Touch elements/client/lib/board/rs/lib.rs only; extend existing tests.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪de8493ee93274410a4d8766626c92913"
+  ]
+}

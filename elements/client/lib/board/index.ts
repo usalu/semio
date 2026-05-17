@@ -156,6 +156,65 @@ export const BOARD_DEFAULT_KIND_CATALOG_BUNDLE: BoardKindCatalogBundle = {
 	wires: BOARD_DEFAULT_WIRE_KIND_CATALOG,
 };
 
+/** @emoji 🔀 Merges catalog slices by stable row `id` (patch rows replace same-id base rows); empty patch slices keep the base slice. */
+export function mergeBoardKindCatalogBundleByRowId(base: BoardKindCatalogBundle, patch: BoardKindCatalogBundle): BoardKindCatalogBundle {
+	function mergedSlice<T extends { id: string }>(
+		baseSlice: readonly T[] | undefined,
+		patchSlice: readonly T[] | undefined,
+	): readonly T[] | undefined {
+		if (patchSlice === undefined) {
+			return baseSlice;
+		}
+		if (patchSlice.length === 0) {
+			return baseSlice;
+		}
+		const byId = new Map<string, T>();
+		for (const row of baseSlice ?? []) {
+			byId.set(row.id, row);
+		}
+		for (const row of patchSlice) {
+			byId.set(row.id, row);
+		}
+		return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
+	}
+	return {
+		edges: mergedSlice(base.edges, patch.edges) ?? base.edges,
+		handles: mergedSlice(base.handles, patch.handles) ?? base.handles,
+		nodes: mergedSlice(base.nodes, patch.nodes) ?? base.nodes,
+		wires: mergedSlice(base.wires, patch.wires) ?? base.wires,
+	};
+}
+
+/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw board fixture JSON when present (nodes/handles slices only). */
+export function boardFixtureMetaKindCatalogBundle(raw: unknown): BoardKindCatalogBundle | undefined {
+	if (!raw || typeof raw !== "object") {
+		return undefined;
+	}
+	const root = raw as Record<string, unknown>;
+	const meta = root.meta;
+	if (!meta || typeof meta !== "object") {
+		return undefined;
+	}
+	const kc = (meta as Record<string, unknown>).kindCatalogs;
+	if (!kc || typeof kc !== "object") {
+		return undefined;
+	}
+	const box = kc as Record<string, unknown>;
+	const nodesRaw = box.nodes;
+	const handlesRaw = box.handles;
+	const out: BoardKindCatalogBundle = {};
+	if (Array.isArray(nodesRaw)) {
+		out.nodes = nodesRaw as readonly BoardNodeKindCatalogEntry[];
+	}
+	if (Array.isArray(handlesRaw)) {
+		out.handles = handlesRaw as readonly BoardHandleKindCatalogEntry[];
+	}
+	if (out.nodes === undefined && out.handles === undefined) {
+		return undefined;
+	}
+	return out;
+}
+
 function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string {
 	const handles = (bundle.handles ?? [])
 		.map((e) => {
@@ -301,7 +360,7 @@ export interface BoardFixtureHandleV1 {
 	id: string;
 	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
 	color?: string;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
 }
@@ -316,8 +375,10 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
+	/** @emoji 🧩 Optional semantic node kind id (e.g. kit `nodeKind` string). */
+	nodeKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
@@ -340,8 +401,10 @@ export interface BoardFixtureRectangleNodeV1 {
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
+	/** @emoji 🧩 Optional semantic node kind id (e.g. kit `nodeKind` string). */
+	nodeKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
@@ -373,6 +436,63 @@ export interface BoardFixtureV1 {
 	nodes: BoardFixtureNodeV1[];
 	schema: string;
 }
+
+// #region 🏷️IconSelectorMode
+
+/** @emoji 🎛️ Board `iconKind` editor tab (`math` = `typst:` / leading `$`, `data` = data URLs, `emoji` = `emoji:` …, `vector` = catalog / inline SVG). */
+export type ElementsBoardIconSelectorMode = "data" | "emoji" | "math" | "vector";
+
+function stripLegacyImageDataPrefixForBoardIcon(raw: string): string {
+	const t = raw.trim();
+	return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
+}
+
+function isRasterDataUrlPayloadForBoardIcon(s: string): boolean {
+	const u = s.trim().toLowerCase();
+	return (
+		u.startsWith("data:image/png;base64,") ||
+		u.startsWith("data:image/jpeg;base64,") ||
+		u.startsWith("data:image/jpg;base64,")
+	);
+}
+
+function looksLikeAsciiCatalogishVectorStemForBoardIcon(s: string): boolean {
+	const t = s.trim();
+	if (t === "") {
+		return false;
+	}
+	if (!/^[\w.-]+$/.test(t)) {
+		return false;
+	}
+	return /[.-_]/.test(t) || t.length > 48;
+}
+
+/** @emoji 🧭 Picks a {@link ElementsBoardIconSelectorMode} tab for a stored board icon string (align with `board_resolve_icon_kind` in `elements/client/lib/board/rs/lib.rs`). */
+export function classifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
+	const t = raw.trim();
+	if (t === "") {
+		return "math";
+	}
+	if (t.startsWith("typst:") || t.startsWith("$")) {
+		return "math";
+	}
+	if (t.startsWith("emoji:")) {
+		return "emoji";
+	}
+	const lower = t.toLowerCase();
+	if (lower.startsWith("data:") || isRasterDataUrlPayloadForBoardIcon(stripLegacyImageDataPrefixForBoardIcon(t))) {
+		return "data";
+	}
+	if (lower.startsWith("<?xml") || lower.includes("<svg")) {
+		return "vector";
+	}
+	if (looksLikeAsciiCatalogishVectorStemForBoardIcon(t)) {
+		return "vector";
+	}
+	return "emoji";
+}
+
+// #endregion 🏷️IconSelectorMode
 
 /** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
 export interface BoardForceGraphLayoutOptions {
@@ -540,7 +660,7 @@ export interface BoardObjectOptions {
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
-	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
 	iconKind?: string;
 	/** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
 	nodeKind?: string;
@@ -565,7 +685,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 export type RectangleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	height: number;
-	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
 	iconKind?: string;
 	/** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
 	nodeKind?: string;
@@ -593,7 +713,7 @@ export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
 	/** @emoji 🎨 Optional CSS hex fill overriding the handle-kind catalog color on the WASM host. */
 	color?: string | null;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
 	handleKind: string;
@@ -609,7 +729,7 @@ export interface BoardHandleProps {
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
 	handleKind: string;
 	id: string;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
 	selected?: boolean;
@@ -1159,6 +1279,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const iconKindRaw = (node as Record<string, unknown>).iconKind;
 		const iconKind =
 			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
+		const nodeKindRaw = node.nodeKind;
+		const nodeKind =
+			typeof nodeKindRaw === "string" && nodeKindRaw.trim() !== "" ? nodeKindRaw.trim() : undefined;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -1185,6 +1308,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(textAlignment !== undefined ? { textAlignment } : {}),
 				...(rootFlag ? { root: true } : {}),
 				...(iconKind !== undefined ? { iconKind } : {}),
+				...(nodeKind !== undefined ? { nodeKind } : {}),
 				handles,
 				height,
 				id,
@@ -1211,6 +1335,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(textAlignment !== undefined ? { textAlignment } : {}),
 			...(rootFlag ? { root: true } : {}),
 			...(iconKind !== undefined ? { iconKind } : {}),
+			...(nodeKind !== undefined ? { nodeKind } : {}),
 			handles,
 			id,
 			radius,
@@ -1530,7 +1655,7 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
-	/** @emoji 🏷️ Runtime icon encoding forwarded to WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, baked catalog id, or inline SVG). */
+	/** @emoji 🏷️ Runtime icon string forwarded to WASM detail LOD (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, baked catalog id, or inline SVG). */
 	iconKind: string | null;
 	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
@@ -3808,6 +3933,7 @@ if (boardVitest) {
 		it("creates an edge when linking two handles with a pointer drag through WASM", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			renderer.setCamera(0, 0, BOARD_LOD_DETAIL_MIN_ZOOM);
 			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
@@ -4324,6 +4450,39 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]).toMatchObject({ text: "primary" });
 		});
 
+		it("parses optional nodeKind on circle and rectangle fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{ handles: [{ angle: 0, id: "c:h" }], id: "c", nodeKind: "semio.kit.node.a", radius: 4, x: 0, y: 0 },
+					{
+						handles: [{ angle: 1, id: "r:h" }],
+						height: 8,
+						id: "r",
+						nodeKind: "semio.kit.node.b",
+						shape: "rectangle",
+						width: 6,
+						x: 1,
+						y: 2,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "semio.kit.node.a" });
+			expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "semio.kit.node.b" });
+		});
+
+		it("mergeBoardKindCatalogBundleByRowId overlays rows by id", () => {
+			const merged = mergeBoardKindCatalogBundleByRowId(BOARD_DEFAULT_KIND_CATALOG_BUNDLE, {
+				handles: [{ color: "#ff0000", defaultWireKind: BOARD_BUILTIN_LINK_WIRE_KIND, id: BOARD_BUILTIN_PORT_HANDLE_KIND, label: "Patched" }],
+				nodes: [{ id: "semio.metabolism.light.node.x", label: "Capsule", name: "Capsule" }],
+			});
+			expect(merged.handles?.find((h) => h.id === BOARD_BUILTIN_PORT_HANDLE_KIND)?.label).toBe("Patched");
+			expect(merged.handles?.find((h) => h.id === BOARD_BUILTIN_PORT_HANDLE_KIND)?.color).toBe("#ff0000");
+			expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
+		});
+
 		it("does not treat kit cs_ labels as display text", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -4503,7 +4662,7 @@ if (boardVitest) {
 			const child = new Node({ id: "child", radius: 10, x: 50, y: 0 });
 			renderer.scene.add(child);
 			await Promise.resolve();
-			expect(created).toEqual(["child"]);
+			expect(created).toEqual(["root", "child"]);
 			off();
 			renderer.dispose();
 		});

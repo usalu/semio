@@ -1,0 +1,10 @@
+{
+  "title": "Nakagin Board Light Kit Semantic Kinds",
+  "emoji": "🗼",
+  "status": "open",
+  "description": "Wire nakagin-capsule-tower.board.json to metabolism.kit.light.semio.json: nodeKind per piece type, handleKind per connector port, meta.kindCatalogs for all kit node kinds and family port handle kinds; update generator and Board.story merge.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
+  "sessions": [
+    "⚪279aa29f0aa542ea8db235a0cd992918"
+  ]
+}

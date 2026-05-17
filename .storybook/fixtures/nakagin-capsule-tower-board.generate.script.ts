@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
-// Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent design (180 pieces, 179 connections).
-// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind. Each node's optional **`iconKind`** is the metabolism icon catalog stem from the piece type's kit `icon` path (`icons/capsule_p.svg` → `capsule_p`) for WASM detail vector lookup (Rust: not `$`, not `data:` → catalog/SVG sniff; else `$` math / `data:` / emoji).
+// Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent + Flat designs; attach `nodeKind` / `handleKind` + `meta.kindCatalogs` from `metabolism.kit.light.semio.json` (kit types + Nakagin family ports).
+// Summary: Geometry and connector **names** still come from the full kit (Flat `pose.center` only exists there); every emitted node gets the light kit **`nodeKind`** for its piece `type.id`, each handle gets **`port.handleKind`** keyed by `(typeId, connectorName)`; `meta.kindCatalogs` lists one **node** catalog row per unique `nodeKind` (id=`nodeKind`, label=name) and one **handle** row per Nakagin family port (id=`handleKind`, label=port name, stable HSL color, `defaultWireKind`=`board.wire.link`). Uniform 40×40 footprint and icon stems unchanged.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -13,7 +13,11 @@ import { fileURLToPath } from "node:url";
 const __dir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dir, "../..");
 const kitPath = join(repoRoot, "semio/assets/fixtures/metabolism.kit.semio.json");
+const lightKitPath = join(repoRoot, "semio/assets/fixtures/metabolism.kit.light.semio.json");
 const outPath = join(__dir, "nakagin-capsule-tower.board.json");
+
+/** @emoji 🔗 Matches {@link BOARD_BUILTIN_LINK_WIRE_KIND} in elements board (gesture default for catalog handles). */
+const LIGHT_PATCH_DEFAULT_WIRE_KIND = "board.wire.link";
 
 /** @emoji 🗼 Parent graph (stable piece ids and connections) — same id as `MetabolismKitNakaginCapsuleTowerDesigns` primary record. */
 const NAKAGIN_PARENT_DESIGN_ID = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
@@ -47,6 +51,25 @@ interface KitConnection {
 	connecting?: KitConnectionEnd;
 	parent?: KitConnectionEnd;
 	child?: KitConnectionEnd;
+}
+
+interface LightFamilyPort {
+	handleKind: string;
+	id: string;
+	name: string;
+}
+
+interface LightKitConnector {
+	id: string;
+	name?: string;
+	port?: { handleKind?: string };
+}
+
+interface LightKitType {
+	connectors?: { items?: LightKitConnector[] };
+	id: string;
+	name: string;
+	nodeKind?: string;
 }
 
 /** @emoji 🔁 Normalizes kit connection endpoints across legacy (`connected`/`connecting`) and current (`parent`/`child`) shapes. */
@@ -97,6 +120,78 @@ function loadKit(): {
 	return { centerUvByName, connections: nak.connections.items, pieceById, typeById };
 }
 
+/** @emoji 🧬 Maps light-kit `port.handleKind` by `(typeId, connectorDisplayName)`; separator is newline so connector names never collide. */
+function loadLightSemantics(): {
+	handleKindByTypeConnectorName: Map<string, string>;
+	kindCatalogs: {
+		handles: { color: string; defaultWireKind: string; id: string; label: string; name: string }[];
+		nodes: { id: string; label: string; name: string }[];
+	};
+	nodeKindByTypeId: Record<string, string>;
+} {
+	const raw = JSON.parse(readFileSync(lightKitPath, "utf8")) as {
+		wip: {
+			families: { items: Array<{ name?: string; ports?: { items?: LightFamilyPort[] } }> };
+			initialKit: { types: { items: LightKitType[] } };
+		};
+	};
+	const types = raw.wip.initialKit.types.items;
+	const handleKindByTypeConnectorName = new Map<string, string>();
+	for (const t of types) {
+		for (const c of t.connectors?.items ?? []) {
+			const hk = typeof c.port?.handleKind === "string" ? c.port.handleKind.trim() : "";
+			if (hk === "") continue;
+			const nm = (c.name ?? "link").trim() || "link";
+			handleKindByTypeConnectorName.set(`${t.id}\n${nm}`, hk);
+		}
+	}
+	const nodeKindByTypeId: Record<string, string> = {};
+	const nodeRows: { id: string; label: string; name: string }[] = [];
+	const seenNodeKind = new Set<string>();
+	for (const t of types) {
+		const nk = typeof t.nodeKind === "string" ? t.nodeKind.trim() : "";
+		if (nk === "") continue;
+		nodeKindByTypeId[t.id] = nk;
+		if (seenNodeKind.has(nk)) continue;
+		seenNodeKind.add(nk);
+		nodeRows.push({ id: nk, label: t.name, name: t.name });
+	}
+	let portItems: LightFamilyPort[] = [];
+	for (const fam of raw.wip.families.items) {
+		if (fam.name === "Nakagin Capsule Tower" && fam.ports?.items?.length) {
+			portItems = fam.ports.items;
+			break;
+		}
+	}
+	if (portItems.length === 0) {
+		throw new Error("[nakagin-board] Nakagin Capsule Tower family ports not found in light kit.");
+	}
+	const handleRows = portItems.map((p) => ({
+		color: stableCatalogColorForKindId(p.handleKind),
+		defaultWireKind: LIGHT_PATCH_DEFAULT_WIRE_KIND,
+		id: p.handleKind,
+		label: p.name,
+		name: p.name,
+	}));
+	handleRows.sort((a, b) => a.id.localeCompare(b.id));
+	nodeRows.sort((a, b) => a.id.localeCompare(b.id));
+	return {
+		handleKindByTypeConnectorName,
+		kindCatalogs: { handles: handleRows, nodes: nodeRows },
+		nodeKindByTypeId,
+	};
+}
+
+/** @emoji 🎨 Deterministic pleasant HSL for WASM handle catalog rows (must include `color`). */
+function stableCatalogColorForKindId(id: string): string {
+	let h = 2166136261;
+	for (let i = 0; i < id.length; i++) {
+		h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+	}
+	const hue = Math.abs(h) % 360;
+	return `hsl(${hue} 52% 48%)`;
+}
+
 /** @emoji 🏷️ Kit `icon` like `icons/capsule_p.svg` → catalog stem `capsule_p` baked in `board_metabolism_icon_match`. */
 function catalogKeyFromKitIconPath(icon: string | undefined): string | undefined {
 	if (icon === undefined || typeof icon !== "string") {
@@ -122,6 +217,27 @@ function connectorName(typeById: Record<string, KitType>, piece: KitPiece, conne
 function handleId(typeById: Record<string, KitType>, pieceId: string, connectorId: string, pieceById: Record<string, KitPiece>): string {
 	const piece = pieceById[pieceId];
 	return `${pieceId}:${connectorName(typeById, piece, connectorId)}`;
+}
+
+function handleKindForBoardHandleId(
+	handleKindByTypeConnectorName: Map<string, string>,
+	pieceById: Record<string, KitPiece>,
+	handleFullId: string,
+): string {
+	const colon = handleFullId.indexOf(":");
+	const pieceId = colon >= 0 ? handleFullId.slice(0, colon) : handleFullId;
+	const connectorDisplayName = colon >= 0 ? handleFullId.slice(colon + 1) : "link";
+	const piece = pieceById[pieceId];
+	if (!piece) {
+		throw new Error(`[nakagin-board] missing piece for handle id ${handleFullId}`);
+	}
+	const hk = handleKindByTypeConnectorName.get(`${piece.type.id}\n${connectorDisplayName}`);
+	if (!hk) {
+		throw new Error(
+			`[nakagin-board] missing light handleKind for type ${piece.type.id} connector "${connectorDisplayName}" (handle ${handleFullId})`,
+		);
+	}
+	return hk;
 }
 
 type PieceLayout =
@@ -217,9 +333,21 @@ function normalizeLayout(pos: Record<string, { x: number; y: number }>, pieceByI
 /** @emoji 📐 Uniform world footprint for every node (rectangles 40×40; circles radius 20). */
 const NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX = 40;
 
+type GeneratedBoardHandle = { angle: number; handleKind: string; id: string; radius: number };
+
 type GeneratedBoardNode = (
-	| { handles: { angle: number; id: string; radius: number }[]; height: number; id: string; label: string; shape: "rectangle"; width: number; x: number; y: number }
-	| { handles: { angle: number; id: string; radius: number }[]; id: string; label: string; radius: number; x: number; y: number }
+	| {
+			handles: GeneratedBoardHandle[];
+			height: number;
+			id: string;
+			label: string;
+			nodeKind: string;
+			shape: "rectangle";
+			width: number;
+			x: number;
+			y: number;
+	  }
+	| { handles: GeneratedBoardHandle[]; id: string; label: string; nodeKind: string; radius: number; x: number; y: number }
 ) & { iconKind?: string };
 
 /** @emoji 📐 Replaces scaled per-kind sizes with {@link NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX} and matching handle hit radii. */
@@ -248,6 +376,7 @@ function applyUniformNodeFootprint(nodes: GeneratedBoardNode[]): void {
 
 //#region 🔖Main
 function main(): void {
+	const light = loadLightSemantics();
 	const { centerUvByName, connections, pieceById, typeById } = loadKit();
 	const pieceIds = Object.keys(pieceById);
 	const pos: Record<string, { x: number; y: number }> = {};
@@ -295,12 +424,21 @@ function main(): void {
 	const nodes = pieceIds
 		.map((id) => {
 			const p = pieceById[id];
+			const nk = light.nodeKindByTypeId[p.type.id];
+			if (!nk) {
+				throw new Error(`[nakagin-board] missing light nodeKind for piece type ${p.type.id} (piece ${id})`);
+			}
 			const iconKind = catalogKeyFromKitIconPath(typeById[p.type.id]?.icon);
 			const L = scaledLayout(id);
 			const rh = Math.round(handleRadiusWorld(id) * 1000) / 1000;
 			const handles = [...handleAngles.keys()]
 				.filter((h) => h.startsWith(`${id}:`))
-				.map((hid) => ({ angle: handleAngles.get(hid)!, id: hid, radius: rh }))
+				.map((hid) => ({
+					angle: handleAngles.get(hid)!,
+					handleKind: handleKindForBoardHandleId(light.handleKindByTypeConnectorName, pieceById, hid),
+					id: hid,
+					radius: rh,
+				}))
 				.sort((a, b) => a.id.localeCompare(b.id));
 			if (L.bounds === "rectangle") {
 				return {
@@ -309,6 +447,7 @@ function main(): void {
 					id,
 					...(iconKind !== undefined ? { iconKind } : {}),
 					label: p.name,
+					nodeKind: nk,
 					shape: "rectangle" as const,
 					width: L.width,
 					x: pos[id].x,
@@ -320,6 +459,7 @@ function main(): void {
 				id,
 				...(iconKind !== undefined ? { iconKind } : {}),
 				label: p.name,
+				nodeKind: nk,
 				radius: L.radius,
 				x: pos[id].x,
 				y: pos[id].y,
@@ -343,8 +483,9 @@ function main(): void {
 	const fixture = {
 		schema: "elements.board.fixture/v1",
 		camera,
-		nodes,
 		edges,
+		meta: { kindCatalogs: light.kindCatalogs },
+		nodes,
 	};
 
 	writeFileSync(outPath, `${JSON.stringify(fixture, null, 2)}\n`, "utf8");

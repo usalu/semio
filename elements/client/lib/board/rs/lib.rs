@@ -1979,8 +1979,8 @@ mod board_host {
 	const MAX_WORLD_CLIP_TILES: u32 = 768;
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
 	const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
-	const INDIRECT_HANDLE_RADIUS_SCALE: f64 = 1.85;
-	const INDIRECT_HANDLE_RING_OFFSET_PX: f64 = 28.0;
+	const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = 0.8;
+	const INDIRECT_HANDLE_RING_GAP_CSS_PX: f64 = 28.0;
 	const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
 	const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
 	const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
@@ -3012,9 +3012,10 @@ mod board_host {
 			})
 		}
 
+		/// @emoji 📐 Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_CSS_PX` **CSS px** from the node body; world offset scales as `1/zoom` so the on-screen gap stays constant.
 		pub(crate) fn indirect_handle_world_pos(&self, h: &HandleData) -> Option<Point> {
 			let n = self.nodes.get(&h.node_id)?;
-			let offset = INDIRECT_HANDLE_RING_OFFSET_PX / self.camera.zoom.max(1e-9);
+			let offset = INDIRECT_HANDLE_RING_GAP_CSS_PX / self.camera.zoom.max(1e-9);
 			Some(match n.shape {
 				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), n.radius + offset, h.angle),
 				NodeShape::Rectangle => handle_position_on_rectangle(
@@ -3026,8 +3027,16 @@ mod board_host {
 			})
 		}
 
-		fn indirect_handle_radius_world(&self, h: &HandleData) -> f64 {
-			h.radius * INDIRECT_HANDLE_RADIUS_SCALE
+		/// @emoji 📐 Indirect-connect marker radius in world units: `INDIRECT_HANDLE_MARKER_NODE_SCALE`× circle radius or × half the shorter rectangle side.
+		pub(crate) fn indirect_handle_marker_radius_world(&self, h: &HandleData) -> f64 {
+			let Some(n) = self.nodes.get(&h.node_id) else {
+				return (h.radius * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9);
+			};
+			let half_extent = match n.shape {
+				NodeShape::Circle => n.radius,
+				NodeShape::Rectangle => n.width.min(n.height) * 0.5,
+			};
+			(half_extent * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9)
 		}
 
 		fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
@@ -3140,7 +3149,7 @@ mod board_host {
 							continue;
 						}
 						let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
-						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_radius_world(h);
+						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_marker_radius_world(h);
 						if distance_between(point, pos) <= tol {
 							return Some(h.id.clone());
 						}
@@ -3708,7 +3717,7 @@ mod board_host {
 
 		fn indirect_handle_world_bounds_cull(&self, h: &HandleData) -> Option<WorldBox> {
 			let pos = self.indirect_handle_world_pos(h)?;
-			let pad = self.drawable_cull_pad_world() + self.indirect_handle_radius_world(h).max(1.0);
+			let pad = self.drawable_cull_pad_world() + self.indirect_handle_marker_radius_world(h).max(1.0);
 			Some(inflate_world_box(
 				WorldBox {
 					min_x: pos.x,
@@ -3761,14 +3770,29 @@ mod board_host {
 			scene.stroke(&stroke, Affine::IDENTITY, color, None, &p);
 		}
 
-		fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool) {
+		fn append_handle_marker(
+			&self,
+			scene: &mut Scene,
+			h: &HandleData,
+			center: Point,
+			radius_world: f64,
+			draw_icon: bool,
+			paint_override: Option<(Color, Color, f64)>,
+		) {
 			let c = self.world_to_screen(center);
 			let r = (radius_world * self.camera.zoom).max(1.0);
 			let circle = Circle::new(c, r);
-			let fill = self.resolve_handle_fill_color(h, &self.vello_theme);
-			let stroke_c = handle_stroke(&self.vello_theme, h.selected);
+			let (fill, stroke_c, stroke_px) = if let Some((f, s, sw)) = paint_override {
+				(f, s, sw)
+			} else {
+				(
+					self.resolve_handle_fill_color(h, &self.vello_theme),
+					handle_stroke(&self.vello_theme, h.selected),
+					2.0_f64,
+				)
+			};
 			scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-			scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
+			scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &circle);
 			if draw_icon {
 				if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
 					if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
@@ -3808,7 +3832,17 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
-				self.append_handle_marker(scene, h, wp, self.indirect_handle_radius_world(h), false);
+				let fill = handle_fill(&self.vello_theme, false);
+				let stroke_c = handle_stroke(&self.vello_theme, false);
+				let stroke_px = 2.0_f64;
+				self.append_handle_marker(
+					scene,
+					h,
+					wp,
+					self.indirect_handle_marker_radius_world(h),
+					false,
+					Some((fill, stroke_c, stroke_px)),
+				);
 			}
 		}
 
@@ -3929,7 +3963,7 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.handle_world_pos(h) else { continue };
-				self.append_handle_marker(scene, h, wp, h.radius, draw_handle_icons);
+				self.append_handle_marker(scene, h, wp, h.radius, draw_handle_icons, None);
 			}
 			let edge_sw = if lod == BoardDrawLod::Minimap {
 				1.12_f64
@@ -6161,6 +6195,7 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("proximityConnect"));
 		assert!(ev.contains("a:h0"));
 		assert!(ev.contains("b:h0"));
 		let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
@@ -6209,6 +6244,7 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("proximityConnect"));
 	}
 
 	#[test]
@@ -6248,6 +6284,7 @@ mod host_tests {
 		h.pointer_down_screen(s1.x, s1.y, 0, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("indirectConnect"));
 		assert!(ev.contains("a:h0"));
 		assert!(ev.contains("b:h0"));
 	}
@@ -6269,6 +6306,37 @@ mod host_tests {
 		h.pointer_down_screen(20.0, 20.0, 0, false);
 		assert!(matches!(h.interaction, Interaction::None));
 		assert!(h.edges.is_empty());
+	}
+
+	#[test]
+	fn board_host_indirect_ring_screen_gap_matches_css_px_across_zoom() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		h.set_camera(0.0, 0.0, 1.0);
+		let ha = h.handles.get("a:h0").unwrap();
+		let body = vcompute::handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let ring = h.indirect_handle_world_pos(ha).unwrap();
+		let gap_px_z1 = vcompute::distance_between(h.world_to_screen(ring), h.world_to_screen(body));
+		h.set_camera(0.0, 0.0, 4.25);
+		let gap_px_z2 = vcompute::distance_between(
+			h.world_to_screen(h.indirect_handle_world_pos(ha).unwrap()),
+			h.world_to_screen(vcompute::handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0)),
+		);
+		assert!(
+			(gap_px_z1 - gap_px_z2).abs() < 0.6,
+			"gaps differ: {gap_px_z1} vs {gap_px_z2}"
+		);
+		assert!((gap_px_z1 - 28.0).abs() < 0.6);
+	}
+
+	#[test]
+	fn board_host_indirect_handle_marker_radius_scales_with_node_extent() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let ha = h.handles.get("a:h0").unwrap();
+		assert!((h.indirect_handle_marker_radius_world(ha) - 32.0).abs() < 1e-6);
 	}
 
 	#[test]
@@ -6337,6 +6405,7 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("proximityConnect"));
 	}
 
 	#[test]

@@ -72,6 +72,7 @@ import {
 	DEFAULT_BOARD_GRID_FACTOR,
 	type BoardLodZoomThresholds,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+	BOARD_LOD_DETAIL_MIN_ZOOM,
 } from "./index";
 
 export type { BoardLodZoomThresholds } from "./index";
@@ -1504,7 +1505,7 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
-						camera={{ x: 0, y: 0, zoom: 1 }}
+						camera={{ x: 0, y: 0, zoom: BOARD_LOD_DETAIL_MIN_ZOOM }}
 						height={600}
 						onReady={(r) => {
 							readyRenderer = r;
@@ -1554,7 +1555,7 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
-						camera={{ x: 0, y: 0, zoom: 1 }}
+						camera={{ x: 0, y: 0, zoom: BOARD_LOD_DETAIL_MIN_ZOOM }}
 						height={600}
 						onReady={(r) => {
 							readyRenderer = r;

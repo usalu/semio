@@ -84,6 +84,8 @@ import {
   ExternalLink as ExternalLinkIcon,
   Folder as FolderIcon,
   GripVertical as GripVerticalIcon,
+  Image as BoardIconRasterGlyphIcon,
+  ImagePlus as BoardIconFileImportIcon,
   Info as InfoIcon,
   Lightbulb as LightbulbIcon,
   Maximize2 as Maximize2Icon,
@@ -93,6 +95,9 @@ import {
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
   SearchIcon,
+  Shapes as BoardIconCatalogGlyphIcon,
+  Sigma as BoardIconMathGlyphIcon,
+  Smile as BoardIconEmojiGlyphIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
 } from "lucide-react";
