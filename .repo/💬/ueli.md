@@ -446,11 +446,25 @@ Compact:
 - selection possible, nodes and edges are individually selectable, drag possible
 - indirect connect possible
 
-Normal: Huge grid with finer large grid (25x25), handles, node with labels, selection possible, nodes and edges are individually selectable, drag possible, connect possible
+Normal
 
-Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label, selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible, proximity connect possible
+- Huge grid with finer large grid (25x25)
+- handles, node with labels
+- selection possible, nodes and edges are individually selectable, drag possible
+- connect possible
 
-Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label,selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible, proximity connect possible
+Detail:
+
+- Huge grid with large gird with finer medium grid (5x5)
+- handles with abbreviated label, node with icon and abbreviated label
+- selection possible, nodes and edges and handles are individually selectable, drag possible
+- connect possible, proximity connect possible
+
+Micro:
+
+- Huge grid with large gird with medium grid with finer small grid (1x1)
+- handles with icon, node with icon and label, selection possible, nodes and edges and handles are individually selectable, drag possible
+- connect possible, proximity connect possible
 
 Within one lod nothing changes. Make the trigger zoom points props.
 
