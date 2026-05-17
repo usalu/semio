@@ -427,9 +427,9 @@ Within one lod nothing changes. Make the trigger zoom points props.
 
 ---
 
-Introduce a new feature: indirect handles
+Introduce a new feature: indirect connect (with indirect handles)
 
-In normal lod, no handles are show. But if a single node is selected then a ring of handles around it should appear (same handle kind just scaled up). If on of them is clicked then a wire is started. If the wire is dropped on a target node then the same ring appears with the handles from the target node. If one of the target handles is selected then the edge is created. Otherwise the wire is stopped. Make sure the ring appears ontop of the other nodes.
+In normal lod, no handles are shown. But if a single node is selected then a ring of handles around it should appear (same handle kind just scaled up to 80% of node size with same styling as selected but with secondary color). If on of them is clicked then a wire is started. If the wire is dropped on a target node then the same ring appears with the handles from the target node. If one of the target handles is selected then the edge is created. Otherwise the wire is stopped. Make sure the ring appears ontop of the other nodes. As soon as it is over a node which is compatible (at least one free compatible handle) then the compatible node should also be shown with hover style.
 
 ---
 

@@ -1,0 +1,10 @@
+{
+  "title": "Board Edges Source Target Only",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Unify board edge JSON and code to only use `source`/`target` (remove `from`/`to`, `in`/`out` aliases) across elements board: fixtures, generator scripts, assets, Rust readers, TS parser/tests.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8e0976db982c465c973f3b833831da32"
+  ]
+}

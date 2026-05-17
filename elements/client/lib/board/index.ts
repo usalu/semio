@@ -1351,8 +1351,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const edge = entry as Record<string, unknown>;
 		const id = typeof edge.id === "string" ? edge.id : null;
-		const sourceRaw = edge.source ?? edge.from;
-		const targetRaw = edge.target ?? edge.to;
+		const sourceRaw = edge.source;
+		const targetRaw = edge.target;
 		const source = typeof sourceRaw === "string" ? sourceRaw : null;
 		const target = typeof targetRaw === "string" ? targetRaw : null;
 		if (!id || !source || !target) {
@@ -4335,6 +4335,18 @@ if (boardVitest) {
 			expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
 		});
 
+		it("classifies board icon selector modes for UI tabs", () => {
+			expect(classifyElementsBoardIconSelectorMode("")).toBe("math");
+			expect(classifyElementsBoardIconSelectorMode("typst:$x$")).toBe("math");
+			expect(classifyElementsBoardIconSelectorMode("$x$")).toBe("math");
+			expect(classifyElementsBoardIconSelectorMode("emoji:😀")).toBe("emoji");
+			expect(classifyElementsBoardIconSelectorMode("data:image/png;base64,abc")).toBe("data");
+			expect(classifyElementsBoardIconSelectorMode("image:data:image/jpeg;base64,xyz")).toBe("data");
+			expect(classifyElementsBoardIconSelectorMode("<svg")).toBe("vector");
+			expect(classifyElementsBoardIconSelectorMode("capsule-with-balcony_p")).toBe("vector");
+			expect(classifyElementsBoardIconSelectorMode("😀")).toBe("emoji");
+		});
+
 		it("parses optional textAutofit on fixture nodes", () => {
 			const circle = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -4417,17 +4429,18 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
 
-		it("normalizes fixture edge `from`/`to` keys into source/target", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ from: "a:h0", id: "e1", to: "b:h0" }],
-				nodes: [
-					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 20, x: 0, y: 0 },
-					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 20, x: 100, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.edges).toEqual([{ id: "e1", source: "a:h0", target: "b:h0" }]);
+		it("rejects fixture edges that use legacy `from`/`to` instead of source/target", () => {
+			expect(
+				parseBoardFixtureV1({
+					camera: { x: 0, y: 0, zoom: 1 },
+					edges: [{ from: "a:h0", id: "e1", to: "b:h0" }],
+					nodes: [
+						{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 20, x: 0, y: 0 },
+						{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 20, x: 100, y: 0 },
+					],
+					schema: "elements.board.fixture/v1",
+				}),
+			).toBeNull();
 		});
 
 		it("maps legacy JSON label into node text", () => {

@@ -1,8 +1,9 @@
 {
   "title": "Nakagin Board Light Kit Semantic Kinds",
   "emoji": "🗼",
-  "status": "open",
+  "status": "closed",
   "description": "Wire nakagin-capsule-tower.board.json to metabolism.kit.light.semio.json: nodeKind per piece type, handleKind per connector port, meta.kindCatalogs for all kit node kinds and family port handle kinds; update generator and Board.story merge.",
+  "summary": "Nakagin board fixture now carries metabolism light `nodeKind` on every node and `handleKind` on every handle (from connector port.handleKind), with `meta.kindCatalogs` listing all light kit node kinds (id=nodeKind, label=name) and Nakagin family port handle kinds (id=handleKind, label=port name, HSL color, defaultWireKind). Generator reads layout from full metabolism.kit.semio.json and semantics from metabolism.kit.light.semio.json (families under initialKit). Added mergeBoardKindCatalogBundleByRowId, boardFixtureMetaKindCatalogBundle, parseBoardFixtureV1 nodeKind, BoardFixture nodeKind on circle+rectangle. Storybook Nakagin story and board play merge fixture catalogs into WASM defaults. @elements/board tests passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
   "sessions": [
     "⚪279aa29f0aa542ea8db235a0cd992918"

@@ -41,7 +41,6 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
-	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -1707,6 +1706,15 @@ function InspectorHandleBatch({
 						uniform={radiusUniform}
 						value={radiusValue}
 					/>
+					<Label id="board-play.inspector.handle.icon" label="Icon">
+						<IconSelector
+							classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode}
+							id="board-play.inspector.handle.icon.selector"
+							onChange={onIconKind}
+							uniform={iconKindUniform}
+							value={iconKindValue}
+						/>
+					</Label>
 					{handleIds.length === 1 ? (
 						<Label id="board-play.inspector.handle.id" label="Id">
 							<Input
@@ -2059,6 +2067,9 @@ function BoardPlayInner(): ReactElement {
 	const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = useState(28);
 	const [treeLayoutDirection, setTreeLayoutDirection] = useState<BoardHierarchicalTreeDirectionKind>("downwards");
 
+	const boardRedrawPlayingRef = useRef(boardRedrawPlaying);
+	boardRedrawPlayingRef.current = boardRedrawPlaying;
+
 	useEffect(() => {
 		try {
 			localStorage.setItem(LS_THEME, theme);
@@ -2186,12 +2197,18 @@ function BoardPlayInner(): ReactElement {
 	const skipNextCameraBasisResyncRef = useRef(false);
 	const prevBoardRedrawPlayingRef = useRef(false);
 	const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
+	const cameraDisplayOverrideRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
+	cameraDisplayOverrideRef.current = cameraDisplayOverrideByPane;
 	const suppressCameraBasisSyncRef = useRef(false);
 	const cameraPlayEndAnimRafRef = useRef<number | null>(null);
 	const boardPlayNodesRedrawCameraAnimRafRef = useRef<number | null>(null);
 	const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const lastPlayingForCameraEaseRef = useRef(false);
 	const [nodesRedrawCameraEaseTick, setNodesRedrawCameraEaseTick] = useState(0);
+	/** @emoji 📷 Cameras shown on canvases at click time; set before {@link patchFixture} so `from` cannot lag one commit behind the graph. */
+	const nodesRedrawEaseFromRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
+	/** @emoji 🔢 Bumped on each redraw click / competing camera path so stale RAF ticks never call {@link setBoardPlayPaneCamerasBaseline}. */
+	const nodesRedrawEaseGenerationRef = useRef(0);
 
 	useEffect(() => {
 		if (boardRedrawPlaying) {
@@ -2213,6 +2230,8 @@ function BoardPlayInner(): ReactElement {
 		const playJustStarted = boardRedrawPlaying && !prevPlaying;
 
 		if (playJustStarted) {
+			nodesRedrawEaseGenerationRef.current += 1;
+			nodesRedrawEaseFromRef.current = null;
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
@@ -2291,6 +2310,7 @@ function BoardPlayInner(): ReactElement {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
 		}
+		nodesRedrawEaseGenerationRef.current += 1;
 		setCameraDisplayOverrideByPane(from);
 
 		const total = BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS;
@@ -2330,28 +2350,33 @@ function BoardPlayInner(): ReactElement {
 
 	const camerasByPane = cameraDisplayOverrideByPane ?? boardPlayPaneCamerasBaseline;
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		if (nodesRedrawCameraEaseTick === 0) {
 			return;
 		}
-		if (boardRedrawPlaying) {
+		if (boardRedrawPlayingRef.current) {
 			return;
 		}
 		if (suppressCameraBasisSyncRef.current) {
 			return;
 		}
-		if (cameraDisplayOverrideByPane !== null) {
+		if (cameraDisplayOverrideRef.current !== null) {
 			return;
 		}
+		const fromSnapshot = nodesRedrawEaseFromRef.current;
+		if (fromSnapshot === null) {
+			return;
+		}
+		const generationAtStart = nodesRedrawEaseGenerationRef.current;
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
 		}
 		const snapshotFixture = fixtureRef.current;
 		const from: Record<BoardPlayPaneId, CameraState> = {
-			"board-detail": { ...boardPlayPaneCamerasBaseline["board-detail"] },
-			"board-overview": { ...boardPlayPaneCamerasBaseline["board-overview"] },
-			"board-selection": { ...boardPlayPaneCamerasBaseline["board-selection"] },
+			"board-detail": { ...fromSnapshot["board-detail"] },
+			"board-overview": { ...fromSnapshot["board-overview"] },
+			"board-selection": { ...fromSnapshot["board-selection"] },
 		};
 		const to = triptychCamerasFromFixture(snapshotFixture);
 		const total = BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
@@ -2359,12 +2384,16 @@ function BoardPlayInner(): ReactElement {
 		const animSpan = total - holdEnd;
 		const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
 		const tickInner = () => {
+			if (nodesRedrawEaseGenerationRef.current !== generationAtStart) {
+				return;
+			}
 			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
 			const elapsed = now - t0;
 			if (elapsed >= total) {
 				const endCameras = blendTriptychCameras(from, to, 1);
 				setBoardPlayPaneCamerasBaseline(endCameras);
 				boardPlayNodesRedrawCameraAnimRafRef.current = null;
+				nodesRedrawEaseFromRef.current = null;
 				return;
 			}
 			if (elapsed >= holdEnd) {
@@ -2386,6 +2415,7 @@ function BoardPlayInner(): ReactElement {
 		if (cameraDisplayOverrideByPane === null) {
 			return;
 		}
+		nodesRedrawEaseGenerationRef.current += 1;
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
@@ -2439,6 +2469,12 @@ function BoardPlayInner(): ReactElement {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
 		}
+		nodesRedrawEaseGenerationRef.current += 1;
+		nodesRedrawEaseFromRef.current = {
+			"board-detail": { ...camerasByPane["board-detail"] },
+			"board-overview": { ...camerasByPane["board-overview"] },
+			"board-selection": { ...camerasByPane["board-selection"] },
+		};
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
 		patchFixture((prev) => {
 			const laidOut = layoutBoardFixtureRedrawNodes(

@@ -1,0 +1,11 @@
+{
+  "title": "Redraw Camera Hypothesis And Rework",
+  "emoji": "📷",
+  "status": "closed",
+  "description": "Board play one-shot Redraw nodes still snaps camera; document hypotheses in ticket markdown, trace all camera mutation paths, rework implementation until ease is reliable.",
+  "summary": "Hypotheses A–F and landed rework are in ticket hypothesis.md. Code: snapshot camerasByPane into nodesRedrawEaseFromRef before patchFixture; generation ref invalidates stale RAF ticks; nodes ease starts in useEffect keyed only by nodesRedrawCameraEaseTick with boardRedrawPlayingRef/cameraDisplayOverrideRef guards (fixes spurious re-ease when post-play clears override). Post-play arms generation bump with nodes RAF cancel. Vitest 65 passed.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪4e03a0f558d24be8aedb898c5e6a2f53"
+  ]
+}

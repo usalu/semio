@@ -1,0 +1,10 @@
+{
+  "title": "Indirect Connect Ring Persistence And Drag Hover",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Fix indirect connect: keep ghost handle ring visible during LinkAtSourceHandle/LinkDragSnap (selection grows past 1 id). Highlight compatible target nodes during drag; draw rings above nodes but below active link wire; wire color secondary/selected-node styling not selection_preview.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪5aaf36eb8dd44f0a9c8917824d34552a"
+  ]
+}

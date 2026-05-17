@@ -15786,7 +15786,7 @@ export function IconSelector({
 						id={`${id}.vector`}
 						mixed={!uniform}
 						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-						placeholder="Metabolism catalog id or inline <svg …>"
+						placeholder="Catalog id or inline <svg …>"
 						readOnly={locked}
 						rows={5}
 						value={vectorFieldValue}

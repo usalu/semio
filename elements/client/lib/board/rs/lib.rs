@@ -452,18 +452,12 @@ mod scene_json {
 		pub meta: Option<serde_json::Value>,
 	}
 
-	/// 🧾 Reads fixture edge endpoint handle ids: prefers `source`/`target`, else `from`/`to` on disk (same ids, canonical field names in memory).
+	/// 🧾 Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
 	pub fn fixture_edge_handle_ids_from_object(
 		eo: &serde_json::Map<String, serde_json::Value>,
 	) -> Option<(&str, &str)> {
-		let source = eo
-			.get("source")
-			.and_then(|v| v.as_str())
-			.or_else(|| eo.get("from").and_then(|v| v.as_str()))?;
-		let target = eo
-			.get("target")
-			.and_then(|v| v.as_str())
-			.or_else(|| eo.get("to").and_then(|v| v.as_str()))?;
+		let source = eo.get("source").and_then(|v| v.as_str())?;
+		let target = eo.get("target").and_then(|v| v.as_str())?;
 		Some((source, target))
 	}
 }
@@ -3039,6 +3033,17 @@ mod board_host {
 			(half_extent * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9)
 		}
 
+		/// @emoji 🧭 Node id whose indirect ring is shown while a link gesture starts or drags from `source_id`.
+		fn indirect_ring_source_node_id_from_interaction(&self) -> Option<String> {
+			match &self.interaction {
+				Interaction::LinkAtSourceHandle { source_id, .. } | Interaction::LinkDragSnap { source_id, .. } => {
+					self.handles.get(source_id).map(|h| h.node_id.clone())
+				}
+				_ => None,
+			}
+		}
+
+		/// @emoji 🧭 Resolves which single node draws the normal-LOD indirect handle ring (idle single selection, link source drag, or indirect target pick).
 		fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
 			if lod != BoardDrawLod::Normal {
 				return None;
@@ -3046,11 +3051,71 @@ mod board_host {
 			if let Interaction::LinkTargetNode { target_node_id, .. } = &self.interaction {
 				return self.nodes.get(target_node_id).filter(|n| n.visible).map(|n| n.id.clone());
 			}
+			if let Some(nid) = self.indirect_ring_source_node_id_from_interaction() {
+				return self.nodes.get(&nid).filter(|n| n.visible).map(|n| n.id.clone());
+			}
 			if self.selection.len() != 1 {
 				return None;
 			}
 			let id = self.selection.iter().next()?;
 			self.nodes.get(id).filter(|n| n.visible).map(|n| n.id.clone())
+		}
+
+		/// @emoji 🧭 True when `target_node_id` hosts at least one visible free handle that can pair with `source_handle_id` under link-compat rules.
+		fn node_has_any_free_link_compatible_handle(&self, source_handle_id: &str, target_node_id: &str) -> bool {
+			let Some(source) = self.handles.get(source_handle_id) else {
+				return false;
+			};
+			if source.node_id == target_node_id {
+				return false;
+			}
+			for (hid, h) in &self.handles {
+				if h.node_id != target_node_id || !h.visible {
+					continue;
+				}
+				if self.handle_has_incident_edge(hid.as_str()) {
+					continue;
+				}
+				if self.handles_link_compatible_for_drag(source, h) {
+					return true;
+				}
+			}
+			false
+		}
+
+		/// @emoji 🧭 Node id to paint with selected chrome while a link wire hovers a compatible target (snap hit or node body under cursor).
+		fn link_drag_compatible_target_node_highlight_id(&self) -> Option<String> {
+			match &self.interaction {
+				Interaction::LinkDragSnap {
+					source_id,
+					target_id,
+					end_world,
+				} => {
+					let sh = self.handles.get(source_id)?;
+					let source_node_id = sh.node_id.as_str();
+					if let Some(tid) = target_id {
+						let th = self.handles.get(tid)?;
+						if th.node_id == source_node_id || self.handle_has_incident_edge(tid.as_str()) {
+							return None;
+						}
+						return self
+							.handles_link_compatible_for_drag(sh, th)
+							.then(|| th.node_id.clone());
+					}
+					let nid = self.resolve_node_hit_world(*end_world)?;
+					if nid == source_node_id {
+						return None;
+					}
+					self.node_has_any_free_link_compatible_handle(source_id, nid.as_str())
+						.then_some(nid)
+				}
+				Interaction::LinkTargetNode { target_node_id, .. } => self
+					.nodes
+					.get(target_node_id)
+					.filter(|n| n.visible)
+					.map(|_| target_node_id.clone()),
+				_ => None,
+			}
 		}
 
 		fn node_center_world(&self, node_id: &str) -> Option<Point> {
@@ -3146,6 +3211,9 @@ mod board_host {
 				if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
 					for h in self.handles.values().rev() {
 						if !h.visible || h.node_id != ring_node_id {
+							continue;
+						}
+						if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
 							continue;
 						}
 						let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
@@ -3825,6 +3893,9 @@ mod board_host {
 				if !h.visible || h.node_id != node_id {
 					continue;
 				}
+				if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
+					continue;
+				}
 				if let Some(tb) = tile_filter {
 					let Some(hb) = self.indirect_handle_world_bounds_cull(h) else { continue };
 					if !world_boxes_overlap(*tb, hb) {
@@ -3853,6 +3924,7 @@ mod board_host {
 			let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_handle_icons = lod == BoardDrawLod::Micro;
 			let indirect_ring_node_id = self.indirect_ring_node_id(lod);
+			let link_drag_node_hover = self.link_drag_compatible_target_node_highlight_id();
 			for n in self.nodes.values() {
 				if !n.visible {
 					continue;
@@ -3862,11 +3934,13 @@ mod board_host {
 						continue;
 					}
 				}
-				let stroke_c = node_stroke_color(&self.vello_theme, n.selected);
+				let link_hover = link_drag_node_hover.as_deref() == Some(n.id.as_str());
+				let sel_chrome = n.selected || link_hover;
+				let stroke_c = node_stroke_color(&self.vello_theme, sel_chrome);
 				let fill = if lod == BoardDrawLod::Minimap {
 					stroke_c
 				} else {
-					node_fill_color(&self.vello_theme, n.selected)
+					node_fill_color(&self.vello_theme, sel_chrome)
 				};
 				let sw = 2.0_f64;
 				match n.shape {
@@ -4011,16 +4085,19 @@ mod board_host {
 					scene.stroke(&wire_stroke, Affine::IDENTITY, wire_color, None, &curve);
 				}
 			}
+			if let Some(node_id) = indirect_ring_node_id {
+				self.append_indirect_handle_ring(scene, tile_filter, &node_id);
+			}
+			let link_wire_sw = 2.85_f64;
+			let link_wire_stroke = Stroke::new(link_wire_sw);
+			let link_wire_color = self.vello_theme.node_stroke;
 			if let Some(c) = self.active_link_wire_curve() {
 				let p0 = self.world_to_screen(c.p0);
 				let p1 = self.world_to_screen(c.p1);
 				let p2 = self.world_to_screen(c.p2);
 				let p3 = self.world_to_screen(c.p3);
 				let curve = CubicBez::new(p0, p1, p2, p3);
-				scene.stroke(&wire_stroke, Affine::IDENTITY, wire_color, None, &curve);
-			}
-			if let Some(node_id) = indirect_ring_node_id {
-				self.append_indirect_handle_ring(scene, tile_filter, &node_id);
+				scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
 			}
 		}
 
@@ -4208,6 +4285,11 @@ mod board_host {
 		/// @emoji 🔗 True when any edge uses this handle as `source` or `target` (handle already participates in a link).
 		fn handle_has_incident_edge(&self, handle_id: &str) -> bool {
 			self.edges.values().any(|e| e.source == handle_id || e.target == handle_id)
+		}
+
+		/// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`normal` LOD).
+		fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
+			!self.handle_has_incident_edge(handle_id)
 		}
 
 		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
@@ -6178,6 +6260,24 @@ mod host_tests {
 		s
 	}
 
+	fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
+		let mut s = link_test_scene_a_to_b_linked();
+		s.handles.push(HandleDescJson {
+			id: "a:h1".into(),
+			node_id: "a".into(),
+			angle: std::f64::consts::FRAC_PI_2,
+			radius: None,
+			selected: None,
+			style: None,
+			handle_kind: Some("parent".into()),
+			color: None,
+			icon_kind: None,
+			user_data: None,
+			visible: None,
+		});
+		s
+	}
+
 	#[test]
 	fn board_host_link_drag_snap_emits_edge_create() {
 		let mut h = BoardHost::new();
@@ -6255,6 +6355,23 @@ mod host_tests {
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		assert_eq!(h.resolve_hit_world(hp_a).as_deref(), Some("a"));
+	}
+
+	#[test]
+	fn board_host_indirect_ring_resolve_skips_connected_handles() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		h.sync_descriptor(&link_test_scene_node_a_two_handles_one_busy()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let ha0 = h.handles.get("a:h0").unwrap().clone();
+		let ha1 = h.handles.get("a:h1").unwrap().clone();
+		let ring_busy = h.indirect_handle_world_pos(&ha0).unwrap();
+		let ring_free = h.indirect_handle_world_pos(&ha1).unwrap();
+		assert_eq!(h.resolve_hit_world(ring_free).as_deref(), Some("a:h1"));
+		assert_ne!(h.resolve_hit_world(ring_busy).as_deref(), Some("a:h0"));
 	}
 
 	#[test]

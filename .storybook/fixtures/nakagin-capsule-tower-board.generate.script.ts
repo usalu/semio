@@ -73,12 +73,12 @@ interface LightKitType {
 }
 
 /** @emoji 🔁 Normalizes kit connection endpoints across legacy (`connected`/`connecting`) and current (`parent`/`child`) shapes. */
-function kitConnectionEnds(c: KitConnection): { from: KitConnectionEnd; to: KitConnectionEnd } {
+function kitConnectionEnds(c: KitConnection): { source: KitConnectionEnd; target: KitConnectionEnd } {
 	if (c.connected && c.connecting) {
-		return { from: c.connected, to: c.connecting };
+		return { source: c.connected, target: c.connecting };
 	}
 	if (c.parent && c.child) {
-		return { from: c.parent, to: c.child };
+		return { source: c.parent, target: c.child };
 	}
 	throw new Error(`[nakagin-board] connection ${c.id}: expected connected/connecting or parent/child`);
 }
@@ -410,7 +410,7 @@ function main(): void {
 
 	const handleAngles = new Map<string, number>();
 	for (const c of connections) {
-		const { from: endA, to: endB } = kitConnectionEnds(c);
+		const { source: endA, target: endB } = kitConnectionEnds(c);
 		const pa = endA.piece.id;
 		const pb = endB.piece.id;
 		const ha = handleId(typeById, pa, endA.connector.id, pieceById);
@@ -473,11 +473,11 @@ function main(): void {
 
 	const edges = connections
 		.map((c) => {
-			const { from: endA, to: endB } = kitConnectionEnds(c);
+			const { source: endA, target: endB } = kitConnectionEnds(c);
 			return {
-				from: handleId(typeById, endA.piece.id, endA.connector.id, pieceById),
 				id: c.id,
-				to: handleId(typeById, endB.piece.id, endB.connector.id, pieceById),
+				source: handleId(typeById, endA.piece.id, endA.connector.id, pieceById),
+				target: handleId(typeById, endB.piece.id, endB.connector.id, pieceById),
 			};
 		})
 		.sort((a, b) => a.id.localeCompare(b.id));

@@ -61,9 +61,9 @@ interface BoardFixtureNodeJson {
 }
 
 interface BoardFixtureEdgeJson {
-	from: string;
 	id: string;
-	to: string;
+	source: string;
+	target: string;
 }
 
 interface BoardFixtureV1 {
@@ -89,12 +89,12 @@ type DefaultBoardGraphNode = {
 	y: number;
 };
 
-type DefaultBoardGraphEdge = { from: string; id: string; to: string };
+type DefaultBoardGraphEdge = { id: string; source: string; target: string };
 
 type DefaultBoardGraph = { edges: DefaultBoardGraphEdge[]; nodes: DefaultBoardGraphNode[] };
 
 const defaultBoardGraph: DefaultBoardGraph = {
-	edges: [{ from: "alpha.out", id: "link-1", to: "beta.in" }],
+	edges: [{ id: "link-1", source: "alpha.out", target: "beta.in" }],
 	nodes: [
 		{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
 		{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
@@ -115,7 +115,7 @@ function BoardDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction
 				const node = graph.nodes.find((entry) => entry.id === id);
 				const handleIds = new Set(node?.handles.map((handle) => handle.id) ?? []);
 				return {
-					edges: graph.edges.filter((edge) => !handleIds.has(edge.from) && !handleIds.has(edge.to)),
+					edges: graph.edges.filter((edge) => !handleIds.has(edge.source) && !handleIds.has(edge.target)),
 					nodes: graph.nodes.filter((entry) => entry.id !== id),
 				};
 			});
@@ -137,7 +137,7 @@ function StatefulInteractiveBoardScene(): ReactElement {
 				</Node>
 			))}
 			{graph.edges.map((edge) => (
-				<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
+				<Edge id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
 			))}
 		</>
 	);
@@ -196,7 +196,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 			),
 		)}
 		{nakaginCapsuleTowerBoard.edges.map((edge) => (
-			<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
+			<Edge id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
 		))}
 	</>
 );
