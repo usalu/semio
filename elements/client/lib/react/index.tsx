@@ -19403,7 +19403,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {options ? (
             <div
               data-slot="window-options-overlay"
-              className="pointer-events-none absolute inset-0 z-panel flex flex-col items-end justify-start gap-half overflow-hidden p-single"
+              className="pointer-events-none absolute top-0 right-0 bottom-0 left-auto z-panel flex w-max max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end justify-start gap-half overflow-hidden p-single"
             >
               <div
                 data-slot="window-options-rail"

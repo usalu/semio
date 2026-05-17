@@ -57,6 +57,17 @@
   pointer-events: auto !important;
 }
 
+/*
+ * Golden Layout forces `pointer-events: auto !important` on every descendant (`.lm_goldenlayout *`).
+ * Window options use a pass-through overlay (`pointer-events-none`) with an interactive rail; that
+ * override must beat `.lm_goldenlayout *` in the cascade. The overlay is also kept narrow in React
+ * (`top/right/bottom` + `w-max`) so it never spans the full canvas hit area.
+ */
+.lm_goldenlayout [data-slot="window-options-overlay"],
+[data-slot="window-options-overlay"] {
+  pointer-events: none !important;
+}
+
 .lm_root {
   z-index: var(--z-base) !important;
   position: relative !important;

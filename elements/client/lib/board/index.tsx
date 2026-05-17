@@ -1660,6 +1660,60 @@ if (boardReactVitest) {
 			restoreCanvas();
 		});
 
+		it("still routes primary pointer down through WASM after the surface context menu opens", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+			const bgMenu: ContextMenuItem[] = [{ id: "bg-smoke", label: "Bg" }];
+			let readyRenderer: BoardRenderer | null = null;
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: BOARD_LOD_DETAIL_MIN_ZOOM }}
+						contextMenu={bgMenu}
+						height={600}
+						onReady={(r) => {
+							readyRenderer = r;
+						}}
+						renderMode="headless-test"
+						width={800}
+					>
+						<Node id="solo" radius={40} x={0} y={0}>
+							<Handle handleKind="board.port" angle={0} id="solo:h0" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+				await Promise.resolve();
+			});
+			const canvas = container.querySelector("canvas") as HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
+			const renderer = requireRenderer(canvas.__boardRenderer ?? readyRenderer);
+			Object.defineProperty(canvas, "clientWidth", { configurable: true, value: 800 });
+			Object.defineProperty(canvas, "clientHeight", { configurable: true, value: 600 });
+			Object.defineProperty(canvas, "getBoundingClientRect", {
+				configurable: true,
+				value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
+			});
+			renderer.render();
+			const spy = vi.spyOn(renderer.session, "pointerDownScreen");
+			const far = renderer.worldToScreen({ x: 1_000_000, y: 1_000_000 });
+			await act(async () => {
+				canvas.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: far.x, clientY: far.y }));
+			});
+			spy.mockClear();
+			await act(async () => {
+				canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: far.x, clientY: far.y }));
+			});
+			expect(spy).toHaveBeenCalled();
+			spy.mockRestore();
+			await act(async () => {
+				root.unmount();
+			});
+			document.body.removeChild(container);
+			restoreCanvas();
+		});
+
 		it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {
 			function OpaqueScene(): ReactElement {
 				return (

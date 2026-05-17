@@ -52,6 +52,41 @@ test.describe("board play", () => {
 		expect(Math.abs((menuBox?.y ?? 0) - point.y)).toBeLessThan(8);
 	});
 
+	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		const overlays = page.locator('[data-slot="window-options-overlay"]');
+		await expect(overlays).toHaveCount(3, { timeout: 120_000 });
+		const n = await overlays.count();
+		for (let i = 0; i < n; i++) {
+			const pe = await overlays.nth(i).evaluate((el) => globalThis.getComputedStyle(el).pointerEvents);
+			expect(pe).toBe("none");
+		}
+	});
+
+	test("hit target at canvas center is the board canvas under Golden Layout", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		const canvas = page.locator('[data-testid="board-canvas"]').first();
+		await expect(canvas).toBeVisible({ timeout: 120_000 });
+		await expect
+			.poll(async () => await canvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+			.not.toBe("init");
+		const probe = await canvas.evaluate((el) => {
+			const r = el.getBoundingClientRect();
+			const x = r.left + Math.min(120, Math.max(8, r.width * 0.35));
+			const y = r.top + Math.min(120, Math.max(8, r.height * 0.35));
+			const stack = document.elementsFromPoint(x, y);
+			const idxCanvas = stack.indexOf(el);
+			const idxOverlay = stack.findIndex(
+				(n) => n instanceof Element && n.closest("[data-slot='window-options-overlay']") !== null,
+			);
+			return { idxCanvas, idxOverlay, stackLen: stack.length };
+		});
+		expect(probe.idxCanvas).toBeGreaterThanOrEqual(0);
+		expect(probe.idxOverlay === -1 || probe.idxCanvas < probe.idxOverlay).toBe(true);
+	});
+
 	test("no wasm borrow_fail during load and viewport resize stress", async ({ page }, testInfo) => {
 		const errors: string[] = [];
 		page.on("console", (msg) => {
