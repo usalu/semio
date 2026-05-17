@@ -98,6 +98,16 @@ const BOARD_PAINT_ROWS: &[BoardPaintRow<'_>] = &[
 		alpha: 1.0,
 	},
 	BoardPaintRow {
+		const_name: "INDIRECT_HANDLE_FILL",
+		src: BoardPaintSrc::Hex { hex: "#c4e4d5" },
+		alpha: 1.0,
+	},
+	BoardPaintRow {
+		const_name: "INDIRECT_HANDLE_STROKE",
+		src: BoardPaintSrc::Token { key: "secondary" },
+		alpha: 1.0,
+	},
+	BoardPaintRow {
 		const_name: "HANDLE_FILL",
 		src: BoardPaintSrc::Token { key: "light" },
 		alpha: 1.0,

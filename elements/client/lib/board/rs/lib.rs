@@ -2254,6 +2254,8 @@ mod board_host {
 		pub node_stroke: Color,
 		pub node_fill_selected: Color,
 		pub node_stroke_selected: Color,
+		pub indirect_handle_fill: Color,
+		pub indirect_handle_stroke: Color,
 		pub handle_fill: Color,
 		pub handle_stroke: Color,
 		pub handle_fill_selected: Color,
@@ -2273,6 +2275,8 @@ mod board_host {
 				node_stroke: board_palette::NODE_STROKE,
 				node_fill_selected: board_palette::NODE_FILL_SELECTED,
 				node_stroke_selected: board_palette::NODE_STROKE_SELECTED,
+				indirect_handle_fill: board_palette::INDIRECT_HANDLE_FILL,
+				indirect_handle_stroke: board_palette::INDIRECT_HANDLE_STROKE,
 				handle_fill: board_palette::HANDLE_FILL,
 				handle_stroke: board_palette::HANDLE_STROKE,
 				handle_fill_selected: board_palette::HANDLE_FILL_SELECTED,
@@ -2951,6 +2955,16 @@ mod board_host {
 					next.node_stroke_selected = c;
 				}
 			}
+			if let Some(arr) = v.get("indirectHandleFill").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.indirect_handle_fill = c;
+				}
+			}
+			if let Some(arr) = v.get("indirectHandleStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.indirect_handle_stroke = c;
+				}
+			}
 			if let Some(arr) = v.get("handleFill").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.handle_fill = c;
@@ -3117,9 +3131,9 @@ mod board_host {
 			}
 		}
 
-		/// @emoji 🧭 Resolves which single node draws the normal-LOD indirect handle ring when that node has **more than one** eligible free handle (otherwise the sole handle is implicit).
+		/// @emoji 🧭 Resolves which single node draws the overview/normal indirect handle ring when that node has **more than one** eligible free handles (otherwise the sole handle is implicit).
 		fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
-			if lod != BoardDrawLod::Normal {
+			if !matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Normal) {
 				return None;
 			}
 			let ring_nid = if let Interaction::LinkTargetNode { target_node_id, .. } = &self.interaction {
@@ -3384,10 +3398,13 @@ mod board_host {
 		}
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
+			if self.current_draw_lod() == BoardDrawLod::Minimap {
+				return None;
+			}
 			let zoom = self.camera.zoom;
 			let o = &self.selection_options;
 			if o.select_handles {
-				if matches!(self.current_draw_lod(), BoardDrawLod::Normal) {
+				if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
 					if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
 						return Some(hid);
 					}
@@ -3419,7 +3436,7 @@ mod board_host {
 						}
 					}
 				}
-				if matches!(self.current_draw_lod(), BoardDrawLod::Normal) {
+				if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
 					if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
 						return Some(hid);
 					}
@@ -4092,8 +4109,8 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
-				let fill = handle_fill(&self.vello_theme, false);
-				let stroke_c = handle_stroke(&self.vello_theme, false);
+				let fill = self.vello_theme.indirect_handle_fill;
+				let stroke_c = self.vello_theme.indirect_handle_stroke;
 				let stroke_px = 2.0_f64;
 				self.append_handle_marker(
 					scene,
@@ -4109,7 +4126,7 @@ mod board_host {
 		fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod) {
 			let pad = self.drawable_cull_pad_world();
 			let draw_node_stroke = lod != BoardDrawLod::Minimap;
-			let draw_handles = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
+			let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_handle_icons = lod == BoardDrawLod::Micro;
 			let indirect_ring_node_id = self.indirect_ring_node_id(lod);
@@ -4476,7 +4493,7 @@ mod board_host {
 			self.edges.values().any(|e| e.source == handle_id || e.target == handle_id)
 		}
 
-		/// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`normal` LOD).
+		/// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
 		fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
 			let Some(h) = self.handles.get(handle_id) else {
 				return false;
@@ -4485,7 +4502,7 @@ mod board_host {
 		}
 
 		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
-			if !matches!(self.current_draw_lod(), BoardDrawLod::Detail | BoardDrawLod::Micro) {
+			if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
 				return None;
 			}
 			let source_handle = self.handles.get(source_handle_id)?;
@@ -5996,6 +6013,10 @@ mod host_tests {
 		h.set_camera(0.0, 0.0, 2.0);
 	}
 
+	fn set_overview_lod(h: &mut BoardHost) {
+		h.set_camera(0.0, 0.0, 0.25);
+	}
+
 	fn sample_scene() -> SceneDescriptorJson {
 		SceneDescriptorJson {
 			nodes: vec![NodeDescJson {
@@ -6152,6 +6173,72 @@ mod host_tests {
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("nodeMove"));
+	}
+
+	#[test]
+	fn board_host_minimap_skips_discrete_hits_and_drag_move() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 0.1);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let _ = h.drain_events_json();
+		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+		assert!(h.resolve_hit_world(Point::new(150.0, 0.0)).is_none());
+		let s = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_move_screen(s.x + 50.0, s.y + 30.0);
+		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("nodeMove"));
+	}
+
+	#[test]
+	fn board_host_detail_lod_resolves_direct_handle_hit() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let probe = Point::new(hp.x + 2.0, hp.y);
+		assert_eq!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
 	}
 
 	#[test]
@@ -6543,6 +6630,27 @@ mod host_tests {
 		assert!(ev.contains("b:h0"));
 		let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
 		assert_eq!(created.len(), 1);
+	}
+
+	#[test]
+	fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_overview_lod(&mut h);
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		let s1 = h.world_to_screen(hp_b);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"), "expected edgeCreate at overview LOD, got: {ev}");
+		assert!(ev.contains("proximityConnect"));
 	}
 
 	#[test]

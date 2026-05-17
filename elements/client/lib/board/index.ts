@@ -922,6 +922,8 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
 	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	indirectHandleFill: [196, 228, 213, 255] as [number, number, number, number],
+	indirectHandleStroke: [52, 209, 191, 255] as [number, number, number, number],
 	handleFill: [247, 243, 227, 255] as [number, number, number, number],
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
 	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
@@ -1022,6 +1024,12 @@ function serializeElementsBoardVelloThemeJson(): string {
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
 		nodeFillSelected: pc("backgroundColor", "var(--color-selected-added)", fb.nodeFillSelected),
 		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
+		indirectHandleFill: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
+			fb.indirectHandleFill,
+		),
+		indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
 		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
 		handleFillSelected: pc("backgroundColor", "var(--color-accent)", fb.handleFillSelected),
@@ -1774,6 +1782,8 @@ export class Handle extends BoardObject {
 	angle: number;
 	/** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
 	color: string | null;
+	/** @emoji 🏷️ Optional WASM detail LOD icon for this handle marker. */
+	iconKind: string | null;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
 	node: Node;
@@ -1787,6 +1797,9 @@ export class Handle extends BoardObject {
 		const rawC = options.color;
 		const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
 		this.color = cs !== "" ? cs : null;
+		const rawIk = options.iconKind;
+		this.iconKind =
+			typeof rawIk === "string" && rawIk.trim() !== "" ? rawIk.trim() : null;
 		this.node = options.node;
 		this.radius = options.radius ?? 8;
 		this.node.attachHandle(this);
@@ -2204,6 +2217,15 @@ function boardAbbreviateCaption(raw: string, maxChars: number): string {
 	return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
+/** @emoji 🏷️ Detail LOD handle caption beside markers (catalog label, abbreviated when an icon is present). */
+export function boardTextOverlayHandleCaptionForLod(catalogLabel: string, iconKind: string | null): string | null {
+	const t = catalogLabel.trim();
+	if (t === "") {
+		return null;
+	}
+	return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 5 : 7);
+}
+
 function boardTextOverlayCaptionForLod(
 	raw: string,
 	lod: "detail" | "micro" | "minimap" | "normal" | "overview",
@@ -2288,6 +2310,7 @@ export class BoardRenderer {
 	private width = 1;
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
+	private handleKindLabelLookupCache: { key: string; map: Map<string, string> } | null = null;
 
 	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 	private gridSnapEnabled = false;
@@ -2377,6 +2400,29 @@ export class BoardRenderer {
 	attachTextOverlayCanvas(canvas: HTMLCanvasElement | null): void {
 		this.textOverlayCanvas = canvas;
 		this.invalidate();
+	}
+
+	private boardHandleKindLabelById(): ReadonlyMap<string, string> {
+		const cached = this.handleKindLabelLookupCache;
+		if (cached && cached.key === this.kindCatalogsJson) {
+			return cached.map;
+		}
+		const m = new Map<string, string>();
+		try {
+			const o = JSON.parse(this.kindCatalogsJson) as {
+				handleKinds?: ReadonlyArray<{ id?: string; label?: string; name?: string }>;
+			};
+			for (const row of o.handleKinds ?? []) {
+				const id = String(row.id ?? "").trim();
+				if (id !== "") {
+					m.set(id, String(row.label ?? row.name ?? id).trim() || id);
+				}
+			}
+		} catch {
+			// ignore
+		}
+		this.handleKindLabelLookupCache = { key: this.kindCatalogsJson, map: m };
+		return m;
 	}
 
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
@@ -2532,6 +2578,7 @@ export class BoardRenderer {
 			return;
 		}
 		this.kindCatalogsJson = json;
+		this.handleKindLabelLookupCache = null;
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -3311,6 +3358,32 @@ export class BoardRenderer {
 			ctx.textBaseline = anchor.textBaseline;
 			ctx.fillText(line, anchor.fillX, anchor.fillY);
 		}
+		if (lod === "detail") {
+			const handleLabels = this.boardHandleKindLabelById();
+			const fontPx = 11;
+			const family = BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
+			for (const handle of this.scene.handles.values()) {
+				if (!handle.visible) {
+					continue;
+				}
+				const catalog = handleLabels.get(handle.handleKind) ?? handle.handleKind;
+				const caption = boardTextOverlayHandleCaptionForLod(catalog, handle.iconKind);
+				if (caption === null) {
+					continue;
+				}
+				const hp = this.worldToScreen(handle.position);
+				const rScreen = handle.radius * this.camera.zoom;
+				if (rScreen < 2) {
+					continue;
+				}
+				const style = this.getStyle(handle.style, handle.selected ? "handle.selected" : "handle");
+				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK["handle"].stroke ?? "#001117";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "top";
+				ctx.fillText(caption, hp.x, hp.y + rScreen + 3);
+			}
+		}
 	}
 
 	/** @emoji 🎨 Presents one GPU frame after {@link BoardRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
@@ -3869,6 +3942,12 @@ if (boardVitest) {
 			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node Label");
 			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "micro", "catalog-icon")).toBe("Node Label");
+		});
+
+		it("abbreviates detail handle overlay captions using catalog text", () => {
+			expect(boardTextOverlayHandleCaptionForLod("Port", null)).toBe("Port");
+			expect(boardTextOverlayHandleCaptionForLod("Longhandle", null)).toBe("Longha…");
+			expect(boardTextOverlayHandleCaptionForLod("Longhandle", "emoji:🔌")).toBe("Long…");
 		});
 	});
 

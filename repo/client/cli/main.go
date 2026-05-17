@@ -46,7 +46,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/blevesearch/bleve/v2"
-	"github.com/blevesearch/bleve/v2/search/query"
+	blevequery "github.com/blevesearch/bleve/v2/search/query"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
@@ -7252,13 +7252,13 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 		return nil, nil
 	}
 	terms := strings.Fields(query)
-	queries := make([]query.Query, 0, len(terms))
+	queries := make([]blevequery.Query, 0, len(terms))
 	for _, term := range terms {
 		match := bleve.NewMatchQuery(term)
 		match.SetFuzziness(2)
 		queries = append(queries, match)
 	}
-	var q query.Query
+	var q blevequery.Query
 	switch len(queries) {
 	case 0:
 		return nil, nil
