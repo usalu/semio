@@ -41,13 +41,18 @@ import {
 	computeHandlePosition,
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
+	type BoardEdgeLinkPayload,
 	type BoardEventMap,
+	type BoardStructureCreatePayload,
+	type BoardStructureDeletePayload,
+	type BoardWireSnapshotPayload,
 	type BoardChildEdgesChangePayload,
 	type BoardChildNodesChangePayload,
 	type BoardFixtureDropDetail,
 	type BoardFixtureV1,
 	type BoardGraphEdgeIdPayload,
 	type BoardGraphNodeIdPayload,
+	type BoardGraphWireIdPayload,
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
 	type BoardHandleProps,
@@ -110,6 +115,39 @@ export interface BoardCanvasProps {
 	onNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
 	onParentEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
 	onParentNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
+	/** @emoji 🎥 Camera pan/zoom center in world space plus zoom factor (same payload as {@link BoardCanvasProps.onViewportChange}). */
+	onCamera?: (state: CameraState) => void;
+	/** @emoji 🖱️ Right-click surface hit before built-in context UI resolves menu items. */
+	onContextMenu?: (payload: BoardEventMap["contextmenu"]) => void;
+	/** @emoji 🪢 Alias for every committed handle link (see {@link BoardCanvasProps.onProximityConnect} / {@link BoardCanvasProps.onIndirectConnect}). */
+	onConnect?: (payload: BoardEdgeLinkPayload) => void;
+	/** @emoji 📦 Fires once for {@link BoardEventMap.nodeCreate}, {@link BoardEventMap.edgeCreate}, or {@link BoardEventMap.wireCreate}. */
+	onCreate?: (payload: BoardStructureCreatePayload) => void;
+	/** @emoji 📦 Fires once for {@link BoardEventMap.nodeDelete}, {@link BoardEventMap.edgeDelete}, or {@link BoardEventMap.wireDestroy}. */
+	onDelete?: (payload: BoardStructureDeletePayload) => void;
+	/** @emoji 🖱️ Node drag motion from WASM (`nodeMove`). */
+	onDrag?: (payload: BoardEventMap["nodeMove"]) => void;
+	onEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
+	onEdgeCreate?: (payload: BoardEdgeLinkPayload) => void;
+	onEdgeDelete?: (payload: { id: string }) => void;
+	/** @emoji 🧭 Second click on an indirect handle ring target after {@link BoardEventMap.edgeCreate}. */
+	onIndirectConnect?: (payload: BoardEdgeLinkPayload) => void;
+	/** @emoji ♻️ GPU/text invalidation tick (coalesced `invalidate`). */
+	onInvalidate?: () => void;
+	onNodeCreate?: (payload: BoardGraphNodeIdPayload) => void;
+	onNodeDelete?: (payload: { id: string }) => void;
+	/** @emoji 🧲 Snap commit on pointer-up after a link drag (`proximityConnect` after `edgeCreate`). */
+	onProximityConnect?: (payload: BoardEdgeLinkPayload) => void;
+	onSelect?: (snapshot: BoardSelectionSnapshot) => void;
+	onWireChange?: (payload: BoardGraphWireIdPayload) => void;
+	onWireCreate?: (payload: BoardWireSnapshotPayload) => void;
+	onWireDestroy?: (payload: BoardGraphWireIdPayload) => void;
+	/** @emoji ↔️ Camera center changed without zoom delta beyond float noise. */
+	onPan?: (state: CameraState) => void;
+	/** @emoji 🔎 Zoom factor changed on the camera snapshot. */
+	onZoom?: (state: CameraState) => void;
+	/** @emoji 🪟 Preferred alias for {@link BoardCanvasProps.onCamera} (viewport = camera snapshot). */
+	onViewportChange?: (state: CameraState) => void;
 	renderMode?: RenderMode;
 	selectionMethod?: BoardSelectionMethod;
 	selectionMode?: BoardSelectionMode;
@@ -668,17 +706,38 @@ export function BoardCanvas({
 	kindCatalogs,
 	kindCompatibility,
 	lodZoomThresholds,
+	onCamera,
 	onChange,
 	onChildEdgeChange,
 	onChildEdgesChange,
 	onChildNodeChange,
 	onChildNodesChange,
+	onConnect,
+	onContextMenu,
+	onCreate,
+	onDelete,
+	onDrag,
+	onEdgeChange,
+	onEdgeCreate,
+	onEdgeDelete,
 	onFixtureDrop,
 	onHover,
+	onIndirectConnect,
+	onInvalidate,
 	onNodeChange,
+	onNodeCreate,
+	onNodeDelete,
+	onPan,
 	onParentEdgeChange,
 	onParentNodeChange,
+	onProximityConnect,
 	onReady,
+	onSelect,
+	onViewportChange,
+	onWireChange,
+	onWireCreate,
+	onWireDestroy,
+	onZoom,
 	renderMode,
 	selectionMethod,
 	selectionMode,
@@ -807,8 +866,14 @@ export function BoardCanvas({
 		if (onChange) {
 			unsubs.push(contextRenderer.on("change", onChange));
 		}
+		if (onNodeCreate) {
+			unsubs.push(contextRenderer.on("nodeCreate", onNodeCreate));
+		}
 		if (onNodeChange) {
 			unsubs.push(contextRenderer.on("nodeChange", onNodeChange));
+		}
+		if (onNodeDelete) {
+			unsubs.push(contextRenderer.on("nodeDelete", onNodeDelete));
 		}
 		if (onParentNodeChange) {
 			unsubs.push(contextRenderer.on("parentNodeChange", onParentNodeChange));
@@ -828,6 +893,24 @@ export function BoardCanvas({
 		if (onChildEdgesChange) {
 			unsubs.push(contextRenderer.on("childEdgesChange", onChildEdgesChange));
 		}
+		if (onEdgeChange) {
+			unsubs.push(contextRenderer.on("edgeChange", onEdgeChange));
+		}
+		if (onEdgeCreate) {
+			unsubs.push(contextRenderer.on("edgeCreate", onEdgeCreate));
+		}
+		if (onEdgeDelete) {
+			unsubs.push(contextRenderer.on("edgeDelete", onEdgeDelete));
+		}
+		if (onWireCreate) {
+			unsubs.push(contextRenderer.on("wireCreate", onWireCreate));
+		}
+		if (onWireChange) {
+			unsubs.push(contextRenderer.on("wireChange", onWireChange));
+		}
+		if (onWireDestroy) {
+			unsubs.push(contextRenderer.on("wireDestroy", onWireDestroy));
+		}
 		return () => {
 			for (const u of unsubs) {
 				u();
@@ -840,23 +923,140 @@ export function BoardCanvas({
 		onChildEdgesChange,
 		onChildNodeChange,
 		onChildNodesChange,
+		onEdgeChange,
+		onEdgeCreate,
+		onEdgeDelete,
 		onNodeChange,
+		onNodeCreate,
+		onNodeDelete,
 		onParentEdgeChange,
 		onParentNodeChange,
+		onWireChange,
+		onWireCreate,
+		onWireDestroy,
 	]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
 			return () => undefined;
 		}
+		const unsubs: Array<() => void> = [];
+		if (onConnect) {
+			unsubs.push(contextRenderer.on("edgeCreate", onConnect));
+			unsubs.push(contextRenderer.on("proximityConnect", onConnect));
+			unsubs.push(contextRenderer.on("indirectConnect", onConnect));
+		}
+		if (onIndirectConnect) {
+			unsubs.push(contextRenderer.on("indirectConnect", onIndirectConnect));
+		}
+		if (onProximityConnect) {
+			unsubs.push(contextRenderer.on("proximityConnect", onProximityConnect));
+		}
+		return () => {
+			for (const u of unsubs) {
+				u();
+			}
+		};
+	}, [contextRenderer, onConnect, onIndirectConnect, onProximityConnect]);
+
+	useEffect(() => {
+		if (!contextRenderer || (!onCamera && !onViewportChange && !onPan && !onZoom)) {
+			return () => undefined;
+		}
+		let prev = contextRenderer.getCameraSnapshot();
+		return contextRenderer.on("camera", (next) => {
+			onCamera?.(next);
+			onViewportChange?.(next);
+			if (Math.abs(prev.zoom - next.zoom) > 1e-9) {
+				onZoom?.(next);
+			}
+			if (Math.abs(prev.x - next.x) > 1e-6 || Math.abs(prev.y - next.y) > 1e-6) {
+				onPan?.(next);
+			}
+			prev = next;
+		});
+	}, [contextRenderer, onCamera, onPan, onViewportChange, onZoom]);
+
+	useEffect(() => {
+		if (!contextRenderer) {
+			return () => undefined;
+		}
+		const unsubs: Array<() => void> = [];
+		if (onSelect) {
+			unsubs.push(contextRenderer.on("select", onSelect));
+		}
+		if (onInvalidate) {
+			unsubs.push(contextRenderer.on("invalidate", onInvalidate));
+		}
+		if (onDrag) {
+			unsubs.push(contextRenderer.on("nodeMove", onDrag));
+		}
+		return () => {
+			for (const u of unsubs) {
+				u();
+			}
+		};
+	}, [contextRenderer, onDrag, onInvalidate, onSelect]);
+
+	useEffect(() => {
+		if (!contextRenderer || (!onCreate && !onDelete)) {
+			return () => undefined;
+		}
+		const unsubs: Array<() => void> = [];
+		if (onCreate) {
+			unsubs.push(
+				contextRenderer.on("nodeCreate", (p) => {
+					onCreate({ kind: "node", id: p.id });
+				}),
+			);
+			unsubs.push(
+				contextRenderer.on("edgeCreate", (p) => {
+					onCreate({ kind: "edge", id: p.id, source: p.source, target: p.target });
+				}),
+			);
+			unsubs.push(
+				contextRenderer.on("wireCreate", (payload) => {
+					onCreate({ kind: "wire", payload });
+				}),
+			);
+		}
+		if (onDelete) {
+			unsubs.push(
+				contextRenderer.on("nodeDelete", (p) => {
+					onDelete({ kind: "node", id: p.id });
+				}),
+			);
+			unsubs.push(
+				contextRenderer.on("edgeDelete", (p) => {
+					onDelete({ kind: "edge", id: p.id });
+				}),
+			);
+			unsubs.push(
+				contextRenderer.on("wireDestroy", (p) => {
+					onDelete({ kind: "wire", id: p.id });
+				}),
+			);
+		}
+		return () => {
+			for (const u of unsubs) {
+				u();
+			}
+		};
+	}, [contextRenderer, onCreate, onDelete]);
+
+	useEffect(() => {
+		if (!contextRenderer) {
+			return () => undefined;
+		}
 		return contextRenderer.on("contextmenu", (payload) => {
+			onContextMenu?.(payload);
 			const items = payload.id ? boardTargetMenusRef.current.get(payload.id) ?? [] : contextMenu ?? [];
 			if (!items.length) {
 				return;
 			}
 			setSurfaceContextMenu({ clientX: payload.clientX, clientY: payload.clientY, items });
 		});
-	}, [contextMenu, contextRenderer]);
+	}, [contextMenu, contextRenderer, onContextMenu]);
 
 	useLayoutEffect(() => {
 		if (!canvasRef.current) {

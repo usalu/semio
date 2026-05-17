@@ -28,6 +28,7 @@ comemo = "0.5.1"
 ecow = "0.2.6"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 data-url = "0.3.2"
+base64 = "0.22.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

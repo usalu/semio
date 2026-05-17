@@ -469,6 +469,37 @@ export interface BoardChildEdgesChangePayload {
 	edgeIds: string[];
 }
 
+/** @emoji 🪢 Payload for {@link BoardEventMap.edgeCreate} and gesture connect aliases. */
+export interface BoardEdgeLinkPayload {
+	id: string;
+	source: string;
+	target: string;
+}
+
+/** @emoji 🧵 Payload for {@link BoardEventMap.wireCreate} (declarative / scene wire). */
+export interface BoardWireSnapshotPayload {
+	endX: number | null;
+	endY: number | null;
+	id: string;
+	source: string;
+	target: string | null;
+	wireKind: string;
+}
+
+/** @emoji 🪪 Payload for {@link BoardEventMap.wireChange} / {@link BoardEventMap.wireDestroy}. */
+export interface BoardGraphWireIdPayload {
+	id: string;
+}
+
+/** @emoji 📦 Optional aggregate for {@link BoardCanvasProps.onCreate} (node, edge, or wire). */
+export type BoardStructureCreatePayload =
+	| { kind: "edge"; id: string; source: string; target: string }
+	| { kind: "node"; id: string }
+	| { kind: "wire"; payload: BoardWireSnapshotPayload };
+
+/** @emoji 📦 Optional aggregate for {@link BoardCanvasProps.onDelete} (node, edge, or wire). */
+export type BoardStructureDeletePayload = { kind: "edge"; id: string } | { kind: "node"; id: string } | { kind: "wire"; id: string };
+
 export interface BoardEventMap {
 	camera: CameraState;
 	change: undefined;
@@ -477,17 +508,24 @@ export interface BoardEventMap {
 	childNodeChange: BoardGraphNodeIdPayload;
 	childNodesChange: BoardChildNodesChangePayload;
 	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
-	edgeCreate: { id: string; source: string; target: string };
+	edgeChange: BoardGraphEdgeIdPayload;
+	edgeCreate: BoardEdgeLinkPayload;
 	edgeDelete: { id: string };
 	fixtureDrop: BoardFixtureDropDetail;
 	hover: BoardHoverPayload;
+	indirectConnect: BoardEdgeLinkPayload;
 	invalidate: undefined;
 	nodeChange: BoardGraphNodeIdPayload;
+	nodeCreate: BoardGraphNodeIdPayload;
 	nodeDelete: { id: string };
 	nodeMove: { id: string; x: number; y: number };
 	parentEdgeChange: BoardGraphEdgeIdPayload;
 	parentNodeChange: BoardGraphNodeIdPayload;
+	proximityConnect: BoardEdgeLinkPayload;
 	select: BoardSelectionSnapshot;
+	wireChange: BoardGraphWireIdPayload;
+	wireCreate: BoardWireSnapshotPayload;
+	wireDestroy: BoardGraphWireIdPayload;
 }
 
 export interface BoardObjectOptions {
@@ -1781,9 +1819,21 @@ export class BoardScene {
 			if (object.target && !this.nodes.has(object.target.node.id)) {
 				this.add(object.target.node);
 			}
-			this.wires.set(object.id, object);
-			object.parent = this;
-			object.attachRenderer(this.renderer);
+			const wire = object as Wire;
+			const existed = this.wires.has(wire.id);
+			this.wires.set(wire.id, wire);
+			wire.parent = this;
+			wire.attachRenderer(this.renderer);
+			if (!existed) {
+				this.renderer?.emit("wireCreate", {
+					endX: wire.endX,
+					endY: wire.endY,
+					id: wire.id,
+					source: wire.source.id,
+					target: wire.target?.id ?? null,
+					wireKind: wire.wireKind,
+				});
+			}
 			this.renderer?.markDirty();
 			return this;
 		}
@@ -1821,6 +1871,7 @@ export class BoardScene {
 			for (const handle of Array.from(object.handles)) {
 				this.remove(handle);
 			}
+			this.renderer?.emit("nodeDelete", { id: object.id });
 			this.nodes.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -1850,6 +1901,7 @@ export class BoardScene {
 		}
 
 		if (object instanceof Wire) {
+			this.renderer?.emit("wireDestroy", { id: object.id });
 			this.wires.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -1857,6 +1909,7 @@ export class BoardScene {
 			return this;
 		}
 
+		this.renderer?.emit("edgeDelete", { id: object.id });
 		this.edges.delete(object.id);
 		object.parent = null;
 		object.attachRenderer(null);
@@ -1898,6 +1951,7 @@ export interface BoardGraphObservationSnapshot {
 	nodeSigById: Map<string, string>;
 	parentEdgeIds: string[];
 	rootIds: string[];
+	wireSigById: Map<string, string>;
 }
 
 function sortIds(ids: Iterable<string>): string[] {
@@ -1950,6 +2004,20 @@ function boardGraphEdgeSig(edge: Edge): string {
 	});
 }
 
+function boardGraphWireSig(wire: Wire): string {
+	return JSON.stringify({
+		endX: wire.endX,
+		endY: wire.endY,
+		id: wire.id,
+		selected: wire.selected,
+		source: wire.source.id,
+		style: wire.style,
+		target: wire.target?.id ?? null,
+		visible: wire.visible,
+		wireKind: wire.wireKind,
+	});
+}
+
 /** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} following directed edges from parent handle node to child handle node. */
 export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGraphObservationSnapshot {
 	const rootIds = sortIds([...scene.nodes.values()].filter((n) => n.root).map((n) => n.id));
@@ -1984,7 +2052,11 @@ export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGr
 	for (const edge of scene.edges.values()) {
 		edgeSigById.set(edge.id, boardGraphEdgeSig(edge));
 	}
-	return { childEdgeIds, childNodeIds, edgeSigById, nodeSigById, parentEdgeIds, rootIds };
+	const wireSigById = new Map<string, string>();
+	for (const wire of scene.wires.values()) {
+		wireSigById.set(wire.id, boardGraphWireSig(wire));
+	}
+	return { childEdgeIds, childNodeIds, edgeSigById, nodeSigById, parentEdgeIds, rootIds, wireSigById };
 }
 //#endregion 🔖DirectedGraphObservation
 
@@ -2437,10 +2509,40 @@ export class BoardRenderer {
 		}
 		const allNodeIds = new Set([...prev.nodeSigById.keys(), ...next.nodeSigById.keys()]);
 		for (const id of allNodeIds) {
-			if (prev.nodeSigById.get(id) !== next.nodeSigById.get(id)) {
+			const sigP = prev.nodeSigById.get(id);
+			const sigN = next.nodeSigById.get(id);
+			if (sigP === sigN) {
+				continue;
+			}
+			if (sigP === undefined && sigN !== undefined) {
+				this.emitter.emit("nodeCreate", { id });
+				anyEmitted = true;
+				continue;
+			}
+			if (sigP !== undefined && sigN !== undefined) {
 				this.emitter.emit("nodeChange", { id });
 				anyEmitted = true;
 			}
+		}
+		const allEdgeIds = new Set([...prev.edgeSigById.keys(), ...next.edgeSigById.keys()]);
+		for (const id of allEdgeIds) {
+			const sigP = prev.edgeSigById.get(id);
+			const sigN = next.edgeSigById.get(id);
+			if (sigP === sigN || sigP === undefined || sigN === undefined) {
+				continue;
+			}
+			this.emitter.emit("edgeChange", { id });
+			anyEmitted = true;
+		}
+		const allWireIds = new Set([...prev.wireSigById.keys(), ...next.wireSigById.keys()]);
+		for (const id of allWireIds) {
+			const sigP = prev.wireSigById.get(id);
+			const sigN = next.wireSigById.get(id);
+			if (sigP === sigN || sigP === undefined || sigN === undefined) {
+				continue;
+			}
+			this.emitter.emit("wireChange", { id });
+			anyEmitted = true;
 		}
 		if (anyEmitted) {
 			this.emitter.emit("change", undefined);
@@ -2952,8 +3054,8 @@ export class BoardRenderer {
 						} else {
 							this.clearWasmHostAuthorshipForEdge(id);
 							graphMutatedForHostMerge = true;
+							this.emitter.emit("edgeDelete", { id });
 						}
-						this.emitter.emit("edgeDelete", { id });
 						break;
 					}
 					case "nodeDelete": {
@@ -2962,8 +3064,9 @@ export class BoardRenderer {
 						if (node) {
 							this.scene.remove(node);
 							graphMutatedForHostMerge = true;
+						} else {
+							this.emitter.emit("nodeDelete", { id });
 						}
-						this.emitter.emit("nodeDelete", { id });
 						break;
 					}
 					case "edgeCreate": {
@@ -2983,6 +3086,26 @@ export class BoardRenderer {
 						this.scene.ingestWasmEdge(new Edge({ id, source: sourceObj, target: targetObj }));
 						graphMutatedForHostMerge = true;
 						this.emitter.emit("edgeCreate", { id, source: sourceId, target: targetId });
+						break;
+					}
+					case "proximityConnect": {
+						const id = String((row.payload as { id?: string }).id ?? "");
+						const sourceId = String((row.payload as { source?: string }).source ?? "");
+						const targetId = String((row.payload as { target?: string }).target ?? "");
+						if (!id || !sourceId || !targetId) {
+							break;
+						}
+						this.emitter.emit("proximityConnect", { id, source: sourceId, target: targetId });
+						break;
+					}
+					case "indirectConnect": {
+						const id = String((row.payload as { id?: string }).id ?? "");
+						const sourceId = String((row.payload as { source?: string }).source ?? "");
+						const targetId = String((row.payload as { target?: string }).target ?? "");
+						if (!id || !sourceId || !targetId) {
+							break;
+						}
+						this.emitter.emit("indirectConnect", { id, source: sourceId, target: targetId });
 						break;
 					}
 					default:
@@ -3665,14 +3788,20 @@ if (boardVitest) {
 
 		it("stores wires and drops them when an endpoint handle is removed", () => {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const created: string[] = [];
+			const destroyed: string[] = [];
+			renderer.on("wireCreate", (e) => created.push(e.id));
+			renderer.on("wireDestroy", (e) => destroyed.push(e.id));
 			const n = new Node({ id: "n", radius: 22, x: 0, y: 0 });
 			const h = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
 			const w = new Wire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
 			renderer.scene.add(n).add(w);
 			expect(renderer.scene.wires.get("w-1")).toBe(w);
 			expect(w.kind).toBe("wire");
+			expect(created).toEqual(["w-1"]);
 			renderer.scene.remove(h);
 			expect(renderer.scene.wires.has("w-1")).toBe(false);
+			expect(destroyed).toEqual(["w-1"]);
 			renderer.dispose();
 		});
 
@@ -4361,6 +4490,40 @@ if (boardVitest) {
 			for (const u of unsubs) {
 				u();
 			}
+			renderer.dispose();
+		});
+
+		it("emits nodeCreate when a node id first appears after the baseline observation", async () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const created: string[] = [];
+			const off = renderer.on("nodeCreate", (p) => created.push(p.id));
+			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			renderer.scene.add(root);
+			await Promise.resolve();
+			const child = new Node({ id: "child", radius: 10, x: 50, y: 0 });
+			renderer.scene.add(child);
+			await Promise.resolve();
+			expect(created).toEqual(["child"]);
+			off();
+			renderer.dispose();
+		});
+
+		it("emits edgeChange when an existing edge signature changes", async () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const changes: string[] = [];
+			const off = renderer.on("edgeChange", (p) => changes.push(p.id));
+			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
+			const hRootSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hChildTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+			const edge = new Edge({ source: hRootSource, id: "link", target: hChildTarget });
+			renderer.scene.add(root).add(child).add(edge);
+			await Promise.resolve();
+			edge.visible = false;
+			renderer.markDirty();
+			await Promise.resolve();
+			expect(changes).toEqual(["link"]);
+			off();
 			renderer.dispose();
 		});
 	});

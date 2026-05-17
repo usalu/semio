@@ -4206,7 +4206,7 @@ mod board_host {
 			best.map(|(_, id)| id)
 		}
 
-		fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str) -> bool {
+		fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str, also_emit: Option<&'static str>) -> bool {
 			if source_handle_id == target_handle_id {
 				return false;
 			}
@@ -4255,6 +4255,12 @@ mod board_host {
 				"edgeCreate",
 				json!({ "id": id, "source": source_handle_id, "target": target_handle_id }),
 			);
+			if let Some(name) = also_emit {
+				self.push_event(
+					name,
+					json!({ "id": id, "source": source_handle_id, "target": target_handle_id }),
+				);
+			}
 			true
 		}
 
@@ -4274,7 +4280,7 @@ mod board_host {
 						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)
 							&& !self.handle_has_incident_edge(id.as_str())
 					}) {
-						self.try_commit_link_edge(&source_id, hid);
+						self.try_commit_link_edge(&source_id, hid, Some("indirectConnect"));
 						self.update_hover_from_world(world);
 						return;
 					}
@@ -4486,7 +4492,7 @@ mod board_host {
 			match grabbed {
 				Interaction::LinkDragSnap { source_id, target_id, .. } => {
 					if let Some(target_handle_id) = target_id {
-						self.try_commit_link_edge(&source_id, &target_handle_id);
+						self.try_commit_link_edge(&source_id, &target_handle_id, Some("proximityConnect"));
 					} else if let Some(target_node_id) = self.resolve_node_hit_world(world) {
 						let source_node_id = self.handles.get(&source_id).map(|h| h.node_id.clone());
 						if source_node_id.as_deref() != Some(target_node_id.as_str()) {
@@ -6294,6 +6300,7 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("proximityConnect"));
 	}
 
 	#[test]
