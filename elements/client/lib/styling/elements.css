@@ -53,19 +53,26 @@
   overflow: hidden !important;
 }
 
-.lm_goldenlayout * {
-  pointer-events: auto !important;
-}
-
 /*
- * Golden Layout forces `pointer-events: auto !important` on every descendant (`.lm_goldenlayout *`).
- * Window options use a pass-through overlay (`pointer-events-none`) with an interactive rail; that
- * override must beat `.lm_goldenlayout *` in the cascade. The overlay is also kept narrow in React
- * (`top/right/bottom` + `w-max`) so it never spans the full canvas hit area.
+ * Do **not** restore `.lm_goldenlayout * { pointer-events: auto !important; }`: it overrides every
+ * deliberate `pointer-events:none` pass-through layer under Golden Layout (Window options shell,
+ * toolbar floats, etc.) and makes full-bleed invisibles steal hits from WebGPU canvases.
+ * Interactive Golden Layout chrome gets explicit `auto` below instead.
  */
-.lm_goldenlayout [data-slot="window-options-overlay"],
-[data-slot="window-options-overlay"] {
-  pointer-events: none !important;
+.lm_goldenlayout .lm_dragProxy,
+.lm_goldenlayout .lm_popin,
+.lm_goldenlayout .lm_header,
+.lm_goldenlayout .lm_tabs,
+.lm_goldenlayout .lm_tab,
+.lm_goldenlayout .lm_controls,
+.lm_goldenlayout .lm_splitter,
+.lm_goldenlayout .lm_splitter .lm_drag_handle,
+.lm_goldenlayout .lm_close,
+.lm_goldenlayout .lm_maximise,
+.lm_goldenlayout .lm_popout,
+.lm_goldenlayout .lm_tabdropdown,
+.lm_goldenlayout .lm_tabdropdown_list {
+  pointer-events: auto !important;
 }
 
 .lm_root {
