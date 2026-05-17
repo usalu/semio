@@ -378,6 +378,29 @@ elements/board:
 
 ---
 
+Make sure to expose callbacks for all events.
+onChange
+onCreate
+onDelete
+onConnect
+onIndirectConnect
+onProximityConnect
+onDrag
+onZoom
+onPan
+onViewportChange
+onNodeCreat
+onNodeChange
+onEdgeChange
+onEdgeCreate
+onEdgeDelete
+onWireCreate
+onWIreChange
+onWireDestroy
+etc
+
+---
+
 Split the monolithic Redraw feature into two features:
 
 - Redraw handles

@@ -15001,6 +15001,54 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
+    fn metabolism_light_fixture_kinds_for_types_and_ports() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.semio.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
+        let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
+        let types_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("types").expect("types")).expect("types list");
+        assert!(!types_arr.is_empty(), "expected seeded types");
+        for t in types_arr {
+            let id = t["id"].as_str().expect("type id");
+            let nk = t["nodeKind"].as_str().expect("type.nodeKind");
+            let exp = format!("semio.metabolism.light.node.{id}");
+            assert_eq!(nk, exp.as_str(), "nodeKind must follow semio.metabolism.light.node.<typeId>");
+        }
+        let fam_arr =
+            crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
+        let mut port_rows = 0usize;
+        for fam in fam_arr {
+            let Some(ports_holder) = fam.get("ports") else { continue };
+            let Some(ports) = crate::kit_backbone::json_array_or_block_items_ref(ports_holder) else {
+                continue;
+            };
+            for p in ports {
+                port_rows += 1;
+                let id = p["id"].as_str().expect("port id");
+                let hk = p["handleKind"].as_str().expect("port.handleKind");
+                let exp = format!("semio.metabolism.light.handle.{id}");
+                assert_eq!(hk, exp.as_str());
+            }
+        }
+        assert!(port_rows >= 1, "expected at least one family port in fixture");
+        for t in types_arr {
+            if let Some(connectors) = t
+                .get("connectors")
+                .and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c))
+            {
+                for c in connectors {
+                    let Some(port) = c.get("port") else { continue };
+                    let Some(pid) = port["id"].as_str() else { continue };
+                    let hk = port["handleKind"].as_str().expect("connector.port.handleKind");
+                    let exp = format!("semio.metabolism.light.handle.{pid}");
+                    assert_eq!(hk, exp.as_str());
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
     fn kit_store_bundle_template_round_trips_metabolism_top_level_keys() {
         // 🧾 The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
         let bundle = crate::kit_backbone::DevBackboneBundleDoc::template();

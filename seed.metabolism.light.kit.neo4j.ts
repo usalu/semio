@@ -15,8 +15,8 @@ function cypherQuote(value: string): string {
 //#endregion 🔖Escape
 
 //#region 🔖Types
-type KitConnector = { id: string; name?: string; port?: { id: string } };
-type KitType = { id: string; name?: string; isAbstract?: boolean; connectors?: { items: KitConnector[] } };
+type KitConnector = { id: string; name?: string; port?: { id: string; handleKind?: string } };
+type KitType = { id: string; name?: string; nodeKind?: string; isAbstract?: boolean; connectors?: { items: KitConnector[] } };
 type KitPiece = { id: string; name?: string; type: { id: string } };
 type KitConnection = {
   id: string;
@@ -24,7 +24,7 @@ type KitConnection = {
   child: { piece: { id: string }; connector: { id: string } };
 };
 type KitDesign = { id: string; name?: string; pieces: { items: KitPiece[] }; connections: { items: KitConnection[] } };
-type KitFamily = { id: string; name?: string; ports?: { items: { id: string; name?: string }[] } };
+type KitFamily = { id: string; name?: string; ports?: { items: { id: string; name?: string; handleKind?: string }[] } };
 type InitialKit = {
   types: { items: KitType[] };
   families: { items: KitFamily[] };
@@ -37,25 +37,33 @@ function unwindTypes(types: KitType[]): string {
   const maps = types.map((t) => {
     const name = t.name != null ? cypherQuote(t.name) : "null";
     const abs = t.isAbstract === true ? "true" : "false";
-    return `{id: ${cypherQuote(t.id)}, name: ${name}, isAbstract: ${abs}}`;
+    const nk = t.nodeKind != null ? cypherQuote(t.nodeKind) : "null";
+    return `{id: ${cypherQuote(t.id)}, name: ${name}, isAbstract: ${abs}, nodeKind: ${nk}}`;
   });
   return [
     `UNWIND [${maps.join(", ")}] AS row`,
     `MERGE (n:Type {id: row.id})`,
-    `SET n.name = coalesce(row.name, n.name), n.isAbstract = row.isAbstract;`,
+    `SET n.name = coalesce(row.name, n.name), n.isAbstract = row.isAbstract, n.nodeKind = coalesce(row.nodeKind, n.nodeKind);`,
   ].join("\n");
 }
 
 function unwindPorts(families: KitFamily[]): string {
-  const rows: { id: string; name: string | null }[] = [];
+  const rows: { id: string; name: string | null; handleKind: string | null }[] = [];
   for (const fam of families) {
     for (const p of fam.ports?.items ?? []) {
-      rows.push({ id: p.id, name: p.name ?? null });
+      rows.push({ id: p.id, name: p.name ?? null, handleKind: p.handleKind ?? null });
     }
   }
   if (rows.length === 0) return "";
-  const maps = rows.map((r) => `{id: ${cypherQuote(r.id)}, name: ${r.name != null ? cypherQuote(r.name) : "null"}}`);
-  return [`UNWIND [${maps.join(", ")}] AS row`, `MERGE (n:Port {id: row.id})`, `SET n.name = coalesce(row.name, n.name);`].join("\n");
+  const maps = rows.map(
+    (r) =>
+      `{id: ${cypherQuote(r.id)}, name: ${r.name != null ? cypherQuote(r.name) : "null"}, handleKind: ${r.handleKind != null ? cypherQuote(r.handleKind) : "null"}}`,
+  );
+  return [
+    `UNWIND [${maps.join(", ")}] AS row`,
+    `MERGE (n:Port {id: row.id})`,
+    `SET n.name = coalesce(row.name, n.name), n.handleKind = coalesce(row.handleKind, n.handleKind);`,
+  ].join("\n");
 }
 
 function unwindConnectors(types: KitType[]): { all: string; withPort: string } {

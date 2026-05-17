@@ -1,8 +1,9 @@
 {
   "title": "Board Icon String Dollar Data Emoji",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Board iconKind: always a string; leading $ = Typst math; data: URL = mime-detected svg or raster; else emoji via bundled Noto Color Emoji subset (Noto emoji family). Remove typst:/emoji:/image: prefixes. Keep metabolism catalog + inline SVG sniff as non-$ non-data vector fallback. Update TS docs/tests and Vitest.",
+  "summary": "iconKind is always a string: leading `$` runs Typst math (strip `$` then wrap or pass through `#`/multiline); `data:` URLs use WHATWG parsing for image/svg+xml, png, jpeg/jpg rasters; otherwise metabolism catalog / inline `\u003csvg` sniff still yields vector; else emoji rendered through Typst with bundled Noto Color Emoji subset (Apache-2.0, Blinc sample bytes). Removed typst:/emoji:/image: prefixes. Added data-url dep, icon cache key v9, Rust tests for $ math / data PNG / emoji. TS/React docs + Vitest handle fixture updated. wasm32 check + nx board:test passed.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪efb7fdfe5b4a4ad191d68c266309cfbd"

@@ -38,7 +38,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80"
                     },
                     {
                         "id": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
@@ -55,7 +56,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
                     },
                     {
                         "id": "bb34f42f-68d6-418b-a613-545ca1d2aa14",
@@ -72,7 +74,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.bb34f42f-68d6-418b-a613-545ca1d2aa14"
                     },
                     {
                         "id": "04e9b156-97a8-4db0-8bb1-f582c5955a79",
@@ -89,7 +92,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.04e9b156-97a8-4db0-8bb1-f582c5955a79"
                     },
                     {
                         "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
@@ -263,7 +267,8 @@
                                     "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-a04a8b137527",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -299,7 +304,8 @@
                                     "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-a04a8b137527",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -489,7 +495,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.277768b5-9220-4312-bf0d-ab82d9fb6a73"
                     },
                     {
                         "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
@@ -655,7 +662,8 @@
                                     "description": "🧺 The center of the east round core (an elevator and a staircase around it).",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-994a9a023448",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -691,7 +699,8 @@
                                     "description": "🪣 The center of the west round core (an elevator and a staircase around it).",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-994a9a023448",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -871,7 +880,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
                     },
                     {
                         "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
@@ -1037,7 +1047,8 @@
                                     "description": "🧴 The middle of the east side of the plattform.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -1073,7 +1084,8 @@
                                     "description": "🧽 The middle of the west side of the plattform.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -1256,7 +1268,8 @@
                         "icon": "",
                         "image": "images/bridge.png",
                         "description": "🏢 A bridge with two segments an addition on the west along the main path.",
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35"
                     },
                     {
                         "id": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
@@ -1421,7 +1434,8 @@
                                     "description": "🧼 The center of the bottom.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -1581,7 +1595,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
                     },
                     {
                         "id": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
@@ -1746,7 +1761,8 @@
                                     "description": "🪥 The center of the bottom.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-671a4aea23eb",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -1886,7 +1902,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9"
                     },
                     {
                         "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
@@ -2051,7 +2068,8 @@
                                     "description": "🔋 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -2240,7 +2258,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d"
                     },
                     {
                         "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
@@ -2405,7 +2424,8 @@
                                     "description": "🔌 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -2603,7 +2623,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
                     },
                     {
                         "id": "e1878572-0fe1-4780-b877-90df9b25d31f",
@@ -2768,7 +2789,8 @@
                                     "description": "💡 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -2957,7 +2979,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.e1878572-0fe1-4780-b877-90df9b25d31f"
                     },
                     {
                         "id": "357b841f-b121-463c-88a6-153d7cbf272f",
@@ -3122,7 +3145,8 @@
                                     "description": "🪔 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -3320,7 +3344,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f"
                     },
                     {
                         "id": "818f2a23-569b-47cb-a69c-147694beb815",
@@ -3485,7 +3510,8 @@
                                     "description": "🧯 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -3674,7 +3700,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815"
                     },
                     {
                         "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
@@ -3839,7 +3866,8 @@
                                     "description": "🗑 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -4037,7 +4065,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd"
                     },
                     {
                         "id": "214a30f8-adfc-40de-840b-151d9f7e17dd",
@@ -4202,7 +4231,8 @@
                                     "description": "🛢 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -4391,7 +4421,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd"
                     },
                     {
                         "id": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
@@ -4556,7 +4587,8 @@
                                     "description": "💰 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -4754,7 +4786,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.cc9a4330-537f-49c2-a70d-5e6383b535f5"
                     },
                     {
                         "id": "f1779b1f-2324-4bad-86da-773a1e90b57c",
@@ -4919,7 +4952,8 @@
                                     "description": "🪙 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -5108,7 +5142,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.f1779b1f-2324-4bad-86da-773a1e90b57c"
                     },
                     {
                         "id": "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
@@ -5273,7 +5308,8 @@
                                     "description": "💴 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -5471,7 +5507,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.3697e115-c2e7-4279-b09a-03e1d1e9c21e"
                     },
                     {
                         "id": "7ca051a6-8752-4ff2-9430-71a80114a88e",
@@ -5636,7 +5673,8 @@
                                     "description": "💵 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -5825,7 +5863,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.7ca051a6-8752-4ff2-9430-71a80114a88e"
                     },
                     {
                         "id": "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
@@ -5990,7 +6029,8 @@
                                     "description": "💶 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -6188,7 +6228,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.6cbd2d9c-5710-452c-af7a-6859cfb0151a"
                     },
                     {
                         "id": "af980393-c613-47c2-88a4-461298b0b8f9",
@@ -6353,7 +6394,8 @@
                                     "description": "💷 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -6542,7 +6584,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.af980393-c613-47c2-88a4-461298b0b8f9"
                     },
                     {
                         "id": "8ee84149-4198-4223-ae89-3021ad2950c7",
@@ -6707,7 +6750,8 @@
                                     "description": "💸 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -6905,7 +6949,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.8ee84149-4198-4223-ae89-3021ad2950c7"
                     },
                     {
                         "id": "5aa65d97-778b-4449-be63-7948730d64bc",
@@ -7070,7 +7115,8 @@
                                     "description": "🏧 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -7259,7 +7305,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.5aa65d97-778b-4449-be63-7948730d64bc"
                     },
                     {
                         "id": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
@@ -7424,7 +7471,8 @@
                                     "description": "🔗 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -7622,7 +7670,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.bfb4b43c-8e75-4265-b64a-7ebe4f62e099"
                     },
                     {
                         "id": "c90e216d-d899-4709-995b-5abfcce75bcb",
@@ -7791,7 +7840,8 @@
                                     "description": "🧲 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -7980,7 +8030,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.c90e216d-d899-4709-995b-5abfcce75bcb"
                     },
                     {
                         "id": "eefe6d3e-f18d-474e-b82e-04bb406d290f",
@@ -8149,7 +8200,8 @@
                                     "description": "🪝 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -8347,7 +8399,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.eefe6d3e-f18d-474e-b82e-04bb406d290f"
                     },
                     {
                         "id": "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
@@ -8516,7 +8569,8 @@
                                     "description": "🧪 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -8705,7 +8759,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.ccb67521-5ca1-42cf-bd81-4058c6c5348d"
                     },
                     {
                         "id": "4b8563c5-37ad-49e8-9b6c-d635378bffce",
@@ -8874,7 +8929,8 @@
                                     "description": "🧫 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -9072,7 +9128,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.4b8563c5-37ad-49e8-9b6c-d635378bffce"
                     },
                     {
                         "id": "5af2d54e-309c-46a6-8454-c91b957a59f9",
@@ -9241,7 +9298,8 @@
                                     "description": "🧬 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -9430,7 +9488,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.5af2d54e-309c-46a6-8454-c91b957a59f9"
                     },
                     {
                         "id": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
@@ -9599,7 +9658,8 @@
                                     "description": "🔬 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -9797,7 +9857,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd"
                     },
                     {
                         "id": "aa34760a-d543-46c8-afa1-d83a38d42f2b",
@@ -9966,7 +10027,8 @@
                                     "description": "🔭 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -10155,7 +10217,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.aa34760a-d543-46c8-afa1-d83a38d42f2b"
                     },
                     {
                         "id": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
@@ -10324,7 +10387,8 @@
                                     "description": "📡 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -10522,7 +10586,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364"
                     },
                     {
                         "id": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
@@ -10687,7 +10752,8 @@
                                     "description": "💉 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -10847,7 +10913,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.93b1cab5-ad4b-422b-a0e0-8b0de23a8534"
                     },
                     {
                         "id": "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
@@ -11012,7 +11079,8 @@
                                     "description": "🩸 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -11181,7 +11249,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.5ee4ad14-091f-42f4-a357-09fc16c3ae39"
                     },
                     {
                         "id": "34ddd546-4df3-480c-9aa3-880fb51b8016",
@@ -11346,7 +11415,8 @@
                                     "description": "🩹 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -11506,7 +11576,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.34ddd546-4df3-480c-9aa3-880fb51b8016"
                     },
                     {
                         "id": "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
@@ -11671,7 +11742,8 @@
                                     "description": "🩺 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -11840,7 +11912,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.e913ffae-6ae9-44e0-b516-1cc763bfefe7"
                     },
                     {
                         "id": "7ec14f29-b730-4000-b66d-aa304767e8c1",
@@ -12005,7 +12078,8 @@
                                     "description": "🩻 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -12165,7 +12239,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.7ec14f29-b730-4000-b66d-aa304767e8c1"
                     },
                     {
                         "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
@@ -12330,7 +12405,8 @@
                                     "description": "🩼 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -12499,7 +12575,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.4cc5a1ea-0fde-4af4-81c5-afa069e6fef5"
                     },
                     {
                         "id": "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
@@ -12664,7 +12741,8 @@
                                     "description": "🧿 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -12824,7 +12902,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.67917609-d54d-4afc-9f9a-6e3abc0d18a4"
                     },
                     {
                         "id": "94c31826-ae8e-432a-9a27-73346f49c704",
@@ -12989,7 +13068,8 @@
                                     "description": "💎 The middle of the main entrance door of the upper entrance floor.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -13158,7 +13238,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.94c31826-ae8e-432a-9a27-73346f49c704"
                     },
                     {
                         "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
@@ -13316,7 +13397,8 @@
                                     "description": "🏮 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -13361,7 +13443,8 @@
                                     "description": "🧧 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -13397,7 +13480,8 @@
                                     "description": "🎀 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13419,7 +13503,8 @@
                                     "description": "🎁 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13441,7 +13526,8 @@
                                     "description": "🎄 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13463,7 +13549,8 @@
                                     "description": "🎊 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13485,7 +13572,8 @@
                                     "description": "🎉 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13507,7 +13595,8 @@
                                     "description": "🎃 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13529,7 +13618,8 @@
                                     "description": "🎈 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13551,7 +13641,8 @@
                                     "description": "🎎 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13727,7 +13818,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
                     },
                     {
                         "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
@@ -13885,7 +13977,8 @@
                                     "description": "🏆 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -13930,7 +14023,8 @@
                                     "description": "🥇 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -13966,7 +14060,8 @@
                                     "description": "🥈 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -13988,7 +14083,8 @@
                                     "description": "🥉 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14010,7 +14106,8 @@
                                     "description": "🏅 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14032,7 +14129,8 @@
                                     "description": "🎗 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14054,7 +14152,8 @@
                                     "description": "🎪 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14076,7 +14175,8 @@
                                     "description": "🎭 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14098,7 +14198,8 @@
                                     "description": "🎨 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14120,7 +14221,8 @@
                                     "description": "🎬 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14296,7 +14398,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.5b3e2b28-e331-420b-83bd-9a8c05ac2918"
                     },
                     {
                         "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
@@ -14454,7 +14557,8 @@
                                     "description": "🎤 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-73ce526cb47c",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -14499,7 +14603,8 @@
                                     "description": "🎧 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-60ea93872506",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -14535,7 +14640,8 @@
                                     "description": "🎼 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14557,7 +14663,8 @@
                                     "description": "🎹 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14579,7 +14686,8 @@
                                     "description": "🥁 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14601,7 +14709,8 @@
                                     "description": "🎷 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14623,7 +14732,8 @@
                                     "description": "🎺 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14645,7 +14755,8 @@
                                     "description": "🎸 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14667,7 +14778,8 @@
                                     "description": "🪕 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14689,7 +14801,8 @@
                                     "description": "🎻 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -14865,7 +14978,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.49233ca9-f005-4d15-b515-2a18a94dd7a8"
                     },
                     {
                         "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
@@ -15023,7 +15137,8 @@
                                     "description": "🎲 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -15068,7 +15183,8 @@
                                     "description": "🎯 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-60ea93872506",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -15104,7 +15220,8 @@
                                     "description": "🎳 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15126,7 +15243,8 @@
                                     "description": "🎮 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15148,7 +15266,8 @@
                                     "description": "🎰 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15170,7 +15289,8 @@
                                     "description": "🧩 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15192,7 +15312,8 @@
                                     "description": "🪀 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15214,7 +15335,8 @@
                                     "description": "🪁 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15236,7 +15358,8 @@
                                     "description": "🪩 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15258,7 +15381,8 @@
                                     "description": "🪅 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15434,7 +15558,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571"
                     },
                     {
                         "id": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
@@ -15600,7 +15725,8 @@
                                     "description": "🎠 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-73ce526cb47c",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -15636,7 +15762,8 @@
                                     "description": "🎡 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -15672,7 +15799,8 @@
                                     "description": "🎢 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15694,7 +15822,8 @@
                                     "description": "💈 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15716,7 +15845,8 @@
                                     "description": "🍕 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15738,7 +15868,8 @@
                                     "description": "🍔 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15760,7 +15891,8 @@
                                     "description": "🌮 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15782,7 +15914,8 @@
                                     "description": "🌯 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15804,7 +15937,8 @@
                                     "description": "🥗 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -15826,7 +15960,8 @@
                                     "description": "🥘 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16002,7 +16137,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
                     },
                     {
                         "id": "2951ab00-3891-4d50-b887-26f1d308bfef",
@@ -16168,7 +16304,8 @@
                                     "description": "🍝 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -16204,7 +16341,8 @@
                                     "description": "🍜 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -16240,7 +16378,8 @@
                                     "description": "🍛 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16262,7 +16401,8 @@
                                     "description": "🍚 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16284,7 +16424,8 @@
                                     "description": "🍙 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16306,7 +16447,8 @@
                                     "description": "🍱 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16328,7 +16470,8 @@
                                     "description": "🥟 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16350,7 +16493,8 @@
                                     "description": "🍡 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16372,7 +16516,8 @@
                                     "description": "🍢 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16394,7 +16539,8 @@
                                     "description": "🍣 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16570,7 +16716,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.2951ab00-3891-4d50-b887-26f1d308bfef"
                     },
                     {
                         "id": "0271dcc8-c961-4ecf-8591-9f8027252174",
@@ -16736,7 +16883,8 @@
                                     "description": "🍤 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-73ce526cb47c",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -16772,7 +16920,8 @@
                                     "description": "🍰 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-60ea93872506",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -16808,7 +16957,8 @@
                                     "description": "🧁 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16830,7 +16980,8 @@
                                     "description": "🍩 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16852,7 +17003,8 @@
                                     "description": "🍪 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16874,7 +17026,8 @@
                                     "description": "🧃 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16896,7 +17049,8 @@
                                     "description": "🥤 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16918,7 +17072,8 @@
                                     "description": "🧊 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16940,7 +17095,8 @@
                                     "description": "🍵 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -16962,7 +17118,8 @@
                                     "description": "🧉 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17138,7 +17295,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.0271dcc8-c961-4ecf-8591-9f8027252174"
                     },
                     {
                         "id": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
@@ -17304,7 +17462,8 @@
                                     "description": "🍷 The bottom system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -17340,7 +17499,8 @@
                                     "description": "🍸 The top system center of the elevator.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-60ea93872506",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506"
                                     },
                                     "mandatory": false,
                                     "props": {
@@ -17376,7 +17536,8 @@
                                     "description": "🍹 The first door of the side plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17398,7 +17559,8 @@
                                     "description": "🍺 The second door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17420,7 +17582,8 @@
                                     "description": "🍻 The third door of the side plattform in the north facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17442,7 +17605,8 @@
                                     "description": "🥂 The fourth door of the side plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17464,7 +17628,8 @@
                                     "description": "🍽 The first door of the main plattform in the west facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17486,7 +17651,8 @@
                                     "description": "🍴 The second door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17508,7 +17674,8 @@
                                     "description": "🥄 The first door of the main plattform in the south facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17530,7 +17697,8 @@
                                     "description": "🔪 The second door of the main plattform in the east facade.",
                                     "port": {
                                         "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                                        "hash": "…"
+                                        "hash": "…",
+                                        "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                     },
                                     "mandatory": false,
                                     "hash": "…"
@@ -17706,7 +17874,8 @@
                                 }
                             ]
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.277e1960-c3c8-4186-9a83-8f7eb66bcf28"
                     },
                     {
                         "id": "019d8734-03bb-774e-b52e-68d4f010e939",
@@ -17715,7 +17884,8 @@
                             "hash": "…",
                             "items": []
                         },
-                        "hash": "…"
+                        "hash": "…",
+                        "nodeKind": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939"
                     }
                 ]
             },
@@ -54143,7 +54313,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448"
                                 },
                                 {
                                     "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
@@ -54157,7 +54328,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321"
                                 },
                                 {
                                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
@@ -54171,7 +54343,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
@@ -54185,7 +54358,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -54199,7 +54373,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-4f2766b68b25",
@@ -54213,7 +54388,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
@@ -54231,7 +54407,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-57263e420e70",
@@ -54249,7 +54426,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
@@ -54263,7 +54441,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
@@ -54277,7 +54456,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-60ea93872506",
@@ -54291,7 +54471,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-60ea93872506"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-671a4aea23eb",
@@ -54305,7 +54486,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-671a4aea23eb"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-6b15b40049fb",
@@ -54319,7 +54501,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6b15b40049fb"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
@@ -54333,7 +54516,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-6c704c2a75e6"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-73ce526cb47c",
@@ -54347,7 +54531,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-73ce526cb47c"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
@@ -54361,7 +54546,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-76bc3f56347a"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
@@ -54375,7 +54561,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
                                 },
                                 {
                                     "id": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
@@ -54389,7 +54576,8 @@
                                             }
                                         ]
                                     },
-                                    "hash": "…"
+                                    "hash": "…",
+                                    "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-7ddf5d3ba702"
                                 }
                             ]
                         },
