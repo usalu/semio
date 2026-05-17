@@ -477,6 +477,41 @@ pub use scene_json::{
 	fixture_edge_handle_ids_from_object,
 };
 
+fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+	obj.get("hidden").and_then(|v| v.as_bool())
+}
+
+fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
+	match board_json_hidden_flag(obj) {
+		Some(hidden) => Some(!hidden),
+		None => obj.get("visible").and_then(|v| v.as_bool()),
+	}
+}
+
+fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
+	board_json_visible_option(obj).unwrap_or(true)
+}
+
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
+	let Some(root) = value.as_object_mut() else {
+		return;
+	};
+	for key in ["nodes", "handles", "edges", "wires"] {
+		let Some(rows) = root.get_mut(key).and_then(|v| v.as_array_mut()) else {
+			continue;
+		};
+		for row in rows {
+			let Some(obj) = row.as_object_mut() else {
+				continue;
+			};
+			if let Some(visible) = board_json_visible_option(obj) {
+				obj.insert("visible".into(), serde_json::json!(visible));
+			}
+		}
+	}
+}
+
 // #region 🕸️ForceGraphLayout
 mod force_graph {
 	use nalgebra::Vector2;
@@ -484,7 +519,7 @@ mod force_graph {
 	use serde_json::Value;
 	use std::collections::{HashMap, HashSet};
 
-	use super::fixture_edge_handle_ids_from_object;
+	use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
 	#[serde(rename_all = "camelCase")]
@@ -601,6 +636,9 @@ mod force_graph {
 			let Some(obj) = node.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(obj) {
+				continue;
+			}
 			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
 				continue;
 			};
@@ -611,20 +649,27 @@ mod force_graph {
 				let Some(ho) = h.as_object() else {
 					continue;
 				};
+				if !board_json_visible_or_true(ho) {
+					continue;
+				}
 				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
 					handle_to_node.insert(hid.to_string(), nid.to_string());
 				}
 			}
 		}
 		let mut id_to_index: HashMap<String, usize> = HashMap::new();
+		let mut visible_node_indices: Vec<usize> = Vec::new();
 		let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
 		let mut positions: Vec<Vector2<f64>> = Vec::new();
 		let mut velocities: Vec<Vector2<f64>> = Vec::new();
 		let mut radii: Vec<f64> = Vec::new();
-		for (idx, node) in nodes.iter().enumerate() {
+		for (raw_idx, node) in nodes.iter().enumerate() {
 			let Some(obj) = node.as_object() else {
 				return Err("node must be object".into());
 			};
+			if !board_json_visible_or_true(obj) {
+				continue;
+			}
 			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
 				return Err("node id missing".into());
 			};
@@ -634,13 +679,17 @@ mod force_graph {
 				(Some(x), Some(y)) if x.is_finite() && y.is_finite() => Some((x, y)),
 				_ => None,
 			};
-			id_to_index.insert(nid.to_string(), idx);
+			id_to_index.insert(nid.to_string(), positions.len());
+			visible_node_indices.push(raw_idx);
 			optional_xy.push(xy);
 			positions.push(Vector2::zeros());
 			velocities.push(Vector2::zeros());
 			radii.push(node_repulsion_radius(node));
 		}
 		let n = positions.len();
+		if n == 0 {
+			return Ok(());
+		}
 		let mut sum = Vector2::zeros();
 		let mut finite_ct: u32 = 0;
 		for xy in &optional_xy {
@@ -673,6 +722,9 @@ mod force_graph {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(eo) {
+				continue;
+			}
 			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
@@ -758,7 +810,10 @@ mod force_graph {
 				positions[i] += v * dt;
 			}
 		}
-		for (idx, node) in nodes.iter_mut().enumerate() {
+		for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
+			let Some(node) = nodes.get_mut(raw_idx) else {
+				continue;
+			};
 			let Some(obj) = node.as_object_mut() else {
 				continue;
 			};
@@ -787,7 +842,7 @@ mod hierarchical_tree {
 	use serde_json::Value;
 	use std::collections::{HashMap, HashSet};
 
-	use super::fixture_edge_handle_ids_from_object;
+	use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
 
 	/// 🌳 Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
 	#[derive(Clone, Debug, Deserialize)]
@@ -1189,6 +1244,9 @@ mod hierarchical_tree {
 			let Some(obj) = node.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(obj) {
+				continue;
+			}
 			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
 				continue;
 			};
@@ -1200,10 +1258,16 @@ mod hierarchical_tree {
 				let Some(ho) = h.as_object() else {
 					continue;
 				};
+				if !board_json_visible_or_true(ho) {
+					continue;
+				}
 				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
 					handle_to_node.insert(hid.to_string(), nid.to_string());
 				}
 			}
+		}
+		if id_to_node.is_empty() {
+			return Ok(());
 		}
 		let mut directed: Vec<(String, String)> = Vec::new();
 		let mut seen_dir: HashSet<(String, String)> = HashSet::new();
@@ -1211,6 +1275,9 @@ mod hierarchical_tree {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(eo) {
+				continue;
+			}
 			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
@@ -1239,6 +1306,9 @@ mod hierarchical_tree {
 			let Some(obj) = node.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(obj) {
+				continue;
+			}
 			if obj.get("root").and_then(|v| v.as_bool()) == Some(true) {
 				if let Some(nid) = obj.get("id").and_then(|v| v.as_str()) {
 					roots.push(nid.to_string());
@@ -1348,7 +1418,7 @@ mod redraw_layout {
 	use std::collections::HashMap;
 	use crate::vello::kurbo::Point;
 
-	use super::fixture_edge_handle_ids_from_object;
+	use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
 	use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
 	use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
 	use super::vcompute::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
@@ -1410,6 +1480,10 @@ mod redraw_layout {
 				shapes.push(None);
 				continue;
 			};
+			if !board_json_visible_or_true(no) {
+				shapes.push(None);
+				continue;
+			}
 			shapes.push(parse_node_shape_snap(no));
 			let Some(hs) = no.get("handles").and_then(|v| v.as_array()) else {
 				continue;
@@ -1418,6 +1492,9 @@ mod redraw_layout {
 				let Some(ho) = h.as_object() else {
 					continue;
 				};
+				if !board_json_visible_or_true(ho) {
+					continue;
+				}
 				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
 					handle_loc.insert(hid.to_string(), (ni, hi));
 				}
@@ -1428,6 +1505,9 @@ mod redraw_layout {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
+			if !board_json_visible_or_true(eo) {
+				continue;
+			}
 			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
@@ -2010,6 +2090,7 @@ mod svg_icon_vello09 {
 }
 
 mod board_host {
+	use super::board_json_visible_option;
 	use super::elements_board_palette as board_palette;
 	use super::scene_json::*;
 	use serde_json::json;
@@ -3261,7 +3342,7 @@ mod board_host {
 			self.handles
 				.iter()
 				.filter(|(id, h)| {
-					h.node_id == node_id && h.visible && self.handle_eligible_indirect_connect_ring(id.as_str())
+					h.node_id == node_id && self.handle_effectively_visible(id.as_str()) && self.handle_eligible_indirect_connect_ring(id.as_str())
 				})
 				.count()
 		}
@@ -3270,7 +3351,7 @@ mod board_host {
 		fn sole_eligible_indirect_handle_on_node(&self, node_id: &str) -> Option<String> {
 			let mut found: Option<String> = None;
 			for (id, h) in &self.handles {
-				if h.node_id != node_id || !h.visible || !self.handle_eligible_indirect_connect_ring(id.as_str()) {
+				if h.node_id != node_id || !self.handle_effectively_visible(id.as_str()) || !self.handle_eligible_indirect_connect_ring(id.as_str()) {
 					continue;
 				}
 				if found.is_some() {
@@ -3289,7 +3370,7 @@ mod board_host {
 			}
 			let mut found: Option<String> = None;
 			for (id, h) in &self.handles {
-				if h.node_id != target_node_id || !h.visible {
+				if h.node_id != target_node_id || !self.handle_effectively_visible(id.as_str()) {
 					continue;
 				}
 				if self.handle_has_incident_edge(id.as_str()) {
@@ -3367,7 +3448,7 @@ mod board_host {
 				return false;
 			}
 			for (hid, h) in &self.handles {
-				if h.node_id != target_node_id || !h.visible {
+				if h.node_id != target_node_id || !self.handle_effectively_visible(hid.as_str()) {
 					continue;
 				}
 				if self.handle_has_incident_edge(hid.as_str()) {
@@ -3515,7 +3596,7 @@ mod board_host {
 				}
 				if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
 					for h in self.handles.values().rev() {
-						if !h.visible || h.node_id != ring_node_id {
+						if h.node_id != ring_node_id || !self.handle_effectively_visible(h.id.as_str()) {
 							continue;
 						}
 						if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
@@ -3533,7 +3614,7 @@ mod board_host {
 					BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
 				) {
 					for h in self.handles.values().rev() {
-						if !h.visible {
+						if !self.handle_effectively_visible(h.id.as_str()) {
 							continue;
 						}
 						let Some(pos) = self.handle_world_pos(h) else { continue };
@@ -3572,7 +3653,7 @@ mod board_host {
 			}
 			if o.select_edges {
 				for e in self.edges.values().rev() {
-					if !e.visible {
+					if !self.edge_effectively_visible(e) {
 						continue;
 					}
 					if let Some(c) = self.edge_curve(e) {
@@ -3940,7 +4021,7 @@ mod board_host {
 						color: handle_color,
 						icon_kind: handle_icon_kind,
 						user_data: None,
-						visible: None,
+						visible: board_json_visible_option(ho),
 					});
 				}
 				let shape_str = obj.get("shape").and_then(|v| v.as_str());
@@ -3979,7 +4060,7 @@ mod board_host {
 						icon_kind,
 						node_kind: fixture_node_kind.clone(),
 						user_data: None,
-						visible: None,
+						visible: board_json_visible_option(obj),
 						root,
 						shape: Some("rectangle".into()),
 						radius: None,
@@ -4011,7 +4092,7 @@ mod board_host {
 						icon_kind,
 						node_kind: fixture_node_kind.clone(),
 						user_data: None,
-						visible: None,
+						visible: board_json_visible_option(obj),
 						root,
 						shape: Some("circle".into()),
 						radius: Some(radius),
@@ -4046,7 +4127,7 @@ mod board_host {
 					selected: None,
 					style: None,
 					user_data: None,
-					visible: None,
+					visible: board_json_visible_option(e),
 				});
 			}
 			if self.sync_descriptor(&desc).is_err() {
@@ -4220,7 +4301,7 @@ mod board_host {
 
 		fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str) {
 			for h in self.handles.values() {
-				if !h.visible || h.node_id != node_id {
+				if h.node_id != node_id || !self.handle_effectively_visible(h.id.as_str()) {
 					continue;
 				}
 				if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
@@ -4357,7 +4438,7 @@ mod board_host {
 				}
 			}
 			for h in self.handles.values() {
-				if !h.visible || !draw_handles {
+				if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
 					continue;
 				}
 				if let Some(tb) = tile_filter {
@@ -4376,7 +4457,7 @@ mod board_host {
 			};
 			let edge_stroke = Stroke::new(edge_sw);
 			for e in self.edges.values() {
-				if !e.visible {
+				if !self.edge_effectively_visible(e) {
 					continue;
 				}
 				if let Some(tb) = tile_filter {
@@ -4403,7 +4484,7 @@ mod board_host {
 			let wire_stroke = Stroke::new(wire_sw);
 			let wire_color = self.vello_theme.selection_preview_stroke;
 			for w in self.wires.values() {
-				if !w.visible {
+				if !self.wire_effectively_visible(w) {
 					continue;
 				}
 				if let Some(c) = self.wire_curve(w) {
@@ -4617,12 +4698,31 @@ mod board_host {
 			self.edges.values().any(|e| e.source == handle_id || e.target == handle_id)
 		}
 
+		fn node_effectively_visible(&self, node_id: &str) -> bool {
+			self.nodes.get(node_id).is_some_and(|n| n.visible)
+		}
+
+		fn handle_effectively_visible(&self, handle_id: &str) -> bool {
+			self.handles
+				.get(handle_id)
+				.is_some_and(|h| h.visible && self.node_effectively_visible(h.node_id.as_str()))
+		}
+
+		fn edge_effectively_visible(&self, edge: &EdgeData) -> bool {
+			edge.visible
+				&& self.handle_effectively_visible(edge.source.as_str())
+				&& self.handle_effectively_visible(edge.target.as_str())
+		}
+
+		fn wire_effectively_visible(&self, wire: &WireData) -> bool {
+			wire.visible
+				&& self.handle_effectively_visible(wire.source.as_str())
+				&& wire.target.as_ref().map(|id| self.handle_effectively_visible(id.as_str())).unwrap_or(true)
+		}
+
 		/// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
 		fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
-			let Some(h) = self.handles.get(handle_id) else {
-				return false;
-			};
-			h.visible && !self.handle_has_incident_edge(handle_id)
+			self.handle_effectively_visible(handle_id) && !self.handle_has_incident_edge(handle_id)
 		}
 
 		/// @emoji 📍 Proximity snap uses real handle anchors in world space; skip only minimap LOD so far-zoomed boards (e.g. Nakagin overview) can snap near target handles.
@@ -4631,10 +4731,13 @@ mod board_host {
 				return None;
 			}
 			let source_handle = self.handles.get(source_handle_id)?;
+			if !self.handle_effectively_visible(source_handle_id) {
+				return None;
+			}
 			let source_node_id = source_handle.node_id.as_str();
 			let mut best: Option<(f64, String)> = None;
 			for (id, h) in &self.handles {
-				if id == source_handle_id || !h.visible {
+				if id == source_handle_id || !self.handle_effectively_visible(id.as_str()) {
 					continue;
 				}
 				if self.handle_has_incident_edge(id.as_str()) {
@@ -4658,6 +4761,9 @@ mod board_host {
 
 		fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str, also_emit: Option<&'static str>) -> bool {
 			if source_handle_id == target_handle_id {
+				return false;
+			}
+			if !self.handle_effectively_visible(source_handle_id) || !self.handle_effectively_visible(target_handle_id) {
 				return false;
 			}
 			let Some(source_row) = self.handles.get(source_handle_id) else {
@@ -4734,7 +4840,8 @@ mod board_host {
 						}
 					}
 					if let Some(hid) = hit.as_ref().filter(|id| {
-						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)
+						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id)
+							&& self.handle_effectively_visible(id.as_str())
 							&& !self.handle_has_incident_edge(id.as_str())
 					}) {
 						self.try_commit_link_edge(&source_id, hid, Some("indirectConnect"));
@@ -5148,14 +5255,14 @@ mod board_host {
 			}
 			if o.select_handles {
 				for h in self.handles.values() {
-					if h.visible && self.selection_contains_handle(h, box_, enclosing, polygon) {
+					if self.handle_effectively_visible(h.id.as_str()) && self.selection_contains_handle(h, box_, enclosing, polygon) {
 						hits.insert(h.id.clone());
 					}
 				}
 			}
 			if o.select_edges {
 				for e in self.edges.values() {
-					if !e.visible {
+					if !self.edge_effectively_visible(e) {
 						continue;
 					}
 					if let Some(c) = self.edge_curve(e) {
@@ -5886,8 +5993,9 @@ impl BoardSession {
 
 	#[wasm_bindgen(js_name = syncDescriptorJson)]
 	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
-		let desc: SceneDescriptorJson =
-			serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+		let mut raw: serde_json::Value = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+		normalize_board_descriptor_hidden_to_visible(&mut raw);
+		let desc: SceneDescriptorJson = serde_json::from_value(raw).map_err(|e| JsValue::from_str(&e.to_string()))?;
 		self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e))?;
 		Ok(())
 	}
@@ -6158,6 +6266,7 @@ mod host_tests {
 	use super::vcompute::handle_position_on_circle;
 	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
 	use crate::vello::kurbo::Point;
+	use serde_json::json;
 
 	fn set_detail_lod(h: &mut BoardHost) {
 		h.set_camera(0.0, 0.0, 2.0);
@@ -6817,6 +6926,90 @@ mod host_tests {
 			ev.contains("proximityConnect") || ev.contains("indirectConnect"),
 			"expected proximityConnect or indirectConnect, got: {ev}"
 		);
+	}
+
+	#[test]
+	fn board_host_hidden_handle_blocks_proximity_connect() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 280.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port", "hidden": true }]
+				}
+			],
+			"edges": []
+		});
+		assert!(h.parse_fixture_v1(&fixture));
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
+		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		let s1 = h.world_to_screen(hp_b);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("edgeCreate"), "hidden handle should block connect, got: {ev}");
+		assert!(h.edges.is_empty());
+	}
+
+	#[test]
+	fn board_host_hidden_node_blocks_indirect_connect() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "parent" }]
+				},
+				{
+					"id": "b",
+					"x": 280.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"hidden": true,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "child" }]
+				}
+			],
+			"edges": []
+		});
+		assert!(h.parse_fixture_v1(&fixture));
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(inside_a.x, inside_a.y, 0, false, false);
+		let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_move_screen(inside_b.x, inside_b.y);
+		h.pointer_up_screen(inside_b.x, inside_b.y);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("edgeCreate"), "hidden node should block indirect connect, got: {ev}");
+		assert!(matches!(h.interaction, Interaction::None));
+		assert!(h.edges.is_empty());
 	}
 
 	#[test]

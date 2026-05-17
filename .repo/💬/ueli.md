@@ -427,6 +427,16 @@ Within one lod nothing changes. Make the trigger zoom points props.
 
 ---
 
+All individual nodes, edges and handles receive a new property: hidden
+When nodes are hi
+Make sure to extend the existing features e.g.
+no proximity connect possible to a hidden node or a hidden handle
+no indirect connect possible to a hidden node or a hidden handle
+no connect possible to a hidden node or a hidden handle
+redraw only takes visisble input (hidden nodes are not updated, hidden edges dont produce forces)
+
+---
+
 Introduce a new feature: indirect connect (with indirect handles)
 
 In normal lod, no handles are shown. But if a single node is selected then a ring of handles around it should appear (same handle kind just scaled up to 80% of node size with same styling as selected but with secondary color). If on of them is clicked then a wire is started. If the wire is dropped on a target node then the same ring appears with the handles from the target node. If one of the target handles is selected then the edge is created. Otherwise the wire is stopped. Make sure the ring appears ontop of the other nodes. As soon as it is over a node which is compatible (at least one free compatible handle) then the compatible node should also be shown with hover style.

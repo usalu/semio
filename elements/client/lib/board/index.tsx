@@ -1075,9 +1075,11 @@ export function BoardCanvas({
 			worldRasterTiling,
 		});
 		rendererRef.current = renderer;
+		renderer.attachTextOverlayCanvas(textOverlayRef.current);
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
 		return () => {
+			renderer.attachTextOverlayCanvas(null);
 			const r = renderer;
 			queueMicrotask(() => {
 				r.dispose();
@@ -1090,18 +1092,6 @@ export function BoardCanvas({
 			});
 		};
 	}, [renderMode]);
-
-	useLayoutEffect(() => {
-		const renderer = rendererRef.current;
-		const overlay = textOverlayRef.current;
-		if (!renderer) {
-			return;
-		}
-		renderer.attachTextOverlayCanvas(overlay);
-		return () => {
-			renderer.attachTextOverlayCanvas(null);
-		};
-	}, [contextRenderer]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -1239,9 +1229,9 @@ export function BoardCanvas({
 					ref={containerRef}
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
-					<div className="relative min-h-0 min-w-0 flex-1">
+					<div className="pointer-events-none relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
 						<canvas
-							className="block h-full min-h-0 min-w-0 w-full touch-none"
+							className="pointer-events-auto block h-full min-h-0 min-w-0 w-full touch-none"
 							data-testid="board-canvas"
 							ref={canvasRef}
 							style={{ display: "block", height: "100%", width: "100%" }}
@@ -1250,7 +1240,7 @@ export function BoardCanvas({
 							className="pointer-events-none absolute inset-0 z-[1] block h-full w-full"
 							data-testid="board-text-overlay"
 							ref={textOverlayRef}
-							style={{ display: "block", height: "100%", width: "100%" }}
+							style={{ display: "block", height: "100%", pointerEvents: "none", width: "100%" }}
 						/>
 					</div>
 					{contextRenderer ? (
@@ -1755,6 +1745,34 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.unmount();
 			});
+			restoreCanvas();
+		});
+
+		it("keeps the gpu canvas as the hit target under the text overlay stack", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+			await act(async () => {
+				root.render(
+					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+						<Node id="a" radius={10} x={0} y={0}>
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+			const gpu = container.querySelector('[data-testid="board-canvas"]') as HTMLElement | null;
+			const overlay = container.querySelector('[data-testid="board-text-overlay"]') as HTMLElement | null;
+			expect(gpu).toBeTruthy();
+			expect(overlay).toBeTruthy();
+			expect(gpu?.className.includes("pointer-events-auto")).toBe(true);
+			expect((overlay?.getAttribute("style") ?? "").includes("pointer-events")).toBe(true);
+			await act(async () => {
+				root.unmount();
+			});
+			document.body.removeChild(container);
 			restoreCanvas();
 		});
 

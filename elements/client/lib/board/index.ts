@@ -357,6 +357,8 @@ export interface BoardFixtureHandleV1 {
 	angle: number;
 	/** @emoji 🔗 Required after {@link parseBoardFixtureV1}; JSON may omit it and receive {@link BOARD_BUILTIN_PORT_HANDLE_KIND}. */
 	handleKind: string;
+	/** @emoji 🙈 Optional hidden flag; when true the handle is excluded from connect, hit, and redraw input. */
+	hidden?: boolean;
 	id: string;
 	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
 	color?: string;
@@ -369,6 +371,8 @@ export interface BoardFixtureHandleV1 {
 export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
+	/** @emoji 🙈 Optional hidden flag; when true the node is excluded from connect, hit, and redraw input. */
+	hidden?: boolean;
 	id: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
@@ -396,6 +400,8 @@ export interface BoardFixtureRectangleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	height: number;
+	/** @emoji 🙈 Optional hidden flag; when true the node is excluded from connect, hit, and redraw input. */
+	hidden?: boolean;
 	id: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
@@ -423,6 +429,8 @@ export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangl
 
 /** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
 export interface BoardFixtureEdgeV1 {
+	/** @emoji 🙈 Optional hidden flag; when true the edge is excluded from connect and redraw input. */
+	hidden?: boolean;
 	id: string;
 	source: string;
 	target: string;
@@ -650,11 +658,32 @@ export interface BoardEventMap {
 
 export interface BoardObjectOptions {
 	draggable?: boolean;
+	hidden?: boolean;
 	id: string;
 	selected?: boolean;
 	style?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
+}
+
+function resolveBoardVisibleFlag(options?: { hidden?: boolean; visible?: boolean }): boolean {
+	if (!options) {
+		return true;
+	}
+	if (options.hidden === true) {
+		return false;
+	}
+	if (options.hidden === false) {
+		return true;
+	}
+	return options.visible ?? true;
+}
+
+function readBoardJsonHiddenFlag(raw: Record<string, unknown>): boolean {
+	return !resolveBoardVisibleFlag({
+		hidden: typeof raw.hidden === "boolean" ? raw.hidden : undefined,
+		visible: typeof raw.visible === "boolean" ? raw.visible : undefined,
+	});
 }
 
 /** @emoji 🔵 World-space circle node (center + radius). */
@@ -728,6 +757,7 @@ export interface BoardHandleProps {
 	contextMenu?: ContextMenuItem[];
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
 	handleKind: string;
+	hidden?: boolean;
 	id: string;
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
@@ -743,6 +773,7 @@ export interface BoardEdgeProps {
 	contextMenu?: ContextMenuItem[];
 	/** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
 	edgeKind?: string;
+	hidden?: boolean;
 	id: string;
 	selected?: boolean;
 	source: string;
@@ -757,6 +788,7 @@ export interface BoardWireProps {
 	contextMenu?: ContextMenuItem[];
 	endX?: number;
 	endY?: number;
+	hidden?: boolean;
 	id: string;
 	selected?: boolean;
 	source: string;
@@ -1268,9 +1300,11 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			const iconRaw = hr.iconKind;
 			const iconTrim =
 				typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
+			const hidden = readBoardJsonHiddenFlag(hr);
 			const base: BoardFixtureHandleV1 = {
 				angle,
 				handleKind,
+				...(hidden ? { hidden: true } : {}),
 				id: hid,
 				...(colorTrim !== undefined ? { color: colorTrim } : {}),
 				...(withRadius ? { radius: hradius } : {}),
@@ -1284,6 +1318,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const textFontSize = fixtureOptionalTextFontSize(node);
 		const textAlignment = fixtureOptionalTextAlignment(node);
 		const rootFlag = node.root === true;
+		const hidden = readBoardJsonHiddenFlag(node);
 		const iconKindRaw = (node as Record<string, unknown>).iconKind;
 		const iconKind =
 			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
@@ -1309,6 +1344,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
+				...(hidden ? { hidden: true } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				...(textAutofit ? { textAutofit: true } : {}),
 				...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1336,6 +1372,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
+			...(hidden ? { hidden: true } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			...(textAutofit ? { textAutofit: true } : {}),
 			...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1363,10 +1400,11 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const targetRaw = edge.target;
 		const source = typeof sourceRaw === "string" ? sourceRaw : null;
 		const target = typeof targetRaw === "string" ? targetRaw : null;
+		const hidden = readBoardJsonHiddenFlag(edge);
 		if (!id || !source || !target) {
 			return null;
 		}
-		edges.push({ id, source, target });
+		edges.push({ ...(hidden ? { hidden: true } : {}), id, source, target });
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
@@ -1631,16 +1669,32 @@ export class BoardObject {
 	selected: boolean;
 	style: string | null;
 	userData: Record<string, unknown>;
-	visible: boolean;
+	private _visible: boolean;
 
 	protected renderer: BoardRenderer | null = null;
 
-	constructor(public readonly id: string, options: BoardObjectOptions) {
+	constructor(public readonly id: string, options: Omit<BoardObjectOptions, "id">) {
 		this.draggable = options.draggable ?? false;
 		this.selected = options.selected ?? false;
 		this.style = options.style ?? null;
 		this.userData = { ...(options.userData ?? {}) };
-		this.visible = options.visible ?? true;
+		this._visible = resolveBoardVisibleFlag(options);
+	}
+
+	get hidden(): boolean {
+		return !this._visible;
+	}
+
+	set hidden(hidden: boolean) {
+		this._visible = !hidden;
+	}
+
+	get visible(): boolean {
+		return this._visible;
+	}
+
+	set visible(visible: boolean) {
+		this._visible = visible;
 	}
 
 	get kind(): BoardObjectKind {
@@ -1902,6 +1956,18 @@ export class Wire extends BoardObject {
 		}
 		return this;
 	}
+}
+
+function isBoardHandleEffectivelyVisible(handle: Handle): boolean {
+	return handle.visible && handle.node.visible;
+}
+
+function isBoardEdgeEffectivelyVisible(edge: Edge): boolean {
+	return edge.visible && isBoardHandleEffectivelyVisible(edge.source) && isBoardHandleEffectivelyVisible(edge.target);
+}
+
+function isBoardWireEffectivelyVisible(wire: Wire): boolean {
+	return wire.visible && isBoardHandleEffectivelyVisible(wire.source) && (!wire.target || isBoardHandleEffectivelyVisible(wire.target));
 }
 //#endregion 🔖Objects
 
@@ -2951,6 +3017,7 @@ export class BoardRenderer {
 				x: node.x,
 				y: node.y,
 				draggable: node.draggable,
+				hidden: node.hidden,
 				selected: node.selected,
 				style: node.style,
 				text: node.text,
@@ -2992,14 +3059,16 @@ export class BoardRenderer {
 		}
 		const handles: Record<string, unknown>[] = [];
 		for (const handle of this.scene.handles.values()) {
+			const visible = isBoardHandleEffectivelyVisible(handle);
 			const row: Record<string, unknown> = {
 				id: handle.id,
 				nodeId: handle.node.id,
 				angle: handle.angle,
 				radius: handle.radius,
+				hidden: handle.hidden,
 				selected: handle.selected,
 				style: handle.style,
-				visible: handle.visible,
+				visible,
 				handleKind: handle.handleKind,
 			};
 			if (handle.color) {
@@ -3012,13 +3081,15 @@ export class BoardRenderer {
 		}
 		const edges: Record<string, unknown>[] = [];
 		for (const edge of this.scene.edges.values()) {
+			const visible = isBoardEdgeEffectivelyVisible(edge);
 			const er: Record<string, unknown> = {
+				hidden: edge.hidden,
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
 				selected: edge.selected,
 				style: edge.style,
-				visible: edge.visible,
+				visible,
 			};
 			if (edge.edgeKind.trim() !== "") {
 				er.edgeKind = edge.edgeKind;
@@ -3027,12 +3098,14 @@ export class BoardRenderer {
 		}
 		const wires: Record<string, unknown>[] = [];
 		for (const wire of this.scene.wires.values()) {
+			const visible = isBoardWireEffectivelyVisible(wire);
 			const row: Record<string, unknown> = {
+				hidden: wire.hidden,
 				id: wire.id,
 				source: wire.source.id,
 				selected: wire.selected,
 				style: wire.style,
-				visible: wire.visible,
+				visible,
 			};
 			if (wire.target) {
 				row.target = wire.target.id;
@@ -3364,7 +3437,7 @@ export class BoardRenderer {
 			const family = BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
 			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
 			for (const handle of this.scene.handles.values()) {
-				if (!handle.visible) {
+				if (!isBoardHandleEffectivelyVisible(handle)) {
 					continue;
 				}
 				const catalog = handleLabels.get(handle.handleKind) ?? handle.handleKind;
@@ -4552,6 +4625,22 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
 
+		it("parses hidden flags on fixture nodes handles and edges", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ hidden: true, id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 0, hidden: true, id: "a:h0" }], hidden: true, id: "a", radius: 10, x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 10, visible: false, x: 50, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ hidden: true, id: "a" });
+			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ hidden: true, id: "a:h0" });
+			expect(parsed?.nodes[1]).toMatchObject({ hidden: true, id: "b" });
+			expect(parsed?.edges[0]).toMatchObject({ hidden: true, id: "e1" });
+		});
+
 		it("rejects fixture edges that use legacy `from`/`to` instead of source/target", () => {
 			expect(
 				parseBoardFixtureV1({
@@ -4719,8 +4808,8 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
 				nodes: [
-					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
+					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			};
@@ -4729,6 +4818,40 @@ if (boardVitest) {
 			const bx = (laid.nodes[1] as { x: number }).x;
 			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
 			expect(laid.schema).toBe("elements.board.fixture/v1");
+		});
+
+		it("redraw leaves hidden nodes untouched", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], hidden: true, id: "b", radius: 40, shape: "circle", x: 1, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
+				mode: "force-graph",
+				randomSeed: 11,
+				redrawHandlesAfter: false,
+				forceGraph: { gravity: 0, idealEdgeLength: 200, iterations: 220, repulsionStrength: 8000, springStrength: 0.04 },
+			});
+			expect(laid.nodes[1]).toMatchObject({ hidden: true, id: "b", x: 1, y: 0 });
+		});
+
+		it("handle snap ignores hidden handles", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 1.57, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, hidden: true, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: 0.25, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 200, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const snapped = layoutBoardFixtureRedrawHandles(fixture);
+			expect(snapped.nodes[0]?.handles[0]?.angle).toBeCloseTo(1.57);
+			expect(snapped.nodes[1]?.handles[0]?.angle).toBeCloseTo(0.25);
 		});
 
 		it("throws on invalid fixture schema from wasm", () => {
@@ -5015,6 +5138,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		return new Node({
 			draggable: props.draggable ?? true,
 			height: props.height,
+			hidden: props.hidden,
 			iconKind: props.iconKind,
 			id: props.id,
 			root: props.root,
@@ -5035,6 +5159,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 	}
 	return new Node({
 		draggable: props.draggable ?? true,
+		hidden: props.hidden,
 		iconKind: props.iconKind,
 		id: props.id,
 		radius: props.radius,
@@ -5058,7 +5183,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = props.visible ?? true;
+	instance.visible = resolveBoardVisibleFlag(props);
 	instance.root = props.root === true;
 	instance.textAutofit = props.textAutofit ?? false;
 	instance.textAlignment = props.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
@@ -5089,7 +5214,7 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = props.visible ?? true;
+	instance.visible = resolveBoardVisibleFlag(props);
 	instance.radius = props.radius ?? 8;
 	instance.handleKind = (props.handleKind ?? "").trim();
 	instance.iconKind =
@@ -5104,7 +5229,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = props.visible ?? true;
+	instance.visible = resolveBoardVisibleFlag(props);
 	instance.edgeKind = typeof props.edgeKind === "string" ? props.edgeKind.trim() : "";
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
@@ -5113,7 +5238,7 @@ function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Han
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = props.visible ?? true;
+	instance.visible = resolveBoardVisibleFlag(props);
 	instance.wireKind = typeof props.wireKind === "string" ? props.wireKind.trim() : "";
 	const tid = (props.target ?? "").trim();
 	const nextTarget = tid !== "" ? targetHandle : null;
@@ -5149,7 +5274,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		ac === bc &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		a.visible === b.visible &&
+		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -5162,7 +5287,7 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 		(a.edgeKind ?? "").trim() === (b.edgeKind ?? "").trim() &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		a.visible === b.visible &&
+		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -5177,7 +5302,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
 		(a.endY ?? Number.NaN) === (b.endY ?? Number.NaN) &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		a.visible === b.visible &&
+		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -5190,7 +5315,7 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		a.draggable !== b.draggable ||
 		a.selected !== b.selected ||
 		a.style !== b.style ||
-		a.visible !== b.visible ||
+		resolveBoardVisibleFlag(a) !== resolveBoardVisibleFlag(b) ||
 		a.text !== b.text ||
 		(a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
 		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
@@ -5282,6 +5407,7 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
 			const ey = wireHost.props.endY;
 			wireHost.impl = new Wire({
 				id: wireHost.props.id,
+				hidden: wireHost.props.hidden,
 				source,
 				target,
 				selected: wireHost.props.selected,
@@ -5573,6 +5699,7 @@ const boardSceneHost = Reconciler({
 					const ey = w.props.endY;
 					w.impl = new Wire({
 						id: w.props.id,
+						hidden: w.props.hidden,
 						source: from,
 						target: to,
 						selected: w.props.selected,
