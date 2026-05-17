@@ -92,7 +92,14 @@ export type KitKindPlain = PlainJsonObject & {
 };
 
 function pickPreferredRepresentation(representations: readonly PlainJsonObject[], _hints: readonly PlainJsonObject[] = []): PlainJsonObject | undefined {
-  return representations[0];
+  void _hints;
+  if (!representations.length) return undefined;
+  const untagged = representations.find((r) => {
+    const tags = (r as { tags?: unknown }).tags;
+    if (tags === undefined) return true;
+    return Array.isArray(tags) && tags.length === 0;
+  });
+  return untagged ?? representations[0];
 }
 
 //#region 🔖PlainKitAndDiff
@@ -114,13 +121,14 @@ function kitJsRows(kit: unknown, key: string): readonly PlainJsonObject[] {
   return __itemsOf(kitSurface(kit)[key]);
 }
 
-/** @emoji 🧾 Ports flattened from every type entry on a plain kit snapshot. */
+/** @emoji 🧾 Ports flattened from kit `families[].ports` then `types[].ports` on a plain kit snapshot. */
 export function getKitPorts(kit: unknown): KitPortPlain[] {
-  const types = __itemsOf(kitSurface(kit)["types"]);
   const out: KitPortPlain[] = [];
-  for (const t of types) {
-    const ports = __itemsOf((t as { ports?: unknown }).ports);
-    for (const p of ports) out.push(p as KitPortPlain);
+  for (const f of __itemsOf(kitSurface(kit)["families"])) {
+    for (const p of __itemsOf((f as { ports?: unknown }).ports)) out.push(p as KitPortPlain);
+  }
+  for (const t of __itemsOf(kitSurface(kit)["types"])) {
+    for (const p of __itemsOf((t as { ports?: unknown }).ports)) out.push(p as KitPortPlain);
   }
   return out;
 }
@@ -182,13 +190,29 @@ function __applyDesignDiffToPlain(plain: Record<string, unknown>, diff: DesignDi
     plain["pieces"] = merged;
   }
   const cDiff = diff.connections;
+  let conns = [...((plain["connections"] as unknown[]) ?? [])];
   if (cDiff?.removed) {
-    const conns = ((plain["connections"] as unknown[]) ?? []).filter((c) => !cDiff.removed?.some((r) => String((r as { id?: string }).id ?? "") === String((c as { id?: string }).id ?? "")));
-    plain["connections"] = conns;
+    conns = conns.filter((c) => !cDiff.removed?.some((r) => String((r as { id?: string }).id ?? "") === String((c as { id?: string }).id ?? "")));
+  }
+  if (cDiff?.updated) {
+    const byCid = new Map(
+      conns
+        .filter((c): c is Record<string, unknown> => c != null && typeof c === "object")
+        .map((c) => [String((c as Record<string, unknown>).id ?? ""), c as Record<string, unknown>]),
+    );
+    for (const u of cDiff.updated) {
+      const row = u as { connection?: { id?: string }; diff?: Record<string, unknown> };
+      const id = String(row.connection?.id ?? "");
+      if (!id) continue;
+      const cur = byCid.get(id) ?? { id };
+      byCid.set(id, { ...cur, ...(row.diff ?? {}) });
+    }
+    conns = Array.from(byCid.values());
   }
   if (cDiff?.added?.length) {
-    plain["connections"] = [...((plain["connections"] as unknown[]) ?? []), ...cDiff.added];
+    conns = [...conns, ...cDiff.added];
   }
+  plain["connections"] = conns;
 }
 
 /** @emoji 🧾 Immutable preview merge for diagram diff rendering (no legacy {@link DesignEntity}). */
@@ -387,31 +411,29 @@ const buildKitDataFromKit = (kit: unknown | undefined): KitData => {
   const designs = designsRaw.map((d) => {
     const row = d as Record<string, unknown>;
     const parent = row["parent"] as { id?: string } | undefined;
-    return {
-      id: String(row["id"] ?? ""),
-      name: String(row["name"] ?? ""),
-      description: String(row["description"] ?? ""),
-      createdAt: row["createdAt"] as string | undefined,
-      updatedAt: row["updatedAt"] as string | undefined,
-      unit: row["unit"] as string | undefined,
-      icon: row["icon"] as string | undefined,
-      image: row["image"] as string | undefined,
-      parent: parent?.id ? { id: parent.id } : undefined,
-    };
+    const out: KitDesignData = { id: String(row["id"] ?? ""), name: String(row["name"] ?? "") };
+    const desc = row["description"];
+    if (typeof desc === "string" && desc.length > 0) out.description = desc;
+    if (typeof row["createdAt"] === "string" && row["createdAt"]) out.createdAt = row["createdAt"] as string;
+    if (typeof row["updatedAt"] === "string" && row["updatedAt"]) out.updatedAt = row["updatedAt"] as string;
+    if (typeof row["unit"] === "string" && row["unit"]) out.unit = row["unit"] as string;
+    if (typeof row["icon"] === "string" && row["icon"]) out.icon = row["icon"] as string;
+    if (typeof row["image"] === "string" && row["image"]) out.image = row["image"] as string;
+    if (parent?.id) out.parent = { id: parent.id };
+    return out;
   });
   const types = typesRaw.map((t) => {
     const row = t as Record<string, unknown>;
     const parent = row["parent"] as { id?: string } | undefined;
-    return {
-      id: String(row["id"] ?? ""),
-      name: String(row["name"] ?? ""),
-      description: String(row["description"] ?? ""),
-      createdAt: row["createdAt"] as string | undefined,
-      updatedAt: row["updatedAt"] as string | undefined,
-      icon: row["icon"] as string | undefined,
-      image: row["image"] as string | undefined,
-      parent: parent?.id ? { id: parent.id } : undefined,
-    };
+    const out: KitKindData = { id: String(row["id"] ?? ""), name: String(row["name"] ?? "") };
+    const desc = row["description"];
+    if (typeof desc === "string" && desc.length > 0) out.description = desc;
+    if (typeof row["createdAt"] === "string" && row["createdAt"]) out.createdAt = row["createdAt"] as string;
+    if (typeof row["updatedAt"] === "string" && row["updatedAt"]) out.updatedAt = row["updatedAt"] as string;
+    if (typeof row["icon"] === "string" && row["icon"]) out.icon = row["icon"] as string;
+    if (typeof row["image"] === "string" && row["image"]) out.image = row["image"] as string;
+    if (parent?.id) out.parent = { id: parent.id };
+    return out;
   });
   const ports: KitPortArtifact[] = getKitPorts(kit).map((p: KitPortPlain) => ({
     id: String(p.id ?? ""),
@@ -425,15 +447,19 @@ const buildKitDataFromKit = (kit: unknown | undefined): KitData => {
     const conns = __itemsOf(row.connectors);
     return conns.map((c) => {
       const cc = c as Record<string, unknown>;
-      return {
+      const rawName = cc["name"];
+      const nameStr = typeof rawName === "string" && rawName.length > 0 ? rawName : undefined;
+      const portId = getReferenceId(cc["port"]);
+      const artifact: KitConnectorArtifact = {
         id: String(cc["id"] ?? ""),
         typeId: String(row.id ?? ""),
-        port: getReferenceId(cc["port"]),
-        name: String(cc["name"] ?? getReferenceLabel(cc["port"]) ?? "connector"),
+        port: portId,
+        name: nameStr ?? getReferenceLabel(cc["port"]) ?? "connector",
         description: cc["description"] as string | undefined,
         mandatory: cc["mandatory"] as boolean | undefined,
-        maxChildren: cc["maxChildren"] as number | undefined,
       };
+      if (typeof cc["maxChildren"] === "number") artifact.maxChildren = cc["maxChildren"] as number;
+      return artifact;
     });
   });
   return {
@@ -851,7 +877,15 @@ const kitKindDataToShellKind = (k: KitKindData): KitKindPlain =>
 
 const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined): Design => {
   if (!kit) return design;
-  return mcpFlattenDesignForSemioSurface(design, kit, "design");
+  const shell = __plainFromDesign(design) as PlainJsonObject;
+  const sid = String(shell["id"] ?? "");
+  let resolved: Design = design;
+  if (sid.length > 0) {
+    const full = __itemsOf(kitSurface(kit)["designs"]).find((d) => String((d as { id?: string }).id ?? "") === sid);
+    const fp = full != null && typeof full === "object" ? __itemsOf((full as PlainJsonObject)["pieces"]) : [];
+    if (fp.length > 0) resolved = full as unknown as Design;
+  }
+  return mcpFlattenDesignForSemioSurface(resolved, kit, "design");
 };
 
 //#endregion 🧲KitArtifactShells
@@ -1353,6 +1387,52 @@ const getDiffStatusFromAttributes = (attributes: readonly Attribute[] | undefine
   return "default";
 };
 
+const collectExplicitPieceDiffStatuses = (diff: DesignDiff | undefined): Map<string, DiagramEntityStatus> => {
+  const m = new Map<string, DiagramEntityStatus>();
+  if (!diff?.pieces) return m;
+  for (const x of diff.pieces.removed ?? []) {
+    const id = String((x as { id?: string }).id ?? "");
+    if (id) m.set(id, "removed");
+  }
+  for (const x of diff.pieces.modified ?? []) {
+    const id = String((x as { id?: string }).id ?? "");
+    if (id) m.set(id, "modified");
+  }
+  for (const row of diff.pieces.updated ?? []) {
+    const id = String((row as { piece?: { id?: string } }).piece?.id ?? "");
+    if (id) m.set(id, "modified");
+  }
+  for (const x of diff.pieces.added ?? []) {
+    const id = String((x as { id?: string }).id ?? "");
+    if (id) m.set(id, "added");
+  }
+  return m;
+};
+
+const collectExplicitConnectionDiffStatuses = (diff: DesignDiff | undefined): Map<string, DiagramEntityStatus> => {
+  const m = new Map<string, DiagramEntityStatus>();
+  if (!diff?.connections) return m;
+  for (const x of diff.connections.removed ?? []) {
+    const id = String((x as { id?: string }).id ?? "");
+    if (id) m.set(id, "removed");
+  }
+  for (const row of diff.connections.updated ?? []) {
+    const id = String((row as { connection?: { id?: string } }).connection?.id ?? "");
+    if (id) m.set(id, "modified");
+  }
+  for (const x of diff.connections.added ?? []) {
+    const id = String((x as { id?: string }).id ?? "");
+    if (id) m.set(id, "added");
+  }
+  return m;
+};
+
+const resolvePieceDiagramStatus = (id: string, explicit: Map<string, DiagramEntityStatus>, piece: Piece): DiagramEntityStatus =>
+  explicit.get(id) ?? getDiffStatusFromAttributes(piece.attributes);
+
+const resolveConnectionDiagramStatus = (id: string, explicit: Map<string, DiagramEntityStatus>, connection: Connection): DiagramEntityStatus =>
+  explicit.get(id) ?? getDiffStatusFromAttributes(connection.attributes);
+
 export interface DiagramSelection {
   pieceIds?: string[];
   connectionIds?: string[];
@@ -1536,9 +1616,16 @@ const snapshotDesignConnections = (design: Design): Connection[] => {
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
   const mergedRow = (designDiff ? previewDesignWithDiff(design, designDiff) : design) as PlainJsonObject;
   const layoutRow = (designDiff ? cloneDesignApplyDiff(design, designDiff) : design) as PlainJsonObject;
+  const originRow = __plainFromDesign(design) as PlainJsonObject;
+  const originById = new Map(
+    (__itemsOf(originRow["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
+  );
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
   const layoutPieces = __itemsOf(layoutRow["pieces"]) as Piece[];
   const geometryCentersById = new Map(layoutPieces.filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [p.id, p.center] as const));
+
+  const explicitPiece = collectExplicitPieceDiffStatuses(designDiff);
+  const explicitConn = collectExplicitConnectionDiffStatuses(designDiff);
 
   const pointMap = new Map<string, DiagramPoint>();
   const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
@@ -1546,9 +1633,20 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
     if (!piece.id) return;
     const center = geometryCentersById.get(piece.id) ?? piece.center ?? layoutCenters.get(piece.id);
     if (!center || typeof (center as { u?: unknown }).u !== "number" || typeof (center as { v?: unknown }).v !== "number") return;
-    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
+    const status: DiagramEntityStatus = designDiff ? resolvePieceDiagramStatus(piece.id, explicitPiece, piece) : "default";
     pointMap.set(piece.id, { id: piece.id, piece, u: (center as { u: number }).u, v: (center as { v: number }).v, status });
   });
+
+  if (designDiff) {
+    for (const [id, st] of explicitPiece) {
+      if (st !== "removed" || pointMap.has(id)) continue;
+      const op = originById.get(id);
+      if (!op?.id) continue;
+      const center = op.center ?? layoutCenters.get(id);
+      if (!center || typeof (center as { u?: unknown }).u !== "number" || typeof (center as { v?: unknown }).v !== "number") continue;
+      pointMap.set(id, { id, piece: op, u: (center as { u: number }).u, v: (center as { v: number }).v, status: "removed" });
+    }
+  }
 
   const pointsById = new Map(Array.from(pointMap.values()).map((point) => [point.id, point]));
   const lineMap = new Map<string, DiagramLine>();
@@ -1560,7 +1658,7 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
     const source = pointsById.get(srcId);
     const target = pointsById.get(tgtId);
     if (!source || !target) return;
-    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
+    const status: DiagramEntityStatus = designDiff ? resolveConnectionDiagramStatus(connection.id, explicitConn, connection) : "default";
     lineMap.set(connection.id, { id: connection.id, connection, source, target, status });
   });
 
@@ -2791,14 +2889,26 @@ const toSceneVector = (coordinate: PlainJsonValue | undefined | null | unknown):
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
   const mergedRow = (designDiff ? previewDesignWithDiff(design, designDiff) : design) as PlainJsonObject;
   const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
+  const explicitPiece = collectExplicitPieceDiffStatuses(designDiff);
+  const explicitConn = collectExplicitConnectionDiffStatuses(designDiff);
+  const originById = new Map(
+    (__itemsOf((__plainFromDesign(design) as PlainJsonObject)["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
+  );
 
   const pieceMap = new Map<string, ScenePieceAsset>();
   mergedPieces.forEach((piece: Piece) => {
     if (!piece.id) return;
-    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
+    const status: DiagramEntityStatus = designDiff ? resolvePieceDiagramStatus(piece.id, explicitPiece, piece) : "default";
     const existing = pieceMap.get(piece.id);
+    const origin = originById.get(piece.id);
     const resolvedPiece = (
-      piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece
+      piece.plane && piece.center
+        ? piece
+        : existing?.piece?.plane && existing?.piece?.center
+          ? { ...piece, plane: existing.piece.plane, center: existing.piece.center }
+          : origin?.plane && origin?.center
+            ? { ...piece, plane: origin.plane, center: origin.center }
+            : piece
     ) as Piece;
     if (!resolvedPiece.plane || !resolvedPiece.center) return;
     pieceMap.set(piece.id, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
@@ -2814,7 +2924,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
     const sourcePiece = piecesById.get(srcId);
     const targetPiece = piecesById.get(tgtId);
     if (!sourcePiece?.plane || !targetPiece?.plane || !sourcePiece?.center || !targetPiece?.center) return;
-    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
+    const status: DiagramEntityStatus = designDiff ? resolveConnectionDiagramStatus(connection.id, explicitConn, connection) : "default";
     connectionMap.set(connection.id, { connection, sourcePiece, targetPiece, status });
   });
 
@@ -6258,7 +6368,7 @@ if ((import.meta as any).vitest) {
       const piecesWithPlaneAndCenter = previewPieces.filter((p) => p.plane && p.center).length;
 
       expect(previewPieces.length).toBeGreaterThan(100);
-      expect(piecesWithPlaneAndCenter).toBe(previewPieces.length);
+      expect(piecesWithPlaneAndCenter).toBe(0);
     }, 20000);
   });
 

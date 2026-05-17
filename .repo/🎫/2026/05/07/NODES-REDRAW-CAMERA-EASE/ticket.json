@@ -1,8 +1,8 @@
 {
   "title": "Nodes Redraw Camera Ease",
-  "status": "closed",
+  "status": "open",
   "summary": "One-shot Redraw nodes: preserve previous fixture camera on the layout patch so descriptor sync does not jump. After commit, useLayoutEffect runs a 1.8s RAF ease (first third hold, cubic blend) from current boardPlayPaneCamerasBaseline toward triptychCamerasFromFixture. Cancels nodes RAF when redraw play starts, when post-play override ease begins, and in shared cleanup paths. Effect deps omit baseline to avoid cleanup cancelling mid-ease.",
-  "goal": "🎯graphqltargetsemiors",
+  "goal": "🎯r2602",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",
     "⚪5ccaf3db9f6c4d0eb07de7931c87ec31",
@@ -11,6 +11,7 @@
     "⚪5151cf0dbf854d8eb1df33d79497e4a9",
     "⚪50d2387dc623473aaec475fd67fa7de1",
     "⚪455e44626cdf468f826eb7240be4cd7f",
-    "⚪cab20e5efc0d409db84211c5f5de7bb1"
+    "⚪cab20e5efc0d409db84211c5f5de7bb1",
+    "⚪1d11b75978c9413a9ae576d6f43745f5"
   ]
 }

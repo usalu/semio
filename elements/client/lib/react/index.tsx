@@ -332,7 +332,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
 }
 
 /**
- * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge). Outside-dismiss uses bubble-phase `pointerdown` on `document` so the board `eventSurface` runs first; portal keeps menu aligned with `clientX`/`clientY` for canvas hosts.
+ * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the board `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -353,11 +353,11 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         onOpenChange(false);
       }
     };
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("pointerdown", handlePointerDown, false);
+    window.addEventListener("keydown", handleKeyDown, false);
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown, false);
+      window.removeEventListener("keydown", handleKeyDown, false);
     };
   }, [items.length, onOpenChange, open, position?.x, position?.y]);
   if (!items.length) {

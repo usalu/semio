@@ -18,7 +18,7 @@
   "targets": {
     "lint": {
       "command": "npm run lint",
-      "cwd": "elements/ui"
+      "cwd": "elements/client/lib/react"
     }
   },
   "dependencies": {
@@ -109,7 +109,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "elements/ui"
+    "directory": "elements/client/lib/react"
   },
   "bundleKind": "ui"
 }

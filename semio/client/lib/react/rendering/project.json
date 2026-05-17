@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/client/lib/ui",
+        "cwd": "semio/client/lib/react/rendering",
         "command": "bun ./script.ts dev",
         "env": {
           "STORYBOOK_PORT": "6008",
@@ -17,7 +17,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/client/lib/ui",
+        "cwd": "semio/client/lib/react/rendering",
         "command": "bunx storybook build",
         "forwardAllArgs": true
       }
@@ -25,7 +25,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/client/lib/ui",
+        "cwd": "semio/client/lib/react/rendering",
         "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
         "forwardAllArgs": true
       }
@@ -33,7 +33,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/client/lib/ui",
+        "cwd": "semio/client/lib/react/rendering",
         "command": "bunx vitest run --passWithNoTests --config vitest.config.ts",
         "forwardAllArgs": true
       }

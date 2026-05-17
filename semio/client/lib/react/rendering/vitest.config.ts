@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-// Specs: Same as {@link ../../elements/ui/vitest.config.ts}; local file so `root` resolves to semio/ui when npm test runs here.
+// Specs: Same pattern as {@link ../../../../../elements/client/lib/react/vitest.config.ts}; local file so `root` resolves to this package when Nx runs tests here.
 // Summary: Vitest config for @semio/ui.
 
 export default defineConfig({
