@@ -234,16 +234,20 @@ function lerpCameraState(a: CameraState, b: CameraState, tLinear: number): Camer
 	};
 }
 
-function blendTriptychCameras(
+/** @emoji 🎯 Lerps only `activePane` between `from` and `to`; other panes keep shallow copies of `from`. */
+function blendTriptychCamerasActivePaneOnly(
 	from: Record<BoardPlayPaneId, CameraState>,
 	to: Record<BoardPlayPaneId, CameraState>,
 	tLinear: number,
+	activePane: BoardPlayPaneId,
 ): Record<BoardPlayPaneId, CameraState> {
-	return {
-		"board-detail": lerpCameraState(from["board-detail"], to["board-detail"], tLinear),
-		"board-overview": lerpCameraState(from["board-overview"], to["board-overview"], tLinear),
-		"board-selection": lerpCameraState(from["board-selection"], to["board-selection"], tLinear),
+	const out: Record<BoardPlayPaneId, CameraState> = {
+		"board-detail": { ...from["board-detail"] },
+		"board-overview": { ...from["board-overview"] },
+		"board-selection": { ...from["board-selection"] },
 	};
+	out[activePane] = lerpCameraState(from[activePane], to[activePane], tLinear);
+	return out;
 }
 
 function dampCameraStateLinear(a: CameraState, b: CameraState, w: number): CameraState {
@@ -254,19 +258,6 @@ function dampCameraStateLinear(a: CameraState, b: CameraState, w: number): Camer
 		x: a.x + (b.x - a.x) * t,
 		y: a.y + (b.y - a.y) * t,
 		zoom: clampZoom(zoom),
-	};
-}
-
-/** @emoji 📷 Linear per-frame damping of all pane cameras toward `to` (used while redraw play runs). */
-function dampTriptychCamerasLinear(
-	from: Record<BoardPlayPaneId, CameraState>,
-	to: Record<BoardPlayPaneId, CameraState>,
-	w: number,
-): Record<BoardPlayPaneId, CameraState> {
-	return {
-		"board-detail": dampCameraStateLinear(from["board-detail"], to["board-detail"], w),
-		"board-overview": dampCameraStateLinear(from["board-overview"], to["board-overview"], w),
-		"board-selection": dampCameraStateLinear(from["board-selection"], to["board-selection"], w),
 	};
 }
 
@@ -298,7 +289,7 @@ interface BoardPlayShellValue {
 	/** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
-	/** @emoji 📷 Mirrors the **active** pane’s imperative camera (wheel/pan) into {@link boardPlayPaneCamerasBaseline} so shell state matches the viewport before redraw / ease. */
+	/** @emoji 📷 Writes the **active** pane’s imperative camera (wheel/pan) into that pane’s entry in {@link boardPlayPaneCamerasBaseline}; other panes unchanged. */
 	syncBaselineFromViewportCamera: (cam: CameraState) => void;
 	boardSelectionMethod: BoardSelectionMethod;
 	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
@@ -2054,7 +2045,11 @@ function BoardPlayInner(): ReactElement {
 	const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = useState<
 		Record<BoardPlayPaneId, CameraState>
 	>(() => triptychCamerasFromFixture(initialFixture));
+	const boardPlayPaneCamerasBaselineRef = useRef(boardPlayPaneCamerasBaseline);
+	boardPlayPaneCamerasBaselineRef.current = boardPlayPaneCamerasBaseline;
 	const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
+	const activePaneIdRef = useRef(activePaneId);
+	activePaneIdRef.current = activePaneId;
 	const [selectionByPane, setSelectionByPane] = useState<Record<BoardPlayPaneId, Set<string>>>(() => selectionSeedForFixture(initialFixture));
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
 	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
@@ -2232,10 +2227,17 @@ function BoardPlayInner(): ReactElement {
 			return;
 		}
 		const c = { x: cam.x, y: cam.y, zoom: cam.zoom };
-		setBoardPlayPaneCamerasBaseline({
-			"board-detail": { ...c },
-			"board-overview": { ...c },
-			"board-selection": { ...c },
+		setBoardPlayPaneCamerasBaseline((prev) => {
+			const pane = activePaneIdRef.current;
+			const p = prev[pane];
+			if (
+				Math.abs(p.x - c.x) < 1e-6 &&
+				Math.abs(p.y - c.y) < 1e-6 &&
+				Math.abs(p.zoom - c.zoom) < 1e-9
+			) {
+				return prev;
+			}
+			return { ...prev, [pane]: { ...c } };
 		});
 	}, []);
 
@@ -2272,12 +2274,11 @@ function BoardPlayInner(): ReactElement {
 			setCameraDisplayOverrideByPane(null);
 			suppressCameraBasisSyncRef.current = false;
 			cameraBasisFixtureRef.current = fixture;
-			const playCam = triptychCamerasFromFixture(fixture);
-			setBoardPlayPaneCamerasBaseline(playCam);
+			const prevCam = boardPlayPaneCamerasBaselineRef.current;
 			boardPlayRedrawCameraChaseRef.current = {
-				"board-detail": { ...playCam["board-detail"] },
-				"board-overview": { ...playCam["board-overview"] },
-				"board-selection": { ...playCam["board-selection"] },
+				"board-detail": { ...prevCam["board-detail"] },
+				"board-overview": { ...prevCam["board-overview"] },
+				"board-selection": { ...prevCam["board-selection"] },
 			};
 		} else if (!suppressCameraBasisSyncRef.current) {
 			if (cameraPlayEndAnimRafRef.current != null) {
@@ -2296,15 +2297,24 @@ function BoardPlayInner(): ReactElement {
 		if (suppressCameraBasisSyncRef.current) {
 			return;
 		}
+		const pane = activePaneIdRef.current;
 		const target = triptychCamerasFromFixture(fixture);
-		const prev = boardPlayRedrawCameraChaseRef.current ?? target;
-		const next = dampTriptychCamerasLinear(prev, target, BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND);
-		boardPlayRedrawCameraChaseRef.current = {
-			"board-detail": { ...next["board-detail"] },
-			"board-overview": { ...next["board-overview"] },
-			"board-selection": { ...next["board-selection"] },
-		};
-		setBoardPlayPaneCamerasBaseline(boardPlayRedrawCameraChaseRef.current);
+		setBoardPlayPaneCamerasBaseline((baselinePrev) => {
+			const prevChase = boardPlayRedrawCameraChaseRef.current ?? baselinePrev;
+			const damped = dampCameraStateLinear(
+				prevChase[pane],
+				target[pane],
+				BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND,
+			);
+			const nextChase: Record<BoardPlayPaneId, CameraState> = {
+				"board-detail": { ...prevChase["board-detail"] },
+				"board-overview": { ...prevChase["board-overview"] },
+				"board-selection": { ...prevChase["board-selection"] },
+			};
+			nextChase[pane] = damped;
+			boardPlayRedrawCameraChaseRef.current = nextChase;
+			return nextChase;
+		});
 	}, [boardRedrawPlaying, fixture]);
 
 	useEffect(() => {
@@ -2334,6 +2344,7 @@ function BoardPlayInner(): ReactElement {
 		};
 		cameraBasisFixtureRef.current = snapshotFixture;
 		const to = triptychCamerasFromFixture(snapshotFixture);
+		const postPlayEasePaneId = activePaneIdRef.current;
 		suppressCameraBasisSyncRef.current = true;
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
@@ -2350,20 +2361,22 @@ function BoardPlayInner(): ReactElement {
 			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
 			const elapsed = now - t0;
 			if (elapsed >= total) {
-				const endCameras = blendTriptychCameras(from, to, 1);
+				const endCameras = blendTriptychCamerasActivePaneOnly(from, to, 1, postPlayEasePaneId);
 				setCameraDisplayOverrideByPane(endCameras);
 				suppressCameraBasisSyncRef.current = false;
 				cameraBasisFixtureRef.current = fixtureRef.current;
 				cameraPlayEndAnimRafRef.current = requestAnimationFrame(() => {
 					setCameraDisplayOverrideByPane(null);
-					setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(fixtureRef.current));
+					const fit = triptychCamerasFromFixture(fixtureRef.current);
+					const p = postPlayEasePaneId;
+					setBoardPlayPaneCamerasBaseline((prev) => ({ ...prev, [p]: { ...fit[p] } }));
 					cameraPlayEndAnimRafRef.current = null;
 				});
 				return;
 			}
 			if (elapsed >= holdEnd) {
 				const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
-				setCameraDisplayOverrideByPane(blendTriptychCameras(from, to, u));
+				setCameraDisplayOverrideByPane(blendTriptychCamerasActivePaneOnly(from, to, u, postPlayEasePaneId));
 			}
 			cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
 		};
@@ -2408,6 +2421,7 @@ function BoardPlayInner(): ReactElement {
 			"board-selection": { ...fromSnapshot["board-selection"] },
 		};
 		const to = triptychCamerasFromFixture(snapshotFixture);
+		const nodesRedrawEasePaneId = activePaneIdRef.current;
 		const total = BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
 		const holdEnd = total / 3;
 		const animSpan = total - holdEnd;
@@ -2419,7 +2433,7 @@ function BoardPlayInner(): ReactElement {
 			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
 			const elapsed = now - t0;
 			if (elapsed >= total) {
-				const endCameras = blendTriptychCameras(from, to, 1);
+				const endCameras = blendTriptychCamerasActivePaneOnly(from, to, 1, nodesRedrawEasePaneId);
 				setBoardPlayPaneCamerasBaseline(endCameras);
 				boardPlayNodesRedrawCameraAnimRafRef.current = null;
 				nodesRedrawEaseFromRef.current = null;
@@ -2427,7 +2441,7 @@ function BoardPlayInner(): ReactElement {
 			}
 			if (elapsed >= holdEnd) {
 				const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
-				setBoardPlayPaneCamerasBaseline(blendTriptychCameras(from, to, u));
+				setBoardPlayPaneCamerasBaseline(blendTriptychCamerasActivePaneOnly(from, to, u, nodesRedrawEasePaneId));
 			}
 			boardPlayNodesRedrawCameraAnimRafRef.current = requestAnimationFrame(tickInner);
 		};

@@ -4,6 +4,16 @@
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
 
+// #region 🏷️BoardIconAssets
+
+mod board_icon_assets {
+	//! @emoji 📎 Static bytes for board icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
+
+	pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
+}
+
+// #endregion 🏷️BoardIconAssets
+
 mod vcompute {
 	use crate::vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Vec2, Stroke};
 	use crate::vello::peniko::Color;
@@ -1562,11 +1572,6 @@ mod board_icon_codec {
 	use typst::syntax::{FileId, Source, VirtualPath};
 	use typst::utils::LazyHash;
 
-	// #region 🖼️EmojiFontBytes
-	// Apache-2.0 subset of Noto Color Emoji (board `rs/assets/`); must be registered in the Typst `FontBook` or `emoji:` icons render as tofu.
-	static BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
-	// #endregion 🖼️EmojiFontBytes
-
 	#[derive(Debug)]
 	pub enum BoardResolvedIcon {
 		None,
@@ -1624,7 +1629,7 @@ mod board_icon_codec {
 
 	fn typst_asset_font_list_plus_noto_color_emoji() -> Vec<Font> {
 		let mut out = typst_asset_font_list();
-		let emoji_blob = Bytes::new(BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET);
+		let emoji_blob = Bytes::new(super::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
 		let mut idx = 0u32;
 		loop {
 			if let Some(f) = Font::new(emoji_blob.clone(), idx) {
@@ -1765,10 +1770,30 @@ mod board_icon_codec {
 
 /// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity). Each path uses `path.abs_transform()` only (usvg already stores document-absolute transforms; do not compose parent × abs when walking groups).
 mod svg_icon_vello09 {
+	use std::sync::{Arc, OnceLock};
+
 	use crate::vello::kurbo::{Affine, BezPath, Point, Stroke};
 	use crate::vello::peniko::{Color, Fill};
 	use crate::vello::Scene;
 	use crate::usvg;
+
+	// #region 🔖BoardIconUsvgParseOptions
+
+	static BOARD_ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
+
+	/// @emoji 🔤 Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
+	pub fn usvg_options_board_icons() -> &'static usvg::Options<'static> {
+		BOARD_ICON_USVG_OPTIONS.get_or_init(|| {
+			let mut db = fontdb::Database::new();
+			db.load_font_data(super::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
+			let mut o = usvg::Options::default();
+			o.fontdb = Arc::new(db);
+			o.font_family = "Noto Color Emoji".into();
+			o
+		})
+	}
+
+	// #endregion 🔖BoardIconUsvgParseOptions
 
 	fn to_affine(ts: &usvg::Transform) -> Affine {
 		let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
@@ -1925,11 +1950,20 @@ mod svg_icon_vello09 {
 				icon_union_rects_into(acc, p.abs_bounding_box());
 				icon_union_rects_into(acc, p.abs_stroke_bounding_box());
 			}
-			_ => {}
+			usvg::Node::Image(img) => {
+				if !img.is_visible() {
+					return;
+				}
+				icon_union_rects_into(acc, img.abs_bounding_box());
+			}
+			usvg::Node::Text(t) => {
+				icon_union_rects_into(acc, t.abs_bounding_box());
+				icon_union_rects_into(acc, t.abs_stroke_bounding_box());
+			}
 		}
 	}
 
-	/// @emoji 📐 Union of visible path paint bounds in absolute SVG space for uniform scale-and-center fits.
+	/// @emoji 📐 Union of visible paint bounds (paths, raster images, text) in absolute SVG space for uniform scale-and-center fits.
 	pub fn svg_icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
 		let mut acc = None::<(f64, f64, f64, f64)>;
 		for c in tree.root().children() {
@@ -1964,8 +1998,7 @@ mod svg_icon_vello09 {
 
 	#[allow(dead_code)]
 	pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), String> {
-		let opt = usvg::Options::default();
-		let tree = usvg::Tree::from_str(svg, &opt).map_err(|e| e.to_string())?;
+		let tree = usvg::Tree::from_str(svg, usvg_options_board_icons()).map_err(|e| e.to_string())?;
 		render_svg_tree_themed(scene, &tree, fg, bg);
 		Ok(())
 	}
@@ -2462,7 +2495,7 @@ mod board_host {
 			let (bx, by, bw, bh, body) = match resolved {
 				super::board_icon_codec::BoardResolvedIcon::None => return None,
 				super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-					let tree = usvg::Tree::from_str(s.trim(), &usvg::Options::default()).ok()?;
+					let tree = usvg::Tree::from_str(s.trim(), super::svg_icon_vello09::usvg_options_board_icons()).ok()?;
 					let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
 					if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
 						return None;
@@ -2473,7 +2506,7 @@ mod board_host {
 				}
 				super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
 					let svg_t = s.trim();
-					let tree = usvg::Tree::from_str(svg_t, &usvg::Options::default()).ok()?;
+					let tree = usvg::Tree::from_str(svg_t, super::svg_icon_vello09::usvg_options_board_icons()).ok()?;
 					let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
 					if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
 						return None;
@@ -7278,6 +7311,16 @@ mod force_graph_tests {
 		assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
 		assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
 		assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
+	}
+
+	#[test]
+	fn svg_icon_content_bounds_includes_visible_image_abs_box() {
+		let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="30" y="40" width="50" height="50"/></svg>"##;
+		let tree = crate::usvg::Tree::from_str(svg, super::svg_icon_vello09::usvg_options_board_icons()).expect("parse");
+		let (x, y, w, h) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+		assert!((x - 30.0).abs() < 2.0, "expected image bbox near x=30, got {x}");
+		assert!((y - 40.0).abs() < 2.0, "expected image bbox near y=40, got {y}");
+		assert!((w - 50.0).abs() < 2.0 && (h - 50.0).abs() < 2.0, "expected ~50×50 bbox, got {w}×{h}");
 	}
 }
 

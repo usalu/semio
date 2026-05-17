@@ -1175,6 +1175,7 @@ dependencies = [
  "comemo",
  "data-url",
  "ecow",
+ "fontdb",
  "image",
  "js-sys",
  "nalgebra 0.33.3",

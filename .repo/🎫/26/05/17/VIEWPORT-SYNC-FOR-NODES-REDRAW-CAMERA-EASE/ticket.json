@@ -1,0 +1,11 @@
+{
+  "title": "Viewport Sync For Nodes Redraw Camera Ease",
+  "emoji": "📷",
+  "status": "closed",
+  "description": "Board play: wheel/pan updates WASM camera but React baseline could drift; nodes-redraw ease snapshots camerasByPane as from, causing visible snap. Wire BoardCanvas onCamera on the active pane to syncBaselineFromViewportCamera (guards: not playing, not suppress, no display override). Document hypothesis G in ticket notes.",
+  "summary": "Wired active-pane BoardCanvas onCamera to syncBaselineFromViewportCamera so wheel/pan updates boardPlayPaneCamerasBaseline before nodes-redraw ease snapshots from (fixes drift vs WASM camera). Guards: not during redraw play, not while suppressCameraBasisSyncRef, not while post-play camera display override. Epsilon no-op in setState to limit churn. Vitest 65 passed in elements/client/lib/board.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9ec9a80899d043719d6fe4c00dea7cf5"
+  ]
+}

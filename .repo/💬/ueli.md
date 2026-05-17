@@ -516,12 +516,13 @@ Change selection for composition. In the ui add three toggles: Nodes, Edges, Han
 Extend selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso
-Additionally there are three modes: additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
+Additionally there are four modes: default (just select new selection), additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
 Make sure that the selection has a special behaviour:
 When ending more left than started then partial selection is enough.
 When ending more right than started then full enclosing is necessary otherwise the edge or node is not selected.
 Make sure target can be set to nodes, edges, nodes&edges (default)
 holding down left button should trigger
+The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
 
 ---
 

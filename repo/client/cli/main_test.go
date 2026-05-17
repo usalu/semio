@@ -13571,6 +13571,67 @@ func TestSearchMonorepoTree(t *testing.T) {
 	})
 }
 
+func TestSearchMonorepoTreeWithCache(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".repo"), 0755); err != nil {
+		t.Fatalf("mkdir .repo: %v", err)
+	}
+	oldRoot := GetRootDir()
+	SetRootDir(tmpDir)
+	defer SetRootDir(oldRoot)
+
+	makeTree := func(description string) *TreeNode {
+		return &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "Codebase", Children: []*TreeNode{
+					{Kind: TreeNodeTechnology, ID: "proj:repo", Label: "repo", Children: []*TreeNode{
+						{Kind: TreeNodeBundle, ID: "bundle:search", Label: "search-bundle", Description: description},
+					}},
+				}},
+			},
+		}
+	}
+
+	t.Run("uses indexed matches from cache", func(t *testing.T) {
+		indexedTree := makeTree("ultrafastneedle")
+		idx, err := ensureCacheIndexed(context.Background(), indexedTree)
+		if err != nil {
+			t.Fatalf("ensureCacheIndexed failed: %v", err)
+		}
+		if err := idx.Close(); err != nil {
+			t.Fatalf("close index failed: %v", err)
+		}
+
+		mutatedTree := makeTree("different-text")
+		result := searchMonorepoTreeWithCache(context.Background(), mutatedTree, "ultrafastneedle")
+
+		found := false
+		var walk func(*TreeNode)
+		walk = func(node *TreeNode) {
+			if node.ID == "bundle:search" {
+				found = true
+			}
+			for _, child := range node.Children {
+				walk(child)
+			}
+		}
+		walk(result)
+		if !found {
+			t.Fatal("expected cached index to find bundle:search")
+		}
+	})
+
+	t.Run("returns empty tree for miss", func(t *testing.T) {
+		result := searchMonorepoTreeWithCache(context.Background(), makeTree("something else"), "no-match-here")
+		if len(result.Children) != 0 {
+			t.Fatalf("expected empty tree, got %d children", len(result.Children))
+		}
+	})
+}
+
 func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{

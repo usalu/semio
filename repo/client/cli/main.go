@@ -46,6 +46,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/search/query"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
@@ -1116,7 +1117,9 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 
 			buildOpts := TreeBuildOptions{
-				IncludeSections: true,
+				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
+					filter.OnlyKinds[TreeNodeDefinition] ||
+					filter.Query != "",
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
@@ -6460,7 +6463,24 @@ func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query stri
 	if query == "" {
 		return root
 	}
-	return searchTreeInMemory(root, query)
+	idx, err := ensureCacheIndexed(ctx, root)
+	if err != nil {
+		return searchTreeInMemory(root, query)
+	}
+	defer idx.Close()
+
+	matchedIDs, err := queryCacheIndex(idx, query, countSearchableTreeNodes(root))
+	if err != nil {
+		return searchTreeInMemory(root, query)
+	}
+	if len(matchedIDs) == 0 {
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	}
+	pruned := pruneUnmatched(root, sliceToSet(matchedIDs))
+	if pruned == nil {
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	}
+	return pruned
 }
 
 // 📝SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
@@ -6470,6 +6490,76 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 		return root
 	}
 	return searchTreeInMemory(root, query)
+}
+
+func countSearchableTreeNodes(root *TreeNode) int {
+	count := 0
+	var walk func(node *TreeNode)
+	walk = func(node *TreeNode) {
+		if node.Kind != TreeNodeCategory {
+			count++
+		}
+		for _, child := range node.Children {
+			walk(child)
+		}
+	}
+	walk(root)
+	if count == 0 {
+		return 1
+	}
+	return count
+}
+
+func sliceToSet(values []string) map[string]bool {
+	result := make(map[string]bool, len(values))
+	for _, value := range values {
+		result[value] = true
+	}
+	return result
+}
+
+func serializeTreeNodeData(data map[string]interface{}) string {
+	if len(data) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(data))
+	for _, value := range data {
+		switch typed := value.(type) {
+		case string:
+			parts = append(parts, typed)
+		case []string:
+			parts = append(parts, strings.Join(typed, " "))
+		case []interface{}:
+			var values []string
+			for _, item := range typed {
+				values = append(values, fmt.Sprint(item))
+			}
+			parts = append(parts, strings.Join(values, " "))
+		default:
+			parts = append(parts, fmt.Sprint(typed))
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+func buildSearchDocumentText(node *TreeNode) string {
+	parts := []string{
+		node.Label,
+		node.ID,
+		node.SubKind,
+		node.Description,
+		node.URI,
+		node.Status,
+		node.Contributor,
+		string(node.Kind),
+		serializeTreeNodeData(node.Data),
+	}
+	for _, child := range node.Children {
+		if child.Kind != TreeNodeCategory {
+			parts = append(parts, child.Label, child.ID, child.Description, serializeTreeNodeData(child.Data))
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 // 🔶levenshtein holds the data fields for a levenshtein record.
@@ -6547,29 +6637,6 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 		return root
 	}
 	matchedIDs := make(map[string]bool)
-	serializeNodeData := func(data map[string]interface{}) string {
-		if len(data) == 0 {
-			return ""
-		}
-		parts := make([]string, 0, len(data))
-		for _, value := range data {
-			switch typed := value.(type) {
-			case string:
-				parts = append(parts, typed)
-			case []string:
-				parts = append(parts, strings.Join(typed, " "))
-			case []interface{}:
-				var values []string
-				for _, item := range typed {
-					values = append(values, fmt.Sprint(item))
-				}
-				parts = append(parts, strings.Join(values, " "))
-			default:
-				parts = append(parts, fmt.Sprint(typed))
-			}
-		}
-		return strings.Join(parts, " ")
-	}
 	var walk func(node *TreeNode)
 	walk = func(node *TreeNode) {
 		if node.Kind != TreeNodeCategory {
@@ -6577,17 +6644,7 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 			if docID == "" {
 				docID = node.Label
 			}
-			text := strings.ToLower(strings.Join([]string{
-				node.Label,
-				node.ID,
-				node.SubKind,
-				node.Description,
-				node.URI,
-				node.Status,
-				node.Contributor,
-				string(node.Kind),
-				serializeNodeData(node.Data),
-			}, " "))
+			text := strings.ToLower(buildSearchDocumentText(node))
 			allMatch := true
 			for _, term := range terms {
 				if !fuzzyContains(text, term) {
@@ -7134,22 +7191,7 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error
 				if docID == "" {
 					docID = node.Label
 				}
-				parts := []string{
-					node.Label,
-					node.ID,
-					node.SubKind,
-					node.Description,
-					node.URI,
-					node.Status,
-					node.Contributor,
-					string(node.Kind),
-				}
-				for _, c := range node.Children {
-					if c.Kind != TreeNodeCategory {
-						parts = append(parts, c.Label, c.ID)
-					}
-				}
-				doc := map[string]interface{}{"text": strings.Join(parts, " ")}
+				doc := map[string]interface{}{"text": buildSearchDocumentText(node)}
 				if p := treeNodeScopePath(node); p != "" {
 					doc["path"] = p
 				}
@@ -7185,22 +7227,7 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error
 			if docID == "" {
 				docID = node.Label
 			}
-			parts := []string{
-				node.Label,
-				node.ID,
-				node.SubKind,
-				node.Description,
-				node.URI,
-				node.Status,
-				node.Contributor,
-				string(node.Kind),
-			}
-			for _, c := range node.Children {
-				if c.Kind != TreeNodeCategory {
-					parts = append(parts, c.Label, c.ID)
-				}
-			}
-			doc := map[string]interface{}{"text": strings.Join(parts, " ")}
+			doc := map[string]interface{}{"text": buildSearchDocumentText(node)}
 			if p := treeNodeScopePath(node); p != "" {
 				doc["path"] = p
 			}
@@ -7224,9 +7251,23 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 	if query == "" {
 		return nil, nil
 	}
-	mq := bleve.NewMatchQuery(query)
-	mq.SetFuzziness(2)
-	req := bleve.NewSearchRequest(mq)
+	terms := strings.Fields(query)
+	queries := make([]query.Query, 0, len(terms))
+	for _, term := range terms {
+		match := bleve.NewMatchQuery(term)
+		match.SetFuzziness(2)
+		queries = append(queries, match)
+	}
+	var q query.Query
+	switch len(queries) {
+	case 0:
+		return nil, nil
+	case 1:
+		q = queries[0]
+	default:
+		q = bleve.NewConjunctionQuery(queries...)
+	}
+	req := bleve.NewSearchRequest(q)
 	req.Size = limit
 	results, err := idx.Search(req)
 	if err != nil {

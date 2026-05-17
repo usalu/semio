@@ -1,0 +1,13 @@
+{
+  "title": "Fix Repo Search Cache Hot Path",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Make ./repo search incredibly performant by ensuring the search command runs on cached indices instead of rescanning the monorepo tree in memory on each query. Inspect the repo CLI search implementation, refactor the hot path to rely on the persisted cache/index, preserve existing search/filter behavior, extend existing tests, and validate with focused test runs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1423"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪269beb8e16574209a5e1bd54c49af75c"
+  ]
+}
