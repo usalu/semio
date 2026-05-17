@@ -131,8 +131,10 @@ function loadLightSemantics(): {
 } {
 	const raw = JSON.parse(readFileSync(lightKitPath, "utf8")) as {
 		wip: {
-			families: { items: Array<{ name?: string; ports?: { items?: LightFamilyPort[] } }> };
-			initialKit: { types: { items: LightKitType[] } };
+			initialKit: {
+				families: { items: Array<{ name?: string; ports?: { items?: LightFamilyPort[] } }> };
+				types: { items: LightKitType[] };
+			};
 		};
 	};
 	const types = raw.wip.initialKit.types.items;
@@ -157,7 +159,7 @@ function loadLightSemantics(): {
 		nodeRows.push({ id: nk, label: t.name, name: t.name });
 	}
 	let portItems: LightFamilyPort[] = [];
-	for (const fam of raw.wip.families.items) {
+	for (const fam of raw.wip.initialKit.families.items) {
 		if (fam.name === "Nakagin Capsule Tower" && fam.ports?.items?.length) {
 			portItems = fam.ports.items;
 			break;

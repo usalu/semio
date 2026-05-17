@@ -15469,6 +15469,345 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #endregion 🏷️Tabs
 
+// #region 🖼️IconSelector
+
+/** @emoji 🎛️ Tab buckets for {@link IconSelector} (board WASM `iconKind`: `typst:` / `$…`, `data:` payloads, `emoji:`, catalog or inline SVG). */
+export type ElementsBoardIconSelectorMode = "data" | "emoji" | "math" | "vector";
+
+function stripLegacyImageDataPrefixForIconSelectorUi(raw: string): string {
+	const t = raw.trim();
+	return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
+}
+
+function isRasterDataUrlPayloadForIconSelectorUi(s: string): boolean {
+	const u = s.trim().toLowerCase();
+	return (
+		u.startsWith("data:image/png;base64,") ||
+		u.startsWith("data:image/jpeg;base64,") ||
+		u.startsWith("data:image/jpg;base64,")
+	);
+}
+
+function looksLikeAsciiCatalogishVectorStemForIconSelectorUi(s: string): boolean {
+	const t = s.trim();
+	if (t === "") {
+		return false;
+	}
+	if (!/^[\w.-]+$/.test(t)) {
+		return false;
+	}
+	return /[.-_]/.test(t) || t.length > 48;
+}
+
+/** @emoji 🧭 Derives {@link IconSelector} tab; keep aligned with `classifyElementsBoardIconSelectorMode` in `@elements/board`. */
+function defaultClassifyElementsBoardIconSelectorMode(raw: string): ElementsBoardIconSelectorMode {
+	const t = raw.trim();
+	if (t === "") {
+		return "math";
+	}
+	if (t.startsWith("typst:") || t.startsWith("$")) {
+		return "math";
+	}
+	if (t.startsWith("emoji:")) {
+		return "emoji";
+	}
+	const lower = t.toLowerCase();
+	if (lower.startsWith("data:") || isRasterDataUrlPayloadForIconSelectorUi(stripLegacyImageDataPrefixForIconSelectorUi(t))) {
+		return "data";
+	}
+	if (lower.startsWith("<?xml") || lower.includes("<svg")) {
+		return "vector";
+	}
+	if (looksLikeAsciiCatalogishVectorStemForIconSelectorUi(t)) {
+		return "vector";
+	}
+	return "emoji";
+}
+
+function stripTypstEmojiPrefixesForIconSelector(raw: string): string {
+	const t = raw.trim();
+	if (t.startsWith("typst:")) {
+		return t.slice("typst:".length).trim();
+	}
+	if (t.startsWith("emoji:")) {
+		return t.slice("emoji:".length).trim();
+	}
+	return t;
+}
+
+function mathInnerFromIconKindStored(stored: string): string {
+	return stripTypstEmojiPrefixesForIconSelector(stored);
+}
+
+function emitMathIconKindFromInner(inner: string): string {
+	const i = inner.trim();
+	if (i === "") {
+		return "";
+	}
+	return `typst:${i}`;
+}
+
+function emojiInnerFromIconKindStored(stored: string): string {
+	const t = stored.trim();
+	return t.startsWith("emoji:") ? t.slice("emoji:".length).trim() : stripTypstEmojiPrefixesForIconSelector(t);
+}
+
+function emitEmojiIconKindFromInner(inner: string): string {
+	const i = inner.trim();
+	return i === "" ? "" : `emoji:${i}`;
+}
+
+function migrateIconKindToIconSelectorMode(
+	prev: string,
+	mode: ElementsBoardIconSelectorMode,
+	classify: (raw: string) => ElementsBoardIconSelectorMode,
+): string {
+	const cur = classify(prev);
+	if (cur === mode) {
+		return prev;
+	}
+	if (mode === "data") {
+		return cur === "data" ? prev : "";
+	}
+	if (mode === "vector") {
+		if (cur === "vector") {
+			return prev;
+		}
+		return "";
+	}
+	const neutral = stripTypstEmojiPrefixesForIconSelector(prev).trim();
+	if (mode === "math") {
+		return neutral === "" ? "" : emitMathIconKindFromInner(neutral);
+	}
+	if (mode === "emoji") {
+		return neutral === "" ? "" : emitEmojiIconKindFromInner(neutral);
+	}
+	return "";
+}
+
+export interface IconSelectorProps {
+	id: string;
+	value: string;
+	onChange: (next: string) => void;
+	disabled?: boolean;
+	uniform?: boolean;
+	classifyElementsBoardIconSelectorMode?: (raw: string) => ElementsBoardIconSelectorMode;
+}
+
+/** @emoji 🖼️ Rich board `iconKind` editor with typst math, `data:` payloads, `emoji:`, catalog or inline SVG, preview, and file import. */
+export function IconSelector({
+	id,
+	value,
+	onChange,
+	disabled = false,
+	uniform = true,
+	classifyElementsBoardIconSelectorMode: classifyModeProp,
+}: IconSelectorProps): React.ReactElement {
+	const classifyMode = classifyModeProp ?? defaultClassifyElementsBoardIconSelectorMode;
+	const activeMode = classifyMode(value);
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
+	const locked = disabled || !uniform;
+	const mathFieldValue = uniform && activeMode === "math" ? mathInnerFromIconKindStored(value) : "";
+	const dataFieldValue = uniform && activeMode === "data" ? value : "";
+	const emojiFieldValue = uniform && activeMode === "emoji" ? emojiInnerFromIconKindStored(value) : "";
+	const vectorFieldValue = uniform && activeMode === "vector" ? value : "";
+
+	const onTabsValueChange = (next: string) => {
+		if (locked) {
+			return;
+		}
+		const mode = next as ElementsBoardIconSelectorMode;
+		onChange(migrateIconKindToIconSelectorMode(value, mode, classifyMode));
+	};
+
+	const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const list = e.target.files;
+		const f = list?.[0];
+		e.target.value = "";
+		if (!f || locked) {
+			return;
+		}
+		const isRasterMime = f.type === "image/png" || f.type === "image/jpeg" || /\.png$/i.test(f.name) || /\.jpe?g$/i.test(f.name);
+		const isSvgMime = f.type === "image/svg+xml" || /\.svg$/i.test(f.name);
+		if (isSvgMime) {
+			const reader = new FileReader();
+			reader.onload = () => {
+				const text = typeof reader.result === "string" ? reader.result.trim() : "";
+				onChange(text);
+			};
+			reader.readAsText(f);
+			return;
+		}
+		if (isRasterMime) {
+			const reader = new FileReader();
+			reader.onload = () => {
+				const url = typeof reader.result === "string" ? reader.result : "";
+				onChange(url.trim());
+			};
+			reader.readAsDataURL(f);
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = () => {
+			const url = typeof reader.result === "string" ? reader.result : "";
+			onChange(url.trim());
+		};
+		reader.readAsDataURL(f);
+	};
+
+	const vectorPreviewSrc = React.useMemo(() => {
+		const t = value.trim();
+		const lower = t.toLowerCase();
+		if (!lower.includes("<svg")) {
+			return null;
+		}
+		try {
+			return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(t)}`;
+		} catch {
+			return null;
+		}
+	}, [value]);
+
+	const rasterPreviewSrc = React.useMemo(() => {
+		const t = value.trim();
+		if (!/^data:image\/(png|jpeg|jpg);/i.test(t)) {
+			return null;
+		}
+		return t;
+	}, [value]);
+
+	const preview = (() => {
+		const t = value.trim();
+		if (t === "") {
+			return <span className="text-muted-foreground text-xs">—</span>;
+		}
+		const mode = classifyMode(t);
+		if (mode === "data") {
+			const src = rasterPreviewSrc ?? (t.toLowerCase().startsWith("data:") ? t : null);
+			if (src && /^data:image\/(png|jpeg|svg\+xml|jpg)/i.test(src)) {
+				return <img alt="" className="max-h-14 max-w-full object-contain" src={src} />;
+			}
+			return (
+				<span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-[10px] leading-tight break-all">
+					{t.length > 180 ? `${t.slice(0, 180)}…` : t}
+				</span>
+			);
+		}
+		if (mode === "vector") {
+			if (vectorPreviewSrc) {
+				return <img alt="" className="max-h-14 max-w-full object-contain" src={vectorPreviewSrc} />;
+			}
+			return (
+				<span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-xs leading-snug break-all">
+					{t.length > 120 ? `${t.slice(0, 120)}…` : t}
+				</span>
+			);
+		}
+		if (mode === "emoji") {
+			const inner = emojiInnerFromIconKindStored(t);
+			return (
+				<span className="text-2xl leading-none" style={{ fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}>
+					{inner || "—"}
+				</span>
+			);
+		}
+		const inner = mathInnerFromIconKindStored(t);
+		return <span className="text-muted-foreground max-h-14 overflow-hidden font-mono text-xs leading-snug break-all">{inner || "—"}</span>;
+	})();
+
+	return (
+		<div className={cn("border-element/50 flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
+			<Tabs onValueChange={onTabsValueChange} value={activeMode}>
+				<TabsList className="grid w-full grid-cols-4 gap-0 text-xs">
+					<TabsTrigger className="px-1" title="Typst math" value="math">
+						<span className="inline-flex items-center gap-1">
+							<BoardIconMathGlyphIcon aria-hidden className="size-3.5" />
+							Math
+						</span>
+					</TabsTrigger>
+					<TabsTrigger className="px-1" title="Raster or data URL" value="data">
+						<span className="inline-flex items-center gap-1">
+							<BoardIconRasterGlyphIcon aria-hidden className="size-3.5" />
+							Data
+						</span>
+					</TabsTrigger>
+					<TabsTrigger className="px-1" title="Typst emoji cell" value="emoji">
+						<span className="inline-flex items-center gap-1">
+							<BoardIconEmojiGlyphIcon aria-hidden className="size-3.5" />
+							Emoji
+						</span>
+					</TabsTrigger>
+					<TabsTrigger className="px-1" title="Catalog id or inline SVG" value="vector">
+						<span className="inline-flex items-center gap-1">
+							<BoardIconCatalogGlyphIcon aria-hidden className="size-3.5" />
+							Vector
+						</span>
+					</TabsTrigger>
+				</TabsList>
+				<TabsContent className="mt-2" value="math">
+					<Textarea
+						className="min-h-[72px] font-mono text-xs"
+						id={`${id}.math`}
+						mixed={!uniform}
+						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(emitMathIconKindFromInner(e.target.value))}
+						placeholder="Typst markup (e.g. $x^2$)"
+						readOnly={locked}
+						rows={4}
+						value={mathFieldValue}
+					/>
+				</TabsContent>
+				<TabsContent className="mt-2 space-y-2" value="data">
+					<Textarea
+						className="min-h-[88px] font-mono text-xs"
+						id={`${id}.data`}
+						mixed={!uniform}
+						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+						placeholder="data:image/png;base64,… or other data:… URL"
+						readOnly={locked}
+						rows={5}
+						value={dataFieldValue}
+					/>
+				</TabsContent>
+				<TabsContent className="mt-2" value="emoji">
+					<Textarea
+						className="min-h-[72px] font-mono text-xs"
+						id={`${id}.emoji`}
+						mixed={!uniform}
+						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(emitEmojiIconKindFromInner(e.target.value))}
+						placeholder="Typst body after emoji: (e.g. 😀)"
+						readOnly={locked}
+						rows={4}
+						value={emojiFieldValue}
+					/>
+				</TabsContent>
+				<TabsContent className="mt-2" value="vector">
+					<Textarea
+						className="min-h-[88px] font-mono text-xs"
+						id={`${id}.vector`}
+						mixed={!uniform}
+						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+						placeholder="Metabolism catalog id or inline <svg …>"
+						readOnly={locked}
+						rows={5}
+						value={vectorFieldValue}
+					/>
+				</TabsContent>
+			</Tabs>
+			<Button className="h-7 gap-1 self-start px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
+				<BoardIconFileImportIcon className="size-3.5" />
+				Import file…
+			</Button>
+			<input accept="image/png,image/jpeg,image/svg+xml,.svg,.png,.jpg,.jpeg" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
+			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
+			<Button className="h-7 self-end px-2 text-xs" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">
+				Clear
+			</Button>
+		</div>
+	);
+}
+
+// #endregion 🖼️IconSelector
+
 // #region 📜Tree
 // Hierarchical tree view with sections, items, and file trees.
 // Consumers MUST wrap components in TreeStateProvider.

@@ -6,6 +6,7 @@
 import {
 	Button,
 	Expertise,
+	IconSelector,
 	Input,
 	Label,
 	Select,
@@ -62,9 +63,11 @@ import {
 	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_SELECTION_TARGETS_DEFAULT,
+	boardFixtureMetaKindCatalogBundle,
 	encodeBoardFixtureForDragV1,
 	layoutBoardFixtureRedrawHandles,
 	layoutBoardFixtureRedrawNodes,
+	mergeBoardKindCatalogBundleByRowId,
 	parseBoardFixtureV1,
 	type BoardFixtureDropDetail,
 	type BoardFixtureCircleNodeV1,
@@ -83,10 +86,16 @@ import {
 	type CameraState,
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	type BoardLodZoomThresholds,
+	classifyElementsBoardIconSelectorMode,
 } from "../index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
+
+const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
+	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+	boardFixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {},
+);
 
 // #region 🔖Kinds
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
@@ -827,6 +836,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						height={node.height}
 						id={node.id}
 						key={node.id}
+						{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 						shape="rectangle"
 						selected={selectedIds.has(node.id)}
 						text={node.text}
@@ -858,6 +868,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						draggable
 						id={node.id}
 						key={node.id}
+						{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 						radius={node.radius}
 						selected={selectedIds.has(node.id)}
 						text={node.text}
@@ -982,7 +993,7 @@ function BoardOverviewPane(): ReactElement {
 				contextMenu={boardPlayCanvasBackgroundMenu}
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
+				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
@@ -1019,7 +1030,7 @@ function BoardDetailPane(): ReactElement {
 				className="min-h-0 flex-1"
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
+				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
@@ -1056,7 +1067,7 @@ function BoardSelectionPane(): ReactElement {
 				className="min-h-0 flex-1"
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
+				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
@@ -1439,6 +1450,10 @@ function InspectorNodeBatch({
 	const textUniform = allEqual(textValues);
 	const textValue = textUniform ? (textValues[0] ?? "") : "";
 
+	const iconKinds = targets.map((n) => n.iconKind ?? "");
+	const iconKindUniform = allEqual(iconKinds);
+	const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
 	const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
 	const shapeUniform = allEqual(shapes);
 	const shapeValue = shapeUniform ? shapes[0] : undefined;
@@ -1473,6 +1488,14 @@ function InspectorNodeBatch({
 	const onText = useCallback(
 		(next: string) => {
 			patchNodes((n) => ({ ...n, text: next === "" ? undefined : next }));
+		},
+		[patchNodes],
+	);
+
+	const onIconKind = useCallback(
+		(next: string) => {
+			const t = next.trim();
+			patchNodes((n) => ({ ...n, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
 		},
 		[patchNodes],
 	);
@@ -1521,6 +1544,15 @@ function InspectorNodeBatch({
 					onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)}
 					placeholder={textUniform ? undefined : "Mixed"}
 					value={textValue}
+				/>
+			</Label>
+			<Label id="board-play.inspector.node.icon" label="Icon">
+				<IconSelector
+					classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode}
+					id="board-play.inspector.node.icon.selector"
+					onChange={onIconKind}
+					uniform={iconKindUniform}
+					value={iconKindValue}
 				/>
 			</Label>
 			<Label id="board-play.inspector.node.shape" label="Shape">
@@ -1621,6 +1653,10 @@ function InspectorHandleBatch({
 	const radiusUniform = allEqual(radii);
 	const radiusValue = radiusUniform ? radii[0]! : Number.NaN;
 
+	const iconKinds = handles.map((h) => h.iconKind ?? "");
+	const iconKindUniform = allEqual(iconKinds);
+	const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
 	const patchHandles = useCallback(
 		(updater: (h: BoardFixtureHandleV1) => BoardFixtureHandleV1) => {
 			patchFixture((prev) => ({
@@ -1632,6 +1668,14 @@ function InspectorHandleBatch({
 			}));
 		},
 		[idSet, patchFixture],
+	);
+
+	const onIconKind = useCallback(
+		(next: string) => {
+			const t = next.trim();
+			patchHandles((h) => ({ ...h, ...(t === "" ? { iconKind: undefined } : { iconKind: t }) }));
+		},
+		[patchHandles],
 	);
 
 	return (
@@ -2191,10 +2235,6 @@ function BoardPlayInner(): ReactElement {
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
-			}
-			if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
-				cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
-				boardPlayNodesRedrawCameraAnimRafRef.current = null;
 			}
 		}
 		prevBoardRedrawPlayingRef.current = boardRedrawPlaying;

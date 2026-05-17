@@ -18,6 +18,8 @@ import {
 import {
 	BOARD_BUILTIN_PORT_HANDLE_KIND,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+	boardFixtureMetaKindCatalogBundle,
+	mergeBoardKindCatalogBundleByRowId,
 } from "../../../../elements/client/lib/board/index";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
 
@@ -46,8 +48,10 @@ interface BoardFixtureNodeJson {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleJson[];
 	height?: number;
+	iconKind?: string;
 	id: string;
 	label?: string;
+	nodeKind?: string;
 	radius?: number;
 	shape?: "circle" | "rectangle";
 	text?: string;
@@ -65,12 +69,17 @@ interface BoardFixtureEdgeJson {
 interface BoardFixtureV1 {
 	camera: { x: number; y: number; zoom: number };
 	edges: BoardFixtureEdgeJson[];
-	meta: Record<string, unknown>;
+	meta?: Record<string, unknown>;
 	nodes: BoardFixtureNodeJson[];
 	schema: string;
 }
 
 const nakaginCapsuleTowerBoard = nakaginCapsuleTowerBoardFixture as BoardFixtureV1;
+
+const nakaginStoryKindCatalogs = mergeBoardKindCatalogBundleByRowId(
+	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+	boardFixtureMetaKindCatalogBundle(nakaginCapsuleTowerBoardFixture) ?? {},
+);
 
 type DefaultBoardGraphNode = {
 	handles: { angle: number; handleKind: string; id: string }[];
@@ -144,6 +153,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					height={node.height}
 					id={node.id}
 					key={node.id}
+					{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 					shape="rectangle"
 					text={node.text ?? node.label}
 					width={node.width}
@@ -162,7 +172,16 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					))}
 				</Node>
 			) : (
-				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} text={node.text ?? node.label} x={node.x} y={node.y}>
+				<Node
+					draggable={false}
+					id={node.id}
+					key={node.id}
+					{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
+					radius={node.radius ?? 0}
+					text={node.text ?? node.label}
+					x={node.x}
+					y={node.y}
+				>
 					{node.handles.map((handle) => (
 						<Handle
 							angle={handle.angle}
@@ -218,5 +237,6 @@ export const NakaginCapsuleTowerFlatSelection: Story = {
 	args: {
 		...Default.args,
 		camera: { ...nakaginCapsuleTowerBoard.camera },
+		kindCatalogs: nakaginStoryKindCatalogs,
 	},
 };

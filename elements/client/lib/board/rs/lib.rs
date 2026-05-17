@@ -5699,6 +5699,7 @@ mod tests {
 #[cfg(test)]
 mod host_tests {
 	use crate::board_host::Interaction;
+	use super::vcompute::distance_between;
 	use super::vcompute::handle_position_on_circle;
 	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
 	use crate::vello::kurbo::Point;
@@ -6314,14 +6315,14 @@ mod host_tests {
 		h.set_size(800, 600, 1.0);
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		h.set_camera(0.0, 0.0, 1.0);
-		let ha = h.handles.get("a:h0").unwrap();
-		let body = vcompute::handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-		let ring = h.indirect_handle_world_pos(ha).unwrap();
-		let gap_px_z1 = vcompute::distance_between(h.world_to_screen(ring), h.world_to_screen(body));
+		let ha = h.handles.get("a:h0").unwrap().clone();
+		let body = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let ring = h.indirect_handle_world_pos(&ha).unwrap();
+		let gap_px_z1 = distance_between(h.world_to_screen(ring), h.world_to_screen(body));
 		h.set_camera(0.0, 0.0, 4.25);
-		let gap_px_z2 = vcompute::distance_between(
-			h.world_to_screen(h.indirect_handle_world_pos(ha).unwrap()),
-			h.world_to_screen(vcompute::handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0)),
+		let gap_px_z2 = distance_between(
+			h.world_to_screen(h.indirect_handle_world_pos(&ha).unwrap()),
+			h.world_to_screen(handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0)),
 		);
 		assert!(
 			(gap_px_z1 - gap_px_z2).abs() < 0.6,
