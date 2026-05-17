@@ -3,11 +3,13 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Board context menu appears linked to the internal board coordinate system instead of the mouse position. Diagnose the board context menu event path and position the menu next to the pointer in viewport/client coordinates. Keep changes in existing files and validate with focused tests or runtime checks where feasible.",
+  "summary": "Fixed board canvas losing pointer interaction when `process.env.VITEST` leaked into Playwright’s Vite webServer (`env: { ...process.env }`), which disabled the window capture pointer bridge while document-level capture listeners still ran first. Introduced `boardSourceRunsAsVitestUnitBundle` from `import.meta.env.MODE === \"test\"` (Vitest config now sets `test.mode: \"test\"`) for both WASM bootstrap and bridge routing; removed `process.env.VITEST` / `import.meta.env.VITEST` bridge checks. Verified with `bun nx run @elements/board:test --skip-nx-cache` (exit 0).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1426"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪96a5f79db40a4421a3f054e2e1500442"
+    "⚪96a5f79db40a4421a3f054e2e1500442",
+    "⚪500b8d27853b43019e56edd5bebe067e"
   ]
 }

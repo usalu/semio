@@ -21,7 +21,10 @@ import initBoardWasm, {
 	initSync,
 } from "./rs/pkg/elements_board.js";
 
-if (typeof process !== "undefined" && process.env.VITEST === "true") {
+/** @emoji 🧪 True when Vite runs this module with `import.meta.env.MODE` set to `test` (board `vitest.config.ts`); avoids leaked `process.env.VITEST` from the parent shell disabling the window pointer bridge in Playwright/Vite dev. */
+const boardSourceRunsAsVitestUnitBundle = (import.meta as { env?: { MODE?: string } }).env?.MODE === "test";
+
+if (boardSourceRunsAsVitestUnitBundle) {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
@@ -583,7 +586,7 @@ export interface BoardRedrawLayoutOptions {
 	};
 }
 
-/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
+/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); pure scalar math in Rust (no layout linear-algebra crate). */
 export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
 	const out = boardRedrawLayoutFixtureJson(
 		JSON.stringify(fixture),
@@ -2362,16 +2365,12 @@ function boardTextOverlayCaptionForLod(
 }
 
 //#region 🔖Renderer
-/** @emoji 🪟 When true, pointer routing attaches to `window` capture so it runs before any `document` capture shell listeners; false under Vitest/jsdom (canvas dispatches do not reach `window` the same way). */
+/** @emoji 🪟 True → pointer/wheel on `window` capture (runs before document-capture shells); `contextmenu` stays on the event surface; off only for the board Vitest unit bundle (`boardSourceRunsAsVitestUnitBundle`). */
 function boardRendererUsesWindowPointerCaptureBridge(): boolean {
 	if (typeof globalThis.window === "undefined" || typeof globalThis.window.addEventListener !== "function") {
 		return false;
 	}
-	if (typeof process !== "undefined" && process.env.VITEST === "true") {
-		return false;
-	}
-	const v = (import.meta as { env?: { VITEST?: boolean | string } }).env?.VITEST;
-	if (v === true || v === "true") {
+	if (boardSourceRunsAsVitestUnitBundle) {
 		return false;
 	}
 	return true;
@@ -3670,7 +3669,7 @@ export class BoardRenderer {
 		return t instanceof Node && this.eventSurface.contains(t);
 	}
 
-	private eventTargetIsUnderEventSurface(event: Event): boolean {
+	private readonly handleWindowPointerDownCapture = (event: Event): void => {
 		if (!this.eventTargetIsUnderEventSurface(event)) {
 			return;
 		}

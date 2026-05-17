@@ -1,0 +1,10 @@
+{
+  "title": "Board Force Graph Dependency Free",
+  "emoji": "🕸️",
+  "status": "open",
+  "description": "Reimplement board force-directed layout in elements/client/lib/board/rs so the force_graph module uses no nalgebra or external math crate—plain f64 vectors only. Preserve behavior and existing Rust tests.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪5ee9713a8b7c470ba09f0131457cf8a1"
+  ]
+}

@@ -5104,12 +5104,10 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 📦 SDL `Checkpoint.kit` — materialized kit at this checkpoint; until checkpoint-owned `changes` are wired, matches `initial`.
+        /// @emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
         pub async fn kit(&self) -> Option<Arc<Kit>> {
-            match self.owner_graph.upgrade() {
-                Some(g) => Some(g.initial_kit.read().await.clone()),
-                None => None,
-            }
+            let g = self.owner_graph.upgrade()?;
+            g.materialized_kit_for_checkpoint_id(&self.id).await.ok()
         }
 
         pub async fn changes(&self) -> crate::gql_relay::ChangeConnection {
@@ -5755,6 +5753,27 @@ pub mod vcs {
             Ok(())
         }
 
+        /// @emoji 📦 Golden `Checkpoint.kit` / `KitReadPointInput.checkpointId` — WIP parent checkpoint resolves like `TheKit.kit`; alternative tip like `Alternative.kit`; otherwise graph `initialKit` until per-checkpoint edit slices exist.
+        pub async fn materialized_kit_for_checkpoint_id(self: &Arc<Self>, checkpoint_id: &Id) -> Result<Arc<Kit>, SemioError> {
+            let in_graph = self.checkpoints.read().await.iter().any(|c| &c.id == checkpoint_id);
+            let in_alt = self.alternatives.read().await.iter().any(|a| a.checkpoints.read().await.iter().any(|c| &c.id == checkpoint_id));
+            if !in_graph && !in_alt {
+                return Err(SemioError::not_found("Checkpoint", checkpoint_id.as_str()));
+            }
+            if self.the_kit_parent_checkpoint.read().await.upgrade().as_ref().map(|p| &p.id) == Some(checkpoint_id) {
+                return Ok(self.materialized_head_kit().await);
+            }
+            for a in self.alternatives.read().await.iter() {
+                let cps = a.checkpoints.read().await;
+                if let Some(tip) = cps.last() {
+                    if &tip.id == checkpoint_id {
+                        return Ok(self.materialized_kit_for_workspace(&a.id).await);
+                    }
+                }
+            }
+            Ok(self.initial_kit.read().await.clone())
+        }
+
         /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../graphql/target.schema.graphql), [`Checkpoint`](../../graphql/target.schema.graphql), [`Alternative`](../../graphql/target.schema.graphql)).
         pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, SemioError> {
             if p.the_kit == Some(true) {
@@ -5762,9 +5781,7 @@ pub mod vcs {
             }
             if let Some(cid) = p.checkpoint_id.clone() {
                 let _ = (p.checkpoint_change_id.clone(), p.checkpoint_operation_id.clone());
-                let cps = self.checkpoints.read().await;
-                let _cp = cps.iter().find(|c| c.id == cid).cloned().ok_or_else(|| SemioError::not_found("Checkpoint", cid.as_str()))?;
-                return Ok(self.initial_kit.read().await.clone());
+                return self.materialized_kit_for_checkpoint_id(&cid).await;
             }
             if let Some(aid) = p.alternative_id.clone() {
                 let alts = self.alternatives.read().await;
@@ -14478,6 +14495,11 @@ mod tests {
             assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
             let cp_initial = vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
             assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
+            assert_eq!(
+                vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["kit"]["name"].as_str(),
+                Some("Hello Bundle"),
+                "checkpoint.kit matches golden Workspace.kit-style materialization at wip parent anchor"
+            );
 
             g.abort_transaction(&ws_a, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_baseline).await;
@@ -14486,6 +14508,7 @@ mod tests {
             assert_eq!(vr["store"]["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
             assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
             assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
+            assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["kit"]["name"].as_str(), Some("the kit"));
 
             let tx_a2 = g.open_transaction(&ws_a).await;
             let req2 = crate::id::Id::new().await;

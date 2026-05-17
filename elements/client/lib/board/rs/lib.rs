@@ -514,12 +514,97 @@ fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
 
 // #region 🕸️ForceGraphLayout
 mod force_graph {
-	use nalgebra::Vector2;
 	use serde::{Deserialize, Serialize};
 	use serde_json::Value;
 	use std::collections::{HashMap, HashSet};
+	use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 
 	use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
+
+	// #region 🔖Vec2
+	/// 📐 Tiny 2-vector for force layout only (no external linear-algebra crate).
+	#[derive(Clone, Copy, Debug)]
+	struct Vec2 {
+		x: f64,
+		y: f64,
+	}
+
+	impl Vec2 {
+		const ZERO: Self = Self { x: 0.0, y: 0.0 };
+		#[inline]
+		fn new(x: f64, y: f64) -> Self {
+			Self { x, y }
+		}
+		#[inline]
+		fn norm(self) -> f64 {
+			(self.x * self.x + self.y * self.y).sqrt()
+		}
+	}
+
+	impl Add for Vec2 {
+		type Output = Self;
+		#[inline]
+		fn add(self, rhs: Self) -> Self {
+			Self::new(self.x + rhs.x, self.y + rhs.y)
+		}
+	}
+
+	impl AddAssign for Vec2 {
+		#[inline]
+		fn add_assign(&mut self, rhs: Self) {
+			self.x += rhs.x;
+			self.y += rhs.y;
+		}
+	}
+
+	impl Sub for Vec2 {
+		type Output = Self;
+		#[inline]
+		fn sub(self, rhs: Self) -> Self {
+			Self::new(self.x - rhs.x, self.y - rhs.y)
+		}
+	}
+
+	impl SubAssign for Vec2 {
+		#[inline]
+		fn sub_assign(&mut self, rhs: Self) {
+			self.x -= rhs.x;
+			self.y -= rhs.y;
+		}
+	}
+
+	impl Mul<f64> for Vec2 {
+		type Output = Self;
+		#[inline]
+		fn mul(self, s: f64) -> Self {
+			Self::new(self.x * s, self.y * s)
+		}
+	}
+
+	impl Mul<Vec2> for f64 {
+		type Output = Vec2;
+		#[inline]
+		fn mul(self, v: Vec2) -> Vec2 {
+			v * self
+		}
+	}
+
+	impl MulAssign<f64> for Vec2 {
+		#[inline]
+		fn mul_assign(&mut self, s: f64) {
+			self.x *= s;
+			self.y *= s;
+		}
+	}
+
+	impl Div<f64> for Vec2 {
+		type Output = Self;
+		#[inline]
+		fn div(self, s: f64) -> Self {
+			Self::new(self.x / s, self.y / s)
+		}
+	}
+	// #endregion
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
 	#[serde(rename_all = "camelCase")]
@@ -660,8 +745,8 @@ mod force_graph {
 		let mut id_to_index: HashMap<String, usize> = HashMap::new();
 		let mut visible_node_indices: Vec<usize> = Vec::new();
 		let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
-		let mut positions: Vec<Vector2<f64>> = Vec::new();
-		let mut velocities: Vec<Vector2<f64>> = Vec::new();
+		let mut positions: Vec<Vec2> = Vec::new();
+		let mut velocities: Vec<Vec2> = Vec::new();
 		let mut radii: Vec<f64> = Vec::new();
 		for (raw_idx, node) in nodes.iter().enumerate() {
 			let Some(obj) = node.as_object() else {
@@ -682,38 +767,38 @@ mod force_graph {
 			id_to_index.insert(nid.to_string(), positions.len());
 			visible_node_indices.push(raw_idx);
 			optional_xy.push(xy);
-			positions.push(Vector2::zeros());
-			velocities.push(Vector2::zeros());
+			positions.push(Vec2::ZERO);
+			velocities.push(Vec2::ZERO);
 			radii.push(node_repulsion_radius(node));
 		}
 		let n = positions.len();
 		if n == 0 {
 			return Ok(());
 		}
-		let mut sum = Vector2::zeros();
+		let mut sum = Vec2::ZERO;
 		let mut finite_ct: u32 = 0;
 		for xy in &optional_xy {
 			if let Some((x, y)) = xy {
-				sum += Vector2::new(*x, *y);
+				sum += Vec2::new(*x, *y);
 				finite_ct += 1;
 			}
 		}
 		let anchor = if finite_ct > 0 {
 			sum / (finite_ct as f64)
 		} else {
-			Vector2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0))
+			Vec2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0))
 		};
 		let mut seed_rng = opts.random_seed;
 		for i in 0..n {
 			positions[i] = if let Some((x, y)) = optional_xy[i] {
-				Vector2::new(x, y)
+				Vec2::new(x, y)
 			} else {
 				let t = i as f64;
 				let ang = t * 2.39996322972865332;
 				let r = 10.0 + t.sqrt() * 22.0;
 				let jx = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
 				let jy = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
-				anchor + Vector2::new(r * ang.cos() + jx, r * ang.sin() + jy)
+				anchor + Vec2::new(r * ang.cos() + jx, r * ang.sin() + jy)
 			};
 		}
 		let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
@@ -765,13 +850,13 @@ mod force_graph {
 			if (p.x - gx).abs() < 1e-6 && (p.y - gy).abs() < 1e-6 {
 				let jx = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
 				let jy = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-				*p += Vector2::new(jx, jy);
+				*p += Vec2::new(jx, jy);
 			}
 		}
 		let iters = opts.iterations.max(1);
 		for iter in 0..iters {
 			let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
-			let mut forces = vec![Vector2::zeros(); n];
+			let mut forces = vec![Vec2::ZERO; n];
 			for i in 0..n {
 				for j in (i + 1)..n {
 					let delta = positions[j] - positions[i];
@@ -795,7 +880,7 @@ mod force_graph {
 			if opts.gravity > 0.0 {
 				let g = opts.gravity * cool;
 				for i in 0..n {
-					let to_c = Vector2::new(gx - positions[i].x, gy - positions[i].y);
+					let to_c = Vec2::new(gx - positions[i].x, gy - positions[i].y);
 					forces[i] += to_c * g;
 				}
 			}

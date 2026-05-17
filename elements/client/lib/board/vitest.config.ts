@@ -8,6 +8,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	root,
 	test: {
+		mode: "test",
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
