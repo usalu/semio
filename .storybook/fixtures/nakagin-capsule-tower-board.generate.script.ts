@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
 // Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent design (180 pieces, 179 connections).
-// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind. Each node's optional **`iconKind`** is the metabolism icon catalog stem from the piece type's kit `icon` path (`icons/capsule_p.svg` → `capsule_p`) for WASM detail SVG lookup.
+// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind. Each node's optional **`iconKind`** is the metabolism icon catalog stem from the piece type's kit `icon` path (`icons/capsule_p.svg` → `capsule_p`) for WASM detail vector lookup (Rust: not `$`, not `data:` → catalog/SVG sniff; else `$` math / `data:` / emoji).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

@@ -7,6 +7,8 @@ include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../core/styling/rs/board
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR"));
+    let emoji_font = manifest_dir.join("assets/NotoColorEmoji-subset.ttf");
+    println!("cargo:rerun-if-changed={}", emoji_font.display());
     emit_board_vello_styles(&manifest_dir, &out_dir);
 
     let icons_src = manifest_dir.join("../../../../..").join("semio/client/examples/metabolism/icons");

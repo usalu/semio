@@ -311,7 +311,7 @@ mod scene_json {
 		pub style: Option<String>,
 		#[serde(default)]
 		pub text: Option<String>,
-		/// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
+		/// @emoji 🏷️ Runtime host encoding: catalog id or inline `<svg` / `<?xml` when not `$` / not `data:`; otherwise `$…` math, `data:` payload, or emoji (Noto Color Emoji).
 		#[serde(default)]
 		pub icon_kind: Option<String>,
 		/// @emoji 🧩 Semantic node-kind id for compatibility rows at `node` specificity.
@@ -349,7 +349,7 @@ mod scene_json {
 		/// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
 		#[serde(default)]
 		pub color: Option<String>,
-		/// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+		/// @emoji 🏷️ Runtime host encoding: leading `$` = Typst math, `data:` URL = svg/png/jpeg, else emoji (Noto Color Emoji); baked catalog id or inline `<svg` still resolves as vector when not `$` / not `data:`.
 		#[serde(default)]
 		pub icon_kind: Option<String>,
 		#[serde(default)]
@@ -1464,7 +1464,7 @@ fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
 }
 
 mod board_icon_codec {
-	use base64::Engine as _;
+	use data_url::DataUrl;
 	use std::path::PathBuf;
 	use std::sync::{Arc, OnceLock};
 	use typst::foundations::{Bytes, Datetime};
@@ -1476,6 +1476,9 @@ mod board_icon_codec {
 	use typst::LibraryExt;
 	use typst::World;
 
+	/// @emoji 📦 Apache-2.0 Noto Color Emoji subset (Noto emoji family) bundled for board emoji icons; glyph coverage from Blinc `blinc_noto_emoji` sample asset.
+	const NOTO_COLOR_EMOJI_SUBSET_FONT: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
+
 	#[derive(Debug)]
 	pub enum BoardResolvedIcon {
 		None,
@@ -1484,23 +1487,72 @@ mod board_icon_codec {
 		RasterRgba8 { rgba: Arc<[u8]>, w: u32, h: u32 },
 	}
 
-	struct RgbaImage {
-		data: Arc<[u8]>,
-		w: u32,
-		h: u32,
+	fn escape_typst_markup_fragment(s: &str) -> String {
+		let mut o = String::new();
+		for ch in s.chars() {
+			match ch {
+				'\\' => o.push_str("\\\\"),
+				'#' => o.push_str("\\#"),
+				'$' => o.push_str("\\$"),
+				'`' => o.push_str("\\`"),
+				'*' => o.push_str("\\*"),
+				'_' => o.push_str("\\_"),
+				'<' => o.push_str("\\<"),
+				'>' => o.push_str("\\>"),
+				'@' => o.push_str("\\@"),
+				_ => o.push(ch),
+			}
+		}
+		o
 	}
 
-	fn decode_raster_icon_bytes(t: &str) -> Option<RgbaImage> {
-		let s = t.trim().strip_prefix("image:").unwrap_or(t.trim()).trim();
-		let rest = s.strip_prefix("data:image/png;base64,").or_else(|| s.strip_prefix("data:image/jpeg;base64,")).or_else(|| s.strip_prefix("data:image/jpg;base64,"))?;
-		let raw = base64::engine::general_purpose::STANDARD.decode(rest.trim()).ok()?;
-		let img = image::load_from_memory(&raw).ok()?;
-		let rgba = img.to_rgba8();
-		let (w, h) = rgba.dimensions();
-		if w == 0 || h == 0 {
-			return None;
+	fn board_math_typst_document(body: &str) -> String {
+		let b = body.trim();
+		if b.is_empty() {
+			return String::new();
 		}
-		Some(RgbaImage { data: Arc::from(rgba.into_raw().into_boxed_slice()), w, h })
+		if b.starts_with('#') || b.contains('\n') {
+			format!("#set page(width: 120pt, height: 120pt, margin: 4pt, fill: none)\n{b}")
+		} else if b.starts_with('$') && b.ends_with('$') && b.len() >= 2 {
+			format!("#set page(width: 120pt, height: 120pt, margin: 4pt, fill: none)\n{b}")
+		} else {
+			format!("#set page(width: 120pt, height: 120pt, margin: 4pt, fill: none)\n${}$", b)
+		}
+	}
+
+	fn board_emoji_typst_document(text: &str) -> String {
+		let esc = escape_typst_markup_fragment(text);
+		format!(
+			"#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set text(font: (\"Noto Color Emoji\", \"New Computer Modern\"), size: 44pt)\n#set align(center + horizon)\n{esc}\n"
+		)
+	}
+
+	fn decode_data_url_board_icon(t: &str) -> Option<BoardResolvedIcon> {
+		let url = DataUrl::process(t.trim()).ok()?;
+		let (bytes, _) = url.decode_to_vec().ok()?;
+		let mt = url.mime_type();
+		if mt.matches("image", "svg+xml") {
+			let svg = String::from_utf8(bytes).ok()?;
+			let sl = svg.to_ascii_lowercase();
+			if !sl.contains("<svg") && !sl.starts_with("<?xml") {
+				return None;
+			}
+			return Some(BoardResolvedIcon::SvgPlain(svg));
+		}
+		if mt.matches("image", "png") || mt.matches("image", "jpeg") || (mt.type_ == "image" && mt.subtype == "jpg") {
+			let img = image::load_from_memory(&bytes).ok()?;
+			let rgba = img.to_rgba8();
+			let (w, h) = rgba.dimensions();
+			if w == 0 || h == 0 {
+				return None;
+			}
+			return Some(BoardResolvedIcon::RasterRgba8 {
+				rgba: Arc::from(rgba.into_raw().into_boxed_slice()),
+				w,
+				h,
+			});
+		}
+		None
 	}
 
 	pub fn board_typst_markup_to_svg(markup: &str) -> Option<String> {
@@ -1511,7 +1563,7 @@ mod board_icon_codec {
 		let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
 		let fonts = FONTS.get_or_init(|| {
 			let mut out = Vec::new();
-			for bytes in typst_assets::fonts() {
+			let mut push_font_file = |bytes: &'static [u8]| {
 				let blob = Bytes::new(bytes);
 				let mut idx = 0u32;
 				loop {
@@ -1522,6 +1574,10 @@ mod board_icon_codec {
 						break;
 					}
 				}
+			};
+			push_font_file(NOTO_COLOR_EMOJI_SUBSET_FONT);
+			for bytes in typst_assets::fonts() {
+				push_font_file(bytes);
 			}
 			out
 		});
@@ -1576,30 +1632,22 @@ mod board_icon_codec {
 		if t.is_empty() {
 			return BoardResolvedIcon::None;
 		}
-		if let Some(src) = t.strip_prefix("typst:") {
-			let src = src.trim();
-			if src.is_empty() {
+		if t.starts_with('$') {
+			let body = t[1..].trim();
+			if body.is_empty() {
 				return BoardResolvedIcon::None;
 			}
-			let wrapped = format!("#set page(width: 96pt, height: 96pt, margin: 3pt, fill: none)\n{src}");
-			return match board_typst_markup_to_svg(&wrapped) {
+			let doc = board_math_typst_document(body);
+			if doc.is_empty() {
+				return BoardResolvedIcon::None;
+			}
+			return match board_typst_markup_to_svg(&doc) {
 				Some(s) => BoardResolvedIcon::SvgPlain(s),
 				None => BoardResolvedIcon::None,
 			};
 		}
-		if let Some(em) = t.strip_prefix("emoji:") {
-			let em = em.trim();
-			if em.is_empty() {
-				return BoardResolvedIcon::None;
-			}
-			let wrapped = format!("#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt)\n{em}");
-			return match board_typst_markup_to_svg(&wrapped) {
-				Some(s) => BoardResolvedIcon::SvgPlain(s),
-				None => BoardResolvedIcon::None,
-			};
-		}
-		if let Some(img) = decode_raster_icon_bytes(t) {
-			return BoardResolvedIcon::RasterRgba8 { rgba: img.data, w: img.w, h: img.h };
+		if let Some(icon) = decode_data_url_board_icon(t) {
+			return icon;
 		}
 		if let Some(svg) = super::resolve_node_icon_svg_from_encoding(t) {
 			if super::board_metabolism_icons::board_metabolism_icon_svg(t).is_some() {
@@ -1607,7 +1655,11 @@ mod board_icon_codec {
 			}
 			return BoardResolvedIcon::SvgPlain(svg);
 		}
-		BoardResolvedIcon::None
+		let doc = board_emoji_typst_document(t);
+		match board_typst_markup_to_svg(&doc) {
+			Some(s) => BoardResolvedIcon::SvgPlain(s),
+			None => BoardResolvedIcon::None,
+		}
 	}
 }
 
@@ -1900,7 +1952,7 @@ mod board_host {
 		pub root: bool,
 		pub style: Option<String>,
 		pub text: Option<String>,
-		/// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
+		/// @emoji 🏷️ Runtime host encoding: catalog id or inline `<svg` / `<?xml` when not `$` / not `data:`; otherwise `$…` math, `data:` payload, or emoji (Noto Color Emoji).
 		pub icon_kind: Option<String>,
 		pub node_kind: String,
 	}
@@ -1958,7 +2010,7 @@ mod board_host {
 		pub handle_kind: String,
 		/// Parsed from descriptor `color` when set (overrides catalog fill).
 		pub color_fill: Option<Color>,
-		/// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+		/// @emoji 🏷️ Runtime host encoding: leading `$` = Typst math, `data:` URL = svg/png/jpeg, else emoji (Noto Color Emoji); baked catalog id or inline `<svg` still resolves as vector when not `$` / not `data:`.
 		pub icon_kind: Option<String>,
 	}
 
@@ -2331,14 +2383,14 @@ mod board_host {
 			let hx = hasher.finish();
 			let f = fg.to_rgba8();
 			let b = bg.to_rgba8();
-			format!("v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}", svg.len(), f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a)
+			format!("v9|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}", svg.len(), f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a)
 		}
 
 		fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
 			let mut hasher = std::collections::hash_map::DefaultHasher::new();
 			rgba.as_ref().hash(&mut hasher);
 			let hx = hasher.finish();
-			format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
+			format!("v9|r|{w}x{h}|{hx:x}|{}", rgba.len())
 		}
 
 		pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -3677,6 +3729,9 @@ mod board_host {
 				if !self.handles_link_compatible_for_drag(source_handle, h) {
 					continue;
 				}
+				if self.handle_has_incident_edge(id.as_str()) {
+					continue;
+				}
 				let pw = self.handle_world_pos(h)?;
 				let tol = self.link_snap_tolerance_world(h);
 				let d = distance_between(world, pw);
@@ -3701,6 +3756,9 @@ mod board_host {
 				return false;
 			}
 			if !self.handles_link_compatible_for_drag(source_row, target_row) {
+				return false;
+			}
+			if self.handle_has_incident_edge(source_handle_id) || self.handle_has_incident_edge(target_handle_id) {
 				return false;
 			}
 			for e in self.edges.values() {
@@ -3730,7 +3788,10 @@ mod board_host {
 			if let Interaction::LinkTargetNode { source_id, target_node_id } = self.interaction.clone() {
 				self.interaction = Interaction::None;
 				if button == 0 {
-					if let Some(hid) = hit.as_ref().filter(|id| self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)) {
+					if let Some(hid) = hit.as_ref().filter(|id| {
+						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)
+							&& !self.handle_has_incident_edge((*id).as_str())
+					}) {
 						self.try_commit_link_edge(&source_id, hid);
 						self.update_hover_from_world(world);
 						return;
@@ -3769,7 +3830,7 @@ mod board_host {
 				}
 			}
 			if let Some(ref hid) = hit {
-				if button == 0 && self.handles.contains_key(hid) {
+				if button == 0 && self.handles.contains_key(hid) && !self.handle_has_incident_edge(hid.as_str()) {
 					let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
@@ -3964,6 +4025,9 @@ mod board_host {
 			let handles_b: Vec<&HandleData> = self.handles.values().filter(|h| h.visible && h.node_id == other_node_id).collect();
 			let mut best: Option<(f64, String, String)> = None;
 			for ha in &handles_a {
+				if self.handle_has_incident_edge(ha.id.as_str()) {
+					continue;
+				}
 				let pa = self.handle_world_pos(ha)?;
 				for hb in &handles_b {
 					if self.handle_has_incident_edge(hb.id.as_str()) {
@@ -6228,12 +6292,33 @@ mod force_graph_tests {
 	}
 
 	#[test]
-	fn board_icon_codec_resolves_typst_math_to_svg_plain() {
-		let r = super::board_icon_codec::board_resolve_icon_kind("typst:$x^2$");
+	fn board_icon_codec_resolves_dollar_math_to_svg_plain() {
+		let r = super::board_icon_codec::board_resolve_icon_kind("$x^2");
 		match r {
 			super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
 				assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
 			}
+			other => panic!("unexpected resolution: {other:?}"),
+		}
+	}
+
+	#[test]
+	fn board_icon_codec_resolves_data_url_png_to_raster() {
+		let png_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+		let r = super::board_icon_codec::board_resolve_icon_kind(&format!("data:image/png;base64,{png_b64}"));
+		match r {
+			super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { w, h, .. } => {
+				assert_eq!((w, h), (1, 1));
+			}
+			other => panic!("unexpected resolution: {other:?}"),
+		}
+	}
+
+	#[test]
+	fn board_icon_codec_resolves_emoji_subset_glyph_to_svg() {
+		let r = super::board_icon_codec::board_resolve_icon_kind("✅");
+		match r {
+			super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg"), "{}", &s[..s.len().min(200)]),
 			other => panic!("unexpected resolution: {other:?}"),
 		}
 	}

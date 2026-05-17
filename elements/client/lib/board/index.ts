@@ -301,7 +301,7 @@ export interface BoardFixtureHandleV1 {
 	id: string;
 	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
 	color?: string;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional icon string: `$…` math, `data:` mime payload, else emoji (Noto Color Emoji); else baked catalog / inline `<svg`. */
 	iconKind?: string;
 	radius?: number;
 }
@@ -316,7 +316,7 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Runtime icon string for WASM detail LOD (`$…`, `data:…`, emoji, catalog id, or inline `<svg`). */
 	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
@@ -340,7 +340,7 @@ export interface BoardFixtureRectangleNodeV1 {
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Runtime icon string for WASM detail LOD (`$…`, `data:…`, emoji, catalog id, or inline `<svg`). */
 	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
@@ -555,7 +555,7 @@ export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
 	/** @emoji 🎨 Optional CSS hex fill overriding the handle-kind catalog color on the WASM host. */
 	color?: string | null;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional icon string: `$…` math, `data:` mime payload, else emoji (Noto Color Emoji); else baked catalog / inline `<svg`. */
 	iconKind?: string;
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
 	handleKind: string;
@@ -571,7 +571,7 @@ export interface BoardHandleProps {
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
 	handleKind: string;
 	id: string;
-	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	/** @emoji 🏷️ Optional icon string: `$…` math, `data:` mime payload, else emoji (Noto Color Emoji); else baked catalog / inline `<svg`. */
 	iconKind?: string;
 	radius?: number;
 	selected?: boolean;
@@ -1492,7 +1492,7 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
-	/** @emoji 🏷️ Runtime icon encoding forwarded to WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, baked catalog id, or inline SVG). */
+	/** @emoji 🏷️ Runtime icon string forwarded to WASM detail LOD (`$…`, `data:…`, emoji, baked catalog id, or inline `<svg`). */
 	iconKind: string | null;
 	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
@@ -4067,7 +4067,7 @@ if (boardVitest) {
 				edges: [],
 				nodes: [
 					{
-						handles: [{ angle: 0, id: "hk.h", iconKind: "  typst:$1+1$  " }],
+						handles: [{ angle: 0, id: "hk.h", iconKind: "  $1+1  " }],
 						id: "hk",
 						radius: 10,
 						x: 0,
@@ -4077,7 +4077,7 @@ if (boardVitest) {
 				schema: "elements.board.fixture/v1",
 			});
 			const n = parsed?.nodes[0];
-			expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
+			expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "$1+1" });
 		});
 
 		it("parses optional textAutofit on fixture nodes", () => {

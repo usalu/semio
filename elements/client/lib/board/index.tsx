@@ -133,7 +133,7 @@ export type BoardNodeCircleProps = {
 	shape?: "circle";
 	style?: string;
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon string: leading `$` = Typst math, `data:` = mime (svg/png/jpeg), else emoji (Noto Color Emoji); catalog id or inline `<svg` when not `$` / not `data:`. */
 	iconKind?: string;
 	/** @emoji 🧩 Semantic node-kind id for WASM compatibility and catalog defaults. */
 	nodeKind?: string;
@@ -163,7 +163,7 @@ export type BoardNodeRectangleProps = {
 	shape: "rectangle";
 	style?: string;
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon string: leading `$` = Typst math, `data:` = mime (svg/png/jpeg), else emoji (Noto Color Emoji); catalog id or inline `<svg` when not `$` / not `data:`. */
 	iconKind?: string;
 	/** @emoji 🧩 Semantic node-kind id for WASM compatibility and catalog defaults. */
 	nodeKind?: string;

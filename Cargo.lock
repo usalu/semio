@@ -1171,8 +1171,8 @@ dependencies = [
 name = "elements_board"
 version = "0.1.0"
 dependencies = [
- "base64",
  "comemo",
+ "data-url",
  "ecow",
  "image",
  "js-sys",
