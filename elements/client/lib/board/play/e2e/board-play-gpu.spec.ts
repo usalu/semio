@@ -23,29 +23,31 @@ test.describe("board play", () => {
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
-			await expect
-				.poll(async () => await canvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
-				.not.toBe("init");
-			await expect
-				.poll(
-					async () => {
-						await canvas.evaluate((el) => {
-							const rect = el.getBoundingClientRect();
-							el.dispatchEvent(
-								new MouseEvent("contextmenu", {
-									bubbles: true,
-									button: 2,
-									cancelable: true,
-									clientX: rect.right - 24,
-									clientY: rect.bottom - 24,
-								}),
-							);
-						});
-						return await page.getByRole("menuitem", { name: "Board background menu" }).isVisible();
-					},
-					{ timeout: 30_000 },
-				)
-				.toBe(true);
+		await expect
+			.poll(async () => await canvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+			.not.toBe("init");
+		const point = await canvas.evaluate((el) => {
+			const rect = el.getBoundingClientRect();
+			const x = rect.left + 140;
+			const y = rect.top + 180;
+			el.dispatchEvent(
+				new MouseEvent("contextmenu", {
+					bubbles: true,
+					button: 2,
+					cancelable: true,
+					clientX: x,
+					clientY: y,
+				}),
+			);
+			return { x, y };
+		});
+		const menu = page.locator('[role="menu"]').first();
+		await expect(menu).toBeVisible({ timeout: 30_000 });
+		await expect(page.getByRole("menuitem", { name: "Board background menu" })).toHaveCount(0);
+		const menuBox = await menu.boundingBox();
+		expect(menuBox).not.toBeNull();
+		expect(Math.abs((menuBox?.x ?? 0) - point.x)).toBeLessThan(8);
+		expect(Math.abs((menuBox?.y ?? 0) - point.y)).toBeLessThan(8);
 	});
 
 	test("no wasm borrow_fail during load and viewport resize stress", async ({ page }, testInfo) => {

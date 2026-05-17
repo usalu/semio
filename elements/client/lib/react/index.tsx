@@ -225,6 +225,26 @@ export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onC
   return <>{rows}</>;
 }
 
+function renderContextMenuTrigger(point: { x: number; y: number } | null): React.ReactNode {
+  const trigger = (
+    <DropdownMenuPrimitive.Trigger asChild>
+      <span
+        aria-hidden
+        style={{
+          height: 1,
+          left: point?.x ?? 0,
+          opacity: 0,
+          pointerEvents: "none",
+          position: "fixed",
+          top: point?.y ?? 0,
+          width: 1,
+        }}
+      />
+    </DropdownMenuPrimitive.Trigger>
+  );
+  return typeof document === "undefined" ? trigger : createPortal(trigger, document.body);
+}
+
 export interface ContextMenuProps {
   items?: ContextMenuItem[];
   children: React.ReactNode;
@@ -252,20 +272,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
       >
         {children}
       </div>
-      <DropdownMenuPrimitive.Trigger asChild>
-        <span
-          aria-hidden
-          style={{
-            height: 1,
-            left: point?.x ?? 0,
-            opacity: 0,
-            pointerEvents: "none",
-            position: "fixed",
-            top: point?.y ?? 0,
-            width: 1,
-          }}
-        />
-      </DropdownMenuPrimitive.Trigger>
+      {renderContextMenuTrigger(point)}
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align="start"
@@ -290,47 +297,86 @@ export interface ContextMenuControllerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => void): React.ReactNode {
+  return items.map((item) => {
+    if (item.separator) {
+      return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
+    }
+    const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
+    return (
+      <button
+        key={item.id}
+        aria-checked={item.checked}
+        aria-disabled={item.disabled}
+        className={cn(
+          contextMenuItemClassName,
+          "w-full bg-transparent text-left",
+          item.destructive && "text-destructive focus:bg-destructive/10",
+        )}
+        data-disabled={item.disabled ? "" : undefined}
+        disabled={item.disabled}
+        onClick={(event) => {
+          item.onSelect?.(event.nativeEvent);
+          onClose();
+        }}
+        role={role}
+        type="button"
+      >
+        {item.checked !== undefined ? <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span> : null}
+        {renderContextMenuIcon(item.icon)}
+        <span className="truncate">{item.label ?? item.id}</span>
+        {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
+      </button>
+    );
+  });
+}
+
 /**
  * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
-  const body = renderContextMenuItems(items, close);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const handlePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (target instanceof Node && menuRef.current?.contains(target)) {
+        return;
+      }
+      onOpenChange(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        onOpenChange(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [onOpenChange, open]);
   if (!items.length) {
     return null;
   }
-  return (
-    <DropdownMenuPrimitive.Root modal={false} onOpenChange={onOpenChange} open={open}>
-      <DropdownMenuPrimitive.Trigger asChild>
-        <span
-          aria-hidden
-          style={{
-            height: 1,
-            left: position?.x ?? 0,
-            opacity: 0,
-            pointerEvents: "none",
-            position: "fixed",
-            top: position?.y ?? 0,
-            width: 1,
-          }}
-        />
-      </DropdownMenuPrimitive.Trigger>
-      {open ? (
-        <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content
-            align="start"
-            avoidCollisions={false}
-            className={contextMenuContentClassName}
-            onCloseAutoFocus={(event) => event.preventDefault()}
-            side="bottom"
-            sideOffset={0}
-            style={position ? { left: position.x, position: "fixed", top: position.y } : undefined}
-          >
-            {body}
-          </DropdownMenuPrimitive.Content>
-        </DropdownMenuPrimitive.Portal>
-      ) : null}
-    </DropdownMenuPrimitive.Root>
+  if (!open || !position || typeof document === "undefined") {
+    return null;
+  }
+  return createPortal(
+    <div
+      className={contextMenuContentClassName}
+      onContextMenu={(event) => event.preventDefault()}
+      ref={menuRef}
+      role="menu"
+      style={{ left: position.x, position: "fixed", top: position.y }}
+    >
+      {renderFixedContextMenuItems(items, close)}
+    </div>,
+    document.body,
   );
 };
 

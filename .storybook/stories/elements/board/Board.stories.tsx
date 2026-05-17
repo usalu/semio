@@ -19,6 +19,7 @@ import {
 	BOARD_BUILTIN_PORT_HANDLE_KIND,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 	boardFixtureMetaKindCatalogBundle,
+	boardFixtureMetaKindCompatibility,
 	mergeBoardKindCatalogBundleByRowId,
 } from "../../../../elements/client/lib/board/index";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
@@ -80,6 +81,8 @@ const nakaginStoryKindCatalogs = mergeBoardKindCatalogBundleByRowId(
 	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
 	boardFixtureMetaKindCatalogBundle(nakaginCapsuleTowerBoardFixture) ?? {},
 );
+
+const nakaginStoryKindCompatibility = boardFixtureMetaKindCompatibility(nakaginCapsuleTowerBoardFixture) ?? [];
 
 type DefaultBoardGraphNode = {
 	handles: { angle: number; handleKind: string; id: string }[];
@@ -238,5 +241,6 @@ export const NakaginCapsuleTowerFlatSelection: Story = {
 		...Default.args,
 		camera: { ...nakaginCapsuleTowerBoard.camera },
 		kindCatalogs: nakaginStoryKindCatalogs,
+		kindCompatibility: nakaginStoryKindCompatibility,
 	},
 };

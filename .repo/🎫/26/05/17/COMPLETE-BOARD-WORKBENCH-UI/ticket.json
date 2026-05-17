@@ -3,13 +3,14 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Complete the board UI in elements/client/lib/board/play. Expand selection and details editing to all graph kinds, including node kinds, edge kinds, wire kinds, and handles. Add a proper workbench right panel with three tabs: Graph (Nodes with child handles subtree items, Edges), Kinds (Node kinds, Edge kinds, Wire kinds), Constraints (compatibility names with specificity, using -- for bidirectional and -\u003e for directed). Make all relevant information editable in the details panel, including dropdowns to switch kinds. Add context menus for selection-aware actions like hide, lock, and delete depending on the current selection/background. Keep changes in existing files and use the existing board play/editor surface.",
-  "summary": "Completed the board play workbench UI in elements/client/lib/board/play with a dedicated Workbench panel (Graph, Kinds, Constraints), expanded details editing for nodes, handles, edges, wires, kind rows, and compatibility constraints, and selection-aware context menus for background and graph objects. Extended board fixture edge parsing to keep edgeKind values and updated board canvas target menus to include wires. Validated with bun ./script.ts test in elements/client/lib/board: Rust tests passed, Vitest passed, and Playwright passed with two GPU-dependent tests skipped.",
+  "summary": "Moved the board workbench from the right panel to the left panel in the board play app, kept the fixture library as the default left-panel tab for existing behavior, and refactored the workbench internals to use existing @elements/ui Tabs and Tree primitives instead of the custom tab strip. Revalidated with bun ./script.ts test in elements/client/lib/board: Rust tests passed, Vitest passed, and Playwright passed with the two existing GPU-dependent tests skipped.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1425"
   },
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪db0f4b9f6d034887ae8e39015caa76d5",
-    "⚪9e3d2a9bc1644a98b7402faec638c2a2"
+    "⚪9e3d2a9bc1644a98b7402faec638c2a2",
+    "⚪af0a226cad94497cb6f6f7b71e044f4e"
   ]
 }

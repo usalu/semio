@@ -215,6 +215,49 @@ export function boardFixtureMetaKindCatalogBundle(raw: unknown): BoardKindCatalo
 	return out;
 }
 
+/** @emoji 🔗 Returns sanitized `meta.kindCompatibility` from raw board fixture JSON when present (same shape as play document constraints). */
+export function boardFixtureMetaKindCompatibility(raw: unknown): readonly BoardKindCompatEntry[] | undefined {
+	if (!raw || typeof raw !== "object") {
+		return undefined;
+	}
+	const meta = (raw as Record<string, unknown>).meta;
+	if (!meta || typeof meta !== "object") {
+		return undefined;
+	}
+	const arr = (meta as Record<string, unknown>).kindCompatibility;
+	if (!Array.isArray(arr) || arr.length === 0) {
+		return undefined;
+	}
+	const out: BoardKindCompatEntry[] = [];
+	for (const entry of arr) {
+		if (!entry || typeof entry !== "object") {
+			continue;
+		}
+		const rec = entry as Record<string, unknown>;
+		const source = typeof rec.source === "string" ? rec.source.trim() : "";
+		const target = typeof rec.target === "string" ? rec.target.trim() : "";
+		const specificity =
+			rec.specificity === "general" ||
+			rec.specificity === "node" ||
+			rec.specificity === "edge" ||
+			rec.specificity === "handle" ||
+			rec.specificity === "wire"
+				? rec.specificity
+				: undefined;
+		if (source === "" || target === "") {
+			continue;
+		}
+		out.push({
+			...(rec.bidirectional === true ? { bidirectional: true } : {}),
+			...(rec.important === true ? { important: true } : {}),
+			...(specificity ? { specificity } : {}),
+			source,
+			target,
+		});
+	}
+	return out.length > 0 ? out : undefined;
+}
+
 function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string {
 	const handles = (bundle.handles ?? [])
 		.map((e) => {

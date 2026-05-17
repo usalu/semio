@@ -61,6 +61,7 @@ import {
 	Square,
 	Trash2,
 	Unlock,
+	ZoomIn,
 } from "lucide-react";
 import {
 	createContext,
@@ -1214,8 +1215,6 @@ function useBoardPaneContextMenus(paneId: BoardPlayPaneId, selectedIds: Set<stri
 		(ids: readonly string[]): ContextMenuItem[] => {
 			if (ids.length === 0) {
 				return [
-					{ disabled: true, id: `${paneId}-background-title`, label: "Board background menu" },
-					{ id: `${paneId}-background-sep`, separator: true },
 					{
 						id: `${paneId}-clear-selection`,
 						label: "Clear selection",
@@ -1230,8 +1229,6 @@ function useBoardPaneContextMenus(paneId: BoardPlayPaneId, selectedIds: Set<stri
 			const lockedSummary = boardPlayBoolSummary(ids.map((id) => lockedIds.has(id)));
 			const countLabel = ids.length === 1 ? "item" : `${ids.length} items`;
 			return [
-				{ disabled: true, id: `${paneId}-background-title`, label: "Board background menu" },
-				{ id: `${paneId}-background-sep`, separator: true },
 				{
 					id: `${paneId}-focus-${ids.join("|")}`,
 					label: `Select ${countLabel}`,
@@ -3078,11 +3075,28 @@ const boardPlayLayout: UIWindowLayout = {
 	},
 };
 
-const boardWindowKinds: UIWindowKindDefinition[] = [
-	{ component: BoardOverviewPane, id: "board-overview", label: "Overview" },
-	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
-	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
-];
+function boardWindowKindsWithRedrawZoomOptions(
+	enabledByPane: Record<BoardPlayPaneId, boolean>,
+	setEnabledByPane: (updater: (prev: Record<BoardPlayPaneId, boolean>) => Record<BoardPlayPaneId, boolean>) => void,
+): UIWindowKindDefinition[] {
+	const optionForPane = (paneId: BoardPlayPaneId): UIWindowKindDefinition["options"] => [
+		{
+			icon: <ZoomIn className="size-small" />,
+			id: `${paneId}-redraw-interactive-zoom`,
+			kind: "toggle",
+			label: "Redraw zoom",
+			pressed: enabledByPane[paneId],
+			onPressedChange: (pressed) => {
+				setEnabledByPane((prev) => ({ ...prev, [paneId]: pressed }));
+			},
+		},
+	];
+	return [
+		{ component: BoardOverviewPane, id: "board-overview", label: "Overview", options: optionForPane("board-overview") },
+		{ component: BoardDetailPane, id: "board-detail", label: "Zoom", options: optionForPane("board-detail") },
+		{ component: BoardSelectionPane, id: "board-selection", label: "Selection", options: optionForPane("board-selection") },
+	];
+}
 
 // #endregion 🔖Layout
 
@@ -3194,6 +3208,13 @@ function BoardPlayInner(): ReactElement {
 	const [boardRedrawProgressiveAutoStopMs, setBoardRedrawProgressiveAutoStopMs] = useState(3000);
 	const [boardRedrawMode, setBoardRedrawMode] = useState<BoardRedrawModeKind>("force-graph");
 	const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = useState(false);
+	const [boardRedrawInteractiveZoomByPane, setBoardRedrawInteractiveZoomByPane] = useState<Record<BoardPlayPaneId, boolean>>({
+		"board-detail": false,
+		"board-overview": false,
+		"board-selection": false,
+	});
+	const boardRedrawInteractiveZoomByPaneRef = useRef(boardRedrawInteractiveZoomByPane);
+	boardRedrawInteractiveZoomByPaneRef.current = boardRedrawInteractiveZoomByPane;
 	const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = useState(120);
 	const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = useState(28);
 	const [treeLayoutDirection, setTreeLayoutDirection] = useState<BoardHierarchicalTreeDirectionKind>("downwards");
@@ -3560,6 +3581,10 @@ function BoardPlayInner(): ReactElement {
 			return;
 		}
 		const pane = activePaneIdRef.current;
+		if (!boardRedrawInteractiveZoomByPaneRef.current[pane]) {
+			boardPlayRedrawCameraChaseRef.current = null;
+			return;
+		}
 		const target = triptychCamerasFromFixture(fixture);
 		setBoardPlayPaneCamerasBaseline((baselinePrev) => {
 			const prevChase = boardPlayRedrawCameraChaseRef.current ?? baselinePrev;
@@ -3577,7 +3602,7 @@ function BoardPlayInner(): ReactElement {
 			boardPlayRedrawCameraChaseRef.current = nextChase;
 			return nextChase;
 		});
-	}, [boardRedrawPlaying, fixture]);
+	}, [boardRedrawInteractiveZoomByPane, boardRedrawPlaying, fixture]);
 
 	useEffect(() => {
 		if (boardRedrawPlaying) {
@@ -3597,6 +3622,12 @@ function BoardPlayInner(): ReactElement {
 			return;
 		}
 		lastPlayingForCameraEaseRef.current = false;
+		const postPlayEasePaneId = activePaneIdRef.current;
+		if (!boardRedrawInteractiveZoomByPaneRef.current[postPlayEasePaneId]) {
+			suppressCameraBasisSyncRef.current = false;
+			setCameraDisplayOverrideByPane(null);
+			return;
+		}
 
 		const snapshotFixture = fixtureRef.current;
 		const from: Record<BoardPlayPaneId, CameraState> = {
@@ -3606,7 +3637,6 @@ function BoardPlayInner(): ReactElement {
 		};
 		cameraBasisFixtureRef.current = snapshotFixture;
 		const to = triptychCamerasFromFixture(snapshotFixture);
-		const postPlayEasePaneId = activePaneIdRef.current;
 		suppressCameraBasisSyncRef.current = true;
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
@@ -3671,6 +3701,11 @@ function BoardPlayInner(): ReactElement {
 		if (fromSnapshot === null) {
 			return;
 		}
+		const nodesRedrawEasePaneId = activePaneIdRef.current;
+		if (!boardRedrawInteractiveZoomByPaneRef.current[nodesRedrawEasePaneId]) {
+			nodesRedrawEaseFromRef.current = null;
+			return;
+		}
 		const generationAtStart = nodesRedrawEaseGenerationRef.current;
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
@@ -3683,7 +3718,6 @@ function BoardPlayInner(): ReactElement {
 			"board-selection": { ...fromSnapshot["board-selection"] },
 		};
 		const to = triptychCamerasFromFixture(snapshotFixture);
-		const nodesRedrawEasePaneId = activePaneIdRef.current;
 		const total = BOARD_PLAY_NODES_REDRAW_CAMERA_EASE_TOTAL_MS;
 		const holdEnd = total / 3;
 		const animSpan = total - holdEnd;
@@ -3714,7 +3748,7 @@ function BoardPlayInner(): ReactElement {
 				boardPlayNodesRedrawCameraAnimRafRef.current = null;
 			}
 		};
-	}, [nodesRedrawCameraEaseTick]);
+	}, [boardRedrawInteractiveZoomByPane, nodesRedrawCameraEaseTick]);
 
 	useEffect(() => {
 		if (cameraDisplayOverrideByPane === null) {
@@ -4025,8 +4059,8 @@ function BoardPlayInner(): ReactElement {
 			id: BOARD_PLAY_APP_ID,
 			label: "Board",
 			leftPanelTabs: [
-				{ content: () => <BoardWorkbenchPanel />, icon: FolderTree, id: "board-play-workbench", order: 0 },
-				{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 1 },
+				{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 },
+				{ content: () => <BoardWorkbenchPanel />, icon: FolderTree, id: "board-play-workbench", order: 1 },
 			],
 			onActiveWindowChange: (windowKindId) => {
 				if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
