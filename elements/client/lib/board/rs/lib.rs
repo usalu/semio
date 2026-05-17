@@ -80,19 +80,24 @@ mod vcompute {
         f64::atan2(-u.x, -u.y)
     }
 
+    /// 🧭 Cubic link: controls extend along node outward radials at anchors; when an anchor has no radial (free end uses `center == point`), arm lies on the source→target chord with the far control **before** the free point so the tip tangent follows the drag outward.
     pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
         let mut source_radial = normalize_or_zero(source_point - source_center);
+        let mut source_arm_negate = false;
         if source_radial == Vec2::new(0.0, 0.0) {
             source_radial = normalize_or_zero(target_point - source_point);
+            source_arm_negate = true;
         }
         let mut target_radial = normalize_or_zero(target_point - target_center);
+        let mut target_arm_negate = false;
         if target_radial == Vec2::new(0.0, 0.0) {
             target_radial = normalize_or_zero(target_point - source_point);
+            target_arm_negate = true;
         }
         let handle_distance = distance_between(source_point, target_point);
         let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
-        let p1 = source_point + source_radial * control_length;
-        let p2 = target_point + target_radial * control_length;
+        let p1 = if source_arm_negate { source_point - source_radial * control_length } else { source_point + source_radial * control_length };
+        let p2 = if target_arm_negate { target_point - target_radial * control_length } else { target_point + target_radial * control_length };
         CubicBez::new(source_point, p1, p2, target_point)
     }
 
@@ -1846,23 +1851,23 @@ mod board_host {
     const MAX_WORLD_CLIP_TILES: u32 = 768;
     const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
     const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
-    const INDIRECT_HANDLE_RADIUS_SCALE: f64 = 1.85;
-    const INDIRECT_HANDLE_RING_OFFSET_PX: f64 = 28.0;
+    const INDIRECT_HANDLE_RADIUS_SCALE: f64 = 2.6;
+    const INDIRECT_HANDLE_RING_OFFSET_PX: f64 = 14.0;
     const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
     const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
     const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
     const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
-	pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
-	pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
-	const BOARD_DEFAULT_WIRE_KIND_ID: &str = "board.wire.link";
-	/// 📏 Detail LOD node icon: clip shape as a fraction of node radius or half-width/height (screen px).
-	const NODE_ICON_CLIP_INSET: f64 = 0.93;
-	/// 📐 Detail LOD node icon: contain-fit target as a fraction of node radius or half-width/height (screen px).
-	const NODE_ICON_FIT_INSET: f64 = 0.82;
-	/// 📏 Micro LOD handle marker icon clip as a fraction of handle radius (screen px).
-	const HANDLE_MARKER_ICON_CLIP_FRAC: f64 = 0.87;
-	/// 📐 Micro LOD handle marker icon contain-fit fraction of handle radius (screen px).
-	const HANDLE_MARKER_ICON_FIT_INSET: f64 = 0.68;
+    pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
+    pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
+    const BOARD_DEFAULT_WIRE_KIND_ID: &str = "board.wire.link";
+    /// 📏 Detail LOD node icon: clip shape as a fraction of node radius or half-width/height (screen px).
+    const NODE_ICON_CLIP_INSET: f64 = 0.93;
+    /// 📐 Detail LOD node icon: contain-fit target as a fraction of node radius or half-width/height (screen px).
+    const NODE_ICON_FIT_INSET: f64 = 0.82;
+    /// 📏 Micro LOD handle marker icon clip as a fraction of handle radius (screen px).
+    const HANDLE_MARKER_ICON_CLIP_FRAC: f64 = 0.87;
+    /// 📐 Micro LOD handle marker icon contain-fit fraction of handle radius (screen px).
+    const HANDLE_MARKER_ICON_FIT_INSET: f64 = 0.68;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum BoardDrawLod {
@@ -2014,7 +2019,10 @@ mod board_host {
     #[derive(Clone, Debug)]
     pub enum Interaction {
         None,
-        Pan { origin: Camera, start_screen: Point },
+        Pan {
+            origin: Camera,
+            start_screen: Point,
+        },
         DragNodes {
             offset: Vec2,
             primary_id: String,
@@ -2022,10 +2030,26 @@ mod board_host {
             /// @emoji 🔌 Nearest compatible handle pair preview while dragging a node with no incident edges into another node's bounds (disabled at minimap/overview LOD).
             proximity_connect: Option<(String, String)>,
         },
-        Selection { initial_ids: BTreeSet<String>, points: Vec<Point>, screen_points: Vec<Point>, start: Point, start_screen: Point },
-        LinkAtSourceHandle { source_id: String, start_screen: Point },
-        LinkDragSnap { source_id: String, target_id: Option<String>, end_world: Point },
-        LinkTargetNode { source_id: String, target_node_id: String },
+        Selection {
+            initial_ids: BTreeSet<String>,
+            points: Vec<Point>,
+            screen_points: Vec<Point>,
+            start: Point,
+            start_screen: Point,
+        },
+        LinkAtSourceHandle {
+            source_id: String,
+            start_screen: Point,
+        },
+        LinkDragSnap {
+            source_id: String,
+            target_id: Option<String>,
+            end_world: Point,
+        },
+        LinkTargetNode {
+            source_id: String,
+            target_node_id: String,
+        },
     }
 
     impl Default for Interaction {
@@ -2205,19 +2229,19 @@ mod board_host {
         }
 
         fn lod_allows_individual_handle_picks(&self, lod: BoardDrawLod) -> bool {
-            matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro)
+            matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro)
         }
 
         fn lod_allows_direct_handle_links(&self, lod: BoardDrawLod) -> bool {
             matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro)
         }
 
-        fn lod_allows_proximity_connect(&self, lod: BoardDrawLod) -> bool {
-            matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro)
+        fn lod_allows_node_bounds_proximity_connect(&self, lod: BoardDrawLod) -> bool {
+            !matches!(lod, BoardDrawLod::Minimap | BoardDrawLod::Overview)
         }
 
         fn lod_allows_area_handle_selection(&self, lod: BoardDrawLod) -> bool {
-            matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro)
+            matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro)
         }
 
         fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
@@ -2744,6 +2768,18 @@ mod board_host {
             h.radius * INDIRECT_HANDLE_RADIUS_SCALE
         }
 
+        fn indirect_handle_hit_tolerance_world(&self, h: &HandleData) -> f64 {
+            self.indirect_handle_radius_world(h) + 2.0 / self.camera.zoom.max(1e-9)
+        }
+
+        fn indirect_handle_fill_color(&self) -> Color {
+            Color::from_rgb8(255, 52, 79)
+        }
+
+        fn indirect_handle_stroke_color(&self) -> Color {
+            Color::from_rgb8(52, 209, 191)
+        }
+
         fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
             if lod != BoardDrawLod::Overview {
                 return None;
@@ -2792,7 +2828,7 @@ mod board_host {
             match &self.interaction {
                 Interaction::LinkDragSnap { source_id, target_id, end_world } => self.link_drag_wire_curve_world(source_id.as_str(), target_id.as_deref(), *end_world),
                 Interaction::LinkTargetNode { source_id, target_node_id } => self.link_drag_wire_curve_world(source_id.as_str(), None, self.node_center_world(target_node_id)?),
-                Interaction::DragNodes { proximity_connect: Some((s, t)), .. } => self.link_drag_wire_curve_world(s.as_str(), Some(t.as_str()), Point::ORIGIN),
+                Interaction::DragNodes { proximity_connect: Some((s, t)), .. } if self.lod_allows_node_bounds_proximity_connect(self.current_draw_lod()) => self.link_drag_wire_curve_world(s.as_str(), Some(t.as_str()), Point::ORIGIN),
                 _ => None,
             }
         }
@@ -2819,34 +2855,21 @@ mod board_host {
 
         pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
             let zoom = self.camera.zoom;
+            let lod = self.current_draw_lod();
             let o = &self.selection_options;
-            if o.select_handles {
-                if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
-                    for h in self.handles.values().rev() {
-                        if !h.visible || h.node_id != ring_node_id {
-                            continue;
-                        }
-                        let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
-                        let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_radius_world(h);
-                        if distance_between(point, pos) <= tol {
-                            return Some(h.id.clone());
-                        }
+            if o.select_handles && self.lod_allows_individual_handle_picks(lod) {
+                for h in self.handles.values().rev() {
+                    if !h.visible {
+                        continue;
                     }
-                }
-                if matches!(self.current_draw_lod(), BoardDrawLod::Detail | BoardDrawLod::Micro) {
-                    for h in self.handles.values().rev() {
-                        if !h.visible {
-                            continue;
-                        }
-                        let Some(pos) = self.handle_world_pos(h) else { continue };
-                        let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
-                        if distance_between(point, pos) <= tol {
-                            return Some(h.id.clone());
-                        }
+                    let Some(pos) = self.handle_world_pos(h) else { continue };
+                    let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
+                    if distance_between(point, pos) <= tol {
+                        return Some(h.id.clone());
                     }
                 }
             }
-            if o.select_nodes {
+            if o.select_nodes && self.lod_allows_individual_picks(lod) {
                 for n in self.nodes.values().rev() {
                     if !n.visible {
                         continue;
@@ -2867,7 +2890,7 @@ mod board_host {
                     }
                 }
             }
-            if o.select_edges {
+            if o.select_edges && self.lod_allows_individual_picks(lod) {
                 for e in self.edges.values().rev() {
                     if !e.visible {
                         continue;
@@ -2877,6 +2900,42 @@ mod board_host {
                             return Some(e.id.clone());
                         }
                     }
+                }
+            }
+            None
+        }
+
+        fn resolve_link_source_handle_world(&self, point: Point) -> Option<String> {
+            let zoom = self.camera.zoom.max(1e-9);
+            let lod = self.current_draw_lod();
+            if lod == BoardDrawLod::Minimap {
+                return None;
+            }
+            if lod == BoardDrawLod::Overview {
+                let ring_node_id = self.indirect_ring_node_id(lod)?;
+                for h in self.handles.values().rev() {
+                    if !h.visible || h.node_id != ring_node_id {
+                        continue;
+                    }
+                    let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
+                    let tol = self.indirect_handle_hit_tolerance_world(h);
+                    if distance_between(point, pos) <= tol {
+                        return Some(h.id.clone());
+                    }
+                }
+                return None;
+            }
+            if !self.lod_allows_direct_handle_links(lod) {
+                return None;
+            }
+            for h in self.handles.values().rev() {
+                if !h.visible {
+                    continue;
+                }
+                let Some(pos) = self.handle_world_pos(h) else { continue };
+                let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
+                if distance_between(point, pos) <= tol {
+                    return Some(h.id.clone());
                 }
             }
             None
@@ -3298,14 +3357,13 @@ mod board_host {
             scene.stroke(&stroke, Affine::IDENTITY, color, None, &p);
         }
 
-        fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool) {
+        fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool, colors: Option<(Color, Color)>) {
             let c = self.world_to_screen(center);
             let r = (radius_world * self.camera.zoom).max(1.0);
             let circle = Circle::new(c, r);
-            let fill = self.resolve_handle_fill_color(h, &self.vello_theme);
-            let stroke_c = handle_stroke(&self.vello_theme, h.selected);
+            let (fill, stroke_c) = colors.unwrap_or_else(|| (self.resolve_handle_fill_color(h, &self.vello_theme), handle_stroke(&self.vello_theme, h.selected)));
             scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-            scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
+            scene.stroke(&Stroke::new(2.5), Affine::IDENTITY, stroke_c, None, &circle);
             if draw_icon {
                 if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
@@ -3345,14 +3403,14 @@ mod board_host {
                     }
                 }
                 let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
-                self.append_handle_marker(scene, h, wp, self.indirect_handle_radius_world(h), false);
+                self.append_handle_marker(scene, h, wp, self.indirect_handle_radius_world(h), false, Some((self.indirect_handle_fill_color(), self.indirect_handle_stroke_color())));
             }
         }
 
         fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod) {
             let pad = self.drawable_cull_pad_world();
             let draw_node_stroke = lod != BoardDrawLod::Minimap;
-            let draw_handles = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
+            let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_handle_icons = lod == BoardDrawLod::Micro;
             let indirect_ring_node_id = self.indirect_ring_node_id(lod);
@@ -3455,7 +3513,7 @@ mod board_host {
                     }
                 }
                 let Some(wp) = self.handle_world_pos(h) else { continue };
-                self.append_handle_marker(scene, h, wp, h.radius, draw_handle_icons);
+                self.append_handle_marker(scene, h, wp, h.radius, draw_handle_icons, None);
             }
             let edge_sw = if lod == BoardDrawLod::Minimap { 1.12_f64 } else { 2.0 * self.camera.zoom.max(0.75) };
             let edge_stroke = Stroke::new(edge_sw);
@@ -3583,7 +3641,7 @@ mod board_host {
         }
 
         pub fn update_hover_from_world(&mut self, world: Point) {
-            let next = self.resolve_hit_world(world);
+            let next = self.resolve_hit_world(world).or_else(|| self.resolve_link_source_handle_world(world));
             self.set_hovered_id(next);
         }
 
@@ -3658,7 +3716,7 @@ mod board_host {
         }
 
         fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
-            if !matches!(self.current_draw_lod(), BoardDrawLod::Detail | BoardDrawLod::Micro) {
+            if !self.lod_allows_direct_handle_links(self.current_draw_lod()) {
                 return None;
             }
             let source_handle = self.handles.get(source_handle_id)?;
@@ -3723,11 +3781,13 @@ mod board_host {
             self.set_selection_screen_preview(None);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            let lod = self.current_draw_lod();
             let hit = self.resolve_hit_world(world);
+            let link_hit = if button == 0 { self.resolve_link_source_handle_world(world) } else { None };
             if let Interaction::LinkTargetNode { source_id, target_node_id } = self.interaction.clone() {
                 self.interaction = Interaction::None;
                 if button == 0 {
-                    if let Some(hid) = hit.as_ref().filter(|id| self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)) {
+                    if let Some(hid) = link_hit.as_ref().filter(|id| self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)) {
                         self.try_commit_link_edge(&source_id, hid);
                         self.update_hover_from_world(world);
                         return;
@@ -3740,9 +3800,21 @@ mod board_host {
                 self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
                 return;
             }
+            if let Some(ref hid) = link_hit {
+                if button == 0 && self.handles.contains_key(hid) {
+                    if self.lod_allows_individual_handle_picks(lod) {
+                        let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
+                        let ids: Vec<_> = next.iter().cloned().collect();
+                        self.set_selection_ids(&ids);
+                    }
+                    self.interaction = Interaction::LinkAtSourceHandle { source_id: hid.clone(), start_screen: screen };
+                    self.set_hovered_id(Some(hid.clone()));
+                    return;
+                }
+            }
             if let Some(ref hid) = hit {
                 if let Some(node) = self.nodes.get(hid) {
-                    if node.draggable {
+                    if node.draggable && self.lod_allows_node_drag(lod) {
                         let nid = hid.clone();
                         let nx = node.x;
                         let ny = node.y;
@@ -3763,16 +3835,6 @@ mod board_host {
                         self.set_hovered_id(hit);
                         return;
                     }
-                }
-            }
-            if let Some(ref hid) = hit {
-                if button == 0 && self.handles.contains_key(hid) {
-                    let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
-                    let ids: Vec<_> = next.iter().cloned().collect();
-                    self.set_selection_ids(&ids);
-                    self.interaction = Interaction::LinkAtSourceHandle { source_id: hid.clone(), start_screen: screen };
-                    self.set_hovered_id(Some(hid.clone()));
-                    return;
                 }
             }
             if hit.is_none() && button == 0 {
@@ -3900,7 +3962,9 @@ mod board_host {
                 }
                 Interaction::DragNodes { proximity_connect, .. } => {
                     if let Some((src, tgt)) = proximity_connect {
-                        self.try_commit_link_edge(&src, &tgt);
+                        if self.lod_allows_node_bounds_proximity_connect(self.current_draw_lod()) {
+                            self.try_commit_link_edge(&src, &tgt);
+                        }
                     }
                     self.interaction = Interaction::None;
                     self.update_hover_from_world(world);
@@ -3946,9 +4010,7 @@ mod board_host {
         }
 
         fn node_has_incident_edge(&self, node_id: &str) -> bool {
-            self.edges.values().any(|e| {
-                self.handles.get(&e.source).is_some_and(|h| h.node_id == node_id) || self.handles.get(&e.target).is_some_and(|h| h.node_id == node_id)
-            })
+            self.edges.values().any(|e| self.handles.get(&e.source).is_some_and(|h| h.node_id == node_id) || self.handles.get(&e.target).is_some_and(|h| h.node_id == node_id))
         }
 
         fn best_proximity_compatible_handle_pair(&self, dragged_node_id: &str, other_node_id: &str) -> Option<(f64, String, String)> {
@@ -3979,9 +4041,8 @@ mod board_host {
             if start_positions.len() != 1 {
                 return None;
             }
-            match self.current_draw_lod() {
-                BoardDrawLod::Minimap | BoardDrawLod::Overview => return None,
-                _ => {}
+            if !self.lod_allows_node_bounds_proximity_connect(self.current_draw_lod()) {
+                return None;
             }
             if self.node_has_incident_edge(primary_id) {
                 return None;
@@ -4085,6 +4146,7 @@ mod board_host {
                 return initial.clone();
             };
             let mut hits = BTreeSet::new();
+            let lod = self.current_draw_lod();
             let o = &self.selection_options;
             if o.select_nodes {
                 for n in self.nodes.values() {
@@ -4093,7 +4155,7 @@ mod board_host {
                     }
                 }
             }
-            if o.select_handles {
+            if o.select_handles && self.lod_allows_area_handle_selection(lod) {
                 for h in self.handles.values() {
                     if h.visible && self.selection_contains_handle(h, box_, enclosing, polygon) {
                         hits.insert(h.id.clone());
@@ -4858,6 +4920,18 @@ mod tests {
     }
 
     #[test]
+    fn wire_bezier_free_end_places_far_control_back_along_chord() {
+        let s = Point::new(40.0, 0.0);
+        let sc = Point::new(0.0, 0.0);
+        let m = Point::new(200.0, 100.0);
+        let c = vcompute::compute_edge_bezier_points(s, m, sc, m);
+        let chord = vcompute::normalize_or_zero(m - s);
+        let toward_p2 = vcompute::normalize_or_zero(m - c.p2);
+        assert!(chord.dot(toward_p2) > 0.95, "p2 should lie from tip back toward source so the tip tangent follows the drag");
+        assert!((m - c.p2).hypot() > 20.0);
+    }
+
+    #[test]
     fn drags_nodes_without_rebuilding_the_scene_catalog() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 30.0, true);
@@ -4941,6 +5015,14 @@ mod host_tests {
 
     fn set_detail_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 2.0);
+    }
+
+    fn set_overview_lod(h: &mut BoardHost) {
+        h.set_camera(0.0, 0.0, 0.2);
+    }
+
+    fn set_minimap_lod(h: &mut BoardHost) {
+        h.set_camera(0.0, 0.0, 0.1);
     }
 
     fn set_normal_lod(h: &mut BoardHost) {
@@ -5216,6 +5298,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "invertive", true, true, true);
+        set_detail_lod(&mut h);
         let mut desc = sample_scene();
         desc.nodes.push(NodeDescJson {
             id: "b".into(),
@@ -5408,9 +5491,9 @@ mod host_tests {
         let _ = h.drain_events_json();
         let sa = h.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(sa.x, sa.y, 0, false);
+        assert!(!matches!(h.interaction, Interaction::DragNodes { .. }), "minimap LOD disables node drag");
         let sm = h.world_to_screen(Point::new(50.0, 0.0));
         h.pointer_move_screen(sm.x, sm.y);
-        assert!(matches!(&h.interaction, Interaction::DragNodes { proximity_connect: None, .. }));
         h.pointer_up_screen(sm.x, sm.y);
         let ev = h.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
@@ -5422,16 +5505,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         set_normal_lod(&mut h);
         let mut desc = proximity_drag_scene();
-        desc.edges.push(EdgeDescJson {
-            id: "e0".into(),
-            source: "a:h0".into(),
-            target: "b:h0".into(),
-            edge_kind: None,
-            selected: None,
-            style: None,
-            user_data: None,
-            visible: None,
-        });
+        desc.edges.push(EdgeDescJson { id: "e0".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, selected: None, style: None, user_data: None, visible: None });
         h.sync_descriptor(&desc).unwrap();
         let _ = h.drain_events_json();
         let sa = h.world_to_screen(Point::new(0.0, 0.0));
@@ -5511,12 +5585,15 @@ mod host_tests {
     }
 
     #[test]
-    fn board_host_normal_lod_hides_unselected_direct_handles() {
+    fn board_host_normal_lod_uses_direct_handles_for_linking_without_handle_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-        assert_eq!(h.resolve_hit_world(hp_a).as_deref(), Some("a"));
+        assert_eq!(h.resolve_hit_world(hp_a).as_deref(), Some("a:h0"));
+        let s0 = h.world_to_screen(hp_a);
+        h.pointer_down_screen(s0.x, s0.y, 0, false);
+        assert!(matches!(h.interaction, Interaction::LinkAtSourceHandle { ref source_id, .. } if source_id == "a:h0"));
     }
 
     #[test]
@@ -5524,6 +5601,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        set_overview_lod(&mut h);
         let _ = h.drain_events_json();
         h.set_selection_ids(&["a".into()]);
         let source = h.handles.get("a:h0").unwrap().clone();
@@ -5556,6 +5634,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        set_overview_lod(&mut h);
         h.set_selection_ids(&["a".into()]);
         let source = h.handles.get("a:h0").unwrap().clone();
         let source_ring = h.indirect_handle_world_pos(&source).unwrap();
@@ -5568,6 +5647,18 @@ mod host_tests {
         h.pointer_down_screen(20.0, 20.0, 0, false);
         assert!(matches!(h.interaction, Interaction::None));
         assert!(h.edges.is_empty());
+    }
+
+    #[test]
+    fn board_host_minimap_lod_disables_individual_pick_and_drag() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        set_minimap_lod(&mut h);
+        let center = h.world_to_screen(Point::new(0.0, 0.0));
+        assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+        h.pointer_down_screen(center.x, center.y, 0, false);
+        assert!(matches!(h.interaction, Interaction::Selection { .. }));
     }
 
     #[test]

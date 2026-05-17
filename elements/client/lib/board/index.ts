@@ -3698,11 +3698,18 @@ if (boardVitest) {
 		it("builds a radial cubic for a wire whose far end is a free world point", () => {
 			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
-			const curve = computeWireBezier(sourceHandle, { x: 200, y: 100 });
+			const end = { x: 200, y: 100 };
+			const curve = computeWireBezier(sourceHandle, end);
 			expect(curve.p0.x).toBeCloseTo(40);
 			expect(curve.p0.y).toBeCloseTo(0);
 			expect(curve.p3.x).toBeCloseTo(200);
 			expect(curve.p3.y).toBeCloseTo(100);
+			const chord = { x: end.x - curve.p0.x, y: end.y - curve.p0.y };
+			const towardP2 = { x: end.x - curve.p2.x, y: end.y - curve.p2.y };
+			const dot =
+				(chord.x * towardP2.x + chord.y * towardP2.y) /
+				(Math.hypot(chord.x, chord.y) * Math.hypot(towardP2.x, towardP2.y));
+			expect(dot).toBeGreaterThan(0.95);
 		});
 
 		it("places rectangle handles on the perimeter by north-zero CCW angle", () => {
@@ -3747,6 +3754,24 @@ if (boardVitest) {
 			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node Label");
 			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "micro", "catalog-icon")).toBe("Node Label");
+			expect(boardHandleTextOverlayCaptionForLod("Handle Label", "detail")).toBe("Handl…");
+			expect(boardHandleTextOverlayCaptionForLod("Handle Label", "micro")).toBeNull();
+		});
+
+		it("exposes per-lod interaction mechanics", () => {
+			expect(resolveBoardLodMechanics("minimap")).toEqual({
+				allowNodeDrag: false,
+				allowProximityConnect: false,
+				handleCaption: "hidden",
+				handlePresentation: "hidden",
+				individualSelection: { edges: false, handles: false, nodes: false },
+				nodeCaption: "hidden",
+				nodeIcon: false,
+			});
+			expect(resolveBoardLodMechanics("overview").handlePresentation).toBe("indirect");
+			expect(resolveBoardLodMechanics("normal").individualSelection.handles).toBe(false);
+			expect(resolveBoardLodMechanics("detail").handleCaption).toBe("abbreviated");
+			expect(resolveBoardLodMechanics("micro").allowProximityConnect).toBe(true);
 		});
 	});
 
@@ -3817,10 +3842,10 @@ if (boardVitest) {
 			renderer.render();
 			renderer.setSelectionIds(["a"]);
 
-			const p0 = renderer.worldToScreen({ x: 68, y: 0 });
+			const p0 = renderer.worldToScreen({ x: 54, y: 0 });
 			const pMid = renderer.worldToScreen({ x: 140, y: 0 });
 			const pDrop = renderer.worldToScreen({ x: 280, y: 0 });
-			const p1 = renderer.worldToScreen({ x: 212, y: 0 });
+			const p1 = renderer.worldToScreen({ x: 226, y: 0 });
 
 			canvas.dispatchEvent(
 				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p0.x, clientY: p0.y }),

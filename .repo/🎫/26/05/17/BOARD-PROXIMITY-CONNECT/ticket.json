@@ -1,10 +1,12 @@
 {
   "title": "Board Proximity Connect",
   "emoji": "🔌",
-  "status": "open",
+  "status": "closed",
   "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
+  "summary": "Proximity connect for unconnected single-node drag: overlapping node bounds picks nearest compatible handle pair, shows transient link wire (normal/detail/micro LOD), commits edge on release; skipped at minimap/overview. Pointer-down prefers link source over node drag. Fixed link-drop to LinkTargetNode (removed bad LOD gate). Tests updated for normal LOD handle hit and minimap (no node drag).",
   "goal": "🎯r2602",
   "sessions": [
-    "⚪e80ef43ea64e47c5a4b9b52a1b31e67b"
+    "⚪e80ef43ea64e47c5a4b9b52a1b31e67b",
+    "⚪eeafb1b5e6ad42759a79bb86d7eacd26"
   ]
 }
