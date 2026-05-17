@@ -54,10 +54,8 @@ import {
 	Repeat2,
 	Settings,
 	Square,
-	Tags,
 	Trash2,
 	Unlock,
-	Workflow,
 } from "lucide-react";
 import {
 	createContext,
@@ -118,11 +116,6 @@ import {
 import { BoardCanvas, Edge, Handle, Node, Wire, useBoardEvent } from "../index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
-
-const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
-	{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
-	boardFixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {},
-);
 
 // #region 🔖Kinds
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
@@ -649,7 +642,7 @@ function BoardPlayToolbar(): ReactElement {
 
 	return (
 		<div className="pointer-events-none flex w-full justify-center px-2 py-1">
-			<ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-[var(--toolbar-gap)] px-2">
+			<ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-(--toolbar-gap) px-2">
 				<ToolbarGroup className="min-w-0 items-center gap-1">
 					<ToolbarItem>
 						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Select</span>
@@ -1120,12 +1113,13 @@ function nakaginBoardMarkers(props: {
 
 /** @emoji 📡 Mirrors canvas selection into shell state for the owning pane. */
 function BoardSelectionReporter({ paneId }: { paneId: BoardPlayPaneId }): null {
-	const { setSelectionForPane } = useBoardPlayShell();
+	const { setSelectionForPane, setWorkbenchSelection } = useBoardPlayShell();
 	const handler = useCallback(
 		(snapshot: { ids: string[] }) => {
 			setSelectionForPane(paneId, snapshot.ids);
+			setWorkbenchSelection(null);
 		},
-		[paneId, setSelectionForPane],
+		[paneId, setSelectionForPane, setWorkbenchSelection],
 	);
 	useBoardEvent("select", handler);
 	return null;
@@ -1489,7 +1483,7 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 				? createPortal(
 						<div
 							aria-hidden
-							className="border-element bg-muted/40 pointer-events-none fixed z-[2147483000] flex items-center justify-center rounded-lg border shadow-sm"
+							className="border-element bg-muted/40 pointer-events-none fixed z-2147483000 flex items-center justify-center rounded-lg border shadow-sm"
 							ref={ghostRef}
 							style={{ height: BOARD_PLAY_DEFAULT_NODE_SIZE_PX, left: -9999, top: 0, width: BOARD_PLAY_DEFAULT_NODE_SIZE_PX }}
 						>
@@ -1513,14 +1507,25 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 
 /** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
 function BoardFixtureLibraryPanel(): ReactElement {
-	const { fixture } = useBoardPlayShell();
+	const { fixture, kindCatalogs, kindCompatibility, lockedIds, wires } = useBoardPlayShell();
 
 	const onShelfDragStart = useCallback(
 		(e: DragEvent<HTMLDivElement>) => {
-			e.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
+			e.dataTransfer.setData(
+				BOARD_FIXTURE_DRAG_V1_MIME,
+				encodeBoardFixtureForDragV1(
+					buildBoardPlayFixturePayload({
+						fixture,
+						kindCatalogs,
+						kindCompatibility,
+						lockedIds: [...lockedIds],
+						wires,
+					}),
+				),
+			);
 			e.dataTransfer.effectAllowed = "copy";
 		},
-		[fixture],
+		[fixture, kindCatalogs, kindCompatibility, lockedIds, wires],
 	);
 
 	return (
@@ -1555,7 +1560,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
 				<div className="text-muted-foreground">Loaded</div>
 				<div>schema: {fixture.schema}</div>
 				<div>
-					nodes: {fixture.nodes.length} · edges: {fixture.edges.length}
+					nodes: {fixture.nodes.length} · edges: {fixture.edges.length} · wires: {wires.length}
 				</div>
 			</div>
 		</div>
@@ -1674,6 +1679,51 @@ function graphObjectKindById(fixture: BoardFixtureV1, wires: readonly BoardPlayW
 		return "wire";
 	}
 	return null;
+}
+
+function expandDeletedGraphIds(fixture: BoardFixtureV1, wires: readonly BoardPlayWireRecord[], ids: readonly string[]): string[] {
+	const remove = new Set(ids);
+	const handleIds = new Set<string>();
+	const edgeIds = new Set<string>();
+	const wireIds = new Set<string>();
+	for (const id of ids) {
+		const node = findNode(fixture, id);
+		if (node) {
+			for (const handle of node.handles) {
+				handleIds.add(handle.id);
+			}
+			continue;
+		}
+		if (findHandle(fixture, id)) {
+			handleIds.add(id);
+			continue;
+		}
+		if (findEdge(fixture, id)) {
+			edgeIds.add(id);
+			continue;
+		}
+		if (findWire(wires, id)) {
+			wireIds.add(id);
+		}
+	}
+	for (const node of fixture.nodes) {
+		if (remove.has(node.id)) {
+			for (const handle of node.handles) {
+				handleIds.add(handle.id);
+			}
+		}
+	}
+	for (const edge of fixture.edges) {
+		if (handleIds.has(edge.source) || handleIds.has(edge.target)) {
+			edgeIds.add(edge.id);
+		}
+	}
+	for (const wire of wires) {
+		if (handleIds.has(wire.source) || (wire.target && handleIds.has(wire.target))) {
+			wireIds.add(wire.id);
+		}
+	}
+	return uniqueSortedStrings([...remove, ...handleIds, ...edgeIds, ...wireIds]);
 }
 
 function toCircleNode(n: BoardFixtureRectangleNodeV1): BoardFixtureCircleNodeV1 {
@@ -2738,13 +2788,13 @@ function BoardWorkbenchPanel(): ReactElement {
 	);
 }
 
-function InspectorNodeKindDetails({ entry, patchKindCatalogs }: { entry: BoardNodeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+function InspectorNodeKindDetails({ entry, patchKindCatalogs, renameKind }: { entry: BoardNodeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void; renameKind: (previousId: string, nextId: string) => void }): ReactElement {
 	const update = (patch: Partial<BoardNodeKindCatalogEntry>): void => {
 		patchKindCatalogs((prev) => ({ ...prev, nodes: (prev.nodes ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
 	};
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
-			<Label id="board-play.kind.node.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.node.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => renameKind(entry.id, e.currentTarget.value.trim() || entry.id)} /></Label>
 			<Label id="board-play.kind.node.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
 			<Label id="board-play.kind.node.defaultHandleKind" label="Default handle kind"><Input className="h-7 font-mono text-xs" value={entry.defaultHandleKind ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ defaultHandleKind: e.target.value || undefined })} /></Label>
 			<Label id="board-play.kind.node.shape" label="Shape"><Select onValueChange={(value) => update({ shape: value === "__none__" ? undefined : (value as BoardNodeKindCatalogEntry["shape"]) })} value={entry.shape ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem><SelectItem value="circle">circle</SelectItem><SelectItem value="rectangle">rectangle</SelectItem></SelectContent></Select></Label>
@@ -2755,13 +2805,13 @@ function InspectorNodeKindDetails({ entry, patchKindCatalogs }: { entry: BoardNo
 	);
 }
 
-function InspectorEdgeKindDetails({ entry, patchKindCatalogs }: { entry: BoardEdgeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+function InspectorEdgeKindDetails({ entry, patchKindCatalogs, renameKind }: { entry: BoardEdgeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void; renameKind: (previousId: string, nextId: string) => void }): ReactElement {
 	const update = (patch: Partial<BoardEdgeKindCatalogEntry>): void => {
 		patchKindCatalogs((prev) => ({ ...prev, edges: (prev.edges ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
 	};
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
-			<Label id="board-play.kind.edge.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.edge.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => renameKind(entry.id, e.currentTarget.value.trim() || entry.id)} /></Label>
 			<Label id="board-play.kind.edge.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
 			<Label id="board-play.kind.edge.shape" label="Shape"><Select onValueChange={(value) => update({ shape: value === "__none__" ? undefined : (value as BoardEdgeKindCatalogEntry["shape"]) })} value={entry.shape ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem><SelectItem value="bezier">bezier</SelectItem><SelectItem value="line">line</SelectItem></SelectContent></Select></Label>
 			<Label id="board-play.kind.edge.color" label="Color"><Input className="h-7 font-mono text-xs" value={entry.color ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ color: e.target.value || undefined })} /></Label>
@@ -2771,13 +2821,13 @@ function InspectorEdgeKindDetails({ entry, patchKindCatalogs }: { entry: BoardEd
 	);
 }
 
-function InspectorWireKindDetails({ entry, kindCatalogs, patchKindCatalogs }: { entry: BoardWireKindCatalogEntry; kindCatalogs: BoardKindCatalogBundle; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+function InspectorWireKindDetails({ entry, kindCatalogs, patchKindCatalogs, renameKind }: { entry: BoardWireKindCatalogEntry; kindCatalogs: BoardKindCatalogBundle; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void; renameKind: (previousId: string, nextId: string) => void }): ReactElement {
 	const update = (patch: Partial<BoardWireKindCatalogEntry>): void => {
 		patchKindCatalogs((prev) => ({ ...prev, wires: (prev.wires ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
 	};
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
-			<Label id="board-play.kind.wire.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.wire.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => renameKind(entry.id, e.currentTarget.value.trim() || entry.id)} /></Label>
 			<Label id="board-play.kind.wire.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
 			<Label id="board-play.kind.wire.defaultEdgeKind" label="Default edge kind"><Select onValueChange={(value) => update({ defaultEdgeKind: value === "__none__" ? undefined : value })} value={entry.defaultEdgeKind ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem>{listEdgeKindIds(kindCatalogs).map((kindId) => (<SelectItem key={kindId} value={kindId}>{boardPlayKindLabel(kindCatalogs.edges, kindId)}</SelectItem>))}</SelectContent></Select></Label>
 		</div>
@@ -2818,9 +2868,42 @@ function BoardSelectionInspectorPanel(): ReactElement {
 		setGraphObjectsHidden,
 		setGraphObjectsLocked,
 		setKindCompatibility,
+		setWorkbenchSelection,
 		wires,
 		workbenchSelection,
 	} = useBoardPlayShell();
+	const renameNodeKind = useCallback((previousId: string, nextId: string) => {
+		if (!previousId || !nextId || previousId === nextId) {
+			return;
+		}
+		patchKindCatalogs((prev) => ({ ...prev, nodes: (prev.nodes ?? []).map((row) => (row.id === previousId ? { ...row, id: nextId } : row)) }));
+		patchFixture((prev) => ({ ...prev, nodes: prev.nodes.map((node) => (node.nodeKind === previousId ? { ...node, nodeKind: nextId } : node)) }));
+		setWorkbenchSelection((selection) => (selection?.kind === "node-kind" && selection.id === previousId ? { ...selection, id: nextId } : selection));
+	}, [patchFixture, patchKindCatalogs, setWorkbenchSelection]);
+	const renameEdgeKind = useCallback((previousId: string, nextId: string) => {
+		if (!previousId || !nextId || previousId === nextId) {
+			return;
+		}
+		patchKindCatalogs((prev) => ({
+			...prev,
+			edges: (prev.edges ?? []).map((row) => (row.id === previousId ? { ...row, id: nextId } : row)),
+			wires: (prev.wires ?? []).map((row) => (row.defaultEdgeKind === previousId ? { ...row, defaultEdgeKind: nextId } : row)),
+		}));
+		patchFixture((prev) => ({ ...prev, edges: prev.edges.map((edge) => (edge.edgeKind === previousId ? { ...edge, edgeKind: nextId } : edge)) }));
+		setWorkbenchSelection((selection) => (selection?.kind === "edge-kind" && selection.id === previousId ? { ...selection, id: nextId } : selection));
+	}, [patchFixture, patchKindCatalogs, setWorkbenchSelection]);
+	const renameWireKind = useCallback((previousId: string, nextId: string) => {
+		if (!previousId || !nextId || previousId === nextId) {
+			return;
+		}
+		patchKindCatalogs((prev) => ({
+			...prev,
+			handles: (prev.handles ?? []).map((row) => (row.defaultWireKind === previousId ? { ...row, defaultWireKind: nextId } : row)),
+			wires: (prev.wires ?? []).map((row) => (row.id === previousId ? { ...row, id: nextId } : row)),
+		}));
+		patchWires((prev) => prev.map((wire) => (wire.wireKind === previousId ? { ...wire, wireKind: nextId } : wire)));
+		setWorkbenchSelection((selection) => (selection?.kind === "wire-kind" && selection.id === previousId ? { ...selection, id: nextId } : selection));
+	}, [patchKindCatalogs, patchWires, setWorkbenchSelection]);
 	const ids = useMemo(() => [...selectionByPane[activePaneId]].sort((a, b) => a.localeCompare(b)), [activePaneId, selectionByPane]);
 
 	const { edgeIds, handleIds, nodeIds, wireIds } = useMemo(() => {
@@ -2847,19 +2930,19 @@ function BoardSelectionInspectorPanel(): ReactElement {
 			if (workbenchSelection.kind === "node-kind") {
 				const entry = (kindCatalogs.nodes ?? []).find((row) => row.id === workbenchSelection.id);
 				if (entry) {
-					return [{ content: <InspectorNodeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-node-kind", label: `Node kind · ${entry.label || entry.id}` }];
+					return [{ content: <InspectorNodeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} renameKind={renameNodeKind} />, defaultOpen: true, id: "board-play-inspector-node-kind", label: `Node kind · ${entry.label || entry.id}` }];
 				}
 			}
 			if (workbenchSelection.kind === "edge-kind") {
 				const entry = (kindCatalogs.edges ?? []).find((row) => row.id === workbenchSelection.id);
 				if (entry) {
-					return [{ content: <InspectorEdgeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-edge-kind", label: `Edge kind · ${entry.label || entry.id}` }];
+					return [{ content: <InspectorEdgeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} renameKind={renameEdgeKind} />, defaultOpen: true, id: "board-play-inspector-edge-kind", label: `Edge kind · ${entry.label || entry.id}` }];
 				}
 			}
 			if (workbenchSelection.kind === "wire-kind") {
 				const entry = (kindCatalogs.wires ?? []).find((row) => row.id === workbenchSelection.id);
 				if (entry) {
-					return [{ content: <InspectorWireKindDetails entry={entry} kindCatalogs={kindCatalogs} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-wire-kind", label: `Wire kind · ${entry.label || entry.id}` }];
+					return [{ content: <InspectorWireKindDetails entry={entry} kindCatalogs={kindCatalogs} patchKindCatalogs={patchKindCatalogs} renameKind={renameWireKind} />, defaultOpen: true, id: "board-play-inspector-wire-kind", label: `Wire kind · ${entry.label || entry.id}` }];
 				}
 			}
 			if (workbenchSelection.kind === "constraint") {
@@ -2890,7 +2973,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 			sections.push({ content: <div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>Unknown ids: {ids.join(", ")}</div>, id: "board-play-inspector-unknown", label: "Selection" });
 		}
 		return sections;
-	}, [deleteWorkbenchSelection, edgeIds, fixture, handleIds, ids, kindCatalogs, kindCompatibility, lockedIds, nodeIds, patchFixture, patchKindCatalogs, patchWires, remapIdInSelections, setGraphObjectsHidden, setGraphObjectsLocked, setKindCompatibility, wireIds, wires, workbenchSelection]);
+	}, [deleteWorkbenchSelection, edgeIds, fixture, handleIds, ids, kindCatalogs, kindCompatibility, lockedIds, nodeIds, patchFixture, patchKindCatalogs, patchWires, remapIdInSelections, renameEdgeKind, renameNodeKind, renameWireKind, setGraphObjectsHidden, setGraphObjectsLocked, setKindCompatibility, wireIds, wires, workbenchSelection]);
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
@@ -2935,7 +3018,7 @@ const boardPlayLayout: UIWindowLayout = {
 };
 
 const boardWindowKinds: UIWindowKindDefinition[] = [
-	{ component: BoardOverviewPane, contextMenu: boardPlayOverviewWindowContextMenu, id: "board-overview", label: "Overview" },
+	{ component: BoardOverviewPane, id: "board-overview", label: "Overview" },
 	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
 	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
 ];
@@ -3009,12 +3092,20 @@ interface BoardPlayRedrawLoopSnapshot {
 }
 
 // #region 🔖Entrypoint
-const initialFixture = parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
+const initialDocument = parseBoardPlayDocument(nakaginFixtureJson as unknown);
+const initialFixture = initialDocument.fixture;
 
 function BoardPlayInner(): ReactElement {
 	const [fixture, setFixtureState] = useState<BoardFixtureV1>(initialFixture);
 	const fixtureRef = useRef<BoardFixtureV1>(fixture);
 	fixtureRef.current = fixture;
+	const [wires, setWiresState] = useState<BoardPlayWireRecord[]>(initialDocument.wires);
+	const [kindCatalogs, setKindCatalogsState] = useState<BoardKindCatalogBundle>(initialDocument.kindCatalogs);
+	const [kindCompatibility, setKindCompatibilityState] = useState<BoardKindCompatEntry[]>(initialDocument.kindCompatibility);
+	const [lockedIdList, setLockedIdList] = useState<string[]>(initialDocument.lockedIds);
+	const lockedIds = useMemo(() => new Set(lockedIdList), [lockedIdList]);
+	const [workbenchTab, setWorkbenchTab] = useState<BoardWorkbenchTab>("graph");
+	const [workbenchSelection, setWorkbenchSelection] = useState<BoardWorkbenchSelection | null>(null);
 	const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = useState<
 		Record<BoardPlayPaneId, CameraState>
 	>(() => triptychCamerasFromFixture(initialFixture));
@@ -3136,14 +3227,43 @@ function BoardPlayInner(): ReactElement {
 		setFixtureState(next);
 		setSelectionByPane(selectionSeedForFixture(next));
 		setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
+		setWorkbenchSelection(null);
 	}, []);
 
 	const patchFixture = useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
 		setFixtureState((prev) => updater(prev));
 	}, []);
 
+	const patchWires = useCallback((updater: (prev: BoardPlayWireRecord[]) => BoardPlayWireRecord[]) => {
+		setWiresState((prev) => updater(prev));
+	}, []);
+
+	const patchKindCatalogs = useCallback((updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => {
+		setKindCatalogsState((prev) => updater(prev));
+	}, []);
+
+	const setLockedIds = useCallback((value: string[] | ((prev: string[]) => string[])) => {
+		setLockedIdList((prev) => uniqueSortedStrings(typeof value === "function" ? value(prev) : value));
+	}, []);
+
+	const setKindCompatibility = useCallback((value: BoardKindCompatEntry[] | ((prev: BoardKindCompatEntry[]) => BoardKindCompatEntry[])) => {
+		setKindCompatibilityState((prev) => (typeof value === "function" ? value(prev) : value));
+	}, []);
+
 	const setSelectionForPane = useCallback((pane: BoardPlayPaneId, ids: readonly string[]) => {
 		setSelectionByPane((prev) => ({ ...prev, [pane]: new Set(ids) }));
+	}, []);
+
+	const focusGraphSelection = useCallback(
+		(ids: readonly string[]) => {
+			setSelectionForPane(activePaneIdRef.current, ids);
+			setWorkbenchSelection(null);
+		},
+		[setSelectionForPane],
+	);
+
+	const focusWorkbenchSelection = useCallback((value: BoardWorkbenchSelection) => {
+		setWorkbenchSelection(value);
 	}, []);
 
 	const handleCanvasFixtureDrop = useCallback((pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => {
@@ -3152,9 +3272,18 @@ function BoardPlayInner(): ReactElement {
 		if (merged) {
 			patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
 			setSelectionForPane(pane, [merged.id]);
+			setWorkbenchSelection(null);
 			return;
 		}
-		setFixture(detail.fixture);
+		const dropped = parseBoardPlayDocument(detail.fixture);
+		setFixtureState(dropped.fixture);
+		setWiresState(dropped.wires);
+		setKindCatalogsState(dropped.kindCatalogs);
+		setKindCompatibilityState(dropped.kindCompatibility);
+		setLockedIdList(dropped.lockedIds);
+		setSelectionByPane(selectionSeedForFixture(dropped.fixture));
+		setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(dropped.fixture));
+		setWorkbenchSelection(null);
 	}, [patchFixture, setFixture, setSelectionForPane]);
 
 	const remapIdInSelections = useCallback((replacedId: string, replacementId: string) => {
@@ -3170,6 +3299,105 @@ function BoardPlayInner(): ReactElement {
 			return next;
 		});
 	}, []);
+
+	const setGraphObjectsHidden = useCallback((ids: readonly string[], hidden: boolean) => {
+		const target = new Set(ids);
+		patchFixture((prev) => ({
+			...prev,
+			edges: prev.edges.map((edge) => (target.has(edge.id) ? { ...edge, ...(hidden ? { hidden: true } : { hidden: undefined }) } : edge)),
+			nodes: prev.nodes.map((node) => ({
+				...node,
+				...(target.has(node.id) ? (hidden ? { hidden: true } : { hidden: undefined }) : {}),
+				handles: node.handles.map((handle) => (target.has(handle.id) ? { ...handle, ...(hidden ? { hidden: true } : { hidden: undefined }) } : handle)),
+			})),
+		}));
+		patchWires((prev) => prev.map((wire) => (target.has(wire.id) ? { ...wire, ...(hidden ? { hidden: true } : { hidden: undefined }) } : wire)));
+	}, [patchFixture, patchWires]);
+
+	const setGraphObjectsLocked = useCallback((ids: readonly string[], locked: boolean) => {
+		const target = new Set(ids);
+		setLockedIds((prev) => (locked ? uniqueSortedStrings([...prev, ...ids]) : prev.filter((id) => !target.has(id))));
+	}, [setLockedIds]);
+
+	const deleteGraphObjects = useCallback((ids: readonly string[]) => {
+		const expandedIds = expandDeletedGraphIds(fixtureRef.current, wires, ids);
+		const remove = new Set(expandedIds);
+		patchFixture((prev) => ({
+			...prev,
+			edges: prev.edges.filter((edge) => !remove.has(edge.id) && !remove.has(edge.source) && !remove.has(edge.target)),
+			nodes: prev.nodes
+				.filter((node) => !remove.has(node.id))
+				.map((node) => ({ ...node, handles: node.handles.filter((handle) => !remove.has(handle.id)) })),
+		}));
+		patchWires((prev) => prev.filter((wire) => !remove.has(wire.id) && !remove.has(wire.source) && !(wire.target && remove.has(wire.target))));
+		setLockedIds((prev) => prev.filter((id) => !remove.has(id)));
+		setSelectionByPane((prev) => ({
+			"board-detail": new Set([...prev["board-detail"]].filter((id) => !remove.has(id))),
+			"board-overview": new Set([...prev["board-overview"]].filter((id) => !remove.has(id))),
+			"board-selection": new Set([...prev["board-selection"]].filter((id) => !remove.has(id))),
+		}));
+		setWorkbenchSelection((prev) => (prev && remove.has(prev.id) ? null : prev));
+	}, [patchFixture, patchWires, setLockedIds, wires]);
+
+	const appendKind = useCallback((kind: "edge-kind" | "node-kind" | "wire-kind") => {
+		const nextId = newBoardAuthoringId(kind);
+		if (kind === "node-kind") {
+			setKindCatalogsState((prev) => ({ ...prev, nodes: [...(prev.nodes ?? []), { id: nextId, label: nextId }] }));
+			setWorkbenchSelection({ id: nextId, kind });
+			setWorkbenchTab("kinds");
+			return;
+		}
+		if (kind === "edge-kind") {
+			setKindCatalogsState((prev) => ({ ...prev, edges: [...(prev.edges ?? []), { id: nextId, label: nextId }] }));
+			setWorkbenchSelection({ id: nextId, kind });
+			setWorkbenchTab("kinds");
+			return;
+		}
+		setKindCatalogsState((prev) => ({ ...prev, wires: [...(prev.wires ?? []), { id: nextId, label: nextId }] }));
+		setWorkbenchSelection({ id: nextId, kind });
+		setWorkbenchTab("kinds");
+	}, []);
+
+	const appendConstraint = useCallback(() => {
+		const source = kindCatalogs.handles?.[0]?.id ?? BOARD_BUILTIN_PORT_HANDLE_KIND;
+		const target = kindCatalogs.handles?.[0]?.id ?? BOARD_BUILTIN_PORT_HANDLE_KIND;
+		setKindCompatibilityState((prev) => [...prev, { source, target }]);
+		setWorkbenchSelection({ id: `constraint:${kindCompatibility.length}`, kind: "constraint" });
+		setWorkbenchTab("constraints");
+	}, [kindCatalogs.handles, kindCompatibility.length]);
+
+	const deleteWorkbenchSelection = useCallback(() => {
+		setWorkbenchSelection((selection) => {
+			if (!selection) {
+				return selection;
+			}
+			if (selection.kind === "constraint") {
+				const index = Number(selection.id.split(":")[1] ?? "-1");
+				if (index >= 0) {
+					setKindCompatibilityState((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
+				}
+				return null;
+			}
+			if (selection.kind === "node-kind") {
+				patchFixture((prev) => ({ ...prev, nodes: prev.nodes.map((node) => (node.nodeKind === selection.id ? { ...node, nodeKind: undefined } : node)) }));
+			}
+			if (selection.kind === "edge-kind") {
+				patchFixture((prev) => ({ ...prev, edges: prev.edges.map((edge) => (edge.edgeKind === selection.id ? { ...edge, edgeKind: undefined } : edge)) }));
+				patchKindCatalogs((prev) => ({ ...prev, wires: (prev.wires ?? []).map((row) => (row.defaultEdgeKind === selection.id ? { ...row, defaultEdgeKind: undefined } : row)) }));
+			}
+			if (selection.kind === "wire-kind") {
+				patchWires((prev) => prev.map((wire) => (wire.wireKind === selection.id ? { ...wire, wireKind: undefined } : wire)));
+				patchKindCatalogs((prev) => ({ ...prev, handles: (prev.handles ?? []).map((row) => (row.defaultWireKind === selection.id ? { ...row, defaultWireKind: undefined } : row)) }));
+			}
+			setKindCatalogsState((prev) => ({
+				...prev,
+				edges: selection.kind === "edge-kind" ? (prev.edges ?? []).filter((row) => row.id !== selection.id) : prev.edges,
+				nodes: selection.kind === "node-kind" ? (prev.nodes ?? []).filter((row) => row.id !== selection.id) : prev.nodes,
+				wires: selection.kind === "wire-kind" ? (prev.wires ?? []).filter((row) => row.id !== selection.id) : prev.wires,
+			}));
+			return null;
+		});
+	}, [patchFixture, patchKindCatalogs, patchWires]);
 
 	const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
 	/** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without resetting {@link boardPlayPaneCamerasBaseline} after palette / shelf fixture drop. */
@@ -3614,6 +3842,8 @@ function BoardPlayInner(): ReactElement {
 			applyBoardRedrawHandlesOnce,
 			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			appendConstraint,
+			appendKind,
 			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
 			boardRedrawPlayMaxItersPerFrame,
@@ -3625,14 +3855,23 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionTargets,
 			boardGridSnapEnabled,
 			camerasByPane,
+			deleteGraphObjects,
+			deleteWorkbenchSelection,
+			focusGraphSelection,
+			focusWorkbenchSelection,
 			syncBaselineFromViewportCamera,
 			fixture,
+			kindCatalogs,
+			kindCompatibility,
 			forceLayoutFullIterations,
 			forceLayoutGravity,
 			forceLayoutIdealEdgeLength,
 			forceLayoutRepulsionStrength,
 			handleCanvasFixtureDrop,
+			lockedIds,
 			patchFixture,
+			patchKindCatalogs,
+			patchWires,
 			remapIdInSelections,
 			resetBoardRedrawProgressiveEpoch,
 			setActivePaneId,
@@ -3647,24 +3886,35 @@ function BoardPlayInner(): ReactElement {
 			setBoardSelectionMode,
 			setBoardSelectionTargets,
 			setFixture,
+			setGraphObjectsHidden,
+			setGraphObjectsLocked,
 			setForceLayoutFullIterations,
 			setForceLayoutGravity,
 			setForceLayoutIdealEdgeLength,
 			setForceLayoutRepulsionStrength,
+			setKindCompatibility,
+			setLockedIds,
 			setTreeLayoutLayerSpacing,
 			setTreeLayoutDirection,
 			setTreeLayoutSiblingGap,
 			selectionByPane,
 			setSelectionForPane,
+			setWorkbenchSelection,
+			setWorkbenchTab,
 			treeLayoutLayerSpacing,
 			treeLayoutDirection,
 			treeLayoutSiblingGap,
+			wires,
+			workbenchSelection,
+			workbenchTab,
 		}),
 		[
 			activePaneId,
 			applyBoardRedrawHandlesOnce,
 			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			appendConstraint,
+			appendKind,
 			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
 			boardRedrawPlayMaxItersPerFrame,
@@ -3676,21 +3926,35 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionTargets,
 			boardGridSnapEnabled,
 			camerasByPane,
+			deleteGraphObjects,
+			deleteWorkbenchSelection,
+			focusGraphSelection,
+			focusWorkbenchSelection,
 			syncBaselineFromViewportCamera,
 			fixture,
+			kindCatalogs,
+			kindCompatibility,
 			forceLayoutFullIterations,
 			forceLayoutGravity,
 			forceLayoutIdealEdgeLength,
 			forceLayoutRepulsionStrength,
 			handleCanvasFixtureDrop,
+			lockedIds,
 			patchFixture,
+			patchKindCatalogs,
+			patchWires,
 			remapIdInSelections,
 			resetBoardRedrawProgressiveEpoch,
 			selectionByPane,
 			setSelectionForPane,
+			setKindCompatibility,
+			setLockedIds,
 			treeLayoutLayerSpacing,
 			treeLayoutDirection,
 			treeLayoutSiblingGap,
+			wires,
+			workbenchSelection,
+			workbenchTab,
 		],
 	);
 
@@ -3708,8 +3972,9 @@ function BoardPlayInner(): ReactElement {
 				}
 			},
 			rightPanelTabs: [
-				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
-				{ content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
+				{ content: () => <BoardWorkbenchPanel />, icon: FolderTree, id: "board-play-workbench", order: 0 },
+				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 1 },
+				{ content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 2 },
 			],
 			toolbarContent: <BoardPlayToolbar />,
 			windowKinds: boardWindowKinds,
