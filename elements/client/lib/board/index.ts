@@ -43,7 +43,7 @@ export { BoardSession };
 export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
-export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
+export type BoardSelectionMode = "additive" | "invertive" | "replace" | "subtractive";
 
 /** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
 export interface BoardSelectionTargets {
@@ -1164,7 +1164,7 @@ function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot 
 function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
 	return {
 		method: options?.method ?? "rectangle",
-		mode: options?.mode ?? "invertive",
+		mode: options?.mode ?? "replace",
 		targets: {
 			edges: options?.targets?.edges ?? BOARD_SELECTION_TARGETS_DEFAULT.edges,
 			handles: options?.targets?.handles ?? BOARD_SELECTION_TARGETS_DEFAULT.handles,
@@ -3649,7 +3649,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey);
+		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
@@ -4148,6 +4148,7 @@ if (boardVitest) {
 			const b = new Node({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.render();
+			renderer.setSelectionOptions({ mode: "additive", targets: { ...BOARD_SELECTION_TARGETS_DEFAULT } });
 			renderer.setSelectionIds(["a", "b"]);
 			const screenA = renderer.worldToScreen({ x: 0, y: 0 });
 			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screenA.x, clientY: screenA.y }));
@@ -4231,6 +4232,49 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
 
 			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+			renderer.dispose();
+		});
+
+		it("replace pick selects only the clicked node; shift adds; ctrl removes", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "replace" } });
+			const a = new Node({ draggable: true, id: "a", radius: 20, x: -60, y: 0 });
+			const b = new Node({ draggable: true, id: "b", radius: 20, x: 60, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+
+			const pa = renderer.worldToScreen({ x: -60, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
+
+			const pb = renderer.worldToScreen({ x: 60, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["b"]);
+
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
+
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y, shiftKey: true }),
+			);
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
+
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y, ctrlKey: true }),
+			);
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
+
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y, ctrlKey: true, shiftKey: true }),
+			);
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
 			renderer.dispose();
 		});
 

@@ -2218,6 +2218,7 @@ mod board_host {
 		},
 		Selection {
 			initial_ids: BTreeSet<String>,
+			merge_mode: String,
 			points: Vec<Point>,
 			screen_points: Vec<Point>,
 			start: Point,
@@ -2349,7 +2350,7 @@ mod board_host {
 				selection: BTreeSet::new(),
 				selection_options: SelectionOptions {
 					method: "rectangle".into(),
-					mode: "invertive".into(),
+					mode: "replace".into(),
 					select_nodes: true,
 					select_edges: true,
 					select_handles: true,
@@ -2681,7 +2682,7 @@ mod board_host {
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
 						.ok_or("handle kind color missing")?;
-					let color = Self::parse_css_hex_color(color_s).ok_or_else(|| format!("invalid handle kind color {color_s:?}"))?;
+					let color = Self::parse_css_color(color_s).ok_or_else(|| format!("invalid handle kind color {color_s:?}"))?;
 					let default_wire_kind = ho
 						.get("defaultWireKind")
 						.or_else(|| ho.get("default_wire_kind"))
@@ -2803,6 +2804,109 @@ mod board_host {
 				}
 				_ => None,
 			}
+		}
+
+		/// @emoji 🎨 Accepts `#rgb`/`#rrggbb`/`#rrggbbaa` or CSS `hsl()` / `hsla()` (comma or space syntax, optional `/` alpha).
+		fn parse_css_color(s: &str) -> Option<Color> {
+			if let Some(c) = Self::parse_css_hex_color(s) {
+				return Some(c);
+			}
+			Self::parse_css_hsl_color(s)
+		}
+
+		fn parse_css_hsl_color(s: &str) -> Option<Color> {
+			let low = s.trim().to_ascii_lowercase();
+			let (legacy_alpha_form, inner) =
+				if let Some(inner) = low.strip_prefix("hsla(").and_then(|x| x.strip_suffix(')')) {
+					(true, inner)
+				} else if let Some(inner) = low.strip_prefix("hsl(").and_then(|x| x.strip_suffix(')')) {
+					(false, inner)
+				} else {
+					return None;
+				};
+			let inner = inner.trim();
+			let (main, alpha_slash) = inner
+				.split_once('/')
+				.map(|(a, b)| (a.trim(), Some(b.trim())))
+				.unwrap_or((inner, None));
+			let normalized = main.replace(',', " ");
+			let parts: Vec<&str> = normalized.split_whitespace().collect();
+			if parts.len() < 3 {
+				return None;
+			}
+			let h = Self::parse_css_hsl_hue(parts[0])?;
+			let sat = Self::parse_css_hsl_sl(parts[1])?;
+			let light = Self::parse_css_hsl_sl(parts[2])?;
+			let alpha = if let Some(a) = alpha_slash {
+				Self::parse_css_alpha_channel(a)?
+			} else if legacy_alpha_form && parts.len() >= 4 {
+				Self::parse_css_alpha_channel(parts[3])?
+			} else {
+				1.0
+			};
+			let (r, g, b) = Self::hsl_to_rgb_bytes(h, sat, light);
+			let a = (alpha * 255.0).round().clamp(0.0, 255.0) as u8;
+			Some(Color::from_rgba8(r, g, b, a))
+		}
+
+		fn parse_css_hsl_hue(tok: &str) -> Option<f64> {
+			let t = tok.trim();
+			let n = t.strip_suffix("deg").map(str::trim).unwrap_or(t);
+			let v: f64 = n.parse().ok()?;
+			v.is_finite().then_some(v)
+		}
+
+		fn parse_css_hsl_sl(tok: &str) -> Option<f64> {
+			let t = tok.trim();
+			if let Some(p) = t.strip_suffix('%') {
+				let v: f64 = p.trim().parse().ok()?;
+				Some((v / 100.0).clamp(0.0, 1.0))
+			} else {
+				let v: f64 = t.parse().ok()?;
+				Some(v.clamp(0.0, 1.0))
+			}
+		}
+
+		fn parse_css_alpha_channel(tok: &str) -> Option<f64> {
+			Self::parse_css_hsl_sl(tok)
+		}
+
+		fn board_hsl_hue_to_rgb_component(p: f64, q: f64, mut t: f64) -> f64 {
+			if t < 0.0 {
+				t += 1.0;
+			}
+			if t > 1.0 {
+				t -= 1.0;
+			}
+			if t < 1.0 / 6.0 {
+				p + (q - p) * 6.0 * t
+			} else if t < 0.5 {
+				q
+			} else if t < 2.0 / 3.0 {
+				p + (q - p) * (2.0 / 3.0 - t) * 6.0
+			} else {
+				p
+			}
+		}
+
+		fn hsl_to_rgb_bytes(h: f64, s: f64, l: f64) -> (u8, u8, u8) {
+			let h_norm = ((h % 360.0 + 360.0) % 360.0) / 360.0;
+			let s = s.clamp(0.0, 1.0);
+			let l = l.clamp(0.0, 1.0);
+			if s <= f64::EPSILON {
+				let v = (l * 255.0).round().clamp(0.0, 255.0) as u8;
+				return (v, v, v);
+			}
+			let q = if l < 0.5 { l * (1.0 + s) } else { l + s - l * s };
+			let p = 2.0 * l - q;
+			let r = Self::board_hsl_hue_to_rgb_component(p, q, h_norm + 1.0 / 3.0);
+			let g = Self::board_hsl_hue_to_rgb_component(p, q, h_norm);
+			let b = Self::board_hsl_hue_to_rgb_component(p, q, h_norm - 1.0 / 3.0);
+			(
+				(r * 255.0).round().clamp(0.0, 255.0) as u8,
+				(g * 255.0).round().clamp(0.0, 255.0) as u8,
+				(b * 255.0).round().clamp(0.0, 255.0) as u8,
+			)
 		}
 
 		fn resolve_handle_fill_color(&self, h: &HandleData, theme: &VelloThemePalette) -> Color {
@@ -3424,7 +3528,10 @@ mod board_host {
 						}
 					}
 				}
-				if matches!(self.current_draw_lod(), BoardDrawLod::Detail | BoardDrawLod::Micro) {
+				if matches!(
+					self.current_draw_lod(),
+					BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
+				) {
 					for h in self.handles.values().rev() {
 						if !h.visible {
 							continue;
@@ -3510,6 +3617,10 @@ mod board_host {
 				"subtractive" => {
 					next.remove(hit_id);
 				}
+				"replace" => {
+					next.clear();
+					next.insert(hit_id.to_string());
+				}
 				_ => {
 					if next.contains(hit_id) {
 						next.remove(hit_id);
@@ -3519,6 +3630,19 @@ mod board_host {
 				}
 			}
 			next
+		}
+
+		fn pick_merge_mode_for_modifiers(ctrl_or_meta: bool, shift: bool, option_mode: &str) -> String {
+			if ctrl_or_meta && shift {
+				return "invertive".into();
+			}
+			if ctrl_or_meta {
+				return "subtractive".into();
+			}
+			if shift {
+				return "additive".into();
+			}
+			option_mode.to_string()
 		}
 
 		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), String> {
@@ -3583,7 +3707,7 @@ mod board_host {
 				let color_fill = match h.color.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
 					None => None,
 					Some(s) => Some(
-						Self::parse_css_hex_color(s)
+						Self::parse_css_color(s)
 							.ok_or_else(|| format!("invalid color on handle {}: {s:?}", h.id))?,
 					),
 				};
@@ -4501,6 +4625,7 @@ mod board_host {
 			h.visible && !self.handle_has_incident_edge(handle_id)
 		}
 
+		/// @emoji 📍 Proximity snap uses real handle anchors in world space; skip only minimap LOD so far-zoomed boards (e.g. Nakagin overview) can snap near target handles.
 		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
 			if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
 				return None;
@@ -4524,7 +4649,7 @@ mod board_host {
 				let pw = self.handle_world_pos(h)?;
 				let tol = self.link_snap_tolerance_world(h);
 				let d = distance_between(world, pw);
-				if d <= tol && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+				if d < tol && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
 					best = Some((d, id.clone()));
 				}
 			}
@@ -4589,7 +4714,7 @@ mod board_host {
 			true
 		}
 
-		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
+		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
 			self.set_selection_screen_preview(None);
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
@@ -4620,7 +4745,9 @@ mod board_host {
 				self.update_hover_from_world(world);
 				return;
 			}
-			if button == 1 || (hit.is_none() && shift) {
+			let merge_from_modifiers = ctrl_or_meta || shift;
+			let pick_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+			if button == 1 {
 				self.interaction = Interaction::Pan {
 					origin: self.camera.clone(),
 					start_screen: screen,
@@ -4633,6 +4760,21 @@ mod board_host {
 						let nid = hid.clone();
 						let nx = node.x;
 						let ny = node.y;
+						let members_before: Vec<String> = self
+							.selection
+							.iter()
+							.filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable))
+							.cloned()
+							.collect();
+						let drag_group_before = members_before.contains(&nid) && members_before.len() > 1;
+						let force_pick_merge = pick_mode == "replace"
+							|| pick_mode == "subtractive"
+							|| (pick_mode == "invertive" && merge_from_modifiers);
+						if !drag_group_before || force_pick_merge {
+							let next = Self::merge_pick_into_selection(&self.selection, &nid, pick_mode.as_str());
+							let ids: Vec<_> = next.iter().cloned().collect();
+							self.set_selection_ids(&ids);
+						}
 						let members: Vec<String> = self
 							.selection
 							.iter()
@@ -4640,11 +4782,6 @@ mod board_host {
 							.cloned()
 							.collect();
 						let drag_group = members.contains(&nid) && members.len() > 1;
-						if !drag_group {
-							let next = Self::merge_pick_into_selection(&self.selection, &nid, self.selection_options.mode.as_str());
-							let ids: Vec<_> = next.iter().cloned().collect();
-							self.set_selection_ids(&ids);
-						}
 						let mut start_positions = BTreeMap::new();
 						for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&nid) } {
 							if let Some(n) = self.nodes.get(id) {
@@ -4663,7 +4800,7 @@ mod board_host {
 			}
 			if let Some(ref hid) = hit {
 				if button == 0 && self.handles.contains_key(hid) && !self.handle_has_incident_edge(hid.as_str()) {
-					let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
+					let next = Self::merge_pick_into_selection(&self.selection, hid, pick_mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
 					self.interaction = Interaction::LinkAtSourceHandle {
@@ -4677,6 +4814,7 @@ mod board_host {
 			if hit.is_none() && button == 0 {
 				self.interaction = Interaction::Selection {
 					initial_ids: self.selection.clone(),
+					merge_mode: pick_mode,
 					points: vec![world],
 					screen_points: vec![screen],
 					start: world,
@@ -4687,7 +4825,7 @@ mod board_host {
 			}
 			self.interaction = Interaction::None;
 			if let Some(id) = hit {
-				let next = Self::merge_pick_into_selection(&self.selection, &id, self.selection_options.mode.as_str());
+				let next = Self::merge_pick_into_selection(&self.selection, &id, pick_mode.as_str());
 				let ids: Vec<_> = next.iter().cloned().collect();
 				self.set_selection_ids(&ids);
 				self.set_hovered_id(Some(id));
@@ -4749,6 +4887,7 @@ mod board_host {
 					mut screen_points,
 					start,
 					initial_ids,
+					merge_mode,
 					start_screen,
 				} => {
 					let last_screen = screen_points.last().copied().unwrap_or(start_screen);
@@ -4765,12 +4904,13 @@ mod board_host {
 					}
 					let initial = initial_ids.clone();
 					let pts = points.clone();
-					let next = self.resolve_area_selection_with_initial(&initial, start, &pts);
+					let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
+						merge_mode,
 						points,
 						screen_points,
 						start,
@@ -4855,6 +4995,7 @@ mod board_host {
 					mut screen_points,
 					start,
 					initial_ids,
+					merge_mode,
 					start_screen,
 				} => {
 					points.push(world);
@@ -4864,7 +5005,7 @@ mod board_host {
 					if click_only {
 						self.set_selection_ids(&[]);
 					} else {
-						let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
+						let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
 						let ids: Vec<_> = next.iter().cloned().collect();
 						self.set_selection_ids(&ids);
 					}
@@ -4986,7 +5127,13 @@ mod board_host {
 			}
 		}
 
-		fn resolve_area_selection_with_initial(&self, initial: &BTreeSet<String>, start: Point, points: &[Point]) -> BTreeSet<String> {
+		fn resolve_area_selection_with_initial(
+			&self,
+			initial: &BTreeSet<String>,
+			start: Point,
+			points: &[Point],
+			merge_mode: &str,
+		) -> BTreeSet<String> {
 			let Some((box_, enclosing, ref polygon)) = self.selection_drag_shape_world(start, points) else {
 				return initial.clone();
 			};
@@ -5018,9 +5165,12 @@ mod board_host {
 					}
 				}
 			}
+			if merge_mode == "replace" {
+				return hits;
+			}
 			let mut next = initial.clone();
 			for id in &hits {
-				match self.selection_options.mode.as_str() {
+				match merge_mode {
 					"additive" => {
 						next.insert(id.clone());
 					}
@@ -5776,8 +5926,8 @@ impl BoardSession {
 	}
 
 	#[wasm_bindgen(js_name = pointerDownScreen)]
-	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
-		self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift);
+	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
+		self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta);
 	}
 
 	#[wasm_bindgen(js_name = pointerMoveScreen)]
@@ -6168,7 +6318,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		let w = Point::new(0.0, 0.0);
 		let s = h.world_to_screen(w);
-		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 50.0, s.y + 30.0);
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
 		let ev = h.drain_events_json();
@@ -6204,7 +6354,7 @@ mod host_tests {
 		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
 		assert!(h.resolve_hit_world(Point::new(150.0, 0.0)).is_none());
 		let s = h.world_to_screen(Point::new(0.0, 0.0));
-		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 50.0, s.y + 30.0);
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
 		let ev = h.drain_events_json();
@@ -6265,11 +6415,12 @@ mod host_tests {
 			height: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
+		h.set_selection_options("rectangle", "additive", true, true, true);
 		h.set_selection_ids(&["a".into(), "b".into()]);
 		let _ = h.drain_events_json();
 		let w = Point::new(0.0, 0.0);
 		let s = h.world_to_screen(w);
-		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 10.0, s.y + 5.0);
 		h.pointer_up_screen(s.x + 10.0, s.y + 5.0);
 		let a = h.nodes.get("a").expect("node a");
@@ -6342,7 +6493,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		let on_edge = Point::new(150.0, 0.0);
 		let s = h.world_to_screen(on_edge);
-		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		let mut got: Vec<_> = h.selection.iter().cloned().collect();
 		got.sort();
 		assert_eq!(got, vec!["a".to_string(), "e1".to_string()]);
@@ -6375,7 +6526,7 @@ mod host_tests {
 		h.set_selection_ids(&["a".into(), "e1".into()]);
 		let away = Point::new(5000.0, 5000.0);
 		let s = h.world_to_screen(away);
-		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_up_screen(s.x, s.y);
 		assert!(h.selection.is_empty());
 	}
@@ -6410,7 +6561,7 @@ mod host_tests {
 		let w1 = Point::new(90.0, 90.0);
 		let s0 = h.world_to_screen(w0);
 		let s1 = h.world_to_screen(w1);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		h.pointer_move_screen(s1.x, s1.y);
 		h.pointer_up_screen(s1.x, s1.y);
 		let mut got: Vec<_> = h.selection.iter().cloned().collect();
@@ -6490,6 +6641,14 @@ mod host_tests {
 			edges: vec![],
 			wires: vec![],
 		}
+	}
+
+	fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
+		let mut s = link_test_scene_no_edge();
+		for n in &mut s.nodes {
+			n.draggable = Some(false);
+		}
+		s
 	}
 
 	fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
@@ -6617,7 +6776,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6637,12 +6796,16 @@ mod host_tests {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		set_overview_lod(&mut h);
-		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		h.sync_descriptor(&link_test_scene_no_edge_non_draggable_nodes()).unwrap();
+		let _ = h.drain_events_json();
+		let center_a = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(center_a.x, center_a.y, 0, false, false);
+		h.pointer_up_screen(center_a.x, center_a.y);
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6650,7 +6813,21 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"), "expected edgeCreate at overview LOD, got: {ev}");
-		assert!(ev.contains("proximityConnect"));
+		assert!(
+			ev.contains("proximityConnect") || ev.contains("indirectConnect"),
+			"expected proximityConnect or indirectConnect, got: {ev}"
+		);
+	}
+
+	#[test]
+	fn board_host_overview_lod_omits_direct_handle_resolve_hit() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_overview_lod(&mut h);
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let probe = Point::new(hp.x + 3.0, hp.y);
+		assert_ne!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
 	}
 
 	#[test]
@@ -6665,7 +6842,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6687,7 +6864,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6699,12 +6876,14 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_normal_lod_hides_unselected_direct_handles() {
+	fn board_host_normal_lod_prefers_node_at_center_and_handle_off_rim() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-		assert_eq!(h.resolve_hit_world(hp_a).as_deref(), Some("a"));
+		assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a"));
+		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let probe = Point::new(hp.x + 2.0, hp.y);
+		assert_eq!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
 	}
 
 	#[test]
@@ -6732,7 +6911,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
 		let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
-		h.pointer_down_screen(inside_a.x, inside_a.y, 0, false);
+		h.pointer_down_screen(inside_a.x, inside_a.y, 0, false, false);
 		assert!(matches!(
 			h.interaction,
 			Interaction::LinkAtSourceHandle { ref source_id, .. } if source_id == "a:h0"
@@ -6759,7 +6938,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
-		h.pointer_down_screen(sa.x, sa.y, 0, false);
+		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let sb = h.world_to_screen(Point::new(280.0, 0.0));
 		h.pointer_move_screen(sb.x, sb.y);
 		h.pointer_up_screen(sb.x, sb.y);
@@ -6770,7 +6949,7 @@ mod host_tests {
 		let b0 = h.handles.get("b:h0").unwrap();
 		let ring0 = h.indirect_handle_world_pos(b0).unwrap();
 		let s1 = h.world_to_screen(ring0);
-		h.pointer_down_screen(s1.x, s1.y, 0, false);
+		h.pointer_down_screen(s1.x, s1.y, 0, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("indirectConnect"));
@@ -6787,12 +6966,12 @@ mod host_tests {
 		h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
 		h.set_selection_ids(&["a".into()]);
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
-		h.pointer_down_screen(sa.x, sa.y, 0, false);
+		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
 		h.pointer_move_screen(target_center.x, target_center.y);
 		h.pointer_up_screen(target_center.x, target_center.y);
 		assert!(matches!(h.interaction, Interaction::LinkTargetNode { .. }));
-		h.pointer_down_screen(20.0, 20.0, 0, false);
+		h.pointer_down_screen(20.0, 20.0, 0, false, false);
 		assert!(matches!(h.interaction, Interaction::None));
 		assert!(h.edges.is_empty());
 	}
@@ -6863,7 +7042,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6872,6 +7051,27 @@ mod host_tests {
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("proximityConnect"));
+	}
+
+	#[test]
+	fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
+		let mut h = BoardHost::new();
+		h.set_board_kind_catalogs_from_json(
+			&serde_json::json!({
+				"handleKinds": [
+					{"id":"space","label":"S","color":"hsl(206 52% 48%)"},
+					{"id":"comma","label":"C","color":"hsl(206, 52%, 48%)"},
+					{"id":"slash","label":"Sl","color":"hsl(206 52% 48% / 0.5)"},
+				],
+			})
+			.to_string(),
+		)
+		.unwrap();
+		let c_space = h.handle_kinds.get("space").expect("space").color;
+		let c_comma = h.handle_kinds.get("comma").expect("comma").color;
+		let c_slash = h.handle_kinds.get("slash").expect("slash").color;
+		assert_eq!(c_space, c_comma);
+		assert_ne!(c_space, c_slash);
 	}
 
 	#[test]
@@ -6900,7 +7100,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6922,7 +7122,7 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
 		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
 		let s1 = h.world_to_screen(hp_b);
@@ -6943,7 +7143,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		assert!(matches!(h.interaction, Interaction::None));
 		assert!(!h.drain_events_json().contains("edgeCreate"));
 	}
@@ -6958,7 +7158,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
-		h.pointer_down_screen(sa.x, sa.y, 0, false);
+		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
 		h.pointer_move_screen(target_center.x, target_center.y);
 		h.pointer_up_screen(target_center.x, target_center.y);
@@ -6971,7 +7171,7 @@ mod host_tests {
 		));
 		let _ = h.drain_events_json();
 		let sb = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_down_screen(sb.x, sb.y, 0, false);
+		h.pointer_down_screen(sb.x, sb.y, 0, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
 		assert_eq!(h.edges.len(), 1);
@@ -6987,7 +7187,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let s0 = h.world_to_screen(hp_a);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		h.pointer_move_screen(s0.x + 2.0, s0.y);
 		h.pointer_up_screen(s0.x + 2.0, s0.y);
 		let ev = h.drain_events_json();

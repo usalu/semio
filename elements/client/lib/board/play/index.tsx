@@ -35,7 +35,7 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -487,6 +487,16 @@ function BoardPlayToolbar(): ReactElement {
 					<ToolbarItem>
 						<button type="button" className={boardToolbarToggleClass(boardSelectionMethod === "lasso")} title="Lasso selection" onClick={() => setBoardSelectionMethod("lasso")}>
 							<Lasso className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardSelectionMode === "replace")}
+							title="Replace selection (default; Shift additive, Ctrl subtractive, Ctrl+Shift invertive)"
+							onClick={() => setBoardSelectionMode("replace")}
+						>
+							<MousePointer2 className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
@@ -2056,7 +2066,7 @@ function BoardPlayInner(): ReactElement {
 	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
 	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
 	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
-	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
+	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("replace");
 	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
 	const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
 	const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);

@@ -1,0 +1,11 @@
+{
+  "title": "Board Modifier Selection Modes",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Board selection: add replace (default) merge mode; modifier chords Ctrl=subtractive, Shift=additive, Ctrl+Shift=invertive override toolbar mode on pointer; extend WASM pointerDownScreen with ctrl/meta flag; remove shift+empty pan (middle-button pan only). Update play toolbar default to replace and add Replace control.",
+  "summary": "Added BoardSelectionMode replace as default (resolve options + WASM host). Pointer chords: Ctrl/Meta=subtractive, Shift=additive, Ctrl+Shift+Meta=invertive override stored toolbar mode; merge_mode is captured on marquee drags. pick merge runs for replace/subtractive and for invertive only when modifier keys were used, so multi-node drags still work with toolbar additive/invertive unless modifiers apply. Removed shift+empty-background pan (middle button only). pointerDownScreen WASM/JS gained ctrl_or_meta. Play toolbar: Replace control (MousePointer2), default replace. Tests updated for multi-drag (additive option) plus replace/modifier coverage.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪34957778b3ea4e34b69345d137e28ddb"
+  ]
+}
