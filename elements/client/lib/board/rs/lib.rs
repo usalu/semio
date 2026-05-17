@@ -2299,7 +2299,6 @@ mod board_host {
 		},
 		Selection {
 			initial_ids: BTreeSet<String>,
-			merge_mode: String,
 			points: Vec<Point>,
 			screen_points: Vec<Point>,
 			start: Point,
@@ -4921,7 +4920,6 @@ mod board_host {
 			if hit.is_none() && button == 0 {
 				self.interaction = Interaction::Selection {
 					initial_ids: self.selection.clone(),
-					merge_mode: pick_mode,
 					points: vec![world],
 					screen_points: vec![screen],
 					start: world,
@@ -4942,7 +4940,7 @@ mod board_host {
 			}
 		}
 
-		pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+		pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			match std::mem::replace(&mut self.interaction, Interaction::None) {
@@ -4994,7 +4992,6 @@ mod board_host {
 					mut screen_points,
 					start,
 					initial_ids,
-					merge_mode,
 					start_screen,
 				} => {
 					let last_screen = screen_points.last().copied().unwrap_or(start_screen);
@@ -5011,13 +5008,14 @@ mod board_host {
 					}
 					let initial = initial_ids.clone();
 					let pts = points.clone();
+					let merge_mode =
+						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
 					let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
-						merge_mode,
 						points,
 						screen_points,
 						start,
@@ -5064,7 +5062,7 @@ mod board_host {
 			}
 		}
 
-		pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+		pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			let grabbed = std::mem::take(&mut self.interaction);
@@ -5102,7 +5100,6 @@ mod board_host {
 					mut screen_points,
 					start,
 					initial_ids,
-					merge_mode,
 					start_screen,
 				} => {
 					points.push(world);
@@ -5112,7 +5109,10 @@ mod board_host {
 					if click_only {
 						self.set_selection_ids(&[]);
 					} else {
-						let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
+						let merge_mode =
+							Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+						let next =
+							self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
 						let ids: Vec<_> = next.iter().cloned().collect();
 						self.set_selection_ids(&ids);
 					}
@@ -6039,13 +6039,13 @@ impl BoardSession {
 	}
 
 	#[wasm_bindgen(js_name = pointerMoveScreen)]
-	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.state.borrow_mut().host.pointer_move_screen(sx, sy);
+	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
+		self.state.borrow_mut().host.pointer_move_screen(sx, sy, shift, ctrl_or_meta);
 	}
 
 	#[wasm_bindgen(js_name = pointerUpScreen)]
-	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.state.borrow_mut().host.pointer_up_screen(sx, sy);
+	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
+		self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta);
 	}
 
 	#[wasm_bindgen(js_name = pointerLeaveScreen)]
@@ -6428,8 +6428,8 @@ mod host_tests {
 		let w = Point::new(0.0, 0.0);
 		let s = h.world_to_screen(w);
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
-		h.pointer_move_screen(s.x + 50.0, s.y + 30.0);
-		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
+		h.pointer_move_screen(s.x + 50.0, s.y + 30.0, false, false);
+		h.pointer_up_screen(s.x + 50.0, s.y + 30.0, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("nodeMove"));
 	}
@@ -6464,8 +6464,8 @@ mod host_tests {
 		assert!(h.resolve_hit_world(Point::new(150.0, 0.0)).is_none());
 		let s = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
-		h.pointer_move_screen(s.x + 50.0, s.y + 30.0);
-		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
+		h.pointer_move_screen(s.x + 50.0, s.y + 30.0, false, false);
+		h.pointer_up_screen(s.x + 50.0, s.y + 30.0, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("nodeMove"));
 	}
@@ -6530,8 +6530,8 @@ mod host_tests {
 		let w = Point::new(0.0, 0.0);
 		let s = h.world_to_screen(w);
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
-		h.pointer_move_screen(s.x + 10.0, s.y + 5.0);
-		h.pointer_up_screen(s.x + 10.0, s.y + 5.0);
+		h.pointer_move_screen(s.x + 10.0, s.y + 5.0, false, false);
+		h.pointer_up_screen(s.x + 10.0, s.y + 5.0, false, false);
 		let a = h.nodes.get("a").expect("node a");
 		let b = h.nodes.get("b").expect("node b");
 		assert!((a.x - 10.0).abs() < 1e-6);
@@ -6636,7 +6636,7 @@ mod host_tests {
 		let away = Point::new(5000.0, 5000.0);
 		let s = h.world_to_screen(away);
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
-		h.pointer_up_screen(s.x, s.y);
+		h.pointer_up_screen(s.x, s.y, false, false);
 		assert!(h.selection.is_empty());
 	}
 
@@ -6671,8 +6671,8 @@ mod host_tests {
 		let s0 = h.world_to_screen(w0);
 		let s1 = h.world_to_screen(w1);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let mut got: Vec<_> = h.selection.iter().cloned().collect();
 		got.sort();
 		assert!(got.contains(&"a".to_string()));
@@ -6887,10 +6887,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("proximityConnect"));
@@ -6909,17 +6909,17 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		let center_a = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(center_a.x, center_a.y, 0, false, false);
-		h.pointer_up_screen(center_a.x, center_a.y);
+		h.pointer_up_screen(center_a.x, center_a.y, false, false);
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"), "expected edgeCreate at overview LOD, got: {ev}");
 		assert!(
@@ -6961,10 +6961,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"), "hidden handle should block connect, got: {ev}");
 		assert!(h.edges.is_empty());
@@ -7004,8 +7004,8 @@ mod host_tests {
 		let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(inside_a.x, inside_a.y, 0, false, false);
 		let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(inside_b.x, inside_b.y);
-		h.pointer_up_screen(inside_b.x, inside_b.y);
+		h.pointer_move_screen(inside_b.x, inside_b.y, false, false);
+		h.pointer_up_screen(inside_b.x, inside_b.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"), "hidden node should block indirect connect, got: {ev}");
 		assert!(matches!(h.interaction, Interaction::None));
@@ -7037,10 +7037,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
 	}
@@ -7059,10 +7059,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("proximityConnect"));
@@ -7110,9 +7110,9 @@ mod host_tests {
 			Interaction::LinkAtSourceHandle { ref source_id, .. } if source_id == "a:h0"
 		));
 		let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(inside_b.x, inside_b.y);
+		h.pointer_move_screen(inside_b.x, inside_b.y, false, false);
 		assert!(matches!(h.interaction, Interaction::LinkDragSnap { .. }));
-		h.pointer_up_screen(inside_b.x, inside_b.y);
+		h.pointer_up_screen(inside_b.x, inside_b.y, false, false);
 		assert!(matches!(h.interaction, Interaction::None));
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
@@ -7133,8 +7133,8 @@ mod host_tests {
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let sb = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(sb.x, sb.y);
-		h.pointer_up_screen(sb.x, sb.y);
+		h.pointer_move_screen(sb.x, sb.y, false, false);
+		h.pointer_up_screen(sb.x, sb.y, false, false);
 		assert!(matches!(
 			h.interaction,
 			Interaction::LinkTargetNode { ref target_node_id, .. } if target_node_id == "b"
@@ -7161,8 +7161,8 @@ mod host_tests {
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(target_center.x, target_center.y);
-		h.pointer_up_screen(target_center.x, target_center.y);
+		h.pointer_move_screen(target_center.x, target_center.y, false, false);
+		h.pointer_up_screen(target_center.x, target_center.y, false, false);
 		assert!(matches!(h.interaction, Interaction::LinkTargetNode { .. }));
 		h.pointer_down_screen(20.0, 20.0, 0, false, false);
 		assert!(matches!(h.interaction, Interaction::None));
@@ -7237,10 +7237,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("proximityConnect"));
@@ -7295,10 +7295,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
 		assert!(ev.contains("proximityConnect"));
@@ -7317,10 +7317,10 @@ mod host_tests {
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
 		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
-		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false);
 		let s1 = h.world_to_screen(hp_b);
-		h.pointer_move_screen(s1.x, s1.y);
-		h.pointer_up_screen(s1.x, s1.y);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
 		assert_eq!(h.edges.len(), 1);
@@ -7353,8 +7353,8 @@ mod host_tests {
 		let sa = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(target_center.x, target_center.y);
-		h.pointer_up_screen(target_center.x, target_center.y);
+		h.pointer_move_screen(target_center.x, target_center.y, false, false);
+		h.pointer_up_screen(target_center.x, target_center.y, false, false);
 		assert!(matches!(
 			h.interaction,
 			Interaction::LinkTargetNode {
@@ -7381,8 +7381,8 @@ mod host_tests {
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let s0 = h.world_to_screen(hp_a);
 		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-		h.pointer_move_screen(s0.x + 2.0, s0.y);
-		h.pointer_up_screen(s0.x + 2.0, s0.y);
+		h.pointer_move_screen(s0.x + 2.0, s0.y, false, false);
+		h.pointer_up_screen(s0.x + 2.0, s0.y, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
 	}

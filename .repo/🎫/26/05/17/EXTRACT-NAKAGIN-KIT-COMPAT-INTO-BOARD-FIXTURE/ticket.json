@@ -1,0 +1,10 @@
+{
+  "title": "Extract Nakagin Kit Compat Into Board Fixture",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Temporary script extracts kindCompatibility from metabolism.kit.semio.json into nakagin board fixture meta; no generator change.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
+  "sessions": [
+    "⚪0e35818dd5934d1797701c0f85a1a28d"
+  ]
+}

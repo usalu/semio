@@ -2357,6 +2357,7 @@ export class BoardRenderer {
 	private lastPointerClientY = 0;
 	private lastPointerScreenX = 0;
 	private lastPointerScreenY = 0;
+	private areaSelectChordBridgeArmed = false;
 	private invalidated = true;
 	private isDisposed = false;
 	private lastRenderTimestamp: number | null = null;
@@ -3566,6 +3567,7 @@ export class BoardRenderer {
 		surface.addEventListener("pointermove", this.handlePointerMove as EventListener);
 		surface.addEventListener("pointerup", this.handlePointerUp as EventListener);
 		surface.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		surface.addEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
 		surface.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
 		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
@@ -3580,8 +3582,10 @@ export class BoardRenderer {
 		surface.removeEventListener("pointermove", this.handlePointerMove as EventListener);
 		surface.removeEventListener("pointerup", this.handlePointerUp as EventListener);
 		surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		surface.removeEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
 		surface.removeEventListener("wheel", this.handleWheel as EventListener);
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
+		this.disarmAreaSelectChordBridge();
 	}
 
 	private updateSelection(ids: Iterable<string>): void {
@@ -3625,6 +3629,50 @@ export class BoardRenderer {
 		this.lastPointerClientY = clientY;
 		this.lastPointerScreenX = screenX;
 		this.lastPointerScreenY = screenY;
+	}
+
+	/** @emoji 🎹 Modifier-only updates do not emit `pointermove`; refresh marquee merge while area-selecting. */
+	private readonly handleAreaSelectChordKeys = (event: KeyboardEvent): void => {
+		if (this.isDisposed || !this.canvas) {
+			return;
+		}
+		if (BoardRenderer.activeRenderer !== this) {
+			return;
+		}
+		if (!this.session.isDraggingAreaSelect()) {
+			return;
+		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.session.pointerMoveScreen(
+			this.lastPointerScreenX,
+			this.lastPointerScreenY,
+			event.shiftKey,
+			event.ctrlKey || event.metaKey,
+		);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
+		this.invalidate();
+	};
+
+	private armAreaSelectChordBridge(): void {
+		if (this.areaSelectChordBridgeArmed) {
+			return;
+		}
+		this.areaSelectChordBridgeArmed = true;
+		globalThis.addEventListener("keydown", this.handleAreaSelectChordKeys, true);
+		globalThis.addEventListener("keyup", this.handleAreaSelectChordKeys, true);
+	}
+
+	private disarmAreaSelectChordBridge(): void {
+		if (!this.areaSelectChordBridgeArmed) {
+			return;
+		}
+		this.areaSelectChordBridgeArmed = false;
+		globalThis.removeEventListener("keydown", this.handleAreaSelectChordKeys, true);
+		globalThis.removeEventListener("keyup", this.handleAreaSelectChordKeys, true);
 	}
 
 	private deleteSelectedObjects(): void {
@@ -3701,7 +3749,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy);
+		this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		const world = this.screenToWorld({ x: sx, y: sy });
@@ -3737,6 +3785,9 @@ export class BoardRenderer {
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
+		if (this.session.isDraggingAreaSelect()) {
+			this.armAreaSelectChordBridge();
+		}
 	};
 
 	private readonly handlePointerMove = (event: PointerEvent): void => {
@@ -3751,7 +3802,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy);
+		this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
@@ -3763,6 +3814,7 @@ export class BoardRenderer {
 		}
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
+			this.disarmAreaSelectChordBridge();
 			if (typeof event.pointerId === "number") {
 				this.eventSurface.releasePointerCapture?.(event.pointerId);
 			}
@@ -3772,12 +3824,13 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerUpScreen(sx, sy);
+		this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		if (typeof event.pointerId === "number") {
 			this.eventSurface.releasePointerCapture?.(event.pointerId);
 		}
+		this.disarmAreaSelectChordBridge();
 		this.invalidate();
 	};
 
@@ -3796,6 +3849,10 @@ export class BoardRenderer {
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
+	};
+
+	private readonly handleLostPointerCapture = (): void => {
+		this.disarmAreaSelectChordBridge();
 	};
 
 	private readonly handleWheel = (event: WheelEvent): void => {
@@ -4295,6 +4352,34 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: leftDragEnd.x, clientY: leftDragEnd.y }));
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: leftDragEnd.x, clientY: leftDragEnd.y }));
 			expect(renderer.selection.getSnapshot().ids).toEqual(["node"]);
+
+			renderer.dispose();
+		});
+
+		it("applies shift during rectangle drag for additive merge against initial selection", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({
+				canvas,
+				renderMode: "headless-test",
+				selection: { mode: "replace", targets: { nodes: true, edges: false, handles: false } },
+			});
+			const keep = new Node({ draggable: true, id: "keep", radius: 20, x: -150, y: 0 });
+			const node = new Node({ id: "node", radius: 20, x: 0, y: 0 });
+			renderer.scene.add(keep).add(node);
+			renderer.render();
+			renderer.setSelectionIds(["keep"]);
+
+			const d0 = renderer.worldToScreen({ x: -40, y: -50 });
+			const d1 = renderer.worldToScreen({ x: 40, y: 50 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: d0.x, clientY: d0.y }));
+			canvas.dispatchEvent(
+				new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
+			);
+			canvas.dispatchEvent(
+				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
+			);
+			const ids = [...renderer.selection.getSnapshot().ids].sort((x, y) => x.localeCompare(y));
+			expect(ids).toEqual(["keep", "node"]);
 
 			renderer.dispose();
 		});
