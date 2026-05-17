@@ -29,7 +29,9 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 	type FooterItem,
+	type TreeDataItem,
 	type TreeDataSection,
+	type TreeHeaderAction,
 	type ContextMenuItem,
 	type UIAppConfig,
 	type UIWindowKindDefinition,
@@ -1506,6 +1508,43 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 // #endregion 🔖PaletteFixtureShelf
 
 /** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
+function boardTreeAddAction(id: string, onClick: () => void, title: string): TreeHeaderAction {
+	return { icon: <Plus className="size-3.5" />, id, onClick, title };
+}
+
+function boardTreeItem({
+	description,
+	id,
+	items,
+	label,
+	onClick,
+	selected,
+}: {
+	description?: ReactNode;
+	id: string;
+	items?: TreeDataItem[];
+	label: ReactNode;
+	onClick?: () => void;
+	selected?: boolean;
+}): TreeDataItem {
+	const childItems = items?.length ? items : undefined;
+	const childSelected = childItems?.some((item) => item.isSelected) ?? false;
+	return {
+		...(childItems ? { defaultOpen: childSelected, items: childItems } : {}),
+		...(description ? { description } : {}),
+		...(onClick
+			? {
+				onClick: () => {
+					onClick();
+				},
+			}
+			: {}),
+		id,
+		isSelected: selected === true,
+		label,
+	};
+}
+
 function BoardFixtureLibraryPanel(): ReactElement {
 	const { fixture, kindCatalogs, kindCompatibility, lockedIds, wires } = useBoardPlayShell();
 
@@ -1527,44 +1566,56 @@ function BoardFixtureLibraryPanel(): ReactElement {
 		},
 		[fixture, kindCatalogs, kindCompatibility, lockedIds, wires],
 	);
-
-	return (
-		<div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
-			<div className="text-muted-foreground text-xs uppercase tracking-wide" data-testid="board-play-fixture-shelf">
-				Fixture shelf
-			</div>
-			<div className="flex flex-col gap-2">
-				<div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
-				<div className="flex flex-wrap gap-2">
-					<BoardFixturePaletteDraggable
-						fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
-						label="Drag circle onto the board"
-						preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />}
-					/>
-					<BoardFixturePaletteDraggable
-						fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
-						label="Drag rectangle onto the board"
-						preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />}
-					/>
-				</div>
-			</div>
-			<div
-				className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing"
-				draggable
-				onDragStart={onShelfDragStart}
-			>
-				<p className="font-medium">Active graph</p>
-				<p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
-			</div>
-			<div className="border-element space-y-1 rounded border p-2 text-xs">
-				<div className="text-muted-foreground">Loaded</div>
-				<div>schema: {fixture.schema}</div>
-				<div>
-					nodes: {fixture.nodes.length} · edges: {fixture.edges.length} · wires: {wires.length}
-				</div>
-			</div>
-		</div>
+	const sections = useMemo<TreeDataSection[]>(
+		() => [
+			{
+				content: (
+					<div className="flex flex-wrap gap-2">
+						<BoardFixturePaletteDraggable
+							fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
+							label="Drag circle onto the board"
+							preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />}
+						/>
+						<BoardFixturePaletteDraggable
+							fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
+							label="Drag rectangle onto the board"
+							preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />}
+						/>
+					</div>
+				),
+				defaultOpen: true,
+				id: "board-play-library-shapes",
+				label: "Shapes",
+			},
+			{
+				content: (
+					<div
+						className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing"
+						draggable
+						onDragStart={onShelfDragStart}
+					>
+						<p className="font-medium">Active graph</p>
+						<p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
+					</div>
+				),
+				defaultOpen: true,
+				id: "board-play-library-active-graph",
+				label: "Payload",
+			},
+			{
+				defaultOpen: true,
+				id: "board-play-library-loaded",
+				items: [
+					boardTreeItem({ description: fixture.schema, id: "board-play-library-loaded-schema", label: "Schema" }),
+					boardTreeItem({ description: `${fixture.nodes.length} nodes · ${fixture.edges.length} edges · ${wires.length} wires`, id: "board-play-library-loaded-graph", label: "Graph" }),
+				],
+				label: "Loaded",
+			},
+		],
+		[fixture.edges.length, fixture.nodes.length, fixture.schema, onShelfDragStart, wires.length],
 	);
+
+	return <BoardSideTreePanel header="Library" icon={<Library className="size-4 shrink-0" />} sections={sections} subtitle={<span data-testid="board-play-fixture-shelf">Fixture shelf</span>} />;
 }
 
 function findNode(fixture: BoardFixtureV1, id: string): BoardFixtureNodeV1 | undefined {
@@ -2647,14 +2698,7 @@ function InspectorWireBatch({
 	);
 }
 
-function boardWorkbenchRowClass(active: boolean): string {
-	return [
-		"flex w-full items-center justify-between gap-2 rounded border px-2 py-1.5 text-left text-xs transition-colors",
-		active ? "border-accent bg-accent/10 text-foreground" : "border-element bg-background hover:bg-hover-panel text-muted-foreground",
-	].join(" ");
-}
-
-function BoardWorkbenchTreePanel({
+function BoardSideTreePanel({
 	header,
 	icon,
 	sections,
@@ -2663,7 +2707,7 @@ function BoardWorkbenchTreePanel({
 	header: string;
 	icon: ReactNode;
 	sections: TreeDataSection[];
-	subtitle?: string;
+	subtitle?: ReactNode;
 }): ReactElement {
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
@@ -2695,55 +2739,57 @@ function BoardWorkbenchGraphPanel(): ReactElement {
 	const graphSections = useMemo<TreeDataSection[]>(
 		() => [
 			{
-				content: (
-					<div className="space-y-2">
-						{fixture.nodes.map((node) => (
-							<div className="space-y-1" key={node.id}>
-								<button className={boardWorkbenchRowClass(selectedIds.has(node.id) && !workbenchSelection)} onClick={() => focusGraphSelection([node.id])} type="button">
-									<span className="truncate">{node.text || node.id}</span>
-									<span className="font-mono text-[10px] opacity-70">{node.id}</span>
-								</button>
-								<div className="ml-3 space-y-1 border-l border-element/60 pl-2">
-									{node.handles.map((handle) => (
-										<button className={boardWorkbenchRowClass(selectedIds.has(handle.id) && !workbenchSelection)} key={handle.id} onClick={() => focusGraphSelection([handle.id])} type="button">
-											<span className="truncate">{boardPlayKindLabel(kindCatalogs.handles, handle.handleKind)}</span>
-											<span className="font-mono text-[10px] opacity-70">{handle.id}</span>
-										</button>
-									))}
-								</div>
-							</div>
-						))}
-					</div>
-				),
 				defaultOpen: true,
 				id: "board-play-workbench-graph-nodes",
+				items: fixture.nodes.map((node) =>
+					boardTreeItem({
+						id: node.id,
+						items: node.handles.map((handle) =>
+							boardTreeItem({
+								description: handle.id,
+								id: handle.id,
+								label: boardPlayKindLabel(kindCatalogs.handles, handle.handleKind),
+								onClick: () => focusGraphSelection([handle.id]),
+								selected: selectedIds.has(handle.id) && !workbenchSelection,
+							}),
+						),
+						label: node.text || node.id,
+						description: node.id,
+						onClick: () => focusGraphSelection([node.id]),
+						selected: selectedIds.has(node.id) && !workbenchSelection,
+					}),
+				),
 				label: `Nodes (${fixture.nodes.length})`,
 			},
 			{
-				content: (
-					<div className="space-y-2">
-						{fixture.edges.map((edge) => (
-							<button className={boardWorkbenchRowClass(selectedIds.has(edge.id) && !workbenchSelection)} key={edge.id} onClick={() => focusGraphSelection([edge.id])} type="button">
-								<span className="truncate">{edge.source} -&gt; {edge.target}</span>
-								<span className="font-mono text-[10px] opacity-70">{edge.id}</span>
-							</button>
-						))}
-						{wires.map((wire) => (
-							<button className={boardWorkbenchRowClass(selectedIds.has(wire.id) && !workbenchSelection)} key={wire.id} onClick={() => focusGraphSelection([wire.id])} type="button">
-								<span className="truncate">{wire.source} {wire.target ? `-> ${wire.target}` : "-> free"}</span>
-								<span className="font-mono text-[10px] opacity-70">{wire.id}</span>
-							</button>
-						))}
-					</div>
-				),
 				defaultOpen: true,
 				id: "board-play-workbench-graph-edges",
+				items: [
+					...fixture.edges.map((edge) =>
+						boardTreeItem({
+							description: edge.id,
+							id: edge.id,
+							label: `${edge.source} -> ${edge.target}`,
+							onClick: () => focusGraphSelection([edge.id]),
+							selected: selectedIds.has(edge.id) && !workbenchSelection,
+						}),
+					),
+					...wires.map((wire) =>
+						boardTreeItem({
+							description: wire.id,
+							id: wire.id,
+							label: `${wire.source} ${wire.target ? `-> ${wire.target}` : "-> free"}`,
+							onClick: () => focusGraphSelection([wire.id]),
+							selected: selectedIds.has(wire.id) && !workbenchSelection,
+						}),
+					),
+				],
 				label: `Edges (${fixture.edges.length + wires.length})`,
 			},
 		],
 		[fixture.edges, fixture.nodes, focusGraphSelection, kindCatalogs.handles, selectedIds, wires, workbenchSelection],
 	);
-	return <BoardWorkbenchTreePanel header="Graph" icon={<FolderTree className="size-4 shrink-0" />} sections={graphSections} subtitle={`pane: ${activePaneId}`} />;
+	return <BoardSideTreePanel header="Graph" icon={<FolderTree className="size-4 shrink-0" />} sections={graphSections} subtitle={`pane: ${activePaneId}`} />;
 }
 
 function BoardWorkbenchKindsPanel(): ReactElement {
@@ -2751,63 +2797,54 @@ function BoardWorkbenchKindsPanel(): ReactElement {
 	const kindSections = useMemo<TreeDataSection[]>(
 		() => [
 			{
-				content: (
-					<div className="space-y-2">
-						<div className="flex items-center justify-end gap-2">
-							<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("node-kind")} type="button" variant="outline">Add</Button>
-						</div>
-						{(kindCatalogs.nodes ?? []).map((entry) => (
-							<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "node-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "node-kind" })} type="button">
-								<span>{entry.label || entry.id}</span>
-								<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
-							</button>
-						))}
-					</div>
-				),
+				actions: [boardTreeAddAction("board-play-kind-add-node", () => appendKind("node-kind"), "Add node kind")],
 				defaultOpen: true,
 				id: "board-play-workbench-kind-nodes",
+				items: (kindCatalogs.nodes ?? []).map((entry) =>
+					boardTreeItem({
+						description: entry.id,
+						id: entry.id,
+						label: entry.label || entry.id,
+						onClick: () => focusWorkbenchSelection({ id: entry.id, kind: "node-kind" }),
+						selected: workbenchSelection?.kind === "node-kind" && workbenchSelection.id === entry.id,
+					}),
+				),
 				label: `Node kinds (${kindCatalogs.nodes?.length ?? 0})`,
 			},
 			{
-				content: (
-					<div className="space-y-2">
-						<div className="flex items-center justify-end gap-2">
-							<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("edge-kind")} type="button" variant="outline">Add</Button>
-						</div>
-						{(kindCatalogs.edges ?? []).map((entry) => (
-							<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "edge-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "edge-kind" })} type="button">
-								<span>{entry.label || entry.id}</span>
-								<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
-							</button>
-						))}
-					</div>
-				),
+				actions: [boardTreeAddAction("board-play-kind-add-edge", () => appendKind("edge-kind"), "Add edge kind")],
 				defaultOpen: true,
 				id: "board-play-workbench-kind-edges",
+				items: (kindCatalogs.edges ?? []).map((entry) =>
+					boardTreeItem({
+						description: entry.id,
+						id: entry.id,
+						label: entry.label || entry.id,
+						onClick: () => focusWorkbenchSelection({ id: entry.id, kind: "edge-kind" }),
+						selected: workbenchSelection?.kind === "edge-kind" && workbenchSelection.id === entry.id,
+					}),
+				),
 				label: `Edge kinds (${kindCatalogs.edges?.length ?? 0})`,
 			},
 			{
-				content: (
-					<div className="space-y-2">
-						<div className="flex items-center justify-end gap-2">
-							<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("wire-kind")} type="button" variant="outline">Add</Button>
-						</div>
-						{(kindCatalogs.wires ?? []).map((entry) => (
-							<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "wire-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "wire-kind" })} type="button">
-								<span>{entry.label || entry.id}</span>
-								<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
-							</button>
-						))}
-					</div>
-				),
+				actions: [boardTreeAddAction("board-play-kind-add-wire", () => appendKind("wire-kind"), "Add wire kind")],
 				defaultOpen: true,
 				id: "board-play-workbench-kind-wires",
+				items: (kindCatalogs.wires ?? []).map((entry) =>
+					boardTreeItem({
+						description: entry.id,
+						id: entry.id,
+						label: entry.label || entry.id,
+						onClick: () => focusWorkbenchSelection({ id: entry.id, kind: "wire-kind" }),
+						selected: workbenchSelection?.kind === "wire-kind" && workbenchSelection.id === entry.id,
+					}),
+				),
 				label: `Wire kinds (${kindCatalogs.wires?.length ?? 0})`,
 			},
 		],
 		[appendKind, focusWorkbenchSelection, kindCatalogs.edges, kindCatalogs.nodes, kindCatalogs.wires, workbenchSelection],
 	);
-	return <BoardWorkbenchTreePanel header="Kinds" icon={<Circle className="size-4 shrink-0" />} sections={kindSections} subtitle="Node, edge, and wire kind catalogs" />;
+	return <BoardSideTreePanel header="Kinds" icon={<Circle className="size-4 shrink-0" />} sections={kindSections} subtitle="Node, edge, and wire kind catalogs" />;
 }
 
 function BoardWorkbenchConstraintsPanel(): ReactElement {
@@ -2815,27 +2852,24 @@ function BoardWorkbenchConstraintsPanel(): ReactElement {
 	const constraintSections = useMemo<TreeDataSection[]>(
 		() => [
 			{
-				content: (
-					<div className="space-y-2">
-						<div className="flex items-center justify-end gap-2">
-							<Button className="h-7 px-2 text-[11px]" onClick={appendConstraint} type="button" variant="outline">Add</Button>
-						</div>
-						{kindCompatibility.map((entry, index) => (
-							<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "constraint" && workbenchSelection.id === `constraint:${index}`)} key={`constraint:${index}`} onClick={() => focusWorkbenchSelection({ id: `constraint:${index}`, kind: "constraint" })} type="button">
-								<span>{boardPlayConstraintLabel(kindCatalogs, entry)}</span>
-								<span className="text-[10px] opacity-70">{entry.important ? "important" : "normal"}</span>
-							</button>
-						))}
-					</div>
-				),
+				actions: [boardTreeAddAction("board-play-constraint-add", appendConstraint, "Add constraint")],
 				defaultOpen: true,
 				id: "board-play-workbench-constraints",
+				items: kindCompatibility.map((entry, index) =>
+					boardTreeItem({
+						description: entry.important ? "important" : "normal",
+						id: `constraint:${index}`,
+						label: boardPlayConstraintLabel(kindCatalogs, entry),
+						onClick: () => focusWorkbenchSelection({ id: `constraint:${index}`, kind: "constraint" }),
+						selected: workbenchSelection?.kind === "constraint" && workbenchSelection.id === `constraint:${index}`,
+					}),
+				),
 				label: `Constraints (${kindCompatibility.length})`,
 			},
 		],
 		[appendConstraint, focusWorkbenchSelection, kindCatalogs, kindCompatibility, workbenchSelection],
 	);
-	return <BoardWorkbenchTreePanel header="Constraints" icon={<Link2 className="size-4 shrink-0" />} sections={constraintSections} subtitle="Compatibility rules and priority" />;
+	return <BoardSideTreePanel header="Constraints" icon={<Link2 className="size-4 shrink-0" />} sections={constraintSections} subtitle="Compatibility rules and priority" />;
 }
 
 function InspectorNodeKindDetails({ entry, patchKindCatalogs, renameKind }: { entry: BoardNodeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void; renameKind: (previousId: string, nextId: string) => void }): ReactElement {
