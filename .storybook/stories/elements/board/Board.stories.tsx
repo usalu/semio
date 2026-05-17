@@ -17,7 +17,7 @@ import {
 } from "../../../../elements/client/lib/board/index.tsx";
 import {
 	BOARD_BUILTIN_PORT_HANDLE_KIND,
-	BOARD_DEFAULT_HANDLE_KIND_CATALOG,
+	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 } from "../../../../elements/client/lib/board/index";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
 
@@ -190,7 +190,7 @@ export const Default: Story = {
 	),
 	args: {
 		camera: { x: 0, y: 0, zoom: 1 },
-		handleKinds: [...BOARD_DEFAULT_HANDLE_KIND_CATALOG],
+		kindCatalogs: { ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
 		height: 520,
 		width: 720,
 		worldRasterTiling: "none",

@@ -58,25 +58,191 @@ export const BOARD_SELECTION_TARGETS_DEFAULT: BoardSelectionTargets = {
 	handles: true,
 	nodes: true,
 };
-export interface BoardHandleLinkCompatPair {
+/** @emoji 🎯 Specificity axis for a {@link BoardKindCompatEntry} (weakest → strongest: general < node < edge < handle < wire). */
+export type BoardSemanticSpecificity = "edge" | "general" | "handle" | "node" | "wire";
+
+/** @emoji 🔗 One allowed directed pair between semantic kind ids; `important` bypasses specificity ordering among matches. */
+export interface BoardKindCompatEntry {
 	source: string;
 	target: string;
+	bidirectional?: boolean;
+	important?: boolean;
+	specificity?: BoardSemanticSpecificity;
 }
 
-/** @emoji 🎨 Catalog row for WASM handle-kind fill defaults (`id` matches {@link Handle.handleKind}; per-handle {@link Handle.color} overrides). */
+/** @emoji 🎨 Handle-kind catalog row: defaults for new handles plus optional gesture {@link BoardWireKindCatalogEntry} id. */
 export interface BoardHandleKindCatalogEntry {
 	color: string;
+	defaultWireKind?: string;
 	id: string;
-	name: string;
+	label: string;
+	name?: string;
+}
+
+/** @emoji 🧵 Wire-kind catalog row for link gestures and default promoted {@link BoardEdgeKindCatalogEntry} id. */
+export interface BoardWireKindCatalogEntry {
+	defaultEdgeKind?: string;
+	id: string;
+	label: string;
+	name?: string;
+}
+
+/** @emoji 🟠 Node-kind catalog row (defaults for instances; richer fields reserved for future paint). */
+export interface BoardNodeKindCatalogEntry {
+	color?: string;
+	defaultHandleKind?: string;
+	defaultShapeProps?: Record<string, unknown>;
+	icon?: string;
+	id: string;
+	label: string;
+	name?: string;
+	shape?: "circle" | "rectangle";
+	stroke?: string;
+}
+
+/** @emoji 🪢 Edge-kind catalog row (defaults for instances; richer fields reserved for future stroke). */
+export interface BoardEdgeKindCatalogEntry {
+	color?: string;
+	defaultShapeProps?: Record<string, unknown>;
+	id: string;
+	label: string;
+	name?: string;
+	pattern?: string;
+	shape?: "bezier" | "line";
+	stroke?: string;
+}
+
+/** @emoji 📚 Central WASM+host registries for semantic board kinds (omit slices to leave prior catalog entries untouched when pushing partial updates is not supported — always send full merged bundle from callers). */
+export interface BoardKindCatalogBundle {
+	edges?: readonly BoardEdgeKindCatalogEntry[];
+	handles?: readonly BoardHandleKindCatalogEntry[];
+	nodes?: readonly BoardNodeKindCatalogEntry[];
+	wires?: readonly BoardWireKindCatalogEntry[];
 }
 
 /** @emoji 🧷 Builtin handle kind id used when fixture JSON omits `handleKind` (aligned with Rust `parse_fixture_v1`). */
 export const BOARD_BUILTIN_PORT_HANDLE_KIND = "board.port";
 
-/** @emoji 🎨 Default WASM catalog so `board.port` handles resolve a catalog color without host configuration. */
+/** @emoji 🧷 Default wire kind id resolved for link gestures when a handle catalog omits `defaultWireKind`. */
+export const BOARD_BUILTIN_LINK_WIRE_KIND = "board.wire.link";
+
+/** @emoji 🧷 Default edge kind id assigned to WASM-created link edges when a wire catalog omits `defaultEdgeKind`. */
+export const BOARD_BUILTIN_LINK_EDGE_KIND = "board.edge.link";
+
+/** @emoji 🎨 Default WASM handle catalog so `board.port` resolves a fill color and gesture wire kind without host configuration. */
 export const BOARD_DEFAULT_HANDLE_KIND_CATALOG: readonly BoardHandleKindCatalogEntry[] = [
-	{ color: "#94a3b8", id: BOARD_BUILTIN_PORT_HANDLE_KIND, name: "Port" },
+	{
+		color: "#94a3b8",
+		defaultWireKind: BOARD_BUILTIN_LINK_WIRE_KIND,
+		id: BOARD_BUILTIN_PORT_HANDLE_KIND,
+		label: "Port",
+	},
 ];
+
+/** @emoji 🎨 Default wire catalog entry paired with {@link BOARD_DEFAULT_HANDLE_KIND_CATALOG}. */
+export const BOARD_DEFAULT_WIRE_KIND_CATALOG: readonly BoardWireKindCatalogEntry[] = [
+	{ defaultEdgeKind: BOARD_BUILTIN_LINK_EDGE_KIND, id: BOARD_BUILTIN_LINK_WIRE_KIND, label: "Link wire" },
+];
+
+/** @emoji 🎨 Default edge catalog entry paired with {@link BOARD_DEFAULT_WIRE_KIND_CATALOG}. */
+export const BOARD_DEFAULT_EDGE_KIND_CATALOG: readonly BoardEdgeKindCatalogEntry[] = [
+	{ id: BOARD_BUILTIN_LINK_EDGE_KIND, label: "Link edge" },
+];
+
+/** @emoji 📚 Default {@link BoardKindCatalogBundle} for {@link BoardCanvas} when callers omit `kindCatalogs`. */
+export const BOARD_DEFAULT_KIND_CATALOG_BUNDLE: BoardKindCatalogBundle = {
+	edges: BOARD_DEFAULT_EDGE_KIND_CATALOG,
+	handles: BOARD_DEFAULT_HANDLE_KIND_CATALOG,
+	wires: BOARD_DEFAULT_WIRE_KIND_CATALOG,
+};
+
+function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string {
+	const handles = (bundle.handles ?? [])
+		.map((e) => {
+			const id = String(e.id ?? "").trim();
+			const color = String(e.color ?? "").trim();
+			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const dw = e.defaultWireKind != null ? String(e.defaultWireKind).trim() : "";
+			if (id === "" || color === "") {
+				return null;
+			}
+			return {
+				id,
+				label,
+				name: label,
+				color,
+				...(dw !== "" ? { defaultWireKind: dw } : {}),
+			};
+		})
+		.filter((x): x is NonNullable<typeof x> => x !== null);
+	const wires = (bundle.wires ?? [])
+		.map((e) => {
+			const id = String(e.id ?? "").trim();
+			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const de = e.defaultEdgeKind != null ? String(e.defaultEdgeKind).trim() : "";
+			if (id === "") {
+				return null;
+			}
+			return { id, label, name: label, ...(de !== "" ? { defaultEdgeKind: de } : {}) };
+		})
+		.filter((x): x is NonNullable<typeof x> => x !== null);
+	const nodes = (bundle.nodes ?? [])
+		.map((e) => {
+			const id = String(e.id ?? "").trim();
+			const label = String(e.label ?? e.name ?? "").trim() || id;
+			if (id === "") {
+				return null;
+			}
+			const row: Record<string, unknown> = { id, label, name: label };
+			if (e.shape) {
+				row.shape = e.shape;
+			}
+			if (e.color != null && String(e.color).trim() !== "") {
+				row.color = String(e.color).trim();
+			}
+			if (e.stroke != null && String(e.stroke).trim() !== "") {
+				row.stroke = String(e.stroke).trim();
+			}
+			if (e.icon != null && String(e.icon).trim() !== "") {
+				row.icon = String(e.icon).trim();
+			}
+			if (e.defaultShapeProps) {
+				row.defaultShapeProps = e.defaultShapeProps;
+			}
+			if (e.defaultHandleKind != null && String(e.defaultHandleKind).trim() !== "") {
+				row.defaultHandleKind = String(e.defaultHandleKind).trim();
+			}
+			return row;
+		})
+		.filter((x): x is NonNullable<typeof x> => x !== null);
+	const edges = (bundle.edges ?? [])
+		.map((e) => {
+			const id = String(e.id ?? "").trim();
+			const label = String(e.label ?? e.name ?? "").trim() || id;
+			if (id === "") {
+				return null;
+			}
+			const row: Record<string, unknown> = { id, label, name: label };
+			if (e.shape) {
+				row.shape = e.shape;
+			}
+			if (e.color != null && String(e.color).trim() !== "") {
+				row.color = String(e.color).trim();
+			}
+			if (e.stroke != null && String(e.stroke).trim() !== "") {
+				row.stroke = String(e.stroke).trim();
+			}
+			if (e.pattern != null && String(e.pattern).trim() !== "") {
+				row.pattern = String(e.pattern).trim();
+			}
+			if (e.defaultShapeProps) {
+				row.defaultShapeProps = e.defaultShapeProps;
+			}
+			return row;
+		})
+		.filter((x): x is NonNullable<typeof x> => x !== null);
+	return JSON.stringify({ edgeKinds: edges, handleKinds: handles, nodeKinds: nodes, wireKinds: wires });
+}
 /** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
@@ -338,6 +504,8 @@ export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
 	iconKind?: string;
+	/** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
+	nodeKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	radius: number;
@@ -361,6 +529,8 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 	height: number;
 	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
 	iconKind?: string;
+	/** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
+	nodeKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	shape: "rectangle";
@@ -413,6 +583,8 @@ export interface BoardHandleProps {
 /** @emoji 🪢 Declarative edge marker props. */
 export interface BoardEdgeProps {
 	contextMenu?: ContextMenuItem[];
+	/** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
+	edgeKind?: string;
 	id: string;
 	selected?: boolean;
 	source: string;
@@ -432,11 +604,14 @@ export interface BoardWireProps {
 	source: string;
 	style?: string;
 	target?: string;
+	/** @emoji 🧩 Semantic wire-kind id for catalog defaults and compatibility (`wire` specificity). */
+	wireKind?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 }
 
 export interface EdgeOptions extends BoardObjectOptions {
+	edgeKind?: string;
 	source: Handle;
 	target: Handle;
 }
@@ -446,6 +621,7 @@ export interface WireOptions extends BoardObjectOptions {
 	endY?: number | null;
 	source: Handle;
 	target: Handle | null;
+	wireKind?: string;
 }
 
 type FrameListener = (state: FrameState, dt: number) => void;
@@ -1331,6 +1507,8 @@ export class Node extends BoardObject {
 	y: number;
 	/** @emoji 🌳 When true, {@link computeBoardGraphObservationSnapshot} treats each {@link Edge} as parent {@link Edge.source} → child {@link Edge.target} along node ids. */
 	root: boolean;
+	/** @emoji 🧩 Semantic node-kind id forwarded to WASM for catalog defaults and compatibility. */
+	nodeKind: string;
 
 	constructor(options: NodeOptions) {
 		super(options.id, {
@@ -1341,6 +1519,8 @@ export class Node extends BoardObject {
 			visible: options.visible,
 		});
 		this.root = options.root === true;
+		const nk = typeof options.nodeKind === "string" ? options.nodeKind.trim() : "";
+		this.nodeKind = nk;
 		this.x = options.x;
 		this.y = options.y;
 		this.text = options.text ?? null;
@@ -1469,6 +1649,8 @@ export class Handle extends BoardObject {
 
 /** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
 export class Edge extends BoardObject {
+	/** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
+	edgeKind: string;
 	source: Handle;
 	target: Handle;
 
@@ -1476,6 +1658,8 @@ export class Edge extends BoardObject {
 		super(options.id, options);
 		this.source = options.source;
 		this.target = options.target;
+		const ek = typeof options.edgeKind === "string" ? options.edgeKind.trim() : "";
+		this.edgeKind = ek;
 	}
 
 	get kind(): BoardObjectKind {
@@ -1499,11 +1683,15 @@ export class Wire extends BoardObject {
 	endY: number | null;
 	source: Handle;
 	target: Handle | null;
+	/** @emoji 🧩 Semantic wire-kind id forwarded to WASM. */
+	wireKind: string;
 
 	constructor(options: WireOptions) {
 		super(options.id, options);
 		this.source = options.source;
 		this.target = options.target;
+		const wk = typeof options.wireKind === "string" ? options.wireKind.trim() : "";
+		this.wireKind = wk;
 		const ex = options.endX;
 		const ey = options.endY;
 		this.endX = typeof ex === "number" && Number.isFinite(ex) ? ex : null;
@@ -1892,9 +2080,9 @@ export class BoardRenderer {
 	private lastPushedDescriptorJson: string | null = null;
 	private lastVelloThemeJson = "";
 	private lastDescriptorPushDeferred = false;
-	private handleLinkCompatJson = "[]";
-	private handleKindsJson = "[]";
-	private lastPushedHandleKindsJson: string | null = null;
+	private kindCompatJson = "[]";
+	private kindCatalogsJson = serializeBoardKindCatalogBundle(BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
+	private lastPushedKindCatalogsJson: string | null = null;
 	private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
@@ -1948,13 +2136,13 @@ export class BoardRenderer {
 			initialSel.targets.edges,
 			initialSel.targets.handles,
 		);
-		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		this.session.setHandleLinkCompatJson(this.kindCompatJson);
 		try {
-			this.session.setHandleKindsJson(this.handleKindsJson);
+			this.session.setBoardKindCatalogsJson(this.kindCatalogsJson);
 		} catch (err) {
-			console.error("[DEBUG] setHandleKindsJson failed during BoardRenderer init", err);
+			console.error("[DEBUG] setBoardKindCatalogsJson failed during BoardRenderer init", err);
 		}
-		this.lastPushedHandleKindsJson = this.handleKindsJson;
+		this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.attachCanvasListeners();
 		if (this.canvas) {
@@ -2106,17 +2294,27 @@ export class BoardRenderer {
 		this.markDirty();
 	}
 
-	/** @emoji 🔗 Sets ordered handle-kind compatibility pairs for link gestures (empty = unrestricted). */
-	setHandleLinkCompatibility(pairs: readonly BoardHandleLinkCompatPair[] | undefined): void {
-		const normalized = (pairs ?? []).map((p) => ({
-			source: String(p.source ?? "").trim(),
-			target: String(p.target ?? "").trim(),
-		}));
+	/** @emoji 🔗 Sets kind-compatibility rules for link gestures (empty = unrestricted). */
+	setKindCompatibility(entries: readonly BoardKindCompatEntry[] | undefined): void {
+		const normalized = (entries ?? []).map((p) => {
+			const rawSp = String(p.specificity ?? "handle").trim().toLowerCase();
+			const specificity =
+				rawSp === "general" || rawSp === "node" || rawSp === "edge" || rawSp === "handle" || rawSp === "wire"
+					? rawSp
+					: "handle";
+			return {
+				source: String(p.source ?? "").trim(),
+				target: String(p.target ?? "").trim(),
+				bidirectional: p.bidirectional === true,
+				important: p.important === true,
+				specificity,
+			};
+		});
 		const json = JSON.stringify(normalized);
-		if (json === this.handleLinkCompatJson) {
+		if (json === this.kindCompatJson) {
 			return;
 		}
-		this.handleLinkCompatJson = json;
+		this.kindCompatJson = json;
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -2124,25 +2322,19 @@ export class BoardRenderer {
 		this.pushSceneToWasmDriver();
 	}
 
-	/** @emoji 🎨 Sets WASM handle-kind catalog (`[{id,name,color},…]`); empty clears to theme-only fallback. */
-	setHandleKindCatalog(entries: readonly BoardHandleKindCatalogEntry[] | undefined): void {
-		const normalized = (entries ?? [])
-			.map((e) => ({
-				color: String(e.color ?? "").trim(),
-				id: String(e.id ?? "").trim(),
-				name: String(e.name ?? "").trim(),
-			}))
-			.filter((e) => e.id !== "" && e.color !== "")
-			.map((e) => ({
-				color: e.color,
-				id: e.id,
-				name: e.name !== "" ? e.name : e.id,
-			}));
-		const json = JSON.stringify(normalized);
-		if (json === this.handleKindsJson) {
+	/** @emoji 🧩 Sets WASM semantic kind catalogs (handles, wires, nodes, edges). */
+	setKindCatalogs(bundle: BoardKindCatalogBundle | undefined): void {
+		const merged: BoardKindCatalogBundle = {
+			edges: bundle?.edges ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.edges,
+			handles: bundle?.handles ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.handles,
+			nodes: bundle?.nodes ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.nodes,
+			wires: bundle?.wires ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.wires,
+		};
+		const json = serializeBoardKindCatalogBundle(merged);
+		if (json === this.kindCatalogsJson) {
 			return;
 		}
-		this.handleKindsJson = json;
+		this.kindCatalogsJson = json;
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -2466,13 +2658,13 @@ export class BoardRenderer {
 		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.pushLodAndGridSnapToWasmSession();
-		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		this.session.setHandleLinkCompatJson(this.kindCompatJson);
 		try {
-			this.session.setHandleKindsJson(this.handleKindsJson);
+			this.session.setBoardKindCatalogsJson(this.kindCatalogsJson);
 		} catch (err) {
-			console.error("[DEBUG] setHandleKindsJson failed after attach_canvas", err);
+			console.error("[DEBUG] setBoardKindCatalogsJson failed after attach_canvas", err);
 		}
-		this.lastPushedHandleKindsJson = this.handleKindsJson;
+		this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.syncGpuReadyCacheFromSession();
 	}
@@ -2495,6 +2687,9 @@ export class BoardRenderer {
 			}
 			if (node.root) {
 				base.root = true;
+			}
+			if (node.nodeKind.trim() !== "") {
+				base.nodeKind = node.nodeKind;
 			}
 			if (Object.keys(node.userData).length > 0) {
 				base.userData = node.userData;
@@ -2543,14 +2738,18 @@ export class BoardRenderer {
 		}
 		const edges: Record<string, unknown>[] = [];
 		for (const edge of this.scene.edges.values()) {
-			edges.push({
+			const er: Record<string, unknown> = {
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
 				selected: edge.selected,
 				style: edge.style,
 				visible: edge.visible,
-			});
+			};
+			if (edge.edgeKind.trim() !== "") {
+				er.edgeKind = edge.edgeKind;
+			}
+			edges.push(er);
 		}
 		const wires: Record<string, unknown>[] = [];
 		for (const wire of this.scene.wires.values()) {
@@ -2567,6 +2766,9 @@ export class BoardRenderer {
 			if (wire.endX != null && wire.endY != null) {
 				row.endX = wire.endX;
 				row.endY = wire.endY;
+			}
+			if (wire.wireKind.trim() !== "") {
+				row.wireKind = wire.wireKind;
 			}
 			wires.push(row);
 		}
@@ -2643,14 +2845,14 @@ export class BoardRenderer {
 		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.pushLodAndGridSnapToWasmSession();
-		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
-		if (this.handleKindsJson !== this.lastPushedHandleKindsJson) {
+		this.session.setHandleLinkCompatJson(this.kindCompatJson);
+		if (this.kindCatalogsJson !== this.lastPushedKindCatalogsJson) {
 			try {
-				this.session.setHandleKindsJson(this.handleKindsJson);
+				this.session.setBoardKindCatalogsJson(this.kindCatalogsJson);
 			} catch (err) {
-				console.error("[DEBUG] setHandleKindsJson failed", err);
+				console.error("[DEBUG] setBoardKindCatalogsJson failed", err);
 			}
-			this.lastPushedHandleKindsJson = this.handleKindsJson;
+			this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
 		}
 		const deferDescriptorSync =
 			this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
@@ -4445,6 +4647,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
+	instance.edgeKind = typeof props.edgeKind === "string" ? props.edgeKind.trim() : "";
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
@@ -4453,6 +4656,7 @@ function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Han
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
+	instance.wireKind = typeof props.wireKind === "string" ? props.wireKind.trim() : "";
 	const tid = (props.target ?? "").trim();
 	const nextTarget = tid !== "" ? targetHandle : null;
 	const ex = props.endX;
@@ -4497,6 +4701,7 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 		a.id === b.id &&
 		a.source === b.source &&
 		a.target === b.target &&
+		(a.edgeKind ?? "").trim() === (b.edgeKind ?? "").trim() &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -4508,6 +4713,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
 	return (
 		a.id === b.id &&
 		a.source === b.source &&
+		(a.wireKind ?? "").trim() === (b.wireKind ?? "").trim() &&
 		(a.target ?? "") === (b.target ?? "") &&
 		(a.endX ?? Number.NaN) === (b.endX ?? Number.NaN) &&
 		(a.endY ?? Number.NaN) === (b.endY ?? Number.NaN) &&
@@ -4533,7 +4739,8 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
 		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
 		(a.root === true) !== (b.root === true) ||
-		(a.iconKind ?? "") !== (b.iconKind ?? "")
+		(a.iconKind ?? "") !== (b.iconKind ?? "") ||
+		(a.nodeKind ?? "").trim() !== (b.nodeKind ?? "").trim()
 	) {
 		return false;
 	}

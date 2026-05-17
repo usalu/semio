@@ -395,12 +395,18 @@ Wait for 1s without changing camera then in the next 2s zoom to the bounding box
 
 There should be 5 lods depending on the zoom level:
 Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels, selection possible with group selection, no individual nodes or edges or handels are selectable, no drag possible
-Overview: Huge grid (100x100), outlines on node, no handles, node with abbreviated labels, selection possible, nodes and edges are individually selectable, drag possible
-Normal: Huge grid with finer large grid (25x25), handles, node with labels, selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible
-Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label, selection possible, drag possible, connect possible, proximity connect possible
-Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label
+Overview: Huge grid (100x100), outlines on node, indirect handles, node with abbreviated labels, selection possible, nodes and edges are individually selectable, drag possible
+Normal: Huge grid with finer large grid (25x25), handles, node with labels, selection possible, nodes and edges are individually selectable, drag possible, connect possible
+Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label, selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible, proximity connect possible
+Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label,selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible, proximity connect possible
 
 Within one lod nothing changes. Make the trigger zoom points props.
+
+---
+
+Introduce a new feature: indirect handles
+
+In normal lod, no handles are show. But if a single node is selected then a ring of handles around it should appear (same handle kind just scaled up). If on of them is clicked then a wire is started. If the wire is dropped on a target node then the same ring appears with the handles from the target node. If one of the target handles is selected then the edge is created. Otherwise the wire is stopped. Make sure the ring appears ontop of the other nodes.
 
 ---
 

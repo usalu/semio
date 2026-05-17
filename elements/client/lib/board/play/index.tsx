@@ -57,7 +57,7 @@ import {
 	BOARD_BUILTIN_PORT_HANDLE_KIND,
 	BOARD_CAMERA_ZOOM_MAX,
 	BOARD_CAMERA_ZOOM_MIN,
-	BOARD_DEFAULT_HANDLE_KIND_CATALOG,
+	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_SELECTION_TARGETS_DEFAULT,
@@ -978,7 +978,7 @@ function BoardOverviewPane(): ReactElement {
 				contextMenu={boardPlayCanvasBackgroundMenu}
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
@@ -1015,7 +1015,7 @@ function BoardDetailPane(): ReactElement {
 				className="min-h-0 flex-1"
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
@@ -1052,7 +1052,7 @@ function BoardSelectionPane(): ReactElement {
 				className="min-h-0 flex-1"
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				kindCatalogs={BOARD_DEFAULT_KIND_CATALOG_BUNDLE}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}

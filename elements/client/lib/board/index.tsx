@@ -48,8 +48,8 @@ import {
 	type BoardFixtureV1,
 	type BoardGraphEdgeIdPayload,
 	type BoardGraphNodeIdPayload,
-	type BoardHandleKindCatalogEntry,
-	type BoardHandleLinkCompatPair,
+	type BoardKindCatalogBundle,
+	type BoardKindCompatEntry,
 	type BoardHandleProps,
 	type BoardEdgeProps,
 	type BoardWireProps,
@@ -66,10 +66,15 @@ import {
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	DEFAULT_BOARD_GRID_FACTOR,
 	type BoardLodZoomThresholds,
+	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 } from "./index";
 
 export type { BoardLodZoomThresholds } from "./index";
-export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR } from "./index";
+export {
+	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	DEFAULT_BOARD_GRID_FACTOR,
+} from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -82,10 +87,10 @@ export interface BoardCanvasProps {
 	/** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
 	fixtureDragDrop?: boolean;
 	height?: number;
-	/** @emoji 🔗 Allowed directed handle-kind pairs for link gestures; empty omits filtering. */
-	handleLinkCompatibility?: readonly BoardHandleLinkCompatPair[];
-	/** @emoji 🎨 WASM catalog rows `{id,name,color}` for default handle fills (per-handle `color` prop overrides). */
-	handleKinds?: readonly BoardHandleKindCatalogEntry[];
+	/** @emoji 🔗 Allowed kind pairs for link gestures (`specificity` tiers + `important`); empty omits filtering. */
+	kindCompatibility?: readonly BoardKindCompatEntry[];
+	/** @emoji 🧩 Central semantic kind catalogs (handles, wires, nodes, edges) for WASM defaults + compatibility. */
+	kindCatalogs?: BoardKindCatalogBundle;
 	onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
 	/** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
 	onHover?: (payload: BoardHoverPayload) => void;
@@ -130,6 +135,8 @@ export type BoardNodeCircleProps = {
 	text?: string;
 	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
+	/** @emoji 🧩 Semantic node-kind id for WASM compatibility and catalog defaults. */
+	nodeKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
@@ -158,6 +165,8 @@ export type BoardNodeRectangleProps = {
 	text?: string;
 	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
+	/** @emoji 🧩 Semantic node-kind id for WASM compatibility and catalog defaults. */
+	nodeKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
@@ -303,6 +312,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 		typeof dsz === "number" && Number.isFinite(dsz) && dsz > 0 ? dsz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	instance.iconKind =
 		typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== "" ? descriptor.iconKind.trim() : null;
+	instance.nodeKind = typeof descriptor.nodeKind === "string" ? descriptor.nodeKind.trim() : "";
 	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
@@ -339,6 +349,7 @@ function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, s
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
+	instance.edgeKind = typeof descriptor.edgeKind === "string" ? descriptor.edgeKind.trim() : "";
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
@@ -352,6 +363,7 @@ function applyWireProps(
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
+	instance.wireKind = typeof descriptor.wireKind === "string" ? descriptor.wireKind.trim() : "";
 	const tid = (descriptor.target ?? "").trim();
 	const nextTarget = tid !== "" ? targetHandle : null;
 	const ex = descriptor.endX;
@@ -381,6 +393,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			height: nodeDescriptor.height,
 			iconKind: nodeDescriptor.iconKind,
 			id: nodeDescriptor.id,
+			nodeKind: nodeDescriptor.nodeKind,
 			root: nodeDescriptor.root,
 			selected: nodeDescriptor.selected,
 			shape: "rectangle",
@@ -401,6 +414,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		draggable: nodeDescriptor.draggable ?? true,
 		iconKind: nodeDescriptor.iconKind,
 		id: nodeDescriptor.id,
+		nodeKind: nodeDescriptor.nodeKind,
 		radius: nodeDescriptor.radius,
 		root: nodeDescriptor.root,
 		selected: nodeDescriptor.selected,
@@ -436,6 +450,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
+				edgeKind: edge.edgeKind || undefined,
 				selected: edge.selected,
 				style: edge.style ?? undefined,
 				visible: edge.visible,
@@ -457,6 +472,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(
 			id,
 			source: link.source,
 			target: link.target,
+			edgeKind: renderer.scene.edges.get(id)?.edgeKind || undefined,
 			selected: false,
 			visible: true,
 			userData: {},
@@ -649,8 +665,8 @@ export function BoardCanvas({
 	height,
 	gridFactor,
 	gridSnapEnabled,
-	handleKinds,
-	handleLinkCompatibility,
+	kindCatalogs,
+	kindCompatibility,
 	lodZoomThresholds,
 	onChange,
 	onChildEdgeChange,
@@ -943,16 +959,16 @@ export function BoardCanvas({
 		if (!renderer) {
 			return;
 		}
-		renderer.setHandleKindCatalog(handleKinds);
-	}, [handleKinds]);
+		renderer.setKindCatalogs(kindCatalogs ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
+	}, [kindCatalogs]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
 		if (!renderer) {
 			return;
 		}
-		renderer.setHandleLinkCompatibility(handleLinkCompatibility);
-	}, [handleLinkCompatibility]);
+		renderer.setKindCompatibility(kindCompatibility);
+	}, [kindCompatibility]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
