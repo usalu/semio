@@ -429,6 +429,8 @@ export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangl
 
 /** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
 export interface BoardFixtureEdgeV1 {
+	/** @emoji 🧩 Optional semantic edge kind id for editor/runtime kind switching. */
+	edgeKind?: string;
 	/** @emoji 🙈 Optional hidden flag; when true the edge is excluded from connect and redraw input. */
 	hidden?: boolean;
 	id: string;
@@ -1400,11 +1402,14 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const targetRaw = edge.target;
 		const source = typeof sourceRaw === "string" ? sourceRaw : null;
 		const target = typeof targetRaw === "string" ? targetRaw : null;
+		const edgeKindRaw = edge.edgeKind;
+		const edgeKind =
+			typeof edgeKindRaw === "string" && edgeKindRaw.trim() !== "" ? edgeKindRaw.trim() : undefined;
 		const hidden = readBoardJsonHiddenFlag(edge);
 		if (!id || !source || !target) {
 			return null;
 		}
-		edges.push({ ...(hidden ? { hidden: true } : {}), id, source, target });
+		edges.push({ ...(edgeKind !== undefined ? { edgeKind } : {}), ...(hidden ? { hidden: true } : {}), id, source, target });
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
@@ -2342,6 +2347,8 @@ export class BoardRenderer {
 	private cachedWasmGpuReady = false;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
 	private canvas: HTMLCanvasElement | null;
+	/** @emoji 🖱️ DOM host for pointer/wheel/contextmenu (defaults to {@link BoardRenderer.canvas}; use a wrapping element when a stacked overlay canvas would otherwise steal hits). */
+	private eventSurface: HTMLElement | null;
 	private dpr = 1;
 	private emitter = new TypedEmitter<BoardEventMap>();
 	private frameListeners = new Set<FrameListener>();
@@ -2389,6 +2396,7 @@ export class BoardRenderer {
 
 	constructor(options: {
 		canvas?: HTMLCanvasElement | null;
+		eventSurface?: HTMLElement | null;
 		renderMode?: RenderMode;
 		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
@@ -2397,6 +2405,7 @@ export class BoardRenderer {
 		gridFactor?: number;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
+		this.eventSurface = options.eventSurface ?? this.canvas;
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
 		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
@@ -3546,30 +3555,32 @@ export class BoardRenderer {
 	}
 
 	private attachCanvasListeners(): void {
-		if (!this.canvas) {
+		const surface = this.eventSurface;
+		if (!surface) {
 			return;
 		}
-		this.canvas.tabIndex = 0;
-		this.canvas.style.touchAction = "none";
-		this.canvas.addEventListener("contextmenu", this.handleContextMenu as EventListener);
-		this.canvas.addEventListener("pointerdown", this.handlePointerDown as EventListener);
-		this.canvas.addEventListener("pointermove", this.handlePointerMove as EventListener);
-		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
-		this.canvas.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		this.canvas.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
+		surface.tabIndex = 0;
+		surface.style.touchAction = "none";
+		surface.addEventListener("contextmenu", this.handleContextMenu as EventListener);
+		surface.addEventListener("pointerdown", this.handlePointerDown as EventListener);
+		surface.addEventListener("pointermove", this.handlePointerMove as EventListener);
+		surface.addEventListener("pointerup", this.handlePointerUp as EventListener);
+		surface.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		surface.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
 		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
 	private detachCanvasListeners(): void {
-		if (!this.canvas) {
+		const surface = this.eventSurface;
+		if (!surface) {
 			return;
 		}
-		this.canvas.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
-		this.canvas.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
-		this.canvas.removeEventListener("pointermove", this.handlePointerMove as EventListener);
-		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
-		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
+		surface.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
+		surface.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
+		surface.removeEventListener("pointermove", this.handlePointerMove as EventListener);
+		surface.removeEventListener("pointerup", this.handlePointerUp as EventListener);
+		surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		surface.removeEventListener("wheel", this.handleWheel as EventListener);
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
@@ -3699,22 +3710,22 @@ export class BoardRenderer {
 	};
 
 	private readonly handlePointerDown = (event: PointerEvent): void => {
-		if (!this.canvas) {
+		if (!this.canvas || !this.eventSurface) {
 			return;
 		}
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
 		BoardRenderer.activeRenderer = this;
-		this.canvas.focus({ preventScroll: true });
+		this.eventSurface.focus({ preventScroll: true });
 		if (typeof event.pointerId === "number") {
-			this.canvas.setPointerCapture?.(event.pointerId);
+			this.eventSurface.setPointerCapture?.(event.pointerId);
 		}
 		event.preventDefault();
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			if (typeof event.pointerId === "number") {
-				this.canvas.releasePointerCapture?.(event.pointerId);
+				this.eventSurface.releasePointerCapture?.(event.pointerId);
 			}
 			return;
 		}
@@ -3747,13 +3758,13 @@ export class BoardRenderer {
 	};
 
 	private readonly handlePointerUp = (event: PointerEvent): void => {
-		if (!this.canvas) {
+		if (!this.canvas || !this.eventSurface) {
 			return;
 		}
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			if (typeof event.pointerId === "number") {
-				this.canvas.releasePointerCapture?.(event.pointerId);
+				this.eventSurface.releasePointerCapture?.(event.pointerId);
 			}
 			return;
 		}
@@ -3765,7 +3776,7 @@ export class BoardRenderer {
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		if (typeof event.pointerId === "number") {
-			this.canvas.releasePointerCapture?.(event.pointerId);
+			this.eventSurface.releasePointerCapture?.(event.pointerId);
 		}
 		this.invalidate();
 	};

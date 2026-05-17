@@ -749,6 +749,7 @@ export function BoardCanvas({
 }: BoardCanvasProps): ReactElement {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const textOverlayRef = useRef<HTMLCanvasElement | null>(null);
+	const eventSurfaceRef = useRef<HTMLDivElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
@@ -848,6 +849,11 @@ export function BoardCanvas({
 		for (const e of descriptor.edges) {
 			if (e.contextMenu?.length) {
 				next.set(e.id, e.contextMenu);
+			}
+		}
+		for (const wire of descriptor.wires) {
+			if (wire.contextMenu?.length) {
+				next.set(wire.id, wire.contextMenu);
 			}
 		}
 		boardTargetMenusRef.current = next;
@@ -1067,6 +1073,7 @@ export function BoardCanvas({
 		const canvas = canvasRef.current;
 		const renderer = new BoardRenderer({
 			canvas,
+			eventSurface: eventSurfaceRef.current ?? undefined,
 			gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
 			gridSnapEnabled: gridSnapEnabled ?? false,
 			lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
@@ -1229,9 +1236,13 @@ export function BoardCanvas({
 					ref={containerRef}
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
-					<div className="pointer-events-none relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
+					<div
+						className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col touch-none"
+						data-testid="board-event-surface"
+						ref={eventSurfaceRef}
+					>
 						<canvas
-							className="pointer-events-auto block h-full min-h-0 min-w-0 w-full touch-none"
+							className="block h-full min-h-0 min-w-0 w-full touch-none"
 							data-testid="board-canvas"
 							ref={canvasRef}
 							style={{ display: "block", height: "100%", width: "100%" }}
@@ -1748,7 +1759,7 @@ if (boardReactVitest) {
 			restoreCanvas();
 		});
 
-		it("keeps the gpu canvas as the hit target under the text overlay stack", async () => {
+		it("mounts an event surface wrapper so pointer listeners cover overlay canvases", async () => {
 			const restoreCanvas = installCanvasStub();
 			const container = document.createElement("div");
 			document.body.appendChild(container);
@@ -1763,11 +1774,10 @@ if (boardReactVitest) {
 				);
 				await Promise.resolve();
 			});
-			const gpu = container.querySelector('[data-testid="board-canvas"]') as HTMLElement | null;
+			const surface = container.querySelector('[data-testid="board-event-surface"]') as HTMLElement | null;
 			const overlay = container.querySelector('[data-testid="board-text-overlay"]') as HTMLElement | null;
-			expect(gpu).toBeTruthy();
-			expect(overlay).toBeTruthy();
-			expect(gpu?.className.includes("pointer-events-auto")).toBe(true);
+			expect(surface).toBeTruthy();
+			expect(surface?.tabIndex).toBe(0);
 			expect((overlay?.getAttribute("style") ?? "").includes("pointer-events")).toBe(true);
 			await act(async () => {
 				root.unmount();

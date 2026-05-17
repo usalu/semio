@@ -378,6 +378,14 @@ elements/board:
 
 ---
 
+Complete the ui.
+e.g. expand selection to include all kinds (node kinds, edge kinds, wire kinds can be selected and information must be editable in the details panel)
+e.g. create proper workbench panel with three tabs: Graph (Two sections Nodes with child handles sub tree items, Edges), Kinds (Three sections), Constraints (Show names with specificity. Use -- for bidirectional and -> for source to target)
+e.g. make all information changable in the details (dropdowns for every selection to switch kinds, etc)
+Add context menus for all actions depending on the selection (hide, lock, delete, etc)
+
+---
+
 Make sure to expose callbacks for all events.
 onChange
 onCreate
@@ -427,8 +435,17 @@ Within one lod nothing changes. Make the trigger zoom points props.
 
 ---
 
+All nodes and handles receive a new property: locked
+Make sure to extend the existing features e.g.
+No drag is possible
+no proximity connect possible to a hidden node or a hidden handle
+no indirect connect possible to a hidden node or a hidden handle
+no connect possible to a hidden node or a hidden handle
+redraw must leave the locked nodes untouched (hidden nodes are not updated, hidden edges dont produce forces)
+
+---
+
 All individual nodes, edges and handles receive a new property: hidden
-When nodes are hi
 Make sure to extend the existing features e.g.
 no proximity connect possible to a hidden node or a hidden handle
 no indirect connect possible to a hidden node or a hidden handle

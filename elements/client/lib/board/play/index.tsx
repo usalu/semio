@@ -35,7 +35,30 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
+import {
+	BoxSelect,
+	Circle,
+	ClipboardList,
+	Eye,
+	EyeOff,
+	FolderTree,
+	Lasso,
+	Library,
+	Link2,
+	Lock,
+	Minus,
+	MousePointer2,
+	Pause,
+	Play,
+	Plus,
+	Repeat2,
+	Settings,
+	Square,
+	Tags,
+	Trash2,
+	Unlock,
+	Workflow,
+} from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -68,6 +91,7 @@ import {
 	layoutBoardFixtureRedrawNodes,
 	mergeBoardKindCatalogBundleByRowId,
 	parseBoardFixtureV1,
+	type BoardEdgeKindCatalogEntry,
 	type BoardFixtureDropDetail,
 	type BoardFixtureCircleNodeV1,
 	type BoardFixtureEdgeV1,
@@ -76,18 +100,22 @@ import {
 	type BoardFixtureRectangleNodeV1,
 	type BoardFixtureV1,
 	type BoardHierarchicalTreeDirectionKind,
+	type BoardKindCatalogBundle,
+	type BoardKindCompatEntry,
 	type BoardRedrawLayoutOptions,
 	type BoardRedrawModeKind,
 	type BoardForceGraphLayoutOptions,
+	type BoardNodeKindCatalogEntry,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
 	type BoardSelectionTargets,
+	type BoardWireKindCatalogEntry,
 	type CameraState,
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	type BoardLodZoomThresholds,
 	classifyElementsBoardIconSelectorMode,
 } from "../index";
-import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
+import { BoardCanvas, Edge, Handle, Node, Wire, useBoardEvent } from "../index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
 
@@ -98,20 +126,152 @@ const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId(
 
 // #region 🔖Kinds
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
+type BoardWorkbenchTab = "constraints" | "graph" | "kinds";
+
+interface BoardPlayWireRecord {
+	endX?: number;
+	endY?: number;
+	hidden?: boolean;
+	id: string;
+	source: string;
+	target?: string;
+	wireKind?: string;
+}
+
+interface BoardPlayDocument {
+	fixture: BoardFixtureV1;
+	kindCatalogs: BoardKindCatalogBundle;
+	kindCompatibility: BoardKindCompatEntry[];
+	lockedIds: string[];
+	wires: BoardPlayWireRecord[];
+}
+
+type BoardWorkbenchSelection =
+	| { id: string; kind: "constraint" }
+	| { id: string; kind: "edge-kind" }
+	| { id: string; kind: "node-kind" }
+	| { id: string; kind: "wire-kind" };
 
 const BOARD_PLAY_APP_ID = "elements-board-play";
-
-const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
-const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
-	{ id: "demo-node", label: "Demo capsule action" },
-	{ children: [{ id: "demo-sub-1", label: "Nested item" }], id: "demo-sub", label: "Demo nested" },
-];
-const boardPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
-const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Board background menu" }];
 
 const LS_THEME = "elements.board-play.surface.theme";
 const LS_DEVICE = "elements.board-play.surface.device";
 const LS_EXPERTISE = "elements.board-play.surface.expertise";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function uniqueSortedStrings(values: readonly string[]): string[] {
+	return [...new Set(values.filter((value) => value.trim() !== ""))].sort((left, right) => left.localeCompare(right));
+}
+
+function parseBoardPlayWireRecord(raw: unknown): BoardPlayWireRecord | null {
+	if (!isRecord(raw)) {
+		return null;
+	}
+	const id = typeof raw.id === "string" ? raw.id.trim() : "";
+	const source = typeof raw.source === "string" ? raw.source.trim() : "";
+	const target = typeof raw.target === "string" && raw.target.trim() !== "" ? raw.target.trim() : undefined;
+	const wireKind = typeof raw.wireKind === "string" && raw.wireKind.trim() !== "" ? raw.wireKind.trim() : undefined;
+	const endX = Number(raw.endX);
+	const endY = Number(raw.endY);
+	if (id === "" || source === "") {
+		return null;
+	}
+	return {
+		...(Number.isFinite(endX) ? { endX } : {}),
+		...(Number.isFinite(endY) ? { endY } : {}),
+		...(raw.hidden === true ? { hidden: true } : {}),
+		id,
+		source,
+		...(target ? { target } : {}),
+		...(wireKind ? { wireKind } : {}),
+	};
+}
+
+function parseBoardPlayKindCompatibility(raw: unknown): BoardKindCompatEntry[] {
+	if (!Array.isArray(raw)) {
+		return [];
+	}
+	const out: BoardKindCompatEntry[] = [];
+	for (const entry of raw) {
+		if (!isRecord(entry)) {
+			continue;
+		}
+		const source = typeof entry.source === "string" ? entry.source.trim() : "";
+		const target = typeof entry.target === "string" ? entry.target.trim() : "";
+		const specificity =
+			entry.specificity === "general" ||
+			entry.specificity === "node" ||
+			entry.specificity === "edge" ||
+			entry.specificity === "handle" ||
+			entry.specificity === "wire"
+				? entry.specificity
+				: undefined;
+		if (source === "" || target === "") {
+			continue;
+		}
+		out.push({
+			...(entry.bidirectional === true ? { bidirectional: true } : {}),
+			...(entry.important === true ? { important: true } : {}),
+			...(specificity ? { specificity } : {}),
+			source,
+			target,
+		});
+	}
+	return out;
+}
+
+function parseBoardPlayDocument(raw: unknown): BoardPlayDocument {
+	const fixture = parseBoardFixtureV1(raw) ?? (raw as BoardFixtureV1);
+	const root = isRecord(raw) ? raw : {};
+	const meta = isRecord(root.meta) ? root.meta : fixture.meta ?? {};
+	const wireSource = Array.isArray(root.wires) ? root.wires : Array.isArray(meta.boardPlayWires) ? meta.boardPlayWires : [];
+	const lockedSource = Array.isArray(meta.boardPlayLockedIds) ? meta.boardPlayLockedIds : [];
+	const kindCatalogs = mergeBoardKindCatalogBundleByRowId(
+		{ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE },
+		boardFixtureMetaKindCatalogBundle(raw) ?? {},
+	);
+	const kindCompatibility = parseBoardPlayKindCompatibility(meta.kindCompatibility);
+	const wires = wireSource.map(parseBoardPlayWireRecord).filter((wire): wire is BoardPlayWireRecord => wire !== null);
+	const lockedIds = uniqueSortedStrings(lockedSource.filter((value): value is string => typeof value === "string"));
+	return { fixture, kindCatalogs, kindCompatibility, lockedIds, wires };
+}
+
+function buildBoardPlayFixturePayload(document: BoardPlayDocument): BoardFixtureV1 {
+	return {
+		...document.fixture,
+		meta: {
+			...(document.fixture.meta ?? {}),
+			boardPlayLockedIds: document.lockedIds,
+			boardPlayWires: document.wires,
+			kindCatalogs: document.kindCatalogs,
+			kindCompatibility: document.kindCompatibility,
+		},
+	};
+}
+
+function boardPlayKindLabel(catalog: readonly { id: string; label: string; name?: string }[] | undefined, id: string): string {
+	const trimmed = id.trim();
+	if (trimmed === "") {
+		return "Unassigned";
+	}
+	for (const row of catalog ?? []) {
+		if (row.id === trimmed) {
+			return row.label || row.name || row.id;
+		}
+	}
+	return trimmed;
+}
+
+function boardPlayConstraintLabel(kindCatalogs: BoardKindCatalogBundle, entry: BoardKindCompatEntry): string {
+	const arrow = entry.bidirectional ? "--" : "->";
+	const source = boardPlayKindLabel(kindCatalogs.handles, entry.source);
+	const target = boardPlayKindLabel(kindCatalogs.handles, entry.target);
+	const specificity = entry.specificity ?? "general";
+	return `${source} ${arrow} ${target} · ${specificity}`;
+}
 
 function parseStoredTheme(raw: string | null): ElementsSurfaceTheme {
 	if (raw === "light" || raw === "dark" || raw === "system") return raw;
@@ -278,14 +438,34 @@ function selectionSeedForFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneI
 // #region 🔖ShellContext
 interface BoardPlayShellValue {
 	fixture: BoardFixtureV1;
+	wires: BoardPlayWireRecord[];
+	kindCatalogs: BoardKindCatalogBundle;
+	kindCompatibility: BoardKindCompatEntry[];
+	lockedIds: Set<string>;
 	setFixture: (next: BoardFixtureV1) => void;
 	/** @emoji 🎯 Palette drags merge one node at the pointer; full fixtures replace the graph. */
 	handleCanvasFixtureDrop: (pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => void;
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+	patchWires: (updater: (prev: BoardPlayWireRecord[]) => BoardPlayWireRecord[]) => void;
+	patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void;
+	setKindCompatibility: (value: BoardKindCompatEntry[] | ((prev: BoardKindCompatEntry[]) => BoardKindCompatEntry[])) => void;
+	setLockedIds: (value: string[] | ((prev: string[]) => string[])) => void;
 	activePaneId: BoardPlayPaneId;
 	setActivePaneId: (id: BoardPlayPaneId) => void;
 	selectionByPane: Record<BoardPlayPaneId, Set<string>>;
 	setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
+	workbenchTab: BoardWorkbenchTab;
+	setWorkbenchTab: (value: BoardWorkbenchTab) => void;
+	workbenchSelection: BoardWorkbenchSelection | null;
+	setWorkbenchSelection: (value: BoardWorkbenchSelection | null) => void;
+	focusGraphSelection: (ids: readonly string[]) => void;
+	focusWorkbenchSelection: (value: BoardWorkbenchSelection) => void;
+	setGraphObjectsHidden: (ids: readonly string[], hidden: boolean) => void;
+	setGraphObjectsLocked: (ids: readonly string[], locked: boolean) => void;
+	deleteGraphObjects: (ids: readonly string[]) => void;
+	appendConstraint: () => void;
+	appendKind: (kind: "edge-kind" | "node-kind" | "wire-kind") => void;
+	deleteWorkbenchSelection: () => void;
 	/** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
@@ -825,19 +1005,25 @@ function BoardPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>): ReactElement {
-	const demoNodeId = fixture.nodes[0]?.id;
-	const demoEdgeId = fixture.edges[0]?.id;
+function nakaginBoardMarkers(props: {
+	fixture: BoardFixtureV1;
+	lockedIds: ReadonlySet<string>;
+	selectedIds: Set<string>;
+	contextMenuById: (id: string | null) => ContextMenuItem[];
+	wires: readonly BoardPlayWireRecord[];
+}): ReactElement {
+	const { contextMenuById, fixture, lockedIds, selectedIds, wires } = props;
 	return (
 		<>
 			{fixture.nodes.map((node) =>
 				node.shape === "rectangle" ? (
 					<Node
-						contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
-						draggable
+						contextMenu={contextMenuById(node.id)}
+						draggable={!lockedIds.has(node.id)}
 						height={node.height}
 						id={node.id}
 						key={node.id}
+						{...(node.hidden === true ? { hidden: true } : {})}
 						{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 						shape="rectangle"
 						selected={selectedIds.has(node.id)}
@@ -855,7 +1041,9 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 							<Handle
 								angle={handle.angle}
 								color={handle.color}
+								contextMenu={contextMenuById(handle.id)}
 								handleKind={handle.handleKind}
+								{...(handle.hidden === true ? { hidden: true } : {})}
 								id={handle.id}
 								key={handle.id}
 								radius={handle.radius}
@@ -866,10 +1054,11 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 					</Node>
 				) : (
 					<Node
-						contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
-						draggable
+						contextMenu={contextMenuById(node.id)}
+						draggable={!lockedIds.has(node.id)}
 						id={node.id}
 						key={node.id}
+						{...(node.hidden === true ? { hidden: true } : {})}
 						{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 						radius={node.radius}
 						selected={selectedIds.has(node.id)}
@@ -886,7 +1075,9 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 							<Handle
 								angle={handle.angle}
 								color={handle.color}
+								contextMenu={contextMenuById(handle.id)}
 								handleKind={handle.handleKind}
+								{...(handle.hidden === true ? { hidden: true } : {})}
 								id={handle.id}
 								key={handle.id}
 								radius={handle.radius}
@@ -899,12 +1090,28 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 			)}
 			{fixture.edges.map((edge) => (
 				<Edge
-					contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined}
+					contextMenu={contextMenuById(edge.id)}
+					edgeKind={edge.edgeKind}
+					{...(edge.hidden === true ? { hidden: true } : {})}
 					id={edge.id}
 					key={edge.id}
 					selected={selectedIds.has(edge.id)}
 					source={edge.source}
 					target={edge.target}
+				/>
+			))}
+			{wires.map((wire) => (
+				<Wire
+					contextMenu={contextMenuById(wire.id)}
+					{...(typeof wire.endX === "number" ? { endX: wire.endX } : {})}
+					{...(typeof wire.endY === "number" ? { endY: wire.endY } : {})}
+					{...(wire.hidden === true ? { hidden: true } : {})}
+					id={wire.id}
+					key={wire.id}
+					selected={selectedIds.has(wire.id)}
+					source={wire.source}
+					{...(wire.target ? { target: wire.target } : {})}
+					{...(wire.wireKind ? { wireKind: wire.wireKind } : {})}
 				/>
 			))}
 		</>
@@ -973,31 +1180,127 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
 	);
 }
 
+function useBoardPaneContextMenus(paneId: BoardPlayPaneId, selectedIds: Set<string>): {
+	backgroundMenu: ContextMenuItem[];
+	contextMenuById: (id: string | null) => ContextMenuItem[];
+} {
+	const {
+		deleteGraphObjects,
+		fixture,
+		focusGraphSelection,
+		lockedIds,
+		setGraphObjectsHidden,
+		setGraphObjectsLocked,
+		setSelectionForPane,
+		setWorkbenchSelection,
+		wires,
+	} = useBoardPlayShell();
+	const selectedList = useMemo(() => [...selectedIds].sort((left, right) => left.localeCompare(right)), [selectedIds]);
+
+	const idsForTarget = useCallback(
+		(id: string | null): string[] => {
+			if (!id) {
+				return selectedList;
+			}
+			if (selectedIds.has(id) && selectedList.length > 0) {
+				return selectedList;
+			}
+			return [id];
+		},
+		[selectedIds, selectedList],
+	);
+
+	const menuForIds = useCallback(
+		(ids: readonly string[]): ContextMenuItem[] => {
+			if (ids.length === 0) {
+				return [
+					{
+						id: `${paneId}-clear-selection`,
+						label: "Clear selection",
+						onSelect: () => {
+							setSelectionForPane(paneId, []);
+							setWorkbenchSelection(null);
+						},
+					},
+				];
+			}
+			const hiddenSummary = boardPlayBoolSummary(ids.map((id) => graphObjectHiddenById(fixture, wires, id)));
+			const lockedSummary = boardPlayBoolSummary(ids.map((id) => lockedIds.has(id)));
+			const countLabel = ids.length === 1 ? "item" : `${ids.length} items`;
+			return [
+				{
+					id: `${paneId}-focus-${ids.join("|")}`,
+					label: `Select ${countLabel}`,
+					onSelect: () => {
+						focusGraphSelection(ids);
+					},
+				},
+				{
+					id: `${paneId}-${hiddenSummary.value ? "show" : "hide"}-${ids.join("|")}`,
+					icon: hiddenSummary.value ? Eye : EyeOff,
+					label: hiddenSummary.value ? `Show ${countLabel}` : `Hide ${countLabel}`,
+					onSelect: () => {
+						setGraphObjectsHidden(ids, !hiddenSummary.value);
+					},
+				},
+				{
+					id: `${paneId}-${lockedSummary.value ? "unlock" : "lock"}-${ids.join("|")}`,
+					icon: lockedSummary.value ? Unlock : Lock,
+					label: lockedSummary.value ? `Unlock ${countLabel}` : `Lock ${countLabel}`,
+					onSelect: () => {
+						setGraphObjectsLocked(ids, !lockedSummary.value);
+					},
+				},
+				{
+					id: `${paneId}-delete-${ids.join("|")}`,
+					icon: Trash2,
+					destructive: true,
+					label: `Delete ${countLabel}`,
+					onSelect: () => {
+						deleteGraphObjects(ids);
+					},
+				},
+			];
+		},
+		[deleteGraphObjects, fixture, focusGraphSelection, lockedIds, paneId, setGraphObjectsHidden, setGraphObjectsLocked, setSelectionForPane, setWorkbenchSelection, wires],
+	);
+
+	const contextMenuById = useCallback((id: string | null) => menuForIds(idsForTarget(id)), [idsForTarget, menuForIds]);
+	const backgroundMenu = useMemo(() => menuForIds(selectedList), [menuForIds, selectedList]);
+	return { backgroundMenu, contextMenuById };
+}
+
 function BoardOverviewPane(): ReactElement {
 	const {
 		activePaneId,
 		boardGridSnapEnabled,
+		kindCatalogs,
+		kindCompatibility,
 		boardSelectionMethod,
 		boardSelectionMode,
 		boardSelectionTargets,
 		fixture,
 		handleCanvasFixtureDrop,
+		lockedIds,
 		camerasByPane,
 		selectionByPane,
 		syncBaselineFromViewportCamera,
+		wires,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-overview";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
+	const { backgroundMenu, contextMenuById } = useBoardPaneContextMenus(paneId, selectedIds);
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
 				camera={camera}
 				className="min-h-0 flex-1"
-				contextMenu={boardPlayCanvasBackgroundMenu}
+				contextMenu={backgroundMenu}
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
+				kindCatalogs={kindCatalogs}
+				kindCompatibility={kindCompatibility}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -1008,7 +1311,7 @@ function BoardOverviewPane(): ReactElement {
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				<BoardPlayRedrawProgressReset />
-				{nakaginBoardMarkers(fixture, selectedIds)}
+				{nakaginBoardMarkers({ contextMenuById, fixture, lockedIds, selectedIds, wires })}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -1018,26 +1321,33 @@ function BoardDetailPane(): ReactElement {
 	const {
 		activePaneId,
 		boardGridSnapEnabled,
+		kindCatalogs,
+		kindCompatibility,
 		boardSelectionMethod,
 		boardSelectionMode,
 		boardSelectionTargets,
 		fixture,
 		handleCanvasFixtureDrop,
+		lockedIds,
 		camerasByPane,
 		selectionByPane,
 		syncBaselineFromViewportCamera,
+		wires,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-detail";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
+	const { backgroundMenu, contextMenuById } = useBoardPaneContextMenus(paneId, selectedIds);
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
 				camera={camera}
 				className="min-h-0 flex-1"
+				contextMenu={backgroundMenu}
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
+				kindCatalogs={kindCatalogs}
+				kindCompatibility={kindCompatibility}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -1048,7 +1358,7 @@ function BoardDetailPane(): ReactElement {
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				<BoardPlayRedrawProgressReset />
-				{nakaginBoardMarkers(fixture, selectedIds)}
+				{nakaginBoardMarkers({ contextMenuById, fixture, lockedIds, selectedIds, wires })}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -1058,26 +1368,33 @@ function BoardSelectionPane(): ReactElement {
 	const {
 		activePaneId,
 		boardGridSnapEnabled,
+		kindCatalogs,
+		kindCompatibility,
 		boardSelectionMethod,
 		boardSelectionMode,
 		boardSelectionTargets,
 		fixture,
 		handleCanvasFixtureDrop,
+		lockedIds,
 		camerasByPane,
 		selectionByPane,
 		syncBaselineFromViewportCamera,
+		wires,
 	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-selection";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
+	const { backgroundMenu, contextMenuById } = useBoardPaneContextMenus(paneId, selectedIds);
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
 				camera={camera}
 				className="min-h-0 flex-1"
+				contextMenu={backgroundMenu}
 				fixtureDragDrop
 				gridSnapEnabled={boardGridSnapEnabled}
-				kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
+				kindCatalogs={kindCatalogs}
+				kindCompatibility={kindCompatibility}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -1088,7 +1405,7 @@ function BoardSelectionPane(): ReactElement {
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				<BoardPlayRedrawProgressReset />
-				{nakaginBoardMarkers(fixture, selectedIds)}
+				{nakaginBoardMarkers({ contextMenuById, fixture, lockedIds, selectedIds, wires })}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -1253,6 +1570,10 @@ function findEdge(fixture: BoardFixtureV1, id: string): BoardFixtureEdgeV1 | und
 	return fixture.edges.find((e) => e.id === id);
 }
 
+function findWire(wires: readonly BoardPlayWireRecord[], id: string): BoardPlayWireRecord | undefined {
+	return wires.find((wire) => wire.id === id);
+}
+
 function findHandleOwner(fixture: BoardFixtureV1, handleId: string): { node: BoardFixtureNodeV1; handleId: string } | undefined {
 	for (const node of fixture.nodes) {
 		if (node.handles.some((h) => h.id === handleId)) {
@@ -1293,6 +1614,66 @@ function listHandleIds(fixture: BoardFixtureV1): string[] {
 	}
 	out.sort((a, b) => a.localeCompare(b));
 	return out;
+}
+
+function listNodeKindIds(kindCatalogs: BoardKindCatalogBundle): string[] {
+	return uniqueSortedStrings((kindCatalogs.nodes ?? []).map((entry) => entry.id));
+}
+
+function listHandleKindIds(kindCatalogs: BoardKindCatalogBundle): string[] {
+	return uniqueSortedStrings((kindCatalogs.handles ?? []).map((entry) => entry.id));
+}
+
+function listEdgeKindIds(kindCatalogs: BoardKindCatalogBundle): string[] {
+	return uniqueSortedStrings((kindCatalogs.edges ?? []).map((entry) => entry.id));
+}
+
+function listWireKindIds(kindCatalogs: BoardKindCatalogBundle): string[] {
+	return uniqueSortedStrings((kindCatalogs.wires ?? []).map((entry) => entry.id));
+}
+
+function boardPlayBoolSummary(values: boolean[]): { uniform: boolean; value: boolean } {
+	return { uniform: allEqual(values), value: values.every(Boolean) };
+}
+
+function boardPlayOptionalStringSummary(values: string[]): { uniform: boolean; value: string } {
+	return { uniform: allEqual(values), value: values[0] ?? "" };
+}
+
+function graphObjectHiddenById(fixture: BoardFixtureV1, wires: readonly BoardPlayWireRecord[], id: string): boolean {
+	const node = findNode(fixture, id);
+	if (node) {
+		return node.hidden === true;
+	}
+	const handle = findHandle(fixture, id);
+	if (handle) {
+		return handle.hidden === true;
+	}
+	const edge = findEdge(fixture, id);
+	if (edge) {
+		return edge.hidden === true;
+	}
+	const wire = findWire(wires, id);
+	if (wire) {
+		return wire.hidden === true;
+	}
+	return false;
+}
+
+function graphObjectKindById(fixture: BoardFixtureV1, wires: readonly BoardPlayWireRecord[], id: string): "edge" | "handle" | "node" | "wire" | null {
+	if (findNode(fixture, id)) {
+		return "node";
+	}
+	if (findHandle(fixture, id)) {
+		return "handle";
+	}
+	if (findEdge(fixture, id)) {
+		return "edge";
+	}
+	if (findWire(wires, id)) {
+		return "wire";
+	}
+	return null;
 }
 
 function toCircleNode(n: BoardFixtureRectangleNodeV1): BoardFixtureCircleNodeV1 {
@@ -1442,14 +1823,22 @@ function NumericStepperRow({
 /** @emoji 🟠 Batch node inspector: name (`text`), shape, center, size fields apply to every selected node. */
 function InspectorNodeBatch({
 	fixture,
+	kindCatalogs,
+	lockedIds,
 	nodeIds,
 	patchFixture,
 	remapIdInSelections,
+	setGraphObjectsHidden,
+	setGraphObjectsLocked,
 }: {
 	fixture: BoardFixtureV1;
+	kindCatalogs: BoardKindCatalogBundle;
+	lockedIds: ReadonlySet<string>;
 	nodeIds: readonly string[];
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
+	setGraphObjectsHidden: (ids: readonly string[], hidden: boolean) => void;
+	setGraphObjectsLocked: (ids: readonly string[], locked: boolean) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(nodeIds), [nodeIds]);
 	const targets = useMemo(
@@ -1468,6 +1857,16 @@ function InspectorNodeBatch({
 	const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
 	const shapeUniform = allEqual(shapes);
 	const shapeValue = shapeUniform ? shapes[0] : undefined;
+	const hiddenSummary = boardPlayBoolSummary(targets.map((node) => node.hidden === true));
+	const lockedSummary = boardPlayBoolSummary(nodeIds.map((id) => lockedIds.has(id)));
+	const rootSummary = boardPlayBoolSummary(targets.map((node) => node.root === true));
+	const textAutofitSummary = boardPlayBoolSummary(targets.map((node) => node.textAutofit === true));
+	const nodeKindSummary = boardPlayOptionalStringSummary(targets.map((node) => node.nodeKind ?? ""));
+	const textAlignmentSummary = boardPlayOptionalStringSummary(targets.map((node) => node.textAlignment ?? ""));
+	const textFontFamilySummary = boardPlayOptionalStringSummary(targets.map((node) => node.textFontFamily ?? ""));
+	const textFontSizeValues = targets.map((node) => node.textFontSize ?? 14);
+	const textFontSizeUniform = allEqual(textFontSizeValues);
+	const textFontSizeValue = textFontSizeUniform ? textFontSizeValues[0] ?? 14 : Number.NaN;
 
 	const xs = targets.map((n) => n.x);
 	const ys = targets.map((n) => n.y);
@@ -1528,6 +1927,34 @@ function InspectorNodeBatch({
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
+			<div className="grid grid-cols-2 gap-2">
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={hiddenSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsHidden(nodeIds, e.target.checked)} type="checkbox" />
+					<span>{hiddenSummary.uniform ? "Hidden" : "Hidden (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={lockedSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsLocked(nodeIds, e.target.checked)} type="checkbox" />
+					<span>{lockedSummary.uniform ? "Locked" : "Locked (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input
+						checked={rootSummary.value}
+						className="accent-accent size-3.5"
+						onChange={(e) => patchNodes((node) => ({ ...node, ...(e.target.checked ? { root: true } : { root: undefined }) }))}
+						type="checkbox"
+					/>
+					<span>{rootSummary.uniform ? "Root" : "Root (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input
+						checked={textAutofitSummary.value}
+						className="accent-accent size-3.5"
+						onChange={(e) => patchNodes((node) => ({ ...node, ...(e.target.checked ? { textAutofit: true } : { textAutofit: undefined }) }))}
+						type="checkbox"
+					/>
+					<span>{textAutofitSummary.uniform ? "Text autofit" : "Text autofit (mixed)"}</span>
+				</label>
+			</div>
 			{nodeIds.length === 1 ? (
 				<Label id="board-play.inspector.node.id" label="Id">
 					<Input
@@ -1566,6 +1993,26 @@ function InspectorNodeBatch({
 					value={iconKindValue}
 				/>
 			</Label>
+			<Label id="board-play.inspector.node.kind" label="Node kind">
+				<Select
+					onValueChange={(value) => {
+						patchNodes((node) => ({ ...node, ...(value === "__none__" ? { nodeKind: undefined } : { nodeKind: value }) }));
+					}}
+					value={nodeKindSummary.uniform ? (nodeKindSummary.value || "__none__") : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={nodeKindSummary.uniform ? "node kind" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__none__">Unassigned</SelectItem>
+						{listNodeKindIds(kindCatalogs).map((kindId) => (
+							<SelectItem key={kindId} value={kindId}>
+								{boardPlayKindLabel(kindCatalogs.nodes, kindId)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
 			<Label id="board-play.inspector.node.shape" label="Shape">
 				<Select
 					key={shapeUniform && shapeValue ? `shape-${shapeValue}` : "shape-mixed"}
@@ -1585,6 +2032,46 @@ function InspectorNodeBatch({
 					</SelectContent>
 				</Select>
 			</Label>
+			<Label id="board-play.inspector.node.textAlignment" label="Text alignment">
+				<Select
+					onValueChange={(value) => {
+						patchNodes((node) => ({ ...node, ...(value === "__none__" ? { textAlignment: undefined } : { textAlignment: value as BoardFixtureNodeV1["textAlignment"] }) }));
+					}}
+					value={textAlignmentSummary.uniform ? (textAlignmentSummary.value || "__none__") : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={textAlignmentSummary.uniform ? "alignment" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__none__">Default</SelectItem>
+						{["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"].map((alignment) => (
+							<SelectItem key={alignment} value={alignment}>
+								{alignment}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
+			<Label id="board-play.inspector.node.fontFamily" label="Text font family">
+				<Input
+					className="h-7 font-mono text-xs"
+					onChange={(e: ChangeEvent<HTMLInputElement>) => {
+						const next = e.target.value.trim();
+						patchNodes((node) => ({ ...node, ...(next === "" ? { textFontFamily: undefined } : { textFontFamily: next }) }));
+					}}
+					placeholder={textFontFamilySummary.uniform ? undefined : "Mixed"}
+					value={textFontFamilySummary.uniform ? textFontFamilySummary.value : ""}
+				/>
+			</Label>
+			<NumericStepperRow
+				id="board-play.inspector.node.fontSize"
+				label="Text font size"
+				onAbsolute={(value) => patchNodes((node) => ({ ...node, textFontSize: Math.max(1, value) }))}
+				onDelta={(delta) => patchNodes((node) => ({ ...node, textFontSize: Math.max(1, (node.textFontSize ?? 14) + delta) }))}
+				step={1}
+				uniform={textFontSizeUniform}
+				value={textFontSizeValue}
+			/>
 			<NumericStepperRow
 				id="board-play.inspector.node.x"
 				label="x"
@@ -1644,13 +2131,21 @@ function InspectorNodeBatch({
 function InspectorHandleBatch({
 	fixture,
 	handleIds,
+	kindCatalogs,
+	lockedIds,
 	patchFixture,
 	remapIdInSelections,
+	setGraphObjectsHidden,
+	setGraphObjectsLocked,
 }: {
 	fixture: BoardFixtureV1;
 	handleIds: readonly string[];
+	kindCatalogs: BoardKindCatalogBundle;
+	lockedIds: ReadonlySet<string>;
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
+	setGraphObjectsHidden: (ids: readonly string[], hidden: boolean) => void;
+	setGraphObjectsLocked: (ids: readonly string[], locked: boolean) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(handleIds), [handleIds]);
 	const handles = useMemo(
@@ -1663,6 +2158,10 @@ function InspectorHandleBatch({
 	const radii = handles.map((h) => h.radius ?? 8);
 	const radiusUniform = allEqual(radii);
 	const radiusValue = radiusUniform ? radii[0]! : Number.NaN;
+	const hiddenSummary = boardPlayBoolSummary(handles.map((handle) => handle.hidden === true));
+	const lockedSummary = boardPlayBoolSummary(handleIds.map((id) => lockedIds.has(id)));
+	const handleKindSummary = boardPlayOptionalStringSummary(handles.map((handle) => handle.handleKind ?? ""));
+	const colorSummary = boardPlayOptionalStringSummary(handles.map((handle) => handle.color ?? ""));
 
 	const iconKinds = handles.map((h) => h.iconKind ?? "");
 	const iconKindUniform = allEqual(iconKinds);
@@ -1691,6 +2190,16 @@ function InspectorHandleBatch({
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
+			<div className="grid grid-cols-2 gap-2">
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={hiddenSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsHidden(handleIds, e.target.checked)} type="checkbox" />
+					<span>{hiddenSummary.uniform ? "Hidden" : "Hidden (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={lockedSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsLocked(handleIds, e.target.checked)} type="checkbox" />
+					<span>{lockedSummary.uniform ? "Locked" : "Locked (mixed)"}</span>
+				</label>
+			</div>
 			<div className="flex flex-wrap items-start gap-4">
 				<AngleTRing
 					angleUniform={angleUniform}
@@ -1718,6 +2227,37 @@ function InspectorHandleBatch({
 						uniform={radiusUniform}
 						value={radiusValue}
 					/>
+					<Label id="board-play.inspector.handle.kind" label="Handle kind">
+						<Select
+							onValueChange={(value) => {
+								patchHandles((handle) => ({ ...handle, handleKind: value === "__none__" ? BOARD_BUILTIN_PORT_HANDLE_KIND : value }));
+							}}
+							value={handleKindSummary.uniform ? (handleKindSummary.value || "__none__") : undefined}
+						>
+							<SelectTrigger className="h-7 font-mono text-xs">
+								<SelectValue placeholder={handleKindSummary.uniform ? "handle kind" : "Mixed"} />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="__none__">Default port</SelectItem>
+								{listHandleKindIds(kindCatalogs).map((kindId) => (
+									<SelectItem key={kindId} value={kindId}>
+										{boardPlayKindLabel(kindCatalogs.handles, kindId)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</Label>
+					<Label id="board-play.inspector.handle.color" label="Color">
+						<Input
+							className="h-7 font-mono text-xs"
+							onChange={(e: ChangeEvent<HTMLInputElement>) => {
+								const next = e.target.value.trim();
+								patchHandles((handle) => ({ ...handle, ...(next === "" ? { color: undefined } : { color: next }) }));
+							}}
+							placeholder={colorSummary.uniform ? "#rrggbb" : "Mixed"}
+							value={colorSummary.uniform ? colorSummary.value : ""}
+						/>
+					</Label>
 					<Label id="board-play.inspector.handle.icon" label="Icon">
 						<IconSelector
 							classifyElementsBoardIconSelectorMode={classifyElementsBoardIconSelectorMode}
@@ -1766,13 +2306,21 @@ function InspectorHandleBatch({
 function InspectorEdgeBatch({
 	fixture,
 	edgeIds,
+	kindCatalogs,
+	lockedIds,
 	patchFixture,
 	remapIdInSelections,
+	setGraphObjectsHidden,
+	setGraphObjectsLocked,
 }: {
 	fixture: BoardFixtureV1;
 	edgeIds: readonly string[];
+	kindCatalogs: BoardKindCatalogBundle;
+	lockedIds: ReadonlySet<string>;
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
 	remapIdInSelections: (replacedId: string, replacementId: string) => void;
+	setGraphObjectsHidden: (ids: readonly string[], hidden: boolean) => void;
+	setGraphObjectsLocked: (ids: readonly string[], locked: boolean) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(edgeIds), [edgeIds]);
 	const edges = useMemo(
@@ -1781,8 +2329,12 @@ function InspectorEdgeBatch({
 	);
 	const sources = edges.map((e) => e.source);
 	const targets = edges.map((e) => e.target);
+	const edgeKinds = edges.map((edge) => edge.edgeKind ?? "");
 	const sourceUniform = allEqual(sources);
 	const targetUniform = allEqual(targets);
+	const edgeKindSummary = boardPlayOptionalStringSummary(edgeKinds);
+	const hiddenSummary = boardPlayBoolSummary(edges.map((edge) => edge.hidden === true));
+	const lockedSummary = boardPlayBoolSummary(edgeIds.map((id) => lockedIds.has(id)));
 	const handleOptions = useMemo(() => listHandleIds(fixture), [fixture]);
 
 	const patchEdges = useCallback(
@@ -1797,6 +2349,36 @@ function InspectorEdgeBatch({
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
+			<div className="grid grid-cols-2 gap-2">
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={hiddenSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsHidden(edgeIds, e.target.checked)} type="checkbox" />
+					<span>{hiddenSummary.uniform ? "Hidden" : "Hidden (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={lockedSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsLocked(edgeIds, e.target.checked)} type="checkbox" />
+					<span>{lockedSummary.uniform ? "Locked" : "Locked (mixed)"}</span>
+				</label>
+			</div>
+			<Label id="board-play.inspector.edge.kind" label="Edge kind">
+				<Select
+					onValueChange={(value) => {
+						patchEdges((edge) => ({ ...edge, ...(value === "__none__" ? { edgeKind: undefined } : { edgeKind: value }) }));
+					}}
+					value={edgeKindSummary.uniform ? (edgeKindSummary.value || "__none__") : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={edgeKindSummary.uniform ? "edge kind" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__none__">Unassigned</SelectItem>
+						{listEdgeKindIds(kindCatalogs).map((kindId) => (
+							<SelectItem key={kindId} value={kindId}>
+								{boardPlayKindLabel(kindCatalogs.edges, kindId)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
 			<Label id="board-play.inspector.edge.source" label="Source">
 				<Select
 					onValueChange={(v) => {
@@ -1860,15 +2442,392 @@ function InspectorEdgeBatch({
 	);
 }
 
-/** @emoji 🔎 Sketchpad-style tree inspector with batch edits for the active pane selection. */
+function InspectorWireBatch({
+	fixture,
+	kindCatalogs,
+	lockedIds,
+	patchWires,
+	remapIdInSelections,
+	setGraphObjectsHidden,
+	setGraphObjectsLocked,
+	wireIds,
+	wires,
+}: {
+	fixture: BoardFixtureV1;
+	kindCatalogs: BoardKindCatalogBundle;
+	lockedIds: ReadonlySet<string>;
+	patchWires: (updater: (prev: BoardPlayWireRecord[]) => BoardPlayWireRecord[]) => void;
+	remapIdInSelections: (replacedId: string, replacementId: string) => void;
+	setGraphObjectsHidden: (ids: readonly string[], hidden: boolean) => void;
+	setGraphObjectsLocked: (ids: readonly string[], locked: boolean) => void;
+	wireIds: readonly string[];
+	wires: readonly BoardPlayWireRecord[];
+}): ReactElement {
+	const idSet = useMemo(() => new Set(wireIds), [wireIds]);
+	const targets = useMemo(() => wireIds.map((id) => findWire(wires, id)).filter((wire): wire is BoardPlayWireRecord => Boolean(wire)), [wireIds, wires]);
+	const handleOptions = useMemo(() => listHandleIds(fixture), [fixture]);
+	const sourceSummary = boardPlayOptionalStringSummary(targets.map((wire) => wire.source));
+	const targetSummary = boardPlayOptionalStringSummary(targets.map((wire) => wire.target ?? ""));
+	const wireKindSummary = boardPlayOptionalStringSummary(targets.map((wire) => wire.wireKind ?? ""));
+	const hiddenSummary = boardPlayBoolSummary(targets.map((wire) => wire.hidden === true));
+	const lockedSummary = boardPlayBoolSummary(wireIds.map((id) => lockedIds.has(id)));
+	const endXValues = targets.map((wire) => wire.endX ?? 0);
+	const endYValues = targets.map((wire) => wire.endY ?? 0);
+	const endXUniform = allEqual(endXValues);
+	const endYUniform = allEqual(endYValues);
+	const endXValue = endXUniform ? endXValues[0] ?? 0 : Number.NaN;
+	const endYValue = endYUniform ? endYValues[0] ?? 0 : Number.NaN;
+
+	const patchTargetWires = useCallback(
+		(updater: (wire: BoardPlayWireRecord) => BoardPlayWireRecord) => {
+			patchWires((prev) => prev.map((wire) => (idSet.has(wire.id) ? updater(wire) : wire)));
+		},
+		[idSet, patchWires],
+	);
+
+	return (
+		<div className="border-element/60 space-y-3 border-l pl-2">
+			<div className="grid grid-cols-2 gap-2">
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={hiddenSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsHidden(wireIds, e.target.checked)} type="checkbox" />
+					<span>{hiddenSummary.uniform ? "Hidden" : "Hidden (mixed)"}</span>
+				</label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]">
+					<input checked={lockedSummary.value} className="accent-accent size-3.5" onChange={(e) => setGraphObjectsLocked(wireIds, e.target.checked)} type="checkbox" />
+					<span>{lockedSummary.uniform ? "Locked" : "Locked (mixed)"}</span>
+				</label>
+			</div>
+			<Label id="board-play.inspector.wire.kind" label="Wire kind">
+				<Select
+					onValueChange={(value) => {
+						patchTargetWires((wire) => ({ ...wire, ...(value === "__none__" ? { wireKind: undefined } : { wireKind: value }) }));
+					}}
+					value={wireKindSummary.uniform ? (wireKindSummary.value || "__none__") : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={wireKindSummary.uniform ? "wire kind" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__none__">Unassigned</SelectItem>
+						{listWireKindIds(kindCatalogs).map((kindId) => (
+							<SelectItem key={kindId} value={kindId}>
+								{boardPlayKindLabel(kindCatalogs.wires, kindId)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
+			<Label id="board-play.inspector.wire.source" label="Source">
+				<Select
+					onValueChange={(value) => {
+						patchTargetWires((wire) => ({ ...wire, source: value }));
+					}}
+					value={sourceSummary.uniform ? sourceSummary.value : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={sourceSummary.uniform ? "source" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						{handleOptions.map((handleId) => (
+							<SelectItem key={`wire-source-${handleId}`} value={handleId}>
+								{handleId}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
+			<Label id="board-play.inspector.wire.target" label="Target handle">
+				<Select
+					onValueChange={(value) => {
+						patchTargetWires((wire) => ({ ...wire, ...(value === "__free__" ? { target: undefined } : { target: value }) }));
+					}}
+					value={targetSummary.uniform ? (targetSummary.value || "__free__") : undefined}
+				>
+					<SelectTrigger className="h-7 font-mono text-xs">
+						<SelectValue placeholder={targetSummary.uniform ? "target" : "Mixed"} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__free__">Free end</SelectItem>
+						{handleOptions.map((handleId) => (
+							<SelectItem key={`wire-target-${handleId}`} value={handleId}>
+								{handleId}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</Label>
+			<NumericStepperRow
+				id="board-play.inspector.wire.endX"
+				label="Free end x"
+				onAbsolute={(value) => patchTargetWires((wire) => ({ ...wire, endX: value, target: undefined }))}
+				onDelta={(delta) => patchTargetWires((wire) => ({ ...wire, endX: (wire.endX ?? 0) + delta, target: undefined }))}
+				step={1}
+				uniform={endXUniform}
+				value={endXValue}
+			/>
+			<NumericStepperRow
+				id="board-play.inspector.wire.endY"
+				label="Free end y"
+				onAbsolute={(value) => patchTargetWires((wire) => ({ ...wire, endY: value, target: undefined }))}
+				onDelta={(delta) => patchTargetWires((wire) => ({ ...wire, endY: (wire.endY ?? 0) + delta, target: undefined }))}
+				step={1}
+				uniform={endYUniform}
+				value={endYValue}
+			/>
+			{wireIds.length === 1 ? (
+				<Label id="board-play.inspector.wire.id" label="Id">
+					<Input
+						className="h-7 font-mono text-xs"
+						defaultValue={wireIds[0]}
+						key={wireIds[0]}
+						onBlur={(e) => {
+							const nextId = e.currentTarget.value.trim();
+							const oldId = wireIds[0];
+							if (!oldId || !nextId || nextId === oldId) {
+								return;
+							}
+							patchWires((prev) => prev.map((wire) => (wire.id === oldId ? { ...wire, id: nextId } : wire)));
+							remapIdInSelections(oldId, nextId);
+						}}
+					/>
+				</Label>
+			) : null}
+		</div>
+	);
+}
+
+function boardWorkbenchRowClass(active: boolean): string {
+	return [
+		"flex w-full items-center justify-between gap-2 rounded border px-2 py-1.5 text-left text-xs transition-colors",
+		active ? "border-accent bg-accent/10 text-foreground" : "border-element bg-background hover:bg-hover-panel text-muted-foreground",
+	].join(" ");
+}
+
+function BoardWorkbenchPanel(): ReactElement {
+	const {
+		activePaneId,
+		appendConstraint,
+		appendKind,
+		fixture,
+		focusGraphSelection,
+		kindCatalogs,
+		kindCompatibility,
+		selectionByPane,
+		setWorkbenchTab,
+		wires,
+		workbenchSelection,
+		workbenchTab,
+		focusWorkbenchSelection,
+	} = useBoardPlayShell();
+	const selectedIds = selectionByPane[activePaneId];
+	return (
+		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
+			<div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
+				<FolderTree className="size-4 shrink-0" />
+				<div>
+					<div className="font-semibold uppercase tracking-wide">Workbench</div>
+					<div className="text-[11px] opacity-80">pane: {activePaneId}</div>
+				</div>
+			</div>
+			<div className="grid shrink-0 grid-cols-3 gap-1">
+				{([
+					["graph", "Graph"],
+					["kinds", "Kinds"],
+					["constraints", "Constraints"],
+				] as const).map(([id, label]) => (
+					<button className={boardWorkbenchRowClass(workbenchTab === id)} key={id} onClick={() => setWorkbenchTab(id)} type="button">
+						<span>{label}</span>
+					</button>
+				))}
+			</div>
+			<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden space-y-3">
+				{workbenchTab === "graph" ? (
+					<>
+						<section className="space-y-2">
+							<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Nodes</div>
+							{fixture.nodes.map((node) => (
+								<div className="space-y-1" key={node.id}>
+									<button className={boardWorkbenchRowClass(selectedIds.has(node.id) && !workbenchSelection)} onClick={() => focusGraphSelection([node.id])} type="button">
+										<span className="truncate">{node.text || node.id}</span>
+										<span className="font-mono text-[10px] opacity-70">{node.id}</span>
+									</button>
+									<div className="ml-3 space-y-1 border-l border-element/60 pl-2">
+										{node.handles.map((handle) => (
+											<button className={boardWorkbenchRowClass(selectedIds.has(handle.id) && !workbenchSelection)} key={handle.id} onClick={() => focusGraphSelection([handle.id])} type="button">
+												<span className="truncate">{boardPlayKindLabel(kindCatalogs.handles, handle.handleKind)}</span>
+												<span className="font-mono text-[10px] opacity-70">{handle.id}</span>
+											</button>
+										))}
+									</div>
+								</div>
+							))}
+						</section>
+						<section className="space-y-2">
+							<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Edges</div>
+							{fixture.edges.map((edge) => (
+								<button className={boardWorkbenchRowClass(selectedIds.has(edge.id) && !workbenchSelection)} key={edge.id} onClick={() => focusGraphSelection([edge.id])} type="button">
+									<span className="truncate">{edge.source} -&gt; {edge.target}</span>
+									<span className="font-mono text-[10px] opacity-70">{edge.id}</span>
+								</button>
+							))}
+							{wires.map((wire) => (
+								<button className={boardWorkbenchRowClass(selectedIds.has(wire.id) && !workbenchSelection)} key={wire.id} onClick={() => focusGraphSelection([wire.id])} type="button">
+									<span className="truncate">{wire.source} {wire.target ? `-> ${wire.target}` : "-> free"}</span>
+									<span className="font-mono text-[10px] opacity-70">{wire.id}</span>
+								</button>
+							))}
+						</section>
+					</>
+				) : null}
+				{workbenchTab === "kinds" ? (
+					<>
+						<section className="space-y-2">
+							<div className="flex items-center justify-between gap-2">
+								<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Node kinds</div>
+								<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("node-kind")} type="button" variant="outline">Add</Button>
+							</div>
+							{(kindCatalogs.nodes ?? []).map((entry) => (
+								<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "node-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "node-kind" })} type="button">
+									<span>{entry.label || entry.id}</span>
+									<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
+								</button>
+							))}
+						</section>
+						<section className="space-y-2">
+							<div className="flex items-center justify-between gap-2">
+								<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Edge kinds</div>
+								<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("edge-kind")} type="button" variant="outline">Add</Button>
+							</div>
+							{(kindCatalogs.edges ?? []).map((entry) => (
+								<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "edge-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "edge-kind" })} type="button">
+									<span>{entry.label || entry.id}</span>
+									<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
+								</button>
+							))}
+						</section>
+						<section className="space-y-2">
+							<div className="flex items-center justify-between gap-2">
+								<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Wire kinds</div>
+								<Button className="h-7 px-2 text-[11px]" onClick={() => appendKind("wire-kind")} type="button" variant="outline">Add</Button>
+							</div>
+							{(kindCatalogs.wires ?? []).map((entry) => (
+								<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "wire-kind" && workbenchSelection.id === entry.id)} key={entry.id} onClick={() => focusWorkbenchSelection({ id: entry.id, kind: "wire-kind" })} type="button">
+									<span>{entry.label || entry.id}</span>
+									<span className="font-mono text-[10px] opacity-70">{entry.id}</span>
+								</button>
+							))}
+						</section>
+					</>
+				) : null}
+				{workbenchTab === "constraints" ? (
+					<section className="space-y-2">
+						<div className="flex items-center justify-between gap-2">
+							<div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Constraints</div>
+							<Button className="h-7 px-2 text-[11px]" onClick={appendConstraint} type="button" variant="outline">Add</Button>
+						</div>
+						{kindCompatibility.map((entry, index) => (
+							<button className={boardWorkbenchRowClass(workbenchSelection?.kind === "constraint" && workbenchSelection.id === `constraint:${index}`)} key={`constraint:${index}`} onClick={() => focusWorkbenchSelection({ id: `constraint:${index}`, kind: "constraint" })} type="button">
+								<span>{boardPlayConstraintLabel(kindCatalogs, entry)}</span>
+								<span className="text-[10px] opacity-70">{entry.important ? "important" : "normal"}</span>
+							</button>
+						))}
+					</section>
+				) : null}
+			</div>
+		</div>
+	);
+}
+
+function InspectorNodeKindDetails({ entry, patchKindCatalogs }: { entry: BoardNodeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+	const update = (patch: Partial<BoardNodeKindCatalogEntry>): void => {
+		patchKindCatalogs((prev) => ({ ...prev, nodes: (prev.nodes ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
+	};
+	return (
+		<div className="border-element/60 space-y-3 border-l pl-2">
+			<Label id="board-play.kind.node.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.node.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
+			<Label id="board-play.kind.node.defaultHandleKind" label="Default handle kind"><Input className="h-7 font-mono text-xs" value={entry.defaultHandleKind ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ defaultHandleKind: e.target.value || undefined })} /></Label>
+			<Label id="board-play.kind.node.shape" label="Shape"><Select onValueChange={(value) => update({ shape: value === "__none__" ? undefined : (value as BoardNodeKindCatalogEntry["shape"]) })} value={entry.shape ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem><SelectItem value="circle">circle</SelectItem><SelectItem value="rectangle">rectangle</SelectItem></SelectContent></Select></Label>
+			<Label id="board-play.kind.node.color" label="Color"><Input className="h-7 font-mono text-xs" value={entry.color ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ color: e.target.value || undefined })} /></Label>
+			<Label id="board-play.kind.node.stroke" label="Stroke"><Input className="h-7 font-mono text-xs" value={entry.stroke ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ stroke: e.target.value || undefined })} /></Label>
+			<Label id="board-play.kind.node.icon" label="Icon"><Input className="h-7 font-mono text-xs" value={entry.icon ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ icon: e.target.value || undefined })} /></Label>
+		</div>
+	);
+}
+
+function InspectorEdgeKindDetails({ entry, patchKindCatalogs }: { entry: BoardEdgeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+	const update = (patch: Partial<BoardEdgeKindCatalogEntry>): void => {
+		patchKindCatalogs((prev) => ({ ...prev, edges: (prev.edges ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
+	};
+	return (
+		<div className="border-element/60 space-y-3 border-l pl-2">
+			<Label id="board-play.kind.edge.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.edge.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
+			<Label id="board-play.kind.edge.shape" label="Shape"><Select onValueChange={(value) => update({ shape: value === "__none__" ? undefined : (value as BoardEdgeKindCatalogEntry["shape"]) })} value={entry.shape ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem><SelectItem value="bezier">bezier</SelectItem><SelectItem value="line">line</SelectItem></SelectContent></Select></Label>
+			<Label id="board-play.kind.edge.color" label="Color"><Input className="h-7 font-mono text-xs" value={entry.color ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ color: e.target.value || undefined })} /></Label>
+			<Label id="board-play.kind.edge.stroke" label="Stroke"><Input className="h-7 font-mono text-xs" value={entry.stroke ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ stroke: e.target.value || undefined })} /></Label>
+			<Label id="board-play.kind.edge.pattern" label="Pattern"><Input className="h-7 font-mono text-xs" value={entry.pattern ?? ""} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ pattern: e.target.value || undefined })} /></Label>
+		</div>
+	);
+}
+
+function InspectorWireKindDetails({ entry, kindCatalogs, patchKindCatalogs }: { entry: BoardWireKindCatalogEntry; kindCatalogs: BoardKindCatalogBundle; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void }): ReactElement {
+	const update = (patch: Partial<BoardWireKindCatalogEntry>): void => {
+		patchKindCatalogs((prev) => ({ ...prev, wires: (prev.wires ?? []).map((row) => (row.id === entry.id ? { ...row, ...patch } : row)) }));
+	};
+	return (
+		<div className="border-element/60 space-y-3 border-l pl-2">
+			<Label id="board-play.kind.wire.id" label="Id"><Input className="h-7 font-mono text-xs" defaultValue={entry.id} key={entry.id} onBlur={(e) => update({ id: e.currentTarget.value.trim() || entry.id })} /></Label>
+			<Label id="board-play.kind.wire.label" label="Label"><Input className="h-7 font-mono text-xs" value={entry.label} onChange={(e: ChangeEvent<HTMLInputElement>) => update({ label: e.target.value })} /></Label>
+			<Label id="board-play.kind.wire.defaultEdgeKind" label="Default edge kind"><Select onValueChange={(value) => update({ defaultEdgeKind: value === "__none__" ? undefined : value })} value={entry.defaultEdgeKind ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">Unassigned</SelectItem>{listEdgeKindIds(kindCatalogs).map((kindId) => (<SelectItem key={kindId} value={kindId}>{boardPlayKindLabel(kindCatalogs.edges, kindId)}</SelectItem>))}</SelectContent></Select></Label>
+		</div>
+	);
+}
+
+function InspectorConstraintDetails({ entry, index, kindCatalogs, setKindCompatibility }: { entry: BoardKindCompatEntry; index: number; kindCatalogs: BoardKindCatalogBundle; setKindCompatibility: (value: BoardKindCompatEntry[] | ((prev: BoardKindCompatEntry[]) => BoardKindCompatEntry[])) => void }): ReactElement {
+	const update = (patch: Partial<BoardKindCompatEntry>): void => {
+		setKindCompatibility((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
+	};
+	return (
+		<div className="border-element/60 space-y-3 border-l pl-2">
+			<Label id="board-play.constraint.source" label="Source handle kind"><Select onValueChange={(value) => update({ source: value })} value={entry.source}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent>{listHandleKindIds(kindCatalogs).map((kindId) => (<SelectItem key={`constraint-source-${kindId}`} value={kindId}>{boardPlayKindLabel(kindCatalogs.handles, kindId)}</SelectItem>))}</SelectContent></Select></Label>
+			<Label id="board-play.constraint.target" label="Target handle kind"><Select onValueChange={(value) => update({ target: value })} value={entry.target}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent>{listHandleKindIds(kindCatalogs).map((kindId) => (<SelectItem key={`constraint-target-${kindId}`} value={kindId}>{boardPlayKindLabel(kindCatalogs.handles, kindId)}</SelectItem>))}</SelectContent></Select></Label>
+			<Label id="board-play.constraint.specificity" label="Specificity"><Select onValueChange={(value) => update({ specificity: value === "__none__" ? undefined : (value as BoardKindCompatEntry["specificity"]) })} value={entry.specificity ?? "__none__"}><SelectTrigger className="h-7 font-mono text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">general</SelectItem><SelectItem value="general">general</SelectItem><SelectItem value="node">node</SelectItem><SelectItem value="edge">edge</SelectItem><SelectItem value="handle">handle</SelectItem><SelectItem value="wire">wire</SelectItem></SelectContent></Select></Label>
+			<div className="grid grid-cols-2 gap-2">
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]"><input checked={entry.bidirectional === true} className="accent-accent size-3.5" onChange={(e) => update({ bidirectional: e.target.checked || undefined })} type="checkbox" /><span>Bidirectional (--)</span></label>
+				<label className="text-muted-foreground flex items-center gap-2 text-[11px]"><input checked={entry.important === true} className="accent-accent size-3.5" onChange={(e) => update({ important: e.target.checked || undefined })} type="checkbox" /><span>Important</span></label>
+			</div>
+		</div>
+	);
+}
+
+/** @emoji 🔎 Sketchpad-style detail inspector for graph selection, kind rows, and compatibility entries. */
 function BoardSelectionInspectorPanel(): ReactElement {
-	const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionByPane } = useBoardPlayShell();
+	const {
+		activePaneId,
+		deleteWorkbenchSelection,
+		fixture,
+		kindCatalogs,
+		kindCompatibility,
+		lockedIds,
+		patchFixture,
+		patchKindCatalogs,
+		patchWires,
+		remapIdInSelections,
+		selectionByPane,
+		setGraphObjectsHidden,
+		setGraphObjectsLocked,
+		setKindCompatibility,
+		wires,
+		workbenchSelection,
+	} = useBoardPlayShell();
 	const ids = useMemo(() => [...selectionByPane[activePaneId]].sort((a, b) => a.localeCompare(b)), [activePaneId, selectionByPane]);
 
-	const { edgeIds, handleIds, nodeIds } = useMemo(() => {
+	const { edgeIds, handleIds, nodeIds, wireIds } = useMemo(() => {
 		const nodeIds: string[] = [];
 		const handleIds: string[] = [];
 		const edgeIds: string[] = [];
+		const wireIds: string[] = [];
 		for (const id of ids) {
 			if (findNode(fixture, id)) {
 				nodeIds.push(id);
@@ -1876,68 +2835,72 @@ function BoardSelectionInspectorPanel(): ReactElement {
 				edgeIds.push(id);
 			} else if (findHandleOwner(fixture, id)) {
 				handleIds.push(id);
+			} else if (findWire(wires, id)) {
+				wireIds.push(id);
 			}
 		}
-		return { edgeIds, handleIds, nodeIds };
-	}, [fixture, ids]);
+		return { edgeIds, handleIds, nodeIds, wireIds };
+	}, [fixture, ids, wires]);
 
 	const treeSections = useMemo<TreeDataSection[]>(() => {
+		if (workbenchSelection) {
+			if (workbenchSelection.kind === "node-kind") {
+				const entry = (kindCatalogs.nodes ?? []).find((row) => row.id === workbenchSelection.id);
+				if (entry) {
+					return [{ content: <InspectorNodeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-node-kind", label: `Node kind · ${entry.label || entry.id}` }];
+				}
+			}
+			if (workbenchSelection.kind === "edge-kind") {
+				const entry = (kindCatalogs.edges ?? []).find((row) => row.id === workbenchSelection.id);
+				if (entry) {
+					return [{ content: <InspectorEdgeKindDetails entry={entry} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-edge-kind", label: `Edge kind · ${entry.label || entry.id}` }];
+				}
+			}
+			if (workbenchSelection.kind === "wire-kind") {
+				const entry = (kindCatalogs.wires ?? []).find((row) => row.id === workbenchSelection.id);
+				if (entry) {
+					return [{ content: <InspectorWireKindDetails entry={entry} kindCatalogs={kindCatalogs} patchKindCatalogs={patchKindCatalogs} />, defaultOpen: true, id: "board-play-inspector-wire-kind", label: `Wire kind · ${entry.label || entry.id}` }];
+				}
+			}
+			if (workbenchSelection.kind === "constraint") {
+				const index = Number(workbenchSelection.id.split(":")[1] ?? "-1");
+				const entry = kindCompatibility[index];
+				if (entry) {
+					return [{ content: <InspectorConstraintDetails entry={entry} index={index} kindCatalogs={kindCatalogs} setKindCompatibility={setKindCompatibility} />, defaultOpen: true, id: "board-play-inspector-constraint", label: boardPlayConstraintLabel(kindCatalogs, entry) }];
+				}
+			}
+		}
 		if (ids.length === 0) {
-			return [
-				{
-					content: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>,
-					id: "board-play-inspector-empty",
-					label: null,
-				},
-			];
+			return [{ content: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or choose a workbench row.</p>, id: "board-play-inspector-empty", label: null }];
 		}
 		const sections: TreeDataSection[] = [];
 		if (nodeIds.length > 0) {
-			sections.push({
-				content: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-				defaultOpen: true,
-				id: "board-play-inspector-nodes",
-				label: `Nodes (${nodeIds.length})`,
-			});
+			sections.push({ content: <InspectorNodeBatch fixture={fixture} kindCatalogs={kindCatalogs} lockedIds={lockedIds} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} setGraphObjectsHidden={setGraphObjectsHidden} setGraphObjectsLocked={setGraphObjectsLocked} />, defaultOpen: true, id: "board-play-inspector-nodes", label: `Nodes (${nodeIds.length})` });
 		}
 		if (handleIds.length > 0) {
-			sections.push({
-				content: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-				defaultOpen: true,
-				id: "board-play-inspector-handles",
-				label: `Handles (${handleIds.length})`,
-			});
+			sections.push({ content: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} kindCatalogs={kindCatalogs} lockedIds={lockedIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} setGraphObjectsHidden={setGraphObjectsHidden} setGraphObjectsLocked={setGraphObjectsLocked} />, defaultOpen: true, id: "board-play-inspector-handles", label: `Handles (${handleIds.length})` });
 		}
 		if (edgeIds.length > 0) {
-			sections.push({
-				content: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
-				defaultOpen: true,
-				id: "board-play-inspector-edges",
-				label: `Edges (${edgeIds.length})`,
-			});
+			sections.push({ content: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} kindCatalogs={kindCatalogs} lockedIds={lockedIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} setGraphObjectsHidden={setGraphObjectsHidden} setGraphObjectsLocked={setGraphObjectsLocked} />, defaultOpen: true, id: "board-play-inspector-edges", label: `Edges (${edgeIds.length})` });
+		}
+		if (wireIds.length > 0) {
+			sections.push({ content: <InspectorWireBatch fixture={fixture} kindCatalogs={kindCatalogs} lockedIds={lockedIds} patchWires={patchWires} remapIdInSelections={remapIdInSelections} setGraphObjectsHidden={setGraphObjectsHidden} setGraphObjectsLocked={setGraphObjectsLocked} wireIds={wireIds} wires={wires} />, defaultOpen: true, id: "board-play-inspector-wires", label: `Wires (${wireIds.length})` });
 		}
 		if (sections.length === 0) {
-			sections.push({
-				content: (
-					<div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
-						Unknown ids: {ids.join(", ")}
-					</div>
-				),
-				id: "board-play-inspector-unknown",
-				label: "Selection",
-			});
+			sections.push({ content: <div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>Unknown ids: {ids.join(", ")}</div>, id: "board-play-inspector-unknown", label: "Selection" });
 		}
 		return sections;
-	}, [edgeIds, fixture, handleIds, ids, nodeIds, patchFixture, remapIdInSelections]);
+	}, [deleteWorkbenchSelection, edgeIds, fixture, handleIds, ids, kindCatalogs, kindCompatibility, lockedIds, nodeIds, patchFixture, patchKindCatalogs, patchWires, remapIdInSelections, setGraphObjectsHidden, setGraphObjectsLocked, setKindCompatibility, wireIds, wires, workbenchSelection]);
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
 			<div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
 				<ClipboardList className="size-4 shrink-0" />
-				<div>
+				<div className="min-w-0 flex-1">
 					<div className="font-semibold uppercase tracking-wide">Detail</div>
 					<div className="text-[11px] opacity-80">pane: {activePaneId}</div>
 				</div>
+				{workbenchSelection ? <Button className="h-7 px-2 text-[11px]" onClick={deleteWorkbenchSelection} type="button" variant="outline">Clear row</Button> : null}
 			</div>
 			<div className="min-h-0 flex-1 overflow-hidden">
 				<TreeStateProvider>

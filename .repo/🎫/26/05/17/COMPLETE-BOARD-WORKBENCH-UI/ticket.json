@@ -1,0 +1,13 @@
+{
+  "title": "Complete Board Workbench UI",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Complete the board UI in elements/client/lib/board/play. Expand selection and details editing to all graph kinds, including node kinds, edge kinds, wire kinds, and handles. Add a proper workbench right panel with three tabs: Graph (Nodes with child handles subtree items, Edges), Kinds (Node kinds, Edge kinds, Wire kinds), Constraints (compatibility names with specificity, using -- for bidirectional and -\u003e for directed). Make all relevant information editable in the details panel, including dropdowns to switch kinds. Add context menus for selection-aware actions like hide, lock, and delete depending on the current selection/background. Keep changes in existing files and use the existing board play/editor surface.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1425"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪db0f4b9f6d034887ae8e39015caa76d5"
+  ]
+}
