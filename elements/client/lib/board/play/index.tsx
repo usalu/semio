@@ -800,7 +800,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
-					While play is on, cameras ease each tick toward a bbox fit of the current layout (damped). After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to the final bbox fit without a jump. Dragging a node resets progressive ramp and the auto-stop timer.
+					When play starts the current camera is kept; each tick it damps toward a bbox fit of the layout as it moves. After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to the final bbox fit without a jump. Dragging a node resets progressive ramp and the auto-stop timer.
 				</p>
 			</div>
 		</div>
@@ -1987,6 +1987,8 @@ function BoardPlayInner(): ReactElement {
 	const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = useState<
 		Record<BoardPlayPaneId, CameraState>
 	>(() => triptychCamerasFromFixture(initialFixture));
+	const boardPlayPaneCamerasBaselineMirrorRef = useRef(boardPlayPaneCamerasBaseline);
+	boardPlayPaneCamerasBaselineMirrorRef.current = boardPlayPaneCamerasBaseline;
 	const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
 	const [selectionByPane, setSelectionByPane] = useState<Record<BoardPlayPaneId, Set<string>>>(() => selectionSeedForFixture(initialFixture));
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
@@ -2170,12 +2172,11 @@ function BoardPlayInner(): ReactElement {
 			setCameraDisplayOverrideByPane(null);
 			suppressCameraBasisSyncRef.current = false;
 			cameraBasisFixtureRef.current = fixture;
-			const playCam = triptychCamerasFromFixture(fixture);
-			setBoardPlayPaneCamerasBaseline(playCam);
+			const cur = boardPlayPaneCamerasBaselineMirrorRef.current;
 			boardPlayRedrawCameraChaseRef.current = {
-				"board-detail": { ...playCam["board-detail"] },
-				"board-overview": { ...playCam["board-overview"] },
-				"board-selection": { ...playCam["board-selection"] },
+				"board-detail": { ...cur["board-detail"] },
+				"board-overview": { ...cur["board-overview"] },
+				"board-selection": { ...cur["board-selection"] },
 			};
 		} else if (!suppressCameraBasisSyncRef.current) {
 			if (cameraPlayEndAnimRafRef.current != null) {

@@ -1,0 +1,10 @@
+{
+  "title": "Board Proximity Connect",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e80ef43ea64e47c5a4b9b52a1b31e67b"
+  ]
+}

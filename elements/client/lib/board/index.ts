@@ -715,11 +715,75 @@ export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.norma
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
 export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
 
+export type BoardLodLabel = "detail" | "micro" | "minimap" | "normal" | "overview";
+
+export interface BoardLodMechanics {
+	allowNodeDrag: boolean;
+	allowProximityConnect: boolean;
+	handleCaption: "abbreviated" | "hidden";
+	handlePresentation: "direct" | "hidden" | "indirect";
+	individualSelection: { edges: boolean; handles: boolean; nodes: boolean };
+	nodeCaption: "abbreviated" | "full" | "hidden";
+	nodeIcon: boolean;
+}
+
+const BOARD_LOD_MECHANICS: Record<BoardLodLabel, BoardLodMechanics> = {
+	detail: {
+		allowNodeDrag: true,
+		allowProximityConnect: true,
+		handleCaption: "abbreviated",
+		handlePresentation: "direct",
+		individualSelection: { edges: true, handles: true, nodes: true },
+		nodeCaption: "abbreviated",
+		nodeIcon: true,
+	},
+	micro: {
+		allowNodeDrag: true,
+		allowProximityConnect: true,
+		handleCaption: "hidden",
+		handlePresentation: "direct",
+		individualSelection: { edges: true, handles: true, nodes: true },
+		nodeCaption: "full",
+		nodeIcon: true,
+	},
+	minimap: {
+		allowNodeDrag: false,
+		allowProximityConnect: false,
+		handleCaption: "hidden",
+		handlePresentation: "hidden",
+		individualSelection: { edges: false, handles: false, nodes: false },
+		nodeCaption: "hidden",
+		nodeIcon: false,
+	},
+	normal: {
+		allowNodeDrag: true,
+		allowProximityConnect: false,
+		handleCaption: "hidden",
+		handlePresentation: "direct",
+		individualSelection: { edges: true, handles: false, nodes: true },
+		nodeCaption: "full",
+		nodeIcon: false,
+	},
+	overview: {
+		allowNodeDrag: true,
+		allowProximityConnect: false,
+		handleCaption: "hidden",
+		handlePresentation: "indirect",
+		individualSelection: { edges: true, handles: false, nodes: true },
+		nodeCaption: "abbreviated",
+		nodeIcon: false,
+	},
+};
+
+export function resolveBoardLodMechanics(lod: BoardLodLabel): BoardLodMechanics {
+	return BOARD_LOD_MECHANICS[lod];
+}
+
 /** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
 export function resolveBoardLodLabelFromThresholds(
 	zoom: number,
 	t: BoardLodZoomThresholds,
-): "detail" | "micro" | "minimap" | "normal" | "overview" {
+): BoardLodLabel {
 	const z = zoom;
 	if (z < t.minimapMaxZoom) {
 		return "minimap";
@@ -737,7 +801,7 @@ export function resolveBoardLodLabelFromThresholds(
 }
 
 /** @emoji 📶 LOD tier for `data-board-lod` using {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}. */
-export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minimap" | "normal" | "overview" {
+export function resolveBoardLodLabel(zoom: number): BoardLodLabel {
 	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
@@ -1613,6 +1677,7 @@ export class Handle extends BoardObject {
 	color: string | null;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
+	iconKind: string | null;
 	node: Node;
 	radius: number;
 
@@ -1621,6 +1686,8 @@ export class Handle extends BoardObject {
 		this.angle = options.angle;
 		const ck = String(options.handleKind ?? "").trim();
 		this.handleKind = ck;
+		this.iconKind =
+			typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
 		const rawC = options.color;
 		const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
 		this.color = cs !== "" ? cs : null;
@@ -2007,25 +2074,57 @@ function boardAbbreviateCaption(raw: string, maxChars: number): string {
 	return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
+function boardOverlayCaptionSeed(primary: string | null | undefined, fallback: string | null | undefined): string {
+	const first = typeof primary === "string" ? primary.trim() : "";
+	if (first !== "") {
+		return first;
+	}
+	return typeof fallback === "string" ? fallback.trim() : "";
+}
+
+function boardBuildKindLabelById(entries: readonly { id: string; label: string; name?: string }[]): Map<string, string> {
+	const next = new Map<string, string>();
+	for (const entry of entries) {
+		const id = entry.id.trim();
+		if (id === "") {
+			continue;
+		}
+		next.set(id, entry.label.trim() || (entry.name ?? "").trim() || id);
+	}
+	return next;
+}
+
 function boardTextOverlayCaptionForLod(
 	raw: string,
-	lod: "detail" | "micro" | "minimap" | "normal" | "overview",
+	lod: BoardLodLabel,
 	iconKind: string | null,
 ): string | null {
 	const t = raw.trim();
 	if (t === "") {
 		return null;
 	}
-	if (lod === "minimap") {
+	const mechanics = resolveBoardLodMechanics(lod);
+	if (mechanics.nodeCaption === "hidden") {
 		return null;
 	}
 	if (lod === "overview") {
 		return boardAbbreviateCaption(t, 5);
 	}
-	if (lod === "detail") {
+	if (mechanics.nodeCaption === "abbreviated") {
 		return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 8 : 10);
 	}
-	return raw;
+	return t;
+}
+
+function boardHandleTextOverlayCaptionForLod(raw: string, lod: BoardLodLabel): string | null {
+	const t = raw.trim();
+	if (t === "") {
+		return null;
+	}
+	if (resolveBoardLodMechanics(lod).handleCaption === "hidden") {
+		return null;
+	}
+	return boardAbbreviateCaption(t, 6);
 }
 
 //#region 🔖Renderer
@@ -2082,6 +2181,8 @@ export class BoardRenderer {
 	private lastDescriptorPushDeferred = false;
 	private kindCompatJson = "[]";
 	private kindCatalogsJson = serializeBoardKindCatalogBundle(BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
+	private handleKindLabelById = boardBuildKindLabelById(BOARD_DEFAULT_KIND_CATALOG_BUNDLE.handles ?? []);
+	private nodeKindLabelById = boardBuildKindLabelById(BOARD_DEFAULT_KIND_CATALOG_BUNDLE.nodes ?? []);
 	private lastPushedKindCatalogsJson: string | null = null;
 	private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
@@ -2331,6 +2432,8 @@ export class BoardRenderer {
 			wires: bundle?.wires ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.wires,
 		};
 		const json = serializeBoardKindCatalogBundle(merged);
+		this.handleKindLabelById = boardBuildKindLabelById(merged.handles ?? []);
+		this.nodeKindLabelById = boardBuildKindLabelById(merged.nodes ?? []);
 		if (json === this.kindCatalogsJson) {
 			return;
 		}
@@ -3018,11 +3121,13 @@ export class BoardRenderer {
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
 		const lod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+		const mechanics = resolveBoardLodMechanics(lod);
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
 				continue;
 			}
-			const caption = boardTextOverlayCaptionForLod(node.text ?? "", lod, node.iconKind);
+			const rawNodeCaption = boardOverlayCaptionSeed(node.text, this.nodeKindLabelById.get(node.nodeKind));
+			const caption = boardTextOverlayCaptionForLod(rawNodeCaption, lod, node.iconKind);
 			if (caption === null) {
 				continue;
 			}
@@ -3062,6 +3167,27 @@ export class BoardRenderer {
 			ctx.textAlign = anchor.textAlign;
 			ctx.textBaseline = anchor.textBaseline;
 			ctx.fillText(line, anchor.fillX, anchor.fillY);
+		}
+		if (mechanics.handleCaption === "hidden") {
+			return;
+		}
+		ctx.font = boardBuildCanvasFontSpec(10, BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT);
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		for (const handle of this.scene.handles.values()) {
+			if (!handle.visible) {
+				continue;
+			}
+			const rawHandleCaption = boardOverlayCaptionSeed(this.handleKindLabelById.get(handle.handleKind), handle.handleKind);
+			const caption = boardHandleTextOverlayCaptionForLod(rawHandleCaption, lod);
+			if (caption === null) {
+				continue;
+			}
+			const center = this.worldToScreen(handle.position);
+			const radiusPx = Math.max(6, handle.radius * this.camera.zoom);
+			const style = this.getStyle(handle.style, handle.selected ? "handle.selected" : "handle");
+			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
+			ctx.fillText(caption, center.x + radiusPx + 4, center.y);
 		}
 	}
 
@@ -3644,6 +3770,7 @@ if (boardVitest) {
 		it("stores nodes, handles, and edges with stable ids and emits edge creation", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			renderer.setCamera(0, 0, 2);
 			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
@@ -3676,7 +3803,7 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
-		it("creates an edge when linking two handles with a pointer drag through WASM", () => {
+		it("creates an edge when linking two handles with an indirect normal-LOD pointer flow through WASM", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
@@ -3688,10 +3815,12 @@ if (boardVitest) {
 			new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
 			renderer.scene.add(a).add(b);
 			renderer.render();
+			renderer.setSelectionIds(["a"]);
 
-			const p0 = renderer.worldToScreen(computeHandlePosition(a, 0));
+			const p0 = renderer.worldToScreen({ x: 68, y: 0 });
 			const pMid = renderer.worldToScreen({ x: 140, y: 0 });
-			const p1 = renderer.worldToScreen(computeHandlePosition(b, Math.PI));
+			const pDrop = renderer.worldToScreen({ x: 280, y: 0 });
+			const p1 = renderer.worldToScreen({ x: 212, y: 0 });
 
 			canvas.dispatchEvent(
 				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p0.x, clientY: p0.y }),
@@ -3700,10 +3829,13 @@ if (boardVitest) {
 				new MouseEvent("pointermove", { bubbles: true, clientX: pMid.x + 20, clientY: pMid.y }),
 			);
 			canvas.dispatchEvent(
-				new MouseEvent("pointermove", { bubbles: true, clientX: p1.x, clientY: p1.y }),
+				new MouseEvent("pointermove", { bubbles: true, clientX: pDrop.x, clientY: pDrop.y }),
 			);
 			canvas.dispatchEvent(
-				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: p1.x, clientY: p1.y }),
+				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pDrop.x, clientY: pDrop.y }),
+			);
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p1.x, clientY: p1.y }),
 			);
 
 			expect(edgeEvents.length).toBe(1);
@@ -5183,4 +5315,3 @@ export function unmountBoardHostMount(root: BoardHostMount): void {
 
 export { boardSceneHost };
 //#endregion 🔖HostMountInternals
-
