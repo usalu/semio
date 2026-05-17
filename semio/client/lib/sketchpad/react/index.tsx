@@ -19995,7 +19995,7 @@ export interface FocusApi {
 }
 
 /**
- * Listens to pointer/keydown/focusin and updates `ui.origin` on the sketchpad actor.
+ * 🧭 Listens to pointer/keydown/focusin and updates `ui.origin` on the sketchpad actor. `pointerdown` is registered in the bubble phase so embedded canvases receive gestures before this handler runs.
  * Mount once under the sketchpad actor; renders nothing.
  */
 export const OriginDocumentListener: FC = () => {
@@ -20005,11 +20005,11 @@ export const OriginDocumentListener: FC = () => {
     const handler = (event: Event) => {
       actor.send({ type: "UI.ORIGIN.SET", origin: resolveOriginFromEventTarget(event.target) });
     };
-    document.addEventListener("pointerdown", handler, true);
+    document.addEventListener("pointerdown", handler);
     document.addEventListener("keydown", handler, true);
     document.addEventListener("focusin", handler, true);
     return () => {
-      document.removeEventListener("pointerdown", handler, true);
+      document.removeEventListener("pointerdown", handler);
       document.removeEventListener("keydown", handler, true);
       document.removeEventListener("focusin", handler, true);
     };

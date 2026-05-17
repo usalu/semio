@@ -15640,7 +15640,7 @@ export interface IconSelectorProps {
 	classifyElementsBoardIconSelectorMode?: (raw: string) => ElementsBoardIconSelectorMode;
 }
 
-/** @emoji 🖼️ Rich board `iconKind` editor with typst math, `data:` payloads, `emoji:`, catalog or inline SVG, preview, and file import. */
+/** @emoji 🖼️ Board `iconKind` editor: mode dropdown (math / data URL / emoji / catalog or SVG), one editor, preview strip, import and clear. */
 export function IconSelector({
 	id,
 	value,
@@ -15658,13 +15658,57 @@ export function IconSelector({
 	const emojiFieldValue = uniform && activeMode === "emoji" ? emojiInnerFromIconKindStored(value) : "";
 	const vectorFieldValue = uniform && activeMode === "vector" ? value : "";
 
-	const onTabsValueChange = (next: string) => {
+	const onModeSelect = (next: string) => {
 		if (locked) {
 			return;
 		}
 		const mode = next as ElementsBoardIconSelectorMode;
 		onChange(migrateIconKindToIconSelectorMode(value, mode, classifyMode));
 	};
+
+	const editorValue = uniform
+		? activeMode === "math"
+			? mathFieldValue
+			: activeMode === "data"
+				? dataFieldValue
+				: activeMode === "emoji"
+					? emojiFieldValue
+					: vectorFieldValue
+		: "";
+
+	const onEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		if (locked) {
+			return;
+		}
+		const raw = e.target.value;
+		if (activeMode === "math") {
+			onChange(emitMathIconKindFromInner(raw));
+			return;
+		}
+		if (activeMode === "emoji") {
+			onChange(emitEmojiIconKindFromInner(raw));
+			return;
+		}
+		onChange(raw);
+	};
+
+	const editorPlaceholder =
+		activeMode === "math"
+			? "Typst markup (e.g. $x^2$)"
+			: activeMode === "data"
+				? "data:image/png;base64,… or other data:… URL"
+				: activeMode === "emoji"
+					? "Typst body after emoji: (e.g. 😀)"
+					: "Catalog id or inline <svg …>";
+
+	const modeSelectTitle =
+		activeMode === "math"
+			? "Typst math (stored as typst:… or leading $)"
+			: activeMode === "data"
+				? "Raster or other data: URL"
+				: activeMode === "emoji"
+					? "Typst emoji cell (stored as emoji:…)"
+					: "Metabolism catalog id or inline SVG";
 
 	const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const list = e.target.files;
@@ -15763,91 +15807,59 @@ export function IconSelector({
 
 	return (
 		<div className={cn("border-element/50 flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
-			<Tabs onValueChange={onTabsValueChange} value={activeMode}>
-				<TabsList className="grid w-full grid-cols-4 gap-0 text-xs">
-					<TabsTrigger className="px-1" title="Typst math" value="math">
-						<span className="inline-flex items-center gap-1">
-							<BoardIconMathGlyphIcon aria-hidden className="size-3.5" />
+			<Select disabled={locked} onValueChange={onModeSelect} value={activeMode}>
+				<SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`} title={modeSelectTitle}>
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent position="popper">
+					<SelectItem id={`${id}.mode.math`} value="math">
+						<span className="inline-flex items-center gap-2">
+							<BoardIconMathGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Math
 						</span>
-					</TabsTrigger>
-					<TabsTrigger className="px-1" title="Raster or data URL" value="data">
-						<span className="inline-flex items-center gap-1">
-							<BoardIconRasterGlyphIcon aria-hidden className="size-3.5" />
-							Data
+					</SelectItem>
+					<SelectItem id={`${id}.mode.data`} value="data">
+						<span className="inline-flex items-center gap-2">
+							<BoardIconRasterGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							Data URL
 						</span>
-					</TabsTrigger>
-					<TabsTrigger className="px-1" title="Typst emoji cell" value="emoji">
-						<span className="inline-flex items-center gap-1">
-							<BoardIconEmojiGlyphIcon aria-hidden className="size-3.5" />
+					</SelectItem>
+					<SelectItem id={`${id}.mode.emoji`} value="emoji">
+						<span className="inline-flex items-center gap-2">
+							<BoardIconEmojiGlyphIcon aria-hidden className="size-3.5 shrink-0" />
 							Emoji
 						</span>
-					</TabsTrigger>
-					<TabsTrigger className="px-1" title="Catalog id or inline SVG" value="vector">
-						<span className="inline-flex items-center gap-1">
-							<BoardIconCatalogGlyphIcon aria-hidden className="size-3.5" />
-							Vector
+					</SelectItem>
+					<SelectItem id={`${id}.mode.vector`} value="vector">
+						<span className="inline-flex items-center gap-2">
+							<BoardIconCatalogGlyphIcon aria-hidden className="size-3.5 shrink-0" />
+							Catalog / SVG
 						</span>
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent className="mt-2" value="math">
-					<Textarea
-						className="min-h-[72px] font-mono text-xs"
-						id={`${id}.math`}
-						mixed={!uniform}
-						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(emitMathIconKindFromInner(e.target.value))}
-						placeholder="Typst markup (e.g. $x^2$)"
-						readOnly={locked}
-						rows={4}
-						value={mathFieldValue}
-					/>
-				</TabsContent>
-				<TabsContent className="mt-2 space-y-2" value="data">
-					<Textarea
-						className="min-h-[88px] font-mono text-xs"
-						id={`${id}.data`}
-						mixed={!uniform}
-						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-						placeholder="data:image/png;base64,… or other data:… URL"
-						readOnly={locked}
-						rows={5}
-						value={dataFieldValue}
-					/>
-				</TabsContent>
-				<TabsContent className="mt-2" value="emoji">
-					<Textarea
-						className="min-h-[72px] font-mono text-xs"
-						id={`${id}.emoji`}
-						mixed={!uniform}
-						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(emitEmojiIconKindFromInner(e.target.value))}
-						placeholder="Typst body after emoji: (e.g. 😀)"
-						readOnly={locked}
-						rows={4}
-						value={emojiFieldValue}
-					/>
-				</TabsContent>
-				<TabsContent className="mt-2" value="vector">
-					<Textarea
-						className="min-h-[88px] font-mono text-xs"
-						id={`${id}.vector`}
-						mixed={!uniform}
-						onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-						placeholder="Catalog id or inline <svg …>"
-						readOnly={locked}
-						rows={5}
-						value={vectorFieldValue}
-					/>
-				</TabsContent>
-			</Tabs>
-			<Button className="h-7 gap-1 self-start px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
-				<BoardIconFileImportIcon className="size-3.5" />
-				Import file…
-			</Button>
-			<input accept="image/png,image/jpeg,image/svg+xml,.svg,.png,.jpg,.jpeg" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
+					</SelectItem>
+				</SelectContent>
+			</Select>
+			<Textarea
+				className={cn("min-h-[72px] font-mono text-xs", (activeMode === "data" || activeMode === "vector") && "min-h-[88px]")}
+				id={`${id}.field`}
+				key={activeMode}
+				mixed={!uniform}
+				onChange={onEditorChange}
+				placeholder={editorPlaceholder}
+				readOnly={locked}
+				rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
+				value={editorValue}
+			/>
 			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
-			<Button className="h-7 self-end px-2 text-xs" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">
-				Clear
-			</Button>
+			<div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
+					<BoardIconFileImportIcon className="size-3.5" />
+					Import file…
+				</Button>
+				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">
+					Clear
+				</Button>
+			</div>
+			<input accept="image/png,image/jpeg,image/svg+xml,.svg,.png,.jpg,.jpeg" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
 		</div>
 	);
 }

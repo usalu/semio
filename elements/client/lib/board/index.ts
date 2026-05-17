@@ -2362,6 +2362,21 @@ function boardTextOverlayCaptionForLod(
 }
 
 //#region 🔖Renderer
+/** @emoji 🪟 When true, pointer routing attaches to `window` capture so it runs before any `document` capture shell listeners; false under Vitest/jsdom (canvas dispatches do not reach `window` the same way). */
+function boardRendererUsesWindowPointerCaptureBridge(): boolean {
+	if (typeof globalThis.window === "undefined" || typeof globalThis.window.addEventListener !== "function") {
+		return false;
+	}
+	if (typeof process !== "undefined" && process.env.VITEST === "true") {
+		return false;
+	}
+	const v = (import.meta as { env?: { VITEST?: boolean | string } }).env?.VITEST;
+	if (v === true || v === "true") {
+		return false;
+	}
+	return true;
+}
+
 /** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
 export class BoardRenderer {
 	static activeRenderer: BoardRenderer | null = null;
@@ -2381,6 +2396,7 @@ export class BoardRenderer {
 	private wasmSessionBorrowDepth = 0;
 	/** @emoji 🧷 Tracks `pushSceneToWasmDriver` + {@link BoardSession.renderFrame} where `device.poll` may synchronously re-enter JS while WASM still borrows `BoardSession`. */
 	private wasmGpuFrameDepth = 0;
+	private boardPointerBridgeUsesWindowCapture = false;
 
 	/** @emoji 🚧 True while wasm-bindgen holds `&mut BoardSession`; any other JS→wasm call on this session must defer (see commit 379 + follow-up). */
 	private wasmSessionCallBlockedForReentry(): boolean {
@@ -3605,31 +3621,82 @@ export class BoardRenderer {
 		}
 		surface.tabIndex = 0;
 		surface.style.touchAction = "none";
+		this.boardPointerBridgeUsesWindowCapture = boardRendererUsesWindowPointerCaptureBridge();
 		surface.addEventListener("contextmenu", this.handleContextMenu as EventListener);
-		surface.addEventListener("pointerdown", this.handlePointerDown as EventListener);
-		surface.addEventListener("pointermove", this.handlePointerMove as EventListener);
-		surface.addEventListener("pointerup", this.handlePointerUp as EventListener);
+		if (this.boardPointerBridgeUsesWindowCapture) {
+			globalThis.addEventListener("pointerdown", this.handleWindowPointerDownCapture as EventListener, true);
+			globalThis.addEventListener("pointermove", this.handleWindowPointerMoveCapture as EventListener, true);
+			globalThis.addEventListener("pointerup", this.handleWindowPointerUpCapture as EventListener, true);
+			globalThis.addEventListener("wheel", this.handleWindowWheelCapture as EventListener, { capture: true, passive: false });
+		} else {
+			surface.addEventListener("pointerdown", this.handlePointerDown as EventListener);
+			surface.addEventListener("pointermove", this.handlePointerMove as EventListener);
+			surface.addEventListener("pointerup", this.handlePointerUp as EventListener);
+			surface.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
+		}
 		surface.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		surface.addEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
-		surface.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
 		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
 	private detachCanvasListeners(): void {
 		const surface = this.eventSurface;
-		if (!surface) {
-			return;
+		if (this.boardPointerBridgeUsesWindowCapture) {
+			globalThis.removeEventListener("pointerdown", this.handleWindowPointerDownCapture as EventListener, true);
+			globalThis.removeEventListener("pointermove", this.handleWindowPointerMoveCapture as EventListener, true);
+			globalThis.removeEventListener("pointerup", this.handleWindowPointerUpCapture as EventListener, true);
+			globalThis.removeEventListener("wheel", this.handleWindowWheelCapture as EventListener, { capture: true } as AddEventListenerOptions);
+		} else if (surface) {
+			surface.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
+			surface.removeEventListener("pointermove", this.handlePointerMove as EventListener);
+			surface.removeEventListener("pointerup", this.handlePointerUp as EventListener);
+			surface.removeEventListener("wheel", this.handleWheel as EventListener);
 		}
-		surface.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
-		surface.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
-		surface.removeEventListener("pointermove", this.handlePointerMove as EventListener);
-		surface.removeEventListener("pointerup", this.handlePointerUp as EventListener);
-		surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		surface.removeEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
-		surface.removeEventListener("wheel", this.handleWheel as EventListener);
+		this.boardPointerBridgeUsesWindowCapture = false;
+		if (surface) {
+			surface.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
+			surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
+			surface.removeEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
+		}
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 		this.disarmAreaSelectChordBridge();
 	}
+
+	private eventTargetIsUnderEventSurface(event: Event): boolean {
+		if (this.isDisposed || !this.eventSurface) {
+			return false;
+		}
+		const t = event.target;
+		return t instanceof Node && this.eventSurface.contains(t);
+	}
+
+	private eventTargetIsUnderEventSurface(event: Event): boolean {
+		if (!this.eventTargetIsUnderEventSurface(event)) {
+			return;
+		}
+		this.handlePointerDown(event as PointerEvent);
+	};
+
+	private readonly handleWindowPointerMoveCapture = (event: Event): void => {
+		if (!this.eventTargetIsUnderEventSurface(event)) {
+			return;
+		}
+		this.handlePointerMove(event as PointerEvent);
+	};
+
+	private readonly handleWindowPointerUpCapture = (event: Event): void => {
+		if (!this.eventTargetIsUnderEventSurface(event)) {
+			return;
+		}
+		this.handlePointerUp(event as PointerEvent);
+	};
+
+	private readonly handleWindowWheelCapture = (event: Event): void => {
+		if (!this.eventTargetIsUnderEventSurface(event)) {
+			return;
+		}
+		this.handleWheel(event as WheelEvent);
+	};
 
 	private updateSelection(ids: Iterable<string>): void {
 		const nextIds = new Set(ids);
