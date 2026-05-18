@@ -239,6 +239,10 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@elements/board:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
+    if (segments[0] === "scene") {
+      runCmd("bun", ["nx", "run", "@elements/scene:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
     if (segments[0] === "mcp") {
       this.runMcp(segments.slice(1));
       return;

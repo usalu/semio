@@ -14,7 +14,19 @@ import {
 	type CSSProperties,
 	type ReactNode,
 } from "react";
-import { Frustum, Matrix4, Quaternion, Sphere, Vector3, type Group, type Mesh } from "three";
+import {
+	Frustum,
+	Matrix4,
+	Plane,
+	Quaternion,
+	Raycaster,
+	Sphere,
+	Vector2,
+	Vector3,
+	type Group,
+	type Mesh,
+	type Object3D,
+} from "three";
 
 //#region 🔖Kinds
 export type Vec3 = readonly [number, number, number];
@@ -37,6 +49,8 @@ export interface SceneVortexProps {
 	direction?: Vec3;
 	radius?: number;
 	visible?: boolean;
+	handleMeshUrl?: string;
+	children?: ReactNode;
 }
 
 export interface SceneMagnetProps {
@@ -132,11 +146,24 @@ export interface SceneTieLinkPayload {
 	readonly tieId?: string;
 }
 
+export interface SceneLinkCompatibleNodesPayload {
+	readonly source: string;
+	readonly objectIds: readonly string[];
+}
+
+export interface SceneLinkTargetRingPayload {
+	readonly source: string;
+	readonly objectId: string | null;
+	readonly vortexFullIds: readonly string[];
+}
+
 export interface SceneCanvasProps {
 	camera?: Partial<SceneCameraState>;
 	chunkSize?: number;
 	kindCatalogs?: SceneKindCatalogBundle;
 	kindCompatibility?: readonly SceneKindCompatEntry[];
+	/** @emoji 🚫 Vortex full ids (`objectId:vortexId`) that already terminate a tie and cannot start or receive a new link. */
+	blockedVortexFullIds?: ReadonlySet<string>;
 	proximityRadius?: number;
 	relocateMode?: SceneRelocateMode;
 	selectionMode?: SceneSelectionMode;
@@ -146,6 +173,8 @@ export interface SceneCanvasProps {
 	onConnect?: (p: SceneTieLinkPayload) => void;
 	onIndirectConnect?: (p: SceneTieLinkPayload) => void;
 	onProximityConnect?: (p: SceneTieLinkPayload) => void;
+	onLinkCompatibleNodes?: (p: SceneLinkCompatibleNodesPayload) => void;
+	onLinkTargetRing?: (p: SceneLinkTargetRingPayload) => void;
 	children?: ReactNode;
 }
 
@@ -237,6 +266,7 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 					position: vx.position,
 					...(isVec3(vx.direction) ? { direction: vx.direction } : {}),
 					...(typeof vx.radius === "number" ? { radius: vx.radius } : {}),
+					...(typeof vx.handleMeshUrl === "string" ? { handleMeshUrl: vx.handleMeshUrl } : {}),
 				});
 			}
 		}
@@ -278,6 +308,133 @@ export function sceneKindsCompatible(
 			(e.bidirectional === true && e.source === bKind && e.target === aKind),
 	);
 }
+
+const SCENE_DEFAULT_WIRE_KIND_ID = "board.wire.link";
+
+export function sceneBlockedVortexFullIdsFromTies(
+	ties: readonly Pick<SceneTieProps, "source" | "target">[],
+): ReadonlySet<string> {
+	const s = new Set<string>();
+	for (const t of ties) {
+		s.add(t.source);
+		s.add(t.target);
+	}
+	return s;
+}
+
+export interface SceneLinkHandleContext {
+	readonly objectId: string;
+	readonly objectKind: string | undefined;
+	readonly vortexKind: string | undefined;
+}
+
+function catalogHandleById(
+	catalogs: SceneKindCatalogBundle | undefined,
+	handleKind: string | undefined,
+): SceneHandleKindCatalogEntry | undefined {
+	if (!handleKind || !catalogs?.handles?.length) return undefined;
+	return catalogs.handles.find((h) => h.id === handleKind);
+}
+
+function catalogWireById(
+	catalogs: SceneKindCatalogBundle | undefined,
+	wireKind: string | undefined,
+): SceneWireKindCatalogEntry | undefined {
+	if (!wireKind || !catalogs?.wires?.length) return undefined;
+	return catalogs.wires.find((w) => w.id === wireKind);
+}
+
+export function resolveSceneWireKindForVortex(
+	vortexKind: string | undefined,
+	catalogs: SceneKindCatalogBundle | undefined,
+): string {
+	const h = catalogHandleById(catalogs, vortexKind);
+	const w = h?.defaultWireKind?.trim();
+	return w && w.length > 0 ? w : SCENE_DEFAULT_WIRE_KIND_ID;
+}
+
+export function resolveSceneEdgeKindForWire(
+	wireKind: string | undefined,
+	catalogs: SceneKindCatalogBundle | undefined,
+): string {
+	const w = catalogWireById(catalogs, wireKind);
+	const e = w?.defaultEdgeKind?.trim();
+	return e && e.length > 0 ? e : "";
+}
+
+function sceneCompatPairMatches(rule: SceneKindCompatEntry, a: string, b: string): boolean {
+	if (rule.source === a && rule.target === b) return true;
+	if (rule.bidirectional === true && rule.source === b && rule.target === a) return true;
+	return false;
+}
+
+function sceneLinkGestureRuleApplies(
+	rule: SceneKindCompatEntry,
+	source: SceneLinkHandleContext,
+	target: SceneLinkHandleContext,
+	catalogs: SceneKindCatalogBundle | undefined,
+): boolean {
+	const wSrc = resolveSceneWireKindForVortex(source.vortexKind, catalogs);
+	const wTgt = resolveSceneWireKindForVortex(target.vortexKind, catalogs);
+	const eSrc = resolveSceneEdgeKindForWire(wSrc, catalogs);
+	const eTgt = resolveSceneEdgeKindForWire(wTgt, catalogs);
+	const sn = source.objectKind ?? "";
+	const tn = target.objectKind ?? "";
+	const sh = source.vortexKind ?? "";
+	const th = target.vortexKind ?? "";
+	const spec = rule.specificity ?? "handle";
+	switch (spec) {
+		case "general":
+			return sceneCompatPairMatches(rule, sh, th);
+		case "object":
+		case "node":
+			return sceneCompatPairMatches(rule, sn, tn);
+		case "edge":
+		case "tie":
+			return sceneCompatPairMatches(rule, eSrc, eTgt);
+		case "handle":
+			return sceneCompatPairMatches(rule, sh, th);
+		case "wire":
+			return sceneCompatPairMatches(rule, wSrc, th);
+		default:
+			return sceneCompatPairMatches(rule, sh, th);
+	}
+}
+
+export function sceneHandlesLinkCompatibleForDrag(
+	source: SceneLinkHandleContext,
+	target: SceneLinkHandleContext,
+	rules: readonly SceneKindCompatEntry[] | undefined,
+	catalogs: SceneKindCatalogBundle | undefined,
+): boolean {
+	if (!rules?.length) return true;
+	let matched = rules.filter((r) => sceneLinkGestureRuleApplies(r, source, target, catalogs));
+	if (matched.length === 0) return false;
+	if (matched.some((r) => r.important)) matched = matched.filter((r) => r.important);
+	else {
+		const rank = (s: SceneKindCompatEntry["specificity"] | undefined): number => {
+			switch (s) {
+				case "general":
+					return 0;
+				case "object":
+				case "node":
+					return 1;
+				case "edge":
+				case "tie":
+					return 2;
+				case "wire":
+					return 3;
+				case "handle":
+					return 4;
+				default:
+					return 4;
+			}
+		};
+		const maxRank = Math.max(...matched.map((r) => rank(r.specificity)));
+		matched = matched.filter((r) => rank(r.specificity) === maxRank);
+	}
+	return matched.length > 0;
+}
 //#endregion 🧩Compat
 
 //#region 🏊Pool
@@ -312,13 +469,25 @@ function usePooledGltf(url: string) {
 //#region 🎯Registry
 type VortexGetter = () => Vector3 | null;
 
+export interface SceneVortexBindingMeta {
+	readonly fullId: string;
+	readonly objectId: string;
+	readonly objectKind: string | undefined;
+	readonly vortexKind: string | undefined;
+}
+
 export interface SceneRegistryValue {
 	registerVortex(fullId: string, getter: VortexGetter): void;
 	unregisterVortex(fullId: string): void;
 	getVortexWorld(fullId: string): Vector3 | null;
-	registerObject(id: string, group: Group | null): void;
+	registerVortexBinding(meta: SceneVortexBindingMeta, pickRoot: Object3D | null): void;
+	unregisterVortexBinding(fullId: string): void;
+	registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
 	getObjectGroup(id: string): Group | null;
+	getObjectKind(id: string): string | undefined;
+	kindCatalogs: SceneKindCatalogBundle | undefined;
 	kindCompatibility: readonly SceneKindCompatEntry[] | undefined;
+	blockedVortexFullIds: ReadonlySet<string>;
 	proximityRadius: number;
 	selectedObjectIds: readonly string[];
 	setSelectedObjectIds(ids: readonly string[]): void;
@@ -326,10 +495,20 @@ export interface SceneRegistryValue {
 	relocateMode: SceneRelocateMode;
 	activeRelocateObjectId: string | null;
 	setActiveRelocateObjectId: (id: string | null) => void;
+	linkDragActive: boolean;
+	linkDragSourceFullId: string | null;
+	linkCompatibleTargetFullIds: ReadonlySet<string>;
+	linkHoverRingFullId: string | null;
+	linkEndWorldScratch: Vector3;
+	beginLinkDragFromVortex(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined): void;
+	cancelLinkDrag(): void;
+	findNearestProximityRelocate(world: Vector3, movingObjectId: string): SceneTieLinkPayload | null;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
 	onConnect?: (p: SceneTieLinkPayload) => void;
 	onProximityConnect?: (p: SceneTieLinkPayload) => void;
 	onIndirectConnect?: (p: SceneTieLinkPayload) => void;
+	onLinkCompatibleNodes?: (p: SceneLinkCompatibleNodesPayload) => void;
+	onLinkTargetRing?: (p: SceneLinkTargetRingPayload) => void;
 	onRelocate?: (p: SceneRelocatePayload) => void;
 }
 
@@ -340,8 +519,6 @@ function useSceneRegistry(): SceneRegistryValue {
 	if (!v) throw new Error("Scene registry missing");
 	return v;
 }
-
-const vortexGetterMap = new Map<string, VortexGetter>();
 //#endregion 🎯Registry
 
 //#region 🧱Chunking
@@ -394,26 +571,29 @@ function scaleToThree(s: number | Vec3 | undefined): Vector3 {
 	if (typeof s === "number") return new Vector3(s, s, s);
 	return new Vector3(s[0], s[1], s[2]);
 }
-
-function findNearestVortexPayload(
-	world: Vector3,
-	movingObjectId: string,
-	radius: number,
-): SceneTieLinkPayload | null {
-	let best: { d: number; id: string } | null = null;
-	for (const [fullId, getter] of vortexGetterMap) {
-		if (fullId.startsWith(`${movingObjectId}:`)) continue;
-		const p = getter();
-		if (!p) continue;
-		const d = p.distanceTo(world);
-		if (d > radius) continue;
-		if (!best || d < best.d) best = { d, id: fullId };
-	}
-	if (!best) return null;
-	const linkSource = `${movingObjectId}:link`;
-	return { source: linkSource, target: best.id };
-}
 //#endregion 🧊Helpers
+
+//#region 🔗LinkGesture
+function readSceneVortexFullIdFromObject(o: Object3D | null): string | null {
+	let cur: Object3D | null = o;
+	while (cur) {
+		const id = cur.userData?.sceneVortexFullId;
+		if (typeof id === "string" && id.length > 0) return id;
+		cur = cur.parent;
+	}
+	return null;
+}
+
+function readSceneObjectIdFromObject(o: Object3D | null): string | null {
+	let cur: Object3D | null = o;
+	while (cur) {
+		const id = cur.userData?.sceneObjectId;
+		if (typeof id === "string" && id.length > 0) return id;
+		cur = cur.parent;
+	}
+	return null;
+}
+//#endregion 🔗LinkGesture
 
 //#region 🧊Object
 export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
@@ -424,11 +604,11 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 
 	useEffect(() => {
-		reg.registerObject(props.id, group.current);
+		reg.registerObject(props.id, props.objectKind, group.current);
 		return () => {
-			reg.registerObject(props.id, null);
+			reg.registerObject(props.id, props.objectKind, null);
 		};
-	}, [props.id, reg]);
+	}, [props.id, props.objectKind, reg]);
 
 	useEffect(() => {
 		if (group.current) setTcTarget(group.current);
@@ -437,6 +617,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void }) => {
 			e.stopPropagation();
+			if (reg.linkDragActive) return;
 			if (reg.selectionMode === "single") {
 				reg.setSelectedObjectIds([props.id]);
 				reg.onSelect?.({ objectIds: [props.id], vortexIds: [] });
@@ -499,7 +680,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 								scale: afterScale,
 							},
 						});
-						const cand = findNearestVortexPayload(g.position, props.id, reg.proximityRadius);
+						const cand = reg.findNearestProximityRelocate(g.position, props.id);
 						if (cand) reg.onProximityConnect?.(cand);
 						beforeRef.current = null;
 					}}
@@ -511,15 +692,64 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 //#endregion 🧊Object
 
 //#region 🌀Vortex
-export const SceneVortex = memo(function SceneVortex(props: SceneVortexProps & { objectId: string }) {
-	const mesh = useRef<Mesh>(null);
+const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
+
+function SceneVortexVisual(props: {
+	fullId: string;
+	radius: number;
+	visible: boolean;
+	position: Vec3;
+	handleMeshUrl?: string;
+	children?: ReactNode;
+	highlight: "none" | "compatible" | "ring" | "source";
+}) {
+	const gltf = props.handleMeshUrl ? usePooledGltf(props.handleMeshUrl) : null;
+	const color =
+		props.highlight === "compatible"
+			? "#22c55e"
+			: props.highlight === "ring"
+				? "#facc15"
+				: props.highlight === "source"
+					? "#94a3b8"
+					: "#38bdf8";
+	const emissive = props.highlight === "ring" ? "#ca8a04" : "#000000";
+	const emissiveIntensity = props.highlight === "ring" ? 0.45 : 0;
+	const scale = props.handleMeshUrl ? (props.radius / 0.35) * 0.9 : 1;
+	return (
+		<group position={props.position as [number, number, number]} visible={props.visible}>
+			{props.handleMeshUrl && gltf?.scene ? (
+				<Clone object={gltf.scene} scale={scale} userData={{ sceneVortexFullId: props.fullId }} />
+			) : props.children ? (
+				<group userData={{ sceneVortexFullId: props.fullId }}>{props.children}</group>
+			) : (
+				<mesh userData={{ sceneVortexFullId: props.fullId }}>
+					<sphereGeometry args={[props.radius, 12, 12]} />
+					<meshStandardMaterial
+						color={color}
+						emissive={emissive}
+						emissiveIntensity={emissiveIntensity}
+						{...vortexFallbackMatProps}
+					/>
+				</mesh>
+			)}
+		</group>
+	);
+}
+
+export const SceneVortex = memo(function SceneVortex(
+	props: SceneVortexProps & { objectId: string; objectKind?: string },
+) {
+	const root = useRef<Group>(null);
+	const pickRef = useRef<Group>(null);
 	const reg = useSceneRegistry();
 	const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
+	const r = props.radius ?? 0.35;
+
 	useEffect(() => {
 		const getter = () => {
-			if (!mesh.current) return null;
+			if (!root.current) return null;
 			const v = new Vector3();
-			mesh.current.getWorldPosition(v);
+			root.current.getWorldPosition(v);
 			return v;
 		};
 		reg.registerVortex(fullId, getter);
@@ -527,18 +757,71 @@ export const SceneVortex = memo(function SceneVortex(props: SceneVortexProps & {
 			reg.unregisterVortex(fullId);
 		};
 	}, [fullId, reg]);
-	const r = props.radius ?? 0.35;
+
+	useEffect(() => {
+		reg.registerVortexBinding(
+			{
+				fullId,
+				objectId: props.objectId,
+				objectKind: props.objectKind,
+				vortexKind: props.vortexKind,
+			},
+			pickRef.current,
+		);
+		return () => {
+			reg.unregisterVortexBinding(fullId);
+		};
+	}, [fullId, props.objectId, props.objectKind, props.vortexKind, reg]);
+
+	const highlight: "none" | "compatible" | "ring" | "source" = reg.linkDragSourceFullId === fullId
+		? "source"
+		: reg.linkHoverRingFullId === fullId
+			? "ring"
+			: reg.linkCompatibleTargetFullIds.has(fullId)
+				? "compatible"
+				: "none";
+
+	const onPointerDown = useCallback(
+		(e: { stopPropagation: () => void; nativeEvent: PointerEvent; target: EventTarget | null }) => {
+			e.stopPropagation();
+			const pe = e.nativeEvent;
+			if (pe.button !== 0) return;
+			if (reg.blockedVortexFullIds.has(fullId)) return;
+			reg.beginLinkDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
+			const el = pe.currentTarget instanceof Element ? pe.currentTarget : null;
+			if (el && typeof (el as HTMLElement).setPointerCapture === "function") {
+				try {
+					(el as HTMLElement).setPointerCapture(pe.pointerId);
+				} catch {
+					/* ignore */
+				}
+			}
+		},
+		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
+	);
+
+	const vis = props.visible !== false;
 	return (
-		<mesh
-			ref={mesh}
-			position={props.position as [number, number, number]}
+		<group
+			ref={root}
 			userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }}
 			data-scene-vortex={fullId}
-			visible={props.visible !== false}
+			visible={vis}
+			onPointerDown={onPointerDown}
 		>
-			<sphereGeometry args={[r, 12, 12]} />
-			<meshStandardMaterial color="#38bdf8" transparent opacity={0.55} />
-		</mesh>
+			<group ref={pickRef}>
+				<SceneVortexVisual
+					fullId={fullId}
+					radius={r}
+					visible={vis}
+					position={[0, 0, 0]}
+					handleMeshUrl={props.handleMeshUrl}
+					highlight={highlight}
+				>
+					{props.children}
+				</SceneVortexVisual>
+			</group>
+		</group>
 	);
 });
 //#endregion 🌀Vortex

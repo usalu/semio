@@ -4,28 +4,28 @@ overview: "Build `@elements/scene` as the 3D counterpart of `@elements/board`: R
 todos:
   - id: bootstrap
     content: Create scene package.json, project.json, script.ts (dev/build/test only), vite.config.ts, index.html
-    status: in_progress
+    status: completed
   - id: runtime
     content: "Implement react/index.tsx: Scene, Object, Vortex, Magnet, Tie, Attraction with regions"
-    status: pending
+    status: completed
   - id: pool
     content: Implement MeshPool (useGLTF + InstancedMesh, refcounted) and Chunking (per-chunk groups, frustum + radius cull)
-    status: pending
+    status: completed
   - id: interact
     content: Implement Selection + Relocate (Translate/Rotate/Scale) + Connect/Indirect/Proximity compat checks against kindCatalogs
-    status: pending
+    status: completed
   - id: coords
     content: No semio-named helpers in scene; fixture stores final three.js origin/quaternion. Optional tiny pure `planeBasisToThreeJs` in scene only if unit tests need shared math without JSON (neutral naming, no semio types)
-    status: pending
+    status: completed
   - id: bake
     content: One-off script in active ticket folder (not under elements/scene) reads shallow design + kit JSON from repo paths, may use @semio/js flatten once, writes nakagin-capsule-tower.scene.json; run manually then commit JSON
-    status: pending
+    status: completed
   - id: play
     content: Build play site with @elements/ui shell, fixture shelf, selection inspector, relocate-mode toolbar
-    status: pending
+    status: completed
   - id: tests
     content: Add vitest specs (fixture roundtrip, pool, chunk, coord, connect) + playwright e2e for nakagin scene
-    status: pending
+    status: completed
 isProject: false
 ---
 

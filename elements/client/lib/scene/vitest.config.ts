@@ -13,7 +13,6 @@ export default defineConfig({
 		fileParallelism: false,
 		maxConcurrency: 1,
 		include: ["react/index.tsx", "play/index.tsx"],
-		includeSource: ["react/index.tsx", "play/index.tsx"],
 		passWithNoTests: true,
 	},
 });
