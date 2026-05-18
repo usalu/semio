@@ -378,6 +378,10 @@ elements/board:
 
 ---
 
+All text inside shapes should be centered and not right aligned. When too long abbreviate it with …
+
+---
+
 Complete the ui.
 e.g. expand selection to include all kinds (node kinds, edge kinds, wire kinds can be selected and information must be editable in the details panel)
 e.g. create proper workbench panel with three tabs: Graph (Two sections Nodes with child handles sub tree items, Edges), Kinds (Three sections), Constraints (Show names with specificity. Use -- for bidirectional and -> for source to target)

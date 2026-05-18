@@ -1261,8 +1261,8 @@ function serializeElementsBoardVelloThemeJson(): string {
 export const BOARD_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
 export type BoardNodeTextAlignment = (typeof BOARD_NODE_TEXT_ALIGNMENTS)[number];
 
-/** @emoji ⬅️ Default: reading-order start at west edge, vertically centered (`w`). */
-export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "w";
+/** @emoji 🎯 Default node caption anchor at the shape center. */
+export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "c";
 
 /** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
 export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
@@ -3785,7 +3785,7 @@ export class BoardRenderer {
 			const fontPx = node.textFontSize;
 			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
 			const line = boardEllipsisTextToWidth(ctx, caption, maxW);
-			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
+			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, BOARD_NODE_TEXT_ALIGNMENT_DEFAULT);
 			ctx.textAlign = anchor.textAlign;
 			ctx.textBaseline = anchor.textBaseline;
 			ctx.fillText(line, anchor.fillX, anchor.fillY);
@@ -4413,12 +4413,20 @@ if (boardVitest) {
 			expect(ctx.measureText(out).width).toBeLessThanOrEqual(50);
 			expect(out.length).toBeLessThan("abcdefghij".length + 1);
 		});
+
+		it("abbreviates to the widest fitting prefix plus ellipsis", () => {
+			const ctx: CanvasTextMeasuring = {
+				font: "10px monospace",
+				measureText: (t: string) => ({ width: t.length * 10 }),
+			};
+			expect(boardEllipsisTextToWidth(ctx, "abcdef", 40)).toBe("abc…");
+		});
 	});
 
 	describe("boardNodeTextPlacementAnchor", () => {
-		it("anchors west at the left-middle of the node-centered box", () => {
-			const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, "w");
-			expect(a).toEqual({ fillX: 60, fillY: 50, textAlign: "left", textBaseline: "middle" });
+		it("anchors center at the middle of the node-centered box", () => {
+			const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, BOARD_NODE_TEXT_ALIGNMENT_DEFAULT);
+			expect(a).toEqual({ fillX: 100, fillY: 50, textAlign: "center", textBaseline: "middle" });
 		});
 	});
 
@@ -6598,4 +6606,3 @@ export function unmountBoardHostMount(root: BoardHostMount): void {
 
 export { boardSceneHost };
 //#endregion 🔖HostMountInternals
-

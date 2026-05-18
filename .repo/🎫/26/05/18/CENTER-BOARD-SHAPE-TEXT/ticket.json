@@ -1,0 +1,13 @@
+{
+  "title": "Center Board Shape Text",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Board text inside shapes should be centered instead of right aligned. Text that is too long should be abbreviated with an ellipsis.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1435"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪e138ed842cb7439bbcbb13b3264610be"
+  ]
+}
