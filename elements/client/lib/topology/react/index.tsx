@@ -1,5 +1,5 @@
 import type { ContextMenuItem } from "@elements/ui";
-import { memo, useMemo, type ReactElement } from "react";
+import { Suspense, memo, useMemo, type ReactElement } from "react";
 
 import {
 	boardFixtureMetaKindCatalogBundle,
@@ -344,36 +344,38 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 	const sceneRest = props.scene ?? {};
 	return (
 		<div className="flex h-full min-h-0 flex-1 flex-col" data-topology-scene-root>
-			<Scene
-				className="min-h-0 flex-1"
-				camera={sceneRest.camera ?? props.fixture.camera}
-				blockedVortexFullIds={blocked}
-				{...s}
-				{...sceneRest}
-				relocateMode={props.relocateMode}
-			>
-				{props.fixture.objects.map((o) => (
-					<SceneObject
-						key={o.id}
-						id={o.id}
-						meshUrl={o.meshUrl}
-						origin={o.origin}
-						orientation={o.orientation}
-						scale={o.scale}
-						objectKind={o.objectKind}
-						label={o.label}
-						selected={props.selectedObjectId === o.id}
-						relocate={props.relocateMode}
-					>
-						{o.vortices.map((v) => (
-							<SceneVortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
-						))}
-					</SceneObject>
-				))}
-				{props.fixture.ties.map((t) => (
-					<SceneTie key={t.id} {...t} />
-				))}
-			</Scene>
+			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
+				<Scene
+					className="min-h-0 flex-1"
+					camera={sceneRest.camera ?? props.fixture.camera}
+					blockedVortexFullIds={blocked}
+					{...s}
+					{...sceneRest}
+					relocateMode={props.relocateMode}
+				>
+					{props.fixture.objects.map((o) => (
+						<SceneObject
+							key={o.id}
+							id={o.id}
+							meshUrl={o.meshUrl}
+							origin={o.origin}
+							orientation={o.orientation}
+							scale={o.scale}
+							objectKind={o.objectKind}
+							label={o.label}
+							selected={props.selectedObjectId === o.id}
+							relocate={props.relocateMode}
+						>
+							{o.vortices.map((v) => (
+								<SceneVortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
+							))}
+						</SceneObject>
+					))}
+					{props.fixture.ties.map((t) => (
+						<SceneTie key={t.id} {...t} />
+					))}
+				</Scene>
+			</Suspense>
 		</div>
 	);
 });

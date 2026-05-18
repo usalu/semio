@@ -83,6 +83,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [proximityCount, setProximityCount] = useState(0);
 	const [connectCount, setConnectCount] = useState(0);
+	const [indirectCount, setIndirectCount] = useState(0);
 	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);

@@ -14,9 +14,11 @@ export default defineConfig({
 		target: "esnext",
 	},
 	resolve: {
-		alias: {
-			"@elements/ui": path.resolve(__dirname, "../../react/index.tsx"),
-		},
+		alias: [
+			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../react/index.tsx") },
+			{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },
+		],
+		dedupe: ["three"],
 	},
 	server: {
 		fs: {
