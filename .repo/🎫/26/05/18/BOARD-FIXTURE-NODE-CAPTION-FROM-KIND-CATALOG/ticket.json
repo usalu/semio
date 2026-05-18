@@ -1,0 +1,10 @@
+{
+  "title": "Board Fixture Node Caption From Kind Catalog",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Board play Nakagin capsule nodes show no caption because fixtureNodeDisplayText drops cs_* labels. Resolve overlay text from meta.kindCatalogs.nodes by nodeKind when primary caption is absent.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
+  "sessions": [
+    "⚪ad75ea4e339143d7bfcca95b740b8ee2"
+  ]
+}

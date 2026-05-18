@@ -1270,6 +1270,35 @@ function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefin
 	return lab;
 }
 
+/** @emoji 📚 Supplies node overlay text from `meta.kindCatalogs.nodes` when {@link fixtureNodeDisplayText} is empty (e.g. Nakagin `cs_*` piece ids + `nodeKind`). */
+function boardFixtureMetaNodeKindCaption(meta: Record<string, unknown> | undefined, nodeKind: string | undefined): string | undefined {
+	if (!nodeKind) {
+		return undefined;
+	}
+	const kc = meta?.kindCatalogs;
+	if (!kc || typeof kc !== "object") {
+		return undefined;
+	}
+	const rows = (kc as Record<string, unknown>).nodes;
+	if (!Array.isArray(rows)) {
+		return undefined;
+	}
+	for (const row of rows) {
+		if (!row || typeof row !== "object") {
+			continue;
+		}
+		const r = row as Record<string, unknown>;
+		if (typeof r.id !== "string" || r.id !== nodeKind) {
+			continue;
+		}
+		const label = typeof r.label === "string" ? r.label.trim() : "";
+		const name = typeof r.name === "string" ? r.name.trim() : "";
+		const pick = label !== "" ? label : name;
+		return pick !== "" ? pick : undefined;
+	}
+	return undefined;
+}
+
 function fixtureOptionalTextFontFamily(node: Record<string, unknown>): string | undefined {
 	const raw = node.textFontFamily ?? node.fontFamily;
 	if (typeof raw !== "string") {
@@ -1314,6 +1343,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 	if (!Array.isArray(root.nodes) || !Array.isArray(root.edges)) {
 		return null;
 	}
+	const fixtureMeta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	const nodes: BoardFixtureNodeV1[] = [];
 	for (const entry of root.nodes) {
 		if (!entry || typeof entry !== "object") {
@@ -1362,7 +1392,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			};
 			handles.push(base);
 		}
-		const textFromJson = fixtureNodeDisplayText(node);
+		const nodeKindRaw = node.nodeKind;
+		const nodeKind =
+			typeof nodeKindRaw === "string" && nodeKindRaw.trim() !== "" ? nodeKindRaw.trim() : undefined;
+		const textFromJson = fixtureNodeDisplayText(node) ?? boardFixtureMetaNodeKindCaption(fixtureMeta, nodeKind);
 		const textAutofit = node.textAutofit === true;
 		const textFontFamily = fixtureOptionalTextFontFamily(node);
 		const textFontSize = fixtureOptionalTextFontSize(node);
@@ -1372,9 +1405,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const iconKindRaw = (node as Record<string, unknown>).iconKind;
 		const iconKind =
 			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
-		const nodeKindRaw = node.nodeKind;
-		const nodeKind =
-			typeof nodeKindRaw === "string" && nodeKindRaw.trim() !== "" ? nodeKindRaw.trim() : undefined;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -4685,6 +4715,34 @@ if (boardVitest) {
 			expect(parsed?.nodes[1]).toMatchObject({ id: "b", shape: "circle" });
 			expect(parsed?.edges[0]?.id).toBe("e1");
 			expect(parsed?.camera.zoom).toBe(0.5);
+		});
+
+		it("fills node text from meta.kindCatalogs when label is internal cs_* and nodeKind matches", () => {
+			const kindId = "semio.metabolism.light.node.test-capsule-kind";
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				meta: {
+					kindCatalogs: {
+						nodes: [{ id: kindId, label: "J", name: "J" }],
+					},
+				},
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "cap:link" }],
+						height: 40,
+						id: "cap-1",
+						label: "cs_sl1_d0_t_f4_b_c1",
+						nodeKind: kindId,
+						shape: "rectangle",
+						width: 40,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "cap-1", shape: "rectangle", text: "J" });
 		});
 
 		it("parses rectangle fixture nodes", () => {

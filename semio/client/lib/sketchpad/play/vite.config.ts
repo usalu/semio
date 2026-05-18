@@ -49,10 +49,10 @@ export default defineConfig(async () => {
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
         { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../ui") },
-        { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../../sketchpad") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../react/rendering") },
+        { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../react") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
-        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../assets") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
         { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
         { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
         { find: "vite/internal", replacement: viteInternalFallback },
@@ -76,7 +76,7 @@ export default defineConfig(async () => {
         enforce: "pre" as const,
         configureServer(server: any) {
           const sketchpadPublicPath = path.resolve(__dirname, "../../sketchpad/public");
-          const assetsPath = path.resolve(__dirname, "../../assets");
+          const assetsPath = path.resolve(__dirname, "../../../../assets");
           const metabolismKitPath = path.resolve(assetsPath, "semio/metabolism.zip");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
@@ -104,7 +104,7 @@ export default defineConfig(async () => {
           });
         },
         generateBundle(this: { emitFile: (asset: { type: "asset"; fileName: string; source: Buffer }) => void }) {
-          const assetsPath = path.resolve(__dirname, "../../assets");
+          const assetsPath = path.resolve(__dirname, "../../../../assets");
           const metabolismKitPath = path.resolve(assetsPath, "semio/metabolism.zip");
           if (fs.existsSync(metabolismKitPath) && fs.statSync(metabolismKitPath).isFile()) {
             this.emitFile({

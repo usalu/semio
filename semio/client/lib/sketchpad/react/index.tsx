@@ -189,7 +189,7 @@ import type {
   SimulationNodeDatum,
   ThreeEvent,
   UIWindowKindDefinition,
-} from "../react/ui";
+} from "@semio/ui";
 import {
   Action,
   ActionGroup,
@@ -345,7 +345,7 @@ import {
   ViewportPortal,
   Window,
   WindowKind,
-} from "../react/ui";
+} from "@semio/ui";
 
 import {
   AddIcon,
@@ -417,7 +417,7 @@ import {
 } from "@semio/assets/icons";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
-export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "../react/ui";
+export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
@@ -1502,7 +1502,7 @@ export function applySelectionComposition<T>(previous: T[] | undefined, incoming
   return uniquePrevious.filter((value) => incomingSet.has(value));
 }
 
-export type { UIWindowControl as WindowControl, UIWindowKindDefinition as WindowKindDefinition } from "../react/ui";
+export type { UIWindowControl as WindowControl, UIWindowKindDefinition as WindowKindDefinition } from "@semio/ui";
 
 /**
  * Panel layout positions: left, right, middle, or bottom.
@@ -2256,7 +2256,7 @@ export interface ToolGroupProps {
 // MUST define the focus item interface for search and navigation targets.
 
 // FocusItem is re-exported from elements.tsx as UIFindItem.
-export type { UIFindItem as FocusItem } from "../react/ui";
+export type { UIFindItem as FocusItem } from "@semio/ui";
 // #endregion ⚡Focus
 
 // #region 🎮Footer

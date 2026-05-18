@@ -5,16 +5,16 @@
     "paths": {
       "@semio/sketchpad": ["."],
       "@semio/sketchpad/*": ["./*"],
-      "@semio/js": ["../js"],
-      "@semio/js/*": ["../js/*"],
-      "@semio/ui": ["../ui"],
-      "@semio/ui/*": ["../ui/*"],
-      "@semio/assets": ["../../../assets"],
-      "@semio/assets/*": ["../../../assets/*"],
-      "@semio/react": ["../react"],
-      "@semio/react/*": ["../react/*"],
-      "@semio/rs-wasm": ["../rs/pkg/semio.d.ts"],
-      "@semio/rs-wasm/*": ["../rs/pkg/*"]
+      "@semio/js": ["../../js"],
+      "@semio/js/*": ["../../js/*"],
+      "@semio/ui": ["../../react/rendering"],
+      "@semio/ui/*": ["../../react/rendering/*"],
+      "@semio/assets": ["../../../../assets"],
+      "@semio/assets/*": ["../../../../assets/*"],
+      "@semio/react": ["../../react/logic"],
+      "@semio/react/*": ["../../react/logic/*"],
+      "@semio/rs-wasm": ["../../rs/pkg/semio.d.ts"],
+      "@semio/rs-wasm/*": ["../../rs/pkg/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
   }

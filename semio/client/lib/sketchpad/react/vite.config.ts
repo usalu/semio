@@ -65,7 +65,7 @@ const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons"
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
-  const assetsPath = path.resolve(__dirname, "../../../assets");
+  const assetsPath = path.resolve(__dirname, "../../../../assets");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
       const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -98,7 +98,7 @@ export default defineConfig(async ({ mode }) => {
   // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
-  const workspaceRoot = path.resolve(__dirname, "../../../../");
+  const workspaceRoot = path.resolve(__dirname, "../../../../../");
   const prod = mode === "production";
   const useSyncRoot = path.resolve(workspaceRoot, "node_modules/use-sync-external-store/cjs");
   const shimMain = path.join(useSyncRoot, prod ? "use-sync-external-store-shim.production.js" : "use-sync-external-store-shim.development.js");
@@ -115,14 +115,14 @@ export default defineConfig(async ({ mode }) => {
     resolve: {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [
-        { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
         // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
         // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
-        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg/semio.js") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../react/rendering") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
-        { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
-        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../assets") },
+        { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
         { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../../elements/client/lib/react/index.tsx") },
         { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../../elements/client/lib/react/index.tsx") },
         { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },

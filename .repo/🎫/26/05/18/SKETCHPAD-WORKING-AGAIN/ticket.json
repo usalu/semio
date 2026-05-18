@@ -1,0 +1,10 @@
+{
+  "title": "Sketchpad Working Again",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Restore sketchpad dev/build: fix imports, vite entry, nx targets, or broken deps until play/sketchpad runs.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪29202e0691474cdca961f464b79e33bc"
+  ]
+}

@@ -554,7 +554,7 @@ function isBrowserWorkerRuntime(): boolean {
 }
 
 function shouldStartLiveSubscriptionLoop(): boolean {
-  return typeof window !== "undefined" && typeof document !== "undefined";
+  return isBrowserWorkerRuntime();
 }
 
 function defaultRsWasmSpecifier(): string {

@@ -60,8 +60,8 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
     React.useEffect(() => {
       const e = entityRef.current;
       if (e == null) return;
-      if (eventKind == null || eventKind === "") return undefined;
-      return e.session.bus.subscribeKind(eventKind, () => void refresh());
+      const subscribedKind = eventKind == null || eventKind === "" ? "commandSucceeded" : eventKind;
+      return e.session.bus.subscribeKind(subscribedKind, () => void refresh());
     }, [entity, eventKind, refresh]);
 
     return value;
@@ -107,6 +107,7 @@ function semioInternalOperationBind<E extends Entity, Args extends unknown[] = [
         try {
           const raw = (await impl(e, ...args)) as SetResult | void | undefined;
           const result: SetResult = raw === undefined ? ({ ok: true } as const) : (raw as SetResult);
+          if (result.ok) e.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
           setStatus({ kind: "settled", result });
           return result;
         } catch (err) {
@@ -162,8 +163,8 @@ function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => T | u
     React.useEffect(() => {
       const k = kitRef.current;
       if (k == null) return;
-      if (eventKind != null && eventKind !== "") return k.session.bus.subscribeKind(eventKind, () => void refresh());
-      return undefined;
+      const subscribedKind = eventKind == null || eventKind === "" ? "commandSucceeded" : eventKind;
+      return k.session.bus.subscribeKind(subscribedKind, () => void refresh());
     }, [kit, eventKind, refresh]);
 
     return value;
@@ -205,8 +206,8 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => T
     React.useEffect(() => {
       const s = storeRef.current;
       if (s == null) return;
-      if (eventKind != null && eventKind !== "") return s.session.bus.subscribeKind(eventKind, () => void refresh());
-      return undefined;
+      const subscribedKind = eventKind == null || eventKind === "" ? "commandSucceeded" : eventKind;
+      return s.session.bus.subscribeKind(subscribedKind, () => void refresh());
     }, [store, eventKind, refresh]);
 
     return value;
@@ -236,6 +237,7 @@ function semioInternalStoreOperationBind<Args extends unknown[] = []>(
         try {
           const raw = (await impl(k, ...args)) as SetResult | void | undefined;
           const result: SetResult = raw === undefined ? ({ ok: true } as const) : (raw as SetResult);
+          if (result.ok) k.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
           setStatus({ kind: "settled", result });
           return result;
         } catch (err) {
@@ -275,6 +277,7 @@ function semioInternalSessionOperationBind<Args extends unknown[] = []>(
         try {
           const raw = (await impl(s, ...args)) as SetResult | void | undefined;
           const result: SetResult = raw === undefined ? ({ ok: true } as const) : (raw as SetResult);
+          if (result.ok) s.bus.emit({ kind: "commandSucceeded", payload: null } as never);
           setStatus({ kind: "settled", result });
           return result;
         } catch (err) {
@@ -2517,6 +2520,60 @@ if (import.meta.vitest) {
       });
       ui.unmount();
       spy.mockRestore();
+    });
+  });
+
+  describe("React hooks over in-memory session", () => {
+    it("refreshes read hooks after operation hooks settle through the JS bridge", async () => {
+      const { act, render, screen, waitFor } = await import("@testing-library/react");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      const [store] = await session.stores();
+      const kit = await store!.wip().theKit().kit();
+
+      function Probe(): React.ReactElement {
+        const ids = useKitTags();
+        const [createTag, status] = useCreateTag();
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement("div", { "data-testid": "tag-count" }, String(ids.length)),
+          React.createElement("div", { "data-testid": "status" }, status.kind),
+          React.createElement("button", { onClick: () => void createTag("alpha-tag") }, "create"),
+        );
+      }
+
+      const ui = render(
+        React.createElement(
+          SessionContextProvider,
+          { session, children:
+          React.createElement(
+            StoreContextProvider,
+            { id: store!.id, children:
+            React.createElement(
+              WipContextProvider,
+              { children: React.createElement(TheKitContextProvider, { children: React.createElement(KitContextProvider, { id: kit.id, children: React.createElement(Probe) }) }) },
+            ),
+            },
+          ),
+          },
+        ),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tag-count").textContent).toBe("0");
+      });
+
+      await act(async () => {
+        screen.getByText("create").click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tag-count").textContent).toBe("1");
+        expect(screen.getByTestId("status").textContent).toBe("settled");
+      });
+
+      ui.unmount();
+      await session.dispose();
     });
   });
 
