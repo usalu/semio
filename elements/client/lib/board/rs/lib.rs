@@ -3878,6 +3878,53 @@ mod board_host {
 			self.push_event("select", payload);
 		}
 
+		/// @emoji 🧿 Live rectangle/lasso preview: updates `selection` without mutating exit chrome (one cycle applies on commit).
+		fn set_selection_ids_gestured_preview(&mut self, ids: &[String], gesture: Option<&str>) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			let mut sorted: Vec<_> = next.iter().cloned().collect();
+			sorted.sort();
+			let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+			let sig = (sorted.clone(), gesture_owned.clone());
+			if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
+				return;
+			}
+			self.last_select_emit_sig = Some(sig);
+			if next != self.selection {
+				self.selection = next;
+				self.sync_selection_flags_to_objects();
+			}
+			let mut payload = json!({ "ids": sorted });
+			if let Some(ref g) = gesture_owned {
+				payload["gestureMergeMode"] = json!(g);
+			}
+			payload["exitHighlightIds"] = json!(self.selection_exit_sorted_vec());
+			self.push_event("select", payload);
+		}
+
+		fn sorted_selection_ids(set: &BTreeSet<String>) -> Vec<String> {
+			let mut v: Vec<_> = set.iter().cloned().collect();
+			v.sort();
+			v
+		}
+
+		/// @emoji 🧿 Ends a rectangle/lasso cycle: exit chrome uses `initial_ids` → `ids`, and JS receives `anchorIds` for Escape.
+		fn commit_area_select_from_initial(&mut self, initial_ids: &BTreeSet<String>, ids: &[String], gesture: Option<&str>) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			let sorted = Self::sorted_selection_ids(&next);
+			let anchor = Self::sorted_selection_ids(initial_ids);
+			let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+			self.last_select_emit_sig = None;
+			self.set_selection_exit_last_transition(initial_ids, &next);
+			self.selection = next;
+			self.sync_selection_flags_to_objects();
+			let mut payload = json!({ "ids": sorted, "anchorIds": anchor });
+			if let Some(ref g) = gesture_owned {
+				payload["gestureMergeMode"] = json!(g);
+			}
+			payload["exitHighlightIds"] = json!(self.selection_exit_sorted_vec());
+			self.push_event("select", payload);
+		}
+
 		/// @emoji 🧿 True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
 		pub fn is_dragging_area_select(&self) -> bool {
 			matches!(&self.interaction, Interaction::Selection { .. })
@@ -6019,7 +6066,7 @@ mod board_host {
 					let ids: Vec<_> = next.iter().cloned().collect();
 					let merge_from_modifiers = ctrl_or_meta || shift;
 					let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
-					self.set_selection_ids_gestured(&ids, gesture);
+					self.set_selection_ids_gestured_preview(&ids, gesture);
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
@@ -6132,12 +6179,12 @@ mod board_host {
 						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
 					let gesture = merge_from_modifiers.then(|| merge_mode.as_str());
 					if click_only {
-						self.set_selection_ids_gestured(&[], gesture);
+						self.commit_area_select_from_initial(&initial_ids, &[], gesture);
 					} else {
 						let next =
 							self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
 						let ids: Vec<_> = next.iter().cloned().collect();
-						self.set_selection_ids_gestured(&ids, gesture);
+						self.commit_area_select_from_initial(&initial_ids, &ids, gesture);
 					}
 					self.set_selection_screen_preview(None);
 					self.update_hover_from_world(world);
@@ -6161,8 +6208,11 @@ mod board_host {
 			match prev {
 				Interaction::Selection { initial_ids, .. } => {
 					self.set_selection_screen_preview(None);
-					let ids: Vec<_> = initial_ids.iter().cloned().collect();
-					self.set_selection_ids_gestured(&ids, None);
+					self.selection_exit_highlight.clear();
+					self.selection = initial_ids.clone();
+					self.sync_selection_flags_to_objects();
+					self.last_select_emit_sig = None;
+					self.push_select_event();
 					true
 				}
 				other => {
@@ -7951,6 +8001,58 @@ mod host_tests {
 		got.sort();
 		assert!(got.contains(&"a".to_string()));
 		assert!(got.contains(&"a:h0".to_string()));
+	}
+
+	#[test]
+	fn board_host_area_select_freezes_exit_highlight_until_commit() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+			scale: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let _ = h.drain_events_json();
+		assert!(h.selection_exit_highlight.is_empty());
+		let away = h.world_to_screen(Point::new(4000.0, 0.0));
+		h.pointer_down_screen(away.x, away.y, 0, false, false);
+		assert!(h.is_dragging_area_select());
+		let _ = h.drain_events_json();
+		let w0 = Point::new(200.0, -80.0);
+		let w1 = Point::new(380.0, 80.0);
+		let s0 = h.world_to_screen(w0);
+		let s1 = h.world_to_screen(w1);
+		h.pointer_move_screen(s0.x, s0.y, false, false);
+		let _ = h.drain_events_json();
+		assert!(h.selection.contains("b"), "preview should include node b");
+		let frozen = h.selection_exit_highlight.clone();
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		let _ = h.drain_events_json();
+		assert_eq!(frozen, h.selection_exit_highlight);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
+		let _ = h.drain_events_json();
+		assert!(h.selection.contains("b"));
+		assert!(!h.selection.contains("a"));
+		assert!(h.selection_exit_highlight.contains("a"));
 	}
 
 	fn link_test_scene_no_edge() -> SceneDescriptorJson {

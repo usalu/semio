@@ -1616,18 +1616,18 @@ function BoardFixtureLibraryPanel(): ReactElement {
 		() => [
 			{
 				content: (
-					<div className="flex flex-wrap gap-2">
-						<BoardFixturePaletteDraggable
-							fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
-							label="Drag circle onto the board"
-							preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />}
-						/>
-						<BoardFixturePaletteDraggable
-							fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
-							label="Drag rectangle onto the board"
-							preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />}
-						/>
-					</div>
+				<div className="flex flex-wrap gap-2">
+					<BoardFixturePaletteDraggable
+						fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
+						label="Drag circle onto the board"
+						preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />}
+					/>
+					<BoardFixturePaletteDraggable
+						fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
+						label="Drag rectangle onto the board"
+						preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />}
+					/>
+				</div>
 				),
 				defaultOpen: true,
 				id: "board-play-library-shapes",
@@ -1637,12 +1637,12 @@ function BoardFixtureLibraryPanel(): ReactElement {
 				content: (
 					<div
 						className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing"
-						draggable
-						onDragStart={onShelfDragStart}
-					>
-						<p className="font-medium">Active graph</p>
-						<p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
-					</div>
+				draggable
+				onDragStart={onShelfDragStart}
+			>
+				<p className="font-medium">Active graph</p>
+				<p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
+			</div>
 				),
 				defaultOpen: true,
 				id: "board-play-library-active-graph",
@@ -3907,9 +3907,9 @@ function BoardPlayInner(): ReactElement {
 		const interactiveZoomEnabled = boardRedrawInteractiveZoomByPaneRef.current[activePaneId];
 		nodesRedrawEaseFromRef.current = interactiveZoomEnabled
 			? {
-					"board-detail": { ...camerasByPane["board-detail"] },
-					"board-overview": { ...camerasByPane["board-overview"] },
-					"board-selection": { ...camerasByPane["board-selection"] },
+			"board-detail": { ...camerasByPane["board-detail"] },
+			"board-overview": { ...camerasByPane["board-overview"] },
+			"board-selection": { ...camerasByPane["board-selection"] },
 				}
 			: null;
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
@@ -3934,7 +3934,7 @@ function BoardPlayInner(): ReactElement {
 			return { ...laidOut, camera: { ...prev.camera } };
 		});
 		if (interactiveZoomEnabled) {
-			setNodesRedrawCameraEaseTick((n) => n + 1);
+		setNodesRedrawCameraEaseTick((n) => n + 1);
 		}
 	}, [
 		activePaneId,

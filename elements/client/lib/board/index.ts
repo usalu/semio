@@ -3580,13 +3580,22 @@ export class BoardRenderer {
 						break;
 					}
 					case "select": {
-						const payload = row.payload as { ids?: unknown; gestureMergeMode?: unknown; exitHighlightIds?: unknown };
+						const payload = row.payload as {
+							ids?: unknown;
+							gestureMergeMode?: unknown;
+							exitHighlightIds?: unknown;
+							anchorIds?: unknown;
+						};
 						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
 						const exitRaw = payload.exitHighlightIds;
 						if (Array.isArray(exitRaw)) {
 							this.selectionExitHighlightIds = new Set(exitRaw.map((id) => String(id)));
 						} else {
 							this.selectionExitHighlightIds.clear();
+						}
+						const anchorRaw = payload.anchorIds;
+						if (Array.isArray(anchorRaw)) {
+							this.selectionPreviousForEscape = sortedSelectionIds(anchorRaw.map((id) => String(id)));
 						}
 						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
 						const nextKeys = [...ids].sort();
@@ -3599,7 +3608,9 @@ export class BoardRenderer {
 						if (!idsUnchanged) {
 							const prevIds = this.selectionIds;
 							const nextSel = new Set(ids);
-							this.captureSelectionForEscapeUndo(prevIds);
+							if (!Array.isArray(anchorRaw)) {
+								this.captureSelectionForEscapeUndo(prevIds);
+							}
 							this.selectionIds = nextSel;
 							for (const object of this.scene.getAllObjects()) {
 								object.selected = this.selectionIds.has(object.id);
@@ -4470,6 +4481,21 @@ if (boardVitest) {
 		});
 		return { canvas, context };
 	}
+
+	describe("board text overlay paint", () => {
+		it("centers node captions and abbreviates overlong shape text", () => {
+			const { canvas, context } = createMockCanvas(200, 100);
+			const renderer = new BoardRenderer({ renderMode: "main-thread" });
+			renderer.setSize(200, 100, 1);
+			renderer.attachTextOverlayCanvas(canvas);
+			renderer.scene.add(new Node({ id: "caption", radius: 20, text: "abcdefghi", textAlignment: "e", x: 0, y: 0 }));
+			renderer.render();
+			expect(context.textAlign).toBe("center");
+			expect(context.textBaseline).toBe("middle");
+			expect(context.fillText).toHaveBeenCalledWith("abcd…", 100, 50);
+			renderer.dispose();
+		});
+	});
 
 	describe("board hover publication", () => {
 		it("emits hover with hit id and pointer/world coordinates after pointermove", () => {

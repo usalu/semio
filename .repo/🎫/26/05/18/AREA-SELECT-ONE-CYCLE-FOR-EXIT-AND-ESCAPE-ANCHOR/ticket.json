@@ -1,0 +1,10 @@
+{
+  "title": "Area Select One Cycle For Exit And Escape Anchor",
+  "emoji": "🎯",
+  "status": "open",
+  "description": "Selection exit + Escape anchor: during rectangle/lasso drag do not update exit chrome per move; on pointer_up commit apply one transition from initial_ids to final; cancel clears exit; emit anchorIds on area commit for TS Escape restore.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪93046ef00af34017a49a21fba5461f41"
+  ]
+}
