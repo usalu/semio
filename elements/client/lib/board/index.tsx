@@ -188,6 +188,7 @@ export type BoardNodeCircleProps = {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not autofitting. */
 	textFontSize?: number;
+	scale?: number;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	x: number;
@@ -218,6 +219,7 @@ export type BoardNodeRectangleProps = {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not autofitting. */
 	textFontSize?: number;
+	scale?: number;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	width: number;
@@ -356,6 +358,8 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	instance.iconKind =
 		typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== "" ? descriptor.iconKind.trim() : null;
 	instance.nodeKind = typeof descriptor.nodeKind === "string" ? descriptor.nodeKind.trim() : "";
+	instance.setScale(descriptor.scale ?? 1);
+	instance.setKindScale(renderer.resolveNodeKindScale(instance.nodeKind));
 	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
@@ -376,7 +380,9 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.radius = descriptor.radius ?? 8;
+	instance.setScale(descriptor.scale ?? 1);
 	instance.handleKind = (descriptor.handleKind ?? "").trim();
+	instance.setKindScale(renderer.resolveHandleKindScale(instance.handleKind));
 	instance.iconKind =
 		typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== ""
 			? descriptor.iconKind.trim()
@@ -446,6 +452,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			textAutofit: nodeDescriptor.textAutofit,
 			textFontFamily: nodeDescriptor.textFontFamily,
 			textFontSize: nodeDescriptor.textFontSize,
+			scale: nodeDescriptor.scale,
 			userData: nodeDescriptor.userData,
 			visible: nodeDescriptor.visible,
 			width: nodeDescriptor.width,
@@ -467,6 +474,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		textAutofit: nodeDescriptor.textAutofit,
 		textFontFamily: nodeDescriptor.textFontFamily,
 		textFontSize: nodeDescriptor.textFontSize,
+		scale: nodeDescriptor.scale,
 		userData: nodeDescriptor.userData,
 		visible: nodeDescriptor.visible,
 		x: nodeDescriptor.x,
@@ -1453,6 +1461,16 @@ if (boardReactVitest) {
 			expect(descriptor.edges[0]?.contextMenu).toEqual(edgeMenu);
 		});
 
+		it("captures node and handle scale props in descriptors", () => {
+			const descriptor = buildBoardSceneDescriptor(
+				<Node id="scaled" nodeKind="kind.node" radius={12} scale={1.5} x={0} y={0}>
+					<Handle angle={0} handleKind="kind.handle" id="scaled:h0" scale={0.75} />
+				</Node>,
+			);
+			expect(descriptor.nodes[0]?.scale).toBe(1.5);
+			expect(descriptor.handles[0]?.scale).toBe(0.75);
+		});
+
 		it("mergeWasmHostAuthoredEdgesIntoDescriptor keeps WASM gesture edges across JSX-only syncs until adopted", () => {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const jsx = buildBoardSceneDescriptor(
@@ -1891,6 +1909,27 @@ if (boardReactVitest) {
 			syncBoardScene(renderer, descriptor);
 			const h = renderer.scene.getObjectById("h1") as BoardHandleObject;
 			expect(h.handleKind).toBe("slot-a");
+			renderer.dispose();
+		});
+
+		it("multiplies node and handle scales with kind scales in scene instances", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			renderer.setKindCatalogs({
+				handles: [{ color: "#94a3b8", id: "slot-a", label: "Slot A", scale: 2 }],
+				nodes: [{ id: "kind-a", label: "Kind A", scale: 1.5 }],
+			} satisfies BoardKindCatalogBundle);
+			const descriptor = buildBoardSceneDescriptor(
+				<Node id="n" nodeKind="kind-a" radius={10} scale={2} x={0} y={0}>
+					<Handle angle={0} handleKind="slot-a" id="h1" radius={4} scale={0.5} />
+				</Node>,
+			);
+			syncBoardScene(renderer, descriptor);
+			const node = renderer.scene.getObjectById("n") as BoardNodeObject;
+			const handle = renderer.scene.getObjectById("h1") as BoardHandleObject;
+			expect(node.effectiveScale).toBeCloseTo(3);
+			expect(handle.effectiveScale).toBeCloseTo(3);
+			expect(handle.effectiveRadius).toBeCloseTo(12);
+			expect(handle.position.x).toBeCloseTo(30);
 			renderer.dispose();
 		});
 

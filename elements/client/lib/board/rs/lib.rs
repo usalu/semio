@@ -371,6 +371,8 @@ mod scene_json {
 		pub width: Option<f64>,
 		#[serde(default)]
 		pub height: Option<f64>,
+		#[serde(default)]
+		pub scale: Option<f64>,
 	}
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
@@ -397,6 +399,8 @@ mod scene_json {
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
 		pub visible: Option<bool>,
+		#[serde(default)]
+		pub scale: Option<f64>,
 	}
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
@@ -2690,6 +2694,7 @@ mod board_host {
 		pub radius: f64,
 		pub width: f64,
 		pub height: f64,
+		pub scale: f64,
 		pub draggable: bool,
 		pub selected: bool,
 		pub visible: bool,
@@ -2706,6 +2711,7 @@ mod board_host {
 		pub name: String,
 		pub color: Color,
 		pub default_wire_kind: Option<String>,
+		pub scale: f64,
 	}
 
 	#[derive(Clone, Debug)]
@@ -2717,6 +2723,7 @@ mod board_host {
 	#[derive(Clone, Debug)]
 	pub struct NodeKindDef {
 		pub name: String,
+		pub scale: f64,
 	}
 
 	#[derive(Clone, Debug)]
@@ -2748,6 +2755,7 @@ mod board_host {
 		pub node_id: String,
 		pub angle: f64,
 		pub radius: f64,
+		pub scale: f64,
 		pub selected: bool,
 		pub visible: bool,
 		pub style: Option<String>,
@@ -3868,19 +3876,58 @@ mod board_host {
 			)
 		}
 
+		fn node_kind_scale(&self, node_kind: &str) -> f64 {
+			self.node_kinds.get(node_kind).map(|k| k.scale).unwrap_or(1.0)
+		}
+
+		fn handle_kind_scale(&self, handle_kind: &str) -> f64 {
+			self.handle_kinds.get(handle_kind).map(|k| k.scale).unwrap_or(1.0)
+		}
+
+		fn effective_node_scale(&self, n: &NodeData) -> f64 {
+			(n.scale * self.node_kind_scale(n.node_kind.as_str())).max(1e-9)
+		}
+
+		fn scaled_node_radius(&self, n: &NodeData) -> f64 {
+			n.radius * self.effective_node_scale(n)
+		}
+
+		fn scaled_node_width(&self, n: &NodeData) -> f64 {
+			n.width * self.effective_node_scale(n)
+		}
+
+		fn scaled_node_height(&self, n: &NodeData) -> f64 {
+			n.height * self.effective_node_scale(n)
+		}
+
+		fn effective_handle_scale(&self, h: &HandleData) -> f64 {
+			let node_scale = self
+				.nodes
+				.get(h.node_id.as_str())
+				.map(|n| self.effective_node_scale(n))
+				.unwrap_or(1.0);
+			(node_scale * h.scale * self.handle_kind_scale(h.handle_kind.as_str())).max(1e-9)
+		}
+
+		fn effective_handle_radius(&self, h: &HandleData) -> f64 {
+			h.radius * self.effective_handle_scale(h)
+		}
+
 		fn handle_world_pos(&self, h: &HandleData) -> Option<Point> {
 			let n = self.nodes.get(&h.node_id)?;
 			Some(match n.shape {
-				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), n.radius, h.angle),
-				NodeShape::Rectangle => handle_position_on_rectangle(Point::new(n.x, n.y), n.width, n.height, h.angle),
+				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n), h.angle),
+				NodeShape::Rectangle => {
+					handle_position_on_rectangle(Point::new(n.x, n.y), self.scaled_node_width(n), self.scaled_node_height(n), h.angle)
+				}
 			})
 		}
 
 		/// @emoji 📐 Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
 		fn indirect_node_half_extent(n: &NodeData) -> f64 {
 			match n.shape {
-				NodeShape::Circle => n.radius,
-				NodeShape::Rectangle => n.width.min(n.height) * 0.5,
+				NodeShape::Circle => n.radius * n.scale,
+				NodeShape::Rectangle => n.width.min(n.height) * n.scale * 0.5,
 			}
 		}
 

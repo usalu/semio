@@ -275,6 +275,7 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 			const color = String(e.color ?? "").trim();
 			const label = String(e.label ?? e.name ?? "").trim() || id;
 			const dw = e.defaultWireKind != null ? String(e.defaultWireKind).trim() : "";
+			const scale = normalizeBoardScale(e.scale);
 			if (id === "" || color === "") {
 				return null;
 			}
@@ -283,6 +284,7 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 				label,
 				name: label,
 				color,
+				...(scale !== 1 ? { scale } : {}),
 				...(dw !== "" ? { defaultWireKind: dw } : {}),
 			};
 		})
@@ -323,6 +325,10 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 			}
 			if (e.defaultHandleKind != null && String(e.defaultHandleKind).trim() !== "") {
 				row.defaultHandleKind = String(e.defaultHandleKind).trim();
+			}
+			const scale = normalizeBoardScale(e.scale);
+			if (scale !== 1) {
+				row.scale = scale;
 			}
 			return row;
 		})
@@ -1470,6 +1476,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				typeof colorRaw === "string" && colorRaw.trim() !== "" ? colorRaw.trim() : undefined;
 			const hradius = Number(hr.radius);
 			const withRadius = Number.isFinite(hradius) && hradius > 0;
+			const hscale = Number(hr.scale);
+			const withScale = Number.isFinite(hscale) && hscale > 0;
 			const iconRaw = hr.iconKind;
 			const iconTrim =
 				typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
@@ -1481,6 +1489,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				id: hid,
 				...(colorTrim !== undefined ? { color: colorTrim } : {}),
 				...(withRadius ? { radius: hradius } : {}),
+				...(withScale ? { scale: hscale } : {}),
 				...(iconTrim !== undefined ? { iconKind: iconTrim } : {}),
 			};
 			handles.push(base);
@@ -1495,6 +1504,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const textAlignment = fixtureOptionalTextAlignment(node);
 		const rootFlag = node.root === true;
 		const hidden = readBoardJsonHiddenFlag(node);
+		const rawScale = Number(node.scale);
+		const scale = Number.isFinite(rawScale) && rawScale > 0 ? rawScale : undefined;
 		const iconKindRaw = (node as Record<string, unknown>).iconKind;
 		const iconKind =
 			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
@@ -1526,6 +1537,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(rootFlag ? { root: true } : {}),
 				...(iconKind !== undefined ? { iconKind } : {}),
 				...(nodeKind !== undefined ? { nodeKind } : {}),
+				...(scale !== undefined ? { scale } : {}),
 				handles,
 				height,
 				id,
@@ -1554,6 +1566,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(rootFlag ? { root: true } : {}),
 			...(iconKind !== undefined ? { iconKind } : {}),
 			...(nodeKind !== undefined ? { nodeKind } : {}),
+			...(scale !== undefined ? { scale } : {}),
 			handles,
 			id,
 			radius,
@@ -1890,7 +1903,9 @@ export class BoardObject {
 export class Node extends BoardObject {
 	handles: Handle[] = [];
 	height: number;
+	private kindScale = 1;
 	radius: number;
+	scale: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
 	/** @emoji 🏷️ Runtime icon string forwarded to WASM detail LOD (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, baked catalog id, or inline SVG). */
@@ -1924,6 +1939,7 @@ export class Node extends BoardObject {
 		this.nodeKind = nk;
 		this.x = options.x;
 		this.y = options.y;
+		this.scale = normalizeBoardScale(options.scale);
 		this.text = options.text ?? null;
 		this.iconKind =
 			typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
@@ -1954,6 +1970,10 @@ export class Node extends BoardObject {
 
 	get kind(): BoardObjectKind {
 		return "node";
+	}
+
+	get effectiveScale(): number {
+		return normalizeBoardScale(this.scale) * normalizeBoardScale(this.kindScale);
 	}
 
 	setPosition(x: number, y: number): this {
@@ -1989,6 +2009,16 @@ export class Node extends BoardObject {
 		return this;
 	}
 
+	setScale(scale: number): this {
+		this.scale = normalizeBoardScale(scale);
+		return this;
+	}
+
+	setKindScale(scale: number): this {
+		this.kindScale = normalizeBoardScale(scale);
+		return this;
+	}
+
 	setTextAutofit(value: boolean): this {
 		this.textAutofit = value;
 		return this;
@@ -2014,10 +2044,12 @@ export class Handle extends BoardObject {
 	color: string | null;
 	/** @emoji 🏷️ Optional WASM detail LOD icon for this handle marker. */
 	iconKind: string | null;
+	private kindScale = 1;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
 	node: Node;
 	radius: number;
+	scale: number;
 
 	constructor(options: HandleOptions) {
 		super(options.id, options);
@@ -2032,6 +2064,7 @@ export class Handle extends BoardObject {
 			typeof rawIk === "string" && rawIk.trim() !== "" ? rawIk.trim() : null;
 		this.node = options.node;
 		this.radius = options.radius ?? 8;
+		this.scale = normalizeBoardScale(options.scale);
 		this.node.attachHandle(this);
 	}
 
@@ -2047,8 +2080,26 @@ export class Handle extends BoardObject {
 		return computeHandleTangent(this.angle);
 	}
 
+	get effectiveScale(): number {
+		return this.node.effectiveScale * normalizeBoardScale(this.scale) * normalizeBoardScale(this.kindScale);
+	}
+
+	get effectiveRadius(): number {
+		return this.radius * this.effectiveScale;
+	}
+
 	setAngle(angle: number): this {
 		this.angle = angle;
+		return this;
+	}
+
+	setScale(scale: number): this {
+		this.scale = normalizeBoardScale(scale);
+		return this;
+	}
+
+	setKindScale(scale: number): this {
+		this.kindScale = normalizeBoardScale(scale);
 		return this;
 	}
 }
@@ -2592,7 +2643,12 @@ export class BoardRenderer {
 	private width = 1;
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
-	private handleKindLabelLookupCache: { key: string; map: Map<string, string> } | null = null;
+	private kindCatalogLookupCache: {
+		key: string;
+		handleKindLabels: Map<string, string>;
+		handleKindScales: Map<string, number>;
+		nodeKindScales: Map<string, number>;
+	} | null = null;
 
 	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 	private gridSnapEnabled = false;
@@ -2686,27 +2742,64 @@ export class BoardRenderer {
 		this.invalidate();
 	}
 
-	private boardHandleKindLabelById(): ReadonlyMap<string, string> {
-		const cached = this.handleKindLabelLookupCache;
+	private boardKindCatalogLookups(): {
+		handleKindLabels: ReadonlyMap<string, string>;
+		handleKindScales: ReadonlyMap<string, number>;
+		nodeKindScales: ReadonlyMap<string, number>;
+	} {
+		const cached = this.kindCatalogLookupCache;
 		if (cached && cached.key === this.kindCatalogsJson) {
-			return cached.map;
+			return cached;
 		}
-		const m = new Map<string, string>();
+		const handleKindLabels = new Map<string, string>();
+		const handleKindScales = new Map<string, number>();
+		const nodeKindScales = new Map<string, number>();
 		try {
 			const o = JSON.parse(this.kindCatalogsJson) as {
-				handleKinds?: ReadonlyArray<{ id?: string; label?: string; name?: string }>;
+				handleKinds?: ReadonlyArray<{ id?: string; label?: string; name?: string; scale?: number }>;
+				nodeKinds?: ReadonlyArray<{ id?: string; scale?: number }>;
 			};
 			for (const row of o.handleKinds ?? []) {
 				const id = String(row.id ?? "").trim();
 				if (id !== "") {
-					m.set(id, String(row.label ?? row.name ?? id).trim() || id);
+					handleKindLabels.set(id, String(row.label ?? row.name ?? id).trim() || id);
+					handleKindScales.set(id, normalizeBoardScale(row.scale));
+				}
+			}
+			for (const row of o.nodeKinds ?? []) {
+				const id = String(row.id ?? "").trim();
+				if (id !== "") {
+					nodeKindScales.set(id, normalizeBoardScale(row.scale));
 				}
 			}
 		} catch {
 			// ignore
 		}
-		this.handleKindLabelLookupCache = { key: this.kindCatalogsJson, map: m };
-		return m;
+		this.kindCatalogLookupCache = { key: this.kindCatalogsJson, handleKindLabels, handleKindScales, nodeKindScales };
+		return this.kindCatalogLookupCache;
+	}
+
+	private boardHandleKindLabelById(): ReadonlyMap<string, string> {
+		return this.boardKindCatalogLookups().handleKindLabels;
+	}
+
+	resolveNodeKindScale(nodeKind: string): number {
+		const id = nodeKind.trim();
+		return id === "" ? 1 : this.boardKindCatalogLookups().nodeKindScales.get(id) ?? 1;
+	}
+
+	resolveHandleKindScale(handleKind: string): number {
+		const id = handleKind.trim();
+		return id === "" ? 1 : this.boardKindCatalogLookups().handleKindScales.get(id) ?? 1;
+	}
+
+	private refreshSceneKindScales(): void {
+		for (const node of this.scene.nodes.values()) {
+			node.setKindScale(this.resolveNodeKindScale(node.nodeKind));
+		}
+		for (const handle of this.scene.handles.values()) {
+			handle.setKindScale(this.resolveHandleKindScale(handle.handleKind));
+		}
 	}
 
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
@@ -2869,7 +2962,8 @@ export class BoardRenderer {
 			return;
 		}
 		this.kindCatalogsJson = json;
-		this.handleKindLabelLookupCache = null;
+		this.kindCatalogLookupCache = null;
+		this.refreshSceneKindScales();
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -3272,6 +3366,9 @@ export class BoardRenderer {
 			if (node.textAlignment !== BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) {
 				base.textAlignment = node.textAlignment;
 			}
+			if (node.scale !== 1) {
+				base.scale = node.scale;
+			}
 			if (node.shape === "rectangle") {
 				base.shape = "rectangle";
 				base.width = node.width;
@@ -3296,6 +3393,9 @@ export class BoardRenderer {
 				visible,
 				handleKind: handle.handleKind,
 			};
+			if (handle.scale !== 1) {
+				row.scale = handle.scale;
+			}
 			if (handle.color) {
 				row.color = handle.color;
 			}
@@ -3652,10 +3752,10 @@ export class BoardRenderer {
 			let maxW: number;
 			let maxH: number;
 			if (node.shape === "rectangle") {
-				maxW = node.width * this.camera.zoom * inset;
-				maxH = node.height * this.camera.zoom * inset;
+				maxW = boardNodeScaledWidth(node) * this.camera.zoom * inset;
+				maxH = boardNodeScaledHeight(node) * this.camera.zoom * inset;
 			} else {
-				const d = 2 * node.radius * this.camera.zoom * inset;
+				const d = 2 * boardNodeScaledRadius(node) * this.camera.zoom * inset;
 				maxW = d;
 				maxH = d;
 			}
@@ -3701,7 +3801,7 @@ export class BoardRenderer {
 					continue;
 				}
 				const hp = this.worldToScreen(handle.position);
-				const rScreen = handle.radius * this.camera.zoom;
+				const rScreen = boardHandleScaledRadius(handle) * this.camera.zoom;
 				if (rScreen < 2) {
 					continue;
 				}
@@ -5847,7 +5947,9 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			hidden: props.hidden,
 			iconKind: props.iconKind,
 			id: props.id,
+			nodeKind: props.nodeKind,
 			root: props.root,
+			scale: props.scale,
 			selected: props.selected,
 			shape: "rectangle",
 			style: props.style,
@@ -5868,8 +5970,10 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		hidden: props.hidden,
 		iconKind: props.iconKind,
 		id: props.id,
+		nodeKind: props.nodeKind,
 		radius: props.radius,
 		root: props.root,
+		scale: props.scale,
 		selected: props.selected,
 		style: props.style,
 		text: props.text,
@@ -5902,6 +6006,9 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 		typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	instance.iconKind =
 		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
+	instance.nodeKind = typeof props.nodeKind === "string" ? props.nodeKind.trim() : "";
+	instance.setScale(props.scale ?? 1);
+	instance.setKindScale(renderer.resolveNodeKindScale(instance.nodeKind));
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -5922,7 +6029,9 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = resolveBoardVisibleFlag(props);
 	instance.radius = props.radius ?? 8;
+	instance.setScale(props.scale ?? 1);
 	instance.handleKind = (props.handleKind ?? "").trim();
+	instance.setKindScale(renderer.resolveHandleKindScale(instance.handleKind));
 	instance.iconKind =
 		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
 	const rawC = props.color;
@@ -5975,6 +6084,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		a.id === b.id &&
 		a.angle === b.angle &&
 		a.radius === b.radius &&
+		normalizeBoardScale(a.scale) === normalizeBoardScale(b.scale) &&
 		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
 		(a.iconKind ?? "") === (b.iconKind ?? "") &&
 		ac === bc &&
@@ -6027,6 +6137,7 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
 		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
 		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
+		normalizeBoardScale(a.scale) !== normalizeBoardScale(b.scale) ||
 		(a.root === true) !== (b.root === true) ||
 		(a.iconKind ?? "") !== (b.iconKind ?? "") ||
 		(a.nodeKind ?? "").trim() !== (b.nodeKind ?? "").trim()
@@ -6053,6 +6164,7 @@ function mountHandleUnderNode(renderer: BoardRenderer, nodeHost: BoardHostNode, 
 	}
 	nodeHost.handleChildren.add(handleHost);
 	const impl = new Handle({ ...handleHost.props, node: nodeHost.impl });
+	impl.setKindScale(renderer.resolveHandleKindScale(impl.handleKind));
 	handleHost.impl = impl;
 	renderer.batch(() => {
 		renderer.scene.add(impl);
@@ -6064,6 +6176,7 @@ function mountNode(renderer: BoardRenderer, nodeHost: BoardHostNode): void {
 	if (nodeHost.impl.parent) {
 		return;
 	}
+	nodeHost.impl.setKindScale(renderer.resolveNodeKindScale(nodeHost.impl.nodeKind));
 	renderer.batch(() => {
 		renderer.scene.add(nodeHost.impl);
 	});
