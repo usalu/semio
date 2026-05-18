@@ -133,6 +133,10 @@ export interface BoardCanvasProps {
 	onEdgeDelete?: (payload: { id: string }) => void;
 	/** @emoji 🧭 Second click on an indirect handle ring target after {@link BoardEventMap.edgeCreate}. */
 	onIndirectConnect?: (payload: BoardEdgeLinkPayload) => void;
+	/** @emoji 🎯 Compatible targets highlighted while a link wire is active. */
+	onLinkCompatibleNodes?: (payload: BoardEventMap["linkCompatibleNodes"]) => void;
+	/** @emoji ⭕ Handle ring on a hovered compatible target during link drag. */
+	onLinkTargetRing?: (payload: BoardEventMap["linkTargetRing"]) => void;
 	/** @emoji ♻️ GPU/text invalidation tick (coalesced `invalidate`). */
 	onInvalidate?: () => void;
 	onNodeCreate?: (payload: BoardGraphNodeIdPayload) => void;
@@ -530,6 +534,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 	const desiredEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
 	const desiredWireIds = new Set(descriptor.wires.map((wire) => wire.id));
 
+	renderer.scene.withDescriptorSync(() => {
 	renderer.batch(() => {
 		for (const nodeDescriptor of descriptor.nodes) {
 			let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
@@ -632,6 +637,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 			}
 		}
 	});
+	});
 
 	renderer.invalidate();
 }
@@ -724,6 +730,8 @@ export function BoardCanvas({
 	onFixtureDrop,
 	onHover,
 	onIndirectConnect,
+	onLinkCompatibleNodes,
+	onLinkTargetRing,
 	onInvalidate,
 	onNodeChange,
 	onNodeCreate,
@@ -960,12 +968,18 @@ export function BoardCanvas({
 		if (onProximityConnect) {
 			unsubs.push(contextRenderer.on("proximityConnect", onProximityConnect));
 		}
+		if (onLinkCompatibleNodes) {
+			unsubs.push(contextRenderer.on("linkCompatibleNodes", onLinkCompatibleNodes));
+		}
+		if (onLinkTargetRing) {
+			unsubs.push(contextRenderer.on("linkTargetRing", onLinkTargetRing));
+		}
 		return () => {
 			for (const u of unsubs) {
 				u();
 			}
 		};
-	}, [contextRenderer, onConnect, onIndirectConnect, onProximityConnect]);
+	}, [contextRenderer, onConnect, onIndirectConnect, onLinkCompatibleNodes, onLinkTargetRing, onProximityConnect]);
 
 	useEffect(() => {
 		if (!contextRenderer || (!onCamera && !onViewportChange && !onPan && !onZoom)) {
@@ -1898,6 +1912,52 @@ if (boardReactVitest) {
 			expect(secondNode).not.toBe(firstNode);
 			expect((secondNode as BoardNodeObject).shape).toBe("rectangle");
 			expect((secondNode as BoardNodeObject).width).toBe(40);
+			renderer.dispose();
+		});
+
+		it("syncBoardScene purge does not emit nodeDelete (hosts own fixture truth)", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const nodeDeletes: string[] = [];
+			renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+			const withNode = buildBoardSceneDescriptor(
+				<Node id="keep" radius={24} x={0} y={0}>
+					<Handle handleKind="board.port" angle={0} id="keep.h0" />
+				</Node>,
+			);
+			syncBoardScene(renderer, withNode);
+			expect(renderer.scene.nodes.has("keep")).toBe(true);
+			syncBoardScene(renderer, { edges: [], handles: [], nodes: [], wires: [] });
+			expect(renderer.scene.nodes.has("keep")).toBe(false);
+			expect(nodeDeletes).toEqual([]);
+			renderer.dispose();
+		});
+
+		it("keeps a newly merged palette node across wasmHostSceneMerge resync", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const nodeDeletes: string[] = [];
+			renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+			const base = buildBoardSceneDescriptor(
+				<Node id="a" radius={40} x={0} y={0}>
+					<Handle handleKind="board.port" angle={0} id="a.h0" />
+				</Node>,
+			);
+			syncBoardScene(renderer, base);
+			const dropped = buildBoardSceneDescriptor(
+				<>
+					<Node id="a" radius={40} x={0} y={0}>
+						<Handle handleKind="board.port" angle={0} id="a.h0" />
+					</Node>
+					<Node id="palette-drop-1" radius={20} x={120} y={80}>
+						<Handle handleKind="board.port" angle={0} id="palette-drop-1.h0" />
+					</Node>
+				</>,
+			);
+			syncBoardScene(renderer, dropped);
+			expect(renderer.scene.nodes.has("palette-drop-1")).toBe(true);
+			syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, dropped));
+			syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, dropped));
+			expect(renderer.scene.nodes.has("palette-drop-1")).toBe(true);
+			expect(nodeDeletes).toEqual([]);
 			renderer.dispose();
 		});
 

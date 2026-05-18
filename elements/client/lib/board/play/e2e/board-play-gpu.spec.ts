@@ -55,7 +55,7 @@ test.describe("board play", () => {
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		const overlays = page.locator('[data-slot="window-options-overlay"]');
+		const overlays = page.locator('[data-slot="window-measures-overlay"]');
 		await expect(overlays).toHaveCount(3, { timeout: 120_000 });
 		const n = await overlays.count();
 		for (let i = 0; i < n; i++) {
@@ -79,7 +79,7 @@ test.describe("board play", () => {
 			const stack = document.elementsFromPoint(x, y);
 			const idxCanvas = stack.indexOf(el);
 			const idxOverlay = stack.findIndex(
-				(n) => n instanceof Element && n.closest("[data-slot='window-options-overlay']") !== null,
+				(n) => n instanceof Element && n.closest("[data-slot='window-measures-overlay']") !== null,
 			);
 			return { idxCanvas, idxOverlay, stackLen: stack.length };
 		});

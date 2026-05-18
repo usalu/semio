@@ -48,6 +48,11 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "replace" | "subtractive";
 
+/** @emoji ✅ Narrows unknown JSON or bridge payloads to {@link BoardSelectionMode}. */
+export function isBoardSelectionMode(value: unknown): value is BoardSelectionMode {
+	return value === "additive" || value === "invertive" || value === "replace" || value === "subtractive";
+}
+
 /** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
 export interface BoardSelectionTargets {
 	edges: boolean;
@@ -364,6 +369,8 @@ export interface CameraState {
 
 export interface BoardSelectionSnapshot {
 	ids: string[];
+	/** @emoji 🖱️ Effective merge mode for this emission when modifier chords override the sticky toolbar option. */
+	gestureMergeMode?: BoardSelectionMode;
 }
 
 export interface BoardSelectionOptions {
@@ -558,6 +565,7 @@ export interface BoardForceGraphLayoutOptions {
 	gravity?: number;
 	idealEdgeLength?: number;
 	iterations?: number;
+	lockedNodeIds?: readonly string[];
 	maxSpeed?: number;
 	pairwiseRepulsionMaxBodies?: number;
 	randomSeed?: number;
@@ -586,6 +594,7 @@ export interface BoardRedrawLayoutOptions {
 		layerSpacing: number;
 		siblingGap: number;
 	};
+	lockedNodeIds?: readonly string[];
 }
 
 /** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); Barnes–Hut repulsion beyond `pairwiseRepulsionMaxBodies`, else exact pairwise. */
@@ -654,6 +663,19 @@ export interface BoardEdgeLinkPayload {
 	target: string;
 }
 
+/** @emoji 🎯 Compatible target nodes while a link wire is active ({@link BoardEventMap.linkCompatibleNodes}). */
+export interface BoardLinkCompatibleNodesPayload {
+	nodeIds: string[];
+	source: string;
+}
+
+/** @emoji ⭕ Indirect-style handle ring on a hovered compatible target ({@link BoardEventMap.linkTargetRing}). */
+export interface BoardLinkTargetRingPayload {
+	handleIds: string[];
+	nodeId: string | null;
+	source: string;
+}
+
 /** @emoji 🧵 Payload for {@link BoardEventMap.wireCreate} (declarative / scene wire). */
 export interface BoardWireSnapshotPayload {
 	endX: number | null;
@@ -693,6 +715,8 @@ export interface BoardEventMap {
 	hover: BoardHoverPayload;
 	indirectConnect: BoardEdgeLinkPayload;
 	invalidate: undefined;
+	linkCompatibleNodes: BoardLinkCompatibleNodesPayload;
+	linkTargetRing: BoardLinkTargetRingPayload;
 	nodeChange: BoardGraphNodeIdPayload;
 	nodeCreate: BoardGraphNodeIdPayload;
 	nodeDelete: { id: string };
@@ -1239,8 +1263,16 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 	return Array.from(ids).sort((left, right) => left.localeCompare(right));
 }
 
-function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
-	return { ids: sortedSelectionIds(ids) };
+function selectionSnapshotsEqual(left: BoardSelectionSnapshot, right: BoardSelectionSnapshot): boolean {
+	return arrayEqual(left.ids, right.ids) && left.gestureMergeMode === right.gestureMergeMode;
+}
+
+function createSelectionSnapshot(ids: Iterable<string>, gestureMergeMode?: BoardSelectionMode): BoardSelectionSnapshot {
+	const snap: BoardSelectionSnapshot = { ids: sortedSelectionIds(ids) };
+	if (gestureMergeMode !== undefined) {
+		snap.gestureMergeMode = gestureMergeMode;
+	}
+	return snap;
 }
 
 function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
@@ -2027,7 +2059,23 @@ export class BoardScene {
 	readonly nodes = new Map<string, Node>();
 	readonly wires = new Map<string, Wire>();
 
+	private descriptorSyncDepth = 0;
+
 	constructor(private renderer: BoardRenderer | null = null) { }
+
+	/** @emoji 🔁 Runs {@link BoardScene.remove} purges without {@link BoardEventMap.nodeDelete} / edge / wire lifecycle (declarative JSX owns truth). */
+	withDescriptorSync(action: () => void): void {
+		this.descriptorSyncDepth += 1;
+		try {
+			action();
+		} finally {
+			this.descriptorSyncDepth -= 1;
+		}
+	}
+
+	private emitLifecycleDeletes(): boolean {
+		return this.descriptorSyncDepth === 0;
+	}
 
 	setRenderer(renderer: BoardRenderer | null): void {
 		this.renderer = renderer;
@@ -2123,7 +2171,9 @@ export class BoardScene {
 			for (const handle of Array.from(object.handles)) {
 				this.remove(handle);
 			}
-			this.renderer?.emit("nodeDelete", { id: object.id });
+			if (this.emitLifecycleDeletes()) {
+				this.renderer?.emit("nodeDelete", { id: object.id });
+			}
 			this.nodes.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -2153,7 +2203,9 @@ export class BoardScene {
 		}
 
 		if (object instanceof Wire) {
-			this.renderer?.emit("wireDestroy", { id: object.id });
+			if (this.emitLifecycleDeletes()) {
+				this.renderer?.emit("wireDestroy", { id: object.id });
+			}
 			this.wires.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -2161,7 +2213,9 @@ export class BoardScene {
 			return this;
 		}
 
-		this.renderer?.emit("edgeDelete", { id: object.id });
+		if (this.emitLifecycleDeletes()) {
+			this.renderer?.emit("edgeDelete", { id: object.id });
+		}
 		this.edges.delete(object.id);
 		object.parent = null;
 		object.attachRenderer(null);
@@ -3320,17 +3374,24 @@ export class BoardRenderer {
 						break;
 					}
 					case "select": {
-						const ids = (row.payload as { ids: string[] }).ids ?? [];
+						const payload = row.payload as { ids?: unknown; gestureMergeMode?: unknown };
+						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
+						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
 						const nextKeys = [...ids].sort();
-						if (arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds))) {
+						const prevSnap = this.selectionStore.getSnapshot();
+						const idsUnchanged = arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds));
+						const gestureUnchanged = prevSnap.gestureMergeMode === gestureMergeMode;
+						if (idsUnchanged && gestureUnchanged) {
 							break;
 						}
-						this.selectionIds = new Set(ids);
-						for (const object of this.scene.getAllObjects()) {
-							object.selected = this.selectionIds.has(object.id);
+						if (!idsUnchanged) {
+							this.selectionIds = new Set(ids);
+							for (const object of this.scene.getAllObjects()) {
+								object.selected = this.selectionIds.has(object.id);
+							}
 						}
-						const snap = createSelectionSnapshot(this.selectionIds);
-						this.selectionStore.setSnapshot(snap, (left, right) => arrayEqual(left.ids, right.ids));
+						const snap = createSelectionSnapshot(ids, gestureMergeMode);
+						this.selectionStore.setSnapshot(snap, selectionSnapshotsEqual);
 						this.emitter.emit("select", snap);
 						break;
 					}
@@ -3416,6 +3477,24 @@ export class BoardRenderer {
 							break;
 						}
 						this.emitter.emit("indirectConnect", { id, source: sourceId, target: targetId });
+						break;
+					}
+					case "linkCompatibleNodes": {
+						const source = String((row.payload as { source?: string }).source ?? "");
+						const nodeIds = Array.isArray((row.payload as { nodeIds?: unknown }).nodeIds)
+							? (row.payload as { nodeIds: unknown[] }).nodeIds.map((id) => String(id))
+							: [];
+						this.emitter.emit("linkCompatibleNodes", { source, nodeIds });
+						break;
+					}
+					case "linkTargetRing": {
+						const source = String((row.payload as { source?: string }).source ?? "");
+						const nodeIdRaw = (row.payload as { nodeId?: string | null }).nodeId;
+						const nodeId = nodeIdRaw === null || nodeIdRaw === undefined ? null : String(nodeIdRaw);
+						const handleIds = Array.isArray((row.payload as { handleIds?: unknown }).handleIds)
+							? (row.payload as { handleIds: unknown[] }).handleIds.map((id) => String(id))
+							: [];
+						this.emitter.emit("linkTargetRing", { source, nodeId, handleIds });
 						break;
 					}
 					default:
@@ -3714,14 +3793,14 @@ export class BoardRenderer {
 	private updateSelection(ids: Iterable<string>): void {
 		const nextIds = new Set(ids);
 		const nextSnapshot = createSelectionSnapshot(nextIds);
-		if (arrayEqual(nextSnapshot.ids, this.selectionStore.getSnapshot().ids)) {
+		if (selectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
 			return;
 		}
 		this.selectionIds = nextIds;
 		for (const object of this.scene.getAllObjects()) {
 			object.selected = this.selectionIds.has(object.id);
 		}
-		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
+		this.selectionStore.setSnapshot(nextSnapshot, selectionSnapshotsEqual);
 		this.emit("select", nextSnapshot);
 		this.markDirty();
 	}
@@ -4439,6 +4518,28 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
+		it("at overview LOD drags the selection from a gap inside the union bounds without a node hit", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const a = new Node({ draggable: true, id: "a", radius: 40, x: 0, y: 0 });
+			const b = new Node({ draggable: true, id: "b", radius: 40, x: 300, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+			renderer.setCamera(0, 0, 0.25);
+			renderer.setSelectionIds(["a", "b"]);
+			const gap = renderer.worldToScreen({ x: 150, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: gap.x, clientY: gap.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: gap.x + 40, clientY: gap.y + 20 }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: gap.x + 40, clientY: gap.y + 20 }));
+			const zoom = 0.25;
+			expect(a.x).toBeCloseTo(40 / zoom, 3);
+			expect(a.y).toBeCloseTo(20 / zoom, 3);
+			expect(b.x).toBeCloseTo(300 + 40 / zoom, 3);
+			expect(b.y).toBeCloseTo(20 / zoom, 3);
+			expect([...renderer.selection.getSnapshot().ids].sort()).toEqual(["a", "b"]);
+			renderer.dispose();
+		});
+
 		it("keeps imperative node coordinates when declarative props still show pre-drag authoring values", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
@@ -4507,6 +4608,10 @@ if (boardVitest) {
 
 			const d0 = renderer.worldToScreen({ x: -40, y: -50 });
 			const d1 = renderer.worldToScreen({ x: 40, y: 50 });
+			const selectSnaps: BoardSelectionSnapshot[] = [];
+			const offSelect = renderer.on("select", (snap) => {
+				selectSnaps.push({ ...snap, ids: [...snap.ids] });
+			});
 			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: d0.x, clientY: d0.y }));
 			canvas.dispatchEvent(
 				new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
@@ -4514,8 +4619,11 @@ if (boardVitest) {
 			canvas.dispatchEvent(
 				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
 			);
+			offSelect();
 			const ids = [...renderer.selection.getSnapshot().ids].sort((x, y) => x.localeCompare(y));
 			expect(ids).toEqual(["keep", "node"]);
+			expect(selectSnaps.some((s) => s.gestureMergeMode === "additive")).toBe(true);
+			expect(renderer.selection.getSnapshot().gestureMergeMode).toBe("additive");
 
 			renderer.dispose();
 		});
@@ -5053,6 +5161,35 @@ if (boardVitest) {
 			const bx = (laid.nodes[1] as { x: number }).x;
 			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
 			expect(laid.schema).toBe("elements.board.fixture/v1");
+		});
+
+		it("keeps locked node coordinates fixed on force redraw", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 35, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 35, shape: "circle", x: 40, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
+				forceGraph: {
+					gravity: 0,
+					idealEdgeLength: 160,
+					iterations: 180,
+					lockedNodeIds: ["a"],
+					randomSeed: 101,
+					repulsionStrength: 7500,
+					springStrength: 0.045,
+				},
+				lockedNodeIds: ["a"],
+				mode: "force-graph",
+				redrawHandlesAfter: false,
+			});
+			expect((laid.nodes[0] as { x: number }).x).toBeCloseTo(0, 5);
+			expect((laid.nodes[0] as { y: number }).y).toBeCloseTo(0, 5);
+			expect(Math.abs((laid.nodes[1] as { x: number }).x - 40)).toBeGreaterThan(20);
 		});
 
 		it("redraw leaves hidden nodes untouched", () => {

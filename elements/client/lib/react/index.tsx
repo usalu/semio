@@ -19314,7 +19314,7 @@ export interface WindowConfig {
   onMinimize?: () => void;
   onClose?: () => void;
   controls?: React.ReactNode;
-  options?: React.ReactNode;
+  measures?: React.ReactNode;
 }
 
 /**
@@ -19343,7 +19343,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, options }) => {
+const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
   const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
   const windowRef = React.useRef<HTMLDivElement>(null);
@@ -19400,16 +19400,16 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
-          {options ? (
+          {measures ? (
             <div
-              data-slot="window-options-overlay"
+              data-slot="window-measures-overlay"
               className="pointer-events-none absolute top-0 right-0 bottom-0 left-auto z-panel flex w-max max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end justify-start gap-half overflow-hidden p-single"
             >
               <div
-                data-slot="window-options-rail"
+                data-slot="window-measures-stack"
                 className="pointer-events-auto flex max-h-full max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end gap-half overflow-y-auto overscroll-contain"
               >
-                {options}
+                {measures}
               </div>
             </div>
           ) : null}
@@ -21520,14 +21520,16 @@ export interface UIWindowControl {
 }
 
 /**
- * 🧱 Declarative per-window option entries rendered as small floating controls stacked top-to-bottom along the right edge.
+ * 📐 Declarative `measure` entries for a window: read-only readouts (`display`, `reading`) or interactive controls; rendered as compact floats on the right.
  **/
-export type UIWindowOption =
+export type UIWindowMeasure =
+  | { kind: "display"; id: string; label?: string; content: React.ReactNode }
+  | { kind: "reading"; id: string; label?: string; text: string; monospace?: boolean }
   | { kind: "section"; id: string; title: string }
   | { kind: "separator"; id: string }
   | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon?: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
   | { kind: "select"; id: string; label?: string; value?: string; defaultValue?: string; items: { id: string; value: string; label: string }[]; onValueChange?: (value: string) => void }
-  | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; options: { value: string; label: string }[]; onValueChange?: (value: string) => void }
+  | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; choices: { value: string; label: string }[]; onValueChange?: (value: string) => void }
   | { kind: "button"; id: string; label?: string; text: string; icon?: React.ReactNode; onClick?: () => void }
   | { kind: "buttonCycle"; id: string; label?: string; value?: string; items: { value: string; label: string; icon?: React.ReactNode; text?: string; id?: string }[]; onValueChange?: (value: string) => void }
   | { kind: "input"; id: string; label?: string; value?: string; placeholder?: string; onLazyChange?: (value: string) => void }
@@ -21539,7 +21541,7 @@ export type UIWindowOption =
   | { kind: "color"; id: string; label?: string; value?: string; onChange?: (value: string) => void };
 
 /**
- * Definition of a window kind with label, icon, component, controls, and optional floating window options.
+ * Definition of a window kind with label, icon, component, controls, and optional floating window measures.
  * Each app registers the window kinds it can render.
  **/
 export interface UIWindowKindDefinition {
@@ -21548,7 +21550,7 @@ export interface UIWindowKindDefinition {
   icon?: React.ReactNode;
   component: React.ComponentType<any>;
   controls?: UIWindowControl[];
-  options?: UIWindowOption[];
+  measures?: UIWindowMeasure[];
   contextMenu?: ContextMenuItem[];
   variants?: {
     id: string;
@@ -21845,12 +21847,12 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
   </ActionGroup>
 );
 
-// #region 🪟WindowOptionsOverlay
+// #region 🪟WindowMeasuresOverlay
 
-const UIWindowOptionFloat: React.FC<{ optionId: string; label?: string; children: React.ReactNode }> = ({ optionId, label, children }) => (
+const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; children: React.ReactNode }> = ({ measureId, label, children }) => (
   <div
-    data-slot="window-option-float"
-    data-option-id={optionId}
+    data-slot="window-measure-float"
+    data-measure-id={measureId}
     className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm"
   >
     {label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
@@ -21859,141 +21861,153 @@ const UIWindowOptionFloat: React.FC<{ optionId: string; label?: string; children
 );
 
 /**
- * 🪟 Maps declarative `UIWindowOption` entries into compact floating controls aligned to the right edge.
+ * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
  **/
-export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ options }) => (
-  <div data-slot="window-options-rail-inner" className="flex flex-col items-end gap-half">
-    {options.map((option) => {
-      switch (option.kind) {
+export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
+  <div data-slot="window-measures-stack-inner" className="flex flex-col items-end gap-half">
+    {measures.map((measure) => {
+      switch (measure.kind) {
+        case "display":
+          return (
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
+            </UIWindowMeasureFloat>
+          );
+        case "reading":
+          return (
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
+            </UIWindowMeasureFloat>
+          );
         case "section":
           return (
             <div
-              key={option.id}
-              data-slot="window-option-section"
+              key={measure.id}
+              data-slot="window-measure-heading"
               className="border-element/60 bg-window/85 max-w-[11rem] rounded-md border px-single py-tiny text-center shadow-sm backdrop-blur-sm"
             >
-              <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{option.title}</span>
+              <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{measure.title}</span>
             </div>
           );
         case "separator":
-          return <div key={option.id} data-slot="window-option-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
+          return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
         case "toggle":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Toggle id={option.id} pressed={option.pressed} defaultPressed={option.defaultPressed} onPressedChange={option.onPressedChange} icon={option.icon ?? <CheckIcon className="size-small" />} text={option.text} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Toggle id={measure.id} pressed={measure.pressed} defaultPressed={measure.defaultPressed} onPressedChange={measure.onPressedChange} icon={measure.icon ?? <CheckIcon className="size-small" />} text={measure.text} />
+            </UIWindowMeasureFloat>
           );
         case "select":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Select id={option.id} value={option.value} defaultValue={option.defaultValue} onValueChange={option.onValueChange}>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
                 <SelectTrigger className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {option.items.map((item) => (
+                  {measure.items.map((item) => (
                     <SelectItem key={item.id} value={item.value}>
                       {item.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </UIWindowOptionFloat>
+            </UIWindowMeasureFloat>
           );
         case "combobox":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Combobox id={option.id} value={option.value} options={option.options} placeholder={option.placeholder} onValueChange={option.onValueChange} className="w-full min-w-0 max-w-[9.5rem]" />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className="w-full min-w-0 max-w-[9.5rem]" />
+            </UIWindowMeasureFloat>
           );
         case "button":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Button id={option.id} text={option.text} icon={option.icon} onClick={option.onClick} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
+            </UIWindowMeasureFloat>
           );
         case "buttonCycle":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <ButtonCycle id={option.id} value={option.value} onValueChange={option.onValueChange} items={option.items} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
+            </UIWindowMeasureFloat>
           );
         case "input":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Input id={option.id} lazy className="h-medium w-full min-w-0 max-w-[9.5rem]" value={option.value} placeholder={option.placeholder} onLazyChange={option.onLazyChange} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Input id={measure.id} lazy className="h-medium w-full min-w-0 max-w-[9.5rem]" value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
+            </UIWindowMeasureFloat>
           );
         case "textarea":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Textarea id={option.id} lazy className="min-h-[4rem] w-full min-w-0 max-w-[9.5rem]" value={option.value} placeholder={option.placeholder} rows={option.rows} onLazyChange={option.onLazyChange} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Textarea id={measure.id} lazy className="min-h-[4rem] w-full min-w-0 max-w-[9.5rem]" value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
+            </UIWindowMeasureFloat>
           );
         case "checkbox":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id}>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id}>
               <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
                 <input
-                  id={option.id}
+                  id={measure.id}
                   type="checkbox"
                   className="border-element accent-foreground size-small shrink-0 rounded border"
-                  {...(option.checked !== undefined ? { checked: option.checked } : { defaultChecked: option.defaultChecked })}
-                  onChange={(event) => option.onCheckedChange?.(event.target.checked)}
+                  {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
+                  onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
                 />
-                {option.label ? (
-                  <label htmlFor={option.id} className="cursor-pointer select-none">
-                    {option.label}
+                {measure.label ? (
+                  <label htmlFor={measure.id} className="cursor-pointer select-none">
+                    {measure.label}
                   </label>
                 ) : null}
               </div>
-            </UIWindowOptionFloat>
+            </UIWindowMeasureFloat>
           );
         case "radio":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={option.id}>
-                {option.items.map((item) => (
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={measure.id}>
+                {measure.items.map((item) => (
                   <button
                     key={item.value}
                     type="button"
-                    data-slot="window-option-radio-item"
+                    data-slot="window-measure-radio-item"
                     className={cn(
                       "border-element/80 hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
-                      option.value === item.value && "bg-active-base text-active-foreground",
+                      measure.value === item.value && "bg-active-base text-active-foreground",
                     )}
-                    onClick={() => option.onChange?.(item.value)}
+                    onClick={() => measure.onChange?.(item.value)}
                   >
                     {item.label}
                   </button>
                 ))}
               </div>
-            </UIWindowOptionFloat>
+            </UIWindowMeasureFloat>
           );
         case "slider": {
-          const min = option.min ?? 0;
-          const max = option.max ?? 100;
-          const v = option.value ?? min;
+          const min = measure.min ?? 0;
+          const max = measure.max ?? 100;
+          const v = measure.value ?? min;
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Slider id={option.id} value={[v]} min={min} max={max} step={option.step} onValueChange={(vals) => option.onValueChange?.(vals[0] ?? min)} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
+            </UIWindowMeasureFloat>
           );
         }
         case "number":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Stepper id={option.id} value={option.value} min={option.min} max={option.max} step={option.step} onChange={option.onChange} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
+            </UIWindowMeasureFloat>
           );
         case "color":
           return (
-            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
-              <Input id={option.id} type="color" className="h-medium w-full min-w-0 max-w-[9.5rem] cursor-pointer" value={option.value} onChange={(event) => option.onChange?.(event.target.value)} />
-            </UIWindowOptionFloat>
+            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+              <Input id={measure.id} type="color" className="h-medium w-full min-w-0 max-w-[9.5rem] cursor-pointer" value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
+            </UIWindowMeasureFloat>
           );
         default: {
-          const _exhaustive: never = option;
+          const _exhaustive: never = measure;
           return _exhaustive;
         }
       }
@@ -22001,7 +22015,7 @@ export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ o
   </div>
 );
 
-// #endregion 🪟WindowOptionsOverlay
+// #endregion 🪟WindowMeasuresOverlay
 
 /**
  * Portal target for a golden-layout window kind.
@@ -22186,7 +22200,7 @@ const UICanvas: React.FC<{
             onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
             onClose={() => clickGoldenLayoutControl(".lm_close")}
             controls={portal.windowKind.controls ? <UIWindowControlsGroup controls={portal.windowKind.controls} /> : undefined}
-            options={portal.windowKind.options?.length ? <UIWindowOptionsRail options={portal.windowKind.options} /> : undefined}
+            measures={portal.windowKind.measures?.length ? <UIWindowMeasures measures={portal.windowKind.measures} /> : undefined}
           >
             <ContextMenu items={portal.windowKind.contextMenu}>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -23813,31 +23827,33 @@ if (treeVitest) {
     });
   });
 
-  describe("window options overlay", () => {
-    it("renders floating window options overlay without consuming main layout width", () => {
+  describe("window measures overlay", () => {
+    it("renders floating window measures overlay without consuming main layout width", () => {
       const markup = renderToStaticMarkup(
-        <Window id="opt-win" options={<span data-testid="opt-slot">o</span>}>
+        <Window id="opt-win" measures={<span data-testid="measure-slot">m</span>}>
           <div>main-body</div>
         </Window>,
       );
-      expect(markup).toContain('data-slot="window-options-overlay"');
-      expect(markup).toContain('data-slot="window-options-rail"');
+      expect(markup).toContain('data-slot="window-measures-overlay"');
+      expect(markup).toContain('data-slot="window-measures-stack"');
       expect(markup).toContain("main-body");
     });
 
-    it("renders declarative UIWindowOptionsRail entries as right-aligned floats", () => {
-      const opts: UIWindowOption[] = [
+    it("renders declarative UIWindowMeasures entries as right-aligned floats", () => {
+      const list: UIWindowMeasure[] = [
+        { content: <span>Rich</span>, id: "disp", kind: "display", label: "State" },
+        { id: "read", kind: "reading", monospace: true, text: "42", label: "Count" },
         { id: "sec", kind: "section", title: "Group" },
         { id: "sep", kind: "separator" },
         { id: "btn", kind: "button", onClick: () => undefined, text: "Run" },
         { checked: true, id: "chk", kind: "checkbox", label: "On", onCheckedChange: () => undefined },
         { id: "rad", items: [{ label: "A", value: "a" }], kind: "radio", onChange: () => undefined, value: "a" },
       ];
-      const markup = renderToStaticMarkup(<UIWindowOptionsRail options={opts} />);
-      expect(markup).toContain('data-slot="window-options-rail-inner"');
-      expect(markup).toContain('data-slot="window-option-section"');
-      expect(markup).toContain('data-slot="window-option-float"');
-      expect(markup).toContain('data-slot="window-option-radio-item"');
+      const markup = renderToStaticMarkup(<UIWindowMeasures measures={list} />);
+      expect(markup).toContain('data-slot="window-measures-stack-inner"');
+      expect(markup).toContain('data-slot="window-measure-heading"');
+      expect(markup).toContain('data-slot="window-measure-float"');
+      expect(markup).toContain('data-slot="window-measure-radio-item"');
     });
   });
 

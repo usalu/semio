@@ -110,6 +110,7 @@ import {
 	type BoardNodeKindCatalogEntry,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
+	type BoardSelectionSnapshot,
 	type BoardSelectionTargets,
 	type BoardWireKindCatalogEntry,
 	type CameraState,
@@ -470,6 +471,9 @@ interface BoardPlayShellValue {
 	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
 	boardSelectionMode: BoardSelectionMode;
 	setBoardSelectionMode: (value: BoardSelectionMode) => void;
+	/** @emoji 🖱️ Transient toolbar highlight from modifier override on the active pane’s last `select` emission. */
+	boardSelectionGestureHighlight: BoardSelectionMode | null;
+	setBoardSelectionGestureHighlight: (value: BoardSelectionMode | null) => void;
 	boardSelectionTargets: BoardSelectionTargets;
 	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
 	boardGridSnapEnabled: boolean;
@@ -548,6 +552,12 @@ function boardPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number, p
 	return Math.max(2, Math.round(2 + t * (cap - 2)));
 }
 
+/** @emoji 🔒 Node ids in `lockedIds` that refer to graph nodes on the fixture (for WASM redraw pin list). */
+function boardPlayLockedGraphNodeIds(fixture: BoardFixtureV1, lockedIds: ReadonlySet<string>): string[] {
+	const known = new Set(fixture.nodes.map((n) => n.id));
+	return [...lockedIds].filter((id) => known.has(id));
+}
+
 /** @emoji 📐 Builds {@link BoardRedrawLayoutOptions} for the active pane camera center and redraw mode. */
 function boardPlayRedrawLayoutOpts(
 	pane: BoardPlayPaneId,
@@ -561,6 +571,7 @@ function boardPlayRedrawLayoutOpts(
 	treeSiblingGap: number,
 	treeDirection: BoardHierarchicalTreeDirectionKind,
 	redrawHandlesAfter: boolean,
+	lockedNodeIds: readonly string[],
 ): BoardRedrawLayoutOptions {
 	const cam = camerasByPane[pane];
 	const cx = cam.x;
@@ -574,6 +585,7 @@ function boardPlayRedrawLayoutOpts(
 				layerSpacing: Math.max(24, treeLayerSpacing),
 				siblingGap: Math.max(0, treeSiblingGap),
 			},
+			lockedNodeIds: [...lockedNodeIds],
 			mode: "hierarchical-tree",
 			redrawHandlesAfter,
 		};
@@ -584,9 +596,10 @@ function boardPlayRedrawLayoutOpts(
 		gravity: Math.max(0, forceGravity),
 		idealEdgeLength: Math.max(8, forceIdealEdge),
 		iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
+		lockedNodeIds: [...lockedNodeIds],
 		repulsionStrength: Math.max(40, Math.min(120, Math.round(forceRepulsion))),
 	};
-	return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph", redrawHandlesAfter };
+	return { centerX: cx, centerY: cy, forceGraph: fg, lockedNodeIds: [...lockedNodeIds], mode: "force-graph", redrawHandlesAfter };
 }
 
 /** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
@@ -596,12 +609,14 @@ function BoardPlayToolbar(): ReactElement {
 		applyBoardRedrawHandlesOnce,
 		boardGridSnapEnabled,
 		boardSelectionMethod,
+		boardSelectionGestureHighlight,
 		boardSelectionMode,
 		boardSelectionTargets,
 		camerasByPane,
 		boardRedrawPlaying,
 		patchFixture,
 		setBoardGridSnapEnabled,
+		setBoardSelectionGestureHighlight,
 		setBoardSelectionMethod,
 		setBoardSelectionMode,
 		setBoardSelectionTargets,
@@ -610,6 +625,7 @@ function BoardPlayToolbar(): ReactElement {
 	} = useBoardPlayShell();
 
 	const camera = camerasByPane[activePaneId];
+	const mergeToggleActive = boardSelectionGestureHighlight ?? boardSelectionMode;
 
 	const appendCircle = useCallback(() => {
 		const id = newBoardAuthoringId("node");
@@ -667,25 +683,52 @@ function BoardPlayToolbar(): ReactElement {
 					<ToolbarItem>
 						<button
 							type="button"
-							className={boardToolbarToggleClass(boardSelectionMode === "replace")}
+							className={boardToolbarToggleClass(mergeToggleActive === "replace")}
 							title="Replace selection (default; Shift additive, Ctrl subtractive, Ctrl+Shift invertive)"
-							onClick={() => setBoardSelectionMode("replace")}
+							onClick={() => {
+								setBoardSelectionGestureHighlight(null);
+								setBoardSelectionMode("replace");
+							}}
 						>
 							<MousePointer2 className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "additive")} title="Additive" onClick={() => setBoardSelectionMode("additive")}>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(mergeToggleActive === "additive")}
+							title="Additive"
+							onClick={() => {
+								setBoardSelectionGestureHighlight(null);
+								setBoardSelectionMode("additive");
+							}}
+						>
 							<Plus className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "subtractive")} title="Subtractive" onClick={() => setBoardSelectionMode("subtractive")}>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(mergeToggleActive === "subtractive")}
+							title="Subtractive"
+							onClick={() => {
+								setBoardSelectionGestureHighlight(null);
+								setBoardSelectionMode("subtractive");
+							}}
+						>
 							<Minus className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "invertive")} title="Invertive" onClick={() => setBoardSelectionMode("invertive")}>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(mergeToggleActive === "invertive")}
+							title="Invertive"
+							onClick={() => {
+								setBoardSelectionGestureHighlight(null);
+								setBoardSelectionMode("invertive");
+							}}
+						>
 							<Repeat2 className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
@@ -1115,13 +1158,16 @@ function nakaginBoardMarkers(props: {
 
 /** @emoji 📡 Mirrors canvas selection into shell state for the owning pane. */
 function BoardSelectionReporter({ paneId }: { paneId: BoardPlayPaneId }): null {
-	const { setSelectionForPane, setWorkbenchSelection } = useBoardPlayShell();
+	const { activePaneId, setBoardSelectionGestureHighlight, setSelectionForPane, setWorkbenchSelection } = useBoardPlayShell();
 	const handler = useCallback(
-		(snapshot: { ids: string[] }) => {
+		(snapshot: BoardSelectionSnapshot) => {
 			setSelectionForPane(paneId, snapshot.ids);
 			setWorkbenchSelection(null);
+			if (paneId === activePaneId) {
+				setBoardSelectionGestureHighlight(snapshot.gestureMergeMode ?? null);
+			}
 		},
-		[paneId, setSelectionForPane, setWorkbenchSelection],
+		[activePaneId, paneId, setBoardSelectionGestureHighlight, setSelectionForPane, setWorkbenchSelection],
 	);
 	useBoardEvent("select", handler);
 	return null;
@@ -3105,7 +3151,7 @@ function boardWindowKindsWithRedrawZoomOptions(
 	enabledByPane: Record<BoardPlayPaneId, boolean>,
 	setEnabledByPane: (updater: (prev: Record<BoardPlayPaneId, boolean>) => Record<BoardPlayPaneId, boolean>) => void,
 ): UIWindowKindDefinition[] {
-	const optionForPane = (paneId: BoardPlayPaneId): UIWindowKindDefinition["options"] => [
+	const measuresForPane = (paneId: BoardPlayPaneId): UIWindowKindDefinition["measures"] => [
 		{
 			icon: <ZoomIn className="size-small" />,
 			id: `${paneId}-redraw-interactive-zoom`,
@@ -3118,9 +3164,9 @@ function boardWindowKindsWithRedrawZoomOptions(
 		},
 	];
 	return [
-		{ component: BoardOverviewPane, id: "board-overview", label: "Overview", options: optionForPane("board-overview") },
-		{ component: BoardDetailPane, id: "board-detail", label: "Zoom", options: optionForPane("board-detail") },
-		{ component: BoardSelectionPane, id: "board-selection", label: "Selection", options: optionForPane("board-selection") },
+		{ component: BoardOverviewPane, id: "board-overview", label: "Overview", measures: measuresForPane("board-overview") },
+		{ component: BoardDetailPane, id: "board-detail", label: "Zoom", measures: measuresForPane("board-detail") },
+		{ component: BoardSelectionPane, id: "board-selection", label: "Selection", measures: measuresForPane("board-selection") },
 	];
 }
 
@@ -3186,6 +3232,7 @@ interface BoardPlayRedrawLoopSnapshot {
 	forceLayoutGravity: number;
 	forceLayoutIdealEdgeLength: number;
 	forceLayoutRepulsionStrength: number;
+	lockedNodeIds: string[];
 	mode: BoardRedrawModeKind;
 	treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
 	treeLayoutLayerSpacing: number;
@@ -3221,6 +3268,7 @@ function BoardPlayInner(): ReactElement {
 	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
 	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
 	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("replace");
+	const [boardSelectionGestureHighlight, setBoardSelectionGestureHighlight] = useState<BoardSelectionMode | null>(null);
 	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
 	const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
 	const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
@@ -3246,6 +3294,10 @@ function BoardPlayInner(): ReactElement {
 
 	const boardRedrawPlayingRef = useRef(boardRedrawPlaying);
 	boardRedrawPlayingRef.current = boardRedrawPlaying;
+
+	useEffect(() => {
+		setBoardSelectionGestureHighlight(null);
+	}, [activePaneId]);
 
 	useEffect(() => {
 		try {
@@ -3814,6 +3866,7 @@ function BoardPlayInner(): ReactElement {
 		forceLayoutGravity: 0.012,
 		forceLayoutIdealEdgeLength: 64,
 		forceLayoutRepulsionStrength: 80,
+		lockedNodeIds: [],
 		mode: "force-graph",
 		treeLayoutDirection: "downwards",
 		treeLayoutLayerSpacing: 120,
@@ -3834,6 +3887,7 @@ function BoardPlayInner(): ReactElement {
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
+		lockedNodeIds: boardPlayLockedGraphNodeIds(fixture, lockedIds),
 		mode: boardRedrawMode,
 		treeLayoutDirection,
 		treeLayoutLayerSpacing,
@@ -3874,6 +3928,7 @@ function BoardPlayInner(): ReactElement {
 					treeLayoutSiblingGap,
 					treeLayoutDirection,
 					boardRedrawHandlesAfterNodes,
+					boardPlayLockedGraphNodeIds(prev, lockedIds),
 				),
 			);
 			return { ...laidOut, camera: { ...prev.camera } };
@@ -3890,6 +3945,7 @@ function BoardPlayInner(): ReactElement {
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
+		lockedIds,
 		patchFixture,
 		treeLayoutLayerSpacing,
 		treeLayoutDirection,
@@ -3943,6 +3999,7 @@ function BoardPlayInner(): ReactElement {
 							snap.treeLayoutSiblingGap,
 							snap.treeLayoutDirection,
 							snap.boardRedrawHandlesAfterNodes,
+							snap.lockedNodeIds,
 						),
 					);
 				}
@@ -3963,6 +4020,7 @@ function BoardPlayInner(): ReactElement {
 							snap.treeLayoutSiblingGap,
 							snap.treeLayoutDirection,
 							snap.boardRedrawHandlesAfterNodes,
+							snap.lockedNodeIds,
 						),
 					);
 				}
@@ -3991,6 +4049,7 @@ function BoardPlayInner(): ReactElement {
 			boardRedrawPlaying,
 			boardRedrawProgressiveAutoStopMs,
 			boardRedrawProgressiveEnabled,
+			boardSelectionGestureHighlight,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -4023,6 +4082,7 @@ function BoardPlayInner(): ReactElement {
 			setBoardRedrawProgressiveAutoStopMs,
 			setBoardRedrawProgressiveEnabled,
 			setBoardGridSnapEnabled,
+			setBoardSelectionGestureHighlight,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
 			setBoardSelectionTargets,
@@ -4060,6 +4120,7 @@ function BoardPlayInner(): ReactElement {
 			boardRedrawPlaying,
 			boardRedrawProgressiveAutoStopMs,
 			boardRedrawProgressiveEnabled,
+			boardSelectionGestureHighlight,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -4085,9 +4146,32 @@ function BoardPlayInner(): ReactElement {
 			remapIdInSelections,
 			resetBoardRedrawProgressiveEpoch,
 			selectionByPane,
-			setSelectionForPane,
+			setActivePaneId,
+			setBoardRedrawHandlesAfterNodes,
+			setBoardRedrawMode,
+			setBoardRedrawPlayMaxItersPerFrame,
+			setBoardRedrawPlaying,
+			setBoardRedrawProgressiveAutoStopMs,
+			setBoardRedrawProgressiveEnabled,
+			setBoardGridSnapEnabled,
+			setBoardSelectionGestureHighlight,
+			setBoardSelectionMethod,
+			setBoardSelectionMode,
+			setBoardSelectionTargets,
+			setFixture,
+			setGraphObjectsHidden,
+			setGraphObjectsLocked,
+			setForceLayoutFullIterations,
+			setForceLayoutGravity,
+			setForceLayoutIdealEdgeLength,
+			setForceLayoutRepulsionStrength,
 			setKindCompatibility,
 			setLockedIds,
+			setSelectionForPane,
+			setTreeLayoutLayerSpacing,
+			setTreeLayoutDirection,
+			setTreeLayoutSiblingGap,
+			setWorkbenchSelection,
 			treeLayoutLayerSpacing,
 			treeLayoutDirection,
 			treeLayoutSiblingGap,

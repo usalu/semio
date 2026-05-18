@@ -1,9 +1,9 @@
 {
   "title": "Run Rs Graphql Js React Sketchpad Pipeline",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Rs in-memory kit, GraphQL semio-store, js Session, react SemioStoreKitLineHost + KitWasmMountProvider, sketchpad play env wiring; schema vs metabolism fixture.",
-  "summary": "Aligned golden GraphQL Kit with RS and metabolism initialKit by adding version and improving kit JSON hydrate/projection. Added ParentStore::spawn_from_install_json_value so semio-store POST /install create+importFile accept full kit-store bundle JSON (e.g. metabolism.kit.semio.json) or bare initialKit DTOs; new semio-store test covers bundle install. Restored KitWasmMountProvider/useKitWasmHost in @semio/react and kitStoreFromKitStoreClient stub in @semio/js for sketchpad imports. Playground can use VITE_SEMIO_NATIVE_STORE=1 + VITE_SEMIO_STORE_URL with SemioStoreKitLineHost for RS→GraphQL→Session→React pipeline. cargo test -p semio-store: 5 passed.",
+  "summary": "Indirect-connect ghost ring offset is now proportional to node half-extent (0.7×) in world space instead of a fixed 28 CSS px gap scaled by 1/zoom. Ring handles and node body now scale together when zooming so the ring no longer pushes handles outward on zoom out. Shared `indirect_node_half_extent` helper; test asserts stable rim-to-ring ratio across zoom.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪ee7ab7c8e03b43b4b01d4742f6e2be3f",

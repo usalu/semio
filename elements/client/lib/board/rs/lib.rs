@@ -637,6 +637,9 @@ mod force_graph {
 		/// Use exact O(n²) repulsion when the visible body count is at most this (tiny graphs / tests).
 		#[serde(default = "default_pairwise_repulsion_max_bodies")]
 		pub pairwise_repulsion_max_bodies: u32,
+		/// Node ids whose `x`/`y` stay fixed for this layout pass (pinned bodies still participate in repulsion and springs).
+		#[serde(default)]
+		pub locked_node_ids: Vec<String>,
 	}
 
 	fn default_iterations() -> u32 {
@@ -689,6 +692,7 @@ mod force_graph {
 				random_seed: default_random_seed(),
 				barnes_hut_theta: default_barnes_hut_theta(),
 				pairwise_repulsion_max_bodies: default_pairwise_repulsion_max_bodies(),
+				locked_node_ids: Vec::new(),
 			}
 		}
 	}
@@ -1062,6 +1066,23 @@ mod force_graph {
 			positions[i] += v * dt;
 		}
 	}
+
+	fn zero_forces_on_pinned(forces: &mut [Vec2], pin: &[Option<Vec2>]) {
+		for i in 0..forces.len() {
+			if pin[i].is_some() {
+				forces[i] = Vec2::ZERO;
+			}
+		}
+	}
+
+	fn enforce_pin_constraints(positions: &mut [Vec2], velocities: &mut [Vec2], pin: &[Option<Vec2>]) {
+		for i in 0..positions.len() {
+			if let Some(p) = pin[i] {
+				positions[i] = p;
+				velocities[i] = Vec2::ZERO;
+			}
+		}
+	}
 	// #endregion
 
 	pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
@@ -1078,6 +1099,7 @@ mod force_graph {
 		if nodes.is_empty() {
 			return Ok(());
 		}
+		let locked_ids: HashSet<String> = opts.locked_node_ids.iter().cloned().collect();
 		let mut handle_to_node: HashMap<String, String> = HashMap::new();
 		for node in nodes.iter() {
 			let Some(obj) = node.as_object() else {
@@ -1107,6 +1129,7 @@ mod force_graph {
 		let mut id_to_index: HashMap<String, usize> = HashMap::new();
 		let mut visible_node_indices: Vec<usize> = Vec::new();
 		let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
+		let mut is_locked: Vec<bool> = Vec::new();
 		let mut positions: Vec<Vec2> = Vec::new();
 		let mut velocities: Vec<Vec2> = Vec::new();
 		let mut radii: Vec<f64> = Vec::new();
@@ -1129,6 +1152,7 @@ mod force_graph {
 			id_to_index.insert(nid.to_string(), positions.len());
 			visible_node_indices.push(raw_idx);
 			optional_xy.push(xy);
+			is_locked.push(locked_ids.contains(nid));
 			positions.push(Vec2::ZERO);
 			velocities.push(Vec2::ZERO);
 			radii.push(node_repulsion_radius(node));
@@ -1163,6 +1187,7 @@ mod force_graph {
 				anchor + Vec2::new(r * ang.cos() + jx, r * ang.sin() + jy)
 			};
 		}
+		let pin: Vec<Option<Vec2>> = (0..n).map(|i| if is_locked[i] { Some(positions[i]) } else { None }).collect();
 		let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
 		let mut seen: HashSet<(usize, usize)> = HashSet::new();
 		for e in &edges {
@@ -1208,11 +1233,14 @@ mod force_graph {
 		let gy = opts.center_y.unwrap_or(cy);
 		let k = opts.ideal_edge_length.max(1e-6);
 		let mut rng = opts.random_seed;
-		for p in &mut positions {
-			if (p.x - gx).abs() < 1e-6 && (p.y - gy).abs() < 1e-6 {
+		for i in 0..n {
+			if pin[i].is_some() {
+				continue;
+			}
+			if (positions[i].x - gx).abs() < 1e-6 && (positions[i].y - gy).abs() < 1e-6 {
 				let jx = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
 				let jy = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-				*p += Vec2::new(jx, jy);
+				positions[i] += Vec2::new(jx, jy);
 			}
 		}
 		let iters = opts.iterations.max(1);
@@ -1233,6 +1261,7 @@ mod force_graph {
 			);
 			add_spring_forces(&mut forces, &positions, &edge_pairs, k, opts.spring_strength, cool);
 			add_gravity_toward(&mut forces, &positions, gx, gy, opts.gravity, cool);
+			zero_forces_on_pinned(&mut forces, &pin);
 			integrate_velocity_and_positions(
 				&mut positions,
 				&mut velocities,
@@ -1242,6 +1271,7 @@ mod force_graph {
 				opts.velocity_damping,
 				opts.max_speed,
 			);
+			enforce_pin_constraints(&mut positions, &mut velocities, &pin);
 		}
 		for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
 			let Some(node) = nodes.get_mut(raw_idx) else {
@@ -2003,6 +2033,8 @@ mod redraw_layout {
 		#[serde(default)]
 		redraw_handles_after: bool,
 		#[serde(default)]
+		locked_node_ids: Vec<String>,
+		#[serde(default)]
 		force_graph: Option<ForceGraphLayoutOptions>,
 		#[serde(default)]
 		hierarchical_tree: Option<HierarchicalTreeLayoutOptions>,
@@ -2022,6 +2054,11 @@ mod redraw_layout {
 				}
 				if let Some(s) = opts.random_seed {
 					fo.random_seed = s;
+				}
+				for id in &opts.locked_node_ids {
+					if !fo.locked_node_ids.contains(id) {
+						fo.locked_node_ids.push(id.clone());
+					}
 				}
 				apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
 			}
@@ -2562,11 +2599,14 @@ mod board_host {
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
 	const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
 	const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = 0.8;
-	const INDIRECT_HANDLE_RING_GAP_CSS_PX: f64 = 28.0;
+	/// Radial offset from node rim to indirect-handle center, as a fraction of node half-extent (circle radius or half the shorter rectangle side).
+	const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = 0.7;
 	const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
 	const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
+	const LINK_COMMIT_SNAP_TIGHT_PX: f64 = 2.0;
 	const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
 	const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
+	const BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
 	pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
 	pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
 	const BOARD_DEFAULT_WIRE_KIND_ID: &str = "board.wire.link";
@@ -2839,6 +2879,12 @@ mod board_host {
 		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
 		pub grid_snap_enabled: bool,
 		icon_vector_cache: RefCell<HashMap<String, CachedIconPaint>>,
+		/// @emoji 📡 Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
+		link_compat_nodes_emit_key: Option<String>,
+		/// @emoji 📡 Dedupes {@code linkTargetRing} emissions while a link wire is active.
+		link_target_ring_emit_key: Option<String>,
+		/// @emoji 📡 Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
+		last_select_emit_sig: Option<(Vec<String>, Option<String>)>,
 	}
 
 	impl Default for Camera {
@@ -2885,6 +2931,9 @@ mod board_host {
 				grid_factor: GRID_FACTOR_DEFAULT,
 				grid_snap_enabled: false,
 				icon_vector_cache: RefCell::new(HashMap::new()),
+				link_compat_nodes_emit_key: None,
+				link_target_ring_emit_key: None,
+				last_select_emit_sig: None,
 			}
 		}
 	}
@@ -3661,6 +3710,7 @@ mod board_host {
 		}
 
 		fn push_select_event(&mut self) {
+			self.last_select_emit_sig = None;
 			let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
 			sorted.sort();
 			self.push_event("select", json!({ "ids": sorted }));
@@ -3674,6 +3724,27 @@ mod board_host {
 			self.selection = next;
 			self.sync_selection_flags_to_objects();
 			self.push_select_event();
+		}
+
+		fn set_selection_ids_gestured(&mut self, ids: &[String], gesture: Option<&str>) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			let mut sorted: Vec<_> = next.iter().cloned().collect();
+			sorted.sort();
+			let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+			let sig = (sorted.clone(), gesture_owned.clone());
+			if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
+				return;
+			}
+			self.last_select_emit_sig = Some(sig);
+			if next != self.selection {
+				self.selection = next;
+				self.sync_selection_flags_to_objects();
+			}
+			let mut payload = json!({ "ids": sorted });
+			if let Some(ref g) = gesture_owned {
+				payload["gestureMergeMode"] = json!(g);
+			}
+			self.push_event("select", payload);
 		}
 
 		/// @emoji 🧿 True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
@@ -3711,10 +3782,23 @@ mod board_host {
 			})
 		}
 
-		/// @emoji 📐 Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_CSS_PX` **CSS px** from the node body; world offset scales as `1/zoom` so the on-screen gap stays constant.
+		/// @emoji 📐 Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
+		fn indirect_node_half_extent(n: &NodeData) -> f64 {
+			match n.shape {
+				NodeShape::Circle => n.radius,
+				NodeShape::Rectangle => n.width.min(n.height) * 0.5,
+			}
+		}
+
+		/// @emoji 📐 Radial world offset from node rim to indirect-handle center (`INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× half-extent) so ring–node proportions stay fixed when zooming.
+		fn indirect_handle_ring_offset_world(n: &NodeData) -> f64 {
+			(Self::indirect_node_half_extent(n) * INDIRECT_HANDLE_RING_GAP_NODE_SCALE).max(1e-9)
+		}
+
+		/// @emoji 📐 Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× node half-extent from the node body so ring spacing scales with the node at every zoom.
 		pub(crate) fn indirect_handle_world_pos(&self, h: &HandleData) -> Option<Point> {
 			let n = self.nodes.get(&h.node_id)?;
-			let offset = INDIRECT_HANDLE_RING_GAP_CSS_PX / self.camera.zoom.max(1e-9);
+			let offset = Self::indirect_handle_ring_offset_world(n);
 			Some(match n.shape {
 				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), n.radius + offset, h.angle),
 				NodeShape::Rectangle => handle_position_on_rectangle(
@@ -3731,21 +3815,96 @@ mod board_host {
 			let Some(n) = self.nodes.get(&h.node_id) else {
 				return (h.radius * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9);
 			};
-			let half_extent = match n.shape {
-				NodeShape::Circle => n.radius,
-				NodeShape::Rectangle => n.width.min(n.height) * 0.5,
-			};
-			(half_extent * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9)
+			(Self::indirect_node_half_extent(n) * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9)
 		}
 
-		/// @emoji 🧭 Node id whose indirect ring is shown while a link gesture starts or drags from `source_id`.
-		fn indirect_ring_source_node_id_from_interaction(&self) -> Option<String> {
+		/// @emoji 🧭 Source handle id while a link wire is drawn (`LinkDragSnap` / `LinkTargetNode`).
+		fn active_link_source_handle_id(&self) -> Option<&str> {
 			match &self.interaction {
-				Interaction::LinkAtSourceHandle { source_id, .. } | Interaction::LinkDragSnap { source_id, .. } => {
-					self.handles.get(source_id).map(|h| h.node_id.clone())
+				Interaction::LinkDragSnap { source_id, .. } | Interaction::LinkTargetNode { source_id, .. } => {
+					Some(source_id.as_str())
 				}
 				_ => None,
 			}
+		}
+
+		/// @emoji 🧭 Visible target node ids that expose at least one free handle compatible with `source_handle_id`.
+		fn link_drag_compatible_target_node_ids(&self, source_handle_id: &str) -> Vec<String> {
+			let Some(source) = self.handles.get(source_handle_id) else {
+				return Vec::new();
+			};
+			let source_node_id = source.node_id.as_str();
+			let mut out = Vec::new();
+			let mut seen = std::collections::BTreeSet::new();
+			for (hid, h) in &self.handles {
+				if h.node_id == source_node_id || !self.handle_effectively_visible(hid.as_str()) {
+					continue;
+				}
+				if self.handle_has_incident_edge(hid.as_str()) {
+					continue;
+				}
+				if !self.handles_link_compatible_for_drag(source, h) {
+					continue;
+				}
+				if !self.nodes.get(&h.node_id).is_some_and(|n| n.visible) {
+					continue;
+				}
+				if seen.insert(h.node_id.clone()) {
+					out.push(h.node_id.clone());
+				}
+			}
+			out.sort();
+			out
+		}
+
+		/// @emoji 🧭 Count of visible free handles on `node_id` compatible with `source_handle_id`.
+		fn link_compatible_handle_count_on_node(&self, source_handle_id: &str, node_id: &str) -> usize {
+			let Some(source) = self.handles.get(source_handle_id) else {
+				return 0;
+			};
+			if source.node_id == node_id {
+				return 0;
+			}
+			self.handles
+				.iter()
+				.filter(|(id, h)| {
+					h.node_id == node_id
+						&& self.handle_eligible_link_target_ring(id.as_str(), source_handle_id)
+						&& self.handles_link_compatible_for_drag(source, h)
+				})
+				.count()
+		}
+
+		/// @emoji 🧭 Free compatible handle ids on `node_id` for an active link from `source_handle_id`.
+		fn link_compatible_handle_ids_on_node(&self, source_handle_id: &str, node_id: &str) -> Vec<String> {
+			let Some(source) = self.handles.get(source_handle_id) else {
+				return Vec::new();
+			};
+			let mut out: Vec<String> = self
+				.handles
+				.iter()
+				.filter_map(|(id, h)| {
+					if h.node_id != node_id {
+						return None;
+					}
+					if !self.handle_eligible_link_target_ring(id.as_str(), source_handle_id) {
+						return None;
+					}
+					self.handles_link_compatible_for_drag(source, h).then(|| id.clone())
+				})
+				.collect();
+			out.sort();
+			out
+		}
+
+		/// @emoji 🧭 Compatible target node under `world` while a link wire is active (node body hit).
+		fn link_drag_ring_target_node_id(&self, source_handle_id: &str, world: Point) -> Option<String> {
+			let nid = self.resolve_node_hit_world(world)?;
+			if self.handles.get(source_handle_id)?.node_id == nid {
+				return None;
+			}
+			self.node_has_any_free_link_compatible_handle(source_handle_id, nid.as_str())
+				.then_some(nid)
 		}
 
 		/// @emoji 🧭 Resolves which single node draws the overview/normal indirect handle ring when that node has **more than one** eligible free handles (otherwise the sole handle is implicit).
@@ -3753,11 +3912,32 @@ mod board_host {
 			if !matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Normal) {
 				return None;
 			}
-			let ring_nid = if let Interaction::LinkTargetNode { target_node_id, .. } = &self.interaction {
-				target_node_id.clone()
-			} else if let Some(nid) = self.indirect_ring_source_node_id_from_interaction() {
-				nid
-			} else if self.selection.len() == 1 {
+			if let Interaction::LinkTargetNode {
+				source_id,
+				target_node_id,
+			} = &self.interaction
+			{
+				if self.link_compatible_handle_count_on_node(source_id, target_node_id) > 1 {
+					return self.nodes.get(target_node_id).filter(|n| n.visible).map(|n| n.id.clone());
+				}
+				return None;
+			}
+			if let Interaction::LinkDragSnap {
+				source_id,
+				end_world,
+				..
+			} = &self.interaction
+			{
+				let ring_nid = self.link_drag_ring_target_node_id(source_id, *end_world)?;
+				if self.link_compatible_handle_count_on_node(source_id, ring_nid.as_str()) > 1 {
+					return Some(ring_nid);
+				}
+				return None;
+			}
+			if self.active_link_source_handle_id().is_some() {
+				return None;
+			}
+			let ring_nid = if self.selection.len() == 1 {
 				self.selection.iter().next()?.clone()
 			} else {
 				return None;
@@ -3893,38 +4073,119 @@ mod board_host {
 			false
 		}
 
-		/// @emoji 🧭 Node id to paint with selected chrome while a link wire hovers a compatible target (snap hit or node body under cursor).
-		fn link_drag_compatible_target_node_highlight_id(&self) -> Option<String> {
-			match &self.interaction {
-				Interaction::LinkDragSnap {
-					source_id,
-					target_id,
-					end_world,
-				} => {
-					let sh = self.handles.get(source_id)?;
-					let source_node_id = sh.node_id.as_str();
-					if let Some(tid) = target_id {
-						let th = self.handles.get(tid)?;
-						if th.node_id == source_node_id || self.handle_has_incident_edge(tid.as_str()) {
-							return None;
-						}
-						return self
-							.handles_link_compatible_for_drag(sh, th)
-							.then(|| th.node_id.clone());
-					}
-					let nid = self.resolve_node_hit_world(*end_world)?;
-					if nid == source_node_id {
-						return None;
-					}
-					self.node_has_any_free_link_compatible_handle(source_id, nid.as_str())
-						.then_some(nid)
+		/// @emoji 💫 True when the handle may appear on a link-target ghost ring (`overview`/`normal` LOD).
+		fn handle_eligible_link_target_ring(&self, handle_id: &str, source_handle_id: &str) -> bool {
+			if !self.handle_effectively_visible(handle_id) || self.handle_has_incident_edge(handle_id) {
+				return false;
+			}
+			let Some(source) = self.handles.get(source_handle_id) else {
+				return false;
+			};
+			let Some(target) = self.handles.get(handle_id) else {
+				return false;
+			};
+			if source.node_id == target.node_id {
+				return false;
+			}
+			self.handles_link_compatible_for_drag(source, target)
+		}
+
+		fn indirect_ring_handle_eligible(&self, handle_id: &str, ring_node_id: &str) -> bool {
+			if self.handles.get(handle_id).is_none_or(|h| h.node_id != ring_node_id) {
+				return false;
+			}
+			if let Some(source_id) = self.active_link_source_handle_id() {
+				self.handle_eligible_link_target_ring(handle_id, source_id)
+			} else {
+				self.handle_eligible_indirect_connect_ring(handle_id)
+			}
+		}
+
+		fn link_drag_target_ring_hit(&self, source_id: &str, point: Point) -> Option<String> {
+			if !matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
+				return None;
+			}
+			let node_id = self.link_drag_ring_target_node_id(source_id, point)?;
+			if self.link_compatible_handle_count_on_node(source_id, node_id.as_str()) <= 1 {
+				return None;
+			}
+			let zoom = self.camera.zoom;
+			for h in self.handles.values().rev() {
+				if h.node_id != node_id || !self.handle_eligible_link_target_ring(h.id.as_str(), source_id) {
+					continue;
 				}
-				Interaction::LinkTargetNode { target_node_id, .. } => self
-					.nodes
-					.get(target_node_id)
-					.filter(|n| n.visible)
-					.map(|_| target_node_id.clone()),
+				let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
+				let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_marker_radius_world(h);
+				if distance_between(point, pos) <= tol {
+					return Some(h.id.clone());
+				}
+			}
+			None
+		}
+
+		fn link_target_ring_snapshot(&self, source_handle_id: &str) -> (Option<String>, Vec<String>) {
+			let node_id = match &self.interaction {
+				Interaction::LinkTargetNode { target_node_id, .. } => Some(target_node_id.clone()),
+				Interaction::LinkDragSnap { end_world, .. } => {
+					self.link_drag_ring_target_node_id(source_handle_id, *end_world)
+				}
 				_ => None,
+			};
+			let Some(nid) = node_id else {
+				return (None, Vec::new());
+			};
+			if self.link_compatible_handle_count_on_node(source_handle_id, nid.as_str()) <= 1 {
+				return (None, Vec::new());
+			}
+			(
+				Some(nid.clone()),
+				self.link_compatible_handle_ids_on_node(source_handle_id, nid.as_str()),
+			)
+		}
+
+		fn sync_link_gesture_events(&mut self) {
+			let Some(source) = self.active_link_source_handle_id().map(str::to_string) else {
+				self.clear_link_gesture_events();
+				return;
+			};
+			let node_ids = self.link_drag_compatible_target_node_ids(&source);
+			let compat_key = format!("{}|{}", source, node_ids.join(","));
+			if self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str()) {
+				self.link_compat_nodes_emit_key = Some(compat_key);
+				self.push_event(
+					"linkCompatibleNodes",
+					json!({ "source": source, "nodeIds": node_ids }),
+				);
+			}
+			let (ring_node_id, ring_handle_ids) = self.link_target_ring_snapshot(&source);
+			let ring_key = format!(
+				"{}|{}|{}",
+				source,
+				ring_node_id.as_deref().unwrap_or(""),
+				ring_handle_ids.join(",")
+			);
+			if self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str()) {
+				self.link_target_ring_emit_key = Some(ring_key);
+				self.push_event(
+					"linkTargetRing",
+					json!({
+						"source": source,
+						"nodeId": ring_node_id,
+						"handleIds": ring_handle_ids,
+					}),
+				);
+			}
+		}
+
+		fn clear_link_gesture_events(&mut self) {
+			if self.link_compat_nodes_emit_key.take().is_some() {
+				self.push_event("linkCompatibleNodes", json!({ "source": "", "nodeIds": [] }));
+			}
+			if self.link_target_ring_emit_key.take().is_some() {
+				self.push_event(
+					"linkTargetRing",
+					json!({ "source": "", "nodeId": null, "handleIds": [] }),
+				);
 			}
 		}
 
@@ -4014,8 +4275,18 @@ mod board_host {
 			}
 		}
 
+		/// @emoji 🧭 Minimap/overview LOD: group selection and bounded drag only — no per-node/edge/handle picks.
+		fn lod_disables_discrete_pick(&self) -> bool {
+			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
+		}
+
+		/// @emoji 🧭 Minimap/overview LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
+		fn lod_uses_bounded_drag(&self) -> bool {
+			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
+		}
+
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
-			if self.current_draw_lod() == BoardDrawLod::Minimap {
+			if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
 				return None;
 			}
 			let zoom = self.camera.zoom;
@@ -4025,13 +4296,18 @@ mod board_host {
 					if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
 						return Some(hid);
 					}
+					if let Interaction::LinkDragSnap { source_id, .. } = &self.interaction {
+						if let Some(hid) = self.link_drag_target_ring_hit(source_id, point) {
+							return Some(hid);
+						}
+					}
 				}
 				if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
 					for h in self.handles.values().rev() {
 						if h.node_id != ring_node_id || !self.handle_effectively_visible(h.id.as_str()) {
 							continue;
 						}
-						if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
+						if !self.indirect_ring_handle_eligible(h.id.as_str(), ring_node_id.as_str()) {
 							continue;
 						}
 						let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
@@ -4043,7 +4319,7 @@ mod board_host {
 				}
 				if matches!(
 					self.current_draw_lod(),
-					BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
+					BoardDrawLod::Overview | BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
 				) {
 					for h in self.handles.values().rev() {
 						if !self.handle_effectively_visible(h.id.as_str()) {
@@ -4061,6 +4337,9 @@ mod board_host {
 						return Some(hid);
 					}
 				}
+			}
+			if matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
+				return None;
 			}
 			if o.select_nodes {
 				for n in self.nodes.values().rev() {
@@ -4164,6 +4443,7 @@ mod board_host {
 				Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. }
 			) {
 				self.interaction = Interaction::None;
+				self.clear_link_gesture_events();
 			}
 			let want_nodes: BTreeSet<_> = desc.nodes.iter().map(|n| n.id.clone()).collect();
 			let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
@@ -4736,7 +5016,7 @@ mod board_host {
 				if h.node_id != node_id || !self.handle_effectively_visible(h.id.as_str()) {
 					continue;
 				}
-				if !self.handle_eligible_indirect_connect_ring(h.id.as_str()) {
+				if !self.indirect_ring_handle_eligible(h.id.as_str(), node_id) {
 					continue;
 				}
 				if let Some(tb) = tile_filter {
@@ -4767,7 +5047,15 @@ mod board_host {
 			let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_handle_icons = lod == BoardDrawLod::Micro;
 			let indirect_ring_node_id = self.indirect_ring_node_id(lod);
-			let link_drag_node_hover = self.link_drag_compatible_target_node_highlight_id();
+			let link_source = self.active_link_source_handle_id().map(str::to_string);
+			let link_compat_nodes: std::collections::BTreeSet<String> = link_source
+				.as_ref()
+				.map(|s| {
+					self.link_drag_compatible_target_node_ids(s)
+						.into_iter()
+						.collect()
+				})
+				.unwrap_or_default();
 			for n in self.nodes.values() {
 				if !n.visible {
 					continue;
@@ -4777,13 +5065,26 @@ mod board_host {
 						continue;
 					}
 				}
-				let link_hover = link_drag_node_hover.as_deref() == Some(n.id.as_str());
-				let sel_chrome = n.selected || link_hover;
-				let stroke_c = node_stroke_color(&self.vello_theme, sel_chrome);
-				let fill = if lod == BoardDrawLod::Minimap {
-					stroke_c
+				let link_compat = link_compat_nodes.contains(&n.id);
+				let sel_chrome = n.selected && !link_compat;
+				let (stroke_c, fill) = if link_compat {
+					(
+						self.vello_theme.indirect_handle_stroke,
+						if lod == BoardDrawLod::Minimap {
+							self.vello_theme.indirect_handle_stroke
+						} else {
+							self.vello_theme.indirect_handle_fill
+						},
+					)
 				} else {
-					node_fill_color(&self.vello_theme, sel_chrome)
+					(
+						node_stroke_color(&self.vello_theme, sel_chrome),
+						if lod == BoardDrawLod::Minimap {
+							node_stroke_color(&self.vello_theme, sel_chrome)
+						} else {
+							node_fill_color(&self.vello_theme, sel_chrome)
+						},
+					)
 				};
 				let sw = 2.0_f64;
 				match n.shape {
@@ -5120,9 +5421,25 @@ mod board_host {
 			self.push_select_event();
 		}
 
-		fn link_snap_tolerance_world(&self, h: &HandleData) -> f64 {
+		fn link_snap_drag_tolerance_screen(&self, h: &HandleData) -> f64 {
 			let z = self.camera.zoom.max(1e-9);
-			(HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX) / z + h.radius
+			HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX + h.radius * z
+		}
+
+		fn link_snap_commit_proximity_ok(&self, target_handle_id: &str, world: Point) -> bool {
+			let Some(h) = self.handles.get(target_handle_id) else {
+				return false;
+			};
+			if !self.handle_effectively_visible(target_handle_id) {
+				return false;
+			}
+			let Some(pw) = self.handle_world_pos(h) else {
+				return false;
+			};
+			let z = self.camera.zoom.max(1e-9);
+			let d_screen = distance_between(self.world_to_screen(world), self.world_to_screen(pw));
+			let tol_commit = HANDLE_HIT_TOLERANCE_PX + LINK_COMMIT_SNAP_TIGHT_PX + h.radius * z;
+			d_screen <= tol_commit
 		}
 
 		/// @emoji 🔗 True when any edge uses this handle as `source` or `target` (handle already participates in a link).
@@ -5157,7 +5474,7 @@ mod board_host {
 			self.handle_effectively_visible(handle_id) && !self.handle_has_incident_edge(handle_id)
 		}
 
-		/// @emoji 📍 Proximity snap uses real handle anchors in world space; skip only minimap LOD so far-zoomed boards (e.g. Nakagin overview) can snap near target handles.
+		/// @emoji 📍 Drag-phase link snap tests **screen px** to the handle anchor so detail/micro zoom keeps a stable hit halo; pointer-up re-checks with `link_snap_commit_proximity_ok` before `proximityConnect`.
 		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
 			if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
 				return None;
@@ -5167,6 +5484,7 @@ mod board_host {
 				return None;
 			}
 			let source_node_id = source_handle.node_id.as_str();
+			let p_scr = self.world_to_screen(world);
 			let mut best: Option<(f64, String)> = None;
 			for (id, h) in &self.handles {
 				if id == source_handle_id || !self.handle_effectively_visible(id.as_str()) {
@@ -5182,10 +5500,11 @@ mod board_host {
 					continue;
 				}
 				let pw = self.handle_world_pos(h)?;
-				let tol = self.link_snap_tolerance_world(h);
-				let d = distance_between(world, pw);
-				if d < tol && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
-					best = Some((d, id.clone()));
+				let h_scr = self.world_to_screen(pw);
+				let d_screen = distance_between(p_scr, h_scr);
+				let tol_screen = self.link_snap_drag_tolerance_screen(h);
+				if d_screen <= tol_screen && best.as_ref().map(|(bd, _)| d_screen < *bd).unwrap_or(true) {
+					best = Some((d_screen, id.clone()));
 				}
 			}
 			best.map(|(_, id)| id)
@@ -5263,6 +5582,7 @@ mod board_host {
 			} = self.interaction.clone()
 			{
 				self.interaction = Interaction::None;
+				self.clear_link_gesture_events();
 				if button == 0 {
 					if let Some(th) = self.node_sole_free_link_compatible_handle(&source_id, &target_node_id) {
 						if hit.as_deref() == Some(target_node_id.as_str()) || hit.as_deref() == Some(th.as_str()) {
@@ -5272,9 +5592,10 @@ mod board_host {
 						}
 					}
 					if let Some(hid) = hit.as_ref().filter(|id| {
-						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id)
-							&& self.handle_effectively_visible(id.as_str())
-							&& !self.handle_has_incident_edge(id.as_str())
+						self.handles
+							.get(*id)
+							.is_some_and(|h| h.node_id == target_node_id)
+							&& self.handle_eligible_link_target_ring(id.as_str(), source_id.as_str())
 					}) {
 						self.try_commit_link_edge(&source_id, hid, Some("indirectConnect"));
 						self.update_hover_from_world(world);
@@ -5312,7 +5633,8 @@ mod board_host {
 						if !drag_group_before || force_pick_merge {
 							let next = Self::merge_pick_into_selection(&self.selection, &nid, pick_mode.as_str());
 							let ids: Vec<_> = next.iter().cloned().collect();
-							self.set_selection_ids(&ids);
+							let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
+							self.set_selection_ids_gestured(&ids, gesture);
 						}
 						let members: Vec<String> = self
 							.selection
@@ -5341,7 +5663,8 @@ mod board_host {
 				if button == 0 && self.handles.contains_key(hid) && !self.handle_has_incident_edge(hid.as_str()) {
 					let next = Self::merge_pick_into_selection(&self.selection, hid, pick_mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
-					self.set_selection_ids(&ids);
+					let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
+					self.set_selection_ids_gestured(&ids, gesture);
 					self.interaction = Interaction::LinkAtSourceHandle {
 						source_id: hid.clone(),
 						start_screen: screen,
@@ -5351,6 +5674,9 @@ mod board_host {
 				}
 			}
 			if hit.is_none() && button == 0 {
+				if !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
+					return;
+				}
 				self.interaction = Interaction::Selection {
 					initial_ids: self.selection.clone(),
 					points: vec![world],
@@ -5365,10 +5691,12 @@ mod board_host {
 			if let Some(id) = hit {
 				let next = Self::merge_pick_into_selection(&self.selection, &id, pick_mode.as_str());
 				let ids: Vec<_> = next.iter().cloned().collect();
-				self.set_selection_ids(&ids);
+				let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
+				self.set_selection_ids_gestured(&ids, gesture);
 				self.set_hovered_id(Some(id));
 			} else {
-				self.set_selection_ids(&[]);
+				let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
+				self.set_selection_ids_gestured(&[], gesture);
 				self.set_hovered_id(None);
 			}
 		}
@@ -5445,7 +5773,9 @@ mod board_host {
 						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
 					let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
-					self.set_selection_ids(&ids);
+					let merge_from_modifiers = ctrl_or_meta || shift;
+					let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
+					self.set_selection_ids_gestured(&ids, gesture);
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
@@ -5464,6 +5794,7 @@ mod board_host {
 							target_id: optional_target_handle_id,
 							end_world: world,
 						};
+						self.sync_link_gesture_events();
 					} else {
 						self.interaction = Interaction::LinkAtSourceHandle { source_id, start_screen };
 						self.update_hover_from_world(world);
@@ -5477,6 +5808,7 @@ mod board_host {
 						target_id: optional_target_handle_id,
 						end_world: world,
 					};
+					self.sync_link_gesture_events();
 				}
 				Interaction::LinkTargetNode {
 					source_id,
@@ -5501,31 +5833,43 @@ mod board_host {
 			let grabbed = std::mem::take(&mut self.interaction);
 			match grabbed {
 				Interaction::LinkDragSnap { source_id, target_id, .. } => {
-					if let Some(target_handle_id) = target_id {
-						self.try_commit_link_edge(&source_id, &target_handle_id, Some("proximityConnect"));
-					} else if let Some(target_node_id) = self.resolve_node_hit_world(world) {
+					if let Some(ref target_handle_id) = target_id {
+						if self.link_snap_commit_proximity_ok(target_handle_id, world)
+							&& self.try_commit_link_edge(&source_id, target_handle_id, Some("proximityConnect"))
+						{
+							self.interaction = Interaction::None;
+							self.clear_link_gesture_events();
+							self.update_hover_from_world(world);
+							return;
+						}
+					}
+					if let Some(target_node_id) = self.resolve_node_hit_world(world) {
 						let source_node_id = self.handles.get(&source_id).map(|h| h.node_id.clone());
 						if source_node_id.as_deref() != Some(target_node_id.as_str()) {
 							if let Some(sole_target) =
 								self.node_sole_free_link_compatible_handle(source_id.as_str(), target_node_id.as_str())
 							{
 								self.try_commit_link_edge(&source_id, &sole_target, Some("indirectConnect"));
+								self.clear_link_gesture_events();
 							} else {
 								self.interaction = Interaction::LinkTargetNode {
 									source_id,
 									target_node_id: target_node_id.clone(),
 								};
 								self.set_hovered_id(Some(target_node_id));
+								self.sync_link_gesture_events();
 							}
 							self.update_hover_from_world(world);
 							return;
 						}
 					}
 					self.interaction = Interaction::None;
+					self.clear_link_gesture_events();
 					self.update_hover_from_world(world);
 				}
 				Interaction::LinkAtSourceHandle { .. } => {
 					self.interaction = Interaction::None;
+					self.clear_link_gesture_events();
 					self.update_hover_from_world(world);
 				}
 				Interaction::Selection {
@@ -5539,15 +5883,17 @@ mod board_host {
 					screen_points.push(screen);
 					let end_screen = screen_points.last().copied().unwrap_or(start_screen);
 					let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+					let merge_from_modifiers = ctrl_or_meta || shift;
+					let merge_mode =
+						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+					let gesture = merge_from_modifiers.then(|| merge_mode.as_str());
 					if click_only {
-						self.set_selection_ids(&[]);
+						self.set_selection_ids_gestured(&[], gesture);
 					} else {
-						let merge_mode =
-							Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
 						let next =
 							self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
 						let ids: Vec<_> = next.iter().cloned().collect();
-						self.set_selection_ids(&ids);
+						self.set_selection_ids_gestured(&ids, gesture);
 					}
 					self.set_selection_screen_preview(None);
 					self.update_hover_from_world(world);
@@ -5585,6 +5931,80 @@ mod board_host {
 				},
 			};
 			inflate_world_box(raw, pad)
+		}
+
+		fn selection_draggable_node_members(&self) -> Vec<String> {
+			self.selection
+				.iter()
+				.filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable))
+				.cloned()
+				.collect()
+		}
+
+		fn selection_union_bounds_world(&self) -> Option<WorldBox> {
+			let mut corners: Vec<Point> = Vec::new();
+			for id in &self.selection {
+				let Some(n) = self.nodes.get(id) else {
+					continue;
+				};
+				let b = self.node_world_bounds(n, 0.0);
+				corners.push(Point::new(b.min_x, b.min_y));
+				corners.push(Point::new(b.max_x, b.max_y));
+			}
+			world_box_from_points(&corners)
+		}
+
+		/// @emoji 📦 Starts a group drag when `world` lies inside the padded union bounds of the current selection (minimap/overview LOD).
+		fn try_begin_bounded_selection_drag_at(&mut self, world: Point) -> bool {
+			if !self.lod_uses_bounded_drag() {
+				return false;
+			}
+			let members = self.selection_draggable_node_members();
+			if members.is_empty() {
+				return false;
+			}
+			let Some(bounds) = self.selection_union_bounds_world() else {
+				return false;
+			};
+			let pad = BOUNDED_DRAG_HIT_PAD_PX / self.camera.zoom.max(1e-9);
+			if !world_box_contains_point(inflate_world_box(bounds, pad), world) {
+				return false;
+			}
+			let primary_id = members
+				.iter()
+				.min_by(|a, b| {
+					let da = self
+						.nodes
+						.get(*a)
+						.map(|n| distance_between(world, Point::new(n.x, n.y)))
+						.unwrap_or(f64::INFINITY);
+					let db = self
+						.nodes
+						.get(*b)
+						.map(|n| distance_between(world, Point::new(n.x, n.y)))
+						.unwrap_or(f64::INFINITY);
+					da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+				})
+				.cloned()
+				.unwrap_or_else(|| members[0].clone());
+			let (px0, py0) = self
+				.nodes
+				.get(&primary_id)
+				.map(|n| (n.x, n.y))
+				.unwrap_or((0.0, 0.0));
+			let mut start_positions = BTreeMap::new();
+			for id in &members {
+				if let Some(n) = self.nodes.get(id) {
+					start_positions.insert(id.clone(), (n.x, n.y));
+				}
+			}
+			self.interaction = Interaction::DragNodes {
+				primary_id,
+				offset: world - Point::new(px0, py0),
+				start_positions,
+			};
+			self.set_hovered_id(None);
+			true
 		}
 
 		fn selection_drag_shape_world(&self, start: Point, points: &[Point]) -> Option<(WorldBox, bool, Vec<Point>)> {
@@ -6697,12 +7117,17 @@ mod host_tests {
 	use crate::board_host::Interaction;
 	use super::vcompute::distance_between;
 	use super::vcompute::handle_position_on_circle;
+	use super::vcompute::handle_position_on_rectangle;
 	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
 	use crate::vello::kurbo::Point;
 	use serde_json::json;
 
 	fn set_detail_lod(h: &mut BoardHost) {
 		h.set_camera(0.0, 0.0, 2.0);
+	}
+
+	fn set_micro_lod(h: &mut BoardHost) {
+		h.set_camera(0.0, 60.0, 4.5);
 	}
 
 	fn set_overview_lod(h: &mut BoardHost) {
@@ -6901,6 +7326,86 @@ mod host_tests {
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0, false, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("nodeMove"));
+	}
+
+	#[test]
+	fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 0.1);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		h.set_selection_ids(&["a".into(), "b".into()]);
+		let _ = h.drain_events_json();
+		let gap = Point::new(150.0, 0.0);
+		let s = h.world_to_screen(gap);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
+		h.pointer_move_screen(s.x + 50.0, s.y + 30.0, false, false);
+		h.pointer_up_screen(s.x + 50.0, s.y + 30.0, false, false);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("nodeMove"), "expected bounded drag nodeMove, got: {ev}");
+		let zoom = 0.1;
+		let dx = 50.0 / zoom;
+		let dy = 30.0 / zoom;
+		let a = h.nodes.get("a").unwrap();
+		let b = h.nodes.get("b").unwrap();
+		assert!((a.x - dx).abs() < 1e-3 && (a.y - dy).abs() < 1e-3);
+		assert!((b.x - (300.0 + dx)).abs() < 1e-3 && (b.y - dy).abs() < 1e-3);
+	}
+
+	#[test]
+	fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_overview_lod(&mut h);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+		h.set_selection_ids(&["a".into(), "b".into()]);
+		let _ = h.drain_events_json();
+		let gap = Point::new(150.0, 0.0);
+		let s = h.world_to_screen(gap);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
+		h.pointer_move_screen(s.x + 40.0, s.y + 20.0, false, false);
+		h.pointer_up_screen(s.x + 40.0, s.y + 20.0, false, false);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("nodeMove"), "expected overview bounded drag, got: {ev}");
 	}
 
 	#[test]
@@ -7334,6 +7839,117 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_micro_lod(&mut h);
+		h.set_board_kind_catalogs_from_json(
+			&serde_json::json!({
+				"handleKinds": [
+					{"id":"core.rect.bottom","label":"B","color":"#112233","defaultWireKind":"link.w"},
+					{"id":"core.rect.top","label":"T","color":"#112233","defaultWireKind":"link.w"}
+				],
+				"wireKinds": [{"id":"link.w","label":"W","defaultEdgeKind":"link.e"}],
+			})
+			.to_string(),
+		)
+		.unwrap();
+		h.set_handle_link_compat_from_json(
+			r#"[{"source":"core.rect.bottom","target":"core.rect.top","specificity":"handle"}]"#,
+		)
+		.unwrap();
+		let desc = SceneDescriptorJson {
+			nodes: vec![
+				NodeDescJson {
+					id: "a".into(),
+					x: 0.0,
+					y: 100.0,
+					draggable: Some(true),
+					selected: None,
+					style: None,
+					text: None,
+					icon_kind: None,
+					node_kind: None,
+					user_data: None,
+					visible: None,
+					root: None,
+					shape: Some("rectangle".into()),
+					radius: None,
+					width: Some(100.0),
+					height: Some(56.0),
+				},
+				NodeDescJson {
+					id: "b".into(),
+					x: 0.0,
+					y: 20.0,
+					draggable: Some(true),
+					selected: None,
+					style: None,
+					text: None,
+					icon_kind: None,
+					node_kind: None,
+					user_data: None,
+					visible: None,
+					root: None,
+					shape: Some("rectangle".into()),
+					radius: None,
+					width: Some(100.0),
+					height: Some(56.0),
+				},
+			],
+			handles: vec![
+				HandleDescJson {
+					id: "a:h0".into(),
+					node_id: "a".into(),
+					angle: std::f64::consts::PI,
+					radius: None,
+					selected: None,
+					style: None,
+					handle_kind: Some("core.rect.bottom".into()),
+					color: None,
+					icon_kind: None,
+					user_data: None,
+					visible: None,
+				},
+				HandleDescJson {
+					id: "b:h0".into(),
+					node_id: "b".into(),
+					angle: 0.0,
+					radius: None,
+					selected: None,
+					style: None,
+					handle_kind: Some("core.rect.top".into()),
+					color: None,
+					icon_kind: None,
+					user_data: None,
+					visible: None,
+				},
+			],
+			edges: vec![],
+			wires: vec![],
+		};
+		h.sync_descriptor(&desc).unwrap();
+		let _ = h.drain_events_json();
+		let pa = handle_position_on_rectangle(Point::new(0.0, 100.0), 100.0, 56.0, std::f64::consts::PI);
+		let pb = handle_position_on_rectangle(Point::new(0.0, 20.0), 100.0, 56.0, 0.0);
+		let s0 = h.world_to_screen(pa);
+		h.pointer_down_screen(s0.x, s0.y, 0, false, false);
+		let mid = Point::new(0.0, 60.0);
+		let s_mid = h.world_to_screen(mid);
+		h.pointer_move_screen(s_mid.x, s_mid.y, false, false);
+		let s1 = h.world_to_screen(pb);
+		h.pointer_move_screen(s1.x, s1.y, false, false);
+		assert!(
+			matches!(h.interaction, Interaction::LinkDragSnap { ref target_id, .. } if target_id.as_deref() == Some("b:h0")),
+			"expected drag snap onto b:h0 at micro zoom"
+		);
+		h.pointer_up_screen(s1.x, s1.y, false, false);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"), "expected edgeCreate, got: {ev}");
+		assert!(ev.contains("proximityConnect"), "expected proximityConnect, got: {ev}");
+	}
+
+	#[test]
 	fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
@@ -7617,25 +8233,57 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_indirect_ring_screen_gap_matches_css_px_across_zoom() {
+	fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let sa = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(sa.x, sa.y, 0, false, false);
+		let sb = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_move_screen(sb.x, sb.y, false, false);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("linkCompatibleNodes"), "got: {ev}");
+		assert!(ev.contains(r#""nodeIds":["b"]"#) || ev.contains(r#""nodeIds": ["b"]"#), "got: {ev}");
+		assert!(ev.contains("linkTargetRing"), "got: {ev}");
+		assert!(ev.contains("b:h0") && ev.contains("b:h1"), "got: {ev}");
+		let ring = h.indirect_handle_world_pos(h.handles.get("b:h1").unwrap()).unwrap();
+		assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("b:h1"));
+		h.pointer_up_screen(20.0, 20.0, false, false);
+		let ev_end = h.drain_events_json();
+		assert!(ev_end.contains("linkCompatibleNodes"));
+		assert!(ev_end.contains(r#""nodeIds":[]"#) || ev_end.contains(r#""nodeIds": []"#));
+		assert!(ev_end.contains("linkTargetRing"));
+	}
+
+	#[test]
+	fn board_host_indirect_ring_gap_scales_with_node_across_zoom() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-		h.set_camera(0.0, 0.0, 1.0);
 		let ha = h.handles.get("a:h0").unwrap().clone();
-		let body = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-		let ring = h.indirect_handle_world_pos(&ha).unwrap();
-		let gap_px_z1 = distance_between(h.world_to_screen(ring), h.world_to_screen(body));
+		let node_r = 40.0_f64;
+		let body = || handle_position_on_circle(Point::new(0.0, 0.0), node_r, 0.0);
+		let gap_ratio = |host: &BoardHost| {
+			let ring = host.indirect_handle_world_pos(&ha).unwrap();
+			let gap_px = distance_between(host.world_to_screen(ring), host.world_to_screen(body()));
+			gap_px / (node_r * host.camera.zoom)
+		};
+		h.set_camera(0.0, 0.0, 1.0);
+		let ratio_z1 = gap_ratio(&h);
+		let gap_px_z1 = node_r * ratio_z1;
 		h.set_camera(0.0, 0.0, 4.25);
-		let gap_px_z2 = distance_between(
-			h.world_to_screen(h.indirect_handle_world_pos(&ha).unwrap()),
-			h.world_to_screen(handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0)),
-		);
+		let ratio_z2 = gap_ratio(&h);
+		let gap_px_z2 = node_r * 4.25 * ratio_z2;
 		assert!(
-			(gap_px_z1 - gap_px_z2).abs() < 0.6,
-			"gaps differ: {gap_px_z1} vs {gap_px_z2}"
+			(ratio_z1 - ratio_z2).abs() < 1e-6,
+			"rim-to-ring ratios differ: {ratio_z1} vs {ratio_z2}"
 		);
-		assert!((gap_px_z1 - 28.0).abs() < 0.6);
+		assert!((ratio_z1 - 0.7).abs() < 1e-6);
+		assert!((gap_px_z2 - gap_px_z1 * 4.25).abs() < 0.6, "screen gap should scale with zoom: {gap_px_z1} vs {gap_px_z2}");
 	}
 
 	#[test]
@@ -7866,6 +8514,91 @@ mod force_graph_tests {
 		let ax = nodes[0]["x"].as_f64().unwrap();
 		let bx = nodes[1]["x"].as_f64().unwrap();
 		assert!((bx - ax).abs() > 80.0, "expected horizontal separation, got a={ax} b={bx}");
+	}
+
+	#[test]
+	fn force_graph_pins_locked_node_positions() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 35.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 40.0,
+					"y": 0.0,
+					"radius": 35.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"iterations": 180,
+			"idealEdgeLength": 160.0,
+			"repulsionStrength": 7500.0,
+			"springStrength": 0.045,
+			"gravity": 0.0,
+			"randomSeed": 101,
+			"lockedNodeIds": ["a"]
+		});
+		let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		let ax = nodes[0]["x"].as_f64().unwrap();
+		let ay = nodes[0]["y"].as_f64().unwrap();
+		assert!((ax - 0.0).abs() < 1e-9 && (ay - 0.0).abs() < 1e-9);
+		let bx = nodes[1]["x"].as_f64().unwrap();
+		assert!((bx - 40.0).abs() > 25.0, "expected free node to move, bx={bx}");
+	}
+
+	#[test]
+	fn redraw_force_graph_top_level_locked_node_ids_pins() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 35.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 40.0,
+					"y": 0.0,
+					"radius": 35.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"mode": "force-graph",
+			"lockedNodeIds": ["a"],
+			"randomSeed": 101,
+			"redrawHandlesAfter": false,
+			"forceGraph": {
+				"iterations": 180,
+				"idealEdgeLength": 160.0,
+				"repulsionStrength": 7500.0,
+				"springStrength": 0.045,
+				"gravity": 0.0
+			}
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
+		assert!((nodes[0]["y"].as_f64().unwrap() - 0.0).abs() < 1e-9);
 	}
 
 	#[test]
