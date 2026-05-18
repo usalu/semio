@@ -1,10 +1,10 @@
 // #region 🧲Header
-// 💻 elements/client/lib/topology/play/index.tsx — Topology play harness: Nakagin board + scene in two `windowKinds`, shared `buildTopologyDualSurfaceBindings`.
+// 💻 elements/client/lib/topology/play/index.tsx — Topology play harness: paired Nakagin board+scene (`windowKinds`), shared dual-surface bindings from `../react`.
 // #endregion 🧲Header
 
 // #region 📥Imports
 import { useGLTF } from "@react-three/drei";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -21,14 +21,7 @@ import {
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
 
 import nakaginBoardJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
-import {
-	boardFixtureMetaKindCatalogBundle,
-	parseBoardFixtureV1,
-	type BoardFixtureV1,
-	type BoardKindCatalogBundle,
-	type BoardKindCompatEntry,
-	type CameraState,
-} from "../../board/index.ts";
+import { parseBoardFixtureV1, type BoardFixtureV1, type CameraState } from "../../board/index.ts";
 import nakaginSceneJson from "../../scene/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	buildTopologyDualSurfaceBindings,
@@ -36,64 +29,43 @@ import {
 	TopologyBoardPane,
 	TopologyScenePane,
 	topologyMirrorConnectHandlers,
-	DEFAULT_BOARD_GRID_FACTOR,
-	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	topologyMirrorProximityHandlers,
+	topologySceneChromeDefaults,
+	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
-import {
-	parseSceneFixtureV1,
-	type SceneCameraState,
-	type SceneFixtureV1,
-	type SceneKindCatalogBundle,
-	type SceneLodKind,
-	type SceneRelocateMode,
-} from "../../scene/react/index.tsx";
+import { parseSceneFixtureV1, type SceneCameraState, type SceneFixtureV1, type SceneLodKind, type SceneRelocateMode } from "../../scene/react/index.tsx";
 import topologyManifestJson from "../fixtures/nakagin-capsule-tower.topology.json";
 import "./globals.css";
 // #endregion 📥Imports
 
-// #region 🧾Meta
-function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly BoardKindCompatEntry[] {
-	if (!meta || typeof meta !== "object") return [];
-	const arr = (meta as { kindCompatibility?: unknown }).kindCompatibility;
-	if (!Array.isArray(arr)) return [];
-	const out: BoardKindCompatEntry[] = [];
-	for (const entry of arr) {
-		if (!entry || typeof entry !== "object") continue;
-		const e = entry as Record<string, unknown>;
-		const source = typeof e.source === "string" ? e.source.trim() : "";
-		const target = typeof e.target === "string" ? e.target.trim() : "";
-		if (!source || !target) continue;
-		const specificity =
-			e.specificity === "general" ||
-			e.specificity === "node" ||
-			e.specificity === "edge" ||
-			e.specificity === "handle" ||
-			e.specificity === "wire" ||
-			e.specificity === "object" ||
-			e.specificity === "tie"
-				? e.specificity
-				: undefined;
-		out.push({
-			source,
-			target,
-			...(e.bidirectional === true ? { bidirectional: true } : {}),
-			...(e.important === true ? { important: true } : {}),
-			...(specificity ? { specificity } : {}),
-		});
-	}
-	return out;
-}
-
-function parseKindCatalogs(meta: Record<string, unknown> | undefined): SceneKindCatalogBundle | undefined {
-	const kc = meta?.kindCatalogs;
-	if (!kc || typeof kc !== "object") return undefined;
-	return kc as SceneKindCatalogBundle;
-}
-// #endregion 🧾Meta
-
-// #region 🎛️Shell
+// #region 🏷️PlayIds
 const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
 
+const TOPOLOGY_PLAY_WINDOWS = {
+	board: "topology-board",
+	scene: "topology-scene",
+} as const;
+
+const TOPOLOGY_PLAY_WINDOW_LABELS = {
+	board: "Sketch board",
+	scene: "Spatial scene",
+} as const;
+// #endregion 🏷️PlayIds
+
+// #region 🎛️Chrome
+const TOPOLOGY_PLAY_CHROME_STRIP_CLASS = "flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2";
+
+function TopologyPlayChromeStrip(props: { readonly leading: ReactNode; readonly trailing: ReactNode }): ReactElement {
+	return (
+		<div className={TOPOLOGY_PLAY_CHROME_STRIP_CLASS}>
+			<ToolbarZone>{props.leading}</ToolbarZone>
+			<div className="ml-auto flex flex-wrap items-center gap-3 text-xs text-muted-foreground">{props.trailing}</div>
+		</div>
+	);
+}
+// #endregion 🎛️Chrome
+
+// #region 🎛️Shell
 interface TopologyPlayShellValue {
 	readonly manifestLabel: string | undefined;
 	readonly boardFixture: BoardFixtureV1;
@@ -126,21 +98,23 @@ function TopologyBoardWindow(): ReactElement {
 	const s = useTopologyPlayShell();
 	return (
 		<div className="flex h-full w-full flex-col">
-			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
-				<ToolbarZone>
+			<TopologyPlayChromeStrip
+				leading={
 					<ToolbarGroup>
 						<ToolbarItem>
-							<span className="px-2 text-xs text-muted-foreground">Sketch board</span>
+							<span className="px-2 text-xs text-muted-foreground">{TOPOLOGY_PLAY_WINDOW_LABELS.board}</span>
 						</ToolbarItem>
 					</ToolbarGroup>
-				</ToolbarZone>
-				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-					<span data-e2e-topology-manifest>{s.manifestLabel ?? "topology"}</span>
-					<span data-e2e-topology-board-selected>{[...s.boardSelected].join(", ") || "—"}</span>
-					<span data-e2e-topology-connect-board>{s.connectBoard}</span>
-					<span data-e2e-topology-proximity-board>{s.proximityBoard}</span>
-				</div>
-			</div>
+				}
+				trailing={
+					<>
+						<span data-e2e-topology-manifest>{s.manifestLabel ?? "topology"}</span>
+						<span data-e2e-topology-board-selected>{[...s.boardSelected].join(", ") || "—"}</span>
+						<span data-e2e-topology-connect-board>{s.connectBoard}</span>
+						<span data-e2e-topology-proximity-board>{s.proximityBoard}</span>
+					</>
+				}
+			/>
 			<div className="relative min-h-0 flex-1">
 				<TopologyBoardPane
 					fixture={s.boardFixture}
@@ -157,8 +131,8 @@ function TopologySceneWindow(): ReactElement {
 	const s = useTopologyPlayShell();
 	return (
 		<div className="flex h-full w-full flex-col">
-			<div className="flex shrink-0 flex-wrap gap-2 border-b border-border bg-muted/40 p-2">
-				<ToolbarZone>
+			<TopologyPlayChromeStrip
+				leading={
 					<ToolbarGroup>
 						<ToolbarItem asChild>
 							<Button
@@ -191,21 +165,23 @@ function TopologySceneWindow(): ReactElement {
 							</Button>
 						</ToolbarItem>
 					</ToolbarGroup>
-				</ToolbarZone>
-				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-					<span data-e2e-topology-scene-lod>{s.sceneLodTag}</span>
-					<span data-e2e-topology-scene-selected>{s.sceneSelected ?? "—"}</span>
-					<span data-e2e-topology-connect-scene>{s.connectScene}</span>
-					<span data-e2e-topology-proximity-scene>{s.proximityScene}</span>
-				</div>
-			</div>
+				}
+				trailing={
+					<>
+						<span data-e2e-topology-scene-lod>{s.sceneLodTag}</span>
+						<span data-e2e-topology-scene-selected>{s.sceneSelected ?? "—"}</span>
+						<span data-e2e-topology-connect-scene>{s.connectScene}</span>
+						<span data-e2e-topology-proximity-scene>{s.proximityScene}</span>
+					</>
+				}
+			/>
 			<div className="relative min-h-0 flex-1">
 				<TopologyScenePane
 					fixture={s.sceneFixture}
 					bindings={s.bindings}
 					relocateMode={s.relocateMode}
 					selectedObjectId={s.sceneSelected}
-					scene={{ camera: s.sceneCamera, showLodGrid: true, proximityRadius: 24 }}
+					scene={{ camera: s.sceneCamera, ...topologySceneChromeDefaults() }}
 				/>
 			</div>
 		</div>
@@ -213,14 +189,11 @@ function TopologySceneWindow(): ReactElement {
 }
 // #endregion 🎛️Shell
 
-// #region 🎬Controller
-function TopologyPlayController({
-	boardFixture,
-	sceneFixture,
-}: {
-	readonly boardFixture: BoardFixtureV1;
-	readonly sceneFixture: SceneFixtureV1;
-}): ReactElement {
+// #region 🎬PairedModel
+function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: SceneFixtureV1): {
+	readonly shellValue: TopologyPlayShellValue;
+	readonly apps: UIAppConfig[];
+} {
 	const manifest = useMemo(() => parseTopologyFixtureV1(topologyManifestJson as unknown), []);
 	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
 	const [boardSelected, setBoardSelected] = useState<ReadonlySet<string>>(() => new Set());
@@ -235,12 +208,14 @@ function TopologyPlayController({
 	const [proximityBoard, setProximityBoard] = useState(0);
 	const [proximityScene, setProximityScene] = useState(0);
 
-	const kindCompatibility = useMemo(() => parseKindCompatibility(sceneFixture.meta), [sceneFixture.meta]);
-	const kindCatalogs = useMemo(() => {
-		const fromBoard = boardFixtureMetaKindCatalogBundle(boardFixture.meta);
-		if (fromBoard) return fromBoard;
-		return parseKindCatalogs(sceneFixture.meta) as BoardKindCatalogBundle | undefined;
-	}, [boardFixture.meta, sceneFixture.meta]);
+	const sharedKinds = useMemo(
+		() =>
+			topologySharedKindsFromPairedMetas({
+				boardMeta: boardFixture.meta,
+				sceneMeta: sceneFixture.meta,
+			}),
+		[boardFixture.meta, sceneFixture.meta],
+	);
 
 	const onBoardSelect = useCallback((snap: { ids: readonly string[] }) => {
 		setBoardSelected(new Set(snap.ids));
@@ -259,39 +234,28 @@ function TopologyPlayController({
 		[],
 	);
 
-	const onBoardProximity = useCallback(() => {
-		setProximityBoard((c) => c + 1);
-	}, []);
-	const onSceneProximity = useCallback(() => {
-		setProximityScene((c) => c + 1);
-	}, []);
+	const mirrorProximity = useMemo(
+		() =>
+			topologyMirrorProximityHandlers((p) => {
+				if (p.surface === "board") setProximityBoard((c) => c + 1);
+				else setProximityScene((c) => c + 1);
+			}),
+		[],
+	);
 
 	const bindings = useMemo(
 		() =>
 			buildTopologyDualSurfaceBindings({
-				lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-				gridFactor: DEFAULT_BOARD_GRID_FACTOR,
-				gridSnapEnabled: true,
-				kindCatalogs,
-				kindCompatibility: [...kindCompatibility],
+				...sharedKinds,
 				onBoardSelect,
 				onSceneSelect,
 				onBoardCamera: setBoardCamera,
 				onSceneCamera: setSceneCamera,
 				onSceneLodChange: setSceneLodTag,
-				onBoardProximityConnect: onBoardProximity,
-				onSceneProximityConnect: onSceneProximity,
 				...mirrorConnect,
+				...mirrorProximity,
 			}),
-		[
-			kindCatalogs,
-			kindCompatibility,
-			mirrorConnect,
-			onBoardProximity,
-			onBoardSelect,
-			onSceneProximity,
-			onSceneSelect,
-		],
+		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect],
 	);
 
 	useEffect(() => {
@@ -353,18 +317,31 @@ function TopologyPlayController({
 				id: TOPOLOGY_PLAY_APP_ID,
 				label: "Topology play",
 				windowKinds: [
-					{ id: "topology-board", label: "Sketch board", component: TopologyBoardWindow },
-					{ id: "topology-scene", label: "Spatial scene", component: TopologySceneWindow },
+					{ id: TOPOLOGY_PLAY_WINDOWS.board, label: TOPOLOGY_PLAY_WINDOW_LABELS.board, component: TopologyBoardWindow },
+					{ id: TOPOLOGY_PLAY_WINDOWS.scene, label: TOPOLOGY_PLAY_WINDOW_LABELS.scene, component: TopologySceneWindow },
 				],
 				defaultLayout: createStackLayout(
-					["topology-board", "topology-scene"],
-					["Sketch board", "Spatial scene"],
+					[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
+					[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
 				),
 			},
 		],
 		[],
 	);
 
+	return { shellValue, apps };
+}
+// #endregion 🎬PairedModel
+
+// #region 🎬Controller
+function TopologyPlayController({
+	boardFixture,
+	sceneFixture,
+}: {
+	readonly boardFixture: BoardFixtureV1;
+	readonly sceneFixture: SceneFixtureV1;
+}): ReactElement {
+	const { shellValue, apps } = useTopologyPairedPlayModel(boardFixture, sceneFixture);
 	return (
 		<TopologyPlayShellContext.Provider value={shellValue}>
 			<UI apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
@@ -428,6 +405,13 @@ if (import.meta.vitest) {
 		it("parses topology manifest", () => {
 			const t = parseTopologyFixtureV1(topologyManifestJson as unknown);
 			expect(t?.schema).toBe("elements.topology.fixture/v1");
+		});
+		it("shared kinds merge metas like the play harness", () => {
+			const sk = topologySharedKindsFromPairedMetas({
+				boardMeta: undefined,
+				sceneMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
+			});
+			expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
 		});
 	});
 }

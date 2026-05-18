@@ -1,6 +1,8 @@
 import type { ContextMenuItem } from "@elements/ui";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
+/** 🔭 Topology pairs board WASM with scene R3F under one dual-surface contract; `@elements/board` and `@elements/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
+
 import {
 	boardFixtureMetaKindCatalogBundle,
 	parseBoardFixtureV1,
@@ -10,7 +12,6 @@ import {
 	type BoardFixtureV1,
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
-	type BoardLodZoomThresholds,
 } from "../../board/index.ts";
 import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
@@ -20,7 +21,6 @@ import {
 	SceneVortex,
 	parseSceneFixtureV1,
 	sceneBlockedVortexFullIdsFromTies,
-	type SceneCameraState,
 	type SceneCanvasProps,
 	type SceneFixtureV1,
 	type SceneKindCatalogBundle,
@@ -161,7 +161,116 @@ export function topologyMirrorConnectHandlers(onBoth: (p: {
 		onSceneConnect: (payload) => onBoth({ source: payload.source, target: payload.target, surface: "scene" }),
 	};
 }
+
+/** @emoji 🔗 Mirrors proximity-connect telemetry across both surfaces (board WASM vs scene vortex pick). */
+export function topologyMirrorProximityHandlers(onBoth: (p: { readonly surface: "board" | "scene" }) => void): Pick<
+	TopologyDualSurfaceBindingInput,
+	"onBoardProximityConnect" | "onSceneProximityConnect"
+> {
+	return {
+		onBoardProximityConnect: () => onBoth({ surface: "board" }),
+		onSceneProximityConnect: () => onBoth({ surface: "scene" }),
+	};
+}
 //#endregion 🔗SharedBindings
+
+//#region 🧾PairedMeta
+function isTopologyMetaRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+/** @emoji 🧾 Reads `kindCompatibility` rows from one fixture meta blob (shared row shape across board + scene JSON). */
+export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unknown> | undefined): BoardKindCompatEntry[] {
+	if (!isTopologyMetaRecord(meta)) return [];
+	const arr = meta.kindCompatibility;
+	if (!Array.isArray(arr)) return [];
+	const out: BoardKindCompatEntry[] = [];
+	for (const entry of arr) {
+		if (!isTopologyMetaRecord(entry)) continue;
+		const source = typeof entry.source === "string" ? entry.source.trim() : "";
+		const target = typeof entry.target === "string" ? entry.target.trim() : "";
+		if (!source || !target) continue;
+		const specificity =
+			entry.specificity === "general" ||
+			entry.specificity === "node" ||
+			entry.specificity === "edge" ||
+			entry.specificity === "handle" ||
+			entry.specificity === "wire" ||
+			entry.specificity === "object" ||
+			entry.specificity === "tie"
+				? entry.specificity
+				: undefined;
+		out.push({
+			source,
+			target,
+			...(entry.bidirectional === true ? { bidirectional: true } : {}),
+			...(entry.important === true ? { important: true } : {}),
+			...(specificity ? { specificity } : {}),
+		});
+	}
+	return out;
+}
+
+/** @emoji 🧾 Reads `kindCatalogs` object from one fixture meta (scene JSON shape; cast at dual-surface boundary). */
+export function topologyKindCatalogBundleFromSceneMeta(meta: Record<string, unknown> | undefined): SceneKindCatalogBundle | undefined {
+	if (!isTopologyMetaRecord(meta)) return undefined;
+	const kc = meta.kindCatalogs;
+	if (!kc || typeof kc !== "object" || Array.isArray(kc)) return undefined;
+	return kc as SceneKindCatalogBundle;
+}
+
+/** @emoji 🧾 Picks a single catalog bundle for dual surfaces: board fixture meta wins, else scene meta. */
+export function topologyPairedKindCatalogBundle(inp: {
+	readonly boardMeta: Record<string, unknown> | undefined;
+	readonly sceneMeta: Record<string, unknown> | undefined;
+}): BoardKindCatalogBundle | undefined {
+	const fromBoard = boardFixtureMetaKindCatalogBundle(inp.boardMeta);
+	if (fromBoard) return fromBoard;
+	return topologyKindCatalogBundleFromSceneMeta(inp.sceneMeta) as BoardKindCatalogBundle | undefined;
+}
+
+/** @emoji 🧾 Picks compatibility rows for dual surfaces: board meta wins when non-empty, else scene meta. */
+export function topologyPairedKindCompatibility(inp: {
+	readonly boardMeta: Record<string, unknown> | undefined;
+	readonly sceneMeta: Record<string, unknown> | undefined;
+}): readonly BoardKindCompatEntry[] {
+	const fromBoard = topologyKindCompatibilityRowsFromMeta(inp.boardMeta);
+	if (fromBoard.length > 0) return fromBoard;
+	return topologyKindCompatibilityRowsFromMeta(inp.sceneMeta);
+}
+//#endregion 🧾PairedMeta
+
+//#region 🎚️PairDefaults
+/** @emoji 🎚️ Root layout class shared by `TopologyBoardPane` / `TopologyScenePane` shells (pair-aligned chrome). */
+export const TOPOLOGY_PANE_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
+
+/** @emoji 🎚️ LOD + grid defaults shared by paired board/scene canvases (same knobs as standalone plays). */
+export const TOPOLOGY_LOD_GRID_DEFAULTS: TopologyLodGridShared = {
+	lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	gridFactor: DEFAULT_BOARD_GRID_FACTOR,
+	gridSnapEnabled: true,
+};
+
+/** @emoji 🎚️ Scene-only chrome defaults aligned with `elements/scene/play` (topology passes them via `scene` prop). */
+export function topologySceneChromeDefaults(): Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "gridSnapEnabled"> {
+	return { showLodGrid: true, proximityRadius: 24, gridSnapEnabled: true };
+}
+
+/** @emoji 🎚️ Merges paired fixture metas into the shared LOD/grid + catalog fields consumed by `buildTopologyDualSurfaceBindings`. */
+export function topologySharedKindsFromPairedMetas(inp: {
+	readonly boardMeta: Record<string, unknown> | undefined;
+	readonly sceneMeta: Record<string, unknown> | undefined;
+}): Pick<
+	TopologyDualSurfaceBindingInput,
+	"lodZoomThresholds" | "gridFactor" | "gridSnapEnabled" | "kindCatalogs" | "kindCompatibility"
+> {
+	return {
+		...TOPOLOGY_LOD_GRID_DEFAULTS,
+		kindCatalogs: topologyPairedKindCatalogBundle(inp),
+		kindCompatibility: topologyPairedKindCompatibility(inp),
+	};
+}
+//#endregion 🎚️PairDefaults
 
 //#region 🗼BoardMarkers
 export interface TopologyBoardWireRecord {
@@ -290,6 +399,7 @@ export function topologyBoardMarkersFromFixture(props: {
 //#endregion 🗼BoardMarkers
 
 //#region 🪟Panes
+//#region 🪟PanesBoard
 export interface TopologyBoardPaneProps {
 	readonly fixture: BoardFixtureV1;
 	readonly bindings: TopologyDualSurfaceBindings;
@@ -315,7 +425,7 @@ export const TopologyBoardPane = memo(function TopologyBoardPane(props: Topology
 	const mergedCatalogs =
 		boardExtra.kindCatalogs ?? b.kindCatalogs ?? boardFixtureMetaKindCatalogBundle(props.fixture.meta);
 	return (
-		<div className="flex h-full min-h-0 flex-1 flex-col" data-topology-board-root>
+		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-board-root data-topology-surface="board">
 			<BoardCanvas
 				camera={boardExtra.camera ?? props.fixture.camera}
 				className="min-h-0 flex-1"
@@ -328,7 +438,9 @@ export const TopologyBoardPane = memo(function TopologyBoardPane(props: Topology
 		</div>
 	);
 });
+//#endregion 🪟PanesBoard
 
+//#region 🪟PanesScene
 export interface TopologyScenePaneProps {
 	readonly fixture: SceneFixtureV1;
 	readonly bindings: TopologyDualSurfaceBindings;
@@ -343,7 +455,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 	const { scene: s } = props.bindings;
 	const sceneRest = props.scene ?? {};
 	return (
-		<div className="flex h-full min-h-0 flex-1 flex-col" data-topology-scene-root>
+		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
 			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
 				<Scene
 					className="min-h-0 flex-1"
@@ -379,6 +491,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 		</div>
 	);
 });
+//#endregion 🪟PanesScene
 //#endregion 🪟Panes
 
 export { parseBoardFixtureV1, parseSceneFixtureV1, sceneBlockedVortexFullIdsFromTies };
@@ -399,12 +512,43 @@ if (import.meta.vitest) {
 	describe("buildTopologyDualSurfaceBindings", () => {
 		it("forwards lod keys to both slices", () => {
 			const b = buildTopologyDualSurfaceBindings({
-				lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
-				gridFactor: DEFAULT_BOARD_GRID_FACTOR,
-				gridSnapEnabled: true,
+				...TOPOLOGY_LOD_GRID_DEFAULTS,
 			});
 			expect(b.board.gridSnapEnabled).toBe(true);
 			expect(b.scene.gridSnapEnabled).toBe(true);
+		});
+	});
+	describe("topologyPairedKindCompatibility", () => {
+		it("prefers board meta rows when present", () => {
+			const rows = topologyPairedKindCompatibility({
+				boardMeta: { kindCompatibility: [{ source: "a", target: "b" }] },
+				sceneMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
+			});
+			expect(rows.some((r) => r.source === "a")).toBe(true);
+		});
+		it("falls back to scene meta when board has no rows", () => {
+			const rows = topologyPairedKindCompatibility({
+				boardMeta: {},
+				sceneMeta: { kindCompatibility: [{ source: "x", target: "y" }] },
+			});
+			expect(rows.some((r) => r.source === "x")).toBe(true);
+		});
+	});
+	describe("topologyMirrorProximityHandlers", () => {
+		it("invokes both surfaces", () => {
+			const seen: string[] = [];
+			const m = topologyMirrorProximityHandlers((p) => {
+				seen.push(p.surface);
+			});
+			m.onBoardProximityConnect?.({ source: "a", target: "b" } as never);
+			m.onSceneProximityConnect?.({ source: "a", target: "b" } as never);
+			expect(seen).toEqual(["board", "scene"]);
+		});
+	});
+	describe("topologySharedKindsFromPairedMetas", () => {
+		it("includes lod defaults", () => {
+			const s = topologySharedKindsFromPairedMetas({ boardMeta: undefined, sceneMeta: undefined });
+			expect(s.gridSnapEnabled).toBe(true);
 		});
 	});
 }

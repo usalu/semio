@@ -1,0 +1,10 @@
+{
+  "title": "Topology Board Scene Alignment Refactor",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Refactor elements/client/lib/topology: align board+scene play and react layers; extract shared meta/kind defaults and mirror helpers; add topology helpers for board-only and scene-only binding slices; unify play chrome; extend vitest in existing files; run bun ./script.ts test.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪bb339e714138456aa7ffd7094434ebd9"
+  ]
+}

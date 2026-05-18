@@ -130,7 +130,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
 				<ToolbarZone>
 					<ToolbarGroup>
-						<ToolbarItem asChild>
+						<ToolbarItem>
 							<Button
 								variant={relocateMode === "translate" ? "default" : "outline"}
 								size="sm"
@@ -140,7 +140,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 								Translate
 							</Button>
 						</ToolbarItem>
-						<ToolbarItem asChild>
+						<ToolbarItem>
 							<Button
 								variant={relocateMode === "rotate" ? "default" : "outline"}
 								size="sm"
@@ -150,7 +150,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 								Rotate
 							</Button>
 						</ToolbarItem>
-						<ToolbarItem asChild>
+						<ToolbarItem>
 							<Button
 								variant={relocateMode === "scale" ? "default" : "outline"}
 								size="sm"

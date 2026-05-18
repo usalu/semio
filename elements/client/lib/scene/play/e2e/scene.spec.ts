@@ -7,13 +7,23 @@ function collectSceneConsole(page: Page): string[] {
 	return messages;
 }
 
+function expectCleanSceneConsole(messages: string[]): void {
+	const text = messages.join("\n");
+	expect(text).not.toContain("Multiple instances of Three.js");
+	expect(text).not.toContain("indirectCount is not defined");
+	expect(text).not.toContain("React does not recognize the `asChild` prop");
+	expect(text).not.toContain("computeBoundingSphere");
+	expect(text).not.toContain("Could not load /meshes/");
+	expect(text).not.toContain("An error occurred in the <CanvasImpl> component");
+	expect(text).not.toContain("THREE.WebGLRenderer: Context Lost");
+}
+
 test("scene play loads canvas and fixture", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
 	await expect(page.locator("canvas")).toBeVisible({ timeout: 120_000 });
 	await expect(page.locator("[data-scene-root]")).toBeVisible();
-	expect(messages.join("\n")).not.toContain("Multiple instances of Three.js");
-	expect(messages.join("\n")).not.toContain("indirectCount is not defined");
+	expectCleanSceneConsole(messages);
 });
 
 test("scene selection hook updates label", async ({ page }) => {
@@ -26,6 +36,5 @@ test("scene selection hook updates label", async ({ page }) => {
 		return "01890804-66f2-4544-98f0-b6f0c0615492";
 	});
 	await expect(page.locator("[data-e2e-selected]")).toContainText(id.slice(0, 8), { timeout: 10_000 });
-	expect(messages.join("\n")).not.toContain("Multiple instances of Three.js");
-	expect(messages.join("\n")).not.toContain("indirectCount is not defined");
+	expectCleanSceneConsole(messages);
 });
