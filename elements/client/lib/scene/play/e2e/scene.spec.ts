@@ -42,6 +42,21 @@ test("scene selection hook updates label", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
+test("scene click keeps chunked meshes mounted", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	const canvas = page.locator("canvas").first();
+	await canvas.waitFor({ state: "visible", timeout: 120_000 });
+	await page.waitForLoadState("networkidle");
+	await page.waitForTimeout(500);
+	const before = await page.locator("canvas").count();
+	await canvas.click({ position: { x: 320, y: 240 } });
+	await page.waitForTimeout(500);
+	await expect(page.locator("[data-scene-root]")).toBeVisible();
+	await expect(page.locator("canvas")).toHaveCount(before);
+	expectCleanSceneConsole(messages);
+});
+
 test("scene play serves placeholder mesh as binary glb", async ({ request }) => {
 	const response = await request.get("/meshes/placeholder.glb");
 	expect(response.ok()).toBe(true);

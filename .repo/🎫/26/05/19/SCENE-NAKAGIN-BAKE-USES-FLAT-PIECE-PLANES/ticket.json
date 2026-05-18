@@ -1,0 +1,10 @@
+{
+  "title": "Scene Nakagin Bake Uses Flat Piece Planes",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Derive each scene object origin+orientation from semio flat piece planes matched by piece id to board nodes; use planeBasisToThreeJs; regenerate nakagin scene fixture; wire bake into elements scene script.ts.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪22e559702b9343ea99d9ff1c289be39e"
+  ]
+}

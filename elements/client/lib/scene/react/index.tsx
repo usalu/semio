@@ -781,16 +781,22 @@ export function sceneChunkKey(origin: Vec3, chunkSize: number): string {
 	return `${ix}|${iy}|${iz}`;
 }
 
-function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): Set<string> {
+function sceneSetEquals(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+	if (a.size !== b.size) return false;
+	for (const v of a) if (!b.has(v)) return false;
+	return true;
+}
+
+function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
 	const { camera } = useThree();
 	const frustum = useMemo(() => new Frustum(), []);
 	const projScreenMatrix = useMemo(() => new Matrix4(), []);
 	const sphereTmp = useMemo(() => new Sphere(), []);
-	const visible = useMemo(() => new Set<string>(), []);
+	const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
 	useFrame(() => {
 		projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
 		frustum.setFromProjectionMatrix(projScreenMatrix);
-		visible.clear();
+		const next = new Set<string>();
 		const camPos = camera.position;
 		for (const key of chunkKeys) {
 			const [ix, iy, iz] = key.split("|").map(Number);
@@ -801,8 +807,9 @@ function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, max
 			sphereTmp.radius = chunkSize * 0.866;
 			if (sphereTmp.center.distanceTo(camPos) > maxDist + sphereTmp.radius) continue;
 			if (!frustum.intersectsSphere(sphereTmp)) continue;
-			visible.add(key);
+			next.add(key);
 		}
+		setVisible((prev) => (sceneSetEquals(prev, next) ? prev : next));
 	});
 	return visible;
 }
@@ -1204,12 +1211,17 @@ export const SceneMagnet = memo(function SceneMagnet(props: SceneMagnetProps) {
 //#region 🪢Tie
 export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 	const reg = useSceneRegistry();
-	const [pts, setPts] = useState<Vector3[]>(() => [new Vector3(), new Vector3(0, 1, 0)]);
+	const [pts, setPts] = useState<Vector3[] | null>(null);
 	useFrame(() => {
 		const a = reg.getVortexWorld(props.source);
 		const b = reg.getVortexWorld(props.target);
-		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) setPts([a.clone(), b.clone()]);
+		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) {
+			setPts([a.clone(), b.clone()]);
+		} else if (pts !== null) {
+			setPts(null);
+		}
 	});
+	if (!pts) return null;
 	return <Line points={pts} color="#64748b" lineWidth={1} userData={{ sceneTieId: props.id }} />;
 });
 //#endregion 🪢Tie
@@ -1302,9 +1314,13 @@ function SceneLinkRubberBand() {
 		}
 		const a = reg.getVortexWorld(reg.linkDragSourceFullId);
 		const b = reg.linkEndWorldRef.current;
-		if (a && b) {
+		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) {
 			pos.setXYZ(0, a.x, a.y, a.z);
 			pos.setXYZ(1, b.x, b.y, b.z);
+			pos.needsUpdate = true;
+		} else {
+			pos.setXYZ(0, 0, 0, 0);
+			pos.setXYZ(1, 0, 0, 0);
 			pos.needsUpdate = true;
 		}
 	});
