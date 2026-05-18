@@ -14,7 +14,6 @@ import {
 	ToolbarItem,
 	ToolbarZone,
 	UI,
-	createDefaultLayout,
 	createStackLayout,
 	getLevelBgClass,
 	type UIAppConfig,
@@ -357,10 +356,8 @@ function TopologyPlayController({
 					{ id: "topology-board", label: "Sketch board", component: TopologyBoardWindow },
 					{ id: "topology-scene", label: "Spatial scene", component: TopologySceneWindow },
 				],
-				defaultLayout: createDefaultLayout(
+				defaultLayout: createStackLayout(
 					["topology-board", "topology-scene"],
-					"row",
-					[50, 50],
 					["Sketch board", "Spatial scene"],
 				),
 			},
