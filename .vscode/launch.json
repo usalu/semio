@@ -472,6 +472,25 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev🧩elements🏙️scene",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @elements/scene:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SCENE_PLAY_PORT": "6013"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 180
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "uriFormat": "%s"
+      }
+    },
     // #endregion
     // #region 📦 Build
     {

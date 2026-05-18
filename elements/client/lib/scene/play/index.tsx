@@ -170,22 +170,23 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 				</div>
 			</div>
 			<div className="relative min-h-0 flex-1">
-				<Scene
-					className="absolute inset-0"
-					camera={fixture.camera}
-					kindCatalogs={kindCatalogs}
-					kindCompatibility={kindCompatibility}
-					blockedVortexFullIds={blockedVortexFullIds}
-					proximityRadius={24}
-					relocateMode={relocateMode}
-					gridSnapEnabled
-					onLodChange={setSceneLodTag}
-					onSelect={onSelect}
-					onConnect={onConnect}
-					onIndirectConnect={onIndirectConnect}
-					onProximityConnect={onProximityConnect}
-				>
-					<Suspense fallback={null}>
+				<Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
+					<Scene
+						className="absolute inset-0"
+						camera={fixture.camera}
+						kindCatalogs={kindCatalogs}
+						kindCompatibility={kindCompatibility}
+						blockedVortexFullIds={blockedVortexFullIds}
+						proximityRadius={24}
+						relocateMode={relocateMode}
+						showLodGrid
+						gridSnapEnabled
+						onLodChange={setSceneLodTag}
+						onSelect={onSelect}
+						onConnect={onConnect}
+						onIndirectConnect={onIndirectConnect}
+						onProximityConnect={onProximityConnect}
+					>
 						{fixture.objects.map((o) => (
 							<SceneObject
 								key={o.id}
@@ -207,8 +208,8 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 						{fixture.ties.map((t) => (
 							<SceneTie key={t.id} {...t} />
 						))}
-					</Suspense>
-				</Scene>
+					</Scene>
+				</Suspense>
 			</div>
 		</div>
 	);

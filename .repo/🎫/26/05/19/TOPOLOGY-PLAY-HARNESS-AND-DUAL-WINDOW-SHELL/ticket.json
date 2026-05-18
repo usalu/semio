@@ -1,0 +1,10 @@
+{
+  "title": "Topology Play Harness And Dual Window Shell",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Finish elements/client/lib/topology: implement play/index.tsx with LevelProvider+UI and two windowKinds (board vs scene), shared buildTopologyDualSurfaceBindings, Nakagin fixtures, preload GLTF; ensure e2e passes; wire workspace if needed.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪c5c066d455b84ce1896750759400d9ac"
+  ]
+}

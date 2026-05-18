@@ -1,0 +1,10 @@
+{
+  "title": "Elements Topology Package Board Scene",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Add elements/client/lib/topology package: react/index.tsx combining board+scene shared props/helpers, play with two UI window kinds (board + scene), topology fixture JSON, nx script parity with scene.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪336c4af5fa4a4bd7b86e5733d79fb6f4"
+  ]
+}
