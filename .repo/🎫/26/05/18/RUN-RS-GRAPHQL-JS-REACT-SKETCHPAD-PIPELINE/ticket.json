@@ -1,0 +1,11 @@
+{
+  "title": "Run Rs Graphql Js React Sketchpad Pipeline",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Rs in-memory kit, GraphQL semio-store, js Session, react SemioStoreKitLineHost + KitWasmMountProvider, sketchpad play env wiring; schema vs metabolism fixture.",
+  "summary": "Aligned golden GraphQL Kit with RS and metabolism initialKit by adding version and improving kit JSON hydrate/projection. Added ParentStore::spawn_from_install_json_value so semio-store POST /install create+importFile accept full kit-store bundle JSON (e.g. metabolism.kit.semio.json) or bare initialKit DTOs; new semio-store test covers bundle install. Restored KitWasmMountProvider/useKitWasmHost in @semio/react and kitStoreFromKitStoreClient stub in @semio/js for sketchpad imports. Playground can use VITE_SEMIO_NATIVE_STORE=1 + VITE_SEMIO_STORE_URL with SemioStoreKitLineHost for RS→GraphQL→Session→React pipeline. cargo test -p semio-store: 5 passed.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ee7ab7c8e03b43b4b01d4742f6e2be3f"
+  ]
+}

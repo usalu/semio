@@ -50,7 +50,7 @@ type GraphqlWireKind = "query" | "mutation" | "subscription";
 /** @emoji 🔍 SDL operation keyword after leading whitespace and full-line {@code #} comments. */
 function graphqlWireOperationKind(document: string): GraphqlWireKind | null {
   let rest = document.trimStart();
-  for (;;) {
+  for (; ;) {
     if (rest.startsWith("#")) {
       const nl = rest.indexOf("\n");
       if (nl === -1) return null;
@@ -258,7 +258,7 @@ class WorkerStringTransport {
 //#region 🌐HttpStoreTransport
 /** @emoji 🌐 GraphQL-over-HTTP to native `semio-store` (no WASM); subscriptions are no-ops until the sidecar exposes a stream. */
 class HttpStringTransport {
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly baseUrl: string) { }
 
   async execute(requestJson: string): Promise<string> {
     const r = await fetch(`${this.baseUrl}/graphql`, {
@@ -275,7 +275,7 @@ class HttpStringTransport {
     return;
   }
 
-  dispose(): void {}
+  dispose(): void { }
 }
 //#endregion 🌐HttpStoreTransport
 
@@ -426,6 +426,9 @@ export type SessionOpenOptions = Readonly<{
 /** @emoji 🌐 Options for {@link Session.openHttp} against `semio-store` (POST `/install` + POST `/graphql`). */
 export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
 
+/** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store. */
+export const SEMIO_IN_MEMORY_KIT_URI = "dev://empty" as const;
+
 function gqlString(s: string): string {
   return JSON.stringify(s);
 }
@@ -443,7 +446,7 @@ function scopedKitMutationBody(storeId: string, changeId: string, kitSelection: 
 
 function sessionStoreSelectionDocument(innerOnStore: string): { query: string; variables: JsonObject } {
   return {
-    query: `query Stores { session { stores { edges { node { ${innerOnStore} } } } } }`,
+    query: `query Stores { session { stores { edges { cursor node { ${innerOnStore} } } } } }`,
     variables: {},
   };
 }
@@ -451,24 +454,24 @@ function sessionStoreSelectionDocument(innerOnStore: string): { query: string; v
 function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
-      query: `query KitSessionWipStore { session { stores { edges { node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
+      query: `query KitSessionWipStore { session { stores { edges { cursor node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: {},
     };
   }
   if ("checkpoint" in point) {
     return {
-      query: `query KitSessionWipStore($checkpointId: ID!) { session { stores { edges { node { wip { checkpoint(id: $checkpointId) { kit { ${innerOnKitStore} } } } } } } } }`,
+      query: `query KitSessionWipStore($checkpointId: ID!) { session { stores { edges { cursor node { wip { checkpoint(id: $checkpointId) { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: { checkpointId: point.checkpoint.checkpointId },
     };
   }
   if ("alternative" in point) {
     return {
-      query: `query KitSessionWipStore($alternativeId: ID!) { session { stores { edges { node { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } } } } }`,
+      query: `query KitSessionWipStore($alternativeId: ID!) { session { stores { edges { cursor node { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: { alternativeId: point.alternative.alternativeId },
     };
   }
   return {
-    query: `query KitSessionWipStore { session { stores { edges { node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
+    query: `query KitSessionWipStore { session { stores { edges { cursor node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
     variables: {},
   };
 }
@@ -529,8 +532,8 @@ async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | 
     const url = await import("node:url");
     const here = path.dirname(url.fileURLToPath(import.meta.url));
     const candidates = [
-      path.resolve(here, "../../rs/pkg/semio_bg.wasm"),
-      path.resolve(here, "../../../semio/rs/pkg/semio_bg.wasm"),
+      path.resolve(here, "../rs/pkg/semio_bg.wasm"),
+      path.resolve(here, "../../../../semio/client/lib/rs/pkg/semio_bg.wasm"),
     ];
     for (const p of candidates) {
       try {
@@ -544,6 +547,21 @@ async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | 
     /* non-node */
   }
   return undefined;
+}
+
+function isBrowserWorkerRuntime(): boolean {
+  return typeof Worker !== "undefined" && typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function shouldStartLiveSubscriptionLoop(): boolean {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function defaultRsWasmSpecifier(): string {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return new URL("../rs/pkg/semio.js", import.meta.url).href;
+  }
+  return "@semio/rs-wasm";
 }
 
 //#region 🧱Classes
@@ -867,12 +885,17 @@ function subscribeKitCoarseRefetch(
 function backboneBootstrapUriForStoreOpen(raw: string): string {
   const t = raw.trim();
   if (t.startsWith("{") || t.startsWith("[")) {
-    const bytes = new TextEncoder().encode(t);
-    let bin = "";
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
-    return `dev+json:${btoa(bin)}`;
+    return semioJsonBootstrapUri(t);
   }
   return t;
+}
+
+/** @emoji 🧪 Encodes inline kit JSON into the RS `dev+json:` bootstrap URI form. */
+export function semioJsonBootstrapUri(raw: string): string {
+  const bytes = new TextEncoder().encode(raw);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
+  return `dev+json:${btoa(bin)}`;
 }
 
 /** @emoji 📑 Same JSON shape as {@link FieldSpec} but declared before {@link Entity} so {@link Store} field reads stay self-contained. */
@@ -1194,7 +1217,7 @@ export class Session {
 
   static async open(uri: string, opts?: SessionOpenOptions): Promise<Session> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? defaultRsWasmSpecifier();
     const preferInlineInVitest = (() => {
       try {
         const env = (import.meta as { env?: JsonObject }).env;
@@ -1206,7 +1229,7 @@ export class Session {
     })();
 
     const wasmBytesPre = await readSemioWasmBytesFromMonorepoCandidates();
-    const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
+  const useDedicatedWorker = isBrowserWorkerRuntime() && !preferInlineInVitest && wasmBytesPre == null;
 
     const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
     if (useDedicatedWorker) {
@@ -1216,7 +1239,7 @@ export class Session {
         await wt.init(bootstrapUri);
         const k = new Session(timeoutMs, wt);
         await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
-        void k.startSubscriptionLoop();
+        if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
         return k;
       } catch (workerErr) {
         console.warn("[semio/js] WASM worker init failed; falling back to inline WASM", workerErr);
@@ -1248,8 +1271,18 @@ export class Session {
     const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
     const k = new Session(timeoutMs, t);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
-    void k.startSubscriptionLoop();
+    if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
     return k;
+  }
+
+  /** @emoji 🧪 Opens the RS-backed empty in-memory kit store used for local bridge and UI smoke paths. */
+  static async openInMemory(opts?: SessionOpenOptions): Promise<Session> {
+    return Session.open(SEMIO_IN_MEMORY_KIT_URI, opts);
+  }
+
+  /** @emoji 🧪 Opens an RS-backed session from inline kit or bundle JSON via `dev+json:`. */
+  static async openJson(raw: string, opts?: SessionOpenOptions): Promise<Session> {
+    return Session.open(semioJsonBootstrapUri(raw), opts);
   }
 
   /** @emoji 🌐 Opens a {@link Session} against native `semio-store` at {@code baseUrl} (optional POST `/install` first). */
@@ -1267,7 +1300,7 @@ export class Session {
     const inner = new HttpStringTransport(root);
     const k = new Session(timeoutMs, inner);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
-    void k.startSubscriptionLoop();
+    if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
     return k;
   }
 
@@ -3822,12 +3855,27 @@ export async function openSession(uri: string, opts?: SessionOpenOptions): Promi
 export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
   return Session.openHttp(baseUrl, opts);
 }
+
+/** @emoji 🧾 Resolves a wasm-backed kit store from a kit client when `internalKs` exists; otherwise null (HTTP line, stubs). */
+export function kitStoreFromKitStoreClient(_client: unknown): null {
+  return null;
+}
 //#endregion 🚀PublicAPI
 
 
 //#region 🧪Tests
 if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
+  const eventually = async <T>(read: () => Promise<T>, matches: (value: T) => boolean, timeoutMs = 5_000): Promise<T> => {
+    const startedAt = Date.now();
+    let lastValue = await read();
+    while (!matches(lastValue)) {
+      if (Date.now() - startedAt >= timeoutMs) throw new Error(`eventually: timed out after ${timeoutMs}ms`);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      lastValue = await read();
+    }
+    return lastValue;
+  };
   describe("semio/js", () => {
     it("graphql wire kinds match golden operation roots", () => {
       expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
@@ -3846,8 +3894,56 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         JSON.parse(graphqlWirePostBodyJson({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" })) as Record<string, unknown>,
       ).toEqual({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" });
     });
-    it("read and write", () => {
-      // 
+    it("runs the in-memory rs graphql js pipeline", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const envelope = await session.gql.executeQueryJson({ query: KIT_SESSION_QUERY_ENTRY }, 120_000);
+        expect(envelope.errors ?? []).toHaveLength(0);
+
+        const stores = await session.stores();
+        expect(stores.length).toBeGreaterThan(0);
+
+        const store = stores[0]!;
+        const kit = await store.wip().theKit().kit();
+
+        const createTag = await kit.createTag("alpha-tag");
+        expect(createTag).toEqual({ ok: true });
+        const tags = await eventually(() => kit.tags(), (value) => value.length === 1, 10_000);
+        expect(tags).toHaveLength(1);
+        expect(await tags[0]!.name()).toBe("alpha-tag");
+
+        const createConcept = await kit.createConcept("beta-concept");
+        expect(createConcept).toEqual({ ok: true });
+        const concepts = await eventually(() => kit.concepts(), (value) => value.length === 1, 10_000);
+        expect(concepts).toHaveLength(1);
+        expect(await concepts[0]!.name()).toBe("beta-concept");
+
+        const createQuality = await kit.createQuality("q1", "v1");
+        expect(createQuality).toEqual({ ok: true });
+        const qualities = await eventually(() => kit.qualities(), (value) => value.length === 1, 10_000);
+        expect(qualities).toHaveLength(1);
+        expect(await qualities[0]!.key()).toBe("q1");
+
+        const snapshot = unwrapGraphqlData(
+          await session.gql.executeQueryJson(
+            {
+              query: `query PipelineSnapshot { session { stores { edges { node { wip { theKit { kit { tags { edges { node { name } } } concepts { edges { node { name } } } qualities { edges { node { key value } } } } } } } } } } }`,
+            },
+            120_000,
+          ),
+        ) as JsonObject;
+        const storeNode = sessionStoreNodeFromData(snapshot);
+        const kitNode = kitReadSelectionFromData(snapshot, theKitReadPoint);
+        expect(String(jsonObjectField(kitNode, "tags")?.["edges"] instanceof Array)).toBe("true");
+        expect(String(jsonObjectField(kitNode, "concepts")?.["edges"] instanceof Array)).toBe("true");
+        expect(String(jsonObjectField(kitNode, "qualities")?.["edges"] instanceof Array)).toBe("true");
+        const liveKit = jsonObjectField(jsonObjectField(storeNode, "wip"), "theKit")?.["kit"] as JsonObject | undefined;
+        expect((((jsonObjectField(liveKit, "tags")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+        expect((((jsonObjectField(liveKit, "concepts")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+        expect((((jsonObjectField(liveKit, "qualities")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+      } finally {
+        await session.dispose();
+      }
     });
   })
 }

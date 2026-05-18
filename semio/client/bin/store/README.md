@@ -2,7 +2,7 @@
 
 `semio-store` is a small **HTTP** service that holds one native [`kit_store::KitStore`](../rs) (WIP + coordinator + optional backbone) and serves the same **GraphQL** control-plane schema as `semio::kit_graphql` (used by `semio/js` and the Rust kit).
 
-- **`POST /install`**: first call installs the sole in-memory kit (e.g. `{ "create": { "dto": { ... } } }`); later calls return `409`.
+- **`POST /install`**: first call installs the sole in-memory kit. Body is exactly one of `create`, `importFile`, `importFromFolder`, `importFromZip`, `importFromRemote`. **`create.dto`** may be either a bare **`initialKit` projection** (id, name, types, designs, …) or a full **`DevBackboneBundleDoc`** JSON whose `schema` matches the kit-store bundle marker (same as `metabolism.kit.semio.json`). **`importFile`** reads UTF-8 JSON from `path` and uses the same rules. Later calls return `409`.
 - **`POST /graphql`**: standard GraphQL JSON body (`query`, optional `variables`, `operationName`). Mutations are nested under `kitStore { batch(input: …) { … } }` (no JSON-RPC surface).
 - **`GET /graphiql`** (and `GET /graphql` in the browser): **GraphiQL** for ad-hoc queries.
 - **`GET /healthz`**: liveness.

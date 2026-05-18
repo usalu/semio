@@ -1079,7 +1079,7 @@ type Checkpoint implements Entity & StrongEntity {
 	"""
 	initial: Kit
 	"""
-	@emoji 📦 SDL `Checkpoint.kit` — materialized kit at this checkpoint; until checkpoint-owned `changes` are wired, matches `initial`.
+	@emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
 	"""
 	kit: Kit
 	changes: ChangeConnection!

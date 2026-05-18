@@ -13,7 +13,7 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, typeConfig } from "@semio/sketchpad";
-import { InMemoryKitStore, type SketchpadKitStoreFactory } from "@semio/react";
+import { InMemoryKitStore, SemioStoreKitLineHost, type SketchpadKitStoreFactory } from "@semio/react";
 import { createRoot, type Root } from "react-dom/client";
 import "./globals.css";
 
@@ -25,6 +25,10 @@ appRegistry.register(kitConfig);
 appRegistry.register(typeConfig);
 
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
+
+const nativeStoreUrl = (import.meta as { env?: Record<string, string | undefined> }).env?.["VITE_SEMIO_STORE_URL"]?.trim();
+const useNativeStoreLine =
+  (import.meta as { env?: Record<string, string | undefined> }).env?.["VITE_SEMIO_NATIVE_STORE"] === "1" && nativeStoreUrl != null && nativeStoreUrl !== "";
 
 type RootHostElement = HTMLElement & { __semioReactRoot__?: Root };
 
@@ -43,7 +47,13 @@ if (!rootElement) {
 
 getOrCreateDomRoot(rootElement).render(
   <div className="h-screen w-screen">
-    <Sketchpad temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
+    {useNativeStoreLine ? (
+      <SemioStoreKitLineHost baseUrl={nativeStoreUrl!} fallback={<div className="p-4 text-sm opacity-80">Connecting to semio-store…</div>}>
+        <Sketchpad importKitUrls={[]} />
+      </SemioStoreKitLineHost>
+    ) : (
+      <Sketchpad temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
+    )}
   </div>,
 );
 // #endregion 🛎️Entrypoint

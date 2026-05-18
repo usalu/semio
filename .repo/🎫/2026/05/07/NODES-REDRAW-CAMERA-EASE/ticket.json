@@ -1,7 +1,7 @@
 {
   "title": "Nodes Redraw Camera Ease",
-  "status": "open",
-  "summary": "One-shot Redraw nodes: preserve previous fixture camera on the layout patch so descriptor sync does not jump. After commit, useLayoutEffect runs a 1.8s RAF ease (first third hold, cubic blend) from current boardPlayPaneCamerasBaseline toward triptychCamerasFromFixture. Cancels nodes RAF when redraw play starts, when post-play override ease begins, and in shared cleanup paths. Effect deps omit baseline to avoid cleanup cancelling mid-ease.",
+  "status": "closed",
+  "summary": "Fixed the Semio JS bridge so the RS in-memory GraphQL pipeline works end to end in JS. Added explicit in-memory/open-json session helpers, corrected non-browser WASM loading to use the generated rs pkg directly, disabled browser-only live subscription startup outside DOM runtimes, and fixed store-scoped read documents to include relay cursors so JS collection reads resolve the active store correctly. Replaced the placeholder JS embedded test with a real end-to-end smoke test and validated the supported RS mutation path with uncached Vitest plus console-logged runtime checks for createTag/createConcept/createQuality. Note: RS GraphQL createType/createDesign are still stubbed upstream and were not implemented in this slice.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",

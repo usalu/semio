@@ -9053,12 +9053,51 @@ pub mod kit_backbone {
             }
             out
         };
-        serde_json::json!({
-            "id": kid.as_str(),
-            "name": name,
-            "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items },
-            "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items },
-        })
+        let mut root = serde_json::Map::new();
+        root.insert("id".into(), serde_json::Value::String(kid.as_str().to_string()));
+        root.insert("name".into(), serde_json::Value::String(name));
+        if let Some(v) = kit.version.read().await.clone() {
+            root.insert("version".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.description.read().await.clone() {
+            root.insert("description".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.icon.read().await.clone() {
+            root.insert("icon".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.image.read().await.clone() {
+            root.insert("image".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.preview.read().await.clone() {
+            root.insert("preview".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.remote.read().await.clone() {
+            root.insert("remote".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.homepage.read().await.clone() {
+            root.insert("homepage".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.license.read().await.clone() {
+            root.insert("license".into(), serde_json::Value::String(v));
+        }
+        if let Some(v) = kit.uri.read().await.clone() {
+            root.insert("uri".into(), serde_json::Value::String(v));
+        }
+        if let Some(ts) = kit.created.read().await.clone() {
+            root.insert("createdAt".into(), serde_json::Value::String(ts.0.clone()));
+        }
+        if let Some(ts) = kit.updated.read().await.clone() {
+            root.insert("updatedAt".into(), serde_json::Value::String(ts.0.clone()));
+        }
+        root.insert(
+            "types".into(),
+            serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items }),
+        );
+        root.insert(
+            "designs".into(),
+            serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
+        );
+        serde_json::Value::Object(root)
     }
 
     pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
@@ -9069,6 +9108,33 @@ pub mod kit_backbone {
             *kit.snapshot_external_kit_id.write().await = Some(Id::from(id_override));
         } else {
             *kit.snapshot_external_kit_id.write().await = None;
+        }
+        if let Some(s) = json.get("description").and_then(|v| v.as_str()) {
+            *kit.description.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("icon").and_then(|v| v.as_str()) {
+            *kit.icon.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("image").and_then(|v| v.as_str()) {
+            *kit.image.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("preview").and_then(|v| v.as_str()) {
+            *kit.preview.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("remote").and_then(|v| v.as_str()) {
+            *kit.remote.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("homepage").and_then(|v| v.as_str()) {
+            *kit.homepage.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("license").and_then(|v| v.as_str()) {
+            *kit.license.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("uri").and_then(|v| v.as_str()) {
+            *kit.uri.write().await = Some(s.to_string());
+        }
+        if let Some(s) = json.get("version").and_then(|v| v.as_str()) {
+            *kit.version.write().await = Some(s.to_string());
         }
 
         {
@@ -10238,6 +10304,18 @@ pub mod worker {
                 local_provider,
                 remote_providers: RwLock::new(Vec::new()),
             }))
+        }
+
+        /// @emoji 🛰️ `POST /install` bootstrap: full `DevBackboneBundleDoc` JSON (schema `KIT_STORE_BUNDLE_SCHEMA`) or bare `initialKit` projection (same contract as wasm `bootstrap_runtime_from_json_value`).
+        pub async fn spawn_from_install_json_value(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+            if json.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
+                let rt = ParentStore::spawn().await;
+                let s = serde_json::to_string(&json).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
+                Ok(rt)
+            } else {
+                ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(json).await
+            }
         }
 
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {

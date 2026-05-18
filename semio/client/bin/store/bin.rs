@@ -79,14 +79,12 @@ impl InstallBody {
             return Err("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote".to_string());
         }
         if let Some(c) = self.create {
-            return ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(c.dto)
-                .await
-                .map_err(|e: SemioError| e.to_string());
+            return ParentStore::spawn_from_install_json_value(c.dto).await.map_err(|e: SemioError| e.to_string());
         }
         if let Some(p) = self.import_file {
             let txt = std::fs::read_to_string(&p.path).map_err(|e| e.to_string())?;
             let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| e.to_string())?;
-            return ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(v).await.map_err(|e: SemioError| e.to_string());
+            return ParentStore::spawn_from_install_json_value(v).await.map_err(|e: SemioError| e.to_string());
         }
         if self.import_from_folder.is_some() {
             return Err("importFromFolder: not wired in semio-store yet".to_string());
@@ -399,6 +397,47 @@ mod tests {
             Some("RenamedKit"),
             "checkpoint.kit matches wip parent anchor materialization"
         );
+
+        server.abort();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn sidecar_install_create_accepts_full_kit_store_bundle_doc() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use semio::kit_backbone::{DevBackboneBundleDoc, KIT_BUNDLE_HASH_STUB};
+
+        let (server, base) = spawn_server().await?;
+        let client = reqwest::Client::new();
+
+        let mut b = DevBackboneBundleDoc::initialize_with_unsaved_change(
+            "00000000-0000-7000-8000-0000000000cc",
+            "change-bundle-1",
+            "ck-bundle-1",
+        );
+        b.wip.initial_kit = serde_json::json!({
+            "id": "00000000-0000-7000-8000-0000000000cc",
+            "name": "BundleInstallName",
+            "version": "v-bundle-smoke",
+            "types": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
+            "designs": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
+        });
+        let dto = serde_json::to_value(&b)?;
+        post_install(&client, &base, &json!({ "create": { "dto": dto } })).await?;
+
+        let q = post_gql(
+            &client,
+            &base,
+            r#"{ store { wip { initialKit { name version } theKit { kit { name version } } } } }"#,
+            None,
+        )
+        .await?;
+        if q.get("errors").is_some() {
+            return Err(format!("bundle install query: {q}").into());
+        }
+        assert_eq!(q.pointer("/data/store/wip/initialKit/name").and_then(|n| n.as_str()), Some("BundleInstallName"));
+        assert_eq!(q.pointer("/data/store/wip/initialKit/version").and_then(|n| n.as_str()), Some("v-bundle-smoke"));
+        assert_eq!(q.pointer("/data/store/wip/theKit/kit/name").and_then(|n| n.as_str()), Some("BundleInstallName"));
+        assert_eq!(q.pointer("/data/store/wip/theKit/kit/version").and_then(|n| n.as_str()), Some("v-bundle-smoke"));
 
         server.abort();
         Ok(())

@@ -355,6 +355,38 @@ export function SessionContextProvider(props: Readonly<{ session: unknown; child
   return React.createElement(SessionHandleContext.Provider, { value: props.session as Session }, props.children);
 }
 
+//#region 🔌KitWasmHostBridge
+/** @emoji 🔌 Sketchpad registry row: opaque kit store host + optional kit client for VCS / alternatives UI. */
+export type KitWasmHostState = Readonly<{
+  kitTabId: string;
+  store: unknown;
+  kitClient: unknown | null;
+}>;
+
+const KitWasmHostContext = React.createContext<KitWasmHostState | null>(null);
+
+/** @emoji 🔌 Reads {@link KitWasmMountProvider} host bindings (sketchpad registry bridge). */
+export function useKitWasmHost(): KitWasmHostState | null {
+  return React.useContext(KitWasmHostContext);
+}
+
+export type KitWasmMountProviderProps = Readonly<{
+  kitId?: string;
+  store?: unknown;
+  kitClient?: unknown | null;
+  children: ReactNode;
+}>;
+
+/** @emoji 🔌 Publishes registry `store` + `kitClient` for sketchpad footers and native/WASM kit tabs. */
+export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
+  const host = React.useMemo<KitWasmHostState>(
+    () => ({ kitTabId: props.kitId ?? "", store: props.store ?? null, kitClient: props.kitClient ?? null }),
+    [props.kitId, props.store, props.kitClient],
+  );
+  return React.createElement(KitWasmHostContext.Provider, { value: host }, props.children);
+}
+//#endregion 🔌KitWasmHostBridge
+
 //#region 🌐SemioStoreKitLineHost
 /** @emoji 🌐 Composes `SessionContextProvider` → `StoreContextProvider` → WIP graph → `TheKit` → `KitContextProvider` for native `semio-store` + {@link openSessionHttp}. */
 export type SemioStoreKitLineHostProps = Readonly<

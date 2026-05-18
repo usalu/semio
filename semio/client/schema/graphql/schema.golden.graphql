@@ -8860,6 +8860,7 @@ type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   remote: String! # data
   homepage: String! # data
   license: String! # data
+  version: String # data
   uri: String! # data
   design(id: ID!): Design # computed
   designs: DesignConnection! # computed
