@@ -3313,12 +3313,14 @@ mod board_host {
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
 						.map(|s| s.to_string());
+					let scale = ho.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
 					next.insert(
 						id.to_string(),
 						HandleKindDef {
 							name,
 							color,
 							default_wire_kind,
+							scale,
 						},
 					);
 				}
@@ -3367,7 +3369,8 @@ mod board_host {
 						.and_then(|x| x.as_str())
 						.unwrap_or("")
 						.to_string();
-					next.insert(id.to_string(), NodeKindDef { name });
+					let scale = no.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
+					next.insert(id.to_string(), NodeKindDef { name, scale });
 				}
 				self.node_kinds = next;
 			}
@@ -3811,11 +3814,37 @@ mod board_host {
 			}
 		}
 
+		/// @emoji 💠 Adds ids that left `prev` but not in `next` to exit chrome; removes ids that re‑entered selection.
+		fn apply_selection_exit_delta(&mut self, prev: &BTreeSet<String>, next: &BTreeSet<String>) {
+			for id in prev.difference(next) {
+				self.selection_exit_highlight.insert(id.clone());
+			}
+			for id in next {
+				self.selection_exit_highlight.remove(id);
+			}
+		}
+
+		fn prune_selection_exit_dead(&mut self) {
+			self.selection_exit_highlight.retain(|id| {
+				self.nodes.contains_key(id)
+					|| self.handles.contains_key(id)
+					|| self.edges.contains_key(id)
+					|| self.wires.contains_key(id)
+			});
+		}
+
+		fn selection_exit_sorted_vec(&self) -> Vec<String> {
+			let mut v: Vec<_> = self.selection_exit_highlight.iter().cloned().collect();
+			v.sort();
+			v
+		}
+
 		fn push_select_event(&mut self) {
 			self.last_select_emit_sig = None;
 			let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
 			sorted.sort();
-			self.push_event("select", json!({ "ids": sorted }));
+			let exit = self.selection_exit_sorted_vec();
+			self.push_event("select", json!({ "ids": sorted, "exitHighlightIds": exit }));
 		}
 
 		pub fn set_selection_ids(&mut self, ids: &[String]) {
@@ -3823,6 +3852,8 @@ mod board_host {
 			if next == self.selection {
 				return;
 			}
+			let prev = self.selection.clone();
+			self.apply_selection_exit_delta(&prev, &next);
 			self.selection = next;
 			self.sync_selection_flags_to_objects();
 			self.push_select_event();
@@ -3839,6 +3870,8 @@ mod board_host {
 			}
 			self.last_select_emit_sig = Some(sig);
 			if next != self.selection {
+				let prev = self.selection.clone();
+				self.apply_selection_exit_delta(&prev, &next);
 				self.selection = next;
 				self.sync_selection_flags_to_objects();
 			}
@@ -3846,6 +3879,7 @@ mod board_host {
 			if let Some(ref g) = gesture_owned {
 				payload["gestureMergeMode"] = json!(g);
 			}
+			payload["exitHighlightIds"] = json!(self.selection_exit_sorted_vec());
 			self.push_event("select", payload);
 		}
 
@@ -3924,28 +3958,28 @@ mod board_host {
 		}
 
 		/// @emoji 📐 Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
-		fn indirect_node_half_extent(n: &NodeData) -> f64 {
+		fn indirect_node_half_extent(&self, n: &NodeData) -> f64 {
 			match n.shape {
-				NodeShape::Circle => n.radius * n.scale,
-				NodeShape::Rectangle => n.width.min(n.height) * n.scale * 0.5,
+				NodeShape::Circle => self.scaled_node_radius(n),
+				NodeShape::Rectangle => self.scaled_node_width(n).min(self.scaled_node_height(n)) * 0.5,
 			}
 		}
 
 		/// @emoji 📐 Radial world offset from node rim to indirect-handle center (`INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× half-extent) so ring–node proportions stay fixed when zooming.
-		fn indirect_handle_ring_offset_world(n: &NodeData) -> f64 {
-			(Self::indirect_node_half_extent(n) * INDIRECT_HANDLE_RING_GAP_NODE_SCALE).max(1e-9)
+		fn indirect_handle_ring_offset_world(&self, n: &NodeData) -> f64 {
+			(self.indirect_node_half_extent(n) * INDIRECT_HANDLE_RING_GAP_NODE_SCALE).max(1e-9)
 		}
 
 		/// @emoji 📐 Ghost link handles sit on a rim offset by `INDIRECT_HANDLE_RING_GAP_NODE_SCALE`× node half-extent from the node body so ring spacing scales with the node at every zoom.
 		pub(crate) fn indirect_handle_world_pos(&self, h: &HandleData) -> Option<Point> {
 			let n = self.nodes.get(&h.node_id)?;
-			let offset = Self::indirect_handle_ring_offset_world(n);
+			let offset = self.indirect_handle_ring_offset_world(n);
 			Some(match n.shape {
-				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), n.radius + offset, h.angle),
+				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n) + offset, h.angle),
 				NodeShape::Rectangle => handle_position_on_rectangle(
 					Point::new(n.x, n.y),
-					n.width + 2.0 * offset,
-					n.height + 2.0 * offset,
+					self.scaled_node_width(n) + 2.0 * offset,
+					self.scaled_node_height(n) + 2.0 * offset,
 					h.angle,
 				),
 			})
@@ -3954,9 +3988,10 @@ mod board_host {
 		/// @emoji 📐 Indirect-connect marker radius in world units: `INDIRECT_HANDLE_MARKER_NODE_SCALE`× circle radius or × half the shorter rectangle side.
 		pub(crate) fn indirect_handle_marker_radius_world(&self, h: &HandleData) -> f64 {
 			let Some(n) = self.nodes.get(&h.node_id) else {
-				return (h.radius * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9);
+				return (self.effective_handle_radius(h) * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9);
 			};
-			(Self::indirect_node_half_extent(n) * INDIRECT_HANDLE_MARKER_NODE_SCALE).max(1e-9)
+			let handle_local_scale = (h.scale * self.handle_kind_scale(h.handle_kind.as_str())).max(1e-9);
+			(self.indirect_node_half_extent(n) * INDIRECT_HANDLE_MARKER_NODE_SCALE * handle_local_scale).max(1e-9)
 		}
 
 		/// @emoji 🧭 Source handle id while a link wire is drawn (`LinkDragSnap` / `LinkTargetNode`).
@@ -4143,11 +4178,11 @@ mod board_host {
 		fn point_in_node_world(&self, n: &NodeData, point: Point) -> bool {
 			match n.shape {
 				NodeShape::Rectangle => {
-					let hw = n.width / 2.0;
-					let hh = n.height / 2.0;
+					let hw = self.scaled_node_width(n) / 2.0;
+					let hh = self.scaled_node_height(n) / 2.0;
 					(point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh
 				}
-				NodeShape::Circle => distance_between(point, Point::new(n.x, n.y)) <= n.radius,
+				NodeShape::Circle => distance_between(point, Point::new(n.x, n.y)) <= self.scaled_node_radius(n),
 			}
 		}
 
@@ -4492,7 +4527,7 @@ mod board_host {
 							continue;
 						}
 						let Some(pos) = self.handle_world_pos(h) else { continue };
-						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
+						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.effective_handle_radius(h);
 						if distance_between(point, pos) <= tol {
 							return Some(h.id.clone());
 						}
@@ -4511,14 +4546,14 @@ mod board_host {
 					}
 					match n.shape {
 						NodeShape::Rectangle => {
-							let hw = n.width / 2.0;
-							let hh = n.height / 2.0;
+							let hw = self.scaled_node_width(n) / 2.0;
+							let hh = self.scaled_node_height(n) / 2.0;
 							if (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh {
 								return Some(n.id.clone());
 							}
 						}
 						NodeShape::Circle => {
-							if distance_between(point, Point::new(n.x, n.y)) <= n.radius {
+							if distance_between(point, Point::new(n.x, n.y)) <= self.scaled_node_radius(n) {
 								return Some(n.id.clone());
 							}
 						}
@@ -4547,14 +4582,14 @@ mod board_host {
 				}
 				match n.shape {
 					NodeShape::Rectangle => {
-						let hw = n.width / 2.0;
-						let hh = n.height / 2.0;
+						let hw = self.scaled_node_width(n) / 2.0;
+						let hh = self.scaled_node_height(n) / 2.0;
 						if (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh {
 							return Some(n.id.clone());
 						}
 					}
 					NodeShape::Circle => {
-						if distance_between(point, Point::new(n.x, n.y)) <= n.radius {
+						if distance_between(point, Point::new(n.x, n.y)) <= self.scaled_node_radius(n) {
 							return Some(n.id.clone());
 						}
 					}
@@ -4642,6 +4677,7 @@ mod board_host {
 						radius,
 						width,
 						height,
+						scale: n.scale.filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0),
 						draggable: n.draggable.unwrap_or(true),
 						selected: n.selected.unwrap_or(false),
 						visible: n.visible.unwrap_or(true),
@@ -4680,6 +4716,7 @@ mod board_host {
 						node_id: h.node_id.clone(),
 						angle: h.angle,
 						radius: h.radius.unwrap_or(8.0),
+						scale: h.scale.filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0),
 						selected: h.selected.unwrap_or(false),
 						visible: h.visible.unwrap_or(true),
 						style: h.style.clone(),
@@ -4787,6 +4824,9 @@ mod board_host {
 				}
 			}
 			let prev_sel = self.selection.clone();
+			if prev_sel != new_selection {
+				self.apply_selection_exit_delta(&prev_sel, &new_selection);
+			}
 			self.selection = new_selection;
 			for n in self.nodes.values_mut() {
 				n.selected = self.selection.contains(&n.id);
@@ -4897,11 +4937,16 @@ mod board_host {
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
 						.map(|s| s.to_string());
+					let handle_scale = ho
+						.get("scale")
+						.and_then(|v| v.as_f64())
+						.filter(|v| v.is_finite() && *v > 0.0);
 					handles.push(HandleDescJson {
 						id: hid.into(),
 						node_id: id.into(),
 						angle,
 						radius: None,
+						scale: handle_scale,
 						selected: None,
 						style: None,
 						handle_kind: Some(handle_kind),
@@ -4919,6 +4964,10 @@ mod board_host {
 					.map(str::trim)
 					.filter(|s| !s.is_empty())
 					.map(|s| s.to_string());
+				let fixture_node_scale = obj
+					.get("scale")
+					.and_then(|v| v.as_f64())
+					.filter(|v| v.is_finite() && *v > 0.0);
 				if shape_str == Some("rectangle") {
 					let Some(width) = obj.get("width").and_then(|v| v.as_f64()) else {
 						return false;
@@ -4953,6 +5002,7 @@ mod board_host {
 						radius: None,
 						width: Some(width),
 						height: Some(height),
+						scale: fixture_node_scale,
 					});
 				} else {
 					let Some(radius) = obj.get("radius").and_then(|v| v.as_f64()) else {
@@ -4985,6 +5035,7 @@ mod board_host {
 						radius: Some(radius),
 						width: None,
 						height: None,
+						scale: fixture_node_scale,
 					});
 				}
 				desc.handles.extend(handles);
@@ -5069,7 +5120,7 @@ mod board_host {
 
 		fn handle_world_bounds_cull(&self, h: &HandleData) -> Option<WorldBox> {
 			let pos = self.handle_world_pos(h)?;
-			let pad = self.drawable_cull_pad_world() + h.radius.max(1.0);
+			let pad = self.drawable_cull_pad_world() + self.effective_handle_radius(h).max(1.0);
 			Some(inflate_world_box(
 				WorldBox {
 					min_x: pos.x,
@@ -5285,7 +5336,7 @@ mod board_host {
 				match n.shape {
 					NodeShape::Circle => {
 						let c = self.world_to_screen(Point::new(n.x, n.y));
-						let r = (n.radius * self.camera.zoom).max(1.0);
+						let r = (self.scaled_node_radius(n) * self.camera.zoom).max(1.0);
 						let circle = Circle::new(c, r);
 						scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
 						if draw_node_stroke {
@@ -5293,8 +5344,8 @@ mod board_host {
 						}
 					}
 					NodeShape::Rectangle => {
-						let hw = n.width / 2.0;
-						let hh = n.height / 2.0;
+						let hw = self.scaled_node_width(n) / 2.0;
+						let hh = self.scaled_node_height(n) / 2.0;
 						let p0 = self.world_to_screen(Point::new(n.x - hw, n.y - hh));
 						let p1 = self.world_to_screen(Point::new(n.x + hw, n.y + hh));
 						let r = Rect::from_points(p0, p1);
@@ -5311,12 +5362,12 @@ mod board_host {
 							let fit_inset = 0.76;
 							let (sx_half, sy_half) = match n.shape {
 								NodeShape::Circle => {
-									let s = n.radius * self.camera.zoom * fit_inset;
+									let s = self.scaled_node_radius(n) * self.camera.zoom * fit_inset;
 									(s, s)
 								}
 								NodeShape::Rectangle => (
-									n.width * self.camera.zoom * fit_inset * 0.5,
-									n.height * self.camera.zoom * fit_inset * 0.5,
+									self.scaled_node_width(n) * self.camera.zoom * fit_inset * 0.5,
+									self.scaled_node_height(n) * self.camera.zoom * fit_inset * 0.5,
 								),
 							};
 							let center = self.world_to_screen(Point::new(n.x, n.y));
@@ -5329,7 +5380,7 @@ mod board_host {
 								* Affine::scale(scale);
 							match n.shape {
 								NodeShape::Circle => {
-									let r_clip = (n.radius * self.camera.zoom * clip_inset).max(1.0);
+									let r_clip = (self.scaled_node_radius(n) * self.camera.zoom * clip_inset).max(1.0);
 									let disc = Circle::new(center, r_clip);
 									scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
 									match &body {
@@ -5343,8 +5394,8 @@ mod board_host {
 									scene.pop_layer();
 								}
 								NodeShape::Rectangle => {
-									let hw = n.width * self.camera.zoom * clip_inset * 0.5;
-									let hh = n.height * self.camera.zoom * clip_inset * 0.5;
+									let hw = self.scaled_node_width(n) * self.camera.zoom * clip_inset * 0.5;
+									let hh = self.scaled_node_height(n) * self.camera.zoom * clip_inset * 0.5;
 									let clip_r = Rect::from_points(
 										Point::new(center.x - hw, center.y - hh),
 										Point::new(center.x + hw, center.y + hh),
@@ -5376,7 +5427,7 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.handle_world_pos(h) else { continue };
-				self.append_handle_marker(scene, h, wp, h.radius, draw_handle_icons, None);
+				self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, None);
 			}
 			let edge_sw = if lod == BoardDrawLod::Minimap {
 				1.12_f64
@@ -5627,7 +5678,7 @@ mod board_host {
 
 		fn link_snap_drag_tolerance_screen(&self, h: &HandleData) -> f64 {
 			let z = self.camera.zoom.max(1e-9);
-			HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX + h.radius * z
+			HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX + self.effective_handle_radius(h) * z
 		}
 
 		fn link_snap_commit_proximity_ok(&self, target_handle_id: &str, world: Point) -> bool {
@@ -5642,7 +5693,7 @@ mod board_host {
 			};
 			let z = self.camera.zoom.max(1e-9);
 			let d_screen = distance_between(self.world_to_screen(world), self.world_to_screen(pw));
-			let tol_commit = HANDLE_HIT_TOLERANCE_PX + LINK_COMMIT_SNAP_TIGHT_PX + h.radius * z;
+			let tol_commit = HANDLE_HIT_TOLERANCE_PX + LINK_COMMIT_SNAP_TIGHT_PX + self.effective_handle_radius(h) * z;
 			d_screen <= tol_commit
 		}
 
@@ -6137,8 +6188,8 @@ mod board_host {
 		fn node_world_bounds(&self, n: &NodeData, pad: f64) -> WorldBox {
 			let raw = match n.shape {
 				NodeShape::Rectangle => {
-					let hw = n.width / 2.0;
-					let hh = n.height / 2.0;
+					let hw = self.scaled_node_width(n) / 2.0;
+					let hh = self.scaled_node_height(n) / 2.0;
 					WorldBox {
 						min_x: n.x - hw,
 						min_y: n.y - hh,
@@ -6147,10 +6198,10 @@ mod board_host {
 					}
 				}
 				NodeShape::Circle => WorldBox {
-					min_x: n.x - n.radius,
-					min_y: n.y - n.radius,
-					max_x: n.x + n.radius,
-					max_y: n.y + n.radius,
+					min_x: n.x - self.scaled_node_radius(n),
+					min_y: n.y - self.scaled_node_radius(n),
+					max_x: n.x + self.scaled_node_radius(n),
+					max_y: n.y + self.scaled_node_radius(n),
 				},
 			};
 			inflate_world_box(raw, pad)
@@ -6268,7 +6319,7 @@ mod board_host {
 			let Some(pos) = self.handle_world_pos(h) else {
 				return false;
 			};
-			let pad = h.radius.max(1.0);
+			let pad = self.effective_handle_radius(h).max(1.0);
 			let bounds = WorldBox {
 				min_x: pos.x - pad,
 				min_y: pos.y - pad,
@@ -7381,6 +7432,7 @@ mod host_tests {
 				radius: Some(40.0),
 				width: None,
 				height: None,
+				scale: None,
 			}],
 			handles: vec![
 				HandleDescJson {
@@ -7395,6 +7447,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 				HandleDescJson {
 					id: "b:h0".into(),
@@ -7408,6 +7461,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 			],
 			edges: vec![EdgeDescJson {
@@ -7426,14 +7480,21 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_sync_descriptor_applies_selection_exit_highlight_ids() {
+	fn board_host_selection_exit_highlight_tracks_removed_ids_not_descriptor_field() {
 		let mut h = BoardHost::new();
 		h.set_size(400, 300, 1.0);
 		let mut d = sample_scene();
 		d.selection_exit_highlight_ids = vec!["a".into(), "ghost".into()];
 		h.sync_descriptor(&d).unwrap();
-		assert!(h.selection_exit_highlight.contains("a"));
+		let _ = h.drain_events_json();
+		assert!(!h.selection_exit_highlight.contains("a"));
 		assert!(!h.selection_exit_highlight.contains("ghost"));
+		h.set_selection_ids(&["a".into(), "e1".into()]);
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["e1".into()]);
+		let _ = h.drain_events_json();
+		assert!(h.selection_exit_highlight.contains("a"));
+		assert!(!h.selection_exit_highlight.contains("e1"));
 	}
 
 	#[test]
@@ -7478,6 +7539,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
@@ -7508,6 +7570,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		h.set_world_raster_tiling("none");
@@ -7539,6 +7602,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
@@ -7574,6 +7638,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
@@ -7610,6 +7675,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into(), "b".into()]);
@@ -7653,6 +7719,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
@@ -7690,6 +7757,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
@@ -7719,6 +7787,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_options("rectangle", "additive", true, true, true);
@@ -7762,6 +7831,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let inside_node_a = Point::new(0.0, 0.0);
@@ -7793,6 +7863,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into()]);
@@ -7896,6 +7967,7 @@ mod host_tests {
 					radius: Some(40.0),
 					width: None,
 					height: None,
+					scale: None,
 				},
 				NodeDescJson {
 					id: "b".into(),
@@ -7914,6 +7986,7 @@ mod host_tests {
 					radius: Some(40.0),
 					width: None,
 					height: None,
+					scale: None,
 				},
 			],
 			handles: vec![
@@ -7929,6 +8002,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 				HandleDescJson {
 					id: "b:h0".into(),
@@ -7942,6 +8016,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 			],
 			edges: vec![],
@@ -7972,6 +8047,7 @@ mod host_tests {
 			icon_kind: None,
 			user_data: None,
 			visible: None,
+			scale: None,
 		});
 		s
 	}
@@ -7990,6 +8066,7 @@ mod host_tests {
 			icon_kind: None,
 			user_data: None,
 			visible: None,
+			scale: None,
 		});
 		s
 	}
@@ -8013,6 +8090,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		s.handles.push(HandleDescJson {
 			id: "c:h0".into(),
@@ -8026,6 +8104,7 @@ mod host_tests {
 			icon_kind: None,
 			user_data: None,
 			visible: None,
+			scale: None,
 		});
 		s.edges.push(EdgeDescJson {
 			id: "e-bc".into(),
@@ -8069,6 +8148,7 @@ mod host_tests {
 			icon_kind: None,
 			user_data: None,
 			visible: None,
+			scale: None,
 		});
 		s
 	}
@@ -8137,6 +8217,7 @@ mod host_tests {
 					radius: None,
 					width: Some(100.0),
 					height: Some(56.0),
+					scale: None,
 				},
 				NodeDescJson {
 					id: "b".into(),
@@ -8155,6 +8236,7 @@ mod host_tests {
 					radius: None,
 					width: Some(100.0),
 					height: Some(56.0),
+					scale: None,
 				},
 			],
 			handles: vec![
@@ -8170,6 +8252,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 				HandleDescJson {
 					id: "b:h0".into(),
@@ -8183,6 +8266,7 @@ mod host_tests {
 					icon_kind: None,
 					user_data: None,
 					visible: None,
+					scale: None,
 				},
 			],
 			edges: vec![],
@@ -8554,6 +8638,32 @@ mod host_tests {
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		let ha = h.handles.get("a:h0").unwrap();
 		assert!((h.indirect_handle_marker_radius_world(ha) - 32.0).abs() < 1e-6);
+	}
+
+	#[test]
+	fn board_host_handle_scale_combines_node_and_kind_scales() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_board_kind_catalogs_from_json(
+			&serde_json::json!({
+				"handleKinds": [{"id":"slot-a","label":"Slot A","color":"#112233","scale":2.0}],
+				"nodeKinds": [{"id":"kind-a","label":"Kind A","scale":1.5}],
+			})
+			.to_string(),
+		)
+		.unwrap();
+		let mut desc = link_test_scene_no_edge();
+		desc.nodes[0].node_kind = Some("kind-a".into());
+		desc.nodes[0].scale = Some(2.0);
+		desc.handles[0].handle_kind = Some("slot-a".into());
+		desc.handles[0].scale = Some(0.5);
+		h.sync_descriptor(&desc).unwrap();
+		let ha = h.handles.get("a:h0").unwrap();
+		let pos = h.handle_world_pos(ha).unwrap();
+		assert!((pos.x - 120.0).abs() < 1e-6);
+		assert!(pos.y.abs() < 1e-6);
+		assert!((h.effective_handle_radius(ha) - 24.0).abs() < 1e-6);
+		assert!((h.indirect_handle_marker_radius_world(ha) - 96.0).abs() < 1e-6);
 	}
 
 	#[test]

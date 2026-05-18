@@ -1,0 +1,10 @@
+{
+  "title": "Wasm Authoritative Selection Exit Highlight",
+  "emoji": "🎯",
+  "status": "open",
+  "description": "Finish board selection-exit highlight: TS reads exitHighlightIds from wasm select events; descriptor JSON no longer sends selectionExitHighlightIds; setSelectionIds wasm-first then drain; Rust test asserts exit highlight from set_selection_ids not descriptor field.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪57498c2fa99149c9a05c41f37099ad30"
+  ]
+}

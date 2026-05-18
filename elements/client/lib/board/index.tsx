@@ -369,7 +369,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	}
 }
 
-function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescriptor, node: BoardNodeObject): void {
+function applyHandleProps(renderer: BoardRenderer, instance: BoardHandleObject, descriptor: HandleDescriptor, node: BoardNodeObject): void {
 	if (instance.node !== node) {
 		instance.node.detachHandle(instance);
 		node.attachHandle(instance);
@@ -569,7 +569,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 			if (!(existingHandle instanceof BoardHandleObject)) {
 				renderer.scene.add(handle);
 			}
-			applyHandleProps(handle, handleDescriptor, parentNode);
+			applyHandleProps(renderer, handle, handleDescriptor, parentNode);
 		}
 
 		for (const edgeDescriptor of descriptor.edges) {

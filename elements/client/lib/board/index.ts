@@ -2819,9 +2819,9 @@ export class BoardRenderer {
 			this.updateSelection(ids);
 			return;
 		}
-		this.pushSceneToWasmDriver();
 		this.session.setSelectionIdsJson(JSON.stringify([...ids]));
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	}
 
 	getSelectionOptions(): ResolvedBoardSelectionOptions {
@@ -3444,9 +3444,7 @@ export class BoardRenderer {
 			}
 			wires.push(row);
 		}
-		this.pruneStaleSelectionExitHighlightIds();
-		const selectionExitHighlightIds = [...this.selectionExitHighlightIds].sort((a, b) => a.localeCompare(b));
-		return JSON.stringify({ nodes, handles, edges, wires, selectionExitHighlightIds });
+		return JSON.stringify({ nodes, handles, edges, wires });
 	}
 
 	private syncBoardAppearanceFromDocument(): void {
@@ -3582,8 +3580,14 @@ export class BoardRenderer {
 						break;
 					}
 					case "select": {
-						const payload = row.payload as { ids?: unknown; gestureMergeMode?: unknown };
+						const payload = row.payload as { ids?: unknown; gestureMergeMode?: unknown; exitHighlightIds?: unknown };
 						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
+						const exitRaw = payload.exitHighlightIds;
+						if (Array.isArray(exitRaw)) {
+							this.selectionExitHighlightIds = new Set(exitRaw.map((id) => String(id)));
+						} else {
+							this.selectionExitHighlightIds.clear();
+						}
 						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
 						const nextKeys = [...ids].sort();
 						const prevSnap = this.selectionStore.getSnapshot();
@@ -3595,7 +3599,7 @@ export class BoardRenderer {
 						if (!idsUnchanged) {
 							const prevIds = this.selectionIds;
 							const nextSel = new Set(ids);
-							this.mergeSelectionExitHighlight(prevIds, nextSel);
+							this.captureSelectionForEscapeUndo(prevIds);
 							this.selectionIds = nextSel;
 							for (const object of this.scene.getAllObjects()) {
 								object.selected = this.selectionIds.has(object.id);
@@ -4007,32 +4011,11 @@ export class BoardRenderer {
 		return this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
 	}
 
-	private mergeSelectionExitHighlight(prev: ReadonlySet<string>, next: ReadonlySet<string>): void {
+	private captureSelectionForEscapeUndo(prev: ReadonlySet<string>): void {
 		if (this.selectionExitHighlightDisabled()) {
 			return;
 		}
 		this.selectionPreviousForEscape = sortedSelectionIds(prev);
-		for (const id of prev) {
-			if (!next.has(id)) {
-				this.selectionExitHighlightIds.add(id);
-			}
-		}
-		for (const id of next) {
-			this.selectionExitHighlightIds.delete(id);
-		}
-	}
-
-	private pruneStaleSelectionExitHighlightIds(): void {
-		for (const id of [...this.selectionExitHighlightIds]) {
-			if (
-				!this.scene.nodes.has(id) &&
-				!this.scene.handles.has(id) &&
-				!this.scene.edges.has(id) &&
-				!this.scene.wires.has(id)
-			) {
-				this.selectionExitHighlightIds.delete(id);
-			}
-		}
 	}
 
 	private textOverlayNodeStyleKey(node: Node): "node" | "node.selected" | "node.selectionExit" {
@@ -4063,7 +4046,7 @@ export class BoardRenderer {
 		}
 		const prevIds = this.selectionIds;
 		this.selectionIds = nextIds;
-		this.mergeSelectionExitHighlight(prevIds, nextIds);
+		this.captureSelectionForEscapeUndo(prevIds);
 		for (const object of this.scene.getAllObjects()) {
 			object.selected = this.selectionIds.has(object.id);
 		}
@@ -4563,6 +4546,14 @@ if (boardVitest) {
 			const pE = computeHandlePosition(rectNode, (3 * Math.PI) / 2);
 			expect(pE.x).toBeCloseTo(120);
 			expect(pE.y).toBeCloseTo(50);
+		});
+
+		it("scales handle anchors with node scale while handle scale only affects handle size", () => {
+			const node = new Node({ id: "scaled", radius: 10, scale: 2, x: 0, y: 0 });
+			const handle = new Handle({ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "scaled:h0", node, radius: 4, scale: 0.5 });
+			expect(handle.position.x).toBeCloseTo(20);
+			expect(handle.position.y).toBeCloseTo(0);
+			expect(handle.effectiveRadius).toBeCloseTo(4);
 		});
 
 		it("labels minimap, overview, normal, detail, and micro LOD bands from zoom thresholds", () => {
@@ -5271,6 +5262,26 @@ if (boardVitest) {
 				schema: "elements.board.fixture/v1",
 			});
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
+		});
+
+		it("parses optional node and handle scales on fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 1.2, id: "h1", scale: 0.5 }],
+						id: "c1",
+						radius: 12,
+						scale: 1.75,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "c1", scale: 1.75 });
+			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ id: "h1", scale: 0.5 });
 		});
 
 		it("parses hidden flags on fixture nodes handles and edges", () => {
