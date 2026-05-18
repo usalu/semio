@@ -1,8 +1,9 @@
 {
-  "title": "Scene Link Rubber Band Setxyz NaN Fix",
+  "title": "Scene Link Rubber Band Setxyz Na N Fix",
   "emoji": "🩹",
-  "status": "open",
+  "status": "closed",
   "description": "Fix SceneLinkRubberBand setXYZ calls missing z argument causing NaN BufferGeometry and failing scene Playwright console checks.",
+  "summary": "Scene Playwright failed: console contained THREE.BufferGeometry computeBoundingSphere NaN from SceneLinkRubberBand idle branch calling setXYZ with only three coordinates (z was undefined). Fixed to setXYZ(i,0,0,0) for both vertices. Vitest + Playwright (3 e2e) pass.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪7cdb9fcaf28e477b848616ecfdb8700a"

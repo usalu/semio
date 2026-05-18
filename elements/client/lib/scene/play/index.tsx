@@ -1,21 +1,31 @@
 // #region 🧲Header
-// 💻 elements/client/lib/scene/play/index.tsx — Scene play harness: Nakagin fixture, relocate toolbar, selection, `@elements/ui` shell.
+// 💻 elements/client/lib/scene/play/index.tsx — Scene play harness: same `@elements/ui` surface chrome + shell as board play (globals, window level, footer theme/device/expertise, `useElementsSurfaceChrome`), Nakagin fixture + relocate toolbar.
 // #endregion 🧲Header
 
 // #region 📥Imports
 import { useGLTF } from "@react-three/drei";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 
 import {
 	Button,
+	Expertise,
 	LevelProvider,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
 	UI,
 	createStackLayout,
 	getLevelBgClass,
+	useElementsSurfaceChrome,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+	type FooterItem,
 	type UIAppConfig,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
@@ -76,6 +86,102 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): SceneKind
 	return kc as SceneKindCatalogBundle;
 }
 // #endregion 🧾Meta
+
+// #region 🖥️Surface
+const LS_THEME = "elements.board-play.surface.theme";
+const LS_DEVICE = "elements.board-play.surface.device";
+const LS_EXPERTISE = "elements.board-play.surface.expertise";
+
+function parseStoredTheme(raw: string | null): ElementsSurfaceTheme {
+	if (raw === "light" || raw === "dark" || raw === "system") return raw;
+	return "system";
+}
+
+function parseStoredDevice(raw: string | null): ElementsSurfaceDevice {
+	if (raw === "desktop" || raw === "tablet" || raw === "mobile") return raw;
+	return "desktop";
+}
+
+function parseStoredExpertise(raw: string | null): Expertise {
+	if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
+	return Expertise.NORMAL;
+}
+
+function readTheme(): ElementsSurfaceTheme {
+	if (typeof localStorage === "undefined") return "system";
+	try {
+		return parseStoredTheme(localStorage.getItem(LS_THEME));
+	} catch {
+		return "system";
+	}
+}
+
+function readDevice(): ElementsSurfaceDevice {
+	if (typeof localStorage === "undefined") return "desktop";
+	try {
+		return parseStoredDevice(localStorage.getItem(LS_DEVICE));
+	} catch {
+		return "desktop";
+	}
+}
+
+function readExpertise(): Expertise {
+	if (typeof localStorage === "undefined") return Expertise.NORMAL;
+	try {
+		return parseStoredExpertise(localStorage.getItem(LS_EXPERTISE));
+	} catch {
+		return Expertise.NORMAL;
+	}
+}
+
+function ScenePlaySurfaceFooter(props: {
+	theme: ElementsSurfaceTheme;
+	device: ElementsSurfaceDevice;
+	expertise: Expertise;
+	onTheme: (v: ElementsSurfaceTheme) => void;
+	onDevice: (v: ElementsSurfaceDevice) => void;
+	onExpertise: (v: Expertise) => void;
+}): ReactElement {
+	const { theme, device, expertise, onDevice, onExpertise, onTheme } = props;
+	return (
+		<div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
+			<span className="shrink-0 text-xs text-muted-foreground">Theme</span>
+			<Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
+				<SelectTrigger className="h-medium w-30" id="scene-play-surface-theme" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="system">System</SelectItem>
+					<SelectItem value="light">Light</SelectItem>
+					<SelectItem value="dark">Dark</SelectItem>
+				</SelectContent>
+			</Select>
+			<span className="shrink-0 text-xs text-muted-foreground">Device</span>
+			<Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
+				<SelectTrigger className="h-medium w-30" id="scene-play-surface-device" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="desktop">Desktop</SelectItem>
+					<SelectItem value="tablet">Tablet</SelectItem>
+					<SelectItem value="mobile">Mobile</SelectItem>
+				</SelectContent>
+			</Select>
+			<span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
+			<Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
+				<SelectTrigger className="h-medium w-30" id="scene-play-surface-expertise" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
+					<SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
+					<SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
+				</SelectContent>
+			</Select>
+		</div>
+	);
+}
+// #endregion 🖥️Surface
 
 // #region 🎬ScenePlay
 function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
@@ -224,11 +330,62 @@ function MainWindow() {
 	return <ScenePlayBody fixture={fixture} />;
 }
 
-function ScenePlayApp() {
+const SCENE_PLAY_APP_ID = "elements-scene-play";
+
+function ScenePlayInner(): ReactElement {
+	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
+	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
+	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_THEME, theme);
+		} catch {
+			/* ignore */
+		}
+	}, [theme]);
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_DEVICE, device);
+		} catch {
+			/* ignore */
+		}
+	}, [device]);
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_EXPERTISE, expertise);
+		} catch {
+			/* ignore */
+		}
+	}, [expertise]);
+
+	const surfaceFooterItems = useMemo<FooterItem[]>(
+		() => [
+			{
+				content: (
+					<ScenePlaySurfaceFooter
+						device={device}
+						expertise={expertise}
+						onDevice={setDevice}
+						onExpertise={setExpertise}
+						onTheme={setTheme}
+						theme={theme}
+					/>
+				),
+				id: "scene-play-surface",
+				order: 0,
+			},
+		],
+		[device, expertise, theme],
+	);
+
 	const apps = useMemo<UIAppConfig[]>(
 		() => [
 			{
-				id: "elements-scene-play",
+				id: SCENE_PLAY_APP_ID,
 				label: "Scene play",
 				windowKinds: [{ id: "scene-main", label: "Scene", component: MainWindow }],
 				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
@@ -236,9 +393,18 @@ function ScenePlayApp() {
 		],
 		[],
 	);
+
 	return (
-		<LevelProvider>
-			<UI apps={apps} defaultAppId="elements-scene-play" className={getLevelBgClass(0)} />
+		<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+	);
+}
+
+function ScenePlayApp(): ReactElement {
+	return (
+		<LevelProvider level="window">
+			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+				<ScenePlayInner />
+			</div>
 		</LevelProvider>
 	);
 }

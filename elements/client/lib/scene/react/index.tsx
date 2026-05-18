@@ -823,6 +823,10 @@ function scaleToThree(s: number | Vec3 | undefined): Vector3 {
 	if (typeof s === "number") return new Vector3(s, s, s);
 	return new Vector3(s[0], s[1], s[2]);
 }
+
+function sceneVector3IsFinite(v: Vector3): boolean {
+	return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
+}
 //#endregion 🧊Helpers
 
 //#region 🔗LinkGesture
@@ -1204,7 +1208,7 @@ export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 	useFrame(() => {
 		const a = reg.getVortexWorld(props.source);
 		const b = reg.getVortexWorld(props.target);
-		if (a && b) setPts([a.clone(), b.clone()]);
+		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) setPts([a.clone(), b.clone()]);
 	});
 	return <Line points={pts} color="#64748b" lineWidth={1} userData={{ sceneTieId: props.id }} />;
 });
