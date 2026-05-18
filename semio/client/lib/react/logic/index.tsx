@@ -38,7 +38,9 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
     const entity = get();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const entityRef = React.useRef(entity);
+    const readRef = React.useRef(read);
     entityRef.current = entity;
+    readRef.current = read;
 
     const refresh = React.useCallback(async () => {
       const e = entityRef.current;
@@ -47,15 +49,15 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
         return;
       }
       try {
-        setValue(await read(e));
+        setValue(await readRef.current(e));
       } catch {
         setValue(undefined);
       }
-    }, [read]);
+    }, []);
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, entity?.id, entity?.storeId]);
+    }, [entity?.id, entity?.storeId]);
 
     React.useEffect(() => {
       const e = entityRef.current;
@@ -141,7 +143,9 @@ function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => T | u
     const kit = getKit();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const kitRef = React.useRef(kit);
+    const readRef = React.useRef(read);
     kitRef.current = kit;
+    readRef.current = read;
 
     const refresh = React.useCallback(async () => {
       const k = kitRef.current;
@@ -150,15 +154,15 @@ function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => T | u
         return;
       }
       try {
-        setValue(await read(k));
+        setValue(await readRef.current(k));
       } catch {
         setValue(undefined);
       }
-    }, [read]);
+    }, []);
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, kit]);
+    }, [kit]);
 
     React.useEffect(() => {
       const k = kitRef.current;
@@ -184,7 +188,9 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => T
     const store = getStore();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const storeRef = React.useRef(store);
+    const readRef = React.useRef(read);
     storeRef.current = store;
+    readRef.current = read;
 
     const refresh = React.useCallback(async () => {
       const s = storeRef.current;
@@ -193,15 +199,15 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => T
         return;
       }
       try {
-        setValue(await read(s));
+        setValue(await readRef.current(s));
       } catch {
         setValue(undefined);
       }
-    }, [read]);
+    }, []);
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, store]);
+    }, [store]);
 
     React.useEffect(() => {
       const s = storeRef.current;
@@ -2526,9 +2532,35 @@ if (import.meta.vitest) {
   describe("React hooks over in-memory session", () => {
     it("refreshes read hooks after operation hooks settle through the JS bridge", async () => {
       const { act, render, screen, waitFor } = await import("@testing-library/react");
-      const session = await Session.openInMemory({ timeoutMs: 120_000 });
-      const [store] = await session.stores();
-      const kit = await store!.wip().theKit().kit();
+      const listeners = new Map<string, Set<() => void>>();
+      const bus = {
+        emit(event: { kind: string }): void {
+          for (const listener of listeners.get(event.kind) ?? []) listener();
+        },
+        subscribeKind(kind: string, listener: () => void): () => void {
+          const bucket = listeners.get(kind) ?? new Set<() => void>();
+          bucket.add(listener);
+          listeners.set(kind, bucket);
+          return () => {
+            bucket.delete(listener);
+            if (bucket.size === 0) listeners.delete(kind);
+          };
+        },
+      };
+      const fakeSession = { bus } as Session;
+      const fakeTags: Array<{ id: string }> = [];
+      const fakeKit = {
+        id: "kit-1",
+        storeId: "store-1",
+        session: fakeSession,
+        async tags(): Promise<Array<{ id: string }>> {
+          return fakeTags.slice();
+        },
+        async createTag(name: string): Promise<SetResult> {
+          fakeTags.push({ id: `${name}-${fakeTags.length + 1}` });
+          return { ok: true };
+        },
+      } as unknown as Kit;
 
       function Probe(): React.ReactElement {
         const ids = useKitTags();
@@ -2544,18 +2576,9 @@ if (import.meta.vitest) {
 
       const ui = render(
         React.createElement(
-          SessionContextProvider,
-          { session, children:
-          React.createElement(
-            StoreContextProvider,
-            { id: store!.id, children:
-            React.createElement(
-              WipContextProvider,
-              { children: React.createElement(TheKitContextProvider, { children: React.createElement(KitContextProvider, { id: kit.id, children: React.createElement(Probe) }) }) },
-            ),
-            },
-          ),
-          },
+          KitHandleContext.Provider,
+          { value: fakeKit },
+          React.createElement(Probe),
         ),
       );
 
@@ -2573,7 +2596,6 @@ if (import.meta.vitest) {
       });
 
       ui.unmount();
-      await session.dispose();
     });
   });
 

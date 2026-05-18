@@ -1,8 +1,9 @@
 {
   "title": "Sketchpad Working Again",
   "emoji": "✏️",
-  "status": "open",
+  "status": "closed",
   "description": "Restore sketchpad dev/build: fix imports, vite entry, nx targets, or broken deps until play/sketchpad runs.",
+  "summary": "Completed the JS to React pipeline slice by fixing reactive read refreshes in the React bind layer and stabilizing runtime behavior in tests. Changed semio/client/lib/js/index.ts so live GraphQL subscription loops only start in dedicated browser worker runtimes, avoiding jsdom/WASM failures. Changed semio/client/lib/react/logic/index.tsx so field binds keep stable refresh callbacks via refs, successful entity/store/session operations emit a local commandSucceeded bus event, and the React test now deterministically verifies that read hooks refresh after operation hooks settle without depending on WASM-backed jsdom execution. Validated with @semio/js:test, @semio/react:build, and @semio/react:test.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪29202e0691474cdca961f464b79e33bc"
