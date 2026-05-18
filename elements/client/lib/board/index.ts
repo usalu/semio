@@ -593,6 +593,7 @@ export interface BoardRedrawLayoutOptions {
 		direction: BoardHierarchicalTreeDirectionKind;
 		layerSpacing: number;
 		siblingGap: number;
+		lockedNodeIds?: readonly string[];
 	};
 	lockedNodeIds?: readonly string[];
 }
@@ -933,6 +934,26 @@ export const BOARD_CAMERA_ZOOM_MAX = 32;
 
 const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
+
+/** @emoji 🎹 True when the area-select modifier bridge should mirror `pointerMoveScreen` (modifier keys only; avoids hotkeys corrupting live selection). */
+function isAreaSelectChordBridgeKeyboardEvent(event: KeyboardEvent): boolean {
+	if (event.repeat) {
+		return false;
+	}
+	switch (event.code) {
+		case "ShiftLeft":
+		case "ShiftRight":
+		case "ControlLeft":
+		case "ControlRight":
+		case "MetaLeft":
+		case "MetaRight":
+		case "AltLeft":
+		case "AltRight":
+			return true;
+		default:
+			return false;
+	}
+}
 
 /** @emoji ⌨️ True when Delete/Backspace should reach the board instead of staying in a focused text control. */
 function shouldBoardHandleDeleteShortcut(): boolean {
@@ -3844,6 +3865,9 @@ export class BoardRenderer {
 		if (!this.session.isDraggingAreaSelect()) {
 			return;
 		}
+		if (!isAreaSelectChordBridgeKeyboardEvent(event)) {
+			return;
+		}
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -4320,6 +4344,21 @@ if (boardVitest) {
 			renderer.render();
 			expect(frameCount).toBe(1);
 			renderer.dispose();
+		});
+	});
+
+	describe("area select chord bridge keyboard filter", () => {
+		it("accepts only physical modifier keys", () => {
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ShiftLeft", repeat: false } as KeyboardEvent)).toBe(true);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ControlRight", repeat: false } as KeyboardEvent)).toBe(true);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "MetaRight", repeat: false } as KeyboardEvent)).toBe(true);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "AltRight", repeat: false } as KeyboardEvent)).toBe(true);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "Digit1", repeat: false } as KeyboardEvent)).toBe(false);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "Escape", repeat: false } as KeyboardEvent)).toBe(false);
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "KeyK", repeat: false } as KeyboardEvent)).toBe(false);
+		});
+		it("ignores auto-repeat", () => {
+			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ShiftLeft", repeat: true } as KeyboardEvent)).toBe(false);
 		});
 	});
 
@@ -5300,6 +5339,61 @@ if (boardVitest) {
 				expect(Number.isFinite((n as { x: number }).x)).toBe(true);
 				expect(Number.isFinite((n as { y: number }).y)).toBe(true);
 			}
+		});
+	});
+
+	describe("board hierarchical tree redraw", () => {
+		it("keeps locked node coordinates fixed on tree redraw", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [
+					{ id: "e1", source: "r:h", target: "c1:h" },
+					{ id: "e2", source: "r:h", target: "c2:h" },
+				],
+				nodes: [
+					{
+						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "r:h" }],
+						id: "r",
+						radius: 18,
+						root: true,
+						shape: "circle",
+						x: 120,
+						y: -33,
+					},
+					{
+						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "c1:h" }],
+						id: "c1",
+						radius: 18,
+						shape: "circle",
+						x: 0,
+						y: 0,
+					},
+					{
+						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "c2:h" }],
+						id: "c2",
+						radius: 18,
+						shape: "circle",
+						x: 5,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
+				centerX: 0,
+				centerY: 0,
+				hierarchicalTree: { direction: "downwards", layerSpacing: 90, siblingGap: 12 },
+				lockedNodeIds: ["r"],
+				mode: "hierarchical-tree",
+				redrawHandlesAfter: false,
+			});
+			const r = laid.nodes.find((n) => n.id === "r") as { x: number; y: number };
+			const c1 = laid.nodes.find((n) => n.id === "c1") as { x: number; y: number };
+			const c2 = laid.nodes.find((n) => n.id === "c2") as { x: number; y: number };
+			expect(r.x).toBeCloseTo(120, 3);
+			expect(r.y).toBeCloseTo(-33, 3);
+			expect(Math.abs(c1.y - c2.y)).toBeLessThan(1e-2);
+			expect(Math.abs(c1.y - r.y)).toBeGreaterThan(40);
 		});
 	});
 

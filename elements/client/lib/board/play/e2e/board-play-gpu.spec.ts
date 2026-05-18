@@ -21,7 +21,7 @@ test.describe("board play", () => {
 	test("opens board background context menu on overview canvas", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator('[data-option-id$="-redraw-interactive-zoom"]')).toHaveCount(3);
+		await expect(page.locator('[id$="-redraw-interactive-zoom"]')).toHaveCount(3, { timeout: 120_000 });
 		await expect(page.locator("#board-overview-redraw-interactive-zoom")).toHaveAttribute("data-state", "off");
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });

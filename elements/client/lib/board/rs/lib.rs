@@ -1321,6 +1321,9 @@ mod hierarchical_tree {
 		pub center_x: Option<f64>,
 		#[serde(default)]
 		pub center_y: Option<f64>,
+		/// 📌 Node ids whose incoming fixture centers are kept; Buchheim still runs for placement of unlocked nodes.
+		#[serde(default)]
+		pub locked_node_ids: Vec<String>,
 	}
 
 	fn default_layer_spacing() -> f64 {
@@ -1341,6 +1344,7 @@ mod hierarchical_tree {
 				direction: default_direction(),
 				center_x: None,
 				center_y: None,
+				locked_node_ids: Vec::new(),
 			}
 		}
 	}
@@ -1856,9 +1860,36 @@ mod hierarchical_tree {
 		let gy = opts.center_y.unwrap_or(0.0);
 		let dx = gx - cx;
 		let dy = gy - cy;
+		let locked_set: HashSet<String> = opts.locked_node_ids.iter().cloned().collect();
+		let mut pinned_world: HashMap<String, (f64, f64)> = HashMap::new();
+		if !locked_set.is_empty() {
+			for node in nodes.iter() {
+				let Some(obj) = node.as_object() else {
+					continue;
+				};
+				if !board_json_visible_or_true(obj) {
+					continue;
+				}
+				let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
+					continue;
+				};
+				if !locked_set.contains(nid) {
+					continue;
+				}
+				if !id_to_node.contains_key(nid) {
+					continue;
+				}
+				let px = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+				let py = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+				pinned_world.insert(nid.to_string(), (px, py));
+			}
+		}
 		for (id, (x, y)) in pos {
-			let fx = x + dx;
-			let fy = y + dy;
+			let (fx, fy) = if let Some(&(px, py)) = pinned_world.get(&id) {
+				(px, py)
+			} else {
+				(x + dx, y + dy)
+			};
 			let idx = nodes
 				.iter()
 				.position(|n| n.get("id").and_then(|v| v.as_str()) == Some(id.as_str()))
@@ -2069,6 +2100,11 @@ mod redraw_layout {
 				}
 				if opts.center_y.is_some() {
 					hierarchical_opts.center_y = opts.center_y;
+				}
+				for id in &opts.locked_node_ids {
+					if !hierarchical_opts.locked_node_ids.contains(id) {
+						hierarchical_opts.locked_node_ids.push(id.clone());
+					}
 				}
 				apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &hierarchical_opts)?;
 			}
@@ -4280,13 +4316,38 @@ mod board_host {
 			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
 		}
 
+		/// @emoji 🔗 Overview LOD: tight world-radius hit on a free handle so link drag can start without enabling broad `resolve_hit_world` handle picks.
+		fn resolve_overview_free_link_handle_pointer_world(&self, point: Point) -> Option<String> {
+			if !matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
+				return None;
+			}
+			if !self.selection_options.select_handles {
+				return None;
+			}
+			const MAX_D_WORLD: f64 = 2.25;
+			let mut best: Option<(f64, String)> = None;
+			for h in self.handles.values() {
+				if !self.handle_effectively_visible(h.id.as_str()) || self.handle_has_incident_edge(h.id.as_str()) {
+					continue;
+				}
+				let Some(pos) = self.handle_world_pos(h) else {
+					continue;
+				};
+				let d = distance_between(point, pos);
+				if d <= MAX_D_WORLD && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+					best = Some((d, h.id.clone()));
+				}
+			}
+			best.map(|(_, id)| id)
+		}
+
 		/// @emoji 🧭 Minimap/overview LOD: pointer-down inside the selection AABB moves the group without a discrete hit.
 		fn lod_uses_bounded_drag(&self) -> bool {
 			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
 		}
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
-			if matches!(self.current_draw_lod(), BoardDrawLod::Minimap) {
+			if self.lod_disables_discrete_pick() {
 				return None;
 			}
 			let zoom = self.camera.zoom;
@@ -4319,7 +4380,7 @@ mod board_host {
 				}
 				if matches!(
 					self.current_draw_lod(),
-					BoardDrawLod::Overview | BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
+					BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
 				) {
 					for h in self.handles.values().rev() {
 						if !self.handle_effectively_visible(h.id.as_str()) {
@@ -4337,9 +4398,6 @@ mod board_host {
 						return Some(hid);
 					}
 				}
-			}
-			if matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
-				return None;
 			}
 			if o.select_nodes {
 				for n in self.nodes.values().rev() {
@@ -5575,7 +5633,9 @@ mod board_host {
 			self.set_selection_screen_preview(None);
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
-			let hit = self.resolve_hit_world(world);
+			let hit = self
+				.resolve_hit_world(world)
+				.or_else(|| self.resolve_overview_free_link_handle_pointer_world(world));
 			if let Interaction::LinkTargetNode {
 				source_id,
 				target_node_id,
@@ -8980,6 +9040,108 @@ mod force_graph_tests {
 		assert!((c1y - ry).abs() > 40.0, "expected child below root");
 		assert!((c2y - ry).abs() > 40.0);
 		assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
+	}
+
+	#[test]
+	fn hierarchical_tree_pins_locked_root_coordinates() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"x": 120.0,
+					"y": -33.0,
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c1",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 18.0,
+					"handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c2",
+					"x": 5.0,
+					"y": 0.0,
+					"radius": 18.0,
+					"handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [
+				{ "id": "e1", "source": "r:h", "target": "c1:h" },
+				{ "id": "e2", "source": "r:h", "target": "c2:h" }
+			]
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"lockedNodeIds": ["r"],
+			"hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
+		for n in parsed["nodes"].as_array().unwrap() {
+			let id = n["id"].as_str().unwrap().to_string();
+			by_id.insert(id, (n["x"].as_f64().unwrap(), n["y"].as_f64().unwrap()));
+		}
+		let (rx, ry) = *by_id.get("r").unwrap();
+		assert!((rx - 120.0).abs() < 1e-3 && (ry + 33.0).abs() < 1e-3, "locked root moved: {rx},{ry}");
+		let (_c1x, c1y) = *by_id.get("c1").unwrap();
+		let (_c2x, c2y) = *by_id.get("c2").unwrap();
+		assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
+		assert!((c1y - ry).abs() > 40.0, "children laid relative to tree, root stayed pinned");
+	}
+
+	#[test]
+	fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"x": 77.0,
+					"y": 12.0,
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c1",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 18.0,
+					"handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"hierarchicalTree": {
+				"direction": "downwards",
+				"layerSpacing": 90.0,
+				"siblingGap": 12.0,
+				"lockedNodeIds": ["r"]
+			}
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
+		for n in parsed["nodes"].as_array().unwrap() {
+			let id = n["id"].as_str().unwrap().to_string();
+			by_id.insert(id, (n["x"].as_f64().unwrap(), n["y"].as_f64().unwrap()));
+		}
+		let (rx, ry) = *by_id.get("r").unwrap();
+		assert!((rx - 77.0).abs() < 1e-3 && (ry - 12.0).abs() < 1e-3, "nested locked list ignored: {rx},{ry}");
 	}
 
 	#[test]
