@@ -1,8 +1,9 @@
 {
   "title": "Scene Connect Mechanisms",
   "emoji": "🔗",
-  "status": "open",
+  "status": "closed",
   "description": "Add scene 3D connect mechanisms analogous to board: handle meshes (user-provided, sphere fallback), connect drag from handle with compatible vortex highlighting, indirect and proximity commit paths. Extend @elements/scene react/index.tsx and play; tests in existing vitest blocks.",
+  "summary": "Scene link gestures aligned with board: vortex handles (optional GLTF handleMeshUrl, custom children, sphere fallback), pointer-drag connect with compatible-target highlighting and target-ring callbacks, direct on compatible vortex hit, indirect when exactly one free compatible handle on hit object, proximity commit from drop point, rubber band line, orbit disabled while dragging. Added kindCatalogs + blockedVortexFullIds + onLinkCompatibleNodes/onLinkTargetRing on Scene; compat resolution via sceneHandlesLinkCompatibleForDrag (specificity tiers). Play passes fixture meta catalogs, tie-blocked handles, connect/indirect counters. Vitest for blocked set, link compat, wire kind resolver.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪5ff9ac9d59d74672bbb75308d9463f56"

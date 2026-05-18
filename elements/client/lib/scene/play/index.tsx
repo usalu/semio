@@ -27,7 +27,9 @@ import {
 	SceneTie,
 	SceneVortex,
 	parseSceneFixtureV1,
+	sceneBlockedVortexFullIdsFromTies,
 	type SceneFixtureV1,
+	type SceneKindCatalogBundle,
 	type SceneKindCompatEntry,
 	type SceneRelocateMode,
 } from "../react/index";
@@ -66,6 +68,12 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
 	}
 	return out;
 }
+
+function parseKindCatalogs(meta: Record<string, unknown> | undefined): SceneKindCatalogBundle | undefined {
+	const kc = meta?.kindCatalogs;
+	if (!kc || typeof kc !== "object") return undefined;
+	return kc as SceneKindCatalogBundle;
+}
 // #endregion 🧾Meta
 
 // #region 🎬ScenePlay
@@ -73,7 +81,14 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [proximityCount, setProximityCount] = useState(0);
+	const [connectCount, setConnectCount] = useState(0);
+	const [indirectCount, setIndirectCount] = useState(0);
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
+	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
+	const blockedVortexFullIds = useMemo(
+		() => sceneBlockedVortexFullIdsFromTies(fixture.ties),
+		[fixture.ties],
+	);
 
 	useEffect(() => {
 		const urls = [...new Set(fixture.objects.map((o) => o.meshUrl))];
@@ -98,6 +113,14 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 
 	const onProximityConnect = useCallback(() => {
 		setProximityCount((c) => c + 1);
+	}, []);
+
+	const onConnect = useCallback(() => {
+		setConnectCount((c) => c + 1);
+	}, []);
+
+	const onIndirectConnect = useCallback(() => {
+		setIndirectCount((c) => c + 1);
 	}, []);
 
 	return (
@@ -140,6 +163,8 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
 					<span data-e2e-selected>{selectedId ?? "—"}</span>
 					<span data-e2e-proximity-count>{proximityCount}</span>
+					<span data-e2e-connect-count>{connectCount}</span>
+					<span data-e2e-indirect-count>{indirectCount}</span>
 				</div>
 			</div>
 			<div className="relative min-h-0 flex-1">
@@ -147,10 +172,14 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 					<Scene
 						className="absolute inset-0"
 						camera={fixture.camera}
+						kindCatalogs={kindCatalogs}
 						kindCompatibility={kindCompatibility}
+						blockedVortexFullIds={blockedVortexFullIds}
 						proximityRadius={24}
 						relocateMode={relocateMode}
 						onSelect={onSelect}
+						onConnect={onConnect}
+						onIndirectConnect={onIndirectConnect}
 						onProximityConnect={onProximityConnect}
 					>
 						{fixture.objects.map((o) => (
@@ -167,7 +196,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 								relocate={relocateMode}
 							>
 								{o.vortices.map((v) => (
-									<SceneVortex key={v.id} objectId={o.id} {...v} />
+									<SceneVortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
 								))}
 							</SceneObject>
 						))}
