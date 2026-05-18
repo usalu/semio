@@ -4867,7 +4867,7 @@ mod board_host {
 			}
 			let prev_sel = self.selection.clone();
 			if prev_sel != new_selection {
-				self.set_selection_exit_last_transition(&prev_sel, &new_selection);
+				self.selection_exit_highlight.clear();
 			}
 			self.selection = new_selection;
 			for n in self.nodes.values_mut() {

@@ -1,10 +1,10 @@
 ---
 name: scene 3d board pendant
-overview: "Build `@elements/scene` as the 3D counterpart of `@elements/board`: R3F-based React component with the same kinds, compatibility and connect mechanisms (Indirect / Connect / Proximity), swappable glb meshes, central object pool, chunking for infinite worlds, and relocate (Translate/Rotate/Scale) instead of drag. Ship a Nakagin play site at JSON parity with the board fixture, fed by a baked `nakagin-capsule-tower.scene.json` produced from the flattened semio design with planes converted into three.js (Y-up, right-handed) origins + orientation quaternions."
+overview: "Build `@elements/scene` as the 3D counterpart of `@elements/board`: R3F-based React component with the same kinds, compatibility and connect mechanisms (Indirect / Connect / Proximity), swappable glb meshes, central object pool, chunking for infinite worlds, and relocate (Translate/Rotate/Scale) instead of drag. Ship a Nakagin play site at JSON parity with the board fixture by consuming checked-in `nakagin-capsule-tower.scene.json` (origins and quaternions already in three.js Y-up space). Semio is not a dependency of `@elements/scene`: a one-off bake script (ticket folder only, optional `@semio/js` there) generates that JSON once from repo fixture files; the scene library, play site, and tests never import semio."
 todos:
   - id: bootstrap
-    content: Create scene package.json, project.json, script.ts (dev/build/test/bake-nakagin), vite.config.ts, index.html
-    status: pending
+    content: Create scene package.json, project.json, script.ts (dev/build/test only), vite.config.ts, index.html
+    status: in_progress
   - id: runtime
     content: "Implement react/index.tsx: Scene, Object, Vortex, Magnet, Tie, Attraction with regions"
     status: pending
@@ -15,10 +15,10 @@ todos:
     content: Implement Selection + Relocate (Translate/Rotate/Scale) + Connect/Indirect/Proximity compat checks against kindCatalogs
     status: pending
   - id: coords
-    content: Implement semio-plane → three (Y-up) origin + quaternion conversion helper with golden test
+    content: No semio-named helpers in scene; fixture stores final three.js origin/quaternion. Optional tiny pure `planeBasisToThreeJs` in scene only if unit tests need shared math without JSON (neutral naming, no semio types)
     status: pending
   - id: bake
-    content: Write bake-nakagin script that flattens shallow design + light kit, maps glbs, writes scene fixture with board-parity ids
+    content: One-off script in active ticket folder (not under elements/scene) reads shallow design + kit JSON from repo paths, may use @semio/js flatten once, writes nakagin-capsule-tower.scene.json; run manually then commit JSON
     status: pending
   - id: play
     content: Build play site with @elements/ui shell, fixture shelf, selection inspector, relocate-mode toolbar
@@ -64,13 +64,13 @@ Compatibility/connect rules reuse the board catalog format verbatim (`source`/`t
 
 - [elements/client/lib/scene/project.json](elements/client/lib/scene/project.json) targets: `dev`, `build`, `test` calling `bun ./script.ts`. `SCENE_PLAY_PORT=6013` (dev), `6028` (test).
 
-- [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts) modeled on board's `script.ts` (no cargo/wasm step): `dev` → vite, `build` → vite build, `test` → vitest + playwright.
+- [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts) modeled on board's `script.ts` (no cargo/wasm step): `dev` → vite, `build` → vite build, `test` → vitest + playwright. **No `bake-*` subcommands** — fixture generation is not part of this package's surface.
 
-- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — `package.json`-free static folder; play `vite.config.ts` aliases `/meshes/*` to `semio/assets/fixtures/metabolism/representations/*` via `server.fs.allow` (same pattern board uses for fixture json).
+- [elements/client/lib/scene/fixtures/meshes/](elements/client/lib/scene/fixtures/meshes/) — optional empty placeholder; play `vite.config.ts` aliases `/meshes/*` to repo `semio/assets/fixtures/metabolism/representations/*.glb` via `server.fs.allow` (static files only, no semio JavaScript).
 
-## Coordinate system
+## Coordinate system (fixture authoring only, not scene runtime)
 
-Semio plane `(origin, xAxis, yAxis)` is right-handed with `zAxis = xAxis × yAxis`. Three.js uses Y-up, right-handed. Apply the mapping `(x, y, z)_semio → (x, z, -y)_three` (rotate -90° about world X) consistently for origin, axes and derived quaternion. Quaternion is built from the rotated basis (`new Matrix4().makeBasis(x', y', z')` → `Quaternion.setFromRotationMatrix`).
+Checked-in `nakagin-capsule-tower.scene.json` stores `origin` and `orientation` already in **three.js** Y-up, right-handed space. The one-off bake tool (ticket folder) may read design JSON whose planes use a different authoring basis; that tool applies `(x, y, z)_authoring → (x, z, -y)_three` and `Matrix4.makeBasis` → quaternion **once** when writing JSON. `@elements/scene` only reads numbers from JSON — it does not implement or import that conversion path.
 
 ## Scene fixture schema (parity with board)
 
@@ -92,33 +92,23 @@ Keys, ids, kindCatalogs and tie wiring are 1:1 with `nakagin-capsule-tower.board
 
 ## Strict isolation from semio
 
-`@elements/scene` (runtime + play site + tests) has **zero** semio dependency. It is a pure R3F React component package living under `./elements` and consumes only JSON. The Nakagin fixture is checked-in JSON — the play site `import`s it directly and never touches `@semio/*`.
+`@elements/scene` (runtime + play site + tests + `script.ts`) has **zero** semio dependency: no `@semio/*` in [elements/client/lib/scene/package.json](elements/client/lib/scene/package.json), no imports from `@semio/*` or `semio/` TypeScript modules anywhere under `elements/client/lib/scene/`.
 
-- `package.json` MUST NOT list `@semio/js`, `@semio/react`, `@semio/rs`, or any other `@semio/*` package.
-- `react/index.tsx` MUST NOT import from `@semio/*`.
-- `play/index.tsx` MUST NOT import from `@semio/*`.
-- `play/vite.config.ts` `server.fs.allow` only needs the elements root + `semio/assets/fixtures/metabolism/representations/` for static `.glb` serving (binary assets, no code).
-- glb assets are referenced by URL only (`/meshes/<name>.glb` alias) — they are data, not a code dependency.
+- Play site only `import`s checked-in JSON and loads glbs by URL; `vite.config.ts` `server.fs.allow` may include the repo path to `semio/assets/.../representations/` **for static `.glb` files only** (not for executing semio code).
 
-The only place semio is used is the offline bake tool (see next section), which lives in its own folder, is not part of the published surface and is not imported by anything in `scene/react`, `scene/play`, or `scene/fixtures`.
+## One-time Nakagin fixture bake (ticket folder only, outside `elements/scene`)
 
-## Baking the Nakagin scene fixture (offline tool, isolated)
+Authoring `nakagin-capsule-tower.scene.json` is **not** implemented inside `@elements/scene`. It is a disposable script kept **only** in the active ticket folder (per repo rules: temp tooling lives under `.repo/🎫/.../`), for example `.repo/🎫/YY/MM/DD/<slug>/bake-nakagin-scene.mts`.
 
-One-off offline bake to **author** the fixture once. Output JSON is checked in; the scene package never re-runs it. Re-bake only when the board fixture is regenerated.
+That script may:
 
-- Lives in [elements/client/lib/scene/fixtures/bake/](elements/client/lib/scene/fixtures/bake/) — a sibling tool folder, not part of the scene runtime build.
-  - `bake.ts` — the bake program. It is the only file in the repo allowed to mix `@semio/js` with scene types.
-  - `bake.package.json` is not needed; it's invoked through a top-level dev script (see below) using the repo's hoisted `@semio/js`.
-- Invoked via `bun ./script.ts bake-nakagin` in [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts). The `bake-nakagin` subcommand is gated behind a `if (command === "bake-nakagin")` branch that `await import`s `./fixtures/bake/bake.ts` lazily so production `dev`/`build`/`test` paths never load semio.
-- The bake performs:
-  1. Load `semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json` + `semio/assets/fixtures/metabolism.kit.light.semio.json`.
-  2. `flattenDesign(design, kit)` (existing JS impl, see `semio/client/lib/react/rendering/index.tsx:4839`) to materialize per-piece planes + connector world points.
-  3. For each piece → emit a scene `object` using the same `id` as in the board fixture; vortex ids are `<pieceId>:<connectorId>` to match board tie endpoints exactly.
-  4. Resolve `meshUrl` from each type's `.glb` representation → `/meshes/<filename>.glb` (URL string only).
-  5. Convert each plane via `semioPlaneToThree` → `{ origin, orientation }`.
-  6. Copy `kindCatalogs` + `edges` directly from the board fixture (ids align). Write `elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json`.
+1. `readFileSync` shallow design + light kit JSON from `semio/assets/fixtures/...` (plain paths, no `@elements/scene` import required).
+2. `import { flattenDesign } from "@semio/js"` (or equivalent single entry the monorepo already resolves for one-off dev runs) to flatten pieces and connector geometry.
+3. Apply authoring-basis → three.js conversion locally inside the script (inline functions, ~15 lines of `three` math, or `import` from `three` only).
+4. `readFileSync` `.storybook/fixtures/nakagin-capsule-tower.board.json` and copy `kindCatalogs` + `edges` into the scene fixture for id parity.
+5. `writeFileSync` → [elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json](elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json).
 
-After bake completes, you can `rm -rf elements/client/lib/scene/fixtures/bake/node_modules` — runtime does not need any of it.
+Run once with `bun .repo/🎫/.../bake-nakagin-scene.mts`, then commit the JSON. Nothing under `elements/client/lib/scene` imports or re-exports that script.
 
 ## Pool, chunking, relocate details
 
@@ -132,8 +122,7 @@ Extend (do not create new) [elements/client/lib/board/vitest.config.ts](elements
 - fixture round-trip (`parseSceneFixtureV1` ↔ JSON parity with board ids),
 - pool acquire/release reference counting,
 - chunk visibility cull math,
-- relocate translate → proximity-connect emits `onProximityConnect` with the right tie payload,
-- coordinate conversion (plane → three quaternion) golden values.
+- relocate translate → proximity-connect emits `onProximityConnect` with the right tie payload.
 
 Playwright play-site e2e: load Nakagin scene, assert glb meshes render, click an object, translate it, drop on a compatible vortex → assert `onConnect` callback observed via instrumentation div.
 
@@ -288,26 +277,9 @@ useGLTF.preload = useGLTF.preload ?? (() => {});             // satisfies tree-s
 
 `<Object>` consumes the pool entry; objects sharing a `meshUrl` are grouped into one `<Instances>` per chunk via DREI `<Instances>/<Instance>` so each unique mesh issues a single draw call per chunk.
 
-### Coordinate conversion (semio plane → three)
+### Coordinate conversion (not in `@elements/scene`)
 
-```ts
-//#region 📐Coords
-import { Matrix4, Quaternion, Vector3 } from "three";
-
-export const semioPointToThree = (p: { x: number; y: number; z: number }): Vec3 => [p.x, p.z, -p.y];
-export const semioVectorToThree = semioPointToThree;
-
-/** 🧭 Semio plane (Z-up RH) → three (Y-up RH) origin + quaternion. */
-export const semioPlaneToThree = (plane: SemioPlane): { origin: Vec3; orientation: Quat } => {
-  const x = new Vector3(...semioVectorToThree(plane.xAxis));
-  const y = new Vector3(...semioVectorToThree(plane.yAxis));
-  const z = new Vector3().crossVectors(x, y).normalize();
-  const o = semioPointToThree(plane.origin);
-  const q = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
-  return { origin: o, orientation: [q.x, q.y, q.z, q.w] };
-};
-//#endregion 📐Coords
-```
+Plane → three.js basis conversion lives **only** in the ticket `bake-nakagin-scene.mts` as private inline helpers (or `import` from `three` there). Do not export `semio*` or `SemioPlane` from [elements/client/lib/scene/react/index.tsx](elements/client/lib/scene/react/index.tsx).
 
 ### Relocate + connect (replaces drag)
 
@@ -399,67 +371,71 @@ export const encodeSceneFixtureForDragV1 = (f: SceneFixtureV1) => JSON.stringify
 //#endregion 🧾Fixture
 ```
 
-### Bake-nakagin (offline tool, lives in [elements/client/lib/scene/fixtures/bake/bake.ts](elements/client/lib/scene/fixtures/bake/bake.ts))
+### Ticket-only bake script blueprint (`.repo/🎫/.../bake-nakagin-scene.mts`)
 
-This is the only file in the scene tree that touches semio. It is invoked manually via `bun ./script.ts bake-nakagin`; the scene runtime, play site and tests do not import it.
+Not part of `@elements/scene`. May use `@semio/js` and `three` here only. Writes into `elements/client/lib/scene/fixtures/` as the single allowed cross-folder write from the ticket.
 
 ```ts
-// fixtures/bake/bake.ts — offline only. NEVER imported by scene/react, scene/play, or scene tests.
+#!/usr/bin/env bun
+// .repo/🎫/YY/MM/DD/<slug>/bake-nakagin-scene.mts — run once; never imported by elements
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { flattenDesign } from "@semio/js";                         // 🚧 offline-only import
-import { semioPlaneToThree, semioPointToThree, semioVectorToThree, type SceneFixtureV1 } from "../../react/index";
+import { Matrix4, Quaternion, Vector3 } from "three";
+import { flattenDesign } from "@semio/js";
 
-const repo = (p: string) => join(import.meta.dir, "../../../../../..", p);
+const repoRoot = join(import.meta.dir, "../../../../.."); // adjust depth to repo root
+const repo = (p: string) => join(repoRoot, p);
 
-export const bakeNakaginScene = () => {
-  const design = JSON.parse(readFileSync(repo("semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json"), "utf8"));
-  const kit    = JSON.parse(readFileSync(repo("semio/assets/fixtures/metabolism.kit.light.semio.json"), "utf8"));
-  const board  = JSON.parse(readFileSync(repo(".storybook/fixtures/nakagin-capsule-tower.board.json"), "utf8"));
-  const flat   = flattenDesign(design, kit);
-
-  const meshUrl = (typeId: string) => {
-    const t = kit.types.find((x: any) => x.id === typeId);
-    const rep = t.representations.find((r: any) => r.file.endsWith(".glb"));
-    return `/meshes/${basename(rep.file)}`;
-  };
-
-  const objects = flat.pieces.map((p: any) => {
-    const { origin, orientation } = semioPlaneToThree(p.pose.plane);
-    return {
-      id: p.id, objectKind: `semio.metabolism.light.node.${p.type.id}`,
-      label: p.name, meshUrl: meshUrl(p.type.id), origin, orientation,
-      vortices: p.type.connectors.map((c: any) => ({
-        id: `${p.id}:${c.id}`, vortexKind: `semio.metabolism.light.handle.${c.id}`,
-        position: semioPointToThree(c.point), direction: semioVectorToThree(c.direction), radius: 0.3,
-      })),
-    };
-  });
-
-  const scene: SceneFixtureV1 = {
-    schema: "elements.scene.fixture/v1",
-    camera: { position: [80, 80, 80], target: [0, 20, 0], zoom: 1 },
-    kindCatalogs: board.kindCatalogs,                              // 🪞 reuse 1:1 (ids match)
-    ties: board.edges,                                             // 🪞 source/target ids identical
-    objects,
-  };
-  writeFileSync(repo("elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json"), JSON.stringify(scene, null, 2));
+const authoringPointToThree = (p: { x: number; y: number; z: number }) => [p.x, p.z, -p.y] as const;
+const planeToThree = (plane: { origin: any; xAxis: any; yAxis: any }) => {
+  const x = new Vector3(...authoringPointToThree(plane.xAxis));
+  const y = new Vector3(...authoringPointToThree(plane.yAxis));
+  const z = new Vector3().crossVectors(x, y).normalize();
+  const o = authoringPointToThree(plane.origin);
+  const q = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
+  return { origin: o, orientation: [q.x, q.y, q.z, q.w] as const };
 };
 
-if (import.meta.main) bakeNakaginScene();
+const design = JSON.parse(readFileSync(repo("semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json"), "utf8"));
+const kit = JSON.parse(readFileSync(repo("semio/assets/fixtures/metabolism.kit.light.semio.json"), "utf8"));
+const board = JSON.parse(readFileSync(repo(".storybook/fixtures/nakagin-capsule-tower.board.json"), "utf8"));
+const flat = flattenDesign(design, kit);
+
+const meshUrl = (typeId: string) => {
+  const t = kit.types.find((x: { id: string }) => x.id === typeId);
+  const rep = t.representations.find((r: { file: string }) => r.file.endsWith(".glb"));
+  return `/meshes/${basename(rep.file)}`;
+};
+
+const objects = flat.pieces.map((p: any) => {
+  const { origin, orientation } = planeToThree(p.pose.plane);
+  return {
+    id: p.id,
+    objectKind: `semio.metabolism.light.node.${p.type.id}`,
+    label: p.name,
+    meshUrl: meshUrl(p.type.id),
+    origin,
+    orientation,
+    vortices: p.type.connectors.map((c: any) => ({
+      id: `${p.id}:${c.id}`,
+      vortexKind: `semio.metabolism.light.handle.${c.id}`,
+      position: authoringPointToThree(c.point),
+      direction: authoringPointToThree(c.direction),
+      radius: 0.3,
+    })),
+  };
+});
+
+const scene = {
+  schema: "elements.scene.fixture/v1",
+  camera: { position: [80, 80, 80], target: [0, 20, 0], zoom: 1 },
+  kindCatalogs: board.kindCatalogs,
+  ties: board.edges,
+  objects,
+};
+
+writeFileSync(repo("elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json"), JSON.stringify(scene, null, 2));
 ```
-
-In `scene/script.ts` the gate stays lazy so semio is only resolved when explicitly baking:
-
-```ts
-if (command === "bake-nakagin") {
-  const { bakeNakaginScene } = await import("./fixtures/bake/bake.ts");
-  bakeNakaginScene();
-  process.exit(0);
-}
-```
-
-Note: `semioPlaneToThree` / `semioPointToThree` / `semioVectorToThree` are pure math helpers exported from `scene/react/index.tsx` (no semio runtime — just three.js + numbers). The bake tool reuses them so the conversion lives in exactly one place.
 
 ### Play site skeleton ([elements/client/lib/scene/play/index.tsx](elements/client/lib/scene/play/index.tsx))
 
@@ -494,7 +470,7 @@ const App = () => {
 1. `ticket_open` "Extend Elements With Scene 3D" under the most appropriate goal (read `repo://goals` first).
 2. Wire `package.json` workspace entry + nx project graph; run `bun install`.
 3. Implement scene runtime in `react/index.tsx` (regions: Kinds, Scene, Object, Vortex, Magnet, Tie, Attraction, Pool, Chunking, Selection, Relocate, Fixture).
-4. Implement bake script + run it to produce `nakagin-capsule-tower.scene.json`.
+4. Add ticket-only `bake-nakagin-scene.mts`, run once with `bun`, commit `nakagin-capsule-tower.scene.json` (scene package never references semio).
 5. Implement play site reusing the `@elements/ui` `UI` shell, toolbar, fixture shelf.
 6. Cargo/wasm not needed; ensure `script.ts test` runs vitest + playwright green.
 7. `ticket_close` with file list.

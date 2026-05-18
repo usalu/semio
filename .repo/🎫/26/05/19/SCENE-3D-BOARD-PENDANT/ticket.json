@@ -1,0 +1,15 @@
+{
+  "title": "Scene 3d Board Pendant",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Implement @elements/scene per plan scene_3d_board_pendant_296f1e60: R3F scene, pool, chunking, relocate, connect modes, play site, tests, ticket-only bake script for nakagin fixture JSON.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "plan": {
+    "client": "cursor",
+    "id": "296f1e60",
+    "source": "C:\\git\\semio\\.cursor\\plans\\scene_3d_board_pendant_296f1e60.plan.md"
+  },
+  "sessions": [
+    "⚪063d773018744edcac0cd0fcf2e44303"
+  ]
+}
