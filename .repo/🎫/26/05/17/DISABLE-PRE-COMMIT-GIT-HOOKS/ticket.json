@@ -1,5 +1,5 @@
 {
-  "title": "Fix Repo Search Cache Hot Path",
+  "title": "Disable Pre-Commit Git Hooks",
   "emoji": "🐛",
   "status": "closed",
   "description": "Make ./repo search incredibly performant by ensuring the search command runs on cached indices instead of rescanning the monorepo tree in memory on each query. Inspect the repo CLI search implementation, refactor the hot path to rely on the persisted cache/index, preserve existing search/filter behavior, extend existing tests, and validate with focused test runs.",

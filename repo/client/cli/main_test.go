@@ -16805,12 +16805,8 @@ func TestConfigureGitHooks(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		preCommitPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
-		preCommitData, err := os.ReadFile(preCommitPath)
-		if err != nil {
-			t.Fatal("pre-commit hook not created")
-		}
-		if !strings.Contains(string(preCommitData), "pre-commit run --hook-stage pre-commit") {
-			t.Error("pre-commit hook does not call pre-commit framework")
+		if _, err := os.Stat(preCommitPath); err == nil || !os.IsNotExist(err) {
+			t.Fatal("pre-commit hook still exists")
 		}
 		postCheckpointData, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
 		if err != nil {
@@ -16819,12 +16815,12 @@ func TestConfigureGitHooks(t *testing.T) {
 		if !strings.Contains(string(postCheckpointData), "hook version.checkpoint.ended") {
 			t.Error("post-checkpoint hook does not call hook version.checkpoint.ended")
 		}
-		info, err := os.Stat(preCommitPath)
+		info, err := os.Stat(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
 		if err != nil {
 			t.Fatal(err)
 		}
 		if info.Mode()&0111 == 0 {
-			t.Error("pre-commit hook is not executable")
+			t.Error("post-checkpoint hook is not executable")
 		}
 		return tmpDir
 	}

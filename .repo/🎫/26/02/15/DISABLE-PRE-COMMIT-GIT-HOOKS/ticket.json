@@ -1,8 +1,11 @@
 {
-  "title": "Monorepo Pre-Commit Framework Migration",
+  "title": "Disable Pre-Commit Git Hooks",
   "emoji": "📝",
-  "status": "closed",
+  "status": "open",
   "description": "Replace husky with a global pre-commit setup for the monorepo.",
   "summary": "Migrated monorepo pre-commit to pre-commit.com and validated install/run.",
-  "goal": "🎯aioptimizedrepo"
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f34eefc1409647cf9f24a5661b3f0b70"
+  ]
 }

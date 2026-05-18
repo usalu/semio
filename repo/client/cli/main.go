@@ -36337,25 +36337,7 @@ func configureGitHooks(repoRoot string) error {
 		return err
 	}
 	preCommitPath := filepath.Join(hooksDir, "pre-commit")
-	preCommitScript := `#!/usr/bin/env sh
-set -eu
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -z "$repo_root" ] || [ ! -f "$repo_root/.pre-commit-config.yaml" ]; then
-  exit 0
-fi
-cd "$repo_root"
-if command -v uv >/dev/null 2>&1; then
-  uv run --group dev pre-commit run --hook-stage pre-commit
-  exit $?
-fi
-if command -v pre-commit >/dev/null 2>&1; then
-  pre-commit run --hook-stage pre-commit
-  exit $?
-fi
-echo "pre-commit is required. install with: uv sync --group dev" >&2
-exit 1
-`
-	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
+	if err := os.Remove(preCommitPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
