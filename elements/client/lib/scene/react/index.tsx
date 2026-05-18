@@ -34,8 +34,8 @@ import {
 	type WebGLRenderer,
 } from "three";
 import {
+	mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc,
 	mergeAuthoringPlanesFromFlatPlanesV1Doc,
-	paperAuthoringPlaneAtBoard,
 	semioAuthoringPlaneFromDesignPiece,
 } from "../semioDesignPlane.ts";
 import { planeBasisToThreeJs } from "../coordsPlane.ts";
@@ -2056,34 +2056,37 @@ if (import.meta.vitest) {
 	describe("sceneChunkDistanceVisible", () => {
 		it("keeps visible inside exit margin after entering", () => {
 			const cam = new Vector3(0, 0, 0);
-			const center = new Vector3(500, 0, 0);
 			const chunkSize = 256;
-			const maxDist = 400;
+			const maxDist = 200;
+			const enterDist = maxDist + sceneChunkBoundsRadius(chunkSize);
+			const far = new Vector3(enterDist + chunkSize, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: center, chunkSize, maxDist, wasVisible: false }),
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: far, chunkSize, maxDist, wasVisible: false }),
 			).toBe(false);
-			const near = new Vector3(350, 0, 0);
+			const near = new Vector3(enterDist - 50, 0, 0);
 			expect(
 				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: near, chunkSize, maxDist, wasVisible: false }),
 			).toBe(true);
-			const between = new Vector3(680, 0, 0);
+			const between = new Vector3(enterDist + chunkSize * 0.25, 0, 0);
 			expect(
 				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: between, chunkSize, maxDist, wasVisible: true }),
 			).toBe(true);
-			const far = new Vector3(900, 0, 0);
+			const beyond = new Vector3(enterDist + chunkSize * 0.75, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: far, chunkSize, maxDist, wasVisible: true }),
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: beyond, chunkSize, maxDist, wasVisible: true }),
 			).toBe(false);
 		});
 	});
 	describe("planeBasisToThreeJs", () => {
-		it("maps identity-ish basis", () => {
+		it("maps authoring xyz to three xzy (auth y → three z, auth z → three y)", () => {
 			const { origin, orientation } = planeBasisToThreeJs({
 				origin: { x: 1, y: 2, z: 3 },
 				xAxis: { x: 1, y: 0, z: 0 },
 				yAxis: { x: 0, y: 1, z: 0 },
 			});
 			expect(origin[0]).toBe(1);
+			expect(origin[1]).toBe(3);
+			expect(origin[2]).toBe(2);
 			expect(orientation.length).toBe(4);
 		});
 	});
@@ -2133,11 +2136,19 @@ if (import.meta.vitest) {
 			expect(m.get("p1")?.origin.z).toBe(9);
 		});
 	});
-	describe("paperAuthoringPlaneAtBoard", () => {
-		it("anchors at board coordinates", () => {
-			const p = paperAuthoringPlaneAtBoard(10, -20);
-			expect(p.origin.x).toBe(10);
-			expect(p.origin.y).toBe(-20);
+	describe("mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc", () => {
+		it("indexes by piece name", () => {
+			const m = new Map();
+			mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc(
+				{
+					schema: "elements.scene.flat-layout-planes/v1",
+					byPieceName: {
+						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+					},
+				},
+				m,
+			);
+			expect(m.get("p1")?.origin.z).toBe(9);
 		});
 	});
 	describe("sceneGltfPoolAcquire", () => {

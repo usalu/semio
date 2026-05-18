@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 Scene package task router: `bun ./script.ts <dev|build|test|bake> [args…]` — `test` runs Vitest then Playwright against the play harness. */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { bakeNakaginCapsuleTowerSceneFixture } from "./nakaginSceneBake.ts";
 
@@ -65,11 +64,7 @@ if (command === "dev") {
 		process.exit(1);
 	}
 	const repoRoot = join(cwd, "..", "..", "..", "..");
-	const flatRel = "elements/client/lib/scene/fixtures/nakagin-capsule-tower.flat-planes.v1.json";
-	bakeNakaginCapsuleTowerSceneFixture({
-		repoRoot,
-		...(existsSync(join(repoRoot, flatRel)) ? { flatPlanesV1RelativePath: flatRel } : {}),
-	});
+	bakeNakaginCapsuleTowerSceneFixture({ repoRoot });
 } else {
 	console.error("usage: bun ./script.ts <dev|build|test|bake> [args…]");
 	process.exit(1);

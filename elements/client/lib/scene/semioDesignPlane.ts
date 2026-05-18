@@ -41,13 +41,17 @@ export function semioAuthoringPlaneFromDesignPiece(piece: Record<string, unknown
 	return null;
 }
 
-/** @emoji 🧾 Horizontal authoring plane through board sketch coordinates (paper: x east, y north, z up at sheet). */
-export function paperAuthoringPlaneAtBoard(x: number, y: number): SemioAuthoringPlane {
-	return {
-		origin: { x, y, z: 0 },
-		xAxis: { x: 1, y: 0, z: 0 },
-		yAxis: { x: 0, y: 1, z: 0 },
-	};
+/** @emoji 🧾 Materialized flat layout sidecar: `elements.scene.flat-layout-planes/v1` with `byPieceName` → authoring plane (board `label` matches piece `name`). */
+export function mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc(doc: unknown, into: Map<string, SemioAuthoringPlane>): void {
+	if (!doc || typeof doc !== "object") return;
+	const r = doc as Record<string, unknown>;
+	if (r["schema"] !== "elements.scene.flat-layout-planes/v1") return;
+	const by = r["byPieceName"] as Record<string, unknown> | undefined;
+	if (!by || typeof by !== "object") return;
+	for (const [name, plane] of Object.entries(by)) {
+		if (!name || !isSemioAuthoringPlane(plane)) continue;
+		into.set(name, plane);
+	}
 }
 
 /** @emoji 🧾 Optional WASM dump: `elements.scene.flat-planes/v1` with `byPieceId` authoring planes (overrides JSON-derived planes). */

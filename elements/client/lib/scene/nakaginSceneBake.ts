@@ -3,9 +3,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { planeBasisToThreeJs } from "./coordsPlane.ts";
 import {
-	mergeAuthoringPlanesFromDesignDoc,
+	mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc,
 	mergeAuthoringPlanesFromFlatPlanesV1Doc,
-	paperAuthoringPlaneAtBoard,
 	type SemioAuthoringPlane,
 } from "./semioDesignPlane.ts";
 
@@ -20,54 +19,36 @@ function bodyRadius(node: Record<string, unknown>): number {
 	return Math.max(w, h) * 0.5;
 }
 
-const nakaginDesignFixtureBasenames = [
-	"nakagin-capsule-tower.shallow.design.semio.json",
-	"nakagin-capsule-tower.with-diff.design.semio.json",
-	"nakagin-capsule-tower.copy.design.semio.json",
-	"nakagin-capsule-tower.paste.design.semio.json",
-	"nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json",
-	"nakagin-capsule-tower.paste.design.diff.semio.json",
-	"nakagin-capsule-tower.deleted.design.diff.semio.json",
-] as const;
-
 export interface BakeNakaginCapsuleTowerSceneFixtureOptions {
 	readonly repoRoot: string;
 	readonly boardRelativePath?: string;
 	readonly sceneOutRelativePath?: string;
-	readonly extraDesignRelativePaths?: readonly string[];
+	/** @emoji 🧾 Defaults to `elements/client/lib/scene/fixtures/nakagin-flat-layout.planes.v1.json` (Flat design piece `name` → plane). */
+	readonly flatLayoutPlanesRelativePath?: string;
+	/** @emoji 🧾 Optional `elements.scene.flat-planes/v1` keyed by **board piece id** (overrides layout plane when present). */
 	readonly flatPlanesV1RelativePath?: string;
 }
 
 export type { SemioAuthoringPlane };
 
-/** @emoji 🧾 Rebuilds `nakagin-capsule-tower.scene.json` from board + semio design planes (id-matched); falls back to paper plane at board (x,y). */
+/** @emoji 🧾 Rebuilds nakagin scene fixture: three.js origin/orientation from Flat layout **plane only** (match board `label` to piece `name`); never uses board x/y for placement. */
 export function bakeNakaginCapsuleTowerSceneFixture(opts: BakeNakaginCapsuleTowerSceneFixtureOptions): void {
 	const repoRoot = opts.repoRoot;
 	const boardPath = join(repoRoot, opts.boardRelativePath ?? ".storybook/fixtures/nakagin-capsule-tower.board.json");
 	const outPath = join(repoRoot, opts.sceneOutRelativePath ?? "elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json");
-	const semioFixtures = join(repoRoot, "semio/assets/fixtures");
+	const layoutPath = join(
+		repoRoot,
+		opts.flatLayoutPlanesRelativePath ?? "elements/client/lib/scene/fixtures/nakagin-flat-layout.planes.v1.json",
+	);
 
-	const planeById = new Map<string, SemioAuthoringPlane>();
-	for (const base of nakaginDesignFixtureBasenames) {
-		const p = join(semioFixtures, base);
-		try {
-			const doc = JSON.parse(readFileSync(p, "utf8")) as Record<string, unknown>;
-			mergeAuthoringPlanesFromDesignDoc(doc, planeById);
-		} catch {
-			/* optional fixtures */
-		}
-	}
-	for (const rel of opts.extraDesignRelativePaths ?? []) {
-		const doc = JSON.parse(readFileSync(join(repoRoot, rel), "utf8")) as Record<string, unknown>;
-		mergeAuthoringPlanesFromDesignDoc(doc, planeById);
-	}
+	const planeByLabel = new Map<string, SemioAuthoringPlane>();
+	const layoutDoc = JSON.parse(readFileSync(layoutPath, "utf8")) as unknown;
+	mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc(layoutDoc, planeByLabel);
+
+	const planeBySourceId = new Map<string, SemioAuthoringPlane>();
 	if (opts.flatPlanesV1RelativePath) {
-		try {
-			const raw = JSON.parse(readFileSync(join(repoRoot, opts.flatPlanesV1RelativePath), "utf8")) as unknown;
-			mergeAuthoringPlanesFromFlatPlanesV1Doc(raw, planeById);
-		} catch {
-			/* optional */
-		}
+		const raw = JSON.parse(readFileSync(join(repoRoot, opts.flatPlanesV1RelativePath), "utf8")) as unknown;
+		mergeAuthoringPlanesFromFlatPlanesV1Doc(raw, planeBySourceId);
 	}
 
 	const board = JSON.parse(readFileSync(boardPath, "utf8")) as Record<string, unknown>;
@@ -77,9 +58,11 @@ export function bakeNakaginCapsuleTowerSceneFixture(opts: BakeNakaginCapsuleTowe
 
 	const objects = nodes.map((node) => {
 		const id = String(node.id);
-		const x = Number(node.x);
-		const y = Number(node.y);
-		const authoringPlane = planeById.get(id) ?? paperAuthoringPlaneAtBoard(x, y);
+		const label = typeof node.label === "string" ? node.label : id;
+		const authoringPlane = planeBySourceId.get(id) ?? planeByLabel.get(label);
+		if (!authoringPlane) {
+			throw new Error(`[bake nakagin scene] missing flat-layout plane for board node ${id} label "${label}"`);
+		}
 		const { origin, orientation } = planeBasisToThreeJs(authoringPlane);
 		const iconKind = String(node.iconKind ?? "placeholder");
 		const br = bodyRadius(node);
@@ -97,7 +80,7 @@ export function bakeNakaginCapsuleTowerSceneFixture(opts: BakeNakaginCapsuleTowe
 		});
 		return {
 			id,
-			label: typeof node.label === "string" ? node.label : id,
+			label,
 			objectKind: typeof node.nodeKind === "string" ? node.nodeKind : undefined,
 			meshUrl: iconKindToMeshUrl(iconKind),
 			origin,
@@ -125,6 +108,8 @@ export function bakeNakaginCapsuleTowerSceneFixture(opts: BakeNakaginCapsuleTowe
 	};
 
 	writeFileSync(outPath, JSON.stringify(scene, null, 2));
-	console.log(`[bake nakagin scene] wrote ${outPath} (${objects.length} objects, ${ties.length} ties, ${planeById.size} design planes merged)`);
+	console.log(
+		`[bake nakagin scene] wrote ${outPath} (${objects.length} objects, ${ties.length} ties, ${planeByLabel.size} layout planes, ${planeBySourceId.size} id overrides)`,
+	);
 }
 // #endregion 🧾NakaginSceneBake

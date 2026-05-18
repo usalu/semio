@@ -1387,15 +1387,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        121.195,
-        0,
-        -245.063
+        -20.75,
+        19.6167,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -1416,12 +1416,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        -422.534
+        -19.95,
+        16.8667,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1445,15 +1445,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        712.446
+        -14.55,
+        32.45,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1474,15 +1474,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        222.974
+        -17.25,
+        24.2,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1503,15 +1503,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        587.824
+        -8.85,
+        29.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1532,15 +1532,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        -833.268
+        -19.95,
+        9.5333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1561,15 +1561,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        -352.378
+        -14.55,
+        15.95,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1590,12 +1590,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -593.823
+        -8.85,
+        13.2,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1619,15 +1619,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -717.675
+        -2.65,
+        11.3667,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -1648,12 +1648,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        841.245
+        -14.55,
+        35.2,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1677,12 +1677,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        -777.475
+        -19.95,
+        11.3667,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1706,12 +1706,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        101.296
+        -17.25,
+        24.2,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1735,15 +1735,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        -677.45
+        -11.55,
+        10.45,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1764,12 +1764,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        151.262,
-        0,
-        -379.594
+        -22.65,
+        16.8667,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1793,15 +1793,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        941.438
+        -19.95,
+        37.0333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1822,15 +1822,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        -128.283,
-        0,
-        394.263
+        -5.35,
+        27.8667,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -1851,15 +1851,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -135.172,
-        0,
-        -764.405
+        -2.65,
+        12.2833,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -1880,15 +1880,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        -841.85
+        -17.25,
+        7.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -1909,15 +1909,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -185.263
+        -2.65,
+        19.6167,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -1938,12 +1938,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -431.116
+        -17.25,
+        15.95,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -1967,15 +1967,15 @@
       "objectKind": "semio.metabolism.light.node.5b3e2b28-e331-420b-83bd-9a8c05ac2918",
       "meshUrl": "/meshes/tambour_first-storey.glb",
       "origin": [
-        86.132,
-        0,
-        -898.398
+        -18.6,
+        7.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -2086,15 +2086,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        -493.09
+        -5.35,
+        14.1167,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -2115,15 +2115,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        862.7
+        -23.45,
+        36.1167,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -2144,15 +2144,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        -202.123
+        -23.45,
+        19.6167,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -2173,15 +2173,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        343.897
+        -7.5,
+        26.75,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -2292,15 +2292,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        121.195,
-        0,
-        642.29
+        -20.75,
+        33.3667,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -2321,15 +2321,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        755.386
+        -17.25,
+        32.45,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2350,12 +2350,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -948.764
+        -8.85,
+        7.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -2379,15 +2379,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        45.504
+        -17.25,
+        21.45,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2408,15 +2408,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        55.412
+        -8.85,
+        21.45,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2437,15 +2437,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        -685.864
+        -22.65,
+        12.2833,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2466,15 +2466,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        -123.385
+        -19.95,
+        20.5333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2495,12 +2495,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        308.833
+        -14.55,
+        26.95,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -2524,15 +2524,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        -11.044
+        -18.6,
+        21.25,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -2633,12 +2633,12 @@
       "objectKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
       "meshUrl": "/meshes/placeholder.glb",
       "origin": [
-        31.458,
-        0,
-        -499.979
+        -15.85,
+        13.2,
+        -8.1
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -2662,15 +2662,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        0,
-        0,
-        0
+        -18.6,
+        10.25,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -2781,12 +2781,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        293.53
+        -8.85,
+        26.95,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -2810,15 +2810,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        -655.797
+        -19.95,
+        12.2833,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2839,15 +2839,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        733.901
+        -22.65,
+        34.2833,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -2868,15 +2868,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        698.838
+        -18.6,
+        32.25,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -2987,12 +2987,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -578.52
+        -14.55,
+        13.2,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3016,12 +3016,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        151.262,
-        0,
-        152.818
+        -22.65,
+        25.1167,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3045,15 +3045,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        -322.508
+        -11.55,
+        15.95,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3074,12 +3074,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -76.175
+        -17.25,
+        21.45,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3103,15 +3103,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        330.289
+        -23.45,
+        27.8667,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -3132,15 +3132,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        169.678
+        -2.65,
+        25.1167,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -3161,12 +3161,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -135.172,
-        0,
-        -409.463
+        -3.45,
+        17.7833,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3190,15 +3190,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        121.195,
-        0,
-        -954.946
+        -20.75,
+        8.6167,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -3219,12 +3219,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        471.001
+        -8.85,
+        29.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3248,15 +3248,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -362.734
+        -2.65,
+        16.8667,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -3277,15 +3277,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -7.793
+        -2.65,
+        22.3667,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -3306,15 +3306,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        -854.92
+        -11.55,
+        7.7,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3335,15 +3335,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        39.322
+        -5.35,
+        22.3667,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -3364,15 +3364,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        -486.908
+        -17.25,
+        13.2,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3393,12 +3393,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -88.057,
-        0,
-        99.969
+        -6.15,
+        26.0333,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3422,12 +3422,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -933.461
+        -14.55,
+        7.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3451,12 +3451,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        633.708
+        -17.25,
+        32.45,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3480,12 +3480,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -88.057,
-        0,
-        277.44
+        -6.15,
+        28.7833,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3509,15 +3509,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        121.195,
-        0,
-        287.349
+        -20.75,
+        27.8667,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -3538,15 +3538,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        -720.927
+        -7.5,
+        10.25,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -3657,15 +3657,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -540.205
+        -2.65,
+        14.1167,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -3686,15 +3686,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        -508.393
+        -22.65,
+        15.0333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3715,15 +3715,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        357.505
+        -14.55,
+        26.95,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3744,15 +3744,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        -300.856
+        -19.95,
+        17.7833,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3773,15 +3773,15 @@
       "objectKind": "semio.metabolism.light.node.5b3e2b28-e331-420b-83bd-9a8c05ac2918",
       "meshUrl": "/meshes/tambour_first-storey.glb",
       "origin": [
-        -84.805,
-        0,
-        -898.398
+        -7.5,
+        7.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -3892,15 +3892,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        577.915
+        -17.25,
+        29.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -3921,12 +3921,12 @@
       "objectKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
       "meshUrl": "/meshes/placeholder.glb",
       "origin": [
-        31.458,
-        0,
-        32.433
+        -15.85,
+        21.45,
+        -8.1
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3950,12 +3950,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -191.767
+        -11.55,
+        18.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -3979,12 +3979,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -724.179
+        -11.55,
+        10.45,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4008,12 +4008,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -771.294
+        -8.85,
+        10.45,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4037,15 +4037,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        -365.986
+        -7.5,
+        15.75,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -4156,15 +4156,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        166.426
+        -7.5,
+        24,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -4275,15 +4275,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        54.086
+        -19.95,
+        23.2833,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -4304,15 +4304,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        -24.653
+        -23.45,
+        22.3667,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -4333,12 +4333,12 @@
       "objectKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
       "meshUrl": "/meshes/capital.glb",
       "origin": [
-        -84.805,
-        0,
-        637.888
+        -7.5,
+        34.0833,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4362,12 +4362,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        456.237
+        -17.25,
+        29.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4391,12 +4391,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -546.708
+        -11.55,
+        13.2,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4420,12 +4420,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -369.238
+        -11.55,
+        15.95,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4449,15 +4449,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        -299.529
+        -8.85,
+        15.95,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -4478,12 +4478,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        116.059
+        -8.85,
+        24.2,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4507,12 +4507,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -135.172,
-        0,
-        122.949
+        -3.45,
+        26.0333,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4536,15 +4536,15 @@
       "objectKind": "semio.metabolism.light.node.49233ca9-f005-4d15-b515-2a18a94dd7a8",
       "meshUrl": "/meshes/tambour_last-storey.glb",
       "origin": [
-        86.132,
-        0,
-        876.308
+        -18.6,
+        35,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -4655,15 +4655,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        -848.031
+        -5.35,
+        8.6167,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -4684,15 +4684,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        524.619
+        -2.65,
+        30.6167,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -4713,15 +4713,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        586.497
+        -19.95,
+        31.5333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -4742,15 +4742,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        -884.79
+        -14.55,
+        7.7,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -4771,15 +4771,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        521.367
+        -18.6,
+        29.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -4880,12 +4880,12 @@
       "objectKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
       "meshUrl": "/meshes/placeholder.glb",
       "origin": [
-        31.458,
-        0,
-        564.845
+        -15.85,
+        29.7,
+        -8.1
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -4909,15 +4909,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        343.897
+        -18.6,
+        26.75,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -5033,7 +5033,7 @@
         0
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5067,12 +5067,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -608.587
+        -17.25,
+        13.2,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5096,15 +5096,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        409.027
+        -19.95,
+        28.7833,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5125,15 +5125,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        -863.335
+        -22.65,
+        9.5333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5154,15 +5154,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        -330.923
+        -22.65,
+        17.7833,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5183,12 +5183,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -88.057,
-        0,
-        -432.443
+        -6.15,
+        17.7833,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5212,15 +5212,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -135.172,
-        0,
-        -586.934
+        -2.65,
+        15.0333,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -5241,15 +5241,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        -313.019
+        -5.35,
+        16.8667,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -5270,15 +5270,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        -309.438
+        -17.25,
+        15.95,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5299,12 +5299,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        163.174
+        -11.55,
+        24.2,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5328,15 +5328,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        -543.457
+        -7.5,
+        13,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -5447,12 +5447,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -46.108
+        -14.55,
+        21.45,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5476,12 +5476,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -401.049
+        -14.55,
+        15.95,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5505,15 +5505,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        -478.326
+        -19.95,
+        15.0333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5534,15 +5534,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -135.172,
-        0,
-        -231.993
+        -2.65,
+        20.5333,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -5563,15 +5563,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        -476.999
+        -8.85,
+        13.2,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -5592,15 +5592,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        685.23
+        -23.45,
+        33.3667,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -5621,12 +5621,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -88.057,
-        0,
-        -964.855
+        -6.15,
+        9.5333,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5650,15 +5650,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        -188.515
+        -7.5,
+        18.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -5769,15 +5769,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        166.426
+        -18.6,
+        24,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -5888,12 +5888,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -416.353
+        -8.85,
+        15.95,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5917,12 +5917,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -14.296
+        -11.55,
+        21.45,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5946,12 +5946,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -755.99
+        -14.55,
+        10.45,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -5975,15 +5975,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        -670.56
+        -5.35,
+        11.3667,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6004,15 +6004,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        889.917
+        -14.55,
+        35.2,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6033,15 +6033,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -135.172,
-        0,
-        477.89
+        -2.65,
+        31.5333,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6062,15 +6062,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -88.057,
-        0,
-        -254.972
+        -5.35,
+        20.5333,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6091,15 +6091,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        -84.805,
-        0,
-        -11.044
+        -7.5,
+        21.25,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -6210,15 +6210,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        -543.457
+        -18.6,
+        13,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6319,15 +6319,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        347.149
+        -2.65,
+        27.8667,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6348,15 +6348,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -135.172,
-        0,
-        -54.522
+        -2.65,
+        23.2833,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6377,12 +6377,12 @@
       "objectKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
       "meshUrl": "/meshes/capital.glb",
       "origin": [
-        86.132,
-        0,
-        992.829
+        -18.6,
+        39.5833,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6406,12 +6406,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        819.76
+        -19.95,
+        36.1167,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6435,15 +6435,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        -153.452
+        -22.65,
+        20.5333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6464,15 +6464,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        -145.038
+        -11.55,
+        18.7,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6493,12 +6493,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -88.057,
-        0,
-        -77.501
+        -6.15,
+        23.2833,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6522,15 +6522,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        378.96
+        -22.65,
+        28.7833,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6551,15 +6551,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        763.968
+        -19.95,
+        34.2833,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6580,15 +6580,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        -138.149
+        -5.35,
+        19.6167,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6609,12 +6609,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        340.645
+        -11.55,
+        26.95,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6638,15 +6638,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        387.374
+        -11.55,
+        26.95,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6667,15 +6667,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        -365.986
+        -18.6,
+        15.75,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -6786,12 +6786,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        151.262,
-        0,
-        507.759
+        -22.65,
+        30.6167,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6815,15 +6815,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        24.019
+        -22.65,
+        23.2833,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6844,12 +6844,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -135.172,
-        0,
-        -941.875
+        -3.45,
+        9.5333,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -6873,15 +6873,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        151.262,
-        0,
-        -912.006
+        -23.45,
+        8.6167,
+        -6.35
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -6902,15 +6902,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        -707.319
+        -14.55,
+        10.45,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6931,15 +6931,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        911.372
+        -22.65,
+        37.0333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6960,15 +6960,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        -131.967
+        -17.25,
+        18.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -6989,15 +6989,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -34.438,
-        0,
-        209.904
+        -11.55,
+        24.2,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7018,12 +7018,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        811.178
+        -17.25,
+        35.2,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7047,15 +7047,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        -831.941
+        -8.85,
+        7.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7076,12 +7076,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        -901.65
+        -11.55,
+        7.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7105,15 +7105,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        932.856
+        -17.25,
+        35.2,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7134,12 +7134,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        486.304
+        -14.55,
+        29.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7163,15 +7163,15 @@
       "objectKind": "semio.metabolism.light.node.357b841f-b121-463c-88a6-153d7cbf272f",
       "meshUrl": "/meshes/capsule_p.glb",
       "origin": [
-        99.74,
-        0,
-        231.556
+        -19.95,
+        26.0333,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7192,15 +7192,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        -654.47
+        -8.85,
+        10.45,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7221,15 +7221,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        201.489
+        -22.65,
+        26.0333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7250,15 +7250,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        -174.907
+        -14.55,
+        18.7,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7279,12 +7279,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        -600.005
+        -19.95,
+        14.1167,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7308,15 +7308,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        21.002,
-        0,
-        180.034
+        -14.55,
+        24.2,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7337,15 +7337,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        232.883
+        -8.85,
+        24.2,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7366,12 +7366,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -61.411
+        -8.85,
+        21.45,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7395,12 +7395,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        151.262,
-        0,
-        -734.535
+        -22.65,
+        11.3667,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7424,12 +7424,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        131.363
+        -14.55,
+        24.2,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7453,15 +7453,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -128.283,
-        0,
-        216.793
+        -5.35,
+        25.1167,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7482,15 +7482,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -88.057,
-        0,
-        -609.913
+        -5.35,
+        15.0333,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7511,12 +7511,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        151.262,
-        0,
-        -557.065
+        -22.65,
+        14.1167,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7540,15 +7540,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        400.445
+        -17.25,
+        26.95,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7569,12 +7569,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        464.819
+        -19.95,
+        30.6167,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7598,15 +7598,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        143.08,
-        0,
-        556.43
+        -22.65,
+        31.5333,
+        -9.85
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7627,15 +7627,15 @@
       "objectKind": "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
       "meshUrl": "/meshes/capsule_s.glb",
       "origin": [
-        -128.283,
-        0,
-        571.734
+        -5.35,
+        30.6167,
+        -11.75
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7656,15 +7656,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        410.354
+        -8.85,
+        26.95,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7685,15 +7685,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -88.057,
-        0,
-        454.91
+        -5.35,
+        31.5333,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7714,15 +7714,15 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -88.057,
-        0,
-        -787.384
+        -5.35,
+        12.2833,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7743,15 +7743,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -81.553,
-        0,
-        -122.058
+        -8.85,
+        18.7,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -7772,12 +7772,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -963.528
+        -17.25,
+        7.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7801,12 +7801,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -253.645
+        -17.25,
+        18.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -7830,15 +7830,15 @@
       "objectKind": "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "meshUrl": "/meshes/tambour.glb",
       "origin": [
-        86.132,
-        0,
-        -188.515
+        -18.6,
+        18.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -7949,15 +7949,15 @@
       "objectKind": "semio.metabolism.light.node.49233ca9-f005-4d15-b515-2a18a94dd7a8",
       "meshUrl": "/meshes/tambour_last-storey.glb",
       "origin": [
-        -84.805,
-        0,
-        521.367
+        -7.5,
+        29.5,
+        -7.7
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -8068,12 +8068,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        121.195,
-        0,
-        109.878
+        -19.95,
+        25.1167,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8097,15 +8097,15 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        121.195,
-        0,
-        -67.593
+        -20.75,
+        22.3667,
+        -3.65
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.5,
+        -0.5,
+        0.5,
+        0.5
       ],
       "vortices": [
         {
@@ -8126,15 +8126,15 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        51.069,
-        0,
-        -664.379
+        -17.25,
+        10.45,
+        -12.55
       ],
       "orientation": [
+        0,
         -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        0.7071067811865476,
+        0
       ],
       "vortices": [
         {
@@ -8155,12 +8155,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        278.767
+        -17.25,
+        26.95,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8184,15 +8184,15 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        -151.262,
-        0,
-        -895.146
+        -2.65,
+        8.6167,
+        -9.05
       ],
       "orientation": [
-        -0.7071067811865475,
-        0,
-        0,
-        0.7071067811865476
+        -0.5,
+        -0.5,
+        0.5,
+        -0.5
       ],
       "vortices": [
         {
@@ -8213,12 +8213,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        663.775
+        -14.55,
+        32.45,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8242,12 +8242,12 @@
       "objectKind": "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "meshUrl": "/meshes/capsule_L.glb",
       "origin": [
-        -18.348,
-        0,
-        518.115
+        -11.55,
+        29.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8271,12 +8271,12 @@
       "objectKind": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "meshUrl": "/meshes/capsule_backslash.glb",
       "origin": [
-        -41.328,
-        0,
-        -238.882
+        -8.85,
+        18.7,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8300,12 +8300,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        -135.172,
-        0,
-        300.419
+        -3.45,
+        28.7833,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8329,12 +8329,12 @@
       "objectKind": "semio.metabolism.light.node.2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "meshUrl": "/meshes/capsule_slash.glb",
       "origin": [
-        72.524,
-        0,
-        -786.057
+        -17.25,
+        10.45,
+        -2.85
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
@@ -8358,12 +8358,12 @@
       "objectKind": "semio.metabolism.light.node.818f2a23-569b-47cb-a69c-147694beb815",
       "meshUrl": "/meshes/capsule_J.glb",
       "origin": [
-        29.584,
-        0,
-        -223.578
+        -14.55,
+        18.7,
+        -5.55
       ],
       "orientation": [
-        -0.7071067811865475,
+        0.7071067811865475,
         0,
         0,
         0.7071067811865476
