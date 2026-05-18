@@ -1291,8 +1291,8 @@ function SceneLinkRubberBand() {
 		const wire =
 			(reg.linkDragActive || reg.linkIndirectPickAwait !== null) && reg.linkDragSourceFullId ? true : false;
 		if (!wire) {
-			pos.setXYZ(0, 0, 0);
-			pos.setXYZ(1, 0, 0);
+			pos.setXYZ(0, 0, 0, 0);
+			pos.setXYZ(1, 0, 0, 0);
 			pos.needsUpdate = true;
 			return;
 		}

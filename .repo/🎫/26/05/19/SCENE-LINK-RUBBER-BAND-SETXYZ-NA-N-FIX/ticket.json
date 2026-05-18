@@ -1,0 +1,10 @@
+{
+  "title": "Scene Link Rubber Band Setxyz NaN Fix",
+  "emoji": "🩹",
+  "status": "open",
+  "description": "Fix SceneLinkRubberBand setXYZ calls missing z argument causing NaN BufferGeometry and failing scene Playwright console checks.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪7cdb9fcaf28e477b848616ecfdb8700a"
+  ]
+}
