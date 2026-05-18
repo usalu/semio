@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
-/** 🧭 Scene package task router: `bun ./script.ts <dev|build|test> [args…]` — `test` runs Vitest then Playwright against the play harness. */
+/** 🧭 Scene package task router: `bun ./script.ts <dev|build|test|bake> [args…]` — `test` runs Vitest then Playwright against the play harness. */
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { bakeNakaginCapsuleTowerSceneFixture } from "./nakaginSceneBake.ts";
 
 const cwd = import.meta.dir;
 const segs = process.argv.slice(2);
@@ -56,7 +58,19 @@ if (command === "dev") {
 } else if (command === "test") {
 	runSync(["bunx", "vitest", "run", "--config", "vitest.config.ts", ...extra]);
 	runSync(["bunx", "playwright", "test", "--config", "play/playwright.config.ts", ...extra], { cwd });
+} else if (command === "bake") {
+	const sub = extra[0];
+	if (sub !== "nakagin") {
+		console.error("usage: bun ./script.ts bake nakagin");
+		process.exit(1);
+	}
+	const repoRoot = join(cwd, "..", "..", "..", "..");
+	const flatRel = "elements/client/lib/scene/fixtures/nakagin-capsule-tower.flat-planes.v1.json";
+	bakeNakaginCapsuleTowerSceneFixture({
+		repoRoot,
+		...(existsSync(join(repoRoot, flatRel)) ? { flatPlanesV1RelativePath: flatRel } : {}),
+	});
 } else {
-	console.error("usage: bun ./script.ts <dev|build|test> [args…]");
+	console.error("usage: bun ./script.ts <dev|build|test|bake> [args…]");
 	process.exit(1);
 }

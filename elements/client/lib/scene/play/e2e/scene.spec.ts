@@ -42,6 +42,17 @@ test("scene selection hook updates label", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
+test("scene does not return to loading meshes after initial load", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
+	await page.waitForLoadState("networkidle");
+	await expect(page.getByText("Loading meshes…")).toHaveCount(0, { timeout: 120_000 });
+	await page.waitForTimeout(2000);
+	await expect(page.getByText("Loading meshes…")).toHaveCount(0);
+	expectCleanSceneConsole(messages);
+});
+
 test("scene click keeps chunked meshes mounted", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");

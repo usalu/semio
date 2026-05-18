@@ -1,40 +1,40 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "@elements/scene",
-  "version": "0.1.0",
-  "description": "elements · scene",
-  "type": "module",
-  "private": true,
-  "dependencies": {
-    "@elements/ui": "workspace:*",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.2",
-    "lucide-react": "^0.536.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "three": "^0.180.0"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.57.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "@types/react": "^19.2.8",
-    "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.180.0",
-    "@vitejs/plugin-react": "^5.1.2",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vitest": "^3.2.4"
-  },
-  "author": {
-    "name": "Ueli Saluz",
-    "email": "ueli@semio-tech.com",
-    "url": "https://github.com/usalu"
-  },
-  "license": "LGPL-3.0-or-later",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/usalu/semio.git",
-    "directory": "elements/client/lib/scene"
-  },
-  "bundleKind": "library"
+	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@elements/scene",
+	"version": "0.1.0",
+	"description": "elements · scene",
+	"type": "module",
+	"private": true,
+	"dependencies": {
+		"@elements/ui": "workspace:*",
+		"@react-three/drei": "^10.7.7",
+		"@react-three/fiber": "^9.4.2",
+		"lucide-react": "^0.536.0",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"three": "^0.180.0"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.57.0",
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"@types/three": "^0.180.0",
+		"@vitejs/plugin-react": "^5.1.2",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^3.2.4"
+	},
+	"author": {
+		"name": "Ueli Saluz",
+		"email": "ueli@semio-tech.com",
+		"url": "https://github.com/usalu/semio"
+	},
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/usalu/semio.git",
+		"directory": "elements/client/lib/scene"
+	},
+	"bundleKind": "library"
 }

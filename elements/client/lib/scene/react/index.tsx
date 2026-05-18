@@ -21,13 +21,10 @@ import {
 	Float32BufferAttribute,
 	GridHelper,
 	LineBasicMaterial,
-	Frustum,
-	Matrix4,
 	PerspectiveCamera as ThreePerspectiveCamera,
 	Plane,
 	Quaternion,
 	Raycaster,
-	Sphere,
 	Vector2,
 	Vector3,
 	type Camera,
@@ -36,6 +33,12 @@ import {
 	type Scene,
 	type WebGLRenderer,
 } from "three";
+import {
+	mergeAuthoringPlanesFromFlatPlanesV1Doc,
+	paperAuthoringPlaneAtBoard,
+	semioAuthoringPlaneFromDesignPiece,
+} from "../semioDesignPlane.ts";
+import { planeBasisToThreeJs } from "../coordsPlane.ts";
 
 //#region 🔖Kinds
 export type Vec3 = readonly [number, number, number];
@@ -249,20 +252,7 @@ export interface SceneFixtureV1 {
 //#endregion 🔖Kinds
 
 //#region 📐Coords
-/** @emoji 🧭 Maps authoring RH basis (origin + xAxis + yAxis) into three.js Y-up RH position + quaternion. */
-export function planeBasisToThreeJs(plane: {
-	readonly origin: { x: number; y: number; z: number };
-	readonly xAxis: { x: number; y: number; z: number };
-	readonly yAxis: { x: number; y: number; z: number };
-}): { origin: Vec3; orientation: Quat } {
-	const authoringToThree = (p: { x: number; y: number; z: number }): Vec3 => [p.x, p.z, -p.y];
-	const x = new Vector3(...authoringToThree(plane.xAxis)).normalize();
-	const y = new Vector3(...authoringToThree(plane.yAxis)).normalize();
-	const z = new Vector3().crossVectors(x, y).normalize();
-	const o = authoringToThree(plane.origin);
-	const q = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
-	return { origin: o, orientation: [q.x, q.y, q.z, q.w] };
-}
+export { planeBasisToThreeJs };
 //#endregion 📐Coords
 
 //#region 📶Lod
@@ -693,10 +683,15 @@ export function sceneGltfPoolRelease(url: string): void {
 	const n = (gltfRefCounts.get(url) ?? 1) - 1;
 	if (n <= 0) {
 		gltfRefCounts.delete(url);
-		useGLTF.clear(url);
 	} else {
 		gltfRefCounts.set(url, n);
 	}
+}
+
+/** @emoji 🧹 Drops pooled GLTF cache entries (call on scene teardown, not per-chunk unmount). */
+export function sceneGltfPoolClear(url: string): void {
+	gltfRefCounts.delete(url);
+	useGLTF.clear(url);
 }
 
 function usePooledGltf(url: string) {
@@ -787,29 +782,51 @@ function sceneSetEquals(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean
 	return true;
 }
 
+/** @emoji 📏 Chunk bounding radius in world units (half-space diagonal of a cube chunk). */
+export function sceneChunkBoundsRadius(chunkSize: number): number {
+	return chunkSize * 0.866;
+}
+
+/** @emoji 👁️ Distance-only chunk visibility with enter/exit hysteresis (avoids frustum-edge flicker). */
+export function sceneChunkDistanceVisible(args: {
+	readonly camPos: Vector3;
+	readonly chunkCenter: Vector3;
+	readonly chunkSize: number;
+	readonly maxDist: number;
+	readonly wasVisible: boolean;
+}): boolean {
+	const boundsR = sceneChunkBoundsRadius(args.chunkSize);
+	const dist = args.camPos.distanceTo(args.chunkCenter);
+	const enterDist = args.maxDist + boundsR;
+	const exitDist = enterDist + args.chunkSize * 0.5;
+	if (dist <= enterDist) return true;
+	if (args.wasVisible && dist <= exitDist) return true;
+	return false;
+}
+
 function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
 	const { camera } = useThree();
-	const frustum = useMemo(() => new Frustum(), []);
-	const projScreenMatrix = useMemo(() => new Matrix4(), []);
-	const sphereTmp = useMemo(() => new Sphere(), []);
+	const centerTmp = useMemo(() => new Vector3(), []);
 	const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
 	useFrame(() => {
-		projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-		frustum.setFromProjectionMatrix(projScreenMatrix);
-		const next = new Set<string>();
 		const camPos = camera.position;
-		for (const key of chunkKeys) {
-			const [ix, iy, iz] = key.split("|").map(Number);
-			const cx = (ix + 0.5) * chunkSize;
-			const cy = (iy + 0.5) * chunkSize;
-			const cz = (iz + 0.5) * chunkSize;
-			sphereTmp.center.set(cx, cy, cz);
-			sphereTmp.radius = chunkSize * 0.866;
-			if (sphereTmp.center.distanceTo(camPos) > maxDist + sphereTmp.radius) continue;
-			if (!frustum.intersectsSphere(sphereTmp)) continue;
-			next.add(key);
-		}
-		setVisible((prev) => (sceneSetEquals(prev, next) ? prev : next));
+		setVisible((prev) => {
+			const next = new Set(prev);
+			for (const key of chunkKeys) {
+				const [ix, iy, iz] = key.split("|").map(Number);
+				centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
+				const show = sceneChunkDistanceVisible({
+					camPos,
+					chunkCenter: centerTmp,
+					chunkSize,
+					maxDist,
+					wasVisible: next.has(key),
+				});
+				if (show) next.add(key);
+				else next.delete(key);
+			}
+			return sceneSetEquals(prev, next) ? prev : next;
+		});
 	});
 	return visible;
 }
@@ -1861,13 +1878,11 @@ function SceneChunks({
 	const visible = useVisibleChunkKeys(buckets.keys(), chunkSize, maxDistance);
 	return (
 		<>
-			{[...buckets].map(([key, items]) =>
-				visible.has(key) ? (
-					<group key={key} userData={{ sceneChunk: key }}>
-						{items}
-					</group>
-				) : null,
-			)}
+			{[...buckets].map(([key, items]) => (
+				<group key={key} userData={{ sceneChunk: key }} visible={visible.has(key)}>
+					{items}
+				</group>
+			))}
 		</>
 	);
 }
@@ -2038,6 +2053,29 @@ if (import.meta.vitest) {
 			expect(sceneChunkKey([300, 0, 0], 256)).toBe("1|0|0");
 		});
 	});
+	describe("sceneChunkDistanceVisible", () => {
+		it("keeps visible inside exit margin after entering", () => {
+			const cam = new Vector3(0, 0, 0);
+			const center = new Vector3(500, 0, 0);
+			const chunkSize = 256;
+			const maxDist = 400;
+			expect(
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: center, chunkSize, maxDist, wasVisible: false }),
+			).toBe(false);
+			const near = new Vector3(350, 0, 0);
+			expect(
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: near, chunkSize, maxDist, wasVisible: false }),
+			).toBe(true);
+			const between = new Vector3(680, 0, 0);
+			expect(
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: between, chunkSize, maxDist, wasVisible: true }),
+			).toBe(true);
+			const far = new Vector3(900, 0, 0);
+			expect(
+				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: far, chunkSize, maxDist, wasVisible: true }),
+			).toBe(false);
+		});
+	});
 	describe("planeBasisToThreeJs", () => {
 		it("maps identity-ish basis", () => {
 			const { origin, orientation } = planeBasisToThreeJs({
@@ -2049,12 +2087,68 @@ if (import.meta.vitest) {
 			expect(orientation.length).toBe(4);
 		});
 	});
+	describe("semioAuthoringPlaneFromDesignPiece", () => {
+		it("reads pose.plane", () => {
+			const pl = semioAuthoringPlaneFromDesignPiece({
+				id: "x",
+				pose: {
+					plane: {
+						origin: { x: 0, y: 1, z: 2 },
+						xAxis: { x: 1, y: 0, z: 0 },
+						yAxis: { x: 0, y: 1, z: 0 },
+					},
+				},
+			});
+			expect(pl?.origin.z).toBe(2);
+		});
+		it("reads semio.plane attribute JSON", () => {
+			const pl = semioAuthoringPlaneFromDesignPiece({
+				id: "y",
+				attributes: [
+					{
+						key: "semio.plane",
+						value: JSON.stringify({
+							origin: { x: 1, y: 2, z: 3 },
+							xAxis: { x: 1, y: 0, z: 0 },
+							yAxis: { x: 0, y: 1, z: 0 },
+						}),
+					},
+				],
+			});
+			expect(pl?.origin.x).toBe(1);
+		});
+	});
+	describe("mergeAuthoringPlanesFromFlatPlanesV1Doc", () => {
+		it("fills map from schema doc", () => {
+			const m = new Map();
+			mergeAuthoringPlanesFromFlatPlanesV1Doc(
+				{
+					schema: "elements.scene.flat-planes/v1",
+					byPieceId: {
+						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+					},
+				},
+				m,
+			);
+			expect(m.get("p1")?.origin.z).toBe(9);
+		});
+	});
+	describe("paperAuthoringPlaneAtBoard", () => {
+		it("anchors at board coordinates", () => {
+			const p = paperAuthoringPlaneAtBoard(10, -20);
+			expect(p.origin.x).toBe(10);
+			expect(p.origin.y).toBe(-20);
+		});
+	});
 	describe("sceneGltfPoolAcquire", () => {
-		it("increments refcount", () => {
-			sceneGltfPoolAcquire("http://x/a.glb");
-			sceneGltfPoolAcquire("http://x/a.glb");
-			sceneGltfPoolRelease("http://x/a.glb");
-			sceneGltfPoolRelease("http://x/a.glb");
+		it("tracks refcount without clearing cache on release", () => {
+			const url = "http://x/pool-test.glb";
+			sceneGltfPoolAcquire(url);
+			sceneGltfPoolAcquire(url);
+			sceneGltfPoolRelease(url);
+			sceneGltfPoolRelease(url);
+			sceneGltfPoolAcquire(url);
+			sceneGltfPoolRelease(url);
 			expect(true).toBe(true);
 		});
 	});
