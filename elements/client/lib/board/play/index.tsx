@@ -51,8 +51,6 @@ import {
 	Magnet,
 	Minus,
 	MousePointer2,
-	Pause,
-	Play,
 	Plus,
 	Repeat2,
 	Settings,
@@ -507,7 +505,7 @@ interface BoardPlayShellValue {
 	setTreeLayoutSiblingGap: (value: number) => void;
 	treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
 	setTreeLayoutDirection: (value: BoardHierarchicalTreeDirectionKind) => void;
-	applyBoardRedrawOnce: () => void;
+	applyBoardRedrawOnce: (modeOverride?: BoardRedrawModeKind) => void;
 	applyBoardRedrawHandlesOnce: () => void;
 	boardRedrawHandlesAfterNodes: boolean;
 	setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
@@ -607,20 +605,19 @@ function BoardPlayToolbar(): ReactElement {
 	const {
 		activePaneId,
 		applyBoardRedrawHandlesOnce,
+		applyBoardRedrawOnce,
 		boardGridSnapEnabled,
 		boardSelectionMethod,
 		boardSelectionGestureHighlight,
 		boardSelectionMode,
 		boardSelectionTargets,
 		camerasByPane,
-		boardRedrawPlaying,
 		patchFixture,
 		setBoardGridSnapEnabled,
 		setBoardSelectionGestureHighlight,
 		setBoardSelectionMethod,
 		setBoardSelectionMode,
 		setBoardSelectionTargets,
-		setBoardRedrawPlaying,
 		setSelectionForPane,
 	} = useBoardPlayShell();
 
@@ -801,30 +798,26 @@ function BoardPlayToolbar(): ReactElement {
 				<ToolbarDivider />
 				<ToolbarGroup className="min-w-0 items-center gap-1">
 					<ToolbarItem>
-						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Layout</span>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Redraw</span>
 					</ToolbarItem>
 					<ToolbarItem>
 						<button
 							type="button"
-							className={boardToolbarToggleClass(boardRedrawPlaying)}
-							title={
-								boardRedrawPlaying
-									? "Pause redraw (requestAnimationFrame; packs WASM work per frame)"
-									: "Play redraw: as much layout work per frame as fits ~14ms budget"
-							}
-							onClick={() => setBoardRedrawPlaying(!boardRedrawPlaying)}
+							className={boardToolbarToggleClass(false)}
+							title="Redraw graph"
+							onClick={() => applyBoardRedrawOnce("force-graph")}
 						>
-							{boardRedrawPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+							<span className="px-0.5">Graph</span>
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
 						<button
 							type="button"
 							className={boardToolbarToggleClass(false)}
-							title="Redraw handles: anchors on the straight segment between node centers"
+							title="Redraw handles"
 							onClick={() => applyBoardRedrawHandlesOnce()}
 						>
-							<Link2 className="size-4" aria-hidden />
+							<span className="px-0.5">Handles</span>
 						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
@@ -3898,12 +3891,13 @@ function BoardPlayInner(): ReactElement {
 		patchFixture((prev) => layoutBoardFixtureRedrawHandles(prev));
 	}, [patchFixture]);
 
-	const applyBoardRedrawOnce = useCallback(() => {
+	const applyBoardRedrawOnce = useCallback((modeOverride?: BoardRedrawModeKind) => {
 		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
 			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
 		}
 		nodesRedrawEaseGenerationRef.current += 1;
+		const mode = modeOverride ?? boardRedrawMode;
 		const interactiveZoomEnabled = boardRedrawInteractiveZoomByPaneRef.current[activePaneId];
 		nodesRedrawEaseFromRef.current = interactiveZoomEnabled
 			? {
@@ -3919,7 +3913,7 @@ function BoardPlayInner(): ReactElement {
 				boardPlayRedrawLayoutOpts(
 					activePaneId,
 					camerasByPane,
-					boardRedrawMode,
+					mode,
 					full,
 					forceLayoutIdealEdgeLength,
 					forceLayoutGravity,

@@ -52,6 +52,31 @@ test.describe("board play", () => {
 		expect(Math.abs((menuBox?.y ?? 0) - point.y)).toBeLessThan(8);
 	});
 
+	test("redraw toolbar exposes graph and independent handles actions", async ({ page }) => {
+		const errors: string[] = [];
+		page.on("console", (msg) => {
+			if (msg.type() === "error") {
+				errors.push(msg.text());
+			}
+		});
+		page.on("pageerror", (err) => {
+			errors.push(err.message);
+		});
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		const redrawLabel = page.locator("span", { hasText: /^Redraw$/ }).first();
+		const graphButton = page.locator('button[title="Redraw graph"]');
+		const handlesButton = page.locator('button[title="Redraw handles"]');
+		await expect(redrawLabel).toBeVisible({ timeout: 120_000 });
+		await expect(graphButton).toHaveText("Graph");
+		await expect(handlesButton).toHaveText("Handles");
+		await handlesButton.click();
+		await graphButton.click();
+		await handlesButton.click();
+		await page.waitForTimeout(100);
+		expect(errors.filter((text) => !text.includes("[DEBUG] BoardRenderer GPU surface init failed NoCompatibleDevice"))).toEqual([]);
+	});
+
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });

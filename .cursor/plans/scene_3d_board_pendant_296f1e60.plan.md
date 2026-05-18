@@ -90,19 +90,35 @@ Semio plane `(origin, xAxis, yAxis)` is right-handed with `zAxis = xAxis × yAxi
 
 Keys, ids, kindCatalogs and tie wiring are 1:1 with `nakagin-capsule-tower.board.json` so the same Nakagin compat catalog drives both surfaces.
 
-## Baking the Nakagin scene fixture
+## Strict isolation from semio
 
-One-off offline bake (no runtime semio dependency in the play site):
+`@elements/scene` (runtime + play site + tests) has **zero** semio dependency. It is a pure R3F React component package living under `./elements` and consumes only JSON. The Nakagin fixture is checked-in JSON — the play site `import`s it directly and never touches `@semio/*`.
 
-- Add a `bake-nakagin` subcommand to [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts) that:
-  1. Loads `semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json` + `semio/assets/fixtures/metabolism.kit.light.semio.json`.
-  2. Calls the existing JS `flattenDesign` (see `semio/client/lib/react/rendering/index.tsx:4839` `// JS-flattened design (correct BFS placement centers)`) to materialize each piece's plane and connector world points.
-  3. For every piece → emits an `object` with same `id` used in the board fixture (preserves tie ids by reusing connector `port` → vortex id mapping `<pieceId>:<connectorId>`).
-  4. Resolves `meshUrl` from the piece's type representation file (`*.glb`) under `semio/assets/fixtures/metabolism/representations/` — aliased to `/meshes/<filename>.glb` at play-site serve time.
-  5. Converts plane → three quaternion + origin via the mapping above.
-  6. Copies `kindCatalogs` and tie list straight from the board fixture (ids match because both flow from the same kit), then writes `elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json`.
+- `package.json` MUST NOT list `@semio/js`, `@semio/react`, `@semio/rs`, or any other `@semio/*` package.
+- `react/index.tsx` MUST NOT import from `@semio/*`.
+- `play/index.tsx` MUST NOT import from `@semio/*`.
+- `play/vite.config.ts` `server.fs.allow` only needs the elements root + `semio/assets/fixtures/metabolism/representations/` for static `.glb` serving (binary assets, no code).
+- glb assets are referenced by URL only (`/meshes/<name>.glb` alias) — they are data, not a code dependency.
 
-Output is checked in; play site only imports the JSON. Re-bake whenever the board fixture is regenerated.
+The only place semio is used is the offline bake tool (see next section), which lives in its own folder, is not part of the published surface and is not imported by anything in `scene/react`, `scene/play`, or `scene/fixtures`.
+
+## Baking the Nakagin scene fixture (offline tool, isolated)
+
+One-off offline bake to **author** the fixture once. Output JSON is checked in; the scene package never re-runs it. Re-bake only when the board fixture is regenerated.
+
+- Lives in [elements/client/lib/scene/fixtures/bake/](elements/client/lib/scene/fixtures/bake/) — a sibling tool folder, not part of the scene runtime build.
+  - `bake.ts` — the bake program. It is the only file in the repo allowed to mix `@semio/js` with scene types.
+  - `bake.package.json` is not needed; it's invoked through a top-level dev script (see below) using the repo's hoisted `@semio/js`.
+- Invoked via `bun ./script.ts bake-nakagin` in [elements/client/lib/scene/script.ts](elements/client/lib/scene/script.ts). The `bake-nakagin` subcommand is gated behind a `if (command === "bake-nakagin")` branch that `await import`s `./fixtures/bake/bake.ts` lazily so production `dev`/`build`/`test` paths never load semio.
+- The bake performs:
+  1. Load `semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json` + `semio/assets/fixtures/metabolism.kit.light.semio.json`.
+  2. `flattenDesign(design, kit)` (existing JS impl, see `semio/client/lib/react/rendering/index.tsx:4839`) to materialize per-piece planes + connector world points.
+  3. For each piece → emit a scene `object` using the same `id` as in the board fixture; vortex ids are `<pieceId>:<connectorId>` to match board tie endpoints exactly.
+  4. Resolve `meshUrl` from each type's `.glb` representation → `/meshes/<filename>.glb` (URL string only).
+  5. Convert each plane via `semioPlaneToThree` → `{ origin, orientation }`.
+  6. Copy `kindCatalogs` + `edges` directly from the board fixture (ids align). Write `elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json`.
+
+After bake completes, you can `rm -rf elements/client/lib/scene/fixtures/bake/node_modules` — runtime does not need any of it.
 
 ## Pool, chunking, relocate details
 
@@ -120,6 +136,358 @@ Extend (do not create new) [elements/client/lib/board/vitest.config.ts](elements
 - coordinate conversion (plane → three quaternion) golden values.
 
 Playwright play-site e2e: load Nakagin scene, assert glb meshes render, click an object, translate it, drop on a compatible vortex → assert `onConnect` callback observed via instrumentation div.
+
+## Code blueprints
+
+### Public types ([elements/client/lib/scene/react/index.tsx](elements/client/lib/scene/react/index.tsx))
+
+```ts
+//#region 🔖Kinds
+export type Vec3 = readonly [number, number, number];
+export type Quat = readonly [number, number, number, number];
+
+export type SceneRelocateMode = "translate" | "rotate" | "scale";
+export type SceneSelectionMode = "single" | "additive" | "subtractive" | "toggle";
+export type SceneConnectKind = "indirect" | "connect" | "proximity";
+
+export interface SceneCameraState {
+  position: Vec3;
+  target: Vec3;
+  zoom: number;
+}
+
+export interface SceneVortexProps {
+  id: string;
+  vortexKind?: string;
+  position: Vec3;
+  direction?: Vec3;
+  radius?: number;
+  visible?: boolean;
+}
+
+export interface SceneMagnetProps {
+  id: string;
+  magnetKind?: string;
+  position: Vec3;
+  orientation?: Quat;
+  size: Vec3;
+}
+
+export interface SceneObjectProps {
+  id: string;
+  objectKind?: string;
+  meshUrl: string;
+  origin: Vec3;
+  orientation?: Quat;
+  scale?: number | Vec3;
+  label?: string;
+  selected?: boolean;
+  visible?: boolean;
+  relocate?: SceneRelocateMode | false;
+  children?: ReactNode;
+  userData?: Record<string, unknown>;
+}
+
+export interface SceneTieProps {
+  id: string;
+  source: `${string}:${string}`;
+  target: `${string}:${string}`;
+  tieKind?: string;
+}
+
+export interface SceneCanvasProps {
+  camera?: Partial<SceneCameraState>;
+  chunkSize?: number;                            // default 256
+  kindCatalogs?: SceneKindCatalogBundle;         // identical shape to BoardKindCatalogBundle
+  kindCompatibility?: readonly SceneKindCompatEntry[];
+  proximityRadius?: number;                      // default 0.5
+  relocateMode?: SceneRelocateMode;
+  selectionMode?: SceneSelectionMode;
+  onCamera?: (s: SceneCameraState) => void;
+  onSelect?: (snap: SceneSelectionSnapshot) => void;
+  onRelocate?: (p: SceneRelocatePayload) => void;
+  onConnect?: (p: SceneTieLinkPayload) => void;
+  onIndirectConnect?: (p: SceneTieLinkPayload) => void;
+  onProximityConnect?: (p: SceneTieLinkPayload) => void;
+  children?: ReactNode;
+}
+//#endregion 🔖Kinds
+```
+
+### Scene root + chunking
+
+```tsx
+//#region 🎬Scene
+export const Scene = ({ children, camera, chunkSize = 256, ...rest }: SceneCanvasProps) => {
+  return (
+    <Canvas dpr={[1, 2]} gl={{ antialias: true }}>
+      <SceneProvider value={useSceneStore(rest)}>
+        <PerspectiveCamera makeDefault position={camera?.position ?? [50, 50, 50]} />
+        <CameraControls onCamera={rest.onCamera} />
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[100, 200, 100]} intensity={0.8} />
+        <SceneChunks chunkSize={chunkSize}>{children}</SceneChunks>
+      </SceneProvider>
+    </Canvas>
+  );
+};
+//#endregion 🎬Scene
+
+//#region 🧱Chunking
+const chunkKey = (origin: Vec3, size: number) =>
+  `${Math.floor(origin[0] / size)}|${Math.floor(origin[1] / size)}|${Math.floor(origin[2] / size)}`;
+
+export const SceneChunks = ({ chunkSize, children }: { chunkSize: number; children: ReactNode }) => {
+  const buckets = useMemo(() => {
+    const map = new Map<string, ReactNode[]>();
+    Children.forEach(children, (child) => {
+      if (!isValidElement<SceneObjectProps>(child)) return;
+      const k = chunkKey(child.props.origin, chunkSize);
+      (map.get(k) ?? map.set(k, []).get(k)!).push(child);
+    });
+    return map;
+  }, [children, chunkSize]);
+
+  const visible = useVisibleChunks(buckets.keys(), chunkSize); // frustum + radius cull
+  return (
+    <>
+      {[...buckets].map(([k, items]) =>
+        visible.has(k) ? <group key={k} userData={{ chunk: k }}>{items}</group> : null,
+      )}
+    </>
+  );
+};
+//#endregion 🧱Chunking
+```
+
+### Mesh pool (central, ref-counted, instanced)
+
+```ts
+//#region 🏊Pool
+interface PoolEntry { gltf: GLTF; refCount: number; instanced?: InstancedMesh }
+const pool = new Map<string, PoolEntry>();
+
+export const useMesh = (url: string): Object3D | null => {
+  const gltf = useGLTF(url);                                // suspends until loaded
+  useEffect(() => {
+    const e = pool.get(url) ?? { gltf, refCount: 0 };
+    e.refCount += 1;
+    pool.set(url, e);
+    return () => {
+      const cur = pool.get(url); if (!cur) return;
+      cur.refCount -= 1;
+      if (cur.refCount <= 0) { useGLTF.clear(url); pool.delete(url); }
+    };
+  }, [url]);
+  return gltf?.scene ?? null;
+};
+
+useGLTF.preload = useGLTF.preload ?? (() => {});             // satisfies tree-shake
+//#endregion 🏊Pool
+```
+
+`<Object>` consumes the pool entry; objects sharing a `meshUrl` are grouped into one `<Instances>` per chunk via DREI `<Instances>/<Instance>` so each unique mesh issues a single draw call per chunk.
+
+### Coordinate conversion (semio plane → three)
+
+```ts
+//#region 📐Coords
+import { Matrix4, Quaternion, Vector3 } from "three";
+
+export const semioPointToThree = (p: { x: number; y: number; z: number }): Vec3 => [p.x, p.z, -p.y];
+export const semioVectorToThree = semioPointToThree;
+
+/** 🧭 Semio plane (Z-up RH) → three (Y-up RH) origin + quaternion. */
+export const semioPlaneToThree = (plane: SemioPlane): { origin: Vec3; orientation: Quat } => {
+  const x = new Vector3(...semioVectorToThree(plane.xAxis));
+  const y = new Vector3(...semioVectorToThree(plane.yAxis));
+  const z = new Vector3().crossVectors(x, y).normalize();
+  const o = semioPointToThree(plane.origin);
+  const q = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
+  return { origin: o, orientation: [q.x, q.y, q.z, q.w] };
+};
+//#endregion 📐Coords
+```
+
+### Relocate + connect (replaces drag)
+
+```tsx
+//#region ✋Relocate
+export const useRelocate = (objectId: string) => {
+  const store = useSceneStore();
+  const mode = store.relocateModeFor(objectId);
+  const start = useCallback((m: SceneRelocateMode) => store.beginRelocate(objectId, m), [objectId]);
+  const update = (next: { origin?: Vec3; orientation?: Quat; scale?: Vec3 }) =>
+    store.updateRelocate(objectId, next);
+  const commit = () => {
+    const cand = store.findBestConnectCandidate(objectId); // proximity radius + compat catalog
+    if (cand) {
+      store.emit("proximityConnect", cand);                 // 🧲 snap on release
+      store.snapObjectToVortex(objectId, cand);
+    }
+    store.endRelocate(objectId);
+  };
+  return { mode, start, update, commit, cancel: () => store.cancelRelocate(objectId) };
+};
+//#endregion ✋Relocate
+```
+
+```tsx
+//#region 🪝Object + TransformControls
+export const Object = (props: SceneObjectProps) => {
+  const mesh = useMesh(props.meshUrl);
+  const ref = useRef<Group>(null!);
+  const { mode, start, update, commit } = useRelocate(props.id);
+  return (
+    <>
+      <group
+        ref={ref}
+        position={props.origin}
+        quaternion={props.orientation}
+        scale={props.scale}
+        onClick={(e) => (e.stopPropagation(), start(props.relocate || "translate"))}
+        userData={{ sceneObjectId: props.id }}
+      >
+        {mesh && <primitive object={mesh.clone()} />}
+        {props.children /* vortices, magnets */}
+      </group>
+      {props.selected && mode && (
+        <TransformControls
+          object={ref}
+          mode={mode}
+          onObjectChange={() => update({
+            origin: ref.current.position.toArray() as Vec3,
+            orientation: ref.current.quaternion.toArray() as Quat,
+          })}
+          onMouseUp={commit}
+        />
+      )}
+    </>
+  );
+};
+//#endregion 🪝Object
+```
+
+### Compatibility lookup (parity with board)
+
+```ts
+//#region 🧩Compat
+export const isCompatible = (
+  a: { kind?: string }, b: { kind?: string },
+  table: readonly SceneKindCompatEntry[],
+) => table.some((e) =>
+  (e.source === a.kind && e.target === b.kind) ||
+  (e.bidirectional && e.source === b.kind && e.target === a.kind),
+);
+//#endregion 🧩Compat
+```
+
+### Fixture I/O (1:1 with board ids)
+
+```ts
+//#region 🧾Fixture
+export const SCENE_FIXTURE_DRAG_V1_MIME = "application/x-elements-scene-fixture+json;v=1";
+export interface SceneFixtureV1 {
+  schema: "elements.scene.fixture/v1";
+  camera: SceneCameraState;
+  kindCatalogs: SceneKindCatalogBundle;
+  ties: SceneTieProps[];
+  objects: Array<SceneObjectProps & { vortices: SceneVortexProps[]; magnets?: SceneMagnetProps[] }>;
+}
+export const parseSceneFixtureV1 = (raw: unknown): SceneFixtureV1 => { /* schema-guarded parse */ };
+export const encodeSceneFixtureForDragV1 = (f: SceneFixtureV1) => JSON.stringify(f);
+//#endregion 🧾Fixture
+```
+
+### Bake-nakagin (offline tool, lives in [elements/client/lib/scene/fixtures/bake/bake.ts](elements/client/lib/scene/fixtures/bake/bake.ts))
+
+This is the only file in the scene tree that touches semio. It is invoked manually via `bun ./script.ts bake-nakagin`; the scene runtime, play site and tests do not import it.
+
+```ts
+// fixtures/bake/bake.ts — offline only. NEVER imported by scene/react, scene/play, or scene tests.
+import { readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
+import { flattenDesign } from "@semio/js";                         // 🚧 offline-only import
+import { semioPlaneToThree, semioPointToThree, semioVectorToThree, type SceneFixtureV1 } from "../../react/index";
+
+const repo = (p: string) => join(import.meta.dir, "../../../../../..", p);
+
+export const bakeNakaginScene = () => {
+  const design = JSON.parse(readFileSync(repo("semio/assets/fixtures/nakagin-capsule-tower.shallow.design.semio.json"), "utf8"));
+  const kit    = JSON.parse(readFileSync(repo("semio/assets/fixtures/metabolism.kit.light.semio.json"), "utf8"));
+  const board  = JSON.parse(readFileSync(repo(".storybook/fixtures/nakagin-capsule-tower.board.json"), "utf8"));
+  const flat   = flattenDesign(design, kit);
+
+  const meshUrl = (typeId: string) => {
+    const t = kit.types.find((x: any) => x.id === typeId);
+    const rep = t.representations.find((r: any) => r.file.endsWith(".glb"));
+    return `/meshes/${basename(rep.file)}`;
+  };
+
+  const objects = flat.pieces.map((p: any) => {
+    const { origin, orientation } = semioPlaneToThree(p.pose.plane);
+    return {
+      id: p.id, objectKind: `semio.metabolism.light.node.${p.type.id}`,
+      label: p.name, meshUrl: meshUrl(p.type.id), origin, orientation,
+      vortices: p.type.connectors.map((c: any) => ({
+        id: `${p.id}:${c.id}`, vortexKind: `semio.metabolism.light.handle.${c.id}`,
+        position: semioPointToThree(c.point), direction: semioVectorToThree(c.direction), radius: 0.3,
+      })),
+    };
+  });
+
+  const scene: SceneFixtureV1 = {
+    schema: "elements.scene.fixture/v1",
+    camera: { position: [80, 80, 80], target: [0, 20, 0], zoom: 1 },
+    kindCatalogs: board.kindCatalogs,                              // 🪞 reuse 1:1 (ids match)
+    ties: board.edges,                                             // 🪞 source/target ids identical
+    objects,
+  };
+  writeFileSync(repo("elements/client/lib/scene/fixtures/nakagin-capsule-tower.scene.json"), JSON.stringify(scene, null, 2));
+};
+
+if (import.meta.main) bakeNakaginScene();
+```
+
+In `scene/script.ts` the gate stays lazy so semio is only resolved when explicitly baking:
+
+```ts
+if (command === "bake-nakagin") {
+  const { bakeNakaginScene } = await import("./fixtures/bake/bake.ts");
+  bakeNakaginScene();
+  process.exit(0);
+}
+```
+
+Note: `semioPlaneToThree` / `semioPointToThree` / `semioVectorToThree` are pure math helpers exported from `scene/react/index.tsx` (no semio runtime — just three.js + numbers). The bake tool reuses them so the conversion lives in exactly one place.
+
+### Play site skeleton ([elements/client/lib/scene/play/index.tsx](elements/client/lib/scene/play/index.tsx))
+
+```tsx
+import fixture from "../fixtures/nakagin-capsule-tower.scene.json";
+import { Scene, Object as SObject, Tie, Vortex, parseSceneFixtureV1 } from "../react/index";
+
+const App = () => {
+  const f = useMemo(() => parseSceneFixtureV1(fixture), []);
+  const [mode, setMode] = useState<SceneRelocateMode>("translate");
+  return (
+    <UI {...uiConfig}>
+      <RelocateToolbar value={mode} onChange={setMode} />
+      <Scene camera={f.camera} kindCatalogs={f.kindCatalogs} kindCompatibility={f.kindCatalogs.compat}
+             relocateMode={mode}
+             onConnect={(p) => console.log("[scene] connect", p)}
+             onProximityConnect={(p) => console.log("[scene] proximity", p)}>
+        {f.objects.map((o) => (
+          <SObject key={o.id} {...o} relocate={mode}>
+            {o.vortices.map((v) => <Vortex key={v.id} {...v} />)}
+          </SObject>
+        ))}
+        {f.ties.map((t) => <Tie key={t.id} {...t} />)}
+      </Scene>
+    </UI>
+  );
+};
+```
 
 ## Ticket flow
 
