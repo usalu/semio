@@ -3814,14 +3814,9 @@ mod board_host {
 			}
 		}
 
-		/// @emoji 💠 Adds ids that left `prev` but not in `next` to exit chrome; removes ids that re‑entered selection.
-		fn apply_selection_exit_delta(&mut self, prev: &BTreeSet<String>, next: &BTreeSet<String>) {
-			for id in prev.difference(next) {
-				self.selection_exit_highlight.insert(id.clone());
-			}
-			for id in next {
-				self.selection_exit_highlight.remove(id);
-			}
+		/// @emoji 💠 Exit chrome lists only ids dropped in this transition (`prev` \\ `next`), not prior steps.
+		fn set_selection_exit_last_transition(&mut self, prev: &BTreeSet<String>, next: &BTreeSet<String>) {
+			self.selection_exit_highlight = prev.difference(next).cloned().collect();
 		}
 
 		fn prune_selection_exit_dead(&mut self) {
@@ -3853,7 +3848,7 @@ mod board_host {
 				return;
 			}
 			let prev = self.selection.clone();
-			self.apply_selection_exit_delta(&prev, &next);
+			self.set_selection_exit_last_transition(&prev, &next);
 			self.selection = next;
 			self.sync_selection_flags_to_objects();
 			self.push_select_event();
@@ -3871,7 +3866,7 @@ mod board_host {
 			self.last_select_emit_sig = Some(sig);
 			if next != self.selection {
 				let prev = self.selection.clone();
-				self.apply_selection_exit_delta(&prev, &next);
+				self.set_selection_exit_last_transition(&prev, &next);
 				self.selection = next;
 				self.sync_selection_flags_to_objects();
 			}
@@ -3943,11 +3938,11 @@ mod board_host {
 			(node_scale * h.scale * self.handle_kind_scale(h.handle_kind.as_str())).max(1e-9)
 		}
 
-		fn effective_handle_radius(&self, h: &HandleData) -> f64 {
+		pub(crate) fn effective_handle_radius(&self, h: &HandleData) -> f64 {
 			h.radius * self.effective_handle_scale(h)
 		}
 
-		fn handle_world_pos(&self, h: &HandleData) -> Option<Point> {
+		pub(crate) fn handle_world_pos(&self, h: &HandleData) -> Option<Point> {
 			let n = self.nodes.get(&h.node_id)?;
 			Some(match n.shape {
 				NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n), h.angle),
@@ -4825,7 +4820,7 @@ mod board_host {
 			}
 			let prev_sel = self.selection.clone();
 			if prev_sel != new_selection {
-				self.apply_selection_exit_delta(&prev_sel, &new_selection);
+				self.set_selection_exit_last_transition(&prev_sel, &new_selection);
 			}
 			self.selection = new_selection;
 			for n in self.nodes.values_mut() {
@@ -4840,21 +4835,9 @@ mod board_host {
 			for w in self.wires.values_mut() {
 				w.selected = self.selection.contains(&w.id);
 			}
-			self.selection_exit_highlight = desc
-				.selection_exit_highlight_ids
-				.iter()
-				.filter(|id| {
-					self.nodes.contains_key(*id)
-						|| self.handles.contains_key(*id)
-						|| self.edges.contains_key(*id)
-						|| self.wires.contains_key(*id)
-				})
-				.cloned()
-				.collect();
+			self.prune_selection_exit_dead();
 			if prev_sel != self.selection {
-				let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
-				sorted.sort();
-				self.push_event("select", json!({ "ids": sorted }));
+				self.push_select_event();
 			}
 			Ok(())
 		}
@@ -5619,6 +5602,7 @@ mod board_host {
 		}
 
 		pub fn delete_selection(&mut self) {
+			let prev_sel = self.selection.clone();
 			let edge_ids: Vec<_> = self.selection.iter().filter(|id| self.edges.contains_key(*id)).cloned().collect();
 			for id in &edge_ids {
 				self.edges.remove(id);
@@ -5672,6 +5656,9 @@ mod board_host {
 			for id in node_ids {
 				self.selection.remove(&id);
 			}
+			let next_sel = self.selection.clone();
+			self.set_selection_exit_last_transition(&prev_sel, &next_sel);
+			self.prune_selection_exit_dead();
 			self.sync_selection_flags_to_objects();
 			self.push_select_event();
 		}
@@ -7498,6 +7485,23 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_selection_exit_highlight_only_last_transition() {
+		let mut h = BoardHost::new();
+		h.set_size(400, 300, 1.0);
+		h.sync_descriptor(&sample_scene()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into(), "e1".into()]);
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["e1".into()]);
+		let _ = h.drain_events_json();
+		assert!(h.selection_exit_highlight.contains("a"));
+		h.set_selection_ids(&[]);
+		let _ = h.drain_events_json();
+		assert!(!h.selection_exit_highlight.contains("a"));
+		assert!(h.selection_exit_highlight.contains("e1"));
+	}
+
+	#[test]
 	fn board_host_cancel_area_select_restores_initial_selection() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
@@ -7898,6 +7902,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into(), "e1".into()]);
@@ -7931,6 +7936,7 @@ mod host_tests {
 			radius: Some(40.0),
 			width: None,
 			height: None,
+			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
@@ -8659,10 +8665,7 @@ mod host_tests {
 		desc.handles[0].scale = Some(0.5);
 		h.sync_descriptor(&desc).unwrap();
 		let ha = h.handles.get("a:h0").unwrap();
-		let pos = h.handle_world_pos(ha).unwrap();
-		assert!((pos.x - 120.0).abs() < 1e-6);
-		assert!(pos.y.abs() < 1e-6);
-		assert!((h.effective_handle_radius(ha) - 24.0).abs() < 1e-6);
+		assert_eq!(h.resolve_hit_world(Point::new(120.0, 0.0)).as_deref(), Some("a:h0"));
 		assert!((h.indirect_handle_marker_radius_world(ha) - 96.0).abs() < 1e-6);
 	}
 
