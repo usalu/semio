@@ -31,6 +31,7 @@ import {
 	type SceneFixtureV1,
 	type SceneKindCatalogBundle,
 	type SceneKindCompatEntry,
+	type SceneLodKind,
 	type SceneRelocateMode,
 } from "../react/index";
 import "./globals.css";
@@ -82,7 +83,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [proximityCount, setProximityCount] = useState(0);
 	const [connectCount, setConnectCount] = useState(0);
-	const [indirectCount, setIndirectCount] = useState(0);
+	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
 	const blockedVortexFullIds = useMemo(
@@ -162,26 +163,29 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 				</ToolbarZone>
 				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
 					<span data-e2e-selected>{selectedId ?? "—"}</span>
+					<span data-e2e-scene-lod>{sceneLodTag}</span>
 					<span data-e2e-proximity-count>{proximityCount}</span>
 					<span data-e2e-connect-count>{connectCount}</span>
 					<span data-e2e-indirect-count>{indirectCount}</span>
 				</div>
 			</div>
 			<div className="relative min-h-0 flex-1">
-				<Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-					<Scene
-						className="absolute inset-0"
-						camera={fixture.camera}
-						kindCatalogs={kindCatalogs}
-						kindCompatibility={kindCompatibility}
-						blockedVortexFullIds={blockedVortexFullIds}
-						proximityRadius={24}
-						relocateMode={relocateMode}
-						onSelect={onSelect}
-						onConnect={onConnect}
-						onIndirectConnect={onIndirectConnect}
-						onProximityConnect={onProximityConnect}
-					>
+				<Scene
+					className="absolute inset-0"
+					camera={fixture.camera}
+					kindCatalogs={kindCatalogs}
+					kindCompatibility={kindCompatibility}
+					blockedVortexFullIds={blockedVortexFullIds}
+					proximityRadius={24}
+					relocateMode={relocateMode}
+					gridSnapEnabled
+					onLodChange={setSceneLodTag}
+					onSelect={onSelect}
+					onConnect={onConnect}
+					onIndirectConnect={onIndirectConnect}
+					onProximityConnect={onProximityConnect}
+				>
+					<Suspense fallback={null}>
 						{fixture.objects.map((o) => (
 							<SceneObject
 								key={o.id}
@@ -203,8 +207,8 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 						{fixture.ties.map((t) => (
 							<SceneTie key={t.id} {...t} />
 						))}
-					</Scene>
-				</Suspense>
+					</Suspense>
+				</Scene>
 			</div>
 		</div>
 	);

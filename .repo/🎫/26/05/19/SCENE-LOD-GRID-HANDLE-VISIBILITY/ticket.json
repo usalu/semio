@@ -1,0 +1,10 @@
+{
+  "title": "Scene Lod Grid Handle Visibility",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Scene package: same LOD concept as board, grid progression, handle visibility per LOD, optional per-LOD handle meshes from user.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪4854f5151158476c9d33f5d9ecf4a88b"
+  ]
+}

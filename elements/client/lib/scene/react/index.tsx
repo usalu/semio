@@ -19,9 +19,11 @@ import {
 import {
 	BufferGeometry,
 	Float32BufferAttribute,
+	GridHelper,
 	LineBasicMaterial,
 	Frustum,
 	Matrix4,
+	PerspectiveCamera as ThreePerspectiveCamera,
 	Plane,
 	Quaternion,
 	Raycaster,
@@ -49,6 +51,31 @@ export interface SceneCameraState {
 	zoom: number;
 }
 
+/** @emoji 📶 Board-aligned scene LOD band label (`data-scene-lod` on the canvas shell). */
+export type SceneLodKind = "minimap" | "overview" | "normal" | "detail" | "micro";
+
+/** @emoji 📐 LOD zoom boundaries for pseudo-zoom from orbit camera distance (same semantics as board CSS zoom bands). */
+export interface SceneLodZoomThresholds {
+	minimapMaxZoom: number;
+	overviewMaxZoom: number;
+	normalMaxZoom: number;
+	detailMaxZoom: number;
+}
+
+/** @emoji 📐 Default LOD thresholds aligned with the sketch board canvas defaults. */
+export const DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS: SceneLodZoomThresholds = {
+	minimapMaxZoom: 0.15,
+	overviewMaxZoom: 0.35,
+	normalMaxZoom: 1.25,
+	detailMaxZoom: 2.5,
+};
+
+/** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
+export const SCENE_LOD_GRID_MAJOR_QUANTUM = 10;
+
+/** @emoji 📐 Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
+export const DEFAULT_SCENE_LOD_GRID_FACTOR = 10;
+
 export interface SceneVortexProps {
 	id: string;
 	vortexKind?: string;
@@ -57,6 +84,8 @@ export interface SceneVortexProps {
 	radius?: number;
 	visible?: boolean;
 	handleMeshUrl?: string;
+	/** @emoji 🎨 Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
+	handleMeshByLod?: Partial<Record<SceneLodKind, string>>;
 	children?: ReactNode;
 }
 
@@ -164,6 +193,12 @@ export interface SceneLinkTargetRingPayload {
 	readonly vortexFullIds: readonly string[];
 }
 
+export interface SceneLinkIndirectPickAwait {
+	readonly sourceFullId: string;
+	readonly targetObjectId: string;
+	readonly candidates: readonly string[];
+}
+
 export interface SceneCanvasProps {
 	camera?: Partial<SceneCameraState>;
 	chunkSize?: number;
@@ -174,7 +209,19 @@ export interface SceneCanvasProps {
 	proximityRadius?: number;
 	relocateMode?: SceneRelocateMode;
 	selectionMode?: SceneSelectionMode;
+	/** @emoji 📶 LOD zoom thresholds for pseudo-zoom derived from orbit camera distance. */
+	lodZoomThresholds?: SceneLodZoomThresholds;
+	/** @emoji 📏 Orbit distance at which pseudo-zoom is ~1 (tune to scene extent). */
+	lodDistanceReference?: number;
+	/** @emoji 📐 Multiplier for LOD grid steps (board `grid_factor`). */
+	gridFactor?: number;
+	/** @emoji 📐 When true, draw a world `GridHelper` stepped by the current LOD band grid. */
+	showLodGrid?: boolean;
+	/** @emoji 🧲 When true, translate relocate snaps to the finest visible LOD grid step (board `grid_snap_enabled`). */
+	gridSnapEnabled?: boolean;
 	onCamera?: (s: SceneCameraState) => void;
+	/** @emoji 📶 Emits whenever the resolved scene LOD band changes. */
+	onLodChange?: (lod: SceneLodKind) => void;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
 	onRelocate?: (p: SceneRelocatePayload) => void;
 	onConnect?: (p: SceneTieLinkPayload) => void;
@@ -218,6 +265,177 @@ export function planeBasisToThreeJs(plane: {
 }
 //#endregion 📐Coords
 
+//#region 📶Lod
+/** @emoji 📶 Resolves scene LOD from pseudo-zoom using explicit thresholds (same band order as the sketch board surface). */
+export function resolveSceneLodLabelFromThresholds(zoom: number, t: SceneLodZoomThresholds): SceneLodKind {
+	const z = zoom;
+	if (z < t.minimapMaxZoom) return "minimap";
+	if (z < t.overviewMaxZoom) return "overview";
+	if (z < t.normalMaxZoom) return "normal";
+	if (z < t.detailMaxZoom) return "detail";
+	return "micro";
+}
+
+/** @emoji 📏 Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
+export function scenePseudoZoomFromOrbitDistance(distance: number, reference: number): number {
+	const d = Math.max(distance, 1e-6);
+	return reference / d;
+}
+
+/** @emoji 📐 Visible LOD grid / relocate snap step in world units (mirrors sketch board WASM `lod_visible_grid_snap_step_world`). */
+export function sceneLodVisibleGridSnapStepWorld(lod: SceneLodKind, gridFactor: number): number | null {
+	const f = gridFactor;
+	switch (lod) {
+		case "minimap":
+			return null;
+		case "overview":
+			return 10 * f;
+		case "normal":
+			return 2.5 * f;
+		case "detail":
+			return 0.5 * f;
+		case "micro":
+			return 0.1 * f;
+		default:
+			return null;
+	}
+}
+
+/** @emoji 🌀 True when primary handle visuals are drawn (board `draw_handles`: normal | detail | micro). */
+export function sceneHandlePrimaryVisualVisibleAtLod(lod: SceneLodKind): boolean {
+	return lod === "normal" || lod === "detail" || lod === "micro";
+}
+
+/** @emoji 🌀 Overview uses invisible pick proxies when primary handle GLB is hidden (minimap has no handle picks). */
+export function sceneHandlePickProxyAtLod(lod: SceneLodKind): boolean {
+	return lod === "overview";
+}
+
+export interface SceneLodContextValue {
+	readonly lod: SceneLodKind;
+	readonly lodGridStepWorld: number | null;
+	readonly gridFactor: number;
+	readonly gridSnapEnabled: boolean;
+}
+
+const SceneLodContext = createContext<SceneLodContextValue | null>(null);
+
+/** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
+export function useSceneLod(): SceneLodContextValue {
+	const v = useContext(SceneLodContext);
+	if (!v) throw new Error("Scene LOD missing");
+	return v;
+}
+
+function SceneLodGridHelper() {
+	const lod = useSceneLod();
+	const grid = useMemo(() => {
+		const step = lod.lodGridStepWorld;
+		if (step == null || !Number.isFinite(step) || step <= 0) return null;
+		const size = 12_000;
+		const divs = Math.min(512, Math.max(2, Math.round(size / step)));
+		return new GridHelper(size, divs, 0x8899aa, 0x445566);
+	}, [lod.lodGridStepWorld]);
+	useEffect(
+		() => () => {
+			grid?.dispose();
+		},
+		[grid],
+	);
+	if (!grid) return null;
+	return <primitive object={grid} position={[0, 0, 0]} />;
+}
+
+function SceneLodFrameRunner(props: {
+	readonly lodKindRef: MutableRefObject<SceneLodKind>;
+	readonly thresholds: SceneLodZoomThresholds;
+	readonly distanceReference: number;
+	readonly gridFactor: number;
+	readonly gridSnapEnabled: boolean;
+	readonly onCtx: (next: SceneLodContextValue) => void;
+	readonly onLodChange?: (lod: SceneLodKind) => void;
+}) {
+	const cam = useThree((s) => s.camera);
+	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+	const tmpT = useMemo(() => new Vector3(), []);
+	const prevLod = useRef<SceneLodKind | null>(null);
+	const ctxSig = useRef("");
+	useFrame(() => {
+		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
+		const dist = cam.position.distanceTo(tgt);
+		const pseudo = scenePseudoZoomFromOrbitDistance(dist, props.distanceReference);
+		const next = resolveSceneLodLabelFromThresholds(pseudo, props.thresholds);
+		props.lodKindRef.current = next;
+		const lodGridStepWorld = sceneLodVisibleGridSnapStepWorld(next, props.gridFactor);
+		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+		if (ctxSig.current !== sig) {
+			ctxSig.current = sig;
+			props.onCtx({
+				lod: next,
+				lodGridStepWorld,
+				gridFactor: props.gridFactor,
+				gridSnapEnabled: props.gridSnapEnabled,
+			});
+		}
+		if (prevLod.current !== next) {
+			prevLod.current = next;
+			props.onLodChange?.(next);
+		}
+	});
+	return null;
+}
+
+function SceneLodBridge(props: {
+	readonly children: ReactNode;
+	readonly lodKindRef: MutableRefObject<SceneLodKind>;
+	readonly thresholds: SceneLodZoomThresholds;
+	readonly distanceReference: number;
+	readonly gridFactor: number;
+	readonly gridSnapEnabled: boolean;
+	readonly showLodGrid: boolean;
+	readonly onLodChange?: (lod: SceneLodKind) => void;
+}) {
+	const [lodCtx, setLodCtx] = useState<SceneLodContextValue>(() => ({
+		lod: "normal",
+		lodGridStepWorld: sceneLodVisibleGridSnapStepWorld("normal", props.gridFactor),
+		gridFactor: props.gridFactor,
+		gridSnapEnabled: props.gridSnapEnabled,
+	}));
+	const onCtx = useCallback(
+		(next: SceneLodContextValue) => {
+			setLodCtx((prev) => {
+				if (
+					prev.lod === next.lod &&
+					prev.lodGridStepWorld === next.lodGridStepWorld &&
+					prev.gridFactor === next.gridFactor &&
+					prev.gridSnapEnabled === next.gridSnapEnabled
+				) {
+					return prev;
+				}
+				return next;
+			});
+		},
+		[],
+	);
+	const v = useMemo(() => lodCtx, [lodCtx]);
+	return (
+		<SceneLodContext.Provider value={v}>
+			<SceneLodFrameRunner
+				lodKindRef={props.lodKindRef}
+				thresholds={props.thresholds}
+				distanceReference={props.distanceReference}
+				gridFactor={props.gridFactor}
+				gridSnapEnabled={props.gridSnapEnabled}
+				onCtx={onCtx}
+				onLodChange={props.onLodChange}
+			/>
+			{props.showLodGrid ? <SceneLodGridHelper /> : null}
+			{props.children}
+		</SceneLodContext.Provider>
+	);
+}
+//#endregion 📶Lod
+
 //#region 🧾Fixture
 function isVec3(v: unknown): v is Vec3 {
 	return Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === "number");
@@ -225,6 +443,19 @@ function isVec3(v: unknown): v is Vec3 {
 
 function isQuat(v: unknown): v is Quat {
 	return Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number");
+}
+
+const SCENE_LOD_KINDS: readonly SceneLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+
+function parseHandleMeshByLod(v: unknown): Partial<Record<SceneLodKind, string>> | undefined {
+	if (!v || typeof v !== "object") return undefined;
+	const o = v as Record<string, unknown>;
+	const out: Partial<Record<SceneLodKind, string>> = {};
+	for (const k of SCENE_LOD_KINDS) {
+		const s = o[k];
+		if (typeof s === "string" && s.length) out[k] = s;
+	}
+	return Object.keys(out).length ? out : undefined;
 }
 
 export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
@@ -267,6 +498,7 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 				if (!v || typeof v !== "object") continue;
 				const vx = v as Record<string, unknown>;
 				if (typeof vx.id !== "string" || !isVec3(vx.position)) continue;
+				const handleMeshByLod = parseHandleMeshByLod(vx.handleMeshByLod);
 				vortices.push({
 					id: vx.id,
 					...(typeof vx.vortexKind === "string" ? { vortexKind: vx.vortexKind } : {}),
@@ -274,6 +506,7 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 					...(isVec3(vx.direction) ? { direction: vx.direction } : {}),
 					...(typeof vx.radius === "number" ? { radius: vx.radius } : {}),
 					...(typeof vx.handleMeshUrl === "string" ? { handleMeshUrl: vx.handleMeshUrl } : {}),
+					...(handleMeshByLod ? { handleMeshByLod } : {}),
 				});
 			}
 		}
@@ -486,6 +719,7 @@ export interface SceneVortexBindingMeta {
 	readonly objectId: string;
 	readonly objectKind: string | undefined;
 	readonly vortexKind: string | undefined;
+	readonly radiusWorld: number;
 }
 
 export interface SceneRegistryValue {
@@ -511,6 +745,7 @@ export interface SceneRegistryValue {
 	linkDragSourceFullId: string | null;
 	linkCompatibleTargetFullIds: ReadonlySet<string>;
 	linkHoverRingFullId: string | null;
+	linkIndirectPickAwait: SceneLinkIndirectPickAwait | null;
 	linkEndWorldRef: MutableRefObject<Vector3 | null>;
 	beginLinkDragFromVortex(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined): void;
 	cancelLinkDrag(): void;
@@ -518,6 +753,8 @@ export interface SceneRegistryValue {
 	attachLinkThreeEnv(env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null): void;
 	updateLinkPointer(clientX: number, clientY: number): void;
 	commitLinkPointer(clientX: number, clientY: number): void;
+	updateIndirectPickPointer(clientX: number, clientY: number): void;
+	commitIndirectPickPointerDown(clientX: number, clientY: number): void;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
 	onConnect?: (p: SceneTieLinkPayload) => void;
 	onProximityConnect?: (p: SceneTieLinkPayload) => void;
@@ -608,6 +845,82 @@ function readSceneObjectIdFromObject(o: Object3D | null): string | null {
 	}
 	return null;
 }
+
+const SCENE_HANDLE_HIT_TOLERANCE_PX = 10;
+const SCENE_LINK_HANDLE_SNAP_EXTRA_PX = 22;
+const SCENE_LINK_COMMIT_SNAP_TIGHT_PX = 2;
+
+function worldToCanvasPx(world: Vector3, camera: Camera, gl: WebGLRenderer): { x: number; y: number } {
+	const v = world.clone().project(camera);
+	const w = gl.domElement.clientWidth;
+	const h = gl.domElement.clientHeight;
+	return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
+}
+
+function scenePixelsPerWorldUnitAt(camera: Camera, gl: WebGLRenderer, world: Vector3): number {
+	if (!(camera as ThreePerspectiveCamera).isPerspectiveCamera) return 1;
+	const pc = camera as ThreePerspectiveCamera;
+	const dist = pc.position.distanceTo(world);
+	const fovRad = (pc.fov * Math.PI) / 180;
+	const h = Math.max(1, gl.domElement.clientHeight);
+	return h / (2 * Math.tan(fovRad / 2) * Math.max(dist, 1e-6));
+}
+
+function sceneLinkSnapDragTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
+	const radPx = radiusWorld * mpp;
+	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_LINK_HANDLE_SNAP_EXTRA_PX + radPx * camera.zoom;
+}
+
+function sceneLinkSnapCommitTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
+	const radPx = radiusWorld * mpp;
+	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_LINK_COMMIT_SNAP_TIGHT_PX + radPx * camera.zoom;
+}
+
+function sceneLinkSnapCommitProximityOk(
+	targetFullId: string,
+	pointerWorld: Vector3,
+	camera: Camera,
+	gl: WebGLRenderer,
+	getVortexWorld: (id: string) => Vector3 | null,
+	metaRadius: (id: string) => number,
+): boolean {
+	const hw = getVortexWorld(targetFullId);
+	if (!hw) return false;
+	const pScr = worldToCanvasPx(pointerWorld, camera, gl);
+	const hScr = worldToCanvasPx(hw, camera, gl);
+	const d = Math.hypot(pScr.x - hScr.x, pScr.y - hScr.y);
+	return d <= sceneLinkSnapCommitTolerancePx(hw, metaRadius(targetFullId), camera, gl);
+}
+
+function sceneNearestLinkSnapFullId(args: {
+	lod: SceneLodKind;
+	pointerWorld: Vector3;
+	sourceFullId: string;
+	compat: ReadonlySet<string>;
+	blocked: ReadonlySet<string>;
+	camera: Camera;
+	gl: WebGLRenderer;
+	getVortexWorld: (id: string) => Vector3 | null;
+	metaRadius: (id: string) => number;
+}): string | null {
+	if (args.lod === "minimap") return null;
+	const pScr = worldToCanvasPx(args.pointerWorld, args.camera, args.gl);
+	let best: { d: number; id: string } | null = null;
+	for (const tid of args.compat) {
+		if (tid === args.sourceFullId) continue;
+		if (args.blocked.has(tid)) continue;
+		const hw = args.getVortexWorld(tid);
+		if (!hw) continue;
+		const hScr = worldToCanvasPx(hw, args.camera, args.gl);
+		const d = Math.hypot(hScr.x - pScr.x, hScr.y - pScr.y);
+		const tol = sceneLinkSnapDragTolerancePx(hw, args.metaRadius(tid), args.camera, args.gl);
+		if (d > tol) continue;
+		if (!best || d < best.d) best = { d, id: tid };
+	}
+	return best?.id ?? null;
+}
 //#endregion 🔗LinkGesture
 
 //#region 🧊Object
@@ -632,7 +945,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void }) => {
 			e.stopPropagation();
-			if (reg.linkDragActive) return;
+			if (reg.linkDragActive || reg.linkIndirectPickAwait) return;
 			if (reg.selectionMode === "single") {
 				reg.setSelectedObjectIds([props.id]);
 				reg.onSelect?.({ objectIds: [props.id], vortexIds: [] });
@@ -644,6 +957,15 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 
 	const quat = useMemo(() => quatToThree(props.orientation), [props.orientation]);
 	const scaleVec = useMemo(() => scaleToThree(props.scale), [props.scale]);
+	const lodCtx = useSceneLod();
+	const mode = props.relocate ?? reg.relocateMode;
+	const transSnap =
+		mode === "translate" &&
+		lodCtx.gridSnapEnabled &&
+		lodCtx.lodGridStepWorld != null &&
+		lodCtx.lodGridStepWorld > 0
+			? lodCtx.lodGridStepWorld
+			: undefined;
 	const showTc =
 		props.selected && reg.activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
 
@@ -663,7 +985,8 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 			{showTc && (
 				<TransformControls
 					object={tcTarget}
-					mode={props.relocate ?? reg.relocateMode}
+					mode={mode}
+					translationSnap={transSnap}
 					onMouseDown={() => {
 						const g = group.current;
 						if (g) {
@@ -683,7 +1006,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 						const afterScale = g.scale.toArray() as unknown as Vec3;
 						reg.onRelocate?.({
 							objectId: props.id,
-							mode: props.relocate ?? reg.relocateMode,
+							mode,
 							before: {
 								origin: before.origin.toArray() as unknown as Vec3,
 								orientation: before.quat.toArray() as unknown as Quat,
@@ -719,18 +1042,20 @@ function SceneVortexHandleGltf(props: { meshUrl: string; fullId: string; radius:
 function SceneVortexFallbackMesh(props: {
 	fullId: string;
 	radius: number;
-	highlight: "none" | "compatible" | "ring" | "source";
+	highlight: "none" | "compatible" | "ring" | "source" | "indirectRing";
 }) {
 	const color =
 		props.highlight === "compatible"
 			? "#22c55e"
 			: props.highlight === "ring"
 				? "#facc15"
-				: props.highlight === "source"
-					? "#94a3b8"
-					: "#38bdf8";
-	const emissive = props.highlight === "ring" ? "#ca8a04" : "#000000";
-	const emissiveIntensity = props.highlight === "ring" ? 0.45 : 0;
+				: props.highlight === "indirectRing"
+					? "#a78bfa"
+					: props.highlight === "source"
+						? "#94a3b8"
+						: "#38bdf8";
+	const emissive = props.highlight === "ring" || props.highlight === "indirectRing" ? "#ca8a04" : "#000000";
+	const emissiveIntensity = props.highlight === "ring" || props.highlight === "indirectRing" ? 0.45 : 0;
 	return (
 		<mesh userData={{ sceneVortexFullId: props.fullId }}>
 			<sphereGeometry args={[props.radius, 12, 12]} />
@@ -775,6 +1100,7 @@ export const SceneVortex = memo(function SceneVortex(
 						objectId: props.objectId,
 						objectKind: props.objectKind,
 						vortexKind: props.vortexKind,
+						radiusWorld: r,
 					},
 					node,
 				);
@@ -785,13 +1111,16 @@ export const SceneVortex = memo(function SceneVortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
-	const highlight: "none" | "compatible" | "ring" | "source" = reg.linkDragSourceFullId === fullId
+	const lodCtx = useSceneLod();
+	const highlight: "none" | "compatible" | "ring" | "source" | "indirectRing" = reg.linkDragSourceFullId === fullId
 		? "source"
 		: reg.linkHoverRingFullId === fullId
 			? "ring"
-			: reg.linkCompatibleTargetFullIds.has(fullId)
-				? "compatible"
-				: "none";
+			: reg.linkIndirectPickAwait?.candidates.includes(fullId) === true
+				? "indirectRing"
+				: reg.linkCompatibleTargetFullIds.has(fullId)
+					? "compatible"
+					: "none";
 
 	const onPointerDown = useCallback(
 		(e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
@@ -812,6 +1141,23 @@ export const SceneVortex = memo(function SceneVortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
+	const inIndirectRing = reg.linkIndirectPickAwait?.candidates.includes(fullId) === true;
+	const linger =
+		(reg.linkDragActive &&
+			(reg.linkDragSourceFullId === fullId ||
+				reg.linkHoverRingFullId === fullId ||
+				reg.linkCompatibleTargetFullIds.has(fullId))) ||
+		inIndirectRing;
+	const drawHandleBody = sceneHandlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
+	const pickProxy = sceneHandlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
+	const meshFromLod = props.handleMeshByLod?.[lodCtx.lod];
+	const meshUrl =
+		typeof meshFromLod === "string" && meshFromLod.length
+			? meshFromLod
+			: typeof props.handleMeshUrl === "string" && props.handleMeshUrl.length
+				? props.handleMeshUrl
+				: undefined;
+
 	const vis = props.visible !== false;
 	return (
 		<group
@@ -822,13 +1168,19 @@ export const SceneVortex = memo(function SceneVortex(
 			visible={vis}
 			onPointerDown={onPointerDown}
 		>
-			{props.handleMeshUrl ? (
-				<SceneVortexHandleGltf meshUrl={props.handleMeshUrl} fullId={fullId} radius={r} />
-			) : props.children ? (
+			{drawHandleBody && meshUrl ? (
+				<SceneVortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} />
+			) : drawHandleBody && props.children ? (
 				<group userData={{ sceneVortexFullId: fullId }}>{props.children}</group>
-			) : (
+			) : drawHandleBody ? (
 				<SceneVortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} />
-			)}
+			) : null}
+			{pickProxy ? (
+				<mesh userData={{ sceneVortexFullId: fullId }} renderOrder={-1}>
+					<sphereGeometry args={[r, 12, 12]} />
+					<meshBasicMaterial transparent opacity={0} depthWrite={false} />
+				</mesh>
+			) : null}
 		</group>
 	);
 });
@@ -881,7 +1233,8 @@ const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 //#region 🎬Scene
 function SceneOrbitGated({ target }: { target: Vec3 }) {
 	const reg = useSceneRegistry();
-	return <OrbitControls makeDefault enabled={!reg.linkDragActive} target={target as [number, number, number]} />;
+	const gate = reg.linkDragActive || reg.linkIndirectPickAwait !== null;
+	return <OrbitControls makeDefault enabled={!gate} target={target as [number, number, number]} />;
 }
 
 function SceneLinkThreeBinder() {
@@ -896,21 +1249,29 @@ function SceneLinkThreeBinder() {
 
 function SceneLinkWindowBridge() {
 	const reg = useSceneRegistry();
+	const linkBusy = reg.linkDragActive || reg.linkIndirectPickAwait !== null;
 	useEffect(() => {
-		if (!reg.linkDragActive) return;
+		if (!linkBusy) return;
 		const onMove = (e: PointerEvent) => {
-			reg.updateLinkPointer(e.clientX, e.clientY);
+			if (reg.linkDragActive) reg.updateLinkPointer(e.clientX, e.clientY);
+			else if (reg.linkIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
 		};
 		const onUp = (e: PointerEvent) => {
-			reg.commitLinkPointer(e.clientX, e.clientY);
+			if (reg.linkDragActive) reg.commitLinkPointer(e.clientX, e.clientY);
+		};
+		const onDown = (e: PointerEvent) => {
+			if (e.button !== 0) return;
+			if (reg.linkIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
 		};
 		window.addEventListener("pointermove", onMove);
 		window.addEventListener("pointerup", onUp, { capture: true });
+		window.addEventListener("pointerdown", onDown, true);
 		return () => {
 			window.removeEventListener("pointermove", onMove);
 			window.removeEventListener("pointerup", onUp, true);
+			window.removeEventListener("pointerdown", onDown, true);
 		};
-	}, [reg, reg.linkDragActive]);
+	}, [reg, linkBusy]);
 	return null;
 }
 
@@ -927,7 +1288,9 @@ function SceneLinkRubberBand() {
 	);
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
-		if (!reg.linkDragActive || !reg.linkDragSourceFullId) {
+		const wire =
+			(reg.linkDragActive || reg.linkIndirectPickAwait !== null) && reg.linkDragSourceFullId ? true : false;
+		if (!wire) {
 			pos.setXYZ(0, 0, 0);
 			pos.setXYZ(1, 0, 0);
 			pos.needsUpdate = true;
@@ -981,6 +1344,7 @@ function CameraReporter({
 
 function SceneRegistryProvider({
 	children,
+	lodKindRef,
 	kindCatalogs,
 	kindCompatibility,
 	blockedVortexFullIds,
@@ -996,6 +1360,7 @@ function SceneRegistryProvider({
 	onRelocate,
 }: {
 	children: ReactNode;
+	lodKindRef: MutableRefObject<SceneLodKind>;
 	kindCatalogs: SceneKindCatalogBundle | undefined;
 	kindCompatibility: readonly SceneKindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
@@ -1016,18 +1381,25 @@ function SceneRegistryProvider({
 	const [linkDragSourceFullId, setLinkDragSourceFullId] = useState<string | null>(null);
 	const [linkCompatibleTargetFullIds, setLinkCompatibleTargetFullIds] = useState<ReadonlySet<string>>(new Set());
 	const [linkHoverRingFullId, setLinkHoverRingFullId] = useState<string | null>(null);
+	const [linkIndirectPickAwait, setLinkIndirectPickAwait] = useState<SceneLinkIndirectPickAwait | null>(null);
 
 	const vortexGettersRef = useRef(new Map<string, VortexGetter>());
 	const vortexMetaRef = useRef(new Map<string, SceneVortexBindingMeta>());
 	const vortexPickRef = useRef(new Map<string, Object3D>());
 	const objectGroupMap = useRef(new Map<string, Group | null>());
 	const objectKindsRef = useRef(new Map<string, string | undefined>());
+	const indirectPickRef = useRef<SceneLinkIndirectPickAwait | null>(null);
+
+	useEffect(() => {
+		indirectPickRef.current = linkIndirectPickAwait;
+	}, [linkIndirectPickAwait]);
 
 	const linkSessionRef = useRef<{
 		sourceFullId: string;
 		sourceObjectId: string;
 		sourceCtx: SceneLinkHandleContext;
 		compat: Set<string>;
+		snapTargetFullId: string | null;
 	} | null>(null);
 	const linkEndWorldRef = useRef<Vector3 | null>(null);
 	const linkThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: Scene } | null>(null);
@@ -1076,11 +1448,13 @@ function SceneRegistryProvider({
 		setLinkDragSourceFullId(null);
 		setLinkCompatibleTargetFullIds(new Set());
 		setLinkHoverRingFullId(null);
+		setLinkIndirectPickAwait(null);
 		onLinkTargetRing?.({ source: "", objectId: null, vortexFullIds: [] });
 	}, [onLinkTargetRing]);
 
 	const beginLinkDragFromVortex = useCallback(
 		(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
+			if (indirectPickRef.current) return;
 			if (blockedVortexFullIds.has(fullId)) return;
 			const sourceCtx: SceneLinkHandleContext = { objectId, objectKind, vortexKind };
 			const compat = new Set<string>();
@@ -1098,7 +1472,14 @@ function SceneRegistryProvider({
 				compat.add(tid);
 				objectIds.add(meta.objectId);
 			}
-			linkSessionRef.current = { sourceFullId: fullId, sourceObjectId: objectId, sourceCtx, compat };
+			setLinkIndirectPickAwait(null);
+			linkSessionRef.current = {
+				sourceFullId: fullId,
+				sourceObjectId: objectId,
+				sourceCtx,
+				compat,
+				snapTargetFullId: null,
+			};
 			linkEndWorldRef.current = null;
 			setLinkDragActive(true);
 			setLinkDragSourceFullId(fullId);
@@ -1155,8 +1536,22 @@ function SceneRegistryProvider({
 				raycasterRef.current.ray.at(80, hitWorld);
 				linkEndWorldRef.current = hitWorld.clone();
 			}
+			const pw = linkEndWorldRef.current;
+			if (pw) {
+				session.snapTargetFullId = sceneNearestLinkSnapFullId({
+					lod: lodKindRef.current,
+					pointerWorld: pw,
+					sourceFullId: session.sourceFullId,
+					compat: session.compat,
+					blocked: blockedVortexFullIds,
+					camera: env.camera,
+					gl: env.gl,
+					getVortexWorld: (id) => vortexGettersRef.current.get(id)?.() ?? null,
+					metaRadius: (id) => vortexMetaRef.current.get(id)?.radiusWorld ?? 0.35,
+				});
+			} else session.snapTargetFullId = null;
 		},
-		[blockedVortexFullIds, collectPickRoots, onLinkTargetRing],
+		[blockedVortexFullIds, collectPickRoots, lodKindRef, onLinkTargetRing],
 	);
 
 	const commitLinkPointer = useCallback(
@@ -1172,9 +1567,29 @@ function SceneRegistryProvider({
 			ndcRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
 			raycasterRef.current.setFromCamera(ndcRef.current, env.camera);
 			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
-			const sourceFull = session.sourceFullId;
-			const drop = linkEndWorldRef.current;
+			const hitWorld = hitScratchRef.current;
+			let pointerWorld: Vector3;
+			if (hits.length > 0) {
+				pointerWorld = hits[0]!.point.clone();
+			} else if (raycasterRef.current.ray.intersectPlane(planeRef.current, hitWorld)) {
+				pointerWorld = hitWorld.clone();
+			} else {
+				raycasterRef.current.ray.at(80, hitWorld);
+				pointerWorld = hitWorld.clone();
+			}
 
+			const getV = (id: string) => vortexGettersRef.current.get(id)?.() ?? null;
+			const rad = (id: string) => vortexMetaRef.current.get(id)?.radiusWorld ?? 0.35;
+			const snapId = session.snapTargetFullId;
+			if (snapId && sceneLinkSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
+				const p = { source: session.sourceFullId, target: snapId };
+				onConnect?.(p);
+				onProximityConnect?.(p);
+				cancelLinkDrag();
+				return;
+			}
+
+			const sourceFull = session.sourceFullId;
 			for (const h of hits) {
 				const vf = readSceneVortexFullIdFromObject(h.object);
 				if (
@@ -1198,29 +1613,29 @@ function SceneRegistryProvider({
 						candidates.push(tid);
 					}
 					if (candidates.length === 1) {
-						onIndirectConnect?.({ source: sourceFull, target: candidates[0]! });
+						const p = { source: sourceFull, target: candidates[0]! };
+						onConnect?.(p);
+						onIndirectConnect?.(p);
 						cancelLinkDrag();
 						return;
 					}
-				}
-			}
-
-			if (drop) {
-				let best: { d: number; id: string } | null = null;
-				for (const tid of session.compat) {
-					if (blockedVortexFullIds.has(tid)) continue;
-					const meta = vortexMetaRef.current.get(tid);
-					if (!meta || meta.objectId === session.sourceObjectId) continue;
-					const w = vortexGettersRef.current.get(tid)?.();
-					if (!w) continue;
-					const d = w.distanceTo(drop);
-					if (d > proximityRadius) continue;
-					if (!best || d < best.d) best = { d, id: tid };
-				}
-				if (best) {
-					onProximityConnect?.({ source: sourceFull, target: best.id });
-					cancelLinkDrag();
-					return;
+					if (candidates.length > 1) {
+						linkSessionRef.current = null;
+						setLinkDragActive(false);
+						setLinkCompatibleTargetFullIds(new Set(candidates));
+						setLinkHoverRingFullId(null);
+						setLinkIndirectPickAwait({
+							sourceFullId: sourceFull,
+							targetObjectId: oid,
+							candidates,
+						});
+						onLinkTargetRing?.({
+							source: sourceFull,
+							objectId: oid,
+							vortexFullIds: candidates,
+						});
+						return;
+					}
 				}
 			}
 			cancelLinkDrag();
@@ -1231,9 +1646,67 @@ function SceneRegistryProvider({
 			collectPickRoots,
 			onConnect,
 			onIndirectConnect,
+			onLinkTargetRing,
 			onProximityConnect,
-			proximityRadius,
 		],
+	);
+
+	const updateIndirectPickPointer = useCallback(
+		(clientX: number, clientY: number) => {
+			const awaitPick = indirectPickRef.current;
+			const env = linkThreeRef.current;
+			if (!awaitPick || !env) return;
+			const rect = env.gl.domElement.getBoundingClientRect();
+			ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+			ndcRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+			raycasterRef.current.setFromCamera(ndcRef.current, env.camera);
+			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
+			let ring: string | null = null;
+			for (const h of hits) {
+				const vf = readSceneVortexFullIdFromObject(h.object);
+				if (vf && awaitPick.candidates.includes(vf)) {
+					ring = vf;
+					break;
+				}
+			}
+			setLinkHoverRingFullId((prev) => (prev === ring ? prev : ring));
+			const hitWorld = hitScratchRef.current;
+			if (hits.length > 0) {
+				linkEndWorldRef.current = hitWorld.copy(hits[0]!.point);
+			} else if (raycasterRef.current.ray.intersectPlane(planeRef.current, hitWorld)) {
+				linkEndWorldRef.current = hitWorld.clone();
+			} else {
+				raycasterRef.current.ray.at(80, hitWorld);
+				linkEndWorldRef.current = hitWorld.clone();
+			}
+		},
+		[collectPickRoots],
+	);
+
+	const commitIndirectPickPointerDown = useCallback(
+		(clientX: number, clientY: number, ev?: PointerEvent) => {
+			const awaitPick = indirectPickRef.current;
+			const env = linkThreeRef.current;
+			if (!awaitPick || !env) return;
+			const rect = env.gl.domElement.getBoundingClientRect();
+			ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+			ndcRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+			raycasterRef.current.setFromCamera(ndcRef.current, env.camera);
+			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
+			for (const h of hits) {
+				const vf = readSceneVortexFullIdFromObject(h.object);
+				if (vf && awaitPick.candidates.includes(vf)) {
+					const p = { source: awaitPick.sourceFullId, target: vf };
+					onConnect?.(p);
+					onIndirectConnect?.(p);
+					cancelLinkDrag();
+					ev?.stopImmediatePropagation();
+					return;
+				}
+			}
+			cancelLinkDrag();
+		},
+		[cancelLinkDrag, collectPickRoots, onConnect, onIndirectConnect],
 	);
 
 	const attachLinkThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null) => {
@@ -1281,6 +1754,7 @@ function SceneRegistryProvider({
 			linkDragSourceFullId,
 			linkCompatibleTargetFullIds,
 			linkHoverRingFullId,
+			linkIndirectPickAwait,
 			beginLinkDragFromVortex,
 			cancelLinkDrag,
 			findNearestProximityRelocate,
@@ -1294,6 +1768,8 @@ function SceneRegistryProvider({
 			attachLinkThreeEnv,
 			updateLinkPointer,
 			commitLinkPointer,
+			updateIndirectPickPointer,
+			commitIndirectPickPointerDown,
 			linkEndWorldRef,
 		}),
 		[
@@ -1317,6 +1793,7 @@ function SceneRegistryProvider({
 			linkDragSourceFullId,
 			linkCompatibleTargetFullIds,
 			linkHoverRingFullId,
+			linkIndirectPickAwait,
 			beginLinkDragFromVortex,
 			cancelLinkDrag,
 			findNearestProximityRelocate,
@@ -1330,6 +1807,8 @@ function SceneRegistryProvider({
 			attachLinkThreeEnv,
 			updateLinkPointer,
 			commitLinkPointer,
+			updateIndirectPickPointer,
+			commitIndirectPickPointerDown,
 		],
 	);
 
@@ -1385,6 +1864,12 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 
 function SceneInner(props: SceneCanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
+	const lodKindRef = useRef<SceneLodKind>("normal");
+	const thresholds = props.lodZoomThresholds ?? DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
+	const distanceReference = props.lodDistanceReference ?? 900;
+	const gridFactor = props.gridFactor ?? DEFAULT_SCENE_LOD_GRID_FACTOR;
+	const gridSnapEnabled = props.gridSnapEnabled ?? false;
+	const showLodGrid = props.showLodGrid === true;
 	const maxDist = 4000;
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
@@ -1393,6 +1878,7 @@ function SceneInner(props: SceneCanvasProps) {
 	const blocked = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
 	return (
 		<SceneRegistryProvider
+			lodKindRef={lodKindRef}
 			kindCatalogs={props.kindCatalogs}
 			kindCompatibility={props.kindCompatibility}
 			blockedVortexFullIds={blocked}
@@ -1407,28 +1893,53 @@ function SceneInner(props: SceneCanvasProps) {
 			onLinkTargetRing={props.onLinkTargetRing}
 			onRelocate={props.onRelocate}
 		>
-			<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
-			<SceneOrbitGated target={tgt} />
-			<SceneLinkThreeBinder />
-			<SceneLinkWindowBridge />
-			<SceneLinkRubberBand />
-			<CameraReporter target={tgt} zoom={zoom} onCamera={props.onCamera} />
-			<ambientLight intensity={0.45} />
-			<directionalLight position={[120, 180, 80]} intensity={0.85} />
-			<SceneChunks chunkSize={chunkSize} maxDistance={maxDist}>
-				{chunked}
-			</SceneChunks>
-			<group data-scene-unchunked>{rest}</group>
+			<SceneLodBridge
+				lodKindRef={lodKindRef}
+				thresholds={thresholds}
+				distanceReference={distanceReference}
+				gridFactor={gridFactor}
+				gridSnapEnabled={gridSnapEnabled}
+				showLodGrid={showLodGrid}
+				onLodChange={props.onLodChange}
+			>
+				<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
+				<SceneOrbitGated target={tgt} />
+				<SceneLinkThreeBinder />
+				<SceneLinkWindowBridge />
+				<SceneLinkRubberBand />
+				<CameraReporter target={tgt} zoom={zoom} onCamera={props.onCamera} />
+				<ambientLight intensity={0.45} />
+				<directionalLight position={[120, 180, 80]} intensity={0.85} />
+				<SceneChunks chunkSize={chunkSize} maxDistance={maxDist}>
+					{chunked}
+				</SceneChunks>
+				<group data-scene-unchunked>{rest}</group>
+			</SceneLodBridge>
 		</SceneRegistryProvider>
 	);
 }
 
 export function Scene(props: SceneCanvasProps & { className?: string; style?: CSSProperties }) {
-	const { children, className, style, ...rest } = props;
+	const { children, className, style, onLodChange, ...rest } = props;
+	const [shellLod, setShellLod] = useState<SceneLodKind>("normal");
+	const handleLod = useCallback(
+		(l: SceneLodKind) => {
+			setShellLod(l);
+			onLodChange?.(l);
+		},
+		[onLodChange],
+	);
 	return (
-		<div className={className} style={{ width: "100%", height: "100%", ...style }} data-scene-root>
+		<div
+			className={className}
+			style={{ width: "100%", height: "100%", ...style }}
+			data-scene-root
+			data-scene-lod={shellLod}
+		>
 			<Canvas gl={{ antialias: true }} dpr={[1, 2]}>
-				<SceneInner {...rest}>{children}</SceneInner>
+				<SceneInner {...rest} onLodChange={handleLod}>
+					{children}
+				</SceneInner>
 			</Canvas>
 		</div>
 	);
@@ -1437,6 +1948,25 @@ export function Scene(props: SceneCanvasProps & { className?: string; style?: CS
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	describe("resolveSceneLodLabelFromThresholds", () => {
+		it("classifies zoom bands", () => {
+			const t = DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
+			expect(resolveSceneLodLabelFromThresholds(0.1, t)).toBe("minimap");
+			expect(resolveSceneLodLabelFromThresholds(0.2, t)).toBe("overview");
+			expect(resolveSceneLodLabelFromThresholds(0.8, t)).toBe("normal");
+			expect(resolveSceneLodLabelFromThresholds(1.6, t)).toBe("detail");
+			expect(resolveSceneLodLabelFromThresholds(5, t)).toBe("micro");
+		});
+	});
+	describe("sceneLodVisibleGridSnapStepWorld", () => {
+		it("returns per-band steps", () => {
+			expect(sceneLodVisibleGridSnapStepWorld("minimap", 10)).toBe(null);
+			expect(sceneLodVisibleGridSnapStepWorld("overview", 10)).toBe(100);
+			expect(sceneLodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
+			expect(sceneLodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
+			expect(sceneLodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
+		});
+	});
 	describe("parseSceneFixtureV1", () => {
 		it("accepts minimal fixture", () => {
 			const f = parseSceneFixtureV1({
@@ -1454,6 +1984,32 @@ if (import.meta.vitest) {
 				],
 			});
 			expect(f?.objects[0]?.id).toBe("a");
+		});
+		it("parses vortex handleMeshByLod", () => {
+			const f = parseSceneFixtureV1({
+				schema: "elements.scene.fixture/v1",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				ties: [],
+				objects: [
+					{
+						id: "a",
+						meshUrl: "/m.glb",
+						origin: [0, 0, 0],
+						orientation: [0, 0, 0, 1],
+						vortices: [
+							{
+								id: "a:v1",
+								position: [0, 0, 0],
+								handleMeshUrl: "/fallback.glb",
+								handleMeshByLod: { detail: "/d.glb", micro: "/u.glb" },
+							},
+						],
+					},
+				],
+			});
+			const v = f?.objects[0]?.vortices[0];
+			expect(v?.handleMeshByLod?.detail).toBe("/d.glb");
+			expect(v?.handleMeshUrl).toBe("/fallback.glb");
 		});
 	});
 	describe("sceneChunkKey", () => {
