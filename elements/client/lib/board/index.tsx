@@ -639,6 +639,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 	});
 	});
 
+	renderer.reconcileSceneSelectedWithSelectionIds();
 	renderer.invalidate();
 }
 //#endregion 🔖Scene Sync

@@ -6070,6 +6070,23 @@ mod board_host {
 			}
 		}
 
+		/// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
+		pub fn cancel_area_select(&mut self) -> bool {
+			let prev = std::mem::replace(&mut self.interaction, Interaction::None);
+			match prev {
+				Interaction::Selection { initial_ids, .. } => {
+					self.set_selection_screen_preview(None);
+					let ids: Vec<_> = initial_ids.iter().cloned().collect();
+					self.set_selection_ids_gestured(&ids, None);
+					true
+				}
+				other => {
+					self.interaction = other;
+					false
+				}
+			}
+		}
+
 		fn node_world_bounds(&self, n: &NodeData, pad: f64) -> WorldBox {
 			let raw = match n.shape {
 				NodeShape::Rectangle => {
@@ -7065,6 +7082,11 @@ impl BoardSession {
 		self.state.borrow_mut().host.pointer_leave_screen();
 	}
 
+	#[wasm_bindgen(js_name = cancelAreaSelect)]
+	pub fn cancel_area_select_wasm(&mut self) -> bool {
+		self.state.borrow_mut().host.cancel_area_select()
+	}
+
 	#[wasm_bindgen(js_name = wheelScreen)]
 	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
 		self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
@@ -7365,6 +7387,25 @@ mod host_tests {
 		h.sync_descriptor(&d).unwrap();
 		assert!(h.selection_exit_highlight.contains("a"));
 		assert!(!h.selection_exit_highlight.contains("ghost"));
+	}
+
+	#[test]
+	fn board_host_cancel_area_select_restores_initial_selection() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into(), "b".into()]);
+		let _ = h.drain_events_json();
+		h.pointer_down_screen(5.0, 5.0, 0, false, false);
+		assert!(h.is_dragging_area_select());
+		let _ = h.drain_events_json();
+		assert!(h.cancel_area_select());
+		assert!(!h.is_dragging_area_select());
+		let _ = h.drain_events_json();
+		assert_eq!(h.selection.len(), 2);
+		assert!(h.selection.contains("a") && h.selection.contains("b"));
 	}
 
 	#[test]

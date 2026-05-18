@@ -85,6 +85,7 @@ export interface BoardHandleKindCatalogEntry {
 	id: string;
 	label: string;
 	name?: string;
+	scale?: number;
 }
 
 /** @emoji 🧵 Wire-kind catalog row for link gestures and default promoted {@link BoardEdgeKindCatalogEntry} id. */
@@ -104,6 +105,7 @@ export interface BoardNodeKindCatalogEntry {
 	id: string;
 	label: string;
 	name?: string;
+	scale?: number;
 	shape?: "circle" | "rectangle";
 	stroke?: string;
 }
@@ -418,6 +420,7 @@ export interface BoardFixtureHandleV1 {
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
+	scale?: number;
 }
 
 /** @emoji 📄 Circle node: {@link BoardFixtureCircleNodeV1.x}/{@link BoardFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link BoardFixtureHandleV1.angle} aims at the connected neighbor (radians). */
@@ -444,6 +447,7 @@ export interface BoardFixtureCircleNodeV1 {
 	textFontFamily?: string;
 	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
 	textFontSize?: number;
+	scale?: number;
 	x: number;
 	y: number;
 }
@@ -472,6 +476,7 @@ export interface BoardFixtureRectangleNodeV1 {
 	textFontFamily?: string;
 	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
 	textFontSize?: number;
+	scale?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -754,6 +759,34 @@ function resolveBoardVisibleFlag(options?: { hidden?: boolean; visible?: boolean
 	return options.visible ?? true;
 }
 
+function normalizeBoardScale(value: unknown): number {
+	return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+function boardNodeEffectiveScale(node: { effectiveScale?: number; scale?: number }): number {
+	return normalizeBoardScale(node.effectiveScale ?? node.scale);
+}
+
+function boardNodeScaledWidth(node: { effectiveScale?: number; scale?: number; width: number }): number {
+	return node.width * boardNodeEffectiveScale(node);
+}
+
+function boardNodeScaledHeight(node: { effectiveScale?: number; scale?: number; height: number }): number {
+	return node.height * boardNodeEffectiveScale(node);
+}
+
+function boardNodeScaledRadius(node: { effectiveScale?: number; scale?: number; radius: number }): number {
+	return node.radius * boardNodeEffectiveScale(node);
+}
+
+function boardHandleEffectiveScale(handle: { effectiveScale?: number; scale?: number }): number {
+	return normalizeBoardScale(handle.effectiveScale ?? handle.scale);
+}
+
+function boardHandleScaledRadius(handle: { effectiveScale?: number; scale?: number; radius: number }): number {
+	return handle.radius * boardHandleEffectiveScale(handle);
+}
+
 function readBoardJsonHiddenFlag(raw: Record<string, unknown>): boolean {
 	return !resolveBoardVisibleFlag({
 		hidden: typeof raw.hidden === "boolean" ? raw.hidden : undefined,
@@ -781,6 +814,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not using autofit. */
 	textFontSize?: number;
+	scale?: number;
 	x: number;
 	y: number;
 };
@@ -805,6 +839,7 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not using autofit. */
 	textFontSize?: number;
+	scale?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -823,6 +858,7 @@ export interface HandleOptions extends BoardObjectOptions {
 	handleKind: string;
 	node: Node;
 	radius?: number;
+	scale?: number;
 }
 
 /** @emoji 🟣 Declarative handle marker props (React + reconciler). */
@@ -837,6 +873,7 @@ export interface BoardHandleProps {
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
+	scale?: number;
 	selected?: boolean;
 	style?: string;
 	userData?: Record<string, unknown>;
@@ -1580,14 +1617,14 @@ export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | nul
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
 export function computeHandlePosition(
-	node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
+	node: { effectiveScale?: number; height: number; radius: number; scale?: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
 	angle: number,
 ): Point {
 	if (node.shape === "rectangle") {
-		const flat = boardHandlePositionRectangle(node.x, node.y, node.width, node.height, angle);
+		const flat = boardHandlePositionRectangle(node.x, node.y, boardNodeScaledWidth(node), boardNodeScaledHeight(node), angle);
 		return { x: flat[0], y: flat[1] };
 	}
-	const flat = boardHandlePositionCircle(node.x, node.y, node.radius, angle);
+	const flat = boardHandlePositionCircle(node.x, node.y, boardNodeScaledRadius(node), angle);
 	return { x: flat[0], y: flat[1] };
 }
 
@@ -2532,6 +2569,8 @@ export class BoardRenderer {
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
 	private selectionExitHighlightIds = new Set<string>();
+	/** @emoji ↩️ Last committed selection before the latest WASM `select` (Escape restores this once). */
+	private selectionPreviousForEscape: string[] = [];
 	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
@@ -2673,6 +2712,13 @@ export class BoardRenderer {
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
 
 	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
+
+	/** @emoji 🔁 Re-applies {@link BoardRenderer.selectionIds} to scene `selected` flags after JSX descriptor sync so WASM selection wins over stale `selected` props. */
+	reconcileSceneSelectedWithSelectionIds(): void {
+		for (const object of this.scene.getAllObjects()) {
+			object.selected = this.selectionIds.has(object.id);
+		}
+	}
 
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
@@ -3732,6 +3778,7 @@ export class BoardRenderer {
 	dispose(): void {
 		this.isDisposed = true;
 		this.selectionExitHighlightIds.clear();
+		this.selectionPreviousForEscape = [];
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
 		this.wasmHostAuthoredEdgeIds.clear();
@@ -3864,6 +3911,7 @@ export class BoardRenderer {
 		if (this.selectionExitHighlightDisabled()) {
 			return;
 		}
+		this.selectionPreviousForEscape = sortedSelectionIds(prev);
 		for (const id of prev) {
 			if (!next.has(id)) {
 				this.selectionExitHighlightIds.add(id);
@@ -4017,6 +4065,29 @@ export class BoardRenderer {
 			return;
 		}
 		if (!shouldBoardHandleDeleteShortcut()) {
+			return;
+		}
+		if (event.key === "Escape") {
+			if (this.wasmSessionCallBlockedForReentry()) {
+				this.invalidated = true;
+				return;
+			}
+			event.preventDefault();
+			if (this.session.isDraggingAreaSelect()) {
+				this.session.cancelAreaSelect();
+				this.applyWasmDrainToScene(this.session.drainEventsJson());
+				this.disarmAreaSelectChordBridge();
+				this.invalidate();
+				return;
+			}
+			if (this.selectionPreviousForEscape.length > 0) {
+				const restore = [...this.selectionPreviousForEscape];
+				this.selectionPreviousForEscape = [];
+				this.setSelectionIds(restore);
+				this.selectionExitHighlightIds.clear();
+				this.lastPushedDescriptorJson = null;
+				this.invalidate();
+			}
 			return;
 		}
 		if (event.key !== "Delete" && event.key !== "Backspace") {
