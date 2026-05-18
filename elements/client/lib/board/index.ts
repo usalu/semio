@@ -3673,8 +3673,19 @@ export class BoardRenderer {
 		if (this.isDisposed || !this.eventSurface) {
 			return false;
 		}
-		const t = event.target;
-		return t instanceof Node && this.eventSurface.contains(t);
+		const surface = this.eventSurface;
+		const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+		const domNodeCtor = surface.ownerDocument?.defaultView?.Node ?? globalThis.Node;
+		for (const entry of path) {
+			if (entry === surface) {
+				return true;
+			}
+			if (typeof domNodeCtor === "function" && entry instanceof domNodeCtor && surface.contains(entry)) {
+				return true;
+			}
+		}
+		const target = event.target;
+		return typeof domNodeCtor === "function" && target instanceof domNodeCtor && surface.contains(target);
 	}
 
 	private readonly handleWindowPointerDownCapture = (event: Event): void => {
@@ -4121,6 +4132,19 @@ if (boardVitest) {
 			expect(last.clientX).toBeCloseTo(p.x);
 			expect(last.worldX).toBeCloseTo(0, 1);
 			renderer.dispose();
+		});
+
+		it("treats DOM event targets under the event surface as board hits when model Node shadows the global constructor", () => {
+			const { canvas } = createMockCanvas();
+			const surface = document.createElement("div");
+			surface.appendChild(canvas);
+			document.body.appendChild(surface);
+			const renderer = new BoardRenderer({ canvas, eventSurface: surface, renderMode: "headless-test" });
+			const event = new MouseEvent("pointerdown", { bubbles: true, clientX: 10, clientY: 10 });
+			Object.defineProperty(event, "target", { configurable: true, value: canvas });
+			expect((renderer as any).eventTargetIsUnderEventSurface(event)).toBe(true);
+			renderer.dispose();
+			surface.remove();
 		});
 	});
 
