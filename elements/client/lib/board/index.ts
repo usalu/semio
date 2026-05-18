@@ -1032,8 +1032,10 @@ const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
 	"handle.selected": { fill: "#ff344f", stroke: "#001117", strokeWidth: 2 },
+	"handle.selectionExit": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
 	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
+	"node.selectionExit": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 3 },
 };
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
@@ -1045,16 +1047,21 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
 	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
 	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
 	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	nodeFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
+	nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	indirectHandleFill: [196, 228, 213, 255] as [number, number, number, number],
 	indirectHandleStroke: [52, 209, 191, 255] as [number, number, number, number],
 	handleFill: [247, 243, 227, 255] as [number, number, number, number],
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
 	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
 	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	handleFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
+	handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
 	selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
 };
@@ -1125,6 +1132,24 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 			stroke: c("color", "var(--color-accent)", f["node.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 3,
 		},
+		"node.selectionExit": {
+			fill: c(
+				"backgroundColor",
+				"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
+				f["node.selectionExit"]?.fill ?? f.node.fill ?? "#c4e4d5",
+			),
+			stroke: c("color", "var(--color-secondary)", f["node.selectionExit"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 3,
+		},
+		"handle.selectionExit": {
+			fill: c(
+				"backgroundColor",
+				"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
+				f["handle.selectionExit"]?.fill ?? f.handle.fill ?? "#c4e4d5",
+			),
+			stroke: c("color", "var(--color-secondary)", f["handle.selectionExit"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 2,
+		},
 	};
 }
 
@@ -1147,10 +1172,17 @@ function serializeElementsBoardVelloThemeJson(): string {
 		})(),
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
 		edgeStrokeSelected: pc("color", "var(--color-accent)", fb.edgeStrokeSelected),
+		edgeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.edgeStrokeSelectionExit),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
 		nodeFillSelected: pc("backgroundColor", "var(--color-selected-added)", fb.nodeFillSelected),
 		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
+		nodeFillSelectionExit: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
+			fb.nodeFillSelectionExit,
+		),
+		nodeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.nodeStrokeSelectionExit),
 		indirectHandleFill: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
@@ -1161,6 +1193,12 @@ function serializeElementsBoardVelloThemeJson(): string {
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
 		handleFillSelected: pc("backgroundColor", "var(--color-accent)", fb.handleFillSelected),
 		handleStrokeSelected: pc("color", "var(--color-accent)", fb.handleStrokeSelected),
+		handleFillSelectionExit: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
+			fb.handleFillSelectionExit,
+		),
+		handleStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.handleStrokeSelectionExit),
 		selectionPreviewFill: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--color-accent) 14%, transparent)",
@@ -2493,6 +2531,7 @@ export class BoardRenderer {
 	private lastRenderTimestamp: number | null = null;
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
+	private selectionExitHighlightIds = new Set<string>();
 	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
@@ -3259,7 +3298,9 @@ export class BoardRenderer {
 			}
 			wires.push(row);
 		}
-		return JSON.stringify({ nodes, handles, edges, wires });
+		this.pruneStaleSelectionExitHighlightIds();
+		const selectionExitHighlightIds = [...this.selectionExitHighlightIds].sort((a, b) => a.localeCompare(b));
+		return JSON.stringify({ nodes, handles, edges, wires, selectionExitHighlightIds });
 	}
 
 	private syncBoardAppearanceFromDocument(): void {
@@ -3406,7 +3447,10 @@ export class BoardRenderer {
 							break;
 						}
 						if (!idsUnchanged) {
-							this.selectionIds = new Set(ids);
+							const prevIds = this.selectionIds;
+							const nextSel = new Set(ids);
+							this.mergeSelectionExitHighlight(prevIds, nextSel);
+							this.selectionIds = nextSel;
 							for (const object of this.scene.getAllObjects()) {
 								object.selected = this.selectionIds.has(object.id);
 							}
@@ -3573,7 +3617,7 @@ export class BoardRenderer {
 				continue;
 			}
 			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
-			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
+			const style = this.getStyle(node.style, this.textOverlayNodeStyleKey(node));
 			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
@@ -3615,7 +3659,7 @@ export class BoardRenderer {
 				if (rScreen < 2) {
 					continue;
 				}
-				const style = this.getStyle(handle.style, handle.selected ? "handle.selected" : "handle");
+				const style = this.getStyle(handle.style, this.textOverlayHandleStyleKey(handle));
 				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK["handle"].stroke ?? "#001117";
 				ctx.textAlign = "center";
 				ctx.textBaseline = "top";
@@ -3687,6 +3731,7 @@ export class BoardRenderer {
 
 	dispose(): void {
 		this.isDisposed = true;
+		this.selectionExitHighlightIds.clear();
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
 		this.wasmHostAuthoredEdgeIds.clear();
@@ -3811,13 +3856,66 @@ export class BoardRenderer {
 		this.handleWheel(event as WheelEvent);
 	};
 
+	private selectionExitHighlightDisabled(): boolean {
+		return this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
+	}
+
+	private mergeSelectionExitHighlight(prev: ReadonlySet<string>, next: ReadonlySet<string>): void {
+		if (this.selectionExitHighlightDisabled()) {
+			return;
+		}
+		for (const id of prev) {
+			if (!next.has(id)) {
+				this.selectionExitHighlightIds.add(id);
+			}
+		}
+		for (const id of next) {
+			this.selectionExitHighlightIds.delete(id);
+		}
+	}
+
+	private pruneStaleSelectionExitHighlightIds(): void {
+		for (const id of [...this.selectionExitHighlightIds]) {
+			if (
+				!this.scene.nodes.has(id) &&
+				!this.scene.handles.has(id) &&
+				!this.scene.edges.has(id) &&
+				!this.scene.wires.has(id)
+			) {
+				this.selectionExitHighlightIds.delete(id);
+			}
+		}
+	}
+
+	private textOverlayNodeStyleKey(node: Node): "node" | "node.selected" | "node.selectionExit" {
+		if (node.selected) {
+			return "node.selected";
+		}
+		if (this.selectionExitHighlightIds.has(node.id)) {
+			return "node.selectionExit";
+		}
+		return "node";
+	}
+
+	private textOverlayHandleStyleKey(handle: Handle): "handle" | "handle.selected" | "handle.selectionExit" {
+		if (handle.selected) {
+			return "handle.selected";
+		}
+		if (this.selectionExitHighlightIds.has(handle.id)) {
+			return "handle.selectionExit";
+		}
+		return "handle";
+	}
+
 	private updateSelection(ids: Iterable<string>): void {
 		const nextIds = new Set(ids);
 		const nextSnapshot = createSelectionSnapshot(nextIds);
 		if (selectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
 			return;
 		}
+		const prevIds = this.selectionIds;
 		this.selectionIds = nextIds;
+		this.mergeSelectionExitHighlight(prevIds, nextIds);
 		for (const object of this.scene.getAllObjects()) {
 			object.selected = this.selectionIds.has(object.id);
 		}

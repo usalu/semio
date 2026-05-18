@@ -444,12 +444,16 @@ mod scene_json {
 	}
 
 	#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+	#[serde(rename_all = "camelCase")]
 	pub struct SceneDescriptorJson {
 		pub nodes: Vec<NodeDescJson>,
 		pub handles: Vec<HandleDescJson>,
 		pub edges: Vec<EdgeDescJson>,
 		#[serde(default)]
 		pub wires: Vec<WireDescJson>,
+		/// @emoji 💠 JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
+		#[serde(default)]
+		pub selection_exit_highlight_ids: Vec<String>,
 	}
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
@@ -2840,16 +2844,21 @@ mod board_host {
 		pub grid_minor_stroke: Color,
 		pub edge_stroke: Color,
 		pub edge_stroke_selected: Color,
+		pub edge_stroke_selection_exit: Color,
 		pub node_fill: Color,
 		pub node_stroke: Color,
 		pub node_fill_selected: Color,
 		pub node_stroke_selected: Color,
+		pub node_fill_selection_exit: Color,
+		pub node_stroke_selection_exit: Color,
 		pub indirect_handle_fill: Color,
 		pub indirect_handle_stroke: Color,
 		pub handle_fill: Color,
 		pub handle_stroke: Color,
 		pub handle_fill_selected: Color,
 		pub handle_stroke_selected: Color,
+		pub handle_fill_selection_exit: Color,
+		pub handle_stroke_selection_exit: Color,
 		pub selection_preview_fill: Color,
 		pub selection_preview_stroke: Color,
 	}
@@ -2861,16 +2870,21 @@ mod board_host {
 				grid_minor_stroke: board_palette::GRID_MINOR_STROKE,
 				edge_stroke: board_palette::EDGE_STROKE,
 				edge_stroke_selected: board_palette::EDGE_STROKE_SELECTED,
+				edge_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
 				node_fill: board_palette::NODE_FILL,
 				node_stroke: board_palette::NODE_STROKE,
 				node_fill_selected: board_palette::NODE_FILL_SELECTED,
 				node_stroke_selected: board_palette::NODE_STROKE_SELECTED,
+				node_fill_selection_exit: board_palette::INDIRECT_HANDLE_FILL,
+				node_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
 				indirect_handle_fill: board_palette::INDIRECT_HANDLE_FILL,
 				indirect_handle_stroke: board_palette::INDIRECT_HANDLE_STROKE,
 				handle_fill: board_palette::HANDLE_FILL,
 				handle_stroke: board_palette::HANDLE_STROKE,
 				handle_fill_selected: board_palette::HANDLE_FILL_SELECTED,
 				handle_stroke_selected: board_palette::HANDLE_STROKE_SELECTED,
+				handle_fill_selection_exit: board_palette::INDIRECT_HANDLE_FILL,
+				handle_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
 				selection_preview_fill: board_palette::SELECTION_PREVIEW_FILL,
 				selection_preview_stroke: board_palette::SELECTION_PREVIEW_STROKE,
 			}
@@ -2892,6 +2906,8 @@ mod board_host {
 		/// @emoji 🔗 Kind-compatibility rules for link gestures; empty = unrestricted.
 		pub link_compat_rules: Vec<LinkCompatRule>,
 		pub selection: BTreeSet<String>,
+		/// @emoji 💠 Descriptor‑driven secondary chrome for ids that left the selection (JS source of truth).
+		pub selection_exit_highlight: BTreeSet<String>,
 		pub selection_options: SelectionOptions,
 		pub hovered_id: Option<String>,
 		pub interaction: Interaction,
@@ -2943,6 +2959,7 @@ mod board_host {
 				edge_kinds: BTreeMap::new(),
 				link_compat_rules: Vec::new(),
 				selection: BTreeSet::new(),
+				selection_exit_highlight: BTreeSet::new(),
 				selection_options: SelectionOptions {
 					method: "rectangle".into(),
 					mode: "replace".into(),
@@ -3514,7 +3531,23 @@ mod board_host {
 			if let Some(def) = self.handle_kinds.get(&h.handle_kind) {
 				return def.color;
 			}
-			handle_fill(theme, h.selected)
+			if h.selected {
+				return handle_fill(theme, true);
+			}
+			if self.selection_exit_highlight.contains(h.id.as_str()) {
+				return theme.handle_fill_selection_exit;
+			}
+			handle_fill(theme, false)
+		}
+
+		fn resolve_handle_stroke_color(&self, h: &HandleData, theme: &VelloThemePalette) -> Color {
+			if h.selected {
+				return handle_stroke(theme, true);
+			}
+			if self.selection_exit_highlight.contains(h.id.as_str()) {
+				return theme.handle_stroke_selection_exit;
+			}
+			handle_stroke(theme, false)
 		}
 
 		fn handles_link_compatible_for_drag(&self, source: &HandleData, target: &HandleData) -> bool {
@@ -3637,6 +3670,11 @@ mod board_host {
 					next.edge_stroke_selected = c;
 				}
 			}
+			if let Some(arr) = v.get("edgeStrokeSelectionExit").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.edge_stroke_selection_exit = c;
+				}
+			}
 			if let Some(arr) = v.get("nodeFill").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.node_fill = c;
@@ -3655,6 +3693,16 @@ mod board_host {
 			if let Some(arr) = v.get("nodeStrokeSelected").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.node_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeFillSelectionExit").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_fill_selection_exit = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeStrokeSelectionExit").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_stroke_selection_exit = c;
 				}
 			}
 			if let Some(arr) = v.get("indirectHandleFill").and_then(|x| x.as_array()) {
@@ -3685,6 +3733,16 @@ mod board_host {
 			if let Some(arr) = v.get("handleStrokeSelected").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.handle_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("handleFillSelectionExit").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_fill_selection_exit = c;
+				}
+			}
+			if let Some(arr) = v.get("handleStrokeSelectionExit").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_stroke_selection_exit = c;
 				}
 			}
 			if let Some(arr) = v.get("selectionPreviewFill").and_then(|x| x.as_array()) {
@@ -4695,6 +4753,17 @@ mod board_host {
 			for w in self.wires.values_mut() {
 				w.selected = self.selection.contains(&w.id);
 			}
+			self.selection_exit_highlight = desc
+				.selection_exit_highlight_ids
+				.iter()
+				.filter(|id| {
+					self.nodes.contains_key(*id)
+						|| self.handles.contains_key(*id)
+						|| self.edges.contains_key(*id)
+						|| self.wires.contains_key(*id)
+				})
+				.cloned()
+				.collect();
 			if prev_sel != self.selection {
 				let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
 				sorted.sort();
@@ -4709,6 +4778,7 @@ mod board_host {
 			self.handles.clear();
 			self.nodes.clear();
 			self.selection.clear();
+			self.selection_exit_highlight.clear();
 		}
 
 		pub fn parse_fixture_v1(&mut self, raw: &serde_json::Value) -> bool {
@@ -5036,7 +5106,7 @@ mod board_host {
 			} else {
 				(
 					self.resolve_handle_fill_color(h, &self.vello_theme),
-					handle_stroke(&self.vello_theme, h.selected),
+					self.resolve_handle_stroke_color(h, &self.vello_theme),
 					2.0_f64,
 				)
 			};
@@ -5125,6 +5195,8 @@ mod board_host {
 				}
 				let link_compat = link_compat_nodes.contains(&n.id);
 				let sel_chrome = n.selected && !link_compat;
+				let exit_secondary =
+					!link_compat && !n.selected && self.selection_exit_highlight.contains(n.id.as_str());
 				let (stroke_c, fill) = if link_compat {
 					(
 						self.vello_theme.indirect_handle_stroke,
@@ -5134,13 +5206,31 @@ mod board_host {
 							self.vello_theme.indirect_handle_fill
 						},
 					)
+				} else if sel_chrome {
+					(
+						node_stroke_color(&self.vello_theme, true),
+						if lod == BoardDrawLod::Minimap {
+							node_stroke_color(&self.vello_theme, true)
+						} else {
+							node_fill_color(&self.vello_theme, true)
+						},
+					)
+				} else if exit_secondary {
+					(
+						self.vello_theme.node_stroke_selection_exit,
+						if lod == BoardDrawLod::Minimap {
+							self.vello_theme.node_stroke_selection_exit
+						} else {
+							self.vello_theme.node_fill_selection_exit
+						},
+					)
 				} else {
 					(
-						node_stroke_color(&self.vello_theme, sel_chrome),
+						node_stroke_color(&self.vello_theme, false),
 						if lod == BoardDrawLod::Minimap {
-							node_stroke_color(&self.vello_theme, sel_chrome)
+							node_stroke_color(&self.vello_theme, false)
 						} else {
-							node_fill_color(&self.vello_theme, sel_chrome)
+							node_fill_color(&self.vello_theme, false)
 						},
 					)
 				};
@@ -5265,6 +5355,8 @@ mod board_host {
 					let curve = CubicBez::new(p0, p1, p2, p3);
 					let stroke_color = if e.selected {
 						self.vello_theme.edge_stroke_selected
+					} else if self.selection_exit_highlight.contains(e.id.as_str()) {
+						self.vello_theme.edge_stroke_selection_exit
 					} else {
 						self.vello_theme.edge_stroke
 					};
@@ -5284,7 +5376,14 @@ mod board_host {
 					let p2 = self.world_to_screen(c.p2);
 					let p3 = self.world_to_screen(c.p3);
 					let curve = CubicBez::new(p0, p1, p2, p3);
-					scene.stroke(&wire_stroke, Affine::IDENTITY, wire_color, None, &curve);
+					let wc = if w.selected {
+						self.vello_theme.edge_stroke_selected
+					} else if self.selection_exit_highlight.contains(w.id.as_str()) {
+						self.vello_theme.edge_stroke_selection_exit
+					} else {
+						wire_color
+					};
+					scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
 				}
 			}
 			if let Some(node_id) = indirect_ring_node_id {
@@ -7253,7 +7352,19 @@ mod host_tests {
 				visible: None,
 			}],
 			wires: vec![],
+			selection_exit_highlight_ids: vec![],
 		}
+	}
+
+	#[test]
+	fn board_host_sync_descriptor_applies_selection_exit_highlight_ids() {
+		let mut h = BoardHost::new();
+		h.set_size(400, 300, 1.0);
+		let mut d = sample_scene();
+		d.selection_exit_highlight_ids = vec!["a".into(), "ghost".into()];
+		h.sync_descriptor(&d).unwrap();
+		assert!(h.selection_exit_highlight.contains("a"));
+		assert!(!h.selection_exit_highlight.contains("ghost"));
 	}
 
 	#[test]
@@ -7747,6 +7858,7 @@ mod host_tests {
 			],
 			edges: vec![],
 			wires: vec![],
+			selection_exit_highlight_ids: vec![],
 		}
 	}
 
@@ -7987,6 +8099,7 @@ mod host_tests {
 			],
 			edges: vec![],
 			wires: vec![],
+			selection_exit_highlight_ids: vec![],
 		};
 		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
