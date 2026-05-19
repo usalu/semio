@@ -2990,9 +2990,7 @@ export class BoardRenderer {
 			return;
 		}
 		this.automaticLod = next;
-		if (next) {
-			this.forcedDrawLodLabel = undefined;
-		}
+		this.forcedDrawLodLabel = undefined;
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;

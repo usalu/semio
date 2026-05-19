@@ -1181,15 +1181,8 @@ export function BoardCanvas({
 			return;
 		}
 		renderer.setAutomaticLod(automaticLod ?? true);
-	}, [automaticLod]);
-
-	useLayoutEffect(() => {
-		const renderer = rendererRef.current;
-		if (!renderer) {
-			return;
-		}
 		renderer.setForcedDrawLod(lod);
-	}, [lod]);
+	}, [automaticLod, lod]);
 
 	useEffect(() => {
 		if (!contextRenderer) {

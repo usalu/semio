@@ -372,7 +372,7 @@ export function resolveSceneLodLabelFromThresholds(zoom: number, t: SceneLodZoom
 	if (z < t.normalMaxZoom) return "normal";
 	if (z < t.detailMaxZoom) return "detail";
 	return "micro";
-}
+	}
 
 /** @emoji 📏 Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
 export function scenePseudoZoomFromOrbitDistance(distance: number, reference: number): number {
@@ -1189,28 +1189,30 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		props.selected && reg.activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
 
 	return (
-		<group
-			ref={group}
-			position={props.origin as [number, number, number]}
-			quaternion={quat}
-			scale={scaleVec}
-			visible={props.visible !== false}
-			onPointerDown={handlePointerDown}
-			userData={{ sceneObjectId: props.id, ...props.userData }}
-			data-scene-object={props.id}
-		>
-			{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? <ScenePlaceholderMesh /> : <SceneResolvedObjectMesh meshUrl={props.meshUrl} />}
-			{props.children}
-		</group>
-		{showTc && tcTarget && (
-			<SceneObjectTransformControls
-				object={tcTarget}
-				objectId={props.id}
-				mode={mode}
-				translationSnap={transSnap}
-				beforeRef={beforeRef}
-			/>
-		)}
+		<>
+			<group
+				ref={group}
+				position={props.origin as [number, number, number]}
+				quaternion={quat}
+				scale={scaleVec}
+				visible={props.visible !== false}
+				onPointerDown={handlePointerDown}
+				userData={{ sceneObjectId: props.id, ...props.userData }}
+				data-scene-object={props.id}
+			>
+				{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? <ScenePlaceholderMesh /> : <SceneResolvedObjectMesh meshUrl={props.meshUrl} />}
+				{props.children}
+			</group>
+			{showTc && tcTarget && (
+				<SceneObjectTransformControls
+					object={tcTarget}
+					objectId={props.id}
+					mode={mode}
+					translationSnap={transSnap}
+					beforeRef={beforeRef}
+				/>
+			)}
+		</>
 	);
 });
 //#endregion 🧊Object
@@ -2282,6 +2284,34 @@ function ScenePlaySurfaceFooter(props: {
 // #endregion 🖥️Surface
 
 // #region 🎬ScenePlay
+function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }) {
+	const reg = useSceneRegistry();
+	useEffect(() => {
+		const w = window as unknown as {
+			__scenePlaySelect?: (id: string) => void;
+			__scenePlayActivate?: (id: string) => void;
+			__scenePlayClearSelection?: () => void;
+		};
+		w.__scenePlaySelect = (id: string) => {
+			props.setSelectedId(id);
+		};
+		w.__scenePlayActivate = (id: string) => {
+			props.setSelectedId(id);
+			reg.setActiveRelocateObjectId(id);
+		};
+		w.__scenePlayClearSelection = () => {
+			props.setSelectedId(null);
+			reg.setActiveRelocateObjectId(null);
+		};
+		return () => {
+			delete w.__scenePlaySelect;
+			delete w.__scenePlayActivate;
+			delete w.__scenePlayClearSelection;
+		};
+	}, [props, reg]);
+	return null;
+}
+
 function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -2302,16 +2332,6 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 			useGLTF.preload(u);
 		}
 	}, [fixture.objects]);
-
-	useEffect(() => {
-		const w = window as unknown as { __scenePlaySelect?: (id: string) => void };
-		w.__scenePlaySelect = (id: string) => {
-			setSelectedId(id);
-		};
-		return () => {
-			delete w.__scenePlaySelect;
-		};
-	}, []);
 
 	const onSelect = useCallback((snap: { objectIds: readonly string[] }) => {
 		setSelectedId(snap.objectIds[0] ?? null);
@@ -2393,6 +2413,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 						onIndirectConnect={onIndirectConnect}
 						onProximityConnect={onProximityConnect}
 					>
+						<ScenePlayTestBridge setSelectedId={setSelectedId} />
 						{fixture.objects.map((o) => (
 							<SceneObject
 								key={o.id}

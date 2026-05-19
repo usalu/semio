@@ -22071,6 +22071,8 @@ const UICanvas: React.FC<{
   const containerRef = React.useRef<HTMLDivElement>(null);
   const layoutRef = React.useRef<any>(null);
   const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
+  /** @emoji 🪟 Stable registry key so measure/control-only `windowKinds` updates do not destroy Golden Layout. */
+  const windowKindRegistryKey = React.useMemo(() => windowKinds.map((wk) => wk.id).join("\0"), [windowKinds]);
 
   /** @emoji 📐 Keeps floating measures/controls in sync when `windowKinds` change without tearing down Golden Layout. */
   React.useEffect(() => {
@@ -22188,7 +22190,7 @@ const UICanvas: React.FC<{
     return () => {
       lifecycle.dispose();
     };
-  }, [windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
+  }, [windowKindRegistryKey, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
 
   return (
     <>

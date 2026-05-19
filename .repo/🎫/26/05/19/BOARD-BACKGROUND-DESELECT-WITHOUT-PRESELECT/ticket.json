@@ -1,0 +1,13 @@
+{
+  "title": "Board Background Deselect Without Preselect",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When deselecting by clicking the board background, skip the preselect phase: no preselect_removed exit highlight flash while the pointer is down. Background click-only should commit selection directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1443"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯apps",
+  "sessions": [
+    "⚪7b589f21c8eb488ba6907f5714dd8c02"
+  ]
+}

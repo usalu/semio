@@ -2824,6 +2824,8 @@ mod board_host {
 			screen_points: Vec<Point>,
 			start: Point,
 			start_screen: Point,
+			/// @emoji 👁️ True once pointer movement exceeds click threshold; gates preselect until then.
+			preview_active: bool,
 		},
 		LinkAtSourceHandle {
 			source_id: String,
@@ -3113,6 +3115,9 @@ mod board_host {
 
 		pub fn set_automatic_lod(&mut self, enabled: bool) {
 			self.automatic_lod = enabled;
+			if enabled {
+				self.forced_draw_lod = None;
+			}
 		}
 
 		pub fn set_forced_draw_lod_label(&mut self, label: &str) {
@@ -3127,7 +3132,10 @@ mod board_host {
 				"normal" => BoardDrawLod::Normal,
 				"detail" => BoardDrawLod::Detail,
 				"micro" => BoardDrawLod::Micro,
-				_ => return,
+				_ => {
+					self.forced_draw_lod = None;
+					return;
+				}
 			});
 		}
 
@@ -3839,7 +3847,13 @@ mod board_host {
 		}
 
 		fn is_preselecting(&self) -> bool {
-			matches!(&self.interaction, Interaction::Selection { .. })
+			matches!(
+				&self.interaction,
+				Interaction::Selection {
+					preview_active: true,
+					..
+				}
+			)
 		}
 
 		fn object_has_selection_exit_secondary(&self, id: &str, selected: bool) -> bool {
@@ -6045,6 +6059,7 @@ mod board_host {
 					screen_points: vec![screen],
 					start: world,
 					start_screen: screen,
+					preview_active: false,
 				};
 				self.set_hovered_id(None);
 				return;
@@ -6116,6 +6131,7 @@ mod board_host {
 					start,
 					initial_ids,
 					start_screen,
+					mut preview_active,
 				} => {
 					let last_screen = screen_points.last().copied().unwrap_or(start_screen);
 					let add_point = self.selection_options.method == "lasso"
@@ -6129,15 +6145,20 @@ mod board_host {
 						let ls = screen_points.len() - 1;
 						screen_points[ls] = screen;
 					}
-					let initial = initial_ids.clone();
-					let pts = points.clone();
-					let merge_mode =
-						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
-					let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
-					let ids: Vec<_> = next.iter().cloned().collect();
-					let merge_from_modifiers = ctrl_or_meta || shift;
-					let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
-					self.apply_area_preselect(&initial, &ids, gesture);
+					if !preview_active && distance_between(start_screen, screen) >= SELECTION_CLICK_MAX_DISTANCE_PX {
+						preview_active = true;
+					}
+					if preview_active {
+						let initial = initial_ids.clone();
+						let pts = points.clone();
+						let merge_mode =
+							Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+						let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
+						let ids: Vec<_> = next.iter().cloned().collect();
+						let merge_from_modifiers = ctrl_or_meta || shift;
+						let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
+						self.apply_area_preselect(&initial, &ids, gesture);
+					}
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
@@ -6145,6 +6166,7 @@ mod board_host {
 						screen_points,
 						start,
 						start_screen,
+						preview_active,
 					};
 				}
 				Interaction::LinkAtSourceHandle { source_id, start_screen } => {
@@ -6240,6 +6262,7 @@ mod board_host {
 					start,
 					initial_ids,
 					start_screen,
+					preview_active,
 				} => {
 					points.push(world);
 					screen_points.push(screen);
@@ -6249,7 +6272,12 @@ mod board_host {
 					let merge_mode =
 						Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
 					let gesture = merge_from_modifiers.then(|| merge_mode.as_str());
-					if click_only {
+					if !preview_active {
+						let next =
+							self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
+						let ids: Vec<_> = next.iter().cloned().collect();
+						self.set_selection_ids_gestured(&ids, gesture);
+					} else if click_only {
 						self.commit_area_select_from_initial(&initial_ids, &[], gesture);
 					} else {
 						let next =
@@ -7601,6 +7629,28 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_manual_lod_follow_zoom_still_encodes_graph() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.sync_descriptor(&sample_scene()).unwrap();
+		let with_automatic = h.encoded_scene_hint();
+		assert!(with_automatic > 0, "sample scene should encode vector paths");
+		h.set_automatic_lod(false);
+		h.set_forced_draw_lod_label("");
+		let manual_follow_zoom = h.encoded_scene_hint();
+		assert!(
+			manual_follow_zoom > 0,
+			"manual follow-zoom LOD must still draw nodes/edges (hint={manual_follow_zoom})"
+		);
+		h.set_forced_draw_lod_label("overview");
+		let pinned_overview = h.encoded_scene_hint();
+		assert!(pinned_overview > 0, "pinned overview LOD must still draw graph");
+		h.set_automatic_lod(true);
+		let automatic_restored = h.encoded_scene_hint();
+		assert_eq!(with_automatic, automatic_restored);
+	}
+
+	#[test]
 	fn board_host_selection_exit_highlight_tracks_removed_ids_not_descriptor_field() {
 		let mut h = BoardHost::new();
 		h.set_size(400, 300, 1.0);
@@ -8015,6 +8065,28 @@ mod host_tests {
 		let mut got: Vec<_> = h.selection.iter().cloned().collect();
 		got.sort();
 		assert_eq!(got, vec!["a".to_string(), "e1".to_string()]);
+	}
+
+	#[test]
+	fn board_host_background_click_deselect_skips_preselect_events() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		let desc = sample_scene();
+		h.sync_descriptor(&desc).unwrap();
+		h.set_selection_ids(&["a".into(), "e1".into()]);
+		let _ = h.drain_events_json();
+		let away = Point::new(5000.0, 5000.0);
+		let s = h.world_to_screen(away);
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
+		h.pointer_move_screen(s.x + 1.0, s.y, false, false);
+		let mid = h.drain_events_json();
+		assert!(!mid.contains("preselect"), "background click path must not emit preselect");
+		assert!(h.preselect_removed.is_empty());
+		h.pointer_up_screen(s.x, s.y, false, false);
+		assert!(h.selection.is_empty());
+		let fin = h.drain_events_json();
+		assert!(fin.contains("select"));
+		assert!(!fin.contains("preselect"));
 	}
 
 	#[test]

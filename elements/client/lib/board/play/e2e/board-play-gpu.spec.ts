@@ -92,6 +92,21 @@ test.describe("board play", () => {
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
 			.toMatch(/^(minimap|overview|normal|detail|micro)$/);
+		await expect
+			.poll(async () => await overviewCanvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+			.toBe("ready");
+		const shotAutomaticOn = await overviewCanvas.screenshot();
+		const uniquePngBytes = (buf: Buffer): number => new Set(buf).size;
+		await page.locator("#board-overview-automatic-lod").click();
+		await expect(page.locator("#board-overview-automatic-lod")).toHaveAttribute("data-state", "off");
+		await expect(page.locator('[data-measure-id="board-overview-lod-tier"]')).toBeVisible({ timeout: 30_000 });
+		await expect
+			.poll(async () => await overviewCanvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+			.toBe("ready");
+		const shotManualFollowZoom = await overviewCanvas.screenshot();
+		expect(uniquePngBytes(shotAutomaticOn)).toBeGreaterThan(64);
+		expect(uniquePngBytes(shotManualFollowZoom)).toBeGreaterThan(64);
+		expect(Math.abs(shotAutomaticOn.length - shotManualFollowZoom.length)).toBeLessThan(shotAutomaticOn.length * 0.35);
 	});
 
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
