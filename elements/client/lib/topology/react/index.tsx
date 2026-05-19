@@ -16,12 +16,12 @@ import {
 import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
 	Canvas3D as Scene,
+	SceneAttractions,
 	SceneAttractionTreeRoots,
 	SceneObjectStateProvider,
 	SceneObjects,
-	SceneTies,
 	parseFixtureV1,
-	blockedVortexFullIdsFromTies,
+	blockedVortexFullIdsFromAttractions,
 	useSceneObjectConnect,
 	useSceneObjectRelocate,
 	type CanvasProps as SceneCanvasProps,
@@ -201,7 +201,7 @@ export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unkno
 			entry.specificity === "handle" ||
 			entry.specificity === "wire" ||
 			entry.specificity === "object" ||
-			entry.specificity === "tie"
+			entry.specificity === "attraction"
 				? entry.specificity
 				: undefined;
 		out.push({
@@ -473,14 +473,14 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 			onConnect={onConnect}
 		>
 			<SceneObjects selectedObjectId={props.selectedObjectId} relocate={props.relocateMode} />
-			<SceneTies />
+			<SceneAttractions />
 			<SceneAttractionTreeRoots />
 		</Scene>
 	);
 });
 
 export const TopologyScenePane = memo(function TopologyScenePane(props: TopologyScenePaneProps) {
-	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromTies(props.fixture.ties);
+	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromAttractions(props.fixture.attractions);
 	return (
 		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
 			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
@@ -494,7 +494,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 //#endregion 🪟PanesScene
 //#endregion 🪟Panes
 
-export { parseBoardFixtureV1, parseFixtureV1, blockedVortexFullIdsFromTies };
+export { parseBoardFixtureV1, parseFixtureV1, blockedVortexFullIdsFromAttractions };
 export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR };
 
 if (import.meta.vitest) {

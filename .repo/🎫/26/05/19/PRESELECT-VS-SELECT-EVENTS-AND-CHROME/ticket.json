@@ -1,12 +1,14 @@
 {
   "title": "Preselect Vs Select Events And Chrome",
   "emoji": "🎯",
-  "status": "closed",
+  "status": "open",
   "description": "Separate preselect (rectangle/lasso drag) from committed select; preselect secondary = anchor minus preselect; preselectCancel on Escape; onPreselect/onPreselectCancel events in TS.",
-  "summary": "Board area-select now keeps a single committed selection while dragging: WASM resolves Selected for preselect∖selection and Highlighted for selection∖preselect (committed selection uses Selected when idle). TS mirrors this via boardElementInteractionChrome, highlighted on BoardObject, Escape→cancelAreaSelect, preselectCancel emit, and syncPreselectionSilent no longer clobbers chrome via full scene push. Play markers pass selected/highlighted separately. Tests cover chrome split, Escape cancel, and interaction chrome helper.",
+  "summary": "Fixed flickering/wrong highlight during rectangle preselect: descriptor JSON now encodes only committed selection (never preview chrome), descriptor sync skips rebuilding selection while preselect is active, style resolution treats all preselect ids as Selected, hover is suppressed during preselect, and descriptor push is deferred while preselect is non-empty.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪abf30dada2954e86be9d6c35250ed41c",
-    "⚪79a7c8180f874e3c88a4bcae25e27a01"
+    "⚪79a7c8180f874e3c88a4bcae25e27a01",
+    "⚪84e5ad2467f24197b40ff9d2865ad249",
+    "⚪4aa5cb34e67047ffb87edcda7e4bd09a"
   ]
 }

@@ -3663,6 +3663,9 @@ mod board_host {
 		}
 
 		fn hovered_style_kind(&self, id: &str) -> Option<BoardElementStyleKind> {
+			if self.is_preselect_active() {
+				return None;
+			}
 			(self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
 		}
 
@@ -3670,15 +3673,13 @@ mod board_host {
 			self.is_preselecting() || !self.preselect.is_empty()
 		}
 
-		/// @emoji 🎨 During area-select: preselect∖selection → Selected; selection∖preselect → Highlighted; else committed selection → Selected.
+		/// @emoji 🎨 During area-select: preselect → Selected; anchor∖preselect → Highlighted; idle selection → Selected.
 		fn resolve_interaction_style_kind(&self, id: &str) -> BoardElementStyleKind {
 			if self.is_preselect_active() {
-				let in_preselect = self.preselect.contains(id);
-				let in_selection = self.selection.contains(id);
-				if in_preselect && !in_selection {
+				if self.preselect.contains(id) {
 					return BoardElementStyleKind::Selected;
 				}
-				if in_selection && !in_preselect {
+				if self.selection.contains(id) {
 					return BoardElementStyleKind::Highlighted;
 				}
 				return BoardElementStyleKind::Neutral;
@@ -4247,6 +4248,7 @@ mod board_host {
 			self.last_preselect_emit_sig = Some(sig);
 			self.preselect = next;
 			self.preselect_removed = anchor_ids.difference(&self.preselect).cloned().collect();
+			self.set_hovered_id_silent(None);
 			self.sync_selection_flags_to_objects();
 			let mut payload = json!({ "ids": sorted, "removedIds": removed });
 			if let Some(ref g) = gesture_owned {
@@ -5298,47 +5300,38 @@ mod board_host {
 					},
 				);
 			}
-			let mut new_selection = BTreeSet::new();
-			for n in &desc.nodes {
-				if n.selected == Some(true) {
-					new_selection.insert(n.id.clone());
+			if !self.is_preselect_active() {
+				let mut new_selection = BTreeSet::new();
+				for n in &desc.nodes {
+					if n.selected == Some(true) {
+						new_selection.insert(n.id.clone());
+					}
+				}
+				for h in &desc.handles {
+					if h.selected == Some(true) {
+						new_selection.insert(h.id.clone());
+					}
+				}
+				for e in &desc.edges {
+					if e.selected == Some(true) {
+						new_selection.insert(e.id.clone());
+					}
+				}
+				for w in &desc.wires {
+					if w.selected == Some(true) {
+						new_selection.insert(w.id.clone());
+					}
+				}
+				let prev_sel = self.selection.clone();
+				if prev_sel != new_selection {
+					self.selection_exit_highlight.clear();
+				}
+				self.selection = new_selection;
+				if prev_sel != self.selection {
+					self.push_select_event();
 				}
 			}
-			for h in &desc.handles {
-				if h.selected == Some(true) {
-					new_selection.insert(h.id.clone());
-				}
-			}
-			for e in &desc.edges {
-				if e.selected == Some(true) {
-					new_selection.insert(e.id.clone());
-				}
-			}
-			for w in &desc.wires {
-				if w.selected == Some(true) {
-					new_selection.insert(w.id.clone());
-				}
-			}
-			let prev_sel = self.selection.clone();
-			if prev_sel != new_selection {
-				self.selection_exit_highlight.clear();
-			}
-			self.selection = new_selection;
-			for n in self.nodes.values_mut() {
-				n.selected = self.selection.contains(&n.id);
-			}
-			for h in self.handles.values_mut() {
-				h.selected = self.selection.contains(&h.id);
-			}
-			for e in self.edges.values_mut() {
-				e.selected = self.selection.contains(&e.id);
-			}
-			for w in self.wires.values_mut() {
-				w.selected = self.selection.contains(&w.id);
-			}
-			if prev_sel != self.selection {
-				self.push_select_event();
-			}
+			self.sync_selection_flags_to_objects();
 			Ok(())
 		}
 
@@ -8635,6 +8628,51 @@ mod host_tests {
 		assert!(!h.selection.contains("a"));
 		assert!(h.preselect_removed.is_empty());
 		assert!(h.selection_exit_highlight.is_empty());
+	}
+
+	#[test]
+	fn board_host_area_select_from_empty_keeps_selection_until_commit() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+			scale: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		h.set_selection_ids(&[]);
+		let _ = h.drain_events_json();
+		let w_down = Point::new(350.0, -50.0);
+		let w_mid = Point::new(270.0, 50.0);
+		let s_down = h.world_to_screen(w_down);
+		let s_mid = h.world_to_screen(w_mid);
+		h.pointer_down_screen(s_down.x, s_down.y, 0, false, false);
+		h.pointer_move_screen(s_mid.x, s_mid.y, false, false);
+		let _ = h.drain_events_json();
+		assert!(h.is_dragging_area_select());
+		assert!(h.preselect.contains("b"));
+		assert!(h.preselect_removed.is_empty());
+		assert!(h.selection.is_empty());
+		h.pointer_up_screen(s_mid.x, s_mid.y, false, false);
+		let _ = h.drain_events_json();
+		assert!(h.selection.contains("b"));
+		assert!(h.preselect.is_empty());
 	}
 
 	#[test]

@@ -3255,13 +3255,8 @@ export class BoardRenderer {
 		this.syncGpuReadyCacheFromSession();
 	}
 
-	private selectionChromeIds(): Set<string> {
-		const { selectedIds } = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
-		return selectedIds;
-	}
-
 	private descriptorJsonForWasmHost(): string {
-		const chrome = this.selectionChromeIds();
+		const committedSelection = this.selectionIds;
 		const nodes: Record<string, unknown>[] = [];
 		for (const node of this.scene.nodes.values()) {
 			const base: Record<string, unknown> = {
@@ -3269,7 +3264,7 @@ export class BoardRenderer {
 				x: node.x,
 				y: node.y,
 				draggable: node.draggable,
-				selected: chrome.has(node.id),
+				selected: committedSelection.has(node.id),
 				style: node.style,
 				text: node.text,
 				visible: node.visible,
@@ -3315,7 +3310,7 @@ export class BoardRenderer {
 				nodeId: handle.node.id,
 				angle: handle.angle,
 				radius: handle.radius,
-				selected: chrome.has(handle.id),
+				selected: committedSelection.has(handle.id),
 				style: handle.style,
 				visible: handle.visible,
 				handleKind: handle.handleKind,
@@ -3334,7 +3329,7 @@ export class BoardRenderer {
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
-				selected: chrome.has(edge.id),
+				selected: committedSelection.has(edge.id),
 				style: edge.style,
 				visible: edge.visible,
 			};
@@ -3348,7 +3343,7 @@ export class BoardRenderer {
 			const row: Record<string, unknown> = {
 				id: wire.id,
 				source: wire.source.id,
-				selected: chrome.has(wire.id),
+				selected: committedSelection.has(wire.id),
 				style: wire.style,
 				visible: wire.visible,
 			};
@@ -3457,7 +3452,9 @@ export class BoardRenderer {
 			this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
 		}
 		const deferDescriptorSync =
-			this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
+			this.session.isDraggingAreaSelect() ||
+			this.session.defersDescriptorSyncFromJs() ||
+			this.preselectIds.size > 0;
 		if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
 			this.lastPushedDescriptorJson = null;
 		}
@@ -4047,7 +4044,9 @@ export class BoardRenderer {
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
 		this.session.pointerMoveScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
-		this.publishHover();
+		if (!this.session.isDraggingAreaSelect()) {
+			this.publishHover();
+		}
 		this.invalidate();
 	};
 
@@ -4589,6 +4588,25 @@ if (boardVitest) {
 			renderer.setSelectionIdsSilent(["solo"]);
 			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
 			expect(selects).toEqual([]);
+			renderer.dispose();
+		});
+
+		it("keeps committed selection empty during rectangle preselect from empty", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
+			const node = new Node({ id: "solo", radius: 20, x: 200, y: 0 });
+			renderer.scene.add(node);
+			renderer.render();
+			const s0 = renderer.worldToScreen({ x: 120, y: -40 });
+			const s1 = renderer.worldToScreen({ x: 280, y: 40 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: s0.x, clientY: s0.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+			expect(renderer.preselection.getSnapshot().removedIds).toEqual([]);
+			expect(node.selected).toBe(true);
+			expect(node.highlighted).toBe(false);
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
 			renderer.dispose();
 		});
 

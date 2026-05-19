@@ -2243,9 +2243,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 					...(props.wormhole ? { sceneWormhole: true } : {}),
 					...props.userData,
 				}}
-				data-scene-object={props.id}
-				data-scene-attracting={props.attracting?.join(",") ?? ""}
-				data-scene-wormhole={props.wormhole ? "true" : undefined}
 			>
 				{props.meshUrl === PLACEHOLDER_MESH_URL ? (
 					<PlaceholderMesh style={meshStyle} />
@@ -3794,7 +3791,7 @@ if (import.meta.vitest) {
 			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
-				ties: [],
+				attractions: [],
 				objects: [
 					{
 						id: "a",
@@ -3813,7 +3810,7 @@ if (import.meta.vitest) {
 				schema: "elements.scene.fixture/v1",
 				domain: "Urban",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
-				ties: [],
+				attractions: [],
 				objects: [{ id: "a", meshUrl: "/m.glb", origin: [1, 2, 3], vortices: [] }],
 			});
 			expect(f?.domain).toBe("urban");
@@ -3822,7 +3819,7 @@ if (import.meta.vitest) {
 			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
-				ties: [],
+				attractions: [],
 				objects: [
 					{
 						id: "a",
@@ -3936,9 +3933,9 @@ if (import.meta.vitest) {
 			expect(ok).toBe(true);
 		});
 	});
-	describe("blockedVortexFullIdsFromTies", () => {
+	describe("blockedVortexFullIdsFromAttractions", () => {
 		it("collects endpoints", () => {
-			const s = blockedVortexFullIdsFromTies([{ source: "a:h1", target: "b:h2" }]);
+			const s = blockedVortexFullIdsFromAttractions([{ attracting: "a:h1", attracted: "b:h2" }]);
 			expect(s.has("a:h1")).toBe(true);
 			expect(s.has("b:h2")).toBe(true);
 		});
@@ -3972,7 +3969,7 @@ if (import.meta.vitest) {
 		it("parses nakagin fixture", () => {
 			const f = parseFixtureV1(fixtureJson as unknown);
 			expect(f?.domain).toBe("architecture");
-			expect(f?.ties.length).toBeGreaterThan(0);
+			expect(f?.attractions.length).toBeGreaterThan(0);
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
 	});
@@ -3982,10 +3979,10 @@ if (import.meta.vitest) {
 				objectIds: ["w", "a", "b", "c"],
 				explicitWormholeIds: new Set(["w"]),
 				edges: [
-					{ attractingObjectId: "w", attractedObjectId: "a", tieId: "t1" },
-					{ attractingObjectId: "a", attractedObjectId: "b", tieId: "t2" },
-					{ attractingObjectId: "w", attractedObjectId: "c", tieId: "t3" },
-					{ attractingObjectId: "c", attractedObjectId: "b", tieId: "t4" },
+					{ attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
+					{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
+					{ attractingObjectId: "w", attractedObjectId: "c", attractionId: "t3" },
+					{ attractingObjectId: "c", attractedObjectId: "b", attractionId: "t4" },
 				],
 			});
 			expect(tree.parentByObjectId.get("b")).toBe("a");
@@ -3996,17 +3993,17 @@ if (import.meta.vitest) {
 				objectIds: ["w", "a", "b"],
 				explicitWormholeIds: new Set(["w"]),
 				edges: [
-					{ attractingObjectId: "w", attractedObjectId: "a", tieId: "t1" },
-					{ attractingObjectId: "a", attractedObjectId: "b", tieId: "t2" },
+					{ attractingObjectId: "w", attractedObjectId: "a", attractionId: "t1" },
+					{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t2" },
 				],
 			});
 			expect(collectAttractedDescendantIds("w", tree.attractingByObjectId)).toEqual(["a", "b"]);
 		});
 	});
-	describe("attractionEdgesFromTies", () => {
+	describe("attractionEdgesFromAttractions", () => {
 		it("maps vortex endpoints to object ids", () => {
-			const edges = attractionEdgesFromTies([
-				{ id: "x", source: "objA:v1", target: "objB:link" },
+			const edges = attractionEdgesFromAttractions([
+				{ id: "x", attracting: "objA:v1", attracted: "objB:link" },
 			]);
 			expect(edges[0]?.attractingObjectId).toBe("objA");
 			expect(edges[0]?.attractedObjectId).toBe("objB");
