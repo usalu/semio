@@ -1355,6 +1355,7 @@ pub mod schema_gap_surfaces {
     }
 
     #[macro_export]
+    #[macro_export]
     macro_rules! gap_surface_family_name_list {
         (@names) => {
         AddedAttributeToConcept,
@@ -1557,6 +1558,12 @@ pub mod schema_gap_surfaces {
         {} => {
             gap_surface_family_name_list!(@names);
         };
+        (@register $builder:expr) => {{
+            $crate::register_gap_surface_family_connections! {
+                @expand $builder;
+                gap_surface_family_name_list!(@names)
+            }
+        }};
     }
 
     #[macro_export]
@@ -1616,20 +1623,23 @@ pub mod schema_gap_surfaces {
         {} => {
             gap_surface_existing_relay_name_list!(@names);
         };
+        (@register $builder:expr) => {{
+            $crate::register_gap_surface_existing_relay_connections! {
+                @expand $builder;
+                gap_surface_existing_relay_name_list!(@names)
+            }
+        }};
     }
 
     #[macro_export]
     macro_rules! with_gap_surface_family_names {
         (gap_surface_families) => {
-            gap_surface_families! {
-                gap_surface_family_name_list! {}
+            $crate::schema_gap_surfaces::gap_surface_families! {
+                $crate::gap_surface_family_name_list!(@names)
             }
         };
         (register_gap_surface_family_connections, $builder:expr) => {
-            register_gap_surface_family_connections! {
-                @expand $builder;
-                gap_surface_family_name_list! {}
-            }
+            $crate::gap_surface_family_name_list!(@register $builder)
         };
     }
 
@@ -1690,21 +1700,11 @@ pub mod schema_gap_surfaces {
     macro_rules! with_gap_surface_existing_relay_names {
         (gap_surface_existing_relays) => {
             $crate::schema_gap_surfaces::gap_surface_existing_relays! {
-                $($crate::gap_surface_existing_relay_name_list!(@names)),*
+                $crate::gap_surface_existing_relay_name_list!(@names)
             }
         };
         (register_gap_surface_existing_relay_connections, $builder:expr) => {
-            $crate::register_gap_surface_existing_relay_connections_from_name_list!($builder)
-        };
-    }
-
-    #[macro_export]
-    macro_rules! register_gap_surface_existing_relay_connections_from_name_list {
-        ($builder:expr) => {
-            $crate::register_gap_surface_existing_relay_connections! {
-                @expand $builder;
-                $($crate::gap_surface_existing_relay_name_list!(@names)),*
-            }
+            $crate::gap_surface_existing_relay_name_list!(@register $builder)
         };
     }
 
@@ -1722,7 +1722,7 @@ pub mod schema_gap_surfaces {
         }};
     }
 
-    gap_surface_existing_relays! { gap_surface_existing_relay_name_list!(@names) };
+    with_gap_surface_existing_relay_names!(gap_surface_existing_relays);
 }
 
 //#endregion 🩹 schema_gap_surfaces

@@ -3425,7 +3425,6 @@ mod board_host {
 					let color = Self::parse_css_color(color_s).ok_or_else(|| format!("invalid handle kind color {color_s:?}"))?;
 					let default_wire_kind = ho
 						.get("defaultWireKind")
-						.or_else(|| ho.get("default_wire_kind"))
 						.and_then(|x| x.as_str())
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
@@ -3461,7 +3460,6 @@ mod board_host {
 						.to_string();
 					let default_edge_kind = wo
 						.get("defaultEdgeKind")
-						.or_else(|| wo.get("default_edge_kind"))
 						.and_then(|x| x.as_str())
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
@@ -5407,7 +5405,6 @@ mod board_host {
 					}
 					let handle_kind = ho
 						.get("handleKind")
-						.or_else(|| ho.get("handle_kind"))
 						.and_then(|v| v.as_str())
 						.map(str::trim)
 						.filter(|s| !s.is_empty())

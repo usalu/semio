@@ -1,0 +1,13 @@
+{
+  "title": "Store Comprehensive Fixture",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Create semio/assets/semio kit-store comprehensive fixture exercising all store reads, writes, alternatives, backbone commands; golden ops+expected pair; wire semio-store and semio/rs tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1461"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪e483a8772dab43a2a7769c251fb89cae"
+  ]
+}

@@ -1,15 +1,17 @@
 {
   "title": "Board Clean Refactor",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Refactor @elements/board and board integration (topology, sketchpad) to be clean: remove legacy APIs, unify naming, consolidate exports, fix inconsistencies, ensure tests pass.",
-  "summary": "Continued board clean refactor. Kit diagram: removed legacy React Flow components (KitArtifactNode, FloatingEdge, FloatingConnectionLine, d3-force simulation); introduced KitDiagramLayoutNode/KitDiagramEdge; layout via layoutBoardFixtureForceGraph from @elements/board; TopologyBoardPane-only rendering with direct position updates on drag. Board package: prior pass canonicalized fixture node captions to text-only. Validation: @elements/board vitest 75 passed; sketchpad vite build succeeded.",
+  "summary": "Completed board clean refactor. Board fixture nodes use text-only captions (label rejected at parse); nakagin fixture migrated. Kit diagram uses @elements/board layoutBoardFixtureForceGraph and TopologyBoardPane only (removed legacy React Flow kit diagram and d3-force). Design topology already uses TopologyBoardPane with attraction-based scene connect. Removed snake_case JSON aliases (handle_kind, default_wire_kind, default_edge_kind) from board WASM catalog/fixture ingest. Tests: cargo test -p elements_board 80 passed; board vitest 75 passed; sketchpad vite build succeeded.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1459"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪07369d2f766b41299436b2a9acef4991",
-    "⚪8ae9df003c504398a1b78b579c802479"
+    "⚪8ae9df003c504398a1b78b579c802479",
+    "⚪b2b60f557ec5434da124417bf2b4f505",
+    "⚪b0056d8d035148f1bae664bcc487bb3b"
   ]
 }
