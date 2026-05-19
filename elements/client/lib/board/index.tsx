@@ -38,6 +38,7 @@ import {
   Wire as BoardWireObject,
   DEFAULT_BOARD_GRID_FACTOR,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  layoutBoardFixtureForceGraph,
   computeHandlePosition,
   createBoardHostMount,
   decodeBoardFixtureFromDragV1,
@@ -88,7 +89,16 @@ export {
   normalizeBoardPreselectProp,
   normalizeBoardSelectionProp,
 } from "./index";
-export type { BoardDrawLodKind, BoardForceGraphLayoutOptions, BoardLodZoomThresholds, BoardPreselectSnapshot } from "./index";
+export type {
+  BoardDrawLodKind,
+  BoardEdgeLinkPayload,
+  BoardFixtureV1,
+  BoardForceGraphLayoutOptions,
+  BoardHoverPayload,
+  BoardLodZoomThresholds,
+  BoardPreselectSnapshot,
+  BoardSelectionSnapshot,
+} from "./index";
 export { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, isBoardDrawLodKind } from "./index";
 export type { BoardLodModeKind } from "./index";
 

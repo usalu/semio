@@ -3868,6 +3868,19 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(graphqlWireOperationKind("subscription { operation { id } }")).toBe("subscription");
       expect(() => assertGraphqlWireKind("mutation { session { start } }", "query")).toThrow(/expected query/);
     });
+    it("parseResponsePayload reads ok errors and IdResult value", () => {
+      expect(parseResponsePayload({ ok: true, result: { value: "abc" } })).toEqual({ ok: true });
+      expect(responseResultId({ ok: true, result: { value: "abc" } })).toBe("abc");
+      const failed = parseResponsePayload({ ok: false, errors: { kind: "Invalid", message: "nope" } });
+      expect(failed.ok).toBe(false);
+      if (!failed.ok) expect(failed.error.message).toBe("nope");
+    });
+    it("withResponseSelection wraps leaf kit commands", () => {
+      expect(withResponseSelection("rename(newName: \"x\")")).toContain("ok");
+      expect(withResponseSelection('design(id: "d") { addFixedPiece(blueprintId: "b", position: { center: { u: 0, v: 0 } }) }')).toContain(
+        "addFixedPiece",
+      );
+    });
     it("graphql wire post json always carries query variables operationName", () => {
       const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
       const o = JSON.parse(raw) as Record<string, unknown>;

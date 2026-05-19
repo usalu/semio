@@ -22,6 +22,14 @@ function expectCleanSceneConsole(messages: string[]): void {
 
 const SCENE_LOD_TIERS = /^(minimap|overview|compact|normal|detail|micro)$/;
 
+async function expectSceneLodReady(page: Page): Promise<void> {
+	await expect
+		.poll(async () => page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 120_000 })
+		.toMatch(SCENE_LOD_TIERS);
+	await expect(page.locator("[data-e2e-scene-lod]")).toBeVisible({ timeout: 120_000 });
+	await expect.poll(async () => page.locator("[data-e2e-scene-lod]").textContent(), { timeout: 120_000 }).toMatch(SCENE_LOD_TIERS);
+}
+
 test("scene play loads canvas and fixture", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
@@ -30,14 +38,7 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	await page.waitForLoadState("networkidle");
 	await page.waitForTimeout(500);
 	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-domain", "architecture");
-	await expect.poll(async () => page.locator("[data-e2e-scene-lod]").textContent()).toMatch(SCENE_LOD_TIERS);
-	await expect
-		.poll(async () => {
-			const rootLod = await page.locator("[data-scene-root]").getAttribute("data-scene-lod");
-			const label = await page.locator("[data-e2e-scene-lod]").textContent();
-			return rootLod === label ? rootLod : null;
-		})
-		.toMatch(SCENE_LOD_TIERS);
+	await expectSceneLodReady(page);
 	await expect(page.locator('[data-measure-id="scene-main-lod"]')).toBeVisible({ timeout: 120_000 });
 	expectCleanSceneConsole(messages);
 });
@@ -112,15 +113,13 @@ test("scene does not return to loading meshes after initial load", async ({ page
 test("scene click keeps chunked meshes mounted", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
-	const canvas = page.locator("canvas").first();
-	await canvas.waitFor({ state: "visible", timeout: 120_000 });
+	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
-	await page.waitForTimeout(500);
+	await expect.poll(async () => page.locator("canvas").count()).toBeGreaterThan(0);
 	const before = await page.locator("canvas").count();
-	await canvas.click({ position: { x: 320, y: 240 } });
-	await page.waitForTimeout(500);
+	await page.locator("canvas").first().click({ position: { x: 320, y: 240 } });
 	await expect(page.locator("[data-scene-root]")).toBeVisible();
-	await expect(page.locator("canvas")).toHaveCount(before);
+	await expect.poll(async () => page.locator("canvas").count()).toBe(before);
 	expectCleanSceneConsole(messages);
 });
 

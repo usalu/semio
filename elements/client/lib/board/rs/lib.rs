@@ -2688,7 +2688,7 @@ mod board_host {
 	}
 
 	#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-	enum BoardElementStyleKind {
+	pub(crate) enum BoardElementStyleKind {
 		Original,
 		Neutral,
 		Hovered,
@@ -6212,32 +6212,44 @@ mod board_host {
 				if !world_boxes_overlap(moving_bounds, target_bounds) {
 					continue;
 				}
-				for (src_id, src_h) in &self.handles {
-					if src_h.node_id != moving_node_id
-						|| !self.handle_effectively_visible(src_id.as_str())
-						|| self.handle_has_incident_edge(src_id.as_str())
-					{
-						continue;
-					}
+				let moving_handles: Vec<_> = self
+					.handles
+					.iter()
+					.filter(|(id, h)| {
+						h.node_id == moving_node_id
+							&& self.handle_effectively_visible(id.as_str())
+							&& !self.handle_has_incident_edge(id.as_str())
+					})
+					.collect();
+				let target_handles: Vec<_> = self
+					.handles
+					.iter()
+					.filter(|(id, h)| {
+						h.node_id == target_id.as_str()
+							&& self.handle_effectively_visible(id.as_str())
+							&& !self.handle_has_incident_edge(id.as_str())
+					})
+					.collect();
+				for (src_id, src_h) in &moving_handles {
 					let Some(src_pos) = self.handle_world_pos(src_h) else {
 						continue;
 					};
-					for (tgt_id, tgt_h) in &self.handles {
-						if tgt_h.node_id != target_id.as_str()
-							|| !self.handle_effectively_visible(tgt_id.as_str())
-							|| self.handle_has_incident_edge(tgt_id.as_str())
-						{
-							continue;
-						}
-						if !self.handles_link_compatible_for_drag(src_h, tgt_h) {
-							continue;
-						}
+					for (tgt_id, tgt_h) in &target_handles {
 						let Some(tgt_pos) = self.handle_world_pos(tgt_h) else {
 							continue;
 						};
 						let d = distance_between(src_pos, tgt_pos);
-						if best.as_ref().map(|(bd, _, _)| d < *bd).unwrap_or(true) {
-							best = Some((d, src_id.clone(), tgt_id.clone()));
+						let pair = if self.handles_link_compatible_for_drag(src_h, tgt_h) {
+							Some(((*src_id).clone(), (*tgt_id).clone()))
+						} else if self.handles_link_compatible_for_drag(tgt_h, src_h) {
+							Some(((*tgt_id).clone(), (*src_id).clone()))
+						} else {
+							None
+						};
+						if let Some((s, t)) = pair {
+							if best.as_ref().map(|(bd, _, _)| d < *bd).unwrap_or(true) {
+								best = Some((d, s.to_string(), t.to_string()));
+							}
 						}
 					}
 				}
@@ -7048,6 +7060,12 @@ mod board_host {
 		}
 	}
 
+	#[cfg(test)]
+	impl BoardHost {
+		pub(crate) fn test_resolve_node_style_kind(&self, node_id: &str) -> Option<BoardElementStyleKind> {
+			self.nodes.get(node_id).map(|n| self.resolve_node_style_kind(n))
+		}
+	}
 }
 
 pub use board_host::BoardHost;
@@ -8029,6 +8047,7 @@ mod tests {
 
 #[cfg(test)]
 mod host_tests {
+	use crate::board_host::BoardElementStyleKind;
 	use crate::board_host::Interaction;
 	use crate::geom_sel::cubic_bezier_point;
 	use super::vcompute::distance_between;
@@ -8262,6 +8281,46 @@ mod host_tests {
 		h.set_world_raster_tiling("world-clip");
 		let tiled = h.encoded_scene_hint();
 		assert!(tiled >= monolithic);
+	}
+
+	#[test]
+	fn board_host_selected_node_keeps_selected_style_when_hovered() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		h.sync_descriptor(&sample_scene()).unwrap();
+		h.set_selection_ids(&["a".into()]);
+		h.set_hovered_id_silent(Some("a".into()));
+		assert_eq!(
+			h.test_resolve_node_style_kind("a"),
+			Some(BoardElementStyleKind::Selected),
+			"committed selection chrome should beat hover while pointer is over the node"
+		);
+		h.set_selection_ids(&[]);
+		h.set_hovered_id_silent(Some("a".into()));
+		assert_eq!(
+			h.test_resolve_node_style_kind("a"),
+			Some(BoardElementStyleKind::Hovered),
+			"unselected nodes should still use hover chrome"
+		);
+	}
+
+	#[test]
+	fn board_host_dragging_selected_node_keeps_selected_style_at_detail_lod() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		h.sync_descriptor(&sample_scene()).unwrap();
+		h.set_selection_ids(&["a".into()]);
+		let s = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(s.x, s.y, 0, false, false);
+		assert!(matches!(h.interaction, Interaction::DragNodes { .. }));
+		assert_eq!(h.hovered_id.as_deref(), Some("a"));
+		assert_eq!(
+			h.test_resolve_node_style_kind("a"),
+			Some(BoardElementStyleKind::Selected),
+			"node drag should keep primary selected paint at detail LOD"
+		);
 	}
 
 	#[test]

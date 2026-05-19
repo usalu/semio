@@ -1,9 +1,9 @@
 {
   "title": "Semio React One Hook Per Entity Field Command",
   "emoji": "⚛️",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio/client/lib/react/logic to one hook per entity (id), exactly one hook per field, and one useEntityCommand hook per entity aggregating all mutations with shared OperationStatus. Remove legacy per-operation exports and useUpdateDesign. Update sketchpad imports and vitest.",
-  "summary": "Completed CQRS hook surface: entity list hooks return full handles (Design[], Type[], Piece[], Connection[]); added aggregate bundles (useTypes, useConnections, usePieces, useDesigns) and SketchpadFacade region (ActiveKitTab, KitStoreProvider stubs, useKitStoreSnapshot from WIP Kit, diff type exports, executeSemioKitCommand/kit registry stubs). Vitest: 6 passed including banned per-operation export check. Sketchpad: local useIncludedDesigns/usePiecesFromIds/useDesignPieceLayoutMap; folder create + moveKitArtifact wired to executeSemioKitCommand when kit store exists. WASM kit-store registry full restore remains follow-up.",
+  "summary": "Completed @semio/react CQRS refactor and restored sketchpad facade: one id hook, field hooks, and EntityCommand per entity; removed per-operation hooks. Spliced full KitHostStore/KitRegistryProvider/InMemoryKitStore/executeSemioKitCommand from ticket patch; KitWasmMountProvider wires KitRuntimeContext when store is passed. Exported useResolvedDesign. Sketchpad: useActiveDesignRow, useDesignPieces/Connections for select-all and footer; folder/move use executeSemioKitCommand. Vitest 6 passed; vite sketchpad build succeeded.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1455"
   },

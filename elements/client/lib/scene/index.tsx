@@ -3410,6 +3410,7 @@ function PlaySurfaceFooter(props: {
 // #region 🎬Play
 function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }) {
 	const reg = useRegistry();
+	const setSelectedId = props.setSelectedId;
 	useEffect(() => {
 		const w = window as unknown as {
 			__scenePlaySelect?: (id: string) => void;
@@ -3417,14 +3418,14 @@ function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => 
 			__scenePlayClearSelection?: () => void;
 		};
 		w.__scenePlaySelect = (id: string) => {
-			props.setSelectedId(id);
+			setSelectedId(id);
 		};
 		w.__scenePlayActivate = (id: string) => {
-			props.setSelectedId(id);
+			setSelectedId(id);
 			reg.setActiveRelocateObjectId(id);
 		};
 		w.__scenePlayClearSelection = () => {
-			props.setSelectedId(null);
+			setSelectedId(null);
 			reg.setActiveRelocateObjectId(null);
 		};
 		return () => {
@@ -3432,7 +3433,7 @@ function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => 
 			delete w.__scenePlayActivate;
 			delete w.__scenePlayClearSelection;
 		};
-	}, [props, reg]);
+	}, [setSelectedId, reg]);
 	return null;
 }
 

@@ -1,9 +1,9 @@
 {
   "title": "Board Clean Refactor",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor @elements/board and board integration (topology, sketchpad) to be clean: remove legacy APIs, unify naming, consolidate exports, fix inconsistencies, ensure tests pass.",
-  "summary": "Canonical board fixture node captions use `text` only: removed `label` from `BoardFixtureNodeV1`, `parseBoardFixtureV1` rejects nodes with a `label` key, dropped `fontFamily` parse alias and Rust `label`→`text` fallback. Migrated 180 Nakagin graph nodes in `.storybook/fixtures/nakagin-capsule-tower.board.json` (`label`→`text`). Updated board play caption editor and Storybook. Validation: `cargo test -p elements_board` (76 passed), `bunx vitest run` in `@elements/board` (75 passed).",
+  "summary": "Continued board clean refactor. Kit diagram: removed legacy React Flow components (KitArtifactNode, FloatingEdge, FloatingConnectionLine, d3-force simulation); introduced KitDiagramLayoutNode/KitDiagramEdge; layout via layoutBoardFixtureForceGraph from @elements/board; TopologyBoardPane-only rendering with direct position updates on drag. Board package: prior pass canonicalized fixture node captions to text-only. Validation: @elements/board vitest 75 passed; sketchpad vite build succeeded.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1459"
   },

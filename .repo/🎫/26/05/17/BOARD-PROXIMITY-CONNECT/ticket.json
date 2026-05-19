@@ -1,9 +1,9 @@
 {
   "title": "Board Proximity Connect",
   "emoji": "🔌",
-  "status": "open",
+  "status": "closed",
   "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
-  "summary": "BoardHost now refuses link gestures that would use a handle that already has an incident edge: try_commit_link_edge guards both endpoints, nearest_link_snap_handle_world skips busy targets, LinkTargetNode completion ignores busy handles, and LinkAtSourceHandle does not start from a busy handle. Added Rust scene helpers and host_tests for busy target/source/indirect. Fixed elements_board Cargo.toml missing base64 for tests. Vitest: use detail-band camera zoom for WASM link-drag tests (snap requires detail LOD), align nodeCreate expectation with graph observation, BoardCanvas tests pass BOARD_LOD_DETAIL_MIN_ZOOM via camera prop.",
+  "summary": "Node-drag proximity connect was missing: only link-drag pointer-up could emit proximityConnect. BoardHost now tracks proximity_pair on DragNodes (normal/detail/micro LOD, single unconnected node): overlapping node bounds pick the nearest compatible free handle pair via handles_link_compatible_for_drag in either direction (same rule engine as indirect/link), preview rubber wire during drag, commit proximityConnect on pointer-up. Tests: board_host_node_drag_proximity_connect_overlapping_compatible_handles, board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge. cargo test -p elements_board --lib: 78 passed; vitest @elements/board: 75 passed; wasm pkg rebuilt.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪e80ef43ea64e47c5a4b9b52a1b31e67b",

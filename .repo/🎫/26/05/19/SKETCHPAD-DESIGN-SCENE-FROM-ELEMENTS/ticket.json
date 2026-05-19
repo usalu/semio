@@ -1,14 +1,18 @@
 {
   "title": "Sketchpad Design Scene From Elements",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Replace the 3D scene in semio/sketchpad design app with the scene from elements (@elements/scene via TopologyScenePane). Wire representations, selection, hover, drag-drop, and relocate; remove dead legacy SemioScene path.",
-  "summary": "Replaced sketchpad design app 3D scene with @elements/scene via TopologyScenePane. Design topology adapter builds valid elements.scene.fixture/v1 (domain, attractions, kit mesh URLs, selection/hover flags). DesignTopologySceneWindow adds relocate toolbar, scene chrome defaults, and library drag-drop onto the ground plane. Removed ~900 lines of legacy SemioScene/RepresentationDesign path.",
+  "summary": "Continued cleanup: wired design topology onBoardHover to DESIGN.SET_HOVER for board↔scene hover chrome; removed dead useThree import; updated embedded Design Playwright test to use elements board/scene selectors (topology roots, board-text-overlay, board canvas pan/drag) instead of react-flow DOM; connector selection via actor when WASM handles have no DOM.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1456"
   },
   "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
   "sessions": [
-    "⚪24378a5e121d42d4870be127c25ccbdf"
+    "⚪24378a5e121d42d4870be127c25ccbdf",
+    "⚪c45dde112b32402095ba8e4fed72fcca",
+    "⚪bceea1c582374f3ebd15e501befe7b81",
+    "⚪77db1e4d14b6468092c9cebd44ac2e06",
+    "⚪88751d91dcfe488aa7ca299ffb2ed0b8"
   ]
 }
