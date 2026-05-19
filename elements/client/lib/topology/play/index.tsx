@@ -24,6 +24,7 @@ import { Move3d, Rotate3d, Scaling } from "lucide-react";
 import nakaginBoardJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
+	boardLodAutomaticSelectLabel,
 	boardLodCanvasProps,
 	isBoardDrawLodKind,
 	parseBoardFixtureV1,
@@ -47,6 +48,7 @@ import {
 	SCENE_LOD_MODE_AUTOMATIC,
 	isSceneLodKind,
 	parseSceneFixtureV1,
+	sceneLodAutomaticSelectLabel,
 	sceneLodCanvasProps,
 	type SceneCameraState,
 	type SceneFixtureV1,
@@ -80,7 +82,9 @@ function topologyPlayLodTierMenuLabel(tier: string): string {
 
 function topologyWindowKindsWithLodMeasures(
 	boardLodMode: BoardLodModeKind,
+	boardEffectiveLod: BoardDrawLodKind,
 	sceneLodMode: SceneLodModeKind,
+	sceneEffectiveLod: SceneLodKind,
 	setBoardLodMode: (mode: BoardLodModeKind) => void,
 	setSceneLodMode: (mode: SceneLodModeKind) => void,
 ): UIWindowKindDefinition[] {
@@ -88,7 +92,11 @@ function topologyWindowKindsWithLodMeasures(
 		{
 			id: `${TOPOLOGY_PLAY_WINDOWS.board}-lod`,
 			items: [
-				{ id: "automatic", label: "Automatic", value: BOARD_LOD_MODE_AUTOMATIC },
+				{
+					id: "automatic",
+					label: boardLodAutomaticSelectLabel(boardEffectiveLod),
+					value: BOARD_LOD_MODE_AUTOMATIC,
+				},
 				...TOPOLOGY_PLAY_LOD_TIERS_BOARD.map((tier) => ({
 					id: tier,
 					label: topologyPlayLodTierMenuLabel(tier),
@@ -109,7 +117,11 @@ function topologyWindowKindsWithLodMeasures(
 		{
 			id: `${TOPOLOGY_PLAY_WINDOWS.scene}-lod`,
 			items: [
-				{ id: "automatic", label: "Automatic", value: SCENE_LOD_MODE_AUTOMATIC },
+				{
+					id: "automatic",
+					label: sceneLodAutomaticSelectLabel(sceneEffectiveLod),
+					value: SCENE_LOD_MODE_AUTOMATIC,
+				},
 				...TOPOLOGY_PLAY_LOD_TIERS_SCENE.map((tier) => ({
 					id: tier,
 					label: topologyPlayLodTierMenuLabel(tier),
@@ -168,6 +180,8 @@ interface TopologyPlayShellValue {
 	readonly sceneSelected: string | null;
 	readonly relocateMode: SceneRelocateMode;
 	readonly sceneLodTag: SceneLodKind;
+	readonly boardLodTag: BoardDrawLodKind;
+	readonly onBoardLodChange: (lod: BoardDrawLodKind) => void;
 	readonly boardLodProps: ReturnType<typeof boardLodCanvasProps>;
 	readonly sceneLodProps: ReturnType<typeof sceneLodCanvasProps>;
 	readonly connectBoard: number;
@@ -213,7 +227,7 @@ function TopologyBoardWindow(): ReactElement {
 					fixture={s.boardFixture}
 					bindings={s.bindings}
 					selectedIds={s.boardSelected}
-					board={{ camera: s.boardCamera, ...s.boardLodProps }}
+					board={{ camera: s.boardCamera, onLodChange: s.onBoardLodChange, ...s.boardLodProps }}
 				/>
 			</div>
 		</div>
@@ -296,6 +310,8 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 		...sceneFixture.camera,
 	}));
 	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
+	const [boardLodTag, setBoardLodTag] = useState<BoardDrawLodKind>("normal");
+	const onBoardLodChange = useCallback((lod: BoardDrawLodKind) => setBoardLodTag(lod), []);
 	const [boardLodMode, setBoardLodMode] = useState<BoardLodModeKind>(BOARD_LOD_MODE_AUTOMATIC);
 	const [sceneLodMode, setSceneLodMode] = useState<SceneLodModeKind>(SCENE_LOD_MODE_AUTOMATIC);
 	const boardLodProps = useMemo(() => boardLodCanvasProps(boardLodMode), [boardLodMode]);
@@ -384,6 +400,8 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,
+			boardLodTag,
+			onBoardLodChange,
 			boardLodProps,
 			sceneLodProps,
 			connectBoard,
@@ -403,6 +421,8 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,
+			boardLodTag,
+			onBoardLodChange,
 			boardLodProps,
 			sceneLodProps,
 			connectBoard,
@@ -417,14 +437,21 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			{
 				id: TOPOLOGY_PLAY_APP_ID,
 				label: "Topology play",
-				windowKinds: topologyWindowKindsWithLodMeasures(boardLodMode, sceneLodMode, setBoardLodMode, setSceneLodMode),
+				windowKinds: topologyWindowKindsWithLodMeasures(
+					boardLodMode,
+					boardLodTag,
+					sceneLodMode,
+					sceneLodTag,
+					setBoardLodMode,
+					setSceneLodMode,
+				),
 				defaultLayout: createStackLayout(
 					[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
 					[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
 				),
 			},
 		],
-		[boardLodMode, sceneLodMode],
+		[boardLodMode, boardLodTag, sceneLodMode, sceneLodTag],
 	);
 
 	return { shellValue, apps };

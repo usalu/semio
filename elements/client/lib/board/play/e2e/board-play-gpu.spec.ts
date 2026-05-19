@@ -95,7 +95,7 @@ test.describe("board play", () => {
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 30_000 })
 			.toBeGreaterThan(0);
 		await page.locator("#board-overview-lod").click();
-		await page.getByRole("option", { name: "Automatic" }).click();
+		await page.getByRole("option", { name: /^Automatic · / }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
 			.toMatch(/^(minimap|overview|normal|detail|micro)$/);

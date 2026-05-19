@@ -329,6 +329,31 @@ export interface BoardPreselectSnapshot {
 /** @emoji 👁️ Empty area-select preview (no ids highlighted, none marked removed). */
 export const BOARD_PRESELECT_EMPTY: BoardPreselectSnapshot = { ids: [], removedIds: [] };
 
+/** @emoji 🎯 Committed selection vs area-select preview chrome (`preselect∖selection` selected, `removedIds` highlighted). */
+export function boardElementInteractionChrome(
+	selectionIds: Iterable<string>,
+	preselection: BoardPreselectSnapshot,
+): { highlightedIds: Set<string>; selectedIds: Set<string> } {
+	const selection = new Set(selectionIds);
+	if (preselection.ids.length === 0) {
+		return { selectedIds: selection, highlightedIds: new Set() };
+	}
+	const selectedIds = new Set(preselection.ids.filter((id) => !selection.has(id)));
+	const highlightedIds = new Set(preselection.removedIds);
+	return { selectedIds, highlightedIds };
+}
+
+/** @emoji 🎨 Resolves headless / fallback style key from interaction chrome flags (selected beats highlighted). */
+export function boardObjectChromeStyleKey(base: "edge" | "handle" | "node", object: BoardObject): string {
+	if (object.selected) {
+		return `${base}.selected`;
+	}
+	if (object.highlighted) {
+		return `${base}.highlighted`;
+	}
+	return base;
+}
+
 export interface BoardSelectionOptions {
 	method?: BoardSelectionMethod;
 	mode?: BoardSelectionMode;
@@ -665,6 +690,7 @@ export interface BoardEventMap {
 
 export interface BoardObjectOptions {
 	draggable?: boolean;
+	highlighted?: boolean;
 	id: string;
 	selected?: boolean;
 	style?: string;
@@ -747,6 +773,7 @@ export interface BoardHandleProps {
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
+	highlighted?: boolean;
 	selected?: boolean;
 	style?: string;
 	userData?: Record<string, unknown>;
@@ -759,6 +786,7 @@ export interface BoardEdgeProps {
 	/** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
 	edgeKind?: string;
 	id: string;
+	highlighted?: boolean;
 	selected?: boolean;
 	source: string;
 	style?: string;
@@ -773,6 +801,7 @@ export interface BoardWireProps {
 	endX?: number;
 	endY?: number;
 	id: string;
+	highlighted?: boolean;
 	selected?: boolean;
 	source: string;
 	style?: string;
@@ -943,13 +972,21 @@ export function boardLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boo
 	return { automaticLod: false, lod: mode };
 }
 
+/** @emoji 📶 Automatic LOD select row label showing the live zoom-derived tier. */
+export function boardLodAutomaticSelectLabel(effectiveTier: BoardDrawLodKind): string {
+	return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
+}
+
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
+	"edge.highlighted": { stroke: "#34d1bf", strokeWidth: 2 },
 	"edge.selected": { stroke: "#34d1bf", strokeWidth: 3 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
+	"handle.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 1.5 },
 	"handle.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
+	"node.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
 	"node.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 3 },
 };
 
@@ -1773,6 +1810,7 @@ class TypedEmitter<TEvents extends object> {
 /** 🧱 Base retained board object with scene identity and shared flags. */
 export class BoardObject {
 	draggable: boolean;
+	highlighted: boolean;
 	parent: BoardScene | null = null;
 	selected: boolean;
 	style: string | null;
@@ -1783,6 +1821,7 @@ export class BoardObject {
 
 	constructor(public readonly id: string, options: BoardObjectOptions) {
 		this.draggable = options.draggable ?? false;
+		this.highlighted = options.highlighted ?? false;
 		this.selected = options.selected ?? false;
 		this.style = options.style ?? null;
 		this.userData = { ...(options.userData ?? {}) };
@@ -2440,6 +2479,9 @@ export class BoardRenderer {
 	/** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
 	private cachedWasmGpuReady = false;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
+	private drawLodStore = new SnapshotStore<BoardDrawLodKind>(
+		resolveBoardLodLabelFromThresholds(DEFAULT_CAMERA.zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS),
+	);
 	private canvas: HTMLCanvasElement | null;
 	private dpr = 1;
 	private emitter = new TypedEmitter<BoardEventMap>();
@@ -2873,6 +2915,10 @@ export class BoardRenderer {
 
 	subscribeCamera = (listener: () => void): (() => void) => this.cameraStore.subscribe(listener);
 
+	getDrawLodSnapshot = (): BoardDrawLodKind => this.drawLodStore.getSnapshot();
+
+	subscribeDrawLod = (listener: () => void): (() => void) => this.drawLodStore.subscribe(listener);
+
 	on<TKey extends keyof BoardEventMap>(name: TKey, handler: (payload: BoardEventMap[TKey]) => void): () => void {
 		return this.emitter.on(name, handler);
 	}
@@ -3209,6 +3255,11 @@ export class BoardRenderer {
 		this.syncGpuReadyCacheFromSession();
 	}
 
+	private selectionChromeIds(): Set<string> {
+		const { selectedIds } = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
+		return selectedIds;
+	}
+
 	private descriptorJsonForWasmHost(): string {
 		const chrome = this.selectionChromeIds();
 		const nodes: Record<string, unknown>[] = [];
@@ -3469,7 +3520,9 @@ export class BoardRenderer {
 						break;
 					}
 					case "preselectCancel": {
-						this.updatePreselection([], [], true);
+						this.updatePreselection([], [], false);
+						this.applySelectionChromeToSceneObjects();
+						this.emit("preselectCancel", BOARD_PRESELECT_EMPTY);
 						break;
 					}
 					case "hover": {
@@ -3612,7 +3665,7 @@ export class BoardRenderer {
 				continue;
 			}
 			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
-			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
+			const style = this.getStyle(node.style, boardObjectChromeStyleKey("node", node));
 			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
@@ -3663,7 +3716,7 @@ export class BoardRenderer {
 				const outward = len > 1e-6 ? 10 / len : 0;
 				const labelX = handleScreen.x + dx * outward;
 				const labelY = handleScreen.y + dy * outward;
-				const style = this.getStyle(handle.style, handle.selected ? "handle.selected" : "handle");
+				const style = this.getStyle(handle.style, boardObjectChromeStyleKey("handle", handle));
 				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
 				ctx.fillText(caption, labelX, labelY);
 			}
@@ -3784,15 +3837,11 @@ export class BoardRenderer {
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
-	/** @emoji 💠 Preselect preview ids when non-empty, otherwise committed selection (mirrors WASM `selection_chrome_ids`). */
-	private selectionChromeIds(): Set<string> {
-		return this.preselectIds.size > 0 ? this.preselectIds : this.selectionIds;
-	}
-
 	private applySelectionChromeToSceneObjects(): void {
-		const chrome = this.selectionChromeIds();
+		const { highlightedIds, selectedIds } = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
 		for (const object of this.scene.getAllObjects()) {
-			object.selected = chrome.has(object.id);
+			object.selected = selectedIds.has(object.id);
+			object.highlighted = highlightedIds.has(object.id);
 		}
 	}
 
@@ -3874,6 +3923,18 @@ export class BoardRenderer {
 		if (BoardRenderer.activeRenderer !== this) {
 			return;
 		}
+		if (event.key === "Escape") {
+			if (this.wasmSessionCallBlockedForReentry()) {
+				this.invalidated = true;
+				return;
+			}
+			if (this.session.cancelAreaSelect()) {
+				event.preventDefault();
+				this.applyWasmDrainToScene(this.session.drainEventsJson());
+				this.invalidate();
+			}
+			return;
+		}
 		if (!shouldBoardHandleDeleteShortcut()) {
 			return;
 		}
@@ -3911,7 +3972,9 @@ export class BoardRenderer {
 		}
 		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
-		this.canvas.dataset.boardLod = this.effectiveDrawLodLabel();
+		const lod = this.effectiveDrawLodLabel();
+		this.drawLodStore.setSnapshot(lod, (left, right) => left === right);
+		this.canvas.dataset.boardLod = lod;
 		this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
@@ -5341,6 +5404,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			iconKind: props.iconKind,
 			id: props.id,
 			root: props.root,
+			highlighted: props.highlighted,
 			selected: props.selected,
 			shape: "rectangle",
 			style: props.style,
@@ -5378,6 +5442,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 
 function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOptions): void {
 	instance.draggable = props.draggable ?? true;
+	instance.highlighted = props.highlighted ?? false;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
@@ -5409,6 +5474,7 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 		node.attachHandle(instance);
 		instance.node = node;
 	}
+	instance.highlighted = props.highlighted ?? false;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
@@ -5424,6 +5490,7 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 }
 
 function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Handle, targetHandle: Handle): void {
+	instance.highlighted = props.highlighted ?? false;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
@@ -5433,6 +5500,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 }
 
 function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Handle, targetHandle: Handle | null): void {
+	instance.highlighted = props.highlighted ?? false;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
@@ -5470,6 +5538,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
 		(a.iconKind ?? "") === (b.iconKind ?? "") &&
 		ac === bc &&
+		a.highlighted === b.highlighted &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -5483,6 +5552,7 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 		a.source === b.source &&
 		a.target === b.target &&
 		(a.edgeKind ?? "").trim() === (b.edgeKind ?? "").trim() &&
+		a.highlighted === b.highlighted &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -5498,6 +5568,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
 		(a.target ?? "") === (b.target ?? "") &&
 		(a.endX ?? Number.NaN) === (b.endX ?? Number.NaN) &&
 		(a.endY ?? Number.NaN) === (b.endY ?? Number.NaN) &&
+		a.highlighted === b.highlighted &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -5511,6 +5582,7 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		a.x !== b.x ||
 		a.y !== b.y ||
 		a.draggable !== b.draggable ||
+		a.highlighted !== b.highlighted ||
 		a.selected !== b.selected ||
 		a.style !== b.style ||
 		a.visible !== b.visible ||

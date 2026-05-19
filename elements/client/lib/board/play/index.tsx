@@ -49,8 +49,10 @@ import {
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
   BOARD_FIXTURE_DRAG_V1_MIME,
   BOARD_LOD_MODE_AUTOMATIC,
+  boardLodAutomaticSelectLabel,
   BOARD_PRESELECT_EMPTY,
   BOARD_SELECTION_TARGETS_DEFAULT,
+  boardElementInteractionChrome,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
   normalizeBoardSelectionProp,
   isBoardDrawLodKind,
@@ -323,6 +325,8 @@ interface BoardPlayShellValue {
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
+
+const BoardPlayLodRuntimeContext = createContext<((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => void) | null>(null);
 
 function useBoardPlayShell(): BoardPlayShellValue {
   const value = useContext(BoardPlayShellContext);
@@ -698,11 +702,10 @@ function BoardPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function boardPlayChromeIds(selectionIds: Set<string>, preselection: BoardPreselectSnapshot): Set<string> {
-  return preselection.ids.length > 0 ? new Set(preselection.ids) : selectionIds;
-}
-
-function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): ReactElement {
+function nakaginBoardMarkers(
+  fixture: BoardFixtureV1,
+  chrome: { highlightedIds: Set<string>; selectedIds: Set<string> },
+): ReactElement {
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   return (
@@ -717,7 +720,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): R
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             shape="rectangle"
-            selected={chromeIds.has(node.id)}
+            highlighted={chrome.highlightedIds.has(node.id)} selected={chrome.selectedIds.has(node.id)}
             text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
@@ -729,7 +732,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): R
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={chromeIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} highlighted={chrome.highlightedIds.has(handle.id)} selected={chrome.selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ) : (
@@ -740,7 +743,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): R
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             radius={node.radius}
-            selected={chromeIds.has(node.id)}
+            highlighted={chrome.highlightedIds.has(node.id)} selected={chrome.selectedIds.has(node.id)}
             text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
@@ -751,13 +754,13 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): R
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={chromeIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} highlighted={chrome.highlightedIds.has(handle.id)} selected={chrome.selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ),
       )}
       {fixture.edges.map((edge) => (
-        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} selected={chromeIds.has(edge.id)} source={edge.source} target={edge.target} />
+        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} highlighted={chrome.highlightedIds.has(edge.id)} selected={chrome.selectedIds.has(edge.id)} source={edge.source} target={edge.target} />
       ))}
     </>
   );
@@ -854,6 +857,8 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
   } = useBoardPlayShell();
   const camera = camerasByPane[paneId];
   const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
+  const reportEffectiveLod = useContext(BoardPlayLodRuntimeContext);
+  const onLodChange = useCallback((lod: BoardDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const selection = useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
   const onSelect = useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
   const onPreselect = useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
@@ -870,6 +875,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
         {...lodProps}
+        onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"
         contextMenu={showBackgroundMenu ? boardPlayCanvasBackgroundMenu : undefined}
@@ -891,7 +897,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
       >
         <BoardStructuralDeleteReporter />
         <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, boardPlayChromeIds(selectionIds, preselection))}
+        {nakaginBoardMarkers(fixture, boardElementInteractionChrome(selectionIds, preselection))}
       </BoardCanvas>
     </BoardPaneChrome>
   );
@@ -1726,13 +1732,18 @@ function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
 
 function boardWindowKindsWithLodMeasures(
   lodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>,
+  effectiveLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind>,
   setLodModeForPane: (pane: BoardPlayPaneId, mode: BoardLodModeKind) => void,
 ): UIWindowKindDefinition[] {
   const lodMeasure = (paneId: BoardPlayPaneId): UIWindowKindDefinition["measures"] => [
     {
       id: `${paneId}-lod`,
       items: [
-        { id: "automatic", label: "Automatic", value: BOARD_LOD_MODE_AUTOMATIC },
+        {
+          id: "automatic",
+          label: boardLodAutomaticSelectLabel(effectiveLodByPane[paneId]),
+          value: BOARD_LOD_MODE_AUTOMATIC,
+        },
         ...BOARD_PLAY_LOD_TIERS.map((tier) => ({
           id: tier,
           label: boardPlayLodTierMenuLabel(tier),
@@ -1862,6 +1873,14 @@ function BoardPlayInner(): ReactElement {
   });
   const setBoardLodModeForPane = useCallback((pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
     setBoardLodModeByPane((prev) => ({ ...prev, [pane]: mode }));
+  }, []);
+  const [boardEffectiveLodByPane, setBoardEffectiveLodByPane] = useState<Record<BoardPlayPaneId, BoardDrawLodKind>>({
+    "board-detail": "normal",
+    "board-overview": "normal",
+    "board-selection": "normal",
+  });
+  const setBoardEffectiveLodForPane = useCallback((pane: BoardPlayPaneId, lod: BoardDrawLodKind) => {
+    setBoardEffectiveLodByPane((prev) => (prev[pane] === lod ? prev : { ...prev, [pane]: lod }));
   }, []);
   const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
     if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
@@ -2517,8 +2536,8 @@ function BoardPlayInner(): ReactElement {
   );
 
   const boardWindowKinds = useMemo(
-    () => boardWindowKindsWithLodMeasures(boardLodModeByPane, setBoardLodModeForPane),
-    [boardLodModeByPane, setBoardLodModeForPane],
+    () => boardWindowKindsWithLodMeasures(boardLodModeByPane, boardEffectiveLodByPane, setBoardLodModeForPane),
+    [boardLodModeByPane, boardEffectiveLodByPane, setBoardLodModeForPane],
   );
 
   const boardPlayApp: UIAppConfig = useMemo(
@@ -2540,7 +2559,9 @@ function BoardPlayInner(): ReactElement {
 
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
-      <UI apps={[boardPlayApp]} defaultAppId={BOARD_PLAY_APP_ID} footerItems={surfaceFooterItems} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} mobile={mobile} />
+      <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
+        <UI apps={[boardPlayApp]} defaultAppId={BOARD_PLAY_APP_ID} footerItems={surfaceFooterItems} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} mobile={mobile} />
+      </BoardPlayLodRuntimeContext.Provider>
     </BoardPlayShellContext.Provider>
   );
 }

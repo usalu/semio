@@ -86,7 +86,7 @@ export {
   normalizeBoardSelectionProp,
 } from "./index";
 export type { BoardDrawLodKind, BoardLodZoomThresholds, BoardPreselectSnapshot } from "./index";
-export { BOARD_LOD_MODE_AUTOMATIC, isBoardDrawLodKind } from "./index";
+export { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, isBoardDrawLodKind } from "./index";
 export type { BoardLodModeKind } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
@@ -116,6 +116,8 @@ export interface BoardCanvasProps {
   automaticLod?: boolean;
   /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
   lod?: BoardDrawLodKind;
+  /** @emoji 📶 Emits whenever the resolved WASM draw LOD band changes. */
+  onLodChange?: (lod: BoardDrawLodKind) => void;
   /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_BOARD_GRID_FACTOR}). */
   gridFactor?: number;
   /** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
@@ -192,6 +194,7 @@ export type BoardNodeCircleProps = {
   radius: number;
   /** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
   root?: boolean;
+  highlighted?: boolean;
   selected?: boolean;
   shape?: "circle";
   style?: string;
@@ -222,6 +225,7 @@ export type BoardNodeRectangleProps = {
   id: string;
   /** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
   root?: boolean;
+  highlighted?: boolean;
   selected?: boolean;
   shape: "rectangle";
   style?: string;
@@ -700,6 +704,7 @@ export function BoardCanvas({
   lodZoomThresholds,
   automaticLod,
   lod,
+  onLodChange,
   onCamera,
   onChange,
   onChildEdgeChange,
@@ -1312,6 +1317,7 @@ export function BoardCanvas({
         {contextRenderer ? (
           <HostMountProvider>
             <BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />
+        {onLodChange ? <BoardDrawLodReporter onLodChange={onLodChange} /> : null}
           </HostMountProvider>
         ) : null}
         <ContextMenuController
@@ -1331,6 +1337,16 @@ export function BoardCanvas({
 //#endregion 🔖Canvas
 
 //#region 🔖Hooks
+/** @emoji 📶 Subscribes to {@link BoardRenderer} draw LOD band changes for window measure labels. */
+export function BoardDrawLodReporter({ onLodChange }: { onLodChange?: (lod: BoardDrawLodKind) => void }): null {
+  const renderer = useBoard();
+  const lod = useSyncExternalStore(renderer.subscribeDrawLod, renderer.getDrawLodSnapshot, renderer.getDrawLodSnapshot);
+  useEffect(() => {
+    onLodChange?.(lod);
+  }, [lod, onLodChange]);
+  return null;
+}
+
 /** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or secondary host tree). */
 export function useBoard(): BoardRenderer {
   const renderer = useContext(BoardContext);

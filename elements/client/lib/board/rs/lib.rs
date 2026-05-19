@@ -3666,44 +3666,67 @@ mod board_host {
 			(self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
 		}
 
+		fn is_preselect_active(&self) -> bool {
+			self.is_preselecting() || !self.preselect.is_empty()
+		}
+
+		/// @emoji 🎨 During area-select: preselect∖selection → Selected; selection∖preselect → Highlighted; else committed selection → Selected.
+		fn resolve_interaction_style_kind(&self, id: &str) -> BoardElementStyleKind {
+			if self.is_preselect_active() {
+				let in_preselect = self.preselect.contains(id);
+				let in_selection = self.selection.contains(id);
+				if in_preselect && !in_selection {
+					return BoardElementStyleKind::Selected;
+				}
+				if in_selection && !in_preselect {
+					return BoardElementStyleKind::Highlighted;
+				}
+				return BoardElementStyleKind::Neutral;
+			}
+			if self.selection.contains(id) {
+				return BoardElementStyleKind::Selected;
+			}
+			BoardElementStyleKind::Neutral
+		}
+
 		fn resolve_node_style_kind(&self, n: &NodeData) -> BoardElementStyleKind {
 			if let Some(kind) = Self::explicit_style_kind(n.style.as_deref()) {
 				return kind;
 			}
-			if n.selected {
-				return BoardElementStyleKind::Highlighted;
+			if let Some(kind) = self.hovered_style_kind(n.id.as_str()) {
+				return kind;
 			}
-			self.hovered_style_kind(n.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+			self.resolve_interaction_style_kind(n.id.as_str())
 		}
 
 		fn resolve_handle_style_kind(&self, h: &HandleData) -> BoardElementStyleKind {
 			if let Some(kind) = Self::explicit_style_kind(h.style.as_deref()) {
 				return kind;
 			}
-			if h.selected {
-				return BoardElementStyleKind::Highlighted;
+			if let Some(kind) = self.hovered_style_kind(h.id.as_str()) {
+				return kind;
 			}
-			self.hovered_style_kind(h.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+			self.resolve_interaction_style_kind(h.id.as_str())
 		}
 
 		fn resolve_edge_style_kind(&self, e: &EdgeData) -> BoardElementStyleKind {
 			if let Some(kind) = Self::explicit_style_kind(e.style.as_deref()) {
 				return kind;
 			}
-			if e.selected {
-				return BoardElementStyleKind::Highlighted;
+			if let Some(kind) = self.hovered_style_kind(e.id.as_str()) {
+				return kind;
 			}
-			self.hovered_style_kind(e.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+			self.resolve_interaction_style_kind(e.id.as_str())
 		}
 
 		fn resolve_wire_style_kind(&self, w: &WireData) -> BoardElementStyleKind {
 			if let Some(kind) = Self::explicit_style_kind(w.style.as_deref()) {
 				return kind;
 			}
-			if w.selected {
-				return BoardElementStyleKind::Highlighted;
+			if let Some(kind) = self.hovered_style_kind(w.id.as_str()) {
+				return kind;
 			}
-			self.hovered_style_kind(w.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+			self.resolve_interaction_style_kind(w.id.as_str())
 		}
 
 		fn node_fill_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {

@@ -605,6 +605,11 @@ export function sceneLodCanvasProps(mode: SceneLodModeKind): Pick<SceneCanvasPro
 	return { automaticLod: false, lod: mode };
 }
 
+/** @emoji 📶 Automatic LOD select row label showing the live orbit-derived tier. */
+export function sceneLodAutomaticSelectLabel(effectiveTier: SceneLodKind): string {
+	return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
+}
+
 function parseSceneDomainKind(value: unknown): SceneDomainKind {
 	if (typeof value !== "string") {
 		return DEFAULT_SCENE_DOMAIN;
@@ -2767,8 +2772,14 @@ function scenePlayLodTierMenuLabel(tier: SceneLodKind): string {
 
 const ScenePlayLodContext = createContext<Pick<SceneCanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
 
+const ScenePlayRuntimeContext = createContext<{
+	readonly effectiveLod: SceneLodKind;
+	readonly setEffectiveLod: (lod: SceneLodKind) => void;
+} | null>(null);
+
 function sceneWindowKindsWithLodMeasures(
 	sceneLodMode: SceneLodModeKind,
+	sceneEffectiveLod: SceneLodKind,
 	setSceneLodMode: (mode: SceneLodModeKind) => void,
 ): UIWindowKindDefinition[] {
 	return [
@@ -2780,7 +2791,11 @@ function sceneWindowKindsWithLodMeasures(
 				{
 					id: "scene-main-lod",
 					items: [
-						{ id: "automatic", label: "Automatic", value: SCENE_LOD_MODE_AUTOMATIC },
+						{
+							id: "automatic",
+							label: sceneLodAutomaticSelectLabel(sceneEffectiveLod),
+							value: SCENE_LOD_MODE_AUTOMATIC,
+						},
 						...SCENE_PLAY_LOD_TIERS.map((tier) => ({
 							id: tier,
 							label: scenePlayLodTierMenuLabel(tier),
@@ -2813,7 +2828,8 @@ function ScenePlayBody({
 	const [proximityCount, setProximityCount] = useState(0);
 	const [connectCount, setConnectCount] = useState(0);
 	const [indirectCount, setIndirectCount] = useState(0);
-	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
+	const runtime = useContext(ScenePlayRuntimeContext);
+	const sceneLodTag = runtime?.effectiveLod ?? "normal";
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
 	const blockedVortexFullIds = useMemo(
@@ -2903,7 +2919,7 @@ function ScenePlayBody({
 						showLodGrid
 						gridSnapEnabled
 						{...lodProps}
-						onLodChange={setSceneLodTag}
+						onLodChange={runtime?.setEffectiveLod}
 						onSelect={onSelect}
 						onConnect={onConnect}
 						onIndirectConnect={onIndirectConnect}
@@ -3000,23 +3016,30 @@ function ScenePlayInner(): ReactElement {
 	);
 
 	const [sceneLodMode, setSceneLodMode] = useState<SceneLodModeKind>(SCENE_LOD_MODE_AUTOMATIC);
+	const [sceneEffectiveLod, setSceneEffectiveLod] = useState<SceneLodKind>("normal");
 	const lodProps = useMemo(() => sceneLodCanvasProps(sceneLodMode), [sceneLodMode]);
+	const sceneRuntime = useMemo(
+		() => ({ effectiveLod: sceneEffectiveLod, setEffectiveLod: setSceneEffectiveLod }),
+		[sceneEffectiveLod],
+	);
 
 	const apps = useMemo<UIAppConfig[]>(
 		() => [
 			{
 				id: SCENE_PLAY_APP_ID,
 				label: "Scene play",
-				windowKinds: sceneWindowKindsWithLodMeasures(sceneLodMode, setSceneLodMode),
+				windowKinds: sceneWindowKindsWithLodMeasures(sceneLodMode, sceneEffectiveLod, setSceneLodMode),
 				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
 			},
 		],
-		[sceneLodMode],
+		[sceneLodMode, sceneEffectiveLod],
 	);
 
 	return (
 		<ScenePlayLodContext.Provider value={lodProps}>
-			<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+			<ScenePlayRuntimeContext.Provider value={sceneRuntime}>
+				<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+			</ScenePlayRuntimeContext.Provider>
 		</ScenePlayLodContext.Provider>
 	);
 }
