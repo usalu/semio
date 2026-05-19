@@ -1721,7 +1721,7 @@ const boardPlayLayout: UIWindowLayout = {
   },
 };
 
-const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
   return tier.charAt(0).toUpperCase() + tier.slice(1);

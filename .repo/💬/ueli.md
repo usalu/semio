@@ -441,20 +441,20 @@ Minimap:
 
 - no grid
 - no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
-- selection possible, bounded drag possible
+- selection, hover, bounded drag
 - no indirect connect possible, no connect, no proxmity connect
 
 Overview:
 
 - Huge grid (500x500)
 - outlines on node, no labels, no labels
-- selection possible, bounded drag possible, drag works within selected bounding rectangle
+- selection, hover, bounded drag
 - no indirect connect possible, no connect, no proxmity connect
 
 Compact:
 
 - Huge grid (100x100)
-- outlines on node, indirect handles, node with abbreviated labels
+- outlines on node, node with abbreviated labels
 - selection possible, nodes and edges are individually selectable, drag possible
 - indirect connect possible
 

@@ -2631,6 +2631,7 @@ mod board_host {
 
 	const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
 	const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
+	const LOD_COMPACT_MAX_ZOOM_DEFAULT: f64 = 0.55;
 	const LOD_NORMAL_MAX_ZOOM_DEFAULT: f64 = 1.25;
 	const LOD_DETAIL_MAX_ZOOM_DEFAULT: f64 = 2.5;
 	const GRID_WORLD_LARGE: f64 = 10.0;
@@ -2659,6 +2660,7 @@ mod board_host {
 	enum BoardDrawLod {
 		Minimap,
 		Overview,
+		Compact,
 		Normal,
 		Detail,
 		Micro,
@@ -2979,9 +2981,10 @@ mod board_host {
 		/// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
 		pub link_screen_preview: Option<Vec<Point>>,
 		pub vello_theme: VelloThemePalette,
-		/// @emoji 📶 Upper bounds for zoom bands: `zoom < minimap`, then overview, then normal, then detail, else micro.
+		/// @emoji 📶 Upper bounds for zoom bands: `zoom < minimap`, then overview, compact, normal, detail, else micro.
 		pub lod_minimap_max_zoom: f64,
 		pub lod_overview_max_zoom: f64,
+		pub lod_compact_max_zoom: f64,
 		pub lod_normal_max_zoom: f64,
 		pub lod_detail_max_zoom: f64,
 		/// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
@@ -3045,6 +3048,7 @@ mod board_host {
 				vello_theme: VelloThemePalette::default(),
 				lod_minimap_max_zoom: LOD_MINIMAP_MAX_ZOOM_DEFAULT,
 				lod_overview_max_zoom: LOD_OVERVIEW_MAX_ZOOM_DEFAULT,
+				lod_compact_max_zoom: LOD_COMPACT_MAX_ZOOM_DEFAULT,
 				lod_normal_max_zoom: LOD_NORMAL_MAX_ZOOM_DEFAULT,
 				lod_detail_max_zoom: LOD_DETAIL_MAX_ZOOM_DEFAULT,
 				grid_factor: GRID_FACTOR_DEFAULT,
@@ -3098,6 +3102,8 @@ mod board_host {
 				BoardDrawLod::Minimap
 			} else if z < self.lod_overview_max_zoom {
 				BoardDrawLod::Overview
+			} else if z < self.lod_compact_max_zoom {
+				BoardDrawLod::Compact
 			} else if z < self.lod_normal_max_zoom {
 				BoardDrawLod::Normal
 			} else if z < self.lod_detail_max_zoom {
@@ -3110,7 +3116,7 @@ mod board_host {
 		fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
 			match self.current_draw_lod() {
 				BoardDrawLod::Minimap => None,
-				BoardDrawLod::Overview => Some(self.grid_step_large_world()),
+				BoardDrawLod::Overview | BoardDrawLod::Compact => Some(self.grid_step_large_world()),
 				BoardDrawLod::Normal => Some(self.grid_step_medium_world()),
 				BoardDrawLod::Detail => Some(self.grid_step_small_world()),
 				BoardDrawLod::Micro => Some(self.grid_step_micro_world()),
@@ -3131,27 +3137,30 @@ mod board_host {
 			(self.snap_world_scalar(x), self.snap_world_scalar(y))
 		}
 
-		/// @emoji 📶 JSON `{ "minimapMaxZoom", "overviewMaxZoom", "normalMaxZoom", "detailMaxZoom" }` strictly increasing CSS-scale zoom values.
+		/// @emoji 📶 JSON `{ "minimapMaxZoom", "overviewMaxZoom", "compactMaxZoom", "normalMaxZoom", "detailMaxZoom" }` strictly increasing CSS-scale zoom values.
 		pub fn set_lod_zoom_thresholds_from_json(&mut self, json: &str) -> Result<(), String> {
 			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
 			let a = v.get("minimapMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "minimapMaxZoom".to_string())?;
 			let b = v.get("overviewMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "overviewMaxZoom".to_string())?;
-			let c = v.get("normalMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "normalMaxZoom".to_string())?;
-			let d = v.get("detailMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "detailMaxZoom".to_string())?;
+			let c = v.get("compactMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "compactMaxZoom".to_string())?;
+			let d = v.get("normalMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "normalMaxZoom".to_string())?;
+			let e = v.get("detailMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "detailMaxZoom".to_string())?;
 			if !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&a)
 				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&b)
 				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&c)
 				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&d)
+				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&e)
 			{
 				return Err("lod zoom thresholds must lie within camera zoom bounds".into());
 			}
-			if !(a < b && b < c && c < d) {
-				return Err("lod zoom thresholds must satisfy minimap < overview < normal < detail".into());
+			if !(a < b && b < c && c < d && d < e) {
+				return Err("lod zoom thresholds must satisfy minimap < overview < compact < normal < detail".into());
 			}
 			self.lod_minimap_max_zoom = a;
 			self.lod_overview_max_zoom = b;
-			self.lod_normal_max_zoom = c;
-			self.lod_detail_max_zoom = d;
+			self.lod_compact_max_zoom = c;
+			self.lod_normal_max_zoom = d;
+			self.lod_detail_max_zoom = e;
 			Ok(())
 		}
 
@@ -3175,6 +3184,7 @@ mod board_host {
 			self.forced_draw_lod = Some(match t {
 				"minimap" => BoardDrawLod::Minimap,
 				"overview" => BoardDrawLod::Overview,
+				"compact" => BoardDrawLod::Compact,
 				"normal" => BoardDrawLod::Normal,
 				"detail" => BoardDrawLod::Detail,
 				"micro" => BoardDrawLod::Micro,
@@ -4436,7 +4446,7 @@ mod board_host {
 
 		/// @emoji 🧭 Resolves which single node draws the overview/normal indirect handle ring when that node has **more than one** eligible free handles (otherwise the sole handle is implicit).
 		fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
-			if !matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Normal) {
+			if !matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
 				return None;
 			}
 			if let Interaction::LinkTargetNode {
@@ -4629,7 +4639,10 @@ mod board_host {
 		}
 
 		fn link_drag_target_ring_hit(&self, source_id: &str, point: Point) -> Option<String> {
-			if !matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
+			if !matches!(
+				self.current_draw_lod(),
+				BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal
+			) {
 				return None;
 			}
 			let node_id = self.link_drag_ring_target_node_id(source_id, point)?;
@@ -4837,6 +4850,95 @@ mod board_host {
 			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
 		}
 
+		fn resolve_hover_world(&self, point: Point) -> Option<String> {
+			let lod = self.current_draw_lod();
+			let zoom = self.camera.zoom;
+			if !matches!(lod, BoardDrawLod::Minimap) {
+				if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
+					if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
+						return Some(hid);
+					}
+					if let Interaction::LinkDragSnap { source_id, .. } = &self.interaction {
+						if let Some(hid) = self.link_drag_target_ring_hit(source_id, point) {
+							return Some(hid);
+						}
+					}
+				}
+				if let Some(ring_node_id) = self.indirect_ring_node_id(lod) {
+					for h in self.handles.values().rev() {
+						if h.node_id != ring_node_id || !self.handle_effectively_visible(h.id.as_str()) {
+							continue;
+						}
+						if !self.indirect_ring_handle_eligible(h.id.as_str(), ring_node_id.as_str()) {
+							continue;
+						}
+						let Some(pos) = self.indirect_handle_world_pos(h) else { continue };
+						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.indirect_handle_marker_radius_world(h);
+						if distance_between(point, pos) <= tol {
+							return Some(h.id.clone());
+						}
+					}
+				}
+				if matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
+					for h in self.handles.values().rev() {
+						if !self.handle_effectively_visible(h.id.as_str()) {
+							continue;
+						}
+						let Some(pos) = self.handle_world_pos(h) else { continue };
+						let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.effective_handle_radius(h);
+						if distance_between(point, pos) <= tol {
+							return Some(h.id.clone());
+						}
+					}
+				}
+				if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Normal) {
+					if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
+						return Some(hid);
+					}
+				}
+			}
+			for n in self.nodes.values().rev() {
+				if !n.visible {
+					continue;
+				}
+				match n.shape {
+					NodeShape::Rectangle => {
+						let hw = self.scaled_node_width(n) / 2.0;
+						let hh = self.scaled_node_height(n) / 2.0;
+						if (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh {
+							return Some(n.id.clone());
+						}
+					}
+					NodeShape::Circle => {
+						if distance_between(point, Point::new(n.x, n.y)) <= self.scaled_node_radius(n) {
+							return Some(n.id.clone());
+						}
+					}
+				}
+			}
+			for w in self.wires.values().rev() {
+				if !self.wire_effectively_visible(w) {
+					continue;
+				}
+				if let Some(c) = self.wire_curve(w) {
+					if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
+						return Some(w.id.clone());
+					}
+				}
+			}
+			for e in self.edges.values().rev() {
+				if !self.edge_effectively_visible(e) {
+					continue;
+				}
+				if let Some(c) = self.edge_curve(e) {
+					if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
+						return Some(e.id.clone());
+					}
+				}
+			}
+			None
+		}
+
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
 			if self.lod_disables_discrete_pick() {
 				return None;
@@ -4844,7 +4946,10 @@ mod board_host {
 			let zoom = self.camera.zoom;
 			let o = &self.selection_options;
 			if o.select_handles {
-				if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
+				if matches!(
+					self.current_draw_lod(),
+					BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal
+				) {
 					if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
 						return Some(hid);
 					}
@@ -4884,7 +4989,10 @@ mod board_host {
 						}
 					}
 				}
-				if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Normal) {
+				if matches!(
+					self.current_draw_lod(),
+					BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal
+				) {
 					if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
 						return Some(hid);
 					}
@@ -5611,7 +5719,6 @@ mod board_host {
 
 		fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod) {
 			let pad = self.drawable_cull_pad_world();
-			let draw_node_stroke = lod != BoardDrawLod::Minimap;
 			let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
 			let draw_handle_icons = lod == BoardDrawLod::Micro;
@@ -5640,8 +5747,12 @@ mod board_host {
 				} else {
 					self.resolve_node_style_kind(n)
 				};
+				let draw_node_stroke = lod != BoardDrawLod::Minimap
+					|| !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
 				let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-				let fill = if lod == BoardDrawLod::Minimap {
+				let fill = if lod == BoardDrawLod::Minimap
+					&& matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
+				{
 					stroke_c
 				} else {
 					Self::node_fill_for_style(&self.vello_theme, style_kind)
@@ -5813,7 +5924,7 @@ mod board_host {
 					BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro => {
 						self.stroke_world_step_grid(&mut inner, grid_color, 0.72, self.grid_step_medium_world(), 0.0);
 					}
-					_ => {}
+					BoardDrawLod::Minimap | BoardDrawLod::Overview | BoardDrawLod::Compact => {}
 				}
 				if matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
 					self.stroke_world_step_grid(&mut inner, grid_color, 0.48, self.grid_step_small_world(), 0.0);
@@ -5895,7 +6006,7 @@ mod board_host {
 		}
 
 		pub fn update_hover_from_world(&mut self, world: Point) {
-			let next = self.resolve_hit_world(world);
+			let next = self.resolve_hover_world(world);
 			self.set_hovered_id(next);
 		}
 
@@ -7742,10 +7853,12 @@ mod tests {
 #[cfg(test)]
 mod host_tests {
 	use crate::board_host::Interaction;
+	use crate::geom_sel::cubic_bezier_point;
 	use super::vcompute::distance_between;
+	use super::vcompute::compute_edge_bezier_points;
 	use super::vcompute::handle_position_on_circle;
 	use super::vcompute::handle_position_on_rectangle;
-	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson, WireDescJson};
 	use crate::vello::kurbo::Point;
 	use serde_json::json;
 
@@ -7997,6 +8110,8 @@ mod host_tests {
 		h.set_size(800, 600, 1.0);
 		h.set_camera(0.0, 0.0, 0.1);
 		let mut desc = sample_scene();
+		desc.handles.clear();
+		desc.edges.clear();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),
 			x: 300.0,
@@ -8409,6 +8524,114 @@ mod host_tests {
 		assert!(!h.selection.contains("a"));
 		assert!(h.preselect_removed.is_empty());
 		assert!(h.selection_exit_highlight.is_empty());
+	}
+
+	#[test]
+	fn board_host_minimap_preselect_matches_selected_chrome() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 0.1);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+			scale: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let neutral_hint = h.encoded_scene_hint();
+		h.set_selection_ids(&["b".into()]);
+		let _ = h.drain_events_json();
+		let selected_hint = h.encoded_scene_hint();
+		assert!(
+			selected_hint > neutral_hint,
+			"minimap selected chrome should add visible vector encoding over neutral state"
+		);
+		h.set_selection_ids(&["a".into()]);
+		let _ = h.drain_events_json();
+		let w_down = Point::new(350.0, -50.0);
+		let w_end = Point::new(265.0, 48.0);
+		let s_down = h.world_to_screen(w_down);
+		let s_end = h.world_to_screen(w_end);
+		h.pointer_down_screen(s_down.x, s_down.y, 0, false, false);
+		h.pointer_move_screen(s_end.x, s_end.y, false, false);
+		assert!(h.is_dragging_area_select());
+		assert!(h.preselect.contains("b"));
+		h.set_selection_screen_preview(None);
+		let preselect_hint = h.encoded_scene_hint();
+		assert!(
+			preselect_hint > neutral_hint,
+			"minimap preselect should add visible selected chrome over neutral minimap rendering"
+		);
+	}
+
+	#[test]
+	fn board_host_minimap_hover_tracks_visible_nodes() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 0.1);
+		let mut desc = sample_scene();
+		desc.handles.clear();
+		desc.edges.clear();
+		h.sync_descriptor(&desc).unwrap();
+		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+		h.update_hover_from_world(Point::new(0.0, 0.0));
+		assert_eq!(h.hovered_id.as_deref(), Some("a"));
+	}
+
+	#[test]
+	fn board_host_hover_tracks_visible_edges() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let desc = sample_scene();
+		h.sync_descriptor(&desc).unwrap();
+		let source = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let target = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let curve = compute_edge_bezier_points(source, target, Point::new(0.0, 0.0), Point::new(280.0, 0.0));
+		let probe = cubic_bezier_point(curve, 0.5);
+		h.update_hover_from_world(probe);
+		assert_eq!(h.hovered_id.as_deref(), Some("e1"));
+	}
+
+	#[test]
+	fn board_host_hover_tracks_visible_wires() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		let mut desc = sample_scene();
+		desc.edges.clear();
+		desc.wires.push(WireDescJson {
+			id: "w1".into(),
+			source: "a:h0".into(),
+			target: None,
+			end_x: Some(220.0),
+			end_y: Some(0.0),
+			selected: None,
+			style: None,
+			wire_kind: None,
+			user_data: None,
+			visible: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let source = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let curve = compute_edge_bezier_points(source, Point::new(220.0, 0.0), Point::new(0.0, 0.0), Point::new(220.0, 0.0));
+		let probe = cubic_bezier_point(curve, 0.5);
+		h.update_hover_from_world(probe);
+		assert_eq!(h.hovered_id.as_deref(), Some("w1"));
 	}
 
 	fn link_test_scene_no_edge() -> SceneDescriptorJson {

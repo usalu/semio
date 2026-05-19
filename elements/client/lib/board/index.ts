@@ -849,10 +849,11 @@ export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
 /** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `2.5×` / `0.5×` / `0.1×` world units per band); default `10` yields `100` / `25` / `5` / `1`. */
 export const DEFAULT_BOARD_GRID_FACTOR = 10;
 
-/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` < detail < `detailMaxZoom` ≤ micro. */
+/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < compact < `compactMaxZoom` < normal < `normalMaxZoom` < detail < `detailMaxZoom` ≤ micro. */
 export interface BoardLodZoomThresholds {
 	minimapMaxZoom: number;
 	overviewMaxZoom: number;
+	compactMaxZoom: number;
 	normalMaxZoom: number;
 	detailMaxZoom: number;
 }
@@ -860,6 +861,7 @@ export interface BoardLodZoomThresholds {
 export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
 	minimapMaxZoom: 0.15,
 	overviewMaxZoom: 0.35,
+	compactMaxZoom: 0.55,
 	normalMaxZoom: 1.25,
 	detailMaxZoom: 2.5,
 };
@@ -877,13 +879,16 @@ export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detail
 export function resolveBoardLodLabelFromThresholds(
 	zoom: number,
 	t: BoardLodZoomThresholds,
-): "detail" | "micro" | "minimap" | "normal" | "overview" {
+): BoardDrawLodKind {
 	const z = zoom;
 	if (z < t.minimapMaxZoom) {
 		return "minimap";
 	}
 	if (z < t.overviewMaxZoom) {
 		return "overview";
+	}
+	if (z < t.compactMaxZoom) {
+		return "compact";
 	}
 	if (z < t.normalMaxZoom) {
 		return "normal";
@@ -895,12 +900,12 @@ export function resolveBoardLodLabelFromThresholds(
 }
 
 /** @emoji 📶 LOD tier for `data-board-lod` using {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}. */
-export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minimap" | "normal" | "overview" {
+export function resolveBoardLodLabel(zoom: number): BoardDrawLodKind {
 	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
 /** @emoji 📶 WASM draw LOD tier label (matches `data-board-lod` / `setForcedDrawLodLabel`). */
-export type BoardDrawLodKind = "detail" | "micro" | "minimap" | "normal" | "overview";
+export type BoardDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "normal" | "overview";
 
 /** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
 export const BOARD_LOD_MODE_AUTOMATIC = "automatic" as const;
@@ -908,7 +913,7 @@ export const BOARD_LOD_MODE_AUTOMATIC = "automatic" as const;
 /** @emoji 📶 Board play / window LOD select value (`automatic` or a pinned {@link BoardDrawLodKind}). */
 export type BoardLodModeKind = typeof BOARD_LOD_MODE_AUTOMATIC | BoardDrawLodKind;
 
-const BOARD_DRAW_LOD_KINDS: readonly BoardDrawLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+const BOARD_DRAW_LOD_KINDS: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 /** @emoji ✅ True when `label` is a pinned WASM draw LOD tier. */
 export function isBoardDrawLodKind(label: string): label is BoardDrawLodKind {
@@ -2220,25 +2225,58 @@ function boardAbbreviateCaption(raw: string, maxChars: number): string {
 	return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
-function boardTextOverlayCaptionForLod(
+/** @emoji 🏷️ Abbreviated node caption for the text overlay canvas, or null when the LOD band hides node labels. */
+export function boardTextOverlayCaptionForLod(
 	raw: string,
-	lod: "detail" | "micro" | "minimap" | "normal" | "overview",
+	lod: BoardDrawLodKind,
 	iconKind: string | null,
 ): string | null {
 	const t = raw.trim();
 	if (t === "") {
 		return null;
 	}
-	if (lod === "minimap") {
+	if (lod === "minimap" || lod === "overview") {
 		return null;
 	}
-	if (lod === "overview") {
-		return boardAbbreviateCaption(t, 5);
+	if (lod === "compact" || lod === "normal") {
+		return boardAbbreviateCaption(t, 8);
 	}
 	if (lod === "detail") {
 		return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 8 : 10);
 	}
-	return raw;
+	if (lod === "micro") {
+		return boardAbbreviateCaption(t, 12);
+	}
+	return null;
+}
+
+/** @emoji 🏷️ Abbreviated handle caption for the text overlay canvas, or null when the LOD band hides handle labels. */
+export function boardHandleOverlayCaptionForLod(raw: string, lod: BoardDrawLodKind): string | null {
+	const t = raw.trim();
+	if (t === "") {
+		return null;
+	}
+	if (lod !== "detail" && lod !== "micro") {
+		return null;
+	}
+	return boardAbbreviateCaption(t, lod === "detail" ? 6 : 8);
+}
+
+/** @emoji 🧩 Resolves a handle-kind catalog label for overlay captions. */
+export function boardHandleKindOverlayLabel(
+	handleKind: string,
+	catalogs: BoardKindCatalogBundle,
+): string {
+	const id = handleKind.trim();
+	if (id === "") {
+		return "";
+	}
+	for (const row of catalogs.handles ?? []) {
+		if (row.id === id) {
+			return (row.label ?? row.name ?? id).trim() || id;
+		}
+	}
+	return id;
 }
 
 //#region 🔖Renderer
@@ -2294,6 +2332,7 @@ export class BoardRenderer {
 	private lastVelloThemeJson = "";
 	private lastDescriptorPushDeferred = false;
 	private kindCompatJson = "[]";
+	private kindCatalogsBundle: BoardKindCatalogBundle = BOARD_DEFAULT_KIND_CATALOG_BUNDLE;
 	private kindCatalogsJson = serializeBoardKindCatalogBundle(BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
 	private lastPushedKindCatalogsJson: string | null = null;
 	private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
@@ -2339,6 +2378,7 @@ export class BoardRenderer {
 			? {
 				minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
 				overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
+				compactMaxZoom: options.lodZoomThresholds.compactMaxZoom,
 				normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
 				detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
 			}
@@ -2473,12 +2513,14 @@ export class BoardRenderer {
 		const c: BoardLodZoomThresholds = {
 			minimapMaxZoom: next.minimapMaxZoom,
 			overviewMaxZoom: next.overviewMaxZoom,
+			compactMaxZoom: next.compactMaxZoom,
 			normalMaxZoom: next.normalMaxZoom,
 			detailMaxZoom: next.detailMaxZoom,
 		};
 		if (
 			c.minimapMaxZoom === this.lodZoomThresholds.minimapMaxZoom &&
 			c.overviewMaxZoom === this.lodZoomThresholds.overviewMaxZoom &&
+			c.compactMaxZoom === this.lodZoomThresholds.compactMaxZoom &&
 			c.normalMaxZoom === this.lodZoomThresholds.normalMaxZoom &&
 			c.detailMaxZoom === this.lodZoomThresholds.detailMaxZoom
 		) {
@@ -2598,6 +2640,7 @@ export class BoardRenderer {
 			nodes: bundle?.nodes ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.nodes,
 			wires: bundle?.wires ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE.wires,
 		};
+		this.kindCatalogsBundle = merged;
 		const json = serializeBoardKindCatalogBundle(merged);
 		if (json === this.kindCatalogsJson) {
 			return;
@@ -3104,6 +3147,7 @@ export class BoardRenderer {
 		const lodJson = JSON.stringify({
 			minimapMaxZoom: this.lodZoomThresholds.minimapMaxZoom,
 			overviewMaxZoom: this.lodZoomThresholds.overviewMaxZoom,
+			compactMaxZoom: this.lodZoomThresholds.compactMaxZoom,
 			normalMaxZoom: this.lodZoomThresholds.normalMaxZoom,
 			detailMaxZoom: this.lodZoomThresholds.detailMaxZoom,
 		});
@@ -3390,6 +3434,39 @@ export class BoardRenderer {
 			ctx.textAlign = anchor.textAlign;
 			ctx.textBaseline = anchor.textBaseline;
 			ctx.fillText(line, anchor.fillX, anchor.fillY);
+		}
+		const drawHandleLabels = lod === "detail" || lod === "micro";
+		if (drawHandleLabels) {
+			const handleFontPx = lod === "detail" ? 10 : 11;
+			ctx.font = boardBuildCanvasFontSpec(handleFontPx, BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT);
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			for (const handle of this.scene.handles.values()) {
+				if (!handle.visible) {
+					continue;
+				}
+				const node = handle.node;
+				if (!node.visible) {
+					continue;
+				}
+				const rawLabel = boardHandleKindOverlayLabel(handle.handleKind, this.kindCatalogsBundle);
+				const caption = boardHandleOverlayCaptionForLod(rawLabel, lod);
+				if (caption === null) {
+					continue;
+				}
+				const handleWorld = computeHandlePosition(node, handle.angle);
+				const handleScreen = this.worldToScreen(handleWorld);
+				const nodeScreen = this.worldToScreen({ x: node.x, y: node.y });
+				const dx = handleScreen.x - nodeScreen.x;
+				const dy = handleScreen.y - nodeScreen.y;
+				const len = Math.hypot(dx, dy);
+				const outward = len > 1e-6 ? 10 / len : 0;
+				const labelX = handleScreen.x + dx * outward;
+				const labelY = handleScreen.y + dy * outward;
+				const style = this.getStyle(handle.style, handle.selected ? "handle.selected" : "handle");
+				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
+				ctx.fillText(caption, labelX, labelY);
+			}
 		}
 	}
 
@@ -3924,32 +4001,38 @@ if (boardVitest) {
 			expect(pE.y).toBeCloseTo(50);
 		});
 
-		it("labels minimap, overview, normal, detail, and micro LOD bands from zoom thresholds", () => {
+		it("labels minimap, overview, compact, normal, detail, and micro LOD bands from zoom thresholds", () => {
 			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
 			expect(resolveBoardLodLabel(0.25)).toBe("overview");
-			expect(resolveBoardLodLabel(0.4)).toBe("normal");
+			expect(resolveBoardLodLabel(0.4)).toBe("compact");
 			expect(resolveBoardLodLabel(0.9)).toBe("normal");
 			expect(resolveBoardLodLabel(1.3)).toBe("detail");
 			expect(resolveBoardLodLabel(2.6)).toBe("micro");
 			const tight: BoardLodZoomThresholds = {
 				minimapMaxZoom: 0.2,
-				overviewMaxZoom: 0.4,
+				overviewMaxZoom: 0.35,
+				compactMaxZoom: 0.45,
 				normalMaxZoom: 0.6,
 				detailMaxZoom: 1,
 			};
 			expect(resolveBoardLodLabelFromThresholds(0.15, tight)).toBe("minimap");
-			expect(resolveBoardLodLabelFromThresholds(0.35, tight)).toBe("overview");
+			expect(resolveBoardLodLabelFromThresholds(0.3, tight)).toBe("overview");
+			expect(resolveBoardLodLabelFromThresholds(0.4, tight)).toBe("compact");
 			expect(resolveBoardLodLabelFromThresholds(0.5, tight)).toBe("normal");
 			expect(resolveBoardLodLabelFromThresholds(0.7, tight)).toBe("detail");
 			expect(resolveBoardLodLabelFromThresholds(1.1, tight)).toBe("micro");
 		});
 
-		it("switches caption policy across the five LOD bands", () => {
+		it("switches caption policy across the six LOD bands", () => {
 			expect(boardTextOverlayCaptionForLod("Node Label", "minimap", null)).toBeNull();
-			expect(boardTextOverlayCaptionForLod("Node Label", "overview", null)).toBe("Node…");
-			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node Label");
+			expect(boardTextOverlayCaptionForLod("Node Label", "overview", null)).toBeNull();
+			expect(boardTextOverlayCaptionForLod("Node Label", "compact", null)).toBe("Node La…");
+			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
-			expect(boardTextOverlayCaptionForLod("Node Label", "micro", "catalog-icon")).toBe("Node Label");
+			expect(boardTextOverlayCaptionForLod("0123456789012345", "micro", null)).toBe("012345678901…");
+			expect(boardHandleOverlayCaptionForLod("Handle Label", "compact")).toBeNull();
+			expect(boardHandleOverlayCaptionForLod("Handle Label", "detail")).toBe("Handl…");
+			expect(boardHandleOverlayCaptionForLod("Handle Label", "micro")).toBe("Handle …");
 		});
 	});
 

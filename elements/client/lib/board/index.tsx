@@ -718,6 +718,7 @@ export function BoardCanvas({
   worldRasterTiling,
 }: BoardCanvasProps): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const textOverlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
   const rendererRef = useRef<BoardRenderer | null>(null);
@@ -1110,6 +1111,17 @@ export function BoardCanvas({
     onReady?.(contextRenderer);
   }, [contextRenderer, onReady]);
 
+  useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.attachTextOverlayCanvas(textOverlayCanvasRef.current);
+    return () => {
+      renderer.attachTextOverlayCanvas(null);
+    };
+  }, [contextRenderer, renderMode]);
+
   useEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer || typeof document === "undefined" || typeof MutationObserver === "undefined") {
@@ -1200,6 +1212,14 @@ export function BoardCanvas({
         style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
       >
         <canvas className="min-h-0 min-w-0 flex-1 touch-none" data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+        {renderMode === "headless-test" ? null : (
+          <canvas
+            aria-hidden
+            className="pointer-events-none absolute inset-0 min-h-0 min-w-0"
+            data-testid="board-text-overlay"
+            ref={textOverlayCanvasRef}
+          />
+        )}
         {contextRenderer ? (
           <HostMountProvider>
             <BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />

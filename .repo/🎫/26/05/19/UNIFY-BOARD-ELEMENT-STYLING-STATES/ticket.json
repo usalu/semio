@@ -3,13 +3,14 @@
   "emoji": "🐛",
   "status": "open",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Moved the area-select selection preview overlay behind board content in the Rust Vello scene builder so marquee and lasso preselect no longer tint or restyle selected element fill and stroke. Validated Rust tests, wasm-pack build, and Vitest through bun nx run @elements/board:test. Playwright still reproduces two existing board UI failures in background context menu and redraw toolbar tests, unrelated to the selection overlay ordering change.",
+  "summary": "Fixed the remaining minimap LOD styling gap by keeping the shared selected/preselect node chrome in the Rust board renderer instead of flattening all minimap nodes to neutral fill-only rendering. Added Rust host coverage that proves minimap preselect adds visible selected chrome. Validation: cargo test -p elements_board --lib preselect_matches_selected_chrome passed; bun nx run @elements/board:test passed Rust tests, wasm-pack, and Vitest, and still reproduces the same two existing Playwright failures in board-play-gpu background menu and redraw toolbar tests.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",
     "⚪79977eb9923d46ee8160fc2b8af58097",
     "⚪62fc0c95c2804ee8b8769f7441bd4256",
     "⚪1624da70a7fc4af391da03ccea9e7761",
-    "⚪9767a670bbfe48f5b05ec801504e5d9a"
+    "⚪9767a670bbfe48f5b05ec801504e5d9a",
+    "⚪9e49b7d2cd2e4cae84a942aaf3220a82"
   ]
 }
