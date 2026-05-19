@@ -158,7 +158,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					key={node.id}
 					{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 					shape="rectangle"
-					text={node.text ?? node.label}
+					text={node.text}
 					width={node.width}
 					x={node.x}
 					y={node.y}
@@ -181,7 +181,7 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					key={node.id}
 					{...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
 					radius={node.radius ?? 0}
-					text={node.text ?? node.label}
+					text={node.text}
 					x={node.x}
 					y={node.y}
 				>

@@ -5376,8 +5376,9 @@ mod board_host {
 				let text = obj
 					.get("text")
 					.and_then(|v| v.as_str())
-					.map(String::from)
-					.or_else(|| obj.get("label").and_then(|v| v.as_str()).map(String::from));
+					.map(str::trim)
+					.filter(|s| !s.is_empty())
+					.map(String::from);
 				let Some(handles_arr) = obj.get("handles").and_then(|v| v.as_array()) else {
 					return false;
 				};

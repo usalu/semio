@@ -72,6 +72,7 @@ import {
   useDesignCommand,
   useDesignContext,
   useDesignDescription,
+  useDesignPieces,
   useDesignIcon,
   useDesignImage,
   useDesignName,
@@ -573,6 +574,30 @@ export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
   };
   visit(design);
   return out.filter((d) => d.id !== (design as any).id);
+}
+
+/** @emoji 📚 Included designs for the active {@link DesignContext} (sketchpad helper). */
+export function useIncludedDesigns(): Design[] {
+  const designId = useDesign();
+  const ks = useKitStoreSnapshot();
+  const kit = ks?.kit;
+  if (kit == null || designId == null || designId === "") return [];
+  const designs = useKitDesigns();
+  const design = designs.find((d) => d.id === designId);
+  if (design == null) return [];
+  return getIncludedDesigns(kit as Kit, design);
+}
+
+/** @emoji 📐 Piece layout map for the active design (sketchpad scene; WIP: empty without kit-store rows). */
+export function useDesignPieceLayoutMap(): ReadonlyMap<string, unknown> {
+  return useMemo(() => new Map(), []);
+}
+
+/** @emoji 🧩 Resolve piece DTO rows by id from the active design scope. */
+export function usePiecesFromIds(pieceIds: readonly string[]): readonly Piece[] {
+  const pieces = useDesignPieces() as Piece[];
+  const byId = useMemo(() => new Map(pieces.map((p) => [p.id, p])), [pieces]);
+  return useMemo(() => pieceIds.map((id) => byId.get(id)).filter((p): p is Piece => p != null), [pieceIds, byId]);
 }
 
 export function sumQualityInDesign(design: Design): number {

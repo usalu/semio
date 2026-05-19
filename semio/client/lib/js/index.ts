@@ -439,7 +439,7 @@ function gqlIdList(ids: readonly string[]): string {
 
 function scopedKitMutationBody(storeId: string, changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
-    query: `mutation($storeId: ID!, $changeId: ID!) { session { store(id: $storeId) { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } } }`,
+    query: `mutation($storeId: ID!, $changeId: ID!) { session { store(id: $storeId) { theKit { unsavedChange(id: $changeId) { kit { ${withResponseSelection(kitSelection)} } } } } } }`,
     variables: { storeId, changeId },
   };
 }
@@ -521,6 +521,44 @@ function gqlOkFromEnvelope(env: GraphqlEnvelope<JsonValue>): SetResult {
     return { ok: false, error: { kind: "Internal", message: env.errors[0]?.message ?? "GraphQL error" } };
   }
   return { ok: true };
+}
+
+/** @emoji 📬 Selection for golden {@code Response} on command mutation leaves. */
+const GQL_RESPONSE_SELECTION =
+  "ok errors { kind message requestId } result { ... on IdResult { value } }";
+
+/** @emoji 📬 Parses a {@code Response} object from mutation data. */
+function parseResponsePayload(node: JsonValue | undefined): SetResult {
+  if (!isJsonObjectNode(node)) return { ok: true };
+  if (node["ok"] === false) {
+    const err = jsonObjectField(node, "errors");
+    return {
+      ok: false,
+      error: {
+        kind: (String(err?.["kind"] ?? "Internal") as SetErrorKind),
+        message: String(err?.["message"] ?? "command failed"),
+      },
+    };
+  }
+  return { ok: true };
+}
+
+/** @emoji 🆔 Reads {@code IdResult.value} from a {@code Response} payload. */
+function responseResultId(node: JsonValue | undefined): string {
+  if (!isJsonObjectNode(node)) return "";
+  const result = jsonObjectField(node, "result");
+  const value = result?.["value"];
+  return value == null ? "" : String(value);
+}
+
+/** @emoji 📬 Appends {@link GQL_RESPONSE_SELECTION} to the innermost kit command field. */
+function withResponseSelection(kitSelection: string): string {
+  const trimmed = kitSelection.trim();
+  const brace = trimmed.indexOf("{");
+  if (brace === -1) return `${trimmed} { ${GQL_RESPONSE_SELECTION} }`;
+  const head = trimmed.slice(0, brace).trimEnd();
+  const inner = trimmed.slice(brace + 1, trimmed.lastIndexOf("}")).trim();
+  return `${head} { ${withResponseSelection(inner)} }`;
 }
 
 type GraphqlExecuteHandle = { execute(requestJson: string): Promise<string> };
@@ -667,6 +705,8 @@ type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = FieldSpec<T
 type BoundNodeFieldSpec<T> = Readonly<{
   selection: string;
   parse: (node: JsonObject | undefined) => T;
+  /** @emoji 📖 Prototype method name when it differs from the GraphQL selection root. */
+  method?: string;
 }>;
 
 type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
@@ -799,7 +839,8 @@ function installNodeFieldMethods<E extends Entity>(
   specs: readonly BoundNodeFieldSpec<unknown>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, schemaFieldName(spec.selection), {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
       configurable: true,
       value: function semioNodeField(this: E): Promise<unknown> {
         return readNodeSelection(this, typename, spec.selection, spec.parse);
@@ -872,7 +913,7 @@ function installEntityNodeMethods<E extends Entity>(
 ): void {
   installNodeFieldMethods(ctor, typename, fields);
   for (const spec of fields) {
-    const fieldName = schemaFieldName(spec.selection);
+    const fieldName = spec.method ?? schemaFieldName(spec.selection);
     const eventMethod = fieldChangedEventMethodName(fieldName);
     const eventKind = defaultFieldEventKind(ctor.name, fieldName);
     Object.defineProperty(ctor.prototype, eventMethod, {
@@ -882,6 +923,160 @@ function installEntityNodeMethods<E extends Entity>(
         return this.session.bus.subscribeKind(eventKind, () => {
           if (typeof read === "function") void read.call(this).then(cb);
         });
+      },
+      writable: true,
+    });
+  }
+}
+
+type StoreBranchEntity = Entity & Readonly<{
+  storeBranchPath(selection: string): string;
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null;
+  readStoreBranch(selection: string): Promise<JsonObject | null>;
+}>;
+
+type BoundStoreBranchFieldSpec<T, E extends StoreBranchEntity> = Readonly<{
+  selection: string;
+  parse: (branch: JsonObject | null) => T;
+  parseEntity?: (entity: E, branch: JsonObject | null) => T;
+  method?: string;
+  eventKind?: string;
+  coarseEvent?: boolean;
+}>;
+
+function defineBoundStoreBranchFields<const S extends readonly BoundStoreBranchFieldSpec<unknown, StoreBranchEntity>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Installs store-scoped field reads and {@code onFieldChanged} on a nested branch (VCS graph roots, checkpoints, …). */
+function installStoreBranchFieldMethods<E extends StoreBranchEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundStoreBranchFieldSpec<unknown, E>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of specs) {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: async function semioStoreBranchField(this: E): Promise<unknown> {
+        const frag = await this.readStoreBranch(spec.selection);
+        const branch = this.parseStoreBranch(frag);
+        return spec.parseEntity != null ? spec.parseEntity(this, branch) : spec.parse(branch);
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(method);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioStoreBranchFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs store-scoped field reads, events, and optional branch helpers on one entity class. */
+function installEntityStoreBranchMethods<E extends StoreBranchEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundStoreBranchFieldSpec<unknown, E>[],
+): void {
+  installStoreBranchFieldMethods(ctor, fields);
+}
+
+type ScopedNodeEntity = Entity & Readonly<{
+  scopedNodePath(selection: string): string;
+  readScopedNode(selection: string): Promise<JsonObject | null>;
+}>;
+
+type BoundScopedNodeFieldSpec<T> = Readonly<{
+  selection: string;
+  parse: (node: JsonObject | null) => T;
+  eventKind?: string;
+  coarseEvent?: boolean;
+}>;
+
+function defineBoundScopedNodeFields<const S extends readonly BoundScopedNodeFieldSpec<unknown>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Installs field reads on a store-nested node already resolved by {@link ScopedNodeEntity#readScopedNode}. */
+function installEntityScopedNodeMethods<E extends ScopedNodeEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundScopedNodeFieldSpec<unknown>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of fields) {
+    const method = schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: async function semioScopedNodeField(this: E): Promise<unknown> {
+        const node = await this.readScopedNode(spec.selection);
+        return spec.parse(node);
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(method);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioScopedNodeFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+type BoundWeakFieldSpec<T> = Readonly<{
+  method: string;
+  selection: string;
+  parse: (role: JsonObject | null) => T;
+  coarseEvent?: boolean;
+}>;
+
+/** @emoji 🏭 Installs async scalar reads on weak kit-nested artifacts ({@link Coordinate}, {@link Point}, …). */
+function installWeakKitFieldMethods<E extends object>(
+  ctor: abstract new (...args: never[]) => E,
+  readRole: (self: E, selection: string) => Promise<JsonObject | null>,
+  parseRole: (self: E, frag: JsonObject | null) => JsonObject | null,
+  specs: readonly BoundWeakFieldSpec<unknown>[],
+  bus: (self: E) => EventBus,
+): void {
+  for (const spec of specs) {
+    Object.defineProperty(ctor.prototype, spec.method, {
+      configurable: true,
+      value: async function semioWeakKitField(this: E): Promise<unknown> {
+        const frag = await readRole(this, spec.selection);
+        return spec.parse(parseRole(this, frag));
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(spec.method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioWeakKitFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[spec.method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        const b = bus(this);
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(b, run);
+        return b.subscribeKind("commandSucceeded", () => run());
       },
       writable: true,
     });
@@ -994,11 +1189,10 @@ function subscribeKitCoarseRefetch(
   bus: { subscribeKind(kind: string, fn: () => void): Unsubscribe },
   run: () => void,
 ): Unsubscribe {
-  const a = bus.subscribeKind("commandSucceeded", run);
-  const b = bus.subscribeKind("kitRenamed", run);
+  const kinds = ["commandSucceeded", "kitRenamed", "draggedPiece", "fixedPiece"] as const;
+  const subs = kinds.map((kind) => bus.subscribeKind(kind, run));
   return (): void => {
-    a();
-    b();
+    for (const off of subs) off();
   };
 }
 //#endregion 📡BusCoarse
@@ -1211,33 +1405,40 @@ export class Session {
   }
 
   private trackCommandResult(env: GraphqlEnvelope<JsonValue>): SetResult {
-    const visit = (value: JsonValue | undefined): string => {
-      if (typeof value === "string" && value !== "") return value;
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          const id = visit(item);
-          if (id !== "") return id;
-        }
-      } else if (isJsonObjectNode(value)) {
-        for (const item of Object.values(value)) {
-          const id = visit(item);
-          if (id !== "") return id;
-        }
+    let failed: SetResult | null = null;
+    const visit = (value: JsonValue | undefined): void => {
+      if (isJsonObjectNode(value) && "ok" in value) {
+        const r = parseResponsePayload(value);
+        if (!r.ok) failed = r;
+        const id = responseResultId(value);
+        if (id !== "") this.trackCommandId(id);
+        return;
       }
-      return "";
+      if (Array.isArray(value)) {
+        for (const item of value) visit(item);
+      } else if (isJsonObjectNode(value)) {
+        for (const item of Object.values(value)) visit(item);
+      }
     };
-    this.trackCommandId(visit(env.data ?? undefined));
+    visit(env.data ?? undefined);
+    if (failed != null) return failed;
     return gqlOkFromEnvelope(env);
   }
 
   async ensureChangeId(storeId?: string): Promise<string> {
     this.ensureAlive();
     if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped change");
-    const data = unwrapGraphqlData(await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId } })) as JsonObject;
-    const sess = data["session"] as JsonObject | undefined;
-    const store = sess?.["store"] as JsonObject | undefined;
-    const tk = store?.["theKit"] as JsonObject | undefined;
-    const cid = String(tk?.["startNewChange"] ?? "");
+    const data = unwrapGraphqlData(
+      await this.mutateEnvelope({
+        query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ${GQL_RESPONSE_SELECTION} } } } } }`,
+        variables: { storeId },
+      }),
+    ) as JsonObject;
+    const start = ((data["session"] as JsonObject | undefined)?.["store"] as JsonObject | undefined)?.["theKit"] as JsonObject | undefined;
+    const payload = start?.["startNewChange"];
+    const r = parseResponsePayload(payload);
+    if (!r.ok) throw new Error(r.error.message);
+    const cid = responseResultId(payload);
     if (cid === "") throw new Error("startNewChange: empty change id");
     return this.trackCommandId(cid);
   }
@@ -1245,9 +1446,11 @@ export class Session {
   async saveChange(storeId?: string): Promise<void> {
     this.ensureAlive();
     if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped save");
-    const data = unwrapGraphqlData(await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId } })) as JsonObject;
-    const id = String(((data["session"] as JsonObject | undefined)?.["store"] as JsonObject | undefined)?.["theKit"] == null ? "" : (((data["session"] as JsonObject)["store"] as JsonObject)["theKit"] as JsonObject)["save"] ?? "");
-    this.trackCommandId(id);
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    this.trackCommandResult(env);
   }
 
   async startNewChange(storeId: string): Promise<ChangeId> {
@@ -1256,7 +1459,10 @@ export class Session {
 
   async createCheckpoint(storeId: string, message: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
     return this.trackCommandResult(env);
   }
 
@@ -1265,8 +1471,8 @@ export class Session {
     const env = await this.mutateEnvelope({
       query:
         name == null
-          ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative } } }`
-          : `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative(name: ${gqlString(name)}) } } }`,
+          ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative { ${GQL_RESPONSE_SELECTION} } } } }`
+          : `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative(name: ${gqlString(name)}) { ${GQL_RESPONSE_SELECTION} } } } }`,
       variables: { storeId },
     });
     return this.trackCommandResult(env);
@@ -1275,7 +1481,7 @@ export class Session {
   async integrateAlternative(storeId: string, alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.mutateEnvelope({
-      query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } } }`,
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit { ${GQL_RESPONSE_SELECTION} } } } } }`,
       variables: { storeId },
     });
     return this.trackCommandResult(env);
@@ -1286,26 +1492,26 @@ export class Session {
     const url = hubUrl ?? "";
     const h = hubUrl == null ? "null" : gqlString(hubUrl);
     const env = await this.mutateEnvelope({
-      query: `mutation { session { remoteProvider(url: ${gqlString(url)}) { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
+      query: `mutation { session { remoteProvider(url: ${gqlString(url)}) { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) { ${GQL_RESPONSE_SELECTION} } } } }`,
     });
     return this.trackCommandResult(env);
   }
 
   async logout(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation { session { remoteProvider(url: "") { logout } } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { remoteProvider(url: "") { logout { ${GQL_RESPONSE_SELECTION} } } } }` });
     return this.trackCommandResult(env);
   }
 
   async sessionStart(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation { session { start } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { start { ${GQL_RESPONSE_SELECTION} } } }` });
     return this.trackCommandResult(env);
   }
 
   async sessionEnd(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation { session { end } }` });
+    const env = await this.mutateEnvelope({ query: `mutation { session { end { ${GQL_RESPONSE_SELECTION} } } }` });
     return this.trackCommandResult(env);
   }
 
@@ -1315,14 +1521,20 @@ export class Session {
 
   async detachBackbone(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
     return this.trackCommandResult(env);
   }
 
   /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the given store command scope. */
   async backboneSyncNow(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.mutateEnvelope({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId } });
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
     return this.trackCommandResult(env);
   }
 
@@ -1706,7 +1918,7 @@ export class Store extends Entity {
 
   async detachBackbone(): Promise<SetResult> {
     const env = await executeSessionWriteGraphql(this.session, {
-      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`,
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach { ${GQL_RESPONSE_SELECTION} } } } } }`,
       variables: { storeId: this.id },
     });
     return this.session.mutationReceipt(env);
@@ -1714,7 +1926,7 @@ export class Store extends Entity {
 
   async syncBackbone(): Promise<SetResult> {
     const env = await executeSessionWriteGraphql(this.session, {
-      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`,
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync { ${GQL_RESPONSE_SELECTION} } } } } }`,
       variables: { storeId: this.id },
     });
     return this.session.mutationReceipt(env);
@@ -1746,13 +1958,15 @@ export abstract class Provider extends Entity {
   }
 
   async createBackbone(uri: string): Promise<SetResult> {
-    const env = await executeSessionWriteGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
     return this.session.mutationReceipt(env);
   }
 
   async attachBackbone(storeId: string): Promise<SetResult> {
     const env = await executeSessionWriteGraphql(this.session, {
-      query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) } } }`,
+      query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) { ${GQL_RESPONSE_SELECTION} } } } }`,
       variables: { storeId },
     });
     return this.session.mutationReceipt(env);
@@ -1806,13 +2020,15 @@ export class RemoteProvider extends Provider {
   async login(username: string, passwordHash: string, hubUrl?: string | null): Promise<SetResult> {
     const h = hubUrl == null ? "null" : gqlString(hubUrl);
     const env = await executeSessionWriteGraphql(this.session, {
-      query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
+      query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) { ${GQL_RESPONSE_SELECTION} } } } }`,
     });
     return this.session.mutationReceipt(env);
   }
 
   async logout(): Promise<SetResult> {
-    const env = await executeSessionWriteGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation { session { ${this.commandSelection} { logout { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
     return this.session.mutationReceipt(env);
   }
 }
@@ -1823,12 +2039,20 @@ export class Graph extends Entity {
     super(session, root);
   }
 
-  private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
-    return this.session.readStoreInnerForId(this.managedStoreId, inner);
-  }
-
   get root(): GraphRootKind {
     return this.id as GraphRootKind;
+  }
+
+  storeBranchPath(selection: string): string {
+    return `${this.root} { ${selection} }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(frag, this.root);
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
   }
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
@@ -1844,53 +2068,31 @@ export class Graph extends Entity {
     return new Alternative(this.session, { parent: "graph", root: this.root, storeId: this.managedStoreId }, alternativeId);
   }
 
-  private async readStoreGraphRootScalar(field: "id" | "hash"): Promise<string> {
-    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { ${field} }`), this.root);
-    return node == null ? "" : String(node[field] ?? "");
-  }
-
-  async hash(): Promise<string> {
-    return await this.readStoreGraphRootScalar("hash");
-  }
-
-  private async alternativeIds(): Promise<readonly string[]> {
-    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { alternatives { edges { node { id } } } }`), this.root);
-    return parseEntityConnectionIds(node, "alternatives");
-  }
-
-  private async checkpointIds(): Promise<readonly string[]> {
-    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { checkpoints { edges { node { id } } } }`), this.root);
-    return parseEntityConnectionIds(node, "checkpoints");
-  }
-
-  /** @emoji 📚 Id-list-stable {@link Alternative} handles under this graph root. */
-  async alternatives(): Promise<readonly Alternative[]> {
-    const ids = await this.alternativeIds();
-    return Object.freeze(ids.map((id) => this.alternative(id)));
-  }
-
-  /** @emoji 📚 Id-list-stable {@link Checkpoint} handles under this graph root. */
-  async checkpoints(): Promise<readonly Checkpoint[]> {
-    const ids = await this.checkpointIds();
-    return Object.freeze(ids.map((id) => this.checkpoint(id)));
-  }
-
-  /** @emoji 📡 Refetches {@link Graph#readAlternatives} on coarse kit ticks. */
-  subscribeAlternatives(cb: (next: readonly Alternative[]) => void): Unsubscribe {
-    const run = (): void => {
-      void this.alternatives().then(cb);
-    };
-    return subscribeKitCoarseRefetch(this.session.bus, run);
-  }
-
-  /** @emoji 📡 Refetches {@link Graph#readCheckpoints} on coarse kit ticks. */
-  subscribeCheckpoints(cb: (next: readonly Checkpoint[]) => void): Unsubscribe {
-    const run = (): void => {
-      void this.checkpoints().then(cb);
-    };
-    return subscribeKitCoarseRefetch(this.session.bus, run);
-  }
+  declare hash: () => Promise<string>;
+  declare alternatives: () => Promise<readonly Alternative[]>;
+  declare checkpoints: () => Promise<readonly Checkpoint[]>;
 }
+
+installEntityStoreBranchMethods(
+  Graph,
+  defineBoundStoreBranchFields([
+    { selection: "hash", parse: (branch) => String(branch?.["hash"] ?? "") },
+    {
+      selection: "alternatives { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "alternatives").map((id) => (entity as Graph).alternative(id))),
+    },
+    {
+      selection: "checkpoints { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "checkpoints").map((id) => (entity as Graph).checkpoint(id))),
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Graph>[],
+);
 
 /** @emoji 🧭 Parent scope for {@link Alternative} navigation. */
 export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind; readonly storeId: string };
@@ -1905,47 +2107,87 @@ export class Alternative extends Entity {
     super(session, id);
   }
 
-  async name(): Promise<string> {
-    const root = this.ap.parent === "graph" ? this.ap.root : "wip";
-    const storeNode = await this.session.readStoreInnerForId(this.ap.storeId, `${root} { alternative(id: ${gqlString(this.id)}) { name } }`);
-    const first = jsonObjectField(storeNode, root);
-    const alt = first?.["alternative"] as JsonObject | undefined;
-    return String(alt?.["name"] ?? "");
+  private graphRoot(): GraphRootKind {
+    return this.ap.parent === "graph" ? this.ap.root : "wip";
   }
+
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot()} { alternative(id: ${gqlString(this.id)}) { ${selection} } }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot()), "alternative");
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.ap.storeId, this.storeBranchPath(selection));
+  }
+
+  declare name: () => Promise<string>;
 }
+
+installEntityStoreBranchMethods(
+  Alternative,
+  defineBoundStoreBranchFields([{ selection: "name", parse: (branch) => String(branch?.["name"] ?? "") }] as const) as readonly BoundStoreBranchFieldSpec<unknown, Alternative>[],
+);
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
-  constructor(session: Session, private readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
+  constructor(session: Session, readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
     super(session, `theKit:${graphRoot}`);
   }
 
   /** @emoji 📦 Target {@code Version.kit} handle beneath this version node. */
-  private kitRef(id = "kit"): Kit {
+  kitRef(id = "kit"): Kit {
     return new Kit(this.session, id, this.managedStoreId);
   }
 
-  private async kitId(): Promise<string> {
-    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { theKit { id } }`);
-    const rootNode = jsonObjectField(storeNode, this.graphRoot);
-    const tk = jsonObjectField(rootNode, "theKit");
-    return String(tk?.["id"] ?? "");
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot} { theKit { ${selection} } }`;
   }
 
-  /** @emoji 📦 Reads target {@code Version.kit} and returns the matching {@link Kit} handle. */
-  async kit(): Promise<Kit> {
-    return this.kitRef(await this.kitId());
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot), "theKit");
   }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
+  }
+
+  declare kit: () => Promise<Kit>;
 }
+
+installEntityStoreBranchMethods(
+  TheKit,
+  defineBoundStoreBranchFields([
+    {
+      selection: "id",
+      method: "kit",
+      parse: () => null as unknown as Kit,
+      parseEntity: (entity, branch) => (entity as TheKit).kitRef(String(branch?.["id"] ?? "kit")),
+      coarseEvent: true,
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, TheKit>[],
+);
 
 /** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
 export class Checkpoint extends Entity {
-  constructor(session: Session, private readonly graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
+  readonly graphRoot: GraphRootKind;
+  constructor(session: Session, graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
     super(session, checkpointId);
+    this.graphRoot = graphRoot;
   }
 
-  private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
-    return this.session.readStoreInnerForId(this.managedStoreId, inner);
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { ${selection} } }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot), "checkpoint");
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
   }
 
   change(changeId: string): Change {
@@ -1956,158 +2198,158 @@ export class Checkpoint extends Entity {
     return new Edit(this.session, this.graphRoot, this.id, editId, this.managedStoreId);
   }
 
-  async message(): Promise<string> {
-    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } }`), this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return String(cp?.["message"] ?? "");
-  }
-
-  async timestamp(): Promise<string | null> {
-    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } }`), this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    const ts = cp?.["timestamp"];
-    return ts == null ? null : String(ts);
-  }
-
-  async hash(): Promise<string> {
-    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } }`), this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return String(cp?.["hash"] ?? "");
-  }
-
-  private async changeIds(): Promise<readonly string[]> {
-    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } }`), this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return parseStrongEntityArrayIds(cp ?? null, "changes");
-  }
-
-  private async editIds(): Promise<readonly string[]> {
-    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } }`), this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return parseEntityConnectionIds(cp ?? null, "edits");
-  }
-
-  /** @emoji 📚 Id-list-stable {@link Change} entities for this checkpoint (schema {@code changes: [Change!]!}). */
-  async changes(): Promise<readonly Change[]> {
-    const ids = await this.changeIds();
-    return Object.freeze(ids.map((cid) => this.change(cid)));
-  }
-
-  /** @emoji 📚 Id-list-stable {@link Edit} handles for this checkpoint. */
-  async edits(): Promise<readonly Edit[]> {
-    const ids = await this.editIds();
-    return Object.freeze(ids.map((eid) => this.edit(eid)));
-  }
-
-  /** @emoji 📡 Refetches {@link Checkpoint#readChanges} on coarse kit ticks. */
-  subscribeChanges(cb: (next: readonly Change[]) => void): Unsubscribe {
-    const run = (): void => {
-      void this.changes().then(cb);
-    };
-    return subscribeKitCoarseRefetch(this.session.bus, run);
-  }
-
-  /** @emoji 📡 Refetches {@link Checkpoint#readEdits} on coarse kit ticks. */
-  subscribeEdits(cb: (next: readonly Edit[]) => void): Unsubscribe {
-    const run = (): void => {
-      void this.edits().then(cb);
-    };
-    return subscribeKitCoarseRefetch(this.session.bus, run);
-  }
+  declare message: () => Promise<string>;
+  declare timestamp: () => Promise<string | null>;
+  declare hash: () => Promise<string>;
+  declare changes: () => Promise<readonly Change[]>;
+  declare edits: () => Promise<readonly Edit[]>;
 }
 
-/** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
+installEntityStoreBranchMethods(
+  Checkpoint,
+  defineBoundStoreBranchFields([
+    { selection: "message", parse: (branch) => String(branch?.["message"] ?? "") },
+    {
+      selection: "timestamp",
+      parse: (branch) => {
+        const ts = branch?.["timestamp"];
+        return ts == null ? null : String(ts);
+      },
+    },
+    { selection: "hash", parse: (branch) => String(branch?.["hash"] ?? "") },
+    {
+      selection: "changes { id }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseStrongEntityArrayIds(branch, "changes").map((cid) => (entity as Checkpoint).change(cid))),
+    },
+    {
+      selection: "edits { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "edits").map((eid) => (entity as Checkpoint).edit(eid))),
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Checkpoint>[],
+);
+
+/** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint}. */
 export class Change extends Entity {
+  readonly graphRoot: GraphRootKind;
+  readonly checkpointId: string;
   constructor(
     session: Session,
-    private readonly graphRoot: GraphRootKind,
-    private readonly checkpointId: string,
+    graphRoot: GraphRootKind,
+    checkpointId: string,
     changeId: string,
     private readonly managedStoreId: string,
   ) {
     super(session, changeId);
+    this.graphRoot = graphRoot;
+    this.checkpointId = checkpointId;
   }
 
-  private async readUnderChange(inner: string): Promise<JsonObject | null> {
-    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`);
-    const rootNode = jsonObjectField(storeNode, this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    const ch = cp?.["change"] as JsonObject | undefined;
-    return ch ?? null;
+  scopedNodePath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${selection} } } } }`;
   }
 
-  async description(): Promise<string> {
-    const node = await this.readUnderChange("description");
-    return String(node?.["description"] ?? "");
+  async readScopedNode(selection: string): Promise<JsonObject | null> {
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, this.scopedNodePath(selection));
+    const cp = jsonObjectField(jsonObjectField(storeNode, this.graphRoot), "checkpoint");
+    return (cp?.["change"] as JsonObject | undefined) ?? null;
   }
 
-  async origin(): Promise<string> {
-    const node = await this.readUnderChange("origin");
-    return String(node?.["origin"] ?? "");
-  }
-
-  async saved(): Promise<boolean | null> {
-    const node = await this.readUnderChange("saved");
-    const v = node?.["saved"];
-    if (v == null) return null;
-    return Boolean(v);
-  }
-
-  async startedAt(): Promise<string> {
-    const node = await this.readUnderChange("startedAt");
-    const v = node?.["startedAt"];
-    return v == null ? "" : String(v);
-  }
-
-  async savedAt(): Promise<string | null> {
-    const node = await this.readUnderChange("savedAt");
-    const v = node?.["savedAt"];
-    return v == null ? null : String(v);
-  }
+  declare description: () => Promise<string>;
+  declare origin: () => Promise<string>;
+  declare saved: () => Promise<boolean | null>;
+  declare startedAt: () => Promise<string>;
+  declare savedAt: () => Promise<string | null>;
 }
 
-/** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
+installEntityScopedNodeMethods(
+  Change,
+  defineBoundScopedNodeFields([
+    { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+    { selection: "origin", parse: (node) => String(node?.["origin"] ?? "") },
+    {
+      selection: "saved",
+      parse: (node) => {
+        const v = node?.["saved"];
+        if (v == null) return null;
+        return Boolean(v);
+      },
+    },
+    {
+      selection: "startedAt",
+      parse: (node) => {
+        const v = node?.["startedAt"];
+        return v == null ? "" : String(v);
+      },
+    },
+    {
+      selection: "savedAt",
+      parse: (node) => {
+        const v = node?.["savedAt"];
+        return v == null ? null : String(v);
+      },
+    },
+  ] as const),
+);
+
+/** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint}. */
 export class Edit extends Entity {
+  readonly graphRoot: GraphRootKind;
+  readonly checkpointId: string;
   constructor(
     session: Session,
-    private readonly graphRoot: GraphRootKind,
-    private readonly checkpointId: string,
+    graphRoot: GraphRootKind,
+    checkpointId: string,
     editId: string,
     private readonly managedStoreId: string,
   ) {
     super(session, editId);
+    this.graphRoot = graphRoot;
+    this.checkpointId = checkpointId;
   }
 
-  private async readUnderEdit(inner: string): Promise<JsonObject | null> {
-    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`);
-    const rootNode = jsonObjectField(storeNode, this.graphRoot);
-    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    const ed = cp?.["edit"] as JsonObject | undefined;
-    return ed ?? null;
+  scopedNodePath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${selection} } } } }`;
   }
 
-  async description(): Promise<string> {
-    const node = await this.readUnderEdit("description");
-    return String(node?.["description"] ?? "");
+  async readScopedNode(selection: string): Promise<JsonObject | null> {
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, this.scopedNodePath(selection));
+    const cp = jsonObjectField(jsonObjectField(storeNode, this.graphRoot), "checkpoint");
+    return (cp?.["edit"] as JsonObject | undefined) ?? null;
   }
 
-  async origin(): Promise<string> {
-    const node = await this.readUnderEdit("origin");
-    return String(node?.["origin"] ?? "");
-  }
-
-  async sequenceNumber(): Promise<number> {
-    const node = await this.readUnderEdit("sequenceNumber");
-    const v = node?.["sequenceNumber"];
-    return typeof v === "number" ? v : Number(v ?? NaN);
-  }
-
-  async startedAt(): Promise<string> {
-    const node = await this.readUnderEdit("startedAt");
-    const v = node?.["startedAt"];
-    return v == null ? "" : String(v);
-  }
+  declare description: () => Promise<string>;
+  declare origin: () => Promise<string>;
+  declare sequenceNumber: () => Promise<number>;
+  declare startedAt: () => Promise<string>;
 }
+
+installEntityScopedNodeMethods(
+  Edit,
+  defineBoundScopedNodeFields([
+    { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+    { selection: "origin", parse: (node) => String(node?.["origin"] ?? "") },
+    {
+      selection: "sequenceNumber",
+      parse: (node) => {
+        const v = node?.["sequenceNumber"];
+        return typeof v === "number" ? v : Number(v ?? NaN);
+      },
+    },
+    {
+      selection: "startedAt",
+      parse: (node) => {
+        const v = node?.["startedAt"];
+        return v == null ? "" : String(v);
+      },
+    },
+  ] as const),
+);
 
 /** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
 export class Conflict extends Entity {
@@ -2115,40 +2357,35 @@ export class Conflict extends Entity {
     super(session, id, storeId);
   }
 
-  async reasons(): Promise<readonly string[]> {
-    const data = unwrapGraphqlData(
-      await executeSessionReadGraphql(this.session, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
-    const n = data["node"] as JsonObject | undefined;
-    const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
-    if (!Array.isArray(raw)) return [];
-    return raw.map((x) => String(x));
-  }
-
-  private async authoritativeChangeId(): Promise<string> {
-    const data = unwrapGraphqlData(
-      await executeSessionReadGraphql(this.session, {
-        query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
-        variables: { id: this.id },
-      }),
-    ) as JsonObject;
-    const n = data["node"] as JsonObject | undefined;
-    const ch = n?.["authoritativeChange"] as JsonObject | null | undefined;
-    return ch ? String(ch["id"] ?? "") : "";
-  }
-
-  private async wipChangeId(): Promise<string> {
-    const data = unwrapGraphqlData(
-      await executeSessionReadGraphql(this.session, {
-        query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
-        variables: { id: this.id },
-      }),
-    ) as JsonObject;
-    const n = data["node"] as JsonObject | undefined;
-    const ch = n?.["wipChange"] as JsonObject | null | undefined;
-    return ch ? String(ch["id"] ?? "") : "";
-  }
+  declare reasons: () => Promise<readonly string[]>;
+  declare authoritativeChangeId: () => Promise<string>;
+  declare wipChangeId: () => Promise<string>;
 }
+
+installEntityNodeMethods(
+  Conflict,
+  "Conflict",
+  defineBoundNodeFields([
+    {
+      selection: "reasons",
+      parse: (node) => {
+        const raw = node?.["reasons"] as readonly JsonValue[] | undefined;
+        if (!Array.isArray(raw)) return [];
+        return raw.map((x) => String(x));
+      },
+    },
+    {
+      selection: "authoritativeChange { id }",
+      method: "authoritativeChangeId",
+      parse: (node) => String((node?.["authoritativeChange"] as JsonObject | undefined)?.["id"] ?? ""),
+    },
+    {
+      selection: "wipChange { id }",
+      method: "wipChangeId",
+      parse: (node) => String((node?.["wipChange"] as JsonObject | undefined)?.["id"] ?? ""),
+    },
+  ] as const) as readonly BoundNodeFieldSpec<unknown>[],
+);
 
 //#endregion 🧬VcsEntities
 
@@ -2665,24 +2902,26 @@ export class Position {
 export class Coordinate {
   constructor(public readonly parent: Position) { }
 
-  async u(): Promise<number> {
-    const frag = (await this.parent.piece.readKitInner(
-      this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
-    const c = json?.["center"] as JsonObject | undefined;
-    return typeof c?.["u"] === "number" ? c["u"] : 0;
-  }
-
-  async v(): Promise<number> {
-    const frag = (await this.parent.piece.readKitInner(
-      this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
-    const c = json?.["center"] as JsonObject | undefined;
-    return typeof c?.["v"] === "number" ? c["v"] : 0;
-  }
+  declare u: () => Promise<number>;
+  declare v: () => Promise<number>;
 }
+
+function parsePieceRoleCenter(frag: JsonObject | null, role: string): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  return (json?.["center"] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Coordinate,
+  (self, selection) =>
+    self.parent.piece.readKitInner(self.parent.piece.kitPieceSelection(`${self.parent.role} { center { ${selection} } }`)) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRoleCenter(frag, self.parent.role),
+  [
+    { method: "u", selection: "u", parse: (c) => (typeof c?.["u"] === "number" ? c["u"] : 0), coarseEvent: true },
+    { method: "v", selection: "v", parse: (c) => (typeof c?.["v"] === "number" ? c["v"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.piece.session.bus,
+);
 
 /** @emoji 📐 Weak {@code Plane} under {@link Position}. */
 export class Plane {
@@ -2712,36 +2951,31 @@ export class Plane {
 export class Point {
   constructor(public readonly parent: Plane) { }
 
-  async x(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const o = pl?.["origin"] as JsonObject | undefined;
-    return typeof o?.["x"] === "number" ? o["x"] : 0;
-  }
-
-  async y(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const o = pl?.["origin"] as JsonObject | undefined;
-    return typeof o?.["y"] === "number" ? o["y"] : 0;
-  }
-
-  async z(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const o = pl?.["origin"] as JsonObject | undefined;
-    return typeof o?.["z"] === "number" ? o["z"] : 0;
-  }
+  declare x: () => Promise<number>;
+  declare y: () => Promise<number>;
+  declare z: () => Promise<number>;
 }
+
+function parsePieceRolePlaneOrigin(frag: JsonObject | null, role: string): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  const pl = json?.["plane"] as JsonObject | undefined;
+  return (pl?.["origin"] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Point,
+  (self, selection) =>
+    self.parent.parent.piece.readKitInner(
+      self.parent.parent.piece.kitPieceSelection(`${self.parent.parent.role} { plane { origin { ${selection} } } }`),
+    ) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRolePlaneOrigin(frag, self.parent.parent.role),
+  [
+    { method: "x", selection: "x", parse: (o) => (typeof o?.["x"] === "number" ? o["x"] : 0), coarseEvent: true },
+    { method: "y", selection: "y", parse: (o) => (typeof o?.["y"] === "number" ? o["y"] : 0), coarseEvent: true },
+    { method: "z", selection: "z", parse: (o) => (typeof o?.["z"] === "number" ? o["z"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.parent.piece.session.bus,
+);
 
 /** @emoji ➡️ Weak axis vector leaf under {@link Plane}. */
 export class Vector {
@@ -2750,36 +2984,31 @@ export class Vector {
     public readonly axisRole: "xAxis" | "yAxis",
   ) { }
 
-  async x(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const ax = pl?.[this.axisRole] as JsonObject | undefined;
-    return typeof ax?.["x"] === "number" ? ax["x"] : 0;
-  }
-
-  async y(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const ax = pl?.[this.axisRole] as JsonObject | undefined;
-    return typeof ax?.["y"] === "number" ? ax["y"] : 0;
-  }
-
-  async z(): Promise<number> {
-    const frag = (await this.parent.parent.piece.readKitInner(
-      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
-    )) as JsonObject | null;
-    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = json?.["plane"] as JsonObject | undefined;
-    const ax = pl?.[this.axisRole] as JsonObject | undefined;
-    return typeof ax?.["z"] === "number" ? ax["z"] : 0;
-  }
+  declare x: () => Promise<number>;
+  declare y: () => Promise<number>;
+  declare z: () => Promise<number>;
 }
+
+function parsePieceRolePlaneAxis(frag: JsonObject | null, role: string, axisRole: "xAxis" | "yAxis"): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  const pl = json?.["plane"] as JsonObject | undefined;
+  return (pl?.[axisRole] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Vector,
+  (self, selection) =>
+    self.parent.parent.piece.readKitInner(
+      self.parent.parent.piece.kitPieceSelection(`${self.parent.parent.role} { plane { ${self.axisRole} { ${selection} } } }`),
+    ) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRolePlaneAxis(frag, self.parent.parent.role, self.axisRole),
+  [
+    { method: "x", selection: "x", parse: (ax) => (typeof ax?.["x"] === "number" ? ax["x"] : 0), coarseEvent: true },
+    { method: "y", selection: "y", parse: (ax) => (typeof ax?.["y"] === "number" ? ax["y"] : 0), coarseEvent: true },
+    { method: "z", selection: "z", parse: (ax) => (typeof ax?.["z"] === "number" ? ax["z"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.parent.piece.session.bus,
+);
 
 /** @emoji ↔️ Weak {@code OffsetInput} path shell (drag hints; expand when SDL exposes offset nodes). */
 export class Offset {

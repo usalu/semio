@@ -419,12 +419,11 @@ export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	id: string;
-	/** @emoji 🏷️ Kit piece `name` from fixture JSON (e.g. `cs_sl1_…`). */
-	label?: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	radius: number;
 	shape?: "circle";
+	/** @emoji 🏷️ On-canvas caption (kit piece `name`, e.g. `cs_sl1_…`). */
 	text?: string;
 	/** @emoji 🏷️ WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
@@ -448,11 +447,10 @@ export interface BoardFixtureRectangleNodeV1 {
 	handles: BoardFixtureHandleV1[];
 	height: number;
 	id: string;
-	/** @emoji 🏷️ Kit piece `name` from fixture JSON (e.g. `cs_sl1_…`). */
-	label?: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	shape: "rectangle";
+	/** @emoji 🏷️ On-canvas caption (kit piece `name`, e.g. `cs_sl1_…`). */
 	text?: string;
 	/** @emoji 🏷️ WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
@@ -1366,30 +1364,23 @@ function boardSelectionModeForHost(mode: BoardSelectionMode): string {
 	return mode === "default" ? "replace" : mode;
 }
 
-/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins, else fixture `label` (kit piece `name`). */
-function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefined {
-	if (typeof node.text === "string") {
-		const trimmed = node.text.trim();
-		if (trimmed !== "") {
-			return trimmed;
-		}
+/** @emoji 🏷️ Resolves optional node caption from raw fixture JSON (`text` only). */
+function fixtureNodeTextFromJson(node: Record<string, unknown>): string | undefined {
+	if (typeof node.text !== "string") {
+		return undefined;
 	}
-	const lab = typeof node.label === "string" ? node.label.trim() : "";
-	return lab !== "" ? lab : undefined;
+	const trimmed = node.text.trim();
+	return trimmed !== "" ? trimmed : undefined;
 }
 
-/** @emoji 🏷️ On-canvas / inspector caption for a parsed fixture node (`text` then `label`). */
+/** @emoji 🏷️ On-canvas / inspector caption for a parsed fixture node. */
 export function boardFixtureNodeCaption(node: BoardFixtureNodeV1): string | undefined {
 	const text = node.text?.trim();
-	if (text) {
-		return text;
-	}
-	const label = node.label?.trim();
-	return label !== "" ? label : undefined;
+	return text !== "" ? text : undefined;
 }
 
 function fixtureOptionalTextFontFamily(node: Record<string, unknown>): string | undefined {
-	const raw = node.textFontFamily ?? node.fontFamily;
+	const raw = node.textFontFamily;
 	if (typeof raw !== "string") {
 		return undefined;
 	}
@@ -1438,6 +1429,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			return null;
 		}
 		const node = entry as Record<string, unknown>;
+		if (Object.hasOwn(node, "label")) {
+			return null;
+		}
 		const id = typeof node.id === "string" ? node.id : null;
 		const x = Number(node.x);
 		const y = Number(node.y);
@@ -1478,9 +1472,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			};
 			handles.push(base);
 		}
-		const labelRaw = typeof node.label === "string" ? node.label.trim() : "";
-		const label = labelRaw !== "" ? labelRaw : undefined;
-		const textFromJson = fixtureNodeDisplayText(node);
+		const textFromJson = fixtureNodeTextFromJson(node);
 		const textAutofit = node.textAutofit === true;
 		const textFontFamily = fixtureOptionalTextFontFamily(node);
 		const textFontSize = fixtureOptionalTextFontSize(node);
@@ -1511,7 +1503,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
-				...(label !== undefined ? { label } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				...(textAutofit ? { textAutofit: true } : {}),
 				...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1539,7 +1530,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
-			...(label !== undefined ? { label } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			...(textAutofit ? { textAutofit: true } : {}),
 			...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -5041,18 +5031,18 @@ if (boardVitest) {
 			expect(rect?.nodes[0]).toMatchObject({ id: "r", textAutofit: true });
 		});
 
-		it("parses optional caption font, size, alignment, and fontFamily alias", () => {
+		it("parses optional caption font, size, and alignment", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [],
 				nodes: [
 					{
-						fontFamily: " Georgia ",
 						handles: [{ angle: 0, id: "z.h" }],
 						id: "z",
 						radius: 8,
 						text: "z",
 						textAlignment: "ne",
+						textFontFamily: " Georgia ",
 						textFontSize: 18,
 						x: 0,
 						y: 0,
@@ -5108,24 +5098,15 @@ if (boardVitest) {
 			).toBeNull();
 		});
 
-		it("maps legacy JSON label into node text", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [],
-				nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ id: "n1", text: "legacy" });
-		});
-
-		it("prefers text over label when both are present in JSON", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [],
-				nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, text: "primary", x: 0, y: 0 }],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ text: "primary" });
+		it("rejects fixture nodes that use legacy `label` instead of `text`", () => {
+			expect(
+				parseBoardFixtureV1({
+					camera: { x: 0, y: 0, zoom: 1 },
+					edges: [],
+					nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
+					schema: "elements.board.fixture/v1",
+				}),
+			).toBeNull();
 		});
 
 		it("parses optional nodeKind on circle and rectangle fixture nodes", () => {
@@ -5161,7 +5142,7 @@ if (boardVitest) {
 			expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
 		});
 
-    it("maps kit piece label to node text and preserves label", () => {
+    it("maps kit piece name to node text", () => {
       const parsed = parseBoardFixtureV1({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
@@ -5170,8 +5151,8 @@ if (boardVitest) {
             handles: [{ angle: 0, id: "a:h" }],
             height: 10,
             id: "a",
-            label: "cs_sl0_d0_t_f0_b_c0",
             shape: "rectangle",
+            text: "cs_sl0_d0_t_f0_b_c0",
             width: 12,
             x: 1,
             y: 2,
@@ -5181,7 +5162,6 @@ if (boardVitest) {
       });
       expect(parsed?.nodes[0]).toMatchObject({
         id: "a",
-        label: "cs_sl0_d0_t_f0_b_c0",
         shape: "rectangle",
         text: "cs_sl0_d0_t_f0_b_c0",
       });

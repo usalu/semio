@@ -10466,31 +10466,33 @@ pub mod worker {
 
         /// @emoji ⏳ Enqueues on wip and waits for `CommandSucceeded` / `OperationFailed` on the bus.
         pub async fn dispatch_wip_wait(&self, cmd: Command) -> crate::operation::CommandResponse {
-            use std::time::{Duration, Instant};
+            use std::time::Duration;
 
             use crate::event::Event;
             use crate::operation::CommandResponse;
 
             let request_id = cmd.request_id().clone();
-            let mut events = self.bus.subscribe();
-            self.wip.send(cmd).await;
-            let deadline = Instant::now() + Duration::from_secs(30);
-            loop {
-                if Instant::now() >= deadline {
-                    return CommandResponse::fail_msg("command timed out").await;
-                }
-                if let Ok(ev) = events.try_recv() {
-                    match ev {
-                        Event::CommandSucceeded(r) if r.request_id == request_id => {
-                            return CommandResponse::ok_request(request_id).await;
+            let wait = async {
+                let mut events = self.bus.subscribe();
+                self.wip.send(cmd).await;
+                loop {
+                    if let Ok(ev) = events.try_recv() {
+                        match ev {
+                            Event::CommandSucceeded(r) if r.request_id == request_id => {
+                                return CommandResponse::ok_request(request_id).await;
+                            }
+                            Event::OperationFailed(e) if e.request_id.as_deref() == Some(request_id.as_str()) => {
+                                return CommandResponse::fail(e).await;
+                            }
+                            _ => {}
                         }
-                        Event::OperationFailed(e) if e.request_id.as_deref() == Some(request_id.as_str()) => {
-                            return CommandResponse::fail(e).await;
-                        }
-                        _ => {}
                     }
+                    futures_lite::future::yield_now().await;
                 }
-                futures_lite::future::yield_now().await;
+            };
+            match tokio::time::timeout(Duration::from_secs(30), wait).await {
+                Ok(response) => response,
+                Err(_) => CommandResponse::fail_msg("command timed out").await,
             }
         }
 
@@ -14666,17 +14668,19 @@ mod tests {
         assert_eq!(_ENTITY_BARE_PROBE + _OP_WITH_INPUT_PROBE + _OP_NO_INPUT_PROBE, 12);
     }
 
+    const GQL_RESPONSE_ID: &str = "{ ok result { ... on IdResult { value } } }";
+
     /// @emoji 🌱 Opens an unsaved kit change via golden `Mutation.session.store.theKit.startNewChange` (see `schema.golden.graphql` Commands block).
     async fn graphql_start_new_change(schema: &AppSchema) -> String {
-        let res = schema
-            .execute(Request::new(
-                r#"mutation { session { store(id: "test-store") { theKit { startNewChange } } } }"#,
-            ))
-            .await;
+        let mutation = format!(
+            r#"mutation {{ session {{ store(id: "test-store") {{ theKit {{ startNewChange {} }} }} }} }}"#,
+            GQL_RESPONSE_ID
+        );
+        let res = schema.execute(Request::new(mutation)).await;
         assert!(res.errors.is_empty(), "startNewChange: {:?}", res.errors);
         res.data
             .into_json()
-            .unwrap()["session"]["store"]["theKit"]["startNewChange"]
+            .unwrap()["session"]["store"]["theKit"]["startNewChange"]["result"]["value"]
             .as_str()
             .expect("change id")
             .to_string()
@@ -14716,7 +14720,7 @@ mod tests {
                         unsavedChange(id: $tx) {
                             kit {
                                 design(id: $designId) {
-                                    addFixedPiece(blueprintId: $bp, position: $pos)
+                                    addFixedPiece(blueprintId: $bp, position: $pos) { ok }
                                 }
                             }
                         }
@@ -14863,12 +14867,15 @@ mod tests {
     fn create_alternative_from_tip_graphql() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            const M: &str = r#"mutation($n: String!) { session { store(id: "test-store") { startAlternative(name: $n) } } }"#;
-            let res = schema.execute(Request::new(M).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" })))).await;
+            let m = format!(
+                r#"mutation($n: String!) {{ session {{ store(id: "test-store") {{ startAlternative(name: $n) {} }} }} }}"#,
+                GQL_RESPONSE_ID
+            );
+            let res = schema.execute(Request::new(m).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" })))).await;
             assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
             let id: String = res.data
                 .into_json()
-                .unwrap()["session"]["store"]["startAlternative"]
+                .unwrap()["session"]["store"]["startAlternative"]["result"]["value"]
                 .as_str()
                 .expect("alt id")
                 .to_string();
@@ -14923,7 +14930,7 @@ mod tests {
                             theKit {
                                 unsavedChange(id: $tx) {
                                     kit {
-                                        createTag(name: $name)
+                                        createTag(name: $name) { ok }
                                     }
                                 }
                             }
@@ -14962,7 +14969,7 @@ mod tests {
                             theKit {
                                 unsavedChange(id: $tx) {
                                     kit {
-                                        createConcept(name: $name)
+                                        createConcept(name: $name) { ok }
                                     }
                                 }
                             }
@@ -15001,7 +15008,7 @@ mod tests {
                             theKit {
                                 unsavedChange(id: $tx) {
                                     kit {
-                                        createQuality(key: $key, value: $value)
+                                        createQuality(key: $key, value: $value) { ok }
                                     }
                                 }
                             }

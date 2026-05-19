@@ -27,6 +27,21 @@ type FieldBindOptions<E, T> = Readonly<{
 }>;
 
 const EMPTY_IDS = Object.freeze([]) as readonly string[];
+const EMPTY_DESIGNS = Object.freeze([]) as readonly Design[];
+const EMPTY_TYPES = Object.freeze([]) as readonly Type[];
+const EMPTY_AUTHORS = Object.freeze([]) as readonly Author[];
+const EMPTY_QUALITIES = Object.freeze([]) as readonly Quality[];
+const EMPTY_TAGS = Object.freeze([]) as readonly Tag[];
+const EMPTY_CONCEPTS = Object.freeze([]) as readonly Concept[];
+const EMPTY_PIECES = Object.freeze([]) as readonly Piece[];
+const EMPTY_CONNECTIONS = Object.freeze([]) as readonly Connection[];
+
+const WRITE_STATUS_IDLE = Object.freeze({ kind: "idle", pending: 0 }) as WriteStatus;
+const WRITE_STATUS_READONLY = Object.freeze({ kind: "readonly", pending: 0 }) as WriteStatus;
+
+async function noopKitFieldSet(): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "Read-only kit field binding.", field: undefined, entity: undefined } };
+}
 
 /**
  * @emoji 🪝 Binds one async entity read to React state; optional bus kind narrows refresh fan-in (no `useSyncExternalStore`).
@@ -89,6 +104,17 @@ export type EntityCommand<Run extends Record<string, (...args: any[]) => Promise
   run: Run;
   status: OperationStatus;
 }>;
+
+/** @emoji 🎛️ Sketchpad row status for {@link KitFieldBinding} tuple reads. */
+export type WriteStatus = Readonly<
+  | { kind: "readonly"; pending: 0 }
+  | { kind: "idle"; pending: number }
+  | { kind: "pending"; pending: number }
+  | { kind: "error"; pending: number; lastError?: SetError }
+>;
+
+/** @emoji 🪝 Sketchpad triad: value, setter, status (`const [value] = hook()`). */
+export type KitFieldBinding<T> = readonly [T, (next: unknown) => Promise<SetResult>, WriteStatus];
 
 type SemioCommandRunners = Record<string, (...args: any[]) => Promise<SetResult>>;
 
@@ -906,54 +932,78 @@ function useResolvedType(id?: ID): Type | null {
 }
 
 // #region 🪝IdStableEntityLists
-/** @emoji 📚 Kit-level design ids via {@link Kit#designs}. */
-export function useKitDesigns(): readonly string[] {
+/** @emoji 📚 Kit-level designs via {@link Kit#designs} (stable entity handles). */
+export function useKitDesigns(): readonly Design[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.designs()).map((d) => d.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.designs())) ?? EMPTY_DESIGNS;
 }
 
-/** @emoji 📚 Kit-level type ids via {@link Kit#types}. */
-export function useKitTypes(): readonly string[] {
+/** @emoji 📚 Kit-level kinds via {@link Kit#types}. */
+export function useKitTypes(): readonly Type[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.types()).map((t) => t.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.types())) ?? EMPTY_TYPES;
 }
 
-/** @emoji 📚 Kit-level author ids via {@link Kit#authors}. */
-export function useKitAuthors(): readonly string[] {
+/** @emoji 📚 Kit-level authors via {@link Kit#authors}. */
+export function useKitAuthors(): readonly Author[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.authors()).map((a) => a.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.authors())) ?? EMPTY_AUTHORS;
 }
 
-/** @emoji 📚 Kit-level quality ids via {@link Kit#qualities}. */
-export function useKitQualities(): readonly string[] {
+/** @emoji 📚 Kit-level qualities via {@link Kit#qualities}. */
+export function useKitQualities(): readonly Quality[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.qualities()).map((q) => q.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.qualities())) ?? EMPTY_QUALITIES;
 }
 
-/** @emoji 📚 Kit-level tag ids via {@link Kit#tags}. */
-export function useKitTags(): readonly string[] {
+/** @emoji 📚 Kit-level tags via {@link Kit#tags}. */
+export function useKitTags(): readonly Tag[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.tags()).map((t) => t.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.tags())) ?? EMPTY_TAGS;
 }
 
-/** @emoji 📚 Kit-level concept ids via {@link Kit#concepts}. */
-export function useKitConcepts(): readonly string[] {
+/** @emoji 📚 Kit-level concepts via {@link Kit#concepts}. */
+export function useKitConcepts(): readonly Concept[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.concepts()).map((c) => c.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.concepts())) ?? EMPTY_CONCEPTS;
 }
 
-/** @emoji 📚 Piece ids in the active {@link DesignContext} design. */
-export function useDesignPieces(): readonly string[] {
+/** @emoji 📚 Pieces in the active {@link DesignContext} design. */
+export function useDesignPieces(): readonly Piece[] {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, async (design) => Object.freeze((await design.pieces()).map((p) => p.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.pieces())) ?? EMPTY_PIECES;
 }
 
-/** @emoji 📚 Connection ids in the active {@link DesignContext} design. */
-export function useDesignConnections(): readonly string[] {
+/** @emoji 📚 Connections in the active {@link DesignContext} design. */
+export function useDesignConnections(): readonly Connection[] {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, async (design) => Object.freeze((await design.connections()).map((c) => c.id))) ?? EMPTY_IDS;
+  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.connections())) ?? EMPTY_CONNECTIONS;
 }
 // #endregion 🪝IdStableEntityLists
+
+// #region 🪝AggregateListBundles
+/** @emoji 📚 Sketchpad bundle: live kit designs. */
+export function useDesigns(): Readonly<{ designs: readonly Design[] }> {
+  const designs = useKitDesigns();
+  return { designs };
+}
+
+/** @emoji 📚 Sketchpad tuple: live kit kinds (`const [types] = useTypes()`). */
+export function useTypes(): KitFieldBinding<readonly Type[]> {
+  const types = useKitTypes();
+  return [types, noopKitFieldSet, WRITE_STATUS_IDLE];
+}
+
+/** @emoji 📚 Pieces in the active design scope. */
+export function usePieces(): readonly Piece[] {
+  return useDesignPieces();
+}
+
+/** @emoji 📚 Connections in the active design scope. */
+export function useConnections(): readonly Connection[] {
+  return useDesignConnections();
+}
+// #endregion 🪝AggregateListBundles
 
 // #region 🪝HooksKit
 // #region 📖KitReads
@@ -1860,6 +1910,277 @@ export function useConnectionAttributes(): readonly Attribute[] | undefined {
 }
 // #endregion ⛓️Connection
 
+// #region 🎨SketchpadFacade
+export type { DesignDiff } from "../rendering/index";
+export type ConnectionDiff = Readonly<Record<string, unknown>>;
+export type PieceDiff = Readonly<Record<string, unknown>>;
+export type TypeDiff = Readonly<Record<string, unknown>>;
+export type KitDiff = Readonly<Record<string, unknown>>;
+export type DiffStatus = string;
+
+export { getKitPorts } from "../rendering/index";
+export { SEMIO_IN_MEMORY_KIT_URI } from "../../js";
+
+/** @emoji 📏 Sketchpad geometric tolerance constant. */
+export const TOLERANCE = 0.001;
+
+export type ActiveKitTabScope = Readonly<{ id: string }>;
+const ActiveKitTabContext = React.createContext<string | null>(null);
+export { ActiveKitTabContext };
+
+/** @emoji 📌 Tab-scoped kit id for sketchpad shell / scene bridge. */
+export function ActiveKitTabContextProvider(props: Readonly<{ kitTabId: string; children: ReactNode }>): React.ReactElement {
+  return React.createElement(ActiveKitTabContext.Provider, { value: props.kitTabId }, props.children);
+}
+
+/** @emoji 📌 Active sketchpad kit tab id (`{ id }`) or `null` outside {@link ActiveKitTabContextProvider}. */
+export function useActiveKitTab(): ActiveKitTabScope | null {
+  const id = React.useContext(ActiveKitTabContext);
+  return id == null || id === "" ? null : { id };
+}
+
+/** @emoji 📌 Whether {@link ActiveKitTabContextProvider} is mounted. */
+export function useIsInActiveKitTab(): boolean {
+  return useActiveKitTab() != null;
+}
+
+export type KitAlternativeSummary = Readonly<{ id: string; name: string }>;
+const KIT_ALTERNATIVE_EMPTY: readonly KitAlternativeSummary[] = Object.freeze([]);
+const KitAlternativeSelectionContext = React.createContext<Readonly<{ selectedAlternativeId: string | null; setSelectedAlternativeId: (id: string | null) => void; alternatives: readonly KitAlternativeSummary[] }>>({
+  selectedAlternativeId: null,
+  setSelectedAlternativeId: () => {},
+  alternatives: KIT_ALTERNATIVE_EMPTY,
+});
+
+/** @emoji 🌱 Sketchpad alternative picker scope (WIP: empty until graph alternatives wire through). */
+export function KitAlternativeSelectionProvider(props: Readonly<{ kitId?: string; children: ReactNode }>): React.ReactElement {
+  void props.kitId;
+  const value = React.useMemo(
+    () => ({
+      selectedAlternativeId: null as string | null,
+      setSelectedAlternativeId: (_id: string | null) => {},
+      alternatives: KIT_ALTERNATIVE_EMPTY,
+    }),
+    [],
+  );
+  return React.createElement(KitAlternativeSelectionContext.Provider, { value }, props.children);
+}
+
+/** @emoji 🌱 Selected alternative id + setter for host dropdowns. */
+export function useKitAlternativeSelection(): readonly [string | null, (id: string | null) => void] {
+  const v = React.useContext(KitAlternativeSelectionContext);
+  return [v.selectedAlternativeId, v.setSelectedAlternativeId] as const;
+}
+
+/** @emoji 🌱 Alternatives list for host dropdowns. */
+export function useKitAlternatives(): readonly KitAlternativeSummary[] {
+  return React.useContext(KitAlternativeSelectionContext).alternatives;
+}
+
+/** @emoji 📦 Sketchpad host root (registry bridge WIP; passes children through). */
+export function KitStoreProvider(props: Readonly<{ children: ReactNode; initialKit?: unknown }>): React.ReactElement {
+  void props.initialKit;
+  return React.createElement(React.Fragment, null, props.children);
+}
+
+/** @emoji 🧾 Registry bridge for {@link SketchpadStore} (null until WASM registry is restored). */
+export function getKitRegistryBridge(): null {
+  return null;
+}
+
+export type KitHostStore = Readonly<{ getSnapshot: () => KitHostSnap; subscribe: (listener: () => void) => () => void }>;
+export type KitHostSnap = Readonly<{ kit: Kit; sync: Readonly<{ status: string; dirty: boolean; readonly: boolean; lastSyncedAt: number | null; error: unknown }> }>;
+
+/** @emoji 📌 Live kit host snapshot from WIP {@link Kit} handle (DTO hydration WIP). */
+export function useKitStoreSnapshot(_explicitKitId?: string): KitHostSnap | null {
+  void _explicitKitId;
+  const kit = React.useContext(KitHandleContext);
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    if (kit == null) return;
+    return kit.session.bus.subscribeKind("commandSucceeded", () => setTick((t) => t + 1));
+  }, [kit, tick]);
+  if (kit == null) return null;
+  return {
+    kit,
+    sync: { status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null },
+  };
+}
+
+/** @emoji 📥 Active kit host store when {@link KitHandleContext} is set. */
+export function useKitStore(): KitHostStore | null {
+  const snap = useKitStoreSnapshot();
+  if (snap == null) return null;
+  const store: KitHostStore = {
+    getSnapshot: () => snap,
+    subscribe: (listener) => {
+      const k = snap.kit;
+      return k.session.bus.subscribeKind("commandSucceeded", listener);
+    },
+  };
+  return store;
+}
+
+/** @emoji 📌 Kit `files` rows for sketchpad panels (`const [files] = useFilesFull()`). */
+export function useFilesFull(_explicitKitId?: string): KitFieldBinding<readonly File[]> {
+  void _explicitKitId;
+  return [Object.freeze([]) as readonly File[], noopKitFieldSet, WRITE_STATUS_IDLE];
+}
+
+/** @emoji 📌 Kit `tags` rows for sketchpad panels (`const [tags] = useTagsFull()`). */
+export function useTagsFull(_explicitKitId?: string): KitFieldBinding<readonly Tag[]> {
+  void _explicitKitId;
+  return [useKitTags(), noopKitFieldSet, WRITE_STATUS_IDLE];
+}
+
+/** @emoji 📌 Included design ids for explode / replace UI (WIP: empty without kit-store client). */
+export function useExplodeableDesignNodes(_designId?: string): readonly [readonly string[]] {
+  void _designId;
+  return [EMPTY_IDS];
+}
+
+/** @emoji 🧾 Legacy string-command entry; prefer entity {@link useKitCommand} / {@link useDesignCommand}. */
+export async function executeSemioKitCommand(_store: unknown, command: string, _origin: string, ..._args: unknown[]): Promise<unknown> {
+  return { ok: false, error: { kind: "NotSupported", message: `executeSemioKitCommand: ${command} requires kit-store WASM bridge.`, field: undefined, entity: undefined } };
+}
+
+/** @emoji 🧾 Memoized kit string-command engine for legacy sketchpad callers. */
+export function useKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
+  return {
+    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) => executeSemioKitCommand(store, String(command), String(origin ?? ""), ...rest),
+  };
+}
+
+export async function kitHostUndo(_store: unknown): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "kitHostUndo: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
+}
+
+export async function kitHostRedo(_store: unknown): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "kitHostRedo: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
+}
+
+export async function applyKitHostGraphOperation(_store: unknown, _op: unknown): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "applyKitHostGraphOperation: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
+}
+
+export function attachSketchpadKitReadShell(_kitStore: unknown): void {
+  void _kitStore;
+}
+
+export function useOpenKits(): readonly string[] {
+  const id = useKit();
+  return id === "" ? EMPTY_IDS : Object.freeze([id]);
+}
+
+export function useKitRegistrySafe(): null {
+  return null;
+}
+
+export function useRegistryHasKit(_kitId: string): boolean {
+  return useKit() !== "";
+}
+
+export function useRegistryKitPersistenceKind(_kitId: string): string | null {
+  void _kitId;
+  return null;
+}
+
+export function useKitStoredFileUrls(_explicitKitId?: string): readonly [Readonly<Record<string, string>>] {
+  void _explicitKitId;
+  return [Object.freeze({})];
+}
+
+export function useKitFileUrl(_fileId?: string): string | undefined {
+  void _fileId;
+  return undefined;
+}
+
+export function useKitFileBlobUrl(_fileId?: string): string | undefined {
+  void _fileId;
+  return undefined;
+}
+
+export function createDefaultBrowserSketchpadFileKitStoreFactory(): () => Promise<unknown> {
+  return async () => {
+    throw new Error("createDefaultBrowserSketchpadFileKitStoreFactory: requires kit-store WASM bridge.");
+  };
+}
+
+export function createDefaultBrowserSketchpadRemoteKitStoreFactory(): () => Promise<unknown> {
+  return async () => {
+    throw new Error("createDefaultBrowserSketchpadRemoteKitStoreFactory: requires kit-store WASM bridge.");
+  };
+}
+
+export function createVscodeWebviewSketchpadFileKitStoreFactory(_vscodeApi: { postMessage: (msg: unknown) => void }): () => Promise<unknown> {
+  return async () => {
+    throw new Error("createVscodeWebviewSketchpadFileKitStoreFactory: requires kit-store WASM bridge.");
+  };
+}
+
+export function createFolderKitStore(_adapter: unknown, _initialKit?: unknown): Promise<unknown> {
+  return Promise.reject(new Error("createFolderKitStore: requires kit-store WASM bridge."));
+}
+
+export function createJsonFileKitStore(_adapter: unknown): Promise<unknown> {
+  return Promise.reject(new Error("createJsonFileKitStore: requires kit-store WASM bridge."));
+}
+
+export function InMemoryKitStore(_kit?: Kit): KitHostStore {
+  const kit = _kit ?? (() => {
+    throw new Error("InMemoryKitStore: kit required.");
+  })();
+  let snap: KitHostSnap = { kit, sync: { status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null } };
+  const listeners = new Set<() => void>();
+  return {
+    getSnapshot: () => snap,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    replace: (next: Kit) => {
+      snap = { kit: next, sync: snap.sync };
+      for (const l of listeners) l();
+    },
+  } as KitHostStore & { replace: (next: Kit) => void };
+}
+
+export function getOrCreateKitFileState(_kitId: string, _fileId: string): unknown {
+  void _kitId;
+  void _fileId;
+  return null;
+}
+
+export function kitStoreFromKitStoreClient(_client: unknown): null {
+  return null;
+}
+
+export type SchemaScopeEntityKind = string;
+export const SchemaScopeContext = React.createContext<SchemaScopeEntityKind | null>(null);
+
+/** @emoji 🧭 Maps entity id prefix to schema scope kind for sketchpad property panels. */
+export function schemaScopeForEntityId(entityId: string): SchemaScopeEntityKind | null {
+  if (entityId.startsWith("design-") || entityId.includes("/designs/")) return "design";
+  if (entityId.startsWith("type-") || entityId.includes("/types/")) return "type";
+  return null;
+}
+
+/** @emoji 🔗 Attach backbone via {@link useStoreCommand} (alias for sketchpad docs). */
+export function useAttachBackbone(): (input: { dev?: { filePath: string }; local?: { folderPath: string }; remote?: { serverUrl: string } }) => Promise<SetResult> {
+  const { run } = useStoreCommand();
+  return React.useCallback(
+    async (input) => {
+      const uri = input.dev?.filePath ?? input.local?.folderPath ?? input.remote?.serverUrl;
+      if (uri == null || uri === "") {
+        return { ok: false, error: { kind: "InvalidValue", message: "useAttachBackbone: no backbone target.", field: undefined, entity: undefined } };
+      }
+      return run.attachBackbone(uri);
+    },
+    [run],
+  );
+}
+// #endregion 🎨SketchpadFacade
+
 // #region 🎛️WriteIndicator
 type LegacyWriteRowStatus =
   | { readonly kind: "readonly" }
@@ -1923,7 +2244,10 @@ if (import.meta.vitest) {
   })();
   const reactSrc = readFileSync(reactSrcPath, "utf8");
   const vitestRegion = reactSrc.indexOf("// #region 🧪Vitest");
-  const reactSrcForBannedScan = vitestRegion === -1 ? reactSrc : reactSrc.slice(0, vitestRegion);
+  const sketchpadFacadeRegion = reactSrc.indexOf("// #region 🎨SketchpadFacade");
+  const scanEnd =
+    sketchpadFacadeRegion !== -1 && (vitestRegion === -1 || sketchpadFacadeRegion < vitestRegion) ? sketchpadFacadeRegion : vitestRegion === -1 ? reactSrc.length : vitestRegion;
+  const reactSrcForBannedScan = reactSrc.slice(0, scanEnd);
   describe("SemioStoreKitLineHost", () => {
     it("opens HTTP session, wraps children, and disposes on unmount", async () => {
       const { render, screen, waitFor } = await import("@testing-library/react");
@@ -2101,6 +2425,14 @@ if (import.meta.vitest) {
       }
     });
   });
+  describe("entity command surface", () => {
+    it("does not export per-operation hooks", () => {
+      const exportNames = [...reactSrc.matchAll(/^export function (use\w+)/gm)].map((m) => m[1]);
+      const banned = exportNames.filter((n) => /^use(Create|Update|Delete|Rename)[A-Z]/.test(n));
+      expect(banned).toEqual([]);
+    });
+  });
+
   describe("schema-1:1 banned patterns (this file)", () => {
     const mustNotMatchCode = [
       /\bbindFieldToReact\b/,

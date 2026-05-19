@@ -1,0 +1,13 @@
+{
+  "title": "Board Clean Refactor",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor @elements/board and board integration (topology, sketchpad) to be clean: remove legacy APIs, unify naming, consolidate exports, fix inconsistencies, ensure tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1459"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪07369d2f766b41299436b2a9acef4991"
+  ]
+}

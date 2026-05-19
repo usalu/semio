@@ -615,8 +615,8 @@ type Alternative implements Workspace & Entity & StrongEntity {
 }
 
 type AlternativeCommand {
-	version: ID!
-	integrateIntoTheKit: ID!
+	version: Response!
+	integrateIntoTheKit: Response!
 }
 
 type AlternativeCommandConnection {
@@ -810,8 +810,8 @@ interface Backbone {
 @emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
 """
 interface BackboneCommand {
-	detach: ID!
-	sync: ID!
+	detach: Response!
+	sync: Response!
 }
 
 type BackboneCommandConnection {
@@ -1116,6 +1116,16 @@ type ClumpEdge {
 }
 
 scalar Color
+
+type CommandResponse implements Response {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	ok: Boolean!
+	errors: Error
+	result: Result
+}
 
 type Concept implements Entity & Node & StrongEntity {
 	id: ID!
@@ -2362,6 +2372,16 @@ interface EntityEdge {
 	cursor: String!
 }
 
+type Error {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	kind: String!
+	message: String!
+	requestId: ID
+}
+
 """
 @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
 """
@@ -2465,8 +2485,8 @@ type FileBackbone implements Backbone {
 }
 
 type FileBackboneCommand implements BackboneCommand {
-	detach: ID!
-	sync: ID!
+	detach: Response!
+	sync: Response!
 }
 
 type FileBackboneCommandConnection {
@@ -2760,6 +2780,14 @@ type GroupModificationsEdge {
 	node: GroupModifications!
 }
 
+type IdResult implements Result {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	value: ID!
+}
+
 """
 @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
 """
@@ -2983,8 +3011,8 @@ type LocalProvider implements Entity & Node & StrongEntity & Provider {
 }
 
 type LocalProviderCommand implements ProviderCommand {
-	createBackbone(uri: String!): ID!
-	attachBackbone(store: ID!): ID!
+	createBackbone(uri: String!): Response!
+	attachBackbone(store: ID!): Response!
 }
 
 type LocalProviderCommandConnection {
@@ -3204,7 +3232,7 @@ type MovedPiecesInputEdge {
 
 type Mutation {
 	"""
-	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` Commands block.
+	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `schema.golden.graphql` Commands block.
 	"""
 	session: SessionCommand!
 }
@@ -3959,8 +3987,8 @@ interface Provider {
 @emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
 """
 interface ProviderCommand {
-	createBackbone(uri: String!): ID!
-	attachBackbone(store: ID!): ID!
+	createBackbone(uri: String!): Response!
+	attachBackbone(store: ID!): Response!
 }
 
 type ProviderCommandConnection {
@@ -4109,10 +4137,10 @@ type RemoteProvider implements Entity & Node & StrongEntity & Provider {
 }
 
 type RemoteProviderCommand implements ProviderCommand {
-	createBackbone(uri: String!): ID!
-	attachBackbone(store: ID!): ID!
-	login(username: String!, passwordHash: String!, hubUrl: String): ID!
-	logout: ID!
+	createBackbone(uri: String!): Response!
+	attachBackbone(store: ID!): Response!
+	login(username: String!, passwordHash: String!, hubUrl: String): Response!
+	logout: Response!
 }
 
 type RemoteProviderCommandConnection {
@@ -4701,6 +4729,29 @@ type RepresentationModificationsEdge {
 }
 
 """
+@emoji 📬 GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
+"""
+interface Response {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	ok: Boolean!
+	errors: Error
+	result: Result
+}
+
+"""
+@emoji 📦 GraphQL `interface Result` — success payloads for `Response.result`.
+"""
+interface Result {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+"""
 @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
 """
 interface RichStrongEntity {
@@ -4733,8 +4784,8 @@ type Session implements Entity & Node & StrongEntity {
 }
 
 type SessionCommand {
-	start: ID!
-	end: ID!
+	start: Response!
+	end: Response!
 	store(id: ID!): StoreCommand!
 	localProvider: LocalProviderCommand!
 	remoteProvider(url: String!): RemoteProviderCommand!
@@ -4917,7 +4968,7 @@ type StoreCommand {
 	backbone: BackboneCommand!
 	theKit: VersionCommand
 	alternative(id: ID!): AlternativeCommand!
-	startAlternative(name: String): ID!
+	startAlternative(name: String): Response!
 }
 
 type StoreCommandConnection {
@@ -5180,7 +5231,7 @@ type TypeOperationEdge {
 
 type UnsavedChangeCommand {
 	kit: OperationInput!
-	save: ID!
+	save: Response!
 }
 
 type UnsavedChangeCommandConnection {
@@ -5679,10 +5730,10 @@ type Version {
 }
 
 type VersionCommand {
-	startNewChange: ID!
+	startNewChange: Response!
 	unsavedChange(id: ID!): UnsavedChangeCommand!
-	save: ID!
-	createCheckpoint(message: String!): ID!
+	save: Response!
+	createCheckpoint(message: String!): Response!
 }
 
 type VersionCommandConnection {
@@ -5735,8 +5786,8 @@ type WebsocketBackbone implements Backbone {
 }
 
 type WebsocketBackboneCommand implements BackboneCommand {
-	detach: ID!
-	sync: ID!
+	detach: Response!
+	sync: Response!
 }
 
 type WebsocketBackboneCommandConnection {

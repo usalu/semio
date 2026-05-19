@@ -1280,9 +1280,7 @@ function InspectorNodeBatch({
     (next: string) => {
       const trimmed = next.trim();
       patchNodes((n) =>
-        trimmed === ""
-          ? { ...n, text: undefined, label: undefined }
-          : { ...n, text: trimmed, label: trimmed },
+        trimmed === "" ? { ...n, text: undefined } : { ...n, text: trimmed },
       );
     },
     [patchNodes],

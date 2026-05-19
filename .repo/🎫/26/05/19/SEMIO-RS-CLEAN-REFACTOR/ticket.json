@@ -1,8 +1,9 @@
 {
   "title": "Semio Rs Clean Refactor",
   "emoji": "🦀",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio/client/lib/rs cleanly: fix naming inconsistencies (double-underscore snake_case), improve module organization, remove unnecessary dead_code/clippy allows where possible, ensure all tests pass.",
+  "summary": "Clean refactor of semio/client/lib/rs: idiomatic snake_case for internal APIs (forward_operation_record_ids, deterministic_diff, wip_operations, append_operation, etc.), removed crate-wide dead_code allow, fixed schema doc links to schema.golden.graphql, repaired dispatch_wip_wait and Response/CommandResponse GraphQL wiring, updated tests for Response subfield selection. cargo test --lib: 40 passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1457"
   },
