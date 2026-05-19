@@ -378,6 +378,14 @@ elements/board:
 
 ---
 
+Make styling more consistent. Expand all elements (node, edge, handle, wire) by more styles and use element styling that are inline with the other element bundles/tokens etc: original (no modification), neutral (replace all colors for e.g. svgs by element colors such as foreground, background, etc.), hovered, selected (primary colored etc), highlighted (secondary colored etc), disabled.
+Extend an element to have a style prop (original, neutral, hovered, selected, highlighted, disabled).
+Then use the prop for all the features.
+This will get rid of all style incosistencies for stroke, color, filling color, etc
+Add a window option for original style (default false) that doesnt modify any imported elements such as svgs
+
+---
+
 All text inside shapes should be centered and not right aligned. When too long abbreviate it with …
 
 ---

@@ -49,7 +49,7 @@ import {
 	EdgesGeometry,
 	Float32BufferAttribute,
 	GridHelper,
-	Line,
+	Line as ThreeLine,
 	LineBasicMaterial,
 	LineSegments,
 	Mesh,
@@ -984,7 +984,7 @@ function sceneApplyMeshStyleToObject3D(root: Object3D, style: SceneMeshStyleKind
 			}
 			return;
 		}
-		if (object instanceof Line || object instanceof LineSegments) {
+		if (object instanceof ThreeLine || object instanceof LineSegments) {
 			if (object.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY]) {
 				return;
 			}
@@ -1121,13 +1121,14 @@ function usePooledStyledMesh(url: string, style: SceneMeshStyleKind) {
 			sceneStyledMeshPoolRelease(url, style);
 		};
 	}, [url, style]);
-	const template = useMemo(() => {
+	const renderRoot = useMemo(() => {
 		if (!gltf.scene) {
 			return null;
 		}
-		return sceneStyledMeshTemplate(url, style, gltf.scene);
+		const template = sceneStyledMeshTemplate(url, style, gltf.scene);
+		return template.clone(true);
 	}, [gltf.scene, url, style]);
-	return template;
+	return renderRoot;
 }
 //#endregion 🏊Pool
 
@@ -1387,14 +1388,14 @@ export interface SceneMeshProps {
 /** @emoji 🧊 Pooled GLB body with {@link SceneMeshStyleKind} recoloring aligned to Elements tokens. */
 export const SceneMesh = memo(function SceneMesh(props: SceneMeshProps) {
 	const style = props.style ?? DEFAULT_SCENE_MESH_STYLE;
-	const template = usePooledStyledMesh(props.meshUrl, style);
-	if (!template) {
+	const renderRoot = usePooledStyledMesh(props.meshUrl, style);
+	if (!renderRoot) {
 		return null;
 	}
 	const scale = props.scale;
 	return (
 		<Clone
-			object={template}
+			object={renderRoot}
 			{...(scale !== undefined
 				? {
 						scale:
@@ -1577,9 +1578,8 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 				onPointerDown={handlePointerDown}
 				onPointerOver={handlePointerOver}
 				onPointerOut={handlePointerOut}
-				userData={{ sceneObjectId: props.id, ...props.userData }}
+				userData={{ sceneObjectId: props.id, sceneMeshStyle: meshStyle, ...props.userData }}
 				data-scene-object={props.id}
-				data-scene-mesh-style={meshStyle}
 			>
 				{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? (
 					<ScenePlaceholderMesh style={meshStyle} />
@@ -1757,7 +1757,6 @@ export const SceneVortex = memo(function SceneVortex(
 			position={props.position as [number, number, number]}
 			userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }}
 			data-scene-vortex={fullId}
-			data-scene-mesh-style={handleMeshStyle}
 			visible={vis}
 			onPointerDown={onPointerDown}
 		>

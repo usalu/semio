@@ -1,0 +1,10 @@
+{
+  "title": "Unify Board Element Styling States",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪9075bfe8fc904de584d91762e331af22"
+  ]
+}
