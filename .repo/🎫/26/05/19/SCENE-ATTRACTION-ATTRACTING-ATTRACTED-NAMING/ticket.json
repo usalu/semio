@@ -1,7 +1,7 @@
 {
   "title": "Scene Attraction Attracting Attracted Naming",
   "emoji": "🧲",
-  "status": "closed",
+  "status": "open",
   "description": "Rename scene Attraction/connect-drag API from source/target and link* to attracting/attracted and attraction* consistently. SceneTie keeps source/target for committed ties; kindCompatibility unchanged.",
   "summary": "Renamed scene Attraction/connect-drag API from source/target and link* to attracting/attracted and attraction* throughout @elements/scene: SceneAttractionPayload, compatible-objects and target-ring callbacks, registry drag state, gesture helpers, rubber band, and SceneAttraction Vec3 props. SceneTie and kindCompatibility catalog rows still use source/target (committed ties / board parity). Updated topology dual-surface bindings and sketchpad onSceneConnect. Vitest 24/24 pass; Playwright needs dev server on 6028.",
   "github": {
@@ -9,6 +9,7 @@
   },
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
-    "⚪b344ddd04ba242678432c673b653bc96"
+    "⚪b344ddd04ba242678432c673b653bc96",
+    "⚪1e11fe2970dd49b1ba67b3dae1f44dfe"
   ]
 }

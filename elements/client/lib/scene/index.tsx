@@ -253,11 +253,11 @@ export interface ObjectProps {
 	userData?: Record<string, unknown>;
 }
 
-export interface TieProps {
+export interface AttractionProps {
 	id: string;
-	source: `${string}:${string}`;
-	target: `${string}:${string}`;
-	tieKind?: string;
+	attracting: `${string}:${string}`;
+	attracted: `${string}:${string}`;
+	attractionKind?: string;
 }
 
 export const PLACEHOLDER_MESH_URL = "elements.scene.placeholder://box";
@@ -304,7 +304,7 @@ export interface KindCompatEntry {
 	target: string;
 	bidirectional?: boolean;
 	important?: boolean;
-	specificity?: "general" | "object" | "tie" | "handle" | "wire" | "node" | "edge";
+	specificity?: "general" | "object" | "attraction" | "handle" | "wire" | "node" | "edge";
 }
 
 export interface SelectionSnapshot {
@@ -322,7 +322,7 @@ export interface RelocatePayload {
 export interface AttractionPayload {
 	readonly attracting: string;
 	readonly attracted: string;
-	readonly tieId?: string;
+	readonly attractionId?: string;
 }
 
 export interface AttractionCompatibleObjectsPayload {
@@ -348,7 +348,7 @@ export interface CanvasProps {
 	chunkSize?: number;
 	kindCatalogs?: KindCatalogBundle;
 	kindCompatibility?: readonly KindCompatEntry[];
-	/** @emoji 🚫 Vortex full ids (`objectId:vortexId`) that already terminate a tie and cannot start or receive a new link. */
+	/** @emoji 🚫 Vortex full ids (`objectId:vortexId`) that already terminate an attraction and cannot start or receive a new attraction. */
 	blockedVortexFullIds?: ReadonlySet<string>;
 	proximityRadius?: number;
 	relocateMode?: RelocateMode;
@@ -392,7 +392,7 @@ export interface FixtureV1 {
 	camera: CameraState;
 	domain: DomainKind;
 	meta?: Record<string, unknown>;
-	ties: TieProps[];
+	attractions: AttractionProps[];
 	objects: FixtureObjectV1[];
 }
 //#endregion 🔖Kinds
@@ -655,19 +655,19 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 	const tgt = c.target;
 	const zoom = c.zoom;
 	if (!isVec3(pos) || !isVec3(tgt) || typeof zoom !== "number") return null;
-	const tiesRaw = r.ties;
+	const attractionsRaw = r.attractions;
 	const objsRaw = r.objects;
-	if (!Array.isArray(tiesRaw) || !Array.isArray(objsRaw)) return null;
-	const ties: TieProps[] = [];
-	for (const t of tiesRaw) {
-		if (!t || typeof t !== "object") continue;
-		const tr = t as Record<string, unknown>;
-		if (typeof tr.id !== "string" || typeof tr.source !== "string" || typeof tr.target !== "string") continue;
-		ties.push({
+	if (!Array.isArray(attractionsRaw) || !Array.isArray(objsRaw)) return null;
+	const attractions: AttractionProps[] = [];
+	for (const attraction of attractionsRaw) {
+		if (!attraction || typeof attraction !== "object") continue;
+		const tr = attraction as Record<string, unknown>;
+		if (typeof tr.id !== "string" || typeof tr.attracting !== "string" || typeof tr.attracted !== "string") continue;
+		attractions.push({
 			id: tr.id,
-			source: tr.source as TieProps["source"],
-			target: tr.target as TieProps["target"],
-			...(typeof tr.tieKind === "string" ? { tieKind: tr.tieKind } : {}),
+			attracting: tr.attracting as AttractionProps["attracting"],
+			attracted: tr.attracted as AttractionProps["attracted"],
+			...(typeof tr.attractionKind === "string" ? { attractionKind: tr.attractionKind } : {}),
 		});
 	}
 	const objects: FixtureObjectV1[] = [];
@@ -713,7 +713,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 		camera: { position: pos, target: tgt, zoom },
 		domain: parseDomainKind(r.domain),
 		...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
-		ties,
+		attractions,
 		objects,
 	};
 }
@@ -724,7 +724,7 @@ export function encodeSceneFixtureForDragV1(fixture: FixtureV1): string {
 //#endregion 🧾Fixture
 
 //#region 🕸️AttractionGraph
-/** @emoji 🔗 Parsed `objectId:vortexId` tie endpoint. */
+/** @emoji 🔗 Parsed `objectId:vortexId` attraction endpoint. */
 export function parseVortexFullId(full: string): { readonly objectId: string; readonly vortexId: string } {
 	const i = full.indexOf(":");
 	if (i < 0) {
@@ -749,23 +749,23 @@ export function isWormholeObject(
 	return inferredWormholeIds.has(objectId);
 }
 
-/** @emoji 🧲 One object-level attraction edge derived from a tie (`source` attracts `target`). */
+/** @emoji 🧲 One object-level attraction edge derived from an attraction (`attracting` attracts `attracted`). */
 export interface AttractionEdge {
 	readonly attractingObjectId: string;
 	readonly attractedObjectId: string;
-	readonly tieId: string;
+	readonly attractionId: string;
 }
 
-/** @emoji 🧲 Maps scene ties to object-level attraction edges. */
-export function attractionEdgesFromTies(ties: readonly TieProps[]): AttractionEdge[] {
+/** @emoji 🧲 Maps scene attractions to object-level attraction edges. */
+export function attractionEdgesFromAttractions(attractions: readonly AttractionProps[]): AttractionEdge[] {
 	const out: AttractionEdge[] = [];
-	for (const tie of ties) {
-		const attractingObjectId = parseVortexFullId(tie.source).objectId;
-		const attractedObjectId = parseVortexFullId(tie.target).objectId;
+	for (const attraction of attractions) {
+		const attractingObjectId = parseVortexFullId(attraction.attracting).objectId;
+		const attractedObjectId = parseVortexFullId(attraction.attracted).objectId;
 		if (!attractingObjectId || !attractedObjectId || attractingObjectId === attractedObjectId) {
 			continue;
 		}
-		out.push({ attractingObjectId, attractedObjectId, tieId: tie.id });
+		out.push({ attractingObjectId, attractedObjectId, attractionId: attraction.id });
 	}
 	return out;
 }
@@ -985,7 +985,7 @@ export interface ObjectRecord {
 
 interface ObjectStateSnapshot {
 	readonly records: ReadonlyMap<string, ObjectRecord>;
-	readonly ties: readonly TieProps[];
+	readonly attractions: readonly AttractionProps[];
 	readonly tree: SceneAttractionTree;
 	readonly version: number;
 }
@@ -993,7 +993,7 @@ interface ObjectStateSnapshot {
 type ObjectStateAction =
 	| { readonly type: "init"; readonly fixture: FixtureV1 }
 	| { readonly type: "relocate"; readonly payload: RelocatePayload }
-	| { readonly type: "addTie"; readonly tie: TieProps }
+	| { readonly type: "addAttraction"; readonly attraction: AttractionProps }
 	| { readonly type: "removeObject"; readonly objectId: string };
 
 function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, ObjectRecord> {
@@ -1014,7 +1014,7 @@ function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, Obje
 	return map;
 }
 
-function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, ties: readonly TieProps[], version: number): ObjectStateSnapshot {
+function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: readonly AttractionProps[], version: number): ObjectStateSnapshot {
 	const objectIds = [...records.keys()];
 	const explicitWormholes = new Set(
 		objectIds.filter((id) => {
@@ -1022,7 +1022,7 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, ties: readonl
 			return r ? isWormholeObject(id, r, new Set()) : false;
 		}),
 	);
-	const edges = attractionEdgesFromTies(ties);
+	const edges = attractionEdgesFromAttractions(attractions);
 	const inferred = new Set<string>();
 	for (const comp of undirectedComponents(objectIds, edges)) {
 		const compEdges = edges.filter(
@@ -1046,28 +1046,28 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, ties: readonl
 		edges,
 		explicitWormholeIds: new Set([...explicitWormholes, ...inferred]),
 	});
-	return { records, ties, tree, version };
+	return { records, attractions, tree, version };
 }
 
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
 	switch (action.type) {
 		case "init": {
 			const records = fixtureToRecords(action.fixture.objects);
-			return buildSnapshot(records, action.fixture.ties, state.version + 1);
+			return buildSnapshot(records, action.fixture.attractions, state.version + 1);
 		}
-		case "addTie": {
-			const ties = [...state.ties, action.tie];
-			return buildSnapshot(state.records, ties, state.version + 1);
+		case "addAttraction": {
+			const attractions = [...state.attractions, action.attraction];
+			return buildSnapshot(state.records, attractions, state.version + 1);
 		}
 		case "removeObject": {
 			const records = new Map(state.records);
 			records.delete(action.objectId);
-			const ties = state.ties.filter((t) => {
-				const s = parseVortexFullId(t.source).objectId;
-				const tg = parseVortexFullId(t.target).objectId;
+			const attractions = state.attractions.filter((attraction) => {
+				const s = parseVortexFullId(attraction.attracting).objectId;
+				const tg = parseVortexFullId(attraction.attracted).objectId;
 				return s !== action.objectId && tg !== action.objectId;
 			});
-			return buildSnapshot(records, ties, state.version + 1);
+			return buildSnapshot(records, attractions, state.version + 1);
 		}
 		case "relocate": {
 			const { payload } = action;
@@ -1116,7 +1116,7 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 					);
 				}
 			}
-			return buildSnapshot(records, state.ties, state.version + 1);
+			return buildSnapshot(records, state.attractions, state.version + 1);
 		}
 		default:
 			return state;
@@ -1132,7 +1132,7 @@ export interface SceneObjectStateContextValue {
 
 const SceneObjectStateContext = createContext<SceneObjectStateContextValue | null>(null);
 
-/** @emoji 🗄️ Central scene object records, ties, and resolved attraction ownership. */
+/** @emoji 🗄️ Central scene object records, attractions, and resolved attraction ownership. */
 export function SceneObjectStateProvider(props: {
 	readonly fixture: FixtureV1;
 	readonly children: ReactNode;
@@ -1140,7 +1140,7 @@ export function SceneObjectStateProvider(props: {
 	readonly onConnect?: (payload: AttractionPayload) => void;
 }) {
 	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
-		buildSnapshot(fixtureToRecords(fixture.objects), fixture.ties, 0),
+		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
 	useEffect(() => {
 		dispatch({ type: "init", fixture: props.fixture });
@@ -1154,13 +1154,13 @@ export function SceneObjectStateProvider(props: {
 	);
 	const handleConnect = useCallback(
 		(payload: AttractionPayload) => {
-			const tieId = payload.tieId ?? `tie-${payload.attracting}-${payload.attracted}`;
+			const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
 			dispatch({
-				type: "addTie",
-				tie: {
-					id: tieId,
-					source: payload.attracting as TieProps["source"],
-					target: payload.attracted as TieProps["target"],
+				type: "addAttraction",
+				attraction: {
+					id: attractionId,
+					attracting: payload.attracting as AttractionProps["attracting"],
+					attracted: payload.attracted as AttractionProps["attracted"],
 				},
 			});
 			props.onConnect?.(payload);
@@ -1187,7 +1187,7 @@ export function useSceneObjectRelocate(): (payload: RelocatePayload) => void {
 	return useSceneObjectState().handleRelocate;
 }
 
-/** @emoji 🪝 Connect handler that appends a tie and recomputes attraction ownership. */
+/** @emoji 🪝 Connect handler that appends an attraction and recomputes attraction ownership. */
 export function useSceneObjectConnect(): (payload: AttractionPayload) => void {
 	return useSceneObjectState().handleConnect;
 }
@@ -1283,13 +1283,13 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 	);
 });
 
-/** @emoji 🔗 Renders ties from central object state. */
-export const SceneTies = memo(function SceneTies() {
+/** @emoji 🧲 Renders attractions from central object state. */
+export const SceneAttractions = memo(function SceneAttractions() {
 	const { snapshot } = useSceneObjectState();
 	return (
 		<>
-			{snapshot.ties.map((t) => (
-				<Tie key={t.id} {...t} />
+			{snapshot.attractions.map((attraction) => (
+				<SceneAttraction key={attraction.id} {...attraction} />
 			))}
 		</>
 	);
@@ -1312,14 +1312,14 @@ export function kindsCompatible(
 
 const DEFAULT_WIRE_KIND_ID = "board.wire.link";
 
-/** @emoji 🔗 Tie endpoint vortex full ids that are already linked and cannot start or receive another link. */
-export function blockedVortexFullIdsFromTies(
-	ties: readonly Pick<TieProps, "source" | "target">[],
+/** @emoji 🧲 Attraction endpoint vortex full ids that are already attracting/attracted and cannot start or receive another attraction. */
+export function blockedVortexFullIdsFromAttractions(
+	attractions: readonly Pick<AttractionProps, "attracting" | "attracted">[],
 ): ReadonlySet<string> {
 	const s = new Set<string>();
-	for (const t of ties) {
-		s.add(t.source);
-		s.add(t.target);
+	for (const attraction of attractions) {
+		s.add(attraction.attracting);
+		s.add(attraction.attracted);
 	}
 	return s;
 }
@@ -1395,7 +1395,7 @@ function attractionGestureRuleApplies(
 		case "node":
 			return compatPairMatches(rule, sn, tn);
 		case "edge":
-		case "tie":
+		case "attraction":
 			return compatPairMatches(rule, eSrc, eTgt);
 		case "handle":
 			return compatPairMatches(rule, sh, th);
@@ -1426,7 +1426,7 @@ export function handlesAttractionCompatibleForDrag(
 				case "node":
 					return 1;
 				case "edge":
-				case "tie":
+				case "attraction":
 					return 2;
 				case "wire":
 					return 3;
@@ -1454,7 +1454,7 @@ const CSS_NEUTRAL_MESH = "var(--color-panel)";
 const CSS_NEUTRAL_LINE = "var(--color-element)";
 const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
 const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
-const CSS_TIE_LINE = "var(--color-muted-foreground)";
+const CSS_ATTRACTION_ENDPOINT_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_LINE = "var(--color-accent)";
 
 const MESH_OUTLINE_USER_DATA_KEY = "__elementsMeshBodyOutline";
@@ -1645,7 +1645,7 @@ export function resolveMeshStyle(args: {
 	return DEFAULT_MESH_STYLE;
 }
 
-/** @emoji 🎨 Resolves a CSS color for scene lines (ties, attractions). */
+/** @emoji 🎨 Resolves a CSS color for scene lines (endpoint attractions, attraction guides). */
 export function lineCssColor(expr: string, fallback: string): string {
 	return resolveCssColor("color", expr, fallback);
 }
@@ -2456,17 +2456,17 @@ export const Magnet = memo(function Magnet(props: MagnetProps) {
 });
 //#endregion 🧲Magnet
 
-//#region 🪢Tie
-export const Tie = memo(function Tie(props: TieProps) {
+//#region 🧲SceneAttraction
+export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
 	const reg = useRegistry();
 	const [pts, setPts] = useState<Vector3[] | null>(null);
-	const tieColor = useMemo(
-		() => lineCssColor(CSS_TIE_LINE, "#64748b"),
+	const attractionColor = useMemo(
+		() => lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b"),
 		[],
 	);
 	useFrame(() => {
-		const a = reg.getVortexWorld(props.source);
-		const b = reg.getVortexWorld(props.target);
+		const a = reg.getVortexWorld(props.attracting);
+		const b = reg.getVortexWorld(props.attracted);
 		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 			setPts([a.clone(), b.clone()]);
 		} else if (pts !== null) {
@@ -2474,9 +2474,9 @@ export const Tie = memo(function Tie(props: TieProps) {
 		}
 	});
 	if (!pts) return null;
-	return <Line points={pts} color={tieColor} lineWidth={1} userData={{ sceneTieId: props.id }} />;
+	return <Line points={pts} color={attractionColor} lineWidth={1} userData={{ sceneAttractionId: props.id }} />;
 });
-//#endregion 🪢Tie
+//#endregion 🧲SceneAttraction
 
 //#region 🧲Attraction
 export const Attraction = memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
@@ -3247,7 +3247,7 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
 			e.specificity === "handle" ||
 			e.specificity === "wire" ||
 			e.specificity === "object" ||
-			e.specificity === "tie"
+			e.specificity === "attraction"
 				? e.specificity
 				: undefined;
 		out.push({
@@ -3462,8 +3462,8 @@ function PlayBody({
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
 	const blockedVortexFullIds = useMemo(
-		() => blockedVortexFullIdsFromTies(fixture.ties),
-		[fixture.ties],
+		() => blockedVortexFullIdsFromAttractions(fixture.attractions),
+		[fixture.attractions],
 	);
 
 	useEffect(() => {
@@ -3596,7 +3596,7 @@ function PlaySceneCanvas(props: {
 		>
 			<PlayTestBridge setSelectedId={props.setSelectedId} />
 			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
-			<SceneTies />
+			<SceneAttractions />
 			<SceneAttractionTreeRoots />
 		</Canvas3D>
 	);
