@@ -361,7 +361,6 @@ function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
 //#region 🔖Scene Sync
 function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, descriptor: NodeDescriptor): void {
   instance.draggable = descriptor.draggable ?? true;
-  instance.selected = descriptor.selected ?? false;
   instance.style = descriptor.style ?? null;
   instance.userData = { ...(descriptor.userData ?? {}) };
   instance.visible = descriptor.visible ?? true;
@@ -388,7 +387,6 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
     node.attachHandle(instance);
     instance.node = node;
   }
-  instance.selected = descriptor.selected ?? false;
   instance.style = descriptor.style ?? null;
   instance.userData = { ...(descriptor.userData ?? {}) };
   instance.visible = descriptor.visible ?? true;
@@ -402,7 +400,6 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 }
 
 function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, sourceHandle: BoardHandleObject, targetHandle: BoardHandleObject): void {
-  instance.selected = descriptor.selected ?? false;
   instance.style = descriptor.style ?? null;
   instance.userData = { ...(descriptor.userData ?? {}) };
   instance.visible = descriptor.visible ?? true;
@@ -411,7 +408,6 @@ function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, s
 }
 
 function applyWireProps(instance: BoardWireObject, descriptor: WireDescriptor, sourceHandle: BoardHandleObject, targetHandle: BoardHandleObject | null): void {
-  instance.selected = descriptor.selected ?? false;
   instance.style = descriptor.style ?? null;
   instance.userData = { ...(descriptor.userData ?? {}) };
   instance.visible = descriptor.visible ?? true;
@@ -447,7 +443,6 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
       id: nodeDescriptor.id,
       nodeKind: nodeDescriptor.nodeKind,
       root: nodeDescriptor.root,
-      selected: nodeDescriptor.selected,
       shape: "rectangle",
       style: nodeDescriptor.style,
       text: nodeDescriptor.text,
@@ -469,7 +464,6 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
     nodeKind: nodeDescriptor.nodeKind,
     radius: nodeDescriptor.radius,
     root: nodeDescriptor.root,
-    selected: nodeDescriptor.selected,
     style: nodeDescriptor.style,
     text: nodeDescriptor.text,
     textAlignment: nodeDescriptor.textAlignment,
@@ -642,6 +636,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
     }
   });
 
+  renderer.syncInteractionChrome();
   renderer.invalidate();
 }
 //#endregion 🔖Scene Sync
@@ -1752,6 +1747,23 @@ if (boardReactVitest) {
       expect(ids).toEqual([null]);
       renderer.dispose();
       restoreCanvas();
+    });
+
+    it("syncBoardScene ignores descriptor selected flags and reapplies interaction chrome", () => {
+      const renderer = new BoardRenderer({ renderMode: "headless-test" });
+      const descriptor = buildBoardSceneDescriptor(
+        <Node id="solo" radius={36} selected x={0} y={0} text="caption" />,
+      );
+      syncBoardScene(renderer, descriptor);
+      const node = renderer.scene.nodes.get("solo");
+      expect(node?.selected).toBe(false);
+      renderer.setSelectionIds(["solo"]);
+      syncBoardScene(renderer, descriptor);
+      expect(node?.selected).toBe(true);
+      renderer.setSelectionIds([]);
+      syncBoardScene(renderer, descriptor);
+      expect(node?.selected).toBe(false);
+      renderer.dispose();
     });
 
     it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {

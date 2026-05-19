@@ -354,6 +354,21 @@ export function boardObjectChromeStyleKey(base: "edge" | "handle" | "node", obje
 	return base;
 }
 
+/** @emoji 🎨 Style key from committed selection / preselect only (not scene object flags). */
+export function boardInteractionChromeStyleKey(
+	base: "edge" | "handle" | "node",
+	id: string,
+	chrome: { highlightedIds: Set<string>; selectedIds: Set<string> },
+): string {
+	if (chrome.selectedIds.has(id)) {
+		return `${base}.selected`;
+	}
+	if (chrome.highlightedIds.has(id)) {
+		return `${base}.highlighted`;
+	}
+	return base;
+}
+
 export interface BoardSelectionOptions {
 	method?: BoardSelectionMethod;
 	mode?: BoardSelectionMode;
@@ -2302,7 +2317,6 @@ function boardGraphNodeSig(node: Node): string {
 		id: node.id,
 		radius: node.radius,
 		root: node.root,
-		selected: node.selected,
 		shape: node.shape,
 		style: node.style,
 		text: node.text,
@@ -3646,6 +3660,7 @@ export class BoardRenderer {
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
 		const lod = this.effectiveDrawLodLabel();
+		const chrome = boardElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
 				continue;
@@ -3668,7 +3683,7 @@ export class BoardRenderer {
 				continue;
 			}
 			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
-			const style = this.getStyle(node.style, boardObjectChromeStyleKey("node", node));
+			const style = this.getStyle(node.style, boardInteractionChromeStyleKey("node", node.id, chrome));
 			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
@@ -3719,7 +3734,7 @@ export class BoardRenderer {
 				const outward = len > 1e-6 ? 10 / len : 0;
 				const labelX = handleScreen.x + dx * outward;
 				const labelY = handleScreen.y + dy * outward;
-				const style = this.getStyle(handle.style, boardObjectChromeStyleKey("handle", handle));
+				const style = this.getStyle(handle.style, boardInteractionChromeStyleKey("handle", handle.id, chrome));
 				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
 				ctx.fillText(caption, labelX, labelY);
 			}
@@ -3838,6 +3853,11 @@ export class BoardRenderer {
 		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
+	}
+
+	/** @emoji 🎨 Reapplies scene `selected` / `highlighted` from committed selection and preselection only. */
+	syncInteractionChrome(): void {
+		this.applySelectionChromeToSceneObjects();
 	}
 
 	private applySelectionChromeToSceneObjects(): void {
@@ -3981,6 +4001,7 @@ export class BoardRenderer {
 		this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
+		this.canvas.dataset.boardHover = this.hoveredId ?? "";
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
 	}
 
@@ -4733,7 +4754,19 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
 
 			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+			expect(node.selected).toBe(false);
+			expect(node.highlighted).toBe(false);
 			renderer.dispose();
+		});
+
+		it("boardInteractionChromeStyleKey follows selection ids not stale scene flags", () => {
+			const node = new Node({ id: "solo", radius: 20, x: 0, y: 0 });
+			node.selected = true;
+			node.highlighted = false;
+			const chrome = boardElementInteractionChrome([], BOARD_PRESELECT_EMPTY);
+			expect(boardInteractionChromeStyleKey("node", node.id, chrome)).toBe("node");
+			const chromeSel = boardElementInteractionChrome(["solo"], BOARD_PRESELECT_EMPTY);
+			expect(boardInteractionChromeStyleKey("node", node.id, chromeSel)).toBe("node.selected");
 		});
 
 		it("stale silent selection sync undoes background deselect until controlled prop updates", () => {
@@ -5532,8 +5565,6 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			iconKind: props.iconKind,
 			id: props.id,
 			root: props.root,
-			highlighted: props.highlighted,
-			selected: props.selected,
 			shape: "rectangle",
 			style: props.style,
 			text: props.text,
@@ -5554,7 +5585,6 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		id: props.id,
 		radius: props.radius,
 		root: props.root,
-		selected: props.selected,
 		style: props.style,
 		text: props.text,
 		textAlignment: props.textAlignment,
@@ -5570,8 +5600,6 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 
 function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOptions): void {
 	instance.draggable = props.draggable ?? true;
-	instance.highlighted = props.highlighted ?? false;
-	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
@@ -5602,8 +5630,6 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 		node.attachHandle(instance);
 		instance.node = node;
 	}
-	instance.highlighted = props.highlighted ?? false;
-	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
@@ -5618,8 +5644,6 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 }
 
 function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Handle, targetHandle: Handle): void {
-	instance.highlighted = props.highlighted ?? false;
-	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
@@ -5628,8 +5652,6 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 }
 
 function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Handle, targetHandle: Handle | null): void {
-	instance.highlighted = props.highlighted ?? false;
-	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;

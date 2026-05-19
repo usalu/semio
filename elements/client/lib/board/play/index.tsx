@@ -52,7 +52,6 @@ import {
   boardLodAutomaticSelectLabel,
   BOARD_PRESELECT_EMPTY,
   BOARD_SELECTION_TARGETS_DEFAULT,
-  boardElementInteractionChrome,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
   normalizeBoardSelectionProp,
   isBoardDrawLodKind,
@@ -269,10 +268,11 @@ interface BoardPlayShellValue {
   preselection: BoardPreselectSnapshot;
   setPreselection: (snapshot: BoardPreselectSnapshot) => void;
   hoveredId: string | null;
-  setHoveredId: (id: string | null) => void;
   /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link BoardPlayShellValue.hoveredId}. */
   hoverSourcePane: BoardPlayPaneId | null;
-  setHoverSourcePane: (pane: BoardPlayPaneId | null) => void;
+  setHoverPane: (pane: BoardPlayPaneId) => void;
+  setHoverForPane: (pane: BoardPlayPaneId, id: string | null) => void;
+  clearHoverForPane: (pane: BoardPlayPaneId) => void;
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
   camerasByPane: Record<BoardPlayPaneId, CameraState>;
@@ -707,10 +707,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function nakaginBoardMarkers(
-  fixture: BoardFixtureV1,
-  chrome: { highlightedIds: Set<string>; selectedIds: Set<string> },
-): ReactElement {
+function nakaginBoardMarkers(fixture: BoardFixtureV1): ReactElement {
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   return (
@@ -725,7 +722,6 @@ function nakaginBoardMarkers(
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             shape="rectangle"
-            highlighted={chrome.highlightedIds.has(node.id)} selected={chrome.selectedIds.has(node.id)}
             text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
@@ -737,7 +733,7 @@ function nakaginBoardMarkers(
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} highlighted={chrome.highlightedIds.has(handle.id)} selected={chrome.selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ) : (
@@ -748,7 +744,6 @@ function nakaginBoardMarkers(
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             radius={node.radius}
-            highlighted={chrome.highlightedIds.has(node.id)} selected={chrome.selectedIds.has(node.id)}
             text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
@@ -759,13 +754,13 @@ function nakaginBoardMarkers(
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} highlighted={chrome.highlightedIds.has(handle.id)} selected={chrome.selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ),
       )}
       {fixture.edges.map((edge) => (
-        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} highlighted={chrome.highlightedIds.has(edge.id)} selected={chrome.selectedIds.has(edge.id)} source={edge.source} target={edge.target} />
+        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
       ))}
     </>
   );
@@ -808,7 +803,7 @@ function BoardPlayRedrawProgressReset(): null {
 // #region 🔖Panes
 /** @emoji 🪟 Captures pointer focus for the active pane (tabs + canvas). */
 function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: BoardPlayPaneId }): ReactElement {
-  const { hoverSourcePane, setActivePaneId, setHoverSourcePane, setHoveredId } = useBoardPlayShell();
+  const { clearHoverForPane, setActivePaneId, setHoverPane } = useBoardPlayShell();
   return (
     <div
       className="flex h-full min-h-0 w-full flex-col"
@@ -816,16 +811,13 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
         setActivePaneId(paneId);
       }}
       onPointerEnter={() => {
-        setHoverSourcePane(paneId);
+        setHoverPane(paneId);
       }}
       onPointerLeave={(event) => {
         if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
           return;
         }
-        if (hoverSourcePane === paneId) {
-          setHoverSourcePane(null);
-          setHoveredId(null);
-        }
+        clearHoverForPane(paneId);
       }}
     >
       {children}
@@ -851,11 +843,10 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
     fixture,
     handleCanvasFixtureDrop,
     camerasByPane,
-    hoverSourcePane,
     hoveredId,
     preselection,
     selectionIds,
-    setHoveredId,
+    setHoverForPane,
     setPreselection,
     setSelectionIds,
     syncBaselineFromViewportCamera,
@@ -869,12 +860,9 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
   const onPreselect = useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
   const onHover = useCallback(
     (payload: { id: string | null }) => {
-      if (hoverSourcePane !== paneId) {
-        return;
-      }
-      setHoveredId(payload.id);
+      setHoverForPane(paneId, payload.id);
     },
-    [hoverSourcePane, paneId, setHoveredId],
+    [paneId, setHoverForPane],
   );
   return (
     <BoardPaneChrome paneId={paneId}>
@@ -902,7 +890,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
       >
         <BoardStructuralDeleteReporter />
         <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, boardElementInteractionChrome(selectionIds, preselection))}
+        {nakaginBoardMarkers(fixture)}
       </BoardCanvas>
     </BoardPaneChrome>
   );
@@ -1863,6 +1851,8 @@ function BoardPlayInner(): ReactElement {
   const [preselection, setPreselection] = useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoverSourcePane, setHoverSourcePane] = useState<BoardPlayPaneId | null>(null);
+  const hoverSourcePaneRef = useRef<BoardPlayPaneId | null>(hoverSourcePane);
+  hoverSourcePaneRef.current = hoverSourcePane;
   const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
   const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
   const [expertise, setExpertise] = useState<Expertise>(readExpertise);
@@ -1981,6 +1971,8 @@ function BoardPlayInner(): ReactElement {
     setSelectionIdsState(selectionSeedForFixture(next));
     setPreselection(BOARD_PRESELECT_EMPTY);
     setHoveredId(null);
+    hoverSourcePaneRef.current = null;
+    setHoverSourcePane(null);
     setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
   }, []);
 
@@ -1990,6 +1982,29 @@ function BoardPlayInner(): ReactElement {
 
   const setSelectionIds = useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
+  }, []);
+
+  const setHoverPane = useCallback((pane: BoardPlayPaneId) => {
+    if (hoverSourcePaneRef.current === pane) {
+      return;
+    }
+    hoverSourcePaneRef.current = pane;
+    setHoverSourcePane(pane);
+  }, []);
+
+  const setHoverForPane = useCallback((pane: BoardPlayPaneId, id: string | null) => {
+    hoverSourcePaneRef.current = pane;
+    setHoverSourcePane(pane);
+    setHoveredId(id);
+  }, []);
+
+  const clearHoverForPane = useCallback((pane: BoardPlayPaneId) => {
+    if (hoverSourcePaneRef.current !== pane) {
+      return;
+    }
+    hoverSourcePaneRef.current = null;
+    setHoverSourcePane(null);
+    setHoveredId(null);
   }, []);
 
   const handleCanvasFixtureDrop = useCallback(
@@ -2495,9 +2510,10 @@ function BoardPlayInner(): ReactElement {
       preselection,
       setPreselection,
       hoveredId,
-      setHoveredId,
       hoverSourcePane,
-      setHoverSourcePane,
+      setHoverPane,
+      setHoverForPane,
+      clearHoverForPane,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,
@@ -2534,6 +2550,9 @@ function BoardPlayInner(): ReactElement {
       preselection,
       hoveredId,
       hoverSourcePane,
+      setHoverPane,
+      setHoverForPane,
+      clearHoverForPane,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,

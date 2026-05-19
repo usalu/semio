@@ -1,0 +1,13 @@
+{
+  "title": "Board Hover Sync Across Windows",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Fix board hover in play mode: hover currently shows nothing and must be synchronized across all board windows in play. Inspect existing board hover state, play window bindings, and rendering chrome; patch existing files only and validate with targeted tests or runtime checks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1452"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪cafdbd43d49b4221959d25fec9b50ac0"
+  ]
+}

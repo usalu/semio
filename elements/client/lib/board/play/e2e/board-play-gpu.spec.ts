@@ -113,6 +113,34 @@ test.describe("board play", () => {
 		}
 	});
 
+	test("hover state follows the pointer and syncs across every board pane", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		const canvases = page.locator('[data-testid="board-canvas"]');
+		await expect(canvases).toHaveCount(3, { timeout: 120_000 });
+		const canvas = canvases.first();
+		await expect
+			.poll(async () => Number(await canvas.getAttribute("data-board-scene-node-count")), { timeout: 120_000 })
+			.toBeGreaterThan(0);
+		const probe = await canvas.evaluate((el) => {
+			const renderer = (el as HTMLCanvasElement & { __boardRenderer?: { scene: { nodes: Map<string, { id: string; x: number; y: number }> }; worldToScreen: (p: { x: number; y: number }) => { x: number; y: number } } }).__boardRenderer;
+			if (!renderer) {
+				throw new Error("Board renderer missing on canvas");
+			}
+			const node = [...renderer.scene.nodes.values()][0];
+			if (!node) {
+				throw new Error("Board scene has no nodes");
+			}
+			const p = renderer.worldToScreen({ x: node.x, y: node.y });
+			const rect = el.getBoundingClientRect();
+			return { id: node.id, x: rect.left + p.x, y: rect.top + p.y };
+		});
+		await page.mouse.move(probe.x, probe.y);
+		await expect
+			.poll(async () => await canvases.evaluateAll((els) => els.map((el) => el.getAttribute("data-board-hover") ?? "")), { timeout: 30_000 })
+			.toEqual([probe.id, probe.id, probe.id]);
+	});
+
 	test("hit target at canvas center is the board canvas under Golden Layout", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
