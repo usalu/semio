@@ -34,6 +34,7 @@ import {
 	useEffect,
 	useLayoutEffect,
 	useMemo,
+	useReducer,
 	useRef,
 	useState,
 	type CSSProperties,
@@ -244,6 +245,10 @@ export interface ObjectProps {
 	disabled?: boolean;
 	visible?: boolean;
 	relocate?: RelocateMode | false;
+	/** @emoji 🧲 Object ids attracted to this object in the resolved ownership tree. */
+	attracting?: readonly string[];
+	/** @emoji 🕳️ Root of a connected attraction component (wormhole). */
+	wormhole?: boolean;
 	children?: ReactNode;
 	userData?: Record<string, unknown>;
 }
@@ -697,6 +702,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 			origin,
 			...(typeof or.objectKind === "string" ? { objectKind: or.objectKind } : {}),
 			...(typeof or.label === "string" ? { label: or.label } : {}),
+			...(or.wormhole === true ? { wormhole: true } : {}),
 			...(isQuat(or.orientation) ? { orientation: or.orientation } : {}),
 			...(typeof or.scale === "number" || isVec3(or.scale) ? { scale: or.scale as number | Vec3 } : {}),
 			vortices,
@@ -716,6 +722,579 @@ export function encodeSceneFixtureForDragV1(fixture: FixtureV1): string {
 	return JSON.stringify(fixture);
 }
 //#endregion 🧾Fixture
+
+//#region 🕸️AttractionGraph
+/** @emoji 🔗 Parsed `objectId:vortexId` tie endpoint. */
+export function parseVortexFullId(full: string): { readonly objectId: string; readonly vortexId: string } {
+	const i = full.indexOf(":");
+	if (i < 0) {
+		return { objectId: full, vortexId: "link" };
+	}
+	return { objectId: full.slice(0, i), vortexId: full.slice(i + 1) };
+}
+
+/** @emoji 🕳️ True when the object is an explicit or inferred wormhole root. */
+export function isWormholeObject(
+	objectId: string,
+	props: { readonly wormhole?: boolean; readonly objectKind?: string },
+	inferredWormholeIds: ReadonlySet<string>,
+): boolean {
+	if (props.wormhole === true) {
+		return true;
+	}
+	const kind = props.objectKind ?? "";
+	if (kind.includes("wormhole")) {
+		return true;
+	}
+	return inferredWormholeIds.has(objectId);
+}
+
+/** @emoji 🧲 One object-level attraction edge derived from a tie (`source` attracts `target`). */
+export interface AttractionEdge {
+	readonly attractingObjectId: string;
+	readonly attractedObjectId: string;
+	readonly tieId: string;
+}
+
+/** @emoji 🧲 Maps scene ties to object-level attraction edges. */
+export function attractionEdgesFromTies(ties: readonly TieProps[]): AttractionEdge[] {
+	const out: AttractionEdge[] = [];
+	for (const tie of ties) {
+		const attractingObjectId = parseVortexFullId(tie.source).objectId;
+		const attractedObjectId = parseVortexFullId(tie.target).objectId;
+		if (!attractingObjectId || !attractedObjectId || attractingObjectId === attractedObjectId) {
+			continue;
+		}
+		out.push({ attractingObjectId, attractedObjectId, tieId: tie.id });
+	}
+	return out;
+}
+
+export interface SceneAttractionTree {
+	readonly parentByObjectId: ReadonlyMap<string, string | null>;
+	readonly attractingByObjectId: ReadonlyMap<string, readonly string[]>;
+	readonly wormholeDistanceByObjectId: ReadonlyMap<string, number>;
+	readonly wormholeIds: readonly string[];
+}
+
+function vec3Add(a: Vec3, b: Vec3): Vec3 {
+	return [a[0] + b[0], a[1] + b[1], a[2] + b[2]] as Vec3;
+}
+
+function vec3Sub(a: Vec3, b: Vec3): Vec3 {
+	return [a[0] - b[0], a[1] - b[1], a[2] - b[2]] as Vec3;
+}
+
+function undirectedComponents(objectIds: readonly string[], edges: readonly AttractionEdge[]): string[][] {
+	const idSet = new Set(objectIds);
+	const adj = new Map<string, Set<string>>();
+	for (const id of objectIds) {
+		adj.set(id, new Set());
+	}
+	for (const e of edges) {
+		if (!idSet.has(e.attractingObjectId) || !idSet.has(e.attractedObjectId)) {
+			continue;
+		}
+		adj.get(e.attractingObjectId)!.add(e.attractedObjectId);
+		adj.get(e.attractedObjectId)!.add(e.attractingObjectId);
+	}
+	const seen = new Set<string>();
+	const components: string[][] = [];
+	for (const id of objectIds) {
+		if (seen.has(id)) {
+			continue;
+		}
+		const stack = [id];
+		const comp: string[] = [];
+		seen.add(id);
+		while (stack.length) {
+			const cur = stack.pop()!;
+			comp.push(cur);
+			for (const nb of adj.get(cur) ?? []) {
+				if (seen.has(nb)) {
+					continue;
+				}
+				seen.add(nb);
+				stack.push(nb);
+			}
+		}
+		components.push(comp);
+	}
+	return components;
+}
+
+/** @emoji 🕸️ Resolves a forest from attraction edges: wormhole roots, closest-to-wormhole parent when multiply attracted. */
+export function resolveSceneAttractionTree(args: {
+	readonly objectIds: readonly string[];
+	readonly edges: readonly AttractionEdge[];
+	readonly explicitWormholeIds?: ReadonlySet<string>;
+}): SceneAttractionTree {
+	const explicit = args.explicitWormholeIds ?? new Set<string>();
+	const incoming = new Map<string, AttractionEdge[]>();
+	const outgoing = new Map<string, string[]>();
+	for (const id of args.objectIds) {
+		incoming.set(id, []);
+		outgoing.set(id, []);
+	}
+	for (const edge of args.edges) {
+		if (!incoming.has(edge.attractedObjectId) || !outgoing.has(edge.attractingObjectId)) {
+			continue;
+		}
+		incoming.get(edge.attractedObjectId)!.push(edge);
+		outgoing.get(edge.attractingObjectId)!.push(edge.attractedObjectId);
+	}
+
+	const wormholeIds: string[] = [];
+	const wormholeDistanceByObjectId = new Map<string, number>();
+	const parentByObjectId = new Map<string, string | null>();
+
+	for (const comp of undirectedComponents(args.objectIds, args.edges)) {
+		const compSet = new Set(comp);
+		const compIncoming = new Map<string, AttractionEdge[]>();
+		for (const id of comp) {
+			compIncoming.set(
+				id,
+				(incoming.get(id) ?? []).filter(
+					(e) => compSet.has(e.attractingObjectId) && compSet.has(e.attractedObjectId),
+				),
+			);
+		}
+		let roots = comp.filter((id) => explicit.has(id));
+		if (!roots.length) {
+			roots = comp.filter((id) => (compIncoming.get(id) ?? []).length === 0);
+		}
+		if (!roots.length) {
+			roots = [comp.slice().sort()[0]!];
+		}
+		for (const root of roots) {
+			if (!wormholeIds.includes(root)) {
+				wormholeIds.push(root);
+			}
+		}
+		const dist = new Map<string, number>();
+		const queue: string[] = [];
+		for (const root of roots) {
+			dist.set(root, 0);
+			queue.push(root);
+		}
+		while (queue.length) {
+			const cur = queue.shift()!;
+			const d = dist.get(cur) ?? 0;
+			for (const child of outgoing.get(cur) ?? []) {
+				if (!compSet.has(child)) {
+					continue;
+				}
+				const next = d + 1;
+				const prev = dist.get(child);
+				if (prev === undefined || next < prev) {
+					dist.set(child, next);
+					queue.push(child);
+				}
+			}
+		}
+		for (const id of comp) {
+			const inc = compIncoming.get(id) ?? [];
+			if (!inc.length) {
+				parentByObjectId.set(id, null);
+				continue;
+			}
+			let best: AttractionEdge | null = null;
+			let bestDist = Number.POSITIVE_INFINITY;
+			for (const edge of inc) {
+				const d = dist.get(edge.attractingObjectId) ?? Number.POSITIVE_INFINITY;
+				if (
+					d < bestDist ||
+					(d === bestDist &&
+						(!best || edge.attractingObjectId.localeCompare(best.attractingObjectId) < 0))
+				) {
+					bestDist = d;
+					best = edge;
+				}
+			}
+			parentByObjectId.set(id, best?.attractingObjectId ?? null);
+		}
+		for (const id of comp) {
+			wormholeDistanceByObjectId.set(id, dist.get(id) ?? Number.POSITIVE_INFINITY);
+		}
+	}
+
+	for (const id of args.objectIds) {
+		if (!parentByObjectId.has(id)) {
+			parentByObjectId.set(id, null);
+			wormholeDistanceByObjectId.set(id, explicit.has(id) ? 0 : Number.POSITIVE_INFINITY);
+		}
+	}
+
+	const attractingByObjectId = new Map<string, string[]>();
+	for (const id of args.objectIds) {
+		attractingByObjectId.set(id, []);
+	}
+	for (const [child, parent] of parentByObjectId) {
+		if (!parent) {
+			continue;
+		}
+		const arr = attractingByObjectId.get(parent) ?? [];
+		arr.push(child);
+		attractingByObjectId.set(parent, arr);
+	}
+	for (const [, arr] of attractingByObjectId) {
+		arr.sort();
+	}
+
+	return {
+		parentByObjectId,
+		attractingByObjectId,
+		wormholeDistanceByObjectId,
+		wormholeIds: wormholeIds.slice().sort(),
+	};
+}
+
+/** @emoji 🧲 Collects transitive attracted object ids in the resolved ownership tree. */
+export function collectAttractedDescendantIds(
+	rootObjectId: string,
+	attractingByObjectId: ReadonlyMap<string, readonly string[]>,
+): readonly string[] {
+	const out: string[] = [];
+	const stack = [...(attractingByObjectId.get(rootObjectId) ?? [])];
+	const seen = new Set<string>();
+	while (stack.length) {
+		const id = stack.pop()!;
+		if (seen.has(id)) {
+			continue;
+		}
+		seen.add(id);
+		out.push(id);
+		for (const child of attractingByObjectId.get(id) ?? []) {
+			stack.push(child);
+		}
+	}
+	return out;
+}
+
+export interface ObjectRecord {
+	readonly id: string;
+	readonly objectKind?: string;
+	readonly meshUrl: string;
+	readonly origin: Vec3;
+	readonly orientation?: Quat;
+	readonly scale?: number | Vec3;
+	readonly label?: string;
+	readonly wormhole?: boolean;
+	readonly vortices: readonly VortexProps[];
+}
+
+interface ObjectStateSnapshot {
+	readonly records: ReadonlyMap<string, ObjectRecord>;
+	readonly ties: readonly TieProps[];
+	readonly tree: SceneAttractionTree;
+	readonly version: number;
+}
+
+type ObjectStateAction =
+	| { readonly type: "init"; readonly fixture: FixtureV1 }
+	| { readonly type: "relocate"; readonly payload: RelocatePayload }
+	| { readonly type: "addTie"; readonly tie: TieProps }
+	| { readonly type: "removeObject"; readonly objectId: string };
+
+function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, ObjectRecord> {
+	const map = new Map<string, ObjectRecord>();
+	for (const o of objects) {
+		map.set(o.id, {
+			id: o.id,
+			meshUrl: o.meshUrl,
+			origin: o.origin,
+			...(o.objectKind ? { objectKind: o.objectKind } : {}),
+			...(o.orientation ? { orientation: o.orientation } : {}),
+			...(o.scale !== undefined ? { scale: o.scale } : {}),
+			...(o.label ? { label: o.label } : {}),
+			...(o.wormhole === true ? { wormhole: true } : {}),
+			vortices: o.vortices,
+		});
+	}
+	return map;
+}
+
+function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, ties: readonly TieProps[], version: number): ObjectStateSnapshot {
+	const objectIds = [...records.keys()];
+	const explicitWormholes = new Set(
+		objectIds.filter((id) => {
+			const r = records.get(id);
+			return r ? isWormholeObject(id, r, new Set()) : false;
+		}),
+	);
+	const edges = attractionEdgesFromTies(ties);
+	const inferred = new Set<string>();
+	for (const comp of undirectedComponents(objectIds, edges)) {
+		const compEdges = edges.filter(
+			(e) => comp.includes(e.attractingObjectId) && comp.includes(e.attractedObjectId),
+		);
+		const inc = new Map<string, number>();
+		for (const id of comp) {
+			inc.set(id, 0);
+		}
+		for (const e of compEdges) {
+			inc.set(e.attractedObjectId, (inc.get(e.attractedObjectId) ?? 0) + 1);
+		}
+		for (const id of comp) {
+			if ((inc.get(id) ?? 0) === 0 && !explicitWormholes.has(id)) {
+				inferred.add(id);
+			}
+		}
+	}
+	const tree = resolveSceneAttractionTree({
+		objectIds,
+		edges,
+		explicitWormholeIds: new Set([...explicitWormholes, ...inferred]),
+	});
+	return { records, ties, tree, version };
+}
+
+function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
+	switch (action.type) {
+		case "init": {
+			const records = fixtureToRecords(action.fixture.objects);
+			return buildSnapshot(records, action.fixture.ties, state.version + 1);
+		}
+		case "addTie": {
+			const ties = [...state.ties, action.tie];
+			return buildSnapshot(state.records, ties, state.version + 1);
+		}
+		case "removeObject": {
+			const records = new Map(state.records);
+			records.delete(action.objectId);
+			const ties = state.ties.filter((t) => {
+				const s = parseVortexFullId(t.source).objectId;
+				const tg = parseVortexFullId(t.target).objectId;
+				return s !== action.objectId && tg !== action.objectId;
+			});
+			return buildSnapshot(records, ties, state.version + 1);
+		}
+		case "relocate": {
+			const { payload } = action;
+			const records = new Map(state.records);
+			const root = records.get(payload.objectId);
+			if (!root) {
+				return state;
+			}
+			const updatePose = (id: string, origin: Vec3, orientation: Quat, scale: Vec3) => {
+				const cur = records.get(id);
+				if (!cur) {
+					return;
+				}
+				records.set(id, {
+					...cur,
+					origin,
+					orientation,
+					scale: scale[0] === scale[1] && scale[1] === scale[2] ? scale[0] : ([scale[0], scale[1], scale[2]] as Vec3),
+				});
+			};
+			updatePose(
+				payload.objectId,
+				payload.after.origin,
+				payload.after.orientation,
+				payload.after.scale,
+			);
+			if (payload.mode === "translate") {
+				const delta = vec3Sub(payload.after.origin, payload.before.origin);
+				for (const id of collectAttractedDescendantIds(payload.objectId, state.tree.attractingByObjectId)) {
+					const cur = records.get(id);
+					if (!cur) {
+						continue;
+					}
+					const sc = cur.scale;
+					const scaleVec =
+						typeof sc === "number"
+							? ([sc, sc, sc] as Vec3)
+							: sc
+								? ([sc[0], sc[1], sc[2]] as Vec3)
+								: ([1, 1, 1] as Vec3);
+					updatePose(
+						id,
+						vec3Add(cur.origin, delta),
+						cur.orientation ?? ([0, 0, 0, 1] as Quat),
+						scaleVec,
+					);
+				}
+			}
+			return buildSnapshot(records, state.ties, state.version + 1);
+		}
+		default:
+			return state;
+	}
+}
+
+export interface SceneObjectStateContextValue {
+	readonly snapshot: ObjectStateSnapshot;
+	readonly dispatch: (action: ObjectStateAction) => void;
+	readonly handleRelocate: (payload: RelocatePayload) => void;
+	readonly handleConnect: (payload: AttractionPayload) => void;
+}
+
+const SceneObjectStateContext = createContext<SceneObjectStateContextValue | null>(null);
+
+/** @emoji 🗄️ Central scene object records, ties, and resolved attraction ownership. */
+export function SceneObjectStateProvider(props: {
+	readonly fixture: FixtureV1;
+	readonly children: ReactNode;
+	readonly onRelocate?: (payload: RelocatePayload) => void;
+	readonly onConnect?: (payload: AttractionPayload) => void;
+}) {
+	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
+		buildSnapshot(fixtureToRecords(fixture.objects), fixture.ties, 0),
+	);
+	useEffect(() => {
+		dispatch({ type: "init", fixture: props.fixture });
+	}, [props.fixture]);
+	const handleRelocate = useCallback(
+		(payload: RelocatePayload) => {
+			dispatch({ type: "relocate", payload });
+			props.onRelocate?.(payload);
+		},
+		[props.onRelocate],
+	);
+	const handleConnect = useCallback(
+		(payload: AttractionPayload) => {
+			const tieId = payload.tieId ?? `tie-${payload.attracting}-${payload.attracted}`;
+			dispatch({
+				type: "addTie",
+				tie: {
+					id: tieId,
+					source: payload.attracting as TieProps["source"],
+					target: payload.attracted as TieProps["target"],
+				},
+			});
+			props.onConnect?.(payload);
+		},
+		[props.onConnect],
+	);
+	const value = useMemo<SceneObjectStateContextValue>(
+		() => ({ snapshot, dispatch, handleRelocate, handleConnect }),
+		[snapshot, handleRelocate, handleConnect],
+	);
+	return <SceneObjectStateContext.Provider value={value}>{props.children}</SceneObjectStateContext.Provider>;
+}
+
+function useSceneObjectState(): SceneObjectStateContextValue {
+	const v = useContext(SceneObjectStateContext);
+	if (!v) {
+		throw new Error("SceneObjectStateProvider missing");
+	}
+	return v;
+}
+
+/** @emoji 🪝 Relocate handler that updates central object state and cascades to attracted descendants. */
+export function useSceneObjectRelocate(): (payload: RelocatePayload) => void {
+	return useSceneObjectState().handleRelocate;
+}
+
+/** @emoji 🪝 Connect handler that appends a tie and recomputes attraction ownership. */
+export function useSceneObjectConnect(): (payload: AttractionPayload) => void {
+	return useSceneObjectState().handleConnect;
+}
+
+function useObjectRecord(objectId: string): ObjectRecord | undefined {
+	const { snapshot } = useSceneObjectState();
+	return useMemo(() => snapshot.records.get(objectId), [snapshot.records, snapshot.version, objectId]);
+}
+
+function useAttractingChildIds(objectId: string): readonly string[] {
+	const { snapshot } = useSceneObjectState();
+	return useMemo(
+		() => snapshot.tree.attractingByObjectId.get(objectId) ?? [],
+		[snapshot.tree.attractingByObjectId, snapshot.version, objectId],
+	);
+}
+
+const ObjectItemById = memo(function ObjectItemById(props: {
+	readonly objectId: string;
+	readonly selected?: boolean;
+	readonly relocate?: RelocateMode | false;
+}) {
+	const record = useObjectRecord(props.objectId);
+	const attracting = useAttractingChildIds(props.objectId);
+	if (!record) {
+		return null;
+	}
+	return (
+		<ObjectItem
+			id={record.id}
+			objectKind={record.objectKind}
+			meshUrl={record.meshUrl}
+			origin={record.origin}
+			orientation={record.orientation}
+			scale={record.scale}
+			label={record.label}
+			wormhole={record.wormhole}
+			attracting={attracting}
+			selected={props.selected}
+			relocate={props.relocate}
+		>
+			{record.vortices.map((v) => (
+				<Vortex key={v.id} objectId={record.id} objectKind={record.objectKind} {...v} />
+			))}
+		</ObjectItem>
+	);
+});
+
+/** @emoji 🌲 Declares attraction tree structure; meshes mount flat via {@link SceneObjects} so ids stay stable on reparent. */
+export const ObjectTreeNode = memo(function ObjectTreeNode(props: { readonly objectId: string }) {
+	const attracting = useAttractingChildIds(props.objectId);
+	return (
+		<>
+			{attracting.map((childId) => (
+				<ObjectTreeNode key={childId} objectId={childId} />
+			))}
+		</>
+	);
+});
+
+export interface SceneObjectsProps {
+	readonly selectedObjectId?: string | null;
+	readonly relocate?: RelocateMode | false;
+}
+
+/** @emoji 🧊 Renders all scene objects from central state (id-keyed; survives ownership changes). */
+export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps) {
+	const { snapshot } = useSceneObjectState();
+	const ids = useMemo(() => [...snapshot.records.keys()].sort(), [snapshot.records, snapshot.version]);
+	return (
+		<>
+			{ids.map((id) => (
+				<ObjectItemById
+					key={id}
+					objectId={id}
+					selected={props.selectedObjectId === id}
+					relocate={props.relocate}
+				/>
+			))}
+		</>
+	);
+});
+
+/** @emoji 🌲 Logical attraction tree roots (wormholes) for structure-only composition. */
+export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots() {
+	const { snapshot } = useSceneObjectState();
+	return (
+		<>
+			{snapshot.tree.wormholeIds.map((id) => (
+				<ObjectTreeNode key={id} objectId={id} />
+			))}
+		</>
+	);
+});
+
+/** @emoji 🔗 Renders ties from central object state. */
+export const SceneTies = memo(function SceneTies() {
+	const { snapshot } = useSceneObjectState();
+	return (
+		<>
+			{snapshot.ties.map((t) => (
+				<Tie key={t.id} {...t} />
+			))}
+		</>
+	);
+});
+//#endregion 🕸️AttractionGraph
 
 //#region 🧩Compat
 export function kindsCompatible(
@@ -1657,8 +2236,16 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				onPointerDown={handlePointerDown}
 				onPointerOver={handlePointerOver}
 				onPointerOut={handlePointerOut}
-				userData={{ sceneObjectId: props.id, sceneMeshStyle: meshStyle, ...props.userData }}
+				userData={{
+					sceneObjectId: props.id,
+					sceneMeshStyle: meshStyle,
+					...(props.attracting?.length ? { sceneAttracting: props.attracting } : {}),
+					...(props.wormhole ? { sceneWormhole: true } : {}),
+					...props.userData,
+				}}
 				data-scene-object={props.id}
+				data-scene-attracting={props.attracting?.join(",") ?? ""}
+				data-scene-wormhole={props.wormhole ? "true" : undefined}
 			>
 				{props.meshUrl === PLACEHOLDER_MESH_URL ? (
 					<PlaceholderMesh style={meshStyle} />
@@ -2949,50 +3536,69 @@ function PlayBody({
 			</div>
 			<div className="relative min-h-0 flex-1">
 				<Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-					<Canvas3D
-						className="absolute inset-0"
-						camera={fixture.camera}
-						domain={fixture.domain}
-						kindCatalogs={kindCatalogs}
-						kindCompatibility={kindCompatibility}
-						blockedVortexFullIds={blockedVortexFullIds}
-						proximityRadius={24}
-						relocateMode={relocateMode}
-						showLodGrid
-						gridSnapEnabled
-						{...lodProps}
-						onLodChange={runtime?.setEffectiveLod}
-						onSelect={onSelect}
-						onConnect={onConnect}
-						onIndirectConnect={onIndirectConnect}
-						onProximityConnect={onProximityConnect}
-					>
-						<PlayTestBridge setSelectedId={setSelectedId} />
-						{fixture.objects.map((o) => (
-							<ObjectItem
-								key={o.id}
-								id={o.id}
-								meshUrl={o.meshUrl}
-								origin={o.origin}
-								orientation={o.orientation}
-								scale={o.scale}
-								objectKind={o.objectKind}
-								label={o.label}
-								selected={selectedId === o.id}
-								relocate={relocateMode}
-							>
-								{o.vortices.map((v) => (
-									<Vortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
-								))}
-							</ObjectItem>
-						))}
-						{fixture.ties.map((t) => (
-							<Tie key={t.id} {...t} />
-						))}
-					</Canvas3D>
+					<SceneObjectStateProvider fixture={fixture} onConnect={onConnect}>
+						<PlaySceneCanvas
+							fixture={fixture}
+							kindCatalogs={kindCatalogs}
+							kindCompatibility={kindCompatibility}
+							blockedVortexFullIds={blockedVortexFullIds}
+							lodProps={lodProps}
+							relocateMode={relocateMode}
+							runtime={runtime}
+							selectedId={selectedId}
+							setSelectedId={setSelectedId}
+							onSelect={onSelect}
+							onIndirectConnect={onIndirectConnect}
+							onProximityConnect={onProximityConnect}
+						/>
+					</SceneObjectStateProvider>
 				</Suspense>
 			</div>
 		</div>
+	);
+}
+
+function PlaySceneCanvas(props: {
+	readonly fixture: FixtureV1;
+	readonly kindCatalogs: KindCatalogBundle | undefined;
+	readonly kindCompatibility: readonly KindCompatEntry[];
+	readonly blockedVortexFullIds: ReadonlySet<string>;
+	readonly lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
+	readonly relocateMode: RelocateMode;
+	readonly runtime: { readonly setEffectiveLod: (lod: LodKind) => void } | null | undefined;
+	readonly selectedId: string | null;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly onSelect: (snap: { objectIds: readonly string[] }) => void;
+	readonly onIndirectConnect: () => void;
+	readonly onProximityConnect: () => void;
+}) {
+	const onRelocate = useSceneObjectRelocate();
+	const onConnect = useSceneObjectConnect();
+	return (
+		<Canvas3D
+			className="absolute inset-0"
+			camera={props.fixture.camera}
+			domain={props.fixture.domain}
+			kindCatalogs={props.kindCatalogs}
+			kindCompatibility={props.kindCompatibility}
+			blockedVortexFullIds={props.blockedVortexFullIds}
+			proximityRadius={24}
+			relocateMode={props.relocateMode}
+			showLodGrid
+			gridSnapEnabled
+			{...props.lodProps}
+			onLodChange={props.runtime?.setEffectiveLod}
+			onSelect={props.onSelect}
+			onConnect={onConnect}
+			onIndirectConnect={props.onIndirectConnect}
+			onProximityConnect={props.onProximityConnect}
+			onRelocate={onRelocate}
+		>
+			<PlayTestBridge setSelectedId={props.setSelectedId} />
+			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
+			<SceneTies />
+			<SceneAttractionTreeRoots />
+		</Canvas3D>
 	);
 }
 
@@ -3368,6 +3974,42 @@ if (import.meta.vitest) {
 			expect(f?.domain).toBe("architecture");
 			expect(f?.ties.length).toBeGreaterThan(0);
 			expect(f?.objects.length).toBeGreaterThan(0);
+		});
+	});
+	describe("resolveSceneAttractionTree", () => {
+		it("picks parent closer to wormhole when multiply attracted", () => {
+			const tree = resolveSceneAttractionTree({
+				objectIds: ["w", "a", "b", "c"],
+				explicitWormholeIds: new Set(["w"]),
+				edges: [
+					{ attractingObjectId: "w", attractedObjectId: "a", tieId: "t1" },
+					{ attractingObjectId: "a", attractedObjectId: "b", tieId: "t2" },
+					{ attractingObjectId: "w", attractedObjectId: "c", tieId: "t3" },
+					{ attractingObjectId: "c", attractedObjectId: "b", tieId: "t4" },
+				],
+			});
+			expect(tree.parentByObjectId.get("b")).toBe("a");
+			expect(tree.attractingByObjectId.get("a")).toEqual(["b"]);
+		});
+		it("lists attracted children per owner", () => {
+			const tree = resolveSceneAttractionTree({
+				objectIds: ["w", "a", "b"],
+				explicitWormholeIds: new Set(["w"]),
+				edges: [
+					{ attractingObjectId: "w", attractedObjectId: "a", tieId: "t1" },
+					{ attractingObjectId: "a", attractedObjectId: "b", tieId: "t2" },
+				],
+			});
+			expect(collectAttractedDescendantIds("w", tree.attractingByObjectId)).toEqual(["a", "b"]);
+		});
+	});
+	describe("attractionEdgesFromTies", () => {
+		it("maps vortex endpoints to object ids", () => {
+			const edges = attractionEdgesFromTies([
+				{ id: "x", source: "objA:v1", target: "objB:link" },
+			]);
+			expect(edges[0]?.attractingObjectId).toBe("objA");
+			expect(edges[0]?.attractedObjectId).toBe("objB");
 		});
 	});
 }

@@ -16,11 +16,14 @@ import {
 import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
 	Canvas3D as Scene,
-	ObjectItem as SceneObject,
-	Tie as SceneTie,
-	Vortex as SceneVortex,
+	SceneAttractionTreeRoots,
+	SceneObjectStateProvider,
+	SceneObjects,
+	SceneTies,
 	parseFixtureV1,
 	blockedVortexFullIdsFromTies,
+	useSceneObjectConnect,
+	useSceneObjectRelocate,
 	type CanvasProps as SceneCanvasProps,
 	type FixtureV1 as SceneFixtureV1,
 	type KindCatalogBundle as SceneKindCatalogBundle,
@@ -451,43 +454,39 @@ export interface TopologyScenePaneProps {
 	readonly blockedVortexFullIds?: ReadonlySet<string>;
 }
 
-export const TopologyScenePane = memo(function TopologyScenePane(props: TopologyScenePaneProps) {
-	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromTies(props.fixture.ties);
+const TopologySceneCanvas = memo(function TopologySceneCanvas(
+	props: TopologyScenePaneProps & { readonly blocked: ReadonlySet<string> },
+) {
+	const onRelocate = useSceneObjectRelocate();
+	const onConnect = useSceneObjectConnect();
 	const { scene: s } = props.bindings;
 	const sceneRest = props.scene ?? {};
 	return (
+		<Scene
+			className="min-h-0 flex-1"
+			camera={sceneRest.camera ?? props.fixture.camera}
+			blockedVortexFullIds={props.blocked}
+			{...s}
+			{...sceneRest}
+			relocateMode={props.relocateMode}
+			onRelocate={onRelocate}
+			onConnect={onConnect}
+		>
+			<SceneObjects selectedObjectId={props.selectedObjectId} relocate={props.relocateMode} />
+			<SceneTies />
+			<SceneAttractionTreeRoots />
+		</Scene>
+	);
+});
+
+export const TopologyScenePane = memo(function TopologyScenePane(props: TopologyScenePaneProps) {
+	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromTies(props.fixture.ties);
+	return (
 		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
 			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-				<Scene
-					className="min-h-0 flex-1"
-					camera={sceneRest.camera ?? props.fixture.camera}
-					blockedVortexFullIds={blocked}
-					{...s}
-					{...sceneRest}
-					relocateMode={props.relocateMode}
-				>
-					{props.fixture.objects.map((o) => (
-						<SceneObject
-							key={o.id}
-							id={o.id}
-							meshUrl={o.meshUrl}
-							origin={o.origin}
-							orientation={o.orientation}
-							scale={o.scale}
-							objectKind={o.objectKind}
-							label={o.label}
-							selected={props.selectedObjectId === o.id}
-							relocate={props.relocateMode}
-						>
-							{o.vortices.map((v) => (
-								<SceneVortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
-							))}
-						</SceneObject>
-					))}
-					{props.fixture.ties.map((t) => (
-						<SceneTie key={t.id} {...t} />
-					))}
-				</Scene>
+				<SceneObjectStateProvider fixture={props.fixture} onConnect={props.bindings.scene.onConnect}>
+					<TopologySceneCanvas {...props} blocked={blocked} />
+				</SceneObjectStateProvider>
 			</Suspense>
 		</div>
 	);
