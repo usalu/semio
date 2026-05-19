@@ -5822,6 +5822,30 @@ mod board_host {
 					self.stroke_world_step_grid(&mut inner, grid_color, 0.32, self.grid_step_micro_world(), 0.0);
 				}
 			}
+			if let Some(ref pts) = self.selection_screen_preview {
+				if pts.len() >= 2 {
+					let mut path = crate::vello::kurbo::BezPath::new();
+					path.move_to(pts[0]);
+					for p in pts.iter().skip(1) {
+						path.line_to(*p);
+					}
+					path.close_path();
+					inner.fill(
+						Fill::NonZero,
+						Affine::IDENTITY,
+						self.vello_theme.selection_preview_fill,
+						None,
+						&path,
+					);
+					inner.stroke(
+						&Stroke::new(1.5),
+						Affine::IDENTITY,
+						self.vello_theme.selection_preview_stroke,
+						None,
+						&path,
+					);
+				}
+			}
 			let use_tiles = self.world_raster_tiling == "world-clip";
 			if use_tiles {
 				let pad = self.drawable_cull_pad_world();
@@ -5854,30 +5878,6 @@ mod board_host {
 				}
 			} else {
 				self.append_nodes_handles_edges(&mut inner, None, lod);
-			}
-			if let Some(ref pts) = self.selection_screen_preview {
-				if pts.len() >= 2 {
-					let mut path = crate::vello::kurbo::BezPath::new();
-					path.move_to(pts[0]);
-					for p in pts.iter().skip(1) {
-						path.line_to(*p);
-					}
-					path.close_path();
-					inner.fill(
-						Fill::NonZero,
-						Affine::IDENTITY,
-						self.vello_theme.selection_preview_fill,
-						None,
-						&path,
-					);
-					inner.stroke(
-						&Stroke::new(1.5),
-						Affine::IDENTITY,
-						self.vello_theme.selection_preview_stroke,
-						None,
-						&path,
-					);
-				}
 			}
 			let scale = self.dpr.max(1.0);
 			if (scale - 1.0).abs() < f64::EPSILON {

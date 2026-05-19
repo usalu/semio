@@ -56,6 +56,7 @@ import {
   type BoardHandleProps,
   type BoardHostMount,
   type BoardHoverPayload,
+  type BoardDrawLodKind,
   type BoardKindCatalogBundle,
   type BoardKindCompatEntry,
   type BoardLodZoomThresholds,
@@ -75,7 +76,9 @@ import {
 } from "./index";
 
 export { BOARD_DEFAULT_KIND_CATALOG_BUNDLE, DEFAULT_BOARD_GRID_FACTOR, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS } from "./index";
-export type { BoardLodZoomThresholds } from "./index";
+export type { BoardDrawLodKind, BoardLodZoomThresholds } from "./index";
+export { BOARD_LOD_MODE_AUTOMATIC, isBoardDrawLodKind } from "./index";
+export type { BoardLodModeKind } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -100,6 +103,10 @@ export interface BoardCanvasProps {
   onChange?: () => void;
   /** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-board-lod`). */
   lodZoomThresholds?: BoardLodZoomThresholds;
+  /** @emoji 📶 When true (default), camera zoom selects draw LOD; when false, {@link lod} pins the tier. */
+  automaticLod?: boolean;
+  /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
+  lod?: BoardDrawLodKind;
   /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_BOARD_GRID_FACTOR}). */
   gridFactor?: number;
   /** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
@@ -668,6 +675,8 @@ export function BoardCanvas({
   kindCatalogs,
   kindCompatibility,
   lodZoomThresholds,
+  automaticLod,
+  lod,
   onCamera,
   onChange,
   onChildEdgeChange,
@@ -1027,9 +1036,11 @@ export function BoardCanvas({
     const canvas = canvasRef.current;
     const renderer = new BoardRenderer({
       canvas,
+      automaticLod: automaticLod ?? true,
       gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
       gridSnapEnabled: gridSnapEnabled ?? false,
       lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+      ...(lod !== undefined ? { lod } : {}),
       renderMode,
       selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
       worldRasterTiling,
@@ -1082,6 +1093,15 @@ export function BoardCanvas({
     }
     renderer.setGridSnapEnabled(gridSnapEnabled ?? false);
   }, [gridSnapEnabled]);
+
+  useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setAutomaticLod(automaticLod ?? true);
+    renderer.setForcedDrawLod(lod);
+  }, [automaticLod, lod]);
 
   useEffect(() => {
     if (!contextRenderer) {

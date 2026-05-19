@@ -441,14 +441,14 @@ Minimap:
 
 - no grid
 - no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
-- selection possible with only group selection, no individual nodes or edges or handels are selectable, bounded drag possible (drag works within selected bounding rectangle normally you need to hit something selected)
+- selection possible, bounded drag possible
 - no indirect connect possible, no connect, no proxmity connect
 
 Overview:
 
 - Huge grid (500x500)
 - outlines on node, no labels, no labels
-- selection possible, no individual nodes or edges or handels are selectable, drag possible, drag works within selected bounding rectangle
+- selection possible, bounded drag possible, drag works within selected bounding rectangle
 - no indirect connect possible, no connect, no proxmity connect
 
 Compact:
@@ -480,6 +480,10 @@ Micro:
 
 Within one lod nothing changes.
 Make the trigger zoom points props (same range for every lod by default)
+
+---
+
+bounded drag (drag works within selected bounding rectangle normally you need to hit something selected)
 
 ---
 

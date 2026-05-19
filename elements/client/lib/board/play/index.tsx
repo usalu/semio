@@ -48,8 +48,10 @@ import {
   BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
   BOARD_FIXTURE_DRAG_V1_MIME,
+  BOARD_LOD_MODE_AUTOMATIC,
   BOARD_SELECTION_TARGETS_DEFAULT,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  isBoardDrawLodKind,
   boardFixtureMetaKindCatalogBundle,
   classifyElementsBoardIconSelectorMode,
   encodeBoardFixtureForDragV1,
@@ -68,6 +70,8 @@ import {
   type BoardHierarchicalTreeDirectionKind,
   type BoardRedrawLayoutOptions,
   type BoardRedrawModeKind,
+  type BoardDrawLodKind,
+  type BoardLodModeKind,
   type BoardSelectionMethod,
   type BoardSelectionMode,
   type BoardSelectionTargets,
@@ -275,6 +279,9 @@ interface BoardPlayShellValue {
   setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
   boardGridSnapEnabled: boolean;
   setBoardGridSnapEnabled: (value: boolean) => void;
+  /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
+  boardLodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>;
+  setBoardLodModeForPane: (pane: BoardPlayPaneId, mode: BoardLodModeKind) => void;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
@@ -809,14 +816,23 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
   );
 }
 
+function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolean; lod?: BoardDrawLodKind } {
+  if (mode === BOARD_LOD_MODE_AUTOMATIC) {
+    return { automaticLod: true };
+  }
+  return { automaticLod: false, lod: mode };
+}
+
 function BoardOverviewPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
+  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
   const paneId: BoardPlayPaneId = "board-overview";
   const camera = camerasByPane[paneId];
   const selectedIds = selectionByPane[paneId];
+  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
   return (
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
+        {...lodProps}
         camera={camera}
         className="min-h-0 flex-1"
         contextMenu={boardPlayCanvasBackgroundMenu}
@@ -840,13 +856,15 @@ function BoardOverviewPane(): ReactElement {
 }
 
 function BoardDetailPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
+  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
   const paneId: BoardPlayPaneId = "board-detail";
   const camera = camerasByPane[paneId];
   const selectedIds = selectionByPane[paneId];
+  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
   return (
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
+        {...lodProps}
         camera={camera}
         className="min-h-0 flex-1"
         fixtureDragDrop
@@ -869,13 +887,15 @@ function BoardDetailPane(): ReactElement {
 }
 
 function BoardSelectionPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
+  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
   const paneId: BoardPlayPaneId = "board-selection";
   const camera = camerasByPane[paneId];
   const selectedIds = selectionByPane[paneId];
+  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
   return (
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
+        {...lodProps}
         camera={camera}
         className="min-h-0 flex-1"
         fixtureDragDrop
@@ -1701,11 +1721,49 @@ const boardPlayLayout: UIWindowLayout = {
   },
 };
 
-const boardWindowKinds: UIWindowKindDefinition[] = [
-  { component: BoardOverviewPane, contextMenu: boardPlayOverviewWindowContextMenu, id: "board-overview", label: "Overview" },
-  { component: BoardDetailPane, id: "board-detail", label: "Zoom" },
-  { component: BoardSelectionPane, id: "board-selection", label: "Selection" },
-];
+const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+
+function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
+  return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
+function boardWindowKindsWithLodMeasures(
+  lodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>,
+  setLodModeForPane: (pane: BoardPlayPaneId, mode: BoardLodModeKind) => void,
+): UIWindowKindDefinition[] {
+  const lodMeasure = (paneId: BoardPlayPaneId): UIWindowKindDefinition["measures"] => [
+    {
+      id: `${paneId}-lod`,
+      items: [
+        { id: "automatic", label: "Automatic", value: BOARD_LOD_MODE_AUTOMATIC },
+        ...BOARD_PLAY_LOD_TIERS.map((tier) => ({
+          id: tier,
+          label: boardPlayLodTierMenuLabel(tier),
+          value: tier,
+        })),
+      ],
+      kind: "select",
+      label: "LOD",
+      onValueChange: (value) => {
+        if (value === BOARD_LOD_MODE_AUTOMATIC || isBoardDrawLodKind(value)) {
+          setLodModeForPane(paneId, value as BoardLodModeKind);
+        }
+      },
+      value: lodModeByPane[paneId],
+    },
+  ];
+  return [
+    {
+      component: BoardOverviewPane,
+      contextMenu: boardPlayOverviewWindowContextMenu,
+      id: "board-overview",
+      label: "Overview",
+      measures: lodMeasure("board-overview"),
+    },
+    { component: BoardDetailPane, id: "board-detail", label: "Zoom", measures: lodMeasure("board-detail") },
+    { component: BoardSelectionPane, id: "board-selection", label: "Selection", measures: lodMeasure("board-selection") },
+  ];
+}
 
 // #endregion 🔖Layout
 
@@ -1797,6 +1855,19 @@ function BoardPlayInner(): ReactElement {
   const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
   const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
+  const [boardLodModeByPane, setBoardLodModeByPane] = useState<Record<BoardPlayPaneId, BoardLodModeKind>>({
+    "board-detail": BOARD_LOD_MODE_AUTOMATIC,
+    "board-overview": BOARD_LOD_MODE_AUTOMATIC,
+    "board-selection": BOARD_LOD_MODE_AUTOMATIC,
+  });
+  const setBoardLodModeForPane = useCallback((pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
+    setBoardLodModeByPane((prev) => ({ ...prev, [pane]: mode }));
+  }, []);
+  const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
+    if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
+      setActivePaneId(windowKindId);
+    }
+  }, []);
   const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
   const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
   const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
@@ -2394,6 +2465,8 @@ function BoardPlayInner(): ReactElement {
       setBoardRedrawProgressiveAutoStopMs,
       setBoardRedrawProgressiveEnabled,
       setBoardGridSnapEnabled,
+      boardLodModeByPane,
+      setBoardLodModeForPane,
       setBoardSelectionMethod,
       setBoardSelectionMode,
       setBoardSelectionTargets,
@@ -2426,6 +2499,8 @@ function BoardPlayInner(): ReactElement {
       boardSelectionMode,
       boardSelectionTargets,
       boardGridSnapEnabled,
+      boardLodModeByPane,
+      setBoardLodModeForPane,
       camerasByPane,
       syncBaselineFromViewportCamera,
       fixture,
@@ -2445,17 +2520,18 @@ function BoardPlayInner(): ReactElement {
     ],
   );
 
+  const boardWindowKinds = useMemo(
+    () => boardWindowKindsWithLodMeasures(boardLodModeByPane, setBoardLodModeForPane),
+    [boardLodModeByPane, setBoardLodModeForPane],
+  );
+
   const boardPlayApp: UIAppConfig = useMemo(
     () => ({
       defaultLayout: boardPlayLayout,
       id: BOARD_PLAY_APP_ID,
       label: "Board",
       leftPanelTabs: [{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 }],
-      onActiveWindowChange: (windowKindId) => {
-        if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
-          setActivePaneId(windowKindId);
-        }
-      },
+      onActiveWindowChange: onBoardPlayActiveWindowChange,
       rightPanelTabs: [
         { content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
         { content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
@@ -2463,7 +2539,7 @@ function BoardPlayInner(): ReactElement {
       toolbarContent: <BoardPlayToolbar />,
       windowKinds: boardWindowKinds,
     }),
-    [setActivePaneId],
+    [boardWindowKinds, onBoardPlayActiveWindowChange],
   );
 
   return (

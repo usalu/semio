@@ -3,12 +3,13 @@
   "emoji": "🐛",
   "status": "open",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Final board styling consistency cleanup: removed the remaining implicit selection-exit/highlight branches from both the TypeScript and Rust style resolvers so preselect cannot resolve to a different visual state than final selection. Highlighted remains available only as an explicit element style, while marquee preselect now resolves only to the same selected or neutral states as the committed result. Revalidated with the full @elements/board test target.",
+  "summary": "Moved the area-select selection preview overlay behind board content in the Rust Vello scene builder so marquee and lasso preselect no longer tint or restyle selected element fill and stroke. Validated Rust tests, wasm-pack build, and Vitest through bun nx run @elements/board:test. Playwright still reproduces two existing board UI failures in background context menu and redraw toolbar tests, unrelated to the selection overlay ordering change.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",
     "⚪79977eb9923d46ee8160fc2b8af58097",
     "⚪62fc0c95c2804ee8b8769f7441bd4256",
-    "⚪1624da70a7fc4af391da03ccea9e7761"
+    "⚪1624da70a7fc4af391da03ccea9e7761",
+    "⚪9767a670bbfe48f5b05ec801504e5d9a"
   ]
 }

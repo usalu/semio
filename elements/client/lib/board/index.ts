@@ -899,6 +899,22 @@ export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minima
 	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
+/** @emoji 📶 WASM draw LOD tier label (matches `data-board-lod` / `setForcedDrawLodLabel`). */
+export type BoardDrawLodKind = "detail" | "micro" | "minimap" | "normal" | "overview";
+
+/** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
+export const BOARD_LOD_MODE_AUTOMATIC = "automatic" as const;
+
+/** @emoji 📶 Board play / window LOD select value (`automatic` or a pinned {@link BoardDrawLodKind}). */
+export type BoardLodModeKind = typeof BOARD_LOD_MODE_AUTOMATIC | BoardDrawLodKind;
+
+const BOARD_DRAW_LOD_KINDS: readonly BoardDrawLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+
+/** @emoji ✅ True when `label` is a pinned WASM draw LOD tier. */
+export function isBoardDrawLodKind(label: string): label is BoardDrawLodKind {
+	return (BOARD_DRAW_LOD_KINDS as readonly string[]).includes(label);
+}
+
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
@@ -2290,9 +2306,13 @@ export class BoardRenderer {
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
 
 	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
+	private automaticLod = true;
+	private forcedDrawLodLabel: BoardDrawLodKind | undefined = undefined;
 	private gridSnapEnabled = false;
 	private gridFactor = DEFAULT_BOARD_GRID_FACTOR;
 	private lastLodThresholdsJsonForWasm: string | null = null;
+	private lastAutomaticLodForWasm: boolean | null = null;
+	private lastForcedDrawLodLabelForWasm: string | null = null;
 	private lastGridSnapEnabledForWasm: boolean | null = null;
 	private lastGridFactorForWasm: number | null = null;
 
@@ -2304,6 +2324,10 @@ export class BoardRenderer {
 		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
 		lodZoomThresholds?: BoardLodZoomThresholds;
+		/** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, {@link lod} pins the tier when set. */
+		automaticLod?: boolean;
+		/** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
+		lod?: BoardDrawLodKind;
 		gridSnapEnabled?: boolean;
 		gridFactor?: number;
 	} = {}) {
@@ -2323,6 +2347,13 @@ export class BoardRenderer {
 		const gf = options.gridFactor;
 		this.gridFactor =
 			typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
+		this.automaticLod = options.automaticLod ?? true;
+		const optLod = options.lod;
+		this.forcedDrawLodLabel =
+			!this.automaticLod && optLod !== undefined && isBoardDrawLodKind(optLod) ? optLod : undefined;
+		if (this.automaticLod) {
+			this.forcedDrawLodLabel = undefined;
+		}
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
@@ -2475,6 +2506,46 @@ export class BoardRenderer {
 		}
 		this.lastGridFactorForWasm = null;
 		this.markDirty();
+	}
+
+	/** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link BoardRenderer.setForcedDrawLod} pins the tier. */
+	setAutomaticLod(next: boolean): void {
+		if (this.automaticLod === next) {
+			return;
+		}
+		this.automaticLod = next;
+		this.forcedDrawLodLabel = undefined;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastAutomaticLodForWasm = null;
+		this.lastForcedDrawLodLabelForWasm = null;
+		this.lastPushedDescriptorJson = null;
+		this.markDirty();
+	}
+
+	/** @emoji 📶 Pins WASM draw LOD when {@link BoardRenderer.setAutomaticLod} is false; pass undefined to follow zoom bands. */
+	setForcedDrawLod(next: BoardDrawLodKind | undefined): void {
+		const norm =
+			this.automaticLod || next === undefined ? undefined : isBoardDrawLodKind(next) ? next : undefined;
+		if (this.forcedDrawLodLabel === norm) {
+			return;
+		}
+		this.forcedDrawLodLabel = norm;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastForcedDrawLodLabelForWasm = null;
+		this.markDirty();
+	}
+
+	private effectiveDrawLodLabel(): BoardDrawLodKind {
+		if (!this.automaticLod && this.forcedDrawLodLabel !== undefined) {
+			return this.forcedDrawLodLabel;
+		}
+		return resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 	}
 
 	/** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
@@ -3056,6 +3127,15 @@ export class BoardRenderer {
 				console.error("[DEBUG] setGridFactor failed", err);
 			}
 		}
+		if (this.lastAutomaticLodForWasm !== this.automaticLod) {
+			this.session.setAutomaticLod(this.automaticLod);
+			this.lastAutomaticLodForWasm = this.automaticLod;
+		}
+		const forcedWasm = this.forcedDrawLodLabel ?? "";
+		if (this.lastForcedDrawLodLabelForWasm !== forcedWasm) {
+			this.session.setForcedDrawLodLabel(forcedWasm);
+			this.lastForcedDrawLodLabelForWasm = forcedWasm;
+		}
 	}
 
 	/** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
@@ -3265,7 +3345,7 @@ export class BoardRenderer {
 		const inset = 0.88;
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
-		const lod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+		const lod = this.effectiveDrawLodLabel();
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
 				continue;
@@ -3524,7 +3604,8 @@ export class BoardRenderer {
 		}
 		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
-		this.canvas.dataset.boardLod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+		this.canvas.dataset.boardLod = this.effectiveDrawLodLabel();
+		this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);

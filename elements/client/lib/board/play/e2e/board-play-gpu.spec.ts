@@ -21,8 +21,7 @@ test.describe("board play", () => {
 	test("opens board background context menu on overview canvas", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator('[id$="-redraw-interactive-zoom"]')).toHaveCount(3, { timeout: 120_000 });
-		await expect(page.locator("#board-overview-redraw-interactive-zoom")).toHaveAttribute("data-state", "off");
+		await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 		await expect
@@ -77,41 +76,29 @@ test.describe("board play", () => {
 		expect(errors.filter((text) => !text.includes("[DEBUG] BoardRenderer GPU surface init failed NoCompatibleDevice"))).toEqual([]);
 	});
 
-	test("manual LOD select appears only on the pane where automatic LOD is off", async ({ page }) => {
+	test("LOD select is visible on each pane and pins a tier without clearing the graph", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
-		await expect(page.locator("#board-overview-automatic-lod")).toHaveAttribute("data-state", "on", { timeout: 120_000 });
-		await expect(page.locator('[data-measure-id="board-overview-lod-tier"]')).toHaveCount(0);
-		await expect(page.locator('[data-measure-id="board-detail-lod-tier"]')).toHaveCount(0);
+		await expect(page.locator('[data-measure-id="board-overview-lod"]')).toBeVisible({ timeout: 120_000 });
+		await expect(page.locator('[data-measure-id="board-detail-lod"]')).toBeVisible();
+		await expect(page.locator('[data-measure-id="board-selection-lod"]')).toBeVisible();
 		const overviewCanvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 120_000 })
 			.toBeGreaterThan(0);
-		const uniquePngBytes = (buf: Buffer): number => new Set(buf).size;
-		let shotAutomaticOn: Buffer | undefined;
-		if ((await overviewCanvas.getAttribute("data-board-surface-state")) === "ready") {
-			shotAutomaticOn = await overviewCanvas.screenshot();
-		}
-		await page.locator("#board-overview-automatic-lod").click();
-		await expect(page.locator("#board-overview-automatic-lod")).toHaveAttribute("data-state", "off");
-		await expect(page.locator('[data-measure-id="board-overview-lod-tier"]')).toBeVisible({ timeout: 30_000 });
-		await expect(page.locator('[data-measure-id="board-detail-lod-tier"]')).toHaveCount(0);
-		await expect(page.locator('[data-measure-id="board-selection-lod-tier"]')).toHaveCount(0);
+		await page.locator("#board-overview-lod").click();
+		await page.getByRole("option", { name: "Overview" }).click();
 		await expect
 			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
-			.toMatch(/^(minimap|overview|normal|detail|micro)$/);
+			.toBe("overview");
 		await expect
 			.poll(async () => Number(await overviewCanvas.getAttribute("data-board-scene-node-count")), { timeout: 30_000 })
 			.toBeGreaterThan(0);
-		if (shotAutomaticOn !== undefined) {
-			await expect
-				.poll(async () => await overviewCanvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
-				.toBe("ready");
-			const shotManualFollowZoom = await overviewCanvas.screenshot();
-			expect(uniquePngBytes(shotAutomaticOn)).toBeGreaterThan(64);
-			expect(uniquePngBytes(shotManualFollowZoom)).toBeGreaterThan(64);
-			expect(Math.abs(shotAutomaticOn.length - shotManualFollowZoom.length)).toBeLessThan(shotAutomaticOn.length * 0.35);
-		}
+		await page.locator("#board-overview-lod").click();
+		await page.getByRole("option", { name: "Automatic" }).click();
+		await expect
+			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
+			.toMatch(/^(minimap|overview|normal|detail|micro)$/);
 	});
 
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
