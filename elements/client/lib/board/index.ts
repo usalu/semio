@@ -47,6 +47,13 @@ export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "replace" | "subtractive";
+export const BOARD_ELEMENT_STYLE_KINDS = ["original", "neutral", "hovered", "selected", "highlighted", "disabled"] as const;
+export type BoardElementStyleKind = (typeof BOARD_ELEMENT_STYLE_KINDS)[number];
+
+/** @emoji 🎨 True when a value is a known board element style state. */
+export function isBoardElementStyleKind(value: unknown): value is BoardElementStyleKind {
+	return typeof value === "string" && (BOARD_ELEMENT_STYLE_KINDS as readonly string[]).includes(value);
+}
 
 /** @emoji ✅ Narrows unknown JSON or bridge payloads to {@link BoardSelectionMode}. */
 export function isBoardSelectionMode(value: unknown): value is BoardSelectionMode {
@@ -757,7 +764,7 @@ export interface BoardObjectOptions {
 	hidden?: boolean;
 	id: string;
 	selected?: boolean;
-	style?: string;
+	style?: BoardElementStyleKind;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 }
@@ -777,6 +784,10 @@ function resolveBoardVisibleFlag(options?: { hidden?: boolean; visible?: boolean
 
 function normalizeBoardScale(value: unknown): number {
 	return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+function normalizeBoardElementStyle(value: unknown): BoardElementStyleKind | null {
+	return isBoardElementStyleKind(value) ? value : null;
 }
 
 function boardNodeEffectiveScale(node: { effectiveScale?: number; scale?: number }): number {
@@ -891,7 +902,7 @@ export interface BoardHandleProps {
 	radius?: number;
 	scale?: number;
 	selected?: boolean;
-	style?: string;
+	style?: BoardElementStyleKind;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 }
@@ -905,7 +916,7 @@ export interface BoardEdgeProps {
 	id: string;
 	selected?: boolean;
 	source: string;
-	style?: string;
+	style?: BoardElementStyleKind;
 	target: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
@@ -920,7 +931,7 @@ export interface BoardWireProps {
 	id: string;
 	selected?: boolean;
 	source: string;
-	style?: string;
+	style?: BoardElementStyleKind;
 	target?: string;
 	/** @emoji 🧩 Semantic wire-kind id for catalog defaults and compatibility (`wire` specificity). */
 	wireKind?: string;
@@ -1089,21 +1100,46 @@ export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minima
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
+	"edge.original": { stroke: "#7b827d", strokeWidth: 2 },
+	"edge.neutral": { stroke: "#7b827d", strokeWidth: 2 },
+	"edge.hovered": { stroke: "#001117", strokeWidth: 2.5 },
 	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
+	"edge.highlighted": { stroke: "#34d1bf", strokeWidth: 3 },
+	"edge.disabled": { stroke: "#9aa39d", strokeWidth: 2 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
+	"handle.original": { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
+	"handle.neutral": { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
+	"handle.hovered": { fill: "#efe8d3", stroke: "#001117", strokeWidth: 2.5 },
 	"handle.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 2 },
-	"handle.selectionExit": { fill: "#e8c4c8", stroke: "#c44a5a", strokeWidth: 2 },
+	"handle.highlighted": { fill: "#d7efe6", stroke: "#34d1bf", strokeWidth: 2 },
+	"handle.disabled": { fill: "#ece7da", stroke: "#9aa39d", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
+	"node.original": { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
+	"node.neutral": { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
+	"node.hovered": { fill: "#e7e1d1", stroke: "#001117", strokeWidth: 2.5 },
 	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
-	"node.selectionExit": { fill: "#e8c4c8", stroke: "#c44a5a", strokeWidth: 3 },
+	"node.highlighted": { fill: "#d7efe6", stroke: "#34d1bf", strokeWidth: 3 },
+	"node.disabled": { fill: "#e7e1d1", stroke: "#9aa39d", strokeWidth: 2 },
+	"wire.original": { stroke: "#7b827d", strokeWidth: 2.25 },
+	"wire.neutral": { stroke: "#7b827d", strokeWidth: 2.25 },
+	"wire.hovered": { stroke: "#001117", strokeWidth: 2.5 },
+	"wire.selected": { stroke: "#ff344f", strokeWidth: 2.85 },
+	"wire.highlighted": { stroke: "#34d1bf", strokeWidth: 2.85 },
+	"wire.disabled": { stroke: "#9aa39d", strokeWidth: 2.25 },
 };
 
 /** @emoji ✅ Shared selected chrome (committed + in-marquee preselect). */
 const BOARD_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-accent) 22%, var(--color-panel))";
 const BOARD_CSS_SELECTED_STROKE = "var(--color-accent)";
-/** @emoji 💡 Shared highlight chrome (anchor ids leaving the marquee during preselect only). */
-const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-selected-removed) 40%, var(--color-panel))";
-const BOARD_CSS_HIGHLIGHTED_STROKE = "var(--color-selected-removed)";
+/** @emoji 👆 Shared hovered chrome for stronger pointer affordance without selecting. */
+const BOARD_CSS_HOVERED_FILL = "color-mix(in oklab, var(--color-foreground) 10%, var(--color-panel))";
+const BOARD_CSS_HOVERED_STROKE = "var(--color-foreground)";
+/** @emoji 💡 Shared highlight chrome (secondary emphasis). */
+const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+const BOARD_CSS_HIGHLIGHTED_STROKE = "var(--color-secondary)";
+/** @emoji 🚫 Shared disabled chrome to mute interaction affordances. */
+const BOARD_CSS_DISABLED_FILL = "color-mix(in oklab, var(--color-muted) 24%, var(--color-panel))";
+const BOARD_CSS_DISABLED_STROKE = "var(--color-muted-foreground)";
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
@@ -1113,22 +1149,37 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
 	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
+	edgeStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
 	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	edgeStrokeSelectionExit: [196, 74, 90, 255] as [number, number, number, number],
+	edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
+	edgeStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
 	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
+	nodeFillHovered: [231, 225, 209, 255] as [number, number, number, number],
+	nodeStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
 	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	nodeFillSelectionExit: [232, 196, 200, 255] as [number, number, number, number],
-	nodeStrokeSelectionExit: [196, 74, 90, 255] as [number, number, number, number],
+	nodeFillSelectionExit: [215, 239, 230, 255] as [number, number, number, number],
+	nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
+	nodeFillDisabled: [231, 225, 209, 255] as [number, number, number, number],
+	nodeStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
 	indirectHandleFill: [196, 228, 213, 255] as [number, number, number, number],
 	indirectHandleStroke: [52, 209, 191, 255] as [number, number, number, number],
 	handleFill: [247, 243, 227, 255] as [number, number, number, number],
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
+	handleFillHovered: [239, 232, 211, 255] as [number, number, number, number],
+	handleStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
 	handleFillSelected: [240, 200, 204, 255] as [number, number, number, number],
 	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	handleFillSelectionExit: [232, 196, 200, 255] as [number, number, number, number],
-	handleStrokeSelectionExit: [196, 74, 90, 255] as [number, number, number, number],
+	handleFillSelectionExit: [215, 239, 230, 255] as [number, number, number, number],
+	handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
+	handleFillDisabled: [236, 231, 218, 255] as [number, number, number, number],
+	handleStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
+	wireStroke: [123, 130, 125, 255] as [number, number, number, number],
+	wireStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
+	wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
+	wireStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
 	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
 	selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
 };
@@ -1178,20 +1229,48 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	};
 	return {
 		edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
+		"edge.original": { stroke: c("color", "var(--color-muted-foreground)", f["edge.original"].stroke ?? "#7b827d"), strokeWidth: 2 },
+		"edge.neutral": { stroke: c("color", "var(--color-muted-foreground)", f["edge.neutral"].stroke ?? "#7b827d"), strokeWidth: 2 },
+		"edge.hovered": { stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["edge.hovered"].stroke ?? "#001117"), strokeWidth: 2.5 },
 		"edge.selected": { stroke: c("color", "var(--color-accent)", f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
+		"edge.highlighted": {
+			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["edge.highlighted"].stroke ?? "#34d1bf"),
+			strokeWidth: 3,
+		},
+		"edge.disabled": { stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["edge.disabled"].stroke ?? "#9aa39d"), strokeWidth: 2 },
 		handle: {
 			fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
 			stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
 			strokeWidth: 2,
+		},
+		"handle.original": {
+			fill: c("backgroundColor", "var(--color-base)", f["handle.original"].fill ?? "#f7f3e3"),
+			stroke: c("color", "var(--color-element)", f["handle.original"].stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"handle.neutral": {
+			fill: c("backgroundColor", "var(--color-base)", f["handle.neutral"].fill ?? "#f7f3e3"),
+			stroke: c("color", "var(--color-element)", f["handle.neutral"].stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"handle.hovered": {
+			fill: c("backgroundColor", BOARD_CSS_HOVERED_FILL, f["handle.hovered"].fill ?? "#efe8d3"),
+			stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["handle.hovered"].stroke ?? "#001117"),
+			strokeWidth: 2.5,
 		},
 		"handle.selected": {
 			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#f0c8cc"),
 			stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["handle.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 2,
 		},
-		"handle.selectionExit": {
-			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["handle.selectionExit"]?.fill ?? "#e8c4c8"),
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["handle.selectionExit"]?.stroke ?? "#c44a5a"),
+		"handle.highlighted": {
+			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#d7efe6"),
+			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["handle.highlighted"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 2,
+		},
+		"handle.disabled": {
+			fill: c("backgroundColor", BOARD_CSS_DISABLED_FILL, f["handle.disabled"]?.fill ?? "#ece7da"),
+			stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["handle.disabled"]?.stroke ?? "#9aa39d"),
 			strokeWidth: 2,
 		},
 		node: {
@@ -1199,16 +1278,45 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 			stroke: c("color", "var(--color-element)", f.node.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
+		"node.original": {
+			fill: c("backgroundColor", "var(--color-panel)", f["node.original"].fill ?? "#eeeadb"),
+			stroke: c("color", "var(--color-element)", f["node.original"].stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"node.neutral": {
+			fill: c("backgroundColor", "var(--color-panel)", f["node.neutral"].fill ?? "#eeeadb"),
+			stroke: c("color", "var(--color-element)", f["node.neutral"].stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"node.hovered": {
+			fill: c("backgroundColor", BOARD_CSS_HOVERED_FILL, f["node.hovered"].fill ?? "#e7e1d1"),
+			stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["node.hovered"].stroke ?? "#001117"),
+			strokeWidth: 2.5,
+		},
 		"node.selected": {
 			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
 			stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["node.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 3,
 		},
-		"node.selectionExit": {
-			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["node.selectionExit"]?.fill ?? "#e8c4c8"),
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["node.selectionExit"]?.stroke ?? "#c44a5a"),
+		"node.highlighted": {
+			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#d7efe6"),
+			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["node.highlighted"]?.stroke ?? "#34d1bf"),
 			strokeWidth: 3,
 		},
+		"node.disabled": {
+			fill: c("backgroundColor", BOARD_CSS_DISABLED_FILL, f["node.disabled"]?.fill ?? "#e7e1d1"),
+			stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["node.disabled"]?.stroke ?? "#9aa39d"),
+			strokeWidth: 2,
+		},
+		"wire.original": { stroke: c("color", "var(--color-muted-foreground)", f["wire.original"].stroke ?? "#7b827d"), strokeWidth: 2.25 },
+		"wire.neutral": { stroke: c("color", "var(--color-muted-foreground)", f["wire.neutral"].stroke ?? "#7b827d"), strokeWidth: 2.25 },
+		"wire.hovered": { stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["wire.hovered"].stroke ?? "#001117"), strokeWidth: 2.5 },
+		"wire.selected": { stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["wire.selected"].stroke ?? "#ff344f"), strokeWidth: 2.85 },
+		"wire.highlighted": {
+			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["wire.highlighted"].stroke ?? "#34d1bf"),
+			strokeWidth: 2.85,
+		},
+		"wire.disabled": { stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["wire.disabled"].stroke ?? "#9aa39d"), strokeWidth: 2.25 },
 	};
 }
 
@@ -1220,8 +1328,12 @@ function serializeElementsBoardVelloThemeJson(): string {
 	};
 	const selectedFill = pc("backgroundColor", BOARD_CSS_SELECTED_FILL, fb.nodeFillSelected);
 	const selectedStroke = pc("color", BOARD_CSS_SELECTED_STROKE, fb.nodeStrokeSelected);
+	const hoveredFill = pc("backgroundColor", BOARD_CSS_HOVERED_FILL, fb.nodeFillHovered);
+	const hoveredStroke = pc("color", BOARD_CSS_HOVERED_STROKE, fb.nodeStrokeHovered);
 	const highlightedFill = pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit);
 	const highlightedStroke = pc("color", BOARD_CSS_HIGHLIGHTED_STROKE, fb.nodeStrokeSelectionExit);
+	const disabledFill = pc("backgroundColor", BOARD_CSS_DISABLED_FILL, fb.nodeFillDisabled);
+	const disabledStroke = pc("color", BOARD_CSS_DISABLED_STROKE, fb.nodeStrokeDisabled);
 	const payload = {
 		rasterClear: pc("backgroundColor", "var(--base)", fb.rasterClear),
 		gridMinorStroke: (() => {
@@ -1234,14 +1346,20 @@ function serializeElementsBoardVelloThemeJson(): string {
 			return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
 		})(),
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
+		edgeStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.edgeStrokeHovered),
 		edgeStrokeSelected: selectedStroke,
 		edgeStrokeSelectionExit: highlightedStroke,
+		edgeStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.edgeStrokeDisabled),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
+		nodeFillHovered: hoveredFill,
+		nodeStrokeHovered: hoveredStroke,
 		nodeFillSelected: selectedFill,
 		nodeStrokeSelected: selectedStroke,
 		nodeFillSelectionExit: highlightedFill,
 		nodeStrokeSelectionExit: highlightedStroke,
+		nodeFillDisabled: disabledFill,
+		nodeStrokeDisabled: disabledStroke,
 		indirectHandleFill: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
@@ -1250,10 +1368,19 @@ function serializeElementsBoardVelloThemeJson(): string {
 		indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
 		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
+		handleFillHovered: pc("backgroundColor", BOARD_CSS_HOVERED_FILL, fb.handleFillHovered),
+		handleStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.handleStrokeHovered),
 		handleFillSelected: selectedFill,
 		handleStrokeSelected: selectedStroke,
 		handleFillSelectionExit: highlightedFill,
 		handleStrokeSelectionExit: highlightedStroke,
+		handleFillDisabled: pc("backgroundColor", BOARD_CSS_DISABLED_FILL, fb.handleFillDisabled),
+		handleStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.handleStrokeDisabled),
+		wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
+		wireStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.wireStrokeHovered),
+		wireStrokeSelected: selectedStroke,
+		wireStrokeHighlighted: highlightedStroke,
+		wireStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.wireStrokeDisabled),
 		selectionPreviewFill: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--color-accent) 14%, transparent)",
@@ -1891,7 +2018,7 @@ export class BoardObject {
 	draggable: boolean;
 	parent: BoardScene | null = null;
 	selected: boolean;
-	style: string | null;
+	style: BoardElementStyleKind | null;
 	userData: Record<string, unknown>;
 	private _visible: boolean;
 
@@ -1900,7 +2027,7 @@ export class BoardObject {
 	constructor(public readonly id: string, options: Omit<BoardObjectOptions, "id">) {
 		this.draggable = options.draggable ?? false;
 		this.selected = options.selected ?? false;
-		this.style = options.style ?? null;
+		this.style = normalizeBoardElementStyle(options.style);
 		this.userData = { ...(options.userData ?? {}) };
 		this._visible = resolveBoardVisibleFlag(options);
 	}
@@ -2694,6 +2821,8 @@ export class BoardRenderer {
 	private lastLodThresholdsJsonForWasm: string | null = null;
 	private lastGridSnapEnabledForWasm: boolean | null = null;
 	private lastGridFactorForWasm: number | null = null;
+	private originalElementStyle = false;
+	private lastOriginalElementStyleForWasm: boolean | null = null;
 	private automaticLod = true;
 	private forcedDrawLodLabel: BoardDrawLodKind | undefined = undefined;
 	private lastAutomaticLodForWasm: boolean | null = null;
@@ -2710,6 +2839,8 @@ export class BoardRenderer {
 		lodZoomThresholds?: BoardLodZoomThresholds;
 		gridSnapEnabled?: boolean;
 		gridFactor?: number;
+		/** @emoji 🎨 When true, imported vector elements such as SVGs keep their authored colors instead of being normalized to board state colors. */
+		originalElementStyle?: boolean;
 		/** @emoji 📶 When false, optional `lod` pins WASM draw LOD; default true uses camera zoom bands. */
 		automaticLod?: boolean;
 		/** @emoji 📶 Pinned draw LOD when `automaticLod` is false; omit to follow zoom bands on the WASM host. */
@@ -2732,6 +2863,7 @@ export class BoardRenderer {
 		const gf = options.gridFactor;
 		this.gridFactor =
 			typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
+		this.originalElementStyle = options.originalElementStyle ?? false;
 		this.automaticLod = options.automaticLod ?? true;
 		const optLod = options.lod;
 		this.forcedDrawLodLabel =
@@ -2749,6 +2881,7 @@ export class BoardRenderer {
 			initialSel.targets.edges,
 			initialSel.targets.handles,
 		);
+		this.session.setOriginalElementStyle(this.originalElementStyle);
 		this.session.setHandleLinkCompatJson(this.kindCompatJson);
 		try {
 			this.session.setBoardKindCatalogsJson(this.kindCatalogsJson);
@@ -2963,6 +3096,25 @@ export class BoardRenderer {
 		}
 		this.lastGridFactorForWasm = null;
 		this.markDirty();
+	}
+
+	/** @emoji 🎨 Toggles whether imported vector elements keep their authored colors instead of following board state colors. */
+	setOriginalElementStyle(enabled: boolean): void {
+		if (this.originalElementStyle === enabled) {
+			return;
+		}
+		this.originalElementStyle = enabled;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastOriginalElementStyleForWasm = null;
+		this.markDirty();
+	}
+
+	/** @emoji 🎨 True when imported vector elements preserve their authored colors. */
+	preservesOriginalElementStyle(): boolean {
+		return this.originalElementStyle;
 	}
 
 	/** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
@@ -3227,6 +3379,44 @@ export class BoardRenderer {
 
 	getStyle(name: string | null, fallbackName: string): BoardStyle {
 		return this.styles.get(name ?? fallbackName) ?? this.styles.get(fallbackName) ?? {};
+	}
+
+	private resolveBoardElementStyleName(
+		kind: BoardObjectKind,
+		explicit: BoardElementStyleKind | null,
+		fallback: BoardElementStyleKind,
+	): string {
+		return `${kind}.${explicit ?? fallback}`;
+	}
+
+	private resolveHoveredStyleKind(id: string): BoardElementStyleKind | null {
+		return this.hoveredId === id ? "hovered" : null;
+	}
+
+	private nodeInteractiveStyleKind(node: Node): BoardElementStyleKind {
+		if (node.style) {
+			return node.style;
+		}
+		if (node.selected) {
+			return "selected";
+		}
+		if (this.secondarySelectionHighlightIds().has(node.id)) {
+			return "highlighted";
+		}
+		return this.resolveHoveredStyleKind(node.id) ?? "neutral";
+	}
+
+	private handleInteractiveStyleKind(handle: Handle): BoardElementStyleKind {
+		if (handle.style) {
+			return handle.style;
+		}
+		if (handle.selected) {
+			return "selected";
+		}
+		if (this.secondarySelectionHighlightIds().has(handle.id)) {
+			return "highlighted";
+		}
+		return this.resolveHoveredStyleKind(handle.id) ?? "neutral";
 	}
 
 	setSize(width: number, height: number, dpr = this.dpr): void {
@@ -3598,6 +3788,10 @@ export class BoardRenderer {
 			} catch (err) {
 				console.error("[DEBUG] setGridFactor failed", err);
 			}
+		}
+		if (this.lastOriginalElementStyleForWasm !== this.originalElementStyle) {
+			this.session.setOriginalElementStyle(this.originalElementStyle);
+			this.lastOriginalElementStyleForWasm = this.originalElementStyle;
 		}
 		if (this.lastAutomaticLodForWasm !== this.automaticLod) {
 			this.session.setAutomaticLod(this.automaticLod);
@@ -4172,24 +4366,12 @@ export class BoardRenderer {
 		return this.session.isDraggingAreaSelect() ? this.preselectRemovedIds : new Set<string>();
 	}
 
-	private textOverlayNodeStyleKey(node: Node): "node" | "node.selected" | "node.selectionExit" {
-		if (node.selected) {
-			return "node.selected";
-		}
-		if (this.secondarySelectionHighlightIds().has(node.id)) {
-			return "node.selectionExit";
-		}
-		return "node";
+	private textOverlayNodeStyleKey(node: Node): string {
+		return this.resolveBoardElementStyleName("node", node.style, this.nodeInteractiveStyleKind(node));
 	}
 
-	private textOverlayHandleStyleKey(handle: Handle): "handle" | "handle.selected" | "handle.selectionExit" {
-		if (handle.selected) {
-			return "handle.selected";
-		}
-		if (this.secondarySelectionHighlightIds().has(handle.id)) {
-			return "handle.selectionExit";
-		}
-		return "handle";
+	private textOverlayHandleStyleKey(handle: Handle): string {
+		return this.resolveBoardElementStyleName("handle", handle.style, this.handleInteractiveStyleKind(handle));
 	}
 
 	private updateSelection(ids: Iterable<string>): void {

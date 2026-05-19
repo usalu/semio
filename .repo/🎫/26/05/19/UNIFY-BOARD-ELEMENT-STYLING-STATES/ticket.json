@@ -3,8 +3,10 @@
   "emoji": "🐛",
   "status": "open",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
+  "summary": "Unified board element styling around explicit shared states across node, handle, edge, and wire. Added original, neutral, hovered, selected, highlighted, and disabled style support in the TypeScript board API, threaded a new originalElementStyle window option through the renderer, and updated the Rust/WASM renderer to resolve paints and imported SVG recoloring consistently from those states. Extended existing board tests and validated with the @elements/board test target, including Rust, wasm rebuild, Vitest, and Playwright.",
   "goal": "🎯r2603",
   "sessions": [
-    "⚪9075bfe8fc904de584d91762e331af22"
+    "⚪9075bfe8fc904de584d91762e331af22",
+    "⚪79977eb9923d46ee8160fc2b8af58097"
   ]
 }

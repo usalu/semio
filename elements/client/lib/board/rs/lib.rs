@@ -2685,6 +2685,16 @@ mod board_host {
 		Rectangle,
 	}
 
+	#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+	enum BoardElementStyleKind {
+		Original,
+		Neutral,
+		Hovered,
+		Selected,
+		Highlighted,
+		Disabled,
+	}
+
 	#[derive(Clone, Debug)]
 	pub struct NodeData {
 		pub id: String,
@@ -2857,22 +2867,37 @@ mod board_host {
 		pub raster_clear: Color,
 		pub grid_minor_stroke: Color,
 		pub edge_stroke: Color,
+		pub edge_stroke_hovered: Color,
 		pub edge_stroke_selected: Color,
 		pub edge_stroke_selection_exit: Color,
+		pub edge_stroke_disabled: Color,
 		pub node_fill: Color,
 		pub node_stroke: Color,
+		pub node_fill_hovered: Color,
+		pub node_stroke_hovered: Color,
 		pub node_fill_selected: Color,
 		pub node_stroke_selected: Color,
 		pub node_fill_selection_exit: Color,
 		pub node_stroke_selection_exit: Color,
+		pub node_fill_disabled: Color,
+		pub node_stroke_disabled: Color,
 		pub indirect_handle_fill: Color,
 		pub indirect_handle_stroke: Color,
 		pub handle_fill: Color,
 		pub handle_stroke: Color,
+		pub handle_fill_hovered: Color,
+		pub handle_stroke_hovered: Color,
 		pub handle_fill_selected: Color,
 		pub handle_stroke_selected: Color,
 		pub handle_fill_selection_exit: Color,
 		pub handle_stroke_selection_exit: Color,
+		pub handle_fill_disabled: Color,
+		pub handle_stroke_disabled: Color,
+		pub wire_stroke: Color,
+		pub wire_stroke_hovered: Color,
+		pub wire_stroke_selected: Color,
+		pub wire_stroke_highlighted: Color,
+		pub wire_stroke_disabled: Color,
 		pub selection_preview_fill: Color,
 		pub selection_preview_stroke: Color,
 	}
@@ -2883,22 +2908,37 @@ mod board_host {
 				raster_clear: board_palette::RASTER_CLEAR,
 				grid_minor_stroke: board_palette::GRID_MINOR_STROKE,
 				edge_stroke: board_palette::EDGE_STROKE,
+				edge_stroke_hovered: board_palette::NODE_STROKE,
 				edge_stroke_selected: board_palette::EDGE_STROKE_SELECTED,
 				edge_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
+				edge_stroke_disabled: board_palette::GRID_MINOR_STROKE,
 				node_fill: board_palette::NODE_FILL,
 				node_stroke: board_palette::NODE_STROKE,
+				node_fill_hovered: board_palette::NODE_FILL,
+				node_stroke_hovered: board_palette::NODE_STROKE,
 				node_fill_selected: board_palette::NODE_FILL_SELECTED,
 				node_stroke_selected: board_palette::NODE_STROKE_SELECTED,
 				node_fill_selection_exit: board_palette::INDIRECT_HANDLE_FILL,
 				node_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
+				node_fill_disabled: board_palette::NODE_FILL,
+				node_stroke_disabled: board_palette::GRID_MINOR_STROKE,
 				indirect_handle_fill: board_palette::INDIRECT_HANDLE_FILL,
 				indirect_handle_stroke: board_palette::INDIRECT_HANDLE_STROKE,
 				handle_fill: board_palette::HANDLE_FILL,
 				handle_stroke: board_palette::HANDLE_STROKE,
+				handle_fill_hovered: board_palette::HANDLE_FILL,
+				handle_stroke_hovered: board_palette::HANDLE_STROKE,
 				handle_fill_selected: board_palette::HANDLE_FILL_SELECTED,
 				handle_stroke_selected: board_palette::HANDLE_STROKE_SELECTED,
 				handle_fill_selection_exit: board_palette::INDIRECT_HANDLE_FILL,
 				handle_stroke_selection_exit: board_palette::INDIRECT_HANDLE_STROKE,
+				handle_fill_disabled: board_palette::HANDLE_FILL,
+				handle_stroke_disabled: board_palette::GRID_MINOR_STROKE,
+				wire_stroke: board_palette::EDGE_STROKE,
+				wire_stroke_hovered: board_palette::NODE_STROKE,
+				wire_stroke_selected: board_palette::EDGE_STROKE_SELECTED,
+				wire_stroke_highlighted: board_palette::INDIRECT_HANDLE_STROKE,
+				wire_stroke_disabled: board_palette::GRID_MINOR_STROKE,
 				selection_preview_fill: board_palette::SELECTION_PREVIEW_FILL,
 				selection_preview_stroke: board_palette::SELECTION_PREVIEW_STROKE,
 			}
@@ -2948,6 +2988,7 @@ mod board_host {
 		pub grid_factor: f64,
 		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
 		pub grid_snap_enabled: bool,
+		pub preserve_original_element_style: bool,
 		/// @emoji 📶 When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
 		pub automatic_lod: bool,
 		forced_draw_lod: Option<BoardDrawLod>,
@@ -3008,6 +3049,7 @@ mod board_host {
 				lod_detail_max_zoom: LOD_DETAIL_MAX_ZOOM_DEFAULT,
 				grid_factor: GRID_FACTOR_DEFAULT,
 				grid_snap_enabled: false,
+				preserve_original_element_style: false,
 				automatic_lod: true,
 				forced_draw_lod: None,
 				icon_vector_cache: RefCell::new(HashMap::new()),
@@ -3151,15 +3193,19 @@ mod board_host {
 			Ok(())
 		}
 
-		fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+		fn get_or_build_icon_paint(
+			&self,
+			encoded: &str,
+			fg: Color,
+			bg: Color,
+			preserve_original_style: bool,
+		) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
 			let resolved = super::board_icon_codec::board_resolve_icon_kind(encoded);
 			let key = match &resolved {
 				super::board_icon_codec::BoardResolvedIcon::None => return None,
-				super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-					Self::icon_vector_cache_key("t", s.as_str(), fg, bg)
-				}
-				super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-					Self::icon_vector_cache_key("p", s.as_str(), fg, bg)
+				super::board_icon_codec::BoardResolvedIcon::SvgThemed(s)
+				| super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+					Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg)
 				}
 				super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
 					Self::icon_raster_cache_key(rgba, *w, *h)
@@ -3180,7 +3226,11 @@ mod board_host {
 						return None;
 					}
 					let mut s = Scene::new();
-					super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+					if preserve_original_style {
+						let _ = vello_svg::append_tree(&mut s, &tree);
+					} else {
+						super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+					}
 					(bx, by, bw, bh, CachedIconBody::Vector(s))
 				}
 				super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
@@ -3191,7 +3241,11 @@ mod board_host {
 						return None;
 					}
 					let mut s = Scene::new();
-					let _ = vello_svg::append_tree(&mut s, &tree);
+					if preserve_original_style {
+						let _ = vello_svg::append_tree(&mut s, &tree);
+					} else {
+						super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+					}
 					(bx, by, bw, bh, CachedIconBody::Vector(s))
 				}
 				super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
@@ -3586,30 +3640,140 @@ mod board_host {
 			)
 		}
 
-		fn resolve_handle_fill_color(&self, h: &HandleData, theme: &VelloThemePalette) -> Color {
-			if let Some(c) = h.color_fill {
-				return c;
+		fn explicit_style_kind(style: Option<&str>) -> Option<BoardElementStyleKind> {
+			match style.map(str::trim).filter(|s| !s.is_empty()) {
+				Some("original") => Some(BoardElementStyleKind::Original),
+				Some("neutral") => Some(BoardElementStyleKind::Neutral),
+				Some("hovered") => Some(BoardElementStyleKind::Hovered),
+				Some("selected") => Some(BoardElementStyleKind::Selected),
+				Some("highlighted") => Some(BoardElementStyleKind::Highlighted),
+				Some("disabled") => Some(BoardElementStyleKind::Disabled),
+				_ => None,
 			}
-			if let Some(def) = self.handle_kinds.get(&h.handle_kind) {
-				return def.color;
-			}
-			if h.selected {
-				return handle_fill(theme, true);
-			}
-			if self.object_has_selection_exit_secondary(h.id.as_str(), h.selected) {
-				return theme.handle_fill_selection_exit;
-			}
-			handle_fill(theme, false)
 		}
 
-		fn resolve_handle_stroke_color(&self, h: &HandleData, theme: &VelloThemePalette) -> Color {
+		fn hovered_style_kind(&self, id: &str) -> Option<BoardElementStyleKind> {
+			(self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
+		}
+
+		fn resolve_node_style_kind(&self, n: &NodeData, highlighted: bool) -> BoardElementStyleKind {
+			if let Some(kind) = Self::explicit_style_kind(n.style.as_deref()) {
+				return kind;
+			}
+			if n.selected {
+				return BoardElementStyleKind::Selected;
+			}
+			if highlighted {
+				return BoardElementStyleKind::Highlighted;
+			}
+			self.hovered_style_kind(n.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+		}
+
+		fn resolve_handle_style_kind(&self, h: &HandleData) -> BoardElementStyleKind {
+			if let Some(kind) = Self::explicit_style_kind(h.style.as_deref()) {
+				return kind;
+			}
 			if h.selected {
-				return handle_stroke(theme, true);
+				return BoardElementStyleKind::Selected;
 			}
 			if self.object_has_selection_exit_secondary(h.id.as_str(), h.selected) {
-				return theme.handle_stroke_selection_exit;
+				return BoardElementStyleKind::Highlighted;
 			}
-			handle_stroke(theme, false)
+			self.hovered_style_kind(h.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+		}
+
+		fn resolve_edge_style_kind(&self, e: &EdgeData) -> BoardElementStyleKind {
+			if let Some(kind) = Self::explicit_style_kind(e.style.as_deref()) {
+				return kind;
+			}
+			if e.selected {
+				return BoardElementStyleKind::Selected;
+			}
+			if self.object_has_selection_exit_secondary(e.id.as_str(), e.selected) {
+				return BoardElementStyleKind::Highlighted;
+			}
+			self.hovered_style_kind(e.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+		}
+
+		fn resolve_wire_style_kind(&self, w: &WireData) -> BoardElementStyleKind {
+			if let Some(kind) = Self::explicit_style_kind(w.style.as_deref()) {
+				return kind;
+			}
+			if w.selected {
+				return BoardElementStyleKind::Selected;
+			}
+			if self.object_has_selection_exit_secondary(w.id.as_str(), w.selected) {
+				return BoardElementStyleKind::Highlighted;
+			}
+			self.hovered_style_kind(w.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
+		}
+
+		fn node_fill_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.node_fill_hovered,
+				BoardElementStyleKind::Selected => theme.node_fill_selected,
+				BoardElementStyleKind::Highlighted => theme.node_fill_selection_exit,
+				BoardElementStyleKind::Disabled => theme.node_fill_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => theme.node_fill,
+			}
+		}
+
+		fn node_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.node_stroke_hovered,
+				BoardElementStyleKind::Selected => theme.node_stroke_selected,
+				BoardElementStyleKind::Highlighted => theme.node_stroke_selection_exit,
+				BoardElementStyleKind::Disabled => theme.node_stroke_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => theme.node_stroke,
+			}
+		}
+
+		fn resolve_handle_fill_color(&self, h: &HandleData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.handle_fill_hovered,
+				BoardElementStyleKind::Selected => theme.handle_fill_selected,
+				BoardElementStyleKind::Highlighted => theme.handle_fill_selection_exit,
+				BoardElementStyleKind::Disabled => theme.handle_fill_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => {
+					if let Some(c) = h.color_fill {
+						return c;
+					}
+					if let Some(def) = self.handle_kinds.get(&h.handle_kind) {
+						return def.color;
+					}
+					theme.handle_fill
+				}
+			}
+		}
+
+		fn resolve_handle_stroke_color(&self, _h: &HandleData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.handle_stroke_hovered,
+				BoardElementStyleKind::Selected => theme.handle_stroke_selected,
+				BoardElementStyleKind::Highlighted => theme.handle_stroke_selection_exit,
+				BoardElementStyleKind::Disabled => theme.handle_stroke_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => theme.handle_stroke,
+			}
+		}
+
+		fn edge_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.edge_stroke_hovered,
+				BoardElementStyleKind::Selected => theme.edge_stroke_selected,
+				BoardElementStyleKind::Highlighted => theme.edge_stroke_selection_exit,
+				BoardElementStyleKind::Disabled => theme.edge_stroke_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => theme.edge_stroke,
+			}
+		}
+
+		fn wire_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+			match kind {
+				BoardElementStyleKind::Hovered => theme.wire_stroke_hovered,
+				BoardElementStyleKind::Selected => theme.wire_stroke_selected,
+				BoardElementStyleKind::Highlighted => theme.wire_stroke_highlighted,
+				BoardElementStyleKind::Disabled => theme.wire_stroke_disabled,
+				BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => theme.wire_stroke,
+			}
 		}
 
 		fn handles_link_compatible_for_drag(&self, source: &HandleData, target: &HandleData) -> bool {
@@ -3705,6 +3869,14 @@ mod board_host {
 			self.world_raster_tiling = next;
 		}
 
+		pub fn set_original_element_style(&mut self, enabled: bool) {
+			if self.preserve_original_element_style == enabled {
+				return;
+			}
+			self.preserve_original_element_style = enabled;
+			self.icon_vector_cache.borrow_mut().clear();
+		}
+
 		pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
 			self.selection_screen_preview = points;
 		}
@@ -3727,6 +3899,11 @@ mod board_host {
 					next.edge_stroke = c;
 				}
 			}
+			if let Some(arr) = v.get("edgeStrokeHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.edge_stroke_hovered = c;
+				}
+			}
 			if let Some(arr) = v.get("edgeStrokeSelected").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.edge_stroke_selected = c;
@@ -3737,6 +3914,11 @@ mod board_host {
 					next.edge_stroke_selection_exit = c;
 				}
 			}
+			if let Some(arr) = v.get("edgeStrokeDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.edge_stroke_disabled = c;
+				}
+			}
 			if let Some(arr) = v.get("nodeFill").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.node_fill = c;
@@ -3745,6 +3927,16 @@ mod board_host {
 			if let Some(arr) = v.get("nodeStroke").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.node_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeFillHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_fill_hovered = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeStrokeHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_stroke_hovered = c;
 				}
 			}
 			if let Some(arr) = v.get("nodeFillSelected").and_then(|x| x.as_array()) {
@@ -3767,6 +3959,16 @@ mod board_host {
 					next.node_stroke_selection_exit = c;
 				}
 			}
+			if let Some(arr) = v.get("nodeFillDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_fill_disabled = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeStrokeDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_stroke_disabled = c;
+				}
+			}
 			if let Some(arr) = v.get("indirectHandleFill").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.indirect_handle_fill = c;
@@ -3785,6 +3987,16 @@ mod board_host {
 			if let Some(arr) = v.get("handleStroke").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.handle_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("handleFillHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_fill_hovered = c;
+				}
+			}
+			if let Some(arr) = v.get("handleStrokeHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_stroke_hovered = c;
 				}
 			}
 			if let Some(arr) = v.get("handleFillSelected").and_then(|x| x.as_array()) {
@@ -3807,6 +4019,41 @@ mod board_host {
 					next.handle_stroke_selection_exit = c;
 				}
 			}
+			if let Some(arr) = v.get("handleFillDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_fill_disabled = c;
+				}
+			}
+			if let Some(arr) = v.get("handleStrokeDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_stroke_disabled = c;
+				}
+			}
+			if let Some(arr) = v.get("wireStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.wire_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("wireStrokeHovered").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.wire_stroke_hovered = c;
+				}
+			}
+			if let Some(arr) = v.get("wireStrokeSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.wire_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("wireStrokeHighlighted").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.wire_stroke_highlighted = c;
+				}
+			}
+			if let Some(arr) = v.get("wireStrokeDisabled").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.wire_stroke_disabled = c;
+				}
+			}
 			if let Some(arr) = v.get("selectionPreviewFill").and_then(|x| x.as_array()) {
 				if let Some(c) = Self::color_from_json_rgba8(arr) {
 					next.selection_preview_fill = c;
@@ -3821,8 +4068,19 @@ mod board_host {
 			next.handle_stroke_selected = next.node_stroke_selected;
 			next.handle_fill_selection_exit = next.node_fill_selection_exit;
 			next.handle_stroke_selection_exit = next.node_stroke_selection_exit;
+			next.handle_fill_hovered = next.node_fill_hovered;
+			next.handle_stroke_hovered = next.node_stroke_hovered;
+			next.handle_fill_disabled = next.node_fill_disabled;
+			next.handle_stroke_disabled = next.node_stroke_disabled;
+			next.edge_stroke_hovered = next.node_stroke_hovered;
 			next.edge_stroke_selected = next.node_stroke_selected;
 			next.edge_stroke_selection_exit = next.node_stroke_selection_exit;
+			next.edge_stroke_disabled = next.node_stroke_disabled;
+			next.wire_stroke = next.edge_stroke;
+			next.wire_stroke_hovered = next.edge_stroke_hovered;
+			next.wire_stroke_selected = next.edge_stroke_selected;
+			next.wire_stroke_highlighted = next.edge_stroke_selection_exit;
+			next.wire_stroke_disabled = next.edge_stroke_disabled;
 			self.vello_theme = next;
 			self.icon_vector_cache.borrow_mut().clear();
 			Ok(())
@@ -5292,6 +5550,7 @@ mod board_host {
 			center: Point,
 			radius_world: f64,
 			draw_icon: bool,
+			style_kind: BoardElementStyleKind,
 			paint_override: Option<(Color, Color, f64)>,
 		) {
 			let c = self.world_to_screen(center);
@@ -5301,8 +5560,8 @@ mod board_host {
 				(f, s, sw)
 			} else {
 				(
-					self.resolve_handle_fill_color(h, &self.vello_theme),
-					self.resolve_handle_stroke_color(h, &self.vello_theme),
+					self.resolve_handle_fill_color(h, &self.vello_theme, style_kind),
+					self.resolve_handle_stroke_color(h, &self.vello_theme, style_kind),
 					2.0_f64,
 				)
 			};
@@ -5310,7 +5569,8 @@ mod board_host {
 			scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &circle);
 			if draw_icon {
 				if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-					if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
+					let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
+					if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
 						let fit_inset = 0.62;
 						let s = radius_world * self.camera.zoom * fit_inset;
 						let cx = bx + bw * 0.5;
@@ -5359,6 +5619,7 @@ mod board_host {
 					wp,
 					self.indirect_handle_marker_radius_world(h),
 					false,
+					BoardElementStyleKind::Highlighted,
 					Some((fill, stroke_c, stroke_px)),
 				);
 			}
@@ -5390,45 +5651,12 @@ mod board_host {
 					}
 				}
 				let link_compat = link_compat_nodes.contains(&n.id);
-				let sel_chrome = n.selected && !link_compat;
-				let exit_secondary =
-					!link_compat && self.object_has_selection_exit_secondary(n.id.as_str(), n.selected);
-				let (stroke_c, fill) = if link_compat {
-					(
-						self.vello_theme.indirect_handle_stroke,
-						if lod == BoardDrawLod::Minimap {
-							self.vello_theme.indirect_handle_stroke
-						} else {
-							self.vello_theme.indirect_handle_fill
-						},
-					)
-				} else if sel_chrome {
-					(
-						node_stroke_color(&self.vello_theme, true),
-						if lod == BoardDrawLod::Minimap {
-							node_stroke_color(&self.vello_theme, true)
-						} else {
-							node_fill_color(&self.vello_theme, true)
-						},
-					)
-				} else if exit_secondary {
-					(
-						self.vello_theme.node_stroke_selection_exit,
-						if lod == BoardDrawLod::Minimap {
-							self.vello_theme.node_stroke_selection_exit
-						} else {
-							self.vello_theme.node_fill_selection_exit
-						},
-					)
+				let style_kind = self.resolve_node_style_kind(n, link_compat || self.object_has_selection_exit_secondary(n.id.as_str(), n.selected));
+				let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
+				let fill = if lod == BoardDrawLod::Minimap {
+					stroke_c
 				} else {
-					(
-						node_stroke_color(&self.vello_theme, false),
-						if lod == BoardDrawLod::Minimap {
-							node_stroke_color(&self.vello_theme, false)
-						} else {
-							node_fill_color(&self.vello_theme, false)
-						},
-					)
+					Self::node_fill_for_style(&self.vello_theme, style_kind)
 				};
 				let sw = 2.0_f64;
 				match n.shape {
@@ -5455,7 +5683,8 @@ mod board_host {
 				}
 				if draw_node_icons {
 					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-						if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
+						let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
+						if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
 							let clip_inset = 0.88;
 							let fit_inset = 0.76;
 							let (sx_half, sy_half) = match n.shape {
@@ -5525,7 +5754,8 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.handle_world_pos(h) else { continue };
-				self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, None);
+				let style_kind = self.resolve_handle_style_kind(h);
+				self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None);
 			}
 			let edge_sw = if lod == BoardDrawLod::Minimap {
 				1.12_f64
@@ -5549,19 +5779,12 @@ mod board_host {
 					let p2 = self.world_to_screen(c.p2);
 					let p3 = self.world_to_screen(c.p3);
 					let curve = CubicBez::new(p0, p1, p2, p3);
-					let stroke_color = if e.selected {
-						self.vello_theme.edge_stroke_selected
-					} else if self.object_has_selection_exit_secondary(e.id.as_str(), e.selected) {
-						self.vello_theme.edge_stroke_selection_exit
-					} else {
-						self.vello_theme.edge_stroke
-					};
+					let stroke_color = Self::edge_stroke_for_style(&self.vello_theme, self.resolve_edge_style_kind(e));
 					scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
 				}
 			}
 			let wire_sw = 2.25_f64;
 			let wire_stroke = Stroke::new(wire_sw);
-			let wire_color = self.vello_theme.selection_preview_stroke;
 			for w in self.wires.values() {
 				if !self.wire_effectively_visible(w) {
 					continue;
@@ -5572,13 +5795,7 @@ mod board_host {
 					let p2 = self.world_to_screen(c.p2);
 					let p3 = self.world_to_screen(c.p3);
 					let curve = CubicBez::new(p0, p1, p2, p3);
-					let wc = if w.selected {
-						self.vello_theme.edge_stroke_selected
-					} else if self.object_has_selection_exit_secondary(w.id.as_str(), w.selected) {
-						self.vello_theme.edge_stroke_selection_exit
-					} else {
-						wire_color
-					};
+					let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w));
 					scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
 				}
 			}
@@ -6583,37 +6800,6 @@ mod board_host {
 		}
 	}
 
-	fn node_fill_color(theme: &VelloThemePalette, sel: bool) -> Color {
-		if sel {
-			theme.node_fill_selected
-		} else {
-			theme.node_fill
-		}
-	}
-
-	fn node_stroke_color(theme: &VelloThemePalette, sel: bool) -> Color {
-		if sel {
-			theme.node_stroke_selected
-		} else {
-			theme.node_stroke
-		}
-	}
-
-	fn handle_fill(theme: &VelloThemePalette, sel: bool) -> Color {
-		if sel {
-			theme.handle_fill_selected
-		} else {
-			theme.handle_fill
-		}
-	}
-
-	fn handle_stroke(theme: &VelloThemePalette, sel: bool) -> Color {
-		if sel {
-			theme.handle_stroke_selected
-		} else {
-			theme.handle_stroke
-		}
-	}
 }
 
 pub use board_host::BoardHost;
@@ -7420,6 +7606,11 @@ impl BoardSession {
 			.host
 			.set_grid_factor(v)
 			.map_err(|e| JsValue::from_str(&e))
+	}
+
+	#[wasm_bindgen(js_name = setOriginalElementStyle)]
+	pub fn set_original_element_style_wasm(&mut self, enabled: bool) {
+		self.state.borrow_mut().host.set_original_element_style(enabled);
 	}
 
 	#[wasm_bindgen(js_name = setAutomaticLod)]

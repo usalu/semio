@@ -42,6 +42,7 @@ import {
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
 	type BoardEdgeLinkPayload,
+	type BoardElementStyleKind,
 	type BoardEventMap,
 	type BoardStructureCreatePayload,
 	type BoardStructureDeletePayload,
@@ -115,6 +116,8 @@ export interface BoardCanvasProps {
 	gridFactor?: number;
 	/** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
 	gridSnapEnabled?: boolean;
+	/** @emoji 🎨 When true, imported vector elements such as SVGs keep their authored colors instead of being normalized to board state colors. */
+	originalElementStyle?: boolean;
 	onChildEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
 	onChildEdgesChange?: (payload: BoardChildEdgesChangePayload) => void;
 	onChildNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
@@ -182,7 +185,7 @@ export type BoardNodeCircleProps = {
 	root?: boolean;
 	selected?: boolean;
 	shape?: "circle";
-	style?: string;
+	style?: BoardElementStyleKind;
 	text?: string;
 	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
@@ -213,7 +216,7 @@ export type BoardNodeRectangleProps = {
 	root?: boolean;
 	selected?: boolean;
 	shape: "rectangle";
-	style?: string;
+	style?: BoardElementStyleKind;
 	text?: string;
 	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
@@ -727,6 +730,7 @@ export function BoardCanvas({
 	height,
 	gridFactor,
 	gridSnapEnabled,
+	originalElementStyle,
 	kindCatalogs,
 	kindCompatibility,
 	lodZoomThresholds,
@@ -1118,6 +1122,7 @@ export function BoardCanvas({
 			gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
 			gridSnapEnabled: gridSnapEnabled ?? false,
 			lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+			originalElementStyle: originalElementStyle ?? false,
 			automaticLod: automaticLod ?? true,
 			...(lod !== undefined ? { lod } : {}),
 			renderMode,
@@ -1158,6 +1163,14 @@ export function BoardCanvas({
 		}
 		renderer.setGridFactor(gridFactor ?? DEFAULT_BOARD_GRID_FACTOR);
 	}, [gridFactor]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setOriginalElementStyle(originalElementStyle ?? false);
+	}, [originalElementStyle]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -1725,6 +1738,50 @@ if (boardReactVitest) {
 			canvas.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: far.x, clientY: far.y }));
 			expect(ids).toEqual([null]);
 			renderer.dispose();
+			restoreCanvas();
+		});
+
+		it("applies originalElementStyle and preserves typed element style states across scene sync", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+			let readyRenderer: BoardRenderer | null = null;
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						height={600}
+						onReady={(r) => {
+							readyRenderer = r;
+						}}
+						originalElementStyle
+						renderMode="headless-test"
+						width={800}
+					>
+						<Node id="a" radius={40} style="disabled" x={0} y={0}>
+							<Handle angle={0} handleKind="board.port" id="a:h0" style="highlighted" />
+						</Node>
+						<Node id="b" radius={40} style="neutral" x={280} y={0}>
+							<Handle angle={Math.PI} handleKind="board.port" id="b:h0" style="selected" />
+						</Node>
+						<Edge id="edge-a-b" source="a:h0" style="hovered" target="b:h0" />
+						<Wire endX={360} endY={40} id="wire-a" source="a:h0" style="original" />
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+				await Promise.resolve();
+			});
+			const canvas = container.querySelector("canvas") as HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
+			const renderer = requireRenderer(canvas.__boardRenderer ?? readyRenderer);
+			expect(renderer.preservesOriginalElementStyle()).toBe(true);
+			expect((renderer.scene.getObjectById("a") as BoardNodeObject).style).toBe("disabled");
+			expect((renderer.scene.getObjectById("a:h0") as BoardHandleObject).style).toBe("highlighted");
+			expect((renderer.scene.getObjectById("edge-a-b") as BoardEdgeObject).style).toBe("hovered");
+			expect((renderer.scene.getObjectById("wire-a") as BoardWireObject).style).toBe("original");
+			await act(async () => {
+				root.unmount();
+			});
+			document.body.removeChild(container);
 			restoreCanvas();
 		});
 
