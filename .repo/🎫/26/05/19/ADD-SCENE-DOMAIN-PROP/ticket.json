@@ -1,8 +1,9 @@
 {
   "title": "Add Scene Domain Prop",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Add a new board scene prop for domain, default it to architecture, and use it to derive or constrain features such as LOD according to the provided domain-specific scale ladders. Update implementation and existing tests as needed.",
+  "summary": "Added a first-class scene domain prop with architecture as the default, introduced the compact scene LOD tier, derived scene LOD thresholds from domain-specific scale ladders, updated scene parsing and play wiring, extended existing scene tests, and set the Nakagin scene fixture domain explicitly to architecture.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1442"
   },

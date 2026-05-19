@@ -1053,6 +1053,13 @@ export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.norma
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
 export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
 
+/** @emoji 📶 Board draw LOD tier label (matches `data-board-lod` / WASM `setForcedDrawLodLabel`). */
+export type BoardDrawLodKind = "detail" | "micro" | "minimap" | "normal" | "overview";
+
+export function isBoardDrawLodKind(value: unknown): value is BoardDrawLodKind {
+	return value === "minimap" || value === "overview" || value === "normal" || value === "detail" || value === "micro";
+}
+
 /** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
 export function resolveBoardLodLabelFromThresholds(
 	zoom: number,
@@ -2692,6 +2699,10 @@ export class BoardRenderer {
 	private lastLodThresholdsJsonForWasm: string | null = null;
 	private lastGridSnapEnabledForWasm: boolean | null = null;
 	private lastGridFactorForWasm: number | null = null;
+	private automaticLod = true;
+	private forcedDrawLodLabel: BoardDrawLodKind | undefined = undefined;
+	private lastAutomaticLodForWasm: boolean | null = null;
+	private lastForcedDrawLodLabelForWasm: string | null = null;
 
 	worldRasterTiling: WorldRasterTilingKind;
 
@@ -2704,6 +2715,10 @@ export class BoardRenderer {
 		lodZoomThresholds?: BoardLodZoomThresholds;
 		gridSnapEnabled?: boolean;
 		gridFactor?: number;
+		/** @emoji 📶 When false, optional `lod` pins WASM draw LOD; default true uses camera zoom bands. */
+		automaticLod?: boolean;
+		/** @emoji 📶 Pinned draw LOD when `automaticLod` is false; omit to follow zoom bands on the WASM host. */
+		lod?: BoardDrawLodKind;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
 		this.eventSurface = options.eventSurface ?? this.canvas;
@@ -2722,6 +2737,13 @@ export class BoardRenderer {
 		const gf = options.gridFactor;
 		this.gridFactor =
 			typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
+		this.automaticLod = options.automaticLod ?? true;
+		const optLod = options.lod;
+		this.forcedDrawLodLabel =
+			!this.automaticLod && optLod !== undefined && isBoardDrawLodKind(optLod) ? optLod : undefined;
+		if (this.automaticLod) {
+			this.forcedDrawLodLabel = undefined;
+		}
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
@@ -2960,6 +2982,47 @@ export class BoardRenderer {
 		}
 		this.lastGridSnapEnabledForWasm = null;
 		this.markDirty();
+	}
+
+	/** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link BoardRenderer.setForcedDrawLod} pins the tier. */
+	setAutomaticLod(next: boolean): void {
+		if (this.automaticLod === next) {
+			return;
+		}
+		this.automaticLod = next;
+		if (next) {
+			this.forcedDrawLodLabel = undefined;
+		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastAutomaticLodForWasm = null;
+		this.lastForcedDrawLodLabelForWasm = null;
+		this.markDirty();
+	}
+
+	/** @emoji 📶 Pins WASM draw LOD when {@link BoardRenderer.setAutomaticLod} is false; pass undefined to follow zoom bands. */
+	setForcedDrawLod(next: BoardDrawLodKind | undefined): void {
+		const norm =
+			this.automaticLod || next === undefined ? undefined : isBoardDrawLodKind(next) ? next : undefined;
+		if (this.forcedDrawLodLabel === norm) {
+			return;
+		}
+		this.forcedDrawLodLabel = norm;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastForcedDrawLodLabelForWasm = null;
+		this.markDirty();
+	}
+
+	private effectiveDrawLodLabel(): BoardDrawLodKind {
+		if (!this.automaticLod && this.forcedDrawLodLabel !== undefined) {
+			return this.forcedDrawLodLabel;
+		}
+		return resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 	}
 
 	/** @emoji 🔗 Sets kind-compatibility rules for link gestures (empty = unrestricted). */
@@ -3542,6 +3605,15 @@ export class BoardRenderer {
 				console.error("[DEBUG] setGridFactor failed", err);
 			}
 		}
+		if (this.lastAutomaticLodForWasm !== this.automaticLod) {
+			this.session.setAutomaticLod(this.automaticLod);
+			this.lastAutomaticLodForWasm = this.automaticLod;
+		}
+		const forcedWasm = this.forcedDrawLodLabel ?? "";
+		if (this.lastForcedDrawLodLabelForWasm !== forcedWasm) {
+			this.session.setForcedDrawLodLabel(forcedWasm);
+			this.lastForcedDrawLodLabelForWasm = forcedWasm;
+		}
 	}
 
 	/** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
@@ -3830,7 +3902,7 @@ export class BoardRenderer {
 		const inset = 0.88;
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
-		const lod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+		const lod = this.effectiveDrawLodLabel();
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
 				continue;
@@ -4302,7 +4374,7 @@ export class BoardRenderer {
 		}
 		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
-		this.canvas.dataset.boardLod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+		this.canvas.dataset.boardLod = this.effectiveDrawLodLabel();
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);

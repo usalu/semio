@@ -55,6 +55,7 @@ import {
 	Repeat2,
 	Settings,
 	Square,
+	Layers,
 	Trash2,
 	Unlock,
 	ZoomIn,
@@ -110,6 +111,7 @@ import {
 	type BoardSelectionMode,
 	type BoardSelectionSnapshot,
 	type BoardSelectionTargets,
+	type BoardDrawLodKind,
 	type BoardWireKindCatalogEntry,
 	type CameraState,
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
@@ -476,6 +478,12 @@ interface BoardPlayShellValue {
 	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
 	boardGridSnapEnabled: boolean;
 	setBoardGridSnapEnabled: (value: boolean) => void;
+	/** @emoji 📶 Per-pane WASM automatic LOD (zoom-driven); when false, optional pinned tier or follow-zoom. */
+	boardAutomaticLodByPane: Record<BoardPlayPaneId, boolean>;
+	setBoardAutomaticLodForPane: (pane: BoardPlayPaneId, value: boolean) => void;
+	/** @emoji 📶 When automatic LOD is off: undefined = follow camera zoom bands on the WASM host. */
+	boardPinnedLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind | undefined>;
+	setBoardPinnedLodForPane: (pane: BoardPlayPaneId, value: BoardDrawLodKind | undefined) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
 	/** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
@@ -1308,7 +1316,9 @@ function useBoardPaneContextMenus(paneId: BoardPlayPaneId, selectedIds: Set<stri
 function BoardOverviewPane(): ReactElement {
 	const {
 		activePaneId,
+		boardAutomaticLodByPane,
 		boardGridSnapEnabled,
+		boardPinnedLodByPane,
 		kindCatalogs,
 		kindCompatibility,
 		boardSelectionMethod,
@@ -1329,6 +1339,7 @@ function BoardOverviewPane(): ReactElement {
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
+				automaticLod={boardAutomaticLodByPane[paneId]}
 				camera={camera}
 				className="min-h-0 flex-1"
 				contextMenu={backgroundMenu}
@@ -1336,6 +1347,7 @@ function BoardOverviewPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={kindCatalogs}
 				kindCompatibility={kindCompatibility}
+				lod={boardPinnedLodByPane[paneId]}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -1355,7 +1367,9 @@ function BoardOverviewPane(): ReactElement {
 function BoardDetailPane(): ReactElement {
 	const {
 		activePaneId,
+		boardAutomaticLodByPane,
 		boardGridSnapEnabled,
+		boardPinnedLodByPane,
 		kindCatalogs,
 		kindCompatibility,
 		boardSelectionMethod,
@@ -1376,6 +1390,7 @@ function BoardDetailPane(): ReactElement {
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
+				automaticLod={boardAutomaticLodByPane[paneId]}
 				camera={camera}
 				className="min-h-0 flex-1"
 				contextMenu={backgroundMenu}
@@ -1383,6 +1398,7 @@ function BoardDetailPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={kindCatalogs}
 				kindCompatibility={kindCompatibility}
+				lod={boardPinnedLodByPane[paneId]}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -1402,7 +1418,9 @@ function BoardDetailPane(): ReactElement {
 function BoardSelectionPane(): ReactElement {
 	const {
 		activePaneId,
+		boardAutomaticLodByPane,
 		boardGridSnapEnabled,
+		boardPinnedLodByPane,
 		kindCatalogs,
 		kindCompatibility,
 		boardSelectionMethod,
@@ -1423,6 +1441,7 @@ function BoardSelectionPane(): ReactElement {
 	return (
 		<BoardPaneChrome paneId={paneId}>
 			<BoardCanvas
+				automaticLod={boardAutomaticLodByPane[paneId]}
 				camera={camera}
 				className="min-h-0 flex-1"
 				contextMenu={backgroundMenu}
@@ -1430,6 +1449,7 @@ function BoardSelectionPane(): ReactElement {
 				gridSnapEnabled={boardGridSnapEnabled}
 				kindCatalogs={kindCatalogs}
 				kindCompatibility={kindCompatibility}
+				lod={boardPinnedLodByPane[paneId]}
 				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
@@ -3140,22 +3160,70 @@ const boardPlayLayout: UIWindowLayout = {
 	},
 };
 
-function boardWindowKindsWithRedrawZoomOptions(
-	enabledByPane: Record<BoardPlayPaneId, boolean>,
-	setEnabledByPane: (updater: (prev: Record<BoardPlayPaneId, boolean>) => Record<BoardPlayPaneId, boolean>) => void,
+const BOARD_PLAY_LOD_FOLLOW_VALUE = "__follow_zoom__";
+
+const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+
+function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
+	return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
+function boardWindowKindsWithPlayMeasures(
+	redrawZoomEnabledByPane: Record<BoardPlayPaneId, boolean>,
+	setRedrawZoomEnabledByPane: (updater: (prev: Record<BoardPlayPaneId, boolean>) => Record<BoardPlayPaneId, boolean>) => void,
+	automaticLodByPane: Record<BoardPlayPaneId, boolean>,
+	setAutomaticLodForPane: (pane: BoardPlayPaneId, value: boolean) => void,
+	pinnedLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind | undefined>,
+	setPinnedLodForPane: (pane: BoardPlayPaneId, value: BoardDrawLodKind | undefined) => void,
 ): UIWindowKindDefinition[] {
-	const measuresForPane = (paneId: BoardPlayPaneId): UIWindowKindDefinition["measures"] => [
-		{
-			icon: <ZoomIn className="size-small" />,
-			id: `${paneId}-redraw-interactive-zoom`,
-			kind: "toggle",
-			label: "Redraw zoom",
-			pressed: enabledByPane[paneId],
-			onPressedChange: (pressed) => {
-				setEnabledByPane((prev) => ({ ...prev, [paneId]: pressed }));
+	const measuresForPane = (paneId: BoardPlayPaneId): UIWindowKindDefinition["measures"] => {
+		const measures: UIWindowKindDefinition["measures"] = [
+			{
+				icon: <ZoomIn className="size-small" />,
+				id: `${paneId}-redraw-interactive-zoom`,
+				kind: "toggle",
+				label: "Redraw zoom",
+				pressed: redrawZoomEnabledByPane[paneId],
+				onPressedChange: (pressed) => {
+					setRedrawZoomEnabledByPane((prev) => ({ ...prev, [paneId]: pressed }));
+				},
 			},
-		},
-	];
+			{
+				icon: <Layers className="size-small" />,
+				id: `${paneId}-automatic-lod`,
+				kind: "toggle",
+				label: "Automatic LOD",
+				pressed: automaticLodByPane[paneId],
+				onPressedChange: (pressed) => {
+					setAutomaticLodForPane(paneId, pressed);
+				},
+			},
+		];
+		if (!automaticLodByPane[paneId]) {
+			const pin = pinnedLodByPane[paneId];
+			measures.push({
+				id: `${paneId}-lod-tier`,
+				items: [
+					{ id: BOARD_PLAY_LOD_FOLLOW_VALUE, label: "Follow zoom", value: BOARD_PLAY_LOD_FOLLOW_VALUE },
+					...BOARD_PLAY_LOD_TIERS.map((tier) => ({
+						id: tier,
+						label: boardPlayLodTierMenuLabel(tier),
+						value: tier,
+					})),
+				],
+				kind: "select",
+				label: "LOD",
+				onValueChange: (value) => {
+					setPinnedLodForPane(
+						paneId,
+						value === BOARD_PLAY_LOD_FOLLOW_VALUE ? undefined : (value as BoardDrawLodKind),
+					);
+				},
+				value: pin === undefined ? BOARD_PLAY_LOD_FOLLOW_VALUE : pin,
+			});
+		}
+		return measures;
+	};
 	return [
 		{ component: BoardOverviewPane, id: "board-overview", label: "Overview", measures: measuresForPane("board-overview") },
 		{ component: BoardDetailPane, id: "board-detail", label: "Zoom", measures: measuresForPane("board-detail") },
@@ -3264,6 +3332,18 @@ function BoardPlayInner(): ReactElement {
 	const [boardSelectionGestureHighlight, setBoardSelectionGestureHighlight] = useState<BoardSelectionMode | null>(null);
 	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
 	const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
+	const [boardAutomaticLodByPane, setBoardAutomaticLodByPane] = useState<Record<BoardPlayPaneId, boolean>>({
+		"board-detail": true,
+		"board-overview": true,
+		"board-selection": true,
+	});
+	const [boardPinnedLodByPane, setBoardPinnedLodByPane] = useState<
+		Record<BoardPlayPaneId, BoardDrawLodKind | undefined>
+	>({
+		"board-detail": undefined,
+		"board-overview": undefined,
+		"board-selection": undefined,
+	});
 	const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
 	const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
 	const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
@@ -4029,6 +4109,14 @@ function BoardPlayInner(): ReactElement {
 		};
 	}, [boardRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
 
+	const setBoardAutomaticLodForPane = useCallback((pane: BoardPlayPaneId, value: boolean) => {
+		setBoardAutomaticLodByPane((prev) => ({ ...prev, [pane]: value }));
+	}, []);
+
+	const setBoardPinnedLodForPane = useCallback((pane: BoardPlayPaneId, value: BoardDrawLodKind | undefined) => {
+		setBoardPinnedLodByPane((prev) => ({ ...prev, [pane]: value }));
+	}, []);
+
 	const shellValue = useMemo<BoardPlayShellValue>(
 		() => ({
 			activePaneId,
@@ -4048,6 +4136,8 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionMode,
 			boardSelectionTargets,
 			boardGridSnapEnabled,
+			boardAutomaticLodByPane,
+			boardPinnedLodByPane,
 			camerasByPane,
 			deleteGraphObjects,
 			deleteWorkbenchSelection,
@@ -4076,6 +4166,8 @@ function BoardPlayInner(): ReactElement {
 			setBoardRedrawProgressiveAutoStopMs,
 			setBoardRedrawProgressiveEnabled,
 			setBoardGridSnapEnabled,
+			setBoardAutomaticLodForPane,
+			setBoardPinnedLodForPane,
 			setBoardSelectionGestureHighlight,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
@@ -4119,6 +4211,8 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionMode,
 			boardSelectionTargets,
 			boardGridSnapEnabled,
+			boardAutomaticLodByPane,
+			boardPinnedLodByPane,
 			camerasByPane,
 			deleteGraphObjects,
 			deleteWorkbenchSelection,
@@ -4148,6 +4242,8 @@ function BoardPlayInner(): ReactElement {
 			setBoardRedrawProgressiveAutoStopMs,
 			setBoardRedrawProgressiveEnabled,
 			setBoardGridSnapEnabled,
+			setBoardAutomaticLodForPane,
+			setBoardPinnedLodForPane,
 			setBoardSelectionGestureHighlight,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
@@ -4175,8 +4271,22 @@ function BoardPlayInner(): ReactElement {
 	);
 
 	const boardWindowKinds = useMemo(
-		() => boardWindowKindsWithRedrawZoomOptions(boardRedrawInteractiveZoomByPane, setBoardRedrawInteractiveZoomByPane),
-		[boardRedrawInteractiveZoomByPane],
+		() =>
+			boardWindowKindsWithPlayMeasures(
+				boardRedrawInteractiveZoomByPane,
+				setBoardRedrawInteractiveZoomByPane,
+				boardAutomaticLodByPane,
+				setBoardAutomaticLodForPane,
+				boardPinnedLodByPane,
+				setBoardPinnedLodForPane,
+			),
+		[
+			boardRedrawInteractiveZoomByPane,
+			boardAutomaticLodByPane,
+			boardPinnedLodByPane,
+			setBoardAutomaticLodForPane,
+			setBoardPinnedLodForPane,
+		],
 	);
 
 	const boardPlayApp: UIAppConfig = useMemo(

@@ -1,0 +1,10 @@
+{
+  "title": "Fix Board Scene Selection Freeze",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Investigate and fix board scene freeze caused by selecting an object, which triggers a TransformControls/updateMatrixWorld stack overflow in the elements board scene. Validate the root cause in the scene implementation, apply a minimal fix in existing files, and run relevant tests.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪925619f6d52e4c368c626ad32bce5f16"
+  ]
+}

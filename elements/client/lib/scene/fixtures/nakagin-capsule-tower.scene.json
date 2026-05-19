@@ -1,5 +1,6 @@
 {
   "schema": "elements.scene.fixture/v1",
+  "domain": "architecture",
   "camera": {
     "position": [
       420,

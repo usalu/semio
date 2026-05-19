@@ -2942,6 +2942,9 @@ mod board_host {
 		pub grid_factor: f64,
 		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
 		pub grid_snap_enabled: bool,
+		/// @emoji 📶 When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
+		pub automatic_lod: bool,
+		forced_draw_lod: Option<BoardDrawLod>,
 		icon_vector_cache: RefCell<HashMap<String, CachedIconPaint>>,
 		/// @emoji 📡 Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
 		link_compat_nodes_emit_key: Option<String>,
@@ -2999,6 +3002,8 @@ mod board_host {
 				lod_detail_max_zoom: LOD_DETAIL_MAX_ZOOM_DEFAULT,
 				grid_factor: GRID_FACTOR_DEFAULT,
 				grid_snap_enabled: false,
+				automatic_lod: true,
+				forced_draw_lod: None,
 				icon_vector_cache: RefCell::new(HashMap::new()),
 				link_compat_nodes_emit_key: None,
 				link_target_ring_emit_key: None,
@@ -3035,6 +3040,11 @@ mod board_host {
 		}
 
 		fn current_draw_lod(&self) -> BoardDrawLod {
+			if !self.automatic_lod {
+				if let Some(lod) = self.forced_draw_lod {
+					return lod;
+				}
+			}
 			let z = self.camera.zoom;
 			if z < self.lod_minimap_max_zoom {
 				BoardDrawLod::Minimap
@@ -3099,6 +3109,26 @@ mod board_host {
 
 		pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
 			self.grid_snap_enabled = enabled;
+		}
+
+		pub fn set_automatic_lod(&mut self, enabled: bool) {
+			self.automatic_lod = enabled;
+		}
+
+		pub fn set_forced_draw_lod_label(&mut self, label: &str) {
+			let t = label.trim();
+			if t.is_empty() {
+				self.forced_draw_lod = None;
+				return;
+			}
+			self.forced_draw_lod = Some(match t {
+				"minimap" => BoardDrawLod::Minimap,
+				"overview" => BoardDrawLod::Overview,
+				"normal" => BoardDrawLod::Normal,
+				"detail" => BoardDrawLod::Detail,
+				"micro" => BoardDrawLod::Micro,
+				_ => return,
+			});
 		}
 
 		pub fn set_grid_factor(&mut self, v: f64) -> Result<(), String> {
@@ -7342,6 +7372,16 @@ impl BoardSession {
 			.host
 			.set_grid_factor(v)
 			.map_err(|e| JsValue::from_str(&e))
+	}
+
+	#[wasm_bindgen(js_name = setAutomaticLod)]
+	pub fn set_automatic_lod_wasm(&mut self, enabled: bool) {
+		self.state.borrow_mut().host.set_automatic_lod(enabled);
+	}
+
+	#[wasm_bindgen(js_name = setForcedDrawLodLabel)]
+	pub fn set_forced_draw_lod_label_wasm(&mut self, label: &str) {
+		self.state.borrow_mut().host.set_forced_draw_lod_label(label);
 	}
 
 	#[wasm_bindgen(js_name = setSelectionIdsJson)]

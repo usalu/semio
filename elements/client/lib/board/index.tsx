@@ -72,11 +72,12 @@ import {
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	DEFAULT_BOARD_GRID_FACTOR,
 	type BoardLodZoomThresholds,
+	type BoardDrawLodKind,
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 	BOARD_LOD_DETAIL_MIN_ZOOM,
 } from "./index";
 
-export type { BoardLodZoomThresholds } from "./index";
+export type { BoardLodZoomThresholds, BoardDrawLodKind } from "./index";
 export {
 	BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
@@ -106,6 +107,10 @@ export interface BoardCanvasProps {
 	onChange?: () => void;
 	/** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-board-lod`). */
 	lodZoomThresholds?: BoardLodZoomThresholds;
+	/** @emoji 📶 Default true: WASM draw LOD follows camera zoom; when false, optional `lod` pins the tier. */
+	automaticLod?: boolean;
+	/** @emoji 📶 Pinned draw LOD when `automaticLod` is false; omit to follow zoom bands on the WASM host. */
+	lod?: BoardDrawLodKind;
 	/** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_BOARD_GRID_FACTOR}). */
 	gridFactor?: number;
 	/** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
@@ -725,6 +730,8 @@ export function BoardCanvas({
 	kindCatalogs,
 	kindCompatibility,
 	lodZoomThresholds,
+	automaticLod,
+	lod,
 	onCamera,
 	onChange,
 	onChildEdgeChange,
@@ -1111,6 +1118,8 @@ export function BoardCanvas({
 			gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
 			gridSnapEnabled: gridSnapEnabled ?? false,
 			lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+			automaticLod: automaticLod ?? true,
+			...(lod !== undefined ? { lod } : {}),
 			renderMode,
 			selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
 			worldRasterTiling,
@@ -1165,6 +1174,22 @@ export function BoardCanvas({
 		}
 		renderer.setGridSnapEnabled(gridSnapEnabled ?? false);
 	}, [gridSnapEnabled]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setAutomaticLod(automaticLod ?? true);
+	}, [automaticLod]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setForcedDrawLod(lod);
+	}, [lod]);
 
 	useEffect(() => {
 		if (!contextRenderer) {

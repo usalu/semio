@@ -77,6 +77,23 @@ test.describe("board play", () => {
 		expect(errors.filter((text) => !text.includes("[DEBUG] BoardRenderer GPU surface init failed NoCompatibleDevice"))).toEqual([]);
 	});
 
+	test("manual LOD select appears only on the pane where automatic LOD is off", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
+		await expect(page.locator("#board-overview-automatic-lod")).toHaveAttribute("data-state", "on", { timeout: 120_000 });
+		await expect(page.locator('[data-measure-id="board-overview-lod-tier"]')).toHaveCount(0);
+		await expect(page.locator('[data-measure-id="board-detail-lod-tier"]')).toHaveCount(0);
+		await page.locator("#board-overview-automatic-lod").click();
+		await expect(page.locator("#board-overview-automatic-lod")).toHaveAttribute("data-state", "off");
+		await expect(page.locator('[data-measure-id="board-overview-lod-tier"]')).toBeVisible({ timeout: 30_000 });
+		await expect(page.locator('[data-measure-id="board-detail-lod-tier"]')).toHaveCount(0);
+		await expect(page.locator('[data-measure-id="board-selection-lod-tier"]')).toHaveCount(0);
+		const overviewCanvas = page.locator('[data-testid="board-canvas"]').first();
+		await expect
+			.poll(async () => await overviewCanvas.getAttribute("data-board-lod"), { timeout: 30_000 })
+			.toMatch(/^(minimap|overview|normal|detail|micro)$/);
+	});
+
 	test("window options overlay stays pointer-events none under Golden Layout (canvas hit-test)", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });

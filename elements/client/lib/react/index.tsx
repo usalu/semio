@@ -21901,7 +21901,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
           return (
             <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
               <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
-                <SelectTrigger className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
+                <SelectTrigger id={measure.id} className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -22071,6 +22071,19 @@ const UICanvas: React.FC<{
   const containerRef = React.useRef<HTMLDivElement>(null);
   const layoutRef = React.useRef<any>(null);
   const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
+
+  /** @emoji 📐 Keeps floating measures/controls in sync when `windowKinds` change without tearing down Golden Layout. */
+  React.useEffect(() => {
+    if (!layoutRef.current) {
+      return;
+    }
+    setPortals((prev) =>
+      prev.map((portal) => {
+        const next = windowKinds.find((wk) => wk.id === portal.windowKind.id);
+        return next ? { ...portal, windowKind: next } : portal;
+      }),
+    );
+  }, [windowKinds]);
 
   React.useEffect(() => {
     if (!containerRef.current || layoutRef.current) return;

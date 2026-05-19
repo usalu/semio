@@ -16,6 +16,8 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("Could not load /meshes/");
 	expect(text).not.toContain("An error occurred in the <CanvasImpl> component");
 	expect(text).not.toContain("THREE.WebGLRenderer: Context Lost");
+	expect(text).not.toContain("Maximum call stack size exceeded");
+	expect(text).not.toContain("updateMatrixWorld");
 }
 
 test("scene play loads canvas and fixture", async ({ page }) => {

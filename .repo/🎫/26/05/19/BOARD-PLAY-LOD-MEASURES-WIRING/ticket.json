@@ -1,0 +1,11 @@
+{
+  "title": "Board Play Lod Measures Wiring",
+  "emoji": "📶",
+  "status": "closed",
+  "description": "Wire Rust BoardHost automatic_lod + forced_draw_lod, WASM setAutomaticLod/setForcedDrawLodLabel, BoardRenderer/BoardCanvas props, and board play floating window measures (Automatic LOD toggle + LOD tier select when off) so LOD controls are visible in board play.",
+  "summary": "Implemented end-to-end board LOD controls: Rust `BoardHost` gains `automatic_lod` (default true) and `forced_draw_lod` with `current_draw_lod` preferring forced tier when automatic is off; WASM `setAutomaticLod` / `setForcedDrawLodLabel`. `BoardRenderer` pushes these with LOD thresholds, exposes `setAutomaticLod` / `setForcedDrawLod`, and uses `effectiveDrawLodLabel()` for overlays and `data-board-lod`. `BoardCanvas` accepts `automaticLod` and `lod` props. Board play adds per-pane shell state and floating measures: Automatic LOD (Layers icon) plus LOD tier select (Follow zoom + tiers) when automatic is off.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1b671a97220f453190b114d247fdaac5"
+  ]
+}

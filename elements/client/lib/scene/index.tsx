@@ -1,5 +1,5 @@
 import { Clone, Line, OrbitControls, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import {
 	Button,
 	Expertise,
@@ -68,6 +68,63 @@ export type Quat = readonly [number, number, number, number];
 export type SceneRelocateMode = "translate" | "rotate" | "scale";
 export type SceneSelectionMode = "single" | "additive" | "subtractive" | "toggle";
 export type SceneConnectKind = "indirect" | "connect" | "proximity";
+export type SceneDomainKind = "urban" | "architecture" | "detailing" | "engineering";
+export type SceneScaleKind =
+	| "1to50000"
+	| "1to25000"
+	| "1to10000"
+	| "1to5000"
+	| "1to2500"
+	| "1to1000"
+	| "1to500"
+	| "1to333"
+	| "1to200"
+	| "1to100"
+	| "1to50"
+	| "1to33"
+	| "1to25"
+	| "1to10"
+	| "1to5"
+	| "1to1"
+	| "2to1"
+	| "5to1"
+	| "10to1"
+	| "20to1"
+	| "50to1";
+
+export const DEFAULT_SCENE_DOMAIN: SceneDomainKind = "architecture";
+export const DEFAULT_SCENE_SCALE_REFERENCE = 100;
+
+const SCENE_SCALE_RATIOS: Record<SceneScaleKind, readonly [numerator: number, denominator: number]> = {
+	"1to50000": [1, 50_000],
+	"1to25000": [1, 25_000],
+	"1to10000": [1, 10_000],
+	"1to5000": [1, 5_000],
+	"1to2500": [1, 2_500],
+	"1to1000": [1, 1_000],
+	"1to500": [1, 500],
+	"1to333": [1, 333],
+	"1to200": [1, 200],
+	"1to100": [1, 100],
+	"1to50": [1, 50],
+	"1to33": [1, 33],
+	"1to25": [1, 25],
+	"1to10": [1, 10],
+	"1to5": [1, 5],
+	"1to1": [1, 1],
+	"2to1": [2, 1],
+	"5to1": [5, 1],
+	"10to1": [10, 1],
+	"20to1": [20, 1],
+	"50to1": [50, 1],
+};
+
+const SCENE_DOMAIN_LOD_SCALES: Record<SceneDomainKind, readonly [SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind]> = {
+	urban: ["1to50000", "1to25000", "1to10000", "1to5000", "1to2500", "1to1000"],
+	architecture: ["1to1000", "1to500", "1to333", "1to200", "1to100", "1to50"],
+	detailing: ["1to50", "1to33", "1to25", "1to10", "1to5", "1to1"],
+	engineering: ["1to1", "2to1", "5to1", "10to1", "20to1", "50to1"],
+};
 
 export interface SceneCameraState {
 	position: Vec3;
@@ -76,23 +133,52 @@ export interface SceneCameraState {
 }
 
 /** @emoji 📶 Board-aligned scene LOD band label (`data-scene-lod` on the canvas shell). */
-export type SceneLodKind = "minimap" | "overview" | "normal" | "detail" | "micro";
+export type SceneLodKind = "minimap" | "overview" | "compact" | "normal" | "detail" | "micro";
 
 /** @emoji 📐 LOD zoom boundaries for pseudo-zoom from orbit camera distance (same semantics as board CSS zoom bands). */
 export interface SceneLodZoomThresholds {
 	minimapMaxZoom: number;
 	overviewMaxZoom: number;
+	compactMaxZoom: number;
 	normalMaxZoom: number;
 	detailMaxZoom: number;
 }
 
-/** @emoji 📐 Default LOD thresholds aligned with the sketch board canvas defaults. */
-export const DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS: SceneLodZoomThresholds = {
-	minimapMaxZoom: 0.15,
-	overviewMaxZoom: 0.35,
-	normalMaxZoom: 1.25,
-	detailMaxZoom: 2.5,
-};
+function sceneScaleKindZoomAnchor(kind: SceneScaleKind, reference: number): number {
+	const [numerator, denominator] = SCENE_SCALE_RATIOS[kind];
+	return (reference * numerator) / denominator;
+}
+
+function sceneThresholdBetweenZoomAnchors(a: number, b: number): number {
+	return Math.sqrt(a * b);
+}
+
+/** @emoji 📐 Returns the six canonical scale bands used by a scene domain from minimap through micro. */
+export function sceneLodScaleKindsForDomain(domain: SceneDomainKind): readonly SceneScaleKind[] {
+	return SCENE_DOMAIN_LOD_SCALES[domain];
+}
+
+/** @emoji 📐 Derives scene LOD thresholds from the scene domain scale ladder using a positive reference zoom. */
+export function sceneLodZoomThresholdsForDomain(
+	domain: SceneDomainKind,
+	reference = DEFAULT_SCENE_SCALE_REFERENCE,
+): SceneLodZoomThresholds {
+	const [minimap, overview, compact, normal, detail, micro] = sceneLodScaleKindsForDomain(domain).map((kind) =>
+		sceneScaleKindZoomAnchor(kind, reference),
+	);
+	return {
+		minimapMaxZoom: sceneThresholdBetweenZoomAnchors(minimap, overview),
+		overviewMaxZoom: sceneThresholdBetweenZoomAnchors(overview, compact),
+		compactMaxZoom: sceneThresholdBetweenZoomAnchors(compact, normal),
+		normalMaxZoom: sceneThresholdBetweenZoomAnchors(normal, detail),
+		detailMaxZoom: sceneThresholdBetweenZoomAnchors(detail, micro),
+	};
+}
+
+/** @emoji 📐 Default LOD thresholds aligned with the architecture scene domain. */
+export const DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS: SceneLodZoomThresholds = sceneLodZoomThresholdsForDomain(
+	DEFAULT_SCENE_DOMAIN,
+);
 
 /** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
 export const SCENE_LOD_GRID_MAJOR_QUANTUM = 10;
@@ -227,6 +313,7 @@ export interface SceneLinkIndirectPickAwait {
 
 export interface SceneCanvasProps {
 	camera?: Partial<SceneCameraState>;
+	domain?: SceneDomainKind;
 	chunkSize?: number;
 	kindCatalogs?: SceneKindCatalogBundle;
 	kindCompatibility?: readonly SceneKindCompatEntry[];
@@ -268,6 +355,7 @@ export interface SceneFixtureObjectV1 extends SceneObjectProps {
 export interface SceneFixtureV1 {
 	schema: "elements.scene.fixture/v1";
 	camera: SceneCameraState;
+	domain: SceneDomainKind;
 	meta?: Record<string, unknown>;
 	ties: SceneTieProps[];
 	objects: SceneFixtureObjectV1[];
@@ -280,6 +368,7 @@ export function resolveSceneLodLabelFromThresholds(zoom: number, t: SceneLodZoom
 	const z = zoom;
 	if (z < t.minimapMaxZoom) return "minimap";
 	if (z < t.overviewMaxZoom) return "overview";
+	if (z < t.compactMaxZoom) return "compact";
 	if (z < t.normalMaxZoom) return "normal";
 	if (z < t.detailMaxZoom) return "detail";
 	return "micro";
@@ -299,6 +388,8 @@ export function sceneLodVisibleGridSnapStepWorld(lod: SceneLodKind, gridFactor: 
 			return null;
 		case "overview":
 			return 10 * f;
+		case "compact":
+			return 5 * f;
 		case "normal":
 			return 2.5 * f;
 		case "detail":
@@ -317,7 +408,7 @@ export function sceneHandlePrimaryVisualVisibleAtLod(lod: SceneLodKind): boolean
 
 /** @emoji 🌀 Overview uses invisible pick proxies when primary handle GLB is hidden (minimap has no handle picks). */
 export function sceneHandlePickProxyAtLod(lod: SceneLodKind): boolean {
-	return lod === "overview";
+	return lod === "overview" || lod === "compact";
 }
 
 export interface SceneLodContextValue {
@@ -454,7 +545,25 @@ function isQuat(v: unknown): v is Quat {
 	return Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number");
 }
 
-const SCENE_LOD_KINDS: readonly SceneLodKind[] = ["minimap", "overview", "normal", "detail", "micro"];
+const SCENE_LOD_KINDS: readonly SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+
+function parseSceneDomainKind(value: unknown): SceneDomainKind {
+	if (typeof value !== "string") {
+		return DEFAULT_SCENE_DOMAIN;
+	}
+	switch (value.trim().toLowerCase()) {
+		case "urban":
+			return "urban";
+		case "architecture":
+			return "architecture";
+		case "detailing":
+			return "detailing";
+		case "engineering":
+			return "engineering";
+		default:
+			return DEFAULT_SCENE_DOMAIN;
+	}
+}
 
 function parseHandleMeshByLod(v: unknown): Partial<Record<SceneLodKind, string>> | undefined {
 	if (!v || typeof v !== "object") return undefined;
@@ -533,6 +642,7 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 	return {
 		schema: "elements.scene.fixture/v1",
 		camera: { position: pos, target: tgt, zoom },
+		domain: parseSceneDomainKind(r.domain),
 		...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
 		ties,
 		objects,
@@ -985,6 +1095,55 @@ const SceneResolvedObjectMesh = memo(function SceneResolvedObjectMesh(props: { r
 	return gltf.scene ? <Clone object={gltf.scene} /> : null;
 });
 
+const SceneObjectTransformControls = memo(function SceneObjectTransformControls(props: {
+	readonly object: Group;
+	readonly objectId: string;
+	readonly mode: SceneRelocateMode;
+	readonly translationSnap: number | undefined;
+	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
+}) {
+	const reg = useSceneRegistry();
+	const scene = useThree((s) => s.scene);
+	return createPortal(
+		<TransformControls
+			object={props.object}
+			mode={props.mode}
+			translationSnap={props.translationSnap}
+			onMouseDown={() => {
+				const g = props.object;
+				props.beforeRef.current = {
+					origin: g.position.clone(),
+					quat: g.quaternion.clone(),
+					scale: g.scale.clone(),
+				};
+			}}
+			onMouseUp={() => {
+				const before = props.beforeRef.current;
+				if (!before) return;
+				const g = props.object;
+				reg.onRelocate?.({
+					objectId: props.objectId,
+					mode: props.mode,
+					before: {
+						origin: before.origin.toArray() as unknown as Vec3,
+						orientation: before.quat.toArray() as unknown as Quat,
+						scale: before.scale.toArray() as unknown as Vec3,
+					},
+					after: {
+						origin: g.position.toArray() as unknown as Vec3,
+						orientation: g.quaternion.toArray() as unknown as Quat,
+						scale: g.scale.toArray() as unknown as Vec3,
+					},
+				});
+				const cand = reg.findNearestProximityRelocate(g.position, props.objectId);
+				if (cand) reg.onProximityConnect?.(cand);
+				props.beforeRef.current = null;
+			}}
+		/>,
+		scene,
+	);
+});
+
 export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const group = useRef<Group>(null);
 	const reg = useSceneRegistry();
@@ -1042,49 +1201,16 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		>
 			{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? <ScenePlaceholderMesh /> : <SceneResolvedObjectMesh meshUrl={props.meshUrl} />}
 			{props.children}
-			{showTc && (
-				<TransformControls
-					object={tcTarget}
-					mode={mode}
-					translationSnap={transSnap}
-					onMouseDown={() => {
-						const g = group.current;
-						if (g) {
-							beforeRef.current = {
-								origin: g.position.clone(),
-								quat: g.quaternion.clone(),
-								scale: g.scale.clone(),
-							};
-						}
-					}}
-					onMouseUp={() => {
-						const g = group.current;
-						if (!g || !beforeRef.current) return;
-						const before = beforeRef.current;
-						const afterOrigin = g.position.toArray() as unknown as Vec3;
-						const afterQuat = g.quaternion.toArray() as unknown as Quat;
-						const afterScale = g.scale.toArray() as unknown as Vec3;
-						reg.onRelocate?.({
-							objectId: props.id,
-							mode,
-							before: {
-								origin: before.origin.toArray() as unknown as Vec3,
-								orientation: before.quat.toArray() as unknown as Quat,
-								scale: before.scale.toArray() as unknown as Vec3,
-							},
-							after: {
-								origin: afterOrigin,
-								orientation: afterQuat,
-								scale: afterScale,
-							},
-						});
-						const cand = reg.findNearestProximityRelocate(g.position, props.id);
-						if (cand) reg.onProximityConnect?.(cand);
-						beforeRef.current = null;
-					}}
-				/>
-			)}
 		</group>
+		{showTc && tcTarget && (
+			<SceneObjectTransformControls
+				object={tcTarget}
+				objectId={props.id}
+				mode={mode}
+				translationSnap={transSnap}
+				beforeRef={beforeRef}
+			/>
+		)}
 	);
 });
 //#endregion 🧊Object
@@ -1934,7 +2060,8 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 function SceneInner(props: SceneCanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
 	const lodKindRef = useRef<SceneLodKind>("normal");
-	const thresholds = props.lodZoomThresholds ?? DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
+	const domain = props.domain ?? DEFAULT_SCENE_DOMAIN;
+	const thresholds = props.lodZoomThresholds ?? sceneLodZoomThresholdsForDomain(domain);
 	const distanceReference = props.lodDistanceReference ?? 900;
 	const gridFactor = props.gridFactor ?? DEFAULT_SCENE_LOD_GRID_FACTOR;
 	const gridSnapEnabled = props.gridSnapEnabled ?? false;
@@ -1989,7 +2116,7 @@ function SceneInner(props: SceneCanvasProps) {
 }
 
 export function Scene(props: SceneCanvasProps & { className?: string; style?: CSSProperties }) {
-	const { children, className, style, onLodChange, ...rest } = props;
+	const { children, className, style, onLodChange, domain = DEFAULT_SCENE_DOMAIN, ...rest } = props;
 	const [shellLod, setShellLod] = useState<SceneLodKind>("normal");
 	const handleLod = useCallback(
 		(l: SceneLodKind) => {
@@ -2002,11 +2129,12 @@ export function Scene(props: SceneCanvasProps & { className?: string; style?: CS
 		<div
 			className={className}
 			style={{ width: "100%", height: "100%", ...style }}
+			data-scene-domain={domain}
 			data-scene-root
 			data-scene-lod={shellLod}
 		>
 			<Canvas gl={{ antialias: true }} dpr={[1, 2]}>
-				<SceneInner {...rest} onLodChange={handleLod}>
+				<SceneInner {...rest} domain={domain} onLodChange={handleLod}>
 					{children}
 				</SceneInner>
 			</Canvas>
@@ -2251,6 +2379,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 					<Scene
 						className="absolute inset-0"
 						camera={fixture.camera}
+						domain={fixture.domain}
 						kindCatalogs={kindCatalogs}
 						kindCompatibility={kindCompatibility}
 						blockedVortexFullIds={blockedVortexFullIds}
@@ -2396,15 +2525,28 @@ if (import.meta.vitest) {
 			const t = DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
 			expect(resolveSceneLodLabelFromThresholds(0.1, t)).toBe("minimap");
 			expect(resolveSceneLodLabelFromThresholds(0.2, t)).toBe("overview");
-			expect(resolveSceneLodLabelFromThresholds(0.8, t)).toBe("normal");
-			expect(resolveSceneLodLabelFromThresholds(1.6, t)).toBe("detail");
-			expect(resolveSceneLodLabelFromThresholds(5, t)).toBe("micro");
+			expect(resolveSceneLodLabelFromThresholds(0.3, t)).toBe("compact");
+			expect(resolveSceneLodLabelFromThresholds(0.5, t)).toBe("normal");
+			expect(resolveSceneLodLabelFromThresholds(1, t)).toBe("detail");
+			expect(resolveSceneLodLabelFromThresholds(2, t)).toBe("micro");
+		});
+	});
+	describe("sceneLodZoomThresholdsForDomain", () => {
+		it("derives architecture thresholds from the domain ladder", () => {
+			const t = sceneLodZoomThresholdsForDomain("architecture");
+			expect(resolveSceneLodLabelFromThresholds(0.1, t)).toBe("minimap");
+			expect(resolveSceneLodLabelFromThresholds(0.2, t)).toBe("overview");
+			expect(resolveSceneLodLabelFromThresholds(0.3, t)).toBe("compact");
+			expect(resolveSceneLodLabelFromThresholds(0.5, t)).toBe("normal");
+			expect(resolveSceneLodLabelFromThresholds(1, t)).toBe("detail");
+			expect(resolveSceneLodLabelFromThresholds(2, t)).toBe("micro");
 		});
 	});
 	describe("sceneLodVisibleGridSnapStepWorld", () => {
 		it("returns per-band steps", () => {
 			expect(sceneLodVisibleGridSnapStepWorld("minimap", 10)).toBe(null);
 			expect(sceneLodVisibleGridSnapStepWorld("overview", 10)).toBe(100);
+			expect(sceneLodVisibleGridSnapStepWorld("compact", 10)).toBe(50);
 			expect(sceneLodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
 			expect(sceneLodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
 			expect(sceneLodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
@@ -2427,6 +2569,17 @@ if (import.meta.vitest) {
 				],
 			});
 			expect(f?.objects[0]?.id).toBe("a");
+			expect(f?.domain).toBe("architecture");
+		});
+		it("parses domain case-insensitively", () => {
+			const f = parseSceneFixtureV1({
+				schema: "elements.scene.fixture/v1",
+				domain: "Urban",
+				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+				ties: [],
+				objects: [{ id: "a", meshUrl: "/m.glb", origin: [1, 2, 3], vortices: [] }],
+			});
+			expect(f?.domain).toBe("urban");
 		});
 		it("parses vortex handleMeshByLod", () => {
 			const f = parseSceneFixtureV1({
@@ -2538,6 +2691,7 @@ if (import.meta.vitest) {
 	describe("scene play fixture hook", () => {
 		it("parses nakagin fixture", () => {
 			const f = parseSceneFixtureV1(sceneFixtureJson as unknown);
+			expect(f?.domain).toBe("architecture");
 			expect(f?.ties.length).toBeGreaterThan(0);
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
