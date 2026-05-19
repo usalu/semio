@@ -407,21 +407,23 @@ export interface TopologyBoardPaneProps {
 	readonly fixture: BoardFixtureV1;
 	readonly bindings: TopologyDualSurfaceBindings;
 	readonly selectedIds: ReadonlySet<string>;
+	readonly lockedIds?: ReadonlySet<string>;
 	readonly wires?: readonly TopologyBoardWireRecord[];
 	readonly board?: Omit<BoardCanvasProps, "children">;
 }
 
 export const TopologyBoardPane = memo(function TopologyBoardPane(props: TopologyBoardPaneProps) {
+	const lockedIds = props.lockedIds ?? new Set<string>();
 	const markers = useMemo(
 		() =>
 			topologyBoardMarkersFromFixture({
 				fixture: props.fixture,
-				lockedIds: new Set(),
+				lockedIds,
 				selectedIds: props.selectedIds,
 				contextMenuById: () => [],
 				wires: props.wires ?? [],
 			}),
-		[props.fixture, props.selectedIds, props.wires],
+		[props.fixture, lockedIds, props.selectedIds, props.wires],
 	);
 	const { board: b } = props.bindings;
 	const boardExtra = props.board ?? {};

@@ -5,10 +5,14 @@ const page = await browser.newPage({ viewport: { height: 900, width: 1600 } });
 const logs: string[] = [];
 
 page.on("console", (message) => logs.push(message.text()));
-await page.goto("http://127.0.0.1:6016/", { timeout: 180_000, waitUntil: "load" });
-await page.getByTestId("board-play-fixture-shelf").waitFor({ state: "visible", timeout: 120_000 });
+console.log("[DEBUG] runtime-check goto");
+await page.goto("http://127.0.0.1:6016/", { timeout: 60_000, waitUntil: "domcontentloaded" });
+console.log("[DEBUG] runtime-check wait fixture shelf");
+await page.getByTestId("board-play-fixture-shelf").waitFor({ state: "visible", timeout: 60_000 });
 
+console.log("[DEBUG] runtime-check probe toolbar");
 const defaultCount = await page.locator('button[title="Default"]').count();
+console.log("[DEBUG] runtime-check probe canvas");
 const result = await page.locator('[data-testid="board-canvas"]').first().evaluate((element) => {
   const canvas = element as HTMLCanvasElement & {
     __boardRenderer?: {

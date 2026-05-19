@@ -150,7 +150,8 @@ import type {
   CameraState as ElementsBoardCameraState,
 } from "@elements/board";
 import {
-  SCENE_PLACEHOLDER_MESH_URL,
+  DEFAULT_DOMAIN,
+  PLACEHOLDER_MESH_URL,
   type SceneCameraState as ElementsSceneCameraState,
   type SceneFixtureV1,
   type SceneRelocateMode as ElementsSceneRelocateMode,
@@ -161,6 +162,7 @@ import {
   buildTopologyDualSurfaceBindings,
   TopologyBoardPane,
   TopologyScenePane,
+  topologySceneChromeDefaults,
 } from "@elements/topology";
 import { gunzipSync } from "fflate";
 
@@ -14579,7 +14581,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 const KitDiagramInner: FC = () => {
   const ks0 = useKitStoreSnapshot();
   const kit = ks0?.kit as Kit | undefined;
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const boardWrapper = useRef<HTMLDivElement>(null);
   const kitCommands = useKitAppCommands();
   const [selection] = useKitAppSelection();
   const [setHover] = useKitAppSetHover();
@@ -14808,6 +14810,14 @@ const KitDiagramInner: FC = () => {
   }, [kit, visibleIds, selection]);
   const baseNodeIdsKey = useMemo(() => baseNodes.map((node) => node.id).join("|"), [baseNodes]);
   const baseEdgeIdsKey = useMemo(() => baseEdges.map((edge) => edge.id).join("|"), [baseEdges]);
+  const boardFixture = useMemo(() => sketchpadKitBuildBoardFixture(diagramNodes, diagramEdges), [diagramNodes, diagramEdges]);
+  const selectedBoardIds = useMemo(() => sketchpadKitSelectionToBoardIds(selection), [selection]);
+  const lockedBoardNodeIds = useMemo(() => (isHandTool ? new Set(diagramNodes.map((node) => node.id)) : new Set<string>()), [isHandTool, diagramNodes]);
+  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() => sketchpadKitBoardCameraFromNodes(diagramNodes));
+
+  useEffect(() => {
+    setBoardCamera(sketchpadKitBoardCameraFromNodes(diagramNodes));
+  }, [baseNodeIdsKey]);
 
   const commitDiagramNodes = useCallback((nextNodes: Node<KitDiagramNode>[]) => {
     diagramNodesRef.current = nextNodes;
@@ -14955,142 +14965,66 @@ const KitDiagramInner: FC = () => {
     };
   }, [baseEdgeIdsKey, baseNodeIdsKey, diagramForceConfig.centerStrength, diagramForceConfig.chargeStrength, diagramForceConfig.collideRadius, diagramForceConfig.linkDistance, stopDragReheat, syncSimulationPositions, updateNodesFromSimulation]);
 
-  const handleNodesChange = useCallback(
-    (changes: any[]) => {
-      const updatedNodes = applyNodeChanges(changes, diagramNodesRef.current);
-      const draggingNodeId = draggingNodeIdRef.current;
-      if (draggingNodeId && simulationRef.current) {
-        const selectedNodes = updatedNodes.filter((node) => node.selected);
-        const selectedPositions = new Map(selectedNodes.map((node) => [node.id, node.position]));
-        if (selectedPositions.size > 1 && selectedPositions.has(draggingNodeId)) {
-          setPinnedPositions(selectedPositions);
-        } else {
-          const draggedNode = updatedNodes.find((node) => node.id === draggingNodeId);
-          if (draggedNode) {
-            setPinnedPositions(new Map([[draggedNode.id, draggedNode.position]]));
-          }
+  const onBoardDrag = useCallback(
+    (payload: { id: string; x: number; y: number }) => {
+      if (isHandTool) return;
+      const node = diagramNodesRef.current.find((entry) => entry.id === payload.id);
+      if (!node) return;
+      const frame = getKitDiagramNodeFrameForKind(node.data.kind);
+      const position = { x: payload.x - frame.width / 2, y: payload.y - frame.height / 2 };
+      if (draggingNodeIdRef.current !== payload.id) {
+        draggingNodeIdRef.current = payload.id;
+        syncSimulationPositions(new Map(diagramNodesRef.current.map((entry) => [entry.id, entry.position])));
+      }
+      const selectedNodes = diagramNodesRef.current.filter((entry) => entry.selected || selectedBoardIds.has(entry.id));
+      const selectedPositions = new Map(selectedNodes.map((entry) => [entry.id, entry.position]));
+      if (node.selected || selectedBoardIds.has(node.id)) {
+        selectedPositions.set(node.id, position);
+      }
+      if (selectedPositions.size > 1 && (node.selected || selectedBoardIds.has(node.id))) {
+        const deltaX = position.x - node.position.x;
+        const deltaY = position.y - node.position.y;
+        const pinned = new Map<string, { x: number; y: number }>();
+        for (const [id, pos] of selectedPositions) {
+          pinned.set(id, id === node.id ? position : { x: pos.x + deltaX, y: pos.y + deltaY });
         }
-      }
-      commitDiagramNodes(updatedNodes);
-    },
-    [commitDiagramNodes, setPinnedPositions],
-  );
-
-  const handleNodeDragStart = useCallback(
-    (_: any, node: Node) => {
-      draggingNodeIdRef.current = node.id;
-      const currentPositions = new Map(diagramNodesRef.current.map((item) => [item.id, item.position]));
-      currentPositions.set(node.id, node.position);
-      syncSimulationPositions(currentPositions);
-      const selectedNodes = diagramNodesRef.current.filter((item) => item.selected);
-      const selectedPositions = new Map(selectedNodes.map((item) => [item.id, item.position]));
-      if (node.selected) {
-        selectedPositions.set(node.id, node.position);
-      }
-      if (selectedPositions.size > 1 && node.selected) {
-        setPinnedPositions(selectedPositions);
+        setPinnedPositions(pinned);
       } else {
-        setPinnedPositions(new Map([[node.id, node.position]]));
+        setPinnedPositions(new Map([[payload.id, position]]));
       }
       startDragReheat();
-      logSimulationState("drag-start", node);
     },
-    [logSimulationState, setPinnedPositions, startDragReheat, syncSimulationPositions],
+    [isHandTool, selectedBoardIds, setPinnedPositions, startDragReheat, syncSimulationPositions],
   );
 
-  const handleNodeDrag = useCallback(
-    (_: any, node: Node) => {
-      if (draggingNodeIdRef.current !== node.id) return;
-      const selectedNodes = diagramNodesRef.current.filter((item) => item.selected);
-      const selectedPositions = new Map(selectedNodes.map((item) => [item.id, item.position]));
-      if (node.selected) {
-        selectedPositions.set(node.id, node.position);
-      }
-      if (selectedPositions.size > 1 && node.selected) {
-        setPinnedPositions(selectedPositions);
-      } else {
-        setPinnedPositions(new Map([[node.id, node.position]]));
-      }
-      startDragReheat();
-      logSimulationState("drag", node);
-    },
-    [logSimulationState, setPinnedPositions, startDragReheat],
-  );
-
-  const handleNodeDragStop = useCallback(
-    (_: any, _node: Node) => {
-      stopDragReheat();
-    },
-    [stopDragReheat],
-  );
-
-  const handleDragEndFallback = useCallback(() => {
-    if (!draggingNodeIdRef.current && !isDragReheatActiveRef.current) return;
+  const onBoardNodeChange = useCallback(() => {
     stopDragReheat();
   }, [stopDragReheat]);
 
-  useEffect(() => {
-    const wrapper = reactFlowWrapper.current;
-    window.addEventListener("pointerup", handleDragEndFallback);
-    window.addEventListener("pointercancel", handleDragEndFallback);
-    window.addEventListener("blur", handleDragEndFallback);
-    if (wrapper) {
-      wrapper.addEventListener("pointerleave", handleDragEndFallback);
-    }
-    return () => {
-      window.removeEventListener("pointerup", handleDragEndFallback);
-      window.removeEventListener("pointercancel", handleDragEndFallback);
-      window.removeEventListener("blur", handleDragEndFallback);
-      if (wrapper) {
-        wrapper.removeEventListener("pointerleave", handleDragEndFallback);
+  const onBoardSelect = useCallback(
+    (snapshot: BoardSelectionSnapshot) => {
+      if (snapshot.ids.length === 0) {
+        kitCommands.deselectAll?.();
+        return;
       }
-    };
-  }, [handleDragEndFallback]);
-
-  const onSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: any) => {
-      const newSelection: KitAppSelection = {};
-      selectedNodes.forEach((node: any) => {
-        const [kind, id] = node.id.split(":");
-        if (kind === "type") {
-          if (!newSelection.types) newSelection.types = [];
-          newSelection.types.push(id);
-        } else if (kind === "design") {
-          if (!newSelection.designs) newSelection.designs = [];
-          newSelection.designs.push(id);
-        } else if (kind === "quality") {
-          if (!newSelection.qualities) newSelection.qualities = [];
-          newSelection.qualities.push(id);
-        } else if (kind === "port") {
-          if (!newSelection.ports) newSelection.ports = [];
-          newSelection.ports.push(id);
-        } else if (kind === "file") {
-          if (!newSelection.files) newSelection.files = [];
-          newSelection.files.push(id);
-        } else if (kind === "folder") {
-          if (!newSelection.folders) newSelection.folders = [];
-          newSelection.folders.push(id);
-        } else if (kind === "author") {
-          if (!newSelection.authors) newSelection.authors = [];
-          newSelection.authors.push(id);
-        }
-      });
-
-      actor.send({ type: "KIT.SET_SELECTION", kitId, selection: newSelection });
+      actor.send({ type: "KIT.SET_SELECTION", kitId, selection: sketchpadKitBoardSelectionToKitSelection(snapshot) });
     },
-    [actor, kitId],
+    [actor, kitCommands, kitId],
   );
 
-  const handlePaneClick = useCallback(() => {
-    kitCommands.deselectAll?.();
-  }, [kitCommands]);
-
-  const handleNodeMouseEnter = useCallback(
-    (_: any, node: any) => {
-      const data = node.data as KitDiagramNode;
-      const kind = data?.kind;
-      const id = data?.id;
-      if (!kind || !id) return;
+  const onBoardHover = useCallback(
+    (payload: BoardHoverPayload) => {
+      if (!payload.id) {
+        clearHover?.();
+        return;
+      }
+      const separatorIndex = payload.id.indexOf(":");
+      if (separatorIndex <= 0) {
+        clearHover?.();
+        return;
+      }
+      const kind = payload.id.slice(0, separatorIndex);
+      const id = payload.id.slice(separatorIndex + 1);
       if (!setHover) return;
       if (kind === "type") setHover({ type: id });
       else if (kind === "design") setHover({ design: id });
@@ -15099,35 +15033,30 @@ const KitDiagramInner: FC = () => {
       else if (kind === "file") setHover({ file: id });
       else if (kind === "folder") setHover({ folder: id });
       else if (kind === "author") setHover({ author: id });
+      else clearHover?.();
     },
-    [setHover],
+    [clearHover, setHover],
   );
 
-  const handleNodeMouseLeave = useCallback(() => {
-    if (clearHover) clearHover();
-  }, [clearHover]);
+  const kitBoardBindings = useMemo(
+    () =>
+      buildTopologyDualSurfaceBindings({
+        gridSnapEnabled: false,
+        onBoardCamera: setBoardCamera,
+        onBoardSelect,
+        onBoardHover,
+      }),
+    [onBoardHover, onBoardSelect],
+  );
 
   const sketchpadCommands = useSketchpadCommands();
-
-  const handleNodeDoubleClick = useCallback(
-    (_: React.MouseEvent, node: any) => {
-      const data = node.data as KitDiagramNode;
-      const kind = data?.kind;
-      const id = data?.id;
-      if (!kind || !id || !kitId) return;
-      if (kind === "design") sketchpadCommands.navigateToDesign(kitId, id);
-      else if (kind === "type") sketchpadCommands.navigateToType(kitId, id);
-      else if (kind === "quality") sketchpadCommands.navigateToQuality(kitId, id);
-    },
-    [kitId, sketchpadCommands],
-  );
 
   useEffect(() => {
     const handleCopyKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "c" || !(e.metaKey || e.ctrlKey)) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
-      if (!reactFlowWrapper.current?.contains(target)) return;
+      if (!boardWrapper.current?.contains(target)) return;
       e.preventDefault();
       if (!kit) return;
       const payload = selection && hasAnySelection(selection) ? buildSelectionKit(kit, selection) : kit;
@@ -15140,32 +15069,13 @@ const KitDiagramInner: FC = () => {
   if (!kit) return null;
 
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => reactFlowWrapper.current?.focus()}>
-      <Diagram
-        nodes={diagramNodes}
-        edges={diagramEdges}
-        nodeTypes={kitNodeTypes}
-        edgeTypes={{ floating: FloatingEdge }}
-        connectionLineComponent={FloatingConnectionLine}
-        forceConfig={{ enabled: false }}
-        elementsSelectable={true}
-        nodesFocusable={true}
-        edgesFocusable={true}
-        onSelectionChange={onSelectionChange}
-        onNodesChangeReactFlow={handleNodesChange}
-        onNodeMouseEnter={handleNodeMouseEnter}
-        onNodeMouseLeave={handleNodeMouseLeave}
-        onNodeDoubleClick={handleNodeDoubleClick}
-        onNodeDragStart={handleNodeDragStart}
-        onNodeDrag={handleNodeDrag}
-        onNodeDragStop={handleNodeDragStop}
-        onPaneClick={handlePaneClick}
-        selectionMode={SelectionMode.Partial}
-        panOnScroll={false}
-        panOnDrag={isHandTool ? true : [1, 2]}
-        selectionOnDrag={!isHandTool}
-        nodesDraggable={!isHandTool}
-        proOptions={{ hideAttribution: true }}
+    <div ref={boardWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => boardWrapper.current?.focus()}>
+      <TopologyBoardPane
+        fixture={boardFixture}
+        bindings={kitBoardBindings}
+        selectedIds={selectedBoardIds}
+        lockedIds={lockedBoardNodeIds}
+        board={{ camera: boardCamera, onDrag: onBoardDrag, onNodeChange: onBoardNodeChange }}
       />
     </div>
   );
@@ -15174,11 +15084,7 @@ const KitDiagramInner: FC = () => {
  * KitDiagram holds the data fields for a KitDiagram record.
  **/
 const KitDiagram: FC<KitDiagramProps> = () => {
-  return (
-    <ReactFlowProvider>
-      <KitDiagramInner />
-    </ReactFlowProvider>
-  );
+  return <KitDiagramInner />;
 };
 
 /**
@@ -35678,6 +35584,30 @@ const sketchpadTopologyBuildBoardFixture = (args: {
   };
 };
 
+const sketchpadTopologyResolvePieceMeshFileId = (
+  piece: Piece,
+  typeById: Map<string, Type>,
+  files: readonly { id: string }[] | undefined,
+  selectedRepresentationTags: Record<string, string[]>,
+): string | null => {
+  const typeId = readSketchpadEntityId(piece.type);
+  if (!typeId) return null;
+  const representations = typeById.get(typeId)?.representations ?? [];
+  if (representations.length === 0) return null;
+  const tagsForType = selectedRepresentationTags[typeId] ?? [];
+  let representation: Representation | undefined;
+  if (tagsForType.length > 0) {
+    representation = selectBestRepresentation(representations) ?? undefined;
+  } else {
+    representation = representations.find((entry) => !entry.tags || entry.tags.length === 0) ?? representations[0];
+  }
+  if (!representation) return null;
+  const fileId = typeof representation.file === "string" ? representation.file : representation.file?.id;
+  if (!fileId) return null;
+  if (!(files ?? []).some((file) => file.id === fileId)) return null;
+  return fileId;
+};
+
 const sketchpadTopologyBuildSceneFixture = (args: {
   readonly pieces: readonly Piece[];
   readonly connections: readonly SemioConnection[];
@@ -35686,19 +35616,28 @@ const sketchpadTopologyBuildSceneFixture = (args: {
   readonly designById: Map<string, Design>;
   readonly showPieces: boolean;
   readonly showConnections: boolean;
+  readonly fileUrls: ReadonlyMap<string, string>;
+  readonly files: readonly { id: string }[] | undefined;
+  readonly selectedRepresentationTags: Record<string, string[]>;
+  readonly selectedPieceIds: ReadonlySet<string>;
+  readonly hoveredPieceIds: ReadonlySet<string>;
 }): SceneFixtureV1 => {
   const objects = args.showPieces
     ? args.pieces.map((piece) => {
         const connectors = sketchpadTopologyResolvePieceConnectors(piece, args.typeById);
         const transform = sketchpadTopologyPiecePlaneToSceneTransform(piece, args.placementByPiece);
+        const meshFileId = sketchpadTopologyResolvePieceMeshFileId(piece, args.typeById, args.files, args.selectedRepresentationTags);
+        const meshUrl = (meshFileId && args.fileUrls.get(meshFileId)) || PLACEHOLDER_MESH_URL;
         return {
           id: piece.id,
           objectKind: readSketchpadEntityId(piece.design) ? "semio.design" : "semio.type",
-          meshUrl: SCENE_PLACEHOLDER_MESH_URL,
+          meshUrl,
           origin: transform.origin,
           orientation: transform.orientation,
           scale: transform.scale,
           label: sketchpadTopologyPieceLabel(piece, args.typeById, args.designById),
+          selected: args.selectedPieceIds.has(piece.id),
+          hovered: args.hoveredPieceIds.has(piece.id),
           vortices: connectors.map((connector, connectorIndex) => ({
             id: connector.id,
             vortexKind: "semio.connector",
@@ -35709,29 +35648,31 @@ const sketchpadTopologyBuildSceneFixture = (args: {
       })
     : [];
 
-  const ties = args.showPieces && args.showConnections
-    ? args.connections
-        .map((connection) => {
-          const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
-          const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
-          const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
-          const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
-          if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
-          return {
-            id: connection.id,
-            source: sketchpadTopologySceneFullId(sourcePieceId, sourceConnectorId),
-            target: sketchpadTopologySceneFullId(targetPieceId, targetConnectorId),
-            tieKind: "semio.connection",
-          };
-        })
-        .filter((tie): tie is NonNullable<typeof tie> => tie !== null)
-    : [];
+  const attractions =
+    args.showPieces && args.showConnections
+      ? args.connections
+          .map((connection) => {
+            const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
+            const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
+            const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
+            const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
+            if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+            return {
+              id: connection.id,
+              attracting: sketchpadTopologySceneFullId(sourcePieceId, sourceConnectorId),
+              attracted: sketchpadTopologySceneFullId(targetPieceId, targetConnectorId),
+              attractionKind: "semio.connection",
+            };
+          })
+          .filter((attraction): attraction is NonNullable<typeof attraction> => attraction !== null)
+      : [];
 
   return {
     schema: "elements.scene.fixture/v1",
+    domain: DEFAULT_DOMAIN,
     camera: sketchpadTopologySceneCameraFromPieces(args.pieces, args.placementByPiece),
+    attractions,
     objects,
-    ties,
   };
 };
 
