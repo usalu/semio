@@ -4841,6 +4841,11 @@ mod board_host {
 			}
 		}
 
+		/// @emoji 🧭 Minimap/overview LOD: group selection and bounded drag only — no per-node/edge/handle picks.
+		fn lod_disables_discrete_pick(&self) -> bool {
+			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
+		}
+
 		/// @emoji 🔗 Overview LOD: tight world-radius hit on a free handle so link drag can start without enabling broad `resolve_hit_world` handle picks.
 		fn resolve_overview_free_link_handle_pointer_world(&self, point: Point) -> Option<String> {
 			if !matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
@@ -4961,6 +4966,9 @@ mod board_host {
 		}
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
+			if self.lod_disables_discrete_pick() {
+				return None;
+			}
 			let zoom = self.camera.zoom;
 			let o = &self.selection_options;
 			if o.select_handles {
@@ -6316,6 +6324,9 @@ mod board_host {
 			}
 			let merge_from_modifiers = ctrl_or_meta || shift;
 			let pick_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+			if button == 0 && !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
+				return;
+			}
 			if button == 1 {
 				self.interaction = Interaction::Pan {
 					origin: self.camera.clone(),
@@ -6383,9 +6394,6 @@ mod board_host {
 				}
 			}
 			if hit.is_none() && button == 0 {
-				if !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
-					return;
-				}
 				self.interaction = Interaction::SelectionPending {
 					initial_ids: self.selection.clone(),
 					start: world,
@@ -8216,6 +8224,8 @@ mod host_tests {
 		h.set_forced_draw_lod_label("minimap");
 		h.set_camera(0.0, 0.0, 0.1);
 		let mut desc = sample_scene();
+		desc.handles.clear();
+		desc.edges.clear();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),
 			x: 300.0,
@@ -8239,6 +8249,7 @@ mod host_tests {
 		h.set_selection_ids(&["a".into(), "b".into()]);
 		let _ = h.drain_events_json();
 		let gap = Point::new(150.0, 0.0);
+		assert!(h.resolve_hit_world(gap).is_none());
 		let s = h.world_to_screen(gap);
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 50.0, s.y + 30.0, false, false);
@@ -8262,6 +8273,8 @@ mod host_tests {
 		h.set_forced_draw_lod_label("overview");
 		set_overview_lod(&mut h);
 		let mut desc = sample_scene();
+		desc.handles.clear();
+		desc.edges.clear();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),
 			x: 300.0,
@@ -8651,12 +8664,13 @@ mod host_tests {
 	fn board_host_minimap_hover_tracks_visible_nodes() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
+		h.set_automatic_lod(false);
+		h.set_forced_draw_lod_label("minimap");
 		h.set_camera(0.0, 0.0, 0.1);
 		let mut desc = sample_scene();
 		desc.handles.clear();
 		desc.edges.clear();
 		h.sync_descriptor(&desc).unwrap();
-		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
 		h.update_hover_from_world(Point::new(0.0, 0.0));
 		assert_eq!(h.hovered_id.as_deref(), Some("a"));
 	}

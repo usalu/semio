@@ -1,9 +1,9 @@
 {
   "title": "Unify Board Element Styling States",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Fixed the remaining minimap LOD styling gap by keeping the shared selected/preselect node chrome in the Rust board renderer instead of flattening all minimap nodes to neutral fill-only rendering. Added Rust host coverage that proves minimap preselect adds visible selected chrome. Validation: cargo test -p elements_board --lib preselect_matches_selected_chrome passed; bun nx run @elements/board:test passed Rust tests, wasm-pack, and Vitest, and still reproduces the same two existing Playwright failures in board-play-gpu background menu and redraw toolbar tests.",
+  "summary": "Removed minimap/overview LOD guard that blocked discrete pick/select via resolve_hit_world; hover was already enabled through resolve_hover_world. Bounded group drag on minimap/overview is unchanged (try_begin_bounded_selection_drag_at when pointer misses a discrete hit inside the padded selection union). Updated host tests for discrete hits at minimap/compact and bounded-drag fixtures (clear edges/handles on gap probes). Validation: cargo test -p elements_board --lib — 74 passed.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",

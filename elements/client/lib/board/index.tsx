@@ -61,6 +61,10 @@ import {
   type BoardKindCompatEntry,
   type BoardLodZoomThresholds,
   type BoardNodeTextAlignment,
+  BOARD_PRESELECT_EMPTY,
+  normalizeBoardPreselectProp,
+  normalizeBoardSelectionProp,
+  type BoardPreselectSnapshot,
   type BoardSelectionMethod,
   type BoardSelectionMode,
   type BoardSelectionSnapshot,
@@ -142,6 +146,19 @@ export interface BoardCanvasProps {
   /** @emoji 🧲 Snap commit on pointer-up after a link drag (`proximityConnect` after `edgeCreate`). */
   onProximityConnect?: (payload: BoardEdgeLinkPayload) => void;
   onSelect?: (snapshot: BoardSelectionSnapshot) => void;
+  /** @emoji ✅ Controlled committed selection (`onSelect` should update this). */
+  selection?: BoardSelectionSnapshot | readonly string[];
+  /** @emoji ✅ Uncontrolled initial committed selection. */
+  defaultSelection?: BoardSelectionSnapshot | readonly string[];
+  /** @emoji 👁️ Controlled area-select preview (`onPreselect` should update this). */
+  preselection?: BoardPreselectSnapshot;
+  /** @emoji 👁️ Uncontrolled initial area-select preview. */
+  defaultPreselection?: BoardPreselectSnapshot;
+  onPreselect?: (snapshot: BoardPreselectSnapshot) => void;
+  /** @emoji 🖱️ Controlled hover target id (`onHover` should update this). */
+  hoveredId?: string | null;
+  /** @emoji 🖱️ Uncontrolled initial hover target id. */
+  defaultHoveredId?: string | null;
   onWireChange?: (payload: BoardGraphWireIdPayload) => void;
   onWireCreate?: (payload: BoardWireSnapshotPayload) => void;
   onWireDestroy?: (payload: BoardGraphWireIdPayload) => void;
@@ -249,6 +266,7 @@ interface BoardSceneDescriptor {
 //#region 🔖Context
 const BoardContext = createContext<BoardRenderer | null>(null);
 let activeBoardRenderer: BoardRenderer | null = null;
+
 //#endregion 🔖Context
 
 //#region 🔖Markers
@@ -704,6 +722,13 @@ export function BoardCanvas({
   onProximityConnect,
   onReady,
   onSelect,
+  selection,
+  defaultSelection,
+  preselection,
+  defaultPreselection,
+  onPreselect,
+  hoveredId: hoveredIdProp,
+  defaultHoveredId,
   onViewportChange,
   onWireChange,
   onWireCreate,
@@ -722,6 +747,19 @@ export function BoardCanvas({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
   const rendererRef = useRef<BoardRenderer | null>(null);
+  const [uncontrolledSelection, setUncontrolledSelection] = useState<BoardSelectionSnapshot>(() =>
+    normalizeBoardSelectionProp(defaultSelection),
+  );
+  const [uncontrolledPreselection, setUncontrolledPreselection] = useState<BoardPreselectSnapshot>(() =>
+    normalizeBoardPreselectProp(defaultPreselection),
+  );
+  const [uncontrolledHoveredId, setUncontrolledHoveredId] = useState<string | null>(defaultHoveredId ?? null);
+  const selectionControlled = selection !== undefined;
+  const preselectionControlled = preselection !== undefined;
+  const hoveredControlled = hoveredIdProp !== undefined;
+  const resolvedSelection = selectionControlled ? normalizeBoardSelectionProp(selection) : uncontrolledSelection;
+  const resolvedPreselection = preselectionControlled ? normalizeBoardPreselectProp(preselection) : uncontrolledPreselection;
+  const resolvedHoveredId = hoveredControlled ? (hoveredIdProp ?? null) : uncontrolledHoveredId;
   const boardTargetMenusRef = useRef(new Map<string, ContextMenuItem[]>());
   const [surfaceContextMenu, setSurfaceContextMenu] = useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
   const [fixtureDragActive, setFixtureDragActive] = useState(false);
@@ -824,11 +862,16 @@ export function BoardCanvas({
   }, [children, contextRenderer]);
 
   useEffect(() => {
-    if (!contextRenderer || !onHover) {
+    if (!contextRenderer || (!onHover && hoveredControlled)) {
       return () => undefined;
     }
-    return contextRenderer.on("hover", onHover);
-  }, [contextRenderer, onHover]);
+    return contextRenderer.on("hover", (payload) => {
+      if (!hoveredControlled) {
+        setUncontrolledHoveredId(payload.id);
+      }
+      onHover?.(payload);
+    });
+  }, [contextRenderer, hoveredControlled, onHover]);
 
   useEffect(() => {
     if (!contextRenderer) {
@@ -954,8 +997,25 @@ export function BoardCanvas({
       return () => undefined;
     }
     const unsubs: Array<() => void> = [];
-    if (onSelect) {
-      unsubs.push(contextRenderer.on("select", onSelect));
+    if (onSelect || !selectionControlled) {
+      unsubs.push(
+        contextRenderer.on("select", (snapshot) => {
+          if (!selectionControlled) {
+            setUncontrolledSelection(snapshot);
+          }
+          onSelect?.(snapshot);
+        }),
+      );
+    }
+    if (onPreselect || !preselectionControlled) {
+      const onPreselectEvent = (snapshot: BoardPreselectSnapshot): void => {
+        if (!preselectionControlled) {
+          setUncontrolledPreselection(snapshot);
+        }
+        onPreselect?.(snapshot);
+      };
+      unsubs.push(contextRenderer.on("preselect", onPreselectEvent));
+      unsubs.push(contextRenderer.on("preselectCancel", onPreselectEvent));
     }
     if (onInvalidate) {
       unsubs.push(contextRenderer.on("invalidate", onInvalidate));
@@ -968,7 +1028,7 @@ export function BoardCanvas({
         u();
       }
     };
-  }, [contextRenderer, onDrag, onInvalidate, onSelect]);
+  }, [contextRenderer, onDrag, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
 
   useEffect(() => {
     if (!contextRenderer || (!onCreate && !onDelete)) {
@@ -1153,6 +1213,30 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
+    renderer.setSelectionIdsSilent(resolvedSelection.ids);
+  }, [resolvedSelection]);
+
+  useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.syncPreselectionSilent(resolvedPreselection);
+  }, [resolvedPreselection]);
+
+  useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.syncHoveredIdSilent(resolvedHoveredId);
+  }, [resolvedHoveredId]);
+
+  useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
     renderer.setKindCatalogs(kindCatalogs ?? BOARD_DEFAULT_KIND_CATALOG_BUNDLE);
   }, [kindCatalogs]);
 
@@ -1265,6 +1349,12 @@ export function useCamera(): [CameraState, (camera: CameraState) => void] {
 export function useSelection(): BoardSelectionSnapshot {
   const renderer = useBoard();
   return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
+}
+
+/** @emoji 👁️ Subscribe to area-select preview ids (and anchor-removed ids) on the active board renderer. */
+export function usePreselection(): BoardPreselectSnapshot {
+  const renderer = useBoard();
+  return useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
 /** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */

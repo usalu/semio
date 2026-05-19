@@ -49,8 +49,10 @@ import {
   BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
   BOARD_FIXTURE_DRAG_V1_MIME,
   BOARD_LOD_MODE_AUTOMATIC,
+  BOARD_PRESELECT_EMPTY,
   BOARD_SELECTION_TARGETS_DEFAULT,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  normalizeBoardSelectionProp,
   isBoardDrawLodKind,
   boardFixtureMetaKindCatalogBundle,
   classifyElementsBoardIconSelectorMode,
@@ -72,8 +74,10 @@ import {
   type BoardRedrawModeKind,
   type BoardDrawLodKind,
   type BoardLodModeKind,
+  type BoardPreselectSnapshot,
   type BoardSelectionMethod,
   type BoardSelectionMode,
+  type BoardSelectionSnapshot,
   type BoardSelectionTargets,
   type CameraState,
 } from "../index";
@@ -241,17 +245,10 @@ function dampCameraStateLinear(a: CameraState, b: CameraState, w: number): Camer
   };
 }
 
-/** @emoji ✅ Distinct default selections per pane (indices stable on full Nakagin graph). */
-function selectionSeedForFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneId, Set<string>> {
+/** @emoji ✅ Shared default selection for all play panes (overview node on the Nakagin graph). */
+function selectionSeedForFixture(fixture: BoardFixtureV1): Set<string> {
   const nodeA = fixture.nodes[0];
-  const nodeB = fixture.nodes[Math.min(42, Math.max(0, fixture.nodes.length - 1))];
-  const handleB = nodeB?.handles[0];
-  const edge = fixture.edges[Math.min(9, Math.max(0, fixture.edges.length - 1))];
-  return {
-    "board-overview": new Set(nodeA?.id ? [nodeA.id] : []),
-    "board-detail": new Set([nodeB?.id, handleB?.id].filter(Boolean) as string[]),
-    "board-selection": new Set(edge?.id ? [edge.id] : []),
-  };
+  return new Set(nodeA?.id ? [nodeA.id] : []);
 }
 // #endregion 🔖Geometry
 
@@ -264,8 +261,15 @@ interface BoardPlayShellValue {
   patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
   activePaneId: BoardPlayPaneId;
   setActivePaneId: (id: BoardPlayPaneId) => void;
-  selectionByPane: Record<BoardPlayPaneId, Set<string>>;
-  setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
+  selectionIds: Set<string>;
+  setSelectionIds: (ids: readonly string[]) => void;
+  preselection: BoardPreselectSnapshot;
+  setPreselection: (snapshot: BoardPreselectSnapshot) => void;
+  hoveredId: string | null;
+  setHoveredId: (id: string | null) => void;
+  /** @emoji 🖱️ Pane that currently owns pointer hover updates for shared {@link BoardPlayShellValue.hoveredId}. */
+  hoverSourcePane: BoardPlayPaneId | null;
+  setHoverSourcePane: (pane: BoardPlayPaneId | null) => void;
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
   camerasByPane: Record<BoardPlayPaneId, CameraState>;
@@ -414,7 +418,7 @@ function BoardPlayToolbar(): ReactElement {
     setBoardSelectionMode,
     setBoardSelectionTargets,
     setBoardRedrawPlaying,
-    setSelectionForPane,
+    setSelectionIds,
   } = useBoardPlayShell();
 
   const camera = camerasByPane[activePaneId];
@@ -430,8 +434,8 @@ function BoardPlayToolbar(): ReactElement {
       y: camera.y,
     };
     patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
-    setSelectionForPane(activePaneId, [id]);
-  }, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
+    setSelectionIds([id]);
+  }, [camera.x, camera.y, patchFixture, setSelectionIds]);
 
   const appendRectangle = useCallback(() => {
     const id = newBoardAuthoringId("node");
@@ -447,8 +451,8 @@ function BoardPlayToolbar(): ReactElement {
       y: camera.y,
     };
     patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
-    setSelectionForPane(activePaneId, [id]);
-  }, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
+    setSelectionIds([id]);
+  }, [camera.x, camera.y, patchFixture, setSelectionIds]);
 
   return (
     <div className="pointer-events-none flex w-full justify-center px-2 py-1">
@@ -754,18 +758,6 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
   );
 }
 
-/** @emoji 📡 Mirrors canvas selection into shell state for the owning pane. */
-function BoardSelectionReporter({ paneId }: { paneId: BoardPlayPaneId }): null {
-  const { setSelectionForPane } = useBoardPlayShell();
-  const handler = useCallback(
-    (snapshot: { ids: string[] }) => {
-      setSelectionForPane(paneId, snapshot.ids);
-    },
-    [paneId, setSelectionForPane],
-  );
-  useBoardEvent("select", handler);
-  return null;
-}
 /** @emoji 🗑️ Keeps the shared shell fixture aligned with canvas `edgeDelete` / `nodeDelete` events. */
 function BoardStructuralDeleteReporter(): null {
   const { applyStructuralDelete } = useBoardPlayShell();
@@ -803,12 +795,24 @@ function BoardPlayRedrawProgressReset(): null {
 // #region 🔖Panes
 /** @emoji 🪟 Captures pointer focus for the active pane (tabs + canvas). */
 function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: BoardPlayPaneId }): ReactElement {
-  const { setActivePaneId } = useBoardPlayShell();
+  const { hoverSourcePane, setActivePaneId, setHoverSourcePane, setHoveredId } = useBoardPlayShell();
   return (
     <div
       className="flex h-full min-h-0 w-full flex-col"
       onPointerDownCapture={() => {
         setActivePaneId(paneId);
+      }}
+      onPointerEnter={() => {
+        setHoverSourcePane(paneId);
+      }}
+      onPointerLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
+          return;
+        }
+        if (hoverSourcePane === paneId) {
+          setHoverSourcePane(null);
+          setHoveredId(null);
+        }
       }}
     >
       {children}

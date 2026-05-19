@@ -2495,15 +2495,80 @@ export class BoardRenderer {
 
 	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
 
+	get preselection(): {
+		getSnapshot: () => BoardPreselectSnapshot;
+		subscribe: (listener: () => void) => () => void;
+	} {
+		return {
+			getSnapshot: this.getPreselectSnapshot,
+			subscribe: this.subscribePreselect,
+		};
+	}
+
+	subscribePreselect = (listener: () => void): (() => void) => this.preselectStore.subscribe(listener);
+
+	getPreselectSnapshot = (): BoardPreselectSnapshot => this.preselectStore.getSnapshot();
+
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
 		if (this.wasmSessionCallBlockedForReentry()) {
-			this.updateSelection(ids);
+			this.updateSelection(ids, true);
 			return;
 		}
 		this.pushSceneToWasmDriver();
 		this.session.setSelectionIdsJson(JSON.stringify([...ids]));
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+	}
+
+	/** @emoji 🔇 Controlled sync: updates WASM + JS selection without emitting `select`. */
+	setSelectionIdsSilent(ids: Iterable<string>): void {
+		const payload = JSON.stringify([...ids]);
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.updateSelection(ids, false);
+			return;
+		}
+		this.pushSceneToWasmDriver();
+		try {
+			this.session.setSelectionIdsJsonSilent(payload);
+		} catch (err) {
+			console.error("[DEBUG] setSelectionIdsJsonSilent failed", err);
+		}
+		this.updateSelection(ids, false);
+		this.markDirty();
+	}
+
+	/** @emoji 👁️ Controlled sync: mirrors area-select preview chrome on this canvas without emitting `preselect`. */
+	syncPreselectionSilent(snapshot: BoardPreselectSnapshot): void {
+		const normalized = normalizeBoardPreselectProp(snapshot);
+		if (preselectSnapshotsEqual(normalized, this.preselectStore.getSnapshot())) {
+			return;
+		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.updatePreselection(normalized.ids, normalized.removedIds, false);
+			return;
+		}
+		this.pushSceneToWasmDriver();
+		try {
+			this.session.setPreselectStateJsonSilent(JSON.stringify(normalized));
+		} catch (err) {
+			console.error("[DEBUG] setPreselectStateJsonSilent failed", err);
+		}
+		this.updatePreselection(normalized.ids, normalized.removedIds, false);
+		this.markDirty();
+	}
+
+	/** @emoji 🖱️ Controlled sync: mirrors hover chrome without emitting `hover`. */
+	syncHoveredIdSilent(id: string | null): void {
+		if (this.hoveredId === id) {
+			return;
+		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.updateHover(id);
+			return;
+		}
+		this.session.setHoveredIdSilent(id);
+		this.updateHover(id);
+		this.markDirty();
 	}
 
 	getSelectionOptions(): ResolvedBoardSelectionOptions {
@@ -3301,23 +3366,23 @@ export class BoardRenderer {
 					}
 					case "select": {
 						const ids = (row.payload as { ids: string[] }).ids ?? [];
-						const nextKeys = [...ids].sort();
-						if (arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds))) {
-							break;
-						}
-						this.selectionIds = new Set(ids);
-						for (const object of this.scene.getAllObjects()) {
-							object.selected = this.selectionIds.has(object.id);
-						}
-						const snap = createSelectionSnapshot(this.selectionIds);
-						this.selectionStore.setSnapshot(snap, (left, right) => arrayEqual(left.ids, right.ids));
-						this.emitter.emit("select", snap);
+						this.updateSelection(ids, true);
+						break;
+					}
+					case "preselect": {
+						const payload = row.payload as { ids?: string[]; removedIds?: string[] };
+						this.updatePreselection(payload.ids ?? [], payload.removedIds ?? [], true);
+						break;
+					}
+					case "preselectCancel": {
+						this.updatePreselection([], [], true);
 						break;
 					}
 					case "hover": {
 						const hid = row.payload.id;
 						const next = hid === null || hid === undefined ? null : String(hid);
 						this.updateHover(next);
+						this.publishHover();
 						break;
 					}
 					case "nodeMove": {
@@ -3625,7 +3690,7 @@ export class BoardRenderer {
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
-	private updateSelection(ids: Iterable<string>): void {
+	private updateSelection(ids: Iterable<string>, emit: boolean): void {
 		const nextIds = new Set(ids);
 		const nextSnapshot = createSelectionSnapshot(nextIds);
 		if (arrayEqual(nextSnapshot.ids, this.selectionStore.getSnapshot().ids)) {
@@ -3636,7 +3701,23 @@ export class BoardRenderer {
 			object.selected = this.selectionIds.has(object.id);
 		}
 		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
-		this.emit("select", nextSnapshot);
+		if (emit) {
+			this.emit("select", nextSnapshot);
+		}
+		this.markDirty();
+	}
+
+	private updatePreselection(ids: Iterable<string>, removedIds: Iterable<string>, emit: boolean): void {
+		const nextSnapshot = createPreselectSnapshot(ids, removedIds);
+		if (preselectSnapshotsEqual(nextSnapshot, this.preselectStore.getSnapshot())) {
+			return;
+		}
+		this.preselectIds = new Set(nextSnapshot.ids);
+		this.preselectRemovedIds = new Set(nextSnapshot.removedIds);
+		this.preselectStore.setSnapshot(nextSnapshot, preselectSnapshotsEqual);
+		if (emit) {
+			this.emit("preselect", nextSnapshot);
+		}
 		this.markDirty();
 	}
 
@@ -4070,7 +4151,7 @@ if (boardVitest) {
 			expect(boardTextOverlayCaptionForLod("Node Label", "compact", null)).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
-			expect(boardTextOverlayCaptionForLod("0123456789012345", "micro", null)).toBe("012345678901…");
+			expect(boardTextOverlayCaptionForLod("0123456789012345", "micro", null)).toBe("01234567890…");
 			expect(boardHandleOverlayCaptionForLod("Handle Label", "compact")).toBeNull();
 			expect(boardHandleOverlayCaptionForLod("Handle Label", "detail")).toBe("Handl…");
 			expect(boardHandleOverlayCaptionForLod("Handle Label", "micro")).toBe("Handle …");
