@@ -1,0 +1,13 @@
+{
+  "title": "Add Scene Domain Prop",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Add a new board scene prop for domain, default it to architecture, and use it to derive or constrain features such as LOD according to the provided domain-specific scale ladders. Update implementation and existing tests as needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1442"
+  },
+  "goal": "🎯board",
+  "sessions": [
+    "⚪29761d1c05e74709aac5492eb63c4571"
+  ]
+}
