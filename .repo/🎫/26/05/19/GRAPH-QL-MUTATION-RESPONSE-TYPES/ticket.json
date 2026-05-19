@@ -1,0 +1,13 @@
+{
+  "title": "GraphQL Mutation Response Types",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Refactor semio/graphql mutations to return proper Response (ok, errors, result) instead of bare ID!, mapped to existing domain types. Update golden schema, Rust resolvers, generated schema.graphql, and semio/js client.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1458"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪2e88fcf3c9d641b3bf667ea66d0350d1"
+  ]
+}

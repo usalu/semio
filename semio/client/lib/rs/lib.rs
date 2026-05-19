@@ -2,7 +2,6 @@
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
-#![allow(dead_code)]
 
 //#region 🧬 entity_dsl
 
@@ -478,7 +477,7 @@ pub mod id {
         }
     }
 
-    /// @emoji 🆔 Wire name `ID` matches relay + [`semio/graphql/target.schema.graphql`](../../graphql/target.schema.graphql) `scalar`/Node ids.
+    /// @emoji 🆔 Wire name `ID` matches relay + [`semio/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
     #[Scalar(name = "ID")]
     impl ScalarType for Id {
         fn parse(value: Value) -> InputValueResult<Self> {
@@ -549,16 +548,42 @@ pub mod color {
 
 pub mod error {
     //! 🚨 Crate-wide error type wired through the event bus as `OperationFailed`.
-    use async_graphql::SimpleObject;
+    use async_graphql::Object;
     use thiserror::Error;
 
-    #[derive(Clone, Debug, Error, SimpleObject)]
-    #[graphql(name = "Error")]
+    #[derive(Clone, Debug, Error)]
     #[error("{kind}: {message}")]
     pub struct SemioError {
         pub kind: String,
         pub message: String,
         pub request_id: Option<String>,
+    }
+
+    #[Object(name = "Error")]
+    impl SemioError {
+        async fn id(&self) -> crate::id::Id {
+            crate::id::Id(crate::hash::h(&[self.kind.as_str(), self.message.as_str()]))
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.kind.as_str(), self.message.as_str()])
+        }
+        async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            None
+        }
+        #[graphql(name = "owns")]
+        async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
+        }
+        async fn kind(&self) -> &str {
+            &self.kind
+        }
+        async fn message(&self) -> &str {
+            &self.message
+        }
+        #[graphql(name = "requestId")]
+        async fn request_id_field(&self) -> Option<crate::id::Id> {
+            self.request_id.as_ref().map(|s| crate::id::Id(s.clone()))
+        }
     }
 
     impl Default for SemioError {
@@ -3274,7 +3299,7 @@ pub mod kit {
     //#endregion 🏘 design
 
     //#region 📚 kit_target_operations
-    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`target.schema.graphql` nested Operations block).
+    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`schema.golden.graphql` nested Operations block).
     pub mod target_operations {
         use std::sync::Arc;
 
@@ -4688,7 +4713,7 @@ impl crate::meta::Quality {
 //#region 🌿 vcs
 
 pub mod vcs {
-    //! 🌿 Version-control entities — [`Change`](../../graphql/target.schema.graphql), [`Edit`](../../graphql/target.schema.graphql), [`Checkpoint`](../../graphql/target.schema.graphql), [`Alternative`](../../graphql/target.schema.graphql), [`Graph`](../../graphql/target.schema.graphql), [`Session`](../../graphql/target.schema.graphql), [`TheKit`](../../graphql/target.schema.graphql) ([`Workspace`](../../graphql/target.schema.graphql)), [`Conflict`](../../graphql/target.schema.graphql).
+    //! 🌿 Version-control entities — [`Change`](../../../schema/graphql/schema.golden.graphql), [`Edit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql), [`Graph`](../../../schema/graphql/schema.golden.graphql), [`Session`](../../../schema/graphql/schema.golden.graphql), [`TheKit`](../../../schema/graphql/schema.golden.graphql) ([`Workspace`](../../../schema/graphql/schema.golden.graphql)), [`Conflict`](../../../schema/graphql/schema.golden.graphql).
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
@@ -4808,13 +4833,13 @@ pub mod vcs {
 
         /// @emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
         #[graphql(name = "forwardOperationRecordIds")]
-        pub async fn forward__operation_record_ids(&self) -> Vec<Id> {
+        pub async fn forward_operation_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
 
         /// @emoji 🔗 Ordered  operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
         #[graphql(name = "backwardOperationRecordIds")]
-        pub async fn backward__operation_record_ids(&self) -> Vec<Id> {
+        pub async fn backward_operation_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
     }
@@ -4822,7 +4847,7 @@ pub mod vcs {
     //#endregion 🪪 change
 
     //#region 💼 edit
-    /// @emoji 🔗 [`Edit`] owner: [`TheKit`] lives on [`Graph`]; [`Alternative`] is its own [`Workspace`](../../graphql/target.schema.graphql) (SDL `Workspace`).
+    /// @emoji 🔗 [`Edit`] owner: [`TheKit`] lives on [`Graph`]; [`Alternative`] is its own [`Workspace`](../../../schema/graphql/schema.golden.graphql) (SDL `Workspace`).
     pub enum EditOwner {
         TheKit(Weak<Graph>),
         Alternative(Weak<Alternative>),
@@ -4884,7 +4909,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 🧾 Flatten [`Edit`] entities into target-schema [`Change`](../../graphql/target.schema.graphql) entities for a [`Workspace`](../../graphql/target.schema.graphql).
+    /// @emoji 🧾 Flatten [`Edit`] entities into target-schema [`Change`](../../../schema/graphql/schema.golden.graphql) entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql).
     async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
         for ed in edits {
@@ -5140,7 +5165,7 @@ pub mod vcs {
     }
 
     impl TheKit {
-        /// @emoji 🧭 SDL [`TheKit`](../../graphql/target.schema.graphql) — [`Workspace`] on [`Graph`] with `savedChanges` / `unsavedChanges` / `kit`.
+        /// @emoji 🧭 SDL [`TheKit`](../../../schema/graphql/schema.golden.graphql) — [`Workspace`] on [`Graph`] with `savedChanges` / `unsavedChanges` / `kit`.
         pub fn new(owner_graph: Weak<Graph>) -> Arc<Self> {
             Arc::new(Self { owner_graph })
         }
@@ -5245,7 +5270,7 @@ pub mod vcs {
             h(&[self.id.as_str(), name.as_str()])
         }
 
-        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists for `edit_id` on this [`Alternative`](../../graphql/target.schema.graphql) (SDL `unsavedChanges`).
+        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists for `edit_id` on this [`Alternative`](../../../schema/graphql/schema.golden.graphql) (SDL `unsavedChanges`).
         pub async fn ensure_unsaved_edit(self: &Arc<Self>, edit_id: &Id) -> Arc<Edit> {
             if let Some(t) = self.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned() {
                 *self.open_edit.write().await = Arc::downgrade(&t);
@@ -5311,7 +5336,7 @@ pub mod vcs {
     }
     //#endregion 🌱 alternative
 
-    /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql) (`workspace_id` + `change_seq`).
+    /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) (`workspace_id` + `change_seq`).
     pub struct MaterializedSlot {
         pub workspace_id: Id,
         pub change_seq: u64,
@@ -5323,7 +5348,7 @@ pub mod vcs {
         pub owner_session: RwLock<Weak<Session>>,
         pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
         pub initial_kit: RwLock<Arc<Kit>>,
-        /// @emoji 🏗️ Mutable working [`Kit`] used while replaying [`Operation`]s for materialized [`TheKit.kit`](../../graphql/target.schema.graphql) / [`Alternative.kit`](../../graphql/target.schema.graphql).
+        /// @emoji 🏗️ Mutable working [`Kit`] used while replaying [`Operation`]s for materialized [`TheKit.kit`](../../../schema/graphql/schema.golden.graphql) / [`Alternative.kit`](../../../schema/graphql/schema.golden.graphql).
         pub mutable_kit: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
@@ -5397,7 +5422,7 @@ pub mod vcs {
             self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph.self_weak upgrade")
         }
 
-        /// @emoji 🪪 Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../graphql/target.schema.graphql) [`Workspace`](../../graphql/target.schema.graphql) id ([`Graph::id`]).
+        /// @emoji 🪪 Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`Graph::id`]).
         pub async fn resolve_workspace_id(self: &Arc<Self>, workspace_ref: &Id) -> Id {
             if workspace_ref.as_str() == "the-kit" {
                 self.ensure_default_checkpoint_for_the_kit().await;
@@ -5407,7 +5432,7 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 📦 [`TheKit.kit`](../../graphql/target.schema.graphql) — materialized [`Kit`] for the graph's [`TheKit`](../../graphql/target.schema.graphql) [`Workspace`](../../graphql/target.schema.graphql).
+        /// @emoji 📦 [`TheKit.kit`](../../../schema/graphql/schema.golden.graphql) — materialized [`Kit`] for the graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn materialized_head_kit(self: &Arc<Self>) -> Arc<Kit> {
             self.ensure_default_checkpoint_for_the_kit().await;
             self.materialized_kit_for_workspace(&self.id).await
@@ -5423,21 +5448,21 @@ pub mod vcs {
             *self.materialized_cache.write().await = None;
         }
 
-        /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../graphql/target.schema.graphql) for this graph's [`TheKit`](../../graphql/target.schema.graphql).
+        /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
         pub async fn saved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             self.ensure_default_checkpoint_for_the_kit().await;
             let txs = self.the_kit_saved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 🧾 SDL `TheKit.unsavedChanges` — [`ChangeConnection`](../../graphql/target.schema.graphql) for this graph's [`TheKit`](../../graphql/target.schema.graphql).
+        /// @emoji 🧾 SDL `TheKit.unsavedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
         pub async fn unsaved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             self.ensure_default_checkpoint_for_the_kit().await;
             let txs = self.the_kit_unsaved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 📎 Ordered saved then unsaved [`Edit`] entities for a [`Workspace`](../../graphql/target.schema.graphql) id ([`TheKit`](../../graphql/target.schema.graphql) = [`Graph::id`], [`Alternative`](../../graphql/target.schema.graphql) = [`Alternative::id`]).
+        /// @emoji 📎 Ordered saved then unsaved [`Edit`] entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`TheKit`](../../../schema/graphql/schema.golden.graphql) = [`Graph::id`], [`Alternative`](../../../schema/graphql/schema.golden.graphql) = [`Alternative::id`]).
         pub async fn workspace_saved_and_unsaved_edits(self: &Arc<Self>, workspace_id: &Id) -> Option<(Vec<Arc<Edit>>, Vec<Arc<Edit>>)> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             if ws == self.id {
@@ -5460,7 +5485,7 @@ pub mod vcs {
             self.alternatives.read().await.iter().find(|a| a.id == ws).cloned()
         }
 
-        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists on [`TheKit`](../../graphql/target.schema.graphql) (SDL `unsavedChanges`).
+        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists on [`TheKit`](../../../schema/graphql/schema.golden.graphql) (SDL `unsavedChanges`).
         pub async fn ensure_the_kit_unsaved_edit(self: &Arc<Self>, edit_id: &Id) -> Arc<Edit> {
             if let Some(t) = self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned() {
                 *self.the_kit_open_edit.write().await = Arc::downgrade(&t);
@@ -5473,7 +5498,7 @@ pub mod vcs {
             t
         }
 
-        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql): clone [`Graph::mutable_kit`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
+        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql): clone [`Graph::mutable_kit`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
         pub async fn materialized_kit_for_workspace(self: &Arc<Self>, workspace_id: &Id) -> Arc<Kit> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let (saved, unsaved, seq) = if ws == self.id {
@@ -5591,7 +5616,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji 🌱 Ensure a seed [`Checkpoint`] exists and [`TheKit`](../../graphql/target.schema.graphql) is anchored (idempotent).
+        /// @emoji 🌱 Ensure a seed [`Checkpoint`] exists and [`TheKit`](../../../schema/graphql/schema.golden.graphql) is anchored (idempotent).
         pub async fn ensure_default_checkpoint_for_the_kit(self: &Arc<Self>) {
             let checkpoint = {
                 let cps = self.checkpoints.read().await;
@@ -5620,7 +5645,7 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 🌱 Fork a new named [`Alternative`](../../graphql/target.schema.graphql) from [`TheKit`](../../graphql/target.schema.graphql) or another alternative's tip [`Checkpoint`](../../graphql/target.schema.graphql).
+        /// @emoji 🌱 Fork a new named [`Alternative`](../../../schema/graphql/schema.golden.graphql) from [`TheKit`](../../../schema/graphql/schema.golden.graphql) or another alternative's tip [`Checkpoint`](../../../schema/graphql/schema.golden.graphql).
         pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, SemioError> {
             let name = name.trim().to_string();
             if name.is_empty() {
@@ -5685,7 +5710,7 @@ pub mod vcs {
             tx
         }
 
-        /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../graphql/target.schema.graphql).
+        /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn commit_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 let tx = {
@@ -5718,7 +5743,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji ⛔ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../graphql/target.schema.graphql).
+        /// @emoji ⛔ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn abort_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 {
@@ -5793,7 +5818,7 @@ pub mod vcs {
             Ok(self.initial_kit.read().await.clone())
         }
 
-        /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../graphql/target.schema.graphql), [`Checkpoint`](../../graphql/target.schema.graphql), [`Alternative`](../../graphql/target.schema.graphql)).
+        /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql)).
         pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, SemioError> {
             if p.the_kit == Some(true) {
                 return Ok(self.materialized_head_kit().await);
@@ -7705,7 +7730,7 @@ pub mod operation {
     //#endregion 📜  operation record (kit bundle / operation log contract)
 
     //#region 📦 diff
-    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `semio/graphql/target.schema.graphql` (`VectorDiff`, `PositionDiff`, …).
+    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `semio/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, …).
     #[derive(Clone, Debug, Default)]
     pub struct Diff {
         pub id: Id,
@@ -8024,6 +8049,122 @@ pub mod operation {
         pub request_id: Id,
         pub kind: String,
     }
+
+    /// @emoji 🆔 GraphQL `IdResult` — command payload id surfaced through `Response.result`.
+    #[derive(Clone, Debug)]
+    pub struct IdResult {
+        pub id: Id,
+        pub value: Id,
+    }
+
+    #[Object(name = "IdResult")]
+    impl IdResult {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str(), self.value.as_str()])
+        }
+        async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            None
+        }
+        #[graphql(name = "owns")]
+        async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
+        }
+        async fn value(&self) -> Id {
+            self.value.clone()
+        }
+    }
+
+    /// @emoji 📦 GraphQL `interface Result` — success payloads for `Response.result`.
+    #[derive(Clone, Debug, Interface)]
+    #[graphql(
+        name = "Result",
+        field(name = "id", ty = "crate::id::Id"),
+        field(name = "hash", ty = "String"),
+        field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+        field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+    )]
+    pub enum ResultInterface {
+        Id(IdResult),
+    }
+
+    /// @emoji 📬 GraphQL command outcome — `ok` / `errors` / `result` per golden `Response`.
+    #[derive(Clone, Debug)]
+    pub struct CommandResponse {
+        pub id: Id,
+        pub ok: bool,
+        pub errors: Option<crate::error::SemioError>,
+        pub result: Option<ResultInterface>,
+    }
+
+    impl CommandResponse {
+        pub async fn ok_id(value: Id) -> Self {
+            let id = Id::new().await;
+            let result = IdResult { id: id.clone(), value: value.clone() };
+            Self { id, ok: true, errors: None, result: Some(ResultInterface::Id(result)) }
+        }
+
+        pub async fn ok_request(request_id: Id) -> Self {
+            Self::ok_id(request_id).await
+        }
+
+        pub async fn fail(err: crate::error::SemioError) -> Self {
+            let id = Id::new().await;
+            Self { id, ok: false, errors: Some(err), result: None }
+        }
+
+        pub async fn fail_msg(message: impl Into<String>) -> Self {
+            Self::fail(crate::error::SemioError::invalid(message)).await
+        }
+
+        pub async fn stub_ok() -> Self {
+            Self::ok_id(Id::new().await).await
+        }
+    }
+
+    #[Object]
+    impl CommandResponse {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            None
+        }
+        #[graphql(name = "owns")]
+        async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
+        }
+        async fn ok(&self) -> bool {
+            self.ok
+        }
+        async fn errors(&self) -> Option<crate::error::SemioError> {
+            self.errors.clone()
+        }
+        async fn result(&self) -> Option<ResultInterface> {
+            self.result.clone()
+        }
+    }
+
+    /// @emoji 📬 GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
+    #[derive(Clone, Debug, Interface)]
+    #[graphql(
+        name = "Response",
+        field(name = "id", ty = "crate::id::Id"),
+        field(name = "hash", ty = "String"),
+        field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+        field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+        field(name = "ok", ty = "bool"),
+        field(name = "errors", ty = "Option<crate::error::SemioError>"),
+        field(name = "result", ty = "Option<crate::operation::ResultInterface>")
+    )]
+    pub enum ResponseInterface {
+        Command(CommandResponse),
+    }
     //#endregion 📡 commands
 
     /// @emoji 🧩 Declarative operation entity registration hook (`operations! { CreatedFixedPiece, … }`) — expand to typed operation structs + history wiring.
@@ -8187,7 +8328,7 @@ pub mod kit_graph_engine {
 
     //#region 🔖 deterministic_diff
     /// @emoji 📦 Deterministic non-persisted diff from operation kind + stable payload digest + projection fingerprint transition.
-    pub fn deterministic__diff(op_kind: &str, payload_digest: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
+    pub fn deterministic_diff(op_kind: &str, payload_digest: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
         let digest = h(&[op_kind, payload_digest, projection_fp_before, projection_fp_after]);
         operation::Diff { id: Id::from(format!("diff:{digest}")), summary: Some(digest) }
     }
@@ -8218,7 +8359,7 @@ pub mod kit_graph_engine {
         let after = graph.materialized_kit_for_workspace(&ws).await;
         let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
         let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
-        let diff = deterministic__diff(op_kind, &payload_digest, &fp_before, &fp_after);
+        let diff = deterministic_diff(op_kind, &payload_digest, &fp_before, &fp_after);
         let created_piece = if let Some((design_id, piece_id)) = created_piece_ids {
             match after.design_by_external_id(&design_id).await {
                 Some(des) => des.piece_by_external_id(&piece_id).await,
@@ -9409,16 +9550,16 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🔁 Flatten every recorded `wip` version edit into ordered [`StoredOperation`] records ready for replay.
-        pub fn wip__operations(&self) -> Vec<StoredOperation> {
+        pub fn wip_operations(&self) -> Vec<StoredOperation> {
             let mut out = Vec::new();
-            Self::push__operations_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
+            Self::push_operations_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
             for alternative in &self.wip.alternatives.items {
-                Self::push__operations_from_version_changes(&mut out, alternative.saved_changes.items.iter().chain(alternative.unsaved_changes.items.iter()), alternative.id.as_str());
+                Self::push_operations_from_version_changes(&mut out, alternative.saved_changes.items.iter().chain(alternative.unsaved_changes.items.iter()), alternative.id.as_str());
             }
             out
         }
 
-        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChange>, fallback_workspace_id: &str) {
+        fn push_operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChange>, fallback_workspace_id: &str) {
             for change in changes {
                 let workspace_id = change.origin.clone().unwrap_or_else(|| fallback_workspace_id.to_string());
                 for edit in &change.edits.items {
@@ -9429,7 +9570,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../graphql/target.schema.graphql) / [`Edit`](../../graphql/target.schema.graphql) cursor as full materialization.
+        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
         async fn edit_from_runtime_change(
             graph: &std::sync::Arc<crate::vcs::Graph>,
             workspace_id: &crate::id::Id,
@@ -9743,7 +9884,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
-        pub fn from_stored__operations(operations: &[StoredOperation]) -> Self {
+        pub fn from_stored_operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
                 bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.workspace_id.clone()), &operation.kind, operation.input.clone(), operation.kit_diff.clone());
@@ -9903,8 +10044,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
     #[cfg(not(target_arch = "wasm32"))]
     pub struct LocalBackboneAttached {
-        #[allow(dead_code)]
-        semio_root: PathBuf,
+        _semio_root: PathBuf,
         db_path: PathBuf,
         connection_uri_normalized: String,
     }
@@ -9964,7 +10104,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
                     let semio_root = resolve_local_semio_root(&path);
                     init_local_dot_semio_layout(&semio_root)?;
                     let db_path = db_file_for_child(&semio_root, child_label)?;
-                    Self::Local(LocalBackboneAttached { semio_root, db_path, connection_uri_normalized: norm })
+                    Self::Local(LocalBackboneAttached { _semio_root: semio_root, db_path, connection_uri_normalized: norm })
                 }
                 crate::operation::BackboneKind::Remote => {
                     return Err(SemioError::invalid("remote backbone attach is not implemented yet"));
@@ -9976,13 +10116,13 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
         pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
             let operations: Vec<StoredOperation> = match self {
-                AttachedBackbone::Dev(d) => d.read_bundle()?.wip__operations(),
+                AttachedBackbone::Dev(d) => d.read_bundle()?.wip_operations(),
                 AttachedBackbone::Local(l) => l.load_operations()?,
             };
             replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append__operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             match self {
                 AttachedBackbone::Dev(d) => d.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
                 AttachedBackbone::Local(l) => l.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
@@ -10201,7 +10341,7 @@ pub mod worker {
                 if let Some(backbone) = guard.as_mut() {
                     let payload = crate::kit_backbone::kit_operation_step_input_json(operation);
                     let kd = kit_diff_wire.as_ref();
-                    backbone.append__operation(workspace_id, transaction_id, operation.kind(), &payload, kd)?;
+                    backbone.append_operation(workspace_id, transaction_id, operation.kind(), &payload, kd)?;
                 }
                 Ok(())
             }
@@ -10324,6 +10464,36 @@ pub mod worker {
             id
         }
 
+        /// @emoji ⏳ Enqueues on wip and waits for `CommandSucceeded` / `OperationFailed` on the bus.
+        pub async fn dispatch_wip_wait(&self, cmd: Command) -> crate::operation::CommandResponse {
+            use std::time::{Duration, Instant};
+
+            use crate::event::Event;
+            use crate::operation::CommandResponse;
+
+            let request_id = cmd.request_id().clone();
+            let mut events = self.bus.subscribe();
+            self.wip.send(cmd).await;
+            let deadline = Instant::now() + Duration::from_secs(30);
+            loop {
+                if Instant::now() >= deadline {
+                    return CommandResponse::fail_msg("command timed out").await;
+                }
+                if let Ok(ev) = events.try_recv() {
+                    match ev {
+                        Event::CommandSucceeded(r) if r.request_id == request_id => {
+                            return CommandResponse::ok_request(request_id).await;
+                        }
+                        Event::OperationFailed(e) if e.request_id.as_deref() == Some(request_id.as_str()) => {
+                            return CommandResponse::fail(e).await;
+                        }
+                        _ => {}
+                    }
+                }
+                futures_lite::future::yield_now().await;
+            }
+        }
+
         pub async fn dispatch_auth(&self, cmd: Command) -> Id {
             let id = cmd.request_id().clone();
             self.auth.send(cmd).await;
@@ -10420,7 +10590,7 @@ pub mod worker {
                     let payload_digest = persisted.stable_payload_digest();
                     let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(before_kit.as_ref()).await;
                     let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after_kit.as_ref()).await;
-                    let diff = crate::kit_graph_engine::deterministic__diff("createFixedPiece", &payload_digest, &fp_before, &fp_after);
+                    let diff = crate::kit_graph_engine::deterministic_diff("createFixedPiece", &payload_digest, &fp_before, &fp_after);
                     let created_input = CreatedFixedPieceInput { design_id: design_id.clone(), blueprint_id: blueprint_id.clone(), position: position.clone(), name: name.clone(), description: description.clone() };
                     let op_evt = Arc::new(CreatedFixedPiece { id: Id::new().await, owner_edit: Arc::downgrade(&tx_edit), input: created_input, diff, piece });
                     let interface = Arc::new(OperationInterface::CreatedFixedPiece(op_evt.clone()));
@@ -12257,8 +12427,8 @@ pub mod gql {
         #[derive(Clone, Interface)]
         #[graphql(
             name = "BackboneCommand",
-            field(name = "detach", ty = "crate::id::Id"),
-            field(name = "sync", ty = "crate::id::Id")
+            field(name = "detach", ty = "crate::operation::ResponseInterface"),
+            field(name = "sync", ty = "crate::operation::ResponseInterface")
         )]
         pub enum BackboneCommandInterface {
             File(Arc<FileBackboneCommand>),
@@ -12271,16 +12441,18 @@ pub mod gql {
 
         #[Object(name = "FileBackboneCommand")]
         impl FileBackboneCommand {
-            async fn detach(&self, ctx: &Context<'_>) -> Id {
+            async fn detach(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let Ok(rt) = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>() else {
-                    return Id::default();
+                    return crate::operation::CommandResponse::fail_msg("no runtime").await.into();
                 };
                 let request_id = Id::new().await;
-                rt.dispatch_wip(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await
+                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() })
+                    .await
+                    .into()
             }
-            async fn sync(&self, ctx: &Context<'_>) -> Id {
+            async fn sync(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let _ = ctx;
-                Id::new().await
+                crate::operation::CommandResponse::stub_ok().await.into()
             }
         }
 
@@ -12290,16 +12462,18 @@ pub mod gql {
 
         #[Object(name = "WebsocketBackboneCommand")]
         impl WebsocketBackboneCommand {
-            async fn detach(&self, ctx: &Context<'_>) -> Id {
+            async fn detach(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let Ok(rt) = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>() else {
-                    return Id::default();
+                    return crate::operation::CommandResponse::fail_msg("no runtime").await.into();
                 };
                 let request_id = Id::new().await;
-                rt.dispatch_wip(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await
+                rt.dispatch_wip_wait(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() })
+                    .await
+                    .into()
             }
-            async fn sync(&self, ctx: &Context<'_>) -> Id {
+            async fn sync(&self, ctx: &Context<'_>) -> crate::operation::ResponseInterface {
                 let _ = ctx;
-                Id::new().await
+                crate::operation::CommandResponse::stub_ok().await.into()
             }
         }
         //#endregion 🧱 golden_interface_minimals
@@ -12571,15 +12745,15 @@ pub mod gql {
     #[Object(name = "LocalProviderCommand")]
     impl LocalProviderCommand {
         #[graphql(name = "createBackbone")]
-        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> Id {
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> crate::operation::ResponseInterface {
             let _ = (ctx, uri);
-            Id::new().await
+            crate::operation::CommandResponse::stub_ok().await.into()
         }
 
         #[graphql(name = "attachBackbone")]
-        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> Id {
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> crate::operation::ResponseInterface {
             let _ = (ctx, store);
-            Id::new().await
+            crate::operation::CommandResponse::stub_ok().await.into()
         }
     }
 
@@ -12593,8 +12767,8 @@ pub mod gql {
     #[derive(Clone, async_graphql::Interface)]
     #[graphql(
         name = "ProviderCommand",
-        field(name = "createBackbone", method = "create_backbone", arg(name = "uri", ty = "String"), ty = "crate::id::Id"),
-        field(name = "attachBackbone", method = "attach_backbone", arg(name = "store", ty = "crate::id::Id"), ty = "crate::id::Id")
+        field(name = "createBackbone", method = "create_backbone", arg(name = "uri", ty = "String"), ty = "crate::operation::ResponseInterface"),
+        field(name = "attachBackbone", method = "attach_backbone", arg(name = "store", ty = "crate::id::Id"), ty = "crate::operation::ResponseInterface")
     )]
     pub enum ProviderCommandInterface {
         Local(LocalProviderCommand),
@@ -12604,25 +12778,25 @@ pub mod gql {
     #[Object(name = "RemoteProviderCommand")]
     impl RemoteProviderCommand {
         #[graphql(name = "createBackbone")]
-        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> Id {
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> crate::operation::ResponseInterface {
             let _ = (ctx, uri, self);
-            Id::new().await
+            crate::operation::CommandResponse::stub_ok().await.into()
         }
 
         #[graphql(name = "attachBackbone")]
-        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> Id {
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> crate::operation::ResponseInterface {
             let _ = (ctx, store, self);
-            Id::new().await
+            crate::operation::CommandResponse::stub_ok().await.into()
         }
 
-        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<Id> {
+        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, username, password_hash, hub_url, self);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
-        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = ctx;
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
     //#endregion 🌐 runtime_hosting
@@ -12725,15 +12899,22 @@ pub mod gql {
 
     #[Object(name = "SessionCommand")]
     impl SessionCommand {
-        async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let _ = rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
-            Ok(rt.sessions.read().await.first().map(|s| s.id.clone()).ok_or_else(|| async_graphql::Error::new("no session"))?)
+            let sid = rt
+                .sessions
+                .read()
+                .await
+                .first()
+                .map(|s| s.id.clone())
+                .ok_or_else(|| async_graphql::Error::new("no session"))?;
+            Ok(crate::operation::CommandResponse::ok_id(sid).await.into())
         }
 
-        async fn end(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn end(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = ctx;
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         async fn store(&self, #[graphql(name = "id")] _id: Id) -> StoreCommand {
@@ -12770,10 +12951,13 @@ pub mod gql {
         }
 
         #[graphql(name = "startAlternative")]
-        async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> async_graphql::Result<Id> {
+        async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let n = name.unwrap_or_default();
-            rt.wip_graph.create_alternative_from_tip(n, None).await.map_err(|e| async_graphql::Error::new(e.to_string()))
+            match rt.wip_graph.create_alternative_from_tip(n, None).await {
+                Ok(id) => Ok(crate::operation::CommandResponse::ok_id(id).await.into()),
+                Err(e) => Ok(crate::operation::CommandResponse::fail(e).await.into()),
+            }
         }
     }
 
@@ -12782,13 +12966,13 @@ pub mod gql {
     #[Object(name = "VersionCommand")]
     impl VersionCommand {
         #[graphql(name = "startNewChange")]
-        async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             let ws = rt.wip_graph.id.clone();
             let tx = rt.wip_graph.open_transaction(&ws).await;
             *rt.wip_kit_scope.write().await = Some((ws, tx.id.clone()));
-            Ok(tx.id.clone())
+            Ok(crate::operation::CommandResponse::ok_id(tx.id.clone()).await.into())
         }
 
         #[graphql(name = "unsavedChange")]
@@ -12802,21 +12986,25 @@ pub mod gql {
             Ok(UnsavedChangeCommand { change_id: id })
         }
 
-        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((workspace_id, tx_id)) = scope else {
-                return Err(async_graphql::Error::new("no active unsaved change"));
+                return Ok(crate::operation::CommandResponse::fail_msg("no active unsaved change").await.into());
             };
-            rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            *rt.wip_kit_scope.write().await = None;
-            Ok(Id::new().await)
+            match rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await {
+                Ok(()) => {
+                    *rt.wip_kit_scope.write().await = None;
+                    Ok(crate::operation::CommandResponse::stub_ok().await.into())
+                }
+                Err(e) => Ok(crate::operation::CommandResponse::fail(e).await.into()),
+            }
         }
 
         #[graphql(name = "createCheckpoint")]
-        async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> async_graphql::Result<Id> {
+        async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, message);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -12830,18 +13018,22 @@ pub mod gql {
             OperationInput { change_id: self.change_id.clone() }
         }
 
-        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((workspace_id, tx_id)) = scope else {
-                return Err(async_graphql::Error::new("no active unsaved change"));
+                return Ok(crate::operation::CommandResponse::fail_msg("no active unsaved change").await.into());
             };
             if tx_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch").await.into());
             }
-            rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            *rt.wip_kit_scope.write().await = None;
-            Ok(Id::new().await)
+            match rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await {
+                Ok(()) => {
+                    *rt.wip_kit_scope.write().await = None;
+                    Ok(crate::operation::CommandResponse::stub_ok().await.into())
+                }
+                Err(e) => Ok(crate::operation::CommandResponse::fail(e).await.into()),
+            }
         }
     }
 
@@ -12851,15 +13043,15 @@ pub mod gql {
 
     #[Object(name = "AlternativeCommand")]
     impl AlternativeCommand {
-        async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, &self.alternative_id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "integrateIntoTheKit")]
-        async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, &self.alternative_id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -12870,29 +13062,33 @@ pub mod gql {
     #[Object(name = "OperationInput")]
     impl OperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation { request_id: request_id.clone(), workspace_id, transaction_id, operation: crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "createTag")]
-        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
@@ -12905,7 +13101,7 @@ pub mod gql {
                 transaction_id,
                 operation: crate::operation::Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
         async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperationInput {
@@ -12913,23 +13109,25 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteTag")]
-        async fn delete_tag(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_tag(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "deleteTags")]
-        async fn delete_tags(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_tags(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "createConcept")]
-        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
@@ -12942,7 +13140,7 @@ pub mod gql {
                 transaction_id,
                 operation: crate::operation::Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
         async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperationInput {
@@ -12950,23 +13148,25 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteConcept")]
-        async fn delete_concept(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_concept(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "deleteConcepts")]
-        async fn delete_concepts(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_concepts(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "createQuality")]
-        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<Id> {
+        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
@@ -12979,7 +13179,7 @@ pub mod gql {
                 transaction_id,
                 operation: crate::operation::Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
         async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperationInput {
@@ -12987,21 +13187,21 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteQuality")]
-        async fn delete_quality(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_quality(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "deleteQualities")]
-        async fn delete_qualities(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_qualities(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<Id> {
+        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, name, description, icon, image, unit);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationInput {
@@ -13009,21 +13209,21 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteType")]
-        async fn delete_type(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_type(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "deleteTypes")]
-        async fn delete_types(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_types(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "createDesign")]
-        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<Id> {
+        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, name, description, icon, image, unit);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationInput {
@@ -13031,15 +13231,15 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteDesign")]
-        async fn delete_design(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_design(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
 
         #[graphql(name = "deleteDesigns")]
-        async fn delete_designs(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_designs(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13051,34 +13251,34 @@ pub mod gql {
     #[Object(name = "TagOperationInput")]
     impl TagOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13090,34 +13290,34 @@ pub mod gql {
     #[Object(name = "ConceptOperationInput")]
     impl ConceptOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13129,34 +13329,34 @@ pub mod gql {
     #[Object(name = "QualityOperationInput")]
     impl QualityOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_key);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13168,70 +13368,70 @@ pub mod gql {
     #[Object(name = "TypeOperationInput")]
     impl TypeOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "createPort")]
-        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, label, description, icon, order);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperationInput {
             PortOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
         }
         #[graphql(name = "deletePort")]
-        async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "deletePorts")]
-        async fn delete_ports(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_ports(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addConnector")]
-        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> async_graphql::Result<Id> {
+        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, description, icon, port_id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperationInput {
             ConnectorOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
         }
         #[graphql(name = "removeConnector")]
-        async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeConnectors")]
-        async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13244,34 +13444,34 @@ pub mod gql {
     #[Object(name = "PortOperationInput")]
     impl PortOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_code, new_label);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13284,19 +13484,19 @@ pub mod gql {
     #[Object(name = "ConnectorOperationInput")]
     impl ConnectorOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_code);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13308,45 +13508,47 @@ pub mod gql {
     #[Object(name = "DesignOperationInput")]
     impl DesignOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
-        async fn flatten(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn flatten(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch").await.into());
             }
             let request_id = Id::new().await;
             let piece_id = Id::new().await;
@@ -13359,7 +13561,7 @@ pub mod gql {
                     input: Input::FixedPiece { position, name, description },
                 },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
         #[graphql(name = "addChildPieceWithParentConnection")]
         async fn add_child_piece_with_parent_connection(
@@ -13373,9 +13575,9 @@ pub mod gql {
             description: Option<String>,
             position: Option<PositionInput>,
             scale: Option<f64>,
-        ) -> async_graphql::Result<Id> {
+        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, name, description, position, scale);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addHangingChildPieceWithParentConnection")]
         async fn add_hanging_child_piece_with_parent_connection(
@@ -13389,9 +13591,9 @@ pub mod gql {
             name: Option<String>,
             description: Option<String>,
             scale: Option<f64>,
-        ) -> async_graphql::Result<Id> {
+        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperationInput {
             PieceOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
@@ -13400,19 +13602,19 @@ pub mod gql {
             PiecesOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
         }
         #[graphql(name = "deletePiece")]
-        async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "deletePieces")]
-        async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "deletePiecesAndConnections")]
-        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, piece_ids, connection_ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13425,20 +13627,22 @@ pub mod gql {
     #[Object(name = "PieceOperationInput")]
     impl PieceOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
-        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch").await.into());
             }
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
@@ -13447,35 +13651,35 @@ pub mod gql {
                 transaction_id,
                 operation: crate::operation::Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
-        async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> async_graphql::Result<Id> {
+        async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, position);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
-        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeBlueprint")]
-        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<Id> {
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
 
@@ -13487,11 +13691,13 @@ pub mod gql {
 
     #[Object(name = "PiecesOperationInput")]
     impl PiecesOperationInput {
-        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
+                return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
+            };
             if transaction_id != self.change_id {
-                return Err(async_graphql::Error::new("change id mismatch"));
+                return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch").await.into());
             }
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
@@ -13500,20 +13706,20 @@ pub mod gql {
                 transaction_id,
                 operation: crate::operation::Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
             };
-            Ok(rt.dispatch_wip(cmd).await)
+            Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
-        async fn r#move(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
+        async fn r#move(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, offset);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
-        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
         #[graphql(name = "changeBlueprint")]
-        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<Id> {
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id);
-            Ok(Id::new().await)
+            Ok(crate::operation::CommandResponse::stub_ok().await.into())
         }
     }
     //#endregion 🎛️commands
@@ -13522,7 +13728,7 @@ pub mod gql {
 
     #[Object]
     impl Mutation {
-        /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` Commands block.
+        /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `schema.golden.graphql` Commands block.
         async fn session(&self) -> SessionCommand {
             SessionCommand
         }
@@ -13672,6 +13878,11 @@ pub mod gql {
             .register_output_type::<crate::gql_relay::PageInfoEdge>()
             .register_output_type::<crate::gql_relay::PageInfoConnection>()
             .register_output_type::<crate::operation::OperationInterface>()
+            .register_output_type::<crate::operation::ResponseInterface>()
+            .register_output_type::<crate::operation::ResultInterface>()
+            .register_output_type::<crate::operation::IdResult>()
+            .register_output_type::<crate::operation::CommandResponse>()
+            .register_output_type::<crate::error::SemioError>()
             .register_output_type::<crate::gql::interfaces::WeakEntityInterface>()
             .register_output_type::<crate::gql::interfaces::GqlEmptyDiff>()
             .register_output_type::<crate::gql::interfaces::EmptyModification>()
@@ -15045,7 +15256,7 @@ mod tests {
             }
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
-            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored__operations(&stored);
+            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored_operations(&stored);
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
@@ -15280,7 +15491,7 @@ mod tests {
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let workspace_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append__operation(&workspace_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
+            bone.append_operation(&workspace_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
             let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
@@ -15328,7 +15539,7 @@ mod tests {
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
 
         // Flatten replays everything in order from wip version changes.
-        let flat = bundle.wip__operations();
+        let flat = bundle.wip_operations();
         assert_eq!(flat.len(), 2);
         assert_eq!(flat[0].workspace_id, "the-kit");
         assert_eq!(flat[0].transaction_id, "change-y");

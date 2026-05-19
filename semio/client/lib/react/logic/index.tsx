@@ -85,12 +85,14 @@ function mapTooLong(err: SetError, maxChars: number): string {
 }
 
 /** @emoji 🎛️ Shared {@link OperationStatus} plus a map of async command runners for one scoped anchor (entity, store, session, or batch). */
-export type EntityCommand<Run extends Record<string, (...args: never[]) => Promise<SetResult>>> = Readonly<{
+export type EntityCommand<Run extends Record<string, (...args: any[]) => Promise<SetResult>>> = Readonly<{
   run: Run;
   status: OperationStatus;
 }>;
 
-type SemioCommandImpl<A> = (anchor: A, ...args: unknown[]) => SetResult | Promise<SetResult> | void | Promise<void>;
+type SemioCommandRunners = Record<string, (...args: any[]) => Promise<SetResult>>;
+
+type SemioCommandImpl<A> = (anchor: A, ...args: any[]) => SetResult | Promise<SetResult> | void | Promise<void>;
 
 /**
  * @emoji 🪝 Builds one React hook per anchor: every command in {@code spec} shares a single {@link OperationStatus}.
@@ -98,16 +100,16 @@ type SemioCommandImpl<A> = (anchor: A, ...args: unknown[]) => SetResult | Promis
 function semioInternalCommandFactory<A>(
   spec: Readonly<Record<string, SemioCommandImpl<A>>>,
   onSuccess: (anchor: A) => void,
-): (get: () => A | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
-  return function useBoundCommand(): EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+): (get: () => A | null) => EntityCommand<SemioCommandRunners> {
+  return function useBoundCommand(get: () => A | null): EntityCommand<SemioCommandRunners> {
     const getRef = React.useRef(get);
     getRef.current = get;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
 
     const run = React.useMemo(() => {
-      const runners: Record<string, (...args: never[]) => Promise<SetResult>> = {};
+      const runners: SemioCommandRunners = {};
       for (const [key, impl] of Object.entries(spec)) {
-        runners[key] = async (...args: never[]) => {
+        runners[key] = async (...args: any[]) => {
           const anchor = getRef.current();
           if (anchor == null) {
             const result: SetResult = {
@@ -141,25 +143,25 @@ function semioInternalCommandFactory<A>(
   };
 }
 
-function semioInternalEntityCommandFactory<E extends Entity>(spec: Readonly<Record<string, SemioCommandImpl<E>>>): (get: () => E | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+function semioInternalEntityCommandFactory<E extends Entity>(spec: Readonly<Record<string, SemioCommandImpl<E>>>): (get: () => E | null) => EntityCommand<SemioCommandRunners> {
   return semioInternalCommandFactory(spec, (e) => {
     e.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
   });
 }
 
-function semioInternalStoreCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Store>>>): (get: () => Store | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+function semioInternalStoreCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Store>>>): (get: () => Store | null) => EntityCommand<SemioCommandRunners> {
   return semioInternalCommandFactory(spec, (s) => {
     s.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
   });
 }
 
-function semioInternalSessionCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Session>>>): (get: () => Session | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+function semioInternalSessionCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Session>>>): (get: () => Session | null) => EntityCommand<SemioCommandRunners> {
   return semioInternalCommandFactory(spec, (s) => {
     s.bus.emit({ kind: "commandSucceeded", payload: null } as never);
   });
 }
 
-function semioInternalPiecesCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<PiecesOperation>>>): (get: () => PiecesOperation | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+function semioInternalPiecesCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<PiecesOperation>>>): (get: () => PiecesOperation | null) => EntityCommand<SemioCommandRunners> {
   return semioInternalCommandFactory(spec, () => { });
 }
 // #endregion 🪝OperationBind
@@ -1039,7 +1041,7 @@ const useKitCommandBound = semioInternalEntityCommandFactory<Kit>({
 });
 
 /** @emoji ✍️ All {@link Kit} mutations for the active WIP kit ({@link useWipKit}). */
-export function useKitCommand(): EntityCommand<ReturnType<typeof useKitCommandBound>["run"]> {
+export function useKitCommand(): EntityCommand<SemioCommandRunners> {
   const kit = useWipKit();
   return useKitCommandBound(() => kit);
 }
@@ -1058,7 +1060,7 @@ const useStoreCommandBound = semioInternalStoreCommandFactory({
 });
 
 /** @emoji ✍️ Store-scoped mutations ({@link useJsStore}). */
-export function useStoreCommand(): EntityCommand<ReturnType<typeof useStoreCommandBound>["run"]> {
+export function useStoreCommand(): EntityCommand<SemioCommandRunners> {
   const store = useJsStore();
   const session = useJsSession();
   const bound = useStoreCommandBound(() => store);
@@ -1080,7 +1082,7 @@ const useSessionCommandBound = semioInternalSessionCommandFactory({
 });
 
 /** @emoji ✍️ {@link Session} mutations for the active JS session. */
-export function useSessionCommand(): EntityCommand<ReturnType<typeof useSessionCommandBound>["run"]> {
+export function useSessionCommand(): EntityCommand<SemioCommandRunners> {
   const session = useJsSession();
   return useSessionCommandBound(() => session);
 }
@@ -1177,7 +1179,7 @@ const useDesignCommandBound = semioInternalEntityCommandFactory<Design>({
 });
 
 /** @emoji ✍️ All {@link Design} mutations; optional {@code id} overrides {@link DesignContext}. */
-export function useDesignCommand(id?: ID): EntityCommand<ReturnType<typeof useDesignCommandBound>["run"]> {
+export function useDesignCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useDesignCommandBound(() => resolveDesign(id));
 }
 // #endregion ✍️DesignWrites
@@ -1255,7 +1257,7 @@ export function useTypeAuthors(id?: string): readonly string[] | undefined {
 }
 
 /** @emoji ✍️ All {@link Type} mutations for {@link TypeContext} (optional {@code id} overrides). */
-export function useTypeCommand(id?: ID): EntityCommand<ReturnType<typeof useTypeCommandBound>["run"]> {
+export function useTypeCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useTypeCommandBound(() => resolveType(id));
 }
 // #endregion 🧰Type
@@ -1313,7 +1315,7 @@ export function usePortAttributes(): readonly Attribute[] | undefined {
 }
 
 /** @emoji ✍️ All {@link Port} mutations for {@link PortContext}. */
-export function usePortCommand(id?: ID): EntityCommand<ReturnType<typeof usePortCommandBound>["run"]> {
+export function usePortCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return usePortCommandBound(() => resolvePort(id));
 }
 // #endregion 🔘Port
@@ -1359,7 +1361,7 @@ export function useConnectorAttributes(id?: string): readonly Attribute[] | unde
 }
 
 /** @emoji ✍️ All {@link Connector} mutations (optional {@code id} overrides {@link ConnectorContext}). */
-export function useConnectorCommand(id?: ID): EntityCommand<ReturnType<typeof useConnectorCommandBound>["run"]> {
+export function useConnectorCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useConnectorCommandBound(() => resolveConnector(id));
 }
 // #endregion 🔗Connector
@@ -1461,7 +1463,7 @@ export function useQualityBenchmarks(): readonly string[] | undefined {
 }
 
 /** @emoji ✍️ All {@link Quality} mutations for {@link QualityContext}. */
-export function useQualityCommand(id?: ID): EntityCommand<ReturnType<typeof useQualityCommandBound>["run"]> {
+export function useQualityCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useQualityCommandBound(() => resolveQuality(id));
 }
 // #endregion 💎Quality
@@ -1507,7 +1509,7 @@ export function useTagAttributes(): readonly Attribute[] | undefined {
 }
 
 /** @emoji ✍️ All {@link Tag} mutations for {@link TagContext}. */
-export function useTagCommand(id?: ID): EntityCommand<ReturnType<typeof useTagCommandBound>["run"]> {
+export function useTagCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useTagCommandBound(() => resolveTag(id));
 }
 // #endregion 🏷️Tag
@@ -1553,7 +1555,7 @@ export function useConceptAttributes(): readonly Attribute[] | undefined {
 }
 
 /** @emoji ✍️ All {@link Concept} mutations for {@link ConceptContext}. */
-export function useConceptCommand(id?: ID): EntityCommand<ReturnType<typeof useConceptCommandBound>["run"]> {
+export function useConceptCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return useConceptCommandBound(() => resolveConcept(id));
 }
 // #endregion 💡Concept
@@ -1745,7 +1747,7 @@ const usePieceCommandBound = semioInternalEntityCommandFactory<Piece>({
 });
 
 /** @emoji ✍️ All {@link Piece} mutations (optional {@code id} overrides {@link PieceContext}). */
-export function usePieceCommand(id?: ID): EntityCommand<ReturnType<typeof usePieceCommandBound>["run"]> {
+export function usePieceCommand(id?: ID): EntityCommand<SemioCommandRunners> {
   return usePieceCommandBound(() => resolvePiece(id));
 }
 // #endregion 🧩Piece
@@ -1759,7 +1761,7 @@ const usePiecesCommandBound = semioInternalPiecesCommandFactory({
 });
 
 /** @emoji ✍️ {@link PiecesOperation} batch mutations via {@link PiecesBatchContext} + {@link DesignContext}. */
-export function usePiecesCommand(): EntityCommand<ReturnType<typeof usePiecesCommandBound>["run"]> {
+export function usePiecesCommand(): EntityCommand<SemioCommandRunners> {
   const store = useJsStore();
   const designId = React.useContext(DesignContext);
   const batch = React.useContext(PiecesBatchContext);

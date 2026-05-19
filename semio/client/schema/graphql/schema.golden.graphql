@@ -188,6 +188,30 @@ interface Results implements WeakEntity & Entity & Node {
 
 #endregion Results
 
+#region Result
+
+interface Result implements WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Response
+  owns: EntityConnection # reference
+}
+
+type IdResult implements Result & WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Response
+  owns: EntityConnection # reference
+  # IdResult
+  value: ID! # data
+}
+
+#endregion Result
+
 #region Responses
 
 interface Response implements WeakEntity & Entity & Node {
@@ -198,12 +222,25 @@ interface Response implements WeakEntity & Entity & Node {
   owner: Entity # reference // Command
   owns: EntityConnection # reference
   # Response
-  ok: Boolean # computed
+  ok: Boolean! # computed
   errors: Error # data
   result: Result # data
 }
 
-#region Responses
+type Error implements WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference
+  owns: EntityConnection # reference
+  # Error
+  kind: String! # data
+  message: String! # data
+  requestId: ID # data
+}
+
+#endregion Responses
 
 #region Inputs
 
@@ -389,8 +426,8 @@ type BackboneConnection implements EntityConnection {
 }
 
 interface BackboneCommand {
-  detach: ID!
-  sync: ID!
+  detach: Response!
+  sync: Response!
 }
 
 type BackboneCommandEdge implements EntityEdge {
@@ -438,8 +475,8 @@ type ProviderConnection implements EntityConnection {
 }
 
 interface ProviderCommand {
-  createBackbone(uri: String!): ID!
-  attachBackbone(store: ID!): ID!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
 }
 
 type ProviderCommandEdge implements EntityEdge {
@@ -2484,13 +2521,13 @@ type QualityModificationsConnection implements EntityConnection {
 
 type QualityOperation {
   # Artifact
-  rename(newKey: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newKey: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
 }
 
 type QualityOperationEdge implements EntityEdge {
@@ -3147,13 +3184,13 @@ type TagModificationsConnection implements EntityConnection {
 
 type TagOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
 }
 
 type TagOperationEdge implements EntityEdge {
@@ -3810,13 +3847,13 @@ type ConceptModificationsConnection implements EntityConnection {
 
 type ConceptOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
 }
 
 type ConceptOperationEdge implements EntityEdge {
@@ -4602,13 +4639,13 @@ type PortModificationsConnection implements EntityConnection {
 
 type PortOperation {
   # Artifact
-  rename(newCode: String!, newLabel: String): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newCode: String!, newLabel: String): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
 }
 
 type PortOperationEdge implements EntityEdge {
@@ -5269,9 +5306,9 @@ type ConnectorModificationsConnection implements EntityConnection {
 
 type ConnectorOperation {
   # Artifact
-  rename(newCode: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newCode: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
 }
 
 type ConnectorOperationEdge implements EntityEdge {
@@ -5582,23 +5619,23 @@ type TypeModificationsConnection implements EntityConnection {
 
 type TypeOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
   # Ports
-  createPort(code: String, label: String, description: String, icon: String, order: Int): ID!
+  createPort(code: String, label: String, description: String, icon: String, order: Int): Response!
   port(id: ID!): PortOperation!
-  deletePort(id: ID!): ID!
-  deletePorts(ids: [ID!]!): ID!
+  deletePort(id: ID!): Response!
+  deletePorts(ids: [ID!]!): Response!
   # Connectors
-  addConnector(code: String!, description: String, icon: String, portId: ID): ID!
+  addConnector(code: String!, description: String, icon: String, portId: ID): Response!
   connector(id: ID!): ConnectorOperation!
-  removeConnector(id: ID!): ID!
-  removeConnectors(ids: [ID!]!): ID!
+  removeConnector(id: ID!): Response!
+  removeConnectors(ids: [ID!]!): Response!
 }
 
 type TypeOperationEdge implements EntityEdge {
@@ -7027,17 +7064,17 @@ type ConnectionModificationsConnection implements EntityConnection {
 
 type PieceOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
   # Piece
-  drag(offset: OffsetInput!): ID!
-  move(position: PositionInput!): ID!
-  fix: ID!
-  changeBlueprint(blueprintId: ID!): ID!
+  drag(offset: OffsetInput!): Response!
+  move(position: PositionInput!): Response!
+  fix: Response!
+  changeBlueprint(blueprintId: ID!): Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
 }
 
 type PieceOperationEdge implements EntityEdge {
@@ -7056,10 +7093,10 @@ type PieceOperationConnection implements EntityConnection {
 
 type PiecesOperation {
   # PiecesOperation
-  drag(offset: OffsetInput!): ID!
-  move(offset: OffsetInput!): ID!
-  fix: ID!
-  changeBlueprint(blueprintId: ID!): ID!
+  drag(offset: OffsetInput!): Response!
+  move(offset: OffsetInput!): Response!
+  fix: Response!
+  changeBlueprint(blueprintId: ID!): Response!
 }
 
 type PiecesOperationEdge implements EntityEdge {
@@ -8793,24 +8830,24 @@ type RemovedAttributesFromDesignConnection implements EntityConnection {
 
 type DesignOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  changeIcon(newIcon: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
+  changeIcon(newIcon: String!): Response!
   # Design
-  flatten: ID!
+  flatten: Response!
   # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
+  addAttribute(key: String!, value: String!, definition: String!): Response!
+  removeAttribute(id: ID!): Response!
+  removeAttributes(ids: [ID!]!): Response!
   # Pieces
-  addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
-  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
-  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
+  addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): Response!
+  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): Response!
+  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): Response!
   piece(id: ID!): PieceOperation!
   pieces(ids: [ID!]!): PiecesOperation!
-  deletePiece(id: ID!): ID!
-  deletePieces(ids: [ID!]!): ID!
-  deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+  deletePiece(id: ID!): Response!
+  deletePieces(ids: [ID!]!): Response!
+  deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): Response!
 }
 
 type DesignOperationEdge implements EntityEdge {
@@ -9002,38 +9039,38 @@ type KitModificationsConnection implements EntityConnection {
 
 type KitOperation {
   # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
+  rename(newName: String!): Response!
+  changeDescription(newDescription: String!): Response!
 
   # Tags
-  createTag(name: String!, description: String, icon: String, order: Int): ID!
+  createTag(name: String!, description: String, icon: String, order: Int): Response!
   tag(id: ID!): TagOperation!
-  deleteTag(id: ID!): ID!
-  deleteTags(ids: [ID!]!): ID!
+  deleteTag(id: ID!): Response!
+  deleteTags(ids: [ID!]!): Response!
 
   # Concepts
-  createConcept(name: String!, description: String, icon: String, order: Int): ID!
+  createConcept(name: String!, description: String, icon: String, order: Int): Response!
   concept(id: ID!): ConceptOperation!
-  deleteConcept(id: ID!): ID!
-  deleteConcepts(ids: [ID!]!): ID!
+  deleteConcept(id: ID!): Response!
+  deleteConcepts(ids: [ID!]!): Response!
 
   # Qualities
-  createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
+  createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): Response!
   quality(id: ID!): QualityOperation!
-  deleteQuality(id: ID!): ID!
-  deleteQualities(ids: [ID!]!): ID!
+  deleteQuality(id: ID!): Response!
+  deleteQualities(ids: [ID!]!): Response!
 
   # Types
-  createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
+  createType(name: String!, description: String, icon: String, image: String, unit: String): Response!
   type(id: ID!): TypeOperation!
-  deleteType(id: ID!): ID!
-  deleteTypes(ids: [ID!]!): ID!
+  deleteType(id: ID!): Response!
+  deleteTypes(ids: [ID!]!): Response!
 
   # Designs
-  createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
+  createDesign(name: String!, description: String, icon: String, image: String, unit: String): Response!
   design(id: ID!): DesignOperation!
-  deleteDesign(id: ID!): ID!
-  deleteDesigns(ids: [ID!]!): ID!
+  deleteDesign(id: ID!): Response!
+  deleteDesigns(ids: [ID!]!): Response!
 }
 
 type KitOperationEdge implements EntityEdge {
@@ -9350,8 +9387,8 @@ type AlternativeConnection implements EntityConnection {
 
 type AlternativeCommand {
   # AlternativeCommand
-  version: ID!
-  integrateIntoTheKit: ID!
+  version: Response!
+  integrateIntoTheKit: Response!
 }
 
 type AlternativeCommandEdge implements EntityEdge {
@@ -9404,7 +9441,7 @@ type VersionConnection implements EntityConnection {
 type UnsavedChangeCommand {
   # UnsavedChangeCommand
   kit: KitOperation!
-  save: ID!
+  save: Response!
 }
 
 type UnsavedChangeCommandEdge implements EntityEdge {
@@ -9423,10 +9460,10 @@ type UnsavedChangeCommandConnection implements EntityConnection {
 
 type VersionCommand {
   # VersionCommand
-  startNewChange: ID!
+  startNewChange: Response!
   unsavedChange(id: ID!): UnsavedChangeCommand!
-  save: ID!
-  createCheckpoint(message: String!): ID!
+  save: Response!
+  createCheckpoint(message: String!): Response!
 }
 
 type VersionCommandEdge implements EntityEdge {
@@ -9549,7 +9586,7 @@ type StoreCommand {
   backbone: BackboneCommand!
   theKit: VersionCommand
   alternative(id: ID!): AlternativeCommand
-  startAlternative(name: String): ID!
+  startAlternative(name: String): Response!
 }
 
 type StoreCommandEdge implements EntityEdge {
@@ -9603,8 +9640,8 @@ type FileBackboneConnection implements EntityConnection {
 }
 
 type FileBackboneCommand implements BackboneCommand {
-  detach: ID!
-  sync: ID!
+  detach: Response!
+  sync: Response!
 }
 
 type FileBackboneCommandEdge implements EntityEdge {
@@ -9641,8 +9678,8 @@ type LocalProvider implements Provider & StrongEntity & Entity & Node {
 
 type LocalProviderCommand implements ProviderCommand {
   # ProviderCommand
-  createBackbone(uri: String!): ID!
-  attachBackbone(store: ID!): ID!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
 }
 
 type LocalProviderCommandEdge implements EntityEdge {
@@ -9694,8 +9731,8 @@ type WebsocketBackboneConnection implements EntityConnection {
 }
 
 type WebsocketBackboneCommand implements BackboneCommand {
-  detach: ID!
-  sync: ID!
+  detach: Response!
+  sync: Response!
 }
 
 type WebsocketBackboneCommandEdge implements EntityEdge {
@@ -9747,11 +9784,11 @@ type RemoteProviderConnection implements EntityConnection {
 
 type RemoteProviderCommand implements ProviderCommand {
   # ProviderCommand
-  createBackbone(uri: String!): ID!
-  attachBackbone(store: ID!): ID!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
   # RemoteProviderCommand
-  login(username: String!, passwordHash: String!, hubUrl: String): ID!
-  logout: ID!
+  login(username: String!, passwordHash: String!, hubUrl: String): Response!
+  logout: Response!
 }
 
 type RemoteProviderCommandEdge implements EntityEdge {
@@ -9806,8 +9843,8 @@ type Session implements StrongEntity & Entity & Node {
 
 type SessionCommand {
   # SessionCommand
-  start: ID!
-  end: ID!
+  start: Response!
+  end: Response!
   store(id: ID!): StoreCommand!
   localProvider: LocalProviderCommand!
   remoteProvider(url: String!): RemoteProviderCommand!
@@ -9851,7 +9888,7 @@ type Query {
 # 🎬 Kit-changing operations resolve through command scopes:
 #     `session → theKit | alternative(id) | startAlternative(name) | start | end | login | logout`,
 #     then `theKit → startNewChange | unsavedChange(id) | save | createCheckpoint`,
-#     then `unsavedChange(id) → kit → …`. Leaf fields return the resulting operation `ID!`.
+#     then `unsavedChange(id) → kit → …`. Leaf fields return `Response!` (`ok`, `errors`, `result`).
 type Mutation {
   # Mutation
   session: SessionCommand!

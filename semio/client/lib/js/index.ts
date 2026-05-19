@@ -656,6 +656,8 @@ type KitPathEntity = Entity & {
 
 type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = FieldSpec<T> & Readonly<{
   parseEntity?: (entity: E, v: JsonValue) => T;
+  /** @emoji 📖 Prototype method name when it differs from the GraphQL field (e.g. {@code typeId} for {@code type { id }}). */
+  method?: string;
   /** @emoji 📡 Bus {@code kind}; defaults via {@link defaultFieldEventKind}. */
   eventKind?: string;
   /** @emoji 📡 List/connection fields: invalidate on {@code commandSucceeded} + {@code kitRenamed}. */
@@ -668,6 +670,8 @@ type BoundNodeFieldSpec<T> = Readonly<{
 }>;
 
 type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
+  /** @emoji 🎬 Prototype method name (GraphQL operation leaf). */
+  method: string;
   buildInner: (entity: E, ...args: readonly unknown[]) => string;
 }>;
 
@@ -761,7 +765,8 @@ function installKitFieldMethods<E extends KitPathEntity>(
   specs: readonly BoundKitFieldSpec<unknown, E>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, schemaFieldName(spec.selection), {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
       configurable: true,
       value: async function semioKitField(this: E): Promise<unknown> {
         const frag = await this.readKitInner(this.kitInnerPath(spec.selection));
@@ -810,7 +815,7 @@ function installKitOperationMethods<E extends KitPathEntity>(
   specs: readonly BoundKitOperationSpec<E>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, schemaOperationName(spec.buildInner({} as E)), {
+    Object.defineProperty(ctor.prototype, spec.method, {
       configurable: true,
       value: async function semioKitOperation(this: E, ...args: readonly unknown[]): Promise<SetResult> {
         const cid = await this.ensureChangeId();
@@ -828,7 +833,7 @@ function installKitEventMethods<E extends KitPathEntity>(
 ): void {
   const entityName = ctor.name;
   for (const spec of specs) {
-    const fieldName = schemaFieldName(spec.selection);
+    const fieldName = spec.method ?? schemaFieldName(spec.selection);
     const readMethod = fieldName;
     const eventMethod = fieldChangedEventMethodName(fieldName);
     const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, fieldName);
@@ -836,7 +841,7 @@ function installKitEventMethods<E extends KitPathEntity>(
       configurable: true,
       value: function semioKitFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
         const run = (): void => {
-          const read = (this as Record<string, () => Promise<unknown>>)[readMethod];
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[readMethod];
           if (typeof read !== "function") return;
           void read.call(this).then(cb);
         };
@@ -873,7 +878,7 @@ function installEntityNodeMethods<E extends Entity>(
     Object.defineProperty(ctor.prototype, eventMethod, {
       configurable: true,
       value: function semioNodeFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
-        const read = (this as Record<string, () => Promise<unknown>>)[fieldName];
+        const read = (this as unknown as Record<string, () => Promise<unknown>>)[fieldName];
         return this.session.bus.subscribeKind(eventKind, () => {
           if (typeof read === "function") void read.call(this).then(cb);
         });
@@ -903,6 +908,31 @@ function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | 
         String(n["key"] ?? ""),
         n["value"] == null ? null : String(n["value"]),
         String(n["definition"] ?? ""),
+      ),
+    );
+  }
+  return out;
+}
+
+/** @emoji 🏁 Parses {@code benchmarks { edges { node { … } } }} under a {@link Quality} kit branch. */
+function parseBenchmarkConnectionUnder(quality: Quality, owner: JsonObject | null | undefined): readonly Benchmark[] {
+  const bench = owner?.["benchmarks"] as JsonObject | undefined;
+  const edges = bench?.["edges"] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(edges)) return [];
+  const out: Benchmark[] = [];
+  for (const e of edges) {
+    if (!isJsonObjectNode(e)) continue;
+    const n = e["node"] as JsonObject | undefined;
+    if (n == null) continue;
+    out.push(
+      new Benchmark(
+        quality,
+        String(n["id"] ?? ""),
+        String(n["name"] ?? ""),
+        typeof n["min"] === "number" ? n["min"] : null,
+        typeof n["max"] === "number" ? n["max"] : null,
+        typeof n["minExcluded"] === "boolean" ? n["minExcluded"] : null,
+        typeof n["maxExcluded"] === "boolean" ? n["maxExcluded"] : null,
       ),
     );
   }
@@ -1491,73 +1521,78 @@ const KIT_FIELDS = defineBoundKitFields([
     selection: "designs { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "designs").map((id) => entity.entity(Design, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "designs").map((id) => new Design(entity.session, id, entity.storeId))),
   },
   {
     selection: "types { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "types").map((id) => entity.entity(Type, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "types").map((id) => new Type(entity.session, id, entity.storeId))),
   },
   {
     selection: "authors { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "authors").map((id) => entity.entity(Author, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
   },
   {
     selection: "qualities { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "qualities").map((id) => entity.entity(Quality, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "qualities").map((id) => new Quality(entity.session, id, entity.storeId))),
   },
   {
     selection: "tags { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "tags").map((id) => entity.entity(Tag, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "tags").map((id) => new Tag(entity.session, id, entity.storeId))),
   },
   {
     selection: "concepts { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "concepts").map((id) => entity.entity(Concept, id))),
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "concepts").map((id) => new Concept(entity.session, id, entity.storeId))),
   },
 ] as const);
 
 const KIT_OPERATIONS = defineBoundKitOperations([
-  { buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
   {
+    method: "createTag",
     buildInner: (_e, name, description, icon, order) =>
       `ct: createTag(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
   },
-  { buildInner: (_e, id) => `dt: deleteTag(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dts: deleteTags(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deleteTag", buildInner: (_e, id) => `dt: deleteTag(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteTags", buildInner: (_e, ids) => `dts: deleteTags(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "createConcept",
     buildInner: (_e, name, description, icon, order) =>
       `cc: createConcept(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
   },
-  { buildInner: (_e, id) => `dc: deleteConcept(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dcs: deleteConcepts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deleteConcept", buildInner: (_e, id) => `dc: deleteConcept(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteConcepts", buildInner: (_e, ids) => `dcs: deleteConcepts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "createQuality",
     buildInner: (_e, key, value, unit, definition, description, icon) =>
       `cq: createQuality(key: ${gqlString(String(key ?? ""))}, value: ${value == null ? "null" : gqlString(String(value))}, unit: ${unit == null ? "null" : gqlString(String(unit))}, definition: ${definition == null ? "null" : gqlString(String(definition))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))})`,
   },
-  { buildInner: (_e, id) => `dq: deleteQuality(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dqs: deleteQualities(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deleteQuality", buildInner: (_e, id) => `dq: deleteQuality(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteQualities", buildInner: (_e, ids) => `dqs: deleteQualities(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "createType",
     buildInner: (_e, name, description, icon, image, unit) =>
       `cT: createType(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
   },
-  { buildInner: (_e, id) => `dT: deleteType(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dTs: deleteTypes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deleteType", buildInner: (_e, id) => `dT: deleteType(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteTypes", buildInner: (_e, ids) => `dTs: deleteTypes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "createDesign",
     buildInner: (_e, name, description, icon, image, unit) =>
       `cD: createDesign(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
   },
-  { buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deleteDesign", buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteDesigns", buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const);
 
 installEntityKitMethods(Kit, KIT_FIELDS as readonly BoundKitFieldSpec<unknown, Kit>[], KIT_OPERATIONS);
@@ -2136,7 +2171,6 @@ export class Design extends Entity {
     return this.child(Piece, pieceId);
   }
 
-  pieces(pieceIds: readonly string[]): PiecesOperation;
   declare pieces: {
     (): Promise<readonly Piece[]>;
     (pieceIds: readonly string[]): PiecesOperation;
@@ -2209,6 +2243,70 @@ function parseDesignBranchConnection(frag: JsonObject | null, key: string): read
   return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), key);
 }
 
+/** @emoji 🧭 Descends {@code type → …} connection ids on kit JSON. */
+function parseTypeBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const t = frag?.["type"] as JsonObject | undefined;
+  return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+/** @emoji 🧭 Scalar on a nested {@code design.layers|groups} edge node matched by id. */
+function readDesignListNodeField(frag: JsonObject | null, listKey: "layers" | "groups", nodeId: string, field: string): string {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.[listKey] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) return String(n[field] ?? "");
+  }
+  return "";
+}
+
+/** @emoji 🧭 Nullable number on a nested {@code design.layers} edge node. */
+function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string, field: string): number | null {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) {
+      const v = n[field];
+      return typeof v === "number" ? v : null;
+    }
+  }
+  return null;
+}
+
+/** @emoji 🧭 Nullable boolean on a nested {@code design.layers} edge node. */
+function readDesignListNodeBooleanOrNull(frag: JsonObject | null, nodeId: string, field: string): boolean | null {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) {
+      const v = n[field];
+      return typeof v === "boolean" ? v : null;
+    }
+  }
+  return null;
+}
+
+/** @emoji 🧩 Scalar under {@code design.piece} on kit JSON. */
+function readPieceBranchString(frag: JsonObject | null, field: string): string {
+  return String(pieceKit(frag)?.[field] ?? "");
+}
+
+/** @emoji 🧩 Nullable scalar under {@code design.piece}. */
+function readPieceBranchNumberOrNull(frag: JsonObject | null, field: string): number | null {
+  const v = pieceKit(frag)?.[field];
+  return typeof v === "number" ? v : null;
+}
+
+/** @emoji ⛓️ Scalar under {@code design.connection}. */
+function readConnectionBranchString(frag: JsonObject | null, field: string): string {
+  return String(connectionKit(frag)?.[field] ?? "");
+}
+
+/** @emoji ⛓️ Nullable scalar under {@code design.connection}. */
+function readConnectionBranchNumberOrNull(frag: JsonObject | null, field: string): number | null {
+  const v = connectionKit(frag)?.[field];
+  return typeof v === "number" ? v : null;
+}
+
 const DESIGN_FIELDS = defineBoundKitFields([
   { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "name") },
   { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "description"), eventKind: "changedDescription" },
@@ -2221,14 +2319,14 @@ const DESIGN_FIELDS = defineBoundKitFields([
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "pieces").map((pid) => entity.piece(pid))),
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "pieces").map((pid) => (entity as Design).piece(pid))),
   },
   {
     selection: "connections { edges { node { id } } }",
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) =>
-      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "connections").map((cid) => entity.connection(cid))),
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "connections").map((cid) => (entity as Design).connection(cid))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -2239,31 +2337,36 @@ const DESIGN_FIELDS = defineBoundKitFields([
 ] as const);
 
 const DESIGN_OPERATIONS = defineBoundKitOperations([
-  { buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
-  { buildInner: () => `fl: flatten` },
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { method: "flatten", buildInner: () => `fl: flatten` },
   {
+    method: "addAttribute",
     buildInner: (_e, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "addFixedPiece",
     buildInner: (_e, blueprintId, position, name, description) =>
       `afp: addFixedPiece(blueprintId: ${gqlString(String(blueprintId ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))})`,
   },
   {
+    method: "addChildPieceWithParentConnection",
     buildInner: (_e, blueprintId, parentPieceId, parentConnector, childConnector, name, description, position, scale) =>
       `ac: addChildPieceWithParentConnection(blueprintId: ${gqlString(String(blueprintId ?? ""))}, parentPieceId: ${gqlString(String(parentPieceId ?? ""))}, parentConnector: ${gqlString(String(parentConnector ?? ""))}, childConnector: ${gqlString(String(childConnector ?? ""))}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))}, position: ${position == null ? "null" : formatPositionInput(position as PositionInput)}, scale: ${scale == null ? "null" : String(scale)})`,
   },
   {
+    method: "addHangingChildPieceWithParentConnection",
     buildInner: (_e, blueprintId, parentPieceId, parentConnector, childConnector, position, name, description, scale) =>
       `ah: addHangingChildPieceWithParentConnection(blueprintId: ${gqlString(String(blueprintId ?? ""))}, parentPieceId: ${gqlString(String(parentPieceId ?? ""))}, parentConnector: ${gqlString(String(parentConnector ?? ""))}, childConnector: ${gqlString(String(childConnector ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))}, scale: ${scale == null ? "null" : String(scale)})`,
   },
-  { buildInner: (_e, id) => `dp: deletePiece(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_e, ids) => `dps: deletePieces(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "deletePiece", buildInner: (_e, id) => `dp: deletePiece(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deletePieces", buildInner: (_e, ids) => `dps: deletePieces(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
+    method: "deletePiecesAndConnections",
     buildInner: (_e, pieceIds, connectionIds) =>
       `dpc: deletePiecesAndConnections(pieceIds: ${gqlIdList((pieceIds as readonly string[]) ?? [])}, connectionIds: ${gqlIdList((connectionIds as readonly string[]) ?? [])})`,
   },
@@ -2272,7 +2375,7 @@ const DESIGN_OPERATIONS = defineBoundKitOperations([
 installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unknown, Design>[], DESIGN_OPERATIONS);
 
 {
-  const readPieces = Design.prototype.pieces as (this: Design) => Promise<readonly Piece[]>;
+  const readPieces = Design.prototype.pieces as unknown as (this: Design) => Promise<readonly Piece[]>;
   Object.defineProperty(Design.prototype, "pieces", {
     configurable: true,
     writable: true,
@@ -2285,6 +2388,7 @@ installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unkn
 //#endregion 📐Design
 
 //#region 🧰Type
+/** @emoji 🧰 Type artifact: declarative field reads, commands, and per-field change subscriptions. */
 export class Type extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -2294,13 +2398,8 @@ export class Type extends Entity {
     return new ctor(this.session, this.id, id, this.storeId);
   }
 
-  private tsel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `type(id: ${gqlString(this.id)}) { ${inner} }`;
-  }
-
-  /** @emoji 🧷 Raw kit fragment for {@code type(id){ inner }}. */
-  private async typeKitFrag(inner: string): Promise<JsonObject | null> {
-    return (await this.readKitInner(this.tsel(inner))) as JsonObject | null;
   }
 
   port(portId: string): Port {
@@ -2315,170 +2414,96 @@ export class Type extends Entity {
     return this.child(Representation, representationId);
   }
 
-  async rename(newName: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`rn: rename(newName: ${gqlString(newName)})`));
-  }
-
-  async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
-  }
-
-  async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
-  }
-
-  async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
-  }
-
-  async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${gqlString(id)})`));
-  }
-
-  async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
-  }
-
-  async createPort(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    const c = code == null ? "null" : gqlString(code);
-    const l = label == null ? "null" : gqlString(label);
-    const d = description == null ? "null" : gqlString(description);
-    const i = icon == null ? "null" : gqlString(icon);
-    const o = order == null ? "null" : String(order);
-    return this.mutateScoped(cid, this.tsel(`cp: createPort(code: ${c}, label: ${l}, description: ${d}, icon: ${i}, order: ${o})`));
-  }
-
-  async deletePort(id: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`dp: deletePort(id: ${gqlString(id)})`));
-  }
-
-  async deletePorts(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`dps: deletePorts(ids: ${gqlIdList(ids)})`));
-  }
-
-  async addConnector(code: string, description?: string | null, icon?: string | null, portId?: string | null): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    const d = description == null ? "null" : gqlString(description);
-    const i = icon == null ? "null" : gqlString(icon);
-    const p = portId == null ? "null" : gqlString(portId);
-    return this.mutateScoped(cid, this.tsel(`ac: addConnector(code: ${gqlString(code)}, description: ${d}, icon: ${i}, portId: ${p})`));
-  }
-
-  async removeConnector(id: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`rc: removeConnector(id: ${gqlString(id)})`));
-  }
-
-  async removeConnectors(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.tsel(`rcs: removeConnectors(ids: ${gqlIdList(ids)})`));
-  }
-
-  /** @emoji 🧰 Resolves {@code type(id){…}} on the materialized kit fragment. */
-  private typeNode(frag: JsonObject | null): JsonObject | undefined {
-    return frag?.["type"] as JsonObject | undefined;
-  }
-
-  async name(): Promise<string> {
-    return readKitBranchString(await this.typeKitFrag("name"), "type", "name");
-  }
-
-  async description(): Promise<string> {
-    return readKitBranchString(await this.typeKitFrag("description"), "type", "description");
-  }
-
-  async icon(): Promise<string> {
-    return readKitBranchString(await this.typeKitFrag("icon"), "type", "icon");
-  }
-
-  async image(): Promise<string> {
-    return readKitBranchString(await this.typeKitFrag("image"), "type", "image");
-  }
-
-  async unit(): Promise<string> {
-    return readKitBranchString(await this.typeKitFrag("unit"), "type", "unit");
-  }
-
-  /** @emoji 🧰 Stable {@link Port} handles for the SDL {@code ports} field. */
-  async ports(): Promise<readonly Port[]> {
-    const inner = "ports { edges { node { id } } }";
-    const frag = await this.typeKitFrag(inner);
-    const prt = this.typeNode(frag)?.["ports"] as JsonObject | undefined;
-    const edges = (prt?.["edges"] as readonly JsonObject[] | undefined) ?? [];
-    const out: Port[] = [];
-    for (const e of edges) {
-      const n = e["node"] as JsonObject | undefined;
-      if (n == null) continue;
-      const id = String(n["id"] ?? "");
-      if (id === "") continue;
-      out.push(this.port(id));
-    }
-    return Object.freeze(out);
-  }
-
-  /** @emoji 🧰 Stable {@link Connector} handles for the SDL {@code connectors} field. */
-  async connectors(): Promise<readonly Connector[]> {
-    const inner = "connectors { edges { node { id code name } } }";
-    const frag = await this.typeKitFrag(inner);
-    const conn = this.typeNode(frag)?.["connectors"] as JsonObject | undefined;
-    const edges = (conn?.["edges"] as readonly JsonObject[] | undefined) ?? [];
-    const out: Connector[] = [];
-    for (const e of edges) {
-      const n = e["node"] as JsonObject | undefined;
-      if (n == null) continue;
-      const id = String(n["id"] ?? "");
-      if (id === "") continue;
-      out.push(this.connector(id));
-    }
-    return Object.freeze(out);
-  }
-
-  /** @emoji 🧰 Stable {@link Representation} handles for the SDL {@code representations} field. */
-  async representations(): Promise<readonly Representation[]> {
-    const inner = "representations { edges { node { id } } }";
-    const frag = await this.typeKitFrag(inner);
-    const rep = this.typeNode(frag)?.["representations"] as JsonObject | undefined;
-    const edges = (rep?.["edges"] as readonly JsonObject[] | undefined) ?? [];
-    const out: Representation[] = [];
-    for (const e of edges) {
-      const n = e["node"] as JsonObject | undefined;
-      const id = String(n?.["id"] ?? "");
-      if (id !== "") out.push(this.representation(id));
-    }
-    return Object.freeze(out);
-  }
-
-  /** @emoji 🧰 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Type.attributes}). */
-  async attributes(): Promise<readonly Attribute[]> {
-    const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = await this.typeKitFrag(inner);
-    return parseAttributeConnectionUnder(this, this.typeNode(frag));
-  }
-
-  /** @emoji 🧰 Stable {@link Author} handles for the SDL {@code authors} field. */
-  async authors(): Promise<readonly Author[]> {
-    const inner = "authors { edges { node { id } } }";
-    const frag = await this.typeKitFrag(inner);
-    const authors = this.typeNode(frag)?.["authors"] as JsonObject | undefined;
-    const edges = (authors?.["edges"] as readonly JsonObject[] | undefined) ?? [];
-    const out: Author[] = [];
-    for (const e of edges) {
-      const n = e["node"] as JsonObject | undefined;
-      const id = String(n?.["id"] ?? "");
-      if (id !== "") out.push(new Author(this.session, id, this.storeId));
-    }
-    return Object.freeze(out);
-  }
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare image: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare ports: () => Promise<readonly Port[]>;
+  declare connectors: () => Promise<readonly Connector[]>;
+  declare representations: () => Promise<readonly Representation[]>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare authors: () => Promise<readonly Author[]>;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare createPort: (code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare deletePort: (id: string) => Promise<SetResult>;
+  declare deletePorts: (ids: readonly string[]) => Promise<SetResult>;
+  declare addConnector: (code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>;
+  declare removeConnector: (id: string) => Promise<SetResult>;
+  declare removeConnectors: (ids: readonly string[]) => Promise<SetResult>;
 }
+
+const TYPE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "icon") },
+  { selection: "image", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "image") },
+  { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "unit") },
+  {
+    selection: "ports { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "ports").map((id) => (entity as Type).port(id))),
+  },
+  {
+    selection: "connectors { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "connectors").map((id) => (entity as Type).connector(id))),
+  },
+  {
+    selection: "representations { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "representations").map((id) => (entity as Type).representation(id))),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["type"] as JsonObject | undefined),
+  },
+  {
+    selection: "authors { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
+  },
+] as const);
+
+const TYPE_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_e, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createPort",
+    buildInner: (_e, code, label, description, icon, order) =>
+      `cp: createPort(code: ${code == null ? "null" : gqlString(String(code))}, label: ${label == null ? "null" : gqlString(String(label))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+  },
+  { method: "deletePort", buildInner: (_e, id) => `dp: deletePort(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deletePorts", buildInner: (_e, ids) => `dps: deletePorts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "addConnector",
+    buildInner: (_e, code, description, icon, portId) =>
+      `ac: addConnector(code: ${gqlString(String(code ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, portId: ${portId == null ? "null" : gqlString(String(portId))})`,
+  },
+  { method: "removeConnector", buildInner: (_e, id) => `rc: removeConnector(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeConnectors", buildInner: (_e, ids) => `rcs: removeConnectors(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const);
+
+installEntityKitMethods(Type, TYPE_FIELDS as readonly BoundKitFieldSpec<unknown, Type>[], TYPE_OPERATIONS);
 //#endregion 🧰Type
 
 /** @emoji 🧷 Kit JSON path {@code type → port} for nested reads under {@link Port}. */
@@ -2489,6 +2514,7 @@ const KIT_PATH_TYPE_CONNECTOR: readonly string[] = ["type", "connector"];
 const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation"];
 
 //#region 🔘Port
+/** @emoji 🔘 Port under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Port extends Entity {
   readonly typeId: string;
   constructor(session: Session, typeId: string, id: string, storeId?: string) {
@@ -2496,84 +2522,58 @@ export class Port extends Entity {
     this.typeId = typeId;
   }
 
-  private psel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `type(id: ${gqlString(this.typeId)}) { port(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
-  /** @emoji 🔘 SDL {@code Port.code}. */
-  async code(): Promise<string> {
-    const frag = (await this.readKitInner(this.psel("code"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_PORT, "code");
-  }
-
-  /** @emoji 🔘 SDL {@code Port.label}. */
-  async label(): Promise<string> {
-    const frag = (await this.readKitInner(this.psel("label"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_PORT, "label");
-  }
-
-  /** @emoji 🔘 SDL {@code Port.order}. */
-  async order(): Promise<number | null> {
-    const frag = (await this.readKitInner(this.psel("order"))) as JsonObject | null;
-    return readKitPathNumberOrNull(frag, KIT_PATH_TYPE_PORT, "order");
-  }
-
-  async name(): Promise<string> {
-    const frag = (await this.readKitInner(this.psel("name"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_PORT, "name");
-  }
-
-  async description(): Promise<string> {
-    const frag = (await this.readKitInner(this.psel("description"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_PORT, "description");
-  }
-
-  async icon(): Promise<string> {
-    const frag = (await this.readKitInner(this.psel("icon"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_PORT, "icon");
-  }
-
-  /** @emoji 🔘 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Port.attributes}). */
-  async attributes(): Promise<readonly Attribute[]> {
-    const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = (await this.readKitInner(this.psel(inner))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this, readKitPathNode(frag, KIT_PATH_TYPE_PORT));
-  }
-
-  async rename(newCode: string, newLabel?: string | null): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    const lab = newLabel == null ? "null" : gqlString(newLabel);
-    return this.mutateScoped(cid, this.psel(`rn: rename(newCode: ${gqlString(newCode)}, newLabel: ${lab})`));
-  }
-
-  async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
-  }
-
-  async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
-  }
-
-  async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
-  }
-
-  async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${gqlString(id)})`));
-  }
-
-  async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
-  }
+  declare code: () => Promise<string>;
+  declare label: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newCode: string, newLabel?: string | null) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
 }
+
+installEntityKitMethods(
+  Port,
+  defineBoundKitFields([
+    { selection: "code", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "code") },
+    { selection: "label", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "label") },
+    { selection: "order", parse: (frag) => readKitPathNumberOrNull(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "order") },
+    { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "name") },
+    { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "icon") },
+    {
+      selection: "attributes { edges { node { id key value definition } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_PORT)),
+    },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Port>[],
+  defineBoundKitOperations([
+    { method: "rename", buildInner: (_e, newCode, newLabel) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))}, newLabel: ${newLabel == null ? "null" : gqlString(String(newLabel))})` },
+    { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+    { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+    {
+      method: "addAttribute",
+      buildInner: (_e, key, value, definition) =>
+        `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+    },
+    { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+    { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  ] as const),
+);
 //#endregion 🔘Port
 
 //#region 🔗Connector
+/** @emoji 🔗 Connector under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Connector extends Entity {
   readonly typeId: string;
   constructor(session: Session, typeId: string, id: string, storeId?: string) {
@@ -2581,66 +2581,49 @@ export class Connector extends Entity {
     this.typeId = typeId;
   }
 
-  private csel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `type(id: ${gqlString(this.typeId)}) { connector(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
-  async rename(newCode: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.csel(`rn: rename(newCode: ${gqlString(newCode)})`));
-  }
-
-  async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
-  }
-
-  async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
-  }
-
-  async name(): Promise<string> {
-    const frag = (await this.readKitInner(this.csel("name"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_CONNECTOR, "name");
-  }
-
-  async code(): Promise<string> {
-    const frag = (await this.readKitInner(this.csel("code"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_CONNECTOR, "code");
-  }
-
-  async description(): Promise<string> {
-    const frag = (await this.readKitInner(this.csel("description"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_CONNECTOR, "description");
-  }
-
-  async icon(): Promise<string> {
-    const frag = (await this.readKitInner(this.csel("icon"))) as JsonObject | null;
-    return readKitPathString(frag, KIT_PATH_TYPE_CONNECTOR, "icon");
-  }
-
-  /** @emoji 🔗 Nullable {@code port { id }} per SDL {@code Connector.port}. */
-  private async portId(): Promise<string | null> {
-    const frag = (await this.readKitInner(this.csel("port { id }"))) as JsonObject | null;
-    const p = readKitPathNode(frag, KIT_PATH_TYPE_CONNECTOR)?.["port"] as JsonObject | null | undefined;
-    if (p == null) return null;
-    const id = String(p["id"] ?? "");
-    return id === "" ? null : id;
-  }
-
-  /** @emoji 🔗 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Connector.attributes}). */
-  async attributes(): Promise<readonly Attribute[]> {
-    const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = (await this.readKitInner(this.csel(inner))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this, readKitPathNode(frag, KIT_PATH_TYPE_CONNECTOR));
-  }
-
-  async port(): Promise<Port | null> {
-    const id = await this.portId();
-    return id == null ? null : new Type(this.session, this.typeId, this.storeId).port(id);
-  }
+  declare name: () => Promise<string>;
+  declare code: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare port: () => Promise<Port | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newCode: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
 }
+
+installEntityKitMethods(
+  Connector,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "name") },
+    { selection: "code", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "code") },
+    { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "icon") },
+    {
+      selection: "port { id }",
+      parse: () => null,
+      parseEntity: (entity, frag) => {
+        const id = String((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)?.["port"] as JsonObject | undefined)?.["id"] ?? "");
+        return id === "" ? null : new Type(entity.session, (entity as Connector).typeId, entity.storeId).port(id);
+      },
+    },
+    {
+      selection: "attributes { edges { node { id key value definition } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)),
+    },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Connector>[],
+  defineBoundKitOperations([
+    { method: "rename", buildInner: (_e, newCode) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))})` },
+    { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+    { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  ] as const),
+);
 //#endregion 🔗Connector
 
 //#region 🧩Piece
@@ -2891,6 +2874,7 @@ function parseIdListConnection(obj: JsonObject | null | undefined, field: string
   return ids;
 }
 
+/** @emoji 🧩 Piece under {@link Design}: declarative reads/commands/events; weak {@link Position} handles stay synchronous. */
 export class Piece extends Entity {
   readonly designId: string;
   private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
@@ -2899,12 +2883,15 @@ export class Piece extends Entity {
     this.designId = designId;
   }
 
-  /** @emoji 🧷 GraphQL path fragment under {@code design(id){ piece(id){ … }}} for kit reads (weak geometry + {@link Piece} fields). */
-  kitPieceSelection(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `design(id: ${gqlString(this.designId)}) { piece(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
-  /** @emoji 📌 Stable weak {@code position} handle for this piece. */
+  /** @emoji 🧷 Alias kept for weak geometry reads under {@link Position}. */
+  kitPieceSelection(inner: string): string {
+    return this.kitInnerPath(inner);
+  }
+
   position(): Position {
     let p = this.positionByRole.get("position");
     if (!p) {
@@ -2914,7 +2901,6 @@ export class Piece extends Entity {
     return p;
   }
 
-  /** @emoji 📌 Stable weak {@code flatPosition} handle for this piece. */
   flatPosition(): Position {
     let p = this.positionByRole.get("flatPosition");
     if (!p) {
@@ -2924,229 +2910,170 @@ export class Piece extends Entity {
     return p;
   }
 
-  async name(): Promise<string> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("name"))) as JsonObject | null;
-    return String(pieceKit(frag)?.["name"] ?? "");
-  }
-
-  async description(): Promise<string> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("description"))) as JsonObject | null;
-    return String(pieceKit(frag)?.["description"] ?? "");
-  }
-
-  async icon(): Promise<string> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("icon"))) as JsonObject | null;
-    return String(pieceKit(frag)?.["icon"] ?? "");
-  }
-
-  async typeId(): Promise<string | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("type { id }"))) as JsonObject | null;
-    const n = pieceKit(frag)?.["type"] as JsonObject | undefined;
-    const tid = n == null ? "" : String(n["id"] ?? "");
-    return tid === "" ? null : tid;
-  }
-
-  async scale(): Promise<number | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
-    const v = pieceKit(frag)?.["scale"];
-    return typeof v === "number" ? v : null;
-  }
-
-  private async positionLoaded(): Promise<Position | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection(`position { ${PIECE_POSITION_SELECTION} }`))) as JsonObject | null;
-    const raw = pieceKit(frag)?.["position"];
-    if (raw == null || typeof raw !== "object") return null;
-    return this.position();
-  }
-
-  private async flatPositionLoaded(): Promise<Position | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection(`flatPosition { ${PIECE_POSITION_SELECTION} }`))) as JsonObject | null;
-    const raw = pieceKit(frag)?.["flatPosition"];
-    if (raw == null || typeof raw !== "object") return null;
-    return this.flatPosition();
-  }
-
-  private async planeLoaded(): Promise<Plane | null> {
-    if ((await this.positionLoaded()) == null) return null;
-    return this.position().plane();
-  }
-
-  private async centerLoaded(): Promise<Coordinate | null> {
-    if ((await this.positionLoaded()) == null) return null;
-    return this.position().center();
-  }
-
-  private async flatPlaneLoaded(): Promise<Plane | null> {
-    if ((await this.flatPositionLoaded()) == null) return null;
-    return this.flatPosition().plane();
-  }
-
-  private async flatCenterLoaded(): Promise<Coordinate | null> {
-    if ((await this.flatPositionLoaded()) == null) return null;
-    return this.flatPosition().center();
-  }
-
-  async blueprint(): Promise<PieceBlueprint | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("blueprint { __typename id }"))) as JsonObject | null;
-    return parsePieceBlueprintFromJson(pieceKit(frag)?.["blueprint"] as JsonObject | undefined);
-  }
-
-  async attributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this, pieceKit(frag));
-  }
-
-  async connectionKind(): Promise<"FIXED" | "CONNECTED" | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("connectionKind"))) as JsonObject | null;
-    const k = pieceKit(frag)?.["connectionKind"];
-    if (k === "FIXED" || k === "CONNECTED") return k;
-    return null;
-  }
-
-  private async parentPieceId(): Promise<string | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("parentPiece { id }"))) as JsonObject | null;
-    const n = pieceKit(frag)?.["parentPiece"] as JsonObject | undefined;
-    const id = n == null ? "" : String(n["id"] ?? "");
-    return id === "" ? null : id;
-  }
-
-  private async parentConnectionId(): Promise<string | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("parentConnection { id }"))) as JsonObject | null;
-    const n = pieceKit(frag)?.["parentConnection"] as JsonObject | undefined;
-    const id = n == null ? "" : String(n["id"] ?? "");
-    return id === "" ? null : id;
-  }
-
-  private async childPieceIds(): Promise<readonly string[]> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("childPieces { edges { node { id } } }"))) as JsonObject | null;
-    return parseIdListConnection(pieceKit(frag), "childPieces");
-  }
-
-  private async childConnectionIds(): Promise<readonly string[]> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("childConnections { edges { node { id } } }"))) as JsonObject | null;
-    return parseIdListConnection(pieceKit(frag), "childConnections");
-  }
-
-  async depth(): Promise<number | null> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("depth"))) as JsonObject | null;
-    const v = pieceKit(frag)?.["depth"];
-    return typeof v === "number" ? v : null;
-  }
-
-  async parentPiece(): Promise<Piece | null> {
-    const id = await this.parentPieceId();
-    return id == null ? null : new Design(this.session, this.designId, this.storeId).piece(id);
-  }
-
-  async parentConnection(): Promise<Connection | null> {
-    const id = await this.parentConnectionId();
-    return id == null ? null : new Design(this.session, this.designId, this.storeId).connection(id);
-  }
-
-  async childPieces(): Promise<readonly Piece[]> {
-    return Object.freeze((await this.childPieceIds()).map((id) => new Design(this.session, this.designId, this.storeId).piece(id)));
-  }
-
-  async childConnections(): Promise<readonly Connection[]> {
-    return Object.freeze((await this.childConnectionIds()).map((id) => new Design(this.session, this.designId, this.storeId).connection(id)));
-  }
-
-  /** @emoji 🧭 Ordered {@link Piece#path} piece node keys (root → … → self) from kit GraphQL. */
-  async pathPieces(): Promise<readonly string[]> {
-    const frag = (await this.readKitInner(this.kitPieceSelection("path { edges { node { id } } }"))) as JsonObject | null;
-    return parseIdListConnection(pieceKit(frag), "path");
-  }
-
-  async rename(newName: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${gqlString(newName)})`));
-  }
-
-  async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
-  }
-
-  async drag(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`dg: drag(offset: ${formatOffsetInput(offset)})`));
-  }
-
-  async move(position: PositionInput): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`mv: move(position: ${formatPositionInput(position)})`));
-  }
-
-  async fix(): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`fx: fix`));
-  }
-
-  async changeBlueprint(blueprintId: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${gqlString(blueprintId)})`));
-  }
-
-  async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
-  }
-
-  async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${gqlString(id)})`));
-  }
-
-  async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
-  }
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare typeId: () => Promise<string | null>;
+  declare scale: () => Promise<number | null>;
+  declare blueprint: () => Promise<PieceBlueprint | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare connectionKind: () => Promise<"FIXED" | "CONNECTED" | null>;
+  declare depth: () => Promise<number | null>;
+  declare parentPiece: () => Promise<Piece | null>;
+  declare parentConnection: () => Promise<Connection | null>;
+  declare childPieces: () => Promise<readonly Piece[]>;
+  declare childConnections: () => Promise<readonly Connection[]>;
+  declare pathPieces: () => Promise<readonly string[]>;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare drag: (offset: OffsetInput) => Promise<SetResult>;
+  declare move: (position: PositionInput) => Promise<SetResult>;
+  declare fix: () => Promise<SetResult>;
+  declare changeBlueprint: (blueprintId: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
 }
+
+const PIECE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "name") },
+  { selection: "description", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "icon") },
+  {
+    method: "typeId",
+    selection: "type { id }",
+    parse: () => null,
+    parseEntity: (_entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["type"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : id;
+    },
+  },
+  { selection: "scale", parse: (frag) => readPieceBranchNumberOrNull(frag as JsonObject | null, "scale") },
+  {
+    selection: "blueprint { __typename id }",
+    parse: () => null,
+    parseEntity: (_entity, frag) => parsePieceBlueprintFromJson(pieceKit(frag as JsonObject | null)?.["blueprint"] as JsonObject | undefined),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, pieceKit(frag as JsonObject | null)),
+  },
+  {
+    selection: "connectionKind",
+    parse: (frag) => {
+      const k = pieceKit(frag as JsonObject | null)?.["connectionKind"];
+      return k === "FIXED" || k === "CONNECTED" ? k : null;
+    },
+    eventKind: "draggedPiece",
+  },
+  { selection: "depth", parse: (frag) => readPieceBranchNumberOrNull(frag as JsonObject | null, "depth") },
+  {
+    selection: "parentPiece { id }",
+    parse: () => null,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["parentPiece"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id);
+    },
+    coarseEvent: true,
+  },
+  {
+    selection: "parentConnection { id }",
+    parse: () => null,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["parentConnection"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id);
+    },
+    coarseEvent: true,
+  },
+  {
+    selection: "childPieces { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "childPieces").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
+  },
+  {
+    selection: "childConnections { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "childConnections").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
+  },
+  {
+    selection: "path { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (_entity, frag) => parseIdListConnection(pieceKit(frag as JsonObject | null), "path"),
+  },
+] as const);
+
+const PIECE_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "drag", buildInner: (_e, offset) => `dg: drag(offset: ${formatOffsetInput(offset as OffsetInput)})` },
+  { method: "move", buildInner: (_e, position) => `mv: move(position: ${formatPositionInput(position as PositionInput)})` },
+  { method: "fix", buildInner: () => `fx: fix` },
+  { method: "changeBlueprint", buildInner: (_e, blueprintId) => `cb: changeBlueprint(blueprintId: ${gqlString(String(blueprintId ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_e, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const);
+
+installEntityKitMethods(Piece, PIECE_FIELDS as readonly BoundKitFieldSpec<unknown, Piece>[], PIECE_OPERATIONS);
 //#endregion 🧩Piece
 
 //#region 🪢PiecesOperation
+type PiecesOperationCommandSpec = Readonly<{
+  method: string;
+  buildInner: (self: PiecesOperation, ...args: readonly unknown[]) => string;
+}>;
+
+/** @emoji 🪢 Installs one batch-command method per spec on {@link PiecesOperation}. */
+function installPiecesOperationMethods(specs: readonly PiecesOperationCommandSpec[]): void {
+  for (const spec of specs) {
+    Object.defineProperty(PiecesOperation.prototype, spec.method, {
+      configurable: true,
+      writable: true,
+      value: async function piecesOpCommand(this: PiecesOperation, ...args: readonly unknown[]): Promise<SetResult> {
+        if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
+        const cid = await this.session.ensureChangeId(this.storeId);
+        return this.session.mutateScoped(this.storeId, cid, spec.buildInner(this, ...args));
+      },
+    });
+  }
+}
+
+/** @emoji 🪢 Batch piece commands under one design: one command method each (no cached fields). */
 export class PiecesOperation {
   constructor(
-    private readonly session: Session,
-    private readonly designId: string,
-    private readonly pieceIds: readonly string[],
-    private readonly storeId?: string,
+    readonly session: Session,
+    readonly designId: string,
+    readonly pieceIds: readonly string[],
+    readonly storeId?: string,
   ) { }
 
-  private psel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `design(id: ${gqlString(this.designId)}) { pieces(ids: ${gqlIdList(this.pieceIds)}) { ${inner} } }`;
   }
 
-  private async ensureChangeId(): Promise<string> {
-    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
-    return this.session.ensureChangeId(this.storeId);
-  }
-
-  private async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
-    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
-    return this.session.mutateScoped(this.storeId, changeId, kitSelection);
-  }
-
-  async drag(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`dg: drag(offset: ${formatOffsetInput(offset)})`));
-  }
-
-  async move(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`mv: move(offset: ${formatOffsetInput(offset)})`));
-  }
-
-  async fix(): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`fx: fix`));
-  }
-
-  async changeBlueprint(blueprintId: string): Promise<SetResult> {
-    const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${gqlString(blueprintId)})`));
-  }
+  declare drag: (offset: OffsetInput) => Promise<SetResult>;
+  declare move: (offset: OffsetInput) => Promise<SetResult>;
+  declare fix: () => Promise<SetResult>;
+  declare changeBlueprint: (blueprintId: string) => Promise<SetResult>;
 }
+
+installPiecesOperationMethods([
+  { method: "drag", buildInner: (self, offset) => self.kitInnerPath(`dg: drag(offset: ${formatOffsetInput(offset as OffsetInput)})`) },
+  { method: "move", buildInner: (self, offset) => self.kitInnerPath(`mv: move(offset: ${formatOffsetInput(offset as OffsetInput)})`) },
+  { method: "fix", buildInner: (self) => self.kitInnerPath(`fx: fix`) },
+  { method: "changeBlueprint", buildInner: (self, blueprintId) => self.kitInnerPath(`cb: changeBlueprint(blueprintId: ${gqlString(String(blueprintId ?? ""))})`) },
+]);
 //#endregion 🪢PiecesOperation
 
 //#region ⛓️Connection
@@ -3202,6 +3129,7 @@ function parseSideFromJson(
   return new Side(session, designId, connectionId, role, pieceId, portId, connectorId, designPieceId, storeId);
 }
 
+/** @emoji ⛓️ Connection under {@link Design}: declarative field reads and change subscriptions (read-only commands in schema). */
 export class Connection extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {
@@ -3209,83 +3137,61 @@ export class Connection extends Entity {
     this.designId = designId;
   }
 
-  private csel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `design(id: ${gqlString(this.designId)}) { connection(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
-  /** @emoji ⛓️ Resolved {@code design.connection} JSON for the given selection tail. */
-  private async connectionUnderDesign(inner: string): Promise<JsonObject | null> {
-    const frag = (await this.readKitInner(this.csel(inner))) as JsonObject | null;
-    return connectionKit(frag);
-  }
-
-  private async readConnScalarString(field: string): Promise<string> {
-    return String((await this.connectionUnderDesign(field))?.[field] ?? "");
-  }
-
-  private async readConnScalarNumberOrNull(field: string): Promise<number | null> {
-    const v = (await this.connectionUnderDesign(field))?.[field];
-    return typeof v === "number" ? v : null;
-  }
-
-  async name(): Promise<string> {
-    return await this.readConnScalarString("name");
-  }
-
-  async description(): Promise<string> {
-    return await this.readConnScalarString("description");
-  }
-
-  async icon(): Promise<string> {
-    return await this.readConnScalarString("icon");
-  }
-
-  async gap(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("gap");
-  }
-
-  async shift(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("shift");
-  }
-
-  async rise(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("rise");
-  }
-
-  async rotation(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("rotation");
-  }
-
-  async turn(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("turn");
-  }
-
-  async tilt(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("tilt");
-  }
-
-  async u(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("u");
-  }
-
-  async v(): Promise<number | null> {
-    return await this.readConnScalarNumberOrNull("v");
-  }
-
-  async parent(): Promise<Side | null> {
-    const connJson = await this.connectionUnderDesign(`parent { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "parent", connJson?.["parent"] as JsonObject | undefined, this.storeId);
-  }
-
-  async child(): Promise<Side | null> {
-    const connJson = await this.connectionUnderDesign(`child { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "child", connJson?.["child"] as JsonObject | undefined, this.storeId);
-  }
-
-  async attributes(): Promise<readonly Attribute[]> {
-    return parseAttributeConnectionUnder(this, await this.connectionUnderDesign("attributes { edges { node { id key value definition } } }"));
-  }
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare gap: () => Promise<number | null>;
+  declare shift: () => Promise<number | null>;
+  declare rise: () => Promise<number | null>;
+  declare rotation: () => Promise<number | null>;
+  declare turn: () => Promise<number | null>;
+  declare tilt: () => Promise<number | null>;
+  declare u: () => Promise<number | null>;
+  declare v: () => Promise<number | null>;
+  declare parent: () => Promise<Side | null>;
+  declare child: () => Promise<Side | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
 }
+
+const CONNECTION_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "name") },
+  { selection: "description", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "icon") },
+  { selection: "gap", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "gap") },
+  { selection: "shift", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "shift") },
+  { selection: "rise", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "rise") },
+  { selection: "rotation", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "rotation") },
+  { selection: "turn", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "turn") },
+  { selection: "tilt", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "tilt") },
+  { method: "u", selection: "u", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "u") },
+  { method: "v", selection: "v", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "v") },
+  {
+    selection: `parent { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => null,
+    parseEntity: (entity, frag) =>
+      parseSideFromJson(entity.session, (entity as Connection).designId, entity.id, "parent", connectionKit(frag as JsonObject | null)?.["parent"] as JsonObject | undefined, entity.storeId),
+    coarseEvent: true,
+  },
+  {
+    selection: `child { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => null,
+    parseEntity: (entity, frag) =>
+      parseSideFromJson(entity.session, (entity as Connection).designId, entity.id, "child", connectionKit(frag as JsonObject | null)?.["child"] as JsonObject | undefined, entity.storeId),
+    coarseEvent: true,
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, connectionKit(frag as JsonObject | null)),
+  },
+] as const);
+
+installEntityKitMethods(Connection, CONNECTION_FIELDS as readonly BoundKitFieldSpec<unknown, Connection>[]);
 //#endregion ⛓️Connection
 
 //#region ✍️Author
@@ -3311,7 +3217,7 @@ const AUTHOR_FIELDS = defineBoundNodeFields([
   { selection: "role", parse: (node) => String(node?.["role"] ?? "") },
   { selection: "rank", parse: (node) => (typeof node?.["rank"] === "number" ? node["rank"] : null) },
 ] as const);
-installNodeFieldMethods(Author, "Author", AUTHOR_FIELDS);
+installEntityNodeMethods(Author, "Author", AUTHOR_FIELDS);
 //#endregion ✍️Author
 
 //#region 💎Quality
@@ -3339,46 +3245,20 @@ export class Quality extends Entity {
   declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
   declare removeAttribute: (id: string) => Promise<SetResult>;
   declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
-
-  async benchmarks(): Promise<readonly Benchmark[]> {
-    const frag = (await this.readKitInner(
-      this.kitInnerPath(`benchmarks { edges { node { id name min max minExcluded maxExcluded } } }`),
-    )) as JsonObject | null;
-    const q = frag?.["quality"] as JsonObject | undefined;
-    const bench = q?.["benchmarks"] as JsonObject | undefined;
-    const edges = bench?.["edges"] as readonly JsonValue[] | undefined;
-    if (!Array.isArray(edges)) return [];
-    const out: Benchmark[] = [];
-    for (const e of edges) {
-      if (!isJsonObjectNode(e)) continue;
-      const n = e["node"] as JsonObject | undefined;
-      if (n == null) continue;
-      out.push(
-        new Benchmark(
-          this,
-          String(n["id"] ?? ""),
-          String(n["name"] ?? ""),
-          typeof n["min"] === "number" ? n["min"] : null,
-          typeof n["max"] === "number" ? n["max"] : null,
-          typeof n["minExcluded"] === "boolean" ? n["minExcluded"] : null,
-          typeof n["maxExcluded"] === "boolean" ? n["maxExcluded"] : null,
-        ),
-      );
-    }
-    return out;
-  }
+  declare benchmarks: () => Promise<readonly Benchmark[]>;
 }
 
 const QUALITY_OPERATIONS = defineBoundKitOperations([
-  { buildInner: (_entity, newKey) => `rk: rename(newKey: ${gqlString(String(newKey ?? ""))})` },
-  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { method: "rename", buildInner: (_entity, newKey) => `rk: rename(newKey: ${gqlString(String(newKey ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
+    method: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const);
 installEntityKitMethods(Quality, defineBoundKitFields([
   { selection: "key", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "key") },
@@ -3391,7 +3271,14 @@ installEntityKitMethods(Quality, defineBoundKitFields([
   {
     selection: "attributes { edges { node { id key value definition } } }",
     parse: () => [],
+    coarseEvent: true,
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["quality"] as JsonObject | undefined),
+  },
+  {
+    selection: "benchmarks { edges { node { id name min max minExcluded maxExcluded } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseBenchmarkConnectionUnder(entity as Quality, (frag as JsonObject | null)?.["quality"] as JsonObject | undefined),
   },
 ]) as readonly BoundKitFieldSpec<unknown, Quality>[], QUALITY_OPERATIONS);
 //#endregion 💎Quality
@@ -3431,15 +3318,16 @@ installEntityKitMethods(Tag, defineBoundKitFields([
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["tag"] as JsonObject | undefined),
   },
 ]) as readonly BoundKitFieldSpec<unknown, Tag>[], defineBoundKitOperations([
-  { buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { method: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
+    method: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const));
 //#endregion 🏷️Tag
 
@@ -3478,15 +3366,16 @@ installEntityKitMethods(Concept, defineBoundKitFields([
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["concept"] as JsonObject | undefined),
   },
 ]) as readonly BoundKitFieldSpec<unknown, Concept>[], defineBoundKitOperations([
-  { buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { method: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
+    method: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const));
 //#endregion 💡Concept
 
@@ -3513,7 +3402,7 @@ export class Representation extends Entity {
   declare attributes: () => Promise<readonly Attribute[]>;
 }
 
-installKitFieldMethods(Representation, defineBoundKitFields([
+installEntityKitMethods(Representation, defineBoundKitFields([
   { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "name") },
   { selection: "url", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "url") },
   { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "description") },
@@ -3556,7 +3445,7 @@ export class Family extends Entity {
   declare icon: () => Promise<string>;
 }
 
-installNodeFieldMethods(Family, "Family", defineBoundNodeFields([
+installEntityNodeMethods(Family, "Family", defineBoundNodeFields([
   { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
   { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
   { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
@@ -3572,7 +3461,7 @@ export class File extends Entity {
   declare name: () => Promise<string>;
 }
 
-installNodeFieldMethods(File, "File", defineBoundNodeFields([
+installEntityNodeMethods(File, "File", defineBoundNodeFields([
   { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
 ] as const));
 //#endregion 📄File
@@ -3589,7 +3478,7 @@ export class Folder extends Entity {
   declare path: () => Promise<string>;
 }
 
-installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
+installEntityNodeMethods(Folder, "Folder", defineBoundNodeFields([
   { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
   { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
   { selection: "path", parse: (node) => String(node?.["path"] ?? "") },
@@ -3597,7 +3486,7 @@ installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
 //#endregion 📁Folder
 
 //#region 🪟Layer
-/** @emoji 🪟 Design {@link Layer}: read-only in current kit API. */
+/** @emoji 🪟 Design {@link Layer}: declarative field reads and change subscriptions (read-only in current kit API). */
 export class Layer extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {
@@ -3605,61 +3494,35 @@ export class Layer extends Entity {
     this.designId = designId;
   }
 
-  private lsel(inner: string): string {
+  kitInnerPath(inner: string): string {
     return `design(id: ${gqlString(this.designId)}) { layers { edges { node { id ${inner} } } } }`;
   }
 
-  private async selfLayerNode(innerFields: string): Promise<JsonObject | null> {
-    const frag = (await this.readKitInner(this.lsel(innerFields))) as JsonObject | null;
-    const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
-    for (const e of edges) {
-      const n = e["node"] as JsonObject | undefined;
-      if (n && String(n["id"] ?? "") === this.id) return n;
-    }
-    return null;
-  }
-
-  async name(): Promise<string> {
-    const n = await this.selfLayerNode("name");
-    return String(n?.["name"] ?? "");
-  }
-
-  async description(): Promise<string> {
-    const n = await this.selfLayerNode("description");
-    return String(n?.["description"] ?? "");
-  }
-
-  async icon(): Promise<string> {
-    const n = await this.selfLayerNode("icon");
-    return String(n?.["icon"] ?? "");
-  }
-
-  async color(): Promise<string> {
-    const n = await this.selfLayerNode("color");
-    return String(n?.["color"] ?? "");
-  }
-
-  async order(): Promise<number | null> {
-    const n = await this.selfLayerNode("order");
-    const o = n?.["order"];
-    return typeof o === "number" ? o : null;
-  }
-
-  async visible(): Promise<boolean | null> {
-    const n = await this.selfLayerNode("visible");
-    const v = n?.["visible"];
-    return typeof v === "boolean" ? v : null;
-  }
-
-  async locked(): Promise<boolean | null> {
-    const n = await this.selfLayerNode("locked");
-    const v = n?.["locked"];
-    return typeof v === "boolean" ? v : null;
-  }
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare color: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare visible: () => Promise<boolean | null>;
+  declare locked: () => Promise<boolean | null>;
 }
+
+installEntityKitMethods(
+  Layer,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "name") },
+    { selection: "description", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "icon") },
+    { selection: "color", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "layers", entity.id, "color") },
+    { selection: "order", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeNumberOrNull(frag as JsonObject | null, entity.id, "order") },
+    { selection: "visible", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "visible") },
+    { selection: "locked", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "locked") },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Layer>[],
+);
 //#endregion 🪟Layer
 
 //#region 👥Group
+/** @emoji 👥 Design {@link Group}: declarative field reads and change subscriptions (read-only in current kit API). */
 export class Group extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {
@@ -3667,16 +3530,19 @@ export class Group extends Entity {
     this.designId = designId;
   }
 
-  async name(): Promise<string> {
-    const frag = await this.readKitInner(`design(id: ${gqlString(this.designId)}) { groups { edges { node { id name } } } }`);
-    const edges = (((frag as JsonObject | null)?.["design"] as JsonObject | undefined)?.["groups"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined;
-    for (const e of edges ?? []) {
-      const n = e["node"] as JsonObject | undefined;
-      if (n && String(n["id"] ?? "") === this.id) return String(n["name"] ?? "");
-    }
-    return "";
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { groups { edges { node { id ${inner} } } } }`;
   }
+
+  declare name: () => Promise<string>;
 }
+
+installEntityKitMethods(
+  Group,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "groups", entity.id, "name") },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Group>[],
+);
 //#endregion 👥Group
 
 //#region 📊Stat
@@ -3694,7 +3560,7 @@ export class Stat extends Entity {
   declare icon: () => Promise<string>;
 }
 
-installNodeFieldMethods(Stat, "Stat", defineBoundNodeFields([
+installEntityNodeMethods(Stat, "Stat", defineBoundNodeFields([
   { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
   { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
   { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
@@ -3718,7 +3584,7 @@ export class Prop extends Entity {
   declare quality: () => Promise<Quality | null>;
 }
 
-installNodeFieldMethods(Prop, "Prop", defineBoundNodeFields([
+installEntityNodeMethods(Prop, "Prop", defineBoundNodeFields([
   { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
   { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
   { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
