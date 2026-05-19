@@ -1,38 +1,93 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Semio.Store;
 
-/// <summary>NDJSON JSON-RPC 2.0 to the <c>semio-store</c> process (one kit per process).</summary>
+//#region 🌐GraphqlWire
+/// <summary>🌐 GraphQL-over-HTTP POST body aligned with <c>semio/js</c> and <c>semio-store</c> (<c>query</c>, <c>variables</c>, <c>operationName</c> always present).</summary>
+internal static class GraphqlWire
+{
+    internal static string PostBodyJson(string query, JObject? variables = null, string? operationName = null) =>
+        JsonConvert.SerializeObject(new JObject
+        {
+            ["query"] = query,
+            ["variables"] = variables ?? new JObject(),
+            ["operationName"] = operationName == null ? JValue.CreateNull() : operationName,
+        }, Formatting.None);
+
+    internal static JToken UnwrapData(JToken response)
+    {
+        if (response is not JObject o) throw new IOException("graphql: response is not an object");
+        if (o["errors"] is JArray errs && errs.Count > 0)
+        {
+            var msg = errs[0]?["message"]?.Value<string>() ?? "GraphQL error";
+            throw new IOException("graphql: " + msg);
+        }
+        var data = o["data"];
+        if (data == null || data.Type == JTokenType.Null) throw new IOException("graphql: no data in response");
+        return data;
+    }
+
+    internal static void AssertOperationKind(string document, string kind)
+    {
+        var rest = document.TrimStart();
+        for (; ; )
+        {
+            if (rest.StartsWith("#", StringComparison.Ordinal))
+            {
+                var nl = rest.IndexOf('\n');
+                if (nl < 0) throw new IOException($"graphql: expected {kind}, got unknown");
+                rest = rest[(nl + 1)..].TrimStart();
+                continue;
+            }
+            break;
+        }
+        var head = rest.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+        if (!string.Equals(head, kind, StringComparison.OrdinalIgnoreCase))
+            throw new IOException($"graphql: expected {kind}, got {head}");
+    }
+}
+//#endregion 🌐GraphqlWire
+
+/// <summary>🌐 Thin HTTP GraphQL client to <c>semio-store</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>semio/js</c> <see cref="Session.openHttp"/>.</summary>
 public sealed class StoreClient : IDisposable
 {
     private readonly string _binaryPath;
+    private readonly HttpClient _http;
     private Process? _process;
-    private readonly object _idLock = new();
-    private int _nextId = 1;
-    private readonly Dictionary<int, TaskCompletionSource<JObject>> _pending = new();
-    private readonly object _readPending = new();
-    private StreamWriter? _stdin;
-    private Thread? _readThread;
-    private volatile bool _stopping;
-
-    public StoreClient(string? binaryPath = null)
+    private string? _baseUrl;
+    public StoreClient(string? binaryPath = null, string? baseUrl = null)
     {
         _binaryPath = string.IsNullOrWhiteSpace(binaryPath)
             ? StorePaths.ResolveStoreBinary()
             : binaryPath.Trim();
+        _http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        if (!string.IsNullOrWhiteSpace(baseUrl))
+            _baseUrl = baseUrl.TrimEnd('/');
     }
 
-    public void Start(bool noEvents = true)
+    /// <summary>📡 Kit-store push events are not exposed over HTTP GraphQL yet; subscribe via GraphQL <c>subscription</c> when the sidecar adds a stream.</summary>
+    public event Action<JObject>? OnEvent;
+
+    public void Start()
     {
+        if (_baseUrl != null) return;
         if (_process != null) return;
+        if (!System.IO.File.Exists(_binaryPath))
+            throw new FileNotFoundException("semio-store binary not found", _binaryPath);
+
+        var port = AllocateFreeTcpPort();
         var psi = new ProcessStartInfo
         {
             FileName = _binaryPath,
@@ -42,106 +97,126 @@ public sealed class StoreClient : IDisposable
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
-        if (noEvents) psi.Environment["SEMIO_STORE_NO_EVENTS"] = "1";
+        psi.Environment["SEMIO_STORE_PORT"] = port.ToString();
         var rl = Environment.GetEnvironmentVariable("RUST_LOG");
         psi.Environment["RUST_LOG"] = string.IsNullOrEmpty(rl) ? "error" : rl!;
 
         _process = Process.Start(psi) ?? throw new IOException("semio-store: start failed");
-        if (_process.HasExited) throw new IOException("semio-store exited immediately");
-        _stdin = _process.StandardInput;
-        _readThread = new Thread(ReadLoop) { IsBackground = true };
-        _readThread.Start();
+        _baseUrl = ReadReadyBaseUrl(_process, port);
     }
 
-    private void ReadLoop()
+    private static int AllocateFreeTcpPort()
     {
-        if (_process == null) return;
-        var sr = _process.StandardOutput;
-        while (!_stopping)
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        try
         {
-            string? line;
-            try
+            return ((IPEndPoint)listener.LocalEndpoint).Port;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private static string ReadReadyBaseUrl(Process process, int fallbackPort)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(60);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (process.HasExited)
+                throw new IOException("semio-store exited before ready");
+            var line = process.StandardOutput.ReadLine();
+            if (line == null)
             {
-                line = sr.ReadLine();
+                Thread.Sleep(10);
+                continue;
             }
-            catch
-            {
-                break;
-            }
-            if (line == null) break;
             if (line.Length == 0) continue;
-            JObject o;
             try
             {
-                o = JObject.Parse(line);
-            }
-            catch
-            {
-                continue;
-            }
-            if (o["method"]?.Value<string>() == "event" && o["id"] == null)
-            {
-                if (o["params"] is JObject p) OnEvent?.Invoke(p);
-                continue;
-            }
-            int? id = o["id"]?.Value<int?>();
-            if (id is int i)
-            {
-                TaskCompletionSource<JObject>? tcs;
-                lock (_readPending)
+                var o = JObject.Parse(line);
+                if (o["semioStoreReady"]?.Value<bool>() == true)
                 {
-                    if (_pending.TryGetValue(i, out tcs)) _pending.Remove(i);
+                    var port = o["port"]?.Value<int?>() ?? fallbackPort;
+                    return $"http://127.0.0.1:{port}";
                 }
-                tcs?.TrySetResult(o);
             }
+            catch (JsonException)
+            {
+                /* not the ready line */
+            }
+        }
+        throw new TimeoutException("semio-store: ready line timeout");
+    }
+
+    private string BaseUrl
+    {
+        get
+        {
+            Start();
+            return _baseUrl ?? throw new InvalidOperationException("semio-store: no base url");
         }
     }
 
-    public event Action<JObject>? OnEvent;
-
-    public JToken Call(string method, JToken? parameters)
+    /// <summary>📦 <c>POST /install</c> — exactly one of <c>create</c>, <c>importFile</c>, … per <c>semio-store</c>.</summary>
+    public void Install(JObject body)
     {
-        Start();
-        int id;
-        lock (_idLock) id = _nextId++;
-        var tcs = new TaskCompletionSource<JObject>(TaskCreationOptions.RunContinuationsAsynchronously);
-        lock (_readPending) _pending[id] = tcs;
-        var body = new JObject
-        {
-            ["jsonrpc"] = "2.0",
-            ["id"] = id,
-            ["method"] = method,
-        };
-        if (parameters != null) body["params"] = parameters;
-        var line = body.ToString(Newtonsoft.Json.Formatting.None) + "\n";
-        _stdin?.Write(line);
-        _stdin?.Flush();
-        if (!tcs.Task.Wait(TimeSpan.FromMinutes(5)))
-        {
-            lock (_readPending) { _pending.Remove(id); }
-            throw new TimeoutException("jsonrpc: " + method);
-        }
-        var resp = tcs.Task.Result;
-        if (resp["error"] is JObject err)
-            throw new IOException("jsonrpc: " + err["code"] + " " + err["message"]);
-        return resp["result"] ?? JValue.CreateNull();
+        var json = body.ToString(Formatting.None);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var r = _http.PostAsync($"{BaseUrl}/install", content).GetAwaiter().GetResult();
+        var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        if (!r.IsSuccessStatusCode)
+            throw new IOException($"semio-store install {(int)r.StatusCode}: {t}");
+    }
+
+    /// <summary>📖 <c>POST /graphql</c> query root (<c>type Query</c>).</summary>
+    public JToken ExecuteQuery(string query, JObject? variables = null, string? operationName = null)
+    {
+        GraphqlWire.AssertOperationKind(query, "query");
+        return GraphqlWire.UnwrapData(PostGraphql(GraphqlWire.PostBodyJson(query, variables, operationName)));
+    }
+
+    /// <summary>✍️ <c>POST /graphql</c> mutation root (<c>type Mutation</c>).</summary>
+    public JToken ExecuteMutation(string query, JObject? variables = null, string? operationName = null)
+    {
+        GraphqlWire.AssertOperationKind(query, "mutation");
+        return GraphqlWire.UnwrapData(PostGraphql(GraphqlWire.PostBodyJson(query, variables, operationName)));
+    }
+
+    private JToken PostGraphql(string requestJson)
+    {
+        using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/graphql") { Content = content };
+        req.Headers.TryAddWithoutValidation("Accept", "application/json");
+        var r = _http.SendAsync(req).GetAwaiter().GetResult();
+        var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        if (!r.IsSuccessStatusCode)
+            throw new IOException($"graphql http {(int)r.StatusCode}: {t}");
+        return JToken.Parse(t);
     }
 
     public void Dispose()
     {
-        _stopping = true;
         try
         {
-            if (_process?.HasExited == false && _stdin != null)
+            if (_baseUrl != null)
             {
-                _stdin.Write("{\"jsonrpc\":\"2.0\",\"id\":999999,\"method\":\"server.shutdown\"}\n");
-                _stdin.Flush();
+                using var _ = _http.PostAsync($"{_baseUrl}/server/shutdown", null).GetAwaiter().GetResult();
             }
+        }
+        catch { }
+
+        try
+        {
+            if (_process?.HasExited == false)
+                _process.WaitForExit(2000);
         }
         catch { }
 
         _process?.Dispose();
         _process = null;
+        _http.Dispose();
     }
 }
 

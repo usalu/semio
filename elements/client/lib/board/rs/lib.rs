@@ -3411,9 +3411,10 @@ mod board_host {
 						.filter(|s| !s.is_empty())
 						.ok_or("handle kind id missing")?;
 					let name = ho
-						.get("label")
-						.or_else(|| ho.get("name"))
+						.get("name")
 						.and_then(|x| x.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
 						.unwrap_or("")
 						.to_string();
 					let color_s = ho
@@ -3453,9 +3454,10 @@ mod board_host {
 						.filter(|s| !s.is_empty())
 						.ok_or("wire kind id missing")?;
 					let name = wo
-						.get("label")
-						.or_else(|| wo.get("name"))
+						.get("name")
 						.and_then(|x| x.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
 						.unwrap_or("")
 						.to_string();
 					let default_edge_kind = wo
@@ -3479,9 +3481,10 @@ mod board_host {
 						.filter(|s| !s.is_empty())
 						.ok_or("node kind id missing")?;
 					let name = no
-						.get("label")
-						.or_else(|| no.get("name"))
+						.get("name")
 						.and_then(|x| x.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
 						.unwrap_or("")
 						.to_string();
 					let scale = no.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
@@ -3500,9 +3503,10 @@ mod board_host {
 						.filter(|s| !s.is_empty())
 						.ok_or("edge kind id missing")?;
 					let name = eo
-						.get("label")
-						.or_else(|| eo.get("name"))
+						.get("name")
 						.and_then(|x| x.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
 						.unwrap_or("")
 						.to_string();
 					next.insert(id.to_string(), EdgeKindDef { name });

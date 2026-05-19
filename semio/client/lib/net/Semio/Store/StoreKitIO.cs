@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using Newtonsoft.Json.Linq;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -9,7 +10,7 @@ using Semio;
 
 namespace Semio.Store;
 
-/// <summary>Load/save kits through <c>semio-store</c> JSON-RPC; equality via <c>kit.equals</c>.</summary>
+/// <summary>📦 Load/save kits through <c>semio-store</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
 public static class StoreKitIO
 {
     public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
@@ -17,71 +18,106 @@ public static class StoreKitIO
     private static Kit SnapshotToKit(JToken tok) =>
         Utility.DeserializeKit(tok.ToString(Formatting.None))!;
 
-    public static bool KitsEqual(Kit a, Kit b)
+    private static bool TryOpenStore(out StoreClient? client)
     {
-        var p = StorePaths.ResolveStoreBinary();
-        if (string.IsNullOrEmpty(p) || !System.IO.File.Exists(p))
-            return JToken.DeepEquals(
-                JObject.Parse(Utility.Serialize(a)),
-                JObject.Parse(Utility.Serialize(b)));
-        using var c = new StoreClient();
-        c.Start();
-        var t = c.Call("kit.equals", new JObject { ["a"] = KitToJObject(a), ["b"] = KitToJObject(b) });
-        return t.Type == JTokenType.Boolean && t.Value<bool>();
+        var bin = StorePaths.ResolveStoreBinary();
+        if (string.IsNullOrEmpty(bin) || !System.IO.File.Exists(bin))
+        {
+            client = null;
+            return false;
+        }
+        client = new StoreClient(bin);
+        return true;
     }
+
+    private static void InstallCreate(StoreClient c, JObject dto) =>
+        c.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
+
+    private static void InstallImportFile(StoreClient c, string path) =>
+        c.Install(new JObject { ["importFile"] = new JObject { ["path"] = Path.GetFullPath(path) } });
+
+    private static string? ResolveKitJsonPath(string folderPath)
+    {
+        var root = Path.GetFullPath(folderPath);
+        var direct = Path.Combine(root, "kit.json");
+        if (System.IO.File.Exists(direct)) return direct;
+        foreach (var f in Directory.EnumerateFiles(root, "kit.json", SearchOption.AllDirectories))
+        {
+            if (f.Contains($"{Path.DirectorySeparatorChar}.semio{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                || f.Contains("/.semio/", StringComparison.Ordinal))
+                continue;
+            return f;
+        }
+        return null;
+    }
+
+    public static bool KitsEqual(Kit a, Kit b) =>
+        JToken.DeepEquals(
+            JObject.Parse(Utility.Serialize(a)),
+            JObject.Parse(Utility.Serialize(b)));
 
     public static Kit LoadKitFromZip(string zipPath)
     {
         if (!System.IO.File.Exists(zipPath)) throw new FileNotFoundException(zipPath);
-        using var c = new StoreClient();
-        c.Start();
-        c.Call("io.importFromZip", new JObject { ["path"] = Path.GetFullPath(zipPath) });
-        var tok = c.Call("kit.snapshot", new JObject());
-        return SnapshotToKit(tok);
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+            return LoadKitFromFolder(tempDir);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
     }
 
     public static Kit LoadKitFromFolder(string folderPath)
     {
         if (!Directory.Exists(folderPath) && !System.IO.File.Exists(folderPath)) throw new IOException(folderPath);
+        var kitJson = ResolveKitJsonPath(folderPath)
+            ?? throw new FileNotFoundException($"No kit.json under {folderPath}");
         using var c = new StoreClient();
-        c.Start();
-        c.Call("io.importFromFolder", new JObject { ["path"] = Path.GetFullPath(folderPath) });
-        var tok = c.Call("kit.snapshot", new JObject());
-        return SnapshotToKit(tok);
+        InstallImportFile(c, kitJson);
+        return SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(kitJson)));
     }
 
     public static Kit LoadKitFromFile(string filePath)
     {
         if (!System.IO.File.Exists(filePath)) throw new FileNotFoundException(filePath);
         using var c = new StoreClient();
-        c.Start();
-        c.Call("io.importFromFile", new JObject { ["path"] = Path.GetFullPath(filePath) });
-        var tok = c.Call("kit.snapshot", new JObject());
-        return SnapshotToKit(tok);
+        InstallImportFile(c, filePath);
+        return SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(filePath)));
     }
 
     public static void SaveKitToFile(Kit kit, string filePath)
     {
-        using var c = new StoreClient();
-        c.Start();
-        c.Call("kit.create", new JObject { ["dto"] = KitToJObject(kit) });
-        c.Call("io.exportToFile", new JObject { ["path"] = Path.GetFullPath(filePath) });
+        using (var c = new StoreClient())
+            InstallCreate(c, KitToJObject(kit));
+        System.IO.File.WriteAllText(Path.GetFullPath(filePath), Utility.Serialize(kit));
     }
 
     public static void SaveKitToFolder(Kit kit, string folderPath)
     {
-        using var c = new StoreClient();
-        c.Start();
-        c.Call("kit.create", new JObject { ["dto"] = KitToJObject(kit) });
-        c.Call("io.exportToFolder", new JObject { ["path"] = Path.GetFullPath(folderPath) });
+        Directory.CreateDirectory(folderPath);
+        SaveKitToFile(kit, Path.Combine(folderPath, "kit.json"));
     }
 
     public static void SaveKitToZip(Kit kit, string zipPath)
     {
         if (System.IO.File.Exists(zipPath)) System.IO.File.Delete(zipPath);
-        using var c = new StoreClient();
-        c.Start();
-        c.Call("kit.create", new JObject { ["dto"] = KitToJObject(kit) });
-        c.Call("io.exportToZip", new JObject { ["path"] = Path.GetFullPath(zipPath) });
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            SaveKitToFolder(kit, tempDir);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
     }
 }

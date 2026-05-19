@@ -14480,9 +14480,9 @@ const KitDiagramInner: FC = () => {
 
   const { nodes: baseNodes, edges: baseEdges } = useMemo(() => {
     if (!kit) return { nodes: [], edges: [] };
-    const { nodes: rfNodes, edges: rfEdges } = buildKitDiagramData(kit);
+    const { nodes: layoutNodes, edges: layoutEdges } = buildKitDiagramData(kit);
 
-    const filteredNodes = rfNodes
+    const filteredNodes = layoutNodes
       .filter((n) => visibleIds.has(n.data.id))
       .map((node) => {
         const [kind, id] = node.id.split(":");
@@ -14505,7 +14505,7 @@ const KitDiagramInner: FC = () => {
       });
 
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
-    const filteredEdges = rfEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
+    const filteredEdges = layoutEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
 
     return { nodes: filteredNodes, edges: filteredEdges };
   }, [kit, visibleIds, selection]);
@@ -14514,10 +14514,12 @@ const KitDiagramInner: FC = () => {
   const boardFixture = useMemo(() => sketchpadKitBuildBoardFixture(diagramNodes, diagramEdges), [diagramNodes, diagramEdges]);
   const selectedBoardIds = useMemo(() => sketchpadKitSelectionToBoardIds(selection), [selection]);
   const lockedBoardNodeIds = useMemo(() => (isHandTool ? new Set(diagramNodes.map((node) => node.id)) : new Set<string>()), [isHandTool, diagramNodes]);
-  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() => sketchpadKitBoardCameraFromNodes(diagramNodes));
+  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() =>
+    topologyBoardCameraFromCenters(diagramNodes.map((node) => sketchpadKitBoardNodeCenter(node))),
+  );
 
   useEffect(() => {
-    setBoardCamera(sketchpadKitBoardCameraFromNodes(diagramNodes));
+    setBoardCamera(topologyBoardCameraFromCenters(diagramNodes.map((node) => sketchpadKitBoardNodeCenter(node))));
   }, [baseNodeIdsKey]);
 
 

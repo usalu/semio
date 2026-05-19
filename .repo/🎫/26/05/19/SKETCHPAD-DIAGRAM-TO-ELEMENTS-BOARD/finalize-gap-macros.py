@@ -104,7 +104,7 @@ macros = f"""    macro_rules! gap_surface_families {{
     macro_rules! register_gap_surface_family_connections {{
         ($builder:expr, $($Name:ident),+ $(,)?) => {{{{
             let mut b = $builder;
-            $( b = b.register_output_type::<paste::paste! {{ [<$Name Connection>] }}>(); )+
+            $( b = b.register_output_type::<::paste::paste! {{ $crate::schema_gap_surfaces::[<$Name Connection>] }}>(); )+
             b
         }}}};
     }}
@@ -127,7 +127,7 @@ relay_tail = f"""    #[macro_export]
     macro_rules! register_gap_surface_existing_relay_connections {{
         ($builder:expr, $($Name:ident),+ $(,)?) => {{{{
             let mut b = $builder;
-            $( b = b.register_output_type::<paste::paste! {{ [<$Name Connection>] }}>(); )+
+            $( b = b.register_output_type::<::paste::paste! {{ $crate::schema_gap_surfaces::[<$Name Connection>] }}>(); )+
             b
         }}}};
     }}

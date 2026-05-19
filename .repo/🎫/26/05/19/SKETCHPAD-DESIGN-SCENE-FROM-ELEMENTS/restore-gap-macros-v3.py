@@ -24,8 +24,8 @@ if not fm or not rm:
 family_names = fm.group(1).strip()
 relay_names = rm.group(1).strip()
 
-named_start = mod_text.index('    gap_surface_family_named!(')
-named_end = mod_text.index('    #[macro_export]', named_start)
+named_start = mod_text.index("    gap_surface_family_named!(")
+named_end = mod_text.index("    #[macro_export]", named_start)
 named_section = mod_text[named_start:named_end]
 
 head_end = mod_text.index("    macro_rules! define_gap_surface_families_from_list")
@@ -56,18 +56,38 @@ tail = f"""    macro_rules! define_gap_surface_families_from_list {{
     }}
 
     #[macro_export]
+    macro_rules! __gap_surface_family_name_idents {{
+        () => {{
+            $crate::gap_surface_family_name_list!(@names)
+        }};
+    }}
+
+    #[macro_export]
+    macro_rules! __gap_surface_existing_relay_name_idents {{
+        () => {{
+            $crate::gap_surface_existing_relay_name_list!(@names)
+        }};
+    }}
+
+    #[macro_export]
     macro_rules! gap_surface_family_name_list {{
         (@names) => {{
         {family_names}
         }};
         () => {{
-            define_gap_surface_families_from_list!(gap_surface_family_name_list!(@names));
+            $crate::gap_surface_family_name_list! {{
+                @emit_gap_surface_families;
+                __gap_surface_family_name_idents!()
+            }}
+        }};
+        (@emit_gap_surface_families; $($Name:ident),* $(,)?) => {{
+            gap_surface_families! {{ $($Name),* }}
         }};
         (@register $builder:expr) => {{
-            gap_surface_family_name_list!(
+            $crate::gap_surface_family_name_list! {{
                 @do_register_bridge $builder;
-                gap_surface_family_name_list!(@names)
-            )
+                __gap_surface_family_name_idents!()
+            }}
         }};
         (@do_register_bridge $builder:expr; $($Name:ident),* $(,)?) => {{
             $crate::register_gap_surface_family_connections!(@do_register $builder, $($Name),*)
@@ -80,13 +100,19 @@ tail = f"""    macro_rules! define_gap_surface_families_from_list {{
         {relay_names}
         }};
         () => {{
-            define_gap_surface_existing_relays_from_list!(gap_surface_existing_relay_name_list!(@names));
+            $crate::gap_surface_existing_relay_name_list! {{
+                @emit_gap_surface_existing_relays;
+                __gap_surface_existing_relay_name_idents!()
+            }}
+        }};
+        (@emit_gap_surface_existing_relays; $($Name:ident),* $(,)?) => {{
+            gap_surface_existing_relays! {{ $($Name),* }}
         }};
         (@register $builder:expr) => {{
-            gap_surface_existing_relay_name_list!(
+            $crate::gap_surface_existing_relay_name_list! {{
                 @do_register_bridge $builder;
-                gap_surface_existing_relay_name_list!(@names)
-            )
+                __gap_surface_existing_relay_name_idents!()
+            }}
         }};
         (@do_register_bridge $builder:expr; $($Name:ident),* $(,)?) => {{
             $crate::register_gap_surface_existing_relay_connections!(@do_register $builder, $($Name),*)

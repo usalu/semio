@@ -11,7 +11,7 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Semio;
 
-/// <summary>Kit diff validation, <see cref="AreKitsEqual"/> (via <c>semio-store</c>), and canonical <see cref="KitDiff"/> JSON comparison.</summary>
+/// <summary>Kit diff validation, <see cref="AreKitsEqual"/> (normalized JSON), and canonical <see cref="KitDiff"/> JSON comparison.</summary>
 public static class SemioDiff
 {
     public static DesignChange GetDesignChange(Design before, Design after, string? author = null, DateTime? time = null)

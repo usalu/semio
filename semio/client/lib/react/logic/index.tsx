@@ -20,11 +20,15 @@ export { Alternative, Author, Backbone, Camera, Concept, Connection, Connector, 
 type FieldBindOptions<E, T> = Readonly<{
   /** @emoji 🧲 Single async read (one GraphQL selection / entity method). */
   read: (entity: E) => Promise<T>;
-  /** @emoji 📡 When set, {@link Store#bus} {@code subscribeKind}; when omitted, only mount pull fresh data. */
-  eventKind?: string;
+  /** @emoji 📡 Entity field name → {@code on{Name}Changed} on the anchor (preferred over bus). */
+  field?: string;
   /** @emoji 🪝  source; re-invoked each render — keep stable via {@link React#useCallback}. */
   get: () => E | null;
 }>;
+
+function entityFieldChangedMethodName(fieldName: string): string {
+  return `on${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}Changed`;
+}
 
 const EMPTY_IDS = Object.freeze([]) as readonly string[];
 const EMPTY_DESIGNS = Object.freeze([]) as readonly Design[];
@@ -48,7 +52,7 @@ async function noopKitFieldSet(): Promise<SetResult> {
  * @returns Last resolved value, or {@code undefined} before the first successful read or when the entity is absent.
  */
 function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T>): () => T | undefined {
-  const { read, eventKind, get } = opts;
+  const { read, field: fieldName, get } = opts;
   return function use(): T | undefined {
     const entity = get();
     const [value, setValue] = React.useState<T | undefined>(undefined);
@@ -77,9 +81,13 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
     React.useEffect(() => {
       const e = entityRef.current;
       if (e == null) return;
-      const subscribedKind = eventKind == null || eventKind === "" ? "commandSucceeded" : eventKind;
-      return e.session.bus.subscribeKind(subscribedKind, () => void refresh());
-    }, [entity, eventKind, refresh]);
+      if (fieldName != null && fieldName !== "") {
+        const eventMethod = entityFieldChangedMethodName(fieldName);
+        const sub = (e as unknown as Record<string, (cb: (next: unknown) => void) => () => void>)[eventMethod];
+        if (typeof sub === "function") return sub.call(e, () => void refresh());
+      }
+      return e.session.bus.subscribeKind("commandSucceeded", () => void refresh());
+    }, [entity, fieldName, refresh]);
 
     return value;
   };
@@ -284,8 +292,8 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => T
 }
 // #endregion 🪝KitFieldBind
 
-function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (entity: E) => Promise<T>, eventKind?: string): T | undefined {
-  return semioInternalFieldBind<E, T>({ get: () => entity, read, eventKind })();
+function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (entity: E) => Promise<T>, field?: string): T | undefined {
+  return semioInternalFieldBind<E, T>({ get: () => entity, read, field })();
 }
 
 // #region 🪪IdsAndProviders
@@ -935,49 +943,49 @@ function useResolvedType(id?: ID): Type | null {
 /** @emoji 📚 Kit-level designs via {@link Kit#designs} (stable entity handles). */
 export function useKitDesigns(): readonly Design[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.designs())) ?? EMPTY_DESIGNS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.designs()), "designs") ?? EMPTY_DESIGNS;
 }
 
 /** @emoji 📚 Kit-level kinds via {@link Kit#types}. */
 export function useKitTypes(): readonly Type[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.types())) ?? EMPTY_TYPES;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.types()), "types") ?? EMPTY_TYPES;
 }
 
 /** @emoji 📚 Kit-level authors via {@link Kit#authors}. */
 export function useKitAuthors(): readonly Author[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.authors())) ?? EMPTY_AUTHORS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.authors()), "authors") ?? EMPTY_AUTHORS;
 }
 
 /** @emoji 📚 Kit-level qualities via {@link Kit#qualities}. */
 export function useKitQualities(): readonly Quality[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.qualities())) ?? EMPTY_QUALITIES;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.qualities()), "qualities") ?? EMPTY_QUALITIES;
 }
 
 /** @emoji 📚 Kit-level tags via {@link Kit#tags}. */
 export function useKitTags(): readonly Tag[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.tags())) ?? EMPTY_TAGS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.tags()), "tags") ?? EMPTY_TAGS;
 }
 
 /** @emoji 📚 Kit-level concepts via {@link Kit#concepts}. */
 export function useKitConcepts(): readonly Concept[] {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.concepts())) ?? EMPTY_CONCEPTS;
+  return useCurrentEntityField(kit, async (k) => Object.freeze(await k.concepts()), "concepts") ?? EMPTY_CONCEPTS;
 }
 
 /** @emoji 📚 Pieces in the active {@link DesignContext} design. */
 export function useDesignPieces(): readonly Piece[] {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.pieces())) ?? EMPTY_PIECES;
+  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.pieces()), "pieces") ?? EMPTY_PIECES;
 }
 
 /** @emoji 📚 Connections in the active {@link DesignContext} design. */
 export function useDesignConnections(): readonly Connection[] {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.connections())) ?? EMPTY_CONNECTIONS;
+  return useCurrentEntityField(entity, async (design) => Object.freeze(await design.connections()), "connections") ?? EMPTY_CONNECTIONS;
 }
 // #endregion 🪝IdStableEntityLists
 
@@ -1007,58 +1015,58 @@ export function useConnections(): readonly Connection[] {
 
 // #region 🪝HooksKit
 // #region 📖KitReads
-/** @emoji 📖 Live {@link Kit#name} + {@code kitRenamed}. */
+/** @emoji 📖 Live {@link Kit#name} via {@link Kit#onNameChanged}. */
 export function useKitName(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.name(), "kitRenamed");
+  return useCurrentEntityField(kit, (k) => k.name(), "name");
 }
 
-/** @emoji 📖 Live {@link Kit#description} + {@code changedDescription}. */
+/** @emoji 📖 Live {@link Kit#description} via {@link Kit#onDescriptionChanged}. */
 export function useKitDescription(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.description(), "changedDescription");
+  return useCurrentEntityField(kit, (k) => k.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Kit#icon}. */
 export function useKitIcon(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.icon());
+  return useCurrentEntityField(kit, (k) => k.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Kit#image}. */
 export function useKitImage(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.image());
+  return useCurrentEntityField(kit, (k) => k.image(), "image");
 }
 
 /** @emoji 📖 Live {@link Kit#preview}. */
 export function useKitPreview(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.preview());
+  return useCurrentEntityField(kit, (k) => k.preview(), "preview");
 }
 
 /** @emoji 📖 Live {@link Kit#remote}. */
 export function useKitRemote(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.remote());
+  return useCurrentEntityField(kit, (k) => k.remote(), "remote");
 }
 
 /** @emoji 📖 Live {@link Kit#homepage}. */
 export function useKitHomepage(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.homepage());
+  return useCurrentEntityField(kit, (k) => k.homepage(), "homepage");
 }
 
 /** @emoji 📖 Live {@link Kit#license}. */
 export function useKitLicense(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.license());
+  return useCurrentEntityField(kit, (k) => k.license(), "license");
 }
 
 /** @emoji 📖 Live {@link Kit#uri}. */
 export function useKitUri(): string | undefined {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.uri());
+  return useCurrentEntityField(kit, (k) => k.uri(), "uri");
 }
 
 /** @emoji 🧾 Exposes {@link Store#ensureChangeId} as a stable callback. */
@@ -1157,37 +1165,37 @@ export function useBackboneStatus(): Readonly<{ attachedUri: string | null; kind
 /** @emoji 📖 Live {@link Design#name}. */
 export function useDesignName(id?: string): string {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.name()) ?? "";
+  return useCurrentEntityField(entity, (d) => d.name(), "name") ?? "";
 }
 
-/** @emoji 📖 Live {@link Design#description} + {@code changedDescription}. */
+/** @emoji 📖 Live {@link Design#description} via {@link Design#onDescriptionChanged}. */
 export function useDesignDescription(id?: string): string {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.description(), "changedDescription") ?? "";
+  return useCurrentEntityField(entity, (d) => d.description(), "description") ?? "";
 }
 
 /** @emoji 📖 Live {@link Design#qualitySum}. */
 export function useDesignQualitySum(id?: string): number {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.qualitySum()) ?? 0;
+  return useCurrentEntityField(entity, (d) => d.qualitySum(), "qualitySum") ?? 0;
 }
 
 /** @emoji 📖 Live {@link Design#icon}. */
 export function useDesignIcon(id?: string): string {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.icon()) ?? "";
+  return useCurrentEntityField(entity, (d) => d.icon(), "icon") ?? "";
 }
 
 /** @emoji 📖 Live {@link Design#image}. */
 export function useDesignImage(id?: string): string {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.image()) ?? "";
+  return useCurrentEntityField(entity, (d) => d.image(), "image") ?? "";
 }
 
 /** @emoji 📖 Live {@link Design#unit}. */
 export function useDesignUnit(id?: string): string {
   const entity = useResolvedDesign(id);
-  return useCurrentEntityField(entity, (d) => d.unit()) ?? "";
+  return useCurrentEntityField(entity, (d) => d.unit(), "unit") ?? "";
 }
 // #endregion 📖DesignReads
 
@@ -1255,37 +1263,37 @@ const useTypeCommandBound = semioInternalEntityCommandFactory<Type>({
 /** @emoji 📖 Live {@link Type#name}. */
 export function useTypeName(id?: string): string | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.name());
+  return useCurrentEntityField(entity, (t) => t.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Type#description}. */
 export function useTypeDescription(id?: string): string | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.description());
+  return useCurrentEntityField(entity, (t) => t.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Type#icon}. */
 export function useTypeIcon(id?: string): string | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.icon());
+  return useCurrentEntityField(entity, (t) => t.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Type#image}. */
 export function useTypeImage(id?: string): string | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.image());
+  return useCurrentEntityField(entity, (t) => t.image(), "image");
 }
 
 /** @emoji 📖 Live {@link Type#unit}. */
 export function useTypeUnit(id?: string): string | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.unit());
+  return useCurrentEntityField(entity, (t) => t.unit(), "unit");
 }
 
 /** @emoji 📖 Connector ids for {@link Type#connectors}. */
 export function useTypeConnectors(id?: string): readonly string[] | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.connectors()).map((c) => c.id)));
+  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.connectors()).map((c) => c.id)), "connectors");
 }
 
 /** @emoji 📖 Representation ids for {@link Type#representations}. */
@@ -1297,7 +1305,7 @@ export function useTypeRepresentations(id?: string): readonly string[] | undefin
 /** @emoji 📖 Live {@link Type#attributes}. */
 export function useTypeAttributes(id?: string): readonly Attribute[] | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, (t) => t.attributes());
+  return useCurrentEntityField(entity, (t) => t.attributes(), "attributes");
 }
 
 /** @emoji 📖 Author ids for {@link Type#authors}. */
@@ -1325,43 +1333,43 @@ const usePortCommandBound = semioInternalEntityCommandFactory<Port>({
 /** @emoji 📖 Live {@link Port#code}. */
 export function usePortCode(): string | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.code());
+  return useCurrentEntityField(entity, (p) => p.code(), "code");
 }
 
 /** @emoji 📖 Live {@link Port#label}. */
 export function usePortLabel(): string | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.label());
+  return useCurrentEntityField(entity, (p) => p.label(), "label");
 }
 
 /** @emoji 📖 Live {@link Port#order}. */
 export function usePortOrder(): number | null | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.order());
+  return useCurrentEntityField(entity, (p) => p.order(), "order");
 }
 
 /** @emoji 📖 Live {@link Port#name}. */
 export function usePortName(): string | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.name());
+  return useCurrentEntityField(entity, (p) => p.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Port#description}. */
 export function usePortDescription(): string | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.description());
+  return useCurrentEntityField(entity, (p) => p.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Port#icon}. */
 export function usePortIcon(): string | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.icon());
+  return useCurrentEntityField(entity, (p) => p.icon(), "icon");
 }
 
 /** @emoji 📖 Bulky {@link Port#attributes}. */
 export function usePortAttributes(): readonly Attribute[] | undefined {
   const entity = resolvePort();
-  return useCurrentEntityField(entity, (p) => p.attributes());
+  return useCurrentEntityField(entity, (p) => p.attributes(), "attributes");
 }
 
 /** @emoji ✍️ All {@link Port} mutations for {@link PortContext}. */
@@ -1380,19 +1388,19 @@ const useConnectorCommandBound = semioInternalEntityCommandFactory<Connector>({
 /** @emoji 📖 Live {@link Connector#code}. */
 export function useConnectorCode(id?: string): string | undefined {
   const entity = resolveConnector(id);
-  return useCurrentEntityField(entity, (c) => c.code());
+  return useCurrentEntityField(entity, (c) => c.code(), "code");
 }
 
 /** @emoji 📖 Live {@link Connector#description}. */
 export function useConnectorDescription(id?: string): string | undefined {
   const entity = resolveConnector(id);
-  return useCurrentEntityField(entity, (c) => c.description());
+  return useCurrentEntityField(entity, (c) => c.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Connector#icon}. */
 export function useConnectorIcon(id?: string): string | undefined {
   const entity = resolveConnector(id);
-  return useCurrentEntityField(entity, (c) => c.icon());
+  return useCurrentEntityField(entity, (c) => c.icon(), "icon");
 }
 
 /** @emoji 📖 Linked port id for {@link Connector#port}. */
@@ -1407,7 +1415,7 @@ export function useConnectorPort(id?: string): string | null | undefined {
 /** @emoji 📖 Bulky {@link Connector#attributes}. */
 export function useConnectorAttributes(id?: string): readonly Attribute[] | undefined {
   const entity = resolveConnector(id);
-  return useCurrentEntityField(entity, (c) => c.attributes());
+  return useCurrentEntityField(entity, (c) => c.attributes(), "attributes");
 }
 
 /** @emoji ✍️ All {@link Connector} mutations (optional {@code id} overrides {@link ConnectorContext}). */
@@ -1420,37 +1428,37 @@ export function useConnectorCommand(id?: ID): EntityCommand<SemioCommandRunners>
 /** @emoji 📖 Live {@link Author#name}. */
 export function useAuthorName(id?: string): string | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.name());
+  return useCurrentEntityField(entity, (a) => a.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Author#email}. */
 export function useAuthorEmail(id?: string): string | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.email());
+  return useCurrentEntityField(entity, (a) => a.email(), "email");
 }
 
 /** @emoji 📖 Live {@link Author#rank}. */
 export function useAuthorRank(id?: string): number | null | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.rank());
+  return useCurrentEntityField(entity, (a) => a.rank(), "rank");
 }
 
 /** @emoji 📖 Live {@link Author#description}. */
 export function useAuthorDescription(id?: string): string | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.description());
+  return useCurrentEntityField(entity, (a) => a.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Author#icon}. */
 export function useAuthorIcon(id?: string): string | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.icon());
+  return useCurrentEntityField(entity, (a) => a.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Author#role}. */
 export function useAuthorRole(id?: string): string | undefined {
   const entity = resolveAuthor(id);
-  return useCurrentEntityField(entity, (a) => a.role());
+  return useCurrentEntityField(entity, (a) => a.role(), "role");
 }
 // #endregion ✍️Author
 
@@ -1467,43 +1475,43 @@ const useQualityCommandBound = semioInternalEntityCommandFactory<Quality>({
 /** @emoji 📖 Live {@link Quality#key}. */
 export function useQualityKey(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.key());
+  return useCurrentEntityField(entity, (q) => q.key(), "key");
 }
 
 /** @emoji 📖 Live {@link Quality#value}. */
 export function useQualityValue(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.value());
+  return useCurrentEntityField(entity, (q) => q.value(), "value");
 }
 
 /** @emoji 📖 Live {@link Quality#unit}. */
 export function useQualityUnit(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.unit());
+  return useCurrentEntityField(entity, (q) => q.unit(), "unit");
 }
 
 /** @emoji 📖 Live {@link Quality#definition}. */
 export function useQualityDefinition(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.definition());
+  return useCurrentEntityField(entity, (q) => q.definition(), "definition");
 }
 
 /** @emoji 📖 Live {@link Quality#description}. */
 export function useQualityDescription(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.description());
+  return useCurrentEntityField(entity, (q) => q.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Quality#icon}. */
 export function useQualityIcon(): string | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.icon());
+  return useCurrentEntityField(entity, (q) => q.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Quality#attributes}. */
 export function useQualityAttributes(): readonly Attribute[] | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, (q) => q.attributes());
+  return useCurrentEntityField(entity, (q) => q.attributes(), "attributes");
 }
 
 /** @emoji 📖 Live {@link Quality#benchmarks} as ids. */
@@ -1531,31 +1539,31 @@ const useTagCommandBound = semioInternalEntityCommandFactory<Tag>({
 /** @emoji 📖 Live {@link Tag#name}. */
 export function useTagName(): string | undefined {
   const entity = resolveTag();
-  return useCurrentEntityField(entity, (t) => t.name());
+  return useCurrentEntityField(entity, (t) => t.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Tag#description}. */
 export function useTagDescription(): string | undefined {
   const entity = resolveTag();
-  return useCurrentEntityField(entity, (t) => t.description());
+  return useCurrentEntityField(entity, (t) => t.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Tag#icon}. */
 export function useTagIcon(): string | undefined {
   const entity = resolveTag();
-  return useCurrentEntityField(entity, (t) => t.icon());
+  return useCurrentEntityField(entity, (t) => t.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Tag#order}. */
 export function useTagOrder(): number | null | undefined {
   const entity = resolveTag();
-  return useCurrentEntityField(entity, (t) => t.order());
+  return useCurrentEntityField(entity, (t) => t.order(), "order");
 }
 
 /** @emoji 📖 Live {@link Tag#attributes}. */
 export function useTagAttributes(): readonly Attribute[] | undefined {
   const entity = resolveTag();
-  return useCurrentEntityField(entity, (t) => t.attributes());
+  return useCurrentEntityField(entity, (t) => t.attributes(), "attributes");
 }
 
 /** @emoji ✍️ All {@link Tag} mutations for {@link TagContext}. */
@@ -1577,31 +1585,31 @@ const useConceptCommandBound = semioInternalEntityCommandFactory<Concept>({
 /** @emoji 📖 Live {@link Concept#name}. */
 export function useConceptName(): string | undefined {
   const entity = resolveConcept();
-  return useCurrentEntityField(entity, (c) => c.name());
+  return useCurrentEntityField(entity, (c) => c.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Concept#description}. */
 export function useConceptDescription(): string | undefined {
   const entity = resolveConcept();
-  return useCurrentEntityField(entity, (c) => c.description());
+  return useCurrentEntityField(entity, (c) => c.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Concept#icon}. */
 export function useConceptIcon(): string | undefined {
   const entity = resolveConcept();
-  return useCurrentEntityField(entity, (c) => c.icon());
+  return useCurrentEntityField(entity, (c) => c.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Concept#order}. */
 export function useConceptOrder(): number | null | undefined {
   const entity = resolveConcept();
-  return useCurrentEntityField(entity, (c) => c.order());
+  return useCurrentEntityField(entity, (c) => c.order(), "order");
 }
 
 /** @emoji 📖 Live {@link Concept#attributes}. */
 export function useConceptAttributes(): readonly Attribute[] | undefined {
   const entity = resolveConcept();
-  return useCurrentEntityField(entity, (c) => c.attributes());
+  return useCurrentEntityField(entity, (c) => c.attributes(), "attributes");
 }
 
 /** @emoji ✍️ All {@link Concept} mutations for {@link ConceptContext}. */
@@ -1614,13 +1622,13 @@ export function useConceptCommand(id?: ID): EntityCommand<SemioCommandRunners> {
 /** @emoji 📖 Live {@link Representation#url}. */
 export function useRepresentationUrl(id?: string): string | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, (r) => r.url());
+  return useCurrentEntityField(entity, (r) => r.url(), "url");
 }
 
 /** @emoji 📖 Live {@link Representation#description}. */
 export function useRepresentationDescription(id?: string): string | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, (r) => r.description());
+  return useCurrentEntityField(entity, (r) => r.description(), "description");
 }
 
 /** @emoji 📖 Tag ids for {@link Representation#tags}. */
@@ -1638,7 +1646,7 @@ export function useRepresentationQualities(id?: string): readonly string[] | und
 /** @emoji 📖 Live {@link Representation#attributes}. */
 export function useRepresentationAttributes(id?: string): readonly Attribute[] | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, (r) => r.attributes());
+  return useCurrentEntityField(entity, (r) => r.attributes(), "attributes");
 }
 
 /** @emoji 📖 Linked file id for {@link Representation#file}. */
@@ -1653,7 +1661,7 @@ export function useRepresentationFile(id?: string): string | null | undefined {
 /** @emoji 📖 Live {@link File#name}. */
 export function useFileName(id?: string): string | undefined {
   const entity = resolveFile(id);
-  return useCurrentEntityField(entity, (f) => f.name());
+  return useCurrentEntityField(entity, (f) => f.name(), "name");
 }
 // #endregion 🎨Representation
 
@@ -1661,19 +1669,19 @@ export function useFileName(id?: string): string | undefined {
 /** @emoji 📖 Live {@link Piece#name}. */
 export function usePieceName(id?: string): string | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.name());
+  return useCurrentEntityField(entity, (p) => p.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Piece#description}. */
 export function usePieceDescription(id?: string): string | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.description());
+  return useCurrentEntityField(entity, (p) => p.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Piece#icon}. */
 export function usePieceIcon(id?: string): string | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.icon());
+  return useCurrentEntityField(entity, (p) => p.icon(), "icon");
 }
 
 /** @emoji 📖 Kit piece {@code type { id }} reference. */
@@ -1685,7 +1693,7 @@ export function usePieceTypeId(id?: string): string | undefined {
 /** @emoji 📖 Live {@link Piece#scale}. */
 export function usePieceScale(id?: string): number | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.scale());
+  return useCurrentEntityField(entity, (p) => p.scale(), "scale");
 }
 
 /** @emoji 📖 Live {@link Piece#position}. */
@@ -1727,19 +1735,19 @@ export function usePieceFlatCenter(id?: string): Coordinate | null | undefined {
 /** @emoji 📖 Live {@link Piece#blueprint}. */
 export function usePieceBlueprint(id?: string): PieceBlueprint | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.blueprint());
+  return useCurrentEntityField(entity, (p) => p.blueprint(), "blueprint");
 }
 
 /** @emoji 📖 Live {@link Piece#attributes}. */
 export function usePieceAttributes(id?: string): readonly Attribute[] | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.attributes());
+  return useCurrentEntityField(entity, (p) => p.attributes(), "attributes");
 }
 
 /** @emoji 📖 Live {@link Piece#connectionKind}. */
 export function usePieceConnectionKind(id?: string): "FIXED" | "CONNECTED" | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.connectionKind());
+  return useCurrentEntityField(entity, (p) => p.connectionKind(), "connectionKind");
 }
 
 /** @emoji 📖 Parent piece id for {@link Piece#parentPiece}. */
@@ -1775,13 +1783,13 @@ export function usePieceChildConnections(id?: string): readonly string[] | undef
 /** @emoji 📖 Live {@link Piece#depth}. */
 export function usePieceDepth(id?: string): number | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.depth());
+  return useCurrentEntityField(entity, (p) => p.depth(), "depth");
 }
 
 /** @emoji 📖 Live {@link Piece#path} as ordered piece node keys (assembly chain). */
 export function usePiecePathPieces(id?: string): readonly string[] | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, (p) => p.pathPieces());
+  return useCurrentEntityField(entity, (p) => p.pathPieces(), "pathPieces");
 }
 
 const usePieceCommandBound = semioInternalEntityCommandFactory<Piece>({
@@ -1828,85 +1836,85 @@ export function usePiecesCommand(): EntityCommand<SemioCommandRunners> {
 /** @emoji 📖 Live {@link Connection#gap}. */
 export function useConnectionGap(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.gap());
+  return useCurrentEntityField(entity, (c) => c.gap(), "gap");
 }
 
 /** @emoji 📖 Live {@link Connection#shift}. */
 export function useConnectionShift(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.shift());
+  return useCurrentEntityField(entity, (c) => c.shift(), "shift");
 }
 
 /** @emoji 📖 Live {@link Connection#rise}. */
 export function useConnectionRise(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.rise());
+  return useCurrentEntityField(entity, (c) => c.rise(), "rise");
 }
 
 /** @emoji 📖 Live {@link Connection#rotation}. */
 export function useConnectionRotation(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.rotation());
+  return useCurrentEntityField(entity, (c) => c.rotation(), "rotation");
 }
 
 /** @emoji 📖 Live {@link Connection#turn}. */
 export function useConnectionTurn(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.turn());
+  return useCurrentEntityField(entity, (c) => c.turn(), "turn");
 }
 
 /** @emoji 📖 Live {@link Connection#tilt}. */
 export function useConnectionTilt(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.tilt());
+  return useCurrentEntityField(entity, (c) => c.tilt(), "tilt");
 }
 
 /** @emoji 📖 Live {@link Connection#u}. */
 export function useConnectionU(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.u());
+  return useCurrentEntityField(entity, (c) => c.u(), "u");
 }
 
 /** @emoji 📖 Live {@link Connection#v}. */
 export function useConnectionV(): number | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.v());
+  return useCurrentEntityField(entity, (c) => c.v(), "v");
 }
 
 /** @emoji 📖 Live {@link Connection#parent}. */
 export function useConnectionParent(): Side | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.parent());
+  return useCurrentEntityField(entity, (c) => c.parent(), "parent");
 }
 
 /** @emoji 📖 Live {@link Connection#child}. */
 export function useConnectionChild(): Side | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.child());
+  return useCurrentEntityField(entity, (c) => c.child(), "child");
 }
 
 /** @emoji 📖 Live {@link Connection#name}. */
 export function useConnectionName(): string | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.name());
+  return useCurrentEntityField(entity, (c) => c.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Connection#description}. */
 export function useConnectionDescription(): string | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.description());
+  return useCurrentEntityField(entity, (c) => c.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Connection#icon}. */
 export function useConnectionIcon(): string | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.icon());
+  return useCurrentEntityField(entity, (c) => c.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Connection#attributes}. */
 export function useConnectionAttributes(): readonly Attribute[] | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.attributes());
+  return useCurrentEntityField(entity, (c) => c.attributes(), "attributes");
 }
 // #endregion ⛓️Connection
 

@@ -9,29 +9,28 @@ using Xunit;
 public sealed class StoreClientTests
 {
     [Fact]
-    public void Semio_Store_Sidecar_Smoke()
+    public void Semio_Store_Graphql_Smoke()
     {
         if (!File.Exists(StorePaths.ResolveStoreBinary()) &&
             !File.Exists(Path.Combine("target", "release", "semio-store.exe")) &&
             !File.Exists(Path.Combine("target", "release", "semio-store")))
         {
-            // CI may not have Rust artifacts
             return;
         }
 
         using var c = new StoreClient();
-        var s = c.Call("semio.generateId", new JObject());
-        var id = s.Value<string>();
-        Assert.False(string.IsNullOrEmpty(id));
+        var id = "00000000-0000-7000-8000-000000000099";
         var dto = new JObject
         {
-            ["id"] = id!,
+            ["id"] = id,
             ["name"] = "net-store-test",
             ["types"] = new JArray(),
             ["designs"] = new JArray(),
         };
-        c.Call("kit.create", new JObject { ["dto"] = dto });
-        var snap = c.Call("kit.snapshot", new JObject());
-        Assert.Equal("net-store-test", snap["name"]?.Value<string>());
+        c.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
+        var data = c.ExecuteQuery(
+            "query KitWipName { session { stores { edges { node { wip { theKit { kit { name } } } } } } } } }");
+        var name = data.SelectToken("session.stores.edges[0].node.wip.theKit.kit.name")?.Value<string>();
+        Assert.Equal("net-store-test", name);
     }
 }

@@ -75,16 +75,14 @@ export interface BoardHandleKindCatalogEntry {
 	color: string;
 	defaultWireKind?: string;
 	id: string;
-	label: string;
-	name?: string;
+	name: string;
 }
 
 /** @emoji 🧵 Wire-kind catalog row for link gestures and default promoted {@link BoardEdgeKindCatalogEntry} id. */
 export interface BoardWireKindCatalogEntry {
 	defaultEdgeKind?: string;
 	id: string;
-	label: string;
-	name?: string;
+	name: string;
 }
 
 /** @emoji 🟠 Node-kind catalog row (defaults for instances; richer fields reserved for future paint). */
@@ -94,8 +92,7 @@ export interface BoardNodeKindCatalogEntry {
 	defaultShapeProps?: Record<string, unknown>;
 	icon?: string;
 	id: string;
-	label: string;
-	name?: string;
+	name: string;
 	shape?: "circle" | "rectangle";
 	stroke?: string;
 }
@@ -105,8 +102,7 @@ export interface BoardEdgeKindCatalogEntry {
 	color?: string;
 	defaultShapeProps?: Record<string, unknown>;
 	id: string;
-	label: string;
-	name?: string;
+	name: string;
 	pattern?: string;
 	shape?: "bezier" | "line";
 	stroke?: string;
@@ -135,18 +131,18 @@ export const BOARD_DEFAULT_HANDLE_KIND_CATALOG: readonly BoardHandleKindCatalogE
 		color: "#94a3b8",
 		defaultWireKind: BOARD_BUILTIN_LINK_WIRE_KIND,
 		id: BOARD_BUILTIN_PORT_HANDLE_KIND,
-		label: "Port",
+		name: "Port",
 	},
 ];
 
 /** @emoji 🎨 Default wire catalog entry paired with {@link BOARD_DEFAULT_HANDLE_KIND_CATALOG}. */
 export const BOARD_DEFAULT_WIRE_KIND_CATALOG: readonly BoardWireKindCatalogEntry[] = [
-	{ defaultEdgeKind: BOARD_BUILTIN_LINK_EDGE_KIND, id: BOARD_BUILTIN_LINK_WIRE_KIND, label: "Link wire" },
+	{ defaultEdgeKind: BOARD_BUILTIN_LINK_EDGE_KIND, id: BOARD_BUILTIN_LINK_WIRE_KIND, name: "Link wire" },
 ];
 
 /** @emoji 🎨 Default edge catalog entry paired with {@link BOARD_DEFAULT_WIRE_KIND_CATALOG}. */
 export const BOARD_DEFAULT_EDGE_KIND_CATALOG: readonly BoardEdgeKindCatalogEntry[] = [
-	{ id: BOARD_BUILTIN_LINK_EDGE_KIND, label: "Link edge" },
+	{ id: BOARD_BUILTIN_LINK_EDGE_KIND, name: "Link edge" },
 ];
 
 /** @emoji 📚 Default {@link BoardKindCatalogBundle} for {@link BoardCanvas} when callers omit `kindCatalogs`. */
@@ -220,15 +216,14 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 		.map((e) => {
 			const id = String(e.id ?? "").trim();
 			const color = String(e.color ?? "").trim();
-			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const name = String(e.name ?? "").trim() || id;
 			const dw = e.defaultWireKind != null ? String(e.defaultWireKind).trim() : "";
 			if (id === "" || color === "") {
 				return null;
 			}
 			return {
 				id,
-				label,
-				name: label,
+				name,
 				color,
 				...(dw !== "" ? { defaultWireKind: dw } : {}),
 			};
@@ -237,22 +232,22 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 	const wires = (bundle.wires ?? [])
 		.map((e) => {
 			const id = String(e.id ?? "").trim();
-			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const name = String(e.name ?? "").trim() || id;
 			const de = e.defaultEdgeKind != null ? String(e.defaultEdgeKind).trim() : "";
 			if (id === "") {
 				return null;
 			}
-			return { id, label, name: label, ...(de !== "" ? { defaultEdgeKind: de } : {}) };
+			return { id, name, ...(de !== "" ? { defaultEdgeKind: de } : {}) };
 		})
 		.filter((x): x is NonNullable<typeof x> => x !== null);
 	const nodes = (bundle.nodes ?? [])
 		.map((e) => {
 			const id = String(e.id ?? "").trim();
-			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const name = String(e.name ?? "").trim() || id;
 			if (id === "") {
 				return null;
 			}
-			const row: Record<string, unknown> = { id, label, name: label };
+			const row: Record<string, unknown> = { id, name };
 			if (e.shape) {
 				row.shape = e.shape;
 			}
@@ -277,11 +272,11 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 	const edges = (bundle.edges ?? [])
 		.map((e) => {
 			const id = String(e.id ?? "").trim();
-			const label = String(e.label ?? e.name ?? "").trim() || id;
+			const name = String(e.name ?? "").trim() || id;
 			if (id === "") {
 				return null;
 			}
-			const row: Record<string, unknown> = { id, label, name: label };
+			const row: Record<string, unknown> = { id, name };
 			if (e.shape) {
 				row.shape = e.shape;
 			}
@@ -2455,7 +2450,7 @@ export function boardHandleKindOverlayLabel(
 	}
 	for (const row of catalogs.handles ?? []) {
 		if (row.id === id) {
-			return (row.label ?? row.name ?? id).trim() || id;
+			return (row.name ?? id).trim() || id;
 		}
 	}
 	return id;
@@ -5134,10 +5129,10 @@ if (boardVitest) {
 
 		it("mergeBoardKindCatalogBundleByRowId overlays rows by id", () => {
 			const merged = mergeBoardKindCatalogBundleByRowId(BOARD_DEFAULT_KIND_CATALOG_BUNDLE, {
-				handles: [{ color: "#ff0000", defaultWireKind: BOARD_BUILTIN_LINK_WIRE_KIND, id: BOARD_BUILTIN_PORT_HANDLE_KIND, label: "Patched" }],
-				nodes: [{ id: "semio.metabolism.light.node.x", label: "Capsule", name: "Capsule" }],
+				handles: [{ color: "#ff0000", defaultWireKind: BOARD_BUILTIN_LINK_WIRE_KIND, id: BOARD_BUILTIN_PORT_HANDLE_KIND, name: "Patched" }],
+				nodes: [{ id: "semio.metabolism.light.node.x", name: "Capsule" }],
 			});
-			expect(merged.handles?.find((h) => h.id === BOARD_BUILTIN_PORT_HANDLE_KIND)?.label).toBe("Patched");
+			expect(merged.handles?.find((h) => h.id === BOARD_BUILTIN_PORT_HANDLE_KIND)?.name).toBe("Patched");
 			expect(merged.handles?.find((h) => h.id === BOARD_BUILTIN_PORT_HANDLE_KIND)?.color).toBe("#ff0000");
 			expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
 		});
