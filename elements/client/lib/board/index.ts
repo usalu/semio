@@ -1073,7 +1073,7 @@ function serializeElementsBoardVelloThemeJson(): string {
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
 		edgeStrokeHovered: pc("color", "var(--color-hover-base)", fb.edgeStrokeHovered),
 		edgeStrokeSelected: pc("color", "var(--color-accent)", fb.edgeStrokeSelected),
-		edgeStrokeSelectionExit: pc("color", "var(--color-accent-secondary)", fb.edgeStrokeSelectionExit),
+		edgeStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.edgeStrokeSelectionExit),
 		edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
@@ -1083,18 +1083,18 @@ function serializeElementsBoardVelloThemeJson(): string {
 		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
 		nodeFillSelectionExit: pc(
 			"backgroundColor",
-			"color-mix(in oklab, var(--color-accent-secondary) 24%, var(--color-panel))",
+			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
 			fb.nodeFillSelectionExit,
 		),
-		nodeStrokeSelectionExit: pc("color", "var(--color-accent-secondary)", fb.nodeStrokeSelectionExit),
+		nodeStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.nodeStrokeSelectionExit),
 		nodeFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.nodeFillDisabled),
 		nodeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.nodeStrokeDisabled),
 		indirectHandleFill: pc(
 			"backgroundColor",
-			"color-mix(in oklab, var(--color-accent-secondary) 24%, var(--color-panel))",
+			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
 			fb.indirectHandleFill,
 		),
-		indirectHandleStroke: pc("color", "var(--color-accent-secondary)", fb.indirectHandleStroke),
+		indirectHandleStroke: pc("color", "var(--accent-secondary)", fb.indirectHandleStroke),
 		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
 		handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
@@ -1103,16 +1103,16 @@ function serializeElementsBoardVelloThemeJson(): string {
 		handleStrokeSelected: pc("color", "var(--color-accent)", fb.handleStrokeSelected),
 		handleFillSelectionExit: pc(
 			"backgroundColor",
-			"color-mix(in oklab, var(--color-accent-secondary) 24%, var(--color-panel))",
+			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
 			fb.handleFillSelectionExit,
 		),
-		handleStrokeSelectionExit: pc("color", "var(--color-accent-secondary)", fb.handleStrokeSelectionExit),
+		handleStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.handleStrokeSelectionExit),
 		handleFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.handleFillDisabled),
 		handleStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.handleStrokeDisabled),
 		wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
 		wireStrokeHovered: pc("color", "var(--color-hover-base)", fb.wireStrokeHovered),
 		wireStrokeSelected: pc("color", "var(--color-accent)", fb.wireStrokeSelected),
-		wireStrokeHighlighted: pc("color", "var(--color-accent-secondary)", fb.wireStrokeHighlighted),
+		wireStrokeHighlighted: pc("color", "var(--accent-secondary)", fb.wireStrokeHighlighted),
 		wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
 		selectionPreviewFill: pc(
 			"backgroundColor",
@@ -4873,27 +4873,32 @@ if (boardVitest) {
 			expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
 		});
 
-		it("does not treat kit cs_ labels as display text", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [],
-				nodes: [
-					{
-						handles: [{ angle: 0, id: "a:h" }],
-						height: 10,
-						id: "a",
-						label: "cs_sl0_d0_t_f0_b_c0",
-						shape: "rectangle",
-						width: 12,
-						x: 1,
-						y: 2,
-					},
-				],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "rectangle" });
-			expect(parsed?.nodes[0]).not.toHaveProperty("text");
-		});
+    it("maps kit piece label to node text and preserves label", () => {
+      const parsed = parseBoardFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [],
+        nodes: [
+          {
+            handles: [{ angle: 0, id: "a:h" }],
+            height: 10,
+            id: "a",
+            label: "cs_sl0_d0_t_f0_b_c0",
+            shape: "rectangle",
+            width: 12,
+            x: 1,
+            y: 2,
+          },
+        ],
+        schema: "elements.board.fixture/v1",
+      });
+      expect(parsed?.nodes[0]).toMatchObject({
+        id: "a",
+        label: "cs_sl0_d0_t_f0_b_c0",
+        shape: "rectangle",
+        text: "cs_sl0_d0_t_f0_b_c0",
+      });
+      expect(boardFixtureNodeCaption(parsed!.nodes[0]!)).toBe("cs_sl0_d0_t_f0_b_c0");
+    });
 
 		it("rejects wrong schema or malformed nodes", () => {
 			expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();

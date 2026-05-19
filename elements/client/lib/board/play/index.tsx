@@ -55,6 +55,7 @@ import {
   normalizeBoardSelectionProp,
   isBoardDrawLodKind,
   boardFixtureMetaKindCatalogBundle,
+  boardFixtureNodeCaption,
   classifyElementsBoardIconSelectorMode,
   encodeBoardFixtureForDragV1,
   layoutBoardFixtureRedrawHandles,
