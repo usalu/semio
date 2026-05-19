@@ -3671,7 +3671,7 @@ mod board_host {
 				return kind;
 			}
 			if n.selected {
-				return BoardElementStyleKind::Selected;
+				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(n.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -3681,7 +3681,7 @@ mod board_host {
 				return kind;
 			}
 			if h.selected {
-				return BoardElementStyleKind::Selected;
+				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(h.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -3691,7 +3691,7 @@ mod board_host {
 				return kind;
 			}
 			if e.selected {
-				return BoardElementStyleKind::Selected;
+				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(e.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -3701,7 +3701,7 @@ mod board_host {
 				return kind;
 			}
 			if w.selected {
-				return BoardElementStyleKind::Selected;
+				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(w.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -4099,6 +4099,15 @@ mod board_host {
 			matches!(&self.interaction, Interaction::Selection { .. })
 		}
 
+		/// @emoji 💠 Live area-select preview ids, or committed selection when not preselecting.
+		fn selection_chrome_ids(&self) -> BTreeSet<String> {
+			if self.is_preselecting() || !self.preselect.is_empty() {
+				self.preselect.clone()
+			} else {
+				self.selection.clone()
+			}
+		}
+
 		/// @emoji 🖱️ Empty selection on background click without exit/highlight chrome or preselect.
 		fn clear_selection_on_background_click(&mut self) {
 			if self.selection.is_empty() {
@@ -4115,11 +4124,7 @@ mod board_host {
 		}
 
 		fn sync_selection_flags_to_objects(&mut self) {
-			let chrome = if self.is_preselecting() {
-				self.preselect.clone()
-			} else {
-				self.selection.clone()
-			};
+			let chrome = self.selection_chrome_ids();
 			for n in self.nodes.values_mut() {
 				n.selected = chrome.contains(&n.id);
 			}
@@ -8658,6 +8663,44 @@ mod host_tests {
 		assert!(
 			preselect_hint > neutral_hint,
 			"minimap preselect should add visible selected chrome over neutral minimap rendering"
+		);
+	}
+
+	#[test]
+	fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 0.1);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			icon_kind: None,
+			node_kind: None,
+			user_data: None,
+			visible: None,
+			root: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+			scale: None,
+		});
+		h.sync_descriptor(&desc).unwrap();
+		let neutral_hint = h.encoded_scene_hint();
+		assert!(!matches!(h.interaction, Interaction::Selection { .. }));
+		h.set_preselect_state_silent(&["b".into()], &[]);
+		assert!(h.nodes.get("b").is_some_and(|n| n.selected));
+		assert!(h.nodes.get("a").is_some_and(|n| !n.selected));
+		let preselect_hint = h.encoded_scene_hint();
+		assert!(
+			preselect_hint > neutral_hint,
+			"silent minimap preselect should paint selected chrome without an active area-select interaction"
 		);
 	}
 

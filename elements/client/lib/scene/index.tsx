@@ -20,6 +20,7 @@ import {
 	type ElementsSurfaceTheme,
 	type FooterItem,
 	type UIAppConfig,
+	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
 import {
@@ -349,6 +350,10 @@ export interface SceneCanvasProps {
 	selectionMode?: SceneSelectionMode;
 	/** @emoji 📶 LOD zoom thresholds for pseudo-zoom derived from orbit camera distance. */
 	lodZoomThresholds?: SceneLodZoomThresholds;
+	/** @emoji 📶 When true (default), orbit pseudo-zoom selects the scene LOD band; when false, {@link lod} pins the tier when set. */
+	automaticLod?: boolean;
+	/** @emoji 📶 Pinned scene LOD when {@link automaticLod} is false; omit to follow orbit pseudo-zoom bands. */
+	lod?: SceneLodKind;
 	/** @emoji 📏 Orbit distance at which pseudo-zoom is ~1 (tune to scene extent). */
 	lodDistanceReference?: number;
 	/** @emoji 📐 Multiplier for LOD grid steps (board `grid_factor`). */
@@ -477,6 +482,8 @@ function SceneLodFrameRunner(props: {
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
+	readonly automaticLod: boolean;
+	readonly pinnedLod: SceneLodKind | undefined;
 	readonly onCtx: (next: SceneLodContextValue) => void;
 	readonly onLodChange?: (lod: SceneLodKind) => void;
 }) {
@@ -489,7 +496,10 @@ function SceneLodFrameRunner(props: {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
 		const pseudo = scenePseudoZoomFromOrbitDistance(dist, props.distanceReference);
-		const next = resolveSceneLodLabelFromThresholds(pseudo, props.thresholds);
+		const next =
+			!props.automaticLod && props.pinnedLod !== undefined
+				? props.pinnedLod
+				: resolveSceneLodLabelFromThresholds(pseudo, props.thresholds);
 		props.lodKindRef.current = next;
 		const lodGridStepWorld = sceneLodVisibleGridSnapStepWorld(next, props.gridFactor);
 		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
@@ -518,6 +528,8 @@ function SceneLodBridge(props: {
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly showLodGrid: boolean;
+	readonly automaticLod: boolean;
+	readonly pinnedLod: SceneLodKind | undefined;
 	readonly onLodChange?: (lod: SceneLodKind) => void;
 }) {
 	const [lodCtx, setLodCtx] = useState<SceneLodContextValue>(() => ({
@@ -551,6 +563,8 @@ function SceneLodBridge(props: {
 				distanceReference={props.distanceReference}
 				gridFactor={props.gridFactor}
 				gridSnapEnabled={props.gridSnapEnabled}
+				automaticLod={props.automaticLod}
+				pinnedLod={props.pinnedLod}
 				onCtx={onCtx}
 				onLodChange={props.onLodChange}
 			/>
@@ -571,6 +585,25 @@ function isQuat(v: unknown): v is Quat {
 }
 
 const SCENE_LOD_KINDS: readonly SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+
+/** @emoji 📶 Select value: orbit pseudo-zoom picks the scene LOD band. */
+export const SCENE_LOD_MODE_AUTOMATIC = "automatic" as const;
+
+/** @emoji 📶 Scene play / window LOD select value (`automatic` or a pinned {@link SceneLodKind}). */
+export type SceneLodModeKind = typeof SCENE_LOD_MODE_AUTOMATIC | SceneLodKind;
+
+/** @emoji ✅ True when `label` is a pinned scene LOD tier. */
+export function isSceneLodKind(label: string): label is SceneLodKind {
+	return (SCENE_LOD_KINDS as readonly string[]).includes(label);
+}
+
+/** @emoji 📶 Maps a window LOD select value to {@link SceneCanvasProps} LOD fields. */
+export function sceneLodCanvasProps(mode: SceneLodModeKind): Pick<SceneCanvasProps, "automaticLod" | "lod"> {
+	if (mode === SCENE_LOD_MODE_AUTOMATIC) {
+		return { automaticLod: true };
+	}
+	return { automaticLod: false, lod: mode };
+}
 
 function parseSceneDomainKind(value: unknown): SceneDomainKind {
 	if (typeof value !== "string") {
@@ -2478,6 +2511,8 @@ function SceneInner(props: SceneCanvasProps) {
 	const gridFactor = props.gridFactor ?? DEFAULT_SCENE_LOD_GRID_FACTOR;
 	const gridSnapEnabled = props.gridSnapEnabled ?? false;
 	const showLodGrid = props.showLodGrid === true;
+	const automaticLod = props.automaticLod ?? true;
+	const pinnedLod = !automaticLod && props.lod !== undefined && isSceneLodKind(props.lod) ? props.lod : undefined;
 	const maxDist = 4000;
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
@@ -2508,6 +2543,8 @@ function SceneInner(props: SceneCanvasProps) {
 				gridFactor={gridFactor}
 				gridSnapEnabled={gridSnapEnabled}
 				showLodGrid={showLodGrid}
+				automaticLod={automaticLod}
+				pinnedLod={pinnedLod}
 				onLodChange={props.onLodChange}
 			>
 				<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
@@ -2722,7 +2759,55 @@ function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null
 	return null;
 }
 
-function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
+const SCENE_PLAY_LOD_TIERS: SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+
+function scenePlayLodTierMenuLabel(tier: SceneLodKind): string {
+	return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
+const ScenePlayLodContext = createContext<Pick<SceneCanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
+
+function sceneWindowKindsWithLodMeasures(
+	sceneLodMode: SceneLodModeKind,
+	setSceneLodMode: (mode: SceneLodModeKind) => void,
+): UIWindowKindDefinition[] {
+	return [
+		{
+			id: "scene-main",
+			label: "Scene",
+			component: MainWindow,
+			measures: [
+				{
+					id: "scene-main-lod",
+					items: [
+						{ id: "automatic", label: "Automatic", value: SCENE_LOD_MODE_AUTOMATIC },
+						...SCENE_PLAY_LOD_TIERS.map((tier) => ({
+							id: tier,
+							label: scenePlayLodTierMenuLabel(tier),
+							value: tier,
+						})),
+					],
+					kind: "select",
+					label: "LOD",
+					onValueChange: (value) => {
+						if (value === SCENE_LOD_MODE_AUTOMATIC || isSceneLodKind(value)) {
+							setSceneLodMode(value as SceneLodModeKind);
+						}
+					},
+					value: sceneLodMode,
+				},
+			],
+		},
+	];
+}
+
+function ScenePlayBody({
+	fixture,
+	lodProps,
+}: {
+	fixture: SceneFixtureV1;
+	lodProps: Pick<SceneCanvasProps, "automaticLod" | "lod">;
+}) {
 	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [proximityCount, setProximityCount] = useState(0);
@@ -2817,6 +2902,7 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 						relocateMode={relocateMode}
 						showLodGrid
 						gridSnapEnabled
+						{...lodProps}
 						onLodChange={setSceneLodTag}
 						onSelect={onSelect}
 						onConnect={onConnect}
@@ -2854,10 +2940,11 @@ function ScenePlayBody({ fixture }: { fixture: SceneFixtureV1 }) {
 
 function MainWindow() {
 	const fixture = useMemo(() => parseSceneFixtureV1(sceneFixtureJson as unknown), []);
+	const lodProps = useContext(ScenePlayLodContext);
 	if (!fixture) {
 		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
 	}
-	return <ScenePlayBody fixture={fixture} />;
+	return <ScenePlayBody fixture={fixture} lodProps={lodProps} />;
 }
 
 const SCENE_PLAY_APP_ID = "elements-scene-play";
@@ -2912,20 +2999,25 @@ function ScenePlayInner(): ReactElement {
 		[device, expertise, theme],
 	);
 
+	const [sceneLodMode, setSceneLodMode] = useState<SceneLodModeKind>(SCENE_LOD_MODE_AUTOMATIC);
+	const lodProps = useMemo(() => sceneLodCanvasProps(sceneLodMode), [sceneLodMode]);
+
 	const apps = useMemo<UIAppConfig[]>(
 		() => [
 			{
 				id: SCENE_PLAY_APP_ID,
 				label: "Scene play",
-				windowKinds: [{ id: "scene-main", label: "Scene", component: MainWindow }],
+				windowKinds: sceneWindowKindsWithLodMeasures(sceneLodMode, setSceneLodMode),
 				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
 			},
 		],
-		[],
+		[sceneLodMode],
 	);
 
 	return (
-		<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+		<ScenePlayLodContext.Provider value={lodProps}>
+			<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+		</ScenePlayLodContext.Provider>
 	);
 }
 
@@ -2951,6 +3043,12 @@ if (!import.meta.vitest && typeof document !== "undefined") {
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	describe("sceneLodCanvasProps", () => {
+		it("maps automatic and pinned modes", () => {
+			expect(sceneLodCanvasProps(SCENE_LOD_MODE_AUTOMATIC)).toEqual({ automaticLod: true });
+			expect(sceneLodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
+		});
+	});
 	describe("resolveSceneLodLabelFromThresholds", () => {
 		it("classifies zoom bands", () => {
 			const t = DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;

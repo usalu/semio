@@ -483,6 +483,17 @@ Make the trigger zoom points props (same range for every lod by default)
 
 ---
 
+There is is exactly one selection and one preselection (exists only during select tool use).
+On left mouse click hold and drag a selection tool is started (either rectangle or lasso).
+A selection tool is using a preselection.
+The preselection is either finalized when the mouse click is released or discarded when escape is pressed.
+When discarded no selection changes.
+When there is a preselection it renders elements in two different styles: selected or highlighted.
+Selected when the element is preseselcted and not not part of the selection.
+Highlight when selected element is selected and not part of the preselection.
+
+---
+
 bounded drag (drag works within selected bounding rectangle normally you need to hit something selected)
 
 ---

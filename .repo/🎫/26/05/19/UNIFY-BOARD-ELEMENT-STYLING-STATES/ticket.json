@@ -1,9 +1,9 @@
 {
   "title": "Unify Board Element Styling States",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Finished the remaining selected/preselected parity cleanup in the Rust board renderer. Selected and preselected states now keep the same selected chrome even through visible-element override paths: link-compatible node highlighting no longer overrides selected nodes, and indirect handle rings keep their indirect neutral appearance only for neutral/original handles while selected or preselected handles use the shared selected style. Validation: cargo test -p elements_board --lib passed; bun nx run @elements/board:test passed Rust tests, wasm-pack, and Vitest. Playwright still reproduces the same two existing failures in the board play background context menu and redraw toolbar tests.",
+  "summary": "Collapsed selected and preselected board chrome onto the highlighted palette across the Rust host and TypeScript fallback/theme serialization, and fixed imperative selection syncing so scene objects always refresh their selected flags after setSelectionIds. Validated with cargo test -p elements_board --lib and bun nx run @elements/board:test; the Nx target is green through Rust, wasm-pack, and Vitest, with the same pre-existing Playwright failures remaining in board-play-gpu.spec.ts lines 21 and 54.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",
@@ -13,6 +13,7 @@
     "⚪9767a670bbfe48f5b05ec801504e5d9a",
     "⚪9e49b7d2cd2e4cae84a942aaf3220a82",
     "⚪f89aacae5ba64241bf725491bf3fa162",
-    "⚪94b3a350f3114a8c81f128bb44f213b4"
+    "⚪94b3a350f3114a8c81f128bb44f213b4",
+    "⚪309020340ca34709ac9c32702c758932"
   ]
 }

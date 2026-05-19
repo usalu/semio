@@ -30,6 +30,21 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	await page.waitForTimeout(500);
 	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-domain", "architecture");
 	await expect(page.locator("[data-e2e-scene-lod]")).toHaveText("overview");
+	await expect(page.locator('[data-measure-id="scene-main-lod"]')).toBeVisible({ timeout: 120_000 });
+	expectCleanSceneConsole(messages);
+});
+
+test("scene play LOD measure pins tier on canvas", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
+	await expect(page.locator('[data-measure-id="scene-main-lod"]')).toBeVisible({ timeout: 120_000 });
+	const lodSelect = page.locator('[data-measure-id="scene-main-lod"]');
+	await lodSelect.click();
+	await page.getByRole("option", { name: "Minimap" }).click();
+	await expect
+		.poll(async () => await page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 30_000 })
+		.toBe("minimap");
 	expectCleanSceneConsole(messages);
 });
 

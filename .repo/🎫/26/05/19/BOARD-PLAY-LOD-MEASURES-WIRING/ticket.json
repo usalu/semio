@@ -3,12 +3,13 @@
   "emoji": "📶",
   "status": "closed",
   "description": "Wire Rust BoardHost automatic_lod + forced_draw_lod, WASM setAutomaticLod/setForcedDrawLodLabel, BoardRenderer/BoardCanvas props, and board play floating window measures (Automatic LOD toggle + LOD tier select when off) so LOD controls are visible in board play.",
-  "summary": "Board play refactor had dropped all window measures and BoardRenderer automatic/pinned LOD WASM sync. Restored single per-pane LOD select (Automatic, Minimap, Overview, Normal, Detail, Micro) via boardWindowKindsWithLodMeasures; wired BoardCanvas automaticLod/lod from boardLodModeByPane; re-added BoardRenderer setAutomaticLod/setForcedDrawLod and WASM push. Stable onBoardPlayActiveWindowChange + UICanvas callback refs avoid Golden Layout teardown on LOD changes.",
+  "summary": "Scene play and topology play now expose the same single LOD window measure as board play (Automatic + minimap…micro). SceneCanvas supports automaticLod/lod: automatic uses orbit pseudo-zoom bands via SceneLodFrameRunner; pinned tier skips band resolution. Topology board/scene panes receive boardLodCanvasProps/sceneLodCanvasProps per window. Added boardLodCanvasProps helper in board/index.ts. E2e asserts scene-main-lod, topology-board-lod, topology-scene-lod measures.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪1b671a97220f453190b114d247fdaac5",
     "⚪2e2552cd6d7549b0a26da13fefecbe08",
     "⚪74db19c98e124414b186268bc505be22",
-    "⚪0a5af11f366f44b7be6550ca81575dce"
+    "⚪0a5af11f366f44b7be6550ca81575dce",
+    "⚪27872a88843c419a8c6ec219084a7c28"
   ]
 }

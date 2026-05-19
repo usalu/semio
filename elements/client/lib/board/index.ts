@@ -379,6 +379,8 @@ export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	id: string;
+	/** @emoji 🏷️ Kit piece `name` from fixture JSON (e.g. `cs_sl1_…`). */
+	label?: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	radius: number;
@@ -406,6 +408,8 @@ export interface BoardFixtureRectangleNodeV1 {
 	handles: BoardFixtureHandleV1[];
 	height: number;
 	id: string;
+	/** @emoji 🏷️ Kit piece `name` from fixture JSON (e.g. `cs_sl1_…`). */
+	label?: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	shape: "rectangle";
@@ -931,14 +935,22 @@ export function isBoardDrawLodKind(label: string): label is BoardDrawLodKind {
 	return (BOARD_DRAW_LOD_KINDS as readonly string[]).includes(label);
 }
 
+/** @emoji 📶 Maps a window LOD select value to {@link BoardCanvasProps} LOD fields. */
+export function boardLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolean; lod?: BoardDrawLodKind } {
+	if (mode === BOARD_LOD_MODE_AUTOMATIC) {
+		return { automaticLod: true };
+	}
+	return { automaticLod: false, lod: mode };
+}
+
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
-	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
+	"edge.selected": { stroke: "#34d1bf", strokeWidth: 3 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
-	"handle.selected": { fill: "#ff344f", stroke: "#001117", strokeWidth: 2 },
+	"handle.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
-	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
+	"node.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 3 },
 };
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
@@ -950,15 +962,15 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
 	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
 	edgeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	edgeStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
 	edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	edgeStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillHovered: [192, 205, 197, 255] as [number, number, number, number],
 	nodeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
-	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	nodeFillSelected: [196, 228, 213, 255] as [number, number, number, number],
+	nodeStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
 	nodeFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
 	nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	nodeFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
@@ -969,15 +981,15 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
 	handleFillHovered: [192, 205, 197, 255] as [number, number, number, number],
 	handleStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
-	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	handleFillSelected: [196, 228, 213, 255] as [number, number, number, number],
+	handleStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
 	handleFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
 	handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	handleFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
 	handleStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	wireStroke: [123, 130, 125, 255] as [number, number, number, number],
 	wireStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	wireStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
 	wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
 	wireStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
@@ -1029,15 +1041,19 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	};
 	return {
 		edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
-		"edge.selected": { stroke: c("color", "var(--color-accent)", f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
+		"edge.selected": { stroke: c("color", "var(--accent-secondary)", f["edge.selected"].stroke ?? "#34d1bf"), strokeWidth: 3 },
 		handle: {
 			fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
 			stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
 		"handle.selected": {
-			fill: c("backgroundColor", "var(--color-accent)", f["handle.selected"].fill ?? "#ff344f"),
-			stroke: c("color", "var(--color-foreground)", f["handle.selected"].stroke ?? "#001117"),
+			fill: c(
+				"backgroundColor",
+				"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
+				f["handle.selected"].fill ?? "#c4e4d5",
+			),
+			stroke: c("color", "var(--accent-secondary)", f["handle.selected"].stroke ?? "#34d1bf"),
 			strokeWidth: 2,
 		},
 		node: {
@@ -1046,8 +1062,12 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 			strokeWidth: 2,
 		},
 		"node.selected": {
-			fill: c("backgroundColor", "var(--color-selected-added)", f["node.selected"].fill ?? "#f0c8cc"),
-			stroke: c("color", "var(--color-accent)", f["node.selected"].stroke ?? "#ff344f"),
+			fill: c(
+				"backgroundColor",
+				"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
+				f["node.selected"].fill ?? "#c4e4d5",
+			),
+			stroke: c("color", "var(--accent-secondary)", f["node.selected"].stroke ?? "#34d1bf"),
 			strokeWidth: 3,
 		},
 	};
@@ -1072,15 +1092,19 @@ function serializeElementsBoardVelloThemeJson(): string {
 		})(),
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
 		edgeStrokeHovered: pc("color", "var(--color-hover-base)", fb.edgeStrokeHovered),
-		edgeStrokeSelected: pc("color", "var(--color-accent)", fb.edgeStrokeSelected),
+		edgeStrokeSelected: pc("color", "var(--accent-secondary)", fb.edgeStrokeSelected),
 		edgeStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.edgeStrokeSelectionExit),
 		edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
 		nodeFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.nodeFillHovered),
 		nodeStrokeHovered: pc("color", "var(--color-hover-base)", fb.nodeStrokeHovered),
-		nodeFillSelected: pc("backgroundColor", "var(--color-selected-added)", fb.nodeFillSelected),
-		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
+		nodeFillSelected: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
+			fb.nodeFillSelected,
+		),
+		nodeStrokeSelected: pc("color", "var(--accent-secondary)", fb.nodeStrokeSelected),
 		nodeFillSelectionExit: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
@@ -1099,8 +1123,12 @@ function serializeElementsBoardVelloThemeJson(): string {
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
 		handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
 		handleStrokeHovered: pc("color", "var(--color-hover-base)", fb.handleStrokeHovered),
-		handleFillSelected: pc("backgroundColor", "var(--color-accent)", fb.handleFillSelected),
-		handleStrokeSelected: pc("color", "var(--color-accent)", fb.handleStrokeSelected),
+		handleFillSelected: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
+			fb.handleFillSelected,
+		),
+		handleStrokeSelected: pc("color", "var(--accent-secondary)", fb.handleStrokeSelected),
 		handleFillSelectionExit: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
@@ -1111,7 +1139,7 @@ function serializeElementsBoardVelloThemeJson(): string {
 		handleStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.handleStrokeDisabled),
 		wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
 		wireStrokeHovered: pc("color", "var(--color-hover-base)", fb.wireStrokeHovered),
-		wireStrokeSelected: pc("color", "var(--color-accent)", fb.wireStrokeSelected),
+		wireStrokeSelected: pc("color", "var(--accent-secondary)", fb.wireStrokeSelected),
 		wireStrokeHighlighted: pc("color", "var(--accent-secondary)", fb.wireStrokeHighlighted),
 		wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
 		selectionPreviewFill: pc(
@@ -1280,19 +1308,26 @@ function resolveSelectionOptions(options: BoardSelectionOptions | undefined): Re
 	};
 }
 
-/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins; kit `label` tokens like `cs_sl…` stay off-canvas (internal ids). */
+/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins, else fixture `label` (kit piece `name`). */
 function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefined {
 	if (typeof node.text === "string") {
-		return node.text;
+		const trimmed = node.text.trim();
+		if (trimmed !== "") {
+			return trimmed;
+		}
 	}
-	const lab = typeof node.label === "string" ? node.label : undefined;
-	if (!lab) {
-		return undefined;
+	const lab = typeof node.label === "string" ? node.label.trim() : "";
+	return lab !== "" ? lab : undefined;
+}
+
+/** @emoji 🏷️ On-canvas / inspector caption for a parsed fixture node (`text` then `label`). */
+export function boardFixtureNodeCaption(node: BoardFixtureNodeV1): string | undefined {
+	const text = node.text?.trim();
+	if (text) {
+		return text;
 	}
-	if (lab.startsWith("cs_")) {
-		return undefined;
-	}
-	return lab;
+	const label = node.label?.trim();
+	return label !== "" ? label : undefined;
 }
 
 function fixtureOptionalTextFontFamily(node: Record<string, unknown>): string | undefined {
@@ -1385,6 +1420,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			};
 			handles.push(base);
 		}
+		const labelRaw = typeof node.label === "string" ? node.label.trim() : "";
+		const label = labelRaw !== "" ? labelRaw : undefined;
 		const textFromJson = fixtureNodeDisplayText(node);
 		const textAutofit = node.textAutofit === true;
 		const textFontFamily = fixtureOptionalTextFontFamily(node);
@@ -1416,6 +1453,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
+				...(label !== undefined ? { label } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				...(textAutofit ? { textAutofit: true } : {}),
 				...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1443,6 +1481,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
+			...(label !== undefined ? { label } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			...(textAutofit ? { textAutofit: true } : {}),
 			...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -2599,18 +2638,16 @@ export class BoardRenderer {
 		if (preselectSnapshotsEqual(normalized, this.preselectStore.getSnapshot())) {
 			return;
 		}
+		this.updatePreselection(normalized.ids, normalized.removedIds, false);
 		if (this.wasmSessionCallBlockedForReentry()) {
-			this.updatePreselection(normalized.ids, normalized.removedIds, false);
 			return;
 		}
-		this.pushSceneToWasmDriver();
 		try {
 			this.session.setPreselectStateJsonSilent(JSON.stringify(normalized));
 		} catch (err) {
 			console.error("[DEBUG] setPreselectStateJsonSilent failed", err);
 		}
-		this.updatePreselection(normalized.ids, normalized.removedIds, false);
-		this.markDirty();
+		this.pushSceneToWasmDriver();
 	}
 
 	/** @emoji 🖱️ Controlled sync: mirrors hover chrome without emitting `hover`. */
@@ -3173,6 +3210,7 @@ export class BoardRenderer {
 	}
 
 	private descriptorJsonForWasmHost(): string {
+		const chrome = this.selectionChromeIds();
 		const nodes: Record<string, unknown>[] = [];
 		for (const node of this.scene.nodes.values()) {
 			const base: Record<string, unknown> = {
@@ -3180,7 +3218,7 @@ export class BoardRenderer {
 				x: node.x,
 				y: node.y,
 				draggable: node.draggable,
-				selected: node.selected,
+				selected: chrome.has(node.id),
 				style: node.style,
 				text: node.text,
 				visible: node.visible,
@@ -3226,7 +3264,7 @@ export class BoardRenderer {
 				nodeId: handle.node.id,
 				angle: handle.angle,
 				radius: handle.radius,
-				selected: handle.selected,
+				selected: chrome.has(handle.id),
 				style: handle.style,
 				visible: handle.visible,
 				handleKind: handle.handleKind,
@@ -3245,7 +3283,7 @@ export class BoardRenderer {
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
-				selected: edge.selected,
+				selected: chrome.has(edge.id),
 				style: edge.style,
 				visible: edge.visible,
 			};
@@ -3259,7 +3297,7 @@ export class BoardRenderer {
 			const row: Record<string, unknown> = {
 				id: wire.id,
 				source: wire.source.id,
-				selected: wire.selected,
+				selected: chrome.has(wire.id),
 				style: wire.style,
 				visible: wire.visible,
 			};
@@ -3746,6 +3784,18 @@ export class BoardRenderer {
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
+	/** @emoji 💠 Preselect preview ids when non-empty, otherwise committed selection (mirrors WASM `selection_chrome_ids`). */
+	private selectionChromeIds(): Set<string> {
+		return this.preselectIds.size > 0 ? this.preselectIds : this.selectionIds;
+	}
+
+	private applySelectionChromeToSceneObjects(): void {
+		const chrome = this.selectionChromeIds();
+		for (const object of this.scene.getAllObjects()) {
+			object.selected = chrome.has(object.id);
+		}
+	}
+
 	private updateSelection(ids: Iterable<string>, emit: boolean): void {
 		const nextIds = new Set(ids);
 		const nextSnapshot = createSelectionSnapshot(nextIds);
@@ -3753,14 +3803,14 @@ export class BoardRenderer {
 			return;
 		}
 		this.selectionIds = nextIds;
-		for (const object of this.scene.getAllObjects()) {
-			object.selected = this.selectionIds.has(object.id);
-		}
-		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
 		if (emit) {
 			this.updatePreselection([], [], false);
+		}
+		this.applySelectionChromeToSceneObjects();
+		if (emit) {
 			this.emit("select", nextSnapshot);
 		}
+		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
 		this.markDirty();
 	}
 
@@ -3772,6 +3822,7 @@ export class BoardRenderer {
 		this.preselectIds = new Set(nextSnapshot.ids);
 		this.preselectRemovedIds = new Set(nextSnapshot.removedIds);
 		this.preselectStore.setSnapshot(nextSnapshot, preselectSnapshotsEqual);
+		this.applySelectionChromeToSceneObjects();
 		if (emit) {
 			this.emit("preselect", nextSnapshot);
 		}
@@ -4485,6 +4536,19 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
 			expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
 			expect(renderer.preselection.getSnapshot()).toEqual(BOARD_PRESELECT_EMPTY);
+			renderer.dispose();
+		});
+
+		it("syncPreselectionSilent applies selected chrome on scene objects", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.setSelectionIds(["a"]);
+			renderer.syncPreselectionSilent({ ids: ["b"], removedIds: [] });
+			expect(b.selected).toBe(true);
+			expect(a.selected).toBe(false);
 			renderer.dispose();
 		});
 

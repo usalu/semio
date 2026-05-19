@@ -698,7 +698,11 @@ function BoardPlaySettingsPanel(): ReactElement {
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
-function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>): ReactElement {
+function boardPlayChromeIds(selectionIds: Set<string>, preselection: BoardPreselectSnapshot): Set<string> {
+  return preselection.ids.length > 0 ? new Set(preselection.ids) : selectionIds;
+}
+
+function nakaginBoardMarkers(fixture: BoardFixtureV1, chromeIds: Set<string>): ReactElement {
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
   return (
@@ -713,8 +717,8 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             shape="rectangle"
-            selected={selectedIds.has(node.id)}
-            text={node.text}
+            selected={chromeIds.has(node.id)}
+            text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
             textFontFamily={node.textFontFamily}
@@ -725,7 +729,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={chromeIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ) : (
@@ -736,8 +740,8 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
             key={node.id}
             {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})}
             radius={node.radius}
-            selected={selectedIds.has(node.id)}
-            text={node.text}
+            selected={chromeIds.has(node.id)}
+            text={boardFixtureNodeCaption(node)}
             textAlignment={node.textAlignment}
             textAutofit={node.textAutofit === true}
             textFontFamily={node.textFontFamily}
@@ -747,13 +751,13 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
             {...(node.iconKind ? { iconKind: node.iconKind } : {})}
           >
             {node.handles.map((handle) => (
-              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={selectedIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
+              <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind} id={handle.id} key={handle.id} radius={handle.radius} selected={chromeIds.has(handle.id)} {...(handle.iconKind ? { iconKind: handle.iconKind } : {})} />
             ))}
           </Node>
         ),
       )}
       {fixture.edges.map((edge) => (
-        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} selected={selectedIds.has(edge.id)} source={edge.source} target={edge.target} />
+        <Edge contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined} id={edge.id} key={edge.id} selected={chromeIds.has(edge.id)} source={edge.source} target={edge.target} />
       ))}
     </>
   );
@@ -887,7 +891,7 @@ function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlay
       >
         <BoardStructuralDeleteReporter />
         <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, selectionIds)}
+        {nakaginBoardMarkers(fixture, boardPlayChromeIds(selectionIds, preselection))}
       </BoardCanvas>
     </BoardPaneChrome>
   );
@@ -1234,7 +1238,7 @@ function InspectorNodeBatch({
   const idSet = useMemo(() => new Set(nodeIds), [nodeIds]);
   const targets = useMemo(() => nodeIds.map((id) => findNode(fixture, id)).filter((n): n is BoardFixtureNodeV1 => Boolean(n)), [fixture, nodeIds]);
 
-  const textValues = targets.map((n) => n.text ?? "");
+  const textValues = targets.map((n) => boardFixtureNodeCaption(n) ?? "");
   const textUniform = allEqual(textValues);
   const textValue = textUniform ? (textValues[0] ?? "") : "";
 
@@ -1275,7 +1279,12 @@ function InspectorNodeBatch({
 
   const onText = useCallback(
     (next: string) => {
-      patchNodes((n) => ({ ...n, text: next === "" ? undefined : next }));
+      const trimmed = next.trim();
+      patchNodes((n) =>
+        trimmed === ""
+          ? { ...n, text: undefined, label: undefined }
+          : { ...n, text: trimmed, label: trimmed },
+      );
     },
     [patchNodes],
   );
