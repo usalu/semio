@@ -2689,7 +2689,7 @@ export class BoardRenderer {
 		} catch (err) {
 			console.error("[DEBUG] setPreselectStateJsonSilent failed", err);
 		}
-		this.pushSceneToWasmDriver();
+		this.markDirty();
 	}
 
 	/** @emoji 🖱️ Controlled sync: mirrors hover chrome without emitting `hover`. */
@@ -4555,6 +4555,17 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
+		it("boardElementInteractionChrome maps preselect preview and anchor removal", () => {
+			expect(boardElementInteractionChrome(["a"], { ids: ["a", "b"], removedIds: ["a"] })).toEqual({
+				highlightedIds: new Set(["a"]),
+				selectedIds: new Set(["b"]),
+			});
+			expect(boardElementInteractionChrome(["a"], BOARD_PRESELECT_EMPTY)).toEqual({
+				highlightedIds: new Set(),
+				selectedIds: new Set(["a"]),
+			});
+		});
+
 		it("applies imperative selection via setSelectionIds", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
@@ -4611,7 +4622,49 @@ if (boardVitest) {
 			renderer.setSelectionIds(["a"]);
 			renderer.syncPreselectionSilent({ ids: ["b"], removedIds: [] });
 			expect(b.selected).toBe(true);
+			expect(b.highlighted).toBe(false);
 			expect(a.selected).toBe(false);
+			expect(a.highlighted).toBe(false);
+			renderer.dispose();
+		});
+
+		it("splits preselect preview into selected and highlighted scene chrome", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.setSelectionIds(["a"]);
+			renderer.syncPreselectionSilent({ ids: ["b"], removedIds: ["a"] });
+			expect(b.selected).toBe(true);
+			expect(b.highlighted).toBe(false);
+			expect(a.selected).toBe(false);
+			expect(a.highlighted).toBe(true);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
+			renderer.dispose();
+		});
+
+		it("cancels area-select on Escape without changing committed selection", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.setSelectionIds(["a"]);
+			renderer.render();
+			const cancels: BoardPreselectSnapshot[] = [];
+			renderer.on("preselectCancel", (snap) => cancels.push(snap));
+			const s0 = renderer.worldToScreen({ x: 120, y: -40 });
+			const s1 = renderer.worldToScreen({ x: 280, y: 40 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: s0.x, clientY: s0.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			expect(renderer.preselection.getSnapshot().ids.length).toBeGreaterThan(0);
+			window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+			expect(cancels.length).toBe(1);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
+			expect(renderer.preselection.getSnapshot()).toEqual(BOARD_PRESELECT_EMPTY);
+			expect(a.selected).toBe(true);
+			expect(b.selected).toBe(false);
 			renderer.dispose();
 		});
 

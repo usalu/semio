@@ -64,7 +64,7 @@ import {
 	Vector2,
 	Vector3,
 	type Camera,
-	type Group,
+	Group,
 	type Object3D,
 	type Scene,
 	type WebGLRenderer,
@@ -314,26 +314,26 @@ export interface SceneRelocatePayload {
 	readonly after: { origin: Vec3; orientation: Quat; scale: Vec3 };
 }
 
-export interface SceneTieLinkPayload {
-	readonly source: string;
-	readonly target: string;
+export interface SceneAttractionPayload {
+	readonly attracting: string;
+	readonly attracted: string;
 	readonly tieId?: string;
 }
 
-export interface SceneLinkCompatibleNodesPayload {
-	readonly source: string;
+export interface SceneAttractionCompatibleObjectsPayload {
+	readonly attracting: string;
 	readonly objectIds: readonly string[];
 }
 
-export interface SceneLinkTargetRingPayload {
-	readonly source: string;
+export interface SceneAttractionTargetRingPayload {
+	readonly attracting: string;
 	readonly objectId: string | null;
 	readonly vortexFullIds: readonly string[];
 }
 
-export interface SceneLinkIndirectPickAwait {
-	readonly sourceFullId: string;
-	readonly targetObjectId: string;
+export interface SceneAttractionIndirectPickAwait {
+	readonly attractingFullId: string;
+	readonly attractedObjectId: string;
 	readonly candidates: readonly string[];
 }
 
@@ -367,11 +367,11 @@ export interface SceneCanvasProps {
 	onLodChange?: (lod: SceneLodKind) => void;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
 	onRelocate?: (p: SceneRelocatePayload) => void;
-	onConnect?: (p: SceneTieLinkPayload) => void;
-	onIndirectConnect?: (p: SceneTieLinkPayload) => void;
-	onProximityConnect?: (p: SceneTieLinkPayload) => void;
-	onLinkCompatibleNodes?: (p: SceneLinkCompatibleNodesPayload) => void;
-	onLinkTargetRing?: (p: SceneLinkTargetRingPayload) => void;
+	onConnect?: (p: SceneAttractionPayload) => void;
+	onIndirectConnect?: (p: SceneAttractionPayload) => void;
+	onProximityConnect?: (p: SceneAttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
 	children?: ReactNode;
 }
 
@@ -745,8 +745,8 @@ export function sceneBlockedVortexFullIdsFromTies(
 	return s;
 }
 
-/** @emoji 🧭 Semantic kinds at one end of a link drag (object + vortex handle). */
-export interface SceneLinkHandleContext {
+/** @emoji 🧭 Semantic kinds at one end of an attraction drag (object + vortex handle). */
+export interface SceneAttractionHandleContext {
 	readonly objectId: string;
 	readonly objectKind: string | undefined;
 	readonly vortexKind: string | undefined;
@@ -794,20 +794,20 @@ function sceneCompatPairMatches(rule: SceneKindCompatEntry, a: string, b: string
 	return false;
 }
 
-function sceneLinkGestureRuleApplies(
+function sceneAttractionGestureRuleApplies(
 	rule: SceneKindCompatEntry,
-	source: SceneLinkHandleContext,
-	target: SceneLinkHandleContext,
+	attracting: SceneAttractionHandleContext,
+	attracted: SceneAttractionHandleContext,
 	catalogs: SceneKindCatalogBundle | undefined,
 ): boolean {
-	const wSrc = resolveSceneWireKindForVortex(source.vortexKind, catalogs);
-	const wTgt = resolveSceneWireKindForVortex(target.vortexKind, catalogs);
+	const wSrc = resolveSceneWireKindForVortex(attracting.vortexKind, catalogs);
+	const wTgt = resolveSceneWireKindForVortex(attracted.vortexKind, catalogs);
 	const eSrc = resolveSceneEdgeKindForWire(wSrc, catalogs);
 	const eTgt = resolveSceneEdgeKindForWire(wTgt, catalogs);
-	const sn = source.objectKind ?? "";
-	const tn = target.objectKind ?? "";
-	const sh = source.vortexKind ?? "";
-	const th = target.vortexKind ?? "";
+	const sn = attracting.objectKind ?? "";
+	const tn = attracted.objectKind ?? "";
+	const sh = attracting.vortexKind ?? "";
+	const th = attracted.vortexKind ?? "";
 	const spec = rule.specificity ?? "handle";
 	switch (spec) {
 		case "general":
@@ -827,15 +827,15 @@ function sceneLinkGestureRuleApplies(
 	}
 }
 
-/** @emoji 🤝 WASM-style filtered link compatibility (important + specificity tiers); empty rules allow all. */
-export function sceneHandlesLinkCompatibleForDrag(
-	source: SceneLinkHandleContext,
-	target: SceneLinkHandleContext,
+/** @emoji 🤝 WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
+export function sceneHandlesAttractionCompatibleForDrag(
+	attracting: SceneAttractionHandleContext,
+	attracted: SceneAttractionHandleContext,
 	rules: readonly SceneKindCompatEntry[] | undefined,
 	catalogs: SceneKindCatalogBundle | undefined,
 ): boolean {
 	if (!rules?.length) return true;
-	let matched = rules.filter((r) => sceneLinkGestureRuleApplies(r, source, target, catalogs));
+	let matched = rules.filter((r) => sceneAttractionGestureRuleApplies(r, attracting, attracted, catalogs));
 	if (matched.length === 0) return false;
 	if (matched.some((r) => r.important)) matched = matched.filter((r) => r.important);
 	else {
@@ -1200,26 +1200,26 @@ export interface SceneRegistryValue {
 	relocateMode: SceneRelocateMode;
 	activeRelocateObjectId: string | null;
 	setActiveRelocateObjectId: (id: string | null) => void;
-	linkDragActive: boolean;
-	linkDragSourceFullId: string | null;
-	linkCompatibleTargetFullIds: ReadonlySet<string>;
-	linkHoverRingFullId: string | null;
-	linkIndirectPickAwait: SceneLinkIndirectPickAwait | null;
-	linkEndWorldRef: MutableRefObject<Vector3 | null>;
-	beginLinkDragFromVortex(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined): void;
-	cancelLinkDrag(): void;
-	findNearestProximityRelocate(world: Vector3, movingObjectId: string): SceneTieLinkPayload | null;
-	attachLinkThreeEnv(env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null): void;
-	updateLinkPointer(clientX: number, clientY: number): void;
-	commitLinkPointer(clientX: number, clientY: number): void;
+	attractionDragActive: boolean;
+	attractionDragAttractingFullId: string | null;
+	attractionCompatibleAttractedFullIds: ReadonlySet<string>;
+	attractionHoverRingFullId: string | null;
+	attractionIndirectPickAwait: SceneAttractionIndirectPickAwait | null;
+	attractionEndWorldRef: MutableRefObject<Vector3 | null>;
+	beginAttractionDragFromVortex(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined): void;
+	cancelAttractionDrag(): void;
+	findNearestProximityRelocate(world: Vector3, movingObjectId: string): SceneAttractionPayload | null;
+	attachAttractionThreeEnv(env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null): void;
+	updateAttractionPointer(clientX: number, clientY: number): void;
+	commitAttractionPointer(clientX: number, clientY: number): void;
 	updateIndirectPickPointer(clientX: number, clientY: number): void;
 	commitIndirectPickPointerDown(clientX: number, clientY: number): void;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
-	onConnect?: (p: SceneTieLinkPayload) => void;
-	onProximityConnect?: (p: SceneTieLinkPayload) => void;
-	onIndirectConnect?: (p: SceneTieLinkPayload) => void;
-	onLinkCompatibleNodes?: (p: SceneLinkCompatibleNodesPayload) => void;
-	onLinkTargetRing?: (p: SceneLinkTargetRingPayload) => void;
+	onConnect?: (p: SceneAttractionPayload) => void;
+	onProximityConnect?: (p: SceneAttractionPayload) => void;
+	onIndirectConnect?: (p: SceneAttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
 	onRelocate?: (p: SceneRelocatePayload) => void;
 }
 
@@ -1312,12 +1312,47 @@ function scaleToThree(s: number | Vec3 | undefined): Vector3 {
 	return new Vector3(s[0], s[1], s[2]);
 }
 
+/** @emoji 🔑 Stable key for object pose props (relocate mutates the group without changing this until commit). */
+export function sceneObjectPoseKey(
+	id: string,
+	origin: Vec3,
+	orientation: Quat | undefined,
+	scale: number | Vec3 | undefined,
+): string {
+	const o = orientation ?? ([0, 0, 0, 1] as Quat);
+	const sc = scale === undefined ? 1 : typeof scale === "number" ? scale : scale.join(",");
+	return `${id}|${origin.join(",")}|${o.join(",")}|${sc}`;
+}
+
+/** @emoji 📍 Writes fixture pose onto an object group; avoids R3F controlled transforms so vortex children follow relocate. */
+export function sceneApplyObjectPose(
+	group: Group,
+	origin: Vec3,
+	orientation: Quat | undefined,
+	scale: number | Vec3 | undefined,
+): void {
+	group.position.set(origin[0], origin[1], origin[2]);
+	group.quaternion.copy(quatToThree(orientation));
+	group.scale.copy(scaleToThree(scale));
+}
+
+/** @emoji 🌳 Updates world matrices from root to leaf so {@link Object3D.getWorldPosition} matches the current graph. */
+export function sceneUpdateWorldMatrixChain(leaf: Object3D): void {
+	const chain: Object3D[] = [];
+	for (let cur: Object3D | null = leaf; cur; cur = cur.parent) {
+		chain.push(cur);
+	}
+	for (let i = chain.length - 1; i >= 0; i--) {
+		chain[i]!.updateMatrixWorld(false);
+	}
+}
+
 function sceneVector3IsFinite(v: Vector3): boolean {
 	return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 }
 //#endregion 🧊Helpers
 
-//#region 🔗LinkGesture
+//#region 🧲AttractionGesture
 function readSceneVortexFullIdFromObject(o: Object3D | null): string | null {
 	let cur: Object3D | null = o;
 	while (cur) {
@@ -1339,8 +1374,8 @@ function readSceneObjectIdFromObject(o: Object3D | null): string | null {
 }
 
 const SCENE_HANDLE_HIT_TOLERANCE_PX = 10;
-const SCENE_LINK_HANDLE_SNAP_EXTRA_PX = 22;
-const SCENE_LINK_COMMIT_SNAP_TIGHT_PX = 2;
+const SCENE_ATTRACTION_HANDLE_SNAP_EXTRA_PX = 22;
+const SCENE_ATTRACTION_COMMIT_SNAP_TIGHT_PX = 2;
 
 function worldToCanvasPx(world: Vector3, camera: Camera, gl: WebGLRenderer): { x: number; y: number } {
 	const v = world.clone().project(camera);
@@ -1358,38 +1393,38 @@ function scenePixelsPerWorldUnitAt(camera: Camera, gl: WebGLRenderer, world: Vec
 	return h / (2 * Math.tan(fovRad / 2) * Math.max(dist, 1e-6));
 }
 
-function sceneLinkSnapDragTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+function sceneAttractionSnapDragTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
 	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
 	const radPx = radiusWorld * mpp;
-	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_LINK_HANDLE_SNAP_EXTRA_PX + radPx * camera.zoom;
+	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_ATTRACTION_HANDLE_SNAP_EXTRA_PX + radPx * camera.zoom;
 }
 
-function sceneLinkSnapCommitTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+function sceneAttractionSnapCommitTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
 	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
 	const radPx = radiusWorld * mpp;
-	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_LINK_COMMIT_SNAP_TIGHT_PX + radPx * camera.zoom;
+	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_ATTRACTION_COMMIT_SNAP_TIGHT_PX + radPx * camera.zoom;
 }
 
-function sceneLinkSnapCommitProximityOk(
-	targetFullId: string,
+function sceneAttractionSnapCommitProximityOk(
+	attractedFullId: string,
 	pointerWorld: Vector3,
 	camera: Camera,
 	gl: WebGLRenderer,
 	getVortexWorld: (id: string) => Vector3 | null,
 	metaRadius: (id: string) => number,
 ): boolean {
-	const hw = getVortexWorld(targetFullId);
+	const hw = getVortexWorld(attractedFullId);
 	if (!hw) return false;
 	const pScr = worldToCanvasPx(pointerWorld, camera, gl);
 	const hScr = worldToCanvasPx(hw, camera, gl);
 	const d = Math.hypot(pScr.x - hScr.x, pScr.y - hScr.y);
-	return d <= sceneLinkSnapCommitTolerancePx(hw, metaRadius(targetFullId), camera, gl);
+	return d <= sceneAttractionSnapCommitTolerancePx(hw, metaRadius(attractedFullId), camera, gl);
 }
 
-function sceneNearestLinkSnapFullId(args: {
+function sceneNearestAttractionSnapFullId(args: {
 	lod: SceneLodKind;
 	pointerWorld: Vector3;
-	sourceFullId: string;
+	attractingFullId: string;
 	compat: ReadonlySet<string>;
 	blocked: ReadonlySet<string>;
 	camera: Camera;
@@ -1401,19 +1436,19 @@ function sceneNearestLinkSnapFullId(args: {
 	const pScr = worldToCanvasPx(args.pointerWorld, args.camera, args.gl);
 	let best: { d: number; id: string } | null = null;
 	for (const tid of args.compat) {
-		if (tid === args.sourceFullId) continue;
+		if (tid === args.attractingFullId) continue;
 		if (args.blocked.has(tid)) continue;
 		const hw = args.getVortexWorld(tid);
 		if (!hw) continue;
 		const hScr = worldToCanvasPx(hw, args.camera, args.gl);
 		const d = Math.hypot(hScr.x - pScr.x, hScr.y - pScr.y);
-		const tol = sceneLinkSnapDragTolerancePx(hw, args.metaRadius(tid), args.camera, args.gl);
+		const tol = sceneAttractionSnapDragTolerancePx(hw, args.metaRadius(tid), args.camera, args.gl);
 		if (d > tol) continue;
 		if (!best || d < best.d) best = { d, id: tid };
 	}
 	return best?.id ?? null;
 }
-//#endregion 🔗LinkGesture
+//#endregion 🧲AttractionGesture
 
 //#region 🧊Mesh
 export interface SceneMeshProps {
@@ -1540,13 +1575,13 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 			return true;
 		}
 		const prefix = `${props.id}:`;
-		for (const fullId of reg.linkCompatibleTargetFullIds) {
+		for (const fullId of reg.attractionCompatibleAttractedFullIds) {
 			if (fullId.startsWith(prefix)) {
 				return true;
 			}
 		}
 		return false;
-	}, [props.highlighted, props.id, reg.linkCompatibleTargetFullIds]);
+	}, [props.highlighted, props.id, reg.attractionCompatibleAttractedFullIds]);
 
 	const meshStyle = useMemo(
 		() =>
@@ -1563,7 +1598,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void }) => {
 			e.stopPropagation();
-			if (reg.linkDragActive || reg.linkIndirectPickAwait) return;
+			if (reg.attractionDragActive || reg.attractionIndirectPickAwait) return;
 			if (props.disabled) {
 				return;
 			}
@@ -1591,8 +1626,17 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		setPointerHovered(false);
 	}, []);
 
-	const quat = useMemo(() => quatToThree(props.orientation), [props.orientation]);
-	const scaleVec = useMemo(() => scaleToThree(props.scale), [props.scale]);
+	const poseKey = useMemo(
+		() => sceneObjectPoseKey(props.id, props.origin, props.orientation, props.scale),
+		[props.id, props.origin, props.orientation, props.scale],
+	);
+	useLayoutEffect(() => {
+		const g = group.current;
+		if (!g) {
+			return;
+		}
+		sceneApplyObjectPose(g, props.origin, props.orientation, props.scale);
+	}, [poseKey, props.origin, props.orientation, props.scale]);
 	const lodCtx = useSceneLod();
 	const mode = props.relocate ?? reg.relocateMode;
 	const transSnap =
@@ -1609,9 +1653,6 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		<>
 			<group
 				ref={group}
-				position={props.origin as [number, number, number]}
-				quaternion={quat}
-				scale={scaleVec}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
 				onPointerOver={handlePointerOver}
@@ -1624,7 +1665,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 				) : (
 					<SceneMesh meshUrl={props.meshUrl} style={meshStyle} />
 				)}
-				{props.children}
+				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
 			{showTc && tcTarget && (
 				<SceneObjectTransformControls
@@ -1661,7 +1702,7 @@ function SceneVortexHandleGltf(props: {
 }
 
 function sceneVortexHighlightMeshStyle(
-	highlight: "none" | "compatible" | "ring" | "source" | "indirectRing",
+	highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing",
 ): SceneMeshStyleKind {
 	switch (highlight) {
 		case "ring":
@@ -1669,7 +1710,7 @@ function sceneVortexHighlightMeshStyle(
 			return "highlighted";
 		case "compatible":
 			return "hovered";
-		case "source":
+		case "attracting":
 			return "selected";
 		default:
 			return "neutral";
@@ -1679,7 +1720,7 @@ function sceneVortexHighlightMeshStyle(
 function SceneVortexFallbackMesh(props: {
 	fullId: string;
 	radius: number;
-	highlight: "none" | "compatible" | "ring" | "source" | "indirectRing";
+	highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing";
 }) {
 	const style = sceneVortexHighlightMeshStyle(props.highlight);
 	const colors = sceneMeshStyleColors(style) ?? sceneMeshStyleColors("neutral")!;
@@ -1709,6 +1750,7 @@ export const SceneVortex = memo(function SceneVortex(
 	useEffect(() => {
 		const getter = () => {
 			if (!root.current) return null;
+			sceneUpdateWorldMatrixChain(root.current);
 			const v = new Vector3();
 			root.current.getWorldPosition(v);
 			return v;
@@ -1741,13 +1783,13 @@ export const SceneVortex = memo(function SceneVortex(
 	);
 
 	const lodCtx = useSceneLod();
-	const highlight: "none" | "compatible" | "ring" | "source" | "indirectRing" = reg.linkDragSourceFullId === fullId
-		? "source"
-		: reg.linkHoverRingFullId === fullId
+	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
+		? "attracting"
+		: reg.attractionHoverRingFullId === fullId
 			? "ring"
-			: reg.linkIndirectPickAwait?.candidates.includes(fullId) === true
+			: reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true
 				? "indirectRing"
-				: reg.linkCompatibleTargetFullIds.has(fullId)
+				: reg.attractionCompatibleAttractedFullIds.has(fullId)
 					? "compatible"
 					: "none";
 
@@ -1757,7 +1799,7 @@ export const SceneVortex = memo(function SceneVortex(
 			const pe = e.nativeEvent;
 			if (pe.button !== 0) return;
 			if (reg.blockedVortexFullIds.has(fullId)) return;
-			reg.beginLinkDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
+			reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
 			const el = pe.currentTarget instanceof Element ? pe.currentTarget : null;
 			if (el && typeof (el as HTMLElement).setPointerCapture === "function") {
 				try {
@@ -1770,12 +1812,12 @@ export const SceneVortex = memo(function SceneVortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
-	const inIndirectRing = reg.linkIndirectPickAwait?.candidates.includes(fullId) === true;
+	const inIndirectRing = reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
 	const linger =
-		(reg.linkDragActive &&
-			(reg.linkDragSourceFullId === fullId ||
-				reg.linkHoverRingFullId === fullId ||
-				reg.linkCompatibleTargetFullIds.has(fullId))) ||
+		(reg.attractionDragActive &&
+			(reg.attractionDragAttractingFullId === fullId ||
+				reg.attractionHoverRingFullId === fullId ||
+				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
 	const drawHandleBody = sceneHandlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
 	const pickProxy = sceneHandlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
@@ -1850,8 +1892,8 @@ export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 //#endregion 🪢Tie
 
 //#region 🧲Attraction
-export const SceneAttraction = memo(function SceneAttraction(props: { from: Vec3; to: Vec3 }) {
-	const pts = useMemo(() => [vec3ToThree(props.from), vec3ToThree(props.to)], [props.from, props.to]);
+export const SceneAttraction = memo(function SceneAttraction(props: { attracting: Vec3; attracted: Vec3 }) {
+	const pts = useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
 	const color = useMemo(
 		() => sceneLineCssColor(SCENE_CSS_ATTRACTION_LINE, "#f472b6"),
 		[],
@@ -1876,35 +1918,35 @@ const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 //#region 🎬Scene
 function SceneOrbitGated({ target }: { target: Vec3 }) {
 	const reg = useSceneRegistry();
-	const gate = reg.linkDragActive || reg.linkIndirectPickAwait !== null;
+	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	return <OrbitControls makeDefault enabled={!gate} target={target as [number, number, number]} />;
 }
 
-function SceneLinkThreeBinder() {
+function SceneAttractionThreeBinder() {
 	const reg = useSceneRegistry();
 	const t = useThree();
 	useLayoutEffect(() => {
-		reg.attachLinkThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
-		return () => reg.attachLinkThreeEnv(null);
+		reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
+		return () => reg.attachAttractionThreeEnv(null);
 	}, [reg, t.camera, t.gl, t.scene]);
 	return null;
 }
 
-function SceneLinkWindowBridge() {
+function SceneAttractionWindowBridge() {
 	const reg = useSceneRegistry();
-	const linkBusy = reg.linkDragActive || reg.linkIndirectPickAwait !== null;
+	const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	useEffect(() => {
-		if (!linkBusy) return;
+		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
-			if (reg.linkDragActive) reg.updateLinkPointer(e.clientX, e.clientY);
-			else if (reg.linkIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
+			if (reg.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
+			else if (reg.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
 		};
 		const onUp = (e: PointerEvent) => {
-			if (reg.linkDragActive) reg.commitLinkPointer(e.clientX, e.clientY);
+			if (reg.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
 		};
 		const onDown = (e: PointerEvent) => {
 			if (e.button !== 0) return;
-			if (reg.linkIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
+			if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
 		};
 		window.addEventListener("pointermove", onMove);
 		window.addEventListener("pointerup", onUp, { capture: true });
@@ -1914,11 +1956,11 @@ function SceneLinkWindowBridge() {
 			window.removeEventListener("pointerup", onUp, true);
 			window.removeEventListener("pointerdown", onDown, true);
 		};
-	}, [reg, linkBusy]);
+	}, [reg, attractionBusy]);
 	return null;
 }
 
-function SceneLinkRubberBand() {
+function SceneAttractionRubberBand() {
 	const reg = useSceneRegistry();
 	const geo = useMemo(() => {
 		const g = new BufferGeometry();
@@ -1931,16 +1973,16 @@ function SceneLinkRubberBand() {
 	);
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
-		const wire =
-			(reg.linkDragActive || reg.linkIndirectPickAwait !== null) && reg.linkDragSourceFullId ? true : false;
-		if (!wire) {
+		const attractionLine =
+			(reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
+		if (!attractionLine) {
 			pos.setXYZ(0, 0, 0, 0);
 			pos.setXYZ(1, 0, 0, 0);
 			pos.needsUpdate = true;
 			return;
 		}
-		const a = reg.getVortexWorld(reg.linkDragSourceFullId);
-		const b = reg.linkEndWorldRef.current;
+		const a = reg.getVortexWorld(reg.attractionDragAttractingFullId);
+		const b = reg.attractionEndWorldRef.current;
 		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) {
 			pos.setXYZ(0, a.x, a.y, a.z);
 			pos.setXYZ(1, b.x, b.y, b.z);
@@ -2002,8 +2044,8 @@ function SceneRegistryProvider({
 	onConnect,
 	onProximityConnect,
 	onIndirectConnect,
-	onLinkCompatibleNodes,
-	onLinkTargetRing,
+	onAttractionCompatibleObjects,
+	onAttractionTargetRing,
 	onRelocate,
 }: {
 	children: ReactNode;
@@ -2015,41 +2057,41 @@ function SceneRegistryProvider({
 	selectionMode: SceneSelectionMode;
 	relocateMode: SceneRelocateMode;
 	onSelect?: (snap: SceneSelectionSnapshot) => void;
-	onConnect?: (p: SceneTieLinkPayload) => void;
-	onProximityConnect?: (p: SceneTieLinkPayload) => void;
-	onIndirectConnect?: (p: SceneTieLinkPayload) => void;
-	onLinkCompatibleNodes?: (p: SceneLinkCompatibleNodesPayload) => void;
-	onLinkTargetRing?: (p: SceneLinkTargetRingPayload) => void;
+	onConnect?: (p: SceneAttractionPayload) => void;
+	onProximityConnect?: (p: SceneAttractionPayload) => void;
+	onIndirectConnect?: (p: SceneAttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
 	onRelocate?: (p: SceneRelocatePayload) => void;
 }) {
 	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
-	const [linkDragActive, setLinkDragActive] = useState(false);
-	const [linkDragSourceFullId, setLinkDragSourceFullId] = useState<string | null>(null);
-	const [linkCompatibleTargetFullIds, setLinkCompatibleTargetFullIds] = useState<ReadonlySet<string>>(new Set());
-	const [linkHoverRingFullId, setLinkHoverRingFullId] = useState<string | null>(null);
-	const [linkIndirectPickAwait, setLinkIndirectPickAwait] = useState<SceneLinkIndirectPickAwait | null>(null);
+	const [attractionDragActive, setAttractionDragActive] = useState(false);
+	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
+	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
+	const [attractionHoverRingFullId, setAttractionHoverRingFullId] = useState<string | null>(null);
+	const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = useState<SceneAttractionIndirectPickAwait | null>(null);
 
 	const vortexGettersRef = useRef(new Map<string, VortexGetter>());
 	const vortexMetaRef = useRef(new Map<string, SceneVortexBindingMeta>());
 	const vortexPickRef = useRef(new Map<string, Object3D>());
 	const objectGroupMap = useRef(new Map<string, Group | null>());
 	const objectKindsRef = useRef(new Map<string, string | undefined>());
-	const indirectPickRef = useRef<SceneLinkIndirectPickAwait | null>(null);
+	const indirectPickRef = useRef<SceneAttractionIndirectPickAwait | null>(null);
 
 	useEffect(() => {
-		indirectPickRef.current = linkIndirectPickAwait;
-	}, [linkIndirectPickAwait]);
+		indirectPickRef.current = attractionIndirectPickAwait;
+	}, [attractionIndirectPickAwait]);
 
-	const linkSessionRef = useRef<{
-		sourceFullId: string;
-		sourceObjectId: string;
-		sourceCtx: SceneLinkHandleContext;
+	const attractionSessionRef = useRef<{
+		attractingFullId: string;
+		attractingObjectId: string;
+		attractingCtx: SceneAttractionHandleContext;
 		compat: Set<string>;
-		snapTargetFullId: string | null;
+		snapAttractedFullId: string | null;
 	} | null>(null);
-	const linkEndWorldRef = useRef<Vector3 | null>(null);
-	const linkThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: Scene } | null>(null);
+	const attractionEndWorldRef = useRef<Vector3 | null>(null);
+	const attractionThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: Scene } | null>(null);
 	const raycasterRef = useRef(new Raycaster());
 	const ndcRef = useRef(new Vector2());
 	const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
@@ -2088,54 +2130,54 @@ function SceneRegistryProvider({
 
 	const getObjectKind = useCallback((id: string) => objectKindsRef.current.get(id), []);
 
-	const cancelLinkDrag = useCallback(() => {
-		linkSessionRef.current = null;
-		linkEndWorldRef.current = null;
-		setLinkDragActive(false);
-		setLinkDragSourceFullId(null);
-		setLinkCompatibleTargetFullIds(new Set());
-		setLinkHoverRingFullId(null);
-		setLinkIndirectPickAwait(null);
-		onLinkTargetRing?.({ source: "", objectId: null, vortexFullIds: [] });
-	}, [onLinkTargetRing]);
+	const cancelAttractionDrag = useCallback(() => {
+		attractionSessionRef.current = null;
+		attractionEndWorldRef.current = null;
+		setAttractionDragActive(false);
+		setAttractionDragAttractingFullId(null);
+		setAttractionCompatibleAttractedFullIds(new Set());
+		setAttractionHoverRingFullId(null);
+		setAttractionIndirectPickAwait(null);
+		onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
+	}, [onAttractionTargetRing]);
 
-	const beginLinkDragFromVortex = useCallback(
+	const beginAttractionDragFromVortex = useCallback(
 		(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
 			if (indirectPickRef.current) return;
 			if (blockedVortexFullIds.has(fullId)) return;
-			const sourceCtx: SceneLinkHandleContext = { objectId, objectKind, vortexKind };
+			const attractingCtx: SceneAttractionHandleContext = { objectId, objectKind, vortexKind };
 			const compat = new Set<string>();
 			const objectIds = new Set<string>();
 			for (const [tid, meta] of vortexMetaRef.current) {
 				if (tid === fullId) continue;
 				if (meta.objectId === objectId) continue;
 				if (blockedVortexFullIds.has(tid)) continue;
-				const targetCtx: SceneLinkHandleContext = {
+				const attractedCtx: SceneAttractionHandleContext = {
 					objectId: meta.objectId,
 					objectKind: meta.objectKind,
 					vortexKind: meta.vortexKind,
 				};
-				if (!sceneHandlesLinkCompatibleForDrag(sourceCtx, targetCtx, kindCompatibility, kindCatalogs)) continue;
+				if (!sceneHandlesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
 				compat.add(tid);
 				objectIds.add(meta.objectId);
 			}
-			setLinkIndirectPickAwait(null);
-			linkSessionRef.current = {
-				sourceFullId: fullId,
-				sourceObjectId: objectId,
-				sourceCtx,
+			setAttractionIndirectPickAwait(null);
+			attractionSessionRef.current = {
+				attractingFullId: fullId,
+				attractingObjectId: objectId,
+				attractingCtx,
 				compat,
-				snapTargetFullId: null,
+				snapAttractedFullId: null,
 			};
-			linkEndWorldRef.current = null;
-			setLinkDragActive(true);
-			setLinkDragSourceFullId(fullId);
-			setLinkCompatibleTargetFullIds(compat);
-			setLinkHoverRingFullId(null);
+			attractionEndWorldRef.current = null;
+			setAttractionDragActive(true);
+			setAttractionDragAttractingFullId(fullId);
+			setAttractionCompatibleAttractedFullIds(compat);
+			setAttractionHoverRingFullId(null);
 			setActiveRelocateObjectId(null);
-			onLinkCompatibleNodes?.({ source: fullId, objectIds: [...objectIds] });
+			onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
 		},
-		[blockedVortexFullIds, kindCatalogs, kindCompatibility, onLinkCompatibleNodes],
+		[blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
 	);
 
 	const collectPickRoots = useCallback((): Object3D[] => {
@@ -2145,10 +2187,10 @@ function SceneRegistryProvider({
 		return out;
 	}, []);
 
-	const updateLinkPointer = useCallback(
+	const updateAttractionPointer = useCallback(
 		(clientX: number, clientY: number) => {
-			const env = linkThreeRef.current;
-			const session = linkSessionRef.current;
+			const env = attractionThreeRef.current;
+			const session = attractionSessionRef.current;
 			if (!env || !session) return;
 			const rect = env.gl.domElement.getBoundingClientRect();
 			ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -2158,37 +2200,37 @@ function SceneRegistryProvider({
 			let ring: string | null = null;
 			for (const h of hits) {
 				const vf = readSceneVortexFullIdFromObject(h.object);
-				if (vf && session.compat.has(vf) && vf !== session.sourceFullId && !blockedVortexFullIds.has(vf)) {
+				if (vf && session.compat.has(vf) && vf !== session.attractingFullId && !blockedVortexFullIds.has(vf)) {
 					ring = vf;
 					break;
 				}
 			}
-			setLinkHoverRingFullId((prev) => (prev === ring ? prev : ring));
+			setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
 			if (ring) {
 				const meta = vortexMetaRef.current.get(ring);
-				onLinkTargetRing?.({
-					source: session.sourceFullId,
+				onAttractionTargetRing?.({
+					attracting: session.attractingFullId,
 					objectId: meta?.objectId ?? null,
 					vortexFullIds: ring ? [ring] : [],
 				});
 			} else {
-				onLinkTargetRing?.({ source: session.sourceFullId, objectId: null, vortexFullIds: [] });
+				onAttractionTargetRing?.({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
 			}
 			const hitWorld = hitScratchRef.current;
 			if (hits.length > 0) {
-				linkEndWorldRef.current = hitWorld.copy(hits[0]!.point);
+				attractionEndWorldRef.current = hitWorld.copy(hits[0]!.point);
 			} else if (raycasterRef.current.ray.intersectPlane(planeRef.current, hitWorld)) {
-				linkEndWorldRef.current = hitWorld.clone();
+				attractionEndWorldRef.current = hitWorld.clone();
 			} else {
 				raycasterRef.current.ray.at(80, hitWorld);
-				linkEndWorldRef.current = hitWorld.clone();
+				attractionEndWorldRef.current = hitWorld.clone();
 			}
-			const pw = linkEndWorldRef.current;
+			const pw = attractionEndWorldRef.current;
 			if (pw) {
-				session.snapTargetFullId = sceneNearestLinkSnapFullId({
+				session.snapAttractedFullId = sceneNearestAttractionSnapFullId({
 					lod: lodKindRef.current,
 					pointerWorld: pw,
-					sourceFullId: session.sourceFullId,
+					attractingFullId: session.attractingFullId,
 					compat: session.compat,
 					blocked: blockedVortexFullIds,
 					camera: env.camera,
@@ -2196,17 +2238,17 @@ function SceneRegistryProvider({
 					getVortexWorld: (id) => vortexGettersRef.current.get(id)?.() ?? null,
 					metaRadius: (id) => vortexMetaRef.current.get(id)?.radiusWorld ?? 0.35,
 				});
-			} else session.snapTargetFullId = null;
+			} else session.snapAttractedFullId = null;
 		},
-		[blockedVortexFullIds, collectPickRoots, lodKindRef, onLinkTargetRing],
+		[blockedVortexFullIds, collectPickRoots, lodKindRef, onAttractionTargetRing],
 	);
 
-	const commitLinkPointer = useCallback(
+	const commitAttractionPointer = useCallback(
 		(clientX: number, clientY: number) => {
-			const env = linkThreeRef.current;
-			const session = linkSessionRef.current;
+			const env = attractionThreeRef.current;
+			const session = attractionSessionRef.current;
 			if (!env || !session) {
-				cancelLinkDrag();
+				cancelAttractionDrag();
 				return;
 			}
 			const rect = env.gl.domElement.getBoundingClientRect();
@@ -2227,31 +2269,31 @@ function SceneRegistryProvider({
 
 			const getV = (id: string) => vortexGettersRef.current.get(id)?.() ?? null;
 			const rad = (id: string) => vortexMetaRef.current.get(id)?.radiusWorld ?? 0.35;
-			const snapId = session.snapTargetFullId;
-			if (snapId && sceneLinkSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
-				const p = { source: session.sourceFullId, target: snapId };
+			const snapId = session.snapAttractedFullId;
+			if (snapId && sceneAttractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
+				const p = { attracting: session.attractingFullId, attracted: snapId };
 				onConnect?.(p);
 				onProximityConnect?.(p);
-				cancelLinkDrag();
+				cancelAttractionDrag();
 				return;
 			}
 
-			const sourceFull = session.sourceFullId;
+			const attractingFull = session.attractingFullId;
 			for (const h of hits) {
 				const vf = readSceneVortexFullIdFromObject(h.object);
 				if (
 					vf &&
-					vf !== sourceFull &&
+					vf !== attractingFull &&
 					session.compat.has(vf) &&
 					!blockedVortexFullIds.has(vf) &&
-					vortexMetaRef.current.get(vf)?.objectId !== session.sourceObjectId
+					vortexMetaRef.current.get(vf)?.objectId !== session.attractingObjectId
 				) {
-					onConnect?.({ source: sourceFull, target: vf });
-					cancelLinkDrag();
+					onConnect?.({ attracting: attractingFull, attracted: vf });
+					cancelAttractionDrag();
 					return;
 				}
 				const oid = readSceneObjectIdFromObject(h.object);
-				if (oid && oid !== session.sourceObjectId) {
+				if (oid && oid !== session.attractingObjectId) {
 					const candidates: string[] = [];
 					for (const [tid, meta] of vortexMetaRef.current) {
 						if (meta.objectId !== oid) continue;
@@ -2260,24 +2302,24 @@ function SceneRegistryProvider({
 						candidates.push(tid);
 					}
 					if (candidates.length === 1) {
-						const p = { source: sourceFull, target: candidates[0]! };
+						const p = { attracting: attractingFull, attracted: candidates[0]! };
 						onConnect?.(p);
 						onIndirectConnect?.(p);
-						cancelLinkDrag();
+						cancelAttractionDrag();
 						return;
 					}
 					if (candidates.length > 1) {
-						linkSessionRef.current = null;
-						setLinkDragActive(false);
-						setLinkCompatibleTargetFullIds(new Set(candidates));
-						setLinkHoverRingFullId(null);
-						setLinkIndirectPickAwait({
-							sourceFullId: sourceFull,
-							targetObjectId: oid,
+						attractionSessionRef.current = null;
+						setAttractionDragActive(false);
+						setAttractionCompatibleAttractedFullIds(new Set(candidates));
+						setAttractionHoverRingFullId(null);
+						setAttractionIndirectPickAwait({
+							attractingFullId: attractingFull,
+							attractedObjectId: oid,
 							candidates,
 						});
-						onLinkTargetRing?.({
-							source: sourceFull,
+						onAttractionTargetRing?.({
+							attracting: attractingFull,
 							objectId: oid,
 							vortexFullIds: candidates,
 						});
@@ -2285,15 +2327,15 @@ function SceneRegistryProvider({
 					}
 				}
 			}
-			cancelLinkDrag();
+			cancelAttractionDrag();
 		},
 		[
 			blockedVortexFullIds,
-			cancelLinkDrag,
+			cancelAttractionDrag,
 			collectPickRoots,
 			onConnect,
 			onIndirectConnect,
-			onLinkTargetRing,
+			onAttractionTargetRing,
 			onProximityConnect,
 		],
 	);
@@ -2301,7 +2343,7 @@ function SceneRegistryProvider({
 	const updateIndirectPickPointer = useCallback(
 		(clientX: number, clientY: number) => {
 			const awaitPick = indirectPickRef.current;
-			const env = linkThreeRef.current;
+			const env = attractionThreeRef.current;
 			if (!awaitPick || !env) return;
 			const rect = env.gl.domElement.getBoundingClientRect();
 			ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -2316,15 +2358,15 @@ function SceneRegistryProvider({
 					break;
 				}
 			}
-			setLinkHoverRingFullId((prev) => (prev === ring ? prev : ring));
+			setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
 			const hitWorld = hitScratchRef.current;
 			if (hits.length > 0) {
-				linkEndWorldRef.current = hitWorld.copy(hits[0]!.point);
+				attractionEndWorldRef.current = hitWorld.copy(hits[0]!.point);
 			} else if (raycasterRef.current.ray.intersectPlane(planeRef.current, hitWorld)) {
-				linkEndWorldRef.current = hitWorld.clone();
+				attractionEndWorldRef.current = hitWorld.clone();
 			} else {
 				raycasterRef.current.ray.at(80, hitWorld);
-				linkEndWorldRef.current = hitWorld.clone();
+				attractionEndWorldRef.current = hitWorld.clone();
 			}
 		},
 		[collectPickRoots],
@@ -2333,7 +2375,7 @@ function SceneRegistryProvider({
 	const commitIndirectPickPointerDown = useCallback(
 		(clientX: number, clientY: number, ev?: PointerEvent) => {
 			const awaitPick = indirectPickRef.current;
-			const env = linkThreeRef.current;
+			const env = attractionThreeRef.current;
 			if (!awaitPick || !env) return;
 			const rect = env.gl.domElement.getBoundingClientRect();
 			ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -2343,25 +2385,25 @@ function SceneRegistryProvider({
 			for (const h of hits) {
 				const vf = readSceneVortexFullIdFromObject(h.object);
 				if (vf && awaitPick.candidates.includes(vf)) {
-					const p = { source: awaitPick.sourceFullId, target: vf };
+					const p = { attracting: awaitPick.attractingFullId, attracted: vf };
 					onConnect?.(p);
 					onIndirectConnect?.(p);
-					cancelLinkDrag();
+					cancelAttractionDrag();
 					ev?.stopImmediatePropagation();
 					return;
 				}
 			}
-			cancelLinkDrag();
+			cancelAttractionDrag();
 		},
-		[cancelLinkDrag, collectPickRoots, onConnect, onIndirectConnect],
+		[cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
 	);
 
-	const attachLinkThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null) => {
-		linkThreeRef.current = env;
+	const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null) => {
+		attractionThreeRef.current = env;
 	}, []);
 
 	const findNearestProximityRelocate = useCallback(
-		(world: Vector3, movingObjectId: string): SceneTieLinkPayload | null => {
+		(world: Vector3, movingObjectId: string): SceneAttractionPayload | null => {
 			let best: { d: number; id: string } | null = null;
 			for (const [fullId, getter] of vortexGettersRef.current) {
 				if (fullId.startsWith(`${movingObjectId}:`)) continue;
@@ -2372,7 +2414,7 @@ function SceneRegistryProvider({
 				if (!best || d < best.d) best = { d, id: fullId };
 			}
 			if (!best) return null;
-			return { source: `${movingObjectId}:link`, target: best.id };
+			return { attracting: `${movingObjectId}:link`, attracted: best.id };
 		},
 		[proximityRadius],
 	);
@@ -2397,27 +2439,27 @@ function SceneRegistryProvider({
 			relocateMode,
 			activeRelocateObjectId,
 			setActiveRelocateObjectId,
-			linkDragActive,
-			linkDragSourceFullId,
-			linkCompatibleTargetFullIds,
-			linkHoverRingFullId,
-			linkIndirectPickAwait,
-			beginLinkDragFromVortex,
-			cancelLinkDrag,
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
+			beginAttractionDragFromVortex,
+			cancelAttractionDrag,
 			findNearestProximityRelocate,
 			onSelect,
 			onConnect,
 			onProximityConnect,
 			onIndirectConnect,
-			onLinkCompatibleNodes,
-			onLinkTargetRing,
+			onAttractionCompatibleObjects,
+			onAttractionTargetRing,
 			onRelocate,
-			attachLinkThreeEnv,
-			updateLinkPointer,
-			commitLinkPointer,
+			attachAttractionThreeEnv,
+			updateAttractionPointer,
+			commitAttractionPointer,
 			updateIndirectPickPointer,
 			commitIndirectPickPointerDown,
-			linkEndWorldRef,
+			attractionEndWorldRef,
 		}),
 		[
 			registerVortex,
@@ -2436,24 +2478,24 @@ function SceneRegistryProvider({
 			selectionMode,
 			relocateMode,
 			activeRelocateObjectId,
-			linkDragActive,
-			linkDragSourceFullId,
-			linkCompatibleTargetFullIds,
-			linkHoverRingFullId,
-			linkIndirectPickAwait,
-			beginLinkDragFromVortex,
-			cancelLinkDrag,
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
+			beginAttractionDragFromVortex,
+			cancelAttractionDrag,
 			findNearestProximityRelocate,
 			onSelect,
 			onConnect,
 			onProximityConnect,
 			onIndirectConnect,
-			onLinkCompatibleNodes,
-			onLinkTargetRing,
+			onAttractionCompatibleObjects,
+			onAttractionTargetRing,
 			onRelocate,
-			attachLinkThreeEnv,
-			updateLinkPointer,
-			commitLinkPointer,
+			attachAttractionThreeEnv,
+			updateAttractionPointer,
+			commitAttractionPointer,
 			updateIndirectPickPointer,
 			commitIndirectPickPointerDown,
 		],
@@ -2537,8 +2579,8 @@ function SceneInner(props: SceneCanvasProps) {
 			onConnect={props.onConnect}
 			onProximityConnect={props.onProximityConnect}
 			onIndirectConnect={props.onIndirectConnect}
-			onLinkCompatibleNodes={props.onLinkCompatibleNodes}
-			onLinkTargetRing={props.onLinkTargetRing}
+			onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
+			onAttractionTargetRing={props.onAttractionTargetRing}
 			onRelocate={props.onRelocate}
 		>
 			<SceneLodBridge
@@ -2554,9 +2596,9 @@ function SceneInner(props: SceneCanvasProps) {
 			>
 				<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
 				<SceneOrbitGated target={tgt} />
-				<SceneLinkThreeBinder />
-				<SceneLinkWindowBridge />
-				<SceneLinkRubberBand />
+				<SceneAttractionThreeBinder />
+				<SceneAttractionWindowBridge />
+				<SceneAttractionRubberBand />
 				<CameraReporter target={tgt} zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
@@ -3072,6 +3114,11 @@ if (import.meta.vitest) {
 			expect(sceneLodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
 		});
 	});
+	describe("sceneLodAutomaticSelectLabel", () => {
+		it("includes the live tier in the automatic row", () => {
+			expect(sceneLodAutomaticSelectLabel("overview")).toBe("Automatic · Overview");
+		});
+	});
 	describe("resolveSceneLodLabelFromThresholds", () => {
 		it("classifies zoom bands", () => {
 			const t = DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
@@ -3112,6 +3159,28 @@ if (import.meta.vitest) {
 			expect(sceneLodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
 			expect(sceneLodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
 			expect(sceneLodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
+		});
+	});
+	describe("sceneObjectPoseKey", () => {
+		it("changes when origin changes", () => {
+			const a = sceneObjectPoseKey("id", [0, 0, 0], [0, 0, 0, 1], 1);
+			const b = sceneObjectPoseKey("id", [1, 0, 0], [0, 0, 0, 1], 1);
+			expect(a).not.toBe(b);
+		});
+	});
+	describe("sceneApplyObjectPose", () => {
+		it("places vortex child at expected world offset", () => {
+			const parent = new Group();
+			const vortex = new Group();
+			vortex.position.set(1, 2, 3);
+			parent.add(vortex);
+			sceneApplyObjectPose(parent, [10, 0, 0], [0, 0, 0, 1], 1);
+			sceneUpdateWorldMatrixChain(vortex);
+			const world = new Vector3();
+			vortex.getWorldPosition(world);
+			expect(world.x).toBeCloseTo(11, 5);
+			expect(world.y).toBeCloseTo(2, 5);
+			expect(world.z).toBeCloseTo(3, 5);
 		});
 	});
 	describe("parseSceneFixtureV1", () => {
@@ -3268,9 +3337,9 @@ if (import.meta.vitest) {
 			expect(s.has("b:h2")).toBe(true);
 		});
 	});
-	describe("sceneHandlesLinkCompatibleForDrag", () => {
+	describe("sceneHandlesAttractionCompatibleForDrag", () => {
 		it("allows all when rules empty", () => {
-			const ok = sceneHandlesLinkCompatibleForDrag(
+			const ok = sceneHandlesAttractionCompatibleForDrag(
 				{ objectId: "a", objectKind: "n1", vortexKind: "h1" },
 				{ objectId: "b", objectKind: "n2", vortexKind: "h2" },
 				[],
@@ -3279,7 +3348,7 @@ if (import.meta.vitest) {
 			expect(ok).toBe(true);
 		});
 		it("matches handle specificity", () => {
-			const ok = sceneHandlesLinkCompatibleForDrag(
+			const ok = sceneHandlesAttractionCompatibleForDrag(
 				{ objectId: "a", objectKind: "x", vortexKind: "h1" },
 				{ objectId: "b", objectKind: "y", vortexKind: "h2" },
 				[{ source: "h1", target: "h2", specificity: "handle" }],

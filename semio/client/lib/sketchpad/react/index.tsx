@@ -149,7 +149,7 @@ import {
   type SceneFixtureV1,
   type SceneRelocateMode as ElementsSceneRelocateMode,
   type SceneRelocatePayload,
-  type SceneTieLinkPayload,
+  type SceneAttractionPayload,
 } from "@elements/scene";
 import {
   buildTopologyDualSurfaceBindings,
@@ -35830,11 +35830,11 @@ const useDesignTopologyAdapter = () => {
   );
 
   const onSceneConnect = useCallback(
-    (payload: SceneTieLinkPayload) => {
-      const source = parseSketchpadTopologySceneFullId(payload.source);
-      const target = parseSketchpadTopologySceneFullId(payload.target);
-      if (!source || !target) return;
-      connectEndpoints(source.pieceId, source.connectorId, target.pieceId, target.connectorId);
+    (payload: SceneAttractionPayload) => {
+      const attracting = parseSketchpadTopologySceneFullId(payload.attracting);
+      const attracted = parseSketchpadTopologySceneFullId(payload.attracted);
+      if (!attracting || !attracted) return;
+      connectEndpoints(attracting.pieceId, attracting.connectorId, attracted.pieceId, attracted.connectorId);
     },
     [connectEndpoints],
   );

@@ -1,9 +1,9 @@
 {
   "title": "Board Play Lod Measures Wiring",
   "emoji": "📶",
-  "status": "open",
+  "status": "closed",
   "description": "Wire Rust BoardHost automatic_lod + forced_draw_lod, WASM setAutomaticLod/setForcedDrawLodLabel, BoardRenderer/BoardCanvas props, and board play floating window measures (Automatic LOD toggle + LOD tier select when off) so LOD controls are visible in board play.",
-  "summary": "Scene play and topology play now expose the same single LOD window measure as board play (Automatic + minimap…micro). SceneCanvas supports automaticLod/lod: automatic uses orbit pseudo-zoom bands via SceneLodFrameRunner; pinned tier skips band resolution. Topology board/scene panes receive boardLodCanvasProps/sceneLodCanvasProps per window. Added boardLodCanvasProps helper in board/index.ts. E2e asserts scene-main-lod, topology-board-lod, topology-scene-lod measures.",
+  "summary": "Automatic LOD window measure rows now show the live effective tier (e.g. Automatic · Overview) on board play (per pane), scene play, and topology play (board + scene windows). BoardRenderer publishes draw LOD via subscribeDrawLod; BoardCanvas onLodChange and BoardDrawLodReporter wire pane/shell state. Restored selectionChromeIds for WASM descriptor push. E2E updated for new automatic label and exact Overview option match.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪1b671a97220f453190b114d247fdaac5",

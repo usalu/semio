@@ -65,9 +65,9 @@ export interface TopologyDualSurfaceBindingInput extends TopologyLodGridShared {
 	readonly onBoardProximityConnect?: BoardCanvasProps["onProximityConnect"];
 	readonly onSceneProximityConnect?: SceneCanvasProps["onProximityConnect"];
 	readonly onBoardLinkCompatibleNodes?: BoardCanvasProps["onLinkCompatibleNodes"];
-	readonly onSceneLinkCompatibleNodes?: SceneCanvasProps["onLinkCompatibleNodes"];
+	readonly onSceneAttractionCompatibleObjects?: SceneCanvasProps["onAttractionCompatibleObjects"];
 	readonly onBoardLinkTargetRing?: BoardCanvasProps["onLinkTargetRing"];
-	readonly onSceneLinkTargetRing?: SceneCanvasProps["onLinkTargetRing"];
+	readonly onSceneAttractionTargetRing?: SceneCanvasProps["onAttractionTargetRing"];
 	readonly onBoardSelect?: BoardCanvasProps["onSelect"];
 	readonly onSceneSelect?: SceneCanvasProps["onSelect"];
 	readonly onBoardCamera?: BoardCanvasProps["onCamera"];
@@ -103,8 +103,8 @@ export interface TopologyDualSurfaceBindings {
 		| "onConnect"
 		| "onIndirectConnect"
 		| "onProximityConnect"
-		| "onLinkCompatibleNodes"
-		| "onLinkTargetRing"
+		| "onAttractionCompatibleObjects"
+		| "onAttractionTargetRing"
 		| "onSelect"
 		| "onCamera"
 		| "onLodChange"
@@ -141,8 +141,8 @@ export function buildTopologyDualSurfaceBindings(input: TopologyDualSurfaceBindi
 			onConnect: input.onSceneConnect,
 			onIndirectConnect: input.onSceneIndirectConnect,
 			onProximityConnect: input.onSceneProximityConnect,
-			onLinkCompatibleNodes: input.onSceneLinkCompatibleNodes,
-			onLinkTargetRing: input.onSceneLinkTargetRing,
+			onAttractionCompatibleObjects: input.onSceneAttractionCompatibleObjects,
+			onAttractionTargetRing: input.onSceneAttractionTargetRing,
 			onSelect: input.onSceneSelect,
 			onCamera: input.onSceneCamera as SceneCanvasProps["onCamera"],
 			onLodChange: input.onSceneLodChange,
@@ -158,7 +158,8 @@ export function topologyMirrorConnectHandlers(onBoth: (p: {
 }) => void): Pick<TopologyDualSurfaceBindingInput, "onBoardConnect" | "onSceneConnect"> {
 	return {
 		onBoardConnect: (payload) => onBoth({ source: payload.source, target: payload.target, surface: "board" }),
-		onSceneConnect: (payload) => onBoth({ source: payload.source, target: payload.target, surface: "scene" }),
+		onSceneConnect: (payload) =>
+			onBoth({ source: payload.attracting, target: payload.attracted, surface: "scene" }),
 	};
 }
 
