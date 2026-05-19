@@ -45,9 +45,17 @@ import sceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./play/globals.css";
 import {
 	BufferGeometry,
+	Color,
+	EdgesGeometry,
 	Float32BufferAttribute,
 	GridHelper,
+	Line,
 	LineBasicMaterial,
+	LineSegments,
+	Mesh,
+	MeshStandardMaterial,
+	Points,
+	PointsMaterial,
 	PerspectiveCamera as ThreePerspectiveCamera,
 	Plane,
 	Quaternion,
@@ -68,6 +76,18 @@ export type Quat = readonly [number, number, number, number];
 export type SceneRelocateMode = "translate" | "rotate" | "scale";
 export type SceneSelectionMode = "single" | "additive" | "subtractive" | "toggle";
 export type SceneConnectKind = "indirect" | "connect" | "proximity";
+export const SCENE_MESH_STYLE_KINDS = [
+	"original",
+	"neutral",
+	"hovered",
+	"selected",
+	"highlighted",
+	"disabled",
+] as const;
+/** @emoji 🎨 Homogeneous GLB presentation kind for pooled scene meshes ({@link SceneMesh}). */
+export type SceneMeshStyleKind = (typeof SCENE_MESH_STYLE_KINDS)[number];
+/** @emoji 🎨 Default object mesh style when none is passed ({@link SceneMesh}). */
+export const DEFAULT_SCENE_MESH_STYLE: SceneMeshStyleKind = "neutral";
 export type SceneDomainKind = "urban" | "architecture" | "detailing" | "engineering";
 export type SceneScaleKind =
 	| "1to50000"
@@ -211,11 +231,16 @@ export interface SceneObjectProps {
 	id: string;
 	objectKind?: string;
 	meshUrl: string;
+	/** @emoji 🎨 Explicit mesh style; otherwise derived from disabled, selected, highlighted, hovered. */
+	style?: SceneMeshStyleKind;
 	origin: Vec3;
 	orientation?: Quat;
 	scale?: number | Vec3;
 	label?: string;
 	selected?: boolean;
+	hovered?: boolean;
+	highlighted?: boolean;
+	disabled?: boolean;
 	visible?: boolean;
 	relocate?: SceneRelocateMode | false;
 	children?: ReactNode;
@@ -801,8 +826,222 @@ export function sceneHandlesLinkCompatibleForDrag(
 }
 //#endregion 🧩Compat
 
+//#region 🎨MeshPaint
+const SCENE_CSS_SELECTED_MESH = "var(--color-primary)";
+const SCENE_CSS_SELECTED_LINE = "var(--color-primary)";
+const SCENE_CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
+const SCENE_CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
+const SCENE_CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
+const SCENE_CSS_HOVERED_LINE = "var(--color-accent)";
+const SCENE_CSS_NEUTRAL_MESH = "var(--color-panel)";
+const SCENE_CSS_NEUTRAL_LINE = "var(--color-element)";
+const SCENE_CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
+const SCENE_CSS_DISABLED_LINE = "var(--color-muted-foreground)";
+const SCENE_CSS_TIE_LINE = "var(--color-muted-foreground)";
+const SCENE_CSS_ATTRACTION_LINE = "var(--color-accent)";
+
+const SCENE_MESH_OUTLINE_USER_DATA_KEY = "__elementsSceneMeshOutline";
+
+interface SceneMeshStyleColors {
+	readonly meshColor: string;
+	readonly lineColor: string;
+	readonly emissiveColor: string;
+	readonly emissiveIntensity: number;
+	readonly opacity: number;
+}
+
+const SCENE_MESH_STYLE_HEADLESS: Record<Exclude<SceneMeshStyleKind, "original">, SceneMeshStyleColors> = {
+	neutral: {
+		meshColor: "#eeeadb",
+		lineColor: "#001117",
+		emissiveColor: "#000000",
+		emissiveIntensity: 0,
+		opacity: 1,
+	},
+	hovered: {
+		meshColor: "#f0c8cc",
+		lineColor: "#ff344f",
+		emissiveColor: "#ff344f",
+		emissiveIntensity: 0.15,
+		opacity: 1,
+	},
+	selected: {
+		meshColor: "#ff344f",
+		lineColor: "#ff344f",
+		emissiveColor: "#ff344f",
+		emissiveIntensity: 0.35,
+		opacity: 1,
+	},
+	highlighted: {
+		meshColor: "#ff344f",
+		lineColor: "#ff344f",
+		emissiveColor: "#ff344f",
+		emissiveIntensity: 0.28,
+		opacity: 1,
+	},
+	disabled: {
+		meshColor: "#c8ccc6",
+		lineColor: "#7b827d",
+		emissiveColor: "#000000",
+		emissiveIntensity: 0,
+		opacity: 0.45,
+	},
+};
+
+function sceneProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
+	if (typeof document === "undefined") {
+		return "";
+	}
+	const el = document.createElement("span");
+	const key = property === "color" ? "color" : "background-color";
+	el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
+	document.documentElement.appendChild(el);
+	const out = getComputedStyle(el)[property];
+	el.remove();
+	return out;
+}
+
+function sceneResolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
+	const raw = sceneProbeCssComputed(property, expr);
+	if (!raw || raw === "rgba(0, 0, 0, 0)") {
+		return fallback;
+	}
+	return raw;
+}
+
+/** @emoji 🎨 Resolves mesh and edge colors for a {@link SceneMeshStyleKind} from Elements tokens. */
+export function sceneMeshStyleColors(style: SceneMeshStyleKind): SceneMeshStyleColors | null {
+	if (style === "original") {
+		return null;
+	}
+	const fb = SCENE_MESH_STYLE_HEADLESS[style];
+	const meshExprs: Record<Exclude<SceneMeshStyleKind, "original">, string> = {
+		neutral: SCENE_CSS_NEUTRAL_MESH,
+		hovered: SCENE_CSS_HOVERED_MESH,
+		selected: SCENE_CSS_SELECTED_MESH,
+		highlighted: SCENE_CSS_HIGHLIGHTED_MESH,
+		disabled: SCENE_CSS_DISABLED_MESH,
+	};
+	const lineExprs: Record<Exclude<SceneMeshStyleKind, "original">, string> = {
+		neutral: SCENE_CSS_NEUTRAL_LINE,
+		hovered: SCENE_CSS_HOVERED_LINE,
+		selected: SCENE_CSS_SELECTED_LINE,
+		highlighted: SCENE_CSS_HIGHLIGHTED_LINE,
+		disabled: SCENE_CSS_DISABLED_LINE,
+	};
+	return {
+		meshColor: sceneResolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
+		lineColor: sceneResolveCssColor("color", lineExprs[style], fb.lineColor),
+		emissiveColor: sceneResolveCssColor("color", lineExprs[style], fb.emissiveColor),
+		emissiveIntensity: fb.emissiveIntensity,
+		opacity: fb.opacity,
+	};
+}
+
+function sceneCreateStyledMeshMaterial(color: string, state: SceneMeshStyleColors): MeshStandardMaterial {
+	const mat = new MeshStandardMaterial({
+		color: new Color(color),
+		metalness: 0,
+		roughness: 1,
+	});
+	mat.emissive.set(state.emissiveColor);
+	mat.emissiveIntensity = state.emissiveIntensity;
+	mat.transparent = state.opacity < 1;
+	mat.opacity = state.opacity;
+	return mat;
+}
+
+function sceneCreateStyledLineMaterial(color: string, state: SceneMeshStyleColors): LineBasicMaterial {
+	const mat = new LineBasicMaterial({ color: new Color(color) });
+	mat.transparent = state.opacity < 1;
+	mat.opacity = state.opacity;
+	return mat;
+}
+
+function sceneCreateMeshOutline(geometry: BufferGeometry, color: string, state: SceneMeshStyleColors): LineSegments {
+	const outline = new LineSegments(new EdgesGeometry(geometry), sceneCreateStyledLineMaterial(color, state));
+	outline.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY] = true;
+	outline.scale.setScalar(1.001);
+	return outline;
+}
+
+function sceneApplyMeshStyleToObject3D(root: Object3D, style: SceneMeshStyleKind): void {
+	const colors = sceneMeshStyleColors(style);
+	if (!colors) {
+		return;
+	}
+	root.traverse((object) => {
+		if (object instanceof Mesh) {
+			const meshMaterial = sceneCreateStyledMeshMaterial(colors.meshColor, colors);
+			if (Array.isArray(object.material)) {
+				object.material = object.material.map(() => meshMaterial.clone());
+			} else {
+				object.material = meshMaterial;
+			}
+			const geometry = object.geometry;
+			if (geometry && !object.children.some((c) => c.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY])) {
+				object.add(sceneCreateMeshOutline(geometry, colors.lineColor, colors));
+			}
+			return;
+		}
+		if (object instanceof Line || object instanceof LineSegments) {
+			if (object.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY]) {
+				return;
+			}
+			object.material = sceneCreateStyledLineMaterial(colors.lineColor, colors);
+			return;
+		}
+		if (object instanceof Points) {
+			object.material = new PointsMaterial({
+				color: new Color(colors.lineColor),
+				size: 1,
+				transparent: colors.opacity < 1,
+				opacity: colors.opacity,
+			});
+		}
+	});
+}
+
+/** @emoji 🎨 Chooses the effective mesh style from explicit prop and interaction flags. */
+export function resolveSceneMeshStyle(args: {
+	readonly style?: SceneMeshStyleKind;
+	readonly disabled?: boolean;
+	readonly selected?: boolean;
+	readonly highlighted?: boolean;
+	readonly hovered?: boolean;
+}): SceneMeshStyleKind {
+	if (args.style) {
+		return args.style;
+	}
+	if (args.disabled) {
+		return "disabled";
+	}
+	if (args.selected) {
+		return "selected";
+	}
+	if (args.highlighted) {
+		return "highlighted";
+	}
+	if (args.hovered) {
+		return "hovered";
+	}
+	return DEFAULT_SCENE_MESH_STYLE;
+}
+
+/** @emoji 🎨 Resolves a CSS color for scene lines (ties, attractions). */
+export function sceneLineCssColor(expr: string, fallback: string): string {
+	return sceneResolveCssColor("color", expr, fallback);
+}
+//#endregion 🎨MeshPaint
+
 //#region 🏊Pool
 const gltfRefCounts = new Map<string, number>();
+const styledMeshRefCounts = new Map<string, number>();
+const styledMeshTemplates = new Map<string, Object3D>();
+
+function sceneStyledPoolKey(url: string, style: SceneMeshStyleKind): string {
+	return `${url}\0${style}`;
+}
 
 export function sceneGltfPoolAcquire(url: string): void {
 	gltfRefCounts.set(url, (gltfRefCounts.get(url) ?? 0) + 1);
@@ -817,10 +1056,47 @@ export function sceneGltfPoolRelease(url: string): void {
 	}
 }
 
+export function sceneStyledMeshPoolAcquire(url: string, style: SceneMeshStyleKind): void {
+	const key = sceneStyledPoolKey(url, style);
+	styledMeshRefCounts.set(key, (styledMeshRefCounts.get(key) ?? 0) + 1);
+}
+
+export function sceneStyledMeshPoolRelease(url: string, style: SceneMeshStyleKind): void {
+	const key = sceneStyledPoolKey(url, style);
+	const n = (styledMeshRefCounts.get(key) ?? 1) - 1;
+	if (n <= 0) {
+		styledMeshRefCounts.delete(key);
+		styledMeshTemplates.delete(key);
+	} else {
+		styledMeshRefCounts.set(key, n);
+	}
+}
+
 /** @emoji 🧹 Drops pooled GLTF cache entries (call on scene teardown, not per-chunk unmount). */
 export function sceneGltfPoolClear(url: string): void {
 	gltfRefCounts.delete(url);
+	for (const key of [...styledMeshTemplates.keys()]) {
+		if (key.startsWith(`${url}\0`)) {
+			styledMeshTemplates.delete(key);
+			styledMeshRefCounts.delete(key);
+		}
+	}
 	useGLTF.clear(url);
+}
+
+/** @emoji 🏊 Returns a cached styled GLTF template for {@link SceneMesh} (refcount via acquire/release). */
+export function sceneStyledMeshTemplate(url: string, style: SceneMeshStyleKind, source: Object3D): Object3D {
+	if (style === "original") {
+		return source;
+	}
+	const key = sceneStyledPoolKey(url, style);
+	let template = styledMeshTemplates.get(key);
+	if (!template) {
+		template = source.clone(true);
+		sceneApplyMeshStyleToObject3D(template, style);
+		styledMeshTemplates.set(key, template);
+	}
+	return template;
 }
 
 function usePooledGltf(url: string) {
@@ -832,6 +1108,26 @@ function usePooledGltf(url: string) {
 		};
 	}, [url]);
 	return gltf;
+}
+
+function usePooledStyledMesh(url: string, style: SceneMeshStyleKind) {
+	const gltf = usePooledGltf(url);
+	useEffect(() => {
+		if (style === "original") {
+			return undefined;
+		}
+		sceneStyledMeshPoolAcquire(url, style);
+		return () => {
+			sceneStyledMeshPoolRelease(url, style);
+		};
+	}, [url, style]);
+	const template = useMemo(() => {
+		if (!gltf.scene) {
+			return null;
+		}
+		return sceneStyledMeshTemplate(url, style, gltf.scene);
+	}, [gltf.scene, url, style]);
+	return template;
 }
 //#endregion 🏊Pool
 
@@ -1080,20 +1376,58 @@ function sceneNearestLinkSnapFullId(args: {
 }
 //#endregion 🔗LinkGesture
 
-//#region 🧊Object
-const ScenePlaceholderMesh = memo(function ScenePlaceholderMesh() {
+//#region 🧊Mesh
+export interface SceneMeshProps {
+	readonly meshUrl: string;
+	readonly style?: SceneMeshStyleKind;
+	readonly userData?: Record<string, unknown>;
+	readonly scale?: number | [number, number, number];
+}
+
+/** @emoji 🧊 Pooled GLB body with {@link SceneMeshStyleKind} recoloring aligned to Elements tokens. */
+export const SceneMesh = memo(function SceneMesh(props: SceneMeshProps) {
+	const style = props.style ?? DEFAULT_SCENE_MESH_STYLE;
+	const template = usePooledStyledMesh(props.meshUrl, style);
+	if (!template) {
+		return null;
+	}
+	const scale = props.scale;
 	return (
-		<mesh>
-			<boxGeometry args={[1, 1, 1]} />
-			<meshStandardMaterial color="#cbd5e1" metalness={0.05} roughness={0.85} />
-		</mesh>
+		<Clone
+			object={template}
+			{...(scale !== undefined
+				? {
+						scale:
+							typeof scale === "number"
+								? ([scale, scale, scale] as [number, number, number])
+								: (scale as [number, number, number]),
+					}
+				: {})}
+			userData={props.userData}
+		/>
 	);
 });
 
-const SceneResolvedObjectMesh = memo(function SceneResolvedObjectMesh(props: { readonly meshUrl: string }) {
-	const gltf = usePooledGltf(props.meshUrl);
-	return gltf.scene ? <Clone object={gltf.scene} /> : null;
+const ScenePlaceholderMesh = memo(function ScenePlaceholderMesh(props: { readonly style: SceneMeshStyleKind }) {
+	const colors = sceneMeshStyleColors(props.style);
+	const meshColor = colors?.meshColor ?? "#cbd5e1";
+	const opacity = colors?.opacity ?? 1;
+	return (
+		<mesh>
+			<boxGeometry args={[1, 1, 1]} />
+			<meshStandardMaterial
+				color={meshColor}
+				metalness={0.05}
+				roughness={0.85}
+				transparent={opacity < 1}
+				opacity={opacity}
+			/>
+		</mesh>
+	);
 });
+//#endregion 🧊Mesh
+
+//#region 🧊Object
 
 const SceneObjectTransformControls = memo(function SceneObjectTransformControls(props: {
 	readonly object: Group;
@@ -1149,6 +1483,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const reg = useSceneRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
+	const [pointerHovered, setPointerHovered] = useState(false);
 
 	useEffect(() => {
 		reg.registerObject(props.id, props.objectKind, group.current);
@@ -1161,18 +1496,61 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		if (group.current) setTcTarget(group.current);
 	}, [props.selected, props.id, reg.activeRelocateObjectId]);
 
+	const linkHighlighted = useMemo(() => {
+		if (props.highlighted === true) {
+			return true;
+		}
+		const prefix = `${props.id}:`;
+		for (const fullId of reg.linkCompatibleTargetFullIds) {
+			if (fullId.startsWith(prefix)) {
+				return true;
+			}
+		}
+		return false;
+	}, [props.highlighted, props.id, reg.linkCompatibleTargetFullIds]);
+
+	const meshStyle = useMemo(
+		() =>
+			resolveSceneMeshStyle({
+				style: props.style,
+				disabled: props.disabled,
+				selected: props.selected,
+				highlighted: linkHighlighted,
+				hovered: props.hovered === true || pointerHovered,
+			}),
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
+	);
+
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void }) => {
 			e.stopPropagation();
 			if (reg.linkDragActive || reg.linkIndirectPickAwait) return;
+			if (props.disabled) {
+				return;
+			}
 			if (reg.selectionMode === "single") {
 				reg.setSelectedObjectIds([props.id]);
 				reg.onSelect?.({ objectIds: [props.id], vortexIds: [] });
 			}
 			reg.setActiveRelocateObjectId(props.id);
 		},
-		[props.id, reg],
+		[props.disabled, props.id, reg],
 	);
+
+	const handlePointerOver = useCallback(
+		(e: { stopPropagation: () => void }) => {
+			e.stopPropagation();
+			if (!props.disabled) {
+				setPointerHovered(true);
+			}
+		},
+		[props.disabled],
+	);
+
+	const handlePointerOut = useCallback((e: { stopPropagation: () => void }) => {
+		e.stopPropagation();
+		setPointerHovered(false);
+	}, []);
 
 	const quat = useMemo(() => quatToThree(props.orientation), [props.orientation]);
 	const scaleVec = useMemo(() => scaleToThree(props.scale), [props.scale]);
@@ -1197,10 +1575,17 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 				scale={scaleVec}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
+				onPointerOver={handlePointerOver}
+				onPointerOut={handlePointerOut}
 				userData={{ sceneObjectId: props.id, ...props.userData }}
 				data-scene-object={props.id}
+				data-scene-mesh-style={meshStyle}
 			>
-				{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? <ScenePlaceholderMesh /> : <SceneResolvedObjectMesh meshUrl={props.meshUrl} />}
+				{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? (
+					<ScenePlaceholderMesh style={meshStyle} />
+				) : (
+					<SceneMesh meshUrl={props.meshUrl} style={meshStyle} />
+				)}
 				{props.children}
 			</group>
 			{showTc && tcTarget && (
@@ -1220,13 +1605,37 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 //#region 🌀Vortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
-function SceneVortexHandleGltf(props: { meshUrl: string; fullId: string; radius: number }) {
-	const gltf = usePooledGltf(props.meshUrl);
+function SceneVortexHandleGltf(props: {
+	meshUrl: string;
+	fullId: string;
+	radius: number;
+	style: SceneMeshStyleKind;
+}) {
 	const scale = (props.radius / 0.35) * 0.9;
-	if (!gltf.scene) return null;
 	return (
-		<Clone object={gltf.scene} scale={scale} userData={{ sceneVortexFullId: props.fullId }} />
+		<SceneMesh
+			meshUrl={props.meshUrl}
+			style={props.style}
+			scale={scale}
+			userData={{ sceneVortexFullId: props.fullId }}
+		/>
 	);
+}
+
+function sceneVortexHighlightMeshStyle(
+	highlight: "none" | "compatible" | "ring" | "source" | "indirectRing",
+): SceneMeshStyleKind {
+	switch (highlight) {
+		case "ring":
+		case "indirectRing":
+			return "highlighted";
+		case "compatible":
+			return "hovered";
+		case "source":
+			return "selected";
+		default:
+			return "neutral";
+	}
 }
 
 function SceneVortexFallbackMesh(props: {
@@ -1234,25 +1643,17 @@ function SceneVortexFallbackMesh(props: {
 	radius: number;
 	highlight: "none" | "compatible" | "ring" | "source" | "indirectRing";
 }) {
-	const color =
-		props.highlight === "compatible"
-			? "#22c55e"
-			: props.highlight === "ring"
-				? "#facc15"
-				: props.highlight === "indirectRing"
-					? "#a78bfa"
-					: props.highlight === "source"
-						? "#94a3b8"
-						: "#38bdf8";
-	const emissive = props.highlight === "ring" || props.highlight === "indirectRing" ? "#ca8a04" : "#000000";
-	const emissiveIntensity = props.highlight === "ring" || props.highlight === "indirectRing" ? 0.45 : 0;
+	const style = sceneVortexHighlightMeshStyle(props.highlight);
+	const colors = sceneMeshStyleColors(style) ?? sceneMeshStyleColors("neutral")!;
 	return (
 		<mesh userData={{ sceneVortexFullId: props.fullId }}>
 			<sphereGeometry args={[props.radius, 12, 12]} />
 			<meshStandardMaterial
-				color={color}
-				emissive={emissive}
-				emissiveIntensity={emissiveIntensity}
+				color={colors.meshColor}
+				emissive={colors.emissiveColor}
+				emissiveIntensity={colors.emissiveIntensity}
+				transparent={colors.opacity < 1}
+				opacity={colors.opacity}
 				{...vortexFallbackMatProps}
 			/>
 		</mesh>
@@ -1348,6 +1749,7 @@ export const SceneVortex = memo(function SceneVortex(
 				? props.handleMeshUrl
 				: undefined;
 
+	const handleMeshStyle = sceneVortexHighlightMeshStyle(highlight);
 	const vis = props.visible !== false;
 	return (
 		<group
@@ -1355,11 +1757,12 @@ export const SceneVortex = memo(function SceneVortex(
 			position={props.position as [number, number, number]}
 			userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }}
 			data-scene-vortex={fullId}
+			data-scene-mesh-style={handleMeshStyle}
 			visible={vis}
 			onPointerDown={onPointerDown}
 		>
 			{drawHandleBody && meshUrl ? (
-				<SceneVortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} />
+				<SceneVortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} />
 			) : drawHandleBody && props.children ? (
 				<group userData={{ sceneVortexFullId: fullId }}>{props.children}</group>
 			) : drawHandleBody ? (
@@ -1391,6 +1794,10 @@ export const SceneMagnet = memo(function SceneMagnet(props: SceneMagnetProps) {
 export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 	const reg = useSceneRegistry();
 	const [pts, setPts] = useState<Vector3[] | null>(null);
+	const tieColor = useMemo(
+		() => sceneLineCssColor(SCENE_CSS_TIE_LINE, "#64748b"),
+		[],
+	);
 	useFrame(() => {
 		const a = reg.getVortexWorld(props.source);
 		const b = reg.getVortexWorld(props.target);
@@ -1401,14 +1808,18 @@ export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 		}
 	});
 	if (!pts) return null;
-	return <Line points={pts} color="#64748b" lineWidth={1} userData={{ sceneTieId: props.id }} />;
+	return <Line points={pts} color={tieColor} lineWidth={1} userData={{ sceneTieId: props.id }} />;
 });
 //#endregion 🪢Tie
 
 //#region 🧲Attraction
 export const SceneAttraction = memo(function SceneAttraction(props: { from: Vec3; to: Vec3 }) {
 	const pts = useMemo(() => [vec3ToThree(props.from), vec3ToThree(props.to)], [props.from, props.to]);
-	return <Line points={pts} color="#f472b6" lineWidth={2} />;
+	const color = useMemo(
+		() => sceneLineCssColor(SCENE_CSS_ATTRACTION_LINE, "#f472b6"),
+		[],
+	);
+	return <Line points={pts} color={color} lineWidth={2} />;
 });
 //#endregion 🧲Attraction
 
@@ -2678,6 +3089,49 @@ if (import.meta.vitest) {
 			sceneGltfPoolRelease(url);
 			sceneGltfPoolAcquire(url);
 			sceneGltfPoolRelease(url);
+			expect(true).toBe(true);
+		});
+	});
+	describe("resolveSceneMeshStyle", () => {
+		it("prefers explicit style over interaction flags", () => {
+			expect(
+				resolveSceneMeshStyle({
+					style: "original",
+					selected: true,
+					hovered: true,
+					disabled: true,
+				}),
+			).toBe("original");
+		});
+		it("orders disabled, selected, highlighted, hovered, then default", () => {
+			expect(resolveSceneMeshStyle({ disabled: true, selected: true })).toBe("disabled");
+			expect(resolveSceneMeshStyle({ selected: true, highlighted: true })).toBe("selected");
+			expect(resolveSceneMeshStyle({ highlighted: true, hovered: true })).toBe("highlighted");
+			expect(resolveSceneMeshStyle({ hovered: true })).toBe("hovered");
+			expect(resolveSceneMeshStyle({})).toBe(DEFAULT_SCENE_MESH_STYLE);
+		});
+	});
+	describe("sceneMeshStyleColors", () => {
+		it("returns null for original and colors for neutral", () => {
+			expect(sceneMeshStyleColors("original")).toBeNull();
+			const neutral = sceneMeshStyleColors("neutral");
+			expect(neutral?.meshColor.length).toBeGreaterThan(0);
+			expect(neutral?.lineColor.length).toBeGreaterThan(0);
+		});
+		it("returns primary-toned selected and highlighted fills", () => {
+			const selected = sceneMeshStyleColors("selected");
+			const highlighted = sceneMeshStyleColors("highlighted");
+			expect(selected?.meshColor).toBeTruthy();
+			expect(highlighted?.meshColor).toBeTruthy();
+		});
+	});
+	describe("sceneStyledMeshPoolAcquire", () => {
+		it("tracks styled pool keys separately from base url", () => {
+			const url = "http://x/styled-pool.glb";
+			sceneStyledMeshPoolAcquire(url, "neutral");
+			sceneStyledMeshPoolAcquire(url, "selected");
+			sceneStyledMeshPoolRelease(url, "neutral");
+			sceneStyledMeshPoolRelease(url, "selected");
 			expect(true).toBe(true);
 		});
 	});

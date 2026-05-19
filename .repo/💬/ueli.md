@@ -615,6 +615,35 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+### 🏙️scene
+
+elements scene:
+
+---
+
+Expand the mesh pool by more styles and use element styling that are inline with the other element bundles/tokens etc: original (no modification), neutral (replace all colors for meshes and edges by element colors such as foreground, background, etc.), hovered, selected (all meshes have primary colored material), highlighted (all meshes have primary colored material), disabled.
+Extend A mesh to have a style prop (original, neutral, hovered, selected, highlighted, disabled).
+Then use the prop for all the features.
+
+---
+
+---
+
+### topology
+
+---
+
+Create elements topology
+elements\client\lib\topology\react\index.tsx
+elements\client\lib\topology\play\index.html
+elements\client\lib\topology\fixtures\nakagin-capsule-tower.topology.json
+
+It is the combination of board and scene.
+Share as many props, events, etc as you can.
+Render both in play inside two different window kinds.
+
+---
+
 ## 🔬coda
 
 coda:
