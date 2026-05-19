@@ -1,0 +1,13 @@
+{
+  "title": "Scene Mesh Style Pool",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Expand the elements scene mesh pool by more styles (original, neutral, hovered, selected, highlighted, disabled) using element styling tokens aligned with board bundles. Add style prop to SceneMesh and wire through all features.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1444"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪401b270b94704f1b9102521f9a495179"
+  ]
+}

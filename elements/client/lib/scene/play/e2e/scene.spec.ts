@@ -28,6 +28,8 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	await expect(page.locator("[data-scene-root]")).toBeVisible();
 	await page.waitForLoadState("networkidle");
 	await page.waitForTimeout(500);
+	await expect(page.locator("[data-scene-root]")).toHaveAttribute("data-scene-domain", "architecture");
+	await expect(page.locator("[data-e2e-scene-lod]")).toHaveText("overview");
 	expectCleanSceneConsole(messages);
 });
 

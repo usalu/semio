@@ -22071,6 +22071,10 @@ const UICanvas: React.FC<{
   const containerRef = React.useRef<HTMLDivElement>(null);
   const layoutRef = React.useRef<any>(null);
   const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
+  const onLayoutChangeRef = React.useRef(onLayoutChange);
+  const onActiveWindowChangeRef = React.useRef(onActiveWindowChange);
+  onLayoutChangeRef.current = onLayoutChange;
+  onActiveWindowChangeRef.current = onActiveWindowChange;
   /** @emoji 🪟 Stable registry key so measure/control-only `windowKinds` updates do not destroy Golden Layout. */
   const windowKindRegistryKey = React.useMemo(() => windowKinds.map((wk) => wk.id).join("\0"), [windowKinds]);
 
@@ -22142,10 +22146,11 @@ const UICanvas: React.FC<{
         });
 
         layout.on("stateChanged", () => {
-          if (!onLayoutChange || !isInitialized) return;
+          const onLayout = onLayoutChangeRef.current;
+          if (!onLayout || !isInitialized) return;
           try {
             const nextLayout = parseWindowLayout(layout.toConfig());
-            if (nextLayout) onLayoutChange(nextLayout);
+            if (nextLayout) onLayout(nextLayout);
           } catch (error: any) {
             if (!error?.message?.includes("not yet initialised")) {
               console.warn("[UICanvas] Failed to get layout config:", error);
@@ -22157,7 +22162,8 @@ const UICanvas: React.FC<{
           if (tab._header) {
             tab._header.on("click", () => {
               const componentName = tab._contentItem?.config?.componentName;
-              if (componentName && onActiveWindowChange) onActiveWindowChange(componentName);
+              const onActive = onActiveWindowChangeRef.current;
+              if (componentName && onActive) onActive(componentName);
             });
           }
         });
@@ -22190,7 +22196,7 @@ const UICanvas: React.FC<{
     return () => {
       lifecycle.dispose();
     };
-  }, [windowKindRegistryKey, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
+  }, [windowKindRegistryKey, defaultLayout, layoutState]);
 
   return (
     <>

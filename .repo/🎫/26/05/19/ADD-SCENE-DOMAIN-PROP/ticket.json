@@ -3,7 +3,7 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Add a new board scene prop for domain, default it to architecture, and use it to derive or constrain features such as LOD according to the provided domain-specific scale ladders. Update implementation and existing tests as needed.",
-  "summary": "Restored the missing scenePseudoZoomFromOrbitDistance runtime helper after the scene LOD/domain refactor and tightened the existing scene Playwright console assertions to catch this regression. Verified with focused scene unit tests, a successful @elements/scene build, and the full existing scene Playwright suite passing end to end.",
+  "summary": "Fixed scene LOD calibration for meter-based scenes by deriving domain thresholds with the same distance reference used by runtime pseudo-zoom, so architectural scenes are classified by real camera distance instead of mismatched arbitrary constants. Added unit coverage for the calibrated architecture ladder and end-to-end coverage asserting the play example loads as an architecture scene in overview LOD. Verified with scene unit tests, build, and the full Playwright scene suite.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1442"
   },
@@ -12,6 +12,7 @@
     "⚪29761d1c05e74709aac5492eb63c4571",
     "⚪e05b62f629f64d9ebcaf8fdf28f3626c",
     "⚪f6fdac7795614d508857b6955892459f",
-    "⚪178b576b43fb40c29395cd2a80bacc1e"
+    "⚪178b576b43fb40c29395cd2a80bacc1e",
+    "⚪f737963e047e4c919f4ba7c63062d0ac"
   ]
 }

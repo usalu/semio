@@ -2063,8 +2063,8 @@ function SceneInner(props: SceneCanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
 	const lodKindRef = useRef<SceneLodKind>("normal");
 	const domain = props.domain ?? DEFAULT_SCENE_DOMAIN;
-	const thresholds = props.lodZoomThresholds ?? sceneLodZoomThresholdsForDomain(domain);
-	const distanceReference = props.lodDistanceReference ?? 900;
+	const distanceReference = props.lodDistanceReference ?? DEFAULT_SCENE_SCALE_REFERENCE;
+	const thresholds = props.lodZoomThresholds ?? sceneLodZoomThresholdsForDomain(domain, distanceReference);
 	const gridFactor = props.gridFactor ?? DEFAULT_SCENE_LOD_GRID_FACTOR;
 	const gridSnapEnabled = props.gridSnapEnabled ?? false;
 	const showLodGrid = props.showLodGrid === true;
@@ -2561,6 +2561,16 @@ if (import.meta.vitest) {
 			expect(resolveSceneLodLabelFromThresholds(0.5, t)).toBe("normal");
 			expect(resolveSceneLodLabelFromThresholds(1, t)).toBe("detail");
 			expect(resolveSceneLodLabelFromThresholds(2, t)).toBe("micro");
+		});
+		it("stays meter-calibrated when pseudo zoom and thresholds share the same reference", () => {
+			const distanceReference = 900;
+			const t = sceneLodZoomThresholdsForDomain("architecture", distanceReference);
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(800, distanceReference), t)).toBe("minimap");
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(650, distanceReference), t)).toBe("overview");
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(300, distanceReference), t)).toBe("compact");
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(180, distanceReference), t)).toBe("normal");
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(100, distanceReference), t)).toBe("detail");
+			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(50, distanceReference), t)).toBe("micro");
 		});
 	});
 	describe("sceneLodVisibleGridSnapStepWorld", () => {

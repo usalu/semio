@@ -3322,6 +3322,11 @@ function BoardPlayInner(): ReactElement {
 	const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
 	const activePaneIdRef = useRef(activePaneId);
 	activePaneIdRef.current = activePaneId;
+	const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
+		if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
+			setActivePaneId(windowKindId);
+		}
+	}, []);
 	const [selectionByPane, setSelectionByPane] = useState<Record<BoardPlayPaneId, Set<string>>>(() => selectionSeedForFixture(initialFixture));
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
 	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
@@ -4300,11 +4305,7 @@ function BoardPlayInner(): ReactElement {
 				{ content: () => <BoardWorkbenchKindsPanel />, icon: Circle, id: "board-play-workbench-kinds", order: 2 },
 				{ content: () => <BoardWorkbenchConstraintsPanel />, icon: Link2, id: "board-play-workbench-constraints", order: 3 },
 			],
-			onActiveWindowChange: (windowKindId) => {
-				if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
-					setActivePaneId(windowKindId);
-				}
-			},
+			onActiveWindowChange: onBoardPlayActiveWindowChange,
 			rightPanelTabs: [
 				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
 				{ content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
@@ -4312,7 +4313,7 @@ function BoardPlayInner(): ReactElement {
 			toolbarContent: <BoardPlayToolbar />,
 			windowKinds: boardWindowKinds,
 		}),
-		[boardWindowKinds, setActivePaneId],
+		[boardWindowKinds, onBoardPlayActiveWindowChange],
 	);
 
 	return (
