@@ -1342,6 +1342,18 @@ pub mod schema_gap_surfaces {
         };
     }
 
+    macro_rules! define_gap_surface_families_from_list {
+        ($($Name:ident),+ $(,)?) => {
+            gap_surface_families! { $($Name),+ }
+        };
+    }
+
+    macro_rules! define_gap_surface_existing_relays_from_list {
+        ($($Name:ident),+ $(,)?) => {
+            gap_surface_existing_relays! { $($Name),+ }
+        };
+    }
+
     macro_rules! gap_surface_families {
         { $($Name:ident),* $(,)? } => {
             $(gap_surface_family!($Name);)+
@@ -1354,7 +1366,6 @@ pub mod schema_gap_surfaces {
         };
     }
 
-    #[macro_export]
     #[macro_export]
     macro_rules! gap_surface_family_name_list {
         (@names) => {
@@ -1555,15 +1566,15 @@ pub mod schema_gap_surfaces {
         UpdatedTypeIcon,
         UpdatedTypeIconInput
         };
-        {} => {
-            gap_surface_family_name_list!(@names);
+        () => {
+            define_gap_surface_families_from_list!(gap_surface_family_name_list!(@names));
         };
-        (@register $builder:expr) => {{
-            $crate::register_gap_surface_family_connections! {
-                @expand $builder;
+        (@register $builder:expr) => {
+            $crate::register_gap_surface_family_connections!(
+                @do_register $builder,
                 gap_surface_family_name_list!(@names)
-            }
-        }};
+            )
+        };
     }
 
     #[macro_export]
@@ -1620,22 +1631,29 @@ pub mod schema_gap_surfaces {
         WebsocketBackbone,
         WebsocketBackboneCommand
         };
-        {} => {
+        () => {
             gap_surface_existing_relay_name_list!(@names);
         };
-        (@register $builder:expr) => {{
-            $crate::register_gap_surface_existing_relay_connections! {
-                @expand $builder;
-                gap_surface_existing_relay_name_list!(@names)
+        (@emit_gap_surface_existing_relays; $($Name:ident),* $(,)?) => {
+            gap_surface_existing_relays! { $($Name),* }
+        };
+        (@register $builder:expr) => {
+            gap_surface_existing_relay_name_list! {
+                @do_register_bridge $builder;
+                @names
             }
-        }};
+        };
+        (@do_register_bridge $builder:expr; $($Name:ident),* $(,)?) => {
+            $crate::register_gap_surface_existing_relay_connections!(@do_register $builder, $($Name),*)
+        };
     }
 
     #[macro_export]
     macro_rules! with_gap_surface_family_names {
         (gap_surface_families) => {
-            $crate::schema_gap_surfaces::gap_surface_families! {
-                $crate::gap_surface_family_name_list!(@names)
+            $crate::gap_surface_family_name_list! {
+                @emit_gap_surface_families;
+                @names
             }
         };
         (register_gap_surface_family_connections, $builder:expr) => {
@@ -1645,16 +1663,16 @@ pub mod schema_gap_surfaces {
 
     #[macro_export]
     macro_rules! register_gap_surface_family_connections {
-        (@expand $builder:expr; $($Name:ident),* $(,)?) => {{
+        (@do_register $builder:expr, $($Name:ident),* $(,)?) => {
             let mut b = $builder;
             $( b = b.register_output_type::<$crate::schema_gap_surfaces::paste::paste! { [<$Name Connection>] }>(); )*
             b
-        }};
-        ($builder:expr, $($Name:ident),+ $(,)?) => {{
+        };
+        ($builder:expr, $($Name:ident),+ $(,)?) => {
             let mut b = $builder;
             $( b = b.register_output_type::<$crate::schema_gap_surfaces::paste::paste! { [<$Name Connection>] }>(); )+
             b
-        }};
+        };
     }
 
     with_gap_surface_family_names!(gap_surface_families);
@@ -1696,6 +1714,7 @@ pub mod schema_gap_surfaces {
     );
     gap_surface_family_named!("Version", GapVersion, "VersionEdge", GapVersionEdge, "VersionConnection", GapVersionConnection);
 
+    
     #[macro_export]
     macro_rules! with_gap_surface_existing_relay_names {
         (gap_surface_existing_relays) => {
@@ -1710,16 +1729,16 @@ pub mod schema_gap_surfaces {
 
     #[macro_export]
     macro_rules! register_gap_surface_existing_relay_connections {
-        (@expand $builder:expr; $($Name:ident),* $(,)?) => {{
+        (@do_register $builder:expr, $($Name:ident),* $(,)?) => {
             let mut b = $builder;
             $( b = b.register_output_type::<$crate::schema_gap_surfaces::paste::paste! { [<$Name Connection>] }>(); )*
             b
-        }};
-        ($builder:expr, $($Name:ident),+ $(,)?) => {{
+        };
+        ($builder:expr, $($Name:ident),+ $(,)?) => {
             let mut b = $builder;
             $( b = b.register_output_type::<$crate::schema_gap_surfaces::paste::paste! { [<$Name Connection>] }>(); )+
             b
-        }};
+        };
     }
 
     with_gap_surface_existing_relay_names!(gap_surface_existing_relays);

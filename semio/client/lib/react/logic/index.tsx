@@ -319,7 +319,6 @@ const FolderBackboneContext = React.createContext<string | null>(null);
 const WebsocketBackboneContext = React.createContext<string | null>(null);
 
 const WipMarkerContext = React.createContext(false);
-const StageMarkerContext = React.createContext(false);
 const AuthoritativeMarkerContext = React.createContext(false);
 const TheKitMarkerContext = React.createContext(false);
 
@@ -493,13 +492,6 @@ export function WipContextProvider(props: Readonly<{ children: ReactNode }>): Re
   if (store == null) throw new Error("semio/react: WipContextProvider requires StoreContextProvider.");
   const graph = React.useMemo(() => store.wip(), [store]);
   return React.createElement(WipMarkerContext.Provider, { value: true }, React.createElement(GraphHandleContext.Provider, { value: graph }, props.children));
-}
-
-export function StageContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
-  const store = React.useContext(StoreHandleContext);
-  if (store == null) throw new Error("semio/react: StageContextProvider requires StoreContextProvider.");
-  const graph = React.useMemo(() => store.stage(), [store]);
-  return React.createElement(StageMarkerContext.Provider, { value: true }, React.createElement(GraphHandleContext.Provider, { value: graph }, props.children));
 }
 
 export function AuthoritativeContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -741,10 +733,6 @@ export function useStore(): string {
 export function useWip(): string {
   if (!React.useContext(WipMarkerContext)) throw new Error("semio/react: useWip requires WipContextProvider.");
   return "wip";
-}
-export function useStage(): string {
-  if (!React.useContext(StageMarkerContext)) throw new Error("semio/react: useStage requires StageContextProvider.");
-  return "stage";
 }
 export function useAuthoritative(): string {
   if (!React.useContext(AuthoritativeMarkerContext)) throw new Error("semio/react: useAuthoritative requires AuthoritativeContextProvider.");
@@ -1938,7 +1926,7 @@ export const DiffStatus = Object.freeze({
 export type DiffStatus = (typeof DiffStatus)[keyof typeof DiffStatus];
 
 export { getKitPorts } from "../rendering/index";
-export { SEMIO_IN_MEMORY_KIT_URI, kitStoreFromKitStoreClient } from "../../js";
+export { SEMIO_IN_MEMORY_KIT_URI } from "../../js";
 
 /** @emoji 📏 Sketchpad geometric tolerance constant. */
 export const TOLERANCE = 0.001;

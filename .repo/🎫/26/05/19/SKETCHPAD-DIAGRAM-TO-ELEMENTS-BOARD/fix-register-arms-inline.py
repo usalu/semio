@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 p = Path(r"c:\git\semio\semio\client\lib\rs\lib.rs")
@@ -6,35 +5,29 @@ text = p.read_text(encoding="utf-8")
 
 text = text.replace("#[macro_export]\n    #[macro_export]", "#[macro_export]")
 
-for macro_name, register_macro in [
-    ("gap_surface_family_name_list", "register_gap_surface_family_connections"),
-    ("gap_surface_existing_relay_name_list", "register_gap_surface_existing_relay_connections"),
-]:
-    pattern = (
-        rf"macro_rules! {re.escape(macro_name)} \{{\s*"
-        r"\(@names\) => \{\s*"
-        r"(.*?)"
-        r"\s*\};\s*"
-        r"\{\} => \{[^}]+\};\s*"
-        r"\(@register \$builder:expr\) => \{\{[^}}]+\}\};\s*"
-        r"\}"
-    )
-    m = re.search(pattern, text, re.S)
-    if not m:
-        raise SystemExit(f"pattern not found for {macro_name}")
-    names = m.group(1).strip()
-    replacement = f"""macro_rules! {macro_name} {{
-        (@names) => {{
-        {names}
-        }};
-        (@register $builder:expr) => {{
+
+def fix_register_in_list(list_macro: str, register_macro: str) -> None:
+    global text
+    anchor = f"macro_rules! {list_macro} {{"
+    i = text.index(anchor)
+    j = text.index("(@names) => {", i)
+    names_start = text.index("        Added", j)
+    names_end = text.index("        };", names_start)
+    names = text[names_start:names_end]
+
+    reg_start = text.index("        (@register $builder:expr)", i)
+    reg_end = text.index("        }};", reg_start) + len("        }};")
+    new_reg = f"""        (@register $builder:expr) => {{
             $crate::{register_macro}!($builder,
-        {names}
+{names}
             )
-        }};
-    }}"""
-    text = text[: m.start()] + replacement + text[m.end() :]
-    print(f"fixed {macro_name}")
+        }};"""
+    text = text[:reg_start] + new_reg + text[reg_end:]
+    print(f"fixed @register in {list_macro}")
+
+
+fix_register_in_list("gap_surface_family_name_list", "register_gap_surface_family_connections")
+fix_register_in_list("gap_surface_existing_relay_name_list", "register_gap_surface_existing_relay_connections")
 
 text = text.replace(
     "$crate::schema_gap_surfaces::gap_surface_families! {",
@@ -47,14 +40,6 @@ text = text.replace(
 text = text.replace(
     "$crate::schema_gap_surfaces::paste::paste!",
     "paste::paste!",
-)
-text = text.replace(
-    "            $crate::gap_surface_family_name_list!(@register $builder)\n",
-    "            $crate::gap_surface_family_name_list!(@register $builder)\n",
-)
-text = text.replace(
-    "            $crate::gap_surface_existing_relay_name_list!(@register $builder);\n",
-    "            $crate::gap_surface_existing_relay_name_list!(@register $builder)\n",
 )
 
 p.write_text(text, encoding="utf-8")

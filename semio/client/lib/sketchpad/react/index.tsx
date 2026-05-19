@@ -44,7 +44,6 @@ import {
   type KitFieldBinding,
   kitHostRedo,
   kitHostUndo,
-  kitStoreFromKitStoreClient,
   KitStoreProvider,
   KitWasmMountProvider,
   PieceDiff,
@@ -85,6 +84,7 @@ import {
   useKitStoredFileUrls as useFileUrls,
   useIsInActiveKitTab,
   useJsStore,
+  useStoreCommand,
   useKitAlternatives,
   useKitAlternativeSelection,
   useKitCommandEngineExplicitOrigin,
@@ -150,6 +150,12 @@ import {
   buildTopologyDualSurfaceBindings,
   TopologyBoardPane,
   TopologyScenePane,
+  topologyApplyBoardFixtureCentersToTopLeft,
+  topologyBoardCameraFromCenters,
+  topologyBoardCompoundId,
+  topologyBoardConnectorAngle,
+  topologyDiagramForceGraphOptions,
+  topologyParseBoardCompoundId,
   topologySceneChromeDefaults,
 } from "@elements/topology";
 import { gunzipSync } from "fflate";
@@ -13895,34 +13901,6 @@ interface KitDiagramLayoutNode {
   selected: boolean;
 }
 
-/** @emoji 🕸️ Maps kit diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
-const sketchpadKitDiagramForceGraphOptions = (settings: DiagramForceSettings): BoardForceGraphLayoutOptions => ({
-  centerX: 0,
-  centerY: 0,
-  gravity: settings.centerStrength,
-  idealEdgeLength: settings.linkDistance,
-  iterations: 280,
-  randomSeed: 1,
-  repulsionStrength: Math.abs(settings.chargeStrength),
-});
-
-/** @emoji 📍 Writes WASM layout centers back into kit diagram top-left positions. */
-const sketchpadKitApplyFixturePositionsToLayoutNodes = (
-  nodes: readonly KitDiagramLayoutNode[],
-  fixture: BoardFixtureV1,
-): KitDiagramLayoutNode[] => {
-  const centerById = new Map(fixture.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
-  return nodes.map((node) => {
-    const center = centerById.get(node.id);
-    if (!center) return node;
-    const frame = getKitDiagramNodeFrameForKind(node.data.kind);
-    return {
-      ...node,
-      position: { x: center.x - frame.width / 2, y: center.y - frame.height / 2 },
-    };
-  });
-};
-
 /** @emoji 🗺️ Builds kit diagram layout nodes/edges from kit entities (input for board fixture + WASM layout). */
 const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: KitDiagramEdge[] } => {
   const nodes: KitDiagramLayoutNode[] = [];
@@ -14171,8 +14149,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
 
 const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
 
-const sketchpadKitBoardHandleId = (nodeId: string, side: KitDiagramSnapSide): string => `${nodeId}::${side}`;
-
 const sketchpadKitBoardHandleAngle = (side: KitDiagramSnapSide, shape: "circle" | "rectangle"): number => {
   if (shape === "rectangle") {
     if (side === "top") return 0;
@@ -14189,14 +14165,6 @@ const sketchpadKitBoardHandleAngle = (side: KitDiagramSnapSide, shape: "circle" 
 const sketchpadKitBoardNodeCenter = (node: KitDiagramLayoutNode): { x: number; y: number } => {
   const frame = getKitDiagramNodeFrameForKind(node.data.kind);
   return { x: node.position.x + frame.width / 2, y: node.position.y + frame.height / 2 };
-};
-
-const sketchpadKitBoardCameraFromNodes = (nodes: readonly KitDiagramLayoutNode[]): ElementsBoardCameraState => {
-  if (nodes.length === 0) return { x: 0, y: 0, zoom: 1 };
-  const centers = nodes.map((node) => sketchpadKitBoardNodeCenter(node));
-  const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
-  const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
-  return { x: -avgX, y: -avgY, zoom: 1 };
 };
 
 /** @emoji 🗺️ Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
@@ -14573,8 +14541,12 @@ const KitDiagramInner: FC = () => {
   useEffect(() => {
     if (diagramNodesRef.current.length === 0) return;
     const fixture = sketchpadKitBuildBoardFixture(diagramNodesRef.current, diagramEdgesRef.current);
-    const laid = layoutBoardFixtureForceGraph(fixture, sketchpadKitDiagramForceGraphOptions(diagramForceConfig));
-    commitDiagramNodes(sketchpadKitApplyFixturePositionsToLayoutNodes(diagramNodesRef.current, laid));
+    const laid = layoutBoardFixtureForceGraph(fixture, topologyDiagramForceGraphOptions(diagramForceConfig));
+    commitDiagramNodes(
+      topologyApplyBoardFixtureCentersToTopLeft(diagramNodesRef.current, laid, (node) =>
+        getKitDiagramNodeFrameForKind(node.data.kind),
+      ),
+    );
   }, [baseEdgeIdsKey, baseNodeIdsKey, commitDiagramNodes, diagramForceConfig]);
 
   const onBoardDrag = useCallback(
@@ -16211,34 +16183,6 @@ const SketchpadSettingsContent: FC = () => {
 /** @emoji 🌱 Sentinel option value for the main kit line (Radix Select rejects empty string). */
 const SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE = "__semio_sketchpad_the_kit__";
 
-/** @emoji 🧾 Counts unsaved changes on an alternative wire node (`unsavedChanges` relay, legacy `openTransaction` / draft flags). */
-function __unsavedChangesCountFromAltWire(node: unknown): number {
-  if (node == null || typeof node !== "object") return 0;
-  const n = node as Record<string, unknown>;
-  const uc = n["unsavedChanges"];
-  if (uc != null && typeof uc === "object") {
-    const edges = (uc as { edges?: unknown }).edges;
-    if (Array.isArray(edges)) return edges.filter(Boolean).length;
-  }
-  const ot = n["openTransaction"];
-  if (ot != null && typeof ot === "object" && String((ot as { id?: unknown }).id ?? "").trim() !== "") return 1;
-  const draft = n["draft"];
-  if (draft != null && typeof draft === "object" && ((draft as { u1?: unknown }).u1 === true || (draft as { canUndo?: unknown }).canUndo === true)) return 1;
-  return 0;
-}
-
-/** @emoji 🧾 Flattens `wip.alternatives` from {@link KitStore} `vcsState()` into concrete alternative nodes. */
-function __wipAlternativeNodesFromVcs(vcs: unknown): unknown[] {
-  if (vcs == null || typeof vcs !== "object") return [];
-  const wip = (vcs as { wip?: { alternatives?: unknown } }).wip;
-  const altRaw = wip?.alternatives;
-  if (altRaw == null) return [];
-  if (Array.isArray(altRaw)) return altRaw;
-  const edges = (altRaw as { edges?: readonly { node?: unknown }[] | null }).edges;
-  if (!Array.isArray(edges)) return [];
-  return edges.map((e) => e?.node).filter(Boolean);
-}
-
 /**
  * @emoji 🌱 Registers the left-most footer dropdown: `the kit` vs rs alternatives; shows unsaved change count from `Alternative.unsavedChanges` when present on the wire.
  **/
@@ -16248,8 +16192,8 @@ const KitAlternativeFooterSelector: FC = () => {
   const appType = useAppType();
   const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
   const alternatives = useKitAlternatives();
-  const kitRuntime = useKitWasmHost();
-  const kitClient = kitRuntime?.kitClient ?? null;
+  const store = useJsStore();
+  const storeCmd = useStoreCommand();
   const newAltInputRef = useRef<HTMLInputElement>(null);
   const [creatingAlt, setCreatingAlt] = useState(false);
   const [unsavedCount, setUnsavedCount] = useState(0);
@@ -16259,59 +16203,47 @@ const KitAlternativeFooterSelector: FC = () => {
 
   const handleCreateAlternative = useCallback(async () => {
     const name = newAltInputRef.current?.value?.trim() ?? "";
-    if (!kitClient || name === "" || creatingAlt) return;
+    if (store == null || name === "" || creatingAlt) return;
     setCreatingAlt(true);
     try {
-      const newId = await kitClient.createAlternativeFromTip(name, selectedAlternativeId);
-      const ks = kitStoreFromKitStoreClient(kitClient);
-      const vcs = ks && typeof (ks as { vcsState?: () => Promise<unknown> }).vcsState === "function" ? (ks as { vcsState: () => Promise<unknown> }).vcsState : null;
-      if (vcs) {
-        for (let i = 0; i < 60; i++) {
-          const row = (await vcs()) as { wip?: { alternatives?: readonly { id?: string }[] } };
-          const alts = row.wip?.alternatives;
-          if (Array.isArray(alts) && alts.some((a) => String(a?.id) === newId)) break;
-          await new Promise((r) => setTimeout(r, 15));
+      const result = await storeCmd.run.startAlternative(name);
+      if (!result.ok) return;
+      const alts = await store.wip().alternatives();
+      let match = alts.at(-1) ?? null;
+      for (const a of alts) {
+        if ((await a.name()) === name) {
+          match = a;
+          break;
         }
       }
-      setSelectedAlternativeId(newId);
+      if (match != null) setSelectedAlternativeId(match.id);
       if (newAltInputRef.current) newAltInputRef.current.value = "";
     } catch (e) {
-      console.warn("[DEBUG] createAlternativeFromTip failed", e);
+      console.warn("[DEBUG] startAlternative failed", e);
     } finally {
       setCreatingAlt(false);
     }
-  }, [kitClient, creatingAlt, selectedAlternativeId, setSelectedAlternativeId]);
+  }, [store, storeCmd.run, creatingAlt, setSelectedAlternativeId]);
 
   useEffect(() => {
-    if (!kitClient) {
+    if (store == null || selectedAlternativeId == null) {
       setUnsavedCount(0);
       return;
     }
-    const ks = kitStoreFromKitStoreClient(kitClient) as { vcsState?: () => Promise<unknown> } | null;
-    if (!ks || typeof ks.vcsState !== "function") {
-      setUnsavedCount(0);
-      return;
-    }
+    const alt = store.wip().alternative(selectedAlternativeId);
     let cancelled = false;
-    const pull = async () => {
-      try {
-        const v = await ks.vcsState();
-        if (cancelled) return;
-        const nodes = __wipAlternativeNodesFromVcs(v);
-        const sid = selectedAlternativeId;
-        const node = sid == null ? null : nodes.find((raw) => String((raw as { id?: unknown })?.id ?? "") === sid);
-        setUnsavedCount(node ? __unsavedChangesCountFromAltWire(node) : 0);
-      } catch {
-        if (!cancelled) setUnsavedCount(0);
-      }
+    const pull = (): void => {
+      void alt.unsavedChangeCount().then((n) => {
+        if (!cancelled) setUnsavedCount(n);
+      });
     };
-    void pull();
-    const off = kitClient.subscribe(() => void pull());
+    pull();
+    const off = alt.onUnsavedChangeCountChanged(() => pull());
     return () => {
       cancelled = true;
       off();
     };
-  }, [kitClient, selectedAlternativeId]);
+  }, [store, selectedAlternativeId]);
 
   useEffect(() => {
     if (appType !== "kit" && appType !== "design" && appType !== "type") return;
@@ -16346,13 +16278,13 @@ const KitAlternativeFooterSelector: FC = () => {
             ref={newAltInputRef}
             className="h-8 min-w-[7rem] max-w-[12rem] text-xs"
             placeholder="Branch name"
-            disabled={!kitClient}
+            disabled={store == null}
             aria-label="New alternative name"
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") void handleCreateAlternative();
             }}
           />
-          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={!kitClient || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
+          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={store == null || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
             +
           </Button>
           <Input className="h-8 min-w-[6rem] max-w-[9rem] text-xs" placeholder="hub user" value={hubUser} onChange={(e) => setHubUser(e.target.value)} aria-label="Hub username" />
@@ -16363,15 +16295,9 @@ const KitAlternativeFooterSelector: FC = () => {
             variant="ghost"
             size="sm"
             className="h-8 px-2 text-xs"
-            disabled={!kitClient}
+            disabled={store == null}
             onClick={() => {
-              const ext = kitClient as unknown as Record<string, unknown>;
-              const fn = ext["login"];
-              if (typeof fn !== "function") {
-                console.warn("[DEBUG] kitClient has no login(); wire Session.login after js builder lands");
-                return;
-              }
-              void Promise.resolve((fn as (u: string, p: string, h?: string) => Promise<unknown>)(hubUser, hubPass, hubUrl || undefined)).catch((e) => console.warn("[DEBUG] login failed", e));
+              void store!.session.login(hubUser, hubPass, hubUrl || undefined).catch((e) => console.warn("[DEBUG] login failed", e));
             }}
           >
             login
@@ -34105,8 +34031,6 @@ const SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH = 96;
 const SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT = 48;
 const SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS = 10;
 const SKETCHPAD_TOPOLOGY_SCENE_VORTEX_RADIUS = 0.18;
-
-const sketchpadTopologyBoardHandleId = (pieceId: string, connectorId: string): string => `${pieceId}::${connectorId}`;
 
 const sketchpadTopologySceneFullId = (pieceId: string, connectorId: string): `${string}:${string}` => `${pieceId}:${connectorId}`;
 

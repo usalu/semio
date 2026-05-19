@@ -677,22 +677,13 @@ export type EntityRef = Entity;
 //#endregion 🪶WeakArtifacts
 
 //#region 🏭Factories
-export type FieldSpec<T> = Readonly<{
-  eventKind?: string;
-  selection: string;
-  parse: (v: JsonValue) => T;
-}>;
-
-export type OperationSpec = Readonly<{
-  alias: string;
-  call: string;
-}>;
-
 type KitPathEntity = Entity & {
   kitInnerPath(inner: string): string;
 };
 
-type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = FieldSpec<T> & Readonly<{
+type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = Readonly<{
+  selection: string;
+  parse: (v: JsonValue) => T;
   parseEntity?: (entity: E, v: JsonValue) => T;
   /** @emoji 📖 Prototype method name when it differs from the GraphQL field (e.g. {@code typeId} for {@code type { id }}). */
   method?: string;
@@ -714,16 +705,6 @@ type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
   method: string;
   buildInner: (entity: E, ...args: readonly unknown[]) => string;
 }>;
-
-/** @emoji 🏭 Metadata-only field list (tooling / docs); reads use entity methods. */
-export function defineFields<const S extends readonly FieldSpec<unknown>[]>(specs: S): S {
-  return specs;
-}
-
-/** @emoji 🏭 Metadata-only operation list (tooling / docs); writes use entity methods. */
-export function defineOperations<const S extends readonly OperationSpec[]>(specs: S): S {
-  return specs;
-}
 
 /** @emoji 🏭 Metadata-only bound field list used to install prototype methods from one schema-like roster. */
 function defineBoundKitFields<const S extends readonly BoundKitFieldSpec<unknown>[]>(specs: S): S {
@@ -780,23 +761,6 @@ function defaultFieldEventKind(entityCtorName: string, fieldName: string): strin
   if (entityCtorName === "Kit" && fieldName === "name") return "kitRenamed";
   if (fieldName === "description") return "changedDescription";
   return "commandSucceeded";
-}
-
-/** @emoji 🏭  a field read when the caller supplies the kit-relative GraphQL tail. */
-export function defineField<E extends Entity, T>(entity: E, spec: FieldSpec<T>, pathInKit: (self: E) => string): () => Promise<T> {
-  return async () => {
-    const frag = await entity.readKitInner(pathInKit(entity));
-    return spec.parse(frag as JsonValue);
-  };
-}
-
-/** @emoji 🏭  a mutation leaf using {@link Store#mutateScoped}. */
-export function defineOperation(entity: Entity, spec: OperationSpec, buildPath: (self: Entity) => string): () => Promise<SetResult> {
-  return async () => {
-    void spec;
-    const cid = await entity.ensureChangeId();
-    return entity.mutateScoped(cid, buildPath(entity));
-  };
 }
 
 /** @emoji 🏭 Installs kit-relative read methods on a prototype so classes stay declarative and schema-shaped. */
@@ -1217,13 +1181,6 @@ export function semioJsonBootstrapUri(raw: string): string {
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
   return `dev+json:${btoa(bin)}`;
 }
-
-/** @emoji 📑 Same JSON shape as {@link FieldSpec} but declared before {@link Entity} so {@link Store} field reads stay self-contained. */
-export type KitFieldReadSpec<T> = Readonly<{
-  eventKind?: string;
-  selection: string;
-  parse: (v: JsonValue) => T;
-}>;
 
 function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const conn = frag?.[key] as JsonObject | undefined;
@@ -1898,11 +1855,6 @@ export class Store extends Entity {
     return new Graph(this.session, "wip", this.id);
   }
 
-  /** @emoji 🧭 Staging graph selection (UI tier); mirrors {@link Store#wip} until a distinct stage root exists in the schema. */
-  stage(): Graph {
-    return this.wip();
-  }
-
   authoritative(): Graph {
     return new Graph(this.session, "authoritative", this.id);
   }
@@ -2124,11 +2076,21 @@ export class Alternative extends Entity {
   }
 
   declare name: () => Promise<string>;
+  declare unsavedChangeCount: () => Promise<number>;
 }
 
 installEntityStoreBranchMethods(
   Alternative,
-  defineBoundStoreBranchFields([{ selection: "name", parse: (branch) => String(branch?.["name"] ?? "") }] as const) as readonly BoundStoreBranchFieldSpec<unknown, Alternative>[],
+  defineBoundStoreBranchFields([
+    { selection: "name", parse: (branch) => String(branch?.["name"] ?? "") },
+    {
+      selection: "unsavedChanges { edges { node { id } } }",
+      method: "unsavedChangeCount",
+      parse: () => 0,
+      coarseEvent: true,
+      parseEntity: (_entity, branch) => parseEntityConnectionIds(branch, "unsavedChanges").length,
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Alternative>[],
 );
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
@@ -2914,7 +2876,7 @@ function parsePieceRoleCenter(frag: JsonObject | null, role: string): JsonObject
 installWeakKitFieldMethods(
   Coordinate,
   (self, selection) =>
-    self.parent.piece.readKitInner(self.parent.piece.kitPieceSelection(`${self.parent.role} { center { ${selection} } }`)) as Promise<JsonObject | null>,
+    self.parent.piece.readKitInner(self.parent.piece.kitInnerPath(`${self.parent.role} { center { ${selection} } }`)) as Promise<JsonObject | null>,
   (self, frag) => parsePieceRoleCenter(frag, self.parent.role),
   [
     { method: "u", selection: "u", parse: (c) => (typeof c?.["u"] === "number" ? c["u"] : 0), coarseEvent: true },
@@ -2966,7 +2928,7 @@ installWeakKitFieldMethods(
   Point,
   (self, selection) =>
     self.parent.parent.piece.readKitInner(
-      self.parent.parent.piece.kitPieceSelection(`${self.parent.parent.role} { plane { origin { ${selection} } } }`),
+      self.parent.parent.piece.kitInnerPath(`${self.parent.parent.role} { plane { origin { ${selection} } } }`),
     ) as Promise<JsonObject | null>,
   (self, frag) => parsePieceRolePlaneOrigin(frag, self.parent.parent.role),
   [
@@ -2999,7 +2961,7 @@ installWeakKitFieldMethods(
   Vector,
   (self, selection) =>
     self.parent.parent.piece.readKitInner(
-      self.parent.parent.piece.kitPieceSelection(`${self.parent.parent.role} { plane { ${self.axisRole} { ${selection} } } }`),
+      self.parent.parent.piece.kitInnerPath(`${self.parent.parent.role} { plane { ${self.axisRole} { ${selection} } } }`),
     ) as Promise<JsonObject | null>,
   (self, frag) => parsePieceRolePlaneAxis(frag, self.parent.parent.role, self.axisRole),
   [
@@ -3114,11 +3076,6 @@ export class Piece extends Entity {
 
   kitInnerPath(inner: string): string {
     return `design(id: ${gqlString(this.designId)}) { piece(id: ${gqlString(this.id)}) { ${inner} } }`;
-  }
-
-  /** @emoji 🧷 Alias kept for weak geometry reads under {@link Position}. */
-  kitPieceSelection(inner: string): string {
-    return this.kitInnerPath(inner);
   }
 
   position(): Position {
@@ -3841,10 +3798,6 @@ export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOpt
   return Session.openHttp(baseUrl, opts);
 }
 
-/** @emoji 🧾 Resolves a wasm-backed kit store from a kit client when `internalKs` exists; otherwise null (HTTP line, stubs). */
-export function kitStoreFromKitStoreClient(_client: unknown): null {
-  return null;
-}
 //#endregion 🚀PublicAPI
 
 

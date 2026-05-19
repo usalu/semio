@@ -1,0 +1,13 @@
+{
+  "title": "Semio Cs Thin Graphql Client",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor semio/cs (client/lib/net/Semio) to use semio/rs store as thin client via GraphQL, same pattern as semio/js.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1462"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪e7e9fc88b15d43d1b963a6acb71eb914"
+  ]
+}

@@ -10,8 +10,10 @@ import {
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	type BoardCanvasProps,
 	type BoardFixtureV1,
+	type BoardForceGraphLayoutOptions,
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
+	type CameraState as BoardCameraState,
 } from "../../board/index.ts";
 import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
@@ -176,6 +178,80 @@ export function topologyMirrorProximityHandlers(onBoth: (p: { readonly surface: 
 	};
 }
 //#endregion 🔗SharedBindings
+
+//#region 🕸️BoardLayout
+/** @emoji 🔗 Default separator for board handle ids (`piece::connector`). */
+export const TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR = "::";
+
+/** @emoji 🔗 Builds a compound board handle id from two parts. */
+export function topologyBoardCompoundId(left: string, right: string, separator: string = TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR): string {
+	return `${left}${separator}${right}`;
+}
+
+/** @emoji 🔍 Parses a compound board handle id into left/right parts. */
+export function topologyParseBoardCompoundId(
+	value: string,
+	separator: string = TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR,
+): { left: string; right: string } | null {
+	const separatorIndex = value.indexOf(separator);
+	if (separatorIndex <= 0 || separatorIndex >= value.length - separator.length) return null;
+	return {
+		left: value.slice(0, separatorIndex),
+		right: value.slice(separatorIndex + separator.length),
+	};
+}
+
+/** @emoji 📐 Evenly distributes connector angles around a node rim (starts at top). */
+export function topologyBoardConnectorAngle(index: number, total: number): number {
+	return -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
+}
+
+/** @emoji 🕸️ Diagram force-slider weights shared by sketchpad kit/design hosts. */
+export interface TopologyDiagramForceWeights {
+	readonly centerStrength: number;
+	readonly linkDistance: number;
+	readonly chargeStrength: number;
+}
+
+/** @emoji 🕸️ Maps diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
+export function topologyDiagramForceGraphOptions(weights: TopologyDiagramForceWeights): BoardForceGraphLayoutOptions {
+	return {
+		centerX: 0,
+		centerY: 0,
+		gravity: weights.centerStrength,
+		idealEdgeLength: weights.linkDistance,
+		iterations: 280,
+		randomSeed: 1,
+		repulsionStrength: Math.abs(weights.chargeStrength),
+	};
+}
+
+/** @emoji 📷 Centers the board camera on the average of node centers. */
+export function topologyBoardCameraFromCenters(centers: readonly { x: number; y: number }[]): BoardCameraState {
+	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
+	const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
+	const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
+	return { x: -avgX, y: -avgY, zoom: 1 };
+}
+
+/** @emoji 📍 Writes WASM layout node centers back into top-left layout positions. */
+export function topologyApplyBoardFixtureCentersToTopLeft<T extends { readonly id: string; readonly position: { x: number; y: number } }>(
+	items: readonly T[],
+	fixture: BoardFixtureV1,
+	frameForItem: (item: T) => { width: number; height: number },
+): T[] {
+	const centerById = new Map(fixture.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+	return items.map((item) => {
+		const center = centerById.get(item.id);
+		if (!center) return item;
+		const frame = frameForItem(item);
+		return {
+			...item,
+			position: { x: center.x - frame.width / 2, y: center.y - frame.height / 2 },
+		};
+	});
+}
+//#endregion 🕸️BoardLayout
 
 //#region 🧾PairedMeta
 function isTopologyMetaRecord(value: unknown): value is Record<string, unknown> {
@@ -549,6 +625,35 @@ if (import.meta.vitest) {
 		it("includes lod defaults", () => {
 			const s = topologySharedKindsFromPairedMetas({ boardMeta: undefined, sceneMeta: undefined });
 			expect(s.gridSnapEnabled).toBe(true);
+		});
+	});
+	describe("topologyBoardCompoundId", () => {
+		it("round-trips handle ids", () => {
+			const id = topologyBoardCompoundId("piece-a", "conn-b");
+			expect(topologyParseBoardCompoundId(id)).toEqual({ left: "piece-a", right: "conn-b" });
+		});
+	});
+	describe("topologyApplyBoardFixtureCentersToTopLeft", () => {
+		it("converts centers to top-left using frame size", () => {
+			const fixture: BoardFixtureV1 = {
+				schema: "elements.board.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [{ id: "n1", shape: "rectangle", width: 40, height: 20, x: 50, y: 30, handles: [] }],
+				edges: [],
+			};
+			const next = topologyApplyBoardFixtureCentersToTopLeft(
+				[{ id: "n1", position: { x: 0, y: 0 } }],
+				fixture,
+				() => ({ width: 40, height: 20 }),
+			);
+			expect(next[0]?.position).toEqual({ x: 30, y: 20 });
+		});
+	});
+	describe("topologyDiagramForceGraphOptions", () => {
+		it("maps charge strength to repulsion", () => {
+			const o = topologyDiagramForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
+			expect(o.repulsionStrength).toBe(400);
+			expect(o.idealEdgeLength).toBe(120);
 		});
 	});
 }
