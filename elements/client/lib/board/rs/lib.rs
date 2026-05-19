@@ -3656,15 +3656,12 @@ mod board_host {
 			(self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
 		}
 
-		fn resolve_node_style_kind(&self, n: &NodeData, highlighted: bool) -> BoardElementStyleKind {
+		fn resolve_node_style_kind(&self, n: &NodeData) -> BoardElementStyleKind {
 			if let Some(kind) = Self::explicit_style_kind(n.style.as_deref()) {
 				return kind;
 			}
 			if n.selected {
 				return BoardElementStyleKind::Selected;
-			}
-			if highlighted {
-				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(n.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -3676,9 +3673,6 @@ mod board_host {
 			if h.selected {
 				return BoardElementStyleKind::Selected;
 			}
-			if self.object_has_selection_exit_secondary(h.id.as_str(), h.selected) {
-				return BoardElementStyleKind::Highlighted;
-			}
 			self.hovered_style_kind(h.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
 
@@ -3689,9 +3683,6 @@ mod board_host {
 			if e.selected {
 				return BoardElementStyleKind::Selected;
 			}
-			if self.object_has_selection_exit_secondary(e.id.as_str(), e.selected) {
-				return BoardElementStyleKind::Highlighted;
-			}
 			self.hovered_style_kind(e.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
 
@@ -3701,9 +3692,6 @@ mod board_host {
 			}
 			if w.selected {
 				return BoardElementStyleKind::Selected;
-			}
-			if self.object_has_selection_exit_secondary(w.id.as_str(), w.selected) {
-				return BoardElementStyleKind::Highlighted;
 			}
 			self.hovered_style_kind(w.id.as_str()).unwrap_or(BoardElementStyleKind::Neutral)
 		}
@@ -4131,10 +4119,6 @@ mod board_host {
 			self.selection.clear();
 			self.sync_selection_flags_to_objects();
 			self.push_event("select", json!({ "ids": [], "exitHighlightIds": [] }));
-		}
-
-		fn object_has_selection_exit_secondary(&self, id: &str, selected: bool) -> bool {
-			!selected && self.is_preselecting() && self.preselect_removed.contains(id)
 		}
 
 		fn sync_selection_flags_to_objects(&mut self) {
@@ -5651,7 +5635,11 @@ mod board_host {
 					}
 				}
 				let link_compat = link_compat_nodes.contains(&n.id);
-				let style_kind = self.resolve_node_style_kind(n, link_compat || self.object_has_selection_exit_secondary(n.id.as_str(), n.selected));
+				let style_kind = if link_compat {
+					BoardElementStyleKind::Highlighted
+				} else {
+					self.resolve_node_style_kind(n)
+				};
 				let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
 				let fill = if lod == BoardDrawLod::Minimap {
 					stroke_c
@@ -8365,7 +8353,7 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_area_select_highlight_only_during_preselect() {
+	fn board_host_area_select_preselect_matches_selected_chrome() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		set_detail_lod(&mut h);
@@ -8409,6 +8397,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		assert!(h.preselect.contains("b"), "preview should include node b");
 		assert!(h.preselect_removed.contains("a"));
+		assert!(h.selection_exit_highlight.is_empty());
 		assert!(!h.selection.contains("b"), "committed selection unchanged during preselect");
 		let frozen = h.preselect_removed.clone();
 		h.pointer_move_screen(s_end.x, s_end.y, false, false);

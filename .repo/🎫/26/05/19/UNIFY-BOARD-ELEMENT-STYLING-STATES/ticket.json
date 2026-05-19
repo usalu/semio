@@ -3,10 +3,12 @@
   "emoji": "🐛",
   "status": "open",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Unified board element styling around explicit shared states across node, handle, edge, and wire. Added original, neutral, hovered, selected, highlighted, and disabled style support in the TypeScript board API, threaded a new originalElementStyle window option through the renderer, and updated the Rust/WASM renderer to resolve paints and imported SVG recoloring consistently from those states. Extended existing board tests and validated with the @elements/board test target, including Rust, wasm rebuild, Vitest, and Playwright.",
+  "summary": "Final board styling consistency cleanup: removed the remaining implicit selection-exit/highlight branches from both the TypeScript and Rust style resolvers so preselect cannot resolve to a different visual state than final selection. Highlighted remains available only as an explicit element style, while marquee preselect now resolves only to the same selected or neutral states as the committed result. Revalidated with the full @elements/board test target.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",
-    "⚪79977eb9923d46ee8160fc2b8af58097"
+    "⚪79977eb9923d46ee8160fc2b8af58097",
+    "⚪62fc0c95c2804ee8b8769f7441bd4256",
+    "⚪1624da70a7fc4af391da03ccea9e7761"
   ]
 }

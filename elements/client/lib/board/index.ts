@@ -21,10 +21,7 @@ import initBoardWasm, {
 	initSync,
 } from "./rs/pkg/elements_board.js";
 
-/** @emoji 🧪 True when Vite runs this module with `import.meta.env.MODE` set to `test` (board `vitest.config.ts`); avoids leaked `process.env.VITEST` from the parent shell disabling the window pointer bridge in Playwright/Vite dev. */
-const boardSourceRunsAsVitestUnitBundle = (import.meta as { env?: { MODE?: string } }).env?.MODE === "test";
-
-if (boardSourceRunsAsVitestUnitBundle) {
+if (typeof process !== "undefined" && process.env.VITEST === "true") {
 	const { readFileSync } = await import("node:fs");
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
@@ -46,19 +43,7 @@ export { BoardSession };
 export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
-export type BoardSelectionMode = "additive" | "invertive" | "replace" | "subtractive";
-export const BOARD_ELEMENT_STYLE_KINDS = ["original", "neutral", "hovered", "selected", "highlighted", "disabled"] as const;
-export type BoardElementStyleKind = (typeof BOARD_ELEMENT_STYLE_KINDS)[number];
-
-/** @emoji 🎨 True when a value is a known board element style state. */
-export function isBoardElementStyleKind(value: unknown): value is BoardElementStyleKind {
-	return typeof value === "string" && (BOARD_ELEMENT_STYLE_KINDS as readonly string[]).includes(value);
-}
-
-/** @emoji ✅ Narrows unknown JSON or bridge payloads to {@link BoardSelectionMode}. */
-export function isBoardSelectionMode(value: unknown): value is BoardSelectionMode {
-	return value === "additive" || value === "invertive" || value === "replace" || value === "subtractive";
-}
+export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
 
 /** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
 export interface BoardSelectionTargets {
@@ -92,7 +77,6 @@ export interface BoardHandleKindCatalogEntry {
 	id: string;
 	label: string;
 	name?: string;
-	scale?: number;
 }
 
 /** @emoji 🧵 Wire-kind catalog row for link gestures and default promoted {@link BoardEdgeKindCatalogEntry} id. */
@@ -112,7 +96,6 @@ export interface BoardNodeKindCatalogEntry {
 	id: string;
 	label: string;
 	name?: string;
-	scale?: number;
 	shape?: "circle" | "rectangle";
 	stroke?: string;
 }
@@ -232,49 +215,6 @@ export function boardFixtureMetaKindCatalogBundle(raw: unknown): BoardKindCatalo
 	return out;
 }
 
-/** @emoji 🔗 Returns sanitized `meta.kindCompatibility` from raw board fixture JSON when present (same shape as play document constraints). */
-export function boardFixtureMetaKindCompatibility(raw: unknown): readonly BoardKindCompatEntry[] | undefined {
-	if (!raw || typeof raw !== "object") {
-		return undefined;
-	}
-	const meta = (raw as Record<string, unknown>).meta;
-	if (!meta || typeof meta !== "object") {
-		return undefined;
-	}
-	const arr = (meta as Record<string, unknown>).kindCompatibility;
-	if (!Array.isArray(arr) || arr.length === 0) {
-		return undefined;
-	}
-	const out: BoardKindCompatEntry[] = [];
-	for (const entry of arr) {
-		if (!entry || typeof entry !== "object") {
-			continue;
-		}
-		const rec = entry as Record<string, unknown>;
-		const source = typeof rec.source === "string" ? rec.source.trim() : "";
-		const target = typeof rec.target === "string" ? rec.target.trim() : "";
-		const specificity =
-			rec.specificity === "general" ||
-			rec.specificity === "node" ||
-			rec.specificity === "edge" ||
-			rec.specificity === "handle" ||
-			rec.specificity === "wire"
-				? rec.specificity
-				: undefined;
-		if (source === "" || target === "") {
-			continue;
-		}
-		out.push({
-			...(rec.bidirectional === true ? { bidirectional: true } : {}),
-			...(rec.important === true ? { important: true } : {}),
-			...(specificity ? { specificity } : {}),
-			source,
-			target,
-		});
-	}
-	return out.length > 0 ? out : undefined;
-}
-
 function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string {
 	const handles = (bundle.handles ?? [])
 		.map((e) => {
@@ -282,7 +222,6 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 			const color = String(e.color ?? "").trim();
 			const label = String(e.label ?? e.name ?? "").trim() || id;
 			const dw = e.defaultWireKind != null ? String(e.defaultWireKind).trim() : "";
-			const scale = normalizeBoardScale(e.scale);
 			if (id === "" || color === "") {
 				return null;
 			}
@@ -291,7 +230,6 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 				label,
 				name: label,
 				color,
-				...(scale !== 1 ? { scale } : {}),
 				...(dw !== "" ? { defaultWireKind: dw } : {}),
 			};
 		})
@@ -332,10 +270,6 @@ function serializeBoardKindCatalogBundle(bundle: BoardKindCatalogBundle): string
 			}
 			if (e.defaultHandleKind != null && String(e.defaultHandleKind).trim() !== "") {
 				row.defaultHandleKind = String(e.defaultHandleKind).trim();
-			}
-			const scale = normalizeBoardScale(e.scale);
-			if (scale !== 1) {
-				row.scale = scale;
 			}
 			return row;
 		})
@@ -384,16 +318,6 @@ export interface CameraState {
 
 export interface BoardSelectionSnapshot {
 	ids: string[];
-	/** @emoji 🖱️ Effective merge mode for this emission when modifier chords override the sticky toolbar option. */
-	gestureMergeMode?: BoardSelectionMode;
-}
-
-/** @emoji 👁️ Live rectangle/lasso preview before pointer-up commit. */
-export interface BoardPreselectSnapshot {
-	ids: string[];
-	/** @emoji 💡 Anchor ids leaving the marquee during preselect (`BOARD_CSS_HIGHLIGHTED_*` chrome). */
-	removedIds: string[];
-	gestureMergeMode?: BoardSelectionMode;
 }
 
 export interface BoardSelectionOptions {
@@ -433,23 +357,18 @@ export interface BoardFixtureHandleV1 {
 	angle: number;
 	/** @emoji 🔗 Required after {@link parseBoardFixtureV1}; JSON may omit it and receive {@link BOARD_BUILTIN_PORT_HANDLE_KIND}. */
 	handleKind: string;
-	/** @emoji 🙈 Optional hidden flag; when true the handle is excluded from connect, hit, and redraw input. */
-	hidden?: boolean;
 	id: string;
 	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
 	color?: string;
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
-	scale?: number;
 }
 
 /** @emoji 📄 Circle node: {@link BoardFixtureCircleNodeV1.x}/{@link BoardFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link BoardFixtureHandleV1.angle} aims at the connected neighbor (radians). */
 export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
-	/** @emoji 🙈 Optional hidden flag; when true the node is excluded from connect, hit, and redraw input. */
-	hidden?: boolean;
 	id: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
@@ -468,7 +387,6 @@ export interface BoardFixtureCircleNodeV1 {
 	textFontFamily?: string;
 	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
 	textFontSize?: number;
-	scale?: number;
 	x: number;
 	y: number;
 }
@@ -478,8 +396,6 @@ export interface BoardFixtureRectangleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	height: number;
-	/** @emoji 🙈 Optional hidden flag; when true the node is excluded from connect, hit, and redraw input. */
-	hidden?: boolean;
 	id: string;
 	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
@@ -497,7 +413,6 @@ export interface BoardFixtureRectangleNodeV1 {
 	textFontFamily?: string;
 	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
 	textFontSize?: number;
-	scale?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -508,10 +423,6 @@ export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangl
 
 /** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
 export interface BoardFixtureEdgeV1 {
-	/** @emoji 🧩 Optional semantic edge kind id for editor/runtime kind switching. */
-	edgeKind?: string;
-	/** @emoji 🙈 Optional hidden flag; when true the edge is excluded from connect and redraw input. */
-	hidden?: boolean;
 	id: string;
 	source: string;
 	target: string;
@@ -583,17 +494,14 @@ export function classifyElementsBoardIconSelectorMode(raw: string): ElementsBoar
 
 // #endregion 🏷️IconSelectorMode
 
-/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions`; Barnes–Hut repulsion when body count exceeds `pairwiseRepulsionMaxBodies`). */
+/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
 export interface BoardForceGraphLayoutOptions {
-	barnesHutTheta?: number;
 	centerX?: number;
 	centerY?: number;
 	gravity?: number;
 	idealEdgeLength?: number;
 	iterations?: number;
-	lockedNodeIds?: readonly string[];
 	maxSpeed?: number;
-	pairwiseRepulsionMaxBodies?: number;
 	randomSeed?: number;
 	repulsionStrength?: number;
 	springStrength?: number;
@@ -619,12 +527,10 @@ export interface BoardRedrawLayoutOptions {
 		direction: BoardHierarchicalTreeDirectionKind;
 		layerSpacing: number;
 		siblingGap: number;
-		lockedNodeIds?: readonly string[];
 	};
-	lockedNodeIds?: readonly string[];
 }
 
-/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); Barnes–Hut repulsion beyond `pairwiseRepulsionMaxBodies`, else exact pairwise. */
+/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
 export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
 	const out = boardRedrawLayoutFixtureJson(
 		JSON.stringify(fixture),
@@ -690,19 +596,6 @@ export interface BoardEdgeLinkPayload {
 	target: string;
 }
 
-/** @emoji 🎯 Compatible target nodes while a link wire is active ({@link BoardEventMap.linkCompatibleNodes}). */
-export interface BoardLinkCompatibleNodesPayload {
-	nodeIds: string[];
-	source: string;
-}
-
-/** @emoji ⭕ Indirect-style handle ring on a hovered compatible target ({@link BoardEventMap.linkTargetRing}). */
-export interface BoardLinkTargetRingPayload {
-	handleIds: string[];
-	nodeId: string | null;
-	source: string;
-}
-
 /** @emoji 🧵 Payload for {@link BoardEventMap.wireCreate} (declarative / scene wire). */
 export interface BoardWireSnapshotPayload {
 	endX: number | null;
@@ -742,8 +635,6 @@ export interface BoardEventMap {
 	hover: BoardHoverPayload;
 	indirectConnect: BoardEdgeLinkPayload;
 	invalidate: undefined;
-	linkCompatibleNodes: BoardLinkCompatibleNodesPayload;
-	linkTargetRing: BoardLinkTargetRingPayload;
 	nodeChange: BoardGraphNodeIdPayload;
 	nodeCreate: BoardGraphNodeIdPayload;
 	nodeDelete: { id: string };
@@ -751,8 +642,6 @@ export interface BoardEventMap {
 	parentEdgeChange: BoardGraphEdgeIdPayload;
 	parentNodeChange: BoardGraphNodeIdPayload;
 	proximityConnect: BoardEdgeLinkPayload;
-	preselect: BoardPreselectSnapshot;
-	preselectCancel: BoardSelectionSnapshot;
 	select: BoardSelectionSnapshot;
 	wireChange: BoardGraphWireIdPayload;
 	wireCreate: BoardWireSnapshotPayload;
@@ -761,64 +650,11 @@ export interface BoardEventMap {
 
 export interface BoardObjectOptions {
 	draggable?: boolean;
-	hidden?: boolean;
 	id: string;
 	selected?: boolean;
-	style?: BoardElementStyleKind;
+	style?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
-}
-
-function resolveBoardVisibleFlag(options?: { hidden?: boolean; visible?: boolean }): boolean {
-	if (!options) {
-		return true;
-	}
-	if (options.hidden === true) {
-		return false;
-	}
-	if (options.hidden === false) {
-		return true;
-	}
-	return options.visible ?? true;
-}
-
-function normalizeBoardScale(value: unknown): number {
-	return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 1;
-}
-
-function normalizeBoardElementStyle(value: unknown): BoardElementStyleKind | null {
-	return isBoardElementStyleKind(value) ? value : null;
-}
-
-function boardNodeEffectiveScale(node: { effectiveScale?: number; scale?: number }): number {
-	return normalizeBoardScale(node.effectiveScale ?? node.scale);
-}
-
-function boardNodeScaledWidth(node: { effectiveScale?: number; scale?: number; width: number }): number {
-	return node.width * boardNodeEffectiveScale(node);
-}
-
-function boardNodeScaledHeight(node: { effectiveScale?: number; scale?: number; height: number }): number {
-	return node.height * boardNodeEffectiveScale(node);
-}
-
-function boardNodeScaledRadius(node: { effectiveScale?: number; scale?: number; radius: number }): number {
-	return node.radius * boardNodeEffectiveScale(node);
-}
-
-function boardHandleEffectiveScale(handle: { effectiveScale?: number; scale?: number }): number {
-	return normalizeBoardScale(handle.effectiveScale ?? handle.scale);
-}
-
-function boardHandleScaledRadius(handle: { effectiveScale?: number; scale?: number; radius: number }): number {
-	return handle.radius * boardHandleEffectiveScale(handle);
-}
-
-function readBoardJsonHiddenFlag(raw: Record<string, unknown>): boolean {
-	return !resolveBoardVisibleFlag({
-		hidden: typeof raw.hidden === "boolean" ? raw.hidden : undefined,
-		visible: typeof raw.visible === "boolean" ? raw.visible : undefined,
-	});
 }
 
 /** @emoji 🔵 World-space circle node (center + radius). */
@@ -841,7 +677,6 @@ export type CircleNodeOptions = BoardObjectOptions & {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not using autofit. */
 	textFontSize?: number;
-	scale?: number;
 	x: number;
 	y: number;
 };
@@ -866,7 +701,6 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 	textFontFamily?: string;
 	/** @emoji 🔤 Caption size in layout px when not using autofit. */
 	textFontSize?: number;
-	scale?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -885,7 +719,6 @@ export interface HandleOptions extends BoardObjectOptions {
 	handleKind: string;
 	node: Node;
 	radius?: number;
-	scale?: number;
 }
 
 /** @emoji 🟣 Declarative handle marker props (React + reconciler). */
@@ -895,14 +728,12 @@ export interface BoardHandleProps {
 	contextMenu?: ContextMenuItem[];
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
 	handleKind: string;
-	hidden?: boolean;
 	id: string;
 	/** @emoji 🏷️ Optional WASM detail LOD icon string (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, catalog id, or inline SVG). */
 	iconKind?: string;
 	radius?: number;
-	scale?: number;
 	selected?: boolean;
-	style?: BoardElementStyleKind;
+	style?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 }
@@ -912,11 +743,10 @@ export interface BoardEdgeProps {
 	contextMenu?: ContextMenuItem[];
 	/** @emoji 🧩 Semantic edge-kind id for catalog defaults and compatibility (`edge` specificity). */
 	edgeKind?: string;
-	hidden?: boolean;
 	id: string;
 	selected?: boolean;
 	source: string;
-	style?: BoardElementStyleKind;
+	style?: string;
 	target: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
@@ -927,11 +757,10 @@ export interface BoardWireProps {
 	contextMenu?: ContextMenuItem[];
 	endX?: number;
 	endY?: number;
-	hidden?: boolean;
 	id: string;
 	selected?: boolean;
 	source: string;
-	style?: BoardElementStyleKind;
+	style?: string;
 	target?: string;
 	/** @emoji 🧩 Semantic wire-kind id for catalog defaults and compatibility (`wire` specificity). */
 	wireKind?: string;
@@ -999,26 +828,6 @@ export const BOARD_CAMERA_ZOOM_MAX = 32;
 const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
 
-/** @emoji 🎹 True when the area-select modifier bridge should mirror `pointerMoveScreen` (modifier keys only; avoids hotkeys corrupting live selection). */
-function isAreaSelectChordBridgeKeyboardEvent(event: KeyboardEvent): boolean {
-	if (event.repeat) {
-		return false;
-	}
-	switch (event.code) {
-		case "ShiftLeft":
-		case "ShiftRight":
-		case "ControlLeft":
-		case "ControlRight":
-		case "MetaLeft":
-		case "MetaRight":
-		case "AltLeft":
-		case "AltRight":
-			return true;
-		default:
-			return false;
-	}
-}
-
 /** @emoji ⌨️ True when Delete/Backspace should reach the board instead of staying in a focused text control. */
 function shouldBoardHandleDeleteShortcut(): boolean {
 	const el = document.activeElement;
@@ -1064,13 +873,6 @@ export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.norma
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
 export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
 
-/** @emoji 📶 Board draw LOD tier label (matches `data-board-lod` / WASM `setForcedDrawLodLabel`). */
-export type BoardDrawLodKind = "detail" | "micro" | "minimap" | "normal" | "overview";
-
-export function isBoardDrawLodKind(value: unknown): value is BoardDrawLodKind {
-	return value === "minimap" || value === "overview" || value === "normal" || value === "detail" || value === "micro";
-}
-
 /** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
 export function resolveBoardLodLabelFromThresholds(
 	zoom: number,
@@ -1100,46 +902,12 @@ export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minima
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
-	"edge.original": { stroke: "#7b827d", strokeWidth: 2 },
-	"edge.neutral": { stroke: "#7b827d", strokeWidth: 2 },
-	"edge.hovered": { stroke: "#001117", strokeWidth: 2.5 },
 	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
-	"edge.highlighted": { stroke: "#34d1bf", strokeWidth: 3 },
-	"edge.disabled": { stroke: "#9aa39d", strokeWidth: 2 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
-	"handle.original": { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
-	"handle.neutral": { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
-	"handle.hovered": { fill: "#efe8d3", stroke: "#001117", strokeWidth: 2.5 },
-	"handle.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 2 },
-	"handle.highlighted": { fill: "#d7efe6", stroke: "#34d1bf", strokeWidth: 2 },
-	"handle.disabled": { fill: "#ece7da", stroke: "#9aa39d", strokeWidth: 2 },
+	"handle.selected": { fill: "#ff344f", stroke: "#001117", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
-	"node.original": { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
-	"node.neutral": { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
-	"node.hovered": { fill: "#e7e1d1", stroke: "#001117", strokeWidth: 2.5 },
 	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
-	"node.highlighted": { fill: "#d7efe6", stroke: "#34d1bf", strokeWidth: 3 },
-	"node.disabled": { fill: "#e7e1d1", stroke: "#9aa39d", strokeWidth: 2 },
-	"wire.original": { stroke: "#7b827d", strokeWidth: 2.25 },
-	"wire.neutral": { stroke: "#7b827d", strokeWidth: 2.25 },
-	"wire.hovered": { stroke: "#001117", strokeWidth: 2.5 },
-	"wire.selected": { stroke: "#ff344f", strokeWidth: 2.85 },
-	"wire.highlighted": { stroke: "#34d1bf", strokeWidth: 2.85 },
-	"wire.disabled": { stroke: "#9aa39d", strokeWidth: 2.25 },
 };
-
-/** @emoji ✅ Shared selected chrome (committed + in-marquee preselect). */
-const BOARD_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-accent) 22%, var(--color-panel))";
-const BOARD_CSS_SELECTED_STROKE = "var(--color-accent)";
-/** @emoji 👆 Shared hovered chrome for stronger pointer affordance without selecting. */
-const BOARD_CSS_HOVERED_FILL = "color-mix(in oklab, var(--color-foreground) 10%, var(--color-panel))";
-const BOARD_CSS_HOVERED_STROKE = "var(--color-foreground)";
-/** @emoji 💡 Shared highlight chrome (secondary emphasis). */
-const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
-const BOARD_CSS_HIGHLIGHTED_STROKE = "var(--color-secondary)";
-/** @emoji 🚫 Shared disabled chrome to mute interaction affordances. */
-const BOARD_CSS_DISABLED_FILL = "color-mix(in oklab, var(--color-muted) 24%, var(--color-panel))";
-const BOARD_CSS_DISABLED_STROKE = "var(--color-muted-foreground)";
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
@@ -1149,37 +917,15 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
 	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
-	edgeStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
 	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-	edgeStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
 	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
-	nodeFillHovered: [231, 225, 209, 255] as [number, number, number, number],
-	nodeStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
 	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	nodeFillSelectionExit: [215, 239, 230, 255] as [number, number, number, number],
-	nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-	nodeFillDisabled: [231, 225, 209, 255] as [number, number, number, number],
-	nodeStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
-	indirectHandleFill: [196, 228, 213, 255] as [number, number, number, number],
-	indirectHandleStroke: [52, 209, 191, 255] as [number, number, number, number],
 	handleFill: [247, 243, 227, 255] as [number, number, number, number],
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
-	handleFillHovered: [239, 232, 211, 255] as [number, number, number, number],
-	handleStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
-	handleFillSelected: [240, 200, 204, 255] as [number, number, number, number],
+	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
 	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	handleFillSelectionExit: [215, 239, 230, 255] as [number, number, number, number],
-	handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-	handleFillDisabled: [236, 231, 218, 255] as [number, number, number, number],
-	handleStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
-	wireStroke: [123, 130, 125, 255] as [number, number, number, number],
-	wireStrokeHovered: [0, 17, 23, 255] as [number, number, number, number],
-	wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-	wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
-	wireStrokeDisabled: [154, 163, 157, 255] as [number, number, number, number],
 	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
 	selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
 };
@@ -1229,48 +975,15 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	};
 	return {
 		edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
-		"edge.original": { stroke: c("color", "var(--color-muted-foreground)", f["edge.original"].stroke ?? "#7b827d"), strokeWidth: 2 },
-		"edge.neutral": { stroke: c("color", "var(--color-muted-foreground)", f["edge.neutral"].stroke ?? "#7b827d"), strokeWidth: 2 },
-		"edge.hovered": { stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["edge.hovered"].stroke ?? "#001117"), strokeWidth: 2.5 },
 		"edge.selected": { stroke: c("color", "var(--color-accent)", f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
-		"edge.highlighted": {
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["edge.highlighted"].stroke ?? "#34d1bf"),
-			strokeWidth: 3,
-		},
-		"edge.disabled": { stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["edge.disabled"].stroke ?? "#9aa39d"), strokeWidth: 2 },
 		handle: {
 			fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
 			stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
-		"handle.original": {
-			fill: c("backgroundColor", "var(--color-base)", f["handle.original"].fill ?? "#f7f3e3"),
-			stroke: c("color", "var(--color-element)", f["handle.original"].stroke ?? "#001117"),
-			strokeWidth: 2,
-		},
-		"handle.neutral": {
-			fill: c("backgroundColor", "var(--color-base)", f["handle.neutral"].fill ?? "#f7f3e3"),
-			stroke: c("color", "var(--color-element)", f["handle.neutral"].stroke ?? "#001117"),
-			strokeWidth: 2,
-		},
-		"handle.hovered": {
-			fill: c("backgroundColor", BOARD_CSS_HOVERED_FILL, f["handle.hovered"].fill ?? "#efe8d3"),
-			stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["handle.hovered"].stroke ?? "#001117"),
-			strokeWidth: 2.5,
-		},
 		"handle.selected": {
-			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#f0c8cc"),
-			stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["handle.selected"].stroke ?? "#ff344f"),
-			strokeWidth: 2,
-		},
-		"handle.highlighted": {
-			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#d7efe6"),
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["handle.highlighted"]?.stroke ?? "#34d1bf"),
-			strokeWidth: 2,
-		},
-		"handle.disabled": {
-			fill: c("backgroundColor", BOARD_CSS_DISABLED_FILL, f["handle.disabled"]?.fill ?? "#ece7da"),
-			stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["handle.disabled"]?.stroke ?? "#9aa39d"),
+			fill: c("backgroundColor", "var(--color-accent)", f["handle.selected"].fill ?? "#ff344f"),
+			stroke: c("color", "var(--color-foreground)", f["handle.selected"].stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
 		node: {
@@ -1278,45 +991,11 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 			stroke: c("color", "var(--color-element)", f.node.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
-		"node.original": {
-			fill: c("backgroundColor", "var(--color-panel)", f["node.original"].fill ?? "#eeeadb"),
-			stroke: c("color", "var(--color-element)", f["node.original"].stroke ?? "#001117"),
-			strokeWidth: 2,
-		},
-		"node.neutral": {
-			fill: c("backgroundColor", "var(--color-panel)", f["node.neutral"].fill ?? "#eeeadb"),
-			stroke: c("color", "var(--color-element)", f["node.neutral"].stroke ?? "#001117"),
-			strokeWidth: 2,
-		},
-		"node.hovered": {
-			fill: c("backgroundColor", BOARD_CSS_HOVERED_FILL, f["node.hovered"].fill ?? "#e7e1d1"),
-			stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["node.hovered"].stroke ?? "#001117"),
-			strokeWidth: 2.5,
-		},
 		"node.selected": {
-			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
-			stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["node.selected"].stroke ?? "#ff344f"),
+			fill: c("backgroundColor", "var(--color-selected-added)", f["node.selected"].fill ?? "#f0c8cc"),
+			stroke: c("color", "var(--color-accent)", f["node.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 3,
 		},
-		"node.highlighted": {
-			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#d7efe6"),
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["node.highlighted"]?.stroke ?? "#34d1bf"),
-			strokeWidth: 3,
-		},
-		"node.disabled": {
-			fill: c("backgroundColor", BOARD_CSS_DISABLED_FILL, f["node.disabled"]?.fill ?? "#e7e1d1"),
-			stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["node.disabled"]?.stroke ?? "#9aa39d"),
-			strokeWidth: 2,
-		},
-		"wire.original": { stroke: c("color", "var(--color-muted-foreground)", f["wire.original"].stroke ?? "#7b827d"), strokeWidth: 2.25 },
-		"wire.neutral": { stroke: c("color", "var(--color-muted-foreground)", f["wire.neutral"].stroke ?? "#7b827d"), strokeWidth: 2.25 },
-		"wire.hovered": { stroke: c("color", BOARD_CSS_HOVERED_STROKE, f["wire.hovered"].stroke ?? "#001117"), strokeWidth: 2.5 },
-		"wire.selected": { stroke: c("color", BOARD_CSS_SELECTED_STROKE, f["wire.selected"].stroke ?? "#ff344f"), strokeWidth: 2.85 },
-		"wire.highlighted": {
-			stroke: c("color", BOARD_CSS_HIGHLIGHTED_STROKE, f["wire.highlighted"].stroke ?? "#34d1bf"),
-			strokeWidth: 2.85,
-		},
-		"wire.disabled": { stroke: c("color", BOARD_CSS_DISABLED_STROKE, f["wire.disabled"].stroke ?? "#9aa39d"), strokeWidth: 2.25 },
 	};
 }
 
@@ -1326,14 +1005,6 @@ function serializeElementsBoardVelloThemeJson(): string {
 		const raw = boardProbeCssComputed(prop, expr);
 		return [...boardParseCssColorToRgba8888(raw, fall)];
 	};
-	const selectedFill = pc("backgroundColor", BOARD_CSS_SELECTED_FILL, fb.nodeFillSelected);
-	const selectedStroke = pc("color", BOARD_CSS_SELECTED_STROKE, fb.nodeStrokeSelected);
-	const hoveredFill = pc("backgroundColor", BOARD_CSS_HOVERED_FILL, fb.nodeFillHovered);
-	const hoveredStroke = pc("color", BOARD_CSS_HOVERED_STROKE, fb.nodeStrokeHovered);
-	const highlightedFill = pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit);
-	const highlightedStroke = pc("color", BOARD_CSS_HIGHLIGHTED_STROKE, fb.nodeStrokeSelectionExit);
-	const disabledFill = pc("backgroundColor", BOARD_CSS_DISABLED_FILL, fb.nodeFillDisabled);
-	const disabledStroke = pc("color", BOARD_CSS_DISABLED_STROKE, fb.nodeStrokeDisabled);
 	const payload = {
 		rasterClear: pc("backgroundColor", "var(--base)", fb.rasterClear),
 		gridMinorStroke: (() => {
@@ -1346,41 +1017,15 @@ function serializeElementsBoardVelloThemeJson(): string {
 			return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
 		})(),
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
-		edgeStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.edgeStrokeHovered),
-		edgeStrokeSelected: selectedStroke,
-		edgeStrokeSelectionExit: highlightedStroke,
-		edgeStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.edgeStrokeDisabled),
+		edgeStrokeSelected: pc("color", "var(--color-accent)", fb.edgeStrokeSelected),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
-		nodeFillHovered: hoveredFill,
-		nodeStrokeHovered: hoveredStroke,
-		nodeFillSelected: selectedFill,
-		nodeStrokeSelected: selectedStroke,
-		nodeFillSelectionExit: highlightedFill,
-		nodeStrokeSelectionExit: highlightedStroke,
-		nodeFillDisabled: disabledFill,
-		nodeStrokeDisabled: disabledStroke,
-		indirectHandleFill: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--color-secondary) 25%, var(--color-panel))",
-			fb.indirectHandleFill,
-		),
-		indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
+		nodeFillSelected: pc("backgroundColor", "var(--color-selected-added)", fb.nodeFillSelected),
+		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
 		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
-		handleFillHovered: pc("backgroundColor", BOARD_CSS_HOVERED_FILL, fb.handleFillHovered),
-		handleStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.handleStrokeHovered),
-		handleFillSelected: selectedFill,
-		handleStrokeSelected: selectedStroke,
-		handleFillSelectionExit: highlightedFill,
-		handleStrokeSelectionExit: highlightedStroke,
-		handleFillDisabled: pc("backgroundColor", BOARD_CSS_DISABLED_FILL, fb.handleFillDisabled),
-		handleStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.handleStrokeDisabled),
-		wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
-		wireStrokeHovered: pc("color", BOARD_CSS_HOVERED_STROKE, fb.wireStrokeHovered),
-		wireStrokeSelected: selectedStroke,
-		wireStrokeHighlighted: highlightedStroke,
-		wireStrokeDisabled: pc("color", BOARD_CSS_DISABLED_STROKE, fb.wireStrokeDisabled),
+		handleFillSelected: pc("backgroundColor", "var(--color-accent)", fb.handleFillSelected),
+		handleStrokeSelected: pc("color", "var(--color-accent)", fb.handleStrokeSelected),
 		selectionPreviewFill: pc(
 			"backgroundColor",
 			"color-mix(in oklab, var(--color-accent) 14%, transparent)",
@@ -1400,8 +1045,8 @@ function serializeElementsBoardVelloThemeJson(): string {
 export const BOARD_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
 export type BoardNodeTextAlignment = (typeof BOARD_NODE_TEXT_ALIGNMENTS)[number];
 
-/** @emoji 🎯 Default node caption anchor at the shape center. */
-export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "c";
+/** @emoji ⬅️ Default: reading-order start at west edge, vertically centered (`w`). */
+export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "w";
 
 /** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
 export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
@@ -1504,45 +1149,14 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 	return Array.from(ids).sort((left, right) => left.localeCompare(right));
 }
 
-function selectionSnapshotsEqual(left: BoardSelectionSnapshot, right: BoardSelectionSnapshot): boolean {
-	return arrayEqual(left.ids, right.ids) && left.gestureMergeMode === right.gestureMergeMode;
-}
-
-function preselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
-	return (
-		arrayEqual(left.ids, right.ids) &&
-		arrayEqual(left.removedIds, right.removedIds) &&
-		left.gestureMergeMode === right.gestureMergeMode
-	);
-}
-
-function createPreselectSnapshot(
-	ids: Iterable<string>,
-	removedIds: Iterable<string>,
-	gestureMergeMode?: BoardSelectionMode,
-): BoardPreselectSnapshot {
-	const snap: BoardPreselectSnapshot = {
-		ids: sortedSelectionIds(ids),
-		removedIds: sortedSelectionIds(removedIds),
-	};
-	if (gestureMergeMode !== undefined) {
-		snap.gestureMergeMode = gestureMergeMode;
-	}
-	return snap;
-}
-
-function createSelectionSnapshot(ids: Iterable<string>, gestureMergeMode?: BoardSelectionMode): BoardSelectionSnapshot {
-	const snap: BoardSelectionSnapshot = { ids: sortedSelectionIds(ids) };
-	if (gestureMergeMode !== undefined) {
-		snap.gestureMergeMode = gestureMergeMode;
-	}
-	return snap;
+function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
+	return { ids: sortedSelectionIds(ids) };
 }
 
 function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
 	return {
 		method: options?.method ?? "rectangle",
-		mode: options?.mode ?? "replace",
+		mode: options?.mode ?? "invertive",
 		targets: {
 			edges: options?.targets?.edges ?? BOARD_SELECTION_TARGETS_DEFAULT.edges,
 			handles: options?.targets?.handles ?? BOARD_SELECTION_TARGETS_DEFAULT.handles,
@@ -1551,14 +1165,19 @@ function resolveSelectionOptions(options: BoardSelectionOptions | undefined): Re
 	};
 }
 
-/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins, else fixture `label` (kit piece `name`, e.g. `cs_sl1_…`). */
+/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins; kit `label` tokens like `cs_sl…` stay off-canvas (internal ids). */
 function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefined {
 	if (typeof node.text === "string") {
-		const trimmed = node.text.trim();
-		return trimmed !== "" ? trimmed : undefined;
+		return node.text;
 	}
-	const lab = typeof node.label === "string" ? node.label.trim() : "";
-	return lab !== "" ? lab : undefined;
+	const lab = typeof node.label === "string" ? node.label : undefined;
+	if (!lab) {
+		return undefined;
+	}
+	if (lab.startsWith("cs_")) {
+		return undefined;
+	}
+	return lab;
 }
 
 function fixtureOptionalTextFontFamily(node: Record<string, unknown>): string | undefined {
@@ -1638,39 +1257,31 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				typeof colorRaw === "string" && colorRaw.trim() !== "" ? colorRaw.trim() : undefined;
 			const hradius = Number(hr.radius);
 			const withRadius = Number.isFinite(hradius) && hradius > 0;
-			const hscale = Number(hr.scale);
-			const withScale = Number.isFinite(hscale) && hscale > 0;
 			const iconRaw = hr.iconKind;
 			const iconTrim =
 				typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
-			const hidden = readBoardJsonHiddenFlag(hr);
 			const base: BoardFixtureHandleV1 = {
 				angle,
 				handleKind,
-				...(hidden ? { hidden: true } : {}),
 				id: hid,
 				...(colorTrim !== undefined ? { color: colorTrim } : {}),
 				...(withRadius ? { radius: hradius } : {}),
-				...(withScale ? { scale: hscale } : {}),
 				...(iconTrim !== undefined ? { iconKind: iconTrim } : {}),
 			};
 			handles.push(base);
 		}
-		const nodeKindRaw = node.nodeKind;
-		const nodeKind =
-			typeof nodeKindRaw === "string" && nodeKindRaw.trim() !== "" ? nodeKindRaw.trim() : undefined;
 		const textFromJson = fixtureNodeDisplayText(node);
 		const textAutofit = node.textAutofit === true;
 		const textFontFamily = fixtureOptionalTextFontFamily(node);
 		const textFontSize = fixtureOptionalTextFontSize(node);
 		const textAlignment = fixtureOptionalTextAlignment(node);
 		const rootFlag = node.root === true;
-		const hidden = readBoardJsonHiddenFlag(node);
-		const rawScale = Number(node.scale);
-		const scale = Number.isFinite(rawScale) && rawScale > 0 ? rawScale : undefined;
 		const iconKindRaw = (node as Record<string, unknown>).iconKind;
 		const iconKind =
 			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
+		const nodeKindRaw = node.nodeKind;
+		const nodeKind =
+			typeof nodeKindRaw === "string" && nodeKindRaw.trim() !== "" ? nodeKindRaw.trim() : undefined;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -1690,7 +1301,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
-				...(hidden ? { hidden: true } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				...(textAutofit ? { textAutofit: true } : {}),
 				...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1699,7 +1309,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(rootFlag ? { root: true } : {}),
 				...(iconKind !== undefined ? { iconKind } : {}),
 				...(nodeKind !== undefined ? { nodeKind } : {}),
-				...(scale !== undefined ? { scale } : {}),
 				handles,
 				height,
 				id,
@@ -1719,7 +1328,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
-			...(hidden ? { hidden: true } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			...(textAutofit ? { textAutofit: true } : {}),
 			...(textFontFamily !== undefined ? { textFontFamily } : {}),
@@ -1728,7 +1336,6 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(rootFlag ? { root: true } : {}),
 			...(iconKind !== undefined ? { iconKind } : {}),
 			...(nodeKind !== undefined ? { nodeKind } : {}),
-			...(scale !== undefined ? { scale } : {}),
 			handles,
 			id,
 			radius,
@@ -1748,14 +1355,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const targetRaw = edge.target;
 		const source = typeof sourceRaw === "string" ? sourceRaw : null;
 		const target = typeof targetRaw === "string" ? targetRaw : null;
-		const edgeKindRaw = edge.edgeKind;
-		const edgeKind =
-			typeof edgeKindRaw === "string" && edgeKindRaw.trim() !== "" ? edgeKindRaw.trim() : undefined;
-		const hidden = readBoardJsonHiddenFlag(edge);
 		if (!id || !source || !target) {
 			return null;
 		}
-		edges.push({ ...(edgeKind !== undefined ? { edgeKind } : {}), ...(hidden ? { hidden: true } : {}), id, source, target });
+		edges.push({ id, source, target });
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
@@ -1792,14 +1395,14 @@ export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | nul
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
 export function computeHandlePosition(
-	node: { effectiveScale?: number; height: number; radius: number; scale?: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
+	node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
 	angle: number,
 ): Point {
 	if (node.shape === "rectangle") {
-		const flat = boardHandlePositionRectangle(node.x, node.y, boardNodeScaledWidth(node), boardNodeScaledHeight(node), angle);
+		const flat = boardHandlePositionRectangle(node.x, node.y, node.width, node.height, angle);
 		return { x: flat[0], y: flat[1] };
 	}
-	const flat = boardHandlePositionCircle(node.x, node.y, boardNodeScaledRadius(node), angle);
+	const flat = boardHandlePositionCircle(node.x, node.y, node.radius, angle);
 	return { x: flat[0], y: flat[1] };
 }
 
@@ -2018,34 +1621,18 @@ export class BoardObject {
 	draggable: boolean;
 	parent: BoardScene | null = null;
 	selected: boolean;
-	style: BoardElementStyleKind | null;
+	style: string | null;
 	userData: Record<string, unknown>;
-	private _visible: boolean;
+	visible: boolean;
 
 	protected renderer: BoardRenderer | null = null;
 
-	constructor(public readonly id: string, options: Omit<BoardObjectOptions, "id">) {
+	constructor(public readonly id: string, options: BoardObjectOptions) {
 		this.draggable = options.draggable ?? false;
 		this.selected = options.selected ?? false;
-		this.style = normalizeBoardElementStyle(options.style);
+		this.style = options.style ?? null;
 		this.userData = { ...(options.userData ?? {}) };
-		this._visible = resolveBoardVisibleFlag(options);
-	}
-
-	get hidden(): boolean {
-		return !this._visible;
-	}
-
-	set hidden(hidden: boolean) {
-		this._visible = !hidden;
-	}
-
-	get visible(): boolean {
-		return this._visible;
-	}
-
-	set visible(visible: boolean) {
-		this._visible = visible;
+		this.visible = options.visible ?? true;
 	}
 
 	get kind(): BoardObjectKind {
@@ -2065,9 +1652,7 @@ export class BoardObject {
 export class Node extends BoardObject {
 	handles: Handle[] = [];
 	height: number;
-	private kindScale = 1;
 	radius: number;
-	scale: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
 	/** @emoji 🏷️ Runtime icon string forwarded to WASM detail LOD (`typst:` / `$…`, `emoji:`, `data:` / raster data URLs, baked catalog id, or inline SVG). */
@@ -2101,7 +1686,6 @@ export class Node extends BoardObject {
 		this.nodeKind = nk;
 		this.x = options.x;
 		this.y = options.y;
-		this.scale = normalizeBoardScale(options.scale);
 		this.text = options.text ?? null;
 		this.iconKind =
 			typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
@@ -2132,10 +1716,6 @@ export class Node extends BoardObject {
 
 	get kind(): BoardObjectKind {
 		return "node";
-	}
-
-	get effectiveScale(): number {
-		return normalizeBoardScale(this.scale) * normalizeBoardScale(this.kindScale);
 	}
 
 	setPosition(x: number, y: number): this {
@@ -2171,16 +1751,6 @@ export class Node extends BoardObject {
 		return this;
 	}
 
-	setScale(scale: number): this {
-		this.scale = normalizeBoardScale(scale);
-		return this;
-	}
-
-	setKindScale(scale: number): this {
-		this.kindScale = normalizeBoardScale(scale);
-		return this;
-	}
-
 	setTextAutofit(value: boolean): this {
 		this.textAutofit = value;
 		return this;
@@ -2204,14 +1774,10 @@ export class Handle extends BoardObject {
 	angle: number;
 	/** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
 	color: string | null;
-	/** @emoji 🏷️ Optional WASM detail LOD icon for this handle marker. */
-	iconKind: string | null;
-	private kindScale = 1;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
 	node: Node;
 	radius: number;
-	scale: number;
 
 	constructor(options: HandleOptions) {
 		super(options.id, options);
@@ -2221,12 +1787,8 @@ export class Handle extends BoardObject {
 		const rawC = options.color;
 		const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
 		this.color = cs !== "" ? cs : null;
-		const rawIk = options.iconKind;
-		this.iconKind =
-			typeof rawIk === "string" && rawIk.trim() !== "" ? rawIk.trim() : null;
 		this.node = options.node;
 		this.radius = options.radius ?? 8;
-		this.scale = normalizeBoardScale(options.scale);
 		this.node.attachHandle(this);
 	}
 
@@ -2242,26 +1804,8 @@ export class Handle extends BoardObject {
 		return computeHandleTangent(this.angle);
 	}
 
-	get effectiveScale(): number {
-		return this.node.effectiveScale * normalizeBoardScale(this.scale) * normalizeBoardScale(this.kindScale);
-	}
-
-	get effectiveRadius(): number {
-		return this.radius * this.effectiveScale;
-	}
-
 	setAngle(angle: number): this {
 		this.angle = angle;
-		return this;
-	}
-
-	setScale(scale: number): this {
-		this.scale = normalizeBoardScale(scale);
-		return this;
-	}
-
-	setKindScale(scale: number): this {
-		this.kindScale = normalizeBoardScale(scale);
 		return this;
 	}
 }
@@ -2346,18 +1890,6 @@ export class Wire extends BoardObject {
 		return this;
 	}
 }
-
-function isBoardHandleEffectivelyVisible(handle: Handle): boolean {
-	return handle.visible && handle.node.visible;
-}
-
-function isBoardEdgeEffectivelyVisible(edge: Edge): boolean {
-	return edge.visible && isBoardHandleEffectivelyVisible(edge.source) && isBoardHandleEffectivelyVisible(edge.target);
-}
-
-function isBoardWireEffectivelyVisible(wire: Wire): boolean {
-	return wire.visible && isBoardHandleEffectivelyVisible(wire.source) && (!wire.target || isBoardHandleEffectivelyVisible(wire.target));
-}
 //#endregion 🔖Objects
 
 //#region 🔖Scene
@@ -2368,23 +1900,7 @@ export class BoardScene {
 	readonly nodes = new Map<string, Node>();
 	readonly wires = new Map<string, Wire>();
 
-	private descriptorSyncDepth = 0;
-
 	constructor(private renderer: BoardRenderer | null = null) { }
-
-	/** @emoji 🔁 Runs {@link BoardScene.remove} purges without {@link BoardEventMap.nodeDelete} / edge / wire lifecycle (declarative JSX owns truth). */
-	withDescriptorSync(action: () => void): void {
-		this.descriptorSyncDepth += 1;
-		try {
-			action();
-		} finally {
-			this.descriptorSyncDepth -= 1;
-		}
-	}
-
-	private emitLifecycleDeletes(): boolean {
-		return this.descriptorSyncDepth === 0;
-	}
 
 	setRenderer(renderer: BoardRenderer | null): void {
 		this.renderer = renderer;
@@ -2480,9 +1996,7 @@ export class BoardScene {
 			for (const handle of Array.from(object.handles)) {
 				this.remove(handle);
 			}
-			if (this.emitLifecycleDeletes()) {
-				this.renderer?.emit("nodeDelete", { id: object.id });
-			}
+			this.renderer?.emit("nodeDelete", { id: object.id });
 			this.nodes.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -2512,9 +2026,7 @@ export class BoardScene {
 		}
 
 		if (object instanceof Wire) {
-			if (this.emitLifecycleDeletes()) {
-				this.renderer?.emit("wireDestroy", { id: object.id });
-			}
+			this.renderer?.emit("wireDestroy", { id: object.id });
 			this.wires.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
@@ -2522,9 +2034,7 @@ export class BoardScene {
 			return this;
 		}
 
-		if (this.emitLifecycleDeletes()) {
-			this.renderer?.emit("edgeDelete", { id: object.id });
-		}
+		this.renderer?.emit("edgeDelete", { id: object.id });
 		this.edges.delete(object.id);
 		object.parent = null;
 		object.attachRenderer(null);
@@ -2694,15 +2204,6 @@ function boardAbbreviateCaption(raw: string, maxChars: number): string {
 	return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
-/** @emoji 🏷️ Detail LOD handle caption beside markers (catalog label, abbreviated when an icon is present). */
-export function boardTextOverlayHandleCaptionForLod(catalogLabel: string, iconKind: string | null): string | null {
-	const t = catalogLabel.trim();
-	if (t === "") {
-		return null;
-	}
-	return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 5 : 7);
-}
-
 function boardTextOverlayCaptionForLod(
 	raw: string,
 	lod: "detail" | "micro" | "minimap" | "normal" | "overview",
@@ -2725,17 +2226,6 @@ function boardTextOverlayCaptionForLod(
 }
 
 //#region 🔖Renderer
-/** @emoji 🪟 True → pointer/wheel on `window` capture (runs before document-capture shells); `contextmenu` stays on the event surface; off only for the board Vitest unit bundle (`boardSourceRunsAsVitestUnitBundle`). */
-function boardRendererUsesWindowPointerCaptureBridge(): boolean {
-	if (typeof globalThis.window === "undefined" || typeof globalThis.window.addEventListener !== "function") {
-		return false;
-	}
-	if (boardSourceRunsAsVitestUnitBundle) {
-		return false;
-	}
-	return true;
-}
-
 /** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
 export class BoardRenderer {
 	static activeRenderer: BoardRenderer | null = null;
@@ -2755,7 +2245,6 @@ export class BoardRenderer {
 	private wasmSessionBorrowDepth = 0;
 	/** @emoji 🧷 Tracks `pushSceneToWasmDriver` + {@link BoardSession.renderFrame} where `device.poll` may synchronously re-enter JS while WASM still borrows `BoardSession`. */
 	private wasmGpuFrameDepth = 0;
-	private boardPointerBridgeUsesWindowCapture = false;
 
 	/** @emoji 🚧 True while wasm-bindgen holds `&mut BoardSession`; any other JS→wasm call on this session must defer (see commit 379 + follow-up). */
 	private wasmSessionCallBlockedForReentry(): boolean {
@@ -2765,8 +2254,6 @@ export class BoardRenderer {
 	private cachedWasmGpuReady = false;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
 	private canvas: HTMLCanvasElement | null;
-	/** @emoji 🖱️ DOM host for pointer/wheel/contextmenu (defaults to {@link BoardRenderer.canvas}; use a wrapping element when a stacked overlay canvas would otherwise steal hits). */
-	private eventSurface: HTMLElement | null;
 	private dpr = 1;
 	private emitter = new TypedEmitter<BoardEventMap>();
 	private frameListeners = new Set<FrameListener>();
@@ -2775,20 +2262,13 @@ export class BoardRenderer {
 	private lastPointerClientY = 0;
 	private lastPointerScreenX = 0;
 	private lastPointerScreenY = 0;
-	private areaSelectChordBridgeArmed = false;
 	private invalidated = true;
 	private isDisposed = false;
 	private lastRenderTimestamp: number | null = null;
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
-	private preselectIds = new Set<string>();
-	private preselectRemovedIds = new Set<string>();
-	private selectionExitHighlightIds = new Set<string>();
-	/** @emoji ↩️ Last committed selection before the latest WASM `select` (Escape restores this once). */
-	private selectionPreviousForEscape: string[] = [];
 	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
-	private preselectStore = new SnapshotStore<BoardPreselectSnapshot>({ ids: [], removedIds: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private gpuSurfaceErrorDetail = "";
 	private gpuSurfaceInitPromise: Promise<void> | null = null;
@@ -2808,12 +2288,6 @@ export class BoardRenderer {
 	private width = 1;
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
-	private kindCatalogLookupCache: {
-		key: string;
-		handleKindLabels: Map<string, string>;
-		handleKindScales: Map<string, number>;
-		nodeKindScales: Map<string, number>;
-	} | null = null;
 
 	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 	private gridSnapEnabled = false;
@@ -2821,56 +2295,34 @@ export class BoardRenderer {
 	private lastLodThresholdsJsonForWasm: string | null = null;
 	private lastGridSnapEnabledForWasm: boolean | null = null;
 	private lastGridFactorForWasm: number | null = null;
-	private originalElementStyle = false;
-	private lastOriginalElementStyleForWasm: boolean | null = null;
-	private automaticLod = true;
-	private forcedDrawLodLabel: BoardDrawLodKind | undefined = undefined;
-	private lastAutomaticLodForWasm: boolean | null = null;
-	private lastForcedDrawLodLabelForWasm: string | null = null;
 
 	worldRasterTiling: WorldRasterTilingKind;
 
 	constructor(options: {
 		canvas?: HTMLCanvasElement | null;
-		eventSurface?: HTMLElement | null;
 		renderMode?: RenderMode;
 		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
 		lodZoomThresholds?: BoardLodZoomThresholds;
 		gridSnapEnabled?: boolean;
 		gridFactor?: number;
-		/** @emoji 🎨 When true, imported vector elements such as SVGs keep their authored colors instead of being normalized to board state colors. */
-		originalElementStyle?: boolean;
-		/** @emoji 📶 When false, optional `lod` pins WASM draw LOD; default true uses camera zoom bands. */
-		automaticLod?: boolean;
-		/** @emoji 📶 Pinned draw LOD when `automaticLod` is false; omit to follow zoom bands on the WASM host. */
-		lod?: BoardDrawLodKind;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
-		this.eventSurface = options.eventSurface ?? this.canvas;
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
 		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
 		this.lodZoomThresholds = options.lodZoomThresholds
 			? {
-					minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
-					overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
-					normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
-					detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
-				}
+				minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
+				overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
+				normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
+				detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
+			}
 			: { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 		this.gridSnapEnabled = options.gridSnapEnabled ?? false;
 		const gf = options.gridFactor;
 		this.gridFactor =
 			typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
-		this.originalElementStyle = options.originalElementStyle ?? false;
-		this.automaticLod = options.automaticLod ?? true;
-		const optLod = options.lod;
-		this.forcedDrawLodLabel =
-			!this.automaticLod && optLod !== undefined && isBoardDrawLodKind(optLod) ? optLod : undefined;
-		if (this.automaticLod) {
-			this.forcedDrawLodLabel = undefined;
-		}
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
@@ -2881,7 +2333,6 @@ export class BoardRenderer {
 			initialSel.targets.edges,
 			initialSel.targets.handles,
 		);
-		this.session.setOriginalElementStyle(this.originalElementStyle);
 		this.session.setHandleLinkCompatJson(this.kindCompatJson);
 		try {
 			this.session.setBoardKindCatalogsJson(this.kindCatalogsJson);
@@ -2928,81 +2379,9 @@ export class BoardRenderer {
 		this.invalidate();
 	}
 
-	private boardKindCatalogLookups(): {
-		handleKindLabels: ReadonlyMap<string, string>;
-		handleKindScales: ReadonlyMap<string, number>;
-		nodeKindScales: ReadonlyMap<string, number>;
-	} {
-		const cached = this.kindCatalogLookupCache;
-		if (cached && cached.key === this.kindCatalogsJson) {
-			return cached;
-		}
-		const handleKindLabels = new Map<string, string>();
-		const handleKindScales = new Map<string, number>();
-		const nodeKindScales = new Map<string, number>();
-		try {
-			const o = JSON.parse(this.kindCatalogsJson) as {
-				handleKinds?: ReadonlyArray<{ id?: string; label?: string; name?: string; scale?: number }>;
-				nodeKinds?: ReadonlyArray<{ id?: string; scale?: number }>;
-			};
-			for (const row of o.handleKinds ?? []) {
-				const id = String(row.id ?? "").trim();
-				if (id !== "") {
-					handleKindLabels.set(id, String(row.label ?? row.name ?? id).trim() || id);
-					handleKindScales.set(id, normalizeBoardScale(row.scale));
-				}
-			}
-			for (const row of o.nodeKinds ?? []) {
-				const id = String(row.id ?? "").trim();
-				if (id !== "") {
-					nodeKindScales.set(id, normalizeBoardScale(row.scale));
-				}
-			}
-		} catch {
-			// ignore
-		}
-		this.kindCatalogLookupCache = { key: this.kindCatalogsJson, handleKindLabels, handleKindScales, nodeKindScales };
-		return this.kindCatalogLookupCache;
-	}
-
-	private boardHandleKindLabelById(): ReadonlyMap<string, string> {
-		return this.boardKindCatalogLookups().handleKindLabels;
-	}
-
-	resolveNodeKindScale(nodeKind: string): number {
-		const id = nodeKind.trim();
-		return id === "" ? 1 : this.boardKindCatalogLookups().nodeKindScales.get(id) ?? 1;
-	}
-
-	resolveHandleKindScale(handleKind: string): number {
-		const id = handleKind.trim();
-		return id === "" ? 1 : this.boardKindCatalogLookups().handleKindScales.get(id) ?? 1;
-	}
-
-	private refreshSceneKindScales(): void {
-		for (const node of this.scene.nodes.values()) {
-			node.setKindScale(this.resolveNodeKindScale(node.nodeKind));
-		}
-		for (const handle of this.scene.handles.values()) {
-			handle.setKindScale(this.resolveHandleKindScale(handle.handleKind));
-		}
-	}
-
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
 
 	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
-
-	subscribePreselect = (listener: () => void): (() => void) => this.preselectStore.subscribe(listener);
-
-	getPreselectSnapshot = (): BoardPreselectSnapshot => this.preselectStore.getSnapshot();
-
-	/** @emoji 🔁 Re-applies selection/preselect chrome to scene `selected` flags after JSX descriptor sync. */
-	reconcileSceneSelectedWithSelectionIds(): void {
-		const chrome = this.preselectIds.size > 0 ? this.preselectIds : this.selectionIds;
-		for (const object of this.scene.getAllObjects()) {
-			object.selected = chrome.has(object.id);
-		}
-	}
 
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
@@ -3010,9 +2389,9 @@ export class BoardRenderer {
 			this.updateSelection(ids);
 			return;
 		}
+		this.pushSceneToWasmDriver();
 		this.session.setSelectionIdsJson(JSON.stringify([...ids]));
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
-		this.invalidate();
 	}
 
 	getSelectionOptions(): ResolvedBoardSelectionOptions {
@@ -3098,25 +2477,6 @@ export class BoardRenderer {
 		this.markDirty();
 	}
 
-	/** @emoji 🎨 Toggles whether imported vector elements keep their authored colors instead of following board state colors. */
-	setOriginalElementStyle(enabled: boolean): void {
-		if (this.originalElementStyle === enabled) {
-			return;
-		}
-		this.originalElementStyle = enabled;
-		if (this.wasmSessionCallBlockedForReentry()) {
-			this.invalidated = true;
-			return;
-		}
-		this.lastOriginalElementStyleForWasm = null;
-		this.markDirty();
-	}
-
-	/** @emoji 🎨 True when imported vector elements preserve their authored colors. */
-	preservesOriginalElementStyle(): boolean {
-		return this.originalElementStyle;
-	}
-
 	/** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
 	setGridSnapEnabled(enabled: boolean): void {
 		if (this.gridSnapEnabled === enabled) {
@@ -3129,46 +2489,6 @@ export class BoardRenderer {
 		}
 		this.lastGridSnapEnabledForWasm = null;
 		this.markDirty();
-	}
-
-	/** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, optional {@link BoardRenderer.setForcedDrawLod} pins the tier. */
-	setAutomaticLod(next: boolean): void {
-		if (this.automaticLod === next) {
-			return;
-		}
-		this.automaticLod = next;
-		this.forcedDrawLodLabel = undefined;
-		if (this.wasmSessionCallBlockedForReentry()) {
-			this.invalidated = true;
-			return;
-		}
-		this.lastAutomaticLodForWasm = null;
-		this.lastForcedDrawLodLabelForWasm = null;
-		this.lastPushedDescriptorJson = null;
-		this.markDirty();
-	}
-
-	/** @emoji 📶 Pins WASM draw LOD when {@link BoardRenderer.setAutomaticLod} is false; pass undefined to follow zoom bands. */
-	setForcedDrawLod(next: BoardDrawLodKind | undefined): void {
-		const norm =
-			this.automaticLod || next === undefined ? undefined : isBoardDrawLodKind(next) ? next : undefined;
-		if (this.forcedDrawLodLabel === norm) {
-			return;
-		}
-		this.forcedDrawLodLabel = norm;
-		if (this.wasmSessionCallBlockedForReentry()) {
-			this.invalidated = true;
-			return;
-		}
-		this.lastForcedDrawLodLabelForWasm = null;
-		this.markDirty();
-	}
-
-	private effectiveDrawLodLabel(): BoardDrawLodKind {
-		if (!this.automaticLod && this.forcedDrawLodLabel !== undefined) {
-			return this.forcedDrawLodLabel;
-		}
-		return resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 	}
 
 	/** @emoji 🔗 Sets kind-compatibility rules for link gestures (empty = unrestricted). */
@@ -3212,8 +2532,6 @@ export class BoardRenderer {
 			return;
 		}
 		this.kindCatalogsJson = json;
-		this.kindCatalogLookupCache = null;
-		this.refreshSceneKindScales();
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -3379,44 +2697,6 @@ export class BoardRenderer {
 
 	getStyle(name: string | null, fallbackName: string): BoardStyle {
 		return this.styles.get(name ?? fallbackName) ?? this.styles.get(fallbackName) ?? {};
-	}
-
-	private resolveBoardElementStyleName(
-		kind: BoardObjectKind,
-		explicit: BoardElementStyleKind | null,
-		fallback: BoardElementStyleKind,
-	): string {
-		return `${kind}.${explicit ?? fallback}`;
-	}
-
-	private resolveHoveredStyleKind(id: string): BoardElementStyleKind | null {
-		return this.hoveredId === id ? "hovered" : null;
-	}
-
-	private nodeInteractiveStyleKind(node: Node): BoardElementStyleKind {
-		if (node.style) {
-			return node.style;
-		}
-		if (node.selected) {
-			return "selected";
-		}
-		if (this.secondarySelectionHighlightIds().has(node.id)) {
-			return "highlighted";
-		}
-		return this.resolveHoveredStyleKind(node.id) ?? "neutral";
-	}
-
-	private handleInteractiveStyleKind(handle: Handle): BoardElementStyleKind {
-		if (handle.style) {
-			return handle.style;
-		}
-		if (handle.selected) {
-			return "selected";
-		}
-		if (this.secondarySelectionHighlightIds().has(handle.id)) {
-			return "highlighted";
-		}
-		return this.resolveHoveredStyleKind(handle.id) ?? "neutral";
 	}
 
 	setSize(width: number, height: number, dpr = this.dpr): void {
@@ -3624,7 +2904,6 @@ export class BoardRenderer {
 				x: node.x,
 				y: node.y,
 				draggable: node.draggable,
-				hidden: node.hidden,
 				selected: node.selected,
 				style: node.style,
 				text: node.text,
@@ -3654,9 +2933,6 @@ export class BoardRenderer {
 			if (node.textAlignment !== BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) {
 				base.textAlignment = node.textAlignment;
 			}
-			if (node.scale !== 1) {
-				base.scale = node.scale;
-			}
 			if (node.shape === "rectangle") {
 				base.shape = "rectangle";
 				base.width = node.width;
@@ -3669,21 +2945,16 @@ export class BoardRenderer {
 		}
 		const handles: Record<string, unknown>[] = [];
 		for (const handle of this.scene.handles.values()) {
-			const visible = isBoardHandleEffectivelyVisible(handle);
 			const row: Record<string, unknown> = {
 				id: handle.id,
 				nodeId: handle.node.id,
 				angle: handle.angle,
 				radius: handle.radius,
-				hidden: handle.hidden,
 				selected: handle.selected,
 				style: handle.style,
-				visible,
+				visible: handle.visible,
 				handleKind: handle.handleKind,
 			};
-			if (handle.scale !== 1) {
-				row.scale = handle.scale;
-			}
 			if (handle.color) {
 				row.color = handle.color;
 			}
@@ -3694,15 +2965,13 @@ export class BoardRenderer {
 		}
 		const edges: Record<string, unknown>[] = [];
 		for (const edge of this.scene.edges.values()) {
-			const visible = isBoardEdgeEffectivelyVisible(edge);
 			const er: Record<string, unknown> = {
-				hidden: edge.hidden,
 				id: edge.id,
 				source: edge.source.id,
 				target: edge.target.id,
 				selected: edge.selected,
 				style: edge.style,
-				visible,
+				visible: edge.visible,
 			};
 			if (edge.edgeKind.trim() !== "") {
 				er.edgeKind = edge.edgeKind;
@@ -3711,14 +2980,12 @@ export class BoardRenderer {
 		}
 		const wires: Record<string, unknown>[] = [];
 		for (const wire of this.scene.wires.values()) {
-			const visible = isBoardWireEffectivelyVisible(wire);
 			const row: Record<string, unknown> = {
-				hidden: wire.hidden,
 				id: wire.id,
 				source: wire.source.id,
 				selected: wire.selected,
 				style: wire.style,
-				visible,
+				visible: wire.visible,
 			};
 			if (wire.target) {
 				row.target = wire.target.id;
@@ -3788,19 +3055,6 @@ export class BoardRenderer {
 			} catch (err) {
 				console.error("[DEBUG] setGridFactor failed", err);
 			}
-		}
-		if (this.lastOriginalElementStyleForWasm !== this.originalElementStyle) {
-			this.session.setOriginalElementStyle(this.originalElementStyle);
-			this.lastOriginalElementStyleForWasm = this.originalElementStyle;
-		}
-		if (this.lastAutomaticLodForWasm !== this.automaticLod) {
-			this.session.setAutomaticLod(this.automaticLod);
-			this.lastAutomaticLodForWasm = this.automaticLod;
-		}
-		const forcedWasm = this.forcedDrawLodLabel ?? "";
-		if (this.lastForcedDrawLodLabelForWasm !== forcedWasm) {
-			this.session.setForcedDrawLodLabel(forcedWasm);
-			this.lastForcedDrawLodLabelForWasm = forcedWasm;
 		}
 	}
 
@@ -3880,74 +3134,18 @@ export class BoardRenderer {
 						this.emitter.emit("camera", { ...this.camera });
 						break;
 					}
-					case "preselect": {
-						const payload = row.payload as { ids?: unknown; removedIds?: unknown; gestureMergeMode?: unknown };
-						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
-						const removedRaw = payload.removedIds;
-						const removedIds = Array.isArray(removedRaw) ? removedRaw.map((id) => String(id)) : [];
-						this.preselectIds = new Set(ids);
-						this.preselectRemovedIds = new Set(removedIds);
-						for (const object of this.scene.getAllObjects()) {
-							object.selected = this.preselectIds.has(object.id);
+					case "select": {
+						const ids = (row.payload as { ids: string[] }).ids ?? [];
+						const nextKeys = [...ids].sort();
+						if (arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds))) {
+							break;
 						}
-						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
-						const snap = createPreselectSnapshot(ids, removedIds, gestureMergeMode);
-						this.preselectStore.setSnapshot(snap, preselectSnapshotsEqual);
-						this.emitter.emit("preselect", snap);
-						break;
-					}
-					case "preselectCancel": {
-						const payload = row.payload as { ids?: unknown };
-						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
-						this.preselectIds.clear();
-						this.preselectRemovedIds.clear();
 						this.selectionIds = new Set(ids);
 						for (const object of this.scene.getAllObjects()) {
 							object.selected = this.selectionIds.has(object.id);
 						}
-						const snap = createSelectionSnapshot(ids);
-						this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
-						this.selectionStore.setSnapshot(snap, selectionSnapshotsEqual);
-						this.emitter.emit("preselectCancel", snap);
-						break;
-					}
-					case "select": {
-						const payload = row.payload as {
-							ids?: unknown;
-							gestureMergeMode?: unknown;
-							exitHighlightIds?: unknown;
-							anchorIds?: unknown;
-						};
-						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
-						this.preselectIds.clear();
-						this.preselectRemovedIds.clear();
-						this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
-						this.selectionExitHighlightIds.clear();
-						const anchorRaw = payload.anchorIds;
-						if (Array.isArray(anchorRaw)) {
-							this.selectionPreviousForEscape = sortedSelectionIds(anchorRaw.map((id) => String(id)));
-						}
-						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
-						const nextKeys = [...ids].sort();
-						const prevSnap = this.selectionStore.getSnapshot();
-						const idsUnchanged = arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds));
-						const gestureUnchanged = prevSnap.gestureMergeMode === gestureMergeMode;
-						if (idsUnchanged && gestureUnchanged) {
-							break;
-						}
-						if (!idsUnchanged) {
-							const prevIds = this.selectionIds;
-							const nextSel = new Set(ids);
-							if (!Array.isArray(anchorRaw)) {
-								this.captureSelectionForEscapeUndo(prevIds);
-							}
-							this.selectionIds = nextSel;
-							for (const object of this.scene.getAllObjects()) {
-								object.selected = this.selectionIds.has(object.id);
-							}
-						}
-						const snap = createSelectionSnapshot(ids, gestureMergeMode);
-						this.selectionStore.setSnapshot(snap, selectionSnapshotsEqual);
+						const snap = createSelectionSnapshot(this.selectionIds);
+						this.selectionStore.setSnapshot(snap, (left, right) => arrayEqual(left.ids, right.ids));
 						this.emitter.emit("select", snap);
 						break;
 					}
@@ -4035,24 +3233,6 @@ export class BoardRenderer {
 						this.emitter.emit("indirectConnect", { id, source: sourceId, target: targetId });
 						break;
 					}
-					case "linkCompatibleNodes": {
-						const source = String((row.payload as { source?: string }).source ?? "");
-						const nodeIds = Array.isArray((row.payload as { nodeIds?: unknown }).nodeIds)
-							? (row.payload as { nodeIds: unknown[] }).nodeIds.map((id) => String(id))
-							: [];
-						this.emitter.emit("linkCompatibleNodes", { source, nodeIds });
-						break;
-					}
-					case "linkTargetRing": {
-						const source = String((row.payload as { source?: string }).source ?? "");
-						const nodeIdRaw = (row.payload as { nodeId?: string | null }).nodeId;
-						const nodeId = nodeIdRaw === null || nodeIdRaw === undefined ? null : String(nodeIdRaw);
-						const handleIds = Array.isArray((row.payload as { handleIds?: unknown }).handleIds)
-							? (row.payload as { handleIds: unknown[] }).handleIds.map((id) => String(id))
-							: [];
-						this.emitter.emit("linkTargetRing", { source, nodeId, handleIds });
-						break;
-					}
 					default:
 						break;
 				}
@@ -4085,7 +3265,7 @@ export class BoardRenderer {
 		const inset = 0.88;
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
-		const lod = this.effectiveDrawLodLabel();
+		const lod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
 				continue;
@@ -4097,10 +3277,10 @@ export class BoardRenderer {
 			let maxW: number;
 			let maxH: number;
 			if (node.shape === "rectangle") {
-				maxW = boardNodeScaledWidth(node) * this.camera.zoom * inset;
-				maxH = boardNodeScaledHeight(node) * this.camera.zoom * inset;
+				maxW = node.width * this.camera.zoom * inset;
+				maxH = node.height * this.camera.zoom * inset;
 			} else {
-				const d = 2 * boardNodeScaledRadius(node) * this.camera.zoom * inset;
+				const d = 2 * node.radius * this.camera.zoom * inset;
 				maxW = d;
 				maxH = d;
 			}
@@ -4108,7 +3288,7 @@ export class BoardRenderer {
 				continue;
 			}
 			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
-			const style = this.getStyle(node.style, this.textOverlayNodeStyleKey(node));
+			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
 			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
@@ -4126,36 +3306,10 @@ export class BoardRenderer {
 			const fontPx = node.textFontSize;
 			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
 			const line = boardEllipsisTextToWidth(ctx, caption, maxW);
-			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, BOARD_NODE_TEXT_ALIGNMENT_DEFAULT);
+			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
 			ctx.textAlign = anchor.textAlign;
 			ctx.textBaseline = anchor.textBaseline;
 			ctx.fillText(line, anchor.fillX, anchor.fillY);
-		}
-		if (lod === "detail") {
-			const handleLabels = this.boardHandleKindLabelById();
-			const fontPx = 11;
-			const family = BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
-			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
-			for (const handle of this.scene.handles.values()) {
-				if (!isBoardHandleEffectivelyVisible(handle)) {
-					continue;
-				}
-				const catalog = handleLabels.get(handle.handleKind) ?? handle.handleKind;
-				const caption = boardTextOverlayHandleCaptionForLod(catalog, handle.iconKind);
-				if (caption === null) {
-					continue;
-				}
-				const hp = this.worldToScreen(handle.position);
-				const rScreen = boardHandleScaledRadius(handle) * this.camera.zoom;
-				if (rScreen < 2) {
-					continue;
-				}
-				const style = this.getStyle(handle.style, this.textOverlayHandleStyleKey(handle));
-				ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK["handle"].stroke ?? "#001117";
-				ctx.textAlign = "center";
-				ctx.textBaseline = "top";
-				ctx.fillText(caption, hp.x, hp.y + rScreen + 3);
-			}
 		}
 	}
 
@@ -4222,11 +3376,6 @@ export class BoardRenderer {
 
 	dispose(): void {
 		this.isDisposed = true;
-		this.selectionExitHighlightIds.clear();
-		this.preselectIds.clear();
-		this.preselectRemovedIds.clear();
-		this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
-		this.selectionPreviousForEscape = [];
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
 		this.wasmHostAuthoredEdgeIds.clear();
@@ -4251,142 +3400,44 @@ export class BoardRenderer {
 	}
 
 	private attachCanvasListeners(): void {
-		const surface = this.eventSurface;
-		if (!surface) {
+		if (!this.canvas) {
 			return;
 		}
-		surface.tabIndex = 0;
-		surface.style.touchAction = "none";
-		this.boardPointerBridgeUsesWindowCapture = boardRendererUsesWindowPointerCaptureBridge();
-		if (this.canvas) {
-			this.canvas.dataset.boardPointerBridge = this.boardPointerBridgeUsesWindowCapture ? "window" : "surface";
-		}
-		surface.addEventListener("contextmenu", this.handleContextMenu as EventListener);
-		if (this.boardPointerBridgeUsesWindowCapture) {
-			globalThis.addEventListener("pointerdown", this.handleWindowPointerDownCapture as EventListener, true);
-			globalThis.addEventListener("pointermove", this.handleWindowPointerMoveCapture as EventListener, true);
-			globalThis.addEventListener("pointerup", this.handleWindowPointerUpCapture as EventListener, true);
-			globalThis.addEventListener("wheel", this.handleWindowWheelCapture as EventListener, { capture: true, passive: false });
-		} else {
-			surface.addEventListener("pointerdown", this.handlePointerDown as EventListener);
-			surface.addEventListener("pointermove", this.handlePointerMove as EventListener);
-			surface.addEventListener("pointerup", this.handlePointerUp as EventListener);
-			surface.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
-		}
-		surface.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		surface.addEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
+		this.canvas.tabIndex = 0;
+		this.canvas.style.touchAction = "none";
+		this.canvas.addEventListener("contextmenu", this.handleContextMenu as EventListener);
+		this.canvas.addEventListener("pointerdown", this.handlePointerDown as EventListener);
+		this.canvas.addEventListener("pointermove", this.handlePointerMove as EventListener);
+		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
+		this.canvas.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		this.canvas.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
 		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
 	private detachCanvasListeners(): void {
-		const surface = this.eventSurface;
-		if (this.boardPointerBridgeUsesWindowCapture) {
-			globalThis.removeEventListener("pointerdown", this.handleWindowPointerDownCapture as EventListener, true);
-			globalThis.removeEventListener("pointermove", this.handleWindowPointerMoveCapture as EventListener, true);
-			globalThis.removeEventListener("pointerup", this.handleWindowPointerUpCapture as EventListener, true);
-			globalThis.removeEventListener("wheel", this.handleWindowWheelCapture as EventListener, { capture: true } as AddEventListenerOptions);
-		} else if (surface) {
-			surface.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
-			surface.removeEventListener("pointermove", this.handlePointerMove as EventListener);
-			surface.removeEventListener("pointerup", this.handlePointerUp as EventListener);
-			surface.removeEventListener("wheel", this.handleWheel as EventListener);
+		if (!this.canvas) {
+			return;
 		}
-		this.boardPointerBridgeUsesWindowCapture = false;
-		if (this.canvas) {
-			delete this.canvas.dataset.boardPointerBridge;
-		}
-		if (surface) {
-			surface.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
-			surface.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
-			surface.removeEventListener("lostpointercapture", this.handleLostPointerCapture as EventListener);
-		}
+		this.canvas.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
+		this.canvas.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
+		this.canvas.removeEventListener("pointermove", this.handlePointerMove as EventListener);
+		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
+		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
+		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
 		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
-		this.disarmAreaSelectChordBridge();
-	}
-
-	private eventTargetIsUnderEventSurface(event: Event): boolean {
-		if (this.isDisposed || !this.eventSurface) {
-			return false;
-		}
-		const surface = this.eventSurface;
-		const path = typeof event.composedPath === "function" ? event.composedPath() : [];
-		const domNodeCtor = surface.ownerDocument?.defaultView?.Node ?? globalThis.Node;
-		for (const entry of path) {
-			if (entry === surface) {
-				return true;
-			}
-			if (typeof domNodeCtor === "function" && entry instanceof domNodeCtor && surface.contains(entry)) {
-				return true;
-			}
-		}
-		const target = event.target;
-		return typeof domNodeCtor === "function" && target instanceof domNodeCtor && surface.contains(target);
-	}
-
-	private readonly handleWindowPointerDownCapture = (event: Event): void => {
-		if (!this.eventTargetIsUnderEventSurface(event)) {
-			return;
-		}
-		this.handlePointerDown(event as PointerEvent);
-	};
-
-	private readonly handleWindowPointerMoveCapture = (event: Event): void => {
-		if (!this.eventTargetIsUnderEventSurface(event)) {
-			return;
-		}
-		this.handlePointerMove(event as PointerEvent);
-	};
-
-	private readonly handleWindowPointerUpCapture = (event: Event): void => {
-		if (!this.eventTargetIsUnderEventSurface(event)) {
-			return;
-		}
-		this.handlePointerUp(event as PointerEvent);
-	};
-
-	private readonly handleWindowWheelCapture = (event: Event): void => {
-		if (!this.eventTargetIsUnderEventSurface(event)) {
-			return;
-		}
-		this.handleWheel(event as WheelEvent);
-	};
-
-	private selectionExitHighlightDisabled(): boolean {
-		return this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
-	}
-
-	private captureSelectionForEscapeUndo(prev: ReadonlySet<string>): void {
-		if (this.selectionExitHighlightDisabled()) {
-			return;
-		}
-		this.selectionPreviousForEscape = sortedSelectionIds(prev);
-	}
-
-	private secondarySelectionHighlightIds(): ReadonlySet<string> {
-		return this.session.isDraggingAreaSelect() ? this.preselectRemovedIds : new Set<string>();
-	}
-
-	private textOverlayNodeStyleKey(node: Node): string {
-		return this.resolveBoardElementStyleName("node", node.style, this.nodeInteractiveStyleKind(node));
-	}
-
-	private textOverlayHandleStyleKey(handle: Handle): string {
-		return this.resolveBoardElementStyleName("handle", handle.style, this.handleInteractiveStyleKind(handle));
 	}
 
 	private updateSelection(ids: Iterable<string>): void {
 		const nextIds = new Set(ids);
 		const nextSnapshot = createSelectionSnapshot(nextIds);
-		if (selectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
+		if (arrayEqual(nextSnapshot.ids, this.selectionStore.getSnapshot().ids)) {
 			return;
 		}
-		const prevIds = this.selectionIds;
 		this.selectionIds = nextIds;
-		this.captureSelectionForEscapeUndo(prevIds);
 		for (const object of this.scene.getAllObjects()) {
 			object.selected = this.selectionIds.has(object.id);
 		}
-		this.selectionStore.setSnapshot(nextSnapshot, selectionSnapshotsEqual);
+		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
 		this.emit("select", nextSnapshot);
 		this.markDirty();
 	}
@@ -4419,53 +3470,6 @@ export class BoardRenderer {
 		this.lastPointerScreenY = screenY;
 	}
 
-	/** @emoji 🎹 Modifier-only updates do not emit `pointermove`; refresh marquee merge while area-selecting. */
-	private readonly handleAreaSelectChordKeys = (event: KeyboardEvent): void => {
-		if (this.isDisposed || !this.canvas) {
-			return;
-		}
-		if (BoardRenderer.activeRenderer !== this) {
-			return;
-		}
-		if (!this.session.isDraggingAreaSelect()) {
-			return;
-		}
-		if (!isAreaSelectChordBridgeKeyboardEvent(event)) {
-			return;
-		}
-		if (this.wasmSessionCallBlockedForReentry()) {
-			this.invalidated = true;
-			return;
-		}
-		this.session.pointerMoveScreen(
-			this.lastPointerScreenX,
-			this.lastPointerScreenY,
-			event.shiftKey,
-			event.ctrlKey || event.metaKey,
-		);
-		this.applyWasmDrainToScene(this.session.drainEventsJson());
-		this.publishHover();
-		this.invalidate();
-	};
-
-	private armAreaSelectChordBridge(): void {
-		if (this.areaSelectChordBridgeArmed) {
-			return;
-		}
-		this.areaSelectChordBridgeArmed = true;
-		globalThis.addEventListener("keydown", this.handleAreaSelectChordKeys, true);
-		globalThis.addEventListener("keyup", this.handleAreaSelectChordKeys, true);
-	}
-
-	private disarmAreaSelectChordBridge(): void {
-		if (!this.areaSelectChordBridgeArmed) {
-			return;
-		}
-		this.areaSelectChordBridgeArmed = false;
-		globalThis.removeEventListener("keydown", this.handleAreaSelectChordKeys, true);
-		globalThis.removeEventListener("keyup", this.handleAreaSelectChordKeys, true);
-	}
-
 	private deleteSelectedObjects(): void {
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
@@ -4484,28 +3488,6 @@ export class BoardRenderer {
 			return;
 		}
 		if (!shouldBoardHandleDeleteShortcut()) {
-			return;
-		}
-		if (event.key === "Escape") {
-			if (this.wasmSessionCallBlockedForReentry()) {
-				this.invalidated = true;
-				return;
-			}
-			event.preventDefault();
-			if (this.session.isDraggingAreaSelect()) {
-				this.session.cancelAreaSelect();
-				this.applyWasmDrainToScene(this.session.drainEventsJson());
-				this.disarmAreaSelectChordBridge();
-				this.invalidate();
-				return;
-			}
-			if (this.selectionPreviousForEscape.length > 0) {
-				const restore = [...this.selectionPreviousForEscape];
-				this.selectionPreviousForEscape = [];
-				this.setSelectionIds(restore);
-				this.lastPushedDescriptorJson = null;
-				this.invalidate();
-			}
 			return;
 		}
 		if (event.key !== "Delete" && event.key !== "Backspace") {
@@ -4542,8 +3524,7 @@ export class BoardRenderer {
 		}
 		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
-		this.canvas.dataset.boardLod = this.effectiveDrawLodLabel();
-		this.canvas.dataset.boardSceneNodeCount = String(this.scene.nodes.size);
+		this.canvas.dataset.boardLod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
@@ -4563,7 +3544,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
+		this.session.pointerMoveScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		const world = this.screenToWorld({ x: sx, y: sy });
@@ -4572,22 +3553,22 @@ export class BoardRenderer {
 	};
 
 	private readonly handlePointerDown = (event: PointerEvent): void => {
-		if (!this.canvas || !this.eventSurface) {
+		if (!this.canvas) {
 			return;
 		}
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
 		BoardRenderer.activeRenderer = this;
-		this.eventSurface.focus({ preventScroll: true });
+		this.canvas.focus({ preventScroll: true });
 		if (typeof event.pointerId === "number") {
-			this.eventSurface.setPointerCapture?.(event.pointerId);
+			this.canvas.setPointerCapture?.(event.pointerId);
 		}
 		event.preventDefault();
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			if (typeof event.pointerId === "number") {
-				this.eventSurface.releasePointerCapture?.(event.pointerId);
+				this.canvas.releasePointerCapture?.(event.pointerId);
 			}
 			return;
 		}
@@ -4595,13 +3576,10 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
+		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
-		if (this.session.isDraggingAreaSelect()) {
-			this.armAreaSelectChordBridge();
-		}
 	};
 
 	private readonly handlePointerMove = (event: PointerEvent): void => {
@@ -4616,21 +3594,20 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
+		this.session.pointerMoveScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
 	};
 
 	private readonly handlePointerUp = (event: PointerEvent): void => {
-		if (!this.canvas || !this.eventSurface) {
+		if (!this.canvas) {
 			return;
 		}
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
-			this.disarmAreaSelectChordBridge();
 			if (typeof event.pointerId === "number") {
-				this.eventSurface.releasePointerCapture?.(event.pointerId);
+				this.canvas.releasePointerCapture?.(event.pointerId);
 			}
 			return;
 		}
@@ -4638,13 +3615,12 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
+		this.session.pointerUpScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		if (typeof event.pointerId === "number") {
-			this.eventSurface.releasePointerCapture?.(event.pointerId);
+			this.canvas.releasePointerCapture?.(event.pointerId);
 		}
-		this.disarmAreaSelectChordBridge();
 		this.invalidate();
 	};
 
@@ -4663,10 +3639,6 @@ export class BoardRenderer {
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
-	};
-
-	private readonly handleLostPointerCapture = (): void => {
-		this.disarmAreaSelectChordBridge();
 	};
 
 	private readonly handleWheel = (event: WheelEvent): void => {
@@ -4749,20 +3721,12 @@ if (boardVitest) {
 			expect(ctx.measureText(out).width).toBeLessThanOrEqual(50);
 			expect(out.length).toBeLessThan("abcdefghij".length + 1);
 		});
-
-		it("abbreviates to the widest fitting prefix plus ellipsis", () => {
-			const ctx: CanvasTextMeasuring = {
-				font: "10px monospace",
-				measureText: (t: string) => ({ width: t.length * 10 }),
-			};
-			expect(boardEllipsisTextToWidth(ctx, "abcdef", 40)).toBe("abc…");
-		});
 	});
 
 	describe("boardNodeTextPlacementAnchor", () => {
-		it("anchors center at the middle of the node-centered box", () => {
-			const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, BOARD_NODE_TEXT_ALIGNMENT_DEFAULT);
-			expect(a).toEqual({ fillX: 100, fillY: 50, textAlign: "center", textBaseline: "middle" });
+		it("anchors west at the left-middle of the node-centered box", () => {
+			const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, "w");
+			expect(a).toEqual({ fillX: 60, fillY: 50, textAlign: "left", textBaseline: "middle" });
 		});
 	});
 
@@ -4807,21 +3771,6 @@ if (boardVitest) {
 		return { canvas, context };
 	}
 
-	describe("board text overlay paint", () => {
-		it("centers node captions and abbreviates overlong shape text", () => {
-			const { canvas, context } = createMockCanvas(200, 100);
-			const renderer = new BoardRenderer({ renderMode: "main-thread" });
-			renderer.setSize(200, 100, 1);
-			renderer.attachTextOverlayCanvas(canvas);
-			renderer.scene.add(new Node({ id: "caption", radius: 20, text: "abcdefghi", textAlignment: "e", x: 0, y: 0 }));
-			renderer.render();
-			expect(context.textAlign).toBe("center");
-			expect(context.textBaseline).toBe("middle");
-			expect(context.fillText).toHaveBeenCalledWith("abcd…", 100, 50);
-			renderer.dispose();
-		});
-	});
-
 	describe("board hover publication", () => {
 		it("emits hover with hit id and pointer/world coordinates after pointermove", () => {
 			const { canvas } = createMockCanvas();
@@ -4841,19 +3790,6 @@ if (boardVitest) {
 			expect(last.clientX).toBeCloseTo(p.x);
 			expect(last.worldX).toBeCloseTo(0, 1);
 			renderer.dispose();
-		});
-
-		it("treats DOM event targets under the event surface as board hits when model Node shadows the global constructor", () => {
-			const { canvas } = createMockCanvas();
-			const surface = document.createElement("div");
-			surface.appendChild(canvas);
-			document.body.appendChild(surface);
-			const renderer = new BoardRenderer({ canvas, eventSurface: surface, renderMode: "headless-test" });
-			const event = new MouseEvent("pointerdown", { bubbles: true, clientX: 10, clientY: 10 });
-			Object.defineProperty(event, "target", { configurable: true, value: canvas });
-			expect((renderer as any).eventTargetIsUnderEventSurface(event)).toBe(true);
-			renderer.dispose();
-			surface.remove();
 		});
 	});
 
@@ -4907,14 +3843,6 @@ if (boardVitest) {
 			expect(pE.y).toBeCloseTo(50);
 		});
 
-		it("scales handle anchors with node scale while handle scale only affects handle size", () => {
-			const node = new Node({ id: "scaled", radius: 10, scale: 2, x: 0, y: 0 });
-			const handle = new Handle({ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "scaled:h0", node, radius: 4, scale: 0.5 });
-			expect(handle.position.x).toBeCloseTo(20);
-			expect(handle.position.y).toBeCloseTo(0);
-			expect(handle.effectiveRadius).toBeCloseTo(4);
-		});
-
 		it("labels minimap, overview, normal, detail, and micro LOD bands from zoom thresholds", () => {
 			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
 			expect(resolveBoardLodLabel(0.25)).toBe("overview");
@@ -4942,12 +3870,6 @@ if (boardVitest) {
 			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
 			expect(boardTextOverlayCaptionForLod("Node Label", "micro", "catalog-icon")).toBe("Node Label");
 		});
-
-		it("abbreviates detail handle overlay captions using catalog text", () => {
-			expect(boardTextOverlayHandleCaptionForLod("Port", null)).toBe("Port");
-			expect(boardTextOverlayHandleCaptionForLod("Longhandle", null)).toBe("Longha…");
-			expect(boardTextOverlayHandleCaptionForLod("Longhandle", "emoji:🔌")).toBe("Long…");
-		});
 	});
 
 	describe("board renderer render pipeline", () => {
@@ -4963,29 +3885,6 @@ if (boardVitest) {
 			renderer.render();
 			expect(frameCount).toBe(1);
 			renderer.dispose();
-		});
-	});
-
-	describe("preselect snapshot helpers", () => {
-		it("createPreselectSnapshot sorts ids and removedIds", () => {
-			const snap = createPreselectSnapshot(["b", "a"], ["z", "y"]);
-			expect(snap.ids).toEqual(["a", "b"]);
-			expect(snap.removedIds).toEqual(["y", "z"]);
-		});
-	});
-
-	describe("area select chord bridge keyboard filter", () => {
-		it("accepts only physical modifier keys", () => {
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ShiftLeft", repeat: false } as KeyboardEvent)).toBe(true);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ControlRight", repeat: false } as KeyboardEvent)).toBe(true);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "MetaRight", repeat: false } as KeyboardEvent)).toBe(true);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "AltRight", repeat: false } as KeyboardEvent)).toBe(true);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "Digit1", repeat: false } as KeyboardEvent)).toBe(false);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "Escape", repeat: false } as KeyboardEvent)).toBe(false);
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "KeyK", repeat: false } as KeyboardEvent)).toBe(false);
-		});
-		it("ignores auto-repeat", () => {
-			expect(isAreaSelectChordBridgeKeyboardEvent({ code: "ShiftLeft", repeat: true } as KeyboardEvent)).toBe(false);
 		});
 	});
 
@@ -5170,7 +4069,6 @@ if (boardVitest) {
 			const b = new Node({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.render();
-			renderer.setSelectionOptions({ mode: "additive", targets: { ...BOARD_SELECTION_TARGETS_DEFAULT } });
 			renderer.setSelectionIds(["a", "b"]);
 			const screenA = renderer.worldToScreen({ x: 0, y: 0 });
 			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screenA.x, clientY: screenA.y }));
@@ -5180,28 +4078,6 @@ if (boardVitest) {
 			expect(a.y).toBeCloseTo(5, 5);
 			expect(b.x).toBeCloseTo(110, 5);
 			expect(b.y).toBeCloseTo(5, 5);
-			expect([...renderer.selection.getSnapshot().ids].sort()).toEqual(["a", "b"]);
-			renderer.dispose();
-		});
-
-		it("at overview LOD drags the selection from a gap inside the union bounds without a node hit", () => {
-			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const a = new Node({ draggable: true, id: "a", radius: 40, x: 0, y: 0 });
-			const b = new Node({ draggable: true, id: "b", radius: 40, x: 300, y: 0 });
-			renderer.scene.add(a).add(b);
-			renderer.render();
-			renderer.setCamera(0, 0, 0.25);
-			renderer.setSelectionIds(["a", "b"]);
-			const gap = renderer.worldToScreen({ x: 150, y: 0 });
-			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: gap.x, clientY: gap.y }));
-			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: gap.x + 40, clientY: gap.y + 20 }));
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: gap.x + 40, clientY: gap.y + 20 }));
-			const zoom = 0.25;
-			expect(a.x).toBeCloseTo(40 / zoom, 3);
-			expect(a.y).toBeCloseTo(20 / zoom, 3);
-			expect(b.x).toBeCloseTo(300 + 40 / zoom, 3);
-			expect(b.y).toBeCloseTo(20 / zoom, 3);
 			expect([...renderer.selection.getSnapshot().ids].sort()).toEqual(["a", "b"]);
 			renderer.dispose();
 		});
@@ -5259,41 +4135,6 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
-		it("applies shift during rectangle drag for additive merge against initial selection", () => {
-			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({
-				canvas,
-				renderMode: "headless-test",
-				selection: { mode: "replace", targets: { nodes: true, edges: false, handles: false } },
-			});
-			const keep = new Node({ draggable: true, id: "keep", radius: 20, x: -150, y: 0 });
-			const node = new Node({ id: "node", radius: 20, x: 0, y: 0 });
-			renderer.scene.add(keep).add(node);
-			renderer.render();
-			renderer.setSelectionIds(["keep"]);
-
-			const d0 = renderer.worldToScreen({ x: -40, y: -50 });
-			const d1 = renderer.worldToScreen({ x: 40, y: 50 });
-			const selectSnaps: BoardSelectionSnapshot[] = [];
-			const offSelect = renderer.on("select", (snap) => {
-				selectSnaps.push({ ...snap, ids: [...snap.ids] });
-			});
-			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: d0.x, clientY: d0.y }));
-			canvas.dispatchEvent(
-				new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
-			);
-			canvas.dispatchEvent(
-				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: d1.x, clientY: d1.y, shiftKey: true }),
-			);
-			offSelect();
-			const ids = [...renderer.selection.getSnapshot().ids].sort((x, y) => x.localeCompare(y));
-			expect(ids).toEqual(["keep", "node"]);
-			expect(selectSnaps.some((s) => s.gestureMergeMode === "additive")).toBe(true);
-			expect(renderer.selection.getSnapshot().gestureMergeMode).toBe("additive");
-
-			renderer.dispose();
-		});
-
 		it("clears selection when clicking the background without dragging", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
@@ -5307,71 +4148,10 @@ if (boardVitest) {
 			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
 
 			const background = renderer.worldToScreen({ x: 900, y: 900 });
-			const preselectSnaps: BoardPreselectSnapshot[] = [];
-			const selectSnaps: BoardSelectionSnapshot[] = [];
-			const offPre = renderer.on("preselect", (snap) => {
-				preselectSnaps.push({ ...snap, ids: [...snap.ids], removedIds: [...snap.removedIds] });
-			});
-			const offSel = renderer.on("select", (snap) => {
-				selectSnaps.push({ ...snap, ids: [...snap.ids] });
-			});
 			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
-			canvas.dispatchEvent(
-				new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: background.x + 1, clientY: background.y }),
-			);
-			expect(preselectSnaps).toEqual([]);
-			expect(renderer.getPreselectSnapshot().removedIds).toEqual([]);
-			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
-			offPre();
-			offSel();
+
 			expect(renderer.selection.getSnapshot().ids).toEqual([]);
-			expect(preselectSnaps).toEqual([]);
-			const lastSelect = selectSnaps.at(-1);
-			expect(lastSelect?.ids).toEqual([]);
-			renderer.dispose();
-		});
-
-		it("replace pick selects only the clicked node; shift adds; ctrl removes", () => {
-			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "replace" } });
-			const a = new Node({ draggable: true, id: "a", radius: 20, x: -60, y: 0 });
-			const b = new Node({ draggable: true, id: "b", radius: 20, x: 60, y: 0 });
-			renderer.scene.add(a).add(b);
-			renderer.render();
-
-			const pa = renderer.worldToScreen({ x: -60, y: 0 });
-			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
-
-			const pb = renderer.worldToScreen({ x: 60, y: 0 });
-			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual(["b"]);
-
-			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
-
-			canvas.dispatchEvent(
-				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y, shiftKey: true }),
-			);
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
-
-			canvas.dispatchEvent(
-				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y, ctrlKey: true }),
-			);
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pb.x, clientY: pb.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
-
-			canvas.dispatchEvent(
-				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y, ctrlKey: true, shiftKey: true }),
-			);
-			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: pa.x, clientY: pa.y }));
-			expect(renderer.selection.getSnapshot().ids).toEqual([]);
-
 			renderer.dispose();
 		});
 
@@ -5649,42 +4429,6 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
 
-		it("parses optional node and handle scales on fixture nodes", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [],
-				nodes: [
-					{
-						handles: [{ angle: 1.2, id: "h1", scale: 0.5 }],
-						id: "c1",
-						radius: 12,
-						scale: 1.75,
-						x: 0,
-						y: 0,
-					},
-				],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ id: "c1", scale: 1.75 });
-			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ id: "h1", scale: 0.5 });
-		});
-
-		it("parses hidden flags on fixture nodes handles and edges", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ hidden: true, id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{ handles: [{ angle: 0, hidden: true, id: "a:h0" }], hidden: true, id: "a", radius: 10, x: 0, y: 0 },
-					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 10, visible: false, x: 50, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ hidden: true, id: "a" });
-			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ hidden: true, id: "a:h0" });
-			expect(parsed?.nodes[1]).toMatchObject({ hidden: true, id: "b" });
-			expect(parsed?.edges[0]).toMatchObject({ hidden: true, id: "e1" });
-		});
-
 		it("rejects fixture edges that use legacy `from`/`to` instead of source/target", () => {
 			expect(
 				parseBoardFixtureV1({
@@ -5752,7 +4496,7 @@ if (boardVitest) {
 			expect(merged.nodes?.some((n) => n.id === "semio.metabolism.light.node.x")).toBe(true);
 		});
 
-		it("maps kit piece label to node text", () => {
+		it("does not treat kit cs_ labels as display text", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [],
@@ -5770,11 +4514,8 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			});
-			expect(parsed?.nodes[0]).toMatchObject({
-				id: "a",
-				shape: "rectangle",
-				text: "cs_sl0_d0_t_f0_b_c0",
-			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "rectangle" });
+			expect(parsed?.nodes[0]).not.toHaveProperty("text");
 		});
 
 		it("rejects wrong schema or malformed nodes", () => {
@@ -5850,13 +4591,13 @@ if (boardVitest) {
 	});
 
 	describe("board force graph layout", () => {
-		it("spreads linked nodes using wasm force layout", () => {
+		it("spreads linked nodes using wasm+nalgebra layout", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
 				nodes: [
-					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
+					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			};
@@ -5867,198 +4608,9 @@ if (boardVitest) {
 			expect(laid.schema).toBe("elements.board.fixture/v1");
 		});
 
-		it("keeps locked node coordinates fixed on force redraw", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 35, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 35, shape: "circle", x: 40, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				forceGraph: {
-					gravity: 0,
-					idealEdgeLength: 160,
-					iterations: 180,
-					lockedNodeIds: ["a"],
-					randomSeed: 101,
-					repulsionStrength: 7500,
-					springStrength: 0.045,
-				},
-				lockedNodeIds: ["a"],
-				mode: "force-graph",
-				redrawHandlesAfter: false,
-			});
-			expect((laid.nodes[0] as { x: number }).x).toBeCloseTo(0, 5);
-			expect((laid.nodes[0] as { y: number }).y).toBeCloseTo(0, 5);
-			expect(Math.abs((laid.nodes[1] as { x: number }).x - 40)).toBeGreaterThan(20);
-		});
-
-		it("redraw leaves hidden nodes untouched", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], hidden: true, id: "b", radius: 40, shape: "circle", x: 1, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				mode: "force-graph",
-				randomSeed: 11,
-				redrawHandlesAfter: false,
-				forceGraph: { gravity: 0, idealEdgeLength: 200, iterations: 220, repulsionStrength: 8000, springStrength: 0.04 },
-			});
-			expect(laid.nodes[1]).toMatchObject({ hidden: true, id: "b", x: 1, y: 0 });
-		});
-
-		it("handle snap ignores hidden handles", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{ handles: [{ angle: 1.57, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, hidden: true, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: 0.25, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 200, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const snapped = layoutBoardFixtureRedrawHandles(fixture);
-			expect(snapped.nodes[0]?.handles[0]?.angle).toBeCloseTo(1.57);
-			expect(snapped.nodes[1]?.handles[0]?.angle).toBeCloseTo(0.25);
-		});
-
 		it("throws on invalid fixture schema from wasm", () => {
 			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
 			expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
-		});
-
-		it("spreads a dense graph under Barnes–Hut repulsion (wasm)", () => {
-			const nodes = Array.from({ length: 28 }, (_, k) => ({
-				handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: `n${k}:h0` }],
-				id: `n${k}`,
-				radius: 8,
-				shape: "circle" as const,
-				x: (k % 7) * 11,
-				y: Math.floor(k / 7) * 11,
-			}));
-			const edges = Array.from({ length: 27 }, (_, k) => ({
-				id: `e${k}`,
-				source: `n${k}:h0`,
-				target: `n${k + 1}:h0`,
-			}));
-			const fixture: BoardFixtureV1 = { camera: { x: 0, y: 0, zoom: 1 }, edges, nodes, schema: "elements.board.fixture/v1" };
-			const laid = layoutBoardFixtureForceGraph(fixture, {
-				barnesHutTheta: 0.68,
-				gravity: 0.015,
-				idealEdgeLength: 95,
-				iterations: 200,
-				pairwiseRepulsionMaxBodies: 8,
-				randomSeed: 303,
-				repulsionStrength: 5500,
-				springStrength: 0.048,
-			});
-			const xs = laid.nodes.map((n) => (n as { x: number }).x);
-			const ys = laid.nodes.map((n) => (n as { y: number }).y);
-			for (let i = 0; i < xs.length; i++) {
-				expect(Number.isFinite(xs[i])).toBe(true);
-				expect(Number.isFinite(ys[i])).toBe(true);
-			}
-			expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(35);
-			expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(25);
-		});
-
-		it("passes Barnes–Hut options through redraw wasm path", () => {
-			const nodes = Array.from({ length: 18 }, (_, k) => ({
-				handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: `n${k}:h0` }],
-				id: `n${k}`,
-				radius: 7,
-				shape: "circle" as const,
-				x: (k % 6) * 10,
-				y: Math.floor(k / 6) * 10,
-			}));
-			const edges = Array.from({ length: 17 }, (_, k) => ({
-				id: `e${k}`,
-				source: `n${k}:h0`,
-				target: `n${k + 1}:h0`,
-			}));
-			const fixture: BoardFixtureV1 = { camera: { x: 0, y: 0, zoom: 1 }, edges, nodes, schema: "elements.board.fixture/v1" };
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				forceGraph: {
-					barnesHutTheta: 0.75,
-					gravity: 0.012,
-					idealEdgeLength: 88,
-					iterations: 160,
-					pairwiseRepulsionMaxBodies: 6,
-					randomSeed: 404,
-					repulsionStrength: 5200,
-					springStrength: 0.05,
-				},
-				mode: "force-graph",
-				randomSeed: 404,
-				redrawHandlesAfter: false,
-			});
-			for (const n of laid.nodes) {
-				expect(Number.isFinite((n as { x: number }).x)).toBe(true);
-				expect(Number.isFinite((n as { y: number }).y)).toBe(true);
-			}
-		});
-	});
-
-	describe("board hierarchical tree redraw", () => {
-		it("keeps locked node coordinates fixed on tree redraw", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [
-					{ id: "e1", source: "r:h", target: "c1:h" },
-					{ id: "e2", source: "r:h", target: "c2:h" },
-				],
-				nodes: [
-					{
-						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "r:h" }],
-						id: "r",
-						radius: 18,
-						root: true,
-						shape: "circle",
-						x: 120,
-						y: -33,
-					},
-					{
-						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "c1:h" }],
-						id: "c1",
-						radius: 18,
-						shape: "circle",
-						x: 0,
-						y: 0,
-					},
-					{
-						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "c2:h" }],
-						id: "c2",
-						radius: 18,
-						shape: "circle",
-						x: 5,
-						y: 0,
-					},
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				centerX: 0,
-				centerY: 0,
-				hierarchicalTree: { direction: "downwards", layerSpacing: 90, siblingGap: 12 },
-				lockedNodeIds: ["r"],
-				mode: "hierarchical-tree",
-				redrawHandlesAfter: false,
-			});
-			const r = laid.nodes.find((n) => n.id === "r") as { x: number; y: number };
-			const c1 = laid.nodes.find((n) => n.id === "c1") as { x: number; y: number };
-			const c2 = laid.nodes.find((n) => n.id === "c2") as { x: number; y: number };
-			expect(r.x).toBeCloseTo(120, 3);
-			expect(r.y).toBeCloseTo(-33, 3);
-			expect(Math.abs(c1.y - c2.y)).toBeLessThan(1e-2);
-			expect(Math.abs(c1.y - r.y)).toBeGreaterThan(40);
 		});
 	});
 
@@ -6340,12 +4892,9 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		return new Node({
 			draggable: props.draggable ?? true,
 			height: props.height,
-			hidden: props.hidden,
 			iconKind: props.iconKind,
 			id: props.id,
-			nodeKind: props.nodeKind,
 			root: props.root,
-			scale: props.scale,
 			selected: props.selected,
 			shape: "rectangle",
 			style: props.style,
@@ -6363,13 +4912,10 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 	}
 	return new Node({
 		draggable: props.draggable ?? true,
-		hidden: props.hidden,
 		iconKind: props.iconKind,
 		id: props.id,
-		nodeKind: props.nodeKind,
 		radius: props.radius,
 		root: props.root,
-		scale: props.scale,
 		selected: props.selected,
 		style: props.style,
 		text: props.text,
@@ -6389,7 +4935,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = resolveBoardVisibleFlag(props);
+	instance.visible = props.visible ?? true;
 	instance.root = props.root === true;
 	instance.textAutofit = props.textAutofit ?? false;
 	instance.textAlignment = props.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
@@ -6402,9 +4948,6 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 		typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	instance.iconKind =
 		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
-	instance.nodeKind = typeof props.nodeKind === "string" ? props.nodeKind.trim() : "";
-	instance.setScale(props.scale ?? 1);
-	instance.setKindScale(renderer.resolveNodeKindScale(instance.nodeKind));
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -6423,11 +4966,9 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = resolveBoardVisibleFlag(props);
+	instance.visible = props.visible ?? true;
 	instance.radius = props.radius ?? 8;
-	instance.setScale(props.scale ?? 1);
 	instance.handleKind = (props.handleKind ?? "").trim();
-	instance.setKindScale(renderer.resolveHandleKindScale(instance.handleKind));
 	instance.iconKind =
 		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
 	const rawC = props.color;
@@ -6440,7 +4981,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = resolveBoardVisibleFlag(props);
+	instance.visible = props.visible ?? true;
 	instance.edgeKind = typeof props.edgeKind === "string" ? props.edgeKind.trim() : "";
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
@@ -6449,7 +4990,7 @@ function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Han
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
-	instance.visible = resolveBoardVisibleFlag(props);
+	instance.visible = props.visible ?? true;
 	instance.wireKind = typeof props.wireKind === "string" ? props.wireKind.trim() : "";
 	const tid = (props.target ?? "").trim();
 	const nextTarget = tid !== "" ? targetHandle : null;
@@ -6480,13 +5021,12 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		a.id === b.id &&
 		a.angle === b.angle &&
 		a.radius === b.radius &&
-		normalizeBoardScale(a.scale) === normalizeBoardScale(b.scale) &&
 		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
 		(a.iconKind ?? "") === (b.iconKind ?? "") &&
 		ac === bc &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
+		a.visible === b.visible &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -6499,7 +5039,7 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 		(a.edgeKind ?? "").trim() === (b.edgeKind ?? "").trim() &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
+		a.visible === b.visible &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -6514,7 +5054,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
 		(a.endY ?? Number.NaN) === (b.endY ?? Number.NaN) &&
 		a.selected === b.selected &&
 		a.style === b.style &&
-		resolveBoardVisibleFlag(a) === resolveBoardVisibleFlag(b) &&
+		a.visible === b.visible &&
 		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
 	);
 }
@@ -6527,13 +5067,12 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		a.draggable !== b.draggable ||
 		a.selected !== b.selected ||
 		a.style !== b.style ||
-		resolveBoardVisibleFlag(a) !== resolveBoardVisibleFlag(b) ||
+		a.visible !== b.visible ||
 		a.text !== b.text ||
 		(a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
 		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
 		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
 		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
-		normalizeBoardScale(a.scale) !== normalizeBoardScale(b.scale) ||
 		(a.root === true) !== (b.root === true) ||
 		(a.iconKind ?? "") !== (b.iconKind ?? "") ||
 		(a.nodeKind ?? "").trim() !== (b.nodeKind ?? "").trim()
@@ -6560,7 +5099,6 @@ function mountHandleUnderNode(renderer: BoardRenderer, nodeHost: BoardHostNode, 
 	}
 	nodeHost.handleChildren.add(handleHost);
 	const impl = new Handle({ ...handleHost.props, node: nodeHost.impl });
-	impl.setKindScale(renderer.resolveHandleKindScale(impl.handleKind));
 	handleHost.impl = impl;
 	renderer.batch(() => {
 		renderer.scene.add(impl);
@@ -6572,7 +5110,6 @@ function mountNode(renderer: BoardRenderer, nodeHost: BoardHostNode): void {
 	if (nodeHost.impl.parent) {
 		return;
 	}
-	nodeHost.impl.setKindScale(renderer.resolveNodeKindScale(nodeHost.impl.nodeKind));
 	renderer.batch(() => {
 		renderer.scene.add(nodeHost.impl);
 	});
@@ -6622,7 +5159,6 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
 			const ey = wireHost.props.endY;
 			wireHost.impl = new Wire({
 				id: wireHost.props.id,
-				hidden: wireHost.props.hidden,
 				source,
 				target,
 				selected: wireHost.props.selected,
@@ -6914,7 +5450,6 @@ const boardSceneHost = Reconciler({
 					const ey = w.props.endY;
 					w.impl = new Wire({
 						id: w.props.id,
-						hidden: w.props.hidden,
 						source: from,
 						target: to,
 						selected: w.props.selected,
@@ -6983,3 +5518,4 @@ export function unmountBoardHostMount(root: BoardHostMount): void {
 
 export { boardSceneHost };
 //#endregion 🔖HostMountInternals
+

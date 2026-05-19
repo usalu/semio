@@ -1,13 +1,14 @@
 {
   "title": "Board Play Lod Measures Wiring",
   "emoji": "📶",
-  "status": "closed",
+  "status": "open",
   "description": "Wire Rust BoardHost automatic_lod + forced_draw_lod, WASM setAutomaticLod/setForcedDrawLodLabel, BoardRenderer/BoardCanvas props, and board play floating window measures (Automatic LOD toggle + LOD tier select when off) so LOD controls are visible in board play.",
   "summary": "Fixed persistent empty board when disabling Automatic LOD. Prior fix (stable windowKindRegistryKey) was insufficient: toggling automatic LOD rebuilds boardWindowKinds → boardPlayApp → new inline onActiveWindowChange reference, which was still in UICanvas Golden Layout init effect deps and destroyed all board canvases (WASM hosts lost synced scene; grid-only). Fix: store onLayoutChange/onActiveWindowChange in refs inside UICanvas and remove them from init deps; stabilize board play handler with useCallback; force descriptor re-push on setAutomaticLod; expose data-board-scene-node-count for e2e. E2e now asserts node count \u003e 0 after toggle.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪1b671a97220f453190b114d247fdaac5",
     "⚪2e2552cd6d7549b0a26da13fefecbe08",
-    "⚪74db19c98e124414b186268bc505be22"
+    "⚪74db19c98e124414b186268bc505be22",
+    "⚪0a5af11f366f44b7be6550ca81575dce"
   ]
 }
