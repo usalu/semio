@@ -1,7 +1,7 @@
 {
   "title": "Semio Rs Clean Refactor",
   "emoji": "🦀",
-  "status": "closed",
+  "status": "open",
   "description": "Refactor semio/client/lib/rs cleanly: fix naming inconsistencies (double-underscore snake_case), improve module organization, remove unnecessary dead_code/clippy allows where possible, ensure all tests pass.",
   "summary": "Continued semio/rs clean refactor: merged entity_relay/entity_relay_sync via _entity_relay_shell; Change now tracks forward_record_ids/backward_record_ids with working GraphQL resolvers and stable bundle serialization; fixed meta_arc_titled_entity and meta_quality_entity to use $crate; allowed clippy duplicated_attributes for async-graphql interfaces. cargo test --lib: 40 passed.",
   "github": {
@@ -10,6 +10,7 @@
   "goal": "🎯r2603",
   "sessions": [
     "⚪5c825fe6c690458a9c7925f40db3fbc4",
-    "⚪d7358e7501014450b39ed591db5916af"
+    "⚪d7358e7501014450b39ed591db5916af",
+    "⚪4c77825554524af5aad90d08b15d7208"
   ]
 }

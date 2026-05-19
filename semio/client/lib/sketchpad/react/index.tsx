@@ -71,6 +71,7 @@ import {
   useDesign,
   useDesignCommand,
   useDesignContext,
+  useDesignConnections,
   useDesignDescription,
   useDesignPieces,
   useDesignIcon,
@@ -567,6 +568,20 @@ export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
   };
   visit(design);
   return out.filter((d) => d.id !== (design as any).id);
+}
+
+/** @emoji 📐 Active design DTO row from kit snapshot or {@link useKitDesigns}. */
+export function useActiveDesignRow(): Design | null {
+  const designId = useDesign();
+  const ks = useKitStoreSnapshot();
+  const kitDesigns = useKitDesigns();
+  return useMemo(() => {
+    if (designId == null || designId === "") return null;
+    const kit = ks?.kit as Kit | undefined;
+    const fromSnapshot = kit?.designs?.find((entry) => entry.id === designId);
+    if (fromSnapshot != null) return fromSnapshot;
+    return kitDesigns.find((entry) => entry.id === designId) ?? null;
+  }, [designId, ks?.kit, kitDesigns]);
 }
 
 /** @emoji 📚 Included designs for the active {@link DesignContext} (sketchpad helper). */
@@ -13998,9 +14013,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: 
             id: edgeId,
             source: sourceId,
             target: targetId,
-            type: "floating",
-            style: edgeStyle["reference"],
-            data: { relationship: "reference" },
+            relationship: "reference",
           });
         }
       }
@@ -14014,9 +14027,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: 
             id: edgeId,
             source: sourceId,
             target: targetId,
-            type: "floating",
-            style: edgeStyle["reference"],
-            data: { relationship: "reference" },
+            relationship: "reference",
           });
         }
       }
@@ -14050,9 +14061,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: 
               id: edgeId,
               source: sourceId,
               target: targetId,
-              type: "floating",
-              style: edgeStyle["reference"],
-              data: { relationship: "reference" },
+              relationship: "reference",
             });
           }
           if (!portToTypes.has(portId)) portToTypes.set(portId, new Set());
@@ -14081,9 +14090,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: 
             id: edgeId,
             source: sourceId,
             target: targetId,
-            type: "floating",
-            style: edgeStyle["reference"],
-            data: { relationship: "reference" },
+            relationship: "reference",
           });
         }
       }
@@ -14522,10 +14529,12 @@ const KitDiagramInner: FC = () => {
         else if (kind === "folder") isSelected = selection?.folders?.includes(id) ?? false;
         else if (kind === "author") isSelected = selection?.authors?.includes(id) ?? false;
 
+        const frame = getKitDiagramNodeFrameForKind(node.data.kind);
         return {
           ...node,
           selected: isSelected,
-          style: { ...node.style, width: node.width ?? getKitDiagramNodeFrameForKind(node.data.kind).width, height: node.height ?? getKitDiagramNodeFrameForKind(node.data.kind).height },
+          width: node.width ?? frame.width,
+          height: node.height ?? frame.height,
         };
       });
 
@@ -14605,6 +14614,43 @@ const KitDiagramInner: FC = () => {
   const onBoardNodeChange = useCallback(() => {
     draggingNodeIdRef.current = null;
   }, []);
+
+  const onBoardSelect = useCallback(
+    (snapshot: BoardSelectionSnapshot) => {
+      if (snapshot.ids.length === 0) {
+        kitCommands.deselectAll?.();
+        return;
+      }
+      actor.send({ type: "KIT.SET_SELECTION", kitId, selection: sketchpadKitBoardSelectionToKitSelection(snapshot) });
+    },
+    [actor, kitCommands, kitId],
+  );
+
+  const onBoardHover = useCallback(
+    (payload: BoardHoverPayload) => {
+      if (!payload.id) {
+        clearHover?.();
+        return;
+      }
+      const separatorIndex = payload.id.indexOf(":");
+      if (separatorIndex <= 0) {
+        clearHover?.();
+        return;
+      }
+      const kind = payload.id.slice(0, separatorIndex);
+      const id = payload.id.slice(separatorIndex + 1);
+      if (!setHover) return;
+      if (kind === "type") setHover({ type: id });
+      else if (kind === "design") setHover({ design: id });
+      else if (kind === "quality") setHover({ quality: id });
+      else if (kind === "port") setHover({ port: id });
+      else if (kind === "file") setHover({ file: id });
+      else if (kind === "folder") setHover({ folder: id });
+      else if (kind === "author") setHover({ author: id });
+      else clearHover?.();
+    },
+    [clearHover, setHover],
+  );
 
   const kitBoardBindings = useMemo(
     () =>
@@ -27021,16 +27067,17 @@ export function useDesignAppDeselectAll(): ActionHookResult<[]> {
  *MUST return a callback that adds all piece and connection IDs to selection.
  **/
 export function useDesignAppSelectAll(): ActionHookResult<[]> {
-  const design = useDesign() as Design | null;
+  const pieces = useDesignPieces();
+  const connections = useDesignConnections();
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
-    if (!canSetSelection || !setSelection || !design) return undefined;
+    if (!canSetSelection || !setSelection) return undefined;
     return () => {
-      const allPieces = design.pieces?.map((p) => p.id) ?? [];
-      const allConnections = design.connections?.map((c) => c.id) ?? [];
+      const allPieces = pieces.map((p) => p.id);
+      const allConnections = connections.map((c) => c.id);
       setSelection({ pieces: allPieces, connections: allConnections });
     };
-  }, [design, setSelection, canSetSelection]);
+  }, [pieces, connections, setSelection, canSetSelection]);
   return [action, canSetSelection];
 }
 
@@ -28211,7 +28258,7 @@ export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
-  const design = useDesign() as Design | undefined;
+  const designPieces = useDesignPieces();
   const [types] = useTypes();
   const [tags] = useTagsFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
@@ -28219,15 +28266,14 @@ export const DesignAppFooter: FC = () => {
   const [removeRepresentationTagFromAllTypes] = useDesignAppRemoveRepresentationTagFromAllTypes();
 
   const designTypeIds = useMemo(() => {
-    if (!design?.pieces) return [];
+    if (designPieces.length === 0) return [];
     const typeIds = new Set<string>();
-    design.pieces.forEach((piece) => {
-      if (piece.type?.id) {
-        typeIds.add(piece.type.id);
-      }
-    });
+    for (const piece of designPieces) {
+      const typeId = (piece as { type?: { id?: string } }).type?.id;
+      if (typeId) typeIds.add(typeId);
+    }
     return Array.from(typeIds);
-  }, [design?.pieces]);
+  }, [designPieces]);
 
   const { allRepresentationTagIds, tagNameMap } = useMemo(() => {
     if (!types || designTypeIds.length === 0) return { allRepresentationTagIds: [], tagNameMap: new Map<string, string>() };

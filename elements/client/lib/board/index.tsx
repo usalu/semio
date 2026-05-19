@@ -84,10 +84,11 @@ export {
   BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
   DEFAULT_BOARD_GRID_FACTOR,
   DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  layoutBoardFixtureForceGraph,
   normalizeBoardPreselectProp,
   normalizeBoardSelectionProp,
 } from "./index";
-export type { BoardDrawLodKind, BoardLodZoomThresholds, BoardPreselectSnapshot } from "./index";
+export type { BoardDrawLodKind, BoardForceGraphLayoutOptions, BoardLodZoomThresholds, BoardPreselectSnapshot } from "./index";
 export { BOARD_LOD_MODE_AUTOMATIC, boardLodAutomaticSelectLabel, isBoardDrawLodKind } from "./index";
 export type { BoardLodModeKind } from "./index";
 

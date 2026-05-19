@@ -124,7 +124,7 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/board/index.tsx") },
+        { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/board/index.ts") },
         { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
         { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },
         { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/react/index.tsx") },

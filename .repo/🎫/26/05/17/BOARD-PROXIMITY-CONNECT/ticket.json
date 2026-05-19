@@ -1,7 +1,7 @@
 {
   "title": "Board Proximity Connect",
   "emoji": "🔌",
-  "status": "closed",
+  "status": "open",
   "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
   "summary": "BoardHost now refuses link gestures that would use a handle that already has an incident edge: try_commit_link_edge guards both endpoints, nearest_link_snap_handle_world skips busy targets, LinkTargetNode completion ignores busy handles, and LinkAtSourceHandle does not start from a busy handle. Added Rust scene helpers and host_tests for busy target/source/indirect. Fixed elements_board Cargo.toml missing base64 for tests. Vitest: use detail-band camera zoom for WASM link-drag tests (snap requires detail LOD), align nodeCreate expectation with graph observation, BoardCanvas tests pass BOARD_LOD_DETAIL_MIN_ZOOM via camera prop.",
   "goal": "🎯r2602",
@@ -9,6 +9,7 @@
     "⚪e80ef43ea64e47c5a4b9b52a1b31e67b",
     "⚪eeafb1b5e6ad42759a79bb86d7eacd26",
     "⚪e1ca0b9d3a2543709d2f34d0ff0f5773",
-    "⚪12a36ed49c8146fd9d32a1b2c48b1bdf"
+    "⚪12a36ed49c8146fd9d32a1b2c48b1bdf",
+    "⚪b3ae5bdeb20543aa953c4cc825c64283"
   ]
 }

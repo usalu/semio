@@ -934,7 +934,8 @@ export function ConnectionUnderActiveDesignProvider(props: Readonly<{ id: string
 }
 // #endregion 🔖EntityContextHelpers
 
-function useResolvedDesign(id?: ID): Design | null {
+/** @emoji 🧩 Active {@link Design} entity from {@link DesignContext} + {@link StoreHandleContext}. */
+export function useResolvedDesign(id?: ID): Design | null {
   return resolveDesign(id);
 }
 

@@ -1,0 +1,13 @@
+{
+  "title": "Board Drag Keeps Selected Style",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When dragging a selected board piece at detail LOD, the node suddenly shows hover/highlight style instead of keeping selected primary color. Fix style resolution so selected elements keep selected chrome during drag.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1460"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪4b75fd9680954fddbd038a1d42d5d4e1"
+  ]
+}

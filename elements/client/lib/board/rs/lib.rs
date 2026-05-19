@@ -2829,6 +2829,8 @@ mod board_host {
 			offset: Vec2,
 			primary_id: String,
 			start_positions: BTreeMap<String, (f64, f64)>,
+			/// @emoji 🧲 Preview/commit pair while an unconnected node overlaps a compatible target (`proximityConnect` on pointer-up).
+			proximity_pair: Option<(String, String)>,
 		},
 		/// @emoji 🖱️ Background down before drag threshold; click-up deselects without preselect or exit chrome.
 		SelectionPending {
@@ -3664,6 +3666,9 @@ mod board_host {
 
 		fn hovered_style_kind(&self, id: &str) -> Option<BoardElementStyleKind> {
 			if self.is_preselect_active() {
+				return None;
+			}
+			if self.selection.contains(id) {
 				return None;
 			}
 			(self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
@@ -4822,6 +4827,10 @@ mod board_host {
 					source_id,
 					target_node_id,
 				} => self.link_drag_wire_curve_world(source_id.as_str(), None, self.node_center_world(target_node_id)?),
+				Interaction::DragNodes {
+					proximity_pair: Some((src, tgt)),
+					..
+				} => self.link_drag_wire_curve_world(src.as_str(), Some(tgt.as_str()), Point::ZERO),
 				_ => None,
 			}
 		}
@@ -6167,6 +6176,75 @@ mod board_host {
 			self.edges.values().any(|e| e.source == handle_id || e.target == handle_id)
 		}
 
+		fn node_has_any_incident_edge(&self, node_id: &str) -> bool {
+			self.handles
+				.values()
+				.filter(|h| h.node_id == node_id)
+				.any(|h| self.handle_has_incident_edge(h.id.as_str()))
+		}
+
+		fn lod_allows_node_proximity_connect(&self) -> bool {
+			matches!(
+				self.current_draw_lod(),
+				BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro
+			)
+		}
+
+		/// @emoji 🧲 While dragging a node with no incident edges, overlapping bounds pick the nearest compatible free handle pair.
+		fn node_drag_proximity_handle_pair(&self, moving_node_id: &str) -> Option<(String, String)> {
+			if !self.lod_allows_node_proximity_connect() {
+				return None;
+			}
+			if !self.node_effectively_visible(moving_node_id) {
+				return None;
+			}
+			if self.node_has_any_incident_edge(moving_node_id) {
+				return None;
+			}
+			let moving = self.nodes.get(moving_node_id)?;
+			let moving_bounds = self.node_world_bounds(moving, 0.0);
+			let mut best: Option<(f64, String, String)> = None;
+			for (target_id, target) in &self.nodes {
+				if target_id == moving_node_id || !self.node_effectively_visible(target_id.as_str()) {
+					continue;
+				}
+				let target_bounds = self.node_world_bounds(target, 0.0);
+				if !world_boxes_overlap(moving_bounds, target_bounds) {
+					continue;
+				}
+				for (src_id, src_h) in &self.handles {
+					if src_h.node_id != moving_node_id
+						|| !self.handle_effectively_visible(src_id.as_str())
+						|| self.handle_has_incident_edge(src_id.as_str())
+					{
+						continue;
+					}
+					let Some(src_pos) = self.handle_world_pos(src_h) else {
+						continue;
+					};
+					for (tgt_id, tgt_h) in &self.handles {
+						if tgt_h.node_id != target_id.as_str()
+							|| !self.handle_effectively_visible(tgt_id.as_str())
+							|| self.handle_has_incident_edge(tgt_id.as_str())
+						{
+							continue;
+						}
+						if !self.handles_link_compatible_for_drag(src_h, tgt_h) {
+							continue;
+						}
+						let Some(tgt_pos) = self.handle_world_pos(tgt_h) else {
+							continue;
+						};
+						let d = distance_between(src_pos, tgt_pos);
+						if best.as_ref().map(|(bd, _, _)| d < *bd).unwrap_or(true) {
+							best = Some((d, src_id.clone(), tgt_id.clone()));
+						}
+					}
+				}
+			}
+			best.map(|(_, s, t)| (s, t))
+		}
+
 		fn node_effectively_visible(&self, node_id: &str) -> bool {
 			self.nodes.get(node_id).is_some_and(|n| n.visible)
 		}
@@ -6378,6 +6456,7 @@ mod board_host {
 							primary_id: nid,
 							offset: world - Point::new(nx, ny),
 							start_positions,
+							proximity_pair: None,
 						};
 						self.set_hovered_id(hit);
 						return;
@@ -6429,6 +6508,7 @@ mod board_host {
 					primary_id,
 					offset,
 					start_positions,
+					..
 				} => {
 					let primary_id = primary_id.clone();
 					let offset = offset;
@@ -6452,10 +6532,16 @@ mod board_host {
 							self.push_event("nodeMove", json!({ "id": id, "x": mx, "y": my }));
 						}
 					}
+					let proximity_pair = if start_positions.len() == 1 {
+						self.node_drag_proximity_handle_pair(primary_id.as_str())
+					} else {
+						None
+					};
 					self.interaction = Interaction::DragNodes {
 						primary_id,
 						offset,
 						start_positions: start_positions_cloned,
+						proximity_pair,
 					};
 				}
 				Interaction::Pan { origin, start_screen } => {
@@ -6621,6 +6707,18 @@ mod board_host {
 				Interaction::LinkAtSourceHandle { .. } => {
 					self.interaction = Interaction::None;
 					self.clear_link_gesture_events();
+					self.update_hover_from_world(world);
+				}
+				Interaction::DragNodes {
+					proximity_pair: Some((src, tgt)),
+					..
+				} => {
+					let _ = self.try_commit_link_edge(&src, &tgt, Some("proximityConnect"));
+					self.interaction = Interaction::None;
+					self.update_hover_from_world(world);
+				}
+				Interaction::DragNodes { .. } => {
+					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
 				}
 				Interaction::SelectionPending {
@@ -6801,6 +6899,7 @@ mod board_host {
 				primary_id,
 				offset: world - Point::new(px0, py0),
 				start_positions,
+				proximity_pair: None,
 			};
 			self.set_hovered_id(None);
 			true
@@ -8997,6 +9096,65 @@ mod host_tests {
 			scale: None,
 		});
 		s
+	}
+
+	#[test]
+	fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#)
+			.unwrap();
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		let _ = h.drain_events_json();
+		let center_b = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_down_screen(center_b.x, center_b.y, 0, false, false);
+		let overlap = h.world_to_screen(Point::new(60.0, 0.0));
+		h.pointer_move_screen(overlap.x, overlap.y, false, false);
+		assert!(
+			matches!(
+				h.interaction,
+				Interaction::DragNodes {
+					proximity_pair: Some(_),
+					..
+				}
+			),
+			"expected proximity preview wire while overlapping compatible nodes"
+		);
+		h.pointer_up_screen(overlap.x, overlap.y, false, false);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"), "expected edgeCreate, got: {ev}");
+		assert!(ev.contains("proximityConnect"), "expected proximityConnect, got: {ev}");
+		assert!(ev.contains("b:h0"));
+		assert!(ev.contains("a:h0"));
+	}
+
+	#[test]
+	fn board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		set_detail_lod(&mut h);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#)
+			.unwrap();
+		h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
+		let _ = h.drain_events_json();
+		let center_b = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_down_screen(center_b.x, center_b.y, 0, false, false);
+		let overlap = h.world_to_screen(Point::new(60.0, 0.0));
+		h.pointer_move_screen(overlap.x, overlap.y, false, false);
+		assert!(
+			matches!(
+				h.interaction,
+				Interaction::DragNodes {
+					proximity_pair: None,
+					..
+				}
+			),
+			"connected moving node must not preview node-drag proximity"
+		);
+		h.pointer_up_screen(overlap.x, overlap.y, false, false);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("proximityConnect"), "expected no proximityConnect, got: {ev}");
 	}
 
 	#[test]
