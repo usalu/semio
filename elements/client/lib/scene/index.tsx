@@ -1142,7 +1142,12 @@ export function SceneObjectStateProvider(props: {
 	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
+	const syncedFixtureRef = useRef(props.fixture);
 	useEffect(() => {
+		if (syncedFixtureRef.current === props.fixture) {
+			return;
+		}
+		syncedFixtureRef.current = props.fixture;
 		dispatch({ type: "init", fixture: props.fixture });
 	}, [props.fixture]);
 	const handleRelocate = useCallback(
@@ -2133,34 +2138,45 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 
 export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const group = useRef<Group>(null);
-	const reg = useRegistry();
+	const {
+		registerObject,
+		selectionMode,
+		setSelectedObjectIds,
+		onSelect,
+		setActiveRelocateObjectId,
+		activeRelocateObjectId,
+		relocateMode,
+		attractionDragActive,
+		attractionIndirectPickAwait,
+		attractionCompatibleAttractedFullIds,
+	} = useRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const [pointerHovered, setPointerHovered] = useState(false);
 
 	useEffect(() => {
-		reg.registerObject(props.id, props.objectKind, group.current);
+		registerObject(props.id, props.objectKind, group.current);
 		return () => {
-			reg.registerObject(props.id, props.objectKind, null);
+			registerObject(props.id, props.objectKind, null);
 		};
-	}, [props.id, props.objectKind, reg]);
+	}, [props.id, props.objectKind, registerObject]);
 
 	useEffect(() => {
 		if (group.current) setTcTarget(group.current);
-	}, [props.selected, props.id, reg.activeRelocateObjectId]);
+	}, [props.selected, props.id, activeRelocateObjectId]);
 
 	const linkHighlighted = useMemo(() => {
 		if (props.highlighted === true) {
 			return true;
 		}
 		const prefix = `${props.id}:`;
-		for (const fullId of reg.attractionCompatibleAttractedFullIds) {
+		for (const fullId of attractionCompatibleAttractedFullIds) {
 			if (fullId.startsWith(prefix)) {
 				return true;
 			}
 		}
 		return false;
-	}, [props.highlighted, props.id, reg.attractionCompatibleAttractedFullIds]);
+	}, [props.highlighted, props.id, attractionCompatibleAttractedFullIds]);
 
 	const meshStyle = useMemo(
 		() =>
@@ -2177,17 +2193,26 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const handlePointerDown = useCallback(
 		(e: { stopPropagation: () => void }) => {
 			e.stopPropagation();
-			if (reg.attractionDragActive || reg.attractionIndirectPickAwait) return;
+			if (attractionDragActive || attractionIndirectPickAwait) return;
 			if (props.disabled) {
 				return;
 			}
-			if (reg.selectionMode === "single") {
-				reg.setSelectedObjectIds([props.id]);
-				reg.onSelect?.({ objectIds: [props.id], vortexIds: [] });
+			if (selectionMode === "single") {
+				setSelectedObjectIds([props.id]);
+				onSelect?.({ objectIds: [props.id], vortexIds: [] });
 			}
-			reg.setActiveRelocateObjectId(props.id);
+			setActiveRelocateObjectId(props.id);
 		},
-		[props.disabled, props.id, reg],
+		[
+			attractionDragActive,
+			attractionIndirectPickAwait,
+			onSelect,
+			props.disabled,
+			props.id,
+			selectionMode,
+			setActiveRelocateObjectId,
+			setSelectedObjectIds,
+		],
 	);
 
 	const handlePointerOver = useCallback(
@@ -2215,9 +2240,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			return;
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
-	}, [poseKey, props.origin, props.orientation, props.scale]);
+	}, [poseKey]);
 	const lodCtx = useLod();
-	const mode = props.relocate ?? reg.relocateMode;
+	const mode = props.relocate ?? relocateMode;
 	const transSnap =
 		mode === "translate" &&
 		lodCtx.gridSnapEnabled &&
@@ -2226,7 +2251,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			? lodCtx.lodGridStepWorld
 			: undefined;
 	const showTc =
-		props.selected && reg.activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
+		props.selected && activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
 
 	return (
 		<>
@@ -3594,7 +3619,6 @@ function PlaySceneCanvas(props: {
 			<PlayTestBridge setSelectedId={props.setSelectedId} />
 			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
 			<SceneAttractions />
-			<SceneAttractionTreeRoots />
 		</Canvas3D>
 	);
 }

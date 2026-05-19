@@ -981,33 +981,39 @@ export function boardLodAutomaticSelectLabel(effectiveTier: BoardDrawLodKind): s
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
 	"edge.highlighted": { stroke: "#34d1bf", strokeWidth: 2 },
-	"edge.selected": { stroke: "#34d1bf", strokeWidth: 3 },
+	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
 	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
 	"handle.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 1.5 },
-	"handle.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
+	"handle.selected": { fill: "#ff344f", stroke: "#ff344f", strokeWidth: 2 },
 	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
 	"node.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
-	"node.selected": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 3 },
+	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
 };
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
 //#region 🎨ElementsUiBoardPaint
+/** @emoji 🎨 Elements semantic tokens for committed selection chrome (primary, not secondary). */
+const BOARD_CSS_COLOR_PRIMARY = "var(--color-primary)";
+const BOARD_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
+/** @emoji 🎨 Secondary-tinted fill for preselect exit / highlight chrome only. */
+const BOARD_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+
 /** @emoji 🎨 Resolves Elements semantic CSS (`elements.css` / `@theme`) for board canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
 const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
 	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
 	edgeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	edgeStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
+	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
 	edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	edgeStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
 	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
 	nodeFillHovered: [192, 205, 197, 255] as [number, number, number, number],
 	nodeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	nodeFillSelected: [196, 228, 213, 255] as [number, number, number, number],
-	nodeStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
+	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
+	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
 	nodeFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
 	nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	nodeFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
@@ -1018,15 +1024,15 @@ const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
 	handleFillHovered: [192, 205, 197, 255] as [number, number, number, number],
 	handleStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	handleFillSelected: [196, 228, 213, 255] as [number, number, number, number],
-	handleStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
+	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
+	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
 	handleFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
 	handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
 	handleFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
 	handleStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	wireStroke: [123, 130, 125, 255] as [number, number, number, number],
 	wireStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-	wireStrokeSelected: [52, 209, 191, 255] as [number, number, number, number],
+	wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
 	wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
 	wireStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
 	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
@@ -1078,19 +1084,24 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	};
 	return {
 		edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
-		"edge.selected": { stroke: c("color", "var(--accent-secondary)", f["edge.selected"].stroke ?? "#34d1bf"), strokeWidth: 3 },
+		"edge.highlighted": {
+			stroke: c("color", "var(--color-secondary)", f["edge.highlighted"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 2,
+		},
+		"edge.selected": { stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
 		handle: {
 			fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
 			stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
+		"handle.highlighted": {
+			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#c4e4d5"),
+			stroke: c("color", "var(--color-secondary)", f["handle.highlighted"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 1.5,
+		},
 		"handle.selected": {
-			fill: c(
-				"backgroundColor",
-				"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-				f["handle.selected"].fill ?? "#c4e4d5",
-			),
-			stroke: c("color", "var(--accent-secondary)", f["handle.selected"].stroke ?? "#34d1bf"),
+			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#ff344f"),
+			stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["handle.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 2,
 		},
 		node: {
@@ -1098,13 +1109,14 @@ function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 			stroke: c("color", "var(--color-element)", f.node.stroke ?? "#001117"),
 			strokeWidth: 2,
 		},
+		"node.highlighted": {
+			fill: c("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#c4e4d5"),
+			stroke: c("color", "var(--color-secondary)", f["node.highlighted"]?.stroke ?? "#34d1bf"),
+			strokeWidth: 2,
+		},
 		"node.selected": {
-			fill: c(
-				"backgroundColor",
-				"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-				f["node.selected"].fill ?? "#c4e4d5",
-			),
-			stroke: c("color", "var(--accent-secondary)", f["node.selected"].stroke ?? "#34d1bf"),
+			fill: c("backgroundColor", BOARD_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
+			stroke: c("color", BOARD_CSS_COLOR_PRIMARY, f["node.selected"].stroke ?? "#ff344f"),
 			strokeWidth: 3,
 		},
 	};
@@ -1129,55 +1141,35 @@ function serializeElementsBoardVelloThemeJson(): string {
 		})(),
 		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
 		edgeStrokeHovered: pc("color", "var(--color-hover-base)", fb.edgeStrokeHovered),
-		edgeStrokeSelected: pc("color", "var(--accent-secondary)", fb.edgeStrokeSelected),
-		edgeStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.edgeStrokeSelectionExit),
+		edgeStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.edgeStrokeSelected),
+		edgeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.edgeStrokeSelectionExit),
 		edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
 		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
 		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
 		nodeFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.nodeFillHovered),
 		nodeStrokeHovered: pc("color", "var(--color-hover-base)", fb.nodeStrokeHovered),
-		nodeFillSelected: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-			fb.nodeFillSelected,
-		),
-		nodeStrokeSelected: pc("color", "var(--accent-secondary)", fb.nodeStrokeSelected),
-		nodeFillSelectionExit: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-			fb.nodeFillSelectionExit,
-		),
-		nodeStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.nodeStrokeSelectionExit),
+		nodeFillSelected: pc("backgroundColor", BOARD_CSS_SELECTED_FILL, fb.nodeFillSelected),
+		nodeStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.nodeStrokeSelected),
+		nodeFillSelectionExit: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit),
+		nodeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.nodeStrokeSelectionExit),
 		nodeFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.nodeFillDisabled),
 		nodeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.nodeStrokeDisabled),
-		indirectHandleFill: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-			fb.indirectHandleFill,
-		),
-		indirectHandleStroke: pc("color", "var(--accent-secondary)", fb.indirectHandleStroke),
+		indirectHandleFill: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.indirectHandleFill),
+		indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
 		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
 		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
 		handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
 		handleStrokeHovered: pc("color", "var(--color-hover-base)", fb.handleStrokeHovered),
-		handleFillSelected: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-			fb.handleFillSelected,
-		),
-		handleStrokeSelected: pc("color", "var(--accent-secondary)", fb.handleStrokeSelected),
-		handleFillSelectionExit: pc(
-			"backgroundColor",
-			"color-mix(in oklab, var(--accent-secondary) 24%, var(--color-panel))",
-			fb.handleFillSelectionExit,
-		),
-		handleStrokeSelectionExit: pc("color", "var(--accent-secondary)", fb.handleStrokeSelectionExit),
+		handleFillSelected: pc("backgroundColor", BOARD_CSS_COLOR_PRIMARY, fb.handleFillSelected),
+		handleStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.handleStrokeSelected),
+		handleFillSelectionExit: pc("backgroundColor", BOARD_CSS_HIGHLIGHTED_FILL, fb.handleFillSelectionExit),
+		handleStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.handleStrokeSelectionExit),
 		handleFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.handleFillDisabled),
 		handleStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.handleStrokeDisabled),
 		wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
 		wireStrokeHovered: pc("color", "var(--color-hover-base)", fb.wireStrokeHovered),
-		wireStrokeSelected: pc("color", "var(--accent-secondary)", fb.wireStrokeSelected),
-		wireStrokeHighlighted: pc("color", "var(--accent-secondary)", fb.wireStrokeHighlighted),
+		wireStrokeSelected: pc("color", BOARD_CSS_COLOR_PRIMARY, fb.wireStrokeSelected),
+		wireStrokeHighlighted: pc("color", "var(--color-secondary)", fb.wireStrokeHighlighted),
 		wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
 		selectionPreviewFill: pc(
 			"backgroundColor",

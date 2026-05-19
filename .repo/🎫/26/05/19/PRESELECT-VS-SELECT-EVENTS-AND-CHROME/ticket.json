@@ -1,9 +1,9 @@
 {
   "title": "Preselect Vs Select Events And Chrome",
   "emoji": "🎯",
-  "status": "open",
+  "status": "closed",
   "description": "Separate preselect (rectangle/lasso drag) from committed select; preselect secondary = anchor minus preselect; preselectCancel on Escape; onPreselect/onPreselectCancel events in TS.",
-  "summary": "Fixed flickering/wrong highlight during rectangle preselect: descriptor JSON now encodes only committed selection (never preview chrome), descriptor sync skips rebuilding selection while preselect is active, style resolution treats all preselect ids as Selected, hover is suppressed during preselect, and descriptor push is deferred while preselect is non-empty.",
+  "summary": "Board selected chrome now consistently uses --color-primary (GPU Vello theme JSON, headless fallbacks, 2D overlay styles). Highlight / selection-exit chrome uses --color-secondary so preselect preview stays primary while deselected anchors stay secondary-tinted. Rust NODE_FILL_SELECTED codegen uses primary token at 0.35 alpha.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪abf30dada2954e86be9d6c35250ed41c",

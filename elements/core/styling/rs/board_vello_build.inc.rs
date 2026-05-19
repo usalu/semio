@@ -89,8 +89,8 @@ const BOARD_PAINT_ROWS: &[BoardPaintRow<'_>] = &[
 	},
 	BoardPaintRow {
 		const_name: "NODE_FILL_SELECTED",
-		src: BoardPaintSrc::Hex { hex: "#f0c8cc" },
-		alpha: 1.0,
+		src: BoardPaintSrc::Token { key: "primary" },
+		alpha: 0.35,
 	},
 	BoardPaintRow {
 		const_name: "NODE_STROKE_SELECTED",

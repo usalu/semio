@@ -17,7 +17,6 @@ import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
 	Canvas3D as Scene,
 	SceneAttractions,
-	SceneAttractionTreeRoots,
 	SceneObjectStateProvider,
 	SceneObjects,
 	parseFixtureV1,
@@ -474,7 +473,6 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 		>
 			<SceneObjects selectedObjectId={props.selectedObjectId} relocate={props.relocateMode} />
 			<SceneAttractions />
-			<SceneAttractionTreeRoots />
 		</Scene>
 	);
 });
