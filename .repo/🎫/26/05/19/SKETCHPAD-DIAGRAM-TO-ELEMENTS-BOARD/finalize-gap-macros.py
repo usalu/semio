@@ -136,12 +136,19 @@ relay_tail = f"""    #[macro_export]
 
 """
 
-# rebuild head_mod internals
+# rebuild head_mod internals (keep gap_surface_family_named! block from HEAD)
 start = head_mod.index("    macro_rules! gap_surface_families {")
-end = head_mod.index("    with_gap_surface_existing_relays!();") + len(
-    "    with_gap_surface_existing_relays!();\n"
+named_start = head_mod.index("    gap_surface_family_named!(")
+relay_macro_start = head_mod.index("    macro_rules! with_gap_surface_existing_relay_names {")
+relay_invoke = "    with_gap_surface_existing_relay_names!(gap_surface_existing_relays);"
+end = head_mod.index(relay_invoke) + len(relay_invoke) + 1
+new_mod = (
+    head_mod[:start]
+    + macros
+    + head_mod[named_start:relay_macro_start]
+    + relay_tail
+    + head_mod[end:]
 )
-new_mod = head_mod[:start] + macros + relay_tail + head_mod[end:]
 
 # replace in current file
 cur_path = root / "semio/client/lib/rs/lib.rs"

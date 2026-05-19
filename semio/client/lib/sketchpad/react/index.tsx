@@ -83,8 +83,7 @@ import {
   useKitCommand,
   useKitStoredFileUrls as useFileUrls,
   useIsInActiveKitTab,
-  useJsStore,
-  useStoreCommand,
+  useStoreOptional,
   useKitAlternatives,
   useKitAlternativeSelection,
   useKitCommandEngineExplicitOrigin,
@@ -14177,7 +14176,7 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     const shape: "circle" | "rectangle" = strategy.id === "circle" ? "circle" : "rectangle";
     const center = sketchpadKitBoardNodeCenter(node);
     const handles = SKETCHPAD_KIT_BOARD_HANDLE_SIDES.map((side) => ({
-      id: sketchpadKitBoardHandleId(node.id, side),
+      id: topologyBoardCompoundId(node.id, side),
       angle: sketchpadKitBoardHandleAngle(side, shape),
       handleKind: `semio.kit.${kind}`,
       radius: 4,
@@ -14223,14 +14222,14 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
       );
       return {
         id: edge.id,
-        source: sketchpadKitBoardHandleId(edge.source, anchors.source.localPoint.side),
-        target: sketchpadKitBoardHandleId(edge.target, anchors.target.localPoint.side),
+        source: topologyBoardCompoundId(edge.source, anchors.source.localPoint.side),
+        target: topologyBoardCompoundId(edge.target, anchors.target.localPoint.side),
       };
     })
     .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
   return {
     schema: "elements.board.fixture/v1",
-    camera: sketchpadKitBoardCameraFromNodes(nodes),
+    camera: topologyBoardCameraFromCenters(nodes.map((node) => sketchpadKitBoardNodeCenter(node))),
     nodes: boardNodes,
     edges: boardEdges,
   };
@@ -16192,8 +16191,7 @@ const KitAlternativeFooterSelector: FC = () => {
   const appType = useAppType();
   const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
   const alternatives = useKitAlternatives();
-  const store = useJsStore();
-  const storeCmd = useStoreCommand();
+  const store = useStoreOptional();
   const newAltInputRef = useRef<HTMLInputElement>(null);
   const [creatingAlt, setCreatingAlt] = useState(false);
   const [unsavedCount, setUnsavedCount] = useState(0);
@@ -16206,7 +16204,7 @@ const KitAlternativeFooterSelector: FC = () => {
     if (store == null || name === "" || creatingAlt) return;
     setCreatingAlt(true);
     try {
-      const result = await storeCmd.run.startAlternative(name);
+      const result = await store.startAlternative(name);
       if (!result.ok) return;
       const alts = await store.wip().alternatives();
       let match = alts.at(-1) ?? null;
@@ -16223,7 +16221,7 @@ const KitAlternativeFooterSelector: FC = () => {
     } finally {
       setCreatingAlt(false);
     }
-  }, [store, storeCmd.run, creatingAlt, setSelectedAlternativeId]);
+  }, [store, creatingAlt, setSelectedAlternativeId]);
 
   useEffect(() => {
     if (store == null || selectedAlternativeId == null) {
@@ -16278,13 +16276,13 @@ const KitAlternativeFooterSelector: FC = () => {
             ref={newAltInputRef}
             className="h-8 min-w-[7rem] max-w-[12rem] text-xs"
             placeholder="Branch name"
-            disabled={store == null}
+            disabled={!kitClient}
             aria-label="New alternative name"
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") void handleCreateAlternative();
             }}
           />
-          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={store == null || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
+          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={!kitClient || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
             +
           </Button>
           <Input className="h-8 min-w-[6rem] max-w-[9rem] text-xs" placeholder="hub user" value={hubUser} onChange={(e) => setHubUser(e.target.value)} aria-label="Hub username" />
@@ -16295,9 +16293,15 @@ const KitAlternativeFooterSelector: FC = () => {
             variant="ghost"
             size="sm"
             className="h-8 px-2 text-xs"
-            disabled={store == null}
+            disabled={!kitClient}
             onClick={() => {
-              void store!.session.login(hubUser, hubPass, hubUrl || undefined).catch((e) => console.warn("[DEBUG] login failed", e));
+              const ext = kitClient as unknown as Record<string, unknown>;
+              const fn = ext["login"];
+              if (typeof fn !== "function") {
+                console.warn("[DEBUG] kitClient has no login(); wire Session.login after js builder lands");
+                return;
+              }
+              void Promise.resolve((fn as (u: string, p: string, h?: string) => Promise<unknown>)(hubUser, hubPass, hubUrl || undefined)).catch((e) => console.warn("[DEBUG] login failed", e));
             }}
           >
             login
@@ -16324,7 +16328,7 @@ const KitAlternativeFooterSelector: FC = () => {
       ),
     });
     return () => removeFooterItem("semio.sketchpad.footer.alternative");
-  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId, kitClient, creatingAlt, handleCreateAlternative, unsavedCount, hubUser, hubPass, hubUrl]);
+  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId, store, creatingAlt, handleCreateAlternative, unsavedCount, hubUser, hubPass, hubUrl]);
 
   return null;
 };
@@ -34044,27 +34048,19 @@ const readSketchpadEntityId = (value: unknown): string | undefined => {
 };
 
 const parseSketchpadTopologyBoardHandleId = (value: string): { pieceId: string; connectorId: string } | null => {
-  const separatorIndex = value.indexOf("::");
-  if (separatorIndex <= 0 || separatorIndex >= value.length - 2) return null;
-  return {
-    pieceId: value.slice(0, separatorIndex),
-    connectorId: value.slice(separatorIndex + 2),
-  };
+  const parsed = topologyParseBoardCompoundId(value);
+  if (!parsed) return null;
+  return { pieceId: parsed.left, connectorId: parsed.right };
 };
 
 const parseSketchpadTopologySceneFullId = (value: string): { pieceId: string; connectorId: string } | null => {
-  const separatorIndex = value.indexOf(":");
-  if (separatorIndex <= 0 || separatorIndex >= value.length - 1) return null;
-  return {
-    pieceId: value.slice(0, separatorIndex),
-    connectorId: value.slice(separatorIndex + 1),
-  };
+  const parsed = topologyParseBoardCompoundId(value, ":");
+  if (!parsed) return null;
+  return { pieceId: parsed.left, connectorId: parsed.right };
 };
 
-const sketchpadTopologyConnectorAngle = (index: number, total: number): number => -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
-
 const sketchpadTopologyBoardHandleOffset = (index: number, total: number): { x: number; y: number } => {
-  const angle = sketchpadTopologyConnectorAngle(index, total);
+  const angle = topologyBoardConnectorAngle(index, total);
   const radius = Math.max(SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH, SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT) * 0.5;
   return {
     x: Math.cos(angle) * radius,
@@ -34073,7 +34069,7 @@ const sketchpadTopologyBoardHandleOffset = (index: number, total: number): { x: 
 };
 
 const sketchpadTopologySceneVortexOffset = (index: number, total: number): [number, number, number] => {
-  const angle = sketchpadTopologyConnectorAngle(index, total);
+  const angle = topologyBoardConnectorAngle(index, total);
   return [Math.cos(angle) * 0.75, 0, Math.sin(angle) * 0.75];
 };
 
@@ -34192,8 +34188,8 @@ const sketchpadTopologyBuildBoardFixture = (args: {
           root: !args.placementByPiece.get(piece.id)?.parentPieceId,
           nodeKind: readSketchpadEntityId(piece.design) ? "semio.design" : "semio.type",
           handles: connectors.map((connector, connectorIndex) => ({
-            id: sketchpadTopologyBoardHandleId(piece.id, connector.id),
-            angle: sketchpadTopologyConnectorAngle(connectorIndex, connectors.length),
+            id: topologyBoardCompoundId(piece.id, connector.id),
+            angle: topologyBoardConnectorAngle(connectorIndex, connectors.length),
             radius: SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS,
             handleKind: "semio.connector",
           })),
@@ -34211,8 +34207,8 @@ const sketchpadTopologyBuildBoardFixture = (args: {
           if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
           return {
             id: connection.id,
-            source: sketchpadTopologyBoardHandleId(sourcePieceId, sourceConnectorId),
-            target: sketchpadTopologyBoardHandleId(targetPieceId, targetConnectorId),
+            source: topologyBoardCompoundId(sourcePieceId, sourceConnectorId),
+            target: topologyBoardCompoundId(targetPieceId, targetConnectorId),
             edgeKind: "semio.connection",
           };
         })
