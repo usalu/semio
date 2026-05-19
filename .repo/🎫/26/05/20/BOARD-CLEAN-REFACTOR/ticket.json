@@ -3,11 +3,13 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Refactor @elements/board and board integration (topology, sketchpad) to be clean: remove legacy APIs, unify naming, consolidate exports, fix inconsistencies, ensure tests pass.",
+  "summary": "Canonical board fixture node captions use `text` only: removed `label` from `BoardFixtureNodeV1`, `parseBoardFixtureV1` rejects nodes with a `label` key, dropped `fontFamily` parse alias and Rust `label`→`text` fallback. Migrated 180 Nakagin graph nodes in `.storybook/fixtures/nakagin-capsule-tower.board.json` (`label`→`text`). Updated board play caption editor and Storybook. Validation: `cargo test -p elements_board` (76 passed), `bunx vitest run` in `@elements/board` (75 passed).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1459"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪07369d2f766b41299436b2a9acef4991"
+    "⚪07369d2f766b41299436b2a9acef4991",
+    "⚪8ae9df003c504398a1b78b579c802479"
   ]
 }

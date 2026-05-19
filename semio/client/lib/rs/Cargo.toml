@@ -16,6 +16,7 @@ nalgebra = { version = "0.34.1", features = ["serde-serialize"] }
 sha2 = "0.10"
 blake3 = "1.5"
 hex = "0.4"
+instant = { version = "0.1", features = ["wasm-bindgen"] }
 async-broadcast = "0.7"
 futures-lite = "2"
 async-channel = "2"

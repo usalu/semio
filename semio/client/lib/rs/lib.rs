@@ -2,6 +2,7 @@
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::duplicated_attributes)]
 
 //#region 🧬 entity_dsl
 
@@ -21,10 +22,10 @@ macro_rules! register_input_types {
     }};
 }
 
-/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
+/// @emoji 🪢 `_entity_relay_shell!` — shared relay Edge/Connection structs; `from_entities` body is supplied by [`entity_relay!`] or [`entity_relay_sync!`].
 #[macro_export]
-macro_rules! entity_relay_sync {
-    ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
+macro_rules! _entity_relay_shell {
+    ($Conn:ident, $Edge:ident, $Node:ty, $($from_entities:tt)*) => {
         #[derive(Clone, async_graphql::SimpleObject)]
         pub struct $Edge {
             pub cursor: String,
@@ -40,6 +41,16 @@ macro_rules! entity_relay_sync {
         }
 
         impl $Conn {
+            $($from_entities)*
+        }
+    };
+}
+
+/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
+#[macro_export]
+macro_rules! entity_relay_sync {
+    ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
+        $crate::_entity_relay_shell!($Conn, $Edge, $Node,
             pub fn from_entities(entities: Vec<$Node>) -> Self {
                 let mut child_hashes = Vec::with_capacity(entities.len());
                 for r in &entities {
@@ -49,7 +60,7 @@ macro_rules! entity_relay_sync {
                 let edges = entities.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
                 Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
             }
-        }
+        );
     };
 }
 
@@ -69,21 +80,7 @@ macro_rules! entity_full_family {
 #[macro_export]
 macro_rules! entity_relay {
     ($Conn:ident, $Edge:ident, $Node:ty) => {
-        #[derive(Clone, async_graphql::SimpleObject)]
-        pub struct $Edge {
-            pub cursor: String,
-            pub node: $Node,
-        }
-
-        #[derive(Clone, async_graphql::SimpleObject)]
-        pub struct $Conn {
-            pub edges: Vec<$Edge>,
-            #[graphql(name = "pageInfo")]
-            pub page_info: std::sync::Arc<$crate::gql_relay::PageInfo>,
-            pub hash: String,
-        }
-
-        impl $Conn {
+        $crate::_entity_relay_shell!($Conn, $Edge, $Node,
             pub async fn from_entities(entities: Vec<$Node>) -> Self {
                 let mut child_hashes = Vec::with_capacity(entities.len());
                 for r in &entities {
@@ -93,7 +90,7 @@ macro_rules! entity_relay {
                 let edges = entities.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
                 Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
             }
-        }
+        );
     };
 }
 
@@ -248,26 +245,26 @@ macro_rules! meta_arc_titled_entity {
         $(#[$sm])*
         #[derive(Debug)]
         pub struct $N {
-            pub id: crate::id::Id,
-            pub owner: async_lock::RwLock<crate::gql::interfaces::KitGraphParentWeak>,
+            pub id: $crate::id::Id,
+            pub owner: async_lock::RwLock<$crate::gql::interfaces::KitGraphParentWeak>,
             pub name: async_lock::RwLock<String>,
             pub description: async_lock::RwLock<Option<String>>,
             pub icon: async_lock::RwLock<Option<String>>,
             pub order: async_lock::RwLock<Option<i32>>,
-            pub attributes: async_lock::RwLock<Vec<crate::meta::Attribute>>,
+            pub attributes: async_lock::RwLock<Vec<$crate::meta::Attribute>>,
         }
 
         impl $N {
             pub async fn new(
-                owner: crate::gql::interfaces::KitGraphParentWeak,
+                owner: $crate::gql::interfaces::KitGraphParentWeak,
                 name: String,
                 description: Option<String>,
                 icon: Option<String>,
                 order: Option<i32>,
-                attributes: Vec<crate::meta::Attribute>,
+                attributes: Vec<$crate::meta::Attribute>,
             ) -> std::sync::Arc<Self> {
                 std::sync::Arc::new(Self {
-                    id: crate::id::Id::new().await,
+                    id: $crate::id::Id::new().await,
                     owner: async_lock::RwLock::new(owner),
                     name: async_lock::RwLock::new(name),
                     description: async_lock::RwLock::new(description),
@@ -278,13 +275,13 @@ macro_rules! meta_arc_titled_entity {
             }
 
             pub fn new_with_id(
-                owner: crate::gql::interfaces::KitGraphParentWeak,
-                id: crate::id::Id,
+                owner: $crate::gql::interfaces::KitGraphParentWeak,
+                id: $crate::id::Id,
                 name: String,
                 description: Option<String>,
                 icon: Option<String>,
                 order: Option<i32>,
-                attributes: Vec<crate::meta::Attribute>,
+                attributes: Vec<$crate::meta::Attribute>,
             ) -> std::sync::Arc<Self> {
                 std::sync::Arc::new(Self {
                     id,
@@ -303,17 +300,17 @@ macro_rules! meta_arc_titled_entity {
                 let ic = self.icon.read().await.clone().unwrap_or_default();
                 let ord = self.order.read().await.map(|o| o.to_string()).unwrap_or_default();
                 let attrs = self.attributes.read().await;
-                let mut child_hashes: Vec<String> = attrs.iter().map(crate::meta::Attribute::compute_entity_hash).collect();
+                let mut child_hashes: Vec<String> = attrs.iter().map($crate::meta::Attribute::compute_entity_hash).collect();
                 child_hashes.sort();
-                crate::hash::merkle_node_str(&[$tag, self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
+                $crate::hash::merkle_node_str(&[$tag, self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
             }
         }
 
         impl Default for $N {
             fn default() -> Self {
                 Self {
-                    id: crate::id::Id::default(),
-                    owner: async_lock::RwLock::new(crate::gql::interfaces::KitGraphParentWeak::default()),
+                    id: $crate::id::Id::default(),
+                    owner: async_lock::RwLock::new($crate::gql::interfaces::KitGraphParentWeak::default()),
                     name: async_lock::RwLock::new(String::new()),
                     description: async_lock::RwLock::new(None),
                     icon: async_lock::RwLock::new(None),
@@ -332,32 +329,32 @@ macro_rules! meta_quality_entity {
         /// @emoji 🏷️ SDL `Quality` entity (benchmarks stay value-typed [`Benchmark`] entities).
         #[derive(Debug)]
         pub struct Quality {
-            pub id: crate::id::Id,
-            pub owner: async_lock::RwLock<crate::gql::interfaces::KitGraphParentWeak>,
+            pub id: $crate::id::Id,
+            pub owner: async_lock::RwLock<$crate::gql::interfaces::KitGraphParentWeak>,
             pub key: async_lock::RwLock<String>,
             pub value: async_lock::RwLock<Option<String>>,
             pub unit: async_lock::RwLock<Option<String>>,
             pub definition: async_lock::RwLock<Option<String>>,
             pub description: async_lock::RwLock<Option<String>>,
             pub icon: async_lock::RwLock<Option<String>>,
-            pub benchmarks: async_lock::RwLock<Vec<crate::meta::Benchmark>>,
-            pub attributes: async_lock::RwLock<Vec<crate::meta::Attribute>>,
+            pub benchmarks: async_lock::RwLock<Vec<$crate::meta::Benchmark>>,
+            pub attributes: async_lock::RwLock<Vec<$crate::meta::Attribute>>,
         }
 
         impl Quality {
             pub async fn new(
-                owner: crate::gql::interfaces::KitGraphParentWeak,
+                owner: $crate::gql::interfaces::KitGraphParentWeak,
                 key: String,
                 value: Option<String>,
                 unit: Option<String>,
                 definition: Option<String>,
                 description: Option<String>,
                 icon: Option<String>,
-                benchmarks: Vec<crate::meta::Benchmark>,
-                attributes: Vec<crate::meta::Attribute>,
+                benchmarks: Vec<$crate::meta::Benchmark>,
+                attributes: Vec<$crate::meta::Attribute>,
             ) -> std::sync::Arc<Self> {
                 std::sync::Arc::new(Self {
-                    id: crate::id::Id::new().await,
+                    id: $crate::id::Id::new().await,
                     owner: async_lock::RwLock::new(owner),
                     key: async_lock::RwLock::new(key),
                     value: async_lock::RwLock::new(value),
@@ -371,16 +368,16 @@ macro_rules! meta_quality_entity {
             }
 
             pub fn new_with_id(
-                owner: crate::gql::interfaces::KitGraphParentWeak,
-                id: crate::id::Id,
+                owner: $crate::gql::interfaces::KitGraphParentWeak,
+                id: $crate::id::Id,
                 key: String,
                 value: Option<String>,
                 unit: Option<String>,
                 definition: Option<String>,
                 description: Option<String>,
                 icon: Option<String>,
-                benchmarks: Vec<crate::meta::Benchmark>,
-                attributes: Vec<crate::meta::Attribute>,
+                benchmarks: Vec<$crate::meta::Benchmark>,
+                attributes: Vec<$crate::meta::Attribute>,
             ) -> std::sync::Arc<Self> {
                 std::sync::Arc::new(Self {
                     id,
@@ -405,18 +402,18 @@ macro_rules! meta_quality_entity {
                 let ic = self.icon.read().await.clone().unwrap_or_default();
                 let bm = self.benchmarks.read().await;
                 let av = self.attributes.read().await;
-                let mut child_hashes: Vec<String> = bm.iter().map(crate::meta::Benchmark::compute_entity_hash).collect();
-                child_hashes.extend(av.iter().map(crate::meta::Attribute::compute_entity_hash));
+                let mut child_hashes: Vec<String> = bm.iter().map($crate::meta::Benchmark::compute_entity_hash).collect();
+                child_hashes.extend(av.iter().map($crate::meta::Attribute::compute_entity_hash));
                 child_hashes.sort();
-                crate::hash::merkle_node_str(&["Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
+                $crate::hash::merkle_node_str(&["Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
             }
         }
 
         impl Default for Quality {
             fn default() -> Self {
                 Self {
-                    id: crate::id::Id::default(),
-                    owner: async_lock::RwLock::new(crate::gql::interfaces::KitGraphParentWeak::default()),
+                    id: $crate::id::Id::default(),
+                    owner: async_lock::RwLock::new($crate::gql::interfaces::KitGraphParentWeak::default()),
                     key: async_lock::RwLock::new(String::new()),
                     value: async_lock::RwLock::new(None),
                     unit: async_lock::RwLock::new(None),
@@ -4752,6 +4749,9 @@ pub mod vcs {
         pub forwards: RwLock<Vec<operation::Operation>>,
         /// @emoji 📜 Backward companion operations for explicit undo/redo (same pipeline).
         pub backwards: RwLock<Vec<operation::Operation>>,
+        /// @emoji 🆔 Stable operation-log ids aligned with bundle `OperationStep.id` (see `forwardOperationRecordIds`).
+        pub forward_record_ids: RwLock<Vec<Id>>,
+        pub backward_record_ids: RwLock<Vec<Id>>,
     }
 
     /// 🔗 Weak owner matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
@@ -4773,6 +4773,8 @@ pub mod vcs {
                 origin: RwLock::new(String::new()),
                 forwards: RwLock::new(Vec::new()),
                 backwards: RwLock::new(Vec::new()),
+                forward_record_ids: RwLock::new(Vec::new()),
+                backward_record_ids: RwLock::new(Vec::new()),
             }
         }
     }
@@ -4831,16 +4833,16 @@ pub mod vcs {
             self.origin.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+        /// @emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
         #[graphql(name = "forwardOperationRecordIds")]
         pub async fn forward_operation_record_ids(&self) -> Vec<Id> {
-            Vec::new()
+            self.forward_record_ids.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered  operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+        /// @emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
         #[graphql(name = "backwardOperationRecordIds")]
         pub async fn backward_operation_record_ids(&self) -> Vec<Id> {
-            Vec::new()
+            self.backward_record_ids.read().await.clone()
         }
     }
 
@@ -5606,7 +5608,12 @@ pub mod vcs {
             };
             *change.owner.write().await = change_owner;
             change.forwards.write().await.push(forward);
+            change.forward_record_ids.write().await.push(Id::new().await);
+            let backward_count = backwards.len();
             change.backwards.write().await.extend(backwards);
+            for _ in 0..backward_count {
+                change.backward_record_ids.write().await.push(Id::new().await);
+            }
             if ws == self.id {
                 self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
@@ -9582,16 +9589,19 @@ pub mod kit_backbone {
             let mut forward_items: Vec<OperationStep> = Vec::new();
             let mut backward_items: Vec<OperationStep> = Vec::new();
             let forwards_list = ch.forwards.read().await.clone();
+            let forward_ids = ch.forward_record_ids.read().await.clone();
             for (fi, op) in forwards_list.iter().enumerate() {
                 let kit_cursor = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, fi).await;
                 let kit_diff = match op.to_diff(&kit_cursor).await {
                     Ok(d) => Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0)),
                     Err(_) => None,
                 };
-                forward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
+                let step_id = forward_ids.get(fi).cloned().unwrap_or_else(Id::new_sync).as_str().to_string();
+                forward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
             let kit_bw = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, forwards_list.len()).await;
-            for op in ch.backwards.read().await.iter() {
+            let backward_ids = ch.backward_record_ids.read().await.clone();
+            for (bi, op) in ch.backwards.read().await.iter().enumerate() {
                 let kit_diff = match op.to_diff(&kit_bw).await {
                     Ok(d) => {
                         let w = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0));
@@ -9600,7 +9610,8 @@ pub mod kit_backbone {
                     }
                     Err(_) => None,
                 };
-                backward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
+                let step_id = backward_ids.get(bi).cloned().unwrap_or_else(Id::new_sync).as_str().to_string();
+                backward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
             VersionEdit {
                 id: ch.id.as_str().to_string(),
@@ -10470,29 +10481,28 @@ pub mod worker {
 
             use crate::event::Event;
             use crate::operation::CommandResponse;
+            use instant::Instant;
 
             let request_id = cmd.request_id().clone();
-            let wait = async {
-                let mut events = self.bus.subscribe();
-                self.wip.send(cmd).await;
-                loop {
-                    if let Ok(ev) = events.try_recv() {
-                        match ev {
-                            Event::CommandSucceeded(r) if r.request_id == request_id => {
-                                return CommandResponse::ok_request(request_id).await;
-                            }
-                            Event::OperationFailed(e) if e.request_id.as_deref() == Some(request_id.as_str()) => {
-                                return CommandResponse::fail(e).await;
-                            }
-                            _ => {}
-                        }
-                    }
-                    futures_lite::future::yield_now().await;
+            let mut events = self.bus.subscribe();
+            self.wip.send(cmd).await;
+            let deadline = Instant::now() + Duration::from_secs(30);
+            loop {
+                if Instant::now() >= deadline {
+                    return CommandResponse::fail_msg("command timed out").await;
                 }
-            };
-            match tokio::time::timeout(Duration::from_secs(30), wait).await {
-                Ok(response) => response,
-                Err(_) => CommandResponse::fail_msg("command timed out").await,
+                if let Ok(ev) = events.try_recv() {
+                    match ev {
+                        Event::CommandSucceeded(r) if r.request_id == request_id => {
+                            return CommandResponse::ok_request(request_id).await;
+                        }
+                        Event::OperationFailed(e) if e.request_id.as_deref() == Some(request_id.as_str()) => {
+                            return CommandResponse::fail(e).await;
+                        }
+                        _ => {}
+                    }
+                }
+                futures_lite::future::yield_now().await;
             }
         }
 

@@ -3,12 +3,13 @@
   "emoji": "🦀",
   "status": "closed",
   "description": "Refactor semio/client/lib/rs cleanly: fix naming inconsistencies (double-underscore snake_case), improve module organization, remove unnecessary dead_code/clippy allows where possible, ensure all tests pass.",
-  "summary": "Clean refactor of semio/client/lib/rs: idiomatic snake_case for internal APIs (forward_operation_record_ids, deterministic_diff, wip_operations, append_operation, etc.), removed crate-wide dead_code allow, fixed schema doc links to schema.golden.graphql, repaired dispatch_wip_wait and Response/CommandResponse GraphQL wiring, updated tests for Response subfield selection. cargo test --lib: 40 passed.",
+  "summary": "Continued semio/rs clean refactor: merged entity_relay/entity_relay_sync via _entity_relay_shell; Change now tracks forward_record_ids/backward_record_ids with working GraphQL resolvers and stable bundle serialization; fixed meta_arc_titled_entity and meta_quality_entity to use $crate; allowed clippy duplicated_attributes for async-graphql interfaces. cargo test --lib: 40 passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1457"
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪5c825fe6c690458a9c7925f40db3fbc4"
+    "⚪5c825fe6c690458a9c7925f40db3fbc4",
+    "⚪d7358e7501014450b39ed591db5916af"
   ]
 }

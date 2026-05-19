@@ -363,13 +363,24 @@ export type KitWasmMountProviderProps = Readonly<{
   children: ReactNode;
 }>;
 
+export type KitRuntimeContextValue = Readonly<{ kitId: string; store: KitHostStore; kitClient: unknown | null }>;
+const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
+
 /** @emoji 🔌 Publishes registry `store` + `kitClient` for sketchpad footers and native/WASM kit tabs. */
 export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
   const host = React.useMemo<KitWasmHostState>(
     () => ({ kitTabId: props.kitId ?? "", store: props.store ?? null, kitClient: props.kitClient ?? null }),
     [props.kitId, props.store, props.kitClient],
   );
-  return React.createElement(KitWasmHostContext.Provider, { value: host }, props.children);
+  let branch: ReactNode = props.children;
+  if (props.store != null) {
+    branch = React.createElement(
+      KitRuntimeContext.Provider,
+      { value: { kitId: props.kitId ?? "", store: props.store as KitHostStore, kitClient: props.kitClient ?? null } },
+      branch,
+    );
+  }
+  return React.createElement(KitWasmHostContext.Provider, { value: host }, branch);
 }
 //#endregion 🔌KitWasmHostBridge
 
@@ -1916,10 +1927,17 @@ export type ConnectionDiff = Readonly<Record<string, unknown>>;
 export type PieceDiff = Readonly<Record<string, unknown>>;
 export type TypeDiff = Readonly<Record<string, unknown>>;
 export type KitDiff = Readonly<Record<string, unknown>>;
-export type DiffStatus = string;
+/** @emoji 📊 Transaction/diagram diff status labels for sketchpad chrome. */
+export const DiffStatus = Object.freeze({
+  Unchanged: "unchanged",
+  Added: "added",
+  Removed: "removed",
+  Modified: "modified",
+} as const);
+export type DiffStatus = (typeof DiffStatus)[keyof typeof DiffStatus];
 
 export { getKitPorts } from "../rendering/index";
-export { SEMIO_IN_MEMORY_KIT_URI } from "../../js";
+export { SEMIO_IN_MEMORY_KIT_URI, kitStoreFromKitStoreClient } from "../../js";
 
 /** @emoji 📏 Sketchpad geometric tolerance constant. */
 export const TOLERANCE = 0.001;
@@ -1977,48 +1995,453 @@ export function useKitAlternatives(): readonly KitAlternativeSummary[] {
   return React.useContext(KitAlternativeSelectionContext).alternatives;
 }
 
-/** @emoji 📦 Sketchpad host root (registry bridge WIP; passes children through). */
-export function KitStoreProvider(props: Readonly<{ children: ReactNode; initialKit?: unknown }>): React.ReactElement {
-  void props.initialKit;
-  return React.createElement(React.Fragment, null, props.children);
+//#region 🧾KitHostStore
+const DEFAULT_KIT_SYNC = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
+
+type KitPlain = Kit | Record<string, unknown>;
+
+function isKitPlainDto(k: unknown): k is Record<string, unknown> {
+  return k != null && typeof k === "object" && (Array.isArray((k as { designs?: unknown }).designs) || Array.isArray((k as { types?: unknown }).types));
 }
 
-/** @emoji 🧾 Registry bridge for {@link SketchpadStore} (null until WASM registry is restored). */
-export function getKitRegistryBridge(): null {
+function hostIdStr(x: unknown): string {
+  if (x == null) return "";
+  if (typeof x === "string") return x;
+  if (typeof x === "object" && x !== null && "id" in x) return String((x as { id: unknown }).id);
+  return String(x);
+}
+
+function hostPlainDto(store: KitHostStore): Record<string, unknown> {
+  const k = store.getSnapshot().kit;
+  if (isKitPlainDto(k)) return k;
+  return { id: String((k as Kit).id ?? ""), designs: [], types: [], qualities: [], folders: [], files: [], concepts: [], tags: [], authors: [] };
+}
+
+export type KitHostSnap = Readonly<{ kit: Kit; sync: Readonly<{ status: string; dirty: boolean; readonly: boolean; lastSyncedAt: string | null; error: unknown }> }>;
+
+export type KitHostStore = Readonly<{
+  getSnapshot: () => KitHostSnap;
+  subscribe: (onChange: () => void) => () => void;
+  replace: (kit: KitPlain) => void;
+  readonly name?: string;
+}>;
+
+/** @emoji 🧠 In-memory kit host for sketchpad temporary kits and imports. */
+export class InMemoryKitStore implements KitHostStore {
+  private readonly listeners = new Set<() => void>();
+  private _kit: KitPlain;
+  readonly name = "InMemoryKitStore";
+
+  constructor(seed: KitPlain) {
+    this._kit = seed;
+  }
+
+  getSnapshot(): KitHostSnap {
+    return { kit: this._kit as Kit, sync: DEFAULT_KIT_SYNC };
+  }
+
+  subscribe(onChange: () => void): () => void {
+    this.listeners.add(onChange);
+    return () => {
+      this.listeners.delete(onChange);
+    };
+  }
+
+  replace(kit: KitPlain): void {
+    this._kit = kit;
+    for (const l of this.listeners) {
+      try {
+        l();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+export type KitJsonFileAdapter = Readonly<{ read: () => Promise<string>; write: (json: string) => Promise<void> }>;
+export type KitFolderAdapter = Readonly<Record<string, unknown>>;
+
+export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promise<KitHostStore> {
+  let text = "";
+  try {
+    text = await adapter.read();
+  } catch {
+    text = "";
+  }
+  let seed: Record<string, unknown> = { id: `kit-${Date.now()}`, name: "Untitled", designs: [], types: [], qualities: [], folders: [], files: [] };
+  if (text.trim() !== "") {
+    try {
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      if (parsed && typeof parsed === "object") seed = parsed;
+    } catch {
+      /* keep seed */
+    }
+  }
+  const store = new InMemoryKitStore(seed);
+  const persist = async (json: string) => {
+    await adapter.write(json);
+  };
+  return Object.assign(store, { persistBundle: persist, initialBundleJson: text });
+}
+
+export async function createFolderKitStore(_adapter: KitFolderAdapter, initialKit?: unknown): Promise<KitHostStore> {
+  const seed = (initialKit && typeof initialKit === "object" ? initialKit : { id: `kit-${Date.now()}`, name: "Untitled", designs: [], types: [], folders: [], files: [] }) as KitPlain;
+  return new InMemoryKitStore(seed);
+}
+
+/** @emoji 🧾 Legacy string-command entry for DTO host stores; prefer {@link useKitCommand} on GraphQL kits. */
+export async function executeSemioKitCommand(store: KitHostStore, command: string, _origin: string, ...args: unknown[]): Promise<unknown> {
+  if (command === "semio.kit.undo" || command === "semio.kit.redo") {
+    return { ok: false, error: { kind: "NotSupported", message: `${command}: no kit-store client bridge` } };
+  }
+  if (command === "semio.kit.import") {
+    return { ok: false, error: "semio.kit.import: not wired in this build" };
+  }
+  if (command === "semio.kit.export") {
+    return { ok: true };
+  }
+  if (command === "semio.kit.createFolder" && args[0]) {
+    const snap = hostPlainDto(store);
+    const nextFolders = [...((snap.folders as unknown[]) ?? []), args[0] as Record<string, unknown>];
+    store.replace({ ...snap, folders: nextFolders });
+    return { ok: true };
+  }
+  if (command === "semio.kit.moveToFolder" && args.length >= 3) {
+    const entityId = hostIdStr(args[0]);
+    const kind = String(args[1] ?? "");
+    const folderId = hostIdStr(args[2]);
+    const plain = JSON.parse(JSON.stringify(hostPlainDto(store))) as Record<string, unknown>;
+    if (kind === "type") {
+      for (const t of (plain.types as unknown[] | undefined) ?? []) {
+        if (t && typeof t === "object" && (t as { id?: string }).id === entityId) (t as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "design") {
+      for (const d of (plain.designs as unknown[] | undefined) ?? []) {
+        if (d && typeof d === "object" && (d as { id?: string }).id === entityId) (d as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "quality") {
+      for (const q of (plain.qualities as unknown[] | undefined) ?? []) {
+        if (q && typeof q === "object" && (q as { id?: string }).id === entityId) (q as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "file") {
+      for (const f of (plain.files as unknown[] | undefined) ?? []) {
+        if (f && typeof f === "object" && (f as { id?: string }).id === entityId) (f as { folder?: { id: string } }).folder = { id: folderId };
+      }
+    } else if (kind === "folder") {
+      for (const fo of (plain.folders as unknown[] | undefined) ?? []) {
+        if (fo && typeof fo === "object" && (fo as { id?: string }).id === entityId) {
+          (fo as { parent?: { id: string } }).parent = { id: folderId };
+          delete (fo as { path?: string }).path;
+        }
+      }
+    } else {
+      return { ok: false, error: { kind: "InvalidValue", message: `moveToFolder: unknown kind ${kind}` } };
+    }
+    store.replace(plain);
+    return { ok: true };
+  }
+  return { ok: false, error: { kind: "NotSupported", message: `unhandled ${command}` } };
+}
+
+/** @emoji 🧾 Memoized kit string-command engine for legacy sketchpad callers. */
+export function useKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
+  return {
+    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) => executeSemioKitCommand(store, String(command), String(origin ?? ""), ...rest),
+  };
+}
+
+export async function kitHostUndo(_store: KitHostStore): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "kitHostUndo: no kit-store client bridge", field: undefined, entity: undefined } };
+}
+
+export async function kitHostRedo(_store: KitHostStore): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "kitHostRedo: no kit-store client bridge", field: undefined, entity: undefined } };
+}
+
+export async function applyKitHostGraphOperation(_store: KitHostStore, _op: unknown): Promise<SetResult> {
+  return { ok: false, error: { kind: "NotSupported", message: "applyKitHostGraphOperation: no kit-store client bridge", field: undefined, entity: undefined } };
+}
+
+export function attachSketchpadKitReadShell(_kitStore: KitHostStore): void {
+  void _kitStore;
+}
+
+export function getOrCreateKitFileState(_kitId: string, _fileId: string): unknown {
+  void _kitId;
+  void _fileId;
   return null;
 }
+//#endregion 🧾KitHostStore
 
-export type KitHostStore = Readonly<{ getSnapshot: () => KitHostSnap; subscribe: (listener: () => void) => () => void }>;
-export type KitHostSnap = Readonly<{ kit: Kit; sync: Readonly<{ status: string; dirty: boolean; readonly: boolean; lastSyncedAt: number | null; error: unknown }> }>;
+//#region 📦KitRegistry
+export type KitPersistenceInfo = Readonly<{ kind: "temporary" | "file" | "folder" | "remote" }>;
 
-/** @emoji 📌 Live kit host snapshot from WIP {@link Kit} handle (DTO hydration WIP). */
-export function useKitStoreSnapshot(_explicitKitId?: string): KitHostSnap | null {
-  void _explicitKitId;
-  const kit = React.useContext(KitHandleContext);
-  const [tick, setTick] = React.useState(0);
-  React.useEffect(() => {
-    if (kit == null) return;
-    return kit.session.bus.subscribeKind("commandSucceeded", () => setTick((t) => t + 1));
-  }, [kit, tick]);
-  if (kit == null) return null;
-  return {
-    kit,
-    sync: { status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null },
+export type KitRegistryEntry = Readonly<{
+  store: KitHostStore;
+  kitClient: unknown | null;
+  refs: number;
+  persistence: KitPersistenceInfo;
+}>;
+
+export type KitRegistryValue = Readonly<{
+  activeKitId: string | undefined;
+  setActiveKit: (id: string | undefined) => void;
+  open: (id: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => Promise<void>;
+  openTemporary: (initialKit?: unknown) => Promise<string>;
+  openJsonFile: (kitId: string, adapter: KitJsonFileAdapter) => Promise<void>;
+  openFolder: (kitId: string, adapter: KitFolderAdapter, initialKit?: unknown) => Promise<void>;
+  openRemote: (kitId: string, config: Readonly<{ serverUrl: string }>) => Promise<void>;
+  close: (id: string) => void;
+  get: (id: string) => KitRegistryEntry | undefined;
+  list: () => readonly string[];
+  status: (id: string) => "idle" | "loading" | "ready" | "error";
+}>;
+
+const _kitRegistryListListeners = new Set<() => void>();
+
+function emitKitRegistryListChanged(): void {
+  for (const l of _kitRegistryListListeners) {
+    try {
+      l();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** @emoji 📣 Subscribe to registry open/close list changes. */
+export function subscribeKitRegistryListChanged(onChange: () => void): () => void {
+  _kitRegistryListListeners.add(onChange);
+  return () => {
+    _kitRegistryListListeners.delete(onChange);
   };
 }
 
-/** @emoji 📥 Active kit host store when {@link KitHandleContext} is set. */
-export function useKitStore(): KitHostStore | null {
-  const snap = useKitStoreSnapshot();
-  if (snap == null) return null;
-  const store: KitHostStore = {
-    getSnapshot: () => snap,
-    subscribe: (listener) => {
-      const k = snap.kit;
-      return k.session.bus.subscribeKind("commandSucceeded", listener);
+const KitRegistryContext = React.createContext<KitRegistryValue | null>(null);
+
+let _semioKitRegistryBridge: KitRegistryValue | null = null;
+
+/** @emoji 🧾 Registry bridge for {@link SketchpadStore} and other non-hook callers. */
+export function getKitRegistryBridge(): KitRegistryValue | null {
+  return _semioKitRegistryBridge;
+}
+
+/** @emoji 📦 Host registry for open kit tabs (sketchpad). */
+export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
+  const rowsRef = React.useRef(new Map<string, KitRegistryEntry & { unsub?: () => void }>());
+  const loadingRef = React.useRef(new Set<string>());
+  const errRef = React.useRef(new Map<string, Error>());
+  const [registryEpoch, bump] = React.useReducer((x: number) => x + 1, 0);
+  const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
+
+  const open = React.useCallback(
+    async (kitId: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => {
+      const cur = rowsRef.current.get(kitId);
+      if (cur) {
+        (cur as { refs: number }).refs += 1;
+        bump();
+        return;
+      }
+      if (init.store == null) {
+        throw new Error("KitRegistry.open requires init.store");
+      }
+      loadingRef.current.add(kitId);
+      errRef.current.delete(kitId);
+      bump();
+      try {
+        const store = init.store;
+        const kitClient = init.kitClient ?? null;
+        const persistence: KitPersistenceInfo = { kind: store.name === "InMemoryKitStore" ? "temporary" : "file" };
+        rowsRef.current.set(kitId, { store, kitClient, refs: 1, persistence });
+        emitKitRegistryListChanged();
+      } catch (e) {
+        errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
+        throw e;
+      } finally {
+        loadingRef.current.delete(kitId);
+        bump();
+      }
     },
+    [],
+  );
+
+  const close = React.useCallback((kitId: string) => {
+    const row = rowsRef.current.get(kitId);
+    if (!row) return;
+    row.refs -= 1;
+    if (row.refs <= 0) {
+      row.unsub?.();
+      rowsRef.current.delete(kitId);
+      setActiveKitId((cur) => (cur === kitId ? undefined : cur));
+      emitKitRegistryListChanged();
+    }
+    bump();
+  }, []);
+
+  const value = React.useMemo<KitRegistryValue>(
+    () => ({
+      get activeKitId() {
+        return activeKitId;
+      },
+      setActiveKit: setActiveKitId,
+      open,
+      async openTemporary(initialKit) {
+        const k = `kit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        const seed = (initialKit && typeof initialKit === "object" ? initialKit : { id: k, name: "Untitled", designs: [], types: [], qualities: [], folders: [], files: [] }) as KitPlain;
+        await open(k, { store: new InMemoryKitStore(seed) });
+        return k;
+      },
+      async openJsonFile(kitId, adapter) {
+        const store = await createJsonFileKitStore(adapter);
+        await open(kitId, { store });
+      },
+      async openFolder(kitId, adapter, initialKit) {
+        const store = await createFolderKitStore(adapter, initialKit);
+        await open(kitId, { store });
+      },
+      async openRemote(kitId, config) {
+        const seed = { id: kitId, name: config.serverUrl, remote: config.serverUrl, designs: [], types: [] };
+        await open(kitId, { store: new InMemoryKitStore(seed) });
+      },
+      close,
+      get(kitId) {
+        return rowsRef.current.get(kitId);
+      },
+      list() {
+        return Array.from(rowsRef.current.keys());
+      },
+      status(kitId) {
+        if (loadingRef.current.has(kitId)) return "loading";
+        if (errRef.current.has(kitId)) return "error";
+        if (rowsRef.current.has(kitId)) return "ready";
+        return "idle";
+      },
+    }),
+    [activeKitId, open, close, registryEpoch],
+  );
+
+  _semioKitRegistryBridge = value;
+  React.useLayoutEffect(() => {
+    return () => {
+      _semioKitRegistryBridge = null;
+      _kitRegistryListListeners.clear();
+    };
+  }, []);
+
+  return React.createElement(KitRegistryContext.Provider, { value }, props.children);
+}
+
+/** @emoji 📦 Sketchpad host root: {@link KitRegistryProvider}. */
+export function KitStoreProvider(props: Readonly<{ children: ReactNode; initialKit?: unknown }>): React.ReactElement {
+  void props.initialKit;
+  return React.createElement(KitRegistryProvider, null, props.children);
+}
+
+export function useKitRegistry(): KitRegistryValue {
+  const v = React.useContext(KitRegistryContext);
+  if (v == null) throw new Error("useKitRegistry must be used within KitRegistryProvider.");
+  return v;
+}
+
+/** @emoji 📦 Like {@link useKitRegistry} but returns null outside provider. */
+export function useKitRegistrySafe(): KitRegistryValue | null {
+  return React.useContext(KitRegistryContext);
+}
+//#endregion 📦KitRegistry
+
+//#region 🔌KitRuntimeBridge
+function useKitRuntimeSafe(): KitRuntimeContextValue | null {
+  return React.useContext(KitRuntimeContext);
+}
+
+/** @emoji 📌 Live kit host snapshot for registry tab or {@link KitRuntimeContext}. */
+export function useKitStoreSnapshot(explicitKitId?: string): KitHostSnap | null {
+  const runtime = useKitRuntimeSafe();
+  const tabId = useActiveKitTab()?.id;
+  const regActive = getKitRegistryBridge()?.activeKitId;
+  const kitId = explicitKitId != null && explicitKitId !== "" ? explicitKitId : tabId != null && tabId !== "" ? tabId : regActive;
+  const [registryEpoch, setRegistryEpoch] = React.useState(0);
+  React.useEffect(() => subscribeKitRegistryListChanged(() => setRegistryEpoch((n) => n + 1)), []);
+  const reg = getKitRegistryBridge();
+  const entry = kitId != null && reg != null ? reg.get(kitId) : undefined;
+  const store = runtime?.store ?? entry?.store ?? null;
+  const [snap, setSnap] = React.useState<KitHostSnap | null>(null);
+  React.useEffect(() => {
+    if (store == null) {
+      setSnap(null);
+      return;
+    }
+    const pull = () => setSnap(store.getSnapshot());
+    pull();
+    return store.subscribe(pull);
+  }, [store, registryEpoch, runtime?.kitId, kitId]);
+  if (store == null) {
+    const gqlKit = React.useContext(KitHandleContext);
+    if (gqlKit == null) return null;
+    return { kit: gqlKit, sync: DEFAULT_KIT_SYNC };
+  }
+  return snap;
+}
+
+/** @emoji 📥 Active kit host store for the resolved tab / runtime scope. */
+export function useKitStore(): KitHostStore | null {
+  const runtime = useKitRuntimeSafe();
+  if (runtime?.store) return runtime.store;
+  const tabId = useActiveKitTab()?.id;
+  const reg = getKitRegistryBridge();
+  const kitId = tabId != null && tabId !== "" ? tabId : reg?.activeKitId;
+  if (kitId == null || reg == null) return null;
+  return reg.get(kitId)?.store ?? null;
+}
+
+/** @emoji 📂 Open kit ids from {@link KitRegistryProvider}. */
+export function useOpenKits(): readonly string[] {
+  const [registryEpoch, setRegistryEpoch] = React.useState(0);
+  React.useEffect(() => subscribeKitRegistryListChanged(() => setRegistryEpoch((n) => n + 1)), []);
+  const reg = getKitRegistryBridge();
+  return reg != null ? Object.freeze(reg.list()) : EMPTY_IDS;
+}
+
+export function useRegistryHasKit(kitId: string): boolean {
+  return getKitRegistryBridge()?.get(kitId) != null;
+}
+
+export function useRegistryKitPersistenceKind(kitId: string): KitPersistenceInfo["kind"] | null {
+  return getKitRegistryBridge()?.get(kitId)?.persistence.kind ?? null;
+}
+
+export function useKitStoredFileUrls(_explicitKitId?: string): readonly [Readonly<Record<string, string>>] {
+  void _explicitKitId;
+  return [Object.freeze({})];
+}
+
+export function useKitFileUrl(_fileId?: string): string | undefined {
+  void _fileId;
+  return undefined;
+}
+
+export function useKitFileBlobUrl(_fileId?: string): string | undefined {
+  void _fileId;
+  return undefined;
+}
+
+export function createDefaultBrowserSketchpadFileKitStoreFactory(): () => Promise<KitHostStore> {
+  return async () => {
+    throw new Error("createDefaultBrowserSketchpadFileKitStoreFactory: use fileKitStoreFactory prop on Sketchpad");
   };
-  return store;
+}
+
+export function createDefaultBrowserSketchpadRemoteKitStoreFactory(): () => Promise<KitHostStore> {
+  return async () => {
+    throw new Error("createDefaultBrowserSketchpadRemoteKitStoreFactory: use remoteKitStoreFactory prop on Sketchpad");
+  };
+}
+
+export function createVscodeWebviewSketchpadFileKitStoreFactory(_vscodeApi: { postMessage: (msg: unknown) => void }): () => Promise<KitHostStore> {
+  return async () => {
+    throw new Error("createVscodeWebviewSketchpadFileKitStoreFactory: use fileKitStoreFactory prop on Sketchpad");
+  };
 }
 
 /** @emoji 📌 Kit `files` rows for sketchpad panels (`const [files] = useFilesFull()`). */
@@ -2037,122 +2460,6 @@ export function useTagsFull(_explicitKitId?: string): KitFieldBinding<readonly T
 export function useExplodeableDesignNodes(_designId?: string): readonly [readonly string[]] {
   void _designId;
   return [EMPTY_IDS];
-}
-
-/** @emoji 🧾 Legacy string-command entry; prefer entity {@link useKitCommand} / {@link useDesignCommand}. */
-export async function executeSemioKitCommand(_store: unknown, command: string, _origin: string, ..._args: unknown[]): Promise<unknown> {
-  return { ok: false, error: { kind: "NotSupported", message: `executeSemioKitCommand: ${command} requires kit-store WASM bridge.`, field: undefined, entity: undefined } };
-}
-
-/** @emoji 🧾 Memoized kit string-command engine for legacy sketchpad callers. */
-export function useKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
-  return {
-    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) => executeSemioKitCommand(store, String(command), String(origin ?? ""), ...rest),
-  };
-}
-
-export async function kitHostUndo(_store: unknown): Promise<SetResult> {
-  return { ok: false, error: { kind: "NotSupported", message: "kitHostUndo: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
-}
-
-export async function kitHostRedo(_store: unknown): Promise<SetResult> {
-  return { ok: false, error: { kind: "NotSupported", message: "kitHostRedo: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
-}
-
-export async function applyKitHostGraphOperation(_store: unknown, _op: unknown): Promise<SetResult> {
-  return { ok: false, error: { kind: "NotSupported", message: "applyKitHostGraphOperation: requires kit-store WASM bridge.", field: undefined, entity: undefined } };
-}
-
-export function attachSketchpadKitReadShell(_kitStore: unknown): void {
-  void _kitStore;
-}
-
-export function useOpenKits(): readonly string[] {
-  const id = useKit();
-  return id === "" ? EMPTY_IDS : Object.freeze([id]);
-}
-
-export function useKitRegistrySafe(): null {
-  return null;
-}
-
-export function useRegistryHasKit(_kitId: string): boolean {
-  return useKit() !== "";
-}
-
-export function useRegistryKitPersistenceKind(_kitId: string): string | null {
-  void _kitId;
-  return null;
-}
-
-export function useKitStoredFileUrls(_explicitKitId?: string): readonly [Readonly<Record<string, string>>] {
-  void _explicitKitId;
-  return [Object.freeze({})];
-}
-
-export function useKitFileUrl(_fileId?: string): string | undefined {
-  void _fileId;
-  return undefined;
-}
-
-export function useKitFileBlobUrl(_fileId?: string): string | undefined {
-  void _fileId;
-  return undefined;
-}
-
-export function createDefaultBrowserSketchpadFileKitStoreFactory(): () => Promise<unknown> {
-  return async () => {
-    throw new Error("createDefaultBrowserSketchpadFileKitStoreFactory: requires kit-store WASM bridge.");
-  };
-}
-
-export function createDefaultBrowserSketchpadRemoteKitStoreFactory(): () => Promise<unknown> {
-  return async () => {
-    throw new Error("createDefaultBrowserSketchpadRemoteKitStoreFactory: requires kit-store WASM bridge.");
-  };
-}
-
-export function createVscodeWebviewSketchpadFileKitStoreFactory(_vscodeApi: { postMessage: (msg: unknown) => void }): () => Promise<unknown> {
-  return async () => {
-    throw new Error("createVscodeWebviewSketchpadFileKitStoreFactory: requires kit-store WASM bridge.");
-  };
-}
-
-export function createFolderKitStore(_adapter: unknown, _initialKit?: unknown): Promise<unknown> {
-  return Promise.reject(new Error("createFolderKitStore: requires kit-store WASM bridge."));
-}
-
-export function createJsonFileKitStore(_adapter: unknown): Promise<unknown> {
-  return Promise.reject(new Error("createJsonFileKitStore: requires kit-store WASM bridge."));
-}
-
-export function InMemoryKitStore(_kit?: Kit): KitHostStore {
-  const kit = _kit ?? (() => {
-    throw new Error("InMemoryKitStore: kit required.");
-  })();
-  let snap: KitHostSnap = { kit, sync: { status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null } };
-  const listeners = new Set<() => void>();
-  return {
-    getSnapshot: () => snap,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    replace: (next: Kit) => {
-      snap = { kit: next, sync: snap.sync };
-      for (const l of listeners) l();
-    },
-  } as KitHostStore & { replace: (next: Kit) => void };
-}
-
-export function getOrCreateKitFileState(_kitId: string, _fileId: string): unknown {
-  void _kitId;
-  void _fileId;
-  return null;
-}
-
-export function kitStoreFromKitStoreClient(_client: unknown): null {
-  return null;
 }
 
 export type SchemaScopeEntityKind = string;
@@ -2179,6 +2486,8 @@ export function useAttachBackbone(): (input: { dev?: { filePath: string }; local
     [run],
   );
 }
+//#endregion 🔌KitRuntimeBridge
+// #endregion 🎨SketchpadFacade
 // #endregion 🎨SketchpadFacade
 
 // #region 🎛️WriteIndicator

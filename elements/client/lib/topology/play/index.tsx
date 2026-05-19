@@ -14,7 +14,7 @@ import {
 	ToolbarItem,
 	ToolbarZone,
 	UI,
-	createStackLayout,
+	createDefaultLayout,
 	getLevelBgClass,
 	type UIAppConfig,
 	type UIWindowKindDefinition,
@@ -445,8 +445,10 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 					setBoardLodMode,
 					setSceneLodMode,
 				),
-				defaultLayout: createStackLayout(
+				defaultLayout: createDefaultLayout(
 					[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
+					"row",
+					[50, 50],
 					[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
 				),
 			},
@@ -488,7 +490,7 @@ function invalidFixtureApps(): UIAppConfig[] {
 					component: () => <div className="p-4 text-destructive">Invalid board or scene fixture</div>,
 				},
 			],
-			defaultLayout: createStackLayout(["topology-error"], ["Error"]),
+			defaultLayout: createDefaultLayout(["topology-error"], "row", [100], ["Error"]),
 		},
 	];
 }

@@ -21,6 +21,7 @@ Kit domain logic and caching remain in **`semio/rs`**; the merged legacy entity 
 - Any hook that mirrors **live kit state** from the wasm client MUST prefer **`React.useSyncExternalStore`** with the client's `subscribe` + `getSnapshot` pattern (see existing kit view / live-read hooks in `index.tsx`).
 - Hooks MUST treat `KitStoreClient` / `KitStore` as the authority; local React state is view-only (selection, layout), not a second kit graph.
 - **Entity CQRS:** One id hook per entity (`useDesign`, `useType`, …), one field hook per scalar/collection field (`useDesignName`, …), and one command hook per entity (`useDesignCommand`, `useKitCommand`, …) exposing `{ run, status }` with a shared `OperationStatus` across all mutations on that scope.
+- **Collection reads:** `useKitDesigns`, `useKitTypes`, `useDesignPieces`, … return stable **entity handles** (`Design[]`, `Type[]`, …), not bare id strings. Sketchpad tuple bundles (`useTypes`, `useTagsFull`, …) live in `// #region 🎨SketchpadFacade` (legacy kit-store bridge WIP).
 
 ## Mechanisms
 

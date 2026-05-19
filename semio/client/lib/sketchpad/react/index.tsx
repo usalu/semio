@@ -130,10 +130,12 @@ import {
 import type {
   BoardEdgeLinkPayload,
   BoardFixtureV1,
+  BoardForceGraphLayoutOptions,
   BoardHoverPayload,
   BoardSelectionSnapshot,
   CameraState as ElementsBoardCameraState,
 } from "@elements/board";
+import { layoutBoardFixtureForceGraph } from "@elements/board";
 import {
   DEFAULT_DOMAIN,
   PLACEHOLDER_MESH_URL,
@@ -191,9 +193,6 @@ import type {
   NodeTypes,
   ReactFlowInstance,
   RFConnection,
-  Simulation,
-  SimulationLinkDatum,
-  SimulationNodeDatum,
   ThreeEvent,
   UIWindowKindDefinition,
 } from "@semio/ui";
@@ -244,12 +243,6 @@ import {
   FileTree,
   FileTreeNode,
   Footer,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-  forceX,
-  forceY,
   formatDistanceToNow,
   fromCallback,
   Fuse,
@@ -11422,6 +11415,8 @@ const KitCreateActions: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const ks0 = useKitStoreSnapshot();
   const kit = ks0?.kit as Kit | undefined;
+  const kitStore = useKitStore();
+  const getOrigin = useOrigin();
   const { run: kitRun } = useKitCommand();
   const sketchpadCommands = useSketchpadCommands();
   const [setSelectionAction] = useKitAppSetSelection();
@@ -11494,7 +11489,7 @@ const KitCreateActions: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        void kitRun.createConcept(uniqueName); /* folder: stub */
+        if (kitStore) void executeSemioKitCommand(kitStore, "semio.kit.createFolder", getOrigin(), newFolder);
         setKindActive("folders");
         break;
       }
@@ -11717,9 +11712,9 @@ const AppContent: FC = () => {
   const { run: kitRun } = useKitCommand();
   const { run: designRun } = useDesignCommand();
   const { run: typeRun } = useTypeCommand();
-  const moveKitArtifact = async (_kind: string, _artifactId: string, _folderId: string | null) => {
-    console.warn('[DEBUG] moveKitArtifact is not on KitCommand yet');
-    return { ok: true } as const;
+  const moveKitArtifact = async (kind: string, artifactId: string, folderId: string | null) => {
+    if (kitStore == null) return { ok: false } as const;
+    return executeSemioKitCommand(kitStore, "semio.kit.moveToFolder", getOrigin(), artifactId, kind, folderId ?? "") as Promise<{ ok: boolean }>;
   };
   const getOrigin = useOrigin();
   const kitStore = useKitStore();
@@ -13057,7 +13052,7 @@ const AppContent: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        void kitRun.createConcept(uniqueName); /* folder: stub */
+        if (kitStore) void executeSemioKitCommand(kitStore, "semio.kit.createFolder", getOrigin(), newFolder);
         setKind("folders");
         setSelectionAction?.({ folders: [newFolder.id] });
         break;
@@ -13853,7 +13848,7 @@ const KitTableApp: FC = () => {
 // #endregion 🛎️Table
 
 // #region 🧫Diagram
-// Diagram MUST render the interactive force-directed Kit diagram with type and design nodes.
+// Diagram MUST render the kit topology on @elements/board (WASM force layout) with type and design nodes.
 
 /**
  * KitDiagramNode holds the data fields for a KitDiagramNode record.
@@ -13876,295 +13871,48 @@ interface KitDiagramEdge {
   relationship: "part-of" | "reference";
 }
 
-/** KitArtifactNode holds the data fields for a KitArtifactNode record.
- **/
-/**
- **/
-const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
-  const [selection] = useKitAppSelection();
-  const [hover] = useKitAppHover();
-  const strategy = useMemo(() => getKitDiagramShapeStrategy(data.kind), [data.kind]);
-  const frame = useMemo(() => getKitDiagramNodeFrameForKind(data.kind), [data.kind]);
-  const renderPayload = useMemo<KitDiagramShapeRenderPayload>(() => strategy.getRenderPayload(), [strategy]);
+/** @emoji 📍 Kit diagram layout node (board fixture source; not React Flow). */
+interface KitDiagramLayoutNode {
+  id: string;
+  position: { x: number; y: number };
+  width: number;
+  height: number;
+  data: KitDiagramNode;
+  selected: boolean;
+}
 
-  const isHovered = useMemo(() => {
-    if (!hover) return false;
-    if (data.kind === "type") return hover.type === data.id;
-    if (data.kind === "design") return hover.design === data.id;
-    if (data.kind === "quality") return hover.quality === data.id;
-    if (data.kind === "port") return hover.port === data.id;
-    if (data.kind === "file") return hover.file === data.id;
-    if (data.kind === "folder") return hover.folder === data.id;
-    if (data.kind === "author") return hover.author === data.id;
-    return false;
-  }, [hover, data.kind, data.id]);
+/** @emoji 🕸️ Maps kit diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
+const sketchpadKitDiagramForceGraphOptions = (settings: DiagramForceSettings): BoardForceGraphLayoutOptions => ({
+  centerX: 0,
+  centerY: 0,
+  gravity: settings.centerStrength,
+  idealEdgeLength: settings.linkDistance,
+  iterations: 280,
+  randomSeed: 1,
+  repulsionStrength: Math.abs(settings.chargeStrength),
+});
 
-  const isSelected = useMemo(() => {
-    if (!selection) return false;
-    switch (data.kind) {
-      case "type":
-        return selection.types?.includes(data.id) ?? false;
-      case "design":
-        return selection.designs?.includes(data.id) ?? false;
-      case "quality":
-        return selection.qualities?.includes(data.id) ?? false;
-      case "port":
-        return selection.ports?.includes(data.id) ?? false;
-      case "file":
-        return selection.files?.includes(data.id) ?? false;
-      case "folder":
-        return selection.folders?.includes(data.id) ?? false;
-      case "author":
-        return selection.authors?.includes(data.id) ?? false;
-      default:
-        return false;
-    }
-  }, [selection, data.kind, data.id]);
-
-  return (
-    <div
-      data-kit-node="v3"
-      data-kit-node-shape={strategy.id}
-      data-kit-node-kind={data.kind}
-      style={{
-        width: `${frame.width}px`,
-        height: `${frame.height}px`,
-        position: "relative",
-        background: "transparent",
-        border: "0",
-        outline: "0",
-        boxShadow: "none",
-        pointerEvents: "auto",
-        padding: 0,
-        margin: 0,
-      }}
-      title={data.name || data.id.substring(0, 8)}
-    >
-      <Handle type="target" position={Position.Top} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-      <Handle type="target" position={Position.Left} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-      <Handle type="source" position={Position.Right} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-      <TableAvatar
-        id="semio.sketchpad.app.kit.diagram.node.avatar"
-        className={`!absolute !inset-0 ${renderPayload.className ?? ""}`}
-        name={data.name}
-        icon={data.icon}
-        isSelected={isSelected}
-        isHovered={isHovered}
-        style={{ width: `${frame.width}px`, height: `${frame.height}px`, ...(renderPayload.style as React.CSSProperties | undefined) }}
-      />
-    </div>
-  );
-};
-
-/**
- * kitNodeTypes holds the data fields for a kitNodeTypes record.
- **/
-const kitNodeTypes = {
-  artifact: KitArtifactNode,
-};
-
-/**
- * edgeStyle holds the data fields for a edgeStyle record.
- **/
-const edgeStyle = {
-  "part-of": { stroke: "var(--accent-secondary)", strokeWidth: 3 },
-  reference: { stroke: "var(--foreground)", strokeWidth: 1, strokeDasharray: "5,5" },
-};
-
-/**
- * KIT_DIAGRAM_DEBUG holds the data fields for a KIT_DIAGRAM_DEBUG record.
- **/
-const KIT_DIAGRAM_DEBUG = false;
-/**
- * KIT_DIAGRAM_DEBUG_INTERVAL_MS holds the data fields for a KIT_DIAGRAM_DEBUG_INTERVAL_MS record.
- **/
-const KIT_DIAGRAM_DEBUG_INTERVAL_MS = 400;
-
-/**
- * KIT_DIAGRAM_FALLBACK_KIND holds the data fields for a KIT_DIAGRAM_FALLBACK_KIND record.
- **/
-const KIT_DIAGRAM_FALLBACK_KIND: KitDiagramNodeKind = "quality";
-/**
- * KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE holds the data fields for a KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE record.
- **/
-const KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE = Math.max(KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY.frame.width, KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY.frame.height) * 0.55;
-
-/** isKitDiagramNodeKind holds the data fields for a isKitDiagramNodeKind record.
- **/
-/**
- **/
-const isKitDiagramNodeKind = (value: string): value is KitDiagramNodeKind => value === "type" || value === "design" || value === "quality" || value === "port" || value === "file" || value === "folder" || value === "author";
-/**
- * toReactFlowPosition holds the data fields for a toReactFlowPosition record.
- **/
-const toReactFlowPosition = (side: "top" | "right" | "bottom" | "left"): Position => {
-  if (side === "top") return Position.Top;
-  if (side === "right") return Position.Right;
-  if (side === "bottom") return Position.Bottom;
-  return Position.Left;
-};
-/**
- * resolveDiagramNodeKind holds the data fields for a resolveDiagramNodeKind record.
- **/
-const resolveDiagramNodeKind = (node: any): KitDiagramNodeKind => {
-  const dataKind = (node?.data as KitDiagramNode | undefined)?.kind;
-  if (dataKind && isKitDiagramNodeKind(dataKind)) return dataKind;
-  const idKind = typeof node?.id === "string" ? node.id.split(":", 2)[0] : "";
-  if (isKitDiagramNodeKind(idKind)) return idKind;
-  return KIT_DIAGRAM_FALLBACK_KIND;
-};
-/**
- * resolveDiagramNodePosition holds the data fields for a resolveDiagramNodePosition record.
- **/
-const resolveDiagramNodePosition = (node: any): { x: number; y: number } => {
-  const position = node?.internals?.positionAbsolute ?? node?.positionAbsolute ?? node?.position;
-  if (position && Number.isFinite(position.x) && Number.isFinite(position.y)) return position;
-  return { x: 0, y: 0 };
-};
-/**
- * resolveDiagramNodeFrame holds the data fields for a resolveDiagramNodeFrame record.
- **/
-const resolveDiagramNodeFrame = (node: any, kind: KitDiagramNodeKind) => normalizeKitDiagramFrame({ width: node?.width, height: node?.height }, getKitDiagramNodeFrameForKind(kind));
-/**
- * resolveDiagramEdgeAnchors holds the data fields for a resolveDiagramEdgeAnchors record.
- **/
-const resolveDiagramEdgeAnchors = (sourceNode: any, targetNode: any) => {
-  const sourceKind = resolveDiagramNodeKind(sourceNode);
-  const targetKind = resolveDiagramNodeKind(targetNode);
-  const sourcePosition = resolveDiagramNodePosition(sourceNode);
-  const targetPosition = resolveDiagramNodePosition(targetNode);
-  const sourceFrame = resolveDiagramNodeFrame(sourceNode, sourceKind);
-  const targetFrame = resolveDiagramNodeFrame(targetNode, targetKind);
-  const anchors = resolveKitDiagramAnchorPair({ kind: sourceKind, position: sourcePosition, frame: sourceFrame }, { kind: targetKind, position: targetPosition, frame: targetFrame });
-  return {
-    sx: anchors.source.absolutePoint.x,
-    sy: anchors.source.absolutePoint.y,
-    tx: anchors.target.absolutePoint.x,
-    ty: anchors.target.absolutePoint.y,
-    sourcePos: toReactFlowPosition(anchors.source.localPoint.side),
-    targetPos: toReactFlowPosition(anchors.target.localPoint.side),
-  };
-};
-
-/** FloatingEdge holds the data fields for a FloatingEdge record.
- **/
-/**
- **/
-const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, selected, data }) => {
-  const sourceNode = useInternalNode(source);
-  const targetNode = useInternalNode(target);
-  const debugLogRef = useRef(0);
-
-  if (!sourceNode || !targetNode) {
-    return null;
-  }
-
-  const { sx, sy, tx, ty, sourcePos: sPos, targetPos: tPos } = resolveDiagramEdgeAnchors(sourceNode, targetNode);
-
-  const [edgePath] = getBezierPath({
-    sourceX: sx,
-    sourceY: sy,
-    sourcePosition: sPos,
-    targetX: tx,
-    targetY: ty,
-    targetPosition: tPos,
+/** @emoji 📍 Writes WASM layout centers back into kit diagram top-left positions. */
+const sketchpadKitApplyFixturePositionsToLayoutNodes = (
+  nodes: readonly KitDiagramLayoutNode[],
+  fixture: BoardFixtureV1,
+): KitDiagramLayoutNode[] => {
+  const centerById = new Map(fixture.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+  return nodes.map((node) => {
+    const center = centerById.get(node.id);
+    if (!center) return node;
+    const frame = getKitDiagramNodeFrameForKind(node.data.kind);
+    return {
+      ...node,
+      position: { x: center.x - frame.width / 2, y: center.y - frame.height / 2 },
+    };
   });
-
-  const relationship = data?.relationship as "part-of" | "reference";
-  let stroke = relationship === "part-of" ? "var(--accent-secondary)" : "var(--foreground)";
-  let strokeWidth = relationship === "reference" ? 1 : 3;
-  let dasharray = relationship === "reference" ? "5 5" : undefined;
-  let opacity = 1;
-
-  if (selected) {
-    stroke = "var(--active-base)";
-    strokeWidth = Math.max(strokeWidth, 3);
-    dasharray = undefined;
-    opacity = 1;
-  }
-
-  return (
-    <g>
-      <BaseEdge
-        id={id}
-        path={edgePath}
-        style={{
-          ...style,
-          stroke,
-          strokeWidth,
-          strokeDasharray: dasharray,
-          opacity,
-        }}
-        className="transition-colors duration-200"
-      />
-      {KIT_DIAGRAM_DEBUG ? <circle cx={sx} cy={sy} r={3} fill="var(--accent-secondary)" stroke="none" pointerEvents="none" /> : null}
-      {KIT_DIAGRAM_DEBUG ? <circle cx={tx} cy={ty} r={3} fill="var(--foreground)" stroke="none" pointerEvents="none" /> : null}
-    </g>
-  );
 };
-/**
- * FloatingConnectionLine holds the data fields for a FloatingConnectionLine record.
- **/
-const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY, toX, toY, fromNode, toNode, pointer }) => {
-  const { getNodes } = useReactFlow();
-  const fromKind = resolveDiagramNodeKind(fromNode);
-  const fromPosition = resolveDiagramNodePosition(fromNode);
-  const fromFrame = resolveDiagramNodeFrame(fromNode, fromKind);
-  const targetPoint = pointer ?? { x: toX, y: toY };
-  const sourceDirection = kitDiagramVector(kitDiagramToAbsolutePoint(fromPosition, { x: fromFrame.width / 2, y: fromFrame.height / 2 }), targetPoint);
-  const sourceAnchor = getKitDiagramShapeStrategy(fromKind).resolveNearestPoint(sourceDirection, fromFrame);
-  let sourceX = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).x;
-  let sourceY = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).y;
-  let sourcePosition = toReactFlowPosition(sourceAnchor.side);
-  let targetX = toX;
-  let targetY = toY;
-  let targetPosition = toNode ? Position.Top : toY >= fromY ? Position.Bottom : Position.Top;
 
-  if (toNode) {
-    const resolved = resolveDiagramEdgeAnchors(fromNode, toNode);
-    sourceX = resolved.sx;
-    sourceY = resolved.sy;
-    sourcePosition = resolved.sourcePos;
-    targetX = resolved.tx;
-    targetY = resolved.ty;
-    targetPosition = resolved.targetPos;
-  } else {
-    const proximity = getNodes()
-      .filter((node) => node.id !== fromNode.id)
-      .map((node) => {
-        const kind = resolveDiagramNodeKind(node);
-        const position = resolveDiagramNodePosition(node);
-        const frame = resolveDiagramNodeFrame(node, kind);
-        return resolveKitDiagramProximityAnchor(node.id, { kind, position, frame }, targetPoint);
-      })
-      .sort((a, b) => a.distance - b.distance)[0];
-
-    if (proximity && proximity.distance <= KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE) {
-      targetX = proximity.anchor.absolutePoint.x;
-      targetY = proximity.anchor.absolutePoint.y;
-      targetPosition = toReactFlowPosition(proximity.anchor.localPoint.side);
-    } else {
-      targetPosition = toReactFlowPosition(kitDiagramInferSnapSide({ x: toX - fromPosition.x, y: toY - fromPosition.y }, fromFrame, fromFrame));
-    }
-  }
-  const edgePath = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-  })[0];
-
-  return <BaseEdge path={edgePath} style={{ stroke: "var(--active-base)", strokeWidth: 3 }} />;
-};
-/**
- * buildKitDiagramData holds the data fields for a buildKitDiagramData record.
- **/
-const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {
-  const nodes: Node<KitDiagramNode>[] = [];
-  const edges: Edge[] = [];
+/** @emoji 🗺️ Builds kit diagram layout nodes/edges from kit entities (input for board fixture + WASM layout). */
+const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: KitDiagramEdge[] } => {
+  const nodes: KitDiagramLayoutNode[] = [];
+  const edges: KitDiagramEdge[] = [];
 
   const kindGroups: KitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
 
@@ -14212,10 +13960,10 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
       const frame = getKitDiagramNodeFrameForKind(kind);
       nodes.push({
         id: nodeId,
-        type: "artifact",
         position: { x: 0, y: 0 },
         width: frame.width,
         height: frame.height,
+        selected: false,
         data: {
           id: item.id,
           name: item.name,
@@ -14232,9 +13980,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           id: `${kind}-${item.parentId}-${item.id}`,
           source: `${parentKind}:${item.parentId}`,
           target: nodeId,
-          type: "floating",
-          style: edgeStyle["part-of"],
-          data: { relationship: "part-of" },
+          relationship: "part-of",
         });
       }
     }
@@ -14434,12 +14180,12 @@ const sketchpadKitBoardHandleAngle = (side: KitDiagramSnapSide, shape: "circle" 
   return -Math.PI / 2;
 };
 
-const sketchpadKitBoardNodeCenter = (node: Node<KitDiagramNode>): { x: number; y: number } => {
+const sketchpadKitBoardNodeCenter = (node: KitDiagramLayoutNode): { x: number; y: number } => {
   const frame = getKitDiagramNodeFrameForKind(node.data.kind);
   return { x: node.position.x + frame.width / 2, y: node.position.y + frame.height / 2 };
 };
 
-const sketchpadKitBoardCameraFromNodes = (nodes: readonly Node<KitDiagramNode>[]): ElementsBoardCameraState => {
+const sketchpadKitBoardCameraFromNodes = (nodes: readonly KitDiagramLayoutNode[]): ElementsBoardCameraState => {
   if (nodes.length === 0) return { x: 0, y: 0, zoom: 1 };
   const centers = nodes.map((node) => sketchpadKitBoardNodeCenter(node));
   const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
@@ -14447,8 +14193,8 @@ const sketchpadKitBoardCameraFromNodes = (nodes: readonly Node<KitDiagramNode>[]
   return { x: -avgX, y: -avgY, zoom: 1 };
 };
 
-/** @emoji 🗺️ Maps filtered kit diagram React Flow nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
-const sketchpadKitBuildBoardFixture = (nodes: readonly Node<KitDiagramNode>[], edges: readonly Edge[]): BoardFixtureV1 => {
+/** @emoji 🗺️ Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
+const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], edges: readonly KitDiagramEdge[]): BoardFixtureV1 => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const boardNodes = nodes.map((node) => {
     const kind = node.data.kind;
@@ -14563,21 +14309,6 @@ const sketchpadKitBoardSelectionToKitSelection = (snapshot: BoardSelectionSnapsh
 
 interface KitDiagramProps {}
 
-interface ForceNode extends SimulationNodeDatum {
-  id: string;
-  data: KitDiagramNode;
-}
-
-/**
- * ForceLink holds the data fields for a ForceLink record.
- **/
-interface ForceLink extends SimulationLinkDatum<ForceNode> {
-  id: string;
-  relationship: "part-of" | "reference";
-}
-/**
- * KitDiagramInner holds the data fields for a KitDiagramInner record.
- **/
 const KitDiagramInner: FC = () => {
   const ks0 = useKitStoreSnapshot();
   const kit = ks0?.kit as Kit | undefined;
@@ -14592,17 +14323,12 @@ const KitDiagramInner: FC = () => {
   const isHandTool = activeTool === ToolKind.HAND;
   const actor = useSketchpadActor();
   const [diagramForce] = useKitAppDiagramForce();
-  const [diagramNodes, setDiagramNodes] = useState<Node<KitDiagramNode>[]>([]);
-  const [diagramEdges, setDiagramEdges] = useState<Edge[]>([]);
-  const diagramNodesRef = useRef<Node<KitDiagramNode>[]>([]);
-  const diagramEdgesRef = useRef<Edge[]>([]);
-  const simulationRef = useRef<Simulation<ForceNode, ForceLink> | null>(null);
+  const [diagramNodes, setDiagramNodes] = useState<KitDiagramLayoutNode[]>([]);
+  const [diagramEdges, setDiagramEdges] = useState<KitDiagramEdge[]>([]);
+  const diagramNodesRef = useRef<KitDiagramLayoutNode[]>([]);
+  const diagramEdgesRef = useRef<KitDiagramEdge[]>([]);
   const draggingNodeIdRef = useRef<string | null>(null);
-  const pinnedNodeIdsRef = useRef<Set<string>>(new Set());
-  const isDragReheatActiveRef = useRef(false);
-  const debugTickRef = useRef(0);
   const diagramForceConfig = useMemo(() => ({ ...defaultDiagramForceSettings, ...diagramForce }), [diagramForce]);
-
   const filterSearchSelector = useMemo(() => createKitFilterSearchSelector(kitId), [kitId]);
   const expandedRowsSelector = useMemo(() => createKitExpandedRowsSelector(kitId), [kitId]);
   const filterSearch = useSelector(actor, filterSearchSelector) ?? "";
@@ -14819,87 +14545,11 @@ const KitDiagramInner: FC = () => {
     setBoardCamera(sketchpadKitBoardCameraFromNodes(diagramNodes));
   }, [baseNodeIdsKey]);
 
-  const commitDiagramNodes = useCallback((nextNodes: Node<KitDiagramNode>[]) => {
+
+  const commitDiagramNodes = useCallback((nextNodes: KitDiagramLayoutNode[]) => {
     diagramNodesRef.current = nextNodes;
     setDiagramNodes(nextNodes);
   }, []);
-
-  const syncSimulationPositions = useCallback((positions: Map<string, Node["position"]>) => {
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-    for (const simNode of simulation.nodes()) {
-      const pos = positions.get(simNode.id);
-      if (pos) {
-        simNode.x = pos.x;
-        simNode.y = pos.y;
-      }
-    }
-  }, []);
-
-  const setPinnedPositions = useCallback((positions: Map<string, Node["position"]>) => {
-    pinnedNodeIdsRef.current = new Set(positions.keys());
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-    for (const simNode of simulation.nodes()) {
-      const pos = positions.get(simNode.id);
-      if (pos) {
-        simNode.fx = pos.x;
-        simNode.fy = pos.y;
-      }
-    }
-  }, []);
-
-  const clearPinnedPositions = useCallback(() => {
-    pinnedNodeIdsRef.current = new Set();
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-    for (const simNode of simulation.nodes()) {
-      simNode.fx = null;
-      simNode.fy = null;
-    }
-  }, []);
-
-  const logSimulationState = useCallback((label: string, node?: Node) => {
-    if (!KIT_DIAGRAM_DEBUG) return;
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-  }, []);
-
-  const startDragReheat = useCallback(() => {
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-    if (!isDragReheatActiveRef.current) {
-      isDragReheatActiveRef.current = true;
-    }
-    simulation.alphaTarget(0.3).restart();
-  }, []);
-
-  const stopDragReheat = useCallback(() => {
-    const simulation = simulationRef.current;
-    if (simulation) {
-      simulation.alphaTarget(0);
-    }
-    isDragReheatActiveRef.current = false;
-    clearPinnedPositions();
-    draggingNodeIdRef.current = null;
-    logSimulationState("drag-end");
-  }, [clearPinnedPositions, logSimulationState]);
-
-  const updateNodesFromSimulation = useCallback(() => {
-    const simulation = simulationRef.current;
-    if (!simulation) return;
-    const pinnedNodeIds = pinnedNodeIdsRef.current;
-    const simNodeById = new Map(simulation.nodes().map((node) => [node.id, node]));
-    const nextNodes = diagramNodesRef.current.map((node) => {
-      if (pinnedNodeIds.has(node.id)) {
-        return node;
-      }
-      const simNode = simNodeById.get(node.id);
-      if (!simNode) return node;
-      return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
-    });
-    commitDiagramNodes(nextNodes);
-  }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
     const previousPositions = new Map(diagramNodesRef.current.map((node) => [node.id, node.position]));
@@ -14913,130 +14563,48 @@ const KitDiagramInner: FC = () => {
   }, [baseNodes, baseEdges, commitDiagramNodes]);
 
   useEffect(() => {
-    if (diagramNodesRef.current.length === 0) {
-      if (simulationRef.current) {
-        simulationRef.current.alphaTarget(0);
-        simulationRef.current.stop();
-        simulationRef.current = null;
-      }
-      return;
-    }
-    const nodesSnapshot = diagramNodesRef.current;
-    const edgesSnapshot = diagramEdgesRef.current;
-    const nodesCopy: ForceNode[] = nodesSnapshot.map((node) => ({
-      id: node.id,
-      x: node.position.x,
-      y: node.position.y,
-      data: node.data,
-    }));
-    const linksCopy: ForceLink[] = edgesSnapshot.map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      relationship: (edge.data?.relationship as "part-of" | "reference") ?? "reference",
-    }));
-    const simulation = forceSimulation<ForceNode, ForceLink>(nodesCopy)
-      .force("charge", forceManyBody().strength(diagramForceConfig.chargeStrength))
-      .force(
-        "link",
-        forceLink<ForceNode, ForceLink>(linksCopy)
-          .id((d) => d.id)
-          .distance(diagramForceConfig.linkDistance),
-      )
-      .force("collide", forceCollide().radius(diagramForceConfig.collideRadius))
-      .force("x", forceX(0).strength(diagramForceConfig.centerStrength))
-      .force("y", forceY(0).strength(diagramForceConfig.centerStrength));
-    simulationRef.current = simulation;
-    const snapshotPositions = new Map(nodesSnapshot.map((node) => [node.id, node.position]));
-    syncSimulationPositions(snapshotPositions);
-    const numTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
-    for (let i = 0; i < numTicks; i += 1) {
-      simulation.tick();
-    }
-    updateNodesFromSimulation();
-    simulation.on("tick", updateNodesFromSimulation);
-
-    simulation.alpha(1).restart();
-    return () => {
-      stopDragReheat();
-      simulation.alphaTarget(0);
-      simulation.stop();
-      simulationRef.current = null;
-    };
-  }, [baseEdgeIdsKey, baseNodeIdsKey, diagramForceConfig.centerStrength, diagramForceConfig.chargeStrength, diagramForceConfig.collideRadius, diagramForceConfig.linkDistance, stopDragReheat, syncSimulationPositions, updateNodesFromSimulation]);
+    if (diagramNodesRef.current.length === 0) return;
+    const fixture = sketchpadKitBuildBoardFixture(diagramNodesRef.current, diagramEdgesRef.current);
+    const laid = layoutBoardFixtureForceGraph(fixture, sketchpadKitDiagramForceGraphOptions(diagramForceConfig));
+    commitDiagramNodes(sketchpadKitApplyFixturePositionsToLayoutNodes(diagramNodesRef.current, laid));
+  }, [baseEdgeIdsKey, baseNodeIdsKey, commitDiagramNodes, diagramForceConfig]);
 
   const onBoardDrag = useCallback(
     (payload: { id: string; x: number; y: number }) => {
       if (isHandTool) return;
-      const node = diagramNodesRef.current.find((entry) => entry.id === payload.id);
+      const nodes = diagramNodesRef.current;
+      const node = nodes.find((entry) => entry.id === payload.id);
       if (!node) return;
       const frame = getKitDiagramNodeFrameForKind(node.data.kind);
       const position = { x: payload.x - frame.width / 2, y: payload.y - frame.height / 2 };
-      if (draggingNodeIdRef.current !== payload.id) {
-        draggingNodeIdRef.current = payload.id;
-        syncSimulationPositions(new Map(diagramNodesRef.current.map((entry) => [entry.id, entry.position])));
-      }
-      const selectedNodes = diagramNodesRef.current.filter((entry) => entry.selected || selectedBoardIds.has(entry.id));
+      draggingNodeIdRef.current = payload.id;
+      const selectedNodes = nodes.filter((entry) => entry.selected || selectedBoardIds.has(entry.id));
       const selectedPositions = new Map(selectedNodes.map((entry) => [entry.id, entry.position]));
       if (node.selected || selectedBoardIds.has(node.id)) {
         selectedPositions.set(node.id, position);
       }
+      let nextNodes: KitDiagramLayoutNode[];
       if (selectedPositions.size > 1 && (node.selected || selectedBoardIds.has(node.id))) {
         const deltaX = position.x - node.position.x;
         const deltaY = position.y - node.position.y;
-        const pinned = new Map<string, { x: number; y: number }>();
-        for (const [id, pos] of selectedPositions) {
-          pinned.set(id, id === node.id ? position : { x: pos.x + deltaX, y: pos.y + deltaY });
-        }
-        setPinnedPositions(pinned);
+        nextNodes = nodes.map((entry) => {
+          const pinned = selectedPositions.get(entry.id);
+          if (!pinned) return entry;
+          return entry.id === node.id
+            ? { ...entry, position }
+            : { ...entry, position: { x: pinned.x + deltaX, y: pinned.y + deltaY } };
+        });
       } else {
-        setPinnedPositions(new Map([[payload.id, position]]));
+        nextNodes = nodes.map((entry) => (entry.id === payload.id ? { ...entry, position } : entry));
       }
-      startDragReheat();
+      commitDiagramNodes(nextNodes);
     },
-    [isHandTool, selectedBoardIds, setPinnedPositions, startDragReheat, syncSimulationPositions],
+    [commitDiagramNodes, isHandTool, selectedBoardIds],
   );
 
   const onBoardNodeChange = useCallback(() => {
-    stopDragReheat();
-  }, [stopDragReheat]);
-
-  const onBoardSelect = useCallback(
-    (snapshot: BoardSelectionSnapshot) => {
-      if (snapshot.ids.length === 0) {
-        kitCommands.deselectAll?.();
-        return;
-      }
-      actor.send({ type: "KIT.SET_SELECTION", kitId, selection: sketchpadKitBoardSelectionToKitSelection(snapshot) });
-    },
-    [actor, kitCommands, kitId],
-  );
-
-  const onBoardHover = useCallback(
-    (payload: BoardHoverPayload) => {
-      if (!payload.id) {
-        clearHover?.();
-        return;
-      }
-      const separatorIndex = payload.id.indexOf(":");
-      if (separatorIndex <= 0) {
-        clearHover?.();
-        return;
-      }
-      const kind = payload.id.slice(0, separatorIndex);
-      const id = payload.id.slice(separatorIndex + 1);
-      if (!setHover) return;
-      if (kind === "type") setHover({ type: id });
-      else if (kind === "design") setHover({ design: id });
-      else if (kind === "quality") setHover({ quality: id });
-      else if (kind === "port") setHover({ port: id });
-      else if (kind === "file") setHover({ file: id });
-      else if (kind === "folder") setHover({ folder: id });
-      else if (kind === "author") setHover({ author: id });
-      else clearHover?.();
-    },
-    [clearHover, setHover],
-  );
+    draggingNodeIdRef.current = null;
+  }, []);
 
   const kitBoardBindings = useMemo(
     () =>

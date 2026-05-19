@@ -3,13 +3,14 @@
   "emoji": "⚛️",
   "status": "open",
   "description": "Refactor semio/client/lib/react/logic to one hook per entity (id), exactly one hook per field, and one useEntityCommand hook per entity aggregating all mutations with shared OperationStatus. Remove legacy per-operation exports and useUpdateDesign. Update sketchpad imports and vitest.",
-  "summary": "Refactored @semio/react logic to CQRS: one id hook per entity, one field hook per field, and one command hook per entity (useKitCommand, useDesignCommand, useTypeCommand, useStoreCommand, useSessionCommand, usePiecesCommand, …) with shared EntityCommand { run, status }. Removed per-operation hooks and legacy useUpdateDesign. Added semioInternalCommandFactory. Updated sketchpad imports/usages and AGENTS.md. Vitest @semio/react: 5 passed.",
+  "summary": "Completed CQRS hook surface: entity list hooks return full handles (Design[], Type[], Piece[], Connection[]); added aggregate bundles (useTypes, useConnections, usePieces, useDesigns) and SketchpadFacade region (ActiveKitTab, KitStoreProvider stubs, useKitStoreSnapshot from WIP Kit, diff type exports, executeSemioKitCommand/kit registry stubs). Vitest: 6 passed including banned per-operation export check. Sketchpad: local useIncludedDesigns/usePiecesFromIds/useDesignPieceLayoutMap; folder create + moveKitArtifact wired to executeSemioKitCommand when kit store exists. WASM kit-store registry full restore remains follow-up.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1455"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪1f3699e25840488ca9bea1385f6941ca",
-    "⚪41b2f9b13f844b3098dce0e58a837066"
+    "⚪41b2f9b13f844b3098dce0e58a837066",
+    "⚪828dd157c76e4b9ab6b44ad315c51f0c"
   ]
 }
