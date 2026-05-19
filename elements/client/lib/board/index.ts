@@ -43,7 +43,7 @@ export { BoardSession };
 export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
-export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
+export type BoardSelectionMode = "additive" | "default" | "invertive" | "subtractive";
 
 /** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
 export interface BoardSelectionTargets {
@@ -1274,6 +1274,16 @@ function preselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPrese
 	return arrayEqual(left.ids, right.ids) && arrayEqual(left.removedIds, right.removedIds);
 }
 
+/** @emoji 🧩 Compares committed selection snapshots by sorted id list. */
+export function boardSelectionSnapshotsEqual(left: BoardSelectionSnapshot, right: BoardSelectionSnapshot): boolean {
+	return arrayEqual(left.ids, right.ids);
+}
+
+/** @emoji 🧩 Compares preselect snapshots by ids and removedIds. */
+export function boardPreselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
+	return preselectSnapshotsEqual(left, right);
+}
+
 function cubicBezierPoint(curve: CubicBezierCurve, step: number): Point {
 	const oneMinusStep = 1 - step;
 	const oneMinusSquared = oneMinusStep * oneMinusStep;
@@ -1328,13 +1338,17 @@ export function normalizeBoardPreselectProp(value: BoardPreselectSnapshot | unde
 function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
 	return {
 		method: options?.method ?? "rectangle",
-		mode: options?.mode ?? "invertive",
+		mode: options?.mode ?? "default",
 		targets: {
 			edges: options?.targets?.edges ?? BOARD_SELECTION_TARGETS_DEFAULT.edges,
 			handles: options?.targets?.handles ?? BOARD_SELECTION_TARGETS_DEFAULT.handles,
 			nodes: options?.targets?.nodes ?? BOARD_SELECTION_TARGETS_DEFAULT.nodes,
 		},
 	};
+}
+
+function boardSelectionModeForHost(mode: BoardSelectionMode): string {
+	return mode === "default" ? "replace" : mode;
 }
 
 /** @emoji 🏷️ Resolves optional node caption: explicit `text` wins, else fixture `label` (kit piece `name`). */
@@ -2569,7 +2583,7 @@ export class BoardRenderer {
 		const initialSel = this.selectionOptions;
 		this.session.setSelectionOptions(
 			initialSel.method,
-			initialSel.mode,
+			boardSelectionModeForHost(initialSel.mode),
 			initialSel.targets.nodes,
 			initialSel.targets.edges,
 			initialSel.targets.handles,
@@ -2721,7 +2735,7 @@ export class BoardRenderer {
 			this.invalidated = true;
 			return;
 		}
-		this.session.setSelectionOptions(next.method, next.mode, next.targets.nodes, next.targets.edges, next.targets.handles);
+		this.session.setSelectionOptions(next.method, boardSelectionModeForHost(next.mode), next.targets.nodes, next.targets.edges, next.targets.handles);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.markDirty();
 	}
@@ -3233,7 +3247,7 @@ export class BoardRenderer {
 			}
 		}
 		const o = this.selectionOptions;
-		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
+		this.session.setSelectionOptions(o.method, boardSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.pushLodAndGridSnapToWasmSession();
 		this.session.setHandleLinkCompatJson(this.kindCompatJson);
@@ -3431,7 +3445,7 @@ export class BoardRenderer {
 		}
 		const o = this.selectionOptions;
 		this.session.setSize(this.width, this.height, this.dpr);
-		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
+		this.session.setSelectionOptions(o.method, boardSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.pushLodAndGridSnapToWasmSession();
 		this.session.setHandleLinkCompatJson(this.kindCompatJson);
@@ -3984,7 +3998,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy);
+		this.session.pointerMoveScreen(sx, sy, false, false);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		const world = this.screenToWorld({ x: sx, y: sy });
@@ -4016,7 +4030,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey);
+		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		this.invalidate();
@@ -4034,7 +4048,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerMoveScreen(sx, sy);
+		this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		if (!this.session.isDraggingAreaSelect()) {
 			this.publishHover();
@@ -4057,7 +4071,7 @@ export class BoardRenderer {
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
 		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-		this.session.pointerUpScreen(sx, sy);
+		this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
 		if (typeof event.pointerId === "number") {
@@ -4722,6 +4736,28 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
+		it("stale silent selection sync undoes background deselect until controlled prop updates", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const node = new Node({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+			renderer.scene.add(node);
+			renderer.render();
+
+			const onNode = renderer.worldToScreen({ x: 0, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
+
+			const background = renderer.worldToScreen({ x: 900, y: 900 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+			renderer.setSelectionIdsSilent(["solo"]);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
+			renderer.dispose();
+		});
+
 		it("includes handles in rectangle selection with nodes and edges target", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({
@@ -4796,6 +4832,35 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: invertEnd.x, clientY: invertEnd.y }));
 			expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
 
+			renderer.dispose();
+		});
+
+		it("maps default selection to replace and honors Ctrl and Shift modifiers", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "default", targets: { nodes: true, edges: false, handles: false } } });
+			const a = new Node({ id: "a", radius: 12, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 12, x: 80, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+
+			const clickNode = (id: "a" | "b", init: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean } = {}): void => {
+				const p = renderer.worldToScreen(id === "a" ? { x: 0, y: 0 } : { x: 80, y: 0 });
+				canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p.x, clientY: p.y, ...init }));
+				canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: p.x, clientY: p.y, ...init }));
+			};
+
+			renderer.setSelectionIds(["a"]);
+			clickNode("b", { shiftKey: true });
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
+
+			clickNode("a", { ctrlKey: true });
+			expect(renderer.selection.getSnapshot().ids).toEqual(["b"]);
+
+			clickNode("b", { ctrlKey: true, shiftKey: true });
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+			clickNode("a");
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a"]);
 			renderer.dispose();
 		});
 	});

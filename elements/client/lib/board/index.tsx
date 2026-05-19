@@ -61,6 +61,8 @@ import {
   type BoardKindCompatEntry,
   type BoardLodZoomThresholds,
   type BoardNodeTextAlignment,
+  boardPreselectSnapshotsEqual,
+  boardSelectionSnapshotsEqual,
   normalizeBoardPreselectProp,
   normalizeBoardSelectionProp,
   type BoardPreselectSnapshot,
@@ -1218,11 +1220,26 @@ export function BoardCanvas({
     renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, targets: selectionTargets });
   }, [selectionMethod, selectionMode, selectionTargets]);
 
+  const lastSyncedControlledSelectionRef = useRef<BoardSelectionSnapshot | null>(null);
+  const lastSyncedControlledPreselectionRef = useRef<BoardPreselectSnapshot | null>(null);
+
+  useLayoutEffect(() => {
+    lastSyncedControlledSelectionRef.current = null;
+    lastSyncedControlledPreselectionRef.current = null;
+  }, [contextRenderer]);
+
   useLayoutEffect(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
     }
+    if (
+      lastSyncedControlledSelectionRef.current !== null &&
+      boardSelectionSnapshotsEqual(resolvedSelection, lastSyncedControlledSelectionRef.current)
+    ) {
+      return;
+    }
+    lastSyncedControlledSelectionRef.current = resolvedSelection;
     renderer.setSelectionIdsSilent(resolvedSelection.ids);
   }, [resolvedSelection]);
 
@@ -1231,6 +1248,13 @@ export function BoardCanvas({
     if (!renderer) {
       return;
     }
+    if (
+      lastSyncedControlledPreselectionRef.current !== null &&
+      boardPreselectSnapshotsEqual(resolvedPreselection, lastSyncedControlledPreselectionRef.current)
+    ) {
+      return;
+    }
+    lastSyncedControlledPreselectionRef.current = resolvedPreselection;
     renderer.syncPreselectionSilent(resolvedPreselection);
   }, [resolvedPreselection]);
 

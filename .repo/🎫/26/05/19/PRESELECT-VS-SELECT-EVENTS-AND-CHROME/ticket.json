@@ -1,14 +1,16 @@
 {
   "title": "Preselect Vs Select Events And Chrome",
   "emoji": "🎯",
-  "status": "closed",
+  "status": "open",
   "description": "Separate preselect (rectangle/lasso drag) from committed select; preselect secondary = anchor minus preselect; preselectCancel on Escape; onPreselect/onPreselectCancel events in TS.",
-  "summary": "Board selected chrome now consistently uses --color-primary (GPU Vello theme JSON, headless fallbacks, 2D overlay styles). Highlight / selection-exit chrome uses --color-secondary so preselect preview stays primary while deselected anchors stay secondary-tinted. Rust NODE_FILL_SELECTED codegen uses primary token at 0.35 alpha.",
+  "summary": "Fixed controlled BoardCanvas selection/preselection sync: useLayoutEffect only pushes props to WASM when the controlled snapshot actually changed (refs + boardSelectionSnapshotsEqual / boardPreselectSnapshotsEqual), preventing stale React state from undoing background deselect or single-click pick after invalidate. Exported snapshot equality helpers; added Vitest documenting stale setSelectionIdsSilent behavior. 76 Rust + 73 Vitest board unit tests pass.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪abf30dada2954e86be9d6c35250ed41c",
     "⚪79a7c8180f874e3c88a4bcae25e27a01",
     "⚪84e5ad2467f24197b40ff9d2865ad249",
-    "⚪4aa5cb34e67047ffb87edcda7e4bd09a"
+    "⚪4aa5cb34e67047ffb87edcda7e4bd09a",
+    "⚪9b6d8ee65135453c8a5b66a5c7090380",
+    "⚪76906cd4dcd147b5ab556e6e31366032"
   ]
 }

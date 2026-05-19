@@ -1142,7 +1142,7 @@ export function SceneObjectStateProvider(props: {
 	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
-	const syncedFixtureRef = useRef(props.fixture);
+	const syncedFixtureRef = useRef<FixtureV1 | null>(null);
 	useEffect(() => {
 		if (syncedFixtureRef.current === props.fixture) {
 			return;
@@ -2481,22 +2481,43 @@ export const Magnet = memo(function Magnet(props: MagnetProps) {
 //#region 🧲SceneAttraction
 export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
 	const reg = useRegistry();
-	const [pts, setPts] = useState<Vector3[] | null>(null);
-	const attractionColor = useMemo(
-		() => lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b"),
-		[],
-	);
+	const geo = useMemo(() => {
+		const g = new BufferGeometry();
+		g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
+		return g;
+	}, []);
+	const mat = useMemo(() => {
+		const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
+		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true });
+	}, []);
 	useFrame(() => {
+		const pos = geo.attributes.position as Float32BufferAttribute;
 		const a = reg.getVortexWorld(props.attracting);
 		const b = reg.getVortexWorld(props.attracted);
 		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
-			setPts([a.clone(), b.clone()]);
-		} else if (pts !== null) {
-			setPts(null);
+			pos.setXYZ(0, a.x, a.y, a.z);
+			pos.setXYZ(1, b.x, b.y, b.z);
+		} else {
+			pos.setXYZ(0, 0, 0, 0);
+			pos.setXYZ(1, 0, 0, 0);
 		}
+		pos.needsUpdate = true;
 	});
-	if (!pts) return null;
-	return <Line points={pts} color={attractionColor} lineWidth={1} userData={{ sceneAttractionId: props.id }} />;
+	useEffect(
+		() => () => {
+			geo.dispose();
+			mat.dispose();
+		},
+		[geo, mat],
+	);
+	return (
+		<line
+			geometry={geo}
+			material={mat}
+			raycast={() => null}
+			userData={{ sceneAttractionId: props.id }}
+		/>
+	);
 });
 //#endregion 🧲SceneAttraction
 

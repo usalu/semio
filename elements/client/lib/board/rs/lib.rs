@@ -3337,7 +3337,7 @@ mod board_host {
 			select_handles: bool,
 		) {
 			self.selection_options.method = method.into();
-			self.selection_options.mode = mode.into();
+			self.selection_options.mode = if mode == "default" { "replace" } else { mode }.into();
 			self.selection_options.select_nodes = select_nodes;
 			self.selection_options.select_edges = select_edges;
 			self.selection_options.select_handles = select_handles;
@@ -6351,7 +6351,7 @@ mod board_host {
 							.cloned()
 							.collect();
 						let drag_group_before = members_before.contains(&nid) && members_before.len() > 1;
-						let force_pick_merge = pick_mode == "replace"
+						let force_pick_merge = (pick_mode == "replace" && !drag_group_before)
 							|| pick_mode == "subtractive"
 							|| (pick_mode == "invertive" && merge_from_modifiers);
 						if !drag_group_before || force_pick_merge {
