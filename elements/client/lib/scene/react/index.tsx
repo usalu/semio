@@ -952,6 +952,9 @@ function sceneNearestLinkSnapFullId(args: {
 //#endregion 🔗LinkGesture
 
 //#region 🧊Object
+/** @emoji 🔧 Metabolism kit GLBs are Z-up; rotate each loaded mesh +90° about local +X inside the object group (fixture pose stays piece-wise, not scene-wide). */
+const OBJECT_MESH_FRAME_Z_UP_TO_Y_UP: [number, number, number] = [Math.PI / 2, 0, 0];
+
 export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const group = useRef<Group>(null);
 	const gltf = usePooledGltf(props.meshUrl);
@@ -1008,7 +1011,9 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 			userData={{ sceneObjectId: props.id, ...props.userData }}
 			data-scene-object={props.id}
 		>
-			{gltf.scene && <Clone object={gltf.scene} />}
+			<group rotation={OBJECT_MESH_FRAME_Z_UP_TO_Y_UP}>
+				{gltf.scene && <Clone object={gltf.scene} />}
+			</group>
 			{props.children}
 			{showTc && (
 				<TransformControls
@@ -1064,7 +1069,11 @@ function SceneVortexHandleGltf(props: { meshUrl: string; fullId: string; radius:
 	const gltf = usePooledGltf(props.meshUrl);
 	const scale = (props.radius / 0.35) * 0.9;
 	if (!gltf.scene) return null;
-	return <Clone object={gltf.scene} scale={scale} userData={{ sceneVortexFullId: props.fullId }} />;
+	return (
+		<group rotation={OBJECT_MESH_FRAME_Z_UP_TO_Y_UP}>
+			<Clone object={gltf.scene} scale={scale} userData={{ sceneVortexFullId: props.fullId }} />
+		</group>
+	);
 }
 
 function SceneVortexFallbackMesh(props: {
@@ -2078,7 +2087,7 @@ if (import.meta.vitest) {
 		});
 	});
 	describe("planeBasisToThreeJs", () => {
-		it("maps authoring xyz to three xzy (auth y → three z, auth z → three y)", () => {
+		it("maps authoring xyz with −90° about +X (x,y,z)→(x,z,−y)", () => {
 			const { origin, orientation } = planeBasisToThreeJs({
 				origin: { x: 1, y: 2, z: 3 },
 				xAxis: { x: 1, y: 0, z: 0 },
@@ -2086,7 +2095,7 @@ if (import.meta.vitest) {
 			});
 			expect(origin[0]).toBe(1);
 			expect(origin[1]).toBe(3);
-			expect(origin[2]).toBe(2);
+			expect(origin[2]).toBe(-2);
 			expect(orientation.length).toBe(4);
 		});
 	});
