@@ -4062,23 +4062,6 @@ mod board_host {
 					next.selection_preview_stroke = c;
 				}
 			}
-			next.handle_fill_selected = next.node_fill_selected;
-			next.handle_stroke_selected = next.node_stroke_selected;
-			next.handle_fill_selection_exit = next.node_fill_selection_exit;
-			next.handle_stroke_selection_exit = next.node_stroke_selection_exit;
-			next.handle_fill_hovered = next.node_fill_hovered;
-			next.handle_stroke_hovered = next.node_stroke_hovered;
-			next.handle_fill_disabled = next.node_fill_disabled;
-			next.handle_stroke_disabled = next.node_stroke_disabled;
-			next.edge_stroke_hovered = next.node_stroke_hovered;
-			next.edge_stroke_selected = next.node_stroke_selected;
-			next.edge_stroke_selection_exit = next.node_stroke_selection_exit;
-			next.edge_stroke_disabled = next.node_stroke_disabled;
-			next.wire_stroke = next.edge_stroke;
-			next.wire_stroke_hovered = next.edge_stroke_hovered;
-			next.wire_stroke_selected = next.edge_stroke_selected;
-			next.wire_stroke_highlighted = next.edge_stroke_selection_exit;
-			next.wire_stroke_disabled = next.edge_stroke_disabled;
 			self.vello_theme = next;
 			self.icon_vector_cache.borrow_mut().clear();
 			Ok(())
@@ -8052,6 +8035,24 @@ mod host_tests {
 		let ev2 = h.drain_events_json();
 		assert!(h.selection_exit_highlight.is_empty());
 		assert!(ev2.contains("\"exitHighlightIds\":[]"));
+	}
+
+	#[test]
+	fn board_host_vello_theme_keeps_explicit_element_state_colors() {
+		let mut h = BoardHost::new();
+		h.set_vello_theme_from_json(
+			r#"{
+				"nodeStrokeHovered": [1, 2, 3, 255],
+				"edgeStrokeHovered": [4, 5, 6, 255],
+				"handleStrokeHovered": [7, 8, 9, 255],
+				"wireStrokeHovered": [10, 11, 12, 255]
+			}"#,
+		)
+		.unwrap();
+		assert_eq!(h.vello_theme.node_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+		assert_eq!(h.vello_theme.edge_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
+		assert_eq!(h.vello_theme.handle_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
+		assert_eq!(h.vello_theme.wire_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
 	}
 
 	#[test]

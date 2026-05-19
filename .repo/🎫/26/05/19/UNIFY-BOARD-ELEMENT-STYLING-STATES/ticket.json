@@ -3,7 +3,7 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Make board styling consistent across node, edge, handle, and wire. Extend element style support to cover original, neutral, hovered, selected, highlighted, disabled. Add a shared style prop through the board element contract and use it consistently across features. Add a window option for original style, default false, so imported elements such as SVGs can remain unmodified when requested. Validate through focused tests/builds.",
-  "summary": "Removed minimap/overview LOD guard that blocked discrete pick/select via resolve_hit_world; hover was already enabled through resolve_hover_world. Bounded group drag on minimap/overview is unchanged (try_begin_bounded_selection_drag_at when pointer misses a discrete hit inside the padded selection union). Updated host tests for discrete hits at minimap/compact and bounded-drag fixtures (clear edges/handles on gap probes). Validation: cargo test -p elements_board --lib — 74 passed.",
+  "summary": "Finished the remaining selected/preselected parity cleanup in the Rust board renderer. Selected and preselected states now keep the same selected chrome even through visible-element override paths: link-compatible node highlighting no longer overrides selected nodes, and indirect handle rings keep their indirect neutral appearance only for neutral/original handles while selected or preselected handles use the shared selected style. Validation: cargo test -p elements_board --lib passed; bun nx run @elements/board:test passed Rust tests, wasm-pack, and Vitest. Playwright still reproduces the same two existing failures in the board play background context menu and redraw toolbar tests.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪9075bfe8fc904de584d91762e331af22",
@@ -11,6 +11,7 @@
     "⚪62fc0c95c2804ee8b8769f7441bd4256",
     "⚪1624da70a7fc4af391da03ccea9e7761",
     "⚪9767a670bbfe48f5b05ec801504e5d9a",
-    "⚪9e49b7d2cd2e4cae84a942aaf3220a82"
+    "⚪9e49b7d2cd2e4cae84a942aaf3220a82",
+    "⚪f89aacae5ba64241bf725491bf3fa162"
   ]
 }
