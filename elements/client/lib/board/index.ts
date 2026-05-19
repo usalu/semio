@@ -3702,6 +3702,7 @@ export class BoardRenderer {
 		}
 		this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
 		if (emit) {
+			this.updatePreselection([], [], false);
 			this.emit("select", nextSnapshot);
 		}
 		this.markDirty();
@@ -4394,6 +4395,40 @@ if (boardVitest) {
 			expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
 			expect(targetNode.selected).toBe(true);
 			expect(sourceNode.selected).toBe(false);
+			renderer.dispose();
+		});
+
+		it("syncs selection silently for controlled hosts without emitting select", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const node = new Node({ id: "solo", radius: 20, x: 0, y: 0 });
+			renderer.scene.add(node);
+			const selects: BoardSelectionSnapshot[] = [];
+			renderer.on("select", (snap) => selects.push(snap));
+			renderer.setSelectionIdsSilent(["solo"]);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
+			expect(selects).toEqual([]);
+			renderer.dispose();
+		});
+
+		it("emits preselect while rectangle-selecting and clears on commit", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
+			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 20, x: 120, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+			const preselects: BoardPreselectSnapshot[] = [];
+			renderer.on("preselect", (snap) => preselects.push(snap));
+			const s0 = renderer.worldToScreen({ x: -40, y: -40 });
+			const s1 = renderer.worldToScreen({ x: 160, y: 40 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: s0.x, clientY: s0.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			expect(preselects.length).toBeGreaterThan(0);
+			expect(preselects.at(-1)?.ids.includes("b")).toBe(true);
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["a", "b"]);
+			expect(renderer.preselection.getSnapshot()).toEqual(BOARD_PRESELECT_EMPTY);
 			renderer.dispose();
 		});
 

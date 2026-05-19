@@ -827,98 +827,81 @@ function boardPlayLodCanvasProps(mode: BoardLodModeKind): { automaticLod: boolea
   return { automaticLod: false, lod: mode };
 }
 
-function BoardOverviewPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
-  const paneId: BoardPlayPaneId = "board-overview";
+function BoardPlayPaneCanvas({ paneId, showBackgroundMenu }: { paneId: BoardPlayPaneId; showBackgroundMenu?: boolean }): ReactElement {
+  const {
+    activePaneId,
+    boardGridSnapEnabled,
+    boardLodModeByPane,
+    boardSelectionMethod,
+    boardSelectionMode,
+    boardSelectionTargets,
+    fixture,
+    handleCanvasFixtureDrop,
+    camerasByPane,
+    hoverSourcePane,
+    hoveredId,
+    preselection,
+    selectionIds,
+    setHoveredId,
+    setPreselection,
+    setSelectionIds,
+    syncBaselineFromViewportCamera,
+  } = useBoardPlayShell();
   const camera = camerasByPane[paneId];
-  const selectedIds = selectionByPane[paneId];
   const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
+  const selection = useMemo(() => normalizeBoardSelectionProp([...selectionIds]), [selectionIds]);
+  const onSelect = useCallback((snapshot: BoardSelectionSnapshot) => setSelectionIds(snapshot.ids), [setSelectionIds]);
+  const onPreselect = useCallback((snapshot: BoardPreselectSnapshot) => setPreselection(snapshot), [setPreselection]);
+  const onHover = useCallback(
+    (payload: { id: string | null }) => {
+      if (hoverSourcePane !== paneId) {
+        return;
+      }
+      setHoveredId(payload.id);
+    },
+    [hoverSourcePane, paneId, setHoveredId],
+  );
   return (
     <BoardPaneChrome paneId={paneId}>
       <BoardCanvas
         {...lodProps}
         camera={camera}
         className="min-h-0 flex-1"
-        contextMenu={boardPlayCanvasBackgroundMenu}
+        contextMenu={showBackgroundMenu ? boardPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
         gridSnapEnabled={boardGridSnapEnabled}
+        hoveredId={hoveredId}
         kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
+        onHover={onHover}
+        onPreselect={onPreselect}
+        onSelect={onSelect}
+        preselection={preselection}
+        selection={selection}
         selectionMethod={boardSelectionMethod}
         selectionMode={boardSelectionMode}
         selectionTargets={boardSelectionTargets}
       >
-        <BoardSelectionReporter paneId={paneId} />
         <BoardStructuralDeleteReporter />
         <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, selectedIds)}
+        {nakaginBoardMarkers(fixture, selectionIds)}
       </BoardCanvas>
     </BoardPaneChrome>
   );
+}
+
+function BoardOverviewPane(): ReactElement {
+  return <BoardPlayPaneCanvas paneId="board-overview" showBackgroundMenu />;
 }
 
 function BoardDetailPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
-  const paneId: BoardPlayPaneId = "board-detail";
-  const camera = camerasByPane[paneId];
-  const selectedIds = selectionByPane[paneId];
-  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
-  return (
-    <BoardPaneChrome paneId={paneId}>
-      <BoardCanvas
-        {...lodProps}
-        camera={camera}
-        className="min-h-0 flex-1"
-        fixtureDragDrop
-        gridSnapEnabled={boardGridSnapEnabled}
-        kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
-        lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
-        onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
-        onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
-        selectionMethod={boardSelectionMethod}
-        selectionMode={boardSelectionMode}
-        selectionTargets={boardSelectionTargets}
-      >
-        <BoardSelectionReporter paneId={paneId} />
-        <BoardStructuralDeleteReporter />
-        <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, selectedIds)}
-      </BoardCanvas>
-    </BoardPaneChrome>
-  );
+  return <BoardPlayPaneCanvas paneId="board-detail" />;
 }
 
 function BoardSelectionPane(): ReactElement {
-  const { activePaneId, boardGridSnapEnabled, boardLodModeByPane, boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane, syncBaselineFromViewportCamera } = useBoardPlayShell();
-  const paneId: BoardPlayPaneId = "board-selection";
-  const camera = camerasByPane[paneId];
-  const selectedIds = selectionByPane[paneId];
-  const lodProps = boardPlayLodCanvasProps(boardLodModeByPane[paneId]);
-  return (
-    <BoardPaneChrome paneId={paneId}>
-      <BoardCanvas
-        {...lodProps}
-        camera={camera}
-        className="min-h-0 flex-1"
-        fixtureDragDrop
-        gridSnapEnabled={boardGridSnapEnabled}
-        kindCatalogs={NAKAGIN_BOARD_PLAY_KIND_CATALOGS}
-        lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
-        onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
-        onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
-        selectionMethod={boardSelectionMethod}
-        selectionMode={boardSelectionMode}
-        selectionTargets={boardSelectionTargets}
-      >
-        <BoardSelectionReporter paneId={paneId} />
-        <BoardStructuralDeleteReporter />
-        <BoardPlayRedrawProgressReset />
-        {nakaginBoardMarkers(fixture, selectedIds)}
-      </BoardCanvas>
-    </BoardPaneChrome>
-  );
+  return <BoardPlayPaneCanvas paneId="board-selection" />;
 }
 // #endregion 🔖Panes
 
@@ -1616,8 +1599,8 @@ function InspectorEdgeBatch({
 
 /** @emoji 🔎 Sketchpad-style tree inspector with batch edits for the active pane selection. */
 function BoardSelectionInspectorPanel(): ReactElement {
-  const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionByPane } = useBoardPlayShell();
-  const ids = useMemo(() => [...selectionByPane[activePaneId]].sort((a, b) => a.localeCompare(b)), [activePaneId, selectionByPane]);
+  const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = useBoardPlayShell();
+  const ids = useMemo(() => [...selectionIds].sort((a, b) => a.localeCompare(b)), [selectionIds]);
 
   const { edgeIds, handleIds, nodeIds } = useMemo(() => {
     const nodeIds: string[] = [];
@@ -1850,7 +1833,10 @@ function BoardPlayInner(): ReactElement {
   const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
   const activePaneIdRef = useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
-  const [selectionByPane, setSelectionByPane] = useState<Record<BoardPlayPaneId, Set<string>>>(() => selectionSeedForFixture(initialFixture));
+  const [selectionIds, setSelectionIdsState] = useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
+  const [preselection, setPreselection] = useState<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoverSourcePane, setHoverSourcePane] = useState<BoardPlayPaneId | null>(null);
   const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
   const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
   const [expertise, setExpertise] = useState<Expertise>(readExpertise);
@@ -1927,14 +1913,7 @@ function BoardPlayInner(): ReactElement {
   const applyStructuralDelete = useCallback((kind: "edge" | "node", id: string) => {
     const pruneSelections = (removeIds: readonly string[]): void => {
       const remove = new Set(removeIds);
-      setSelectionByPane((selPrev) => {
-        const paneIds: BoardPlayPaneId[] = ["board-overview", "board-detail", "board-selection"];
-        const next: Record<BoardPlayPaneId, Set<string>> = { ...selPrev };
-        for (const pane of paneIds) {
-          next[pane] = new Set([...selPrev[pane]].filter((x) => !remove.has(x)));
-        }
-        return next;
-      });
+      setSelectionIdsState((prev) => new Set([...prev].filter((x) => !remove.has(x))));
     };
     if (kind === "edge") {
       setFixtureState((prev) => {
@@ -1965,7 +1944,9 @@ function BoardPlayInner(): ReactElement {
 
   const setFixture = useCallback((next: BoardFixtureV1) => {
     setFixtureState(next);
-    setSelectionByPane(selectionSeedForFixture(next));
+    setSelectionIdsState(selectionSeedForFixture(next));
+    setPreselection(BOARD_PRESELECT_EMPTY);
+    setHoveredId(null);
     setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
   }, []);
 
@@ -1973,8 +1954,8 @@ function BoardPlayInner(): ReactElement {
     setFixtureState((prev) => updater(prev));
   }, []);
 
-  const setSelectionForPane = useCallback((pane: BoardPlayPaneId, ids: readonly string[]) => {
-    setSelectionByPane((prev) => ({ ...prev, [pane]: new Set(ids) }));
+  const setSelectionIds = useCallback((ids: readonly string[]) => {
+    setSelectionIdsState(new Set(ids));
   }, []);
 
   const handleCanvasFixtureDrop = useCallback(
@@ -1983,26 +1964,19 @@ function BoardPlayInner(): ReactElement {
       const merged = mergePaletteNodeFromDrop(detail);
       if (merged) {
         patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
-        setSelectionForPane(pane, [merged.id]);
+        setSelectionIds([merged.id]);
         return;
       }
       setFixture(detail.fixture);
     },
-    [patchFixture, setFixture, setSelectionForPane],
+    [patchFixture, setFixture, setSelectionIds],
   );
 
   const remapIdInSelections = useCallback((replacedId: string, replacementId: string) => {
     if (replacedId === replacementId) {
       return;
     }
-    const panes: BoardPlayPaneId[] = ["board-overview", "board-detail", "board-selection"];
-    setSelectionByPane((prev) => {
-      const next: Record<BoardPlayPaneId, Set<string>> = { ...prev };
-      for (const p of panes) {
-        next[p] = new Set([...prev[p]].map((id) => (id === replacedId ? replacementId : id)));
-      }
-      return next;
-    });
+    setSelectionIdsState((prev) => new Set([...prev].map((id) => (id === replacedId ? replacementId : id))));
   }, []);
 
   const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
@@ -2482,8 +2456,14 @@ function BoardPlayInner(): ReactElement {
       setTreeLayoutLayerSpacing,
       setTreeLayoutDirection,
       setTreeLayoutSiblingGap,
-      selectionByPane,
-      setSelectionForPane,
+      selectionIds,
+      setSelectionIds,
+      preselection,
+      setPreselection,
+      hoveredId,
+      setHoveredId,
+      hoverSourcePane,
+      setHoverSourcePane,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,
@@ -2516,8 +2496,10 @@ function BoardPlayInner(): ReactElement {
       patchFixture,
       remapIdInSelections,
       resetBoardRedrawProgressiveEpoch,
-      selectionByPane,
-      setSelectionForPane,
+      selectionIds,
+      preselection,
+      hoveredId,
+      hoverSourcePane,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,

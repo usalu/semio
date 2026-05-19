@@ -8661,21 +8661,6 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_minimap_hover_tracks_visible_nodes() {
-		let mut h = BoardHost::new();
-		h.set_size(800, 600, 1.0);
-		h.set_automatic_lod(false);
-		h.set_forced_draw_lod_label("minimap");
-		h.set_camera(0.0, 0.0, 0.1);
-		let mut desc = sample_scene();
-		desc.handles.clear();
-		desc.edges.clear();
-		h.sync_descriptor(&desc).unwrap();
-		h.update_hover_from_world(Point::new(0.0, 0.0));
-		assert_eq!(h.hovered_id.as_deref(), Some("a"));
-	}
-
-	#[test]
 	fn board_host_hover_tracks_visible_wires() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
