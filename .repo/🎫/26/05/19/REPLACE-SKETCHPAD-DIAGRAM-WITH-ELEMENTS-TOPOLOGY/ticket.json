@@ -1,0 +1,13 @@
+{
+  "title": "Replace Sketchpad Diagram With Elements Topology",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Replace the custom sketchpad diagram and scene with the general elements topology component. Preserve sketchpad data editing by translating relative graph representation into absolute topology coordinates for elements. In particular, semio drag of connected pieces only changes the root piece, but elements requires all affected nodes to be updated. Use onTargetChange and onSourceChange to consume relative input and emit authoritative updates back into sketchpad state. Extend existing tests where practical and run targeted verification.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1441"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ac25b4183dd443b6bf6ada58d73c0ec8"
+  ]
+}

@@ -9,6 +9,9 @@
     ".": "./index.tsx"
   },
   "dependencies": {
+    "@elements/board": "workspace:*",
+    "@elements/scene": "workspace:*",
+    "@elements/topology": "workspace:*",
     "fflate": "^0.8.2",
     "@semio/js": "*",
     "@semio/react": "*",

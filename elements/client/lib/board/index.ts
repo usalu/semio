@@ -381,6 +381,14 @@ export interface BoardSelectionSnapshot {
 	gestureMergeMode?: BoardSelectionMode;
 }
 
+/** @emoji 👁️ Live rectangle/lasso preview before pointer-up commit. */
+export interface BoardPreselectSnapshot {
+	ids: string[];
+	/** @emoji 💠 Anchor selection ids dropped from the current preselect (secondary chrome while dragging). */
+	removedIds: string[];
+	gestureMergeMode?: BoardSelectionMode;
+}
+
 export interface BoardSelectionOptions {
 	method?: BoardSelectionMethod;
 	mode?: BoardSelectionMode;
@@ -736,6 +744,8 @@ export interface BoardEventMap {
 	parentEdgeChange: BoardGraphEdgeIdPayload;
 	parentNodeChange: BoardGraphNodeIdPayload;
 	proximityConnect: BoardEdgeLinkPayload;
+	preselect: BoardPreselectSnapshot;
+	preselectCancel: BoardSelectionSnapshot;
 	select: BoardSelectionSnapshot;
 	wireChange: BoardGraphWireIdPayload;
 	wireCreate: BoardWireSnapshotPayload;
@@ -1367,6 +1377,29 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 
 function selectionSnapshotsEqual(left: BoardSelectionSnapshot, right: BoardSelectionSnapshot): boolean {
 	return arrayEqual(left.ids, right.ids) && left.gestureMergeMode === right.gestureMergeMode;
+}
+
+function preselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
+	return (
+		arrayEqual(left.ids, right.ids) &&
+		arrayEqual(left.removedIds, right.removedIds) &&
+		left.gestureMergeMode === right.gestureMergeMode
+	);
+}
+
+function createPreselectSnapshot(
+	ids: Iterable<string>,
+	removedIds: Iterable<string>,
+	gestureMergeMode?: BoardSelectionMode,
+): BoardPreselectSnapshot {
+	const snap: BoardPreselectSnapshot = {
+		ids: sortedSelectionIds(ids),
+		removedIds: sortedSelectionIds(removedIds),
+	};
+	if (gestureMergeMode !== undefined) {
+		snap.gestureMergeMode = gestureMergeMode;
+	}
+	return snap;
 }
 
 function createSelectionSnapshot(ids: Iterable<string>, gestureMergeMode?: BoardSelectionMode): BoardSelectionSnapshot {
@@ -2619,11 +2652,14 @@ export class BoardRenderer {
 	private lastRenderTimestamp: number | null = null;
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
+	private preselectIds = new Set<string>();
+	private preselectRemovedIds = new Set<string>();
 	private selectionExitHighlightIds = new Set<string>();
 	/** @emoji ↩️ Last committed selection before the latest WASM `select` (Escape restores this once). */
 	private selectionPreviousForEscape: string[] = [];
 	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
+	private preselectStore = new SnapshotStore<BoardPreselectSnapshot>({ ids: [], removedIds: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private gpuSurfaceErrorDetail = "";
 	private gpuSurfaceInitPromise: Promise<void> | null = null;
@@ -2806,10 +2842,15 @@ export class BoardRenderer {
 
 	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
 
-	/** @emoji 🔁 Re-applies {@link BoardRenderer.selectionIds} to scene `selected` flags after JSX descriptor sync so WASM selection wins over stale `selected` props. */
+	subscribePreselect = (listener: () => void): (() => void) => this.preselectStore.subscribe(listener);
+
+	getPreselectSnapshot = (): BoardPreselectSnapshot => this.preselectStore.getSnapshot();
+
+	/** @emoji 🔁 Re-applies selection/preselect chrome to scene `selected` flags after JSX descriptor sync. */
 	reconcileSceneSelectedWithSelectionIds(): void {
+		const chrome = this.session.isDraggingAreaSelect() ? this.preselectIds : this.selectionIds;
 		for (const object of this.scene.getAllObjects()) {
-			object.selected = this.selectionIds.has(object.id);
+			object.selected = chrome.has(object.id);
 		}
 	}
 
@@ -3579,6 +3620,37 @@ export class BoardRenderer {
 						this.emitter.emit("camera", { ...this.camera });
 						break;
 					}
+					case "preselect": {
+						const payload = row.payload as { ids?: unknown; removedIds?: unknown; gestureMergeMode?: unknown };
+						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
+						const removedRaw = payload.removedIds;
+						const removedIds = Array.isArray(removedRaw) ? removedRaw.map((id) => String(id)) : [];
+						this.preselectIds = new Set(ids);
+						this.preselectRemovedIds = new Set(removedIds);
+						for (const object of this.scene.getAllObjects()) {
+							object.selected = this.preselectIds.has(object.id);
+						}
+						const gestureMergeMode = isBoardSelectionMode(payload.gestureMergeMode) ? payload.gestureMergeMode : undefined;
+						const snap = createPreselectSnapshot(ids, removedIds, gestureMergeMode);
+						this.preselectStore.setSnapshot(snap, preselectSnapshotsEqual);
+						this.emitter.emit("preselect", snap);
+						break;
+					}
+					case "preselectCancel": {
+						const payload = row.payload as { ids?: unknown };
+						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
+						this.preselectIds.clear();
+						this.preselectRemovedIds.clear();
+						this.selectionIds = new Set(ids);
+						for (const object of this.scene.getAllObjects()) {
+							object.selected = this.selectionIds.has(object.id);
+						}
+						const snap = createSelectionSnapshot(ids);
+						this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
+						this.selectionStore.setSnapshot(snap, selectionSnapshotsEqual);
+						this.emitter.emit("preselectCancel", snap);
+						break;
+					}
 					case "select": {
 						const payload = row.payload as {
 							ids?: unknown;
@@ -3587,6 +3659,9 @@ export class BoardRenderer {
 							anchorIds?: unknown;
 						};
 						const ids = Array.isArray(payload.ids) ? payload.ids.map((id) => String(id)) : [];
+						this.preselectIds.clear();
+						this.preselectRemovedIds.clear();
+						this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
 						const exitRaw = payload.exitHighlightIds;
 						if (Array.isArray(exitRaw)) {
 							this.selectionExitHighlightIds = new Set(exitRaw.map((id) => String(id)));
@@ -3893,6 +3968,9 @@ export class BoardRenderer {
 	dispose(): void {
 		this.isDisposed = true;
 		this.selectionExitHighlightIds.clear();
+		this.preselectIds.clear();
+		this.preselectRemovedIds.clear();
+		this.preselectStore.setSnapshot({ ids: [], removedIds: [] }, preselectSnapshotsEqual);
 		this.selectionPreviousForEscape = [];
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
@@ -4029,11 +4107,18 @@ export class BoardRenderer {
 		this.selectionPreviousForEscape = sortedSelectionIds(prev);
 	}
 
+	private secondarySelectionHighlightIds(): ReadonlySet<string> {
+		if (this.session.isDraggingAreaSelect()) {
+			return this.preselectRemovedIds;
+		}
+		return this.selectionExitHighlightIds;
+	}
+
 	private textOverlayNodeStyleKey(node: Node): "node" | "node.selected" | "node.selectionExit" {
 		if (node.selected) {
 			return "node.selected";
 		}
-		if (this.selectionExitHighlightIds.has(node.id)) {
+		if (this.secondarySelectionHighlightIds().has(node.id)) {
 			return "node.selectionExit";
 		}
 		return "node";
@@ -4043,7 +4128,7 @@ export class BoardRenderer {
 		if (handle.selected) {
 			return "handle.selected";
 		}
-		if (this.selectionExitHighlightIds.has(handle.id)) {
+		if (this.secondarySelectionHighlightIds().has(handle.id)) {
 			return "handle.selectionExit";
 		}
 		return "handle";
@@ -4178,7 +4263,6 @@ export class BoardRenderer {
 				const restore = [...this.selectionPreviousForEscape];
 				this.selectionPreviousForEscape = [];
 				this.setSelectionIds(restore);
-				this.selectionExitHighlightIds.clear();
 				this.lastPushedDescriptorJson = null;
 				this.invalidate();
 			}
@@ -4638,6 +4722,14 @@ if (boardVitest) {
 			renderer.render();
 			expect(frameCount).toBe(1);
 			renderer.dispose();
+		});
+	});
+
+	describe("preselect snapshot helpers", () => {
+		it("createPreselectSnapshot sorts ids and removedIds", () => {
+			const snap = createPreselectSnapshot(["b", "a"], ["z", "y"]);
+			expect(snap.ids).toEqual(["a", "b"]);
+			expect(snap.removedIds).toEqual(["y", "z"]);
 		});
 	});
 

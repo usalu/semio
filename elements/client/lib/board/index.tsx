@@ -62,6 +62,7 @@ import {
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
+	type BoardPreselectSnapshot,
 	type BoardSelectionSnapshot,
 	type BoardSelectionTargets,
 	type CameraState,
@@ -143,6 +144,8 @@ export interface BoardCanvasProps {
 	onNodeDelete?: (payload: { id: string }) => void;
 	/** @emoji 🧲 Snap commit on pointer-up after a link drag (`proximityConnect` after `edgeCreate`). */
 	onProximityConnect?: (payload: BoardEdgeLinkPayload) => void;
+	onPreselect?: (snapshot: BoardPreselectSnapshot) => void;
+	onPreselectCancel?: (snapshot: BoardSelectionSnapshot) => void;
 	onSelect?: (snapshot: BoardSelectionSnapshot) => void;
 	onWireChange?: (payload: BoardGraphWireIdPayload) => void;
 	onWireCreate?: (payload: BoardWireSnapshotPayload) => void;
@@ -750,6 +753,8 @@ export function BoardCanvas({
 	onParentNodeChange,
 	onProximityConnect,
 	onReady,
+	onPreselect,
+	onPreselectCancel,
 	onSelect,
 	onViewportChange,
 	onWireChange,
@@ -1016,6 +1021,12 @@ export function BoardCanvas({
 		if (onSelect) {
 			unsubs.push(contextRenderer.on("select", onSelect));
 		}
+		if (onPreselect) {
+			unsubs.push(contextRenderer.on("preselect", onPreselect));
+		}
+		if (onPreselectCancel) {
+			unsubs.push(contextRenderer.on("preselectCancel", onPreselectCancel));
+		}
 		if (onInvalidate) {
 			unsubs.push(contextRenderer.on("invalidate", onInvalidate));
 		}
@@ -1027,7 +1038,7 @@ export function BoardCanvas({
 				u();
 			}
 		};
-	}, [contextRenderer, onDrag, onInvalidate, onSelect]);
+	}, [contextRenderer, onDrag, onInvalidate, onPreselect, onPreselectCancel, onSelect]);
 
 	useEffect(() => {
 		if (!contextRenderer || (!onCreate && !onDelete)) {
@@ -1318,10 +1329,16 @@ export function useCamera(): [CameraState, (camera: CameraState) => void] {
 	return [snapshot, (nextCamera) => renderer.setCamera(nextCamera.x, nextCamera.y, nextCamera.zoom)];
 }
 
-/** ✅ Subscribe to semantic selection ids without pushing React through the drag hot path. */
+/** ✅ Subscribe to committed selection ids (pointer-up / click picks), not live marquee preview. */
 export function useSelection(): BoardSelectionSnapshot {
 	const renderer = useBoard();
 	return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
+}
+
+/** 👁️ Subscribe to rectangle/lasso preselect preview (cleared on commit or {@link BoardEventMap.preselectCancel}). */
+export function usePreselect(): BoardPreselectSnapshot {
+	const renderer = useBoard();
+	return useSyncExternalStore(renderer.subscribePreselect, renderer.getPreselectSnapshot, renderer.getPreselectSnapshot);
 }
 
 /** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */

@@ -2914,7 +2914,11 @@ mod board_host {
 		/// @emoji 🔗 Kind-compatibility rules for link gestures; empty = unrestricted.
 		pub link_compat_rules: Vec<LinkCompatRule>,
 		pub selection: BTreeSet<String>,
-		/// @emoji 💠 Descriptor‑driven secondary chrome for ids that left the selection (JS source of truth).
+		/// @emoji 👁️ Live rectangle/lasso preview ids (committed selection stays in `selection` until pointer-up).
+		pub preselect: BTreeSet<String>,
+		/// @emoji 💠 During preselect: anchor selection \\ `preselect` (secondary chrome while dragging).
+		pub preselect_removed: BTreeSet<String>,
+		/// @emoji 💠 After commit: ids dropped in the last `select` transition only.
 		pub selection_exit_highlight: BTreeSet<String>,
 		pub selection_options: SelectionOptions,
 		pub hovered_id: Option<String>,
@@ -2945,6 +2949,8 @@ mod board_host {
 		link_target_ring_emit_key: Option<String>,
 		/// @emoji 📡 Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
 		last_select_emit_sig: Option<(Vec<String>, Option<String>)>,
+		/// @emoji 📡 Dedupes `preselect` emissions during area-select drag.
+		last_preselect_emit_sig: Option<(Vec<String>, Vec<String>, Option<String>)>,
 	}
 
 	impl Default for Camera {
@@ -2967,6 +2973,8 @@ mod board_host {
 				edge_kinds: BTreeMap::new(),
 				link_compat_rules: Vec::new(),
 				selection: BTreeSet::new(),
+				preselect: BTreeSet::new(),
+				preselect_removed: BTreeSet::new(),
 				selection_exit_highlight: BTreeSet::new(),
 				selection_options: SelectionOptions {
 					method: "rectangle".into(),
@@ -2995,6 +3003,7 @@ mod board_host {
 				link_compat_nodes_emit_key: None,
 				link_target_ring_emit_key: None,
 				last_select_emit_sig: None,
+				last_preselect_emit_sig: None,
 			}
 		}
 	}
@@ -3545,7 +3554,7 @@ mod board_host {
 			if h.selected {
 				return handle_fill(theme, true);
 			}
-			if self.selection_exit_highlight.contains(h.id.as_str()) {
+			if self.object_has_selection_exit_secondary(h.id.as_str(), h.selected) {
 				return theme.handle_fill_selection_exit;
 			}
 			handle_fill(theme, false)
@@ -3555,7 +3564,7 @@ mod board_host {
 			if h.selected {
 				return handle_stroke(theme, true);
 			}
-			if self.selection_exit_highlight.contains(h.id.as_str()) {
+			if self.object_has_selection_exit_secondary(h.id.as_str(), h.selected) {
 				return theme.handle_stroke_selection_exit;
 			}
 			handle_stroke(theme, false)
@@ -3799,18 +3808,38 @@ mod board_host {
 			out
 		}
 
+		fn is_preselecting(&self) -> bool {
+			matches!(&self.interaction, Interaction::Selection { .. })
+		}
+
+		fn object_has_selection_exit_secondary(&self, id: &str, selected: bool) -> bool {
+			if selected {
+				return false;
+			}
+			if self.is_preselecting() {
+				self.preselect_removed.contains(id)
+			} else {
+				self.selection_exit_highlight.contains(id)
+			}
+		}
+
 		fn sync_selection_flags_to_objects(&mut self) {
+			let chrome = if self.is_preselecting() {
+				self.preselect.clone()
+			} else {
+				self.selection.clone()
+			};
 			for n in self.nodes.values_mut() {
-				n.selected = self.selection.contains(&n.id);
+				n.selected = chrome.contains(&n.id);
 			}
 			for h in self.handles.values_mut() {
-				h.selected = self.selection.contains(&h.id);
+				h.selected = chrome.contains(&h.id);
 			}
 			for e in self.edges.values_mut() {
-				e.selected = self.selection.contains(&e.id);
+				e.selected = chrome.contains(&e.id);
 			}
 			for w in self.wires.values_mut() {
-				w.selected = self.selection.contains(&w.id);
+				w.selected = chrome.contains(&w.id);
 			}
 		}
 
@@ -3847,6 +3876,9 @@ mod board_host {
 			if next == self.selection {
 				return;
 			}
+			self.preselect.clear();
+			self.preselect_removed.clear();
+			self.last_preselect_emit_sig = None;
 			let prev = self.selection.clone();
 			self.set_selection_exit_last_transition(&prev, &next);
 			self.selection = next;
@@ -3864,6 +3896,9 @@ mod board_host {
 				return;
 			}
 			self.last_select_emit_sig = Some(sig);
+			self.preselect.clear();
+			self.preselect_removed.clear();
+			self.last_preselect_emit_sig = None;
 			if next != self.selection {
 				let prev = self.selection.clone();
 				self.set_selection_exit_last_transition(&prev, &next);
@@ -3878,27 +3913,25 @@ mod board_host {
 			self.push_event("select", payload);
 		}
 
-		/// @emoji 🧿 Live rectangle/lasso preview: updates `selection` without mutating exit chrome (one cycle applies on commit).
-		fn set_selection_ids_gestured_preview(&mut self, ids: &[String], gesture: Option<&str>) {
+		/// @emoji 👁️ Rectangle/lasso drag preview: `preselect` + `preselect_removed` (anchor \\ preselect); emits `preselect` only.
+		fn apply_area_preselect(&mut self, anchor_ids: &BTreeSet<String>, ids: &[String], gesture: Option<&str>) {
 			let next: BTreeSet<String> = ids.iter().cloned().collect();
-			let mut sorted: Vec<_> = next.iter().cloned().collect();
-			sorted.sort();
+			let sorted = Self::sorted_selection_ids(&next);
+			let removed = Self::sorted_selection_ids(&anchor_ids.difference(&next).cloned().collect());
 			let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
-			let sig = (sorted.clone(), gesture_owned.clone());
-			if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
+			let sig = (sorted.clone(), removed.clone(), gesture_owned.clone());
+			if self.preselect == next && self.last_preselect_emit_sig.as_ref() == Some(&sig) {
 				return;
 			}
-			self.last_select_emit_sig = Some(sig);
-			if next != self.selection {
-				self.selection = next;
-				self.sync_selection_flags_to_objects();
-			}
-			let mut payload = json!({ "ids": sorted });
+			self.last_preselect_emit_sig = Some(sig);
+			self.preselect = next;
+			self.preselect_removed = anchor_ids.difference(&self.preselect).cloned().collect();
+			self.sync_selection_flags_to_objects();
+			let mut payload = json!({ "ids": sorted, "removedIds": removed });
 			if let Some(ref g) = gesture_owned {
 				payload["gestureMergeMode"] = json!(g);
 			}
-			payload["exitHighlightIds"] = json!(self.selection_exit_sorted_vec());
-			self.push_event("select", payload);
+			self.push_event("preselect", payload);
 		}
 
 		fn sorted_selection_ids(set: &BTreeSet<String>) -> Vec<String> {
@@ -3907,13 +3940,16 @@ mod board_host {
 			v
 		}
 
-		/// @emoji 🧿 Ends a rectangle/lasso cycle: exit chrome uses `initial_ids` → `ids`, and JS receives `anchorIds` for Escape.
+		/// @emoji 🧿 Ends a rectangle/lasso cycle: commits `selection`, exit chrome = anchor → final, clears preselect.
 		fn commit_area_select_from_initial(&mut self, initial_ids: &BTreeSet<String>, ids: &[String], gesture: Option<&str>) {
 			let next: BTreeSet<String> = ids.iter().cloned().collect();
 			let sorted = Self::sorted_selection_ids(&next);
 			let anchor = Self::sorted_selection_ids(initial_ids);
 			let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
 			self.last_select_emit_sig = None;
+			self.last_preselect_emit_sig = None;
+			self.preselect.clear();
+			self.preselect_removed.clear();
 			self.set_selection_exit_last_transition(initial_ids, &next);
 			self.selection = next;
 			self.sync_selection_flags_to_objects();
@@ -4895,6 +4931,8 @@ mod board_host {
 			self.handles.clear();
 			self.nodes.clear();
 			self.selection.clear();
+			self.preselect.clear();
+			self.preselect_removed.clear();
 			self.selection_exit_highlight.clear();
 		}
 
@@ -5324,7 +5362,7 @@ mod board_host {
 				let link_compat = link_compat_nodes.contains(&n.id);
 				let sel_chrome = n.selected && !link_compat;
 				let exit_secondary =
-					!link_compat && !n.selected && self.selection_exit_highlight.contains(n.id.as_str());
+					!link_compat && self.object_has_selection_exit_secondary(n.id.as_str(), n.selected);
 				let (stroke_c, fill) = if link_compat {
 					(
 						self.vello_theme.indirect_handle_stroke,
@@ -5483,7 +5521,7 @@ mod board_host {
 					let curve = CubicBez::new(p0, p1, p2, p3);
 					let stroke_color = if e.selected {
 						self.vello_theme.edge_stroke_selected
-					} else if self.selection_exit_highlight.contains(e.id.as_str()) {
+					} else if self.object_has_selection_exit_secondary(e.id.as_str(), e.selected) {
 						self.vello_theme.edge_stroke_selection_exit
 					} else {
 						self.vello_theme.edge_stroke
@@ -5506,7 +5544,7 @@ mod board_host {
 					let curve = CubicBez::new(p0, p1, p2, p3);
 					let wc = if w.selected {
 						self.vello_theme.edge_stroke_selected
-					} else if self.selection_exit_highlight.contains(w.id.as_str()) {
+					} else if self.object_has_selection_exit_secondary(w.id.as_str(), w.selected) {
 						self.vello_theme.edge_stroke_selection_exit
 					} else {
 						wire_color
@@ -5968,6 +6006,9 @@ mod board_host {
 				if !merge_from_modifiers && self.try_begin_bounded_selection_drag_at(world) {
 					return;
 				}
+				self.preselect.clear();
+				self.preselect_removed.clear();
+				self.last_preselect_emit_sig = None;
 				self.interaction = Interaction::Selection {
 					initial_ids: self.selection.clone(),
 					points: vec![world],
@@ -6066,7 +6107,7 @@ mod board_host {
 					let ids: Vec<_> = next.iter().cloned().collect();
 					let merge_from_modifiers = ctrl_or_meta || shift;
 					let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
-					self.set_selection_ids_gestured_preview(&ids, gesture);
+					self.apply_area_preselect(&initial, &ids, gesture);
 					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
@@ -6208,11 +6249,14 @@ mod board_host {
 			match prev {
 				Interaction::Selection { initial_ids, .. } => {
 					self.set_selection_screen_preview(None);
-					self.selection_exit_highlight.clear();
+					self.preselect.clear();
+					self.preselect_removed.clear();
+					self.last_preselect_emit_sig = None;
 					self.selection = initial_ids.clone();
 					self.sync_selection_flags_to_objects();
 					self.last_select_emit_sig = None;
-					self.push_select_event();
+					let sorted = Self::sorted_selection_ids(&self.selection);
+					self.push_event("preselectCancel", json!({ "ids": sorted }));
 					true
 				}
 				other => {
@@ -7565,9 +7609,12 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		assert!(h.cancel_area_select());
 		assert!(!h.is_dragging_area_select());
-		let _ = h.drain_events_json();
+		let ev = h.drain_events_json();
+		assert!(ev.contains("preselectCancel"));
+		assert!(!ev.contains("\"select\""));
 		assert_eq!(h.selection.len(), 2);
 		assert!(h.selection.contains("a") && h.selection.contains("b"));
+		assert!(h.preselect.is_empty());
 	}
 
 	#[test]
@@ -8032,6 +8079,7 @@ mod host_tests {
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
 		let _ = h.drain_events_json();
+		assert!(h.preselect_removed.is_empty());
 		assert!(h.selection_exit_highlight.is_empty());
 		let w_down = Point::new(350.0, -50.0);
 		let w_mid = Point::new(270.0, 50.0);
@@ -8044,15 +8092,18 @@ mod host_tests {
 		let s_end = h.world_to_screen(w_end);
 		h.pointer_move_screen(s_mid.x, s_mid.y, false, false);
 		let _ = h.drain_events_json();
-		assert!(h.selection.contains("b"), "preview should include node b");
-		let frozen = h.selection_exit_highlight.clone();
+		assert!(h.preselect.contains("b"), "preview should include node b");
+		assert!(h.preselect_removed.contains("a"));
+		assert!(!h.selection.contains("b"), "committed selection unchanged during preselect");
+		let frozen = h.preselect_removed.clone();
 		h.pointer_move_screen(s_end.x, s_end.y, false, false);
 		let _ = h.drain_events_json();
-		assert_eq!(frozen, h.selection_exit_highlight);
+		assert_eq!(frozen, h.preselect_removed);
 		h.pointer_up_screen(s_end.x, s_end.y, false, false);
 		let _ = h.drain_events_json();
 		assert!(h.selection.contains("b"));
 		assert!(!h.selection.contains("a"));
+		assert!(h.preselect_removed.is_empty());
 		assert!(h.selection_exit_highlight.contains("a"));
 	}
 

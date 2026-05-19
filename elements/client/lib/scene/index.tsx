@@ -143,6 +143,8 @@ export interface SceneTieProps {
 	tieKind?: string;
 }
 
+export const SCENE_PLACEHOLDER_MESH_URL = "elements.scene.placeholder://box";
+
 export interface SceneEdgeKindCatalogEntry {
 	id: string;
 	label?: string;
@@ -969,9 +971,22 @@ function sceneNearestLinkSnapFullId(args: {
 //#endregion 🔗LinkGesture
 
 //#region 🧊Object
+const ScenePlaceholderMesh = memo(function ScenePlaceholderMesh() {
+	return (
+		<mesh>
+			<boxGeometry args={[1, 1, 1]} />
+			<meshStandardMaterial color="#cbd5e1" metalness={0.05} roughness={0.85} />
+		</mesh>
+	);
+});
+
+const SceneResolvedObjectMesh = memo(function SceneResolvedObjectMesh(props: { readonly meshUrl: string }) {
+	const gltf = usePooledGltf(props.meshUrl);
+	return gltf.scene ? <Clone object={gltf.scene} /> : null;
+});
+
 export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	const group = useRef<Group>(null);
-	const gltf = usePooledGltf(props.meshUrl);
 	const reg = useSceneRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
@@ -1025,7 +1040,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 			userData={{ sceneObjectId: props.id, ...props.userData }}
 			data-scene-object={props.id}
 		>
-			{gltf.scene && <Clone object={gltf.scene} />}
+			{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? <ScenePlaceholderMesh /> : <SceneResolvedObjectMesh meshUrl={props.meshUrl} />}
 			{props.children}
 			{showTc && (
 				<TransformControls

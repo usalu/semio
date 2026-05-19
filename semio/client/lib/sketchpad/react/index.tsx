@@ -142,6 +142,20 @@ import {
   useUpdateType,
   useWriteIndicator,
 } from "@semio/react";
+import type { BoardEdgeLinkPayload, BoardFixtureV1, CameraState as ElementsBoardCameraState } from "@elements/board";
+import {
+  SCENE_PLACEHOLDER_MESH_URL,
+  type SceneCameraState as ElementsSceneCameraState,
+  type SceneFixtureV1,
+  type SceneRelocateMode as ElementsSceneRelocateMode,
+  type SceneRelocatePayload,
+  type SceneTieLinkPayload,
+} from "@elements/scene";
+import {
+  buildTopologyDualSurfaceBindings,
+  TopologyBoardPane,
+  TopologyScenePane,
+} from "@elements/topology";
 import { gunzipSync } from "fflate";
 
 /** @emoji 👟 Registry kit-store factory until sketchpad runs purely on {@link SessionContextProvider}. */
@@ -35311,6 +35325,595 @@ const DesignAppScene: FC = () => {
 
 // #endregion 📍Scene
 
+// #region 🧩TopologyAdapter
+const SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH = 96;
+const SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT = 48;
+const SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS = 10;
+const SKETCHPAD_TOPOLOGY_SCENE_VORTEX_RADIUS = 0.18;
+
+const sketchpadTopologyBoardHandleId = (pieceId: string, connectorId: string): string => `${pieceId}::${connectorId}`;
+
+const sketchpadTopologySceneFullId = (pieceId: string, connectorId: string): `${string}:${string}` => `${pieceId}:${connectorId}`;
+
+const readSketchpadEntityId = (value: unknown): string | undefined => {
+  if (typeof value === "string" && value.length > 0) return value;
+  if (value && typeof value === "object") {
+    const id = (value as { id?: unknown }).id;
+    if (typeof id === "string" && id.length > 0) return id;
+  }
+  return undefined;
+};
+
+const parseSketchpadTopologyBoardHandleId = (value: string): { pieceId: string; connectorId: string } | null => {
+  const separatorIndex = value.indexOf("::");
+  if (separatorIndex <= 0 || separatorIndex >= value.length - 2) return null;
+  return {
+    pieceId: value.slice(0, separatorIndex),
+    connectorId: value.slice(separatorIndex + 2),
+  };
+};
+
+const parseSketchpadTopologySceneFullId = (value: string): { pieceId: string; connectorId: string } | null => {
+  const separatorIndex = value.indexOf(":");
+  if (separatorIndex <= 0 || separatorIndex >= value.length - 1) return null;
+  return {
+    pieceId: value.slice(0, separatorIndex),
+    connectorId: value.slice(separatorIndex + 1),
+  };
+};
+
+const sketchpadTopologyConnectorAngle = (index: number, total: number): number => -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
+
+const sketchpadTopologyBoardHandleOffset = (index: number, total: number): { x: number; y: number } => {
+  const angle = sketchpadTopologyConnectorAngle(index, total);
+  const radius = Math.max(SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH, SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT) * 0.5;
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+  };
+};
+
+const sketchpadTopologySceneVortexOffset = (index: number, total: number): [number, number, number] => {
+  const angle = sketchpadTopologyConnectorAngle(index, total);
+  return [Math.cos(angle) * 0.75, 0, Math.sin(angle) * 0.75];
+};
+
+const sketchpadTopologyPieceCenter = (piece: Piece, placementByPiece: Map<string, any>): Coordinate => {
+  const center = placementByPiece.get(piece.id)?.center ?? piece.center;
+  return center ?? { u: 0, v: 0 };
+};
+
+const sketchpadTopologyPiecePlaneToSceneTransform = (piece: Piece, placementByPiece: Map<string, any>) => {
+  if (!piece.plane) {
+    const center = sketchpadTopologyPieceCenter(piece, placementByPiece);
+    return {
+      origin: [center.u, 0, -center.v] as [number, number, number],
+      orientation: [0, 0, 0, 1] as [number, number, number, number],
+      scale: [1, 1, 1] as [number, number, number],
+    };
+  }
+  const worldMatrix = new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeToMatrix(piece.plane)).multiply(toSemioRotation());
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  worldMatrix.decompose(position, quaternion, scale);
+  return {
+    origin: position.toArray() as [number, number, number],
+    orientation: quaternion.toArray() as [number, number, number, number],
+    scale: scale.toArray() as [number, number, number],
+  };
+};
+
+const sketchpadTopologySceneTransformToPlane = (transform: SceneRelocatePayload["after"]): Plane => {
+  const worldMatrix = new THREE.Matrix4().compose(
+    new THREE.Vector3(transform.origin[0], transform.origin[1], transform.origin[2]),
+    new THREE.Quaternion(transform.orientation[0], transform.orientation[1], transform.orientation[2], transform.orientation[3]),
+    new THREE.Vector3(transform.scale[0], transform.scale[1], transform.scale[2]),
+  );
+  const semioMatrix = new THREE.Matrix4().multiplyMatrices(toSemioRotation(), worldMatrix).multiply(toThreeRotation());
+  const e = semioMatrix.elements;
+  const xAxis = new THREE.Vector3(e[0], e[1], e[2]).normalize();
+  const yAxis = new THREE.Vector3(e[4], e[5], e[6]).normalize();
+  return {
+    origin: { x: e[12], y: e[13], z: e[14] },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+  };
+};
+
+const sketchpadTopologyResolvePieceConnectors = (piece: Piece, typeById: Map<string, Type>): Connector[] => {
+  const typeId = readSketchpadEntityId(piece.type);
+  if (!typeId) return [];
+  return typeById.get(typeId)?.connectors ?? [];
+};
+
+const sketchpadTopologyPieceLabel = (piece: Piece, typeById: Map<string, Type>, designById: Map<string, Design>): string => {
+  const designId = readSketchpadEntityId(piece.design);
+  if (designId) {
+    return designById.get(designId)?.name ?? `Design ${designId.slice(0, 8)}`;
+  }
+  const typeId = readSketchpadEntityId(piece.type);
+  if (typeId) {
+    return typeById.get(typeId)?.name ?? `Type ${typeId.slice(0, 8)}`;
+  }
+  return piece.id.slice(0, 8);
+};
+
+const sketchpadTopologyBoardCameraFromPieces = (pieces: readonly Piece[], placementByPiece: Map<string, any>): ElementsBoardCameraState => {
+  if (pieces.length === 0) return { x: 0, y: 0, zoom: 1 };
+  const points = pieces.map((piece) => sketchpadTopologyPieceCenter(piece, placementByPiece));
+  const avgU = points.reduce((sum, point) => sum + point.u, 0) / points.length;
+  const avgV = points.reduce((sum, point) => sum + point.v, 0) / points.length;
+  return { x: avgU * ICON_WIDTH, y: -avgV * ICON_WIDTH, zoom: 1 };
+};
+
+const sketchpadTopologySceneCameraFromPieces = (pieces: readonly Piece[], placementByPiece: Map<string, any>): ElementsSceneCameraState => {
+  if (pieces.length === 0) {
+    return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
+  }
+  const transforms = pieces.map((piece) => sketchpadTopologyPiecePlaneToSceneTransform(piece, placementByPiece));
+  const avg = transforms.reduce(
+    (acc, transform) => {
+      acc[0] += transform.origin[0];
+      acc[1] += transform.origin[1];
+      acc[2] += transform.origin[2];
+      return acc;
+    },
+    [0, 0, 0] as [number, number, number],
+  );
+  const target: [number, number, number] = [avg[0] / transforms.length, avg[1] / transforms.length, avg[2] / transforms.length];
+  return {
+    position: [target[0] + 8, target[1] + 8, target[2] + 8],
+    target,
+    zoom: 1,
+  };
+};
+
+const sketchpadTopologyBuildBoardFixture = (args: {
+  readonly pieces: readonly Piece[];
+  readonly connections: readonly SemioConnection[];
+  readonly placementByPiece: Map<string, any>;
+  readonly typeById: Map<string, Type>;
+  readonly designById: Map<string, Design>;
+  readonly showPieces: boolean;
+  readonly showConnections: boolean;
+}): BoardFixtureV1 => {
+  const nodes = args.showPieces
+    ? args.pieces.map((piece) => {
+        const center = sketchpadTopologyPieceCenter(piece, args.placementByPiece);
+        const connectors = sketchpadTopologyResolvePieceConnectors(piece, args.typeById);
+        return {
+          id: piece.id,
+          shape: "rectangle" as const,
+          width: SKETCHPAD_TOPOLOGY_BOARD_NODE_WIDTH,
+          height: SKETCHPAD_TOPOLOGY_BOARD_NODE_HEIGHT,
+          x: center.u * ICON_WIDTH,
+          y: -center.v * ICON_WIDTH,
+          text: sketchpadTopologyPieceLabel(piece, args.typeById, args.designById),
+          root: !args.placementByPiece.get(piece.id)?.parentPieceId,
+          nodeKind: readSketchpadEntityId(piece.design) ? "semio.design" : "semio.type",
+          handles: connectors.map((connector, connectorIndex) => ({
+            id: sketchpadTopologyBoardHandleId(piece.id, connector.id),
+            angle: sketchpadTopologyConnectorAngle(connectorIndex, connectors.length),
+            radius: SKETCHPAD_TOPOLOGY_BOARD_HANDLE_RADIUS,
+            handleKind: "semio.connector",
+          })),
+        };
+      })
+    : [];
+
+  const edges = args.showPieces && args.showConnections
+    ? args.connections
+        .map((connection) => {
+          const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
+          const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
+          const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
+          const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
+          if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+          return {
+            id: connection.id,
+            source: sketchpadTopologyBoardHandleId(sourcePieceId, sourceConnectorId),
+            target: sketchpadTopologyBoardHandleId(targetPieceId, targetConnectorId),
+            edgeKind: "semio.connection",
+          };
+        })
+        .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
+    : [];
+
+  return {
+    schema: "elements.board.fixture/v1",
+    camera: sketchpadTopologyBoardCameraFromPieces(args.pieces, args.placementByPiece),
+    nodes,
+    edges,
+  };
+};
+
+const sketchpadTopologyBuildSceneFixture = (args: {
+  readonly pieces: readonly Piece[];
+  readonly connections: readonly SemioConnection[];
+  readonly placementByPiece: Map<string, any>;
+  readonly typeById: Map<string, Type>;
+  readonly designById: Map<string, Design>;
+  readonly showPieces: boolean;
+  readonly showConnections: boolean;
+}): SceneFixtureV1 => {
+  const objects = args.showPieces
+    ? args.pieces.map((piece) => {
+        const connectors = sketchpadTopologyResolvePieceConnectors(piece, args.typeById);
+        const transform = sketchpadTopologyPiecePlaneToSceneTransform(piece, args.placementByPiece);
+        return {
+          id: piece.id,
+          objectKind: readSketchpadEntityId(piece.design) ? "semio.design" : "semio.type",
+          meshUrl: SCENE_PLACEHOLDER_MESH_URL,
+          origin: transform.origin,
+          orientation: transform.orientation,
+          scale: transform.scale,
+          label: sketchpadTopologyPieceLabel(piece, args.typeById, args.designById),
+          vortices: connectors.map((connector, connectorIndex) => ({
+            id: connector.id,
+            vortexKind: "semio.connector",
+            position: sketchpadTopologySceneVortexOffset(connectorIndex, connectors.length),
+            radius: SKETCHPAD_TOPOLOGY_SCENE_VORTEX_RADIUS,
+          })),
+        };
+      })
+    : [];
+
+  const ties = args.showPieces && args.showConnections
+    ? args.connections
+        .map((connection) => {
+          const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
+          const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
+          const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
+          const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
+          if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+          return {
+            id: connection.id,
+            source: sketchpadTopologySceneFullId(sourcePieceId, sourceConnectorId),
+            target: sketchpadTopologySceneFullId(targetPieceId, targetConnectorId),
+            tieKind: "semio.connection",
+          };
+        })
+        .filter((tie): tie is NonNullable<typeof tie> => tie !== null)
+    : [];
+
+  return {
+    schema: "elements.scene.fixture/v1",
+    camera: sketchpadTopologySceneCameraFromPieces(args.pieces, args.placementByPiece),
+    objects,
+    ties,
+  };
+};
+
+const sketchpadTopologyBuildConnection = (args: {
+  readonly sourcePieceId: string;
+  readonly sourceConnectorId: string;
+  readonly targetPieceId: string;
+  readonly targetConnectorId: string;
+  readonly pieceById: Map<string, Piece>;
+  readonly placementByPiece: Map<string, any>;
+  readonly connectorRowsByPieceId: Map<string, readonly Connector[]>;
+}): SemioConnection | null => {
+  const sourcePiece = args.pieceById.get(args.sourcePieceId);
+  const targetPiece = args.pieceById.get(args.targetPieceId);
+  if (!sourcePiece || !targetPiece) return null;
+  const sourceCenter = sketchpadTopologyPieceCenter(sourcePiece, args.placementByPiece);
+  const targetCenter = sketchpadTopologyPieceCenter(targetPiece, args.placementByPiece);
+  const sourceConnectors = args.connectorRowsByPieceId.get(args.sourcePieceId) ?? [];
+  const targetConnectors = args.connectorRowsByPieceId.get(args.targetPieceId) ?? [];
+  const sourceIndex = Math.max(0, sourceConnectors.findIndex((connector) => connector.id === args.sourceConnectorId));
+  const targetIndex = Math.max(0, targetConnectors.findIndex((connector) => connector.id === args.targetConnectorId));
+  const sourceOffset = sketchpadTopologyBoardHandleOffset(sourceIndex, sourceConnectors.length || 1);
+  const targetOffset = sketchpadTopologyBoardHandleOffset(targetIndex, targetConnectors.length || 1);
+  const sourceX = sourceCenter.u * ICON_WIDTH + sourceOffset.x;
+  const sourceY = -sourceCenter.v * ICON_WIDTH + sourceOffset.y;
+  const targetX = targetCenter.u * ICON_WIDTH + targetOffset.x;
+  const targetY = -targetCenter.v * ICON_WIDTH + targetOffset.y;
+  return {
+    id: crypto.randomUUID(),
+    connecting: {
+      piece: { id: args.sourcePieceId },
+      connector: { id: args.sourceConnectorId },
+    },
+    connected: {
+      piece: { id: args.targetPieceId },
+      connector: { id: args.targetConnectorId },
+    },
+    u: (sourceX - targetX) / ICON_WIDTH,
+    v: -((sourceY - targetY) / ICON_WIDTH),
+  } as SemioConnection;
+};
+
+const useDesignTopologyAdapter = () => {
+  const [transaction] = useDesignAppChange();
+  const [updatePieces] = useDesignAppUpdatePieces();
+  const [addConnection] = useDesignAppAddConnection();
+  const [selection, setSelection] = useDesignAppSelection();
+  const [deselectAll] = useDesignAppDeselectAll();
+  const [kitTypes0] = useTypes();
+  const kitDesignsField = useKitDesigns();
+  const kit = useKitStoreSnapshot()?.kit as Kit | undefined;
+  const designIdentity = useDesign();
+  const designScope = useDesignContext();
+  const activeDesignId = (designIdentity ?? designScope ?? null) as string | null;
+  const kitTypes = (kitTypes0 ?? []) as Type[];
+  const kitDesigns = (kitDesignsField ?? []) as Design[];
+  const designFilters = useDesignFilters();
+  const placementByPiece = useDesignPieceLayoutMap() as Map<string, any>;
+  const design = useMemo(() => {
+    if (activeDesignId == null) return null;
+    return kitDesigns.find((entry) => entry.id === activeDesignId) ?? kit?.designs?.find((entry) => entry.id === activeDesignId) ?? null;
+  }, [activeDesignId, kitDesigns, kit]);
+
+  const pieces = design?.pieces ?? [];
+  const connections = (design?.connections ?? []) as SemioConnection[];
+  const typeById = useMemo(() => new Map(kitTypes.map((type) => [type.id, type])), [kitTypes]);
+  const designById = useMemo(() => new Map(kitDesigns.map((entry) => [entry.id, entry])), [kitDesigns]);
+  const pieceById = useMemo(() => new Map(pieces.map((piece) => [piece.id, piece])), [pieces]);
+  const connectorRowsByPieceId = useMemo(
+    () => new Map(pieces.map((piece) => [piece.id, sketchpadTopologyResolvePieceConnectors(piece, typeById)])),
+    [pieces, typeById],
+  );
+  const selectedPieceIds = useMemo(
+    () => new Set((selection?.pieces ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)),
+    [selection?.pieces],
+  );
+  const selectedConnectionIds = useMemo(
+    () => new Set((selection?.connections ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)),
+    [selection?.connections],
+  );
+
+  const boardFixture = useMemo(
+    () =>
+      sketchpadTopologyBuildBoardFixture({
+        pieces,
+        connections,
+        placementByPiece,
+        typeById,
+        designById,
+        showPieces: designFilters.showPieces,
+        showConnections: designFilters.showConnections,
+      }),
+    [pieces, connections, placementByPiece, typeById, designById, designFilters.showPieces, designFilters.showConnections],
+  );
+
+  const sceneFixture = useMemo(
+    () =>
+      sketchpadTopologyBuildSceneFixture({
+        pieces,
+        connections,
+        placementByPiece,
+        typeById,
+        designById,
+        showPieces: designFilters.showPieces,
+        showConnections: designFilters.showConnections,
+      }),
+    [pieces, connections, placementByPiece, typeById, designById, designFilters.showPieces, designFilters.showConnections],
+  );
+
+  const initialBoardCamera = useMemo(() => sketchpadTopologyBoardCameraFromPieces(pieces, placementByPiece), [pieces, placementByPiece]);
+  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(initialBoardCamera);
+  useEffect(() => {
+    setBoardCamera(initialBoardCamera);
+  }, [initialBoardCamera]);
+
+  const initialSceneCamera = useMemo(() => sketchpadTopologySceneCameraFromPieces(pieces, placementByPiece), [pieces, placementByPiece]);
+  const [sceneCamera, setSceneCamera] = useState<ElementsSceneCameraState>(initialSceneCamera);
+  useEffect(() => {
+    setSceneCamera(initialSceneCamera);
+  }, [initialSceneCamera]);
+
+  const [relocateMode, setRelocateMode] = useState<ElementsSceneRelocateMode>("translate");
+  const dragTransactionActiveRef = useRef(false);
+  const dragFinalizeTimeoutRef = useRef<number | null>(null);
+
+  const finalizeDragTransaction = useCallback(() => {
+    if (dragFinalizeTimeoutRef.current !== null) {
+      window.clearTimeout(dragFinalizeTimeoutRef.current);
+      dragFinalizeTimeoutRef.current = null;
+    }
+    if (!dragTransactionActiveRef.current) return;
+    dragTransactionActiveRef.current = false;
+    transaction?.finalize();
+  }, [transaction]);
+
+  const scheduleDragFinalize = useCallback(() => {
+    if (dragFinalizeTimeoutRef.current !== null) {
+      window.clearTimeout(dragFinalizeTimeoutRef.current);
+    }
+    dragFinalizeTimeoutRef.current = window.setTimeout(() => {
+      finalizeDragTransaction();
+    }, 140);
+  }, [finalizeDragTransaction]);
+
+  useEffect(() => {
+    return () => {
+      finalizeDragTransaction();
+    };
+  }, [finalizeDragTransaction]);
+
+  const setTopologySelection = useCallback(
+    (pieceIds: string[], connectionIds: string[]) => {
+      if (!setSelection) return;
+      if (pieceIds.length === 0 && connectionIds.length === 0) {
+        deselectAll?.();
+        return;
+      }
+      setSelection({ pieces: pieceIds, connections: connectionIds });
+    },
+    [setSelection, deselectAll],
+  );
+
+  const onBoardSelect = useCallback(
+    (snapshot: { ids: string[] }) => {
+      const pieceIds = snapshot.ids.filter((id) => pieceById.has(id));
+      const connectionIds = snapshot.ids.filter((id) => selectedConnectionIds.has(id) || connections.some((connection) => connection.id === id));
+      setTopologySelection(pieceIds, connectionIds);
+    },
+    [pieceById, selectedConnectionIds, connections, setTopologySelection],
+  );
+
+  const onSceneSelect = useCallback(
+    (snapshot: { objectIds: readonly string[] }) => {
+      setTopologySelection([...snapshot.objectIds].filter((id) => pieceById.has(id)), []);
+    },
+    [pieceById, setTopologySelection],
+  );
+
+  const onBoardDrag = useCallback(
+    (payload: { id: string; x: number; y: number }) => {
+      const piece = pieceById.get(payload.id);
+      if (!piece || !updatePieces) return;
+      const currentCenter = sketchpadTopologyPieceCenter(piece, placementByPiece);
+      const nextCenter = { u: payload.x / ICON_WIDTH, v: -payload.y / ICON_WIDTH };
+      const deltaU = nextCenter.u - currentCenter.u;
+      const deltaV = nextCenter.v - currentCenter.v;
+      if (Math.abs(deltaU) < 1e-6 && Math.abs(deltaV) < 1e-6) return;
+      if (!dragTransactionActiveRef.current) {
+        transaction?.start();
+        dragTransactionActiveRef.current = true;
+      }
+      const downstreamPieceIds = getDownstreamDescendants(placementByPiece as Map<string, PieceMetadata>, new Set([piece.id]));
+      const updateIds = [piece.id, ...downstreamPieceIds];
+      updatePieces(
+        updateIds.map((pieceId) => {
+          const currentPiece = pieceById.get(pieceId);
+          const center = currentPiece ? sketchpadTopologyPieceCenter(currentPiece, placementByPiece) : { u: 0, v: 0 };
+          return {
+            id: pieceId,
+            diff: {
+              center: {
+                u: center.u + deltaU,
+                v: center.v + deltaV,
+              },
+            },
+          };
+        }),
+      );
+      scheduleDragFinalize();
+    },
+    [pieceById, placementByPiece, updatePieces, transaction, scheduleDragFinalize],
+  );
+
+  const onBoardNodeChange = useCallback(() => {
+    scheduleDragFinalize();
+  }, [scheduleDragFinalize]);
+
+  const connectEndpoints = useCallback(
+    (sourcePieceId: string, sourceConnectorId: string, targetPieceId: string, targetConnectorId: string) => {
+      const nextConnection = sketchpadTopologyBuildConnection({
+        sourcePieceId,
+        sourceConnectorId,
+        targetPieceId,
+        targetConnectorId,
+        pieceById,
+        placementByPiece,
+        connectorRowsByPieceId,
+      });
+      if (!nextConnection || !addConnection) return;
+      if (connections.some((connection) => areSameConnection(connection, nextConnection))) return;
+      transaction?.start();
+      addConnection(nextConnection);
+      transaction?.finalize();
+    },
+    [pieceById, placementByPiece, connectorRowsByPieceId, connections, addConnection, transaction],
+  );
+
+  const onBoardConnect = useCallback(
+    (payload: BoardEdgeLinkPayload) => {
+      const source = parseSketchpadTopologyBoardHandleId(payload.source);
+      const target = parseSketchpadTopologyBoardHandleId(payload.target);
+      if (!source || !target) return;
+      connectEndpoints(source.pieceId, source.connectorId, target.pieceId, target.connectorId);
+    },
+    [connectEndpoints],
+  );
+
+  const onSceneConnect = useCallback(
+    (payload: SceneTieLinkPayload) => {
+      const source = parseSketchpadTopologySceneFullId(payload.source);
+      const target = parseSketchpadTopologySceneFullId(payload.target);
+      if (!source || !target) return;
+      connectEndpoints(source.pieceId, source.connectorId, target.pieceId, target.connectorId);
+    },
+    [connectEndpoints],
+  );
+
+  const onSceneRelocate = useCallback(
+    (payload: SceneRelocatePayload) => {
+      if (!updatePieces || !pieceById.has(payload.objectId)) return;
+      transaction?.start();
+      updatePieces([
+        {
+          id: payload.objectId,
+          diff: {
+            plane: sketchpadTopologySceneTransformToPlane(payload.after),
+          },
+        },
+      ]);
+      transaction?.finalize();
+    },
+    [updatePieces, pieceById, transaction],
+  );
+
+  const bindings = useMemo(
+    () =>
+      buildTopologyDualSurfaceBindings({
+        gridFactor: 10,
+        gridSnapEnabled: true,
+        onBoardCamera: setBoardCamera,
+        onBoardConnect,
+        onBoardSelect,
+        onSceneCamera: setSceneCamera,
+        onSceneConnect,
+        onSceneSelect,
+      }),
+    [onBoardConnect, onBoardSelect, onSceneConnect, onSceneSelect],
+  );
+
+  return {
+    boardFixture,
+    sceneFixture,
+    bindings,
+    boardCamera,
+    sceneCamera,
+    relocateMode,
+    setRelocateMode,
+    selectedPieceIds,
+    selectedConnectionIds,
+    onBoardDrag,
+    onBoardNodeChange,
+    onSceneRelocate,
+  };
+};
+
+const DesignTopologyBoardWindow = memo(() => {
+  const topology = useDesignTopologyAdapter();
+  return (
+    <TopologyBoardPane
+      fixture={topology.boardFixture}
+      bindings={topology.bindings}
+      selectedIds={new Set([...topology.selectedPieceIds, ...topology.selectedConnectionIds])}
+      board={{ camera: topology.boardCamera, onDrag: topology.onBoardDrag, onNodeChange: topology.onBoardNodeChange }}
+    />
+  );
+});
+
+const DesignTopologySceneWindow = memo(() => {
+  const topology = useDesignTopologyAdapter();
+  const selectedObjectId = [...topology.selectedPieceIds][0] ?? null;
+  return (
+    <TopologyScenePane
+      fixture={topology.sceneFixture}
+      bindings={topology.bindings}
+      relocateMode={topology.relocateMode}
+      selectedObjectId={selectedObjectId}
+      scene={{ camera: topology.sceneCamera, onRelocate: topology.onSceneRelocate }}
+    />
+  );
+});
+// #endregion 🧩TopologyAdapter
+
 // #endregion ⚙️Canvas
 
 // #region 🧿Windows
@@ -35323,12 +35926,12 @@ export interface AppProps {}
 /**
  * DesignDiagramWindow holds the data fields for a DesignDiagramWindow record.
  **/
-const DesignDiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
+const DesignDiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(() => {
   return (
     <HoverIntentProvider>
       <TransactionPiecesProvider>
         <HoverPiecesProvider>
-          <DesignDiagram reactFlowInstanceRef={reactFlowInstanceRef} />
+          <DesignTopologyBoardWindow />
         </HoverPiecesProvider>
       </TransactionPiecesProvider>
     </HoverIntentProvider>
@@ -35344,7 +35947,7 @@ const SceneWindow = memo(() => {
     <HoverIntentProvider>
       <TransactionPiecesProvider>
         <HoverPiecesProvider>
-          <DesignAppScene />
+          <DesignTopologySceneWindow />
         </HoverPiecesProvider>
       </TransactionPiecesProvider>
     </HoverIntentProvider>
