@@ -1,0 +1,10 @@
+{
+  "title": "Scene Single Index Consolidation",
+  "emoji": "📦",
+  "status": "open",
+  "description": "Consolidate @elements/scene into single react/index.tsx: merge play harness, remove bake scripts and semio plane modules, remove Z-up mesh correction; delete play/index.tsx; vitest single file; update Vite entry.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪16045ec36f6d4f9cb94e065751ec1c3e"
+  ]
+}

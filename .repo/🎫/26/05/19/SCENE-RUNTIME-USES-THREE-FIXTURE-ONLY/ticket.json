@@ -1,8 +1,9 @@
 {
   "title": "Scene Runtime Uses Three Fixture Only",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Remove semio authoring-plane coordinate conversion from the Three/R3F scene runtime. Scene consumes elements.scene.fixture/v1 with origin+orientation already in standard Three.js Y-up world space. Keep authoring→fixture conversion only in the nakagin bake path (authoringToThreeFixture + semioDesignPlane ingestion). Delete coordsPlane; move embedded tests off react/index.",
+  "summary": "Scene R3F runtime no longer imports semio plane helpers or exports planeBasisToThreeJs. Authoring→Three fixture math lives only in authoringToThreeFixture (used by nakaginSceneBake); semioDesignPlane remains bake-side ingestion. Removed coordsPlane.ts; Vitest now runs embedded tests in authoringToThreeFixture.ts and semioDesignPlane.ts. Re-ran bun ./script.ts test (Vitest + Playwright) and bake nakagin — fixture unchanged.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪6992b16e4318499c8a006ecfd97aef23"

@@ -33,7 +33,7 @@ import {
 	topologySceneChromeDefaults,
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
-import { parseSceneFixtureV1, type SceneCameraState, type SceneFixtureV1, type SceneLodKind, type SceneRelocateMode } from "../../scene/react/index.tsx";
+import { parseSceneFixtureV1, type SceneCameraState, type SceneFixtureV1, type SceneLodKind, type SceneRelocateMode } from "../../scene/index.tsx";
 import topologyManifestJson from "../fixtures/nakagin-capsule-tower.topology.json";
 import "./globals.css";
 // #endregion 📥Imports

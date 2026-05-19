@@ -1,52 +1,3 @@
-// #region 🧲Header
-// 💻 elements/client/lib/scene/play/index.tsx — Scene play harness: same `@elements/ui` surface chrome + shell as board play (globals, window level, footer theme/device/expertise, `useElementsSurfaceChrome`), Nakagin fixture + relocate toolbar.
-// #endregion 🧲Header
-
-// #region 📥Imports
-import { useGLTF } from "@react-three/drei";
-import { Suspense, useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
-import { createRoot } from "react-dom/client";
-
-import {
-	Button,
-	Expertise,
-	LevelProvider,
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	ToolbarGroup,
-	ToolbarItem,
-	ToolbarZone,
-	UI,
-	createStackLayout,
-	getLevelBgClass,
-	useElementsSurfaceChrome,
-	type ElementsSurfaceDevice,
-	type ElementsSurfaceTheme,
-	type FooterItem,
-	type UIAppConfig,
-} from "@elements/ui";
-import { Move3d, Rotate3d, Scaling } from "lucide-react";
-
-import sceneFixtureJson from "../fixtures/nakagin-capsule-tower.scene.json";
-import {
-	Scene,
-	SceneObject,
-	SceneTie,
-	SceneVortex,
-	parseSceneFixtureV1,
-	sceneBlockedVortexFullIdsFromTies,
-	type SceneFixtureV1,
-	type SceneKindCatalogBundle,
-	type SceneKindCompatEntry,
-	type SceneLodKind,
-	type SceneRelocateMode,
-} from "../react/index";
-import "./globals.css";
-// #endregion 📥Imports
-
 // #region 🧾Meta
 function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly SceneKindCompatEntry[] {
 	if (!meta || typeof meta !== "object") return [];
@@ -409,21 +360,3 @@ function ScenePlayApp(): ReactElement {
 	);
 }
 // #endregion 🎬ScenePlay
-
-// #region 🚀Mount
-const rootEl = document.getElementById("root");
-if (rootEl) {
-	createRoot(rootEl).render(<ScenePlayApp />);
-}
-// #endregion 🚀Mount
-
-if (import.meta.vitest) {
-	const { describe, expect, it } = import.meta.vitest;
-	describe("scene play fixture hook", () => {
-		it("parses nakagin fixture", () => {
-			const f = parseSceneFixtureV1(sceneFixtureJson as unknown);
-			expect(f?.ties.length).toBeGreaterThan(0);
-			expect(f?.objects.length).toBeGreaterThan(0);
-		});
-	});
-}

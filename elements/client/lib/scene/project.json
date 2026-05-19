@@ -38,15 +38,6 @@
         },
         "forwardAllArgs": true
       }
-    },
-    "bake": {
-      "dependsOn": [],
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "elements/client/lib/scene",
-        "command": "bun ./script.ts bake nakagin",
-        "forwardAllArgs": true
-      }
     }
   }
 }

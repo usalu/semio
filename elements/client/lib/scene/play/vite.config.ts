@@ -5,13 +5,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const sceneRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(__dirname, "../../../../../");
 const meshRoot = path.resolve(repoRoot, "semio/assets/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/fixtures/placeholder.glb");
 
 export default defineConfig({
-	root: __dirname,
+	root: sceneRoot,
 	plugins: [
 		tailwindcss(),
 		react(),
@@ -49,6 +49,8 @@ export default defineConfig({
 	},
 	build: {
 		target: "esnext",
+		outDir: "play/dist",
+		emptyOutDir: true,
 	},
 	resolve: {
 		alias: [

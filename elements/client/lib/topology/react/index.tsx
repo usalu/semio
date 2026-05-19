@@ -27,7 +27,7 @@ import {
 	type SceneKindCompatEntry,
 	type SceneLodZoomThresholds,
 	type SceneRelocateMode,
-} from "../../scene/react/index.tsx";
+} from "../../scene/index.tsx";
 
 //#region 🔖TopologyFixture
 /** @emoji 📄 Parsed `elements.topology.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */
@@ -251,7 +251,7 @@ export const TOPOLOGY_LOD_GRID_DEFAULTS: TopologyLodGridShared = {
 	gridSnapEnabled: true,
 };
 
-/** @emoji 🎚️ Scene-only chrome defaults aligned with `elements/scene/play` (topology passes them via `scene` prop). */
+/** @emoji 🎚️ Scene-only chrome defaults aligned with the scene play harness in `elements/scene/index.tsx` (topology passes them via `scene` prop). */
 export function topologySceneChromeDefaults(): Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "gridSnapEnabled"> {
 	return { showLodGrid: true, proximityRadius: 24, gridSnapEnabled: true };
 }
