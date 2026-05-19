@@ -320,6 +320,15 @@ export interface BoardSelectionSnapshot {
 	ids: string[];
 }
 
+/** @emoji 👁️ Rectangle/lasso drag preview ids plus anchor ids leaving the committed selection during the gesture. */
+export interface BoardPreselectSnapshot {
+	ids: string[];
+	removedIds: string[];
+}
+
+/** @emoji 👁️ Empty area-select preview (no ids highlighted, none marked removed). */
+export const BOARD_PRESELECT_EMPTY: BoardPreselectSnapshot = { ids: [], removedIds: [] };
+
 export interface BoardSelectionOptions {
 	method?: BoardSelectionMethod;
 	mode?: BoardSelectionMode;
@@ -643,6 +652,8 @@ export interface BoardEventMap {
 	parentNodeChange: BoardGraphNodeIdPayload;
 	proximityConnect: BoardEdgeLinkPayload;
 	select: BoardSelectionSnapshot;
+	preselect: BoardPreselectSnapshot;
+	preselectCancel: BoardPreselectSnapshot;
 	wireChange: BoardGraphWireIdPayload;
 	wireCreate: BoardWireSnapshotPayload;
 	wireDestroy: BoardGraphWireIdPayload;
@@ -1146,6 +1157,10 @@ function arrayEqual(left: string[], right: string[]): boolean {
 	return left.every((value, index) => value === right[index]);
 }
 
+function preselectSnapshotsEqual(left: BoardPreselectSnapshot, right: BoardPreselectSnapshot): boolean {
+	return arrayEqual(left.ids, right.ids) && arrayEqual(left.removedIds, right.removedIds);
+}
+
 function cubicBezierPoint(curve: CubicBezierCurve, step: number): Point {
 	const oneMinusStep = 1 - step;
 	const oneMinusSquared = oneMinusStep * oneMinusStep;
@@ -1172,6 +1187,29 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 
 function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
 	return { ids: sortedSelectionIds(ids) };
+}
+
+function createPreselectSnapshot(ids: Iterable<string>, removedIds: Iterable<string>): BoardPreselectSnapshot {
+	return { ids: sortedSelectionIds(ids), removedIds: sortedSelectionIds(removedIds) };
+}
+
+/** @emoji 🧩 Normalizes {@link BoardSelectionSnapshot} or a bare id list into a sorted snapshot. */
+export function normalizeBoardSelectionProp(value: BoardSelectionSnapshot | readonly string[] | undefined): BoardSelectionSnapshot {
+	if (value === undefined) {
+		return { ids: [] };
+	}
+	if (Array.isArray(value)) {
+		return createSelectionSnapshot(value);
+	}
+	return createSelectionSnapshot(value.ids);
+}
+
+/** @emoji 🧩 Normalizes {@link BoardPreselectSnapshot} props for controlled board interaction state. */
+export function normalizeBoardPreselectProp(value: BoardPreselectSnapshot | undefined): BoardPreselectSnapshot {
+	if (value === undefined) {
+		return BOARD_PRESELECT_EMPTY;
+	}
+	return createPreselectSnapshot(value.ids, value.removedIds);
 }
 
 function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
@@ -2323,6 +2361,9 @@ export class BoardRenderer {
 	private selectionIds = new Set<string>();
 	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
+	private preselectIds = new Set<string>();
+	private preselectRemovedIds = new Set<string>();
+	private preselectStore = new SnapshotStore<BoardPreselectSnapshot>(BOARD_PRESELECT_EMPTY);
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private gpuSurfaceErrorDetail = "";
 	private gpuSurfaceInitPromise: Promise<void> | null = null;
@@ -2508,7 +2549,7 @@ export class BoardRenderer {
 		this.markDirty();
 	}
 
-	/** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `normalMaxZoom` / `detailMaxZoom`). */
+	/** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `compactMaxZoom` / `normalMaxZoom` / `detailMaxZoom`). */
 	setLodZoomThresholds(next: BoardLodZoomThresholds): void {
 		const c: BoardLodZoomThresholds = {
 			minimapMaxZoom: next.minimapMaxZoom,

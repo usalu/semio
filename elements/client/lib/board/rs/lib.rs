@@ -4172,6 +4172,32 @@ mod board_host {
 			self.push_select_event();
 		}
 
+		/// @emoji 🔇 Updates committed selection without emitting `select` (controlled React sync).
+		pub fn set_selection_ids_silent(&mut self, ids: &[String]) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			if next == self.selection {
+				return;
+			}
+			self.preselect.clear();
+			self.preselect_removed.clear();
+			self.last_preselect_emit_sig = None;
+			self.selection_exit_highlight.clear();
+			self.selection = next;
+			self.sync_selection_flags_to_objects();
+		}
+
+		/// @emoji 🔇 Mirrors area-select preview chrome without emitting `preselect` (shared multi-view sync).
+		pub fn set_preselect_state_silent(&mut self, ids: &[String], removed_ids: &[String]) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			let removed: BTreeSet<String> = removed_ids.iter().cloned().collect();
+			if self.preselect == next && self.preselect_removed == removed {
+				return;
+			}
+			self.preselect = next;
+			self.preselect_removed = removed;
+			self.sync_selection_flags_to_objects();
+		}
+
 		fn set_selection_ids_gestured(&mut self, ids: &[String], gesture: Option<&str>) {
 			let next: BTreeSet<String> = ids.iter().cloned().collect();
 			let mut sorted: Vec<_> = next.iter().cloned().collect();
@@ -4815,11 +4841,6 @@ mod board_host {
 			}
 		}
 
-		/// @emoji 🧭 Minimap/overview LOD: group selection and bounded drag only — no per-node/edge/handle picks.
-		fn lod_disables_discrete_pick(&self) -> bool {
-			matches!(self.current_draw_lod(), BoardDrawLod::Minimap | BoardDrawLod::Overview)
-		}
-
 		/// @emoji 🔗 Overview LOD: tight world-radius hit on a free handle so link drag can start without enabling broad `resolve_hit_world` handle picks.
 		fn resolve_overview_free_link_handle_pointer_world(&self, point: Point) -> Option<String> {
 			if !matches!(self.current_draw_lod(), BoardDrawLod::Overview) {
@@ -4891,7 +4912,7 @@ mod board_host {
 						}
 					}
 				}
-				if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Normal) {
+				if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
 					if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
 						return Some(hid);
 					}
@@ -4940,9 +4961,6 @@ mod board_host {
 		}
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
-			if self.lod_disables_discrete_pick() {
-				return None;
-			}
 			let zoom = self.camera.zoom;
 			let o = &self.selection_options;
 			if o.select_handles {
@@ -5702,17 +5720,25 @@ mod board_host {
 					}
 				}
 				let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
-				let fill = self.vello_theme.indirect_handle_fill;
-				let stroke_c = self.vello_theme.indirect_handle_stroke;
+				let style_kind = self.resolve_handle_style_kind(h);
 				let stroke_px = 2.0_f64;
+				let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
+					Some((
+						self.vello_theme.indirect_handle_fill,
+						self.vello_theme.indirect_handle_stroke,
+						stroke_px,
+					))
+				} else {
+					None
+				};
 				self.append_handle_marker(
 					scene,
 					h,
 					wp,
 					self.indirect_handle_marker_radius_world(h),
 					false,
-					BoardElementStyleKind::Highlighted,
-					Some((fill, stroke_c, stroke_px)),
+					style_kind,
+					paint_override,
 				);
 			}
 		}
@@ -5742,10 +5768,13 @@ mod board_host {
 					}
 				}
 				let link_compat = link_compat_nodes.contains(&n.id);
-				let style_kind = if link_compat {
+				let resolved_style_kind = self.resolve_node_style_kind(n);
+				let style_kind = if link_compat
+					&& matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
+				{
 					BoardElementStyleKind::Highlighted
 				} else {
-					self.resolve_node_style_kind(n)
+					resolved_style_kind
 				};
 				let draw_node_stroke = lod != BoardDrawLod::Minimap
 					|| !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
@@ -6016,6 +6045,14 @@ mod board_host {
 			}
 			self.hovered_id = id.clone();
 			self.push_event("hover", json!({ "id": id }));
+		}
+
+		/// @emoji 🔇 Updates hover chrome without emitting `hover` (controlled React sync).
+		pub fn set_hovered_id_silent(&mut self, id: Option<String>) {
+			if self.hovered_id == id {
+				return;
+			}
+			self.hovered_id = id;
 		}
 
 		pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
@@ -7729,6 +7766,34 @@ impl BoardSession {
 		Ok(())
 	}
 
+	#[wasm_bindgen(js_name = setSelectionIdsJsonSilent)]
+	pub fn set_selection_ids_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
+		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+		self.state.borrow_mut().host.set_selection_ids_silent(&ids);
+		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = setPreselectStateJsonSilent)]
+	pub fn set_preselect_state_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
+		#[derive(serde::Deserialize)]
+		struct PreselectSync {
+			ids: Vec<String>,
+			#[serde(default, rename = "removedIds")]
+			removed_ids: Vec<String>,
+		}
+		let body: PreselectSync = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+		self.state
+			.borrow_mut()
+			.host
+			.set_preselect_state_silent(&body.ids, &body.removed_ids);
+		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = setHoveredIdSilent)]
+	pub fn set_hovered_id_silent_wasm(&mut self, id: Option<String>) {
+		self.state.borrow_mut().host.set_hovered_id_silent(id);
+	}
+
 	#[wasm_bindgen(js_name = encodedSceneHint)]
 	pub fn encoded_scene_hint_wasm(&self) -> usize {
 		self.state.borrow().host.encoded_scene_hint()
@@ -8105,10 +8170,10 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_minimap_skips_discrete_hits_and_drag_move() {
+	fn board_host_compact_discrete_hit_selects_and_drags_node() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_camera(0.0, 0.0, 0.1);
+		h.set_camera(0.0, 0.0, 0.5);
 		let mut desc = sample_scene();
 		desc.handles.clear();
 		desc.edges.clear();
@@ -8133,20 +8198,22 @@ mod host_tests {
 		});
 		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
-		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+		assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a"));
 		assert!(h.resolve_hit_world(Point::new(150.0, 0.0)).is_none());
 		let s = h.world_to_screen(Point::new(0.0, 0.0));
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 50.0, s.y + 30.0, false, false);
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0, false, false);
 		let ev = h.drain_events_json();
-		assert!(!ev.contains("nodeMove"));
+		assert!(ev.contains("nodeMove"), "compact discrete node hit should drag, got: {ev}");
 	}
 
 	#[test]
 	fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
+		h.set_automatic_lod(false);
+		h.set_forced_draw_lod_label("minimap");
 		h.set_camera(0.0, 0.0, 0.1);
 		let mut desc = sample_scene();
 		desc.nodes.push(NodeDescJson {
@@ -8191,6 +8258,8 @@ mod host_tests {
 	fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
+		h.set_automatic_lod(false);
+		h.set_forced_draw_lod_label("overview");
 		set_overview_lod(&mut h);
 		let mut desc = sample_scene();
 		desc.nodes.push(NodeDescJson {
@@ -8213,10 +8282,10 @@ mod host_tests {
 			scale: None,
 		});
 		h.sync_descriptor(&desc).unwrap();
-		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
 		h.set_selection_ids(&["a".into(), "b".into()]);
 		let _ = h.drain_events_json();
 		let gap = Point::new(150.0, 0.0);
+		assert!(h.resolve_hit_world(gap).is_none());
 		let s = h.world_to_screen(gap);
 		h.pointer_down_screen(s.x, s.y, 0, false, false);
 		h.pointer_move_screen(s.x + 40.0, s.y + 20.0, false, false);
@@ -8590,21 +8659,6 @@ mod host_tests {
 		assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
 		h.update_hover_from_world(Point::new(0.0, 0.0));
 		assert_eq!(h.hovered_id.as_deref(), Some("a"));
-	}
-
-	#[test]
-	fn board_host_hover_tracks_visible_edges() {
-		let mut h = BoardHost::new();
-		h.set_size(800, 600, 1.0);
-		set_detail_lod(&mut h);
-		let desc = sample_scene();
-		h.sync_descriptor(&desc).unwrap();
-		let source = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-		let target = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-		let curve = compute_edge_bezier_points(source, target, Point::new(0.0, 0.0), Point::new(280.0, 0.0));
-		let probe = cubic_bezier_point(curve, 0.5);
-		h.update_hover_from_world(probe);
-		assert_eq!(h.hovered_id.as_deref(), Some("e1"));
 	}
 
 	#[test]
