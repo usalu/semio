@@ -1,5 +1,5 @@
 // #region 🧾SemioDesignPlane
-/** @emoji 🧾 Authoring-space plane (semio Z-up) before three.js conversion. */
+/** @emoji 🧾 Bake-only: reads external kit/design JSON into authoring-plane rows (not used by the Three canvas runtime). */
 export interface SemioAuthoringPlane {
 	readonly origin: { x: number; y: number; z: number };
 	readonly xAxis: { x: number; y: number; z: number };
@@ -80,3 +80,68 @@ export function mergeAuthoringPlanesFromDesignDoc(doc: Record<string, unknown>, 
 	}
 }
 // #endregion 🧾SemioDesignPlane
+
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+	describe("semioAuthoringPlaneFromDesignPiece", () => {
+		it("reads pose.plane", () => {
+			const pl = semioAuthoringPlaneFromDesignPiece({
+				id: "x",
+				pose: {
+					plane: {
+						origin: { x: 0, y: 1, z: 2 },
+						xAxis: { x: 1, y: 0, z: 0 },
+						yAxis: { x: 0, y: 1, z: 0 },
+					},
+				},
+			});
+			expect(pl?.origin.z).toBe(2);
+		});
+		it("reads semio.plane attribute JSON", () => {
+			const pl = semioAuthoringPlaneFromDesignPiece({
+				id: "y",
+				attributes: [
+					{
+						key: "semio.plane",
+						value: JSON.stringify({
+							origin: { x: 1, y: 2, z: 3 },
+							xAxis: { x: 1, y: 0, z: 0 },
+							yAxis: { x: 0, y: 1, z: 0 },
+						}),
+					},
+				],
+			});
+			expect(pl?.origin.x).toBe(1);
+		});
+	});
+	describe("mergeAuthoringPlanesFromFlatPlanesV1Doc", () => {
+		it("fills map from schema doc", () => {
+			const m = new Map();
+			mergeAuthoringPlanesFromFlatPlanesV1Doc(
+				{
+					schema: "elements.scene.flat-planes/v1",
+					byPieceId: {
+						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+					},
+				},
+				m,
+			);
+			expect(m.get("p1")?.origin.z).toBe(9);
+		});
+	});
+	describe("mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc", () => {
+		it("indexes by piece name", () => {
+			const m = new Map();
+			mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc(
+				{
+					schema: "elements.scene.flat-layout-planes/v1",
+					byPieceName: {
+						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+					},
+				},
+				m,
+			);
+			expect(m.get("p1")?.origin.z).toBe(9);
+		});
+	});
+}

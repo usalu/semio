@@ -33,12 +33,6 @@ import {
 	type Scene,
 	type WebGLRenderer,
 } from "three";
-import {
-	mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc,
-	mergeAuthoringPlanesFromFlatPlanesV1Doc,
-	semioAuthoringPlaneFromDesignPiece,
-} from "../semioDesignPlane.ts";
-import { planeBasisToThreeJs } from "../coordsPlane.ts";
 
 //#region 🔖Kinds
 export type Vec3 = readonly [number, number, number];
@@ -250,10 +244,6 @@ export interface SceneFixtureV1 {
 	objects: SceneFixtureObjectV1[];
 }
 //#endregion 🔖Kinds
-
-//#region 📐Coords
-export { planeBasisToThreeJs };
-//#endregion 📐Coords
 
 //#region 📶Lod
 /** @emoji 📶 Resolves scene LOD from pseudo-zoom using explicit thresholds (same band order as the sketch board surface). */
@@ -2084,80 +2074,6 @@ if (import.meta.vitest) {
 			expect(
 				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: beyond, chunkSize, maxDist, wasVisible: true }),
 			).toBe(false);
-		});
-	});
-	describe("planeBasisToThreeJs", () => {
-		it("maps authoring xyz with −90° about +X (x,y,z)→(x,z,−y)", () => {
-			const { origin, orientation } = planeBasisToThreeJs({
-				origin: { x: 1, y: 2, z: 3 },
-				xAxis: { x: 1, y: 0, z: 0 },
-				yAxis: { x: 0, y: 1, z: 0 },
-			});
-			expect(origin[0]).toBe(1);
-			expect(origin[1]).toBe(3);
-			expect(origin[2]).toBe(-2);
-			expect(orientation.length).toBe(4);
-		});
-	});
-	describe("semioAuthoringPlaneFromDesignPiece", () => {
-		it("reads pose.plane", () => {
-			const pl = semioAuthoringPlaneFromDesignPiece({
-				id: "x",
-				pose: {
-					plane: {
-						origin: { x: 0, y: 1, z: 2 },
-						xAxis: { x: 1, y: 0, z: 0 },
-						yAxis: { x: 0, y: 1, z: 0 },
-					},
-				},
-			});
-			expect(pl?.origin.z).toBe(2);
-		});
-		it("reads semio.plane attribute JSON", () => {
-			const pl = semioAuthoringPlaneFromDesignPiece({
-				id: "y",
-				attributes: [
-					{
-						key: "semio.plane",
-						value: JSON.stringify({
-							origin: { x: 1, y: 2, z: 3 },
-							xAxis: { x: 1, y: 0, z: 0 },
-							yAxis: { x: 0, y: 1, z: 0 },
-						}),
-					},
-				],
-			});
-			expect(pl?.origin.x).toBe(1);
-		});
-	});
-	describe("mergeAuthoringPlanesFromFlatPlanesV1Doc", () => {
-		it("fills map from schema doc", () => {
-			const m = new Map();
-			mergeAuthoringPlanesFromFlatPlanesV1Doc(
-				{
-					schema: "elements.scene.flat-planes/v1",
-					byPieceId: {
-						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
-					},
-				},
-				m,
-			);
-			expect(m.get("p1")?.origin.z).toBe(9);
-		});
-	});
-	describe("mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc", () => {
-		it("indexes by piece name", () => {
-			const m = new Map();
-			mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc(
-				{
-					schema: "elements.scene.flat-layout-planes/v1",
-					byPieceName: {
-						p1: { origin: { x: 0, y: 0, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
-					},
-				},
-				m,
-			);
-			expect(m.get("p1")?.origin.z).toBe(9);
 		});
 	});
 	describe("sceneGltfPoolAcquire", () => {

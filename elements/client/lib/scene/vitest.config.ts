@@ -12,7 +12,7 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["react/index.tsx", "play/index.tsx"],
+		include: ["react/index.tsx", "play/index.tsx", "authoringToThreeFixture.ts", "semioDesignPlane.ts"],
 		passWithNoTests: true,
 	},
 });

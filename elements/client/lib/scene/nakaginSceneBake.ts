@@ -1,7 +1,8 @@
 // #region 🧾NakaginSceneBake
+/** @emoji 🧾 Fixture bake entrypoint: merges external layout JSON → `elements.scene.fixture/v1` with three.js-only `origin` / `orientation` (see `authoringToThreeFixture.ts`). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { planeBasisToThreeJs } from "./coordsPlane.ts";
+import { authoringPlaneToThreeFixture } from "./authoringToThreeFixture.ts";
 import {
 	mergeAuthoringPlanesFromFlatLayoutPlanesV1Doc,
 	mergeAuthoringPlanesFromFlatPlanesV1Doc,
@@ -63,7 +64,7 @@ export function bakeNakaginCapsuleTowerSceneFixture(opts: BakeNakaginCapsuleTowe
 		if (!authoringPlane) {
 			throw new Error(`[bake nakagin scene] missing flat-layout plane for board node ${id} label "${label}"`);
 		}
-		const { origin, orientation } = planeBasisToThreeJs(authoringPlane);
+		const { origin, orientation } = authoringPlaneToThreeFixture(authoringPlane);
 		const iconKind = String(node.iconKind ?? "placeholder");
 		const br = bodyRadius(node);
 		const handles = (node.handles as Record<string, unknown>[] | undefined) ?? [];
