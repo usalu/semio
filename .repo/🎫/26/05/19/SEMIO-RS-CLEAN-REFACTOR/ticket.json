@@ -1,0 +1,13 @@
+{
+  "title": "Semio Rs Clean Refactor",
+  "emoji": "🦀",
+  "status": "open",
+  "description": "Refactor semio/client/lib/rs cleanly: fix naming inconsistencies (double-underscore snake_case), improve module organization, remove unnecessary dead_code/clippy allows where possible, ensure all tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1457"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5c825fe6c690458a9c7925f40db3fbc4"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Semio React One Hook Per Entity Field Command",
+  "emoji": "⚛️",
+  "status": "open",
+  "description": "Refactor semio/client/lib/react/logic to one hook per entity (id), exactly one hook per field, and one useEntityCommand hook per entity aggregating all mutations with shared OperationStatus. Remove legacy per-operation exports and useUpdateDesign. Update sketchpad imports and vitest.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1455"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪1f3699e25840488ca9bea1385f6941ca"
+  ]
+}

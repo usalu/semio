@@ -142,7 +142,13 @@ import {
   useUpdateType,
   useWriteIndicator,
 } from "@semio/react";
-import type { BoardEdgeLinkPayload, BoardFixtureV1, CameraState as ElementsBoardCameraState } from "@elements/board";
+import type {
+  BoardEdgeLinkPayload,
+  BoardFixtureV1,
+  BoardHoverPayload,
+  BoardSelectionSnapshot,
+  CameraState as ElementsBoardCameraState,
+} from "@elements/board";
 import {
   SCENE_PLACEHOLDER_MESH_URL,
   type SceneCameraState as ElementsSceneCameraState,
@@ -14407,6 +14413,150 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
     authors,
     qualities,
   };
+};
+
+const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
+
+const sketchpadKitBoardHandleId = (nodeId: string, side: KitDiagramSnapSide): string => `${nodeId}::${side}`;
+
+const sketchpadKitBoardHandleAngle = (side: KitDiagramSnapSide, shape: "circle" | "rectangle"): number => {
+  if (shape === "rectangle") {
+    if (side === "top") return 0;
+    if (side === "right") return Math.PI / 2;
+    if (side === "bottom") return Math.PI;
+    return (3 * Math.PI) / 2;
+  }
+  if (side === "right") return 0;
+  if (side === "bottom") return Math.PI / 2;
+  if (side === "left") return Math.PI;
+  return -Math.PI / 2;
+};
+
+const sketchpadKitBoardNodeCenter = (node: Node<KitDiagramNode>): { x: number; y: number } => {
+  const frame = getKitDiagramNodeFrameForKind(node.data.kind);
+  return { x: node.position.x + frame.width / 2, y: node.position.y + frame.height / 2 };
+};
+
+const sketchpadKitBoardCameraFromNodes = (nodes: readonly Node<KitDiagramNode>[]): ElementsBoardCameraState => {
+  if (nodes.length === 0) return { x: 0, y: 0, zoom: 1 };
+  const centers = nodes.map((node) => sketchpadKitBoardNodeCenter(node));
+  const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
+  const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
+  return { x: -avgX, y: -avgY, zoom: 1 };
+};
+
+/** @emoji 🗺️ Maps filtered kit diagram React Flow nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
+const sketchpadKitBuildBoardFixture = (nodes: readonly Node<KitDiagramNode>[], edges: readonly Edge[]): BoardFixtureV1 => {
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const boardNodes = nodes.map((node) => {
+    const kind = node.data.kind;
+    const frame = getKitDiagramNodeFrameForKind(kind);
+    const strategy = getKitDiagramShapeStrategy(kind);
+    const shape: "circle" | "rectangle" = strategy.id === "circle" ? "circle" : "rectangle";
+    const center = sketchpadKitBoardNodeCenter(node);
+    const handles = SKETCHPAD_KIT_BOARD_HANDLE_SIDES.map((side) => ({
+      id: sketchpadKitBoardHandleId(node.id, side),
+      angle: sketchpadKitBoardHandleAngle(side, shape),
+      handleKind: `semio.kit.${kind}`,
+      radius: 4,
+    }));
+    if (shape === "circle") {
+      return {
+        id: node.id,
+        shape: "circle" as const,
+        radius: frame.width / 2,
+        x: center.x,
+        y: center.y,
+        text: node.data.name,
+        nodeKind: `semio.kit.${kind}`,
+        root: !node.data.parentId,
+        handles,
+      };
+    }
+    return {
+      id: node.id,
+      shape: "rectangle" as const,
+      width: frame.width,
+      height: frame.height,
+      x: center.x,
+      y: center.y,
+      text: node.data.name,
+      nodeKind: `semio.kit.${kind}`,
+      root: !node.data.parentId,
+      handles,
+    };
+  });
+  const boardEdges = edges
+    .map((edge) => {
+      const sourceNode = nodeById.get(edge.source);
+      const targetNode = nodeById.get(edge.target);
+      if (!sourceNode || !targetNode) return null;
+      const sourceKind = sourceNode.data.kind;
+      const targetKind = targetNode.data.kind;
+      const sourceFrame = getKitDiagramNodeFrameForKind(sourceKind);
+      const targetFrame = getKitDiagramNodeFrameForKind(targetKind);
+      const anchors = resolveKitDiagramAnchorPair(
+        { kind: sourceKind, position: sourceNode.position, frame: sourceFrame },
+        { kind: targetKind, position: targetNode.position, frame: targetFrame },
+      );
+      return {
+        id: edge.id,
+        source: sketchpadKitBoardHandleId(edge.source, anchors.source.localPoint.side),
+        target: sketchpadKitBoardHandleId(edge.target, anchors.target.localPoint.side),
+      };
+    })
+    .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
+  return {
+    schema: "elements.board.fixture/v1",
+    camera: sketchpadKitBoardCameraFromNodes(nodes),
+    nodes: boardNodes,
+    edges: boardEdges,
+  };
+};
+
+const sketchpadKitSelectionToBoardIds = (selection: KitAppSelection | undefined): Set<string> => {
+  const ids = new Set<string>();
+  for (const typeId of selection?.types ?? []) ids.add(`type:${typeId}`);
+  for (const designId of selection?.designs ?? []) ids.add(`design:${designId}`);
+  for (const qualityId of selection?.qualities ?? []) ids.add(`quality:${qualityId}`);
+  for (const portId of selection?.ports ?? []) ids.add(`port:${portId}`);
+  for (const fileId of selection?.files ?? []) ids.add(`file:${fileId}`);
+  for (const folderId of selection?.folders ?? []) ids.add(`folder:${folderId}`);
+  for (const authorId of selection?.authors ?? []) ids.add(`author:${authorId}`);
+  return ids;
+};
+
+const sketchpadKitBoardSelectionToKitSelection = (snapshot: BoardSelectionSnapshot): KitAppSelection => {
+  const newSelection: KitAppSelection = {};
+  for (const boardId of snapshot.ids) {
+    const separatorIndex = boardId.indexOf(":");
+    if (separatorIndex <= 0) continue;
+    const kind = boardId.slice(0, separatorIndex);
+    const id = boardId.slice(separatorIndex + 1);
+    if (kind === "type") {
+      if (!newSelection.types) newSelection.types = [];
+      newSelection.types.push(id);
+    } else if (kind === "design") {
+      if (!newSelection.designs) newSelection.designs = [];
+      newSelection.designs.push(id);
+    } else if (kind === "quality") {
+      if (!newSelection.qualities) newSelection.qualities = [];
+      newSelection.qualities.push(id);
+    } else if (kind === "port") {
+      if (!newSelection.ports) newSelection.ports = [];
+      newSelection.ports.push(id);
+    } else if (kind === "file") {
+      if (!newSelection.files) newSelection.files = [];
+      newSelection.files.push(id);
+    } else if (kind === "folder") {
+      if (!newSelection.folders) newSelection.folders = [];
+      newSelection.folders.push(id);
+    } else if (kind === "author") {
+      if (!newSelection.authors) newSelection.authors = [];
+      newSelection.authors.push(id);
+    }
+  }
+  return newSelection;
 };
 
 interface KitDiagramProps {}

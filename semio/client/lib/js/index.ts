@@ -363,7 +363,7 @@ export class EventBus {
 }
 
 /** @emoji 📡 Live target {@code Subscription.operation} stream used to match command IDs emitted by mutations. */
-export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operation { id } }` as const;
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operation { id __typename } }` as const;
 
 /** @emoji 🧭 Store entry query fragment aligned with {@code schema.golden.graphql} (WIP head + {@code theKit} id). */
 export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }` as const;
@@ -656,6 +656,10 @@ type KitPathEntity = Entity & {
 
 type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = FieldSpec<T> & Readonly<{
   parseEntity?: (entity: E, v: JsonValue) => T;
+  /** @emoji 📡 Bus {@code kind}; defaults via {@link defaultFieldEventKind}. */
+  eventKind?: string;
+  /** @emoji 📡 List/connection fields: invalidate on {@code commandSucceeded} + {@code kitRenamed}. */
+  coarseEvent?: boolean;
 }>;
 
 type BoundNodeFieldSpec<T> = Readonly<{
@@ -702,6 +706,36 @@ function schemaOperationName(inner: string): string {
   const name = inner.trim().match(/^(?:[_A-Za-z][_0-9A-Za-z]*:\s*)?([_A-Za-z][_0-9A-Za-z]*)/)?.[1];
   if (name == null || name === "") throw new Error(`Invalid GraphQL operation selection: ${inner}`);
   return name;
+}
+
+/** @emoji 📡 GraphQL {@code Operation} {@code __typename} → {@link EventBus} {@code kind} (react hooks rely on these strings). */
+function operationTypenameToEventKind(typename: string): string {
+  switch (typename) {
+    case "RenamedKit":
+      return "kitRenamed";
+    case "ChangedDescription":
+      return "changedDescription";
+    case "CreatedFixedPiece":
+      return "createdFixedPiece";
+    case "FixedPiece":
+      return "fixedPiece";
+    case "DraggedPiece":
+      return "draggedPiece";
+    default:
+      return typename.charAt(0).toLowerCase() + typename.slice(1);
+  }
+}
+
+/** @emoji 📡 Installed {@code onFieldChanged} method name for a scalar/list field (e.g. {@code onNameChanged}). */
+function fieldChangedEventMethodName(fieldName: string): string {
+  return `on${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}Changed`;
+}
+
+/** @emoji 📡 Default bus kind for a field read on an entity class. */
+function defaultFieldEventKind(entityCtorName: string, fieldName: string): string {
+  if (entityCtorName === "Kit" && fieldName === "name") return "kitRenamed";
+  if (fieldName === "description") return "changedDescription";
+  return "commandSucceeded";
 }
 
 /** @emoji 🏭  a field read when the caller supplies the kit-relative GraphQL tail. */
@@ -781,6 +815,68 @@ function installKitOperationMethods<E extends KitPathEntity>(
       value: async function semioKitOperation(this: E, ...args: readonly unknown[]): Promise<SetResult> {
         const cid = await this.ensureChangeId();
         return this.mutateScoped(cid, this.kitInnerPath(spec.buildInner(this, ...args)));
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs {@code onFieldChanged} subscription methods — one per field spec. */
+function installKitEventMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundKitFieldSpec<unknown, E>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of specs) {
+    const fieldName = schemaFieldName(spec.selection);
+    const readMethod = fieldName;
+    const eventMethod = fieldChangedEventMethodName(fieldName);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, fieldName);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioKitFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as Record<string, () => Promise<unknown>>)[readMethod];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs kit field reads, mutation commands, and per-field change subscriptions from three rosters. */
+function installEntityKitMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundKitFieldSpec<unknown, E>[],
+  operations: readonly BoundKitOperationSpec<E>[] = [],
+): void {
+  installKitFieldMethods(ctor, fields);
+  if (operations.length > 0) installKitOperationMethods(ctor, operations);
+  installKitEventMethods(ctor, fields);
+}
+
+/** @emoji 🏭 Installs {@code node(id)} field reads and per-field change subscriptions. */
+function installEntityNodeMethods<E extends Entity>(
+  ctor: abstract new (...args: never[]) => E,
+  typename: string,
+  fields: readonly BoundNodeFieldSpec<unknown>[],
+): void {
+  installNodeFieldMethods(ctor, typename, fields);
+  for (const spec of fields) {
+    const fieldName = schemaFieldName(spec.selection);
+    const eventMethod = fieldChangedEventMethodName(fieldName);
+    const eventKind = defaultFieldEventKind(ctor.name, fieldName);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioNodeFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const read = (this as Record<string, () => Promise<unknown>>)[fieldName];
+        return this.session.bus.subscribeKind(eventKind, () => {
+          if (typeof read === "function") void read.call(this).then(cb);
+        });
       },
       writable: true,
     });
@@ -965,6 +1061,10 @@ export class Session {
     if (data == null) return;
     const operation = jsonObjectField(data, "operation");
     const id = String(operation?.["id"] ?? "");
+    const typename = String(operation?.["__typename"] ?? "");
+    if (typename !== "") {
+      this.bus.emit({ kind: operationTypenameToEventKind(typename), payload: operation } as unknown as JsonValue);
+    }
     if (id === "" || !this.commandIds.has(id)) return;
     this.commandIds.delete(id);
     this.bus.emit({ kind: "commandSucceeded", payload: operation } as unknown as JsonValue);

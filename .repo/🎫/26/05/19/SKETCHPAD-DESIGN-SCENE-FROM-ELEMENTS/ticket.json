@@ -1,0 +1,13 @@
+{
+  "title": "Sketchpad Design Scene From Elements",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Replace the 3D scene in semio/sketchpad design app with the scene from elements (@elements/scene via TopologyScenePane). Wire representations, selection, hover, drag-drop, and relocate; remove dead legacy SemioScene path.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1456"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
+  "sessions": [
+    "⚪24378a5e121d42d4870be127c25ccbdf"
+  ]
+}

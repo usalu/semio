@@ -127,6 +127,85 @@ function semioInternalOperationBind<E extends Entity, Args extends unknown[] = [
     return [run, status] as const;
   };
 }
+
+/** @emoji 🎛️ Shared {@link OperationStatus} plus a map of async command runners for one scoped anchor (entity, store, session, or batch). */
+export type EntityCommand<Run extends Record<string, (...args: never[]) => Promise<SetResult>>> = Readonly<{
+  run: Run;
+  status: OperationStatus;
+}>;
+
+type SemioCommandImpl<A> = (anchor: A, ...args: unknown[]) => SetResult | Promise<SetResult> | void | Promise<void>;
+
+/**
+ * @emoji 🪝 Builds one React hook per anchor: every command in {@code spec} shares a single {@link OperationStatus}.
+ */
+function semioInternalCommandFactory<A>(
+  spec: Readonly<Record<string, SemioCommandImpl<A>>>,
+  onSuccess: (anchor: A) => void,
+): (get: () => A | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+  return function useBoundCommand(): EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+    const getRef = React.useRef(get);
+    getRef.current = get;
+    const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
+
+    const run = React.useMemo(() => {
+      const runners: Record<string, (...args: never[]) => Promise<SetResult>> = {};
+      for (const [key, impl] of Object.entries(spec)) {
+        runners[key] = async (...args: never[]) => {
+          const anchor = getRef.current();
+          if (anchor == null) {
+            const result: SetResult = {
+              ok: false,
+              error: { kind: "Disposed", message: "No command anchor in React context.", field: undefined, entity: undefined },
+            };
+            setStatus({ kind: "settled", result });
+            return result;
+          }
+          setStatus({ kind: "pending" });
+          try {
+            const raw = (await impl(anchor, ...args)) as SetResult | void | undefined;
+            const result: SetResult = raw === undefined ? ({ ok: true } as const) : (raw as SetResult);
+            if (result.ok) onSuccess(anchor);
+            setStatus({ kind: "settled", result });
+            return result;
+          } catch (err) {
+            const result: SetResult = {
+              ok: false,
+              error: { kind: "Internal", message: err instanceof Error ? err.message : String(err), field: undefined, entity: undefined },
+            };
+            setStatus({ kind: "settled", result });
+            return result;
+          }
+        };
+      }
+      return runners;
+    }, []);
+
+    return { run, status };
+  };
+}
+
+function semioInternalEntityCommandFactory<E extends Entity>(spec: Readonly<Record<string, SemioCommandImpl<E>>>): (get: () => E | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+  return semioInternalCommandFactory(spec, (e) => {
+    e.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+  });
+}
+
+function semioInternalStoreCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Store>>>): (get: () => Store | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+  return semioInternalCommandFactory(spec, (s) => {
+    s.session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+  });
+}
+
+function semioInternalSessionCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<Session>>>): (get: () => Session | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+  return semioInternalCommandFactory(spec, (s) => {
+    s.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+  });
+}
+
+function semioInternalPiecesCommandFactory(spec: Readonly<Record<string, SemioCommandImpl<PiecesOperation>>>): (get: () => PiecesOperation | null) => EntityCommand<Record<string, (...args: never[]) => Promise<SetResult>>> {
+  return semioInternalCommandFactory(spec, () => { });
+}
 // #endregion 🪝OperationBind
 
 // #region 🪝KitFieldBind
@@ -306,9 +385,6 @@ function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (ent
   return semioInternalFieldBind<E, T>({ get: () => entity, read, eventKind })();
 }
 
-function useCurrentEntityOperation<E extends Entity, Args extends unknown[] = []>(entity: E | null, useBound: (get: () => E | null) => readonly [(...args: Args) => void, OperationStatus]): readonly [(...args: Args) => void, OperationStatus] {
-  return useBound(() => entity);
-}
 // #endregion 🪝StoreOperationBind
 
 // #region 🪪IdsAndProviders
@@ -1068,180 +1144,75 @@ export function useEnsureKitChange(): () => Promise<string> {
 // #endregion 📖KitReads
 
 // #region ✍️KitWrites
-/** @emoji ✍️ {@link Kit#rename}. */
-export function useRenameKit(): readonly [(newName: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, newName) => k.rename(newName))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#changeDescription}. */
-export function useChangeKitDescription(): readonly [(newDescription: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, d) => k.changeDescription(d))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#createTag}. */
-export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteTag}. */
-export function useDeleteTag(): readonly [(id: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteTag(id))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteTags}. */
-export function useDeleteTags(): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#createConcept}. */
-export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteConcept}. */
-export function useDeleteConcept(): readonly [(id: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteConcept(id))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteConcepts}. */
-export function useDeleteConcepts(): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#createQuality}. */
-export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
+const useKitCommandBound = semioInternalEntityCommandFactory<Kit>({
+  rename: (k, newName: string) => k.rename(newName),
+  changeDescription: (k, description: string) => k.changeDescription(description),
+  createTag: (k, name: string, description?: string | null, icon?: string | null, order?: number | null) => k.createTag(name, description, icon, order),
+  deleteTag: (k, id: string) => k.deleteTag(id),
+  deleteTags: (k, ids: readonly string[]) => k.deleteTags(ids),
+  createConcept: (k, name: string, description?: string | null, icon?: string | null, order?: number | null) => k.createConcept(name, description, icon, order),
+  deleteConcept: (k, id: string) => k.deleteConcept(id),
+  deleteConcepts: (k, ids: readonly string[]) => k.deleteConcepts(ids),
+  createQuality: (k, key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) =>
     k.createQuality(key, value, unit, definition, description, icon),
-  )(() => kit);
-}
+  deleteQuality: (k, id: string) => k.deleteQuality(id),
+  deleteQualities: (k, ids: readonly string[]) => k.deleteQualities(ids),
+  createType: (k, name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => k.createType(name, description, icon, image, unit),
+  deleteType: (k, id: string) => k.deleteType(id),
+  deleteTypes: (k, ids: readonly string[]) => k.deleteTypes(ids),
+  createDesign: (k, name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => k.createDesign(name, description, icon, image, unit),
+  deleteDesign: (k, id: string) => k.deleteDesign(id),
+  deleteDesigns: (k, ids: readonly string[]) => k.deleteDesigns(ids),
+});
 
-/** @emoji ✍️ {@link Kit#deleteQuality}. */
-export function useDeleteQuality(): readonly [(id: string) => void, OperationStatus] {
+/** @emoji ✍️ All {@link Kit} mutations for the active WIP kit ({@link useWipKit}). */
+export function useKitCommand(): EntityCommand<ReturnType<typeof useKitCommandBound>["run"]> {
   const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteQuality(id))(() => kit);
+  return useKitCommandBound(() => kit);
 }
 
-/** @emoji ✍️ {@link Kit#deleteQualities}. */
-export function useDeleteQualities(): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
-}
+const useStoreCommandBound = semioInternalStoreCommandFactory({
+  saveChange: async (s) => {
+    await s.saveChange();
+    return { ok: true } as const;
+  },
+  createCheckpoint: (s, message: string) => s.createCheckpoint(message),
+  startAlternative: (s, name?: string | null) => s.startAlternative(name ?? undefined),
+  integrateAlternative: (s, id: string) => s.integrateAlternative(id),
+  attachBackbone: (s, uri: string, localProvider: LocalProvider) => s.attachBackbone(localProvider, uri),
+  detachBackbone: (s) => s.detachBackbone(),
+  syncBackbone: (s) => s.syncBackbone(),
+});
 
-/** @emoji ✍️ {@link Kit#createType}. */
-export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteType}. */
-export function useDeleteType(): readonly [(id: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteType(id))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteTypes}. */
-export function useDeleteTypes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#createDesign}. */
-export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteDesign}. */
-export function useDeleteDesign(): readonly [(id: string) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteDesign(id))(() => kit);
-}
-
-/** @emoji ✍️ {@link Kit#deleteDesigns}. */
-export function useDeleteDesigns(): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const kit = useWipKit();
-  return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
-}
-
-/** @emoji ✍️ {@link Store#saveChange}. */
-export function useSaveKitChange(): readonly [() => void, OperationStatus] {
+/** @emoji ✍️ Store-scoped mutations ({@link useJsStore}). */
+export function useStoreCommand(): EntityCommand<ReturnType<typeof useStoreCommandBound>["run"]> {
   const store = useJsStore();
-  return semioInternalStoreOperationBind<[]>(async (k) => {
-    await k.saveChange();
-    return { ok: true };
-  })(() => store);
-}
-
-/** @emoji ✍️ {@link Store#createCheckpoint}. */
-export function useCreateCheckpoint(): readonly [(message: string) => void, OperationStatus] {
-  const store = useJsStore();
-  return semioInternalStoreOperationBind<[string]>((k, message) => k.createCheckpoint(message))(() => store);
-}
-
-/** @emoji ✍️ {@link Store#startAlternative}. */
-export function useStartAlternative(): readonly [(name?: string | null) => void, OperationStatus] {
-  const store = useJsStore();
-  return semioInternalStoreOperationBind<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
-}
-
-/** @emoji ✍️ {@link Store#integrateAlternative}. */
-export function useIntegrateAlternative(): readonly [(id: string) => void, OperationStatus] {
-  const store = useJsStore();
-  return semioInternalStoreOperationBind<[string]>((k, id) => k.integrateAlternative(id))(() => store);
-}
-
-/** @emoji ✍️ {@link Session#login}. */
-export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => void, OperationStatus] {
   const session = useJsSession();
-  return semioInternalSessionOperationBind<[string, string, string | undefined]>((s, u, p, h) => s.login(u, p, h))(() => session);
+  const bound = useStoreCommandBound(() => store);
+  const run = React.useMemo(
+    () => ({
+      ...bound.run,
+      attachBackbone: (uri: string) => bound.run.attachBackbone(uri, session.localProvider()),
+    }),
+    [bound.run, session],
+  );
+  return { run, status: bound.status };
 }
 
-/** @emoji ✍️ {@link Session#logout}. */
-export function useLogout(): readonly [() => void, OperationStatus] {
-  const session = useJsSession();
-  return semioInternalSessionOperationBind<[]>((s) => s.logout())(() => session);
-}
+const useSessionCommandBound = semioInternalSessionCommandFactory({
+  login: (s, username: string, passwordHash: string, hubUrl?: string) => s.login(username, passwordHash, hubUrl),
+  logout: (s) => s.logout(),
+  sessionStart: (s) => s.sessionStart(),
+  sessionEnd: (s) => s.sessionEnd(),
+});
 
-/** @emoji ✍️ {@link Session#sessionStart}. */
-export function useStartSession(): readonly [() => void, OperationStatus] {
+/** @emoji ✍️ {@link Session} mutations for the active JS session. */
+export function useSessionCommand(): EntityCommand<ReturnType<typeof useSessionCommandBound>["run"]> {
   const session = useJsSession();
-  return semioInternalSessionOperationBind<[]>((s) => s.sessionStart())(() => session);
-}
-
-/** @emoji ✍️ {@link Session#sessionEnd}. */
-export function useEndSession(): readonly [() => void, OperationStatus] {
-  const session = useJsSession();
-  return semioInternalSessionOperationBind<[]>((s) => s.sessionEnd())(() => session);
+  return useSessionCommandBound(() => session);
 }
 
 // #region 🪝BackboneOps
-/** @emoji 🛜 {@link Store#attachBackbone} — attaches via {@link LocalProvider} for the active session. */
-export function useAttachBackbone(): readonly [(uri: string) => void, OperationStatus] {
-  const store = useJsStore();
-  const session = useJsSession();
-  return semioInternalStoreOperationBind<[string]>((s, uri) => s.attachBackbone(session.localProvider(), uri))(() => store);
-}
-
-/** @emoji 🛜 {@link Store#detachBackbone}. */
-export function useDetachBackbone(): readonly [() => void, OperationStatus] {
-  const store = useJsStore();
-  return semioInternalStoreOperationBind<[]>((s) => s.detachBackbone())(() => store);
-}
-
-/** @emoji 🛜 {@link Store#syncBackbone}. */
-export function useBackboneSyncNow(): readonly [() => void, OperationStatus] {
-  const store = useJsStore();
-  return semioInternalStoreOperationBind<[]>((s) => s.syncBackbone())(() => store);
-}
 
 /** @emoji 🛜 Live {@link Session#backboneStatus} for the active store (refreshes on {@code commandSucceeded} bus events). */
 export function useBackboneStatus(): Readonly<{ attachedUri: string | null; kind: string }> | undefined {
@@ -1296,123 +1267,45 @@ export function useDesignUnit(id?: string): string {
 // #endregion 📖DesignReads
 
 // #region ✍️DesignWrites
-/** @emoji ✍️ {@link Design#rename}. */
-export function useRenameDesign(id?: string): readonly [(newName: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string]>((d, n) => d.rename(n))(() => entity);
-}
+const useDesignCommandBound = semioInternalEntityCommandFactory<Design>({
+  rename: (d, newName: string) => d.rename(newName),
+  changeDescription: (d, description: string) => d.changeDescription(description),
+  changeIcon: (d, icon: string) => d.changeIcon(icon),
+  flatten: (d) => d.flatten(),
+  addAttribute: (d, key: string, value: string, definition: string) => d.addAttribute(key, value, definition),
+  removeAttribute: (d, attribute: string) => d.removeAttribute(attribute),
+  removeAttributes: (d, ids: readonly string[]) => d.removeAttributes(ids),
+  addFixedPiece: (d, blueprint: string, position: PositionInput, name?: string | null, description?: string | null) => d.addFixedPiece(blueprint, position, name, description),
+  addChildPieceWithParentConnection: (
+    d,
+    blueprint: string,
+    parentPiece: string,
+    parentConnector: string,
+    childConnector: string,
+    name?: string | null,
+    description?: string | null,
+    position?: PositionInput | null,
+    scale?: number | null,
+  ) => d.addChildPieceWithParentConnection(blueprint, parentPiece, parentConnector, childConnector, name, description, position, scale),
+  addHangingChildPieceWithParentConnection: (
+    d,
+    blueprint: string,
+    parentPiece: string,
+    parentConnector: string,
+    childConnector: string,
+    position: PositionInput,
+    name?: string | null,
+    description?: string | null,
+    scale?: number | null,
+  ) => d.addHangingChildPieceWithParentConnection(blueprint, parentPiece, parentConnector, childConnector, position, name, description, scale),
+  deletePiece: (d, piece: string) => d.deletePiece(piece),
+  deletePieces: (d, ids: readonly string[]) => d.deletePieces(ids),
+  deletePiecesAndConnections: (d, pieceIds: readonly string[], connectionIds: readonly string[]) => d.deletePiecesAndConnections(pieceIds, connectionIds),
+});
 
-/** @emoji ✍️ {@link Design#changeDescription}. */
-export function useChangeDesignDescription(id?: string): readonly [(newDescription: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#changeIcon}. */
-export function useChangeDesignIcon(id?: string): readonly [(newIcon: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string]>((d, i) => d.changeIcon(i))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#flatten}. */
-export function useFlattenDesign(id?: string): readonly [() => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, []>((d) => d.flatten())(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#addAttribute}. */
-export function useAddDesignAttribute(id?: string): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string, string, string]>((d, k, v, def) => d.addAttribute(k, v, def))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#removeAttribute}. */
-export function useRemoveDesignAttribute(id?: string): readonly [(attribute: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string]>((d, id) => d.removeAttribute(id))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#removeAttributes}. */
-export function useRemoveDesignAttributes(id?: string): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [readonly string[]]>((d, ids) => d.removeAttributes(ids))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#addFixedPiece}. */
-export function useAddFixedPiece(id?: string): readonly [(blueprint: string, position: PositionInput, name?: string | null, description?: string | null) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string, PositionInput, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) => d.addFixedPiece(bp, pos, n, desc))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#addChildPieceWithParentConnection}. */
-export function useAddChildPieceWithParentConnection(
-  id?: string,
-): readonly [(blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string, string, string, string, string | null | undefined, string | null | undefined, PositionInput | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, n, desc, pos, sc) =>
-    d.addChildPieceWithParentConnection(bp, pp, pc, cc, n, desc, pos, sc),
-  )(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#addHangingChildPieceWithParentConnection}. */
-export function useAddHangingChildPieceWithParentConnection(
-  id?: string,
-): readonly [(blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string, string, string, string, PositionInput, string | null | undefined, string | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, pos, n, desc, sc) =>
-    d.addHangingChildPieceWithParentConnection(bp, pp, pc, cc, pos, n, desc, sc),
-  )(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#deletePiece}. */
-export function useDeleteDesignPiece(id?: string): readonly [(piece: string) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#deletePieces}. */
-export function useDeleteDesignPieces(id?: string): readonly [(ids: readonly string[]) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [readonly string[]]>((d, ids) => d.deletePieces(ids))(() => entity);
-}
-
-/** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
-export function useDeleteDesignPiecesAndConnections(id?: string): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => void, OperationStatus] {
-  const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, pieceIds, connectionIds) => d.deletePiecesAndConnections(pieceIds, connectionIds))(() => entity);
-}
-
-/**
- * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation} ({@code name}, {@code description}, {@code icon}, {@code flatten}); other keys are ignored with a {@code [DEBUG]} console warning.
- */
-export function useUpdateDesign(): Readonly<{
-  run: (id: string, patch: Record<string, unknown>) => void;
-  status: OperationStatus;
-}> {
-  const store = useJsStore();
-  const [run, status] = semioInternalOperationBind<Store, [string, Record<string, unknown>]>(async (st, id, patch) => {
-    const d = st.design(id);
-    for (const [key, raw] of Object.entries(patch)) {
-      if (key === "name") {
-        const r = await d.rename(String(raw ?? ""));
-        if (!r.ok) return r;
-      } else if (key === "description") {
-        const r = await d.changeDescription(String(raw ?? ""));
-        if (!r.ok) return r;
-      } else if (key === "icon") {
-        const r = await d.changeIcon(String(raw ?? ""));
-        if (!r.ok) return r;
-      } else if (key === "flatten" && raw === true) {
-        const r = await d.flatten();
-        if (!r.ok) return r;
-      } else {
-        console.warn(`[DEBUG] useUpdateDesign ignored non-DesignOperation patch key "${key}"`);
-      }
-    }
-    return { ok: true } as const;
-  })(() => store);
-  const runDesign = React.useCallback((id: string, patch: Record<string, unknown>) => run(id, patch), [run]);
-  return { run: runDesign, status };
+/** @emoji ✍️ All {@link Design} mutations; optional {@code id} overrides {@link DesignContext}. */
+export function useDesignCommand(id?: ID): EntityCommand<ReturnType<typeof useDesignCommandBound>["run"]> {
+  return useDesignCommandBound(() => resolveDesign(id));
 }
 // #endregion ✍️DesignWrites
 // #endregion 🪝HooksDesign
