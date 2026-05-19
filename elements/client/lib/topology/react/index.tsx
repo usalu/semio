@@ -15,18 +15,18 @@ import {
 } from "../../board/index.ts";
 import { BoardCanvas, Edge, Handle, Node, Wire } from "../../board/index.tsx";
 import {
-	Scene,
-	SceneObject,
-	SceneTie,
-	SceneVortex,
-	parseSceneFixtureV1,
-	sceneBlockedVortexFullIdsFromTies,
-	type SceneCanvasProps,
-	type SceneFixtureV1,
-	type SceneKindCatalogBundle,
-	type SceneKindCompatEntry,
-	type SceneLodZoomThresholds,
-	type SceneRelocateMode,
+	Canvas3D as Scene,
+	ObjectItem as SceneObject,
+	Tie as SceneTie,
+	Vortex as SceneVortex,
+	parseFixtureV1,
+	blockedVortexFullIdsFromTies,
+	type CanvasProps as SceneCanvasProps,
+	type FixtureV1 as SceneFixtureV1,
+	type KindCatalogBundle as SceneKindCatalogBundle,
+	type KindCompatEntry as SceneKindCompatEntry,
+	type LodZoomThresholds as SceneLodZoomThresholds,
+	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
 
 //#region 🔖TopologyFixture
@@ -452,7 +452,7 @@ export interface TopologyScenePaneProps {
 }
 
 export const TopologyScenePane = memo(function TopologyScenePane(props: TopologyScenePaneProps) {
-	const blocked = props.blockedVortexFullIds ?? sceneBlockedVortexFullIdsFromTies(props.fixture.ties);
+	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromTies(props.fixture.ties);
 	const { scene: s } = props.bindings;
 	const sceneRest = props.scene ?? {};
 	return (
@@ -495,7 +495,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 //#endregion 🪟PanesScene
 //#endregion 🪟Panes
 
-export { parseBoardFixtureV1, parseSceneFixtureV1, sceneBlockedVortexFullIdsFromTies };
+export { parseBoardFixtureV1, parseFixtureV1, blockedVortexFullIdsFromTies };
 export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR };
 
 if (import.meta.vitest) {

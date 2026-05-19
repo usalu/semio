@@ -644,6 +644,24 @@ elements scene:
 
 ---
 
+Scene is a graph from objects and attraction.
+Attractions link objects.
+e.g. if an attracting objects moves, then all attraced objects move aswell.
+Due to the graph nature there can be cycles.
+Every connected component starts by a wormhole (root of the graph).
+When an object is attracted by two different objects it will always attract to the object which is closer to the wormhole.
+
+The obects in react are used as a tree.
+every object has a prop: attracting
+attracting holds all objects that are attracted to it.
+
+To avoid performance issue when ownerships change, keep a central object state.
+Then in the react components only pass ids.
+
+Make sure that when a parent is destroyed, the child instance survives if they just have a new parent.
+
+---
+
 Expand the mesh pool by more styles and use element styling that are inline with the other element bundles/tokens etc: original (no modification), neutral (replace all colors for meshes and edges by element colors such as foreground, background, etc.), hovered, selected (all meshes have primary colored material), highlighted (all meshes have primary colored material), disabled.
 Extend A mesh to have a style prop (original, neutral, hovered, selected, highlighted, disabled).
 Then use the prop for all the features.

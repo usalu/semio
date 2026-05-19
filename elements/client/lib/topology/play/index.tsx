@@ -45,16 +45,16 @@ import {
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
 import {
-	SCENE_LOD_MODE_AUTOMATIC,
-	isSceneLodKind,
-	parseSceneFixtureV1,
-	sceneLodAutomaticSelectLabel,
-	sceneLodCanvasProps,
-	type SceneCameraState,
-	type SceneFixtureV1,
-	type SceneLodKind,
-	type SceneLodModeKind,
-	type SceneRelocateMode,
+	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
+	isLodKind,
+	parseFixtureV1,
+	lodAutomaticSelectLabel as sceneLodAutomaticSelectLabel,
+	lodCanvasProps as sceneLodCanvasProps,
+	type CameraState as SceneCameraState,
+	type FixtureV1 as SceneFixtureV1,
+	type LodKind as SceneLodKind,
+	type LodModeKind as SceneLodModeKind,
+	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
 import topologyManifestJson from "../fixtures/nakagin-capsule-tower.topology.json";
 import "./globals.css";
@@ -131,7 +131,7 @@ function topologyWindowKindsWithLodMeasures(
 			kind: "select",
 			label: "LOD",
 			onValueChange: (value) => {
-				if (value === SCENE_LOD_MODE_AUTOMATIC || isSceneLodKind(value)) {
+				if (value === SCENE_LOD_MODE_AUTOMATIC || isLodKind(value)) {
 					setSceneLodMode(value as SceneLodModeKind);
 				}
 			},
@@ -176,7 +176,7 @@ interface TopologyPlayShellValue {
 	readonly bindings: ReturnType<typeof buildTopologyDualSurfaceBindings>;
 	readonly boardSelected: ReadonlySet<string>;
 	readonly boardCamera: CameraState;
-	readonly sceneCamera: SceneCameraState;
+	readonly sceneCamera: CameraState;
 	readonly sceneSelected: string | null;
 	readonly relocateMode: SceneRelocateMode;
 	readonly sceneLodTag: SceneLodKind;
@@ -188,7 +188,7 @@ interface TopologyPlayShellValue {
 	readonly connectScene: number;
 	readonly proximityBoard: number;
 	readonly proximityScene: number;
-	readonly setRelocateMode: (mode: SceneRelocateMode) => void;
+	readonly setSceneRelocateMode: (mode: SceneRelocateMode) => void;
 }
 
 const TopologyPlayShellContext = createContext<TopologyPlayShellValue | null>(null);
@@ -245,7 +245,7 @@ function TopologySceneWindow(): ReactElement {
 							<Button
 								variant={s.relocateMode === "translate" ? "default" : "outline"}
 								size="sm"
-								onClick={() => s.setRelocateMode("translate")}
+								onClick={() => s.setSceneRelocateMode("translate")}
 							>
 								<Move3d className="mr-1 size-4" />
 								Translate
@@ -255,7 +255,7 @@ function TopologySceneWindow(): ReactElement {
 							<Button
 								variant={s.relocateMode === "rotate" ? "default" : "outline"}
 								size="sm"
-								onClick={() => s.setRelocateMode("rotate")}
+								onClick={() => s.setSceneRelocateMode("rotate")}
 							>
 								<Rotate3d className="mr-1 size-4" />
 								Rotate
@@ -265,7 +265,7 @@ function TopologySceneWindow(): ReactElement {
 							<Button
 								variant={s.relocateMode === "scale" ? "default" : "outline"}
 								size="sm"
-								onClick={() => s.setRelocateMode("scale")}
+								onClick={() => s.setSceneRelocateMode("scale")}
 							>
 								<Scaling className="mr-1 size-4" />
 								Scale
@@ -302,11 +302,11 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 	readonly apps: UIAppConfig[];
 } {
 	const manifest = useMemo(() => parseTopologyFixtureV1(topologyManifestJson as unknown), []);
-	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
+	const [relocateMode, setSceneRelocateMode] = useState<SceneRelocateMode>("translate");
 	const [boardSelected, setBoardSelected] = useState<ReadonlySet<string>>(() => new Set());
 	const [sceneSelected, setSceneSelected] = useState<string | null>(null);
 	const [boardCamera, setBoardCamera] = useState<CameraState>(() => ({ ...boardFixture.camera }));
-	const [sceneCamera, setSceneCamera] = useState<SceneCameraState>(() => ({
+	const [sceneCamera, setSceneCamera] = useState<CameraState>(() => ({
 		...sceneFixture.camera,
 	}));
 	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
@@ -408,7 +408,7 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			connectScene,
 			proximityBoard,
 			proximityScene,
-			setRelocateMode,
+			setSceneRelocateMode,
 		}),
 		[
 			manifest?.label,
@@ -495,7 +495,7 @@ function invalidFixtureApps(): UIAppConfig[] {
 
 function TopologyPlayApp(): ReactElement {
 	const boardFixture = useMemo(() => parseBoardFixtureV1(nakaginBoardJson as unknown), []);
-	const sceneFixture = useMemo(() => parseSceneFixtureV1(nakaginSceneJson as unknown), []);
+	const sceneFixture = useMemo(() => parseFixtureV1(nakaginSceneJson as unknown), []);
 
 	if (!boardFixture || !sceneFixture) {
 		return (
@@ -523,7 +523,7 @@ if (import.meta.vitest) {
 	describe("topology play fixtures", () => {
 		it("parses nakagin board and scene", () => {
 			const b = parseBoardFixtureV1(nakaginBoardJson as unknown);
-			const s = parseSceneFixtureV1(nakaginSceneJson as unknown);
+			const s = parseFixtureV1(nakaginSceneJson as unknown);
 			expect(b?.nodes.length).toBeGreaterThan(0);
 			expect(s?.objects.length).toBeGreaterThan(0);
 		});

@@ -42,7 +42,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import sceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
+import fixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./play/globals.css";
 import {
 	BufferGeometry,
@@ -66,7 +66,7 @@ import {
 	type Camera,
 	Group,
 	type Object3D,
-	type Scene,
+	type Scene as ThreeScene,
 	type WebGLRenderer,
 } from "three";
 
@@ -74,10 +74,10 @@ import {
 export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
 
-export type SceneRelocateMode = "translate" | "rotate" | "scale";
-export type SceneSelectionMode = "single" | "additive" | "subtractive" | "toggle";
-export type SceneConnectKind = "indirect" | "connect" | "proximity";
-export const SCENE_MESH_STYLE_KINDS = [
+export type RelocateMode = "translate" | "rotate" | "scale";
+export type SelectionMode = "single" | "additive" | "subtractive" | "toggle";
+export type ConnectKind = "indirect" | "connect" | "proximity";
+export const MESH_STYLE_KINDS = [
 	"original",
 	"neutral",
 	"hovered",
@@ -85,12 +85,12 @@ export const SCENE_MESH_STYLE_KINDS = [
 	"highlighted",
 	"disabled",
 ] as const;
-/** @emoji 🎨 Homogeneous GLB presentation kind for pooled scene meshes ({@link SceneMesh}). */
-export type SceneMeshStyleKind = (typeof SCENE_MESH_STYLE_KINDS)[number];
-/** @emoji 🎨 Default object mesh style when none is passed ({@link SceneMesh}). */
-export const DEFAULT_SCENE_MESH_STYLE: SceneMeshStyleKind = "neutral";
-export type SceneDomainKind = "urban" | "architecture" | "detailing" | "engineering";
-export type SceneScaleKind =
+/** @emoji 🎨 Homogeneous GLB presentation kind for pooled scene meshes ({@link MeshBody}). */
+export type MeshStyleKind = (typeof MESH_STYLE_KINDS)[number];
+/** @emoji 🎨 Default object mesh style when none is passed ({@link MeshBody}). */
+export const DEFAULT_MESH_STYLE: MeshStyleKind = "neutral";
+export type DomainKind = "urban" | "architecture" | "detailing" | "engineering";
+export type ScaleKind =
 	| "1to50000"
 	| "1to25000"
 	| "1to10000"
@@ -113,10 +113,10 @@ export type SceneScaleKind =
 	| "20to1"
 	| "50to1";
 
-export const DEFAULT_SCENE_DOMAIN: SceneDomainKind = "architecture";
-export const DEFAULT_SCENE_SCALE_REFERENCE = 100;
+export const DEFAULT_DOMAIN: DomainKind = "architecture";
+export const DEFAULT_SCALE_REFERENCE = 100;
 
-const SCENE_SCALE_RATIOS: Record<SceneScaleKind, readonly [numerator: number, denominator: number]> = {
+const SCALE_RATIOS: Record<ScaleKind, readonly [numerator: number, denominator: number]> = {
 	"1to50000": [1, 50_000],
 	"1to25000": [1, 25_000],
 	"1to10000": [1, 10_000],
@@ -140,24 +140,24 @@ const SCENE_SCALE_RATIOS: Record<SceneScaleKind, readonly [numerator: number, de
 	"50to1": [50, 1],
 };
 
-const SCENE_DOMAIN_LOD_SCALES: Record<SceneDomainKind, readonly [SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind, SceneScaleKind]> = {
+const DOMAIN_LOD_SCALES: Record<DomainKind, readonly [ScaleKind, ScaleKind, ScaleKind, ScaleKind, ScaleKind, ScaleKind]> = {
 	urban: ["1to50000", "1to25000", "1to10000", "1to5000", "1to2500", "1to1000"],
 	architecture: ["1to1000", "1to500", "1to333", "1to200", "1to100", "1to50"],
 	detailing: ["1to50", "1to33", "1to25", "1to10", "1to5", "1to1"],
 	engineering: ["1to1", "2to1", "5to1", "10to1", "20to1", "50to1"],
 };
 
-export interface SceneCameraState {
+export interface CameraState {
 	position: Vec3;
 	target: Vec3;
 	zoom: number;
 }
 
 /** @emoji 📶 Board-aligned scene LOD band label (`data-scene-lod` on the canvas shell). */
-export type SceneLodKind = "minimap" | "overview" | "compact" | "normal" | "detail" | "micro";
+export type LodKind = "minimap" | "overview" | "compact" | "normal" | "detail" | "micro";
 
 /** @emoji 📐 LOD zoom boundaries for pseudo-zoom from orbit camera distance (same semantics as board CSS zoom bands). */
-export interface SceneLodZoomThresholds {
+export interface LodZoomThresholds {
 	minimapMaxZoom: number;
 	overviewMaxZoom: number;
 	compactMaxZoom: number;
@@ -165,49 +165,49 @@ export interface SceneLodZoomThresholds {
 	detailMaxZoom: number;
 }
 
-function sceneScaleKindZoomAnchor(kind: SceneScaleKind, reference: number): number {
-	const [numerator, denominator] = SCENE_SCALE_RATIOS[kind];
+function scaleKindZoomAnchor(kind: ScaleKind, reference: number): number {
+	const [numerator, denominator] = SCALE_RATIOS[kind];
 	return (reference * numerator) / denominator;
 }
 
-function sceneThresholdBetweenZoomAnchors(a: number, b: number): number {
+function thresholdBetweenZoomAnchors(a: number, b: number): number {
 	return Math.sqrt(a * b);
 }
 
 /** @emoji 📐 Returns the six canonical scale bands used by a scene domain from minimap through micro. */
-export function sceneLodScaleKindsForDomain(domain: SceneDomainKind): readonly SceneScaleKind[] {
-	return SCENE_DOMAIN_LOD_SCALES[domain];
+export function lodScaleKindsForDomain(domain: DomainKind): readonly ScaleKind[] {
+	return DOMAIN_LOD_SCALES[domain];
 }
 
 /** @emoji 📐 Derives scene LOD thresholds from the scene domain scale ladder using a positive reference zoom. */
-export function sceneLodZoomThresholdsForDomain(
-	domain: SceneDomainKind,
-	reference = DEFAULT_SCENE_SCALE_REFERENCE,
-): SceneLodZoomThresholds {
-	const [minimap, overview, compact, normal, detail, micro] = sceneLodScaleKindsForDomain(domain).map((kind) =>
-		sceneScaleKindZoomAnchor(kind, reference),
+export function lodZoomThresholdsForDomain(
+	domain: DomainKind,
+	reference = DEFAULT_SCALE_REFERENCE,
+): LodZoomThresholds {
+	const [minimap, overview, compact, normal, detail, micro] = lodScaleKindsForDomain(domain).map((kind) =>
+		scaleKindZoomAnchor(kind, reference),
 	);
 	return {
-		minimapMaxZoom: sceneThresholdBetweenZoomAnchors(minimap, overview),
-		overviewMaxZoom: sceneThresholdBetweenZoomAnchors(overview, compact),
-		compactMaxZoom: sceneThresholdBetweenZoomAnchors(compact, normal),
-		normalMaxZoom: sceneThresholdBetweenZoomAnchors(normal, detail),
-		detailMaxZoom: sceneThresholdBetweenZoomAnchors(detail, micro),
+		minimapMaxZoom: thresholdBetweenZoomAnchors(minimap, overview),
+		overviewMaxZoom: thresholdBetweenZoomAnchors(overview, compact),
+		compactMaxZoom: thresholdBetweenZoomAnchors(compact, normal),
+		normalMaxZoom: thresholdBetweenZoomAnchors(normal, detail),
+		detailMaxZoom: thresholdBetweenZoomAnchors(detail, micro),
 	};
 }
 
 /** @emoji 📐 Default LOD thresholds aligned with the architecture scene domain. */
-export const DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS: SceneLodZoomThresholds = sceneLodZoomThresholdsForDomain(
-	DEFAULT_SCENE_DOMAIN,
+export const DEFAULT_LOD_ZOOM_THRESHOLDS: LodZoomThresholds = lodZoomThresholdsForDomain(
+	DEFAULT_DOMAIN,
 );
 
 /** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
-export const SCENE_LOD_GRID_MAJOR_QUANTUM = 10;
+export const LOD_GRID_MAJOR_QUANTUM = 10;
 
 /** @emoji 📐 Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
-export const DEFAULT_SCENE_LOD_GRID_FACTOR = 10;
+export const DEFAULT_LOD_GRID_FACTOR = 10;
 
-export interface SceneVortexProps {
+export interface VortexProps {
 	id: string;
 	vortexKind?: string;
 	position: Vec3;
@@ -216,11 +216,11 @@ export interface SceneVortexProps {
 	visible?: boolean;
 	handleMeshUrl?: string;
 	/** @emoji 🎨 Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
-	handleMeshByLod?: Partial<Record<SceneLodKind, string>>;
+	handleMeshByLod?: Partial<Record<LodKind, string>>;
 	children?: ReactNode;
 }
 
-export interface SceneMagnetProps {
+export interface MagnetProps {
 	id: string;
 	magnetKind?: string;
 	position: Vec3;
@@ -228,12 +228,12 @@ export interface SceneMagnetProps {
 	size: Vec3;
 }
 
-export interface SceneObjectProps {
+export interface ObjectProps {
 	id: string;
 	objectKind?: string;
 	meshUrl: string;
 	/** @emoji 🎨 Explicit mesh style; otherwise derived from disabled, selected, highlighted, hovered. */
-	style?: SceneMeshStyleKind;
+	style?: MeshStyleKind;
 	origin: Vec3;
 	orientation?: Quat;
 	scale?: number | Vec3;
@@ -243,27 +243,27 @@ export interface SceneObjectProps {
 	highlighted?: boolean;
 	disabled?: boolean;
 	visible?: boolean;
-	relocate?: SceneRelocateMode | false;
+	relocate?: RelocateMode | false;
 	children?: ReactNode;
 	userData?: Record<string, unknown>;
 }
 
-export interface SceneTieProps {
+export interface TieProps {
 	id: string;
 	source: `${string}:${string}`;
 	target: `${string}:${string}`;
 	tieKind?: string;
 }
 
-export const SCENE_PLACEHOLDER_MESH_URL = "elements.scene.placeholder://box";
+export const PLACEHOLDER_MESH_URL = "elements.scene.placeholder://box";
 
-export interface SceneEdgeKindCatalogEntry {
+export interface EdgeKindCatalogEntry {
 	id: string;
 	label?: string;
 	name?: string;
 }
 
-export interface SceneHandleKindCatalogEntry {
+export interface HandleKindCatalogEntry {
 	id: string;
 	label?: string;
 	name?: string;
@@ -272,7 +272,7 @@ export interface SceneHandleKindCatalogEntry {
 	scale?: number;
 }
 
-export interface SceneNodeKindCatalogEntry {
+export interface NodeKindCatalogEntry {
 	id: string;
 	label?: string;
 	name?: string;
@@ -280,21 +280,21 @@ export interface SceneNodeKindCatalogEntry {
 	shape?: string;
 }
 
-export interface SceneWireKindCatalogEntry {
+export interface WireKindCatalogEntry {
 	id: string;
 	label?: string;
 	name?: string;
 	defaultEdgeKind?: string;
 }
 
-export interface SceneKindCatalogBundle {
-	edges?: readonly SceneEdgeKindCatalogEntry[];
-	handles?: readonly SceneHandleKindCatalogEntry[];
-	nodes?: readonly SceneNodeKindCatalogEntry[];
-	wires?: readonly SceneWireKindCatalogEntry[];
+export interface KindCatalogBundle {
+	edges?: readonly EdgeKindCatalogEntry[];
+	handles?: readonly HandleKindCatalogEntry[];
+	nodes?: readonly NodeKindCatalogEntry[];
+	wires?: readonly WireKindCatalogEntry[];
 }
 
-export interface SceneKindCompatEntry {
+export interface KindCompatEntry {
 	source: string;
 	target: string;
 	bidirectional?: boolean;
@@ -302,58 +302,58 @@ export interface SceneKindCompatEntry {
 	specificity?: "general" | "object" | "tie" | "handle" | "wire" | "node" | "edge";
 }
 
-export interface SceneSelectionSnapshot {
+export interface SelectionSnapshot {
 	readonly objectIds: readonly string[];
 	readonly vortexIds: readonly string[];
 }
 
-export interface SceneRelocatePayload {
+export interface RelocatePayload {
 	readonly objectId: string;
-	readonly mode: SceneRelocateMode;
+	readonly mode: RelocateMode;
 	readonly before: { origin: Vec3; orientation: Quat; scale: Vec3 };
 	readonly after: { origin: Vec3; orientation: Quat; scale: Vec3 };
 }
 
-export interface SceneAttractionPayload {
+export interface AttractionPayload {
 	readonly attracting: string;
 	readonly attracted: string;
 	readonly tieId?: string;
 }
 
-export interface SceneAttractionCompatibleObjectsPayload {
+export interface AttractionCompatibleObjectsPayload {
 	readonly attracting: string;
 	readonly objectIds: readonly string[];
 }
 
-export interface SceneAttractionTargetRingPayload {
+export interface AttractionTargetRingPayload {
 	readonly attracting: string;
 	readonly objectId: string | null;
 	readonly vortexFullIds: readonly string[];
 }
 
-export interface SceneAttractionIndirectPickAwait {
+export interface AttractionIndirectPickAwait {
 	readonly attractingFullId: string;
 	readonly attractedObjectId: string;
 	readonly candidates: readonly string[];
 }
 
-export interface SceneCanvasProps {
-	camera?: Partial<SceneCameraState>;
-	domain?: SceneDomainKind;
+export interface CanvasProps {
+	camera?: Partial<CameraState>;
+	domain?: DomainKind;
 	chunkSize?: number;
-	kindCatalogs?: SceneKindCatalogBundle;
-	kindCompatibility?: readonly SceneKindCompatEntry[];
+	kindCatalogs?: KindCatalogBundle;
+	kindCompatibility?: readonly KindCompatEntry[];
 	/** @emoji 🚫 Vortex full ids (`objectId:vortexId`) that already terminate a tie and cannot start or receive a new link. */
 	blockedVortexFullIds?: ReadonlySet<string>;
 	proximityRadius?: number;
-	relocateMode?: SceneRelocateMode;
-	selectionMode?: SceneSelectionMode;
+	relocateMode?: RelocateMode;
+	selectionMode?: SelectionMode;
 	/** @emoji 📶 LOD zoom thresholds for pseudo-zoom derived from orbit camera distance. */
-	lodZoomThresholds?: SceneLodZoomThresholds;
+	lodZoomThresholds?: LodZoomThresholds;
 	/** @emoji 📶 When true (default), orbit pseudo-zoom selects the scene LOD band; when false, {@link lod} pins the tier when set. */
 	automaticLod?: boolean;
 	/** @emoji 📶 Pinned scene LOD when {@link automaticLod} is false; omit to follow orbit pseudo-zoom bands. */
-	lod?: SceneLodKind;
+	lod?: LodKind;
 	/** @emoji 📏 Orbit distance at which pseudo-zoom is ~1 (tune to scene extent). */
 	lodDistanceReference?: number;
 	/** @emoji 📐 Multiplier for LOD grid steps (board `grid_factor`). */
@@ -362,39 +362,39 @@ export interface SceneCanvasProps {
 	showLodGrid?: boolean;
 	/** @emoji 🧲 When true, translate relocate snaps to the finest visible LOD grid step (board `grid_snap_enabled`). */
 	gridSnapEnabled?: boolean;
-	onCamera?: (s: SceneCameraState) => void;
+	onCamera?: (s: CameraState) => void;
 	/** @emoji 📶 Emits whenever the resolved scene LOD band changes. */
-	onLodChange?: (lod: SceneLodKind) => void;
-	onSelect?: (snap: SceneSelectionSnapshot) => void;
-	onRelocate?: (p: SceneRelocatePayload) => void;
-	onConnect?: (p: SceneAttractionPayload) => void;
-	onIndirectConnect?: (p: SceneAttractionPayload) => void;
-	onProximityConnect?: (p: SceneAttractionPayload) => void;
-	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
-	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
+	onLodChange?: (lod: LodKind) => void;
+	onSelect?: (snap: SelectionSnapshot) => void;
+	onRelocate?: (p: RelocatePayload) => void;
+	onConnect?: (p: AttractionPayload) => void;
+	onIndirectConnect?: (p: AttractionPayload) => void;
+	onProximityConnect?: (p: AttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
 	children?: ReactNode;
 }
 
-export const SCENE_FIXTURE_DRAG_V1_MIME = "application/x-elements-scene-fixture+json;v=1";
+export const FIXTURE_DRAG_V1_MIME = "application/x-elements-scene-fixture+json;v=1";
 
-export interface SceneFixtureObjectV1 extends SceneObjectProps {
-	vortices: SceneVortexProps[];
-	magnets?: SceneMagnetProps[];
+export interface FixtureObjectV1 extends ObjectProps {
+	vortices: VortexProps[];
+	magnets?: MagnetProps[];
 }
 
-export interface SceneFixtureV1 {
+export interface FixtureV1 {
 	schema: "elements.scene.fixture/v1";
-	camera: SceneCameraState;
-	domain: SceneDomainKind;
+	camera: CameraState;
+	domain: DomainKind;
 	meta?: Record<string, unknown>;
-	ties: SceneTieProps[];
-	objects: SceneFixtureObjectV1[];
+	ties: TieProps[];
+	objects: FixtureObjectV1[];
 }
 //#endregion 🔖Kinds
 
 //#region 📶Lod
 /** @emoji 📶 Resolves scene LOD from pseudo-zoom using explicit thresholds (same band order as the sketch board surface). */
-export function resolveSceneLodLabelFromThresholds(zoom: number, t: SceneLodZoomThresholds): SceneLodKind {
+export function resolveLodLabelFromThresholds(zoom: number, t: LodZoomThresholds): LodKind {
 	const z = zoom;
 	if (z < t.minimapMaxZoom) return "minimap";
 	if (z < t.overviewMaxZoom) return "overview";
@@ -405,13 +405,13 @@ export function resolveSceneLodLabelFromThresholds(zoom: number, t: SceneLodZoom
 	}
 
 /** @emoji 📏 Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
-export function scenePseudoZoomFromOrbitDistance(distance: number, reference: number): number {
+export function pseudoZoomFromOrbitDistance(distance: number, reference: number): number {
 	const d = Math.max(distance, 1e-6);
 	return reference / d;
 }
 
 /** @emoji 📐 Visible LOD grid / relocate snap step in world units (mirrors sketch board WASM `lod_visible_grid_snap_step_world`). */
-export function sceneLodVisibleGridSnapStepWorld(lod: SceneLodKind, gridFactor: number): number | null {
+export function lodVisibleGridSnapStepWorld(lod: LodKind, gridFactor: number): number | null {
 	const f = gridFactor;
 	switch (lod) {
 		case "minimap":
@@ -432,33 +432,33 @@ export function sceneLodVisibleGridSnapStepWorld(lod: SceneLodKind, gridFactor: 
 }
 
 /** @emoji 🌀 True when primary handle visuals are drawn (board `draw_handles`: normal | detail | micro). */
-export function sceneHandlePrimaryVisualVisibleAtLod(lod: SceneLodKind): boolean {
+export function handlePrimaryVisualVisibleAtLod(lod: LodKind): boolean {
 	return lod === "normal" || lod === "detail" || lod === "micro";
 }
 
 /** @emoji 🌀 Overview uses invisible pick proxies when primary handle GLB is hidden (minimap has no handle picks). */
-export function sceneHandlePickProxyAtLod(lod: SceneLodKind): boolean {
+export function handlePickProxyAtLod(lod: LodKind): boolean {
 	return lod === "overview" || lod === "compact";
 }
 
-export interface SceneLodContextValue {
-	readonly lod: SceneLodKind;
+export interface LodContextValue {
+	readonly lod: LodKind;
 	readonly lodGridStepWorld: number | null;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 }
 
-const SceneLodContext = createContext<SceneLodContextValue | null>(null);
+const LodContext = createContext<LodContextValue | null>(null);
 
 /** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
-export function useSceneLod(): SceneLodContextValue {
-	const v = useContext(SceneLodContext);
+export function useLod(): LodContextValue {
+	const v = useContext(LodContext);
 	if (!v) throw new Error("Scene LOD missing");
 	return v;
 }
 
-function SceneLodGridHelper() {
-	const lod = useSceneLod();
+function LodGridHelper() {
+	const lod = useLod();
 	const grid = useMemo(() => {
 		const step = lod.lodGridStepWorld;
 		if (step == null || !Number.isFinite(step) || step <= 0) return null;
@@ -476,32 +476,32 @@ function SceneLodGridHelper() {
 	return <primitive object={grid} position={[0, 0, 0]} />;
 }
 
-function SceneLodFrameRunner(props: {
-	readonly lodKindRef: MutableRefObject<SceneLodKind>;
-	readonly thresholds: SceneLodZoomThresholds;
+function LodFrameRunner(props: {
+	readonly lodKindRef: MutableRefObject<LodKind>;
+	readonly thresholds: LodZoomThresholds;
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly automaticLod: boolean;
-	readonly pinnedLod: SceneLodKind | undefined;
-	readonly onCtx: (next: SceneLodContextValue) => void;
-	readonly onLodChange?: (lod: SceneLodKind) => void;
+	readonly pinnedLod: LodKind | undefined;
+	readonly onCtx: (next: LodContextValue) => void;
+	readonly onLodChange?: (lod: LodKind) => void;
 }) {
 	const cam = useThree((s) => s.camera);
 	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
 	const tmpT = useMemo(() => new Vector3(), []);
-	const prevLod = useRef<SceneLodKind | null>(null);
+	const prevLod = useRef<LodKind | null>(null);
 	const ctxSig = useRef("");
 	useFrame(() => {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
-		const pseudo = scenePseudoZoomFromOrbitDistance(dist, props.distanceReference);
+		const pseudo = pseudoZoomFromOrbitDistance(dist, props.distanceReference);
 		const next =
 			!props.automaticLod && props.pinnedLod !== undefined
 				? props.pinnedLod
-				: resolveSceneLodLabelFromThresholds(pseudo, props.thresholds);
+				: resolveLodLabelFromThresholds(pseudo, props.thresholds);
 		props.lodKindRef.current = next;
-		const lodGridStepWorld = sceneLodVisibleGridSnapStepWorld(next, props.gridFactor);
+		const lodGridStepWorld = lodVisibleGridSnapStepWorld(next, props.gridFactor);
 		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
 		if (ctxSig.current !== sig) {
 			ctxSig.current = sig;
@@ -520,26 +520,26 @@ function SceneLodFrameRunner(props: {
 	return null;
 }
 
-function SceneLodBridge(props: {
+function LodBridge(props: {
 	readonly children: ReactNode;
-	readonly lodKindRef: MutableRefObject<SceneLodKind>;
-	readonly thresholds: SceneLodZoomThresholds;
+	readonly lodKindRef: MutableRefObject<LodKind>;
+	readonly thresholds: LodZoomThresholds;
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly showLodGrid: boolean;
 	readonly automaticLod: boolean;
-	readonly pinnedLod: SceneLodKind | undefined;
-	readonly onLodChange?: (lod: SceneLodKind) => void;
+	readonly pinnedLod: LodKind | undefined;
+	readonly onLodChange?: (lod: LodKind) => void;
 }) {
-	const [lodCtx, setLodCtx] = useState<SceneLodContextValue>(() => ({
+	const [lodCtx, setLodCtx] = useState<LodContextValue>(() => ({
 		lod: "normal",
-		lodGridStepWorld: sceneLodVisibleGridSnapStepWorld("normal", props.gridFactor),
+		lodGridStepWorld: lodVisibleGridSnapStepWorld("normal", props.gridFactor),
 		gridFactor: props.gridFactor,
 		gridSnapEnabled: props.gridSnapEnabled,
 	}));
 	const onCtx = useCallback(
-		(next: SceneLodContextValue) => {
+		(next: LodContextValue) => {
 			setLodCtx((prev) => {
 				if (
 					prev.lod === next.lod &&
@@ -556,8 +556,8 @@ function SceneLodBridge(props: {
 	);
 	const v = useMemo(() => lodCtx, [lodCtx]);
 	return (
-		<SceneLodContext.Provider value={v}>
-			<SceneLodFrameRunner
+		<LodContext.Provider value={v}>
+			<LodFrameRunner
 				lodKindRef={props.lodKindRef}
 				thresholds={props.thresholds}
 				distanceReference={props.distanceReference}
@@ -568,9 +568,9 @@ function SceneLodBridge(props: {
 				onCtx={onCtx}
 				onLodChange={props.onLodChange}
 			/>
-			{props.showLodGrid ? <SceneLodGridHelper /> : null}
+			{props.showLodGrid ? <LodGridHelper /> : null}
 			{props.children}
-		</SceneLodContext.Provider>
+		</LodContext.Provider>
 	);
 }
 //#endregion 📶Lod
@@ -584,35 +584,35 @@ function isQuat(v: unknown): v is Quat {
 	return Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number");
 }
 
-const SCENE_LOD_KINDS: readonly SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const LOD_KINDS: readonly LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 /** @emoji 📶 Select value: orbit pseudo-zoom picks the scene LOD band. */
-export const SCENE_LOD_MODE_AUTOMATIC = "automatic" as const;
+export const LOD_MODE_AUTOMATIC = "automatic" as const;
 
-/** @emoji 📶 Scene play / window LOD select value (`automatic` or a pinned {@link SceneLodKind}). */
-export type SceneLodModeKind = typeof SCENE_LOD_MODE_AUTOMATIC | SceneLodKind;
+/** @emoji 📶 Scene play / window LOD select value (`automatic` or a pinned {@link LodKind}). */
+export type LodModeKind = typeof LOD_MODE_AUTOMATIC | LodKind;
 
 /** @emoji ✅ True when `label` is a pinned scene LOD tier. */
-export function isSceneLodKind(label: string): label is SceneLodKind {
-	return (SCENE_LOD_KINDS as readonly string[]).includes(label);
+export function isLodKind(label: string): label is LodKind {
+	return (LOD_KINDS as readonly string[]).includes(label);
 }
 
-/** @emoji 📶 Maps a window LOD select value to {@link SceneCanvasProps} LOD fields. */
-export function sceneLodCanvasProps(mode: SceneLodModeKind): Pick<SceneCanvasProps, "automaticLod" | "lod"> {
-	if (mode === SCENE_LOD_MODE_AUTOMATIC) {
+/** @emoji 📶 Maps a window LOD select value to {@link CanvasProps} LOD fields. */
+export function lodCanvasProps(mode: LodModeKind): Pick<CanvasProps, "automaticLod" | "lod"> {
+	if (mode === LOD_MODE_AUTOMATIC) {
 		return { automaticLod: true };
 	}
 	return { automaticLod: false, lod: mode };
 }
 
 /** @emoji 📶 Automatic LOD select row label showing the live orbit-derived tier. */
-export function sceneLodAutomaticSelectLabel(effectiveTier: SceneLodKind): string {
+export function lodAutomaticSelectLabel(effectiveTier: LodKind): string {
 	return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
 }
 
-function parseSceneDomainKind(value: unknown): SceneDomainKind {
+function parseDomainKind(value: unknown): DomainKind {
 	if (typeof value !== "string") {
-		return DEFAULT_SCENE_DOMAIN;
+		return DEFAULT_DOMAIN;
 	}
 	switch (value.trim().toLowerCase()) {
 		case "urban":
@@ -624,22 +624,22 @@ function parseSceneDomainKind(value: unknown): SceneDomainKind {
 		case "engineering":
 			return "engineering";
 		default:
-			return DEFAULT_SCENE_DOMAIN;
+			return DEFAULT_DOMAIN;
 	}
 }
 
-function parseHandleMeshByLod(v: unknown): Partial<Record<SceneLodKind, string>> | undefined {
+function parseHandleMeshByLod(v: unknown): Partial<Record<LodKind, string>> | undefined {
 	if (!v || typeof v !== "object") return undefined;
 	const o = v as Record<string, unknown>;
-	const out: Partial<Record<SceneLodKind, string>> = {};
-	for (const k of SCENE_LOD_KINDS) {
+	const out: Partial<Record<LodKind, string>> = {};
+	for (const k of LOD_KINDS) {
 		const s = o[k];
 		if (typeof s === "string" && s.length) out[k] = s;
 	}
 	return Object.keys(out).length ? out : undefined;
 }
 
-export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
+export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
 	if (r.schema !== "elements.scene.fixture/v1") return null;
@@ -653,26 +653,26 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 	const tiesRaw = r.ties;
 	const objsRaw = r.objects;
 	if (!Array.isArray(tiesRaw) || !Array.isArray(objsRaw)) return null;
-	const ties: SceneTieProps[] = [];
+	const ties: TieProps[] = [];
 	for (const t of tiesRaw) {
 		if (!t || typeof t !== "object") continue;
 		const tr = t as Record<string, unknown>;
 		if (typeof tr.id !== "string" || typeof tr.source !== "string" || typeof tr.target !== "string") continue;
 		ties.push({
 			id: tr.id,
-			source: tr.source as SceneTieProps["source"],
-			target: tr.target as SceneTieProps["target"],
+			source: tr.source as TieProps["source"],
+			target: tr.target as TieProps["target"],
 			...(typeof tr.tieKind === "string" ? { tieKind: tr.tieKind } : {}),
 		});
 	}
-	const objects: SceneFixtureObjectV1[] = [];
+	const objects: FixtureObjectV1[] = [];
 	for (const o of objsRaw) {
 		if (!o || typeof o !== "object") continue;
 		const or = o as Record<string, unknown>;
 		if (typeof or.id !== "string" || typeof or.meshUrl !== "string") continue;
 		const origin = or.origin;
 		if (!isVec3(origin)) continue;
-		const vortices: SceneVortexProps[] = [];
+		const vortices: VortexProps[] = [];
 		const vr = or.vortices;
 		if (Array.isArray(vr)) {
 			for (const v of vr) {
@@ -705,23 +705,23 @@ export function parseSceneFixtureV1(raw: unknown): SceneFixtureV1 | null {
 	return {
 		schema: "elements.scene.fixture/v1",
 		camera: { position: pos, target: tgt, zoom },
-		domain: parseSceneDomainKind(r.domain),
+		domain: parseDomainKind(r.domain),
 		...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
 		ties,
 		objects,
 	};
 }
 
-export function encodeSceneFixtureForDragV1(fixture: SceneFixtureV1): string {
+export function encodeSceneFixtureForDragV1(fixture: FixtureV1): string {
 	return JSON.stringify(fixture);
 }
 //#endregion 🧾Fixture
 
 //#region 🧩Compat
-export function sceneKindsCompatible(
+export function kindsCompatible(
 	aKind: string | undefined,
 	bKind: string | undefined,
-	table: readonly SceneKindCompatEntry[] | undefined,
+	table: readonly KindCompatEntry[] | undefined,
 ): boolean {
 	if (!table?.length || !aKind || !bKind) return false;
 	return table.some(
@@ -731,11 +731,11 @@ export function sceneKindsCompatible(
 	);
 }
 
-const SCENE_DEFAULT_WIRE_KIND_ID = "board.wire.link";
+const DEFAULT_WIRE_KIND_ID = "board.wire.link";
 
 /** @emoji 🔗 Tie endpoint vortex full ids that are already linked and cannot start or receive another link. */
-export function sceneBlockedVortexFullIdsFromTies(
-	ties: readonly Pick<SceneTieProps, "source" | "target">[],
+export function blockedVortexFullIdsFromTies(
+	ties: readonly Pick<TieProps, "source" | "target">[],
 ): ReadonlySet<string> {
 	const s = new Set<string>();
 	for (const t of ties) {
@@ -746,64 +746,64 @@ export function sceneBlockedVortexFullIdsFromTies(
 }
 
 /** @emoji 🧭 Semantic kinds at one end of an attraction drag (object + vortex handle). */
-export interface SceneAttractionHandleContext {
+export interface AttractionHandleContext {
 	readonly objectId: string;
 	readonly objectKind: string | undefined;
 	readonly vortexKind: string | undefined;
 }
 
 function catalogHandleById(
-	catalogs: SceneKindCatalogBundle | undefined,
+	catalogs: KindCatalogBundle | undefined,
 	handleKind: string | undefined,
-): SceneHandleKindCatalogEntry | undefined {
+): HandleKindCatalogEntry | undefined {
 	if (!handleKind || !catalogs?.handles?.length) return undefined;
 	return catalogs.handles.find((h) => h.id === handleKind);
 }
 
 function catalogWireById(
-	catalogs: SceneKindCatalogBundle | undefined,
+	catalogs: KindCatalogBundle | undefined,
 	wireKind: string | undefined,
-): SceneWireKindCatalogEntry | undefined {
+): WireKindCatalogEntry | undefined {
 	if (!wireKind || !catalogs?.wires?.length) return undefined;
 	return catalogs.wires.find((w) => w.id === wireKind);
 }
 
 /** @emoji 🔌 Resolves default wire kind for a vortex kind via handle catalog, else `board.wire.link`. */
-export function resolveSceneWireKindForVortex(
+export function resolveWireKindForVortex(
 	vortexKind: string | undefined,
-	catalogs: SceneKindCatalogBundle | undefined,
+	catalogs: KindCatalogBundle | undefined,
 ): string {
 	const h = catalogHandleById(catalogs, vortexKind);
 	const w = h?.defaultWireKind?.trim();
-	return w && w.length > 0 ? w : SCENE_DEFAULT_WIRE_KIND_ID;
+	return w && w.length > 0 ? w : DEFAULT_WIRE_KIND_ID;
 }
 
 /** @emoji 🪢 Resolves default edge kind for a wire kind via wire catalog, else empty string. */
-export function resolveSceneEdgeKindForWire(
+export function resolveEdgeKindForWire(
 	wireKind: string | undefined,
-	catalogs: SceneKindCatalogBundle | undefined,
+	catalogs: KindCatalogBundle | undefined,
 ): string {
 	const w = catalogWireById(catalogs, wireKind);
 	const e = w?.defaultEdgeKind?.trim();
 	return e && e.length > 0 ? e : "";
 }
 
-function sceneCompatPairMatches(rule: SceneKindCompatEntry, a: string, b: string): boolean {
+function compatPairMatches(rule: KindCompatEntry, a: string, b: string): boolean {
 	if (rule.source === a && rule.target === b) return true;
 	if (rule.bidirectional === true && rule.source === b && rule.target === a) return true;
 	return false;
 }
 
-function sceneAttractionGestureRuleApplies(
-	rule: SceneKindCompatEntry,
-	attracting: SceneAttractionHandleContext,
-	attracted: SceneAttractionHandleContext,
-	catalogs: SceneKindCatalogBundle | undefined,
+function attractionGestureRuleApplies(
+	rule: KindCompatEntry,
+	attracting: AttractionHandleContext,
+	attracted: AttractionHandleContext,
+	catalogs: KindCatalogBundle | undefined,
 ): boolean {
-	const wSrc = resolveSceneWireKindForVortex(attracting.vortexKind, catalogs);
-	const wTgt = resolveSceneWireKindForVortex(attracted.vortexKind, catalogs);
-	const eSrc = resolveSceneEdgeKindForWire(wSrc, catalogs);
-	const eTgt = resolveSceneEdgeKindForWire(wTgt, catalogs);
+	const wSrc = resolveWireKindForVortex(attracting.vortexKind, catalogs);
+	const wTgt = resolveWireKindForVortex(attracted.vortexKind, catalogs);
+	const eSrc = resolveEdgeKindForWire(wSrc, catalogs);
+	const eTgt = resolveEdgeKindForWire(wTgt, catalogs);
 	const sn = attracting.objectKind ?? "";
 	const tn = attracted.objectKind ?? "";
 	const sh = attracting.vortexKind ?? "";
@@ -811,35 +811,35 @@ function sceneAttractionGestureRuleApplies(
 	const spec = rule.specificity ?? "handle";
 	switch (spec) {
 		case "general":
-			return sceneCompatPairMatches(rule, sh, th);
+			return compatPairMatches(rule, sh, th);
 		case "object":
 		case "node":
-			return sceneCompatPairMatches(rule, sn, tn);
+			return compatPairMatches(rule, sn, tn);
 		case "edge":
 		case "tie":
-			return sceneCompatPairMatches(rule, eSrc, eTgt);
+			return compatPairMatches(rule, eSrc, eTgt);
 		case "handle":
-			return sceneCompatPairMatches(rule, sh, th);
+			return compatPairMatches(rule, sh, th);
 		case "wire":
-			return sceneCompatPairMatches(rule, wSrc, th);
+			return compatPairMatches(rule, wSrc, th);
 		default:
-			return sceneCompatPairMatches(rule, sh, th);
+			return compatPairMatches(rule, sh, th);
 	}
 }
 
 /** @emoji 🤝 WASM-style filtered attraction compatibility (important + specificity tiers); empty rules allow all. */
-export function sceneHandlesAttractionCompatibleForDrag(
-	attracting: SceneAttractionHandleContext,
-	attracted: SceneAttractionHandleContext,
-	rules: readonly SceneKindCompatEntry[] | undefined,
-	catalogs: SceneKindCatalogBundle | undefined,
+export function handlesAttractionCompatibleForDrag(
+	attracting: AttractionHandleContext,
+	attracted: AttractionHandleContext,
+	rules: readonly KindCompatEntry[] | undefined,
+	catalogs: KindCatalogBundle | undefined,
 ): boolean {
 	if (!rules?.length) return true;
-	let matched = rules.filter((r) => sceneAttractionGestureRuleApplies(r, attracting, attracted, catalogs));
+	let matched = rules.filter((r) => attractionGestureRuleApplies(r, attracting, attracted, catalogs));
 	if (matched.length === 0) return false;
 	if (matched.some((r) => r.important)) matched = matched.filter((r) => r.important);
 	else {
-		const rank = (s: SceneKindCompatEntry["specificity"] | undefined): number => {
+		const rank = (s: KindCompatEntry["specificity"] | undefined): number => {
 			switch (s) {
 				case "general":
 					return 0;
@@ -865,22 +865,22 @@ export function sceneHandlesAttractionCompatibleForDrag(
 //#endregion 🧩Compat
 
 //#region 🎨MeshPaint
-const SCENE_CSS_SELECTED_MESH = "var(--color-primary)";
-const SCENE_CSS_SELECTED_LINE = "var(--color-primary)";
-const SCENE_CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
-const SCENE_CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
-const SCENE_CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
-const SCENE_CSS_HOVERED_LINE = "var(--color-accent)";
-const SCENE_CSS_NEUTRAL_MESH = "var(--color-panel)";
-const SCENE_CSS_NEUTRAL_LINE = "var(--color-element)";
-const SCENE_CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
-const SCENE_CSS_DISABLED_LINE = "var(--color-muted-foreground)";
-const SCENE_CSS_TIE_LINE = "var(--color-muted-foreground)";
-const SCENE_CSS_ATTRACTION_LINE = "var(--color-accent)";
+const CSS_SELECTED_MESH = "var(--color-primary)";
+const CSS_SELECTED_LINE = "var(--color-primary)";
+const CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
+const CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
+const CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
+const CSS_HOVERED_LINE = "var(--color-accent)";
+const CSS_NEUTRAL_MESH = "var(--color-panel)";
+const CSS_NEUTRAL_LINE = "var(--color-element)";
+const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
+const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
+const CSS_TIE_LINE = "var(--color-muted-foreground)";
+const CSS_ATTRACTION_LINE = "var(--color-accent)";
 
-const SCENE_MESH_OUTLINE_USER_DATA_KEY = "__elementsSceneMeshOutline";
+const MESH_OUTLINE_USER_DATA_KEY = "__elementsMeshBodyOutline";
 
-interface SceneMeshStyleColors {
+interface MeshStyleColors {
 	readonly meshColor: string;
 	readonly lineColor: string;
 	readonly emissiveColor: string;
@@ -888,7 +888,7 @@ interface SceneMeshStyleColors {
 	readonly opacity: number;
 }
 
-const SCENE_MESH_STYLE_HEADLESS: Record<Exclude<SceneMeshStyleKind, "original">, SceneMeshStyleColors> = {
+const MESH_STYLE_HEADLESS: Record<Exclude<MeshStyleKind, "original">, MeshStyleColors> = {
 	neutral: {
 		meshColor: "#eeeadb",
 		lineColor: "#001117",
@@ -926,7 +926,7 @@ const SCENE_MESH_STYLE_HEADLESS: Record<Exclude<SceneMeshStyleKind, "original">,
 	},
 };
 
-function sceneProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
+function probeCssComputed(property: "color" | "backgroundColor", value: string): string {
 	if (typeof document === "undefined") {
 		return "";
 	}
@@ -939,44 +939,44 @@ function sceneProbeCssComputed(property: "color" | "backgroundColor", value: str
 	return out;
 }
 
-function sceneResolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
-	const raw = sceneProbeCssComputed(property, expr);
+function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
+	const raw = probeCssComputed(property, expr);
 	if (!raw || raw === "rgba(0, 0, 0, 0)") {
 		return fallback;
 	}
 	return raw;
 }
 
-/** @emoji 🎨 Resolves mesh and edge colors for a {@link SceneMeshStyleKind} from Elements tokens. */
-export function sceneMeshStyleColors(style: SceneMeshStyleKind): SceneMeshStyleColors | null {
+/** @emoji 🎨 Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
+export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 	if (style === "original") {
 		return null;
 	}
-	const fb = SCENE_MESH_STYLE_HEADLESS[style];
-	const meshExprs: Record<Exclude<SceneMeshStyleKind, "original">, string> = {
-		neutral: SCENE_CSS_NEUTRAL_MESH,
-		hovered: SCENE_CSS_HOVERED_MESH,
-		selected: SCENE_CSS_SELECTED_MESH,
-		highlighted: SCENE_CSS_HIGHLIGHTED_MESH,
-		disabled: SCENE_CSS_DISABLED_MESH,
+	const fb = MESH_STYLE_HEADLESS[style];
+	const meshExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
+		neutral: CSS_NEUTRAL_MESH,
+		hovered: CSS_HOVERED_MESH,
+		selected: CSS_SELECTED_MESH,
+		highlighted: CSS_HIGHLIGHTED_MESH,
+		disabled: CSS_DISABLED_MESH,
 	};
-	const lineExprs: Record<Exclude<SceneMeshStyleKind, "original">, string> = {
-		neutral: SCENE_CSS_NEUTRAL_LINE,
-		hovered: SCENE_CSS_HOVERED_LINE,
-		selected: SCENE_CSS_SELECTED_LINE,
-		highlighted: SCENE_CSS_HIGHLIGHTED_LINE,
-		disabled: SCENE_CSS_DISABLED_LINE,
+	const lineExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
+		neutral: CSS_NEUTRAL_LINE,
+		hovered: CSS_HOVERED_LINE,
+		selected: CSS_SELECTED_LINE,
+		highlighted: CSS_HIGHLIGHTED_LINE,
+		disabled: CSS_DISABLED_LINE,
 	};
 	return {
-		meshColor: sceneResolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
-		lineColor: sceneResolveCssColor("color", lineExprs[style], fb.lineColor),
-		emissiveColor: sceneResolveCssColor("color", lineExprs[style], fb.emissiveColor),
+		meshColor: resolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
+		lineColor: resolveCssColor("color", lineExprs[style], fb.lineColor),
+		emissiveColor: resolveCssColor("color", lineExprs[style], fb.emissiveColor),
 		emissiveIntensity: fb.emissiveIntensity,
 		opacity: fb.opacity,
 	};
 }
 
-function sceneCreateStyledMeshMaterial(color: string, state: SceneMeshStyleColors): MeshStandardMaterial {
+function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
 	const mat = new MeshStandardMaterial({
 		color: new Color(color),
 		metalness: 0,
@@ -989,44 +989,44 @@ function sceneCreateStyledMeshMaterial(color: string, state: SceneMeshStyleColor
 	return mat;
 }
 
-function sceneCreateStyledLineMaterial(color: string, state: SceneMeshStyleColors): LineBasicMaterial {
+function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
 	const mat = new LineBasicMaterial({ color: new Color(color) });
 	mat.transparent = state.opacity < 1;
 	mat.opacity = state.opacity;
 	return mat;
 }
 
-function sceneCreateMeshOutline(geometry: BufferGeometry, color: string, state: SceneMeshStyleColors): LineSegments {
-	const outline = new LineSegments(new EdgesGeometry(geometry), sceneCreateStyledLineMaterial(color, state));
-	outline.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY] = true;
+function createMeshOutline(geometry: BufferGeometry, color: string, state: MeshStyleColors): LineSegments {
+	const outline = new LineSegments(new EdgesGeometry(geometry), createStyledLineMaterial(color, state));
+	outline.userData[MESH_OUTLINE_USER_DATA_KEY] = true;
 	outline.scale.setScalar(1.001);
 	return outline;
 }
 
-function sceneApplyMeshStyleToObject3D(root: Object3D, style: SceneMeshStyleKind): void {
-	const colors = sceneMeshStyleColors(style);
+function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
+	const colors = meshStyleColors(style);
 	if (!colors) {
 		return;
 	}
 	root.traverse((object) => {
 		if (object instanceof Mesh) {
-			const meshMaterial = sceneCreateStyledMeshMaterial(colors.meshColor, colors);
+			const meshMaterial = createStyledMeshMaterial(colors.meshColor, colors);
 			if (Array.isArray(object.material)) {
 				object.material = object.material.map(() => meshMaterial.clone());
 			} else {
 				object.material = meshMaterial;
 			}
 			const geometry = object.geometry;
-			if (geometry && !object.children.some((c) => c.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY])) {
-				object.add(sceneCreateMeshOutline(geometry, colors.lineColor, colors));
+			if (geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
+				object.add(createMeshOutline(geometry, colors.lineColor, colors));
 			}
 			return;
 		}
 		if (object instanceof ThreeLine || object instanceof LineSegments) {
-			if (object.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY]) {
+			if (object.userData[MESH_OUTLINE_USER_DATA_KEY]) {
 				return;
 			}
-			object.material = sceneCreateStyledLineMaterial(colors.lineColor, colors);
+			object.material = createStyledLineMaterial(colors.lineColor, colors);
 			return;
 		}
 		if (object instanceof Points) {
@@ -1041,13 +1041,13 @@ function sceneApplyMeshStyleToObject3D(root: Object3D, style: SceneMeshStyleKind
 }
 
 /** @emoji 🎨 Chooses the effective mesh style from explicit prop and interaction flags. */
-export function resolveSceneMeshStyle(args: {
-	readonly style?: SceneMeshStyleKind;
+export function resolveMeshStyle(args: {
+	readonly style?: MeshStyleKind;
 	readonly disabled?: boolean;
 	readonly selected?: boolean;
 	readonly highlighted?: boolean;
 	readonly hovered?: boolean;
-}): SceneMeshStyleKind {
+}): MeshStyleKind {
 	if (args.style) {
 		return args.style;
 	}
@@ -1063,12 +1063,12 @@ export function resolveSceneMeshStyle(args: {
 	if (args.hovered) {
 		return "hovered";
 	}
-	return DEFAULT_SCENE_MESH_STYLE;
+	return DEFAULT_MESH_STYLE;
 }
 
 /** @emoji 🎨 Resolves a CSS color for scene lines (ties, attractions). */
-export function sceneLineCssColor(expr: string, fallback: string): string {
-	return sceneResolveCssColor("color", expr, fallback);
+export function lineCssColor(expr: string, fallback: string): string {
+	return resolveCssColor("color", expr, fallback);
 }
 //#endregion 🎨MeshPaint
 
@@ -1077,15 +1077,15 @@ const gltfRefCounts = new Map<string, number>();
 const styledMeshRefCounts = new Map<string, number>();
 const styledMeshTemplates = new Map<string, Object3D>();
 
-function sceneStyledPoolKey(url: string, style: SceneMeshStyleKind): string {
+function styledPoolKey(url: string, style: MeshStyleKind): string {
 	return `${url}\0${style}`;
 }
 
-export function sceneGltfPoolAcquire(url: string): void {
+export function gltfPoolAcquire(url: string): void {
 	gltfRefCounts.set(url, (gltfRefCounts.get(url) ?? 0) + 1);
 }
 
-export function sceneGltfPoolRelease(url: string): void {
+export function gltfPoolRelease(url: string): void {
 	const n = (gltfRefCounts.get(url) ?? 1) - 1;
 	if (n <= 0) {
 		gltfRefCounts.delete(url);
@@ -1094,13 +1094,13 @@ export function sceneGltfPoolRelease(url: string): void {
 	}
 }
 
-export function sceneStyledMeshPoolAcquire(url: string, style: SceneMeshStyleKind): void {
-	const key = sceneStyledPoolKey(url, style);
+export function styledMeshPoolAcquire(url: string, style: MeshStyleKind): void {
+	const key = styledPoolKey(url, style);
 	styledMeshRefCounts.set(key, (styledMeshRefCounts.get(key) ?? 0) + 1);
 }
 
-export function sceneStyledMeshPoolRelease(url: string, style: SceneMeshStyleKind): void {
-	const key = sceneStyledPoolKey(url, style);
+export function styledMeshPoolRelease(url: string, style: MeshStyleKind): void {
+	const key = styledPoolKey(url, style);
 	const n = (styledMeshRefCounts.get(key) ?? 1) - 1;
 	if (n <= 0) {
 		styledMeshRefCounts.delete(key);
@@ -1111,7 +1111,7 @@ export function sceneStyledMeshPoolRelease(url: string, style: SceneMeshStyleKin
 }
 
 /** @emoji 🧹 Drops pooled GLTF cache entries (call on scene teardown, not per-chunk unmount). */
-export function sceneGltfPoolClear(url: string): void {
+export function gltfPoolClear(url: string): void {
 	gltfRefCounts.delete(url);
 	for (const key of [...styledMeshTemplates.keys()]) {
 		if (key.startsWith(`${url}\0`)) {
@@ -1122,16 +1122,16 @@ export function sceneGltfPoolClear(url: string): void {
 	useGLTF.clear(url);
 }
 
-/** @emoji 🏊 Returns a cached styled GLTF template for {@link SceneMesh} (refcount via acquire/release). */
-export function sceneStyledMeshTemplate(url: string, style: SceneMeshStyleKind, source: Object3D): Object3D {
+/** @emoji 🏊 Returns a cached styled GLTF template for {@link MeshBody} (refcount via acquire/release). */
+export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Object3D): Object3D {
 	if (style === "original") {
 		return source;
 	}
-	const key = sceneStyledPoolKey(url, style);
+	const key = styledPoolKey(url, style);
 	let template = styledMeshTemplates.get(key);
 	if (!template) {
 		template = source.clone(true);
-		sceneApplyMeshStyleToObject3D(template, style);
+		applyMeshStyleToObject3D(template, style);
 		styledMeshTemplates.set(key, template);
 	}
 	return template;
@@ -1140,30 +1140,30 @@ export function sceneStyledMeshTemplate(url: string, style: SceneMeshStyleKind, 
 function usePooledGltf(url: string) {
 	const gltf = useGLTF(url);
 	useEffect(() => {
-		sceneGltfPoolAcquire(url);
+		gltfPoolAcquire(url);
 		return () => {
-			sceneGltfPoolRelease(url);
+			gltfPoolRelease(url);
 		};
 	}, [url]);
 	return gltf;
 }
 
-function usePooledStyledMesh(url: string, style: SceneMeshStyleKind) {
+function usePooledStyledMesh(url: string, style: MeshStyleKind) {
 	const gltf = usePooledGltf(url);
 	useEffect(() => {
 		if (style === "original") {
 			return undefined;
 		}
-		sceneStyledMeshPoolAcquire(url, style);
+		styledMeshPoolAcquire(url, style);
 		return () => {
-			sceneStyledMeshPoolRelease(url, style);
+			styledMeshPoolRelease(url, style);
 		};
 	}, [url, style]);
 	const renderRoot = useMemo(() => {
 		if (!gltf.scene) {
 			return null;
 		}
-		const template = sceneStyledMeshTemplate(url, style, gltf.scene);
+		const template = styledMeshTemplate(url, style, gltf.scene);
 		return template.clone(true);
 	}, [gltf.scene, url, style]);
 	return renderRoot;
@@ -1173,7 +1173,7 @@ function usePooledStyledMesh(url: string, style: SceneMeshStyleKind) {
 //#region 🎯Registry
 type VortexGetter = () => Vector3 | null;
 
-export interface SceneVortexBindingMeta {
+export interface VortexBindingMeta {
 	readonly fullId: string;
 	readonly objectId: string;
 	readonly objectKind: string | undefined;
@@ -1181,85 +1181,85 @@ export interface SceneVortexBindingMeta {
 	readonly radiusWorld: number;
 }
 
-export interface SceneRegistryValue {
+export interface RegistryValue {
 	registerVortex(fullId: string, getter: VortexGetter): void;
 	unregisterVortex(fullId: string): void;
 	getVortexWorld(fullId: string): Vector3 | null;
-	registerVortexBinding(meta: SceneVortexBindingMeta, pickRoot: Object3D | null): void;
+	registerVortexBinding(meta: VortexBindingMeta, pickRoot: Object3D | null): void;
 	unregisterVortexBinding(fullId: string): void;
 	registerObject(id: string, objectKind: string | undefined, group: Group | null): void;
 	getObjectGroup(id: string): Group | null;
 	getObjectKind(id: string): string | undefined;
-	kindCatalogs: SceneKindCatalogBundle | undefined;
-	kindCompatibility: readonly SceneKindCompatEntry[] | undefined;
+	kindCatalogs: KindCatalogBundle | undefined;
+	kindCompatibility: readonly KindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
 	proximityRadius: number;
 	selectedObjectIds: readonly string[];
 	setSelectedObjectIds(ids: readonly string[]): void;
-	selectionMode: SceneSelectionMode;
-	relocateMode: SceneRelocateMode;
+	selectionMode: SelectionMode;
+	relocateMode: RelocateMode;
 	activeRelocateObjectId: string | null;
 	setActiveRelocateObjectId: (id: string | null) => void;
 	attractionDragActive: boolean;
 	attractionDragAttractingFullId: string | null;
 	attractionCompatibleAttractedFullIds: ReadonlySet<string>;
 	attractionHoverRingFullId: string | null;
-	attractionIndirectPickAwait: SceneAttractionIndirectPickAwait | null;
+	attractionIndirectPickAwait: AttractionIndirectPickAwait | null;
 	attractionEndWorldRef: MutableRefObject<Vector3 | null>;
 	beginAttractionDragFromVortex(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined): void;
 	cancelAttractionDrag(): void;
-	findNearestProximityRelocate(world: Vector3, movingObjectId: string): SceneAttractionPayload | null;
-	attachAttractionThreeEnv(env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null): void;
+	findNearestProximityRelocate(world: Vector3, movingObjectId: string): AttractionPayload | null;
+	attachAttractionThreeEnv(env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null): void;
 	updateAttractionPointer(clientX: number, clientY: number): void;
 	commitAttractionPointer(clientX: number, clientY: number): void;
 	updateIndirectPickPointer(clientX: number, clientY: number): void;
 	commitIndirectPickPointerDown(clientX: number, clientY: number): void;
-	onSelect?: (snap: SceneSelectionSnapshot) => void;
-	onConnect?: (p: SceneAttractionPayload) => void;
-	onProximityConnect?: (p: SceneAttractionPayload) => void;
-	onIndirectConnect?: (p: SceneAttractionPayload) => void;
-	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
-	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
-	onRelocate?: (p: SceneRelocatePayload) => void;
+	onSelect?: (snap: SelectionSnapshot) => void;
+	onConnect?: (p: AttractionPayload) => void;
+	onProximityConnect?: (p: AttractionPayload) => void;
+	onIndirectConnect?: (p: AttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+	onRelocate?: (p: RelocatePayload) => void;
 }
 
-const SceneRegistryContext = createContext<SceneRegistryValue | null>(null);
+const RegistryContext = createContext<RegistryValue | null>(null);
 
-function useSceneRegistry(): SceneRegistryValue {
-	const v = useContext(SceneRegistryContext);
+function useRegistry(): RegistryValue {
+	const v = useContext(RegistryContext);
 	if (!v) throw new Error("Scene registry missing");
 	return v;
 }
 //#endregion 🎯Registry
 
 //#region 🧱Chunking
-export function sceneChunkKey(origin: Vec3, chunkSize: number): string {
+export function chunkKey(origin: Vec3, chunkSize: number): string {
 	const ix = Math.floor(origin[0] / chunkSize);
 	const iy = Math.floor(origin[1] / chunkSize);
 	const iz = Math.floor(origin[2] / chunkSize);
 	return `${ix}|${iy}|${iz}`;
 }
 
-function sceneSetEquals(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+function setEquals(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 	if (a.size !== b.size) return false;
 	for (const v of a) if (!b.has(v)) return false;
 	return true;
 }
 
 /** @emoji 📏 Chunk bounding radius in world units (half-space diagonal of a cube chunk). */
-export function sceneChunkBoundsRadius(chunkSize: number): number {
+export function chunkBoundsRadius(chunkSize: number): number {
 	return chunkSize * 0.866;
 }
 
 /** @emoji 👁️ Distance-only chunk visibility with enter/exit hysteresis (avoids frustum-edge flicker). */
-export function sceneChunkDistanceVisible(args: {
+export function chunkDistanceVisible(args: {
 	readonly camPos: Vector3;
 	readonly chunkCenter: Vector3;
 	readonly chunkSize: number;
 	readonly maxDist: number;
 	readonly wasVisible: boolean;
 }): boolean {
-	const boundsR = sceneChunkBoundsRadius(args.chunkSize);
+	const boundsR = chunkBoundsRadius(args.chunkSize);
 	const dist = args.camPos.distanceTo(args.chunkCenter);
 	const enterDist = args.maxDist + boundsR;
 	const exitDist = enterDist + args.chunkSize * 0.5;
@@ -1279,7 +1279,7 @@ function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, max
 			for (const key of chunkKeys) {
 				const [ix, iy, iz] = key.split("|").map(Number);
 				centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
-				const show = sceneChunkDistanceVisible({
+				const show = chunkDistanceVisible({
 					camPos,
 					chunkCenter: centerTmp,
 					chunkSize,
@@ -1289,7 +1289,7 @@ function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, max
 				if (show) next.add(key);
 				else next.delete(key);
 			}
-			return sceneSetEquals(prev, next) ? prev : next;
+			return setEquals(prev, next) ? prev : next;
 		});
 	});
 	return visible;
@@ -1313,7 +1313,7 @@ function scaleToThree(s: number | Vec3 | undefined): Vector3 {
 }
 
 /** @emoji 🔑 Stable key for object pose props (relocate mutates the group without changing this until commit). */
-export function sceneObjectPoseKey(
+export function objectPoseKey(
 	id: string,
 	origin: Vec3,
 	orientation: Quat | undefined,
@@ -1325,7 +1325,7 @@ export function sceneObjectPoseKey(
 }
 
 /** @emoji 📍 Writes fixture pose onto an object group; avoids R3F controlled transforms so vortex children follow relocate. */
-export function sceneApplyObjectPose(
+export function applyObjectPose(
 	group: Group,
 	origin: Vec3,
 	orientation: Quat | undefined,
@@ -1337,7 +1337,7 @@ export function sceneApplyObjectPose(
 }
 
 /** @emoji 🌳 Updates world matrices from root to leaf so {@link Object3D.getWorldPosition} matches the current graph. */
-export function sceneUpdateWorldMatrixChain(leaf: Object3D): void {
+export function updateWorldMatrixChain(leaf: Object3D): void {
 	const chain: Object3D[] = [];
 	for (let cur: Object3D | null = leaf; cur; cur = cur.parent) {
 		chain.push(cur);
@@ -1347,13 +1347,13 @@ export function sceneUpdateWorldMatrixChain(leaf: Object3D): void {
 	}
 }
 
-function sceneVector3IsFinite(v: Vector3): boolean {
+function vector3IsFinite(v: Vector3): boolean {
 	return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 }
 //#endregion 🧊Helpers
 
 //#region 🧲AttractionGesture
-function readSceneVortexFullIdFromObject(o: Object3D | null): string | null {
+function readVortexFullIdFromObject(o: Object3D | null): string | null {
 	let cur: Object3D | null = o;
 	while (cur) {
 		const id = cur.userData?.sceneVortexFullId;
@@ -1363,7 +1363,7 @@ function readSceneVortexFullIdFromObject(o: Object3D | null): string | null {
 	return null;
 }
 
-function readSceneObjectIdFromObject(o: Object3D | null): string | null {
+function readObjectItemIdFromObject(o: Object3D | null): string | null {
 	let cur: Object3D | null = o;
 	while (cur) {
 		const id = cur.userData?.sceneObjectId;
@@ -1373,9 +1373,9 @@ function readSceneObjectIdFromObject(o: Object3D | null): string | null {
 	return null;
 }
 
-const SCENE_HANDLE_HIT_TOLERANCE_PX = 10;
-const SCENE_ATTRACTION_HANDLE_SNAP_EXTRA_PX = 22;
-const SCENE_ATTRACTION_COMMIT_SNAP_TIGHT_PX = 2;
+const HANDLE_HIT_TOLERANCE_PX = 10;
+const ATTRACTION_HANDLE_SNAP_EXTRA_PX = 22;
+const ATTRACTION_COMMIT_SNAP_TIGHT_PX = 2;
 
 function worldToCanvasPx(world: Vector3, camera: Camera, gl: WebGLRenderer): { x: number; y: number } {
 	const v = world.clone().project(camera);
@@ -1384,7 +1384,7 @@ function worldToCanvasPx(world: Vector3, camera: Camera, gl: WebGLRenderer): { x
 	return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
 }
 
-function scenePixelsPerWorldUnitAt(camera: Camera, gl: WebGLRenderer, world: Vector3): number {
+function pixelsPerWorldUnitAt(camera: Camera, gl: WebGLRenderer, world: Vector3): number {
 	if (!(camera as ThreePerspectiveCamera).isPerspectiveCamera) return 1;
 	const pc = camera as ThreePerspectiveCamera;
 	const dist = pc.position.distanceTo(world);
@@ -1393,19 +1393,19 @@ function scenePixelsPerWorldUnitAt(camera: Camera, gl: WebGLRenderer, world: Vec
 	return h / (2 * Math.tan(fovRad / 2) * Math.max(dist, 1e-6));
 }
 
-function sceneAttractionSnapDragTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
-	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
+function attractionSnapDragTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+	const mpp = pixelsPerWorldUnitAt(camera, gl, worldHandle);
 	const radPx = radiusWorld * mpp;
-	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_ATTRACTION_HANDLE_SNAP_EXTRA_PX + radPx * camera.zoom;
+	return HANDLE_HIT_TOLERANCE_PX + ATTRACTION_HANDLE_SNAP_EXTRA_PX + radPx * camera.zoom;
 }
 
-function sceneAttractionSnapCommitTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
-	const mpp = scenePixelsPerWorldUnitAt(camera, gl, worldHandle);
+function attractionSnapCommitTolerancePx(worldHandle: Vector3, radiusWorld: number, camera: Camera, gl: WebGLRenderer): number {
+	const mpp = pixelsPerWorldUnitAt(camera, gl, worldHandle);
 	const radPx = radiusWorld * mpp;
-	return SCENE_HANDLE_HIT_TOLERANCE_PX + SCENE_ATTRACTION_COMMIT_SNAP_TIGHT_PX + radPx * camera.zoom;
+	return HANDLE_HIT_TOLERANCE_PX + ATTRACTION_COMMIT_SNAP_TIGHT_PX + radPx * camera.zoom;
 }
 
-function sceneAttractionSnapCommitProximityOk(
+function attractionSnapCommitProximityOk(
 	attractedFullId: string,
 	pointerWorld: Vector3,
 	camera: Camera,
@@ -1418,11 +1418,11 @@ function sceneAttractionSnapCommitProximityOk(
 	const pScr = worldToCanvasPx(pointerWorld, camera, gl);
 	const hScr = worldToCanvasPx(hw, camera, gl);
 	const d = Math.hypot(pScr.x - hScr.x, pScr.y - hScr.y);
-	return d <= sceneAttractionSnapCommitTolerancePx(hw, metaRadius(attractedFullId), camera, gl);
+	return d <= attractionSnapCommitTolerancePx(hw, metaRadius(attractedFullId), camera, gl);
 }
 
-function sceneNearestAttractionSnapFullId(args: {
-	lod: SceneLodKind;
+function nearestAttractionSnapFullId(args: {
+	lod: LodKind;
 	pointerWorld: Vector3;
 	attractingFullId: string;
 	compat: ReadonlySet<string>;
@@ -1442,7 +1442,7 @@ function sceneNearestAttractionSnapFullId(args: {
 		if (!hw) continue;
 		const hScr = worldToCanvasPx(hw, args.camera, args.gl);
 		const d = Math.hypot(hScr.x - pScr.x, hScr.y - pScr.y);
-		const tol = sceneAttractionSnapDragTolerancePx(hw, args.metaRadius(tid), args.camera, args.gl);
+		const tol = attractionSnapDragTolerancePx(hw, args.metaRadius(tid), args.camera, args.gl);
 		if (d > tol) continue;
 		if (!best || d < best.d) best = { d, id: tid };
 	}
@@ -1451,16 +1451,16 @@ function sceneNearestAttractionSnapFullId(args: {
 //#endregion 🧲AttractionGesture
 
 //#region 🧊Mesh
-export interface SceneMeshProps {
+export interface MeshProps {
 	readonly meshUrl: string;
-	readonly style?: SceneMeshStyleKind;
+	readonly style?: MeshStyleKind;
 	readonly userData?: Record<string, unknown>;
 	readonly scale?: number | [number, number, number];
 }
 
-/** @emoji 🧊 Pooled GLB body with {@link SceneMeshStyleKind} recoloring aligned to Elements tokens. */
-export const SceneMesh = memo(function SceneMesh(props: SceneMeshProps) {
-	const style = props.style ?? DEFAULT_SCENE_MESH_STYLE;
+/** @emoji 🧊 Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
+export const MeshBody = memo(function MeshBody(props: MeshProps) {
+	const style = props.style ?? DEFAULT_MESH_STYLE;
 	const renderRoot = usePooledStyledMesh(props.meshUrl, style);
 	if (!renderRoot) {
 		return null;
@@ -1482,8 +1482,8 @@ export const SceneMesh = memo(function SceneMesh(props: SceneMeshProps) {
 	);
 });
 
-const ScenePlaceholderMesh = memo(function ScenePlaceholderMesh(props: { readonly style: SceneMeshStyleKind }) {
-	const colors = sceneMeshStyleColors(props.style);
+const PlaceholderMesh = memo(function PlaceholderMesh(props: { readonly style: MeshStyleKind }) {
+	const colors = meshStyleColors(props.style);
 	const meshColor = colors?.meshColor ?? "#cbd5e1";
 	const opacity = colors?.opacity ?? 1;
 	return (
@@ -1503,14 +1503,14 @@ const ScenePlaceholderMesh = memo(function ScenePlaceholderMesh(props: { readonl
 
 //#region 🧊Object
 
-const SceneObjectTransformControls = memo(function SceneObjectTransformControls(props: {
+const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 	readonly object: Group;
 	readonly objectId: string;
-	readonly mode: SceneRelocateMode;
+	readonly mode: RelocateMode;
 	readonly translationSnap: number | undefined;
 	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
 }) {
-	const reg = useSceneRegistry();
+	const reg = useRegistry();
 	const scene = useThree((s) => s.scene);
 	return createPortal(
 		<TransformControls
@@ -1552,9 +1552,9 @@ const SceneObjectTransformControls = memo(function SceneObjectTransformControls(
 	);
 });
 
-export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
+export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const group = useRef<Group>(null);
-	const reg = useSceneRegistry();
+	const reg = useRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const [pointerHovered, setPointerHovered] = useState(false);
@@ -1585,7 +1585,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 
 	const meshStyle = useMemo(
 		() =>
-			resolveSceneMeshStyle({
+			resolveMeshStyle({
 				style: props.style,
 				disabled: props.disabled,
 				selected: props.selected,
@@ -1627,7 +1627,7 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 	}, []);
 
 	const poseKey = useMemo(
-		() => sceneObjectPoseKey(props.id, props.origin, props.orientation, props.scale),
+		() => objectPoseKey(props.id, props.origin, props.orientation, props.scale),
 		[props.id, props.origin, props.orientation, props.scale],
 	);
 	useLayoutEffect(() => {
@@ -1635,9 +1635,9 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 		if (!g) {
 			return;
 		}
-		sceneApplyObjectPose(g, props.origin, props.orientation, props.scale);
+		applyObjectPose(g, props.origin, props.orientation, props.scale);
 	}, [poseKey, props.origin, props.orientation, props.scale]);
-	const lodCtx = useSceneLod();
+	const lodCtx = useLod();
 	const mode = props.relocate ?? reg.relocateMode;
 	const transSnap =
 		mode === "translate" &&
@@ -1660,15 +1660,15 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 				userData={{ sceneObjectId: props.id, sceneMeshStyle: meshStyle, ...props.userData }}
 				data-scene-object={props.id}
 			>
-				{props.meshUrl === SCENE_PLACEHOLDER_MESH_URL ? (
-					<ScenePlaceholderMesh style={meshStyle} />
+				{props.meshUrl === PLACEHOLDER_MESH_URL ? (
+					<PlaceholderMesh style={meshStyle} />
 				) : (
-					<SceneMesh meshUrl={props.meshUrl} style={meshStyle} />
+					<MeshBody meshUrl={props.meshUrl} style={meshStyle} />
 				)}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
 			{showTc && tcTarget && (
-				<SceneObjectTransformControls
+				<ObjectTransformControls
 					object={tcTarget}
 					objectId={props.id}
 					mode={mode}
@@ -1684,15 +1684,15 @@ export const SceneObject = memo(function SceneObject(props: SceneObjectProps) {
 //#region 🌀Vortex
 const vortexFallbackMatProps = { transparent: true, opacity: 0.55 } as const;
 
-function SceneVortexHandleGltf(props: {
+function VortexHandleGltf(props: {
 	meshUrl: string;
 	fullId: string;
 	radius: number;
-	style: SceneMeshStyleKind;
+	style: MeshStyleKind;
 }) {
 	const scale = (props.radius / 0.35) * 0.9;
 	return (
-		<SceneMesh
+		<MeshBody
 			meshUrl={props.meshUrl}
 			style={props.style}
 			scale={scale}
@@ -1701,9 +1701,9 @@ function SceneVortexHandleGltf(props: {
 	);
 }
 
-function sceneVortexHighlightMeshStyle(
+function vortexHighlightMeshStyle(
 	highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing",
-): SceneMeshStyleKind {
+): MeshStyleKind {
 	switch (highlight) {
 		case "ring":
 		case "indirectRing":
@@ -1717,13 +1717,13 @@ function sceneVortexHighlightMeshStyle(
 	}
 }
 
-function SceneVortexFallbackMesh(props: {
+function VortexFallbackMesh(props: {
 	fullId: string;
 	radius: number;
 	highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing";
 }) {
-	const style = sceneVortexHighlightMeshStyle(props.highlight);
-	const colors = sceneMeshStyleColors(style) ?? sceneMeshStyleColors("neutral")!;
+	const style = vortexHighlightMeshStyle(props.highlight);
+	const colors = meshStyleColors(style) ?? meshStyleColors("neutral")!;
 	return (
 		<mesh userData={{ sceneVortexFullId: props.fullId }}>
 			<sphereGeometry args={[props.radius, 12, 12]} />
@@ -1739,18 +1739,18 @@ function SceneVortexFallbackMesh(props: {
 	);
 }
 
-export const SceneVortex = memo(function SceneVortex(
-	props: SceneVortexProps & { objectId: string; objectKind?: string },
+export const Vortex = memo(function Vortex(
+	props: VortexProps & { objectId: string; objectKind?: string },
 ) {
 	const root = useRef<Group | null>(null);
-	const reg = useSceneRegistry();
+	const reg = useRegistry();
 	const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
 	const r = props.radius ?? 0.35;
 
 	useEffect(() => {
 		const getter = () => {
 			if (!root.current) return null;
-			sceneUpdateWorldMatrixChain(root.current);
+			updateWorldMatrixChain(root.current);
 			const v = new Vector3();
 			root.current.getWorldPosition(v);
 			return v;
@@ -1782,7 +1782,7 @@ export const SceneVortex = memo(function SceneVortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
-	const lodCtx = useSceneLod();
+	const lodCtx = useLod();
 	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
 		? "attracting"
 		: reg.attractionHoverRingFullId === fullId
@@ -1819,8 +1819,8 @@ export const SceneVortex = memo(function SceneVortex(
 				reg.attractionHoverRingFullId === fullId ||
 				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
-	const drawHandleBody = sceneHandlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
-	const pickProxy = sceneHandlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
+	const drawHandleBody = handlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
+	const pickProxy = handlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
 	const meshFromLod = props.handleMeshByLod?.[lodCtx.lod];
 	const meshUrl =
 		typeof meshFromLod === "string" && meshFromLod.length
@@ -1829,7 +1829,7 @@ export const SceneVortex = memo(function SceneVortex(
 				? props.handleMeshUrl
 				: undefined;
 
-	const handleMeshStyle = sceneVortexHighlightMeshStyle(highlight);
+	const handleMeshStyle = vortexHighlightMeshStyle(highlight);
 	const vis = props.visible !== false;
 	return (
 		<group
@@ -1841,11 +1841,11 @@ export const SceneVortex = memo(function SceneVortex(
 			onPointerDown={onPointerDown}
 		>
 			{drawHandleBody && meshUrl ? (
-				<SceneVortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} />
+				<VortexHandleGltf meshUrl={meshUrl} fullId={fullId} radius={r} style={handleMeshStyle} />
 			) : drawHandleBody && props.children ? (
 				<group userData={{ sceneVortexFullId: fullId }}>{props.children}</group>
 			) : drawHandleBody ? (
-				<SceneVortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} />
+				<VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} />
 			) : null}
 			{pickProxy ? (
 				<mesh userData={{ sceneVortexFullId: fullId }} renderOrder={-1}>
@@ -1859,7 +1859,7 @@ export const SceneVortex = memo(function SceneVortex(
 //#endregion 🌀Vortex
 
 //#region 🧲Magnet
-export const SceneMagnet = memo(function SceneMagnet(props: SceneMagnetProps) {
+export const Magnet = memo(function Magnet(props: MagnetProps) {
 	return (
 		<mesh position={props.position as [number, number, number]} userData={{ sceneMagnetId: props.id }}>
 			<boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
@@ -1870,17 +1870,17 @@ export const SceneMagnet = memo(function SceneMagnet(props: SceneMagnetProps) {
 //#endregion 🧲Magnet
 
 //#region 🪢Tie
-export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
-	const reg = useSceneRegistry();
+export const Tie = memo(function Tie(props: TieProps) {
+	const reg = useRegistry();
 	const [pts, setPts] = useState<Vector3[] | null>(null);
 	const tieColor = useMemo(
-		() => sceneLineCssColor(SCENE_CSS_TIE_LINE, "#64748b"),
+		() => lineCssColor(CSS_TIE_LINE, "#64748b"),
 		[],
 	);
 	useFrame(() => {
 		const a = reg.getVortexWorld(props.source);
 		const b = reg.getVortexWorld(props.target);
-		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) {
+		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 			setPts([a.clone(), b.clone()]);
 		} else if (pts !== null) {
 			setPts(null);
@@ -1892,10 +1892,10 @@ export const SceneTie = memo(function SceneTie(props: SceneTieProps) {
 //#endregion 🪢Tie
 
 //#region 🧲Attraction
-export const SceneAttraction = memo(function SceneAttraction(props: { attracting: Vec3; attracted: Vec3 }) {
+export const Attraction = memo(function Attraction(props: { attracting: Vec3; attracted: Vec3 }) {
 	const pts = useMemo(() => [vec3ToThree(props.attracting), vec3ToThree(props.attracted)], [props.attracting, props.attracted]);
 	const color = useMemo(
-		() => sceneLineCssColor(SCENE_CSS_ATTRACTION_LINE, "#f472b6"),
+		() => lineCssColor(CSS_ATTRACTION_LINE, "#f472b6"),
 		[],
 	);
 	return <Line points={pts} color={color} lineWidth={2} />;
@@ -1904,7 +1904,7 @@ export const SceneAttraction = memo(function SceneAttraction(props: { attracting
 
 //#region ✋Relocate
 export function useSceneRelocate(objectId: string) {
-	const reg = useSceneRegistry();
+	const reg = useRegistry();
 	return {
 		mode: reg.relocateMode,
 		start: () => reg.setActiveRelocateObjectId(objectId),
@@ -1916,14 +1916,14 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
-function SceneOrbitGated({ target }: { target: Vec3 }) {
-	const reg = useSceneRegistry();
+function OrbitGated({ target }: { target: Vec3 }) {
+	const reg = useRegistry();
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	return <OrbitControls makeDefault enabled={!gate} target={target as [number, number, number]} />;
 }
 
-function SceneAttractionThreeBinder() {
-	const reg = useSceneRegistry();
+function AttractionThreeBinder() {
+	const reg = useRegistry();
 	const t = useThree();
 	useLayoutEffect(() => {
 		reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
@@ -1932,8 +1932,8 @@ function SceneAttractionThreeBinder() {
 	return null;
 }
 
-function SceneAttractionWindowBridge() {
-	const reg = useSceneRegistry();
+function AttractionWindowBridge() {
+	const reg = useRegistry();
 	const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	useEffect(() => {
 		if (!attractionBusy) return;
@@ -1960,8 +1960,8 @@ function SceneAttractionWindowBridge() {
 	return null;
 }
 
-function SceneAttractionRubberBand() {
-	const reg = useSceneRegistry();
+function AttractionRubberBand() {
+	const reg = useRegistry();
 	const geo = useMemo(() => {
 		const g = new BufferGeometry();
 		g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
@@ -1983,7 +1983,7 @@ function SceneAttractionRubberBand() {
 		}
 		const a = reg.getVortexWorld(reg.attractionDragAttractingFullId);
 		const b = reg.attractionEndWorldRef.current;
-		if (a && b && sceneVector3IsFinite(a) && sceneVector3IsFinite(b)) {
+		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 			pos.setXYZ(0, a.x, a.y, a.z);
 			pos.setXYZ(1, b.x, b.y, b.z);
 			pos.needsUpdate = true;
@@ -2010,7 +2010,7 @@ function CameraReporter({
 }: {
 	target: Vec3;
 	zoom: number;
-	onCamera?: (s: SceneCameraState) => void;
+	onCamera?: (s: CameraState) => void;
 }) {
 	const { camera } = useThree();
 	const last = useRef("");
@@ -2031,7 +2031,7 @@ function CameraReporter({
 	return null;
 }
 
-function SceneRegistryProvider({
+function RegistryProvider({
 	children,
 	lodKindRef,
 	kindCatalogs,
@@ -2049,20 +2049,20 @@ function SceneRegistryProvider({
 	onRelocate,
 }: {
 	children: ReactNode;
-	lodKindRef: MutableRefObject<SceneLodKind>;
-	kindCatalogs: SceneKindCatalogBundle | undefined;
-	kindCompatibility: readonly SceneKindCompatEntry[] | undefined;
+	lodKindRef: MutableRefObject<LodKind>;
+	kindCatalogs: KindCatalogBundle | undefined;
+	kindCompatibility: readonly KindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
 	proximityRadius: number;
-	selectionMode: SceneSelectionMode;
-	relocateMode: SceneRelocateMode;
-	onSelect?: (snap: SceneSelectionSnapshot) => void;
-	onConnect?: (p: SceneAttractionPayload) => void;
-	onProximityConnect?: (p: SceneAttractionPayload) => void;
-	onIndirectConnect?: (p: SceneAttractionPayload) => void;
-	onAttractionCompatibleObjects?: (p: SceneAttractionCompatibleObjectsPayload) => void;
-	onAttractionTargetRing?: (p: SceneAttractionTargetRingPayload) => void;
-	onRelocate?: (p: SceneRelocatePayload) => void;
+	selectionMode: SelectionMode;
+	relocateMode: RelocateMode;
+	onSelect?: (snap: SelectionSnapshot) => void;
+	onConnect?: (p: AttractionPayload) => void;
+	onProximityConnect?: (p: AttractionPayload) => void;
+	onIndirectConnect?: (p: AttractionPayload) => void;
+	onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
+	onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+	onRelocate?: (p: RelocatePayload) => void;
 }) {
 	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
@@ -2070,14 +2070,14 @@ function SceneRegistryProvider({
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
 	const [attractionHoverRingFullId, setAttractionHoverRingFullId] = useState<string | null>(null);
-	const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = useState<SceneAttractionIndirectPickAwait | null>(null);
+	const [attractionIndirectPickAwait, setAttractionIndirectPickAwait] = useState<AttractionIndirectPickAwait | null>(null);
 
 	const vortexGettersRef = useRef(new Map<string, VortexGetter>());
-	const vortexMetaRef = useRef(new Map<string, SceneVortexBindingMeta>());
+	const vortexMetaRef = useRef(new Map<string, VortexBindingMeta>());
 	const vortexPickRef = useRef(new Map<string, Object3D>());
 	const objectGroupMap = useRef(new Map<string, Group | null>());
 	const objectKindsRef = useRef(new Map<string, string | undefined>());
-	const indirectPickRef = useRef<SceneAttractionIndirectPickAwait | null>(null);
+	const indirectPickRef = useRef<AttractionIndirectPickAwait | null>(null);
 
 	useEffect(() => {
 		indirectPickRef.current = attractionIndirectPickAwait;
@@ -2086,12 +2086,12 @@ function SceneRegistryProvider({
 	const attractionSessionRef = useRef<{
 		attractingFullId: string;
 		attractingObjectId: string;
-		attractingCtx: SceneAttractionHandleContext;
+		attractingCtx: AttractionHandleContext;
 		compat: Set<string>;
 		snapAttractedFullId: string | null;
 	} | null>(null);
 	const attractionEndWorldRef = useRef<Vector3 | null>(null);
-	const attractionThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: Scene } | null>(null);
+	const attractionThreeRef = useRef<{ camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null>(null);
 	const raycasterRef = useRef(new Raycaster());
 	const ndcRef = useRef(new Vector2());
 	const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
@@ -2110,7 +2110,7 @@ function SceneRegistryProvider({
 		return g ? g() : null;
 	}, []);
 
-	const registerVortexBinding = useCallback((meta: SceneVortexBindingMeta, pickRoot: Object3D | null) => {
+	const registerVortexBinding = useCallback((meta: VortexBindingMeta, pickRoot: Object3D | null) => {
 		vortexMetaRef.current.set(meta.fullId, meta);
 		if (pickRoot) vortexPickRef.current.set(meta.fullId, pickRoot);
 		else vortexPickRef.current.delete(meta.fullId);
@@ -2145,19 +2145,19 @@ function SceneRegistryProvider({
 		(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
 			if (indirectPickRef.current) return;
 			if (blockedVortexFullIds.has(fullId)) return;
-			const attractingCtx: SceneAttractionHandleContext = { objectId, objectKind, vortexKind };
+			const attractingCtx: AttractionHandleContext = { objectId, objectKind, vortexKind };
 			const compat = new Set<string>();
 			const objectIds = new Set<string>();
 			for (const [tid, meta] of vortexMetaRef.current) {
 				if (tid === fullId) continue;
 				if (meta.objectId === objectId) continue;
 				if (blockedVortexFullIds.has(tid)) continue;
-				const attractedCtx: SceneAttractionHandleContext = {
+				const attractedCtx: AttractionHandleContext = {
 					objectId: meta.objectId,
 					objectKind: meta.objectKind,
 					vortexKind: meta.vortexKind,
 				};
-				if (!sceneHandlesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
+				if (!handlesAttractionCompatibleForDrag(attractingCtx, attractedCtx, kindCompatibility, kindCatalogs)) continue;
 				compat.add(tid);
 				objectIds.add(meta.objectId);
 			}
@@ -2199,7 +2199,7 @@ function SceneRegistryProvider({
 			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
 			let ring: string | null = null;
 			for (const h of hits) {
-				const vf = readSceneVortexFullIdFromObject(h.object);
+				const vf = readVortexFullIdFromObject(h.object);
 				if (vf && session.compat.has(vf) && vf !== session.attractingFullId && !blockedVortexFullIds.has(vf)) {
 					ring = vf;
 					break;
@@ -2227,7 +2227,7 @@ function SceneRegistryProvider({
 			}
 			const pw = attractionEndWorldRef.current;
 			if (pw) {
-				session.snapAttractedFullId = sceneNearestAttractionSnapFullId({
+				session.snapAttractedFullId = nearestAttractionSnapFullId({
 					lod: lodKindRef.current,
 					pointerWorld: pw,
 					attractingFullId: session.attractingFullId,
@@ -2270,7 +2270,7 @@ function SceneRegistryProvider({
 			const getV = (id: string) => vortexGettersRef.current.get(id)?.() ?? null;
 			const rad = (id: string) => vortexMetaRef.current.get(id)?.radiusWorld ?? 0.35;
 			const snapId = session.snapAttractedFullId;
-			if (snapId && sceneAttractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
+			if (snapId && attractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
 				const p = { attracting: session.attractingFullId, attracted: snapId };
 				onConnect?.(p);
 				onProximityConnect?.(p);
@@ -2280,7 +2280,7 @@ function SceneRegistryProvider({
 
 			const attractingFull = session.attractingFullId;
 			for (const h of hits) {
-				const vf = readSceneVortexFullIdFromObject(h.object);
+				const vf = readVortexFullIdFromObject(h.object);
 				if (
 					vf &&
 					vf !== attractingFull &&
@@ -2292,7 +2292,7 @@ function SceneRegistryProvider({
 					cancelAttractionDrag();
 					return;
 				}
-				const oid = readSceneObjectIdFromObject(h.object);
+				const oid = readObjectItemIdFromObject(h.object);
 				if (oid && oid !== session.attractingObjectId) {
 					const candidates: string[] = [];
 					for (const [tid, meta] of vortexMetaRef.current) {
@@ -2352,7 +2352,7 @@ function SceneRegistryProvider({
 			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
 			let ring: string | null = null;
 			for (const h of hits) {
-				const vf = readSceneVortexFullIdFromObject(h.object);
+				const vf = readVortexFullIdFromObject(h.object);
 				if (vf && awaitPick.candidates.includes(vf)) {
 					ring = vf;
 					break;
@@ -2383,7 +2383,7 @@ function SceneRegistryProvider({
 			raycasterRef.current.setFromCamera(ndcRef.current, env.camera);
 			const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
 			for (const h of hits) {
-				const vf = readSceneVortexFullIdFromObject(h.object);
+				const vf = readVortexFullIdFromObject(h.object);
 				if (vf && awaitPick.candidates.includes(vf)) {
 					const p = { attracting: awaitPick.attractingFullId, attracted: vf };
 					onConnect?.(p);
@@ -2398,12 +2398,12 @@ function SceneRegistryProvider({
 		[cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
 	);
 
-	const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: Scene } | null) => {
+	const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
 		attractionThreeRef.current = env;
 	}, []);
 
 	const findNearestProximityRelocate = useCallback(
-		(world: Vector3, movingObjectId: string): SceneAttractionPayload | null => {
+		(world: Vector3, movingObjectId: string): AttractionPayload | null => {
 			let best: { d: number; id: string } | null = null;
 			for (const [fullId, getter] of vortexGettersRef.current) {
 				if (fullId.startsWith(`${movingObjectId}:`)) continue;
@@ -2419,7 +2419,7 @@ function SceneRegistryProvider({
 		[proximityRadius],
 	);
 
-	const value = useMemo<SceneRegistryValue>(
+	const value = useMemo<RegistryValue>(
 		() => ({
 			registerVortex,
 			unregisterVortex,
@@ -2501,10 +2501,10 @@ function SceneRegistryProvider({
 		],
 	);
 
-	return <SceneRegistryContext.Provider value={value}>{children}</SceneRegistryContext.Provider>;
+	return <RegistryContext.Provider value={value}>{children}</RegistryContext.Provider>;
 }
 
-function SceneChunks({
+function Chunks({
 	chunkSize,
 	maxDistance,
 	children,
@@ -2519,7 +2519,7 @@ function SceneChunks({
 			if (!isValidElement(child)) return;
 			const p = child.props as { origin?: Vec3 };
 			if (!p?.origin) return;
-			const k = sceneChunkKey(p.origin, chunkSize);
+			const k = chunkKey(p.origin, chunkSize);
 			const arr = map.get(k) ?? [];
 			arr.push(child);
 			map.set(k, arr);
@@ -2549,17 +2549,17 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 	return { chunked, rest };
 }
 
-function SceneInner(props: SceneCanvasProps) {
+function Inner(props: CanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
-	const lodKindRef = useRef<SceneLodKind>("normal");
-	const domain = props.domain ?? DEFAULT_SCENE_DOMAIN;
-	const distanceReference = props.lodDistanceReference ?? DEFAULT_SCENE_SCALE_REFERENCE;
-	const thresholds = props.lodZoomThresholds ?? sceneLodZoomThresholdsForDomain(domain, distanceReference);
-	const gridFactor = props.gridFactor ?? DEFAULT_SCENE_LOD_GRID_FACTOR;
+	const lodKindRef = useRef<LodKind>("normal");
+	const domain = props.domain ?? DEFAULT_DOMAIN;
+	const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
+	const thresholds = props.lodZoomThresholds ?? lodZoomThresholdsForDomain(domain, distanceReference);
+	const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
 	const gridSnapEnabled = props.gridSnapEnabled ?? false;
 	const showLodGrid = props.showLodGrid === true;
 	const automaticLod = props.automaticLod ?? true;
-	const pinnedLod = !automaticLod && props.lod !== undefined && isSceneLodKind(props.lod) ? props.lod : undefined;
+	const pinnedLod = !automaticLod && props.lod !== undefined && isLodKind(props.lod) ? props.lod : undefined;
 	const maxDist = 4000;
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
@@ -2567,7 +2567,7 @@ function SceneInner(props: SceneCanvasProps) {
 	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
 	const blocked = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
 	return (
-		<SceneRegistryProvider
+		<RegistryProvider
 			lodKindRef={lodKindRef}
 			kindCatalogs={props.kindCatalogs}
 			kindCompatibility={props.kindCompatibility}
@@ -2583,7 +2583,7 @@ function SceneInner(props: SceneCanvasProps) {
 			onAttractionTargetRing={props.onAttractionTargetRing}
 			onRelocate={props.onRelocate}
 		>
-			<SceneLodBridge
+			<LodBridge
 				lodKindRef={lodKindRef}
 				thresholds={thresholds}
 				distanceReference={distanceReference}
@@ -2595,27 +2595,27 @@ function SceneInner(props: SceneCanvasProps) {
 				onLodChange={props.onLodChange}
 			>
 				<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
-				<SceneOrbitGated target={tgt} />
-				<SceneAttractionThreeBinder />
-				<SceneAttractionWindowBridge />
-				<SceneAttractionRubberBand />
+				<OrbitGated target={tgt} />
+				<AttractionThreeBinder />
+				<AttractionWindowBridge />
+				<AttractionRubberBand />
 				<CameraReporter target={tgt} zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
-				<SceneChunks chunkSize={chunkSize} maxDistance={maxDist}>
+				<Chunks chunkSize={chunkSize} maxDistance={maxDist}>
 					{chunked}
-				</SceneChunks>
+				</Chunks>
 				<group data-scene-unchunked>{rest}</group>
-			</SceneLodBridge>
-		</SceneRegistryProvider>
+			</LodBridge>
+		</RegistryProvider>
 	);
 }
 
-export function Scene(props: SceneCanvasProps & { className?: string; style?: CSSProperties }) {
-	const { children, className, style, onLodChange, domain = DEFAULT_SCENE_DOMAIN, ...rest } = props;
-	const [shellLod, setShellLod] = useState<SceneLodKind>("normal");
+export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
+	const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
+	const [shellLod, setShellLod] = useState<LodKind>("normal");
 	const handleLod = useCallback(
-		(l: SceneLodKind) => {
+		(l: LodKind) => {
 			setShellLod(l);
 			onLodChange?.(l);
 		},
@@ -2630,9 +2630,9 @@ export function Scene(props: SceneCanvasProps & { className?: string; style?: CS
 			data-scene-lod={shellLod}
 		>
 			<Canvas gl={{ antialias: true }} dpr={[1, 2]}>
-				<SceneInner {...rest} domain={domain} onLodChange={handleLod}>
+				<Inner {...rest} domain={domain} onLodChange={handleLod}>
 					{children}
-				</SceneInner>
+				</Inner>
 			</Canvas>
 		</div>
 	);
@@ -2642,11 +2642,11 @@ export function Scene(props: SceneCanvasProps & { className?: string; style?: CS
 
 //#region 🖥️PlayHarness
 // #region 🧾Meta
-function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly SceneKindCompatEntry[] {
+function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
 	if (!meta || typeof meta !== "object") return [];
 	const arr = (meta as { kindCompatibility?: unknown }).kindCompatibility;
 	if (!Array.isArray(arr)) return [];
-	const out: SceneKindCompatEntry[] = [];
+	const out: KindCompatEntry[] = [];
 	for (const entry of arr) {
 		if (!entry || typeof entry !== "object") continue;
 		const e = entry as Record<string, unknown>;
@@ -2674,10 +2674,10 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
 	return out;
 }
 
-function parseKindCatalogs(meta: Record<string, unknown> | undefined): SceneKindCatalogBundle | undefined {
+function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatalogBundle | undefined {
 	const kc = meta?.kindCatalogs;
 	if (!kc || typeof kc !== "object") return undefined;
-	return kc as SceneKindCatalogBundle;
+	return kc as KindCatalogBundle;
 }
 // #endregion 🧾Meta
 
@@ -2728,7 +2728,7 @@ function readExpertise(): Expertise {
 	}
 }
 
-function ScenePlaySurfaceFooter(props: {
+function PlaySurfaceFooter(props: {
 	theme: ElementsSurfaceTheme;
 	device: ElementsSurfaceDevice;
 	expertise: Expertise;
@@ -2777,9 +2777,9 @@ function ScenePlaySurfaceFooter(props: {
 }
 // #endregion 🖥️Surface
 
-// #region 🎬ScenePlay
-function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }) {
-	const reg = useSceneRegistry();
+// #region 🎬Play
+function PlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }) {
+	const reg = useRegistry();
 	useEffect(() => {
 		const w = window as unknown as {
 			__scenePlaySelect?: (id: string) => void;
@@ -2806,23 +2806,23 @@ function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null
 	return null;
 }
 
-const SCENE_PLAY_LOD_TIERS: SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const PLAY_LOD_TIERS: LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
-function scenePlayLodTierMenuLabel(tier: SceneLodKind): string {
+function playLodTierMenuLabel(tier: LodKind): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-const ScenePlayLodContext = createContext<Pick<SceneCanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
+const PlayLodContext = createContext<Pick<CanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
 
-const ScenePlayRuntimeContext = createContext<{
-	readonly effectiveLod: SceneLodKind;
-	readonly setEffectiveLod: (lod: SceneLodKind) => void;
+const PlayRuntimeContext = createContext<{
+	readonly effectiveLod: LodKind;
+	readonly setEffectiveLod: (lod: LodKind) => void;
 } | null>(null);
 
-function sceneWindowKindsWithLodMeasures(
-	sceneLodMode: SceneLodModeKind,
-	sceneEffectiveLod: SceneLodKind,
-	setSceneLodMode: (mode: SceneLodModeKind) => void,
+function windowKindsWithLodMeasures(
+	lodMode: LodModeKind,
+	effectiveLod: LodKind,
+	setLodMode: (mode: LodModeKind) => void,
 ): UIWindowKindDefinition[] {
 	return [
 		{
@@ -2835,47 +2835,47 @@ function sceneWindowKindsWithLodMeasures(
 					items: [
 						{
 							id: "automatic",
-							label: sceneLodAutomaticSelectLabel(sceneEffectiveLod),
-							value: SCENE_LOD_MODE_AUTOMATIC,
+							label: lodAutomaticSelectLabel(effectiveLod),
+							value: LOD_MODE_AUTOMATIC,
 						},
-						...SCENE_PLAY_LOD_TIERS.map((tier) => ({
+						...PLAY_LOD_TIERS.map((tier) => ({
 							id: tier,
-							label: scenePlayLodTierMenuLabel(tier),
+							label: playLodTierMenuLabel(tier),
 							value: tier,
 						})),
 					],
 					kind: "select",
 					label: "LOD",
 					onValueChange: (value) => {
-						if (value === SCENE_LOD_MODE_AUTOMATIC || isSceneLodKind(value)) {
-							setSceneLodMode(value as SceneLodModeKind);
+						if (value === LOD_MODE_AUTOMATIC || isLodKind(value)) {
+							setLodMode(value as LodModeKind);
 						}
 					},
-					value: sceneLodMode,
+					value: lodMode,
 				},
 			],
 		},
 	];
 }
 
-function ScenePlayBody({
+function PlayBody({
 	fixture,
 	lodProps,
 }: {
-	fixture: SceneFixtureV1;
-	lodProps: Pick<SceneCanvasProps, "automaticLod" | "lod">;
+	fixture: FixtureV1;
+	lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
 }) {
-	const [relocateMode, setRelocateMode] = useState<SceneRelocateMode>("translate");
+	const [relocateMode, setRelocateMode] = useState<RelocateMode>("translate");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [proximityCount, setProximityCount] = useState(0);
 	const [connectCount, setConnectCount] = useState(0);
 	const [indirectCount, setIndirectCount] = useState(0);
-	const runtime = useContext(ScenePlayRuntimeContext);
-	const sceneLodTag = runtime?.effectiveLod ?? "normal";
+	const runtime = useContext(PlayRuntimeContext);
+	const lodTag = runtime?.effectiveLod ?? "normal";
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
 	const blockedVortexFullIds = useMemo(
-		() => sceneBlockedVortexFullIdsFromTies(fixture.ties),
+		() => blockedVortexFullIdsFromTies(fixture.ties),
 		[fixture.ties],
 	);
 
@@ -2941,7 +2941,7 @@ function ScenePlayBody({
 				</ToolbarZone>
 				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
 					<span data-e2e-selected>{selectedId ?? "—"}</span>
-					<span data-e2e-scene-lod>{sceneLodTag}</span>
+					<span data-e2e-scene-lod>{lodTag}</span>
 					<span data-e2e-proximity-count>{proximityCount}</span>
 					<span data-e2e-connect-count>{connectCount}</span>
 					<span data-e2e-indirect-count>{indirectCount}</span>
@@ -2949,7 +2949,7 @@ function ScenePlayBody({
 			</div>
 			<div className="relative min-h-0 flex-1">
 				<Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-					<Scene
+					<Canvas3D
 						className="absolute inset-0"
 						camera={fixture.camera}
 						domain={fixture.domain}
@@ -2967,9 +2967,9 @@ function ScenePlayBody({
 						onIndirectConnect={onIndirectConnect}
 						onProximityConnect={onProximityConnect}
 					>
-						<ScenePlayTestBridge setSelectedId={setSelectedId} />
+						<PlayTestBridge setSelectedId={setSelectedId} />
 						{fixture.objects.map((o) => (
-							<SceneObject
+							<ObjectItem
 								key={o.id}
 								id={o.id}
 								meshUrl={o.meshUrl}
@@ -2982,14 +2982,14 @@ function ScenePlayBody({
 								relocate={relocateMode}
 							>
 								{o.vortices.map((v) => (
-									<SceneVortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
+									<Vortex key={v.id} objectId={o.id} objectKind={o.objectKind} {...v} />
 								))}
-							</SceneObject>
+							</ObjectItem>
 						))}
 						{fixture.ties.map((t) => (
-							<SceneTie key={t.id} {...t} />
+							<Tie key={t.id} {...t} />
 						))}
-					</Scene>
+					</Canvas3D>
 				</Suspense>
 			</div>
 		</div>
@@ -2997,17 +2997,17 @@ function ScenePlayBody({
 }
 
 function MainWindow() {
-	const fixture = useMemo(() => parseSceneFixtureV1(sceneFixtureJson as unknown), []);
-	const lodProps = useContext(ScenePlayLodContext);
+	const fixture = useMemo(() => parseFixtureV1(fixtureJson as unknown), []);
+	const lodProps = useContext(PlayLodContext);
 	if (!fixture) {
 		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
 	}
-	return <ScenePlayBody fixture={fixture} lodProps={lodProps} />;
+	return <PlayBody fixture={fixture} lodProps={lodProps} />;
 }
 
-const SCENE_PLAY_APP_ID = "elements-scene-play";
+const PLAY_APP_ID = "elements-scene-play";
 
-function ScenePlayInner(): ReactElement {
+function PlayInner(): ReactElement {
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
 	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
 	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
@@ -3041,7 +3041,7 @@ function ScenePlayInner(): ReactElement {
 		() => [
 			{
 				content: (
-					<ScenePlaySurfaceFooter
+					<PlaySurfaceFooter
 						device={device}
 						expertise={expertise}
 						onDevice={setDevice}
@@ -3057,50 +3057,50 @@ function ScenePlayInner(): ReactElement {
 		[device, expertise, theme],
 	);
 
-	const [sceneLodMode, setSceneLodMode] = useState<SceneLodModeKind>(SCENE_LOD_MODE_AUTOMATIC);
-	const [sceneEffectiveLod, setSceneEffectiveLod] = useState<SceneLodKind>("normal");
-	const lodProps = useMemo(() => sceneLodCanvasProps(sceneLodMode), [sceneLodMode]);
-	const sceneRuntime = useMemo(
-		() => ({ effectiveLod: sceneEffectiveLod, setEffectiveLod: setSceneEffectiveLod }),
-		[sceneEffectiveLod],
+	const [lodMode, setLodMode] = useState<LodModeKind>(LOD_MODE_AUTOMATIC);
+	const [effectiveLod, setEffectiveLod] = useState<LodKind>("normal");
+	const lodProps = useMemo(() => lodCanvasProps(lodMode), [lodMode]);
+	const runtime = useMemo(
+		() => ({ effectiveLod: effectiveLod, setEffectiveLod: setEffectiveLod }),
+		[effectiveLod],
 	);
 
 	const apps = useMemo<UIAppConfig[]>(
 		() => [
 			{
-				id: SCENE_PLAY_APP_ID,
+				id: PLAY_APP_ID,
 				label: "Scene play",
-				windowKinds: sceneWindowKindsWithLodMeasures(sceneLodMode, sceneEffectiveLod, setSceneLodMode),
+				windowKinds: windowKindsWithLodMeasures(lodMode, effectiveLod, setLodMode),
 				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
 			},
 		],
-		[sceneLodMode, sceneEffectiveLod],
+		[lodMode, effectiveLod],
 	);
 
 	return (
-		<ScenePlayLodContext.Provider value={lodProps}>
-			<ScenePlayRuntimeContext.Provider value={sceneRuntime}>
-				<UI apps={apps} defaultAppId={SCENE_PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
-			</ScenePlayRuntimeContext.Provider>
-		</ScenePlayLodContext.Provider>
+		<PlayLodContext.Provider value={lodProps}>
+			<PlayRuntimeContext.Provider value={runtime}>
+				<UI apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+			</PlayRuntimeContext.Provider>
+		</PlayLodContext.Provider>
 	);
 }
 
-function ScenePlayApp(): ReactElement {
+function PlayApp(): ReactElement {
 	return (
 		<LevelProvider level="window">
 			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-				<ScenePlayInner />
+				<PlayInner />
 			</div>
 		</LevelProvider>
 	);
 }
-// #endregion 🎬ScenePlay
+// #endregion 🎬Play
 
 if (!import.meta.vitest && typeof document !== "undefined") {
 	const rootEl = document.getElementById("root");
 	if (rootEl) {
-		createRoot(rootEl).render(<ScenePlayApp />);
+		createRoot(rootEl).render(<PlayApp />);
 	}
 }
 //#endregion 🖥️PlayHarness
@@ -3108,74 +3108,74 @@ if (!import.meta.vitest && typeof document !== "undefined") {
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	describe("sceneLodCanvasProps", () => {
+	describe("lodCanvasProps", () => {
 		it("maps automatic and pinned modes", () => {
-			expect(sceneLodCanvasProps(SCENE_LOD_MODE_AUTOMATIC)).toEqual({ automaticLod: true });
-			expect(sceneLodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
+			expect(lodCanvasProps(LOD_MODE_AUTOMATIC)).toEqual({ automaticLod: true });
+			expect(lodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
 		});
 	});
-	describe("sceneLodAutomaticSelectLabel", () => {
+	describe("lodAutomaticSelectLabel", () => {
 		it("includes the live tier in the automatic row", () => {
-			expect(sceneLodAutomaticSelectLabel("overview")).toBe("Automatic · Overview");
+			expect(lodAutomaticSelectLabel("overview")).toBe("Automatic · Overview");
 		});
 	});
-	describe("resolveSceneLodLabelFromThresholds", () => {
+	describe("resolveLodLabelFromThresholds", () => {
 		it("classifies zoom bands", () => {
-			const t = DEFAULT_SCENE_LOD_ZOOM_THRESHOLDS;
-			expect(resolveSceneLodLabelFromThresholds(0.1, t)).toBe("minimap");
-			expect(resolveSceneLodLabelFromThresholds(0.2, t)).toBe("overview");
-			expect(resolveSceneLodLabelFromThresholds(0.3, t)).toBe("compact");
-			expect(resolveSceneLodLabelFromThresholds(0.5, t)).toBe("normal");
-			expect(resolveSceneLodLabelFromThresholds(1, t)).toBe("detail");
-			expect(resolveSceneLodLabelFromThresholds(2, t)).toBe("micro");
+			const t = DEFAULT_LOD_ZOOM_THRESHOLDS;
+			expect(resolveLodLabelFromThresholds(0.1, t)).toBe("minimap");
+			expect(resolveLodLabelFromThresholds(0.2, t)).toBe("overview");
+			expect(resolveLodLabelFromThresholds(0.3, t)).toBe("compact");
+			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
+			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
+			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
 		});
 	});
-	describe("sceneLodZoomThresholdsForDomain", () => {
+	describe("lodZoomThresholdsForDomain", () => {
 		it("derives architecture thresholds from the domain ladder", () => {
-			const t = sceneLodZoomThresholdsForDomain("architecture");
-			expect(resolveSceneLodLabelFromThresholds(0.1, t)).toBe("minimap");
-			expect(resolveSceneLodLabelFromThresholds(0.2, t)).toBe("overview");
-			expect(resolveSceneLodLabelFromThresholds(0.3, t)).toBe("compact");
-			expect(resolveSceneLodLabelFromThresholds(0.5, t)).toBe("normal");
-			expect(resolveSceneLodLabelFromThresholds(1, t)).toBe("detail");
-			expect(resolveSceneLodLabelFromThresholds(2, t)).toBe("micro");
+			const t = lodZoomThresholdsForDomain("architecture");
+			expect(resolveLodLabelFromThresholds(0.1, t)).toBe("minimap");
+			expect(resolveLodLabelFromThresholds(0.2, t)).toBe("overview");
+			expect(resolveLodLabelFromThresholds(0.3, t)).toBe("compact");
+			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
+			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
+			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
 		});
 		it("stays meter-calibrated when pseudo zoom and thresholds share the same reference", () => {
 			const distanceReference = 900;
-			const t = sceneLodZoomThresholdsForDomain("architecture", distanceReference);
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(800, distanceReference), t)).toBe("minimap");
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(650, distanceReference), t)).toBe("overview");
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(300, distanceReference), t)).toBe("compact");
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(180, distanceReference), t)).toBe("normal");
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(100, distanceReference), t)).toBe("detail");
-			expect(resolveSceneLodLabelFromThresholds(scenePseudoZoomFromOrbitDistance(50, distanceReference), t)).toBe("micro");
+			const t = lodZoomThresholdsForDomain("architecture", distanceReference);
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(800, distanceReference), t)).toBe("minimap");
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(650, distanceReference), t)).toBe("overview");
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(300, distanceReference), t)).toBe("compact");
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(180, distanceReference), t)).toBe("normal");
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(100, distanceReference), t)).toBe("detail");
+			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(50, distanceReference), t)).toBe("micro");
 		});
 	});
-	describe("sceneLodVisibleGridSnapStepWorld", () => {
+	describe("lodVisibleGridSnapStepWorld", () => {
 		it("returns per-band steps", () => {
-			expect(sceneLodVisibleGridSnapStepWorld("minimap", 10)).toBe(null);
-			expect(sceneLodVisibleGridSnapStepWorld("overview", 10)).toBe(100);
-			expect(sceneLodVisibleGridSnapStepWorld("compact", 10)).toBe(50);
-			expect(sceneLodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
-			expect(sceneLodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
-			expect(sceneLodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
+			expect(lodVisibleGridSnapStepWorld("minimap", 10)).toBe(null);
+			expect(lodVisibleGridSnapStepWorld("overview", 10)).toBe(100);
+			expect(lodVisibleGridSnapStepWorld("compact", 10)).toBe(50);
+			expect(lodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
+			expect(lodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
+			expect(lodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
 		});
 	});
-	describe("sceneObjectPoseKey", () => {
+	describe("objectPoseKey", () => {
 		it("changes when origin changes", () => {
-			const a = sceneObjectPoseKey("id", [0, 0, 0], [0, 0, 0, 1], 1);
-			const b = sceneObjectPoseKey("id", [1, 0, 0], [0, 0, 0, 1], 1);
+			const a = objectPoseKey("id", [0, 0, 0], [0, 0, 0, 1], 1);
+			const b = objectPoseKey("id", [1, 0, 0], [0, 0, 0, 1], 1);
 			expect(a).not.toBe(b);
 		});
 	});
-	describe("sceneApplyObjectPose", () => {
+	describe("applyObjectPose", () => {
 		it("places vortex child at expected world offset", () => {
 			const parent = new Group();
 			const vortex = new Group();
 			vortex.position.set(1, 2, 3);
 			parent.add(vortex);
-			sceneApplyObjectPose(parent, [10, 0, 0], [0, 0, 0, 1], 1);
-			sceneUpdateWorldMatrixChain(vortex);
+			applyObjectPose(parent, [10, 0, 0], [0, 0, 0, 1], 1);
+			updateWorldMatrixChain(vortex);
 			const world = new Vector3();
 			vortex.getWorldPosition(world);
 			expect(world.x).toBeCloseTo(11, 5);
@@ -3183,9 +3183,9 @@ if (import.meta.vitest) {
 			expect(world.z).toBeCloseTo(3, 5);
 		});
 	});
-	describe("parseSceneFixtureV1", () => {
+	describe("parseFixtureV1", () => {
 		it("accepts minimal fixture", () => {
-			const f = parseSceneFixtureV1({
+			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
 				ties: [],
@@ -3203,7 +3203,7 @@ if (import.meta.vitest) {
 			expect(f?.domain).toBe("architecture");
 		});
 		it("parses domain case-insensitively", () => {
-			const f = parseSceneFixtureV1({
+			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				domain: "Urban",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
@@ -3213,7 +3213,7 @@ if (import.meta.vitest) {
 			expect(f?.domain).toBe("urban");
 		});
 		it("parses vortex handleMeshByLod", () => {
-			const f = parseSceneFixtureV1({
+			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
 				ties: [],
@@ -3239,52 +3239,52 @@ if (import.meta.vitest) {
 			expect(v?.handleMeshUrl).toBe("/fallback.glb");
 		});
 	});
-	describe("sceneChunkKey", () => {
+	describe("chunkKey", () => {
 		it("buckets origin", () => {
-			expect(sceneChunkKey([10, 10, 10], 256)).toBe("0|0|0");
-			expect(sceneChunkKey([300, 0, 0], 256)).toBe("1|0|0");
+			expect(chunkKey([10, 10, 10], 256)).toBe("0|0|0");
+			expect(chunkKey([300, 0, 0], 256)).toBe("1|0|0");
 		});
 	});
-	describe("sceneChunkDistanceVisible", () => {
+	describe("chunkDistanceVisible", () => {
 		it("keeps visible inside exit margin after entering", () => {
 			const cam = new Vector3(0, 0, 0);
 			const chunkSize = 256;
 			const maxDist = 200;
-			const enterDist = maxDist + sceneChunkBoundsRadius(chunkSize);
+			const enterDist = maxDist + chunkBoundsRadius(chunkSize);
 			const far = new Vector3(enterDist + chunkSize, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: far, chunkSize, maxDist, wasVisible: false }),
+				chunkDistanceVisible({ camPos: cam, chunkCenter: far, chunkSize, maxDist, wasVisible: false }),
 			).toBe(false);
 			const near = new Vector3(enterDist - 50, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: near, chunkSize, maxDist, wasVisible: false }),
+				chunkDistanceVisible({ camPos: cam, chunkCenter: near, chunkSize, maxDist, wasVisible: false }),
 			).toBe(true);
 			const between = new Vector3(enterDist + chunkSize * 0.25, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: between, chunkSize, maxDist, wasVisible: true }),
+				chunkDistanceVisible({ camPos: cam, chunkCenter: between, chunkSize, maxDist, wasVisible: true }),
 			).toBe(true);
 			const beyond = new Vector3(enterDist + chunkSize * 0.75, 0, 0);
 			expect(
-				sceneChunkDistanceVisible({ camPos: cam, chunkCenter: beyond, chunkSize, maxDist, wasVisible: true }),
+				chunkDistanceVisible({ camPos: cam, chunkCenter: beyond, chunkSize, maxDist, wasVisible: true }),
 			).toBe(false);
 		});
 	});
-	describe("sceneGltfPoolAcquire", () => {
+	describe("gltfPoolAcquire", () => {
 		it("tracks refcount without clearing cache on release", () => {
 			const url = "http://x/pool-test.glb";
-			sceneGltfPoolAcquire(url);
-			sceneGltfPoolAcquire(url);
-			sceneGltfPoolRelease(url);
-			sceneGltfPoolRelease(url);
-			sceneGltfPoolAcquire(url);
-			sceneGltfPoolRelease(url);
+			gltfPoolAcquire(url);
+			gltfPoolAcquire(url);
+			gltfPoolRelease(url);
+			gltfPoolRelease(url);
+			gltfPoolAcquire(url);
+			gltfPoolRelease(url);
 			expect(true).toBe(true);
 		});
 	});
-	describe("resolveSceneMeshStyle", () => {
+	describe("resolveMeshStyle", () => {
 		it("prefers explicit style over interaction flags", () => {
 			expect(
-				resolveSceneMeshStyle({
+				resolveMeshStyle({
 					style: "original",
 					selected: true,
 					hovered: true,
@@ -3293,53 +3293,53 @@ if (import.meta.vitest) {
 			).toBe("original");
 		});
 		it("orders disabled, selected, highlighted, hovered, then default", () => {
-			expect(resolveSceneMeshStyle({ disabled: true, selected: true })).toBe("disabled");
-			expect(resolveSceneMeshStyle({ selected: true, highlighted: true })).toBe("selected");
-			expect(resolveSceneMeshStyle({ highlighted: true, hovered: true })).toBe("highlighted");
-			expect(resolveSceneMeshStyle({ hovered: true })).toBe("hovered");
-			expect(resolveSceneMeshStyle({})).toBe(DEFAULT_SCENE_MESH_STYLE);
+			expect(resolveMeshStyle({ disabled: true, selected: true })).toBe("disabled");
+			expect(resolveMeshStyle({ selected: true, highlighted: true })).toBe("selected");
+			expect(resolveMeshStyle({ highlighted: true, hovered: true })).toBe("highlighted");
+			expect(resolveMeshStyle({ hovered: true })).toBe("hovered");
+			expect(resolveMeshStyle({})).toBe(DEFAULT_MESH_STYLE);
 		});
 	});
-	describe("sceneMeshStyleColors", () => {
+	describe("meshStyleColors", () => {
 		it("returns null for original and colors for neutral", () => {
-			expect(sceneMeshStyleColors("original")).toBeNull();
-			const neutral = sceneMeshStyleColors("neutral");
+			expect(meshStyleColors("original")).toBeNull();
+			const neutral = meshStyleColors("neutral");
 			expect(neutral?.meshColor.length).toBeGreaterThan(0);
 			expect(neutral?.lineColor.length).toBeGreaterThan(0);
 		});
 		it("returns primary-toned selected and highlighted fills", () => {
-			const selected = sceneMeshStyleColors("selected");
-			const highlighted = sceneMeshStyleColors("highlighted");
+			const selected = meshStyleColors("selected");
+			const highlighted = meshStyleColors("highlighted");
 			expect(selected?.meshColor).toBeTruthy();
 			expect(highlighted?.meshColor).toBeTruthy();
 		});
 	});
-	describe("sceneStyledMeshPoolAcquire", () => {
+	describe("styledMeshPoolAcquire", () => {
 		it("tracks styled pool keys separately from base url", () => {
 			const url = "http://x/styled-pool.glb";
-			sceneStyledMeshPoolAcquire(url, "neutral");
-			sceneStyledMeshPoolAcquire(url, "selected");
-			sceneStyledMeshPoolRelease(url, "neutral");
-			sceneStyledMeshPoolRelease(url, "selected");
+			styledMeshPoolAcquire(url, "neutral");
+			styledMeshPoolAcquire(url, "selected");
+			styledMeshPoolRelease(url, "neutral");
+			styledMeshPoolRelease(url, "selected");
 			expect(true).toBe(true);
 		});
 	});
-	describe("sceneKindsCompatible", () => {
+	describe("kindsCompatible", () => {
 		it("matches bidirectional", () => {
-			const ok = sceneKindsCompatible("a", "b", [{ source: "b", target: "a", bidirectional: true }]);
+			const ok = kindsCompatible("a", "b", [{ source: "b", target: "a", bidirectional: true }]);
 			expect(ok).toBe(true);
 		});
 	});
-	describe("sceneBlockedVortexFullIdsFromTies", () => {
+	describe("blockedVortexFullIdsFromTies", () => {
 		it("collects endpoints", () => {
-			const s = sceneBlockedVortexFullIdsFromTies([{ source: "a:h1", target: "b:h2" }]);
+			const s = blockedVortexFullIdsFromTies([{ source: "a:h1", target: "b:h2" }]);
 			expect(s.has("a:h1")).toBe(true);
 			expect(s.has("b:h2")).toBe(true);
 		});
 	});
-	describe("sceneHandlesAttractionCompatibleForDrag", () => {
+	describe("handlesAttractionCompatibleForDrag", () => {
 		it("allows all when rules empty", () => {
-			const ok = sceneHandlesAttractionCompatibleForDrag(
+			const ok = handlesAttractionCompatibleForDrag(
 				{ objectId: "a", objectKind: "n1", vortexKind: "h1" },
 				{ objectId: "b", objectKind: "n2", vortexKind: "h2" },
 				[],
@@ -3348,7 +3348,7 @@ if (import.meta.vitest) {
 			expect(ok).toBe(true);
 		});
 		it("matches handle specificity", () => {
-			const ok = sceneHandlesAttractionCompatibleForDrag(
+			const ok = handlesAttractionCompatibleForDrag(
 				{ objectId: "a", objectKind: "x", vortexKind: "h1" },
 				{ objectId: "b", objectKind: "y", vortexKind: "h2" },
 				[{ source: "h1", target: "h2", specificity: "handle" }],
@@ -3357,14 +3357,14 @@ if (import.meta.vitest) {
 			expect(ok).toBe(true);
 		});
 	});
-	describe("resolveSceneWireKindForVortex", () => {
+	describe("resolveWireKindForVortex", () => {
 		it("falls back to default wire id", () => {
-			expect(resolveSceneWireKindForVortex("any", undefined)).toBe("board.wire.link");
+			expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
 		});
 	});
 	describe("scene play fixture hook", () => {
 		it("parses nakagin fixture", () => {
-			const f = parseSceneFixtureV1(sceneFixtureJson as unknown);
+			const f = parseFixtureV1(fixtureJson as unknown);
 			expect(f?.domain).toBe("architecture");
 			expect(f?.ties.length).toBeGreaterThan(0);
 			expect(f?.objects.length).toBeGreaterThan(0);

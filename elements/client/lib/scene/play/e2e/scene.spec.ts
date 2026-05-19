@@ -18,7 +18,7 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("THREE.WebGLRenderer: Context Lost");
 	expect(text).not.toContain("Maximum call stack size exceeded");
 	expect(text).not.toContain("updateMatrixWorld");
-	expect(text).not.toContain("scenePseudoZoomFromOrbitDistance is not defined");
+	expect(text).not.toContain("pseudoZoomFromOrbitDistance is not defined");
 }
 
 test("scene play loads canvas and fixture", async ({ page }) => {
