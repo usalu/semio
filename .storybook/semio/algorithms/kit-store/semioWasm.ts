@@ -1,9 +1,12 @@
 // #region 🧲Header
-// Storybook: lazy wasm init for @semio/rs-wasm
+// Storybook: lazy wasm init; GraphQL-only rs/js wire via `dev://empty` + `installProjection`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
 
 import initSemio, { boot, KitStoreHandle } from "@semio/rs-wasm";
+
+/** @emoji 🧪 Empty WASM store URI — must match {@link RS_WASM_EMPTY_STORE_URI} in `@semio/js`. */
+export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
 // Bundle `semio.js` in Storybook, the default `new URL("semio_bg.wasm", import.meta.url)` is often wrong;
 // point at the pkg explicitly so `fetch` loads the file.
@@ -34,8 +37,7 @@ export function ensureSemioWasm(): Promise<void> {
 export { boot, initSemio, KitStoreHandle };
 
 // #region 🧰StorybookGraphqlWire
-/** @emoji 🔌 Storybook-only GraphQL execute boundary (same shape as WASM `KitStoreHandle.execute`).
- * Returns the **complete JSON** GraphQL response document — no NDJSON / line-of-json. */
+/** @emoji 🔌 Storybook-only GraphQL execute boundary (same shape as WASM `KitStoreHandle.execute`). */
 export type StorybookKitGraphqlHandle = Pick<KitStoreHandle, "execute" | "subscribe">;
 
 function storybookKitGraphqlData(response: unknown): Record<string, unknown> {
@@ -49,6 +51,32 @@ function storybookKitGraphqlData(response: unknown): Record<string, unknown> {
 async function sbGqlMut(handle: StorybookKitGraphqlHandle, query: string, variables?: Record<string, unknown>): Promise<Record<string, unknown>> {
   const json = await handle.execute(JSON.stringify({ query, variables }));
   return storybookKitGraphqlData(JSON.parse(json) as unknown);
+}
+
+/** @emoji 📥 Opens `dev://empty` then seeds kit JSON through GraphQL `installProjection` (rs/js contract). */
+export async function createStorybookKitGraphqlHandle(seedKit: unknown): Promise<KitStoreHandle> {
+  await ensureSemioWasm();
+  const created = KitStoreHandle.create(RS_WASM_EMPTY_STORE_URI);
+  const handle = created instanceof Promise ? await created : created;
+  const json = JSON.stringify(JSON.parse(JSON.stringify(seedKit)) as object);
+  const stores = await sbGqlMut(handle, `query { session { stores { edges { node { id } } } } }`);
+  const edges = ((stores["session"] as Record<string, unknown> | undefined)?.["stores"] as Record<string, unknown> | undefined)?.[
+    "edges"
+  ] as readonly Record<string, unknown>[] | undefined;
+  const storeId = String((edges?.[0]?.["node"] as Record<string, unknown> | undefined)?.["id"] ?? "");
+  if (storeId === "") throw new Error("createStorybookKitGraphqlHandle: no session store");
+  const installed = await sbGqlMut(
+    handle,
+    `mutation($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } } }`,
+    { storeId, json },
+  );
+  const ip = (installed["session"] as Record<string, unknown> | undefined)?.["store"] as Record<string, unknown> | undefined;
+  const payload = ip?.["installProjection"] as Record<string, unknown> | undefined;
+  if (payload?.["ok"] !== true) {
+    const err = (payload?.["errors"] as readonly { message?: string }[] | undefined)?.[0]?.message;
+    throw new Error(err ?? "installProjection failed");
+  }
+  return handle;
 }
 
 /** @emoji 🌐 Runs one GraphQL document over a handle; resolves with the **complete JSON** response. */
@@ -220,8 +248,7 @@ async function storybookExecuteSessionCommands(
               const altTx = sessionTx?.["alternative"] as Record<string, unknown> | undefined;
               const draftTx = altTx?.["draft"] as Record<string, unknown> | undefined;
               const transaction = draftTx?.["transaction"] as Record<string, unknown> | undefined;
-              const tv = transaction?.[txt];
-              const ok = tv === true;
+              const ok = transaction?.[txt] === true;
               results.push({
                 executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ [txt]: { ok } }] } }] },
               });

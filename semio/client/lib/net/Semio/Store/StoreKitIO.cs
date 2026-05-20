@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -14,6 +15,72 @@ namespace Semio.Store;
 public static class StoreKitIO
 {
     public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
+
+    /// <summary>📥 <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for semio-store hydration.</summary>
+    public static JObject KitToInstallProjection(Kit kit)
+    {
+        var dto = KitToJObject(kit);
+        if (dto["pieces"] is JArray rootPieces)
+        {
+            foreach (var piece in rootPieces.OfType<JObject>())
+                NormalizePiecePoseForInstall(piece);
+        }
+        if (dto["designs"] is JArray designs)
+        {
+            foreach (var design in designs.OfType<JObject>())
+            {
+                if (design["pieces"] is not JArray pieces) continue;
+                foreach (var piece in pieces.OfType<JObject>())
+                    NormalizePiecePoseForInstall(piece);
+            }
+        }
+        return dto;
+    }
+
+    private static JObject DefaultInstallPlane() => JObject.Parse(
+        """{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}""");
+
+    private static JObject DefaultInstallCenter() => JObject.Parse("""{"u":0,"v":0}""");
+
+    private static JObject NormalizeInstallCenter(JToken? center)
+    {
+        if (center is JObject o)
+        {
+            var u = o["u"] ?? o["U"];
+            var v = o["v"] ?? o["V"];
+            if (u != null && v != null)
+                return new JObject { ["u"] = u, ["v"] = v };
+        }
+        return DefaultInstallCenter();
+    }
+
+    private static JObject NormalizeInstallPlane(JToken? plane)
+    {
+        if (plane is JObject o
+            && o["origin"] is JObject origin
+            && origin["x"] != null
+            && (o["xAxis"] is JObject || o["x_axis"] is JObject)
+            && (o["yAxis"] is JObject || o["y_axis"] is JObject))
+            return (JObject)o.DeepClone();
+        return DefaultInstallPlane();
+    }
+
+    private static void NormalizePiecePoseForInstall(JObject piece)
+    {
+        var pose = piece["pose"] as JObject;
+        var planeTok = pose?["plane"] ?? piece["plane"];
+        var centerTok = pose?["center"] ?? piece["center"];
+        var newPose = new JObject();
+        if (planeTok != null)
+            newPose["plane"] = NormalizeInstallPlane(planeTok);
+        else
+            newPose["plane"] = DefaultInstallPlane();
+        if (centerTok != null)
+            newPose["center"] = NormalizeInstallCenter(centerTok);
+        piece["pose"] = newPose;
+        piece.Remove("plane");
+        piece.Remove("center");
+    }
 
     private static Kit SnapshotToKit(JToken tok) =>
         Utility.DeserializeKit(tok.ToString(Formatting.None))!;
@@ -30,13 +97,15 @@ public static class StoreKitIO
         return true;
     }
 
-    private static void InstallCreate(StoreClient c, JObject dto) =>
-        c.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
+    /// <summary>🧾 After install/import, verifies materialized <c>wip.theKit.kit.name</c> via golden GraphQL when store is up.</summary>
+    private static void AssertGraphqlKitNameMatches(StoreSession session, string expectedName)
+    {
+        var actual = session.Kit.Name;
+        if (actual != expectedName)
+            throw new IOException($"graphql: materialized kit name {actual} != expected {expectedName}");
+    }
 
-    private static void InstallImportFile(StoreClient c, string path) =>
-        c.Install(new JObject { ["importFile"] = new JObject { ["path"] = Path.GetFullPath(path) } });
-
-    private static string? ResolveKitJsonPath(string folderPath)
+    public static string? ResolveKitJsonPath(string folderPath)
     {
         var root = Path.GetFullPath(folderPath);
         var direct = Path.Combine(root, "kit.json");
@@ -78,23 +147,46 @@ public static class StoreKitIO
         if (!Directory.Exists(folderPath) && !System.IO.File.Exists(folderPath)) throw new IOException(folderPath);
         var kitJson = ResolveKitJsonPath(folderPath)
             ?? throw new FileNotFoundException($"No kit.json under {folderPath}");
-        using var c = new StoreClient();
-        InstallImportFile(c, kitJson);
-        return SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(kitJson)));
+        var kit = SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(kitJson)));
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
+        return kit;
     }
 
     public static Kit LoadKitFromFile(string filePath)
     {
         if (!System.IO.File.Exists(filePath)) throw new FileNotFoundException(filePath);
-        using var c = new StoreClient();
-        InstallImportFile(c, filePath);
-        return SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(filePath)));
+        var kit = SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(filePath)));
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
+        return kit;
     }
 
     public static void SaveKitToFile(Kit kit, string filePath)
     {
-        using (var c = new StoreClient())
-            InstallCreate(c, KitToJObject(kit));
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
         System.IO.File.WriteAllText(Path.GetFullPath(filePath), Utility.Serialize(kit));
     }
 
@@ -119,5 +211,13 @@ public static class StoreKitIO
             if (Directory.Exists(tempDir))
                 Directory.Delete(tempDir, true);
         }
+    }
+
+    /// <summary>🔁 Apply <paramref name="diff"/> to <paramref name="baseKit"/> or folder snapshot, persist via <see cref="SaveKitToFolder"/>, return updated kit.</summary>
+    public static Kit ApplyKitDiffAndSaveToFolder(string folderPath, KitDiff diff, Kit? baseKit = null)
+    {
+        var kit = Kit.ApplyDiff(baseKit ?? LoadKitFromFolder(folderPath), diff);
+        SaveKitToFolder(kit, folderPath);
+        return kit;
     }
 }

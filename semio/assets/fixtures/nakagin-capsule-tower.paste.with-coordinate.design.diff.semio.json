@@ -108,6 +108,43 @@
         "attributes": []
       },
       {
+        "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+        "name": "b",
+        "description": "",
+        "type": {
+          "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+        },
+        "design": null,
+        "plane": {
+          "origin": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "xAxis": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "yAxis": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          }
+        },
+        "center": {
+          "u": 10.0,
+          "v": 10.0
+        },
+        "scale": null,
+        "mirrorPlane": null,
+        "isHidden": false,
+        "isLocked": false,
+        "color": null,
+        "props": null,
+        "attributes": []
+      },
+      {
         "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
         "name": "cs_sl0_d3_t_f2_b_c1",
         "description": "",

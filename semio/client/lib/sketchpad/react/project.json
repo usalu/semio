@@ -39,7 +39,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/lib/sketchpad/react",
-        "command": "bun --import ./pw-loader.mjs ../../../node_modules/playwright/cli.js test",
+        "command": "bun --import ./pw-loader.mjs ../../../../node_modules/playwright/cli.js test",
         "forwardAllArgs": true,
         "env": {
           "SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS": "1"

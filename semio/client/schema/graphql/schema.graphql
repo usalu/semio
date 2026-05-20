@@ -4969,6 +4969,7 @@ type StoreCommand {
 	theKit: VersionCommand
 	alternative(id: ID!): AlternativeCommand!
 	startAlternative(name: String): Response!
+	installProjection(json: String!): Response!
 }
 
 type StoreCommandConnection {

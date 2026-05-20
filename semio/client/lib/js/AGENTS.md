@@ -9,7 +9,7 @@ bundle:
 
 # 🧾 Specification
 
-`semio/js` is a **thin GraphQL client** to `semio/rs` (`KitStoreHandle` over a dedicated Worker). It exposes **`KitStore`**, **`openKit`**, plus wire types required for method signatures.
+`semio/js` is a **thin GraphQL client** to `semio/rs` (`Session` + `Store.installProjection` over a dedicated Worker). It exposes **`Session`**, **`Store`**, **`openSessionInMemory`**, plus wire types required for method signatures.
 
 The root **`@semio/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio/react`**;
 
@@ -19,7 +19,7 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 ## Strict layering
 
 - **Up** (toward UI): `semio/react` imports this package for `KitStore` + wire types.
-- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs`. No imports from `semio/react` or `semio/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
+- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs` (wire: `graphql-contract.ts`; WASM: `rs-wasm-transport.ts` + `kit-store.worker.ts` with `dev://empty` only). Kit JSON enters via `Store.installProjection`, never `Session.open` URIs. No imports from `semio/react` or `semio/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
 
 ## Bidirectional actor model
 

@@ -3,6 +3,12 @@
 // GNU LGPL-3.0 or later — semio/js: stateless {@link Session} + GraphQL transport (WASM worker or inline); no client-side kit cache.
 //#endregion 🧲Header
 
+import { assertRsJsSessionOpenUri, RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
+import { GQL_RESPONSE_SELECTION, withResponseSelection } from "./graphql-kit-selection";
+import { createRsWasmGraphqlHandle } from "./rs-wasm-transport";
+
+export { GQL_RESPONSE_SELECTION, withResponseSelection } from "./graphql-kit-selection";
+
 //#region 📥KitImports
 //#endregion 📥KitImports
 
@@ -11,7 +17,7 @@ export type ID = string
 //#region 🌐Transport
 /** @emoji 🧵 Bundled worker — Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
-  return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
+  return new Worker(new URL("./kit-store.worker", import.meta.url), { type: "module" });
 }
 
 /** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @semio/js surface). */
@@ -426,8 +432,15 @@ export type SessionOpenOptions = Readonly<{
 /** @emoji 🌐 Options for {@link Session.openHttp} against `semio-store` (POST `/install` + POST `/graphql`). */
 export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
 
-/** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store. */
-export const SEMIO_IN_MEMORY_KIT_URI = "dev://empty" as const;
+/** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
+export const SEMIO_IN_MEMORY_KIT_URI = RS_WASM_EMPTY_STORE_URI;
+
+export {
+  assertRsJsSessionOpenUri,
+  RS_WASM_EMPTY_STORE_URI,
+  SEMIO_GRAPHQL_GOLDEN_SCHEMA_PATH,
+  type GraphqlWirePostBody,
+} from "./graphql-contract";
 
 function gqlString(s: string): string {
   return JSON.stringify(s);
@@ -523,10 +536,6 @@ function gqlOkFromEnvelope(env: GraphqlEnvelope<JsonValue>): SetResult {
   return { ok: true };
 }
 
-/** @emoji 📬 Selection for golden {@code Response} on command mutation leaves. */
-const GQL_RESPONSE_SELECTION =
-  "ok errors { kind message requestId } result { ... on IdResult { value } }";
-
 /** @emoji 📬 Parses a {@code Response} object from mutation data. */
 function parseResponsePayload(node: JsonValue | undefined): SetResult {
   if (!isJsonObjectNode(node)) return { ok: true };
@@ -551,55 +560,36 @@ function responseResultId(node: JsonValue | undefined): string {
   return value == null ? "" : String(value);
 }
 
-/** @emoji 📬 Appends {@link GQL_RESPONSE_SELECTION} to the innermost kit command field. */
-function withResponseSelection(kitSelection: string): string {
-  const trimmed = kitSelection.trim();
-  const brace = trimmed.indexOf("{");
-  if (brace === -1) return `${trimmed} { ${GQL_RESPONSE_SELECTION} }`;
-  const head = trimmed.slice(0, brace).trimEnd();
-  const inner = trimmed.slice(brace + 1, trimmed.lastIndexOf("}")).trim();
-  return `${head} { ${withResponseSelection(inner)} }`;
-}
-
 type GraphqlExecuteHandle = { execute(requestJson: string): Promise<string> };
-
-async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
-  try {
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
-    const url = await import("node:url");
-    const here = path.dirname(url.fileURLToPath(import.meta.url));
-    const candidates = [
-      path.resolve(here, "../rs/pkg/semio_bg.wasm"),
-      path.resolve(here, "../../../../semio/client/lib/rs/pkg/semio_bg.wasm"),
-    ];
-    for (const p of candidates) {
-      try {
-        const buf = await fs.readFile(p);
-        return new Uint8Array(buf);
-      } catch {
-        /* try next */
-      }
-    }
-  } catch {
-    /* non-node */
-  }
-  return undefined;
-}
 
 function isBrowserWorkerRuntime(): boolean {
   return typeof Worker !== "undefined" && typeof window !== "undefined" && typeof document !== "undefined";
 }
 
-function shouldStartLiveSubscriptionLoop(): boolean {
-  return isBrowserWorkerRuntime();
+/** @emoji 🧪 True when Vitest or embedded package tests run (jsdom still has Worker/window). */
+function isVitestOrEmbeddedTestRuntime(): boolean {
+  try {
+    const env = (import.meta as { env?: Record<string, unknown> }).env;
+    if (env) {
+      if (Boolean(env["VITEST"])) return true;
+      if (env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1" || env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === true) return true;
+      if (env["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === "1" || env["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === true) return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  const pe = typeof process !== "undefined" ? process.env : undefined;
+  if (pe) {
+    if ("VITEST" in pe) return true;
+    if (pe["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") return true;
+    if (pe["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === "1") return true;
+  }
+  return false;
 }
 
-function defaultRsWasmSpecifier(): string {
-  if (typeof window === "undefined" || typeof document === "undefined") {
-    return new URL("../rs/pkg/semio.js", import.meta.url).href;
-  }
-  return "@semio/rs-wasm";
+function shouldStartLiveSubscriptionLoop(): boolean {
+  if (isVitestOrEmbeddedTestRuntime()) return false;
+  return isBrowserWorkerRuntime();
 }
 
 //#region 🧱Classes
@@ -1165,23 +1155,6 @@ function subscribeKitCoarseRefetch(
 
 
 //#region 🏪Store
-/** @emoji 🔗 Map `Store.open` input: inline JSON becomes `dev+json:` base64 for the WASM bootstrap URI. */
-function backboneBootstrapUriForStoreOpen(raw: string): string {
-  const t = raw.trim();
-  if (t.startsWith("{") || t.startsWith("[")) {
-    return semioJsonBootstrapUri(t);
-  }
-  return t;
-}
-
-/** @emoji 🧪 Encodes inline kit JSON into the RS `dev+json:` bootstrap URI form. */
-export function semioJsonBootstrapUri(raw: string): string {
-  const bytes = new TextEncoder().encode(raw);
-  let bin = "";
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
-  return `dev+json:${btoa(bin)}`;
-}
-
 function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const conn = frag?.[key] as JsonObject | undefined;
   const edges = conn?.["edges"] as readonly JsonValue[] | undefined;
@@ -1435,6 +1408,16 @@ export class Session {
     return this.trackCommandResult(env);
   }
 
+  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (sole rs/js kit bootstrap besides empty store). */
+  async installProjection(storeId: string, json: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ${GQL_RESPONSE_SELECTION} } } } }`,
+      variables: { storeId, json },
+    });
+    return this.trackCommandResult(env);
+  }
+
   async integrateAlternative(storeId: string, alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.mutateEnvelope({
@@ -1515,22 +1498,13 @@ export class Session {
   }
 
   static async open(uri: string, opts?: SessionOpenOptions): Promise<Session> {
+    assertRsJsSessionOpenUri(uri);
     const timeoutMs = opts?.timeoutMs ?? 60_000;
-    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? defaultRsWasmSpecifier();
-    const preferInlineInVitest = (() => {
-      try {
-        const env = (import.meta as { env?: JsonObject }).env;
-        if (env && Boolean(env["VITEST"])) return true;
-      } catch {
-        /* ignore */
-      }
-      return typeof process !== "undefined" && !!process.env && "VITEST" in process.env;
-    })();
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__;
+    const preferInlineInVitest = isVitestOrEmbeddedTestRuntime();
 
-    const wasmBytesPre = await readSemioWasmBytesFromMonorepoCandidates();
-  const useDedicatedWorker = isBrowserWorkerRuntime() && !preferInlineInVitest && wasmBytesPre == null;
-
-    const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
+    const bootstrapUri = RS_WASM_EMPTY_STORE_URI;
+    const useDedicatedWorker = isBrowserWorkerRuntime() && !preferInlineInVitest;
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
@@ -1550,24 +1524,8 @@ export class Session {
       }
     }
 
-    let mod: typeof import("@semio/rs-wasm");
-    try {
-      mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
-    } catch (e) {
-      const base = e instanceof Error ? e.message : String(e);
-      throw new Error(`Failed to load @semio/rs-wasm (inline path): ${base}`, { cause: e });
-    }
-    if (typeof mod.default === "function") {
-      if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
-      else await mod.default();
-    } else await mod.default();
-    if (typeof mod.boot === "function") mod.boot();
-    const handleUnknown = mod.KitStoreHandle.create(bootstrapUri);
-    const wasmHandle = handleUnknown instanceof Promise ? await handleUnknown : handleUnknown;
-    if (wasmHandle == null || typeof (wasmHandle as { execute?: unknown }).execute !== "function") {
-      throw new Error("KitStoreHandle.create did not return execute()");
-    }
-    const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
+    const wasmHandle = await createRsWasmGraphqlHandle(bootstrapUri, { wasmSpecifier });
+    const t = new InlineTransport(wasmHandle);
     const k = new Session(timeoutMs, t);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
     if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
@@ -1579,12 +1537,7 @@ export class Session {
     return Session.open(SEMIO_IN_MEMORY_KIT_URI, opts);
   }
 
-  /** @emoji 🧪 Opens an RS-backed session from inline kit or bundle JSON via `dev+json:`. */
-  static async openJson(raw: string, opts?: SessionOpenOptions): Promise<Session> {
-    return Session.open(semioJsonBootstrapUri(raw), opts);
-  }
-
-  /** @emoji 🌐 Opens a {@link Session} against native `semio-store` at {@code baseUrl} (optional POST `/install` first). */
+  /** @emoji 🌐 Opens a {@link Session} against native `semio-store` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
   static async openHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const root = baseUrl.replace(/\/$/, "");
@@ -1839,6 +1792,11 @@ export class Store extends Entity {
     return await this.session.startNewChange(this.id);
   }
 
+  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (rs/js GraphQL contract). */
+  async installProjection(json: string): Promise<SetResult> {
+    return this.session.installProjection(this.id, json);
+  }
+
   async createCheckpoint(message: string): Promise<SetResult> {
     return this.session.createCheckpoint(this.id, message);
   }
@@ -2023,6 +1981,9 @@ export class Graph extends Entity {
   declare hash: () => Promise<string>;
   declare alternatives: () => Promise<readonly Alternative[]>;
   declare checkpoints: () => Promise<readonly Checkpoint[]>;
+  declare onHashChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onAlternativesChanged: (cb: (next: readonly Alternative[]) => void) => Unsubscribe;
+  declare onCheckpointsChanged: (cb: (next: readonly Checkpoint[]) => void) => Unsubscribe;
 }
 
 installEntityStoreBranchMethods(
@@ -3110,6 +3071,22 @@ export class Piece extends Entity {
   declare childPieces: () => Promise<readonly Piece[]>;
   declare childConnections: () => Promise<readonly Connection[]>;
   declare pathPieces: () => Promise<readonly string[]>;
+  declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onIconChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onTypeIdChanged: (cb: (next: string | null) => void) => Unsubscribe;
+  declare onScaleChanged: (cb: (next: number | null) => void) => Unsubscribe;
+  declare onBlueprintChanged: (cb: (next: PieceBlueprint | null) => void) => Unsubscribe;
+  declare onAttributesChanged: (cb: (next: readonly Attribute[]) => void) => Unsubscribe;
+  declare onConnectionKindChanged: (cb: (next: "FIXED" | "CONNECTED" | null) => void) => Unsubscribe;
+  declare onDepthChanged: (cb: (next: number | null) => void) => Unsubscribe;
+  declare onParentPieceChanged: (cb: (next: Piece | null) => void) => Unsubscribe;
+  declare onParentConnectionChanged: (cb: (next: Connection | null) => void) => Unsubscribe;
+  declare onChildPiecesChanged: (cb: (next: readonly Piece[]) => void) => Unsubscribe;
+  declare onChildConnectionsChanged: (cb: (next: readonly Connection[]) => void) => Unsubscribe;
+  declare onPathPiecesChanged: (cb: (next: readonly string[]) => void) => Unsubscribe;
+  declare onPositionChanged: (cb: (next: unknown) => void) => Unsubscribe;
+  declare onFlatPositionChanged: (cb: (next: unknown) => void) => Unsubscribe;
   declare rename: (newName: string) => Promise<SetResult>;
   declare changeDescription: (newDescription: string) => Promise<SetResult>;
   declare drag: (offset: OffsetInput) => Promise<SetResult>;
@@ -3188,10 +3165,21 @@ const PIECE_FIELDS = defineBoundKitFields([
       Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "childConnections").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
   },
   {
-    selection: "path { edges { node { id } } }",
+    method: "pathPieces",
+    selection: "path { id }",
     parse: () => [],
     coarseEvent: true,
-    parseEntity: (_entity, frag) => parseIdListConnection(pieceKit(frag as JsonObject | null), "path"),
+    parseEntity: (_entity, frag) => {
+      const path = pieceKit(frag as JsonObject | null)?.["path"];
+      if (Array.isArray(path)) {
+        return Object.freeze(
+          path
+            .map((node) => String((node as JsonObject | null)?.["id"] ?? ""))
+            .filter((id) => id !== ""),
+        );
+      }
+      return parseIdListConnection(pieceKit(frag as JsonObject | null), "path");
+    },
   },
 ] as const);
 
@@ -3212,6 +3200,21 @@ const PIECE_OPERATIONS = defineBoundKitOperations([
 ] as const);
 
 installEntityKitMethods(Piece, PIECE_FIELDS as readonly BoundKitFieldSpec<unknown, Piece>[], PIECE_OPERATIONS);
+
+/** @emoji 📡 {@link Piece} weak {@link Position} handles: coarse bus invalidation (drag/move/fix). */
+function installPieceWeakGeometryChangeEvents(): void {
+  for (const role of ["position", "flatPosition"] as const) {
+    const eventMethod = fieldChangedEventMethodName(role);
+    Object.defineProperty(Piece.prototype, eventMethod, {
+      configurable: true,
+      writable: true,
+      value: function pieceWeakGeometryChanged(this: Piece, cb: (next: unknown) => void): Unsubscribe {
+        return subscribeKitCoarseRefetch(this.session.bus, () => cb(null));
+      },
+    });
+  }
+}
+installPieceWeakGeometryChangeEvents();
 //#endregion 🧩Piece
 
 //#region 🪢PiecesOperation
@@ -3788,7 +3791,12 @@ installEntityNodeMethods(Prop, "Prop", defineBoundNodeFields([
 //#endregion 🧱Classes
 
 //#region 🚀PublicAPI
-/** @emoji 🚀 Opens a {@link Session} backed by rs WASM (worker or inline). */
+/** @emoji 🚀 Opens an empty rs WASM {@link Session} (`dev://empty` only; seed kit JSON via {@link Store.installProjection}). */
+export async function openSessionInMemory(opts?: SessionOpenOptions): Promise<Session> {
+  return Session.openInMemory(opts);
+}
+
+/** @emoji 🚀 Opens a {@link Session} backed by rs WASM; {@code uri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
 export async function openSession(uri: string, opts?: SessionOpenOptions): Promise<Session> {
   return Session.open(uri, opts);
 }
@@ -3830,9 +3838,22 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     });
     it("withResponseSelection wraps leaf kit commands", () => {
       expect(withResponseSelection("rename(newName: \"x\")")).toContain("ok");
-      expect(withResponseSelection('design(id: "d") { addFixedPiece(blueprintId: "b", position: { center: { u: 0, v: 0 } }) }')).toContain(
-        "addFixedPiece",
+      const fixed = withResponseSelection(
+        'design(id: "d") { addFixedPiece(blueprintId: "b", position: { center: { u: 0, v: 0 }, plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } } }) }',
       );
+      expect(fixed).toContain("addFixedPiece");
+      expect(fixed).toContain("ok errors");
+      expect(fixed).not.toMatch(/xAxis:\s*\{\s*\{\s*ok/);
+    });
+    it("Piece installs pathPieces and weak-geometry change subscriptions", () => {
+      expect(typeof Piece.prototype.pathPieces).toBe("function");
+      expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");
+      expect(typeof Piece.prototype.onPositionChanged).toBe("function");
+      expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
+    });
+    it("Kit and Graph install field change subscriptions", () => {
+      expect(typeof Kit.prototype.onNameChanged).toBe("function");
+      expect(typeof Graph.prototype.onAlternativesChanged).toBe("function");
     });
     it("graphql wire post json always carries query variables operationName", () => {
       const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
@@ -3875,6 +3896,18 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect(qualities).toHaveLength(1);
         expect(await qualities[0]!.key()).toBe("q1");
 
+        const createDesign = await kit.createDesign("layout-alpha");
+        expect(createDesign).toEqual({ ok: true });
+        const designs = await eventually(() => kit.designs(), (value) => value.length === 1, 10_000);
+        expect(designs).toHaveLength(1);
+        expect(await designs[0]!.name()).toBe("layout-alpha");
+
+        const createType = await kit.createType("kind-beta");
+        expect(createType).toEqual({ ok: true });
+        const types = await eventually(() => kit.types(), (value) => value.length === 1, 10_000);
+        expect(types).toHaveLength(1);
+        expect(await types[0]!.name()).toBe("kind-beta");
+
         const snapshot = unwrapGraphqlData(
           await session.gql.executeQueryJson(
             {
@@ -3892,6 +3925,118 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect((((jsonObjectField(liveKit, "tags")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
         expect((((jsonObjectField(liveKit, "concepts")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
         expect((((jsonObjectField(liveKit, "qualities")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("entity rename fires onNameChanged when kitRenamed is emitted", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const kit = await store.wip().theKit().kit();
+        let nameFromEvent = "";
+        const off = kit.onNameChanged((next) => {
+          nameFromEvent = String(next);
+        });
+        const renamed = await kit.rename("e2e-kit-renamed");
+        expect(renamed.ok).toBe(true);
+        session.bus.emit({ kind: "kitRenamed", payload: null } as never);
+        await eventually(() => kit.name(), (n) => n === "e2e-kit-renamed", 10_000);
+        expect(nameFromEvent).toBe("e2e-kit-renamed");
+        off();
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("Session.open rejects inline JSON bootstrap URI", async () => {
+      await expect(Session.open('{"id":"kit-json"}')).rejects.toThrow(/installProjection/);
+      await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
+    });
+
+    it("openInMemory does not start live subscription loop under embedded tests", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        expect(Reflect.get(session as object, "gqlLoopRunning")).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection hydrates kit from projection JSON", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(
+          JSON.stringify({
+            id: "kit-install-proj",
+            name: "Install Projection Kit",
+            types: { hash: "h", items: [{ id: "t1", name: "Kind-A" }] },
+            designs: { hash: "h", items: [] },
+          }),
+        );
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const types = await eventually(() => kit.types(), (rows) => rows.length >= 1, 30_000);
+        expect(await types[0]!.name()).toBe("Kind-A");
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("store startAlternative exposes graph alternatives and unsavedChangeCount", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const graph = store.wip();
+        let alternativesFromEvent = -1;
+        const off = graph.onAlternativesChanged((next) => {
+          alternativesFromEvent = next.length;
+        });
+        const started = await store.startAlternative("e2e-alt-branch");
+        expect(started.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const alternatives = await eventually(() => graph.alternatives(), (rows) => rows.length >= 1, 15_000);
+        expect(alternatives.length).toBeGreaterThanOrEqual(1);
+        expect(alternativesFromEvent).toBeGreaterThanOrEqual(1);
+        expect(typeof await alternatives[alternatives.length - 1]!.unsavedChangeCount()).toBe("number");
+        off();
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("design piece pathPieces and onPositionChanged on drag", async () => {
+      const originPlane = {
+        origin: { x: 0, y: 0, z: 0 },
+        xAxis: { x: 1, y: 0, z: 0 },
+        yAxis: { x: 0, y: 1, z: 0 },
+      };
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.createType("Blueprint")).toEqual({ ok: true });
+        const blueprintId = (await eventually(() => kit.types(), (rows) => rows.length >= 1, 10_000))[0]!.id;
+        expect(await kit.createDesign("E2E Design")).toEqual({ ok: true });
+        const design = (await eventually(() => kit.designs(), (rows) => rows.length >= 1, 10_000))[0]!;
+        expect(await design.addFixedPiece(blueprintId, { center: { u: 0, v: 0 }, plane: originPlane }, "piece-e2e")).toEqual({ ok: true });
+        const piece = (await eventually(() => design.pieces(), (rows) => rows.length >= 1, 10_000))[0]!;
+        const pathIds = await piece.pathPieces();
+        expect(Array.isArray(pathIds)).toBe(true);
+        let positionEvents = 0;
+        const offPosition = piece.onPositionChanged(() => {
+          positionEvents += 1;
+        });
+        const dragged = await piece.drag({ u: 2, v: 3 });
+        if (dragged.ok) {
+          session.bus.emit({ kind: "draggedPiece", payload: null } as never);
+        }
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        expect(positionEvents).toBeGreaterThanOrEqual(1);
+        offPosition();
       } finally {
         await session.dispose();
       }

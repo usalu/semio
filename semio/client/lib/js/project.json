@@ -16,7 +16,7 @@
       "dependsOn": ["@semio/rs:build"],
       "options": {
         "cwd": "semio/client/lib/js",
-        "command": "bunx vitest run",
+        "command": "bunx vitest run --config vite.config.ts",
         "forwardAllArgs": true,
         "env": {
           "SEMIO_JS_RUN_EMBEDDED_TESTS": "1"

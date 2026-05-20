@@ -11,6 +11,7 @@ type PlainJsonObject = Readonly<Record<string, unknown>>;
 type PlainJsonValue = string | number | boolean | null | readonly PlainJsonValue[] | PlainJsonObject;
 // #endregion 🧾PlainJson
 
+import { getKitPorts, kitItemsOf, kitJsRows, kitSurface, type KitPortPlain } from "./plainKit";
 import { Breadcrumb, Button, Section } from "../../../../../elements/client/lib/react";
 import { Bounds, useBounds } from "@react-three/drei/core/Bounds.js";
 import { Clone } from "@react-three/drei/core/Clone.js";
@@ -41,14 +42,7 @@ export type SceneCamera = PlainJsonObject & {
 const DiffStatus = Object.freeze({ Removed: "removed", Added: "added", Modified: "modified" } as const);
 type SemioFile = Record<string, unknown>;
 
-/** @emoji 🧾 Flat port row from plain kit `types[].ports` (not CQRS {@link import("@semio/js").Port}). */
-export type KitPortPlain = PlainJsonObject & {
-  id?: string;
-  name?: string;
-  description?: string;
-  icon?: string;
-  maxChildren?: number;
-};
+export type { KitPortPlain } from "./plainKit";
 
 /** @emoji 🧾 Plain diagram piece JSON (story/MCP payloads; not CQRS {@link import("@semio/js").Piece}). */
 type Piece = PlainJsonObject & {
@@ -103,35 +97,7 @@ function pickPreferredRepresentation(representations: readonly PlainJsonObject[]
 }
 
 //#region 🔖PlainKitAndDiff
-/** @emoji 🧾 Algorithm / diagram JSON kit surface (`wip.initialKit` or legacy root). */
-export function kitSurface(kit: unknown): Record<string, unknown> {
-  const root = kit as { wip?: { initialKit?: Record<string, unknown> } };
-  const inner = root.wip?.initialKit;
-  if (inner && typeof inner === "object") return inner;
-  return (kit as Record<string, unknown>) ?? {};
-}
-
-function __itemsOf<T>(node: unknown): readonly T[] {
-  if (Array.isArray(node)) return node as readonly T[];
-  if (node && typeof node === "object" && "items" in node && Array.isArray((node as { items: unknown }).items)) return (node as { items: T[] }).items;
-  return [];
-}
-
-function kitJsRows(kit: unknown, key: string): readonly PlainJsonObject[] {
-  return __itemsOf(kitSurface(kit)[key]);
-}
-
-/** @emoji 🧾 Ports flattened from kit `families[].ports` then `types[].ports` on a plain kit snapshot. */
-export function getKitPorts(kit: unknown): KitPortPlain[] {
-  const out: KitPortPlain[] = [];
-  for (const f of __itemsOf(kitSurface(kit)["families"])) {
-    for (const p of __itemsOf((f as { ports?: unknown }).ports)) out.push(p as KitPortPlain);
-  }
-  for (const t of __itemsOf(kitSurface(kit)["types"])) {
-    for (const p of __itemsOf((t as { ports?: unknown }).ports)) out.push(p as KitPortPlain);
-  }
-  return out;
-}
+export { getKitPorts, kitJsRows, kitSurface } from "./plainKit";
 
 /** @emoji 🧾 Gap/shift/rise tuple used by move algorithm stories. */
 export type MoveVector = Readonly<{ gap: number; shift: number; rise: number }>;
@@ -139,20 +105,7 @@ export type MoveVector = Readonly<{ gap: number; shift: number; rise: number }>;
 /** @emoji 🧾 Plain kit JSON / bootstrap bundle passed into algorithm + scene surfaces. */
 export type Kit = unknown;
 
-/** @emoji 🧾 Storybook / diagram design diff (structural; not GraphQL). */
-export type DesignDiff = Readonly<{
-  pieces?: Readonly<{
-    added?: readonly unknown[];
-    removed?: readonly unknown[];
-    updated?: readonly unknown[];
-    modified?: readonly unknown[];
-  }>;
-  connections?: Readonly<{
-    added?: readonly unknown[];
-    removed?: readonly unknown[];
-    updated?: readonly unknown[];
-  }>;
-}>;
+export type { DesignDiff } from "./plainKit";
 
 /** @emoji 🧾 Plain design JSON accepted by {@link SemioDiagram}. */
 export type DesignPlain = Readonly<Record<string, unknown>>;
@@ -406,8 +359,8 @@ const getReferenceLabel = (value: unknown): string | undefined => {
 const buildKitDataFromKit = (kit: unknown | undefined): KitData => {
   if (!kit) return {};
   const surface = kitSurface(kit);
-  const designsRaw = __itemsOf(surface["designs"]);
-  const typesRaw = __itemsOf(surface["types"]);
+  const designsRaw = kitItemsOf(surface["designs"]);
+  const typesRaw = kitItemsOf(surface["types"]);
   const designs = designsRaw.map((d) => {
     const row = d as Record<string, unknown>;
     const parent = row["parent"] as { id?: string } | undefined;
@@ -444,7 +397,7 @@ const buildKitDataFromKit = (kit: unknown | undefined): KitData => {
   }));
   const connectors: KitConnectorArtifact[] = typesRaw.flatMap((t) => {
     const row = t as { id?: string; connectors?: unknown };
-    const conns = __itemsOf(row.connectors);
+    const conns = kitItemsOf(row.connectors);
     return conns.map((c) => {
       const cc = c as Record<string, unknown>;
       const rawName = cc["name"];
@@ -881,8 +834,8 @@ const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined
   const sid = String(shell["id"] ?? "");
   let resolved: Design = design;
   if (sid.length > 0) {
-    const full = __itemsOf(kitSurface(kit)["designs"]).find((d) => String((d as { id?: string }).id ?? "") === sid);
-    const fp = full != null && typeof full === "object" ? __itemsOf((full as PlainJsonObject)["pieces"]) : [];
+    const full = kitItemsOf(kitSurface(kit)["designs"]).find((d) => String((d as { id?: string }).id ?? "") === sid);
+    const fp = full != null && typeof full === "object" ? kitItemsOf((full as PlainJsonObject)["pieces"]) : [];
     if (fp.length > 0) resolved = full as unknown as Design;
   }
   return mcpFlattenDesignForSemioSurface(resolved, kit, "design");
@@ -1585,6 +1538,18 @@ const computeDiagramSelectionOverlayRect = (
 
 // #endregion 🎯SelectionBoundsOverlay
 
+/** u/v from a plain piece row (`center` or nested `pose.center`). */
+const pieceDiagramCenter = (piece: Piece): { u: number; v: number } | undefined => {
+  const c = piece.center;
+  if (c && typeof (c as { u?: unknown }).u === "number" && typeof (c as { v?: unknown }).v === "number") {
+    return { u: (c as { u: number }).u, v: (c as { v: number }).v };
+  }
+  const pose = piece.pose as { center?: { u?: unknown; v?: unknown } } | undefined;
+  const pc = pose?.center;
+  if (pc && typeof pc.u === "number" && typeof pc.v === "number") return { u: pc.u, v: pc.v };
+  return undefined;
+};
+
 /** u/v from `pieces.updated[].diff.center` for diagram layout when a piece omits `center`. */
 const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number; v: number }> => {
   const m = new Map<string, { u: number; v: number }>();
@@ -1618,21 +1583,26 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   const layoutRow = (designDiff ? cloneDesignApplyDiff(design, designDiff) : design) as PlainJsonObject;
   const originRow = __plainFromDesign(design) as PlainJsonObject;
   const originById = new Map(
-    (__itemsOf(originRow["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
+    (kitItemsOf(originRow["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
   );
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
-  const layoutPieces = __itemsOf(layoutRow["pieces"]) as Piece[];
-  const geometryCentersById = new Map(layoutPieces.filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [p.id, p.center] as const));
+  const layoutPieces = kitItemsOf(layoutRow["pieces"]) as Piece[];
+  const geometryCentersById = new Map(
+    layoutPieces
+      .filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0)
+      .map((p) => [p.id, pieceDiagramCenter(p)] as const)
+      .filter((e): e is [string, { u: number; v: number }] => e[1] !== undefined),
+  );
 
   const explicitPiece = collectExplicitPieceDiffStatuses(designDiff);
   const explicitConn = collectExplicitConnectionDiffStatuses(designDiff);
 
   const pointMap = new Map<string, DiagramPoint>();
-  const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
+  const mergedPieces = kitItemsOf(mergedRow["pieces"]) as Piece[];
   mergedPieces.forEach((piece: Piece) => {
     if (!piece.id) return;
-    const center = geometryCentersById.get(piece.id) ?? piece.center ?? layoutCenters.get(piece.id);
-    if (!center || typeof (center as { u?: unknown }).u !== "number" || typeof (center as { v?: unknown }).v !== "number") return;
+    const center = geometryCentersById.get(piece.id) ?? pieceDiagramCenter(piece) ?? layoutCenters.get(piece.id);
+    if (!center) return;
     const status: DiagramEntityStatus = designDiff ? resolvePieceDiagramStatus(piece.id, explicitPiece, piece) : "default";
     pointMap.set(piece.id, { id: piece.id, piece, u: (center as { u: number }).u, v: (center as { v: number }).v, status });
   });
@@ -1642,9 +1612,9 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
       if (st !== "removed" || pointMap.has(id)) continue;
       const op = originById.get(id);
       if (!op?.id) continue;
-      const center = op.center ?? layoutCenters.get(id);
-      if (!center || typeof (center as { u?: unknown }).u !== "number" || typeof (center as { v?: unknown }).v !== "number") continue;
-      pointMap.set(id, { id, piece: op, u: (center as { u: number }).u, v: (center as { v: number }).v, status: "removed" });
+      const center = pieceDiagramCenter(op) ?? layoutCenters.get(id);
+      if (!center) continue;
+      pointMap.set(id, { id, piece: op, u: center.u, v: center.v, status: "removed" });
     }
   }
 
@@ -2310,7 +2280,7 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   if (!hasDiff && hasSelection) {
     // 🔌No diff, selection present: copy selected pieces and connections
     const row = design as PlainJsonObject;
-    const pieceRows = __itemsOf(row["pieces"]) as Piece[];
+    const pieceRows = kitItemsOf(row["pieces"]) as Piece[];
     const pieces = pieceRows.filter((p) => p.id && selectedPieceIds.has(p.id));
     const connections = snapshotDesignConnections(design).filter((c) => c.id && selectedConnectionIds.has(c.id));
     return {
@@ -2847,7 +2817,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
       kind = typeRows.find((candidateKind) => String(candidateKind.name ?? "") === nm);
     }
     let file: SemioFile | undefined;
-    const representations = (kind && typeof kind === "object" && "representations" in kind ? __itemsOf((kind as { representations?: unknown }).representations) : []) as readonly PlainJsonObject[];
+    const representations = (kind && typeof kind === "object" && "representations" in kind ? kitItemsOf((kind as { representations?: unknown }).representations) : []) as readonly PlainJsonObject[];
     let selectedRepresentation = representations.length ? pickPreferredRepresentation(representations, []) : undefined;
     const rep0 = selectedRepresentation as { file?: { id?: string }; name?: string } | undefined;
     if (rep0?.file?.id) file = filesById.get(String(rep0.file.id)) as SemioFile | undefined;
@@ -2888,11 +2858,11 @@ const toSceneVector = (coordinate: PlainJsonValue | undefined | null | unknown):
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
   const mergedRow = (designDiff ? previewDesignWithDiff(design, designDiff) : design) as PlainJsonObject;
-  const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
+  const mergedPieces = kitItemsOf(mergedRow["pieces"]) as Piece[];
   const explicitPiece = collectExplicitPieceDiffStatuses(designDiff);
   const explicitConn = collectExplicitConnectionDiffStatuses(designDiff);
   const originById = new Map(
-    (__itemsOf((__plainFromDesign(design) as PlainJsonObject)["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
+    (kitItemsOf((__plainFromDesign(design) as PlainJsonObject)["pieces"]) as Piece[]).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [String(p.id), p] as const),
   );
 
   const pieceMap = new Map<string, ScenePieceAsset>();
@@ -4263,7 +4233,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
     const mergedRow = (effectiveDiff ? previewDesignWithDiff(design, effectiveDiff) : design) as PlainJsonObject;
-    return __itemsOf(mergedRow["pieces"]).some((p) => (p as Piece).plane && (p as Piece).center);
+    return kitItemsOf(mergedRow["pieces"]).some((p) => (p as Piece).plane && (p as Piece).center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const showSceneColumn = semioDesignShowSceneColumn(splitLayout, hasPlanes);
@@ -4840,7 +4810,7 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
   // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
   // 🔷which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;
-  const candidateHasCenters = __itemsOf((candidateDesign as PlainJsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
+  const candidateHasCenters = kitItemsOf((candidateDesign as PlainJsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
   const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as PlainJsonObject;
   const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designId));
   return {
@@ -5679,7 +5649,7 @@ export const McpDiagramViewer: React.FC = () => {
     })),
   } as unknown as Design;
   const candidateDesign = (designFlat ?? design) as Design | undefined;
-  const candidateHasCenters = __itemsOf((candidateDesign as PlainJsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
+  const candidateHasCenters = kitItemsOf((candidateDesign as PlainJsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
   const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as PlainJsonObject;
   const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
@@ -5905,7 +5875,7 @@ if ((import.meta as any).vitest) {
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(fuller) }],
       });
-      const withScene = __itemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).filter((p) => (p as Piece).plane && (p as Piece).center).length;
+      const withScene = kitItemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).filter((p) => (p as Piece).plane && (p as Piece).center).length;
       expect(withScene).toBe(3);
     });
 
@@ -5965,7 +5935,7 @@ if ((import.meta as any).vitest) {
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(full) }],
       });
-      expect(__itemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).length).toBe(30);
+      expect(kitItemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).length).toBe(30);
     });
 
     it("parses each content block as JSON (text + EmbeddedResource duplicate from engine)", () => {
@@ -5986,7 +5956,7 @@ if ((import.meta as any).vitest) {
           { type: "resource", resource: { uri: "semio://mcp-app/tool-payload", mimeType: "application/json", text: JSON.stringify(full) } },
         ],
       });
-      expect(__itemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).length).toBe(20);
+      expect(kitItemsOf((r?.design as PlainJsonObject | undefined)?.["pieces"]).length).toBe(20);
     });
   });
 
@@ -6217,7 +6187,7 @@ if ((import.meta as any).vitest) {
         },
       } as unknown as DesignDiff) as PlainJsonObject;
 
-      const pcs = __itemsOf(flattened["pieces"]) as Piece[];
+      const pcs = kitItemsOf(flattened["pieces"]) as Piece[];
       expect(pcs[0]?.center).toEqual({ u: 12, v: -4 });
     });
   });
@@ -6364,7 +6334,7 @@ if ((import.meta as any).vitest) {
       expect(design).toBeTruthy();
 
       const preview = resolveKitArtifactDesignForPreview(design!, kit) as PlainJsonObject;
-      const previewPieces = __itemsOf(preview["pieces"]) as Piece[];
+      const previewPieces = kitItemsOf(preview["pieces"]) as Piece[];
       const piecesWithPlaneAndCenter = previewPieces.filter((p) => p.plane && p.center).length;
 
       expect(previewPieces.length).toBeGreaterThan(100);
@@ -7260,14 +7230,14 @@ if ((import.meta as any).vitest) {
 
     it("copies selected pieces and connections when no diff and selection present", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1", "p2"], connectionIds: ["c1"] });
-      expect(__itemsOf((result.design as PlainJsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1", "p2"]);
+      expect(kitItemsOf((result.design as PlainJsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1", "p2"]);
       expect(snapshotDesignConnections(result.design!).map((c) => c.id)).toEqual(["c1"]);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("omits pieces/connections arrays when none are selected in a no-diff selection", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1"], connectionIds: [] });
-      expect(__itemsOf((result.design as PlainJsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1"]);
+      expect(kitItemsOf((result.design as PlainJsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1"]);
       expect((result.design as unknown as { connections?: unknown }).connections).toBeUndefined();
     });
 
@@ -7481,7 +7451,7 @@ const resolveAlgorithmConnectionDiffId = (connectionLike: unknown, fallbackIndex
 
 const resolveAlgorithmPieceDiffLabel = (design: Design | undefined, pieceLike: unknown, fallbackIndex: number): string => {
   const pieceId = resolveAlgorithmPieceDiffId(pieceLike, fallbackIndex);
-  const pieceRows = __itemsOf((design as PlainJsonObject | undefined)?.["pieces"]) as Piece[];
+  const pieceRows = kitItemsOf((design as PlainJsonObject | undefined)?.["pieces"]) as Piece[];
   const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || pieceRows.find((piece) => piece.id === pieceId)?.name;
   return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceId;
 };
@@ -7596,7 +7566,7 @@ const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connect
       ? connectionLike.child.piece.id
       : undefined) ?? sourceConnection?.child?.piece?.id;
 
-  const pieceRows = __itemsOf((design as PlainJsonObject | undefined)?.["pieces"]) as Piece[];
+  const pieceRows = kitItemsOf((design as PlainJsonObject | undefined)?.["pieces"]) as Piece[];
   const connectedPieceName = connectedPieceId ? (pieceRows.find((piece) => piece.id === connectedPieceId)?.name ?? connectedPieceId) : undefined;
   const connectingPieceName = connectingPieceId ? (pieceRows.find((piece) => piece.id === connectingPieceId)?.name ?? connectingPieceId) : undefined;
   if (connectedPieceName || connectingPieceName) {
@@ -8073,7 +8043,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
 
   const design = ctx.design;
   const designRow = design as PlainJsonObject | undefined;
-  const allPieces = __itemsOf(designRow?.["pieces"]) as Piece[];
+  const allPieces = kitItemsOf(designRow?.["pieces"]) as Piece[];
   const selectedPieces = allPieces.filter((p) => p.id && ctx.selectedPieceIds.includes(String(p.id)));
   const visibleDiffCategories = ctx.diffTreeCategories;
   const visibleDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.checkedCount, 0);
@@ -8338,7 +8308,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     [id],
   );
 
-  const pieceCount = __itemsOf((context.design as PlainJsonObject | undefined)?.["pieces"]).length;
+  const pieceCount = kitItemsOf((context.design as PlainJsonObject | undefined)?.["pieces"]).length;
 
   const footerItems: FooterItem[] = React.useMemo(
     () => [

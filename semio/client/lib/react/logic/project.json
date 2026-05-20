@@ -16,11 +16,12 @@
       "dependsOn": ["@semio/rs:build"],
       "options": {
         "cwd": "semio/client/lib/react/logic",
-        "command": "bunx vitest run --config vite.config.ts index.tsx",
+        "command": "bunx vitest run --config vite.config.ts --sequence.concurrent false index.tsx",
         "forwardAllArgs": true,
         "env": {
           "SEMIO_REACT_RUN_EMBEDDED_TESTS": "1",
-          "SEMIO_JS_RUN_EMBEDDED_TESTS": "0"
+          "SEMIO_JS_RUN_EMBEDDED_TESTS": "0",
+          "NODE_OPTIONS": "--max-old-space-size=16384"
         }
       }
     }

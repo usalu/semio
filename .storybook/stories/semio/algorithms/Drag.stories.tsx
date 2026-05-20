@@ -1,22 +1,33 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
-// Specs: Pure UI proxy to flatDesign + dragPieces. No domain logic. All designs include connections.
-// Summary: Flat input design via flatDesign (semio/rs WASM); dragPieces returns flat input, output with connections, and drag diff.
+// Specs: Pure UI proxy to flatDesign + dragPieces via shared story hooks.
+// Summary: IPO drag board — WASM flat input, layout diff, dragPieces output + diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff } from "@semio/react";
+import type { Design } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
-import { dragPieces, flatDesign } from "@semio/algorithms";
+import {
+  AlgorithmApp,
+  WindowKind,
+  dragPieces,
+  mergeKitDesigns,
+  pieceIdsFromWire,
+  useAlgorithmAsyncRun,
+  useFlatDesignPreview,
+  useReconciledPieceSelection,
+  type AlgorithmContextValue,
+  type AlgorithmWindowDef,
+} from "@semio/algorithms";
 
 import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
 import { DragDesign, DragOffset, DragPieces } from "@semio/assets";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };
+const defaultPieceIds = pieceIdsFromWire(DragPieces as { pieces?: { id?: string }[] });
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
@@ -26,75 +37,16 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DragFrame() {
-  const kit = React.useMemo(
-    () => ({
-      ...metabolismKit,
-      designs: [...((metabolismKit as any).designs || []), rawDesign],
-    }),
-    [],
-  ) as any;
-
-  const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
-  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>((DragPieces as any).pieces?.map((p: any) => p.id) ?? []);
+  const kit = React.useMemo(() => mergeKitDesigns(metabolismKit, rawDesign as Record<string, unknown>), []);
   const [vec, setVec] = React.useState(DragOffset);
-  const [outputDesign, setOutputDesign] = React.useState<Design | undefined>(undefined);
-  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
-  const [dragError, setDragError] = React.useState<string | undefined>(undefined);
+  const { flatInputDesign, diagramLayoutDiff, loading: flatLoading, ready } = useFlatDesignPreview(kit, rawDesign.id);
+  const { selectedPieceIds, setSelectedPieceIds } = useReconciledPieceSelection(defaultPieceIds, rawDesign, defaultPieceIds, ready);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setFlatInputDesign(null);
-    setOutputDesign(undefined);
-    setDesignDiff(undefined);
-    setDragError(undefined);
-    void (async () => {
-      const flat = await flatDesign(kit, rawDesign.id);
-      if (cancelled) return;
-      setFlatInputDesign(flat);
-      setSelectedPieceIds((prev) => {
-        const pieceIds = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.id));
-        const filtered = prev.filter((g) => pieceIds.has(g));
-        if (filtered.length > 0) return filtered;
-        return (DragPieces as any).pieces?.map((p: any) => p.id) ?? [];
-      });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kit]);
-
-  React.useEffect(() => {
-    if (!flatInputDesign) return;
-    let cancelled = false;
-    void (async () => {
-      if (selectedPieceIds.length === 0) {
-        if (!cancelled) {
-          setOutputDesign(undefined);
-          setDesignDiff(undefined);
-        }
-        return;
-      }
-      setOutputDesign(undefined);
-      setDesignDiff(undefined);
-      setDragError(undefined);
-      try {
-        const { output, dragDiff } = await dragPieces(kit, rawDesign as Design, selectedPieceIds, vec);
-        if (!cancelled) {
-          setDesignDiff(dragDiff);
-          setOutputDesign(output);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setDesignDiff(undefined);
-          setOutputDesign(undefined);
-          setDragError(e instanceof Error ? e.message : String(e));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [flatInputDesign, kit, selectedPieceIds, vec]);
+  const { result, loading: runLoading, error } = useAlgorithmAsyncRun(
+    ready && selectedPieceIds.length > 0,
+    () => dragPieces(kit, rawDesign as Design, selectedPieceIds, vec),
+    [kit, selectedPieceIds, vec.u, vec.v],
+  );
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
@@ -106,12 +58,13 @@ function DragFrame() {
       vecMax: { u: 10, v: 10 },
       selectedPieceIds,
       onSelectedPieceIdsChange: setSelectedPieceIds,
-      designDiff,
+      designDiff: result?.dragDiff,
+      diagramLayoutDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
-      outputDesign: (outputDesign ?? flatInputDesign ?? rawDesign) as Design,
-      error: dragError ? dragError : !flatInputDesign ? "Loading drag preview…" : selectedPieceIds.length === 0 ? "Select at least one piece to drag." : !outputDesign ? "Loading drag result…" : undefined,
+      outputDesign: (result?.output ?? flatInputDesign ?? rawDesign) as Design,
+      error: error ?? (flatLoading ? "Loading drag preview…" : selectedPieceIds.length === 0 ? "Select at least one piece to drag." : runLoading ? "Loading drag result…" : undefined),
     }),
-    [kit, flatInputDesign, selectedPieceIds, vec, designDiff, outputDesign, dragError],
+    [kit, flatInputDesign, diagramLayoutDiff, selectedPieceIds, vec, result, flatLoading, runLoading, error],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

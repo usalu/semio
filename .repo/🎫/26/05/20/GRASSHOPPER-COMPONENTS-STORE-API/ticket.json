@@ -1,0 +1,14 @@
+{
+  "title": "Grasshopper Components Store Api",
+  "emoji": "🐙",
+  "status": "closed",
+  "description": "Refactor Load Kit, Save Kit, Update Kit Grasshopper components to use StoreKitIO/StoreSession cleanly; centralize directory resolution and diff+save; add tests.",
+  "summary": "Refactored Grasshopper kit persistence (Load Kit, Save Kit, Update Kit) onto shared StoreKitIO/StoreSession paths: KitDirectoryResolver, KitRuntimeState.Remember/TryGetCached, StoreKitIO.ApplyKitDiffAndSaveToFolder; fixed RegisterPersistence typo; added StoreKitIO and GH persistence component tests. Semio store tests 11/11 pass; Semio.Grasshopper net8 build clean.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1464"
+  },
+  "goal": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "sessions": [
+    "⚪09ffaee0063943c8836db193231c2e7f"
+  ]
+}

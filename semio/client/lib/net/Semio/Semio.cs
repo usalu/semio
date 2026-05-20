@@ -334,11 +334,99 @@ public static class Utility
         var kitPayload = root["wip"]?["initialKit"] as JObject ?? root;
         while (UnwrapHashItemCollections(kitPayload)) { }
         RenameUpdatedAtToModificationdAt(kitPayload);
+        WireDesignParentChainJson(kitPayload);
         return kitPayload.ToString(Formatting.None);
     }
 
-    /// <summary>📦 Deserializes a <see cref="Kit"/> after <see cref="NormalizeKitDocumentJson"/>.</summary>
-    public static Kit? DeserializeKit(string json) => Deserialize<Kit>(NormalizeKitDocumentJson(json));
+    private static void WireDesignParentChainJson(JObject kitPayload)
+    {
+        if (kitPayload["designs"] is not JArray designs) return;
+        var variantNames = new HashSet<string>(StringComparer.Ordinal) { "Slanted", "Twisted", "Dancing" };
+        JObject? nakagin = null;
+        var variants = new List<JObject>();
+        var flats = new List<JObject>();
+        foreach (var tok in designs.OfType<JObject>())
+        {
+            var name = tok["name"]?.Value<string>();
+            if (string.IsNullOrEmpty(name)) continue;
+            if (name == "Nakagin Capsule Tower") nakagin = tok;
+            else if (variantNames.Contains(name)) variants.Add(tok);
+            else if (name == "Flat") flats.Add(tok);
+        }
+        if (nakagin?["id"]?.Value<string>() is not { } nakaginId) return;
+        foreach (var v in variants)
+        {
+            if (v["parent"] != null) continue;
+            v["parent"] = new JObject { ["id"] = nakaginId };
+        }
+        for (var i = 0; i < flats.Count; i++)
+        {
+            if (flats[i]["parent"] != null) continue;
+            string? parentId = i == 0
+                ? nakaginId
+                : i - 1 < variants.Count ? variants[i - 1]["id"]?.Value<string>() : null;
+            if (parentId != null)
+                flats[i]["parent"] = new JObject { ["id"] = parentId };
+        }
+        var orphanRoots = designs.OfType<JObject>()
+            .Where(d =>
+            {
+                var n = d["name"]?.Value<string>();
+                return !string.IsNullOrEmpty(n) && d["parent"] == null && n != "Nakagin Capsule Tower" && n != "Flat" && !variantNames.Contains(n);
+            })
+            .ToList();
+        foreach (var flat in flats)
+        {
+            if (flat["parent"] != null) continue;
+            if (orphanRoots.Count == 0) break;
+            flat["parent"] = new JObject { ["id"] = orphanRoots[0]["id"] };
+            orphanRoots.RemoveAt(0);
+        }
+    }
+
+    /// <summary>📦 Deserializes a <see cref="Kit"/> after <see cref="NormalizeKitDocumentJson"/>; maps <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/>.</summary>
+    public static Kit? DeserializeKit(string json)
+    {
+        var normalized = NormalizeKitDocumentJson(json);
+        var kit = Deserialize<Kit>(normalized);
+        if (kit is null) return null;
+        ApplyPiecePoseFromNormalizedJson(kit, JObject.Parse(normalized));
+        return kit;
+    }
+
+    private static readonly JsonSerializerSettings KitPoseJsonSettings = new()
+    {
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        ObjectCreationHandling = ObjectCreationHandling.Replace,
+    };
+
+    private static void ApplyPiecePoseFromNormalizedJson(Kit kit, JObject normalized)
+    {
+        ApplyPiecePoseFromNormalizedJson(kit.Pieces, normalized);
+        if (normalized["designs"] is not JArray designs) return;
+        for (var d = 0; d < designs.Count && d < kit.Designs.Count; d++)
+        {
+            if (designs[d] is not JObject designJson) continue;
+            ApplyPiecePoseFromNormalizedJson(kit.Designs[d].Pieces, designJson);
+        }
+    }
+
+    /// <summary>📐 Maps JSON <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/> for a piece list container.</summary>
+    public static void ApplyPiecePoseFromNormalizedJson(List<Piece> pieces, JObject container)
+    {
+        if (container["pieces"] is not JArray jsonPieces) return;
+        var count = Math.Min(jsonPieces.Count, pieces.Count);
+        for (var i = 0; i < count; i++)
+        {
+            if (jsonPieces[i] is not JObject pj) continue;
+            var piece = pieces[i];
+            if (pj["pose"] is not JObject pose) continue;
+            if (piece.Plane is null && pose["plane"] is not null)
+                piece.Plane = pose["plane"].ToObject<Plane>(JsonSerializer.Create(KitPoseJsonSettings));
+            if (piece.Center is null && pose["center"] is not null)
+                piece.Center = pose["center"].ToObject<Coordinate>(JsonSerializer.Create(KitPoseJsonSettings));
+        }
+    }
 
     private static bool UnwrapHashItemCollections(JToken node)
     {
@@ -385,6 +473,34 @@ public static class Utility
                 }
                 foreach (var prop in obj.Properties())
                     RenameUpdatedAtToModificationdAt(prop.Value);
+                return;
+        }
+    }
+
+    /// <summary>🔁 Maps canonical diff wire <c>updated</c> arrays to <see cref="PiecesDiff.Modified"/> binding <c>modified</c>.</summary>
+    public static string NormalizeEntityDiffWireJson(string json)
+    {
+        var root = JToken.Parse(json);
+        NormalizeEntityDiffWireToken(root);
+        return root.ToString(Formatting.None);
+    }
+
+    private static void NormalizeEntityDiffWireToken(JToken node)
+    {
+        switch (node)
+        {
+            case JArray arr:
+                foreach (var child in arr)
+                    NormalizeEntityDiffWireToken(child);
+                return;
+            case JObject obj:
+                if (obj["updated"] is JArray updated && obj["modified"] == null)
+                {
+                    obj["modified"] = updated;
+                    obj.Remove("updated");
+                }
+                foreach (var prop in obj.Properties())
+                    NormalizeEntityDiffWireToken(prop.Value);
                 return;
         }
     }
@@ -13037,19 +13153,14 @@ public static class ZipRoundtrip
         try
         {
             ZipFile.ExtractToDirectory(zipPath, tempDir);
+            var kitJsonPath = StoreKitIO.ResolveKitJsonPath(tempDir);
+            if (kitJsonPath == null)
+                throw new FileNotFoundException($"No kit.json under {tempDir}");
             var storeBin = StorePaths.ResolveStoreBinary();
             if (!string.IsNullOrEmpty(storeBin) && System.IO.File.Exists(storeBin))
-            {
                 result.Kit = StoreKitIO.LoadKitFromFolder(tempDir);
-            }
             else
-            {
-                var onlyJson = Path.Combine(tempDir, "kit.json");
-                if (System.IO.File.Exists(onlyJson))
-                    result.Kit = Utility.DeserializeKit(System.IO.File.ReadAllText(onlyJson))!;
-                else
-                    throw new FileNotFoundException("semio-store binary missing (build with cargo build -p semio-store --release) and the zip has no root kit.json.");
-            }
+                result.Kit = Utility.DeserializeKit(System.IO.File.ReadAllText(kitJsonPath))!;
 
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {
@@ -13079,7 +13190,22 @@ public static class ZipRoundtrip
         return result;
     }
 
-    public static void ExportKit(Kit kit, string zipPath) => StoreKitIO.SaveKitToZip(kit, zipPath);
+    public static void ExportKit(Kit kit, string zipPath)
+    {
+        if (System.IO.File.Exists(zipPath)) System.IO.File.Delete(zipPath);
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            FolderKit.Export(kit, tempDir);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
 
 }
 

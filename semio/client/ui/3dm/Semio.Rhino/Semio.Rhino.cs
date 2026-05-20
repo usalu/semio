@@ -264,7 +264,7 @@ public class DocumentBinding : IBridgeBinding
             var doc = RhinoDoc.ActiveDoc;
             return Task.FromResult<object?>(new
             {
-                system = doc?.RepresentationUnitSystem.ToString() ?? "None"
+                system = doc?.ModelUnitSystem.ToString() ?? "None"
             });
         },
         ["getLayers"] = _ =>

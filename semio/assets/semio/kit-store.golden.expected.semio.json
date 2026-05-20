@@ -1,10 +1,23 @@
 {
   "kind": "semio.kit_store.golden.expected",
-  "schema": "🎆26🌙06⬆️1",
+  "schema": "\ud83c\udf8626\ud83c\udf1906\u2b06\ufe0f1",
   "invariants": {
     "designCount": 1,
     "totalPieces": 3,
-    "sortedPieceCenters": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+    "sortedPieceCenters": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        3.0,
+        4.0
+      ],
+      [
+        5.0,
+        6.0
+      ]
+    ]
   },
-  "projectionFingerprint": "PLACEHOLDER_RUN_CARGO_TEST"
+  "projectionFingerprint": "1a9a217ca1ac63d89883abe5bc13e36268becf6cb4ef743105af0a11fcf3653a"
 }

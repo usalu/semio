@@ -5104,6 +5104,17 @@ if (boardVitest) {
 			).toBeNull();
 		});
 
+		it("rejects WASM kind catalog rows that use legacy `label` instead of `name`", () => {
+			const session = new BoardSession();
+			expect(() =>
+				session.setBoardKindCatalogsJson(
+					JSON.stringify({
+						handleKinds: [{ id: "h", label: "legacy", color: "#112233" }],
+					}),
+				),
+			).toThrow(/legacy label/);
+		});
+
 		it("parses optional nodeKind on circle and rectangle fixture nodes", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },

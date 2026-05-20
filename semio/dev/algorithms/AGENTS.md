@@ -11,7 +11,7 @@ bundle:
 
 ## Strict layering (algorithms Storybook)
 
-All algorithm story paths use **`@semio/js` `KitStore`** as the browser-facing `semio/rs` re-export for kit reads/writes. For **UI** and shared DTO shapes, use **`@semio/react`** and **`@semio/ui`** re-exports.
+All algorithm story paths use **`@semio/js` `Session`** (`openSessionInMemory` + `Store.installProjection`) as the browser-facing `semio/rs` GraphQL wire. For **UI** and shared DTO shapes, use **`@semio/react`** and **`@semio/ui`** re-exports.
 
 ## 🕸️ Systems
 

@@ -9866,6 +9866,38 @@ public readonly struct UpdateKitOutput
     }
 }
 
+/// <summary>📁 Resolves kit folder from GH data access or document path.</summary>
+public static class KitDirectoryResolver
+{
+    public static string Resolve(IGH_DataAccess DA, int directoryParamIndex, GH_Document? document)
+    {
+        var directory = "";
+        if (!DA.GetData(directoryParamIndex, ref directory) || string.IsNullOrWhiteSpace(directory))
+        {
+            directory = document is { IsFilePathDefined: true } fileDoc
+                ? Path.GetDirectoryName(fileDoc.FilePath) ?? Directory.GetCurrentDirectory()
+                : Directory.GetCurrentDirectory();
+        }
+        return directory;
+    }
+}
+
+/// <summary>💾 In-process kit cache for Update Kit when the same folder was loaded in-session.</summary>
+public static class KitRuntimeState
+{
+    public static Kit? StaticKit { get; private set; }
+    public static string StaticKitDirectory { get; private set; } = "";
+
+    public static void Remember(string directory, Kit kit)
+    {
+        StaticKitDirectory = directory;
+        StaticKit = kit;
+    }
+
+    public static Kit? TryGetCached(string directory) =>
+        StaticKit is not null && StaticKitDirectory == directory ? StaticKit : null;
+}
+
 public abstract class KitOperationComponent<TInput, TOutput> : Component
 {
     protected KitOperationComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
@@ -9913,19 +9945,15 @@ public abstract class KitOperationComponent<TInput, TOutput> : Component
 #region ⛑️Persistence
 // Load/save kits through semio-store (see Semio/Store/StoreKitIO in the net bundle).
 
-public static class KitRuntimeState
-{
-    public static Kit? StaticKit { get; set; }
-    public static string StaticKitDirectory { get; set; } = "";
-}
-
 public abstract class PersistenceComponent<TPersistentInput, TResponse> : KitOperationComponent<PersistenceRequest<TPersistentInput>, TResponse>
 {
+    protected const int DirectoryParamIndexOffset = -2;
+
     protected PersistenceComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
-    protected virtual void RegisterPersitenceInputParams(GH_InputParamManager pManager) { }
+    protected virtual void RegisterPersistenceInputParams(GH_InputParamManager pManager) { }
     protected override void RegisterKitInputParams(GH_InputParamManager pManager)
     {
-        RegisterPersitenceInputParams(pManager);
+        RegisterPersistenceInputParams(pManager);
         var amountCustomParams = pManager.ParamCount;
         pManager.AddTextParameter("Directory", "Di?",
             "Optional directory path of the local kit.\n" +
@@ -9933,10 +9961,10 @@ public abstract class PersistenceComponent<TPersistentInput, TResponse> : KitOpe
             GH_ParamAccess.item);
         pManager[amountCustomParams].Optional = true;
     }
-    protected virtual void RegisterPersitenceOutputParams(GH_OutputParamManager pManager) { }
+    protected virtual void RegisterPersistenceOutputParams(GH_OutputParamManager pManager) { }
     protected override void RegisterKitOutputParams(GH_OutputParamManager pManager)
     {
-        RegisterPersitenceOutputParams(pManager);
+        RegisterPersistenceOutputParams(pManager);
     }
     protected virtual bool TryGetPersistentInput(IGH_DataAccess DA, out TPersistentInput input)
     {
@@ -9944,15 +9972,8 @@ public abstract class PersistenceComponent<TPersistentInput, TResponse> : KitOpe
         return true;
     }
 
-    protected string ResolveKitDirectory(IGH_DataAccess DA)
-    {
-        var directory = "";
-        if (!DA.GetData(Params.Input.Count - 2, ref directory) || string.IsNullOrEmpty(directory))
-            directory = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        return directory;
-    }
+    protected string ResolveKitDirectory(IGH_DataAccess DA) =>
+        KitDirectoryResolver.Resolve(DA, Params.Input.Count + DirectoryParamIndexOffset, OnPingDocument());
 
     protected override bool TryGetInput(IGH_DataAccess DA, out PersistenceRequest<TPersistentInput> input)
     {
@@ -9977,7 +9998,7 @@ public class LoadKitComponent : PersistenceComponent<Unit, Kit>
     public override Guid ComponentGuid => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
     protected override Bitmap Icon => Resources.kit_load_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
+    protected override void RegisterPersistenceOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
         pManager.AddTextParameter("Local Directory", "Di",
@@ -9985,20 +10006,17 @@ public class LoadKitComponent : PersistenceComponent<Unit, Kit>
             GH_ParamAccess.item);
     }
 
-    protected override Kit RunOnKit(string directory, Unit input) => StoreKitIO.LoadKitFromFolder(directory);
+    protected override Kit RunOnKit(string directory, Unit input)
+    {
+        var kit = StoreKitIO.LoadKitFromFolder(directory);
+        KitRuntimeState.Remember(directory, kit);
+        return kit;
+    }
 
     protected override void SetOutput(IGH_DataAccess DA, Kit response)
     {
         DA.SetData(1, new KitGoo(response));
-        var directory = "";
-        DA.GetData(Params.Input.Count - 2, ref directory);
-        if (string.IsNullOrEmpty(directory))
-        {
-            directory = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        }
-        DA.SetData(2, directory);
+        DA.SetData(2, ResolveKitDirectory(DA));
     }
 }
 
@@ -10010,7 +10028,7 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
     public override Guid ComponentGuid => new("A7E3B651-581E-4595-8DAC-132F10BD87FC");
     protected override Bitmap Icon => Resources.kit_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
+    protected override void RegisterPersistenceInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "Kt", "The kit to save.", GH_ParamAccess.item);
     }
@@ -10030,6 +10048,7 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
     protected override Kit RunOnKit(string directory, Kit input)
     {
         StoreKitIO.SaveKitToFolder(input, directory);
+        KitRuntimeState.Remember(directory, input);
         return input;
     }
 }
@@ -10066,13 +10085,7 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
             input = default;
             return false;
         }
-        var directory = "";
-        if (!DA.GetData(1, ref directory) || string.IsNullOrWhiteSpace(directory))
-        {
-            directory = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        }
+        var directory = KitDirectoryResolver.Resolve(DA, 1, OnPingDocument());
         input = new UpdateKitInput(directory, diffGoo.Value);
         return true;
     }
@@ -10080,15 +10093,11 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
     protected override UpdateKitOutput Run(UpdateKitInput input)
     {
         var directory = input.Directory;
-        var diff = input.Diff;
-
-        var baseKit = KitRuntimeState.StaticKit is not null && KitRuntimeState.StaticKitDirectory == directory
-            ? KitRuntimeState.StaticKit
-            : StoreKitIO.LoadKitFromFolder(directory);
-        var updatedKit = Kit.ApplyDiff(baseKit, diff);
-        StoreKitIO.SaveKitToFolder(updatedKit, directory);
-        KitRuntimeState.StaticKit = updatedKit;
-        KitRuntimeState.StaticKitDirectory = directory;
+        var updatedKit = StoreKitIO.ApplyKitDiffAndSaveToFolder(
+            directory,
+            input.Diff,
+            KitRuntimeState.TryGetCached(directory));
+        KitRuntimeState.Remember(directory, updatedKit);
         return new UpdateKitOutput(directory, updatedKit);
     }
 

@@ -3396,6 +3396,16 @@ mod board_host {
 			}
 		}
 
+		fn reject_kind_catalog_row_legacy_label(
+			row: &serde_json::Map<String, serde_json::Value>,
+			slice: &str,
+		) -> Result<(), String> {
+			if row.contains_key("label") {
+				return Err(format!("{slice} kind row must use name, not legacy label"));
+			}
+			Ok(())
+		}
+
 		/// @emoji 🧩 JSON object `{ handleKinds?, wireKinds?, nodeKinds?, edgeKinds? }` replacing prior catalogs (omit arrays to clear that slice).
 		pub fn set_board_kind_catalogs_from_json(&mut self, json: &str) -> Result<(), String> {
 			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
@@ -3404,6 +3414,7 @@ mod board_host {
 				let mut next = BTreeMap::new();
 				for row in arr {
 					let ho = row.as_object().ok_or("handle kind row must be object")?;
+					Self::reject_kind_catalog_row_legacy_label(ho, "handle")?;
 					let id = ho
 						.get("id")
 						.and_then(|x| x.as_str())
@@ -3447,6 +3458,7 @@ mod board_host {
 				let mut next = BTreeMap::new();
 				for row in arr {
 					let wo = row.as_object().ok_or("wire kind row must be object")?;
+					Self::reject_kind_catalog_row_legacy_label(wo, "wire")?;
 					let id = wo
 						.get("id")
 						.and_then(|x| x.as_str())
@@ -3474,6 +3486,7 @@ mod board_host {
 				let mut next = BTreeMap::new();
 				for row in arr {
 					let no = row.as_object().ok_or("node kind row must be object")?;
+					Self::reject_kind_catalog_row_legacy_label(no, "node")?;
 					let id = no
 						.get("id")
 						.and_then(|x| x.as_str())
@@ -3496,6 +3509,7 @@ mod board_host {
 				let mut next = BTreeMap::new();
 				for row in arr {
 					let eo = row.as_object().ok_or("edge kind row must be object")?;
+					Self::reject_kind_catalog_row_legacy_label(eo, "edge")?;
 					let id = eo
 						.get("id")
 						.and_then(|x| x.as_str())
@@ -9250,10 +9264,10 @@ mod host_tests {
 		h.set_board_kind_catalogs_from_json(
 			&serde_json::json!({
 				"handleKinds": [
-					{"id":"core.rect.bottom","label":"B","color":"#112233","defaultWireKind":"link.w"},
-					{"id":"core.rect.top","label":"T","color":"#112233","defaultWireKind":"link.w"}
+					{"id":"core.rect.bottom","name":"B","color":"#112233","defaultWireKind":"link.w"},
+					{"id":"core.rect.top","name":"T","color":"#112233","defaultWireKind":"link.w"}
 				],
-				"wireKinds": [{"id":"link.w","label":"W","defaultEdgeKind":"link.e"}],
+				"wireKinds": [{"id":"link.w","name":"W","defaultEdgeKind":"link.e"}],
 			})
 			.to_string(),
 		)
@@ -9710,8 +9724,8 @@ mod host_tests {
 		h.set_size(800, 600, 1.0);
 		h.set_board_kind_catalogs_from_json(
 			&serde_json::json!({
-				"handleKinds": [{"id":"slot-a","label":"Slot A","color":"#112233","scale":2.0}],
-				"nodeKinds": [{"id":"kind-a","label":"Kind A","scale":1.5}],
+				"handleKinds": [{"id":"slot-a","name":"Slot A","color":"#112233","scale":2.0}],
+				"nodeKinds": [{"id":"kind-a","name":"Kind A","scale":1.5}],
 			})
 			.to_string(),
 		)
@@ -9734,8 +9748,8 @@ mod host_tests {
 		set_detail_lod(&mut h);
 		h.set_board_kind_catalogs_from_json(
 			&serde_json::json!({
-				"handleKinds": [{"id":"parent","label":"P","color":"#112233","defaultWireKind":"flow.wire"}],
-				"wireKinds": [{"id":"flow.wire","label":"W","defaultEdgeKind":"flow.edge"}],
+				"handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
+				"wireKinds": [{"id":"flow.wire","name":"W","defaultEdgeKind":"flow.edge"}],
 			})
 			.to_string(),
 		)
@@ -9765,9 +9779,9 @@ mod host_tests {
 		h.set_board_kind_catalogs_from_json(
 			&serde_json::json!({
 				"handleKinds": [
-					{"id":"space","label":"S","color":"hsl(206 52% 48%)"},
-					{"id":"comma","label":"C","color":"hsl(206, 52%, 48%)"},
-					{"id":"slash","label":"Sl","color":"hsl(206 52% 48% / 0.5)"},
+					{"id":"space","name":"S","color":"hsl(206 52% 48%)"},
+					{"id":"comma","name":"C","color":"hsl(206, 52%, 48%)"},
+					{"id":"slash","name":"Sl","color":"hsl(206 52% 48% / 0.5)"},
 				],
 			})
 			.to_string(),
@@ -9781,14 +9795,25 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
+		let mut h = BoardHost::new();
+		let err = h
+			.set_board_kind_catalogs_from_json(
+				&serde_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string(),
+			)
+			.unwrap_err();
+		assert!(err.contains("legacy label"));
+	}
+
+	#[test]
 	fn board_host_link_important_pair_overrides_lower_specificity_filter() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		set_detail_lod(&mut h);
 		h.set_board_kind_catalogs_from_json(
 			&serde_json::json!({
-				"handleKinds": [{"id":"parent","label":"P","color":"#112233","defaultWireKind":"flow.wire"}],
-				"wireKinds": [{"id":"flow.wire","label":"W"}],
+				"handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
+				"wireKinds": [{"id":"flow.wire","name":"W"}],
 			})
 			.to_string(),
 		)

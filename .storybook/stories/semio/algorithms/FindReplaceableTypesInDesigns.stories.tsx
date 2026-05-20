@@ -6,42 +6,29 @@
 // #endregion 🧲Header
 
 import {
-	getKitPorts,
-	Kit,
-	type Design,
-	AlgorithmApp,
-	WindowKind,
-	type AlgorithmContextValue,
-	type AlgorithmWindowDef,
-	useAlgorithm,
-	flatDesign,
+  AlgorithmApp,
+  NAKAGIN_CAPSULE_TOWER_DESIGN_ID,
+  WindowKind,
+  designFromKit,
+  designsFromKit,
+  findReplaceableTypesForSelection,
+  nakaginStoryCopySelection,
+  typesFromKit,
+  useAlgorithm,
+  useFlatDesignPreview,
+  type AlgorithmContextValue,
+  type AlgorithmWindowDef,
+  type Design,
 } from "@semio/algorithms";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { NakaginCapsuleTowerCopySelection } from "@semio/assets";
 import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
-
-/** Omits t_f1_b_c1 and t_f0→t_f1 link so t_f1 is external-stub in clipboard; includes t_f5/regressions. */
-const omitFromCopySelectionPieceIds = new Set<string>(["31be08e1-e75c-4024-86b4-c3c6d3939fbb"]);
-const omitFromCopySelectionConnectionIds = new Set<string>(["b1ecc6c5-722a-4814-9047-a87222bbaa4d"]);
-const selectionPieceIds = Array.from(
-  new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).pieces ?? []) as { id: string }[]).map((p) => p.id), "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9", "5feebbf8-33d9-41ad-a13a-24c271a1860b"].filter((g) => !omitFromCopySelectionPieceIds.has(g)),
-  ),
-) as string[];
-const selectionConnectionIds = Array.from(
-  new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).connections ?? []) as { id: string }[]).map((c) => c.id), "eb8ce9ce-091c-4495-a651-fa703748dfef", "4d5ff333-d70a-43e1-8b7a-8849c8c91405"].filter(
-      (g) => !omitFromCopySelectionConnectionIds.has(g),
-    ),
-  ),
-) as string[];
+const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
+const { pieceIds: selectionPieceIds, connectionIds: selectionConnectionIds } = nakaginStoryCopySelection();
 
 //#region 🔍FindReplaceableTypesInDesigns
 // Summary: Renders the full Nakagin Capsule Tower source selection and a live compatible tree from the selected pieces.
@@ -93,11 +80,10 @@ function renderCompatibleDesignTreeNode(node: CompatibleDesignTreeNode, depth = 
 }
 
 const CompatibleTypesAndDesignsWindow: React.FC = () => {
-  const { kit, design, selectedPieceIds } = useAlgorithm();
-  const allTypes = (kit.types ?? []) as { id: string; name?: string }[];
-  const allDesigns = (kit.designs ?? []) as Design[];
-  const allPorts = React.useMemo(() => getKitPorts(kit as any), [kit]);
-  const result = React.useMemo(() => Kit.ensure(kit).findReplaceableTypesInDesignsForPiecesInDesignOp(design, allDesigns, kit.types ?? [], allPorts, { pieces: selectedPieceIds }), [allDesigns, allPorts, design, kit, selectedPieceIds]);
+  const { kit, selectedPieceIds } = useAlgorithm();
+  const allTypes = typesFromKit(kit);
+  const allDesigns = designsFromKit(kit) as Design[];
+  const result = React.useMemo(() => findReplaceableTypesForSelection({ pieces: selectedPieceIds }), [selectedPieceIds]);
   const typeById = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.id, nextType] as const)), [allTypes]);
   const visibleDesignIds = React.useMemo(() => new Set(result.designs), [result.designs]);
   const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignIds), [allDesigns, visibleDesignIds]);
@@ -161,37 +147,26 @@ const DEFAULT_LAYOUT = {
 };
 
 function FindReplaceableTypesInDesignsFrame() {
-  const kit = metabolismKit as any;
-  const [flatSourceDesign, setFlatSourceDesign] = React.useState<Design | null>(null);
+  const kit = metabolismKit;
+  const { flatInputDesign, diagramLayoutDiff, loading } = useFlatDesignPreview(kit, String(rawDesign.id ?? NAKAGIN_CAPSULE_TOWER_DESIGN_ID));
   const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>(selectionPieceIds);
   const [selectedConnectionIds, setSelectedConnectionIds] = React.useState<string[]>(selectionConnectionIds);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setFlatSourceDesign(null);
-    void (async () => {
-      const flatSrc = await flatDesign(kit, rawDesign.id);
-      if (!cancelled) setFlatSourceDesign(flatSrc);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kit]);
-
-  const design = (flatSourceDesign ?? rawDesign) as Design;
+  const design = (flatInputDesign ?? rawDesign) as Design;
 
   const context = React.useMemo<AlgorithmContextValue>(
     () => ({
       kit,
       design,
+      diagramLayoutDiff,
       selectedPieceIds,
       onSelectedPieceIdsChange: setSelectedPieceIds,
       selectedConnectionIds,
       onSelectedConnectionIdsChange: setSelectedConnectionIds,
       outputDesign: design,
-      error: !flatSourceDesign ? "Loading design…" : undefined,
+      error: loading ? "Loading design…" : undefined,
     }),
-    [design, flatSourceDesign, kit, selectedConnectionIds, selectedPieceIds],
+    [design, diagramLayoutDiff, kit, loading, selectedConnectionIds, selectedPieceIds],
   );
 
   return <AlgorithmApp id="find-replaceable-types-in-designs" label="Find Replaceable Types In Designs" windows={WINDOWS} defaultLayout={DEFAULT_LAYOUT} context={context} className="h-full w-full" />;

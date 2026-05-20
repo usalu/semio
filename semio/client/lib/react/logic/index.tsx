@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
 import { Alternative, Author, Backbone, Camera, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
+import { getKitPorts } from "../rendering/plainKit";
 
 export type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
 export { Alternative, Author, Backbone, Camera, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
@@ -39,13 +40,6 @@ const EMPTY_TAGS = Object.freeze([]) as readonly Tag[];
 const EMPTY_CONCEPTS = Object.freeze([]) as readonly Concept[];
 const EMPTY_PIECES = Object.freeze([]) as readonly Piece[];
 const EMPTY_CONNECTIONS = Object.freeze([]) as readonly Connection[];
-
-const WRITE_STATUS_IDLE = Object.freeze({ kind: "idle", pending: 0 }) as WriteStatus;
-const WRITE_STATUS_READONLY = Object.freeze({ kind: "readonly", pending: 0 }) as WriteStatus;
-
-async function noopKitFieldSet(): Promise<SetResult> {
-  return { ok: false, error: { kind: "NotSupported", message: "Read-only kit field binding.", field: undefined, entity: undefined } };
-}
 
 /**
  * @emoji 🪝 Binds one async entity read to React state; optional bus kind narrows refresh fan-in (no `useSyncExternalStore`).
@@ -83,7 +77,7 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
       if (e == null) return;
       if (fieldName != null && fieldName !== "") {
         const eventMethod = entityFieldChangedMethodName(fieldName);
-        const sub = (e as unknown as Record<string, (cb: (next: unknown) => void) => () => void>)[eventMethod];
+        const sub = (e as unknown as Record<string, ((cb: (next: unknown) => void) => () => void) | undefined>)[eventMethod];
         if (typeof sub === "function") return sub.call(e, () => void refresh());
       }
       return e.session.bus.subscribeKind("commandSucceeded", () => void refresh());
@@ -107,22 +101,14 @@ function mapTooLong(err: SetError, maxChars: number): string {
   return err.message;
 }
 
+/** @emoji 🎛️ Idle {@link OperationStatus} for read-only sketchpad rows. */
+export const OPERATION_STATUS_IDLE: OperationStatus = Object.freeze({ kind: "idle" });
+
 /** @emoji 🎛️ Shared {@link OperationStatus} plus a map of async command runners for one scoped anchor (entity, store, session, or batch). */
 export type EntityCommand<Run extends Record<string, (...args: any[]) => Promise<SetResult>>> = Readonly<{
   run: Run;
   status: OperationStatus;
 }>;
-
-/** @emoji 🎛️ Sketchpad row status for {@link KitFieldBinding} tuple reads. */
-export type WriteStatus = Readonly<
-  | { kind: "readonly"; pending: 0 }
-  | { kind: "idle"; pending: number }
-  | { kind: "pending"; pending: number }
-  | { kind: "error"; pending: number; lastError?: SetError }
->;
-
-/** @emoji 🪝 Sketchpad triad: value, setter, status (`const [value] = hook()`). */
-export type KitFieldBinding<T> = readonly [T, (next: unknown) => Promise<SetResult>, WriteStatus];
 
 type SemioCommandRunners = Record<string, (...args: any[]) => Promise<SetResult>>;
 
@@ -349,11 +335,10 @@ export function SessionContextProvider(props: Readonly<{ session: unknown; child
 }
 
 //#region 🔌KitWasmHostBridge
-/** @emoji 🔌 Sketchpad registry row: opaque kit store host + optional kit client for VCS / alternatives UI. */
+/** @emoji 🔌 Sketchpad registry row: opaque {@link KitHostStore} for the active kit tab. */
 export type KitWasmHostState = Readonly<{
   kitTabId: string;
   store: unknown;
-  kitClient: unknown | null;
 }>;
 
 const KitWasmHostContext = React.createContext<KitWasmHostState | null>(null);
@@ -366,24 +351,20 @@ export function useKitWasmHost(): KitWasmHostState | null {
 export type KitWasmMountProviderProps = Readonly<{
   kitId?: string;
   store?: unknown;
-  kitClient?: unknown | null;
   children: ReactNode;
 }>;
 
-export type KitRuntimeContextValue = Readonly<{ kitId: string; store: KitHostStore; kitClient: unknown | null }>;
+export type KitRuntimeContextValue = Readonly<{ kitId: string; store: KitHostStore }>;
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
 
-/** @emoji 🔌 Publishes registry `store` + `kitClient` for sketchpad footers and native/WASM kit tabs. */
+/** @emoji 🔌 Publishes registry {@link KitHostStore} for sketchpad kit tabs. */
 export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
-  const host = React.useMemo<KitWasmHostState>(
-    () => ({ kitTabId: props.kitId ?? "", store: props.store ?? null, kitClient: props.kitClient ?? null }),
-    [props.kitId, props.store, props.kitClient],
-  );
+  const host = React.useMemo<KitWasmHostState>(() => ({ kitTabId: props.kitId ?? "", store: props.store ?? null }), [props.kitId, props.store]);
   let branch: ReactNode = props.children;
   if (props.store != null) {
     branch = React.createElement(
       KitRuntimeContext.Provider,
-      { value: { kitId: props.kitId ?? "", store: props.store as KitHostStore, kitClient: props.kitClient ?? null } },
+      { value: { kitId: props.kitId ?? "", store: props.store as KitHostStore } },
       branch,
     );
   }
@@ -392,6 +373,57 @@ export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.Re
 //#endregion 🔌KitWasmHostBridge
 
 //#region 🌐SemioStoreKitLineHost
+/** @emoji 🌐 Provider stack for one {@link Store} branch under an active {@link Session}. */
+function semioStoreKitLineBranch(session: Session, storeId: string, children: ReactNode, kitContextId?: string): React.ReactElement {
+  const kitBranch =
+    kitContextId != null && kitContextId !== "" ? React.createElement(KitContextProvider, { id: kitContextId, children }) : children;
+  const theKitBranch = React.createElement(TheKitContextProvider, { children: kitBranch });
+  const wipBranch = React.createElement(WipContextProvider, { children: theKitBranch });
+  const localBranch = React.createElement(LocalProviderContextProvider, { children: wipBranch });
+  const storeBranch = React.createElement(StoreContextProvider, { id: storeId, children: localBranch });
+  return React.createElement(SessionContextProvider, { session, children: storeBranch });
+}
+
+/** @emoji 🌐 WASM {@link Session} line: same contexts as {@link SemioStoreKitLineHost} without HTTP bootstrap. */
+export type SemioWasmKitLineHostProps = Readonly<{
+  session: Session;
+  storeId?: string;
+  kitContextId?: string;
+  children: ReactNode;
+  fallback?: ReactNode;
+}>;
+
+export function SemioWasmKitLineHost(props: SemioWasmKitLineHostProps): React.ReactElement {
+  const { session, storeId: storeIdProp, kitContextId: kitContextIdProp, children, fallback = null } = props;
+  const [resolved, setResolved] = React.useState<Readonly<{ storeId: string; kitContextId?: string }> | null>(
+    storeIdProp != null && storeIdProp !== "" ? { storeId: storeIdProp, kitContextId: kitContextIdProp } : null,
+  );
+
+  React.useEffect(() => {
+    if (storeIdProp != null && storeIdProp !== "") {
+      setResolved({ storeId: storeIdProp, kitContextId: kitContextIdProp });
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const stores = await session.stores();
+      if (cancelled || stores.length === 0) return;
+      const sid = stores[0]!.id;
+      let kid = kitContextIdProp;
+      if (kid == null || kid === "") {
+        kid = (await session.store(sid).wip().theKit().kit()).id;
+      }
+      if (!cancelled) setResolved({ storeId: sid, kitContextId: kid });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, storeIdProp, kitContextIdProp]);
+
+  if (resolved == null) return React.createElement(React.Fragment, null, fallback);
+  return semioStoreKitLineBranch(session, resolved.storeId, children, resolved.kitContextId);
+}
+
 /** @emoji 🌐 Composes `SessionContextProvider` → `StoreContextProvider` → WIP graph → `TheKit` → `KitContextProvider` for native `semio-store` + {@link openSessionHttp}. */
 export type SemioStoreKitLineHostProps = Readonly<
   {
@@ -459,12 +491,7 @@ export function SemioStoreKitLineHost(props: SemioStoreKitLineHostProps): React.
     return React.createElement(React.Fragment, null, fallback);
   }
   const session = sessionRef.current;
-  const kitBranch = React.createElement(KitContextProvider, { id: kitId, children });
-  const theKitBranch = React.createElement(TheKitContextProvider, { children: kitBranch });
-  const wipBranch = React.createElement(WipContextProvider, { children: theKitBranch });
-  const localBranch = React.createElement(LocalProviderContextProvider, { children: wipBranch });
-  const storeBranch = React.createElement(StoreContextProvider, { id: storeId, children: localBranch });
-  return React.createElement(SessionContextProvider, { session, children: storeBranch });
+  return semioStoreKitLineBranch(session, storeId, children, kitId);
 }
 //#endregion 🌐SemioStoreKitLineHost
 
@@ -812,7 +839,7 @@ export function useBackbone(): string {
   return id;
 }
 
-/** @emoji 🧭 Optional {@link Store} handle for legacy call sites inside this module. */
+/** @emoji 🧭 Optional {@link Store} when {@link StoreContextProvider} is mounted above. */
 export function useStoreOptional(): Store | null {
   return React.useContext(StoreHandleContext);
 }
@@ -836,6 +863,11 @@ export function useWipKit(): Kit {
   const k = React.useContext(KitHandleContext);
   if (k == null) throw new Error("semio/react: useWipKit requires KitContextProvider.");
   return k;
+}
+
+/** @emoji 📦 Optional {@link Kit} from {@link KitHandleContext} (no throw). */
+export function useWipKitOptional(): Kit | null {
+  return React.useContext(KitHandleContext);
 }
 
 /** @emoji 🌐 Authoritative graph (bypasses tier marker; prefer {@link AuthoritativeContextProvider}). */
@@ -942,37 +974,37 @@ function useResolvedType(id?: ID): Type | null {
 // #region 🪝IdStableEntityLists
 /** @emoji 📚 Kit-level designs via {@link Kit#designs} (stable entity handles). */
 export function useKitDesigns(): readonly Design[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.designs()), "designs") ?? EMPTY_DESIGNS;
 }
 
 /** @emoji 📚 Kit-level kinds via {@link Kit#types}. */
 export function useKitTypes(): readonly Type[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.types()), "types") ?? EMPTY_TYPES;
 }
 
 /** @emoji 📚 Kit-level authors via {@link Kit#authors}. */
 export function useKitAuthors(): readonly Author[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.authors()), "authors") ?? EMPTY_AUTHORS;
 }
 
 /** @emoji 📚 Kit-level qualities via {@link Kit#qualities}. */
 export function useKitQualities(): readonly Quality[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.qualities()), "qualities") ?? EMPTY_QUALITIES;
 }
 
 /** @emoji 📚 Kit-level tags via {@link Kit#tags}. */
 export function useKitTags(): readonly Tag[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.tags()), "tags") ?? EMPTY_TAGS;
 }
 
 /** @emoji 📚 Kit-level concepts via {@link Kit#concepts}. */
 export function useKitConcepts(): readonly Concept[] {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, async (k) => Object.freeze(await k.concepts()), "concepts") ?? EMPTY_CONCEPTS;
 }
 
@@ -989,83 +1021,59 @@ export function useDesignConnections(): readonly Connection[] {
 }
 // #endregion 🪝IdStableEntityLists
 
-// #region 🪝AggregateListBundles
-/** @emoji 📚 Sketchpad bundle: live kit designs. */
-export function useDesigns(): Readonly<{ designs: readonly Design[] }> {
-  const designs = useKitDesigns();
-  return { designs };
-}
-
-/** @emoji 📚 Sketchpad tuple: live kit kinds (`const [types] = useTypes()`). */
-export function useTypes(): KitFieldBinding<readonly Type[]> {
-  const types = useKitTypes();
-  return [types, noopKitFieldSet, WRITE_STATUS_IDLE];
-}
-
-/** @emoji 📚 Pieces in the active design scope. */
-export function usePieces(): readonly Piece[] {
-  return useDesignPieces();
-}
-
-/** @emoji 📚 Connections in the active design scope. */
-export function useConnections(): readonly Connection[] {
-  return useDesignConnections();
-}
-// #endregion 🪝AggregateListBundles
-
 // #region 🪝HooksKit
 // #region 📖KitReads
 /** @emoji 📖 Live {@link Kit#name} via {@link Kit#onNameChanged}. */
 export function useKitName(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.name(), "name");
 }
 
 /** @emoji 📖 Live {@link Kit#description} via {@link Kit#onDescriptionChanged}. */
 export function useKitDescription(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.description(), "description");
 }
 
 /** @emoji 📖 Live {@link Kit#icon}. */
 export function useKitIcon(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.icon(), "icon");
 }
 
 /** @emoji 📖 Live {@link Kit#image}. */
 export function useKitImage(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.image(), "image");
 }
 
 /** @emoji 📖 Live {@link Kit#preview}. */
 export function useKitPreview(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.preview(), "preview");
 }
 
 /** @emoji 📖 Live {@link Kit#remote}. */
 export function useKitRemote(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.remote(), "remote");
 }
 
 /** @emoji 📖 Live {@link Kit#homepage}. */
 export function useKitHomepage(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.homepage(), "homepage");
 }
 
 /** @emoji 📖 Live {@link Kit#license}. */
 export function useKitLicense(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.license(), "license");
 }
 
 /** @emoji 📖 Live {@link Kit#uri}. */
 export function useKitUri(): string | undefined {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useCurrentEntityField(kit, (k) => k.uri(), "uri");
 }
 
@@ -1100,7 +1108,7 @@ const useKitCommandBound = semioInternalEntityCommandFactory<Kit>({
 
 /** @emoji ✍️ All {@link Kit} mutations for the active WIP kit ({@link useWipKit}). */
 export function useKitCommand(): EntityCommand<SemioCommandRunners> {
-  const kit = useWipKit();
+  const kit = useWipKitOptional();
   return useKitCommandBound(() => kit);
 }
 
@@ -1299,7 +1307,7 @@ export function useTypeConnectors(id?: string): readonly string[] | undefined {
 /** @emoji 📖 Representation ids for {@link Type#representations}. */
 export function useTypeRepresentations(id?: string): readonly string[] | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.representations()).map((r) => r.id)));
+  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.representations()).map((r) => r.id)), "representations");
 }
 
 /** @emoji 📖 Live {@link Type#attributes}. */
@@ -1311,7 +1319,7 @@ export function useTypeAttributes(id?: string): readonly Attribute[] | undefined
 /** @emoji 📖 Author ids for {@link Type#authors}. */
 export function useTypeAuthors(id?: string): readonly string[] | undefined {
   const entity = useResolvedType(id);
-  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.authors()).map((a) => a.id)));
+  return useCurrentEntityField(entity, async (t) => Object.freeze((await t.authors()).map((a) => a.id)), "authors");
 }
 
 /** @emoji ✍️ All {@link Type} mutations for {@link TypeContext} (optional {@code id} overrides). */
@@ -1406,10 +1414,14 @@ export function useConnectorIcon(id?: string): string | undefined {
 /** @emoji 📖 Linked port id for {@link Connector#port}. */
 export function useConnectorPort(id?: string): string | null | undefined {
   const entity = resolveConnector(id);
-  return useCurrentEntityField(entity, async (c) => {
-    const port = await c.port();
-    return port?.id ?? null;
-  });
+  return useCurrentEntityField(
+    entity,
+    async (c) => {
+      const port = await c.port();
+      return port?.id ?? null;
+    },
+    "port",
+  );
 }
 
 /** @emoji 📖 Bulky {@link Connector#attributes}. */
@@ -1517,7 +1529,7 @@ export function useQualityAttributes(): readonly Attribute[] | undefined {
 /** @emoji 📖 Live {@link Quality#benchmarks} as ids. */
 export function useQualityBenchmarks(): readonly string[] | undefined {
   const entity = resolveQuality();
-  return useCurrentEntityField(entity, async (q) => Object.freeze((await q.benchmarks()).map((b) => b.id)));
+  return useCurrentEntityField(entity, async (q) => Object.freeze((await q.benchmarks()).map((b) => b.id)), "benchmarks");
 }
 
 /** @emoji ✍️ All {@link Quality} mutations for {@link QualityContext}. */
@@ -1634,13 +1646,13 @@ export function useRepresentationDescription(id?: string): string | undefined {
 /** @emoji 📖 Tag ids for {@link Representation#tags}. */
 export function useRepresentationTags(id?: string): readonly string[] | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, async (r) => Object.freeze((await r.tags()).map((t) => t.id)));
+  return useCurrentEntityField(entity, async (r) => Object.freeze((await r.tags()).map((t) => t.id)), "tags");
 }
 
 /** @emoji 📖 Quality ids for {@link Representation#qualities}. */
 export function useRepresentationQualities(id?: string): readonly string[] | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, async (r) => Object.freeze((await r.qualities()).map((q) => q.id)));
+  return useCurrentEntityField(entity, async (r) => Object.freeze((await r.qualities()).map((q) => q.id)), "qualities");
 }
 
 /** @emoji 📖 Live {@link Representation#attributes}. */
@@ -1652,10 +1664,14 @@ export function useRepresentationAttributes(id?: string): readonly Attribute[] |
 /** @emoji 📖 Linked file id for {@link Representation#file}. */
 export function useRepresentationFile(id?: string): string | null | undefined {
   const entity = resolveRepresentation(id);
-  return useCurrentEntityField(entity, async (r) => {
-    const f = await r.file();
-    return f?.id ?? null;
-  });
+  return useCurrentEntityField(
+    entity,
+    async (r) => {
+      const f = await r.file();
+      return f?.id ?? null;
+    },
+    "file",
+  );
 }
 
 /** @emoji 📖 Live {@link File#name}. */
@@ -1687,7 +1703,7 @@ export function usePieceIcon(id?: string): string | undefined {
 /** @emoji 📖 Kit piece {@code type { id }} reference. */
 export function usePieceTypeId(id?: string): string | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => (await p.typeId()) ?? undefined);
+  return useCurrentEntityField(entity, async (p) => (await p.typeId()) ?? undefined, "typeId");
 }
 
 /** @emoji 📖 Live {@link Piece#scale}. */
@@ -1699,37 +1715,37 @@ export function usePieceScale(id?: string): number | null | undefined {
 /** @emoji 📖 Live {@link Piece#position}. */
 export function usePiecePosition(id?: string): Position | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.position());
+  return useCurrentEntityField(entity, async (p) => p.position(), "position");
 }
 
 /** @emoji 📖 Live {@link Piece#flatPosition}. */
 export function usePieceFlatPosition(id?: string): Position | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.flatPosition());
+  return useCurrentEntityField(entity, async (p) => p.flatPosition(), "flatPosition");
 }
 
 /** @emoji 📖 Live {@link Piece#plane}. */
 export function usePiecePlane(id?: string): Plane | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.position().plane());
+  return useCurrentEntityField(entity, async (p) => p.position().plane(), "position");
 }
 
 /** @emoji 📖 Live {@link Piece#center}. */
 export function usePieceCenter(id?: string): Coordinate | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.position().center());
+  return useCurrentEntityField(entity, async (p) => p.position().center(), "position");
 }
 
 /** @emoji 📖 Live {@link Piece#flatPlane}. */
 export function usePieceFlatPlane(id?: string): Plane | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.flatPosition().plane());
+  return useCurrentEntityField(entity, async (p) => p.flatPosition().plane(), "flatPosition");
 }
 
 /** @emoji 📖 Live {@link Piece#flatCenter}. */
 export function usePieceFlatCenter(id?: string): Coordinate | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => p.flatPosition().center());
+  return useCurrentEntityField(entity, async (p) => p.flatPosition().center(), "flatPosition");
 }
 
 /** @emoji 📖 Live {@link Piece#blueprint}. */
@@ -1753,31 +1769,39 @@ export function usePieceConnectionKind(id?: string): "FIXED" | "CONNECTED" | nul
 /** @emoji 📖 Parent piece id for {@link Piece#parentPiece}. */
 export function usePieceParentPiece(id?: string): string | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => {
-    const parent = await p.parentPiece();
-    return parent?.id ?? null;
-  });
+  return useCurrentEntityField(
+    entity,
+    async (p) => {
+      const parent = await p.parentPiece();
+      return parent?.id ?? null;
+    },
+    "parentPiece",
+  );
 }
 
 /** @emoji 📖 Parent connection id for {@link Piece#parentConnection}. */
 export function usePieceParentConnection(id?: string): string | null | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => {
-    const pc = await p.parentConnection();
-    return pc?.id ?? null;
-  });
+  return useCurrentEntityField(
+    entity,
+    async (p) => {
+      const pc = await p.parentConnection();
+      return pc?.id ?? null;
+    },
+    "parentConnection",
+  );
 }
 
 /** @emoji 📖 Child piece ids for {@link Piece#childPieces}. */
 export function usePieceChildPieces(id?: string): readonly string[] | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => Object.freeze((await p.childPieces()).map((c) => c.id)));
+  return useCurrentEntityField(entity, async (p) => Object.freeze((await p.childPieces()).map((c) => c.id)), "childPieces");
 }
 
 /** @emoji 📖 Child connection ids for {@link Piece#childConnections}. */
 export function usePieceChildConnections(id?: string): readonly string[] | undefined {
   const entity = resolvePiece(id);
-  return useCurrentEntityField(entity, async (p) => Object.freeze((await p.childConnections()).map((c) => c.id)));
+  return useCurrentEntityField(entity, async (p) => Object.freeze((await p.childConnections()).map((c) => c.id)), "childConnections");
 }
 
 /** @emoji 📖 Live {@link Piece#depth}. */
@@ -1919,7 +1943,7 @@ export function useConnectionAttributes(): readonly Attribute[] | undefined {
 // #endregion ⛓️Connection
 
 // #region 🎨SketchpadFacade
-export type { DesignDiff } from "../rendering/index";
+export type { DesignDiff } from "../rendering/plainKit";
 export type ConnectionDiff = Readonly<Record<string, unknown>>;
 export type PieceDiff = Readonly<Record<string, unknown>>;
 export type TypeDiff = Readonly<Record<string, unknown>>;
@@ -1933,7 +1957,8 @@ export const DiffStatus = Object.freeze({
 } as const);
 export type DiffStatus = (typeof DiffStatus)[keyof typeof DiffStatus];
 
-export { getKitPorts } from "../rendering/index";
+export { getKitPorts } from "../rendering/plainKit";
+export type { KitPortPlain } from "../rendering/plainKit";
 export { SEMIO_IN_MEMORY_KIT_URI } from "../../js";
 
 /** @emoji 📏 Sketchpad geometric tolerance constant. */
@@ -1967,16 +1992,44 @@ const KitAlternativeSelectionContext = React.createContext<Readonly<{ selectedAl
   alternatives: KIT_ALTERNATIVE_EMPTY,
 });
 
-/** @emoji 🌱 Sketchpad alternative picker scope (WIP: empty until graph alternatives wire through). */
+/** @emoji 🌱 Sketchpad alternative picker; lists {@link Graph#alternatives} when {@link StoreContextProvider} is active. */
 export function KitAlternativeSelectionProvider(props: Readonly<{ kitId?: string; children: ReactNode }>): React.ReactElement {
   void props.kitId;
+  const store = React.useContext(StoreHandleContext);
+  const [selectedAlternativeId, setSelectedAlternativeId] = React.useState<string | null>(null);
+  const [alternatives, setAlternatives] = React.useState<readonly KitAlternativeSummary[]>(KIT_ALTERNATIVE_EMPTY);
+
+  const refreshAlternatives = React.useCallback(async () => {
+    if (store == null) {
+      setAlternatives(KIT_ALTERNATIVE_EMPTY);
+      return;
+    }
+    const alts = await store.wip().alternatives();
+    const summaries = await Promise.all(
+      alts.map(async (a) => {
+        const name = await a.name();
+        return { id: a.id, name: name.trim() === "" ? a.id : name } as KitAlternativeSummary;
+      }),
+    );
+    setAlternatives(Object.freeze(summaries));
+  }, [store]);
+
+  React.useEffect(() => {
+    void refreshAlternatives();
+  }, [refreshAlternatives]);
+
+  React.useEffect(() => {
+    if (store == null) return;
+    return store.wip().onAlternativesChanged(() => void refreshAlternatives());
+  }, [store, refreshAlternatives]);
+
   const value = React.useMemo(
     () => ({
-      selectedAlternativeId: null as string | null,
-      setSelectedAlternativeId: (_id: string | null) => {},
-      alternatives: KIT_ALTERNATIVE_EMPTY,
+      selectedAlternativeId,
+      setSelectedAlternativeId,
+      alternatives,
     }),
-    [],
+    [selectedAlternativeId, alternatives],
   );
   return React.createElement(KitAlternativeSelectionContext.Provider, { value }, props.children);
 }
@@ -2087,13 +2140,13 @@ export async function createFolderKitStore(_adapter: KitFolderAdapter, initialKi
   return new InMemoryKitStore(seed);
 }
 
-/** @emoji 🧾 Legacy string-command entry for DTO host stores; prefer {@link useKitCommand} on GraphQL kits. */
+/** @emoji 🧾 DTO host-store command bridge for folder/file UI tests and {@link InMemoryKitStore}; GraphQL kits use {@link useKitCommand}. */
 export async function executeSemioKitCommand(store: KitHostStore, command: string, _origin: string, ...args: unknown[]): Promise<unknown> {
   if (command === "semio.kit.undo" || command === "semio.kit.redo") {
     return { ok: false, error: { kind: "NotSupported", message: `${command}: no kit-store client bridge` } };
   }
   if (command === "semio.kit.import") {
-    return { ok: false, error: "semio.kit.import: not wired in this build" };
+    return { ok: false, error: { kind: "NotSupported", message: "semio.kit.import: not wired in this build", field: undefined, entity: undefined } };
   }
   if (command === "semio.kit.export") {
     return { ok: true };
@@ -2141,13 +2194,6 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
   return { ok: false, error: { kind: "NotSupported", message: `unhandled ${command}` } };
 }
 
-/** @emoji 🧾 Memoized kit string-command engine for legacy sketchpad callers. */
-export function useKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
-  return {
-    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) => executeSemioKitCommand(store, String(command), String(origin ?? ""), ...rest),
-  };
-}
-
 export async function kitHostUndo(_store: KitHostStore): Promise<SetResult> {
   return { ok: false, error: { kind: "NotSupported", message: "kitHostUndo: no kit-store client bridge", field: undefined, entity: undefined } };
 }
@@ -2176,7 +2222,8 @@ export type KitPersistenceInfo = Readonly<{ kind: "temporary" | "file" | "folder
 
 export type KitRegistryEntry = Readonly<{
   store: KitHostStore;
-  kitClient: unknown | null;
+  session?: Session;
+  jsStoreId?: string;
   refs: number;
   persistence: KitPersistenceInfo;
 }>;
@@ -2184,7 +2231,7 @@ export type KitRegistryEntry = Readonly<{
 export type KitRegistryValue = Readonly<{
   activeKitId: string | undefined;
   setActiveKit: (id: string | undefined) => void;
-  open: (id: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => Promise<void>;
+  open: (id: string, init: Readonly<{ store?: KitHostStore; session?: Session; jsStoreId?: string; initialKit?: unknown }>) => Promise<void>;
   openTemporary: (initialKit?: unknown) => Promise<string>;
   openJsonFile: (kitId: string, adapter: KitJsonFileAdapter) => Promise<void>;
   openFolder: (kitId: string, adapter: KitFolderAdapter, initialKit?: unknown) => Promise<void>;
@@ -2226,14 +2273,22 @@ export function getKitRegistryBridge(): KitRegistryValue | null {
 
 /** @emoji 📦 Host registry for open kit tabs (sketchpad). */
 export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
-  const rowsRef = React.useRef(new Map<string, KitRegistryEntry & { unsub?: () => void }>());
+  type KitRegistryRow = {
+    store: KitHostStore;
+    session?: Session;
+    jsStoreId?: string;
+    refs: number;
+    persistence: KitPersistenceInfo;
+    unsub?: () => void;
+  };
+  const rowsRef = React.useRef(new Map<string, KitRegistryRow>());
   const loadingRef = React.useRef(new Set<string>());
   const errRef = React.useRef(new Map<string, Error>());
   const [registryEpoch, bump] = React.useReducer((x: number) => x + 1, 0);
   const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
 
   const open = React.useCallback(
-    async (kitId: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => {
+    async (kitId: string, init: Readonly<{ store?: KitHostStore; session?: Session; jsStoreId?: string; initialKit?: unknown }>) => {
       const cur = rowsRef.current.get(kitId);
       if (cur) {
         (cur as { refs: number }).refs += 1;
@@ -2248,9 +2303,14 @@ export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): R
       bump();
       try {
         const store = init.store;
-        const kitClient = init.kitClient ?? null;
         const persistence: KitPersistenceInfo = { kind: store.name === "InMemoryKitStore" ? "temporary" : "file" };
-        rowsRef.current.set(kitId, { store, kitClient, refs: 1, persistence });
+        rowsRef.current.set(kitId, {
+          store,
+          session: init.session,
+          jsStoreId: init.jsStoreId,
+          refs: 1,
+          persistence,
+        });
         emitKitRegistryListChanged();
       } catch (e) {
         errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
@@ -2269,6 +2329,7 @@ export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): R
     row.refs -= 1;
     if (row.refs <= 0) {
       row.unsub?.();
+      if (row.session != null) void row.session.dispose();
       rowsRef.current.delete(kitId);
       setActiveKitId((cur) => (cur === kitId ? undefined : cur));
       emitKitRegistryListChanged();
@@ -2303,7 +2364,7 @@ export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): R
       },
       close,
       get(kitId) {
-        return rowsRef.current.get(kitId);
+        return rowsRef.current.get(kitId) as KitRegistryEntry | undefined;
       },
       list() {
         return Array.from(rowsRef.current.keys());
@@ -2381,6 +2442,22 @@ export function useKitStoreSnapshot(explicitKitId?: string): KitHostSnap | null 
   return snap;
 }
 
+/** @emoji 📋 Plain kit JSON from host snapshot or GraphQL bridge (tree, ports, folders). */
+export function useKitPlainOptional(): unknown | null {
+  return useKitStoreSnapshot()?.kit ?? null;
+}
+
+/** @emoji 🔌 Flattened kit ports from {@link useKitPlainOptional} + {@link getKitPorts}. */
+export function useKitPortsFlat(): ReturnType<typeof getKitPorts> {
+  const plain = useKitPlainOptional();
+  return React.useMemo(() => (plain != null ? getKitPorts(plain) : []), [plain]);
+}
+
+/** @emoji 🔄 Active kit host sync lane from {@link useKitStoreSnapshot}. */
+export function useKitSyncSnapshot(): KitHostSnap["sync"] {
+  return useKitStoreSnapshot()?.sync ?? DEFAULT_KIT_SYNC;
+}
+
 /** @emoji 📥 Active kit host store for the resolved tab / runtime scope. */
 export function useKitStore(): KitHostStore | null {
   const runtime = useKitRuntimeSafe();
@@ -2441,22 +2518,17 @@ export function createVscodeWebviewSketchpadFileKitStoreFactory(_vscodeApi: { po
   };
 }
 
-/** @emoji 📌 Kit `files` rows for sketchpad panels (`const [files] = useFilesFull()`). */
-export function useFilesFull(_explicitKitId?: string): KitFieldBinding<readonly File[]> {
-  void _explicitKitId;
-  return [Object.freeze([]) as readonly File[], noopKitFieldSet, WRITE_STATUS_IDLE];
+const EMPTY_FILES = Object.freeze([]) as readonly File[];
+
+/** @emoji 📚 Kit-level files (WIP: empty until {@link Kit} exposes files). */
+export function useKitFiles(): readonly File[] {
+  return EMPTY_FILES;
 }
 
-/** @emoji 📌 Kit `tags` rows for sketchpad panels (`const [tags] = useTagsFull()`). */
-export function useTagsFull(_explicitKitId?: string): KitFieldBinding<readonly Tag[]> {
-  void _explicitKitId;
-  return [useKitTags(), noopKitFieldSet, WRITE_STATUS_IDLE];
-}
-
-/** @emoji 📌 Included design ids for explode / replace UI (WIP: empty without kit-store client). */
-export function useExplodeableDesignNodes(_designId?: string): readonly [readonly string[]] {
+/** @emoji 📌 Included design ids for explode / replace UI (WIP: empty until design graph exposes included nodes). */
+export function useExplodeableDesignNodeIds(_designId?: string): readonly string[] {
   void _designId;
-  return [EMPTY_IDS];
+  return EMPTY_IDS;
 }
 
 export type SchemaScopeEntityKind = string;
@@ -2485,47 +2557,23 @@ export function useAttachBackbone(): (input: { dev?: { filePath: string }; local
 }
 //#endregion 🔌KitRuntimeBridge
 // #endregion 🎨SketchpadFacade
-// #endregion 🎨SketchpadFacade
 
 // #region 🎛️WriteIndicator
-type LegacyWriteRowStatus =
-  | { readonly kind: "readonly" }
-  | { readonly kind: "idle"; readonly pending: number }
-  | { readonly kind: "pending"; readonly pending: number }
-  | { readonly kind: "error"; readonly pending: number; readonly lastError: SetError };
-
-/** @emoji 🎛️ Maps {@link OperationStatus} or legacy triad status into sketchpad row affordances. */
-export function useWriteIndicator(status: OperationStatus | LegacyWriteRowStatus): Readonly<{
+/** @emoji 🎛️ Maps {@link OperationStatus} into sketchpad row affordances. */
+export function useWriteIndicator(status: OperationStatus): Readonly<{
   disabled: boolean;
   spinning: boolean;
   error?: SetError;
 }> {
-  if (status.kind === "readonly") {
-    return { disabled: true, spinning: false, error: undefined };
-  }
-  if (status.kind === "error" && "lastError" in status) {
-    return { disabled: false, spinning: false, error: status.lastError };
-  }
-  if (status.kind === "pending" && "pending" in status) {
+  if (status.kind === "pending") {
     return { disabled: true, spinning: true, error: undefined };
   }
-  if (status.kind === "idle" && "pending" in status) {
-    return { disabled: false, spinning: false, error: undefined };
-  }
-  const op = status as OperationStatus;
-  if (op.kind === "pending") {
-    return { disabled: true, spinning: true, error: undefined };
-  }
-  if (op.kind === "settled" && !op.result.ok) {
-    return { disabled: false, spinning: false, error: op.result.error };
+  if (status.kind === "settled" && !status.result.ok) {
+    return { disabled: false, spinning: false, error: status.result.error };
   }
   return { disabled: false, spinning: false, error: undefined };
 }
 // #endregion 🎛️WriteIndicator
-
-// #region ⚛️Embedded tests
-// @emoji 🧹 Legacy InMemoryKitStore embedded block removed during single-source Kit migration; restore with GraphQL Kit stubs only.
-// #endregion ⚛️Embedded tests
 
 // #region 🧪Vitest
 if (import.meta.vitest) {
@@ -2614,6 +2662,122 @@ if (import.meta.vitest) {
       });
       ui.unmount();
       spy.mockRestore();
+    });
+  });
+
+  describe("SemioWasmKitLineHost", () => {
+    it("mounts store line and refreshes useKitName after kit.rename", async () => {
+      const { act, render, screen, waitFor } = await import("@testing-library/react");
+      const JsMod = await import("../../js");
+      const session = await JsMod.Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const stores = await session.stores();
+        expect(stores.length).toBeGreaterThan(0);
+        const storeId = stores[0]!.id;
+        const kitEntity = await session.store(storeId).wip().theKit().kit();
+
+        function NameProbe(): React.ReactElement {
+          const name = useKitName();
+          return React.createElement("span", { "data-testid": "kit-name" }, name ?? "");
+        }
+
+        const ui = render(
+          React.createElement(SemioWasmKitLineHost, {
+            session,
+            storeId,
+            kitContextId: kitEntity.id,
+            children: React.createElement(NameProbe),
+          }),
+        );
+
+        await waitFor(() => {
+          expect(screen.getByTestId("kit-name").textContent).not.toBe("");
+        });
+
+        await act(async () => {
+          const result = await kitEntity.rename("react-wasm-e2e");
+          expect(result.ok).toBe(true);
+          session.bus.emit({ kind: "kitRenamed", payload: null } as never);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByTestId("kit-name").textContent).toBe("react-wasm-e2e");
+        });
+
+        ui.unmount();
+      } finally {
+        await session.dispose();
+      }
+    });
+  });
+
+  describe("Kit registry WASM session", () => {
+    it("stores session on open, exposes store via SemioWasmKitLineHost, disposes on close", async () => {
+      const { render, screen, waitFor } = await import("@testing-library/react");
+      const JsMod = await import("../../js");
+      const session = await JsMod.Session.openInMemory({ timeoutMs: 120_000 });
+      const disposeSpy = vi.spyOn(session, "dispose");
+      try {
+        const stores = await session.stores();
+        const storeId = stores[0]!.id;
+        const kitEntity = await session.store(storeId).wip().theKit().kit();
+        const hostStore = new InMemoryKitStore({ id: kitEntity.id, name: "registry-e2e", designs: [], types: [] });
+
+        function Harness(): React.ReactElement | null {
+          const { open, close } = useKitRegistry();
+          const [ready, setReady] = React.useState(false);
+          React.useEffect(() => {
+            let cancelled = false;
+            void (async () => {
+              await open("tab-e2e", { store: hostStore, session, jsStoreId: storeId });
+              if (!cancelled) setReady(true);
+            })();
+            return () => {
+              cancelled = true;
+              close("tab-e2e");
+            };
+          }, [open, close, session, storeId]);
+          if (!ready) return null;
+          return React.createElement(SemioWasmKitLineHost, {
+            session,
+            storeId,
+            kitContextId: kitEntity.id,
+            children: React.createElement(KitAlternativeSelectionProvider, {
+              kitId: kitEntity.id,
+              children: React.createElement(StoreProbe),
+            }),
+          });
+        }
+
+        function StoreProbe(): React.ReactElement {
+          const storeOpt = useStoreOptional();
+          const alts = useKitAlternatives();
+          return React.createElement(
+            React.Fragment,
+            null,
+            React.createElement("span", { "data-testid": "has-store" }, storeOpt == null ? "no" : "yes"),
+            React.createElement("span", { "data-testid": "alt-count" }, String(alts.length)),
+          );
+        }
+
+        const ui = render(React.createElement(KitRegistryProvider, null, React.createElement(Harness)));
+
+        await waitFor(() => {
+          expect(screen.getByTestId("has-store").textContent).toBe("yes");
+        });
+
+        const jsStore = session.store(storeId);
+        const altResult = await jsStore.startAlternative("registry-e2e-alt");
+        expect(altResult.ok).toBe(true);
+        expect((await jsStore.wip().alternatives()).length).toBeGreaterThanOrEqual(1);
+
+        ui.unmount();
+        await waitFor(() => {
+          expect(disposeSpy).toHaveBeenCalledTimes(1);
+        });
+      } finally {
+        disposeSpy.mockRestore();
+      }
     });
   });
 
@@ -2755,6 +2919,13 @@ if (import.meta.vitest) {
       /\buseKitScope\s*\(/,
       /\bKitScope\b/,
       /\bKitShellScopeProvider\b/,
+      /\bKitFieldBinding\b/,
+      /\bWriteStatus\b/,
+      /\buseFilesFull\b/,
+      /\buseTagsFull\b/,
+      /\bfunction useTypes\b/,
+      /\bLegacyWriteRowStatus\b/,
+      /\bSketchpadTriad\b/,
     ];
     it("react index has no banned substrings as live code calls", () => {
       for (const re of mustNotMatchCode) {

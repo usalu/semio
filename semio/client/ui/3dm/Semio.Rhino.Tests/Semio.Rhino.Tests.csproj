@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Semio.Rhino\Semio.Rhino.csproj" />
+    <ProjectReference Include="..\Semio.Rhino\Semio.Rhino.csproj" AdditionalProperties="Configuration=UnitTest" />
     <ProjectReference Include="..\..\..\lib\net\Semio\Semio.csproj" />
   </ItemGroup>
 

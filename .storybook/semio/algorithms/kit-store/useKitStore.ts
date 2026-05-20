@@ -4,7 +4,7 @@
 
 import * as React from "react";
 
-import { ensureSemioWasm, KitStoreHandle } from "./semioWasm";
+import { createStorybookKitGraphqlHandle, type KitStoreHandle } from "./semioWasm";
 
 import type { LoggedEvent } from "./EventsFeed";
 
@@ -87,9 +87,7 @@ export function useKitStore(seedKit: unknown) {
     setReady(false);
     void (async () => {
       try {
-        await ensureSemioWasm();
-        const plain = JSON.parse(JSON.stringify(seedKit)) as object;
-        const h = KitStoreHandle.create(plain);
+        const h = await createStorybookKitGraphqlHandle(seedKit);
         if (cancelled) {
           h.free();
           return;

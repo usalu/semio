@@ -8,65 +8,19 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Semio.Store;
 
-//#region 🌐GraphqlWire
-/// <summary>🌐 GraphQL-over-HTTP POST body aligned with <c>semio/js</c> and <c>semio-store</c> (<c>query</c>, <c>variables</c>, <c>operationName</c> always present).</summary>
-internal static class GraphqlWire
-{
-    internal static string PostBodyJson(string query, JObject? variables = null, string? operationName = null) =>
-        JsonConvert.SerializeObject(new JObject
-        {
-            ["query"] = query,
-            ["variables"] = variables ?? new JObject(),
-            ["operationName"] = operationName == null ? JValue.CreateNull() : operationName,
-        }, Formatting.None);
-
-    internal static JToken UnwrapData(JToken response)
-    {
-        if (response is not JObject o) throw new IOException("graphql: response is not an object");
-        if (o["errors"] is JArray errs && errs.Count > 0)
-        {
-            var msg = errs[0]?["message"]?.Value<string>() ?? "GraphQL error";
-            throw new IOException("graphql: " + msg);
-        }
-        var data = o["data"];
-        if (data == null || data.Type == JTokenType.Null) throw new IOException("graphql: no data in response");
-        return data;
-    }
-
-    internal static void AssertOperationKind(string document, string kind)
-    {
-        var rest = document.TrimStart();
-        for (; ; )
-        {
-            if (rest.StartsWith("#", StringComparison.Ordinal))
-            {
-                var nl = rest.IndexOf('\n');
-                if (nl < 0) throw new IOException($"graphql: expected {kind}, got unknown");
-                rest = rest[(nl + 1)..].TrimStart();
-                continue;
-            }
-            break;
-        }
-        var head = rest.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-        if (!string.Equals(head, kind, StringComparison.OrdinalIgnoreCase))
-            throw new IOException($"graphql: expected {kind}, got {head}");
-    }
-}
-//#endregion 🌐GraphqlWire
-
-/// <summary>🌐 Thin HTTP GraphQL client to <c>semio-store</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>semio/js</c> <see cref="Session.openHttp"/>.</summary>
+/// <summary>🌐 Thin HTTP GraphQL client to <c>semio-store</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>semio/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
 public sealed class StoreClient : IDisposable
 {
     private readonly string _binaryPath;
     private readonly HttpClient _http;
     private Process? _process;
     private string? _baseUrl;
+
     public StoreClient(string? binaryPath = null, string? baseUrl = null)
     {
         _binaryPath = string.IsNullOrWhiteSpace(binaryPath)
@@ -76,9 +30,6 @@ public sealed class StoreClient : IDisposable
         if (!string.IsNullOrWhiteSpace(baseUrl))
             _baseUrl = baseUrl.TrimEnd('/');
     }
-
-    /// <summary>📡 Kit-store push events are not exposed over HTTP GraphQL yet; subscribe via GraphQL <c>subscription</c> when the sidecar adds a stream.</summary>
-    public event Action<JObject>? OnEvent;
 
     public void Start()
     {
@@ -159,8 +110,8 @@ public sealed class StoreClient : IDisposable
         }
     }
 
-    /// <summary>📦 <c>POST /install</c> — exactly one of <c>create</c>, <c>importFile</c>, … per <c>semio-store</c>.</summary>
-    public void Install(JObject body)
+    /// <summary>📦 <c>POST /install</c> — exactly one install field per <c>semio-store</c>.</summary>
+    internal void Install(JObject body)
     {
         var json = body.ToString(Formatting.None);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -168,20 +119,45 @@ public sealed class StoreClient : IDisposable
         var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         if (!r.IsSuccessStatusCode)
             throw new IOException($"semio-store install {(int)r.StatusCode}: {t}");
+        WarmGraphqlSession();
+    }
+
+    /// <summary>🧾 Warm-path after install — <c>session.start</c> + store cursor probe (semio/js <c>warmGraphqlRead</c>).</summary>
+    internal void WarmGraphqlSession()
+    {
+        try
+        {
+            ExecuteMutation(StoreGraphql.SessionStartMutation());
+        }
+        catch
+        {
+            /* session may already be started */
+        }
+        _ = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
+    }
+
+    /// <summary>🪢 First <c>Session.stores.edges[].cursor</c> (store command scope id, typically <c>e0</c>).</summary>
+    internal string DefaultStoreId()
+    {
+        var data = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
+        var id = StoreGraphqlJson.DefaultStoreCursor(data);
+        if (string.IsNullOrEmpty(id))
+            throw new IOException("graphql: no session store cursor");
+        return id;
     }
 
     /// <summary>📖 <c>POST /graphql</c> query root (<c>type Query</c>).</summary>
-    public JToken ExecuteQuery(string query, JObject? variables = null, string? operationName = null)
+    internal JToken ExecuteQuery(string query, JObject? variables = null, string? operationName = null)
     {
-        GraphqlWire.AssertOperationKind(query, "query");
-        return GraphqlWire.UnwrapData(PostGraphql(GraphqlWire.PostBodyJson(query, variables, operationName)));
+        StoreGraphqlWire.AssertOperationKind(query, "query");
+        return StoreGraphqlWire.UnwrapData(PostGraphql(StoreGraphqlWire.PostBodyJson(query, variables, operationName)));
     }
 
     /// <summary>✍️ <c>POST /graphql</c> mutation root (<c>type Mutation</c>).</summary>
-    public JToken ExecuteMutation(string query, JObject? variables = null, string? operationName = null)
+    internal JToken ExecuteMutation(string query, JObject? variables = null, string? operationName = null)
     {
-        GraphqlWire.AssertOperationKind(query, "mutation");
-        return GraphqlWire.UnwrapData(PostGraphql(GraphqlWire.PostBodyJson(query, variables, operationName)));
+        StoreGraphqlWire.AssertOperationKind(query, "mutation");
+        return StoreGraphqlWire.UnwrapData(PostGraphql(StoreGraphqlWire.PostBodyJson(query, variables, operationName)));
     }
 
     private JToken PostGraphql(string requestJson)
@@ -218,6 +194,106 @@ public sealed class StoreClient : IDisposable
         _process = null;
         _http.Dispose();
     }
+}
+
+/// <summary>🧭 Thin GraphQL session over <see cref="StoreClient" /> (aligned with semio/js <c>Session</c> store surface).</summary>
+public sealed class StoreSession : IDisposable
+{
+    private readonly StoreClient _client;
+    private string? _storeId;
+    private string? _activeChangeId;
+    private WipKit? _kit;
+
+    public StoreSession(StoreClient client)
+    {
+        _client = client;
+        Events = new StoreEventBus();
+    }
+
+    /// <summary>📡 Command and field-change bus for this session.</summary>
+    public StoreEventBus Events { get; }
+
+    /// <summary>📦 WIP kit under <c>session.stores → wip.theKit.kit</c>.</summary>
+    public WipKit Kit => _kit ??= new WipKit(this);
+
+    /// <summary>🌐 Opens against an existing <c>semio-store</c> base URL (optional install-create first).</summary>
+    public static StoreSession OpenHttp(string baseUrl, JObject? installCreateDto = null)
+    {
+        var c = new StoreClient(baseUrl: baseUrl);
+        var session = new StoreSession(c);
+        if (installCreateDto != null)
+            session.InstallCreate(installCreateDto);
+        else
+            c.WarmGraphqlSession();
+        return session;
+    }
+
+    /// <summary>🪢 Store command scope id (<c>Session.stores.edges[].cursor</c>, typically <c>e0</c>).</summary>
+    public string StoreId => _storeId ??= _client.DefaultStoreId();
+
+    //#region 🎬 install commands
+    /// <summary>📦 <c>POST /install</c> with <c>create.dto</c>.</summary>
+    public void InstallCreate(JObject dto) =>
+        _client.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
+
+    /// <summary>📥 <c>POST /install</c> with normalized initial-kit projection (<see cref="StoreKitIO.KitToInstallProjection"/>).</summary>
+    public void InstallProjection(Kit kit) =>
+        InstallCreate(StoreKitIO.KitToInstallProjection(kit));
+
+    /// <summary>📦 <c>POST /install</c> with <c>importFile.path</c>.</summary>
+    public void InstallImportFile(string path) =>
+        _client.Install(new JObject { ["importFile"] = new JObject { ["path"] = Path.GetFullPath(path) } });
+    //#endregion 🎬 install commands
+
+    //#region 🎬 session commands
+    /// <summary>🎬 <c>session.store.theKit.startNewChange</c>.</summary>
+    public string StartNewChange()
+    {
+        _activeChangeId = MutateStartNewChange();
+        Events.AfterCommand();
+        return _activeChangeId;
+    }
+
+    internal string EnsureChangeId() => _activeChangeId ??= MutateStartNewChange();
+    //#endregion 🎬 session commands
+
+    private string MutateStartNewChange()
+    {
+        var data = _client.ExecuteMutation(
+            StoreGraphql.SessionStoreStartNewChangeMutation(),
+            new JObject { ["storeId"] = StoreId });
+        var node = data.SelectToken("session.store.theKit.startNewChange");
+        StoreGraphqlJson.AssertResponseOk(node, "startNewChange");
+        var changeId = StoreGraphqlJson.ResponseResultId(node as JObject);
+        if (string.IsNullOrEmpty(changeId))
+            throw new IOException("graphql: startNewChange returned empty change id");
+        return changeId;
+    }
+
+    internal JToken ReadSessionEntry() =>
+        _client.ExecuteQuery(StoreGraphql.KitSessionQueryEntry);
+
+    internal JToken ReadKitSelection(string selection) =>
+        _client.ExecuteQuery(StoreGraphql.KitSessionWipKitQuery(selection));
+
+    internal JObject? ReadKitObject(string selection) =>
+        StoreGraphqlJson.WipTheKitKit(ReadKitSelection(selection), StoreId);
+
+    internal JToken ReadMaterialization() =>
+        _client.ExecuteQuery(StoreGraphql.KitWipMaterializationQuery());
+
+    internal void RunKitMutation(string changeId, string kitSelection, string? fieldEventKind)
+    {
+        var (query, variables) = StoreGraphql.ScopedKitMutation(StoreId, changeId, kitSelection);
+        var data = _client.ExecuteMutation(query, variables);
+        var op = kitSelection.Trim().Split('(')[0].Trim();
+        var node = StoreGraphqlJson.FindKitCommandResponse(data)
+            ?? data.SelectToken($"session.store.theKit.unsavedChange.kit.{op}");
+        StoreGraphqlJson.AssertResponseOk(node, op);
+        Events.AfterCommand(fieldEventKind);
+    }
+
+    public void Dispose() => _client.Dispose();
 }
 
 public static class StorePaths

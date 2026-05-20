@@ -1,0 +1,70 @@
+    Blocking waiting for file lock on artifact directory
+   Compiling semio v0.1.0 (C:\git\semio\semio\client\lib\rs)
+error: no rules expected `!`
+    --> semio\client\lib\rs\lib.rs:1608:49
+     |
+1603 |     macro_rules! gap_surface_family_name_list {
+     |     ----------------------------------------- when calling this macro
+...
+1608 |                 __gap_surface_family_name_idents!()
+     |                                                 ^ no rules expected this token in macro call
+...
+1661 |     gap_surface_family_name_list!(@apply_families);
+     |     ---------------------------------------------- in this macro invocation
+     |
+     = note: while trying to match sequence start
+     = note: this error originates in the macro `gap_surface_family_name_list` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected `!`
+    --> semio\client\lib\rs\lib.rs:1628:57
+     |
+1623 |     macro_rules! gap_surface_existing_relay_name_list {
+     |     ------------------------------------------------- when calling this macro
+...
+1628 |                 __gap_surface_existing_relay_name_idents!()
+     |                                                         ^ no rules expected this token in macro call
+...
+1719 |     gap_surface_existing_relay_name_list!(@apply_relays);
+     |     ---------------------------------------------------- in this macro invocation
+     |
+     = note: while trying to match sequence start
+     = note: this error originates in the macro `gap_surface_existing_relay_name_list` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected `!`
+     --> semio\client\lib\rs\lib.rs:1617:49
+      |
+ 1617 |                   __gap_surface_family_name_idents!()
+      |                                                   ^ no rules expected this token in macro call
+...
+ 1653 |       macro_rules! register_gap_surface_family_connections {
+      |       ---------------------------------------------------- when calling this macro
+...
+14071 |           let builder = crate::with_gap_surface_family_names!(
+      |  _______________________-
+14072 | |             register_gap_surface_family_connections,
+14073 | |             builder
+14074 | |         );
+      | |_________- in this macro invocation
+      |
+      = note: while trying to match sequence start
+      = note: this error originates in the macro `$crate::gap_surface_family_name_list` which comes from the expansion of the macro `crate::with_gap_surface_family_names` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: no rules expected `!`
+     --> semio\client\lib\rs\lib.rs:1637:57
+      |
+ 1637 |                   __gap_surface_existing_relay_name_idents!()
+      |                                                           ^ no rules expected this token in macro call
+...
+ 1711 |       macro_rules! register_gap_surface_existing_relay_connections {
+      |       ------------------------------------------------------------ when calling this macro
+...
+14084 | /         crate::with_gap_surface_existing_relay_names!(
+14085 | |             register_gap_surface_existing_relay_connections,
+14086 | |             builder
+14087 | |         )
+      | |_________- in this macro invocation
+      |
+      = note: while trying to match sequence start
+      = note: this error originates in the macro `$crate::gap_surface_existing_relay_name_list` which comes from the expansion of the macro `crate::with_gap_surface_existing_relay_names` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `semio` (lib test) due to 4 previous errors

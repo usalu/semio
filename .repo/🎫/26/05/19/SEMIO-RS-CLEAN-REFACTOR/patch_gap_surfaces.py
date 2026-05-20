@@ -127,6 +127,7 @@ with_fam_new = """    #[macro_export]
 """
 m = with_fam_pat.search(text)
 if not m:
+    print("FAIL family", "invocation" in text, "register_macro" in text)
     raise SystemExit("with_gap_surface_family_names block not found")
 text = text[: m.start()] + with_fam_new + text[m.end() :]
 

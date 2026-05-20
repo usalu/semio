@@ -3,9 +3,9 @@
   "schema": "🎆26🌙06⬆️1",
   "draftId": "the-kit",
   "transactionId": "tx-golden-us001",
-  "ops": [
+  "operations": [
     {
-      "kind": "createdFixedPiece",
+      "kind": "createFixedPiece",
       "input": {
         "designId": "des-golden",
         "blueprintId": "bp-golden-1",
@@ -20,7 +20,7 @@
       }
     },
     {
-      "kind": "createdFixedPiece",
+      "kind": "createFixedPiece",
       "input": {
         "designId": "des-golden",
         "blueprintId": "bp-golden-2",
@@ -35,7 +35,7 @@
       }
     },
     {
-      "kind": "createdFixedPiece",
+      "kind": "createFixedPiece",
       "input": {
         "designId": "des-golden",
         "blueprintId": "bp-golden-3",

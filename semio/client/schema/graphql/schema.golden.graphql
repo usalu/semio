@@ -9587,6 +9587,7 @@ type StoreCommand {
   theKit: VersionCommand
   alternative(id: ID!): AlternativeCommand
   startAlternative(name: String): Response!
+  installProjection(json: String!): Response!
 }
 
 type StoreCommandEdge implements EntityEdge {
@@ -9886,7 +9887,8 @@ type Query {
 #region ScopedCommands
 
 # 🎬 Kit-changing operations resolve through command scopes:
-#     `session → theKit | alternative(id) | startAlternative(name) | start | end | login | logout`,
+#     `session → store(id) → installProjection(json) | startAlternative | backbone | theKit | alternative(id)`,
+#     `session → start | end | login | logout`,
 #     then `theKit → startNewChange | unsavedChange(id) | save | createCheckpoint`,
 #     then `unsavedChange(id) → kit → …`. Leaf fields return `Response!` (`ok`, `errors`, `result`).
 type Mutation {

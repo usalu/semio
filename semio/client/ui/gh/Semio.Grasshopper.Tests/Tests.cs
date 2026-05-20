@@ -14,11 +14,10 @@ using System.Runtime.InteropServices;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Grasshopper.Rhinoceros.Representation;
-using Grasshopper.Rhinoceros.Representation.Params;
 using Rhino.FileIO;
 using Rhino.Geometry;
 using Semio.Grasshopper;
+using static Semio.Grasshopper.Compatibility;
 
 namespace Semio.Grasshopper.Tests;
 
@@ -204,7 +203,7 @@ public class ImportRepresentationUtilityTests
         var importedRepresentationObjectData = Utility.ImportRhinoRepresentationObjectDataFromSemioFile(file);
 
         Assert.NotNull(importedRepresentationObjectData);
-        Assert.IsType<RepresentationObject>(importedRepresentationObjectData);
+        Assert.IsType<RhinoRepresentationObjectData>(importedRepresentationObjectData);
         Assert.True(importedRepresentationObjectData.IsValid);
         Assert.True(importedRepresentationObjectData.UserText.TryGetValue("semio.import-representation.blob", out var resolvedBlob));
         Assert.Equal(blob, resolvedBlob);
@@ -333,7 +332,7 @@ public class RepresentationObjectToGroupComponentTests
         var resolvedContexts = new List<Utility.RhinoRepresentationObject>();
         foreach (var importedRhinoObject in importedRhinoObjects)
         {
-            var didResolve = Utility.TryResolveRhinoRepresentationContext(new RepresentationObject(importedRhinoObject), out var resolvedContext);
+            var didResolve = Utility.TryResolveRhinoRepresentationContext(importedRhinoObject, out var resolvedContext);
             Assert.True(didResolve);
             Assert.NotNull(resolvedContext.RepresentationObject);
             resolvedContexts.Add(resolvedContext);
@@ -370,6 +369,43 @@ public class GroupToRepresentationObjectComponentTests
     }
 }
 #endregion 👓GroupToRepresentationObjectComponentTests
+
+#region ⛑️KitPersistenceComponentTests
+// Tests MUST verify Load Kit, Save Kit, and Update Kit register store-backed persistence correctly.
+public class KitPersistenceComponentTests
+{
+    [Fact]
+    public void LoadKitComponent_ShouldExposeKitAndDirectoryOutputs()
+    {
+        var component = new LoadKitComponent();
+        Assert.Equal(3, component.Params.Output.Count);
+        Assert.IsType<KitParam>(component.Params.Output[1]);
+        Assert.IsType<Param_String>(component.Params.Output[2]);
+    }
+
+    [Fact]
+    public void UpdateKitComponent_ShouldDelegateDiffApplyToStoreKitIO()
+    {
+        var component = new UpdateKitComponent();
+        Assert.Equal("Update Kit", component.Name);
+        Assert.Contains("Update Kit", component.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(3, component.Params.Input.Count);
+        Assert.IsType<KitDiffParam>(component.Params.Input[0]);
+    }
+
+    [Fact]
+    public void KitRuntimeState_Remember_And_TryGetCached_Roundtrip()
+    {
+        var kit = new Semio.Kit { Id = "00000000-0000-7000-8000-0000000000ff", Name = "gh-cache" };
+        var dir = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "gh-kit-cache"));
+        KitRuntimeState.Remember(dir, kit);
+        var cached = KitRuntimeState.TryGetCached(dir);
+        Assert.NotNull(cached);
+        Assert.Equal("gh-cache", cached!.Name);
+        Assert.Null(KitRuntimeState.TryGetCached(dir + "-other"));
+    }
+}
+#endregion ⛑️KitPersistenceComponentTests
 
 #region 🌩️NamingConventionTests
 // Tests MUST verify Grasshopper components and parameters follow repo naming and description rules.
@@ -460,9 +496,8 @@ public class ExportDesignToBlocksComponentTests
             .ToList();
 
         var ids = allComponentKinds
-            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentId)
-            .Where(g => g.HasValue)
-            .Select(g => g!.Value)
+            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentGuid)
+            .Where(g => g != Guid.Empty)
             .ToList();
 
         var duplicates = ids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();

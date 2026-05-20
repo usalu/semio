@@ -10,7 +10,7 @@ import { within } from "storybook/test";
 import * as React from "react";
 
 import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
+import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
 
 import { CommandForm } from "../../../semio/algorithms/kit-store/CommandForm";
 import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "../../../semio/algorithms/kit-store/commandSchema";
@@ -21,11 +21,12 @@ import { HistoryControls, KitTreeGraph } from "../../../semio/algorithms/kit-sto
 import { SnapshotViewer } from "../../../semio/algorithms/kit-store/SnapshotViewer";
 import { useKitStore } from "../../../semio/algorithms/kit-store/useKitStore";
 
-const kitJson = metabolismKit as unknown;
-const anyKit = kitJson as { designs?: { id: string }[]; types?: { id: string }[]; name?: string };
-const seedDesign = anyKit.designs?.[0];
-const firstTypeId = anyKit.types?.[0]?.id ?? "";
-const firstDesignId = seedDesign?.id ?? "";
+const kitJson = metabolismKit;
+const seedDesignPlain = designFromKit(kitJson, NAKAGIN_CAPSULE_TOWER_DESIGN_ID);
+const kitTypes = kitSurface(kitJson)["types"];
+const typesItems = Array.isArray(kitTypes) ? kitTypes : Array.isArray((kitTypes as { items?: unknown[] } | undefined)?.items) ? ((kitTypes as { items: { id?: string }[] }).items) : [];
+const firstTypeId = String(typesItems[0]?.id ?? "");
+const firstDesignId = String(seedDesignPlain?.id ?? "");
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "ks-ent", kind: WindowKind.DESIGN_INPUT, label: "Entity ids", component: EntityWindow },
@@ -248,18 +249,13 @@ function EventsWindow() {
 function KitStoreFrame() {
   const store = useKitStore(kitJson);
 
-  const design = React.useMemo(() => {
-    if (seedDesign) {
-      return new DesignEntity(seedDesign as any);
-    }
-    return new DesignEntity({} as any);
-  }, []);
+  const design = React.useMemo(() => new DesignEntity((seedDesignPlain ?? { id: "empty" }) as Design), []);
 
   const context = React.useMemo<AlgorithmContextValue>(
     () => ({
-      kit: kitJson as unknown as Kit,
-      design: design as Design,
-      outputDesign: design as Design,
+      kit: kitJson as Kit,
+      design,
+      outputDesign: design,
       selectedPieceIds: [],
       onSelectedPieceIdsChange: () => {},
     }),

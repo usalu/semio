@@ -118,6 +118,8 @@ public static class SemioDiff
         return list;
     }
 
+    private static JArray? DiffUpdatesArray(JObject raw) => raw["updated"] as JArray ?? raw["modified"] as JArray;
+
     private static bool KitDiffDeepEqual(JToken a, JToken b) => JToken.DeepEquals(a, b);
 
     private delegate void DesignNestedHandler(KitDiffValidationContext ctx, JObject kitMap, JObject designItem, JObject? diffMap, string path, RefSets refs);
@@ -166,7 +168,7 @@ public static class SemioDiff
         if (ctx.Heal)
         {
             if (raw["removed"] is JArray r0) hRem = (JArray)r0.DeepClone();
-            if (raw["updated"] is JArray u0) hUpd = (JArray)u0.DeepClone();
+            if (DiffUpdatesArray(raw) is JArray u0) hUpd = (JArray)u0.DeepClone();
             if (raw["added"] is JArray a0) hAdd = (JArray)a0.DeepClone();
         }
         if (raw["removed"] is JArray removedTok)
@@ -260,7 +262,7 @@ public static class SemioDiff
                         }
                     }
                 }
-        if (raw["updated"] is JArray updTok)
+        if (DiffUpdatesArray(raw) is JArray updTok)
             foreach (var u in updTok)
                 if (u is JObject um && um[idKey] is JObject idObj)
                 {

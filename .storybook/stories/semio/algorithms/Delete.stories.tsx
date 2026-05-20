@@ -1,23 +1,33 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx
-// Specs: Pure UI proxy to flatDesign + deletePieces. No domain logic. All designs include connections.
-// Summary: Flat input design via flatDesign (semio/rs WASM); deletePieces returns diff; Design.applyDiff computes output.
+// Specs: Pure UI proxy to flatDesign + deletePieces via shared story hooks.
+// Summary: IPO delete board — selection input, delete diff, output with applied diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff, DesignPlain } from "@semio/react";
-import { Design as DesignEntity } from "@semio/react";
+import type { Design, DesignDiff } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
-import { deletePieces, flatDesign } from "@semio/algorithms";
+import {
+  AlgorithmApp,
+  WindowKind,
+  NAKAGIN_CAPSULE_TOWER_DESIGN_ID,
+  deletePieces,
+  designFromKit,
+  previewDesignWithAppliedDiff,
+  useAlgorithmAsyncRun,
+  useFlatDesignPreview,
+  useReconciledPieceSelection,
+  type AlgorithmContextValue,
+  type AlgorithmWindowDef,
+} from "@semio/algorithms";
 
 import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
+const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
+const defaultPieceIds = ((rawDesign.pieces as { id: string }[] | undefined) ?? []).slice(0, 3).map((p) => p.id);
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "delete-input", kind: WindowKind.SELECTION_INPUT, label: "Input" },
@@ -26,62 +36,29 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DeleteFrame() {
-  const kit = metabolismKit as any;
-  const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
-  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([]);
+  const kit = metabolismKit;
   const [selectedConnectionIds, setSelectedConnectionIds] = React.useState<string[]>([]);
-  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const { flatInputDesign, diagramLayoutDiff, loading: flatLoading, ready } = useFlatDesignPreview(kit, rawDesign.id);
+  const { selectedPieceIds, setSelectedPieceIds } = useReconciledPieceSelection([], rawDesign, defaultPieceIds, ready);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setFlatInputDesign(null);
-    setDesignDiff(undefined);
-    void (async () => {
-      const flat = await flatDesign(kit, rawDesign.id);
-      if (cancelled) return;
-      setFlatInputDesign(flat);
-      setSelectedPieceIds((prev) => {
-        const pieceIds = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.id));
-        const filtered = prev.filter((g) => pieceIds.has(g));
-        if (filtered.length > 0) return filtered;
-        return (rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.id);
-      });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kit]);
+  const hasSelection = selectedPieceIds.length > 0 || selectedConnectionIds.length > 0;
+  const { result: diffRes, loading: runLoading } = useAlgorithmAsyncRun(
+    ready && hasSelection,
+    async () => {
+      const res = await deletePieces(flatInputDesign!, selectedPieceIds, selectedConnectionIds);
+      return res.ok ? res.diff : undefined;
+    },
+    [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds],
+  );
 
-  React.useEffect(() => {
-    if (!flatInputDesign) return;
-    let cancelled = false;
-    void (async () => {
-      if (selectedPieceIds.length === 0 && selectedConnectionIds.length === 0) {
-        if (!cancelled) setDesignDiff(undefined);
-        return;
-      }
-      setDesignDiff(undefined);
-      const diffRes = await deletePieces(kit, flatInputDesign, selectedPieceIds, selectedConnectionIds);
-      if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.diff : undefined);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds]);
-
-  const outputDesign = React.useMemo(() => {
-    if (!flatInputDesign) return rawDesign as Design;
-    if (!designDiff) return flatInputDesign as Design;
-    const plain = (flatInputDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatInputDesign)) as DesignPlain);
-    const next = new DesignEntity(plain);
-    next.applyDiff(designDiff);
-    return next;
-  }, [designDiff, flatInputDesign]);
+  const designDiff = diffRes as DesignDiff | undefined;
+  const outputDesign = previewDesignWithAppliedDiff(flatInputDesign, designDiff, rawDesign);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
       design: (flatInputDesign ?? rawDesign) as Design,
+      diagramLayoutDiff,
       selectedPieceIds,
       onSelectedPieceIdsChange: setSelectedPieceIds,
       selectedConnectionIds,
@@ -89,15 +66,15 @@ function DeleteFrame() {
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: outputDesign as Design,
-      error: !flatInputDesign
+      error: flatLoading
         ? "Loading delete preview…"
-        : selectedPieceIds.length === 0 && selectedConnectionIds.length === 0
+        : !hasSelection
           ? "Select at least one piece or connection to delete."
-          : !designDiff
+          : runLoading
             ? "Loading delete result…"
             : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign],
+    [kit, flatInputDesign, diagramLayoutDiff, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign, flatLoading, hasSelection, runLoading],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

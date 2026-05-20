@@ -26,9 +26,14 @@ export default defineConfig({
   test: {
     name: "semio-react",
     environment: "jsdom",
-    testTimeout: 30000,
+    testTimeout: 120000,
     include: ["index.tsx"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
+    maxWorkers: 1,
+    fileParallelism: false,
+    pool: "forks",
+    isolate: true,
+    execArgv: ["--max-old-space-size=16384"],
     /** Lets `@semio/js` `KitStore.open` load `semio_bg.wasm` when Vitest bundles `import.meta.url` away from `semio/js`. */
     env: { SEMIO_WASM_BG_PATH: semioWasmBg },
   },

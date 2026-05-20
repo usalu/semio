@@ -6,6 +6,8 @@
 
 /// <reference lib="webworker" />
 
+import { RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
+
 //#region 🧷WasmHandle
 type WasmKitHandle = {
   execute: (body: string) => Promise<string>;
@@ -41,6 +43,10 @@ self.onmessage = async (ev: MessageEvent<string>) => {
       if (typeof mod.default === "function") await mod.default();
       if (typeof mod.boot === "function") mod.boot();
       const uri = typeof msg.uri === "string" ? msg.uri : "";
+      if (uri !== RS_WASM_EMPTY_STORE_URI) {
+        post({ op: "error", message: `worker init: only ${RS_WASM_EMPTY_STORE_URI} is allowed` });
+        return;
+      }
       const created = (mod as { KitStoreHandle: { create: (uri: string) => WasmKitHandle | Promise<WasmKitHandle> } }).KitStoreHandle.create(uri);
       handle = created instanceof Promise ? await created : created;
       post({ op: "ready" });

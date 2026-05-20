@@ -41,11 +41,11 @@ import {
   InMemoryKitStore,
   KitAlternativeSelectionProvider,
   KitDiff,
-  type KitFieldBinding,
   kitHostRedo,
   kitHostUndo,
   KitStoreProvider,
   KitWasmMountProvider,
+  SemioWasmKitLineHost,
   PieceDiff,
   PieceUnderActiveDesignProvider,
   Plane,
@@ -62,7 +62,6 @@ import {
   useAuthorName,
   useConnection,
   useConnectionContext,
-  useConnections,
   useConnectorCode,
   useConnectorCommand,
   useConnectorDescription,
@@ -77,18 +76,20 @@ import {
   useDesignImage,
   useDesignName,
   useDesignUnit,
-  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
+  useExplodeableDesignNodeIds,
   useFileName,
-  useFilesFull,
   useKitCommand,
+  useKitFiles,
   useKitStoredFileUrls as useFileUrls,
   useIsInActiveKitTab,
   useStoreOptional,
   useKitAlternatives,
   useKitAlternativeSelection,
-  useKitCommandEngineExplicitOrigin,
   useKitDescription,
   useKitDesigns,
+  useKitTags,
+  useKitTypes,
+  useWipKit,
   useKitFileBlobUrl,
   useKitFileUrl,
   useKitHomepage,
@@ -97,8 +98,12 @@ import {
   useKitLicense,
   useKitRegistrySafe,
   useKitStore,
-  useKitStoreSnapshot,
+  useKitAuthors,
+  useKitPlainOptional,
+  useKitPortsFlat,
+  useKitQualities,
   useKitWasmHost,
+  useWipKitOptional,
   useOpenKits,
   usePiece,
   usePieceContext,
@@ -110,8 +115,6 @@ import {
   useRepresentationDescription,
   useRepresentationFile,
   useRepresentationUrl,
-  useStoreOptional,
-  useTagsFull,
   useType,
   useTypeAttributes,
   useTypeAuthors,
@@ -123,8 +126,9 @@ import {
   useTypeImage,
   useTypeName,
   useTypeRepresentations,
-  useTypes,
   useTypeUnit,
+  OPERATION_STATUS_IDLE,
+  type OperationStatus,
   useWriteIndicator,
 } from "@semio/react";
 import {
@@ -151,8 +155,10 @@ import {
   TopologyScenePane,
   topologyApplyBoardFixtureCentersToTopLeft,
   topologyBoardCameraFromCenters,
+  topologyBoardCenterFromTopLeft,
   topologyBoardCompoundId,
   topologyBoardConnectorAngle,
+  topologyKitBoardHandleAngle,
   topologyDiagramForceGraphOptions,
   topologyParseBoardCompoundId,
   topologySceneChromeDefaults,
@@ -435,7 +441,7 @@ import { Euler, Matrix4, Vector3 } from "three";
 
 type SemioBundleJson = Record<string, unknown>;
 
-/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for WASM `dev+json:` bootstrap. */
+/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL `installProjection` payloads. */
 function semioDenormalizeBundleValue(v: unknown): unknown {
   if (v == null || typeof v !== "object") return v;
   if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
@@ -494,14 +500,16 @@ export function colorPortsForTypes(types: Type[] | undefined) {
   };
 }
 
-export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
+export function findTypeInKit(kitOrTypes: Kit | readonly Type[], typeId: string | null | undefined): Type | undefined {
   if (!typeId) return undefined;
-  return (kit as any).types?.find((t: Type) => t.id === typeId) as Type | undefined;
+  if (Array.isArray(kitOrTypes)) return kitOrTypes.find((t) => t.id === typeId);
+  return (kitOrTypes as { types?: readonly Type[] }).types?.find((t) => t.id === typeId);
 }
 
-export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
+export function findDesignInKit(kitOrDesigns: Kit | readonly Design[], designId: string | null | undefined): Design | undefined {
   if (!designId) return undefined;
-  return (kit as any).designs?.find((d: Design) => d.id === designId) as Design | undefined;
+  if (Array.isArray(kitOrDesigns)) return kitOrDesigns.find((d) => d.id === designId);
+  return (kitOrDesigns as { designs?: readonly Design[] }).designs?.find((d) => d.id === designId);
 }
 
 export function findPieceInDesign(design: Design, pieceId: string | null | undefined) {
@@ -554,50 +562,43 @@ export function getClusterableGroups(_kit: Kit, _designId: string, _selectedPiec
   return [];
 }
 
-export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
+export function getIncludedDesigns(allDesigns: readonly Design[], design: Design): Design[] {
   const out: Design[] = [];
   const seen = new Set<string>();
   const visit = (d: Design) => {
     if (seen.has(d.id)) return;
     seen.add(d.id);
     out.push(d);
-    for (const p of (d as any).pieces || []) {
-      const ins = (p as any).includedInDesigns as string[] | undefined;
-      if (ins)
-        for (const id of ins) {
-          const d2 = findDesignInKit(kit, id);
-          if (d2) visit(d2);
-        }
+    for (const p of (d as { pieces?: readonly { includedInDesigns?: string[] }[] }).pieces ?? []) {
+      const ins = p.includedInDesigns;
+      if (ins) for (const childId of ins) {
+        const d2 = findDesignInKit(allDesigns, childId);
+        if (d2) visit(d2);
+      }
     }
   };
   visit(design);
-  return out.filter((d) => d.id !== (design as any).id);
+  return out.filter((d) => d.id !== design.id);
 }
 
-/** @emoji 📐 Active design DTO row from kit snapshot or {@link useKitDesigns}. */
+/** @emoji 📐 Active design row from {@link useKitDesigns} for the active {@link DesignContext}. */
 export function useActiveDesignRow(): Design | null {
-  const designId = useDesign();
-  const ks = useKitStoreSnapshot();
+  const designId = useDesignContext();
   const kitDesigns = useKitDesigns();
   return useMemo(() => {
     if (designId == null || designId === "") return null;
-    const kit = ks?.kit as Kit | undefined;
-    const fromSnapshot = kit?.designs?.find((entry) => entry.id === designId);
-    if (fromSnapshot != null) return fromSnapshot;
     return kitDesigns.find((entry) => entry.id === designId) ?? null;
-  }, [designId, ks?.kit, kitDesigns]);
+  }, [designId, kitDesigns]);
 }
 
 /** @emoji 📚 Included designs for the active {@link DesignContext} (sketchpad helper). */
 export function useIncludedDesigns(): Design[] {
-  const designId = useDesign();
-  const ks = useKitStoreSnapshot();
-  const kit = ks?.kit;
-  if (kit == null || designId == null || designId === "") return [];
+  const designId = useDesignContext();
+  if (designId == null || designId === "") return [];
   const designs = useKitDesigns();
   const design = designs.find((d) => d.id === designId);
   if (design == null) return [];
-  return getIncludedDesigns(kit as Kit, design);
+  return getIncludedDesigns(designs, design);
 }
 
 /** @emoji 📐 Piece layout map for the active design (sketchpad scene; WIP: empty without kit-store rows). */
@@ -695,7 +696,7 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
 }
 
 /**
- * @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} handle via {@link Session.open} (`dev+json:` bootstrap).
+ * @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} handle via GraphQL {@link Store.installProjection}.
  */
 export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit; session: Session }> {
   let bytes: Uint8Array;
@@ -713,10 +714,13 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
   const text = new TextDecoder().decode(bytes);
   const plainUnknown = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
   const payload = typeof plainUnknown === "object" && plainUnknown != null ? JSON.stringify(plainUnknown) : String(plainUnknown);
-  const session = await Session.open(payload);
+  const session = await Session.openInMemory();
   const stores = await session.stores();
-  if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after WASM bootstrap");
-  const kit = await stores[0]!.wip().theKit().kit();
+  if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after openInMemory");
+  const store = stores[0]!;
+  const installed = await store.installProjection(payload);
+  if (!installed.ok) throw new Error(`semio/sketchpad: importKit installProjection failed: ${installed.error?.message ?? "unknown"}`);
+  const kit = await store.wip().theKit().kit();
   return { kit, session };
 }
 
@@ -997,54 +1001,6 @@ export interface PersistenceProvider {
  **/
 export type PersistenceFactory = (syncDoc: SyncDoc, key: string) => PersistenceProvider;
 
-/**
- * I/O adapter for reading and writing kit data as a JSON string.
- **/
-export interface JsonFileAdapter {
-  read(key: string): Promise<string | null>;
-  write(key: string, json: string): Promise<void>;
-}
-
-/**
- * I/O adapter for reading and writing kit data as SQLite binary.
- **/
-export interface SqliteAdapter {
-  read(key: string): Promise<Uint8Array | null>;
-  write(key: string, data: Uint8Array): Promise<void>;
-}
-
-class ImmediateSyncPersistenceProvider implements PersistenceProvider {
-  private destroyed = false;
-  constructor() {
-    queueMicrotask(() => {
-      if (this.destroyed) return;
-    });
-  }
-  once(event: "synced", callback: () => void): void {
-    if (event === "synced") queueMicrotask(callback);
-  }
-  on(event: "synced", callback: () => void): void {
-    if (event === "synced") queueMicrotask(callback);
-  }
-  destroy(): void {
-    this.destroyed = true;
-  }
-}
-
-/**
- * @deprecated In-memory doc only; `adapter` is ignored. Host should persist kit via `@semio/react` store clients → `@semio/js` `KitStore`.
- */
-export function createJsonFilePersistenceFactory(_adapter: JsonFileAdapter): PersistenceFactory {
-  return (_syncDoc: SyncDoc, _key: string) => new ImmediateSyncPersistenceProvider();
-}
-
-/**
- * @deprecated In-memory doc only; `adapter` is ignored.
- */
-export function createSqliteFolderPersistenceFactory(_adapter: SqliteAdapter): PersistenceFactory {
-  return (_syncDoc: SyncDoc, _key: string) => new ImmediateSyncPersistenceProvider();
-}
-
 // #endregion 🏂PersistenceProviders
 
 // #endregion ⛩️Imports
@@ -1118,20 +1074,6 @@ export function writableHookResult<T>(value: T, setter: (value: T) => void, canS
 export function conditionalHookResult<T>(canSet: boolean, value: T, setter: ((value: T) => void) | undefined): HookResult<T> {
   return [value, canSet ? setter : undefined, canSet] as const;
 }
-
-// #region 🎨Sketchpad 🛠️PropertiesSchemaBridge
-/**
- * @emoji 🛠️ Bridges `@semio/react` schema 1:1 {@link KitFieldBinding} into sketchpad {@link HookResult} for property panels (write lane ≠ `readonly`).
- */
-function kitFieldBindingToHookResult<T>(scopeId: string | undefined, binding: KitFieldBinding<T>): HookResult<T> {
-  const [value, setAsync, writeStatus] = binding;
-  const canSet = Boolean(scopeId) && writeStatus.kind !== "readonly";
-  const setter = (next: T) => {
-    void setAsync(next);
-  };
-  return conditionalHookResult(canSet, value as T, setter);
-}
-// #endregion 🎨Sketchpad 🛠️PropertiesSchemaBridge
 
 /**
  * A reactive field with a value, canSet flag, and setter function.
@@ -7261,14 +7203,29 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
   }
 
   const innerStore = sketchpadStore.kit(kitId);
+  const mount = (store: unknown, gql?: Readonly<{ session: Session; jsStoreId?: string }>): React.ReactElement => {
+    const branch = React.createElement(KitWasmMountProvider, { kitId, store, children });
+    const alt = React.createElement(KitAlternativeSelectionProvider, { kitId }, branch);
+    if (gql == null) return alt;
+    return React.createElement(
+      SemioWasmKitLineHost,
+      { session: gql.session, storeId: gql.jsStoreId, kitContextId: kitId },
+      alt,
+    );
+  };
+
   if (registry) {
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
     if (status === "ready" && entry) {
-      return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitWasmMountProvider, { kitId, store: entry.store, kitClient: entry.kitClient, children }));
+      const gql =
+        entry.session != null
+          ? { session: entry.session, jsStoreId: entry.jsStoreId }
+          : undefined;
+      return mount(entry.store, gql);
     }
   }
-  return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitWasmMountProvider, { store: innerStore, children }));
+  return mount(innerStore);
 }
 
 /**
@@ -10294,33 +10251,38 @@ export function useKitAppClearAuthors(): ActionHookResult<[]> {
  *MUST return a callback that adds all artifact IDs to selection.
  **/
 export function useKitAppSelectAll(): ActionHookResult<[]> {
-  const ks0 = useKitStoreSnapshot();
-  const kit = ks0?.kit as Kit | undefined;
+  const kitPlain = useKitPlainOptional();
+  const kitTypes = useKitTypes();
+  const kitDesigns = useKitDesigns();
+  const kitQualities = useKitQualities();
+  const kitAuthors = useKitAuthors();
+  const kitFiles = useKitFiles();
+  const kitPorts = useKitPortsFlat();
   const [, setSelection] = useKitAppSelection();
-  const canAct = setSelection !== undefined && kit !== null && kit !== undefined;
+  const canAct = setSelection !== undefined && (kitPlain != null || kitTypes.length > 0);
   const action = useMemo(() => {
-    if (!canAct || !setSelection || !kit) return undefined;
+    if (!canAct || !setSelection) return undefined;
     return () => {
       const allSelection: KitAppSelection = {};
-      const types = kit.types?.map((t: Type) => t.id);
-      const designs = kit.designs?.map((d: Design) => d.id);
-      const qualities = kit.qualities?.map((q: Quality) => q.name);
-      const ports = getKitPorts(kit).map((p: Port) => p.id);
-      const files = kit.files?.map((f: SemioFile) => f.name);
-      const folders = kit.folders?.map((f: Folder) => f.id);
-      const authors = kit.authors?.map((a: Author) => a.name);
+      const plain = kitPlain as { folders?: readonly Folder[] } | null;
+      const types = kitTypes.map((t) => t.id);
+      const designs = kitDesigns.map((d) => d.id);
+      const qualities = kitQualities.map((q) => (q as { name?: string; key?: string }).name ?? (q as { key?: string }).key ?? q.id);
+      const ports = kitPorts.map((p) => p.id);
+      const files = kitFiles.map((f) => (f as { name?: string }).name ?? f.id);
+      const folders = plain?.folders?.map((f) => f.id) ?? [];
 
-      if (types && types.length > 0) allSelection.types = types;
-      if (designs && designs.length > 0) allSelection.designs = designs;
-      if (qualities && qualities.length > 0) allSelection.qualities = qualities;
-      if (ports && ports.length > 0) allSelection.ports = ports;
-      if (files && files.length > 0) allSelection.files = files;
-      if (folders && folders.length > 0) allSelection.folders = folders;
-      if (authors && authors.length > 0) allSelection.authors = authors;
+      if (types.length > 0) allSelection.types = types;
+      if (designs.length > 0) allSelection.designs = designs;
+      if (qualities.length > 0) allSelection.qualities = qualities;
+      if (ports.length > 0) allSelection.ports = ports;
+      if (files.length > 0) allSelection.files = files;
+      if (folders.length > 0) allSelection.folders = folders;
+      if (kitAuthors.length > 0) allSelection.authors = kitAuthors.map((a) => (a as { name?: string }).name ?? a.id);
 
       setSelection(allSelection);
     };
-  }, [kit, setSelection, canAct]);
+  }, [kitPlain, kitTypes, kitDesigns, kitQualities, kitAuthors, kitFiles, kitPorts, setSelection, canAct]);
   return [action, canAct];
 }
 
@@ -11432,8 +11394,7 @@ const KitKindToggles: FC = () => {
  **/
 const KitCreateActions: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const ks0 = useKitStoreSnapshot();
-  const kit = ks0?.kit as Kit | undefined;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const kitStore = useKitStore();
   const getOrigin = useOrigin();
   const { run: kitRun } = useKitCommand();
@@ -11726,8 +11687,7 @@ const AppContent: FC = () => {
   const kitScope = useActiveKitTab();
   const hasKit = useHasKit(kitScope?.id || "");
 
-  const appKs = useKitStoreSnapshot();
-  const kit = appKs?.kit as Kit;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const { run: kitRun } = useKitCommand();
   const { run: designRun } = useDesignCommand();
   const { run: typeRun } = useTypeCommand();
@@ -14148,24 +14108,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
 
 const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
 
-const sketchpadKitBoardHandleAngle = (side: KitDiagramSnapSide, shape: "circle" | "rectangle"): number => {
-  if (shape === "rectangle") {
-    if (side === "top") return 0;
-    if (side === "right") return Math.PI / 2;
-    if (side === "bottom") return Math.PI;
-    return (3 * Math.PI) / 2;
-  }
-  if (side === "right") return 0;
-  if (side === "bottom") return Math.PI / 2;
-  if (side === "left") return Math.PI;
-  return -Math.PI / 2;
-};
-
-const sketchpadKitBoardNodeCenter = (node: KitDiagramLayoutNode): { x: number; y: number } => {
-  const frame = getKitDiagramNodeFrameForKind(node.data.kind);
-  return { x: node.position.x + frame.width / 2, y: node.position.y + frame.height / 2 };
-};
-
 /** @emoji 🗺️ Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
 const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], edges: readonly KitDiagramEdge[]): BoardFixtureV1 => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
@@ -14174,10 +14116,10 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     const frame = getKitDiagramNodeFrameForKind(kind);
     const strategy = getKitDiagramShapeStrategy(kind);
     const shape: "circle" | "rectangle" = strategy.id === "circle" ? "circle" : "rectangle";
-    const center = sketchpadKitBoardNodeCenter(node);
+    const center = topologyBoardCenterFromTopLeft(node.position, frame);
     const handles = SKETCHPAD_KIT_BOARD_HANDLE_SIDES.map((side) => ({
       id: topologyBoardCompoundId(node.id, side),
-      angle: sketchpadKitBoardHandleAngle(side, shape),
+      angle: topologyKitBoardHandleAngle(side, shape),
       handleKind: `semio.kit.${kind}`,
       radius: 4,
     }));
@@ -14229,7 +14171,9 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
   return {
     schema: "elements.board.fixture/v1",
-    camera: topologyBoardCameraFromCenters(nodes.map((node) => sketchpadKitBoardNodeCenter(node))),
+    camera: topologyBoardCameraFromCenters(
+      nodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+    ),
     nodes: boardNodes,
     edges: boardEdges,
   };
@@ -14283,8 +14227,7 @@ const sketchpadKitBoardSelectionToKitSelection = (snapshot: BoardSelectionSnapsh
 interface KitDiagramProps {}
 
 const KitDiagramInner: FC = () => {
-  const ks0 = useKitStoreSnapshot();
-  const kit = ks0?.kit as Kit | undefined;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const boardWrapper = useRef<HTMLDivElement>(null);
   const kitCommands = useKitAppCommands();
   const [selection] = useKitAppSelection();
@@ -14515,11 +14458,17 @@ const KitDiagramInner: FC = () => {
   const selectedBoardIds = useMemo(() => sketchpadKitSelectionToBoardIds(selection), [selection]);
   const lockedBoardNodeIds = useMemo(() => (isHandTool ? new Set(diagramNodes.map((node) => node.id)) : new Set<string>()), [isHandTool, diagramNodes]);
   const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() =>
-    topologyBoardCameraFromCenters(diagramNodes.map((node) => sketchpadKitBoardNodeCenter(node))),
+    topologyBoardCameraFromCenters(
+      diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+    ),
   );
 
   useEffect(() => {
-    setBoardCamera(topologyBoardCameraFromCenters(diagramNodes.map((node) => sketchpadKitBoardNodeCenter(node))));
+    setBoardCamera(
+      topologyBoardCameraFromCenters(
+        diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
+      ),
+    );
   }, [baseNodeIdsKey]);
 
 
@@ -15198,8 +15147,7 @@ export const KitToolbarHistory: FC = () => {
  * MUST re-import the kit from its remote URL, discarding all local changes.
  **/
 export const KitToolbarReset: FC = () => {
-  const ks0 = useKitStoreSnapshot();
-  const kit = ks0?.kit as Kit | undefined;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const kitStore = useKitStore();
   const getOrigin = useOrigin();
   const resetLabel = useLabel("semio.sketchpad.app.kit.toolbar.reset");
@@ -15232,7 +15180,6 @@ export const KitToolbarReset: FC = () => {
 // #region 💧Details
 // Details MUST render the Kit app detail panels for kit, type, port, tag, design, file, folder, and multi-artifact sections.
 
-// #region 🔖SketchpadTriadFieldRows
 /**
  * @emoji 🧾 Stringify optional type parent reference for read-only display rows.
  */
@@ -15255,7 +15202,7 @@ function formatTypeParentRefForInput(value: unknown): string {
 function SketchpadInputRow(props: {
   value: string | null | undefined;
   commit: (next: unknown) => Promise<unknown>;
-  status: WriteStatus;
+  status: OperationStatus;
   id: string;
   placeholder?: string;
   placeholderId?: string;
@@ -15285,7 +15232,7 @@ function SketchpadInputRow(props: {
 function SketchpadTextareaRow(props: {
   value: string | null | undefined;
   commit: (next: unknown) => Promise<unknown>;
-  status: WriteStatus;
+  status: OperationStatus;
   id: string;
   placeholder?: string;
   placeholderId?: string;
@@ -15311,43 +15258,7 @@ function SketchpadTextareaRow(props: {
   );
 }
 
-/** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadInputRow}. Use the segregated row directly in new code. */
-function SketchpadTriadInputRow(props: { triad: KitFieldBinding<any>; id: string; placeholder?: string; placeholderId?: string; readOnly?: boolean; mapCommit?: (raw: string) => unknown }): React.ReactElement {
-  const { triad, ...rest } = props;
-  const [raw, setValue, status] = triad;
-  return <SketchpadInputRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
-}
-
-/** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadTextareaRow}. */
-function SketchpadTriadTextareaRow(props: { triad: KitFieldBinding<any>; id: string; placeholder?: string; placeholderId?: string; readOnly?: boolean; mapCommit?: (raw: string) => unknown }): React.ReactElement {
-  const { triad, ...rest } = props;
-  const [raw, setValue, status] = triad;
-  return <SketchpadTextareaRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
-}
 // #endregion 🔖SegregatedFieldRows
-
-/**
- * @emoji 🧾 Triad-backed toggle row (e.g. type abstract flag).
- */
-function SketchpadTriadToggleRow(props: { triad: KitFieldBinding<boolean | undefined | null>; id: string; icon?: React.ReactNode }): React.ReactElement {
-  const { triad, id, icon } = props;
-  const [pressed, setPressed, status] = triad;
-  const { spinning, error, disabled } = useWriteIndicator(status);
-  return (
-    <TreeRow>
-      <div className="flex min-w-0 w-full flex-col gap-tiny">
-        <div className="flex min-w-0 w-full items-center gap-single">
-          <div className="min-w-0 flex-1">
-            <Toggle id={id} pressed={!!pressed} disabled={disabled} onPressedChange={(p) => void setPressed(p)} showLabel icon={icon} />
-          </div>
-          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
-        </div>
-        {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
-      </div>
-    </TreeRow>
-  );
-}
-// #endregion 🔖SketchpadTriadFieldRows
 
 /**
  * Detail section component for the currently open kit.
@@ -15364,8 +15275,8 @@ export const KitSection: FC = () => {
 /**
  **/
 const KitSectionForm: FC = () => {
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit | undefined;
+  const kit = useWipKitOptional();
+  if (kit == null) return null;
   const { run: kitRun, status: renameKitStatus } = useKitCommand();
   const changeKitDescriptionStatus = renameKitStatus;
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
@@ -15411,10 +15322,10 @@ const KitSectionForm: FC = () => {
         id="semio.sketchpad.app.kit.panel.details.section.kit.description"
         placeholder={descriptionPlaceholder}
       />
-      <SketchpadInputRow value={icon ?? ""} commit={async () => ({ ok: true }) as const} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} readOnly />
-      <SketchpadInputRow value={image ?? ""} commit={async () => ({ ok: true }) as const} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} readOnly />
-      <SketchpadInputRow value={homepage ?? ""} commit={async () => ({ ok: true }) as const} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} readOnly />
-      <SketchpadInputRow value={license ?? ""} commit={async () => ({ ok: true }) as const} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} readOnly />
+      <SketchpadInputRow value={icon ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} readOnly />
+      <SketchpadInputRow value={image ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} readOnly />
+      <SketchpadInputRow value={homepage ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} readOnly />
+      <SketchpadInputRow value={license ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} readOnly />
     </>
   );
 };
@@ -15473,12 +15384,12 @@ const SingleTypeSectionFields: FC = () => {
       <SketchpadInputRow
         value={image ?? ""}
         commit={async () => ({ ok: true }) as const}
-        status={{ kind: "idle" }}
+        status={OPERATION_STATUS_IDLE}
         id="semio.sketchpad.app.type.panel.details.section.type.image"
         placeholderId="semio.sketchpad.app.type.imagePlaceholder.label"
         readOnly
       />
-      <SketchpadInputRow value={unit ?? ""} commit={async () => ({ ok: true }) as const} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
+      <SketchpadInputRow value={unit ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
@@ -15534,9 +15445,8 @@ export const PortSection: FC = () => {
  **/
 const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
   const { t } = useTranslation();
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit | undefined;
-  const iface = kit?.ports?.find((i) => i.id === portId);
+  const kitPorts = useKitPortsFlat();
+  const iface = kitPorts.find((i) => i.id === portId);
   if (!iface) return null;
   const compatibleCount = iface.compatiblePorts?.length || 0;
   return (
@@ -15563,9 +15473,8 @@ const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
  **/
 const MultiplePortsSection: FC<{ portIds: string[] }> = ({ portIds }) => {
   const { t } = useTranslation();
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit | undefined;
-  const ports = portIds.map((id) => kit?.ports?.find((i) => i.id === id)).filter((i) => i !== undefined) as Port[];
+  const kitPorts = useKitPortsFlat();
+  const ports = portIds.map((id) => kitPorts.find((i) => i.id === id)).filter((i) => i !== undefined) as Port[];
   return (
     <>
       <HelperRow propertyAligned>
@@ -15861,7 +15770,7 @@ const MultipleDesignsSection: FC<{ designIds: string[] }> = ({ designIds }) => {
 export const FileSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
-  const [files0] = useFilesFull();
+  const files0 = useKitFiles();
   const selectedFiles = selection?.files || [];
 
   if (selectedFiles.length === 0) return null;
@@ -15928,8 +15837,7 @@ export const FileSection: FC = () => {
 export const FolderSection: FC = () => {
   const { t } = useTranslation();
   const kitDataSource = useKitAppStore() as any;
-  const ksFolder = useKitStoreSnapshot();
-  const kit = ksFolder?.kit as Kit;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const [selection] = useKitAppSelection();
   const selectedFolders = selection?.folders || [];
 
@@ -16185,7 +16093,7 @@ const SketchpadSettingsContent: FC = () => {
 const SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE = "__semio_sketchpad_the_kit__";
 
 /**
- * @emoji 🌱 Registers the left-most footer dropdown: `the kit` vs rs alternatives; shows unsaved change count from `Alternative.unsavedChanges` when present on the wire.
+ * @emoji 🌱 Footer dropdown: the kit vs WIP alternatives; unsaved count via {@link Alternative#unsavedChangeCount}.
  **/
 const KitAlternativeFooterSelector: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -16194,6 +16102,7 @@ const KitAlternativeFooterSelector: FC = () => {
   const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
   const alternatives = useKitAlternatives();
   const store = useStoreOptional();
+  const session = store?.session ?? null;
   const newAltInputRef = useRef<HTMLInputElement>(null);
   const [creatingAlt, setCreatingAlt] = useState(false);
   const [unsavedCount, setUnsavedCount] = useState(0);
@@ -16218,8 +16127,8 @@ const KitAlternativeFooterSelector: FC = () => {
       }
       if (match != null) setSelectedAlternativeId(match.id);
       if (newAltInputRef.current) newAltInputRef.current.value = "";
-    } catch (e) {
-      console.warn("[DEBUG] startAlternative failed", e);
+    } catch {
+      /* ignore */
     } finally {
       setCreatingAlt(false);
     }
@@ -16278,13 +16187,13 @@ const KitAlternativeFooterSelector: FC = () => {
             ref={newAltInputRef}
             className="h-8 min-w-[7rem] max-w-[12rem] text-xs"
             placeholder="Branch name"
-            disabled={!kitClient}
+            disabled={store == null}
             aria-label="New alternative name"
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter") void handleCreateAlternative();
             }}
           />
-          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={!kitClient || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
+          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={store == null || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
             +
           </Button>
           <Input className="h-8 min-w-[6rem] max-w-[9rem] text-xs" placeholder="hub user" value={hubUser} onChange={(e) => setHubUser(e.target.value)} aria-label="Hub username" />
@@ -16295,15 +16204,10 @@ const KitAlternativeFooterSelector: FC = () => {
             variant="ghost"
             size="sm"
             className="h-8 px-2 text-xs"
-            disabled={!kitClient}
+            disabled={session == null}
             onClick={() => {
-              const ext = kitClient as unknown as Record<string, unknown>;
-              const fn = ext["login"];
-              if (typeof fn !== "function") {
-                console.warn("[DEBUG] kitClient has no login(); wire Session.login after js builder lands");
-                return;
-              }
-              void Promise.resolve((fn as (u: string, p: string, h?: string) => Promise<unknown>)(hubUser, hubPass, hubUrl || undefined)).catch((e) => console.warn("[DEBUG] login failed", e));
+              if (session == null) return;
+              void session.login(hubUser, hubPass, hubUrl || undefined);
             }}
           >
             login
@@ -16313,15 +16217,10 @@ const KitAlternativeFooterSelector: FC = () => {
             variant="ghost"
             size="sm"
             className="h-8 px-2 text-xs"
-            disabled={!kitClient}
+            disabled={session == null}
             onClick={() => {
-              const ext = kitClient as unknown as Record<string, unknown>;
-              const fn = ext["logout"];
-              if (typeof fn !== "function") {
-                console.warn("[DEBUG] kitClient has no logout(); wire Session.logout after js builder lands");
-                return;
-              }
-              void Promise.resolve((fn as () => Promise<unknown>)()).catch((e) => console.warn("[DEBUG] logout failed", e));
+              if (session == null) return;
+              void session.logout();
             }}
           >
             logout
@@ -16330,7 +16229,7 @@ const KitAlternativeFooterSelector: FC = () => {
       ),
     });
     return () => removeFooterItem("semio.sketchpad.footer.alternative");
-  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId, store, creatingAlt, handleCreateAlternative, unsavedCount, hubUser, hubPass, hubUrl]);
+  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId, store, session, creatingAlt, handleCreateAlternative, unsavedCount, hubUser, hubPass, hubUrl]);
 
   return null;
 };
@@ -17092,8 +16991,8 @@ export class SketchpadStore {
         const kitsToOpen = initialState.kits.slice();
         /** Defer so `createKit` → `openKitInRegistry` never runs during React render (registry `bump` would setState on `KitRegistryProvider` while a child is rendering). */
         queueMicrotask(() => {
-          kitsToOpen.forEach(({ kit, kind, source }) => {
-            void this.createKit(kit, kind, source, false);
+          kitsToOpen.forEach(({ kit, kind, source, session }) => {
+            void this.createKit(kit, kind, source, false, session);
           });
         });
       }
@@ -17290,7 +17189,19 @@ export class SketchpadStore {
   };
 
   /** @emoji 🔗 Open via {@link KitRegistryValue}; prefer `backbone` / built-in `openJsonFile` over passing a pre-built host store. */
-  private openKitInRegistry = async (kitId: string, init: Parameters<KitRegistryValue["open"]>[1], kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
+  private registryOpenInit = async (kitStore: KitHostStore, wasmSession?: Session): Promise<Parameters<KitRegistryValue["open"]>[1]> => {
+    if (wasmSession == null) return { store: kitStore };
+    const stores = await wasmSession.stores();
+    return { store: kitStore, session: wasmSession, jsStoreId: stores[0]?.id };
+  };
+
+  private openKitInRegistry = async (
+    kitId: string,
+    init: Parameters<KitRegistryValue["open"]>[1],
+    kind: KitKind,
+    source?: InitialStateKit["source"],
+    wasmSession?: Session,
+  ): Promise<void> => {
     const reg = getKitRegistryBridge();
     if (!reg) {
       throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
@@ -17298,8 +17209,12 @@ export class SketchpadStore {
     if (reg.get(kitId)) {
       return;
     }
+    const merged =
+      wasmSession != null && init.store != null
+        ? await this.registryOpenInit(init.store, wasmSession)
+        : init;
     try {
-      await reg.open(kitId, init);
+      await reg.open(kitId, merged);
     } catch (e) {
       console.error(`[sketchpad] KitRegistry open failed for ${kitId}`, e);
       throw e;
@@ -17345,7 +17260,7 @@ export class SketchpadStore {
     remote: false,
   });
 
-  createKit = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<Id> => {
+  createKit = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true, wasmSession?: Session): Promise<Id> => {
     const localKitStoreFactory = this.folderKitStoreFactory ?? this.fileKitStoreFactory;
     const regKind = kind ?? "temporary";
 
@@ -17353,19 +17268,19 @@ export class SketchpadStore {
       const remoteKit = source?.kind === "remote" && source.url ? ({ ...kit, name: source.url } as Kit) : kit;
       const kitStore = await this.remoteKitStoreFactory(remoteKit);
       const kid = kitStore.getSnapshot().kit.id;
-      await this.openKitInRegistry(kid, { store: kitStore }, "remote", source?.kind === "remote" ? source : undefined);
+      await this.openKitInRegistry(kid, { store: kitStore }, "remote", source?.kind === "remote" ? source : undefined, wasmSession);
       return kid;
     }
     if (regKind === "folder" && this.folderKitStoreFactory && (interactive || source?.kind === "folder")) {
       const kitStore = await this.folderKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
       const kid = kitStore.getSnapshot().kit.id;
-      await this.openKitInRegistry(kid, { store: kitStore }, "folder", source);
+      await this.openKitInRegistry(kid, { store: kitStore }, "folder", source, wasmSession);
       return kid;
     }
     if (regKind === "file" && this.fileKitStoreFactory && (interactive || source?.kind === "file")) {
       const kitStore = await this.fileKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
       const kid = kitStore.getSnapshot().kit.id;
-      await this.openKitInRegistry(kid, { store: kitStore }, "file", source);
+      await this.openKitInRegistry(kid, { store: kitStore }, "file", source, wasmSession);
       return kid;
     }
     if ((regKind === "folder" || regKind === "file") && !interactive) {
@@ -17375,7 +17290,13 @@ export class SketchpadStore {
     if (regKind === "temporary" && this.temporaryKitStoreFactory) {
       const kitStore = await this.temporaryKitStoreFactory(kit);
       const kid = kitStore.getSnapshot().kit.id;
-      await this.openKitInRegistry(kid, { store: kitStore }, "temporary");
+      await this.openKitInRegistry(kid, { store: kitStore }, "temporary", undefined, wasmSession);
+      return kid;
+    }
+    if (wasmSession != null) {
+      const kitStore = this.temporaryKitStoreFactory ? await this.temporaryKitStoreFactory(kit) : new InMemoryKitStore(kit as Record<string, unknown>);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, await this.registryOpenInit(kitStore, wasmSession), "temporary", source, wasmSession);
       return kid;
     }
     if (regKind === "file" && !this.fileKitStoreFactory) {
@@ -17394,10 +17315,10 @@ export class SketchpadStore {
       const inferredKind: KitKind = this.folderKitStoreFactory ? "folder" : "file";
       const kitStore = await localKitStoreFactory(kit);
       const kid = kitStore.getSnapshot().kit.id;
-      await this.openKitInRegistry(kid, { store: kitStore }, inferredKind);
+      await this.openKitInRegistry(kid, { store: kitStore }, inferredKind, undefined, wasmSession);
       return kid;
     }
-    await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary");
+    await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary", undefined, wasmSession);
     return kit.id;
   };
 
@@ -17680,7 +17601,8 @@ export class SketchpadStore {
       const kind = kindCandidate === "temporary" || kindCandidate === "file" || kindCandidate === "folder" || kindCandidate === "remote" ? kindCandidate : undefined;
       const source = sourceCandidate && typeof sourceCandidate === "object" && (sourceCandidate as { kind?: unknown }).kind ? (sourceCandidate as InitialStateKit["source"]) : undefined;
       const interactive = typeof interactiveCandidate === "boolean" ? interactiveCandidate : typeof sourceCandidate === "boolean" ? sourceCandidate : typeof kindCandidate === "boolean" ? kindCandidate : true;
-      const kitId = await this.createKit(kit, kind, source, interactive);
+      const wasmSession = rest[4] as Session | undefined;
+      const kitId = await this.createKit(kit, kind, source, interactive, wasmSession);
       return { kitId } as T;
     }
     if (command === "semio.sketchpad.openKit") {
@@ -18247,6 +18169,7 @@ const SketchpadInstanceWithKitRegistry: FC<SketchpadInstanceProviderProps & { in
       (window as any).__SEMIO_STORE__ = store;
       (window as any).__SEMIO_ACTOR__ = actor;
       (window as any).__SEMIO_EXECUTE_SEMIO_KIT_COMMAND__ = executeSemioKitCommand;
+      (window as any).__SEMIO_KIT_REGISTRY__ = getKitRegistryBridge;
     }
   }
 
@@ -18259,9 +18182,9 @@ const SketchpadInstanceWithKitRegistry: FC<SketchpadInstanceProviderProps & { in
     const doImportKits = async () => {
       for (const url of importKitUrls) {
         try {
-          const { kit } = await importKit(url);
+          const { kit, session } = await importKit(url);
 
-          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
+          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, "temporary", undefined, false, session);
         } catch (error) {
           console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
         }
@@ -19234,16 +19157,6 @@ export function useSketchpadCommands() {
   );
 }
 
-/**
- * Hook returning kit command dispatchers for a specific kit by id.
- **/
-function useKitCommandsById(kitId?: string) {
-  const runtime = useKitWasmHost();
-  const effectiveKitId = useResolvedKitIdentifier(kitId);
-  const kitStore = runtime && effectiveKitId && String(runtime.kitTabId ?? "") === String(effectiveKitId) ? runtime.store : null;
-  return useKitCommandEngineExplicitOrigin(kitStore);
-}
-
 // #endregion 🎏Sketchpad
 
 // #region 🌙Commands
@@ -19631,36 +19544,6 @@ export const OriginDocumentListener: FC = () => {
   }, [actor]);
   return null;
 };
-
-/**
- * @deprecated No-op — shell state lives in the sketchpad machine. Mount {@link OriginDocumentListener} once instead.
- */
-export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => (
-  <>
-    <OriginDocumentListener />
-    {children}
-  </>
-);
-
-/**
- * @deprecated No-op — mount {@link OriginDocumentListener} if needed; state is in `sketchpadMachine`.
- */
-export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
-
-/**
- * @deprecated No-op.
- */
-export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
-
-/**
- * @deprecated No-op.
- */
-export const SidePanelTabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
-
-/**
- * @deprecated No-op.
- */
-export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
 
 export const useFocus = (): FocusApi => {
   const actor = useSketchpadActor();
@@ -20231,11 +20114,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const isKitApp = kitId && !isDesignApp && !isTypeApp;
 
-  const navbarKitSnap = useKitStoreSnapshot();
-  const kitFromScope = navbarKitSnap?.kit;
-  const designFromScope = useDesign();
-  const typeFromScope = useType();
-  const kit: Kit | Kit | null | undefined = (kitFromScope as Kit | Kit | null | undefined) || kits.find((k) => k.id === kitId);
+  const kitFromScope = useWipKitOptional();
+  const designFromScope = useDesignContext();
+  const typeFromScope = useTypeContext();
+  const kit: Kit | null | undefined = (kitFromScope as Kit | null | undefined) ?? kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
   const kitKindItems = [
@@ -20254,7 +20136,10 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   }, [filteredKits, createKitLabel]);
 
   const sketchpadCommands = useSketchpadCommands();
-  const kitCommands = useKitCommandsById(kitId || undefined);
+  const { run: kitRun } = useKitCommand();
+  const wipKit = useWipKitOptional();
+  const kitDesignsLive = useKitDesigns();
+  const kitTypesLive = useKitTypes();
 
   const artifactKinds = [
     { label: <LayoutIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.designs", kind: "designs", href: kitId ? `/kits/${kitId}?kind=designs` : "/kits?kind=designs" },
@@ -20336,87 +20221,86 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   );
 
   const defaultDesignName = useLabel("semio.sketchpad.app.design.defaultName");
-  const handleCreateDesign = useCallback(
-    (origin: string, name?: string, parent?: string) => {
-      if (!kitCommands || !kitId) return;
-      const id = crypto.randomUUID();
-      const existingNames = allDesigns.map((d) => d.name);
-      const uniqueName = name || generateUniqueName(defaultDesignName ?? "", existingNames);
-      kitCommands.createDesign(origin, { id, name: uniqueName, parent: parent ? { id: parent } : undefined, pieces: [], connections: [] });
-      sketchpadCommands.navigateToDesign(kitId, id);
+  const resolveCreatedEntityId = useCallback(
+    async (kind: "design" | "type", uniqueName: string, beforeCount: number): Promise<string | undefined> => {
+      if (wipKit == null) return undefined;
+      for (let attempt = 0; attempt < 40; attempt++) {
+        const entities = kind === "design" ? await wipKit.designs() : await wipKit.types();
+        if (entities.length > beforeCount) {
+          for (const entity of entities) {
+            if ((await entity.name()) === uniqueName) return entity.id;
+          }
+          return entities[entities.length - 1]?.id;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      return undefined;
     },
-    [kitCommands, kitId, sketchpadCommands, allDesigns, defaultDesignName],
+    [wipKit],
+  );
+
+  const handleCreateDesign = useCallback(
+    async (_origin: string, name?: string, _parent?: string) => {
+      if (!kitId || wipKit == null) return;
+      const designNames = (kitDesignsLive.length > 0 ? kitDesignsLive : allDesigns).map((d) => d.name);
+      const uniqueName = name || generateUniqueName(defaultDesignName ?? "", designNames);
+      const before = (await wipKit.designs()).length;
+      const res = await kitRun.createDesign(uniqueName);
+      if (!res.ok) return;
+      const createdId = await resolveCreatedEntityId("design", uniqueName, before);
+      if (createdId) sketchpadCommands.navigateToDesign(kitId, createdId);
+    },
+    [kitRun, wipKit, kitId, sketchpadCommands, kitDesignsLive, allDesigns, defaultDesignName, resolveCreatedEntityId],
   );
 
   const defaultTypeName = useLabel("semio.sketchpad.app.type.defaultName");
   const handleCreateType = useCallback(
-    (origin: string, name?: string, parent?: string) => {
-      if (!kitCommands || !kitId) return;
-      const id = crypto.randomUUID();
-      const existingNames = allTypes.map((t) => t.name);
-      const uniqueName = name || generateUniqueName(defaultTypeName ?? "", existingNames);
-      kitCommands.createType(origin, { id, name: uniqueName, parent: parent ? { id: parent } : undefined, connectors: [] });
-      sketchpadCommands.navigateToType(kitId, id);
+    async (_origin: string, name?: string, _parent?: string) => {
+      if (!kitId || wipKit == null) return;
+      const typeNames = (kitTypesLive.length > 0 ? kitTypesLive : allTypes).map((t) => t.name);
+      const uniqueName = name || generateUniqueName(defaultTypeName ?? "", typeNames);
+      const before = (await wipKit.types()).length;
+      const res = await kitRun.createType(uniqueName);
+      if (!res.ok) return;
+      const createdId = await resolveCreatedEntityId("type", uniqueName, before);
+      if (createdId) sketchpadCommands.navigateToType(kitId, createdId);
     },
-    [kitCommands, kitId, sketchpadCommands, allTypes, defaultTypeName],
+    [kitRun, wipKit, kitId, sketchpadCommands, kitTypesLive, allTypes, defaultTypeName, resolveCreatedEntityId],
   );
 
   const handleCreateChild = useCallback(
-    (origin: string, designOrType: Design | Type, isType: boolean) => {
-      if (!kitCommands) return;
-      const id = crypto.randomUUID();
-      if (!isType) {
-        const d = designOrType as Design;
-        const existingNames = allDesigns.filter((design) => design.parent?.id === d.id).map((design) => design.name);
-        const uniqueName = generateUniqueName(d.name, existingNames);
-        kitCommands.createDesign(origin, {
-          id,
-          name: uniqueName,
-          parent: { id: d.id },
-          pieces: [],
-          connections: [],
-        });
-        if (kitId) sketchpadCommands.navigateToDesign(kitId, id);
-      } else {
+    async (origin: string, designOrType: Design | Type, isType: boolean) => {
+      if (isType) {
         const typeObj = designOrType as Type;
-        const existingNames = allTypes.filter((type) => type.parent?.id === typeObj.id).map((type) => type.name);
-        const uniqueName = generateUniqueName(typeObj.name, existingNames);
-        kitCommands.createType(origin, {
-          id,
-          name: uniqueName,
-          parent: { id: typeObj.id },
-          connectors: [],
-        });
-        navigate(`/kits/${kitId}/types/${id}`);
+        const siblingNames = (kitTypesLive.length > 0 ? kitTypesLive : allTypes).filter((t) => t.parent?.id === typeObj.id).map((t) => t.name);
+        await handleCreateType(origin, generateUniqueName(typeObj.name, siblingNames));
+        return;
       }
+      const d = designOrType as Design;
+      const siblingNames = (kitDesignsLive.length > 0 ? kitDesignsLive : allDesigns).filter((design) => design.parent?.id === d.id).map((design) => design.name);
+      await handleCreateDesign(origin, generateUniqueName(d.name, siblingNames));
     },
-    [kitCommands, kitId, navigate, allDesigns, allTypes],
+    [handleCreateDesign, handleCreateType, kitDesignsLive, kitTypesLive, allDesigns, allTypes],
   );
 
   const handleCreate = useCallback(
     (origin: string) => {
-      if (!kit || !filteredKind || !kitCommands) return;
+      if (!kit || !filteredKind) return;
 
       switch (filteredKind) {
         case "designs":
-          handleCreateDesign(origin);
+          void handleCreateDesign(origin);
           break;
         case "types":
-          handleCreateType(origin);
+          void handleCreateType(origin);
           break;
         case "authors":
-          const id = crypto.randomUUID();
-          kitCommands.createAuthor(origin, { id, name: "New Author", email: "" });
-          break;
         case "qualities":
-          // TODO: Add createQuality command
-          break;
         case "files":
-          // TODO: Add createFile command
           break;
       }
     },
-    [kit, filteredKind, kitCommands, handleCreateDesign, handleCreateType],
+    [kit, filteredKind, handleCreateDesign, handleCreateType],
   );
 
   const design = designFromScope || (isDesignApp ? allDesigns.find((d) => d.id === itemId) : undefined);
@@ -22463,10 +22347,9 @@ const LayoutWrapper: FC = () => {
   const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
   const isKitApp = kitId && !isDesignApp && !isTypeApp;
 
-  const footerKitSnap = useKitStoreSnapshot();
-  const kitFromScope = footerKitSnap?.kit;
-  const designFromScope = useDesign();
-  const typeFromScope = useType();
+  const kitFromScope = useWipKitOptional();
+  const designFromScope = useDesignContext();
+  const typeFromScope = useTypeContext();
   const kit: Kit | Kit | null | undefined = (kitFromScope as Kit | Kit | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
@@ -28190,8 +28073,8 @@ export const DesignAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const designPieces = useDesignPieces();
-  const [types] = useTypes();
-  const [tags] = useTagsFull();
+  const types = useKitTypes();
+  const tags = useKitTags();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [addRepresentationTagForAllTypes] = useDesignAppAddRepresentationTagForAllTypes();
   const [removeRepresentationTagFromAllTypes] = useDesignAppRemoveRepresentationTagFromAllTypes();
@@ -28797,16 +28680,12 @@ const DesignSectionForm: FC = () => {
     };
   }, [location.pathname]);
   const scopedDesignId = designScope ?? pathScope.designId;
-  const dsgKs = useKitStoreSnapshot();
-  const kit = dsgKs?.kit as Kit | null;
-  const kitDesignsField = useKitDesigns();
-  const kitDesigns = (kitDesignsField ?? []) as Design[];
-  const designIdentity = useDesign();
-  const activeDesignId = designIdentity ?? scopedDesignId ?? null;
+  const kitDesigns = useKitDesigns();
+  const activeDesignId = scopedDesignId ?? null;
   const design = useMemo(() => {
     if (activeDesignId == null) return null;
-    return kitDesigns.find((entry) => entry.id === activeDesignId) ?? kit?.designs?.find((entry) => entry.id === activeDesignId) ?? null;
-  }, [activeDesignId, kitDesigns, kit]);
+    return kitDesigns.find((entry) => entry.id === activeDesignId) ?? null;
+  }, [activeDesignId, kitDesigns]);
 
   const authorLabel = useLabel("semio.sketchpad.app.design.author");
   const attributeLabel = useLabel("semio.sketchpad.app.design.attribute");
@@ -29202,13 +29081,15 @@ const PiecesSectionForm: FC = () => {
   const [updatePiece] = useDesignAppUpdatePiece();
   const [updatePieces] = useDesignAppUpdatePieces();
   const design = useActiveDesignRow();
-  const pcKs = useKitStoreSnapshot();
-  const kit = pcKs?.kit as Kit;
+  const kitDesigns = useKitDesigns();
+  const kitTypes = useKitTypes();
+  const kitPlain = useKitPlainOptional();
+  const typesForLookup = ((kitPlain as { types?: readonly Type[] })?.types ?? kitTypes) as readonly Type[];
   const { run: designRun, status: designCommandStatus } = useDesignCommand();
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((includedDesign) => [includedDesign.id, includedDesign])), [includedDesigns]);
   const layoutMap = useDesignPieceLayoutMap();
-  const allConnections = useConnections();
+  const allConnections = useDesignConnections();
   const [selection] = useDesignAppSelection();
   const knownSelectablePieceIds = useMemo(() => [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...includedDesigns.map((entry) => entry.id)])], [design?.pieces, includedDesigns]);
   const selectedPieceIds = useMemo(
@@ -29281,20 +29162,20 @@ const PiecesSectionForm: FC = () => {
     if (!entry?.type) return null;
     if (typeof entry.type === "string") {
       try {
-        return findTypeInKit(kit, entry.type);
+        return findTypeInKit(typesForLookup, entry.type);
       } catch (_error) {
         return null;
       }
     }
     if (typeof entry.type === "object" && "id" in entry.type && entry.type.id) {
       try {
-        return findTypeInKit(kit, entry.type.id);
+        return findTypeInKit(typesForLookup, entry.type.id);
       } catch (_error) {
         return null;
       }
     }
     if (typeof entry.type === "object" && entry.type.name) {
-      const matchByNameVariant = (kit.types || []).find((type) => {
+      const matchByNameVariant = typesForLookup.find((type) => {
         const typeVariant = (type as any).variant || "";
         const entryVariant = (entry.type as any).variant || "";
         return type.name === entry.type.name && typeVariant === entryVariant;
@@ -29314,7 +29195,7 @@ const PiecesSectionForm: FC = () => {
   const resolveDesignInKitSafe = (designId?: string): Design | null => {
     if (!designId) return null;
     try {
-      return findDesignInKit(kit, designId);
+      return findDesignInKit(kitDesigns, designId);
     } catch (_error) {
       return null;
     }
@@ -29354,7 +29235,7 @@ const PiecesSectionForm: FC = () => {
     };
 
     if (isSingle && piece && isRealPiece(piece)) {
-      const currentType = piece.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type) : piece.type && typeof piece.type === "object" && "id" in piece.type ? findTypeInKit(kit, piece.type.id) : null;
+      const currentType = piece.type && typeof piece.type === "string" ? findTypeInKit(typesForLookup, piece.type) : piece.type && typeof piece.type === "object" && "id" in piece.type ? findTypeInKit(typesForLookup, piece.type.id) : null;
       if (!currentType) return;
       const match = resolveType(currentType.name, variantValue);
       if (!match) return;
@@ -29367,7 +29248,7 @@ const PiecesSectionForm: FC = () => {
     const updates = pieces
       .filter(isRealPiece)
       .map((p) => {
-        const currentType = p.type && typeof p.type === "string" ? findTypeInKit(kit, p.type) : p.type && typeof p.type === "object" && "id" in p.type ? findTypeInKit(kit, p.type.id) : null;
+        const currentType = p.type && typeof p.type === "string" ? findTypeInKit(typesForLookup, p.type) : p.type && typeof p.type === "object" && "id" in p.type ? findTypeInKit(typesForLookup, p.type.id) : null;
         if (!currentType) return null;
         const match = resolveType(currentType.name, variantValue);
         if (!match) return null;
@@ -29958,7 +29839,7 @@ const PiecesSectionForm: FC = () => {
                     value: name,
                     label: name,
                   }))}
-                  value={isSingle && piece && piece.type && "id" in piece.type ? findTypeInKit(kit, piece.type.id)?.name || "" : commonTypeName || ""}
+                  value={isSingle && piece && piece.type && "id" in piece.type ? findTypeInKit(typesForLookup, piece.type.id)?.name || "" : commonTypeName || ""}
                   placeholder={!isSingle && commonTypeName === undefined ? mixedValuesLabel : selectTypeLabel}
                   onValueChange={handleTypeNameChange}
                   showLabel
@@ -29972,7 +29853,7 @@ const PiecesSectionForm: FC = () => {
                       value: variant,
                       label: variant,
                     }))}
-                    value={isSingle && piece && piece.type && "id" in piece.type ? (findTypeInKit(kit, piece.type.id) as any)?.variant || "" : commonTypeVariant || ""}
+                    value={isSingle && piece && piece.type && "id" in piece.type ? (findTypeInKit(typesForLookup, piece.type.id) as any)?.variant || "" : commonTypeVariant || ""}
                     placeholder={!isSingle && commonTypeVariant === undefined ? mixedValuesLabel : selectVariantLabel}
                     onValueChange={handleTypeVariantChange}
                     allowClear={true}
@@ -30509,8 +30390,7 @@ const ConnectorSectionForm: FC<{ pieceId: Id; connectorId: Id }> = ({ pieceId, c
   const { t } = useTranslation();
   const designRow = useActiveDesignRow();
   const designPieces = useDesignPieces();
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const connectorNotFoundLabel = useLabel("semio.sketchpad.app.design.panel.details.section.connector.notFound");
   const yesLabel = useLabel("semio.sketchpad.common.yes");
   const noLabel = useLabel("semio.sketchpad.common.no");
@@ -30911,9 +30791,8 @@ type ExpandMenuProps = {
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
   const designScope = useDesignContext();
-  const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope ?? undefined);
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit;
+  const explodeableIds = useExplodeableDesignNodeIds(designScope ?? undefined);
+  const kitDesigns = useKitDesigns();
   const explodeableDesignNodes = useMemo(() => {
     const idSet = new Set((explodeableIds ?? []).map(String));
     if (idSet.size === 0) return [] as typeof nodes;
@@ -30949,7 +30828,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
         const boundingBox = getBoundingBoxForNode(node);
         const piece = node.data.piece as Piece;
         const designId = piece.type?.id;
-        const design = designId ? findDesignInKit(kit, designId) : null;
+        const design = designId ? findDesignInKit(kitDesigns, designId) : null;
         const designName = design?.name ?? "";
 
         return (
@@ -31084,8 +30963,7 @@ const getConnectorPositionStyle = (connector: Connector): { x: number; y: number
  **/
 const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getConnectorPositionStyle(connector);
-  const ks0 = useKitStoreSnapshot();
-  const kit = ks0?.kit as Kit | undefined;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const selectedPortId = useContext(SelectedConnectorPortContext);
   const connectorPortId = getConnectorPortId(connector);
   const groupTone = getPortTone(connectorPortId, getKitPorts(kit));
@@ -32408,11 +32286,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
   const sketchpadCommands = useSketchpadCommands();
-  const [kitTypes] = useTypes();
+  const kitTypes = useKitTypes();
   const kitDesignsField = useKitDesigns();
   const kitDesigns = (kitDesignsField ?? []) as Design[];
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const [activeTool] = useDesignAppActiveTool();
 
   const [selection, setSelection] = useDesignAppSelection();
@@ -32424,8 +32301,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [savedDiagramScale] = useDesignAppDiagramScale();
   const [panelVisibility] = useDesignAppPanelVisibility();
 
-  const designIdentity = useDesign();
-  const activeDesignId = designIdentity ?? null;
+  const designScope = useDesignContext();
+  const activeDesignId = designScope ?? null;
   const design = useMemo(() => {
     if (activeDesignId == null) return null;
     return kitDesigns.find((d) => d.id === activeDesignId) ?? kit.designs?.find((d) => d.id === activeDesignId) ?? null;
@@ -34362,12 +34239,11 @@ const useDesignTopologyAdapter = () => {
   const [addConnection] = useDesignAppAddConnection();
   const [selection, setSelection] = useDesignAppSelection();
   const [deselectAll] = useDesignAppDeselectAll();
-  const [kitTypes0] = useTypes();
+  const kitTypes0 = useKitTypes();
   const kitDesignsField = useKitDesigns();
-  const kit = useKitStoreSnapshot()?.kit as Kit | undefined;
-  const designIdentity = useDesign();
+  const kit = useKitPlainOptional() as Kit | undefined;
   const designScope = useDesignContext();
-  const activeDesignId = (designIdentity ?? designScope ?? null) as string | null;
+  const activeDesignId = (designScope ?? null) as string | null;
   const kitTypes = (kitTypes0 ?? []) as Type[];
   const kitDesigns = (kitDesignsField ?? []) as Design[];
   const designFilters = useDesignFilters();
@@ -34394,7 +34270,7 @@ const useDesignTopologyAdapter = () => {
     () => new Set((selection?.connections ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)),
     [selection?.connections],
   );
-  const [files] = useFilesFull();
+  const files = useKitFiles();
   const fileUrls = useFileUrls();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [hover, setDesignHover] = useDesignAppHover();
@@ -34746,7 +34622,7 @@ const DesignTopologySceneWindow = memo(() => {
   const topology = useDesignTopologyAdapter();
   const [transaction] = useDesignAppChange();
   const [addPiece] = useDesignAppAddPiece();
-  const [kitTypes0] = useTypes();
+  const kitTypes0 = useKitTypes();
   const kitDesignsField = useKitDesigns();
   const kitTypes = (kitTypes0 ?? []) as Type[];
   const kitDesigns = (kitDesignsField ?? []) as Design[];
@@ -34895,10 +34771,8 @@ const DesignWindowApp: FC<AppProps> = () => {
   const [selection] = useDesignAppSelection();
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
-  const wbKs = useKitStoreSnapshot();
-  const kit = wbKs?.kit as Kit | null;
-  const designEntity = useDesign();
-  const scopedDesignId = designEntity ?? designScope ?? null;
+  const kit = useKitPlainOptional() as Kit | undefined;
+  const scopedDesignId = designScope ?? null;
   const kitDesignsForWorkbench = useKitDesigns();
   const design = useMemo(() => {
     if (scopedDesignId == null || !kit) return undefined;
@@ -34906,7 +34780,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     return rows.find((entry) => entry.id === scopedDesignId) ?? kit.designs?.find((entry) => entry.id === scopedDesignId);
   }, [scopedDesignId, kit, kitDesignsForWorkbench]);
   const kitId = kitScope?.id ?? kit?.id;
-  const [workbenchTypes0] = useTypes();
+  const workbenchTypes0 = useKitTypes();
   const workbenchDesignsField = useKitDesigns();
   const workbenchDesigns0 = workbenchDesignsField ?? [];
   const workbenchTypes = workbenchTypes0 ?? [];
@@ -35329,8 +35203,7 @@ const DesignWindowApp: FC<AppProps> = () => {
   }, [addSection, removeSection]);
 
   const PiecesWorkbenchContent: FC = () => {
-    const ksKit = useKitStoreSnapshot();
-    const kit = ksKit?.kit as Kit;
+    const kit = useKitPlainOptional() as Kit | undefined;
     const resolveParentId = (parent: any): string | undefined => (typeof parent === "string" ? parent : parent?.id);
 
     const handleCreateTypeChild = (parentType: Type) => {
@@ -37371,7 +37244,6 @@ export const TypeDetails: FC = () => {
   return isInTypeContext ? <TypeDetailsForm /> : null;
 };
 
-const READONLY_ROW_STATUS = { kind: "idle" } as const;
 
 const TypeRepresentationTreeItem: FC<{
   representationId: string;
@@ -37389,16 +37261,16 @@ const TypeRepresentationTreeItem: FC<{
   return (
     <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
       <TreeItem id="semio.sketchpad.app.type.representation" label={representationUrl || representationFileName || representationId} className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}>
-        <SketchpadInputRow value={representationUrl ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.url" readOnly />
+        <SketchpadInputRow value={representationUrl ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.representations.url" readOnly />
         <SketchpadTextareaRow
           value={representationDescription ?? ""}
           commit={async () => ({ ok: true }) as const}
-          status={READONLY_ROW_STATUS}
+          status={OPERATION_STATUS_IDLE}
           id="semio.sketchpad.app.type.panel.details.section.representations.description"
           placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
           readOnly
         />
-        <SketchpadInputRow value={representationFileName ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.file" readOnly />
+        <SketchpadInputRow value={representationFileName ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.representations.file" readOnly />
       </TreeItem>
     </div>
   );
@@ -37410,8 +37282,8 @@ const TypeAuthorTreeItem: FC<{ authorId: string }> = ({ authorId }) => {
 
   return (
     <TreeItem id="semio.sketchpad.app.type.author" label={authorName || authorId}>
-      <SketchpadInputRow value={authorName ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.name" readOnly />
-      <SketchpadInputRow value={authorEmail ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.email" readOnly />
+      <SketchpadInputRow value={authorName ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.authors.name" readOnly />
+      <SketchpadInputRow value={authorEmail ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.authors.email" readOnly />
     </TreeItem>
   );
 };
@@ -37459,7 +37331,7 @@ const TypeConnectorTreeItemContent: FC<{
         <SketchpadInputRow
           value={connectorPort ?? ""}
           commit={async () => ({ ok: true }) as const}
-          status={READONLY_ROW_STATUS}
+          status={OPERATION_STATUS_IDLE}
           id="semio.sketchpad.app.type.panel.details.section.connectors.port"
           placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
           readOnly
@@ -37515,12 +37387,12 @@ const TypeDetailsForm: FC = () => {
       <SketchpadInputRow
         value={typeImage.value ?? ""}
         commit={async () => ({ ok: true }) as const}
-        status={READONLY_ROW_STATUS}
+        status={OPERATION_STATUS_IDLE}
         id="semio.sketchpad.app.type.panel.details.section.type.image"
         placeholderId="semio.sketchpad.app.type.imagePlaceholder.label"
         readOnly
       />
-      <SketchpadInputRow value={typeUnit ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
+      <SketchpadInputRow value={typeUnit ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
@@ -37687,11 +37559,11 @@ const AttributesSectionForm: FC = () => {
             },
           ]}
         >
-          <SketchpadInputRow value={attribute.key ?? ""} commit={async () => ({ ok: true }) as const} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.name" readOnly />
+          <SketchpadInputRow value={attribute.key ?? ""} commit={async () => ({ ok: true }) as const} status={OPERATION_STATUS_IDLE} id="semio.sketchpad.app.type.panel.details.section.attributes.name" readOnly />
           <SketchpadInputRow
             value={attribute.value ?? ""}
             commit={async () => ({ ok: true }) as const}
-            status={READONLY_ROW_STATUS}
+            status={OPERATION_STATUS_IDLE}
             id="semio.sketchpad.app.type.panel.details.section.attributes.value"
             placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label"
             readOnly
@@ -37699,7 +37571,7 @@ const AttributesSectionForm: FC = () => {
           <SketchpadInputRow
             value={attribute.definition ?? ""}
             commit={async () => ({ ok: true }) as const}
-            status={READONLY_ROW_STATUS}
+            status={OPERATION_STATUS_IDLE}
             id="semio.sketchpad.app.type.panel.details.section.attributes.definition"
             placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
             readOnly
@@ -37748,7 +37620,7 @@ const TypeConnectorSectionFormBody: FC<{ connectorId: Id }> = ({ connectorId }) 
       <SketchpadInputRow
         value={connectorPort ?? ""}
         commit={async () => ({ ok: true }) as const}
-        status={READONLY_ROW_STATUS}
+        status={OPERATION_STATUS_IDLE}
         id="semio.sketchpad.app.type.panel.details.section.connectors.port"
         placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
         readOnly
@@ -38189,7 +38061,12 @@ const TypeWindowApp: FC = () => {
     };
   }, [addSection, removeSection, appType, selection]);
 
-  const type = useType() as Type | undefined;
+  const typeId = useTypeContext();
+  const kitTypesForScope = useKitTypes();
+  const type = useMemo(() => {
+    if (typeId == null) return undefined;
+    return kitTypesForScope.find((entry) => entry.id === typeId);
+  }, [typeId, kitTypesForScope]) as Type | undefined;
   const kitStore = useKitStore();
   const getOrigin = useOrigin();
 
@@ -38575,8 +38452,13 @@ export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
-  const type = useType() as Type | undefined;
-  const [tags] = useTagsFull();
+  const typeId = useTypeContext();
+  const kitTypesForFooter = useKitTypes();
+  const type = useMemo(() => {
+    if (typeId == null) return undefined;
+    return kitTypesForFooter.find((entry) => entry.id === typeId);
+  }, [typeId, kitTypesForFooter]) as Type | undefined;
+  const tags = useKitTags();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const [addRepresentationTag] = useTypeAppAddRepresentationTag();
   const [removeRepresentationTag] = useTypeAppRemoveRepresentationTag();
@@ -40264,8 +40146,7 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
  **/
 export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
-  const qwKs = useKitStoreSnapshot();
-  const kit = qwKs?.kit as Kit | null;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const qualities = kit?.qualities || [];
 
   return (
@@ -40382,8 +40263,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
  **/
 const QualityWorkbenchQualities: FC = () => {
   const { t } = useTranslation();
-  const qqKs = useKitStoreSnapshot();
-  const kit = qqKs?.kit as Kit | null;
+  const kit = useKitPlainOptional() as Kit | undefined;
   const qualities = kit?.qualities || [];
 
   if (qualities.length === 0) {
@@ -46374,7 +46254,35 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         await expect(page.locator("#semio\\.sketchpad\\.startup, #semio\\.sketchpad\\.navbar").first()).toBeVisible({ timeout: 5000 });
         const rootHtml = await page.locator("#root").innerHTML();
         expect(rootHtml.trim().length).toBeGreaterThan(0);
-        expect(rootHtml.includes('class="h-screen w-screen"></div>')).toBeFalsy();
+        expect(rootHtml.includes("h-screen w-screen")).toBeTruthy();
+      });
+
+      test("Metabolism Import Wires WASM Session For Footer VCS", async ({ page }) => {
+        test.setTimeout(300000);
+        await warmSketchpadEntrypoint(page);
+        await page.goto("/", { waitUntil: "networkidle" });
+        await expect(page.locator("#semio\\.sketchpad\\.navbar").first()).toBeVisible({ timeout: 120000 });
+
+        const registryReady = await page.waitForFunction(
+          () => {
+            const reg = (window as any).__SEMIO_KIT_REGISTRY__?.();
+            return reg != null && reg.list().length > 0;
+          },
+          { timeout: 180000 },
+        );
+        expect(registryReady).toBeTruthy();
+
+        const sessionWired = await page.evaluate(() => {
+          const reg = (window as any).__SEMIO_KIT_REGISTRY__?.();
+          if (reg == null) return { ok: false, reason: "no-registry" };
+          const kid = reg.list()[0];
+          const row = kid == null ? null : reg.get(kid);
+          return { ok: row?.session != null && row?.jsStoreId != null && row.jsStoreId !== "", kid };
+        });
+        expect(sessionWired.ok).toBe(true);
+
+        await expect(page.locator("#semio\\.sketchpad\\.footer\\.alternative\\.select").first()).toBeVisible({ timeout: 120000 });
+        await expect(page.locator('[aria-label="New alternative name"]').first()).toBeEnabled({ timeout: 30000 });
       });
 
       test("Sketchpad Scope Provider Fallback Id", async ({ page }) => {

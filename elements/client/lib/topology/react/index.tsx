@@ -206,6 +206,30 @@ export function topologyBoardConnectorAngle(index: number, total: number): numbe
 	return -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
 }
 
+export type TopologyKitBoardSide = "top" | "right" | "bottom" | "left";
+
+/** @emoji 📐 Kit diagram snap side to board handle angle (rectangle vs circle rim). */
+export function topologyKitBoardHandleAngle(side: TopologyKitBoardSide, shape: "circle" | "rectangle"): number {
+	if (shape === "rectangle") {
+		if (side === "top") return 0;
+		if (side === "right") return Math.PI / 2;
+		if (side === "bottom") return Math.PI;
+		return (3 * Math.PI) / 2;
+	}
+	if (side === "right") return 0;
+	if (side === "bottom") return Math.PI / 2;
+	if (side === "left") return Math.PI;
+	return -Math.PI / 2;
+}
+
+/** @emoji 📍 Node center from top-left layout position and frame size. */
+export function topologyBoardCenterFromTopLeft(
+	position: { readonly x: number; readonly y: number },
+	frame: { readonly width: number; readonly height: number },
+): { x: number; y: number } {
+	return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
+}
+
 /** @emoji 🕸️ Diagram force-slider weights shared by sketchpad kit/design hosts. */
 export interface TopologyDiagramForceWeights {
 	readonly centerStrength: number;
@@ -631,6 +655,17 @@ if (import.meta.vitest) {
 		it("round-trips handle ids", () => {
 			const id = topologyBoardCompoundId("piece-a", "conn-b");
 			expect(topologyParseBoardCompoundId(id)).toEqual({ left: "piece-a", right: "conn-b" });
+		});
+	});
+	describe("topologyKitBoardHandleAngle", () => {
+		it("maps rectangle sides to axis angles", () => {
+			expect(topologyKitBoardHandleAngle("top", "rectangle")).toBe(0);
+			expect(topologyKitBoardHandleAngle("right", "rectangle")).toBeCloseTo(Math.PI / 2);
+		});
+	});
+	describe("topologyBoardCenterFromTopLeft", () => {
+		it("offsets by half frame", () => {
+			expect(topologyBoardCenterFromTopLeft({ x: 10, y: 20 }, { width: 40, height: 60 })).toEqual({ x: 30, y: 50 });
 		});
 	});
 	describe("topologyApplyBoardFixtureCentersToTopLeft", () => {
