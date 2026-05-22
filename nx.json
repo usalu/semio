@@ -24,36 +24,26 @@
       "{workspaceRoot}/go.work.sum",
       "{workspaceRoot}/pyproject.toml",
       "{workspaceRoot}/uv.lock",
+      "{workspaceRoot}/CMakeLists.txt",
+      "{workspaceRoot}/CMakePresets.json",
       "{workspaceRoot}/Monorepo.sln",
       "{workspaceRoot}/eslint.config.mjs",
       "{workspaceRoot}/.dependency-cruiser.cjs"
     ],
-    "production": [
-      "default",
-      "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
-      "!{projectRoot}/.storybook/**"
-    ],
-    "cargo": [
-      "{projectRoot}/**/*.rs",
-      "{projectRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock"
-    ],
-    "go": [
-      "{projectRoot}/**/*.go",
-      "{projectRoot}/go.mod",
-      "{projectRoot}/go.sum",
-      "{workspaceRoot}/go.work",
-      "{workspaceRoot}/go.work.sum"
-    ],
-    "uv": [
-      "{projectRoot}/**/*.py",
-      "{projectRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock"
-    ],
-    "dotnet": [
-      "{projectRoot}/**/*.cs",
-      "{projectRoot}/**/*.csproj",
-      "{workspaceRoot}/Monorepo.sln"
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
+    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
+    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"],
+    "cpp": [
+      "{workspaceRoot}/CMakeLists.txt",
+      "{workspaceRoot}/CMakePresets.json",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.h",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.hpp",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cpp",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cmake",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/CMakeLists.txt",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/vcpkg.json"
     ]
   },
   "targetDefaults": {

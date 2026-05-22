@@ -784,6 +784,8 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
     Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
     Sync-WingetPackage -Id "Oven-sh.Bun" -Label "Bun"
+    Sync-WingetPackage -Id "Kitware.CMake" -Label "CMake"
+    Sync-WingetPackage -Id "Ninja-build.Ninja" -Label "Ninja"
     Sync-WingetPackage -Id "Microsoft.OpenJDK.21" -Label "Microsoft OpenJDK 21"
     Sync-WingetPackage -Id "GoLang.Go" -Label "Go"
     Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
@@ -792,7 +794,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.8" -Label ".NET SDK 8.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
-    Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools" -AdditionalArguments @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+    Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Visual Studio Build Tools" -AdditionalArguments @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
     Sync-WingetPackage -Id "Axosoft.GitKraken" -Label "GitKraken Desktop"
     Sync-WingetPackage -Id "GitKraken.cli" -Label "GitKraken CLI"
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"

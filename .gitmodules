@@ -6,4 +6,4 @@
 	url = https://github.com/usalu/recherche
 [submodule "elements/client/lib/geometry/topologic"]
 	path = elements/client/lib/geometry/topologic
-	url = https://github.com/wassimj/Topologic
+	url = https://github.com/usalu/Topologic

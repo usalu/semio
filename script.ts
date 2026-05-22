@@ -8,12 +8,7 @@ import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
-import {
-  Neo4jCypherExport,
-  getAllNeo4jGraphExportSpecs,
-  joinNeo4jGraphDatabaseName,
-  partitionNeo4jGraphCliArgv,
-} from "./generate.neo4j.gen.ts";
+import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, partitionNeo4jGraphCliArgv } from "./generate.neo4j.gen.ts";
 import { seedMetabolismLightKitNeo4j } from "./seed.metabolism.light.kit.neo4j.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
@@ -44,7 +39,7 @@ function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return env;
 }
 
-function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}): void {
+function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
   try {
     runCmd(cmd, args, opts);
   } catch {
@@ -138,6 +133,8 @@ export class SetupScript extends Script {
     tryRun("uvx", ["--quiet", "mcp-neo4j-cypher", "--help"]);
     console.log("[setup] cargo fetch…");
     tryRun("cargo", ["fetch", "--manifest-path", "Cargo.toml"]);
+    console.log("[setup] C++ toolchain and vcpkg…");
+    tryRun("bun", [join(this.root, "script.ts"), "cpp", "setup"], { cwd: this.root });
     console.log("[setup] go build repo client…");
     const clientOut = join(this.root, "repo", "client", process.platform === "win32" ? "client.exe" : "client");
     tryRun("go", ["build", "-o", clientOut, "./repo/client/mcp"], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
@@ -150,10 +147,7 @@ export class SetupScript extends Script {
     const cargoConfig = join(cargoHome, "config.toml");
     if (!existsSync(cargoConfig)) {
       mkdirSync(cargoHome, { recursive: true });
-      writeFileSync(
-        cargoConfig,
-        `[target.wasm32-unknown-unknown]\nrustflags = ["--cfg", "getrandom_backend=wasm_js"]\n`,
-      );
+      writeFileSync(cargoConfig, `[target.wasm32-unknown-unknown]\nrustflags = ["--cfg", "getrandom_backend=wasm_js"]\n`);
       console.log("[setup] wrote ~/.cargo/config.toml wasm flags.");
     }
 
@@ -254,20 +248,7 @@ export class DevScript extends Script {
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = process.env.STORYBOOK_PORT ?? "6010";
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
-    const storybookArgs = [
-      "storybook",
-      "dev",
-      "-c",
-      ".storybook",
-      "-p",
-      port,
-      ...(useExactPort ? ["--exact-port"] : []),
-      "--host",
-      host,
-      "--no-open",
-      "--debug",
-      ...extra,
-    ];
+    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...extra];
     runCmd("bunx", storybookArgs, {
       cwd: this.root,
       env: {
@@ -332,11 +313,7 @@ export class DevScript extends Script {
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const child =
       mode === "repo"
-        ? spawn(
-            "npx",
-            ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"],
-            { stdio: "inherit", shell: true, cwd: this.root, env: { ...process.env, HOST: host } },
-          )
+        ? spawn("npx", ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], { stdio: "inherit", shell: true, cwd: this.root, env: { ...process.env, HOST: host } })
         : spawn("npx", ["--yes", "@modelcontextprotocol/inspector"], {
             stdio: "inherit",
             shell: true,
@@ -348,9 +325,7 @@ export class DevScript extends Script {
   private runMcpNeo4j(neoSegments: string[]): void {
     const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(neoSegments);
     const hasName = nameParts.length > 0;
-    const graphDatabase = hasName
-      ? joinNeo4jGraphDatabaseName(nameParts)
-      : process.env.NEO4J_DATABASE || "semio";
+    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || "semio";
     const args = [...passthrough];
     if (hasName && !args.includes("--namespace")) args.push("--namespace", graphDatabase);
     const r = spawnSync("uvx", ["mcp-neo4j-cypher", ...args], {
@@ -449,20 +424,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root });
-    runCmd(
-      "bunx",
-      [
-        "dependency-cruiser@16",
-        "semio/client/lib/js",
-        "semio/client/lib/react",
-        "semio/client/lib/sketchpad",
-        "--config",
-        ".dependency-cruiser.cjs",
-        "--output-type",
-        "err",
-      ],
-      { cwd: this.root, shell: true },
-    );
+    runCmd("bunx", ["dependency-cruiser@16", "semio/client/lib/js", "semio/client/lib/react", "semio/client/lib/sketchpad", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖LintScript
@@ -532,19 +494,15 @@ export class TestScript extends Script {
     });
     try {
       await this.waitForUrl(new URL("index.html", baseUrl).href, 120000);
-      runCmd(
-        "bunx",
-        ["playwright", "test", ".storybook/board.spec.ts", "--config", ".storybook/playwright.config.ts"],
-        {
-          cwd: this.root,
-          env: {
-            ...process.env,
-            PLAYWRIGHT_BASE_URL: baseUrl,
-            PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${this.root}/node_modules/.cache/ms-playwright`,
-            STORYBOOK_PORT: storybookPort,
-          },
+      runCmd("bunx", ["playwright", "test", ".storybook/board.spec.ts", "--config", ".storybook/playwright.config.ts"], {
+        cwd: this.root,
+        env: {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: baseUrl,
+          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${this.root}/node_modules/.cache/ms-playwright`,
+          STORYBOOK_PORT: storybookPort,
         },
-      );
+      });
     } finally {
       server.kill();
     }
@@ -590,6 +548,123 @@ export class BuildScript extends Script {
   }
 }
 //#endregion 🔖BuildScript
+
+//#region 🔖CppScript
+export class CppScript extends Script {
+  run(segments: string[]): void {
+    const command = segments[0] ?? "all";
+    const preset = this.resolvePreset(segments.slice(1));
+    if (command === "setup") {
+      this.runSetup();
+      return;
+    }
+    if (command === "configure") {
+      this.runConfigure(preset);
+      return;
+    }
+    if (command === "build") {
+      this.runBuild(preset);
+      return;
+    }
+    if (command === "test") {
+      this.runTest(preset);
+      return;
+    }
+    if (command === "all") {
+      this.runSetup();
+      this.runConfigure(preset);
+      this.runBuild(preset);
+      this.runTest(preset);
+      return;
+    }
+    console.error("[cpp] usage: bun ./script.ts cpp [setup|configure|build|test|all] [preset]");
+    process.exit(1);
+  }
+
+  private resolvePreset(segments: string[]): string {
+    const explicit = segments.find((segment) => !segment.startsWith("-"));
+    if (explicit) return explicit;
+    if (process.env.CMAKE_PRESET) return process.env.CMAKE_PRESET;
+    if (process.platform === "win32") return "windows";
+    if (process.platform === "darwin") return "macos";
+    return "linux";
+  }
+
+  private runSetup(): void {
+    this.ensureTool("cmake", "cmake");
+    if (process.platform !== "win32") this.ensureTool("ninja", "ninja");
+    this.ensureVcpkg();
+  }
+
+  private runConfigure(preset: string): void {
+    this.runSetup();
+    runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv() });
+  }
+
+  private runBuild(preset: string): void {
+    runCmd(this.resolveTool("cmake"), ["--build", "--preset", preset], { cwd: this.root, env: this.cppEnv() });
+  }
+
+  private runTest(preset: string): void {
+    runCmd(this.resolveTool("ctest"), ["--preset", preset], { cwd: this.root, env: this.cppEnv() });
+  }
+
+  private ensureTool(command: string, uvTool: string): void {
+    if (this.hasTool(command)) return;
+    if (this.hasTool("uv")) {
+      runCmd(this.resolveTool("uv"), ["tool", "install", "--upgrade", uvTool], { cwd: this.root });
+      if (this.hasTool(command)) return;
+    }
+    console.error(`[cpp] ${command} is required. Run the native bootstrap or rebuild the devcontainer.`);
+    process.exit(1);
+  }
+
+  private hasTool(command: string): boolean {
+    const result = spawnSync(this.resolveTool(command), ["--version"], {
+      stdio: "ignore",
+      shell: process.platform === "win32" && !this.resolveTool(command).includes("\\"),
+      env: this.cppEnv(),
+    });
+    return result.status === 0;
+  }
+
+  private resolveTool(command: string): string {
+    const extension = process.platform === "win32" ? ".exe" : "";
+    const candidates = [command, join(homedir(), ".local", "bin", `${command}${extension}`), join(homedir(), ".local", "bin", command)];
+    return candidates.find((candidate) => existsSync(candidate)) ?? command;
+  }
+
+  private ensureVcpkg(): void {
+    const vcpkgRoot = this.vcpkgRoot();
+    const vcpkgExe = join(vcpkgRoot, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
+    if (!existsSync(vcpkgRoot)) {
+      mkdirSync(join(this.root, ".repo", "cache"), { recursive: true });
+      runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root });
+    }
+    if (!existsSync(vcpkgExe)) {
+      if (process.platform === "win32") {
+        runCmd("cmd.exe", ["/c", join(vcpkgRoot, "bootstrap-vcpkg.bat"), "-disableMetrics"], { cwd: vcpkgRoot });
+      } else {
+        runCmd("bash", [join(vcpkgRoot, "bootstrap-vcpkg.sh"), "-disableMetrics"], { cwd: vcpkgRoot });
+      }
+    }
+  }
+
+  private cppEnv(): NodeJS.ProcessEnv {
+    return {
+      ...devToolingEnv(),
+      CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL ?? "4",
+      VCPKG_ROOT: this.vcpkgRoot(),
+      VCPKG_DISABLE_METRICS: "1",
+      VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "4",
+    };
+  }
+
+  private vcpkgRoot(): string {
+    return process.env.VCPKG_ROOT || join(this.root, ".repo", "cache", "vcpkg");
+  }
+}
+//#endregion 🔖CppScript
 
 //#region 🔖PublishScript
 export class PublishScript extends Script {
@@ -663,6 +738,7 @@ const registry = new Map<string, Script>([
   ["format", new FormatScript(WORKSPACE_ROOT)],
   ["test", new TestScript(WORKSPACE_ROOT)],
   ["build", new BuildScript(WORKSPACE_ROOT)],
+  ["cpp", new CppScript(WORKSPACE_ROOT)],
   ["publish", new PublishScript(WORKSPACE_ROOT)],
   ["purge", new PurgeScript(WORKSPACE_ROOT)],
   ["seed", new SeedScript(WORKSPACE_ROOT)],
@@ -671,7 +747,7 @@ const registry = new Map<string, Script>([
 async function main(): Promise<void> {
   const segments = process.argv.slice(2);
   if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|publish|purge|seed> [segments…]");
+    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge|seed> [segments…]");
     process.exit(1);
   }
   const verb = segments[0];

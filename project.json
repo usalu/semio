@@ -145,6 +145,49 @@
         }
       }
     },
+    "cpp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-setup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp setup",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-configure": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-setup"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp configure",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-configure"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp build",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-build"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp test",
+        "forwardAllArgs": true
+      }
+    },
     "setup-storybook": {
       "executor": "nx:run-commands",
       "cache": false,

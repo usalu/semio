@@ -409,6 +409,33 @@ ensure_uv() {
 }
 #endregion 🔖EnsureUv
 
+#region 🔖EnsureCpp
+ensure_cpp_toolchain() {
+  case "$(uname -s)" in
+  Darwin)
+    if command -v brew >/dev/null 2>&1; then
+      brew install cmake ninja pkg-config || true
+    else
+      log "Homebrew not available; install CMake and Ninja before running native C++ builds."
+    fi
+    ;;
+  Linux)
+    if command -v apt-get >/dev/null 2>&1; then
+      if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev
+      elif [ "$(id -u)" -eq 0 ]; then
+        apt-get update -qq
+        apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev
+      fi
+    else
+      log "apt-get not available; install CMake, Ninja, pkg-config, and uuid headers with your system package manager."
+    fi
+    ;;
+  esac
+}
+#endregion 🔖EnsureCpp
+
 #region 🔖EnsureBun
 ensure_bun() {
   if command -v bun >/dev/null 2>&1; then
@@ -546,6 +573,7 @@ if [ "$SEMIO_SESSION_START" = "1" ]; then
 fi
 install_neo4j_desktop
 ensure_uv
+ensure_cpp_toolchain
 ensure_native_neo4j
 repo_bootstrap
 log "Native (Unix) bootstrap complete. Open a new shell to load NEO4J_* from your profile, or run: export NEO4J_URI=bolt://localhost:7687 …"
