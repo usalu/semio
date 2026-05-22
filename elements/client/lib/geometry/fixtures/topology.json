@@ -1,0 +1,182 @@
+{
+	"schema": "elements.geometry.topologic.fixture/v1",
+	"label": "Topologic All-Kinds Fixture",
+	"roots": ["topology-root"],
+	"topologies": [
+		{
+			"id": "topology-root",
+			"kind": "topology",
+			"label": "Topology Root",
+			"members": ["cluster-campus", "vertex-beacon", "edge-arc", "wire-open"]
+		},
+		{
+			"id": "vertex-beacon",
+			"kind": "vertex",
+			"label": "Vertex Beacon",
+			"point": [0, 2.6, 0],
+			"radius": 0.18,
+			"style": { "color": "#38bdf8" }
+		},
+		{ "id": "v0", "kind": "vertex", "point": [-1.5, 0, -1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v1", "kind": "vertex", "point": [1.5, 0, -1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v2", "kind": "vertex", "point": [1.5, 0, 1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v3", "kind": "vertex", "point": [-1.5, 0, 1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v4", "kind": "vertex", "point": [-1.5, 2.2, -1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v5", "kind": "vertex", "point": [1.5, 2.2, -1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v6", "kind": "vertex", "point": [1.5, 2.2, 1.5], "style": { "color": "#94a3b8" } },
+		{ "id": "v7", "kind": "vertex", "point": [-1.5, 2.2, 1.5], "style": { "color": "#94a3b8" } },
+		{
+			"id": "edge-arc",
+			"kind": "edge",
+			"label": "Curved Edge",
+			"vertices": ["v4", "v6"],
+			"curve": [[-1.5, 2.2, -1.5], [0, 3.1, 0], [1.5, 2.2, 1.5]],
+			"style": { "color": "#fb7185", "lineWidth": 3 }
+		},
+		{ "id": "e0", "kind": "edge", "vertices": ["v0", "v1"], "style": { "color": "#e2e8f0" } },
+		{ "id": "e1", "kind": "edge", "vertices": ["v1", "v2"], "style": { "color": "#e2e8f0" } },
+		{ "id": "e2", "kind": "edge", "vertices": ["v2", "v3"], "style": { "color": "#e2e8f0" } },
+		{ "id": "e3", "kind": "edge", "vertices": ["v3", "v0"], "style": { "color": "#e2e8f0" } },
+		{ "id": "e4", "kind": "edge", "vertices": ["v4", "v5"], "style": { "color": "#cbd5e1" } },
+		{ "id": "e5", "kind": "edge", "vertices": ["v5", "v6"], "style": { "color": "#cbd5e1" } },
+		{ "id": "e6", "kind": "edge", "vertices": ["v6", "v7"], "style": { "color": "#cbd5e1" } },
+		{ "id": "e7", "kind": "edge", "vertices": ["v7", "v4"], "style": { "color": "#cbd5e1" } },
+		{ "id": "e8", "kind": "edge", "vertices": ["v0", "v4"], "style": { "color": "#94a3b8" } },
+		{ "id": "e9", "kind": "edge", "vertices": ["v1", "v5"], "style": { "color": "#94a3b8" } },
+		{ "id": "e10", "kind": "edge", "vertices": ["v2", "v6"], "style": { "color": "#94a3b8" } },
+		{ "id": "e11", "kind": "edge", "vertices": ["v3", "v7"], "style": { "color": "#94a3b8" } },
+		{
+			"id": "wire-open",
+			"kind": "wire",
+			"label": "Open Wire",
+			"edges": ["edge-arc", "e6"],
+			"closed": false,
+			"manifold": false,
+			"style": { "color": "#fb7185", "lineWidth": 2.5 }
+		},
+		{
+			"id": "wire-floor",
+			"kind": "wire",
+			"label": "Floor Loop",
+			"edges": ["e0", "e1", "e2", "e3"],
+			"closed": true,
+			"style": { "color": "#34d399", "lineWidth": 2 }
+		},
+		{
+			"id": "wire-roof",
+			"kind": "wire",
+			"label": "Roof Loop",
+			"edges": ["e4", "e5", "e6", "e7"],
+			"closed": true,
+			"style": { "color": "#60a5fa", "lineWidth": 2 }
+		},
+		{ "id": "wire-front", "kind": "wire", "edges": ["e0", "e9", "e4", "e8"], "closed": true, "style": { "color": "#f59e0b" } },
+		{ "id": "wire-right", "kind": "wire", "edges": ["e1", "e10", "e5", "e9"], "closed": true, "style": { "color": "#f97316" } },
+		{ "id": "wire-back", "kind": "wire", "edges": ["e2", "e11", "e6", "e10"], "closed": true, "style": { "color": "#a78bfa" } },
+		{ "id": "wire-left", "kind": "wire", "edges": ["e3", "e8", "e7", "e11"], "closed": true, "style": { "color": "#22c55e" } },
+		{
+			"id": "face-floor",
+			"kind": "face",
+			"label": "Floor Face",
+			"wires": ["wire-floor"],
+			"surface": {
+				"vertices": [[-1.5, 0, -1.5], [1.5, 0, -1.5], [1.5, 0, 1.5], [-1.5, 0, 1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#22c55e", "opacity": 0.35 }
+		},
+		{
+			"id": "face-roof",
+			"kind": "face",
+			"label": "Roof Face",
+			"wires": ["wire-roof"],
+			"surface": {
+				"vertices": [[-1.5, 2.2, -1.5], [1.5, 2.2, -1.5], [1.5, 2.2, 1.5], [-1.5, 2.2, 1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#60a5fa", "opacity": 0.28 }
+		},
+		{
+			"id": "face-front",
+			"kind": "face",
+			"wires": ["wire-front"],
+			"surface": {
+				"vertices": [[-1.5, 0, -1.5], [1.5, 0, -1.5], [1.5, 2.2, -1.5], [-1.5, 2.2, -1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#f59e0b", "opacity": 0.3 }
+		},
+		{
+			"id": "face-right",
+			"kind": "face",
+			"wires": ["wire-right"],
+			"surface": {
+				"vertices": [[1.5, 0, -1.5], [1.5, 0, 1.5], [1.5, 2.2, 1.5], [1.5, 2.2, -1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#fb923c", "opacity": 0.3 }
+		},
+		{
+			"id": "face-back",
+			"kind": "face",
+			"wires": ["wire-back"],
+			"surface": {
+				"vertices": [[1.5, 0, 1.5], [-1.5, 0, 1.5], [-1.5, 2.2, 1.5], [1.5, 2.2, 1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#a78bfa", "opacity": 0.3 }
+		},
+		{
+			"id": "face-left",
+			"kind": "face",
+			"wires": ["wire-left"],
+			"surface": {
+				"vertices": [[-1.5, 0, 1.5], [-1.5, 0, -1.5], [-1.5, 2.2, -1.5], [-1.5, 2.2, 1.5]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#22c55e", "opacity": 0.3 }
+		},
+		{
+			"id": "shell-room",
+			"kind": "shell",
+			"label": "Room Shell",
+			"faces": ["face-floor", "face-roof", "face-front", "face-right", "face-back", "face-left"],
+			"style": { "color": "#fde68a", "opacity": 0.18 }
+		},
+		{
+			"id": "cell-room",
+			"kind": "cell",
+			"label": "Room Cell",
+			"shells": ["shell-room"],
+			"style": { "color": "#fef08a", "opacity": 0.16 }
+		},
+		{
+			"id": "cell-room-shifted",
+			"kind": "cell",
+			"label": "Shifted Cell",
+			"shells": ["shell-room"],
+			"transform": { "position": [3.6, 0, 0] },
+			"style": { "color": "#7dd3fc", "opacity": 0.14 }
+		},
+		{
+			"id": "cell-complex-campus",
+			"kind": "cellComplex",
+			"label": "Cell Complex",
+			"cells": ["cell-room", "cell-room-shifted"],
+			"style": { "color": "#e879f9", "opacity": 0.1 }
+		},
+		{
+			"id": "cluster-inner",
+			"kind": "cluster",
+			"label": "Inner Cluster",
+			"topologies": ["face-roof", "wire-open", "edge-arc"]
+		},
+		{
+			"id": "cluster-campus",
+			"kind": "cluster",
+			"label": "Campus Cluster",
+			"topologies": ["cluster-inner", "shell-room", "cell-room", "cell-complex-campus"],
+			"style": { "color": "#c084fc", "opacity": 0.08 }
+		}
+	]
+}

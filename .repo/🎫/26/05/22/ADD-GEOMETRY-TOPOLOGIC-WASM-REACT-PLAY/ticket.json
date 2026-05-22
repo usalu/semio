@@ -1,0 +1,10 @@
+{
+  "title": "Add Geometry Topologic Wasm React Play",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Create geometry wasm bindings surface for Topologic, add R3F React components for Topology/Vertex/Edge/Wire/Face/Shell/Cell/CellComplex/Cluster, add comprehensive topology fixture JSON using all kinds, and add geometry playground with same UI shell pattern and transform gumball selection for each kind.",
+  "goal": "🎯elements🎯client",
+  "sessions": [
+    "⚪5e435ad82bc64b5e886393040cfa818e"
+  ]
+}
