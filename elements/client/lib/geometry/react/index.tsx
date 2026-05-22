@@ -20,10 +20,12 @@ import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group } from "three
 
 import {
 	TOPOLOGIC_KINDS,
+	topologicTransformPoint,
 	TopologicCellComplexEntity,
 	TopologicCellEntity,
 	TopologicClusterEntity,
 	TopologicEdgeEntity,
+	type TopologicEntity,
 	TopologicFaceEntity,
 	type TopologicFixtureV1,
 	TopologicShellEntity,
@@ -103,11 +105,12 @@ function TopologicGroup(props: {
 }): ReactElement {
 	const ref = useRef<Group>(null);
 	const scene = useTopologicScene();
+	const registerObject = scene.registerObject;
 	const { position, quaternion, scale } = transformProps(props.transform);
 	useEffect(() => {
-		scene.registerObject(props.entityId, ref.current);
-		return () => scene.registerObject(props.entityId, null);
-	}, [props.entityId, scene]);
+		registerObject(props.entityId, ref.current);
+		return () => registerObject(props.entityId, null);
+	}, [props.entityId, registerObject]);
 	return (
 		<group
 			ref={ref}
@@ -139,13 +142,82 @@ function useFaceGeometry(face: TopologicFaceEntity): BufferGeometry {
 }
 //#endregion 🔖Geometry
 
+//#region 🔖Traversal
+interface ResolvedTopologyEntry {
+	readonly entity: TopologicEntity;
+	readonly transform: TopologicTransform | undefined;
+}
+
+interface TopologyTraversalResult {
+	readonly entries: readonly ResolvedTopologyEntry[];
+	readonly revisitedIds: readonly string[];
+}
+
+function normalizeScaleVector(scale: TopologicTransform["scale"]): readonly [number, number, number] {
+	if (typeof scale === "number") return [scale, scale, scale];
+	return scale ?? [1, 1, 1];
+}
+
+function multiplyQuat(
+	a: readonly [number, number, number, number],
+	b: readonly [number, number, number, number],
+): readonly [number, number, number, number] {
+	const [ax, ay, az, aw] = a;
+	const [bx, by, bz, bw] = b;
+	return [
+		aw * bx + ax * bw + ay * bz - az * by,
+		aw * by - ax * bz + ay * bw + az * bx,
+		aw * bz + ax * by - ay * bx + az * bw,
+		aw * bw - ax * bx - ay * by - az * bz,
+	];
+}
+
+function composeTransform(parent: TopologicTransform | undefined, local: TopologicTransform | undefined): TopologicTransform | undefined {
+	if (!parent) return local;
+	if (!local) return parent;
+	const parentScale = normalizeScaleVector(parent.scale);
+	const localScale = normalizeScaleVector(local.scale);
+	return {
+		position: topologicTransformPoint(local.position ?? [0, 0, 0], parent),
+		rotation: multiplyQuat(parent.rotation ?? [0, 0, 0, 1], local.rotation ?? [0, 0, 0, 1]),
+		scale: [parentScale[0] * localScale[0], parentScale[1] * localScale[1], parentScale[2] * localScale[2]],
+	};
+}
+
+export function collectSceneEntries(session: TopologicWasmSession): TopologyTraversalResult {
+	const entries: ResolvedTopologyEntry[] = [];
+	const visited = new Set<string>();
+	const revisitedIds = new Set<string>();
+	const visit = (entityId: string, inheritedTransform: TopologicTransform | undefined): void => {
+		const entity = session.getEntity(entityId);
+		if (!entity) return;
+		if (visited.has(entity.id)) {
+			revisitedIds.add(entity.id);
+			return;
+		}
+		visited.add(entity.id);
+		const transform = composeTransform(inheritedTransform, entity.transform);
+		entries.push({ entity, transform });
+		for (const child of session.childrenOf(entity.id)) {
+			visit(child.id, transform);
+		}
+	};
+	for (const rootId of session.fixture.roots) visit(rootId, undefined);
+	return { entries, revisitedIds: [...revisitedIds] };
+}
+//#endregion 🔖Traversal
+
 //#region 🔖Kinds
-export function Vertex(props: { readonly entity: TopologicVertexEntity }): ReactElement {
+function TopologyAnchor(props: { readonly entityId: string; readonly transform: TopologicTransform | undefined }): ReactElement {
+	return <TopologicGroup entityId={props.entityId} transform={props.transform} />;
+}
+
+export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const selected = useIsSelected(props.entity.id);
 	const color = selectedColor(topologyColor(props.entity, "#38bdf8"), selected);
 	const radius = props.entity.radius ?? props.entity.style?.pointSize ?? 0.12;
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
 			<mesh position={props.entity.point}>
 				<sphereGeometry args={[radius, 24, 24]} />
 				<meshStandardMaterial color={color} transparent opacity={topologyOpacity(props.entity, 1)} />
@@ -154,12 +226,12 @@ export function Vertex(props: { readonly entity: TopologicVertexEntity }): React
 	);
 }
 
-export function Edge(props: { readonly entity: TopologicEdgeEntity }): ReactElement {
+export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
 	const points = scene.session.edgeCurve(props.entity.id);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
 			<Line
 				points={points}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
@@ -169,11 +241,11 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity }): ReactElem
 	);
 }
 
-export function Wire(props: { readonly entity: TopologicWireEntity }): ReactElement {
+export function Wire(props: { readonly entity: TopologicWireEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
 			{props.entity.edges.map((edgeId) => {
 				const edge = scene.session.getEntity(edgeId);
 				if (!edge || edge.kind !== "edge") return null;
@@ -190,11 +262,11 @@ export function Wire(props: { readonly entity: TopologicWireEntity }): ReactElem
 	);
 }
 
-export function Face(props: { readonly entity: TopologicFaceEntity }): ReactElement {
+export function Face(props: { readonly entity: TopologicFaceEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const selected = useIsSelected(props.entity.id);
 	const geometry = useFaceGeometry(props.entity);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
 			<mesh geometry={geometry}>
 				<meshStandardMaterial
 					color={selectedColor(topologyColor(props.entity, "#fbbf24"), selected)}
@@ -207,75 +279,37 @@ export function Face(props: { readonly entity: TopologicFaceEntity }): ReactElem
 	);
 }
 
-export function Shell(props: { readonly entity: TopologicShellEntity }): ReactElement {
-	const scene = useTopologicScene();
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
-			{props.entity.faces.map((faceId) => {
-				const face = scene.session.getEntity(faceId);
-				return face?.kind === "face" ? <Face key={faceId} entity={face} /> : null;
-			})}
-		</TopologicGroup>
-	);
+export function Shell(props: { readonly entity: TopologicShellEntity; readonly transform?: TopologicTransform }): ReactElement {
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
 }
 
-export function Cell(props: { readonly entity: TopologicCellEntity }): ReactElement {
-	const scene = useTopologicScene();
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
-			{props.entity.shells.map((shellId) => {
-				const shell = scene.session.getEntity(shellId);
-				return shell?.kind === "shell" ? <Shell key={shellId} entity={shell} /> : null;
-			})}
-		</TopologicGroup>
-	);
+export function Cell(props: { readonly entity: TopologicCellEntity; readonly transform?: TopologicTransform }): ReactElement {
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
 }
 
-export function CellComplex(props: { readonly entity: TopologicCellComplexEntity }): ReactElement {
-	const scene = useTopologicScene();
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
-			{props.entity.cells.map((cellId) => {
-				const cell = scene.session.getEntity(cellId);
-				return cell?.kind === "cell" ? <Cell key={cellId} entity={cell} /> : null;
-			})}
-		</TopologicGroup>
-	);
+export function CellComplex(props: { readonly entity: TopologicCellComplexEntity; readonly transform?: TopologicTransform }): ReactElement {
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
 }
 
-export function Cluster(props: { readonly entity: TopologicClusterEntity }): ReactElement {
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
-			{props.entity.topologies.map((topologyId) => (
-				<Topology key={topologyId} entityId={topologyId} />
-			))}
-		</TopologicGroup>
-	);
+export function Cluster(props: { readonly entity: TopologicClusterEntity; readonly transform?: TopologicTransform }): ReactElement {
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
 }
 
-function TopologyRoot(props: { readonly entity: TopologicTopologyEntity }): ReactElement {
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.entity.transform}>
-			{props.entity.members.map((memberId) => (
-				<Topology key={memberId} entityId={memberId} />
-			))}
-		</TopologicGroup>
-	);
+function TopologyRoot(props: { readonly entity: TopologicTopologyEntity; readonly transform?: TopologicTransform }): ReactElement {
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
 }
 
-export function Topology(props: { readonly entityId: string }): ReactElement | null {
-	const scene = useTopologicScene();
-	const entity = scene.session.getEntity(props.entityId);
-	if (!entity) return null;
-	if (entity.kind === "topology") return <TopologyRoot entity={entity} />;
-	if (entity.kind === "vertex") return <Vertex entity={entity} />;
-	if (entity.kind === "edge") return <Edge entity={entity} />;
-	if (entity.kind === "wire") return <Wire entity={entity} />;
-	if (entity.kind === "face") return <Face entity={entity} />;
-	if (entity.kind === "shell") return <Shell entity={entity} />;
-	if (entity.kind === "cell") return <Cell entity={entity} />;
-	if (entity.kind === "cellComplex") return <CellComplex entity={entity} />;
-	return <Cluster entity={entity} />;
+export function Topology(props: { readonly entry: ResolvedTopologyEntry }): ReactElement | null {
+	const { entity, transform } = props.entry;
+	if (entity.kind === "topology") return <TopologyRoot entity={entity} transform={transform} />;
+	if (entity.kind === "vertex") return <Vertex entity={entity} transform={transform} />;
+	if (entity.kind === "edge") return <Edge entity={entity} transform={transform} />;
+	if (entity.kind === "wire") return <Wire entity={entity} transform={transform} />;
+	if (entity.kind === "face") return <Face entity={entity} transform={transform} />;
+	if (entity.kind === "shell") return <Shell entity={entity} transform={transform} />;
+	if (entity.kind === "cell") return <Cell entity={entity} transform={transform} />;
+	if (entity.kind === "cellComplex") return <CellComplex entity={entity} transform={transform} />;
+	return <Cluster entity={entity} transform={transform} />;
 }
 //#endregion 🔖Kinds
 
@@ -317,6 +351,9 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 	const [version, setVersion] = useState(0);
 	const session = useMemo(() => new TopologicWasmSession(props.fixture), [props.fixture]);
 	const registerObject = useCallback((id: string, object: Group | null) => {
+		const current = objectMapRef.current.get(id) ?? null;
+		if (object === current) return;
+		if (!object && !objectMapRef.current.has(id)) return;
 		if (object) objectMapRef.current.set(id, object);
 		else objectMapRef.current.delete(id);
 		setVersion((current) => current + 1);
@@ -333,6 +370,7 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 		}),
 		[props.onSelect, props.onTransformCommit, props.selectedId, props.transformMode, registerObject, session, version],
 	);
+	const traversal = useMemo(() => collectSceneEntries(session), [session]);
 	return (
 		<TopologicSceneContext.Provider value={value}>
 			<ambientLight intensity={0.55} />
@@ -340,8 +378,8 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 			<directionalLight position={[-8, 6, -6]} intensity={0.45} />
 			<gridHelper args={[32, 32, "#334155", "#1e293b"]} />
 			<axesHelper args={[3.5]} />
-			{session.fixture.roots.map((entityId) => (
-				<Topology key={entityId} entityId={entityId} />
+			{traversal.entries.map((entry) => (
+				<Topology key={entry.entity.id} entry={entry} />
 			))}
 			<TopologicTransformGumball />
 			<OrbitControls makeDefault />
@@ -384,6 +422,14 @@ if (import.meta.vitest) {
 			const bindings = await ensureTopologicWasmLoaded();
 			const fixture = bindings.parseFixture((await import("../fixtures/topology.json")).default);
 			expect(fixture?.schema).toBe("elements.geometry.topologic.fixture/v1");
+		});
+
+		it("collects every shipped topology from the rooted scene graph", async () => {
+			const bindings = await ensureTopologicWasmLoaded();
+			const fixture = bindings.parseFixture((await import("../fixtures/topology.json")).default);
+			expect(fixture).toBeTruthy();
+			const traversal = collectSceneEntries(new TopologicWasmSession(fixture as TopologicFixtureV1));
+			expect(traversal.entries).toHaveLength((fixture as TopologicFixtureV1).topologies.length);
 		});
 	});
 }

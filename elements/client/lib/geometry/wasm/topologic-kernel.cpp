@@ -284,6 +284,21 @@ val find_entity(const val& fixture, const std::string& entity_id) {
 
 val normalize_transform(const val& transform) {
 	val out = val::object();
+	if (!is_record(transform)) {
+		val position = val::array();
+		position.call<void>("push", 0.0);
+		position.call<void>("push", 0.0);
+		position.call<void>("push", 0.0);
+		val rotation = val::array();
+		rotation.call<void>("push", 0.0);
+		rotation.call<void>("push", 0.0);
+		rotation.call<void>("push", 0.0);
+		rotation.call<void>("push", 1.0);
+		out.set("position", position);
+		out.set("rotation", rotation);
+		out.set("scale", 1.0);
+		return out;
+	}
 	const val position = clone_vec3(transform["position"]);
 	const val rotation = clone_quat(transform["rotation"]);
 	out.set("position", position.isNull() ? val::array() : position);

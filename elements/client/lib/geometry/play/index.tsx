@@ -2,7 +2,17 @@
 // 💻 elements/client/lib/geometry/play/index.tsx — Geometry play harness: Topologic all-kinds selector, single-window UI shell, and transform gumball editing for every entity kind.
 // #endregion 🧲Header
 
-import { Button, LevelProvider, ToolbarGroup, ToolbarItem, ToolbarZone, UI, createDefaultLayout, getLevelBgClass, type UIAppConfig } from "@elements/ui";
+import {
+	LevelProvider,
+	ToolbarDivider,
+	ToolbarGroup,
+	ToolbarItem,
+	ToolbarZone,
+	UI,
+	createDefaultLayout,
+	getLevelBgClass,
+	type UIAppConfig,
+} from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
 import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -25,6 +35,7 @@ import "./globals.css";
 //#region 🔖Ids
 const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
 const GEOMETRY_PLAY_WINDOW_ID = "geometry-topologic-window";
+const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
 //#endregion 🔖Ids
 
 //#region 🔖Context
@@ -50,63 +61,82 @@ function useGeometryPlay(): GeometryPlayValue {
 //#endregion 🔖Context
 
 //#region 🔖Controls
-function toolbarSelect(value: string, onChange: (value: string) => void, options: readonly { readonly id: string; readonly label: string }[]): ReactElement {
-	return (
-		<select
-			className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
-			value={value}
-			onChange={(event) => onChange(event.target.value)}
-		>
-			{options.map((option) => (
-				<option key={option.id} value={option.id}>
-					{option.label}
-				</option>
-			))}
-		</select>
-	);
+function geometryToolbarToggleClass(active: boolean): string {
+	return [
+		"inline-flex shrink-0 items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors",
+		active ? "bg-accent text-accent-foreground border border-element" : "text-muted-foreground hover:bg-hover-panel border border-transparent",
+	].join(" ");
+}
+
+function geometryKindLabel(kind: TopologicKind): string {
+	if (kind === "cellComplex") return "CellComplex";
+	return kind.charAt(0).toUpperCase() + kind.slice(1);
 }
 
 function GeometryPlayWindow(): ReactElement {
 	const play = useGeometryPlay();
 	const entitiesOfKind = play.session.listByKind(play.selectedKind);
+	const selectedEntity = play.selectedId ? play.session.getEntity(play.selectedId) : null;
 	return (
 		<div className="flex h-full w-full flex-col">
 			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
 				<ToolbarZone>
 					<ToolbarGroup>
 						<ToolbarItem>
-							<div className="flex items-center gap-2 px-1">
-								<BoxSelect className="size-4 text-muted-foreground" />
-								{toolbarSelect(play.selectedKind, (value) => play.setSelectedKind(value as TopologicKind), TOPOLOGIC_KINDS.map((kind) => ({ id: kind, label: kind })))}
-							</div>
+							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Kinds</span>
+						</ToolbarItem>
+						{TOPOLOGIC_KINDS.map((kind) => (
+							<ToolbarItem key={kind}>
+								<button type="button" className={geometryToolbarToggleClass(play.selectedKind === kind)} title={`Show ${geometryKindLabel(kind)} entities`} onClick={() => play.setSelectedKind(kind)}>
+									<span className="px-0.5">{geometryKindLabel(kind)}</span>
+								</button>
+							</ToolbarItem>
+						))}
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
+						<ToolbarItem>
+							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Transform</span>
 						</ToolbarItem>
 						<ToolbarItem>
-							{toolbarSelect(
-								play.selectedId ?? "",
-								(value) => play.setSelectedId(value || null),
-								[{ id: "", label: "Nothing selected" }, ...entitiesOfKind.map((entity) => ({ id: entity.id, label: topologicEntityLabel(entity) }))],
-							)}
+							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "translate")} title="Translate selection" onClick={() => play.setTransformMode("translate")}>
+								<Move3d className="size-4" aria-hidden />
+							</button>
+						</ToolbarItem>
+						<ToolbarItem>
+							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "rotate")} title="Rotate selection" onClick={() => play.setTransformMode("rotate")}>
+								<Rotate3d className="size-4" aria-hidden />
+							</button>
+						</ToolbarItem>
+						<ToolbarItem>
+							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "scale")} title="Scale selection" onClick={() => play.setTransformMode("scale")}>
+								<Scaling className="size-4" aria-hidden />
+							</button>
+						</ToolbarItem>
+					</ToolbarGroup>
+					<ToolbarDivider />
+					<ToolbarGroup>
+						<ToolbarItem>
+							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Selection</span>
+						</ToolbarItem>
+						<ToolbarItem>
+							<button type="button" className={geometryToolbarToggleClass(false)} title="Clear current selection" onClick={() => play.setSelectedId(null)}>
+								<BoxSelect className="size-4" aria-hidden />
+							</button>
+						</ToolbarItem>
+						<ToolbarItem>
+							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{play.selectedKind}</span>
+						</ToolbarItem>
+						<ToolbarItem>
+							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{selectedEntity ? topologicEntityLabel(selectedEntity) : "—"}</span>
+						</ToolbarItem>
+						<ToolbarItem>
+							<span className="text-muted-foreground px-1 text-xs">{entitiesOfKind.length}</span>
 						</ToolbarItem>
 					</ToolbarGroup>
 				</ToolbarZone>
-				<div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-					<Button variant={play.transformMode === "translate" ? "default" : "outline"} size="sm" onClick={() => play.setTransformMode("translate")}>
-						<Move3d className="mr-1 size-4" />
-						Translate
-					</Button>
-					<Button variant={play.transformMode === "rotate" ? "default" : "outline"} size="sm" onClick={() => play.setTransformMode("rotate")}>
-						<Rotate3d className="mr-1 size-4" />
-						Rotate
-					</Button>
-					<Button variant={play.transformMode === "scale" ? "default" : "outline"} size="sm" onClick={() => play.setTransformMode("scale")}>
-						<Scaling className="mr-1 size-4" />
-						Scale
-					</Button>
-					<span data-e2e-geometry-kind>{play.selectedKind}</span>
-					<span data-e2e-geometry-selection>{play.selectedId ?? "—"}</span>
-				</div>
 			</div>
-			<div className="min-h-0 flex-1">
+			<div className="relative min-h-0 flex-1">
 				<TopologicViewport
 					fixture={play.fixture}
 					selectedId={play.selectedId}
@@ -177,8 +207,8 @@ function GeometryPlayController(): ReactElement {
 			{
 				id: GEOMETRY_PLAY_APP_ID,
 				label: "Geometry play",
-				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: "Topologic Playground", component: GeometryPlayWindow }],
-				defaultLayout: createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], ["Topologic Playground"]),
+				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
+				defaultLayout: createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]),
 			},
 		],
 		[],
@@ -191,18 +221,22 @@ function GeometryPlayController(): ReactElement {
 
 	return (
 		<GeometryPlayContext.Provider value={value}>
-			<LevelProvider>
-				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-					<UI apps={apps} />
-				</div>
-			</LevelProvider>
+			<UI apps={apps} defaultAppId={GEOMETRY_PLAY_APP_ID} className={getLevelBgClass(0)} />
 		</GeometryPlayContext.Provider>
+	);
+}
+
+function GeometryPlayApp(): ReactElement {
+	return (
+		<LevelProvider>
+			<GeometryPlayController />
+		</LevelProvider>
 	);
 }
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
-	createRoot(rootElement).render(<GeometryPlayController />);
+	createRoot(rootElement).render(<GeometryPlayApp />);
 }
 //#endregion 🔖Controller
 

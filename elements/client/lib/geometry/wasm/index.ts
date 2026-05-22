@@ -284,6 +284,24 @@ if (import.meta.vitest) {
 			const session = new TopologicWasmSession(updated);
 			expect(session.getEntity("vertex")).toMatchObject({ transform: { position: [3, 2, 1] } });
 		});
+
+		it("computes edge curves when vertices omit transforms", async () => {
+			const fixture = (await loadTopologicFixtureV1({
+				schema: "elements.geometry.topologic.fixture/v1",
+				roots: ["root"],
+				topologies: [
+					{ id: "root", kind: "topology", members: ["edge"] },
+					{ id: "start", kind: "vertex", point: [0, 0, 0] },
+					{ id: "end", kind: "vertex", point: [2, 0, 0] },
+					{ id: "edge", kind: "edge", vertices: ["start", "end"] },
+				],
+			})) as TopologicFixtureV1;
+			const session = new TopologicWasmSession(fixture);
+			expect(session.edgeCurve("edge")).toEqual([
+				[0, 0, 0],
+				[2, 0, 0],
+			]);
+		});
 	});
 }
 //#endregion 🧪Tests
