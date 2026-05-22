@@ -4,7 +4,7 @@
 
 import { Button, LevelProvider, ToolbarGroup, ToolbarItem, ToolbarZone, UI, createDefaultLayout, getLevelBgClass, type UIAppConfig } from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
+import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 
 import topologyJson from "../fixtures/topology.json";
@@ -153,23 +153,22 @@ function GeometryPlayController(): ReactElement {
 		}
 	}, [selectedId, selectedKind, session]);
 
-	if (loadError) throw loadError;
-	if (!fixture || !session) {
-		return <div className={`flex h-screen items-center justify-center text-sm text-muted-foreground ${getLevelBgClass("window")}`}>Loading geometry wasm…</div>;
-	}
-
-	const value = useMemo<GeometryPlayValue>(
-		() => ({
-			fixture,
-			session,
-			selectedKind,
-			selectedId,
-			transformMode,
-			setSelectedKind,
-			setSelectedId,
-			setTransformMode,
-			onTransformCommit: (id, transform) => setFixture((current) => updateTopologicFixtureTransform(current, id, transform)),
-		}),
+	const value = useMemo<GeometryPlayValue | null>(
+		() =>
+			fixture && session
+				? {
+					fixture,
+					session,
+					selectedKind,
+					selectedId,
+					transformMode,
+					setSelectedKind,
+					setSelectedId,
+					setTransformMode,
+					onTransformCommit: (id, transform) =>
+						setFixture((current) => (current ? updateTopologicFixtureTransform(current, id, transform) : current)),
+				}
+				: null,
 		[fixture, selectedId, selectedKind, session, transformMode],
 	);
 
@@ -184,6 +183,11 @@ function GeometryPlayController(): ReactElement {
 		],
 		[],
 	);
+
+	if (loadError) throw loadError;
+	if (!value) {
+		return <div className={`flex h-screen items-center justify-center text-sm text-muted-foreground ${getLevelBgClass("window")}`}>Loading geometry wasm…</div>;
+	}
 
 	return (
 		<GeometryPlayContext.Provider value={value}>
@@ -207,6 +211,35 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("geometry play fixture", () => {
+		it("renders through wasm fixture load without changing hook order", async () => {
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+			const errors: string[] = [];
+			const originalError = console.error;
+			const originalActEnvironment = (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT;
+			(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+			console.error = (...args: unknown[]) => {
+				errors.push(args.map((value) => String(value)).join(" "));
+			};
+			try {
+				await act(async () => {
+					root.render(<GeometryPlayController />);
+					await Promise.resolve();
+					await Promise.resolve();
+				});
+				expect(errors.some((entry) => entry.includes("change in the order of Hooks called by GeometryPlayController"))).toBe(false);
+				expect(errors.some((entry) => entry.includes("Rendered more hooks than during the previous render"))).toBe(false);
+			} finally {
+				console.error = originalError;
+				(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = originalActEnvironment;
+				await act(async () => {
+					root.unmount();
+				});
+				container.remove();
+			}
+		});
+
 		it("ships at least one selectable entity for every topologic kind", async () => {
 			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
 			const session = new TopologicWasmSession(fixture);

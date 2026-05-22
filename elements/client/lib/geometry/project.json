@@ -5,10 +5,9 @@
 		"dev": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/geometry",
-				"command": "bun ./script.ts dev",
+				"cwd": ".",
+				"command": "bun nx run @elements/geometry-play:dev",
 				"env": {
-					"GEOMETRY_PLAY_PORT": "6016",
 					"NODE_OPTIONS": "",
 					"NX_NATIVE_COMMAND_RUNNER": "false",
 					"NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",

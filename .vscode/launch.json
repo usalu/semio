@@ -207,6 +207,22 @@
       }
     },
     {
+      "name": "🛠️dev📐elements🖱️geometry🎛️play",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @elements/geometry-play:dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 65
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev👤semio🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
