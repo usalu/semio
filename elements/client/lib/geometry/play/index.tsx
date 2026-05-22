@@ -13,7 +13,7 @@ import {
 	TOPOLOGIC_KINDS,
 	TopologicWasmSession,
 	ensureTopologicWasmLoaded,
-	parseTopologicFixtureV1,
+	loadTopologicFixtureV1,
 	topologicEntityLabel,
 	updateTopologicFixtureTransform,
 	type TopologicFixtureV1,
@@ -122,24 +122,41 @@ function GeometryPlayWindow(): ReactElement {
 
 //#region 🔖Controller
 function GeometryPlayController(): ReactElement {
-	const parsedFixture = useMemo(() => parseTopologicFixtureV1(topologyJson as unknown), []);
-	if (!parsedFixture) throw new Error("geometry topology fixture failed to parse");
-	const [fixture, setFixture] = useState<TopologicFixtureV1>(parsedFixture);
-	const session = useMemo(() => new TopologicWasmSession(fixture), [fixture]);
+	const [fixture, setFixture] = useState<TopologicFixtureV1 | null>(null);
+	const [loadError, setLoadError] = useState<Error | null>(null);
+	const session = useMemo(() => (fixture ? new TopologicWasmSession(fixture) : null), [fixture]);
 	const [selectedKind, setSelectedKind] = useState<TopologicKind>("topology");
-	const [selectedId, setSelectedId] = useState<string | null>(() => session.listByKind("topology")[0]?.id ?? null);
+	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [transformMode, setTransformMode] = useState<TopologicTransformMode>("translate");
 
 	useEffect(() => {
-		void ensureTopologicWasmLoaded();
+		let cancelled = false;
+		void ensureTopologicWasmLoaded()
+			.then(async () => {
+				const parsedFixture = await loadTopologicFixtureV1(topologyJson as unknown);
+				if (!parsedFixture) throw new Error("geometry topology fixture failed to parse");
+				if (!cancelled) setFixture(parsedFixture);
+			})
+			.catch((error) => {
+				if (!cancelled) setLoadError(error instanceof Error ? error : new Error(String(error)));
+			});
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	useEffect(() => {
+		if (!session) return;
 		const selected = selectedId ? session.getEntity(selectedId) : null;
 		if (!selected || selected.kind !== selectedKind) {
 			setSelectedId(session.listByKind(selectedKind)[0]?.id ?? null);
 		}
 	}, [selectedId, selectedKind, session]);
+
+	if (loadError) throw loadError;
+	if (!fixture || !session) {
+		return <div className={`flex h-screen items-center justify-center text-sm text-muted-foreground ${getLevelBgClass("window")}`}>Loading geometry wasm…</div>;
+	}
 
 	const value = useMemo<GeometryPlayValue>(
 		() => ({
@@ -190,8 +207,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("geometry play fixture", () => {
-		it("ships at least one selectable entity for every topologic kind", () => {
-			const fixture = parseTopologicFixtureV1(topologyJson as unknown) as TopologicFixtureV1;
+		it("ships at least one selectable entity for every topologic kind", async () => {
+			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
 			const session = new TopologicWasmSession(fixture);
 			for (const kind of TOPOLOGIC_KINDS) {
 				expect(session.listByKind(kind).length).toBeGreaterThan(0);
