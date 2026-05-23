@@ -475,6 +475,7 @@ export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsS
     if (typeof window === "undefined" || typeof document === "undefined") return undefined;
     const root = document.documentElement;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const bindings = new DOMEventBindingController();
     const apply = (): void => {
       const prefersDark = mq.matches;
       const dark = theme === "dark" || (theme === "system" && prefersDark);
@@ -482,9 +483,9 @@ export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsS
       applyDocumentBodyBaseColors();
     };
     apply();
-    mq.addEventListener("change", apply);
+    bindings.listen(mq, "change", apply);
     return () => {
-      mq.removeEventListener("change", apply);
+      bindings.dispose();
       root.classList.remove("dark");
       document.body.style.backgroundColor = "";
       document.body.style.color = "";
@@ -10910,12 +10911,13 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
     }
 
     const mediaQueryList = window.matchMedia(query);
+    const bindings = new DOMEventBindingController();
     const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
     setMatches(mediaQueryList.matches);
-    mediaQueryList.addEventListener("change", handleChange);
+    bindings.listen(mediaQueryList, "change", handleChange);
 
     return () => {
-      mediaQueryList.removeEventListener("change", handleChange);
+      bindings.dispose();
     };
   }, [query]);
 
@@ -14983,14 +14985,11 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       setDraggingOrbId(null);
       transaction?.abort?.();
     };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-    };
+    const bindings = new DOMEventBindingController();
+    bindings.listen(window, "pointermove", onMove);
+    bindings.listen(window, "pointerup", onUp);
+    bindings.listen(window, "pointercancel", onCancel);
+    return () => bindings.dispose();
   }, [draggingOrbId, angleFromEvent, flushPendingChange, onOrbChange, transaction]);
   React.useEffect(() => {
     return () => {

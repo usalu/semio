@@ -14,7 +14,6 @@ import {
 	useReducer,
 	useRef,
 	useState,
-	useSyncExternalStore,
 	type CSSProperties,
 	type MutableRefObject,
 	type ReactElement,
@@ -46,6 +45,24 @@ import {
 	type WebGLRenderer,
 } from "three";
 
+type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+class SceneEventBindingController {
+	private readonly cleanups: Array<() => void> = [];
+
+	listen(target: SceneListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+		if (!target) return;
+		target.addEventListener(kind, listener, options);
+		this.cleanups.push(() => target.removeEventListener(kind, listener, options));
+	}
+
+	dispose(): void {
+		while (this.cleanups.length > 0) {
+			this.cleanups.pop()?.();
+		}
+	}
+}
+
 //#region 🔖Kinds
 export type Vec3 = readonly [number, number, number];
 export type Quat = readonly [number, number, number, number];
@@ -64,7 +81,7 @@ export const MESH_STYLE_KINDS = [
 /** @emoji 🎨 Homogeneous GLB presentation kind for pooled scene meshes ({@link MeshBody}). */
 export type MeshStyleKind = (typeof MESH_STYLE_KINDS)[number];
 /** @emoji 🎨 Default object mesh style when none is passed ({@link MeshBody}). */
-export const DEFAULT_MESH_STYLE: MeshStyleKind = "original";
+export const DEFAULT_MESH_STYLE: MeshStyleKind = "neutral";
 export type DomainKind = "urban" | "architecture" | "detailing" | "engineering";
 export type ScaleKind =
 	| "1to50000"
@@ -311,10 +328,6 @@ export interface AttractionTargetRingPayload {
 	readonly vortexFullIds: readonly string[];
 }
 
-function attractionTargetRingSignature(payload: AttractionTargetRingPayload): string {
-	return `${payload.attracting}\0${payload.objectId ?? ""}\0${payload.vortexFullIds.join(",")}`;
-}
-
 export interface AttractionIndirectPickAwait {
 	readonly attractingFullId: string;
 	readonly attractedObjectId: string;
@@ -386,43 +399,7 @@ export function resolveLodLabelFromThresholds(zoom: number, t: LodZoomThresholds
 	if (z < t.normalMaxZoom) return "normal";
 	if (z < t.detailMaxZoom) return "detail";
 	return "micro";
-}
-
-const LOD_ZOOM_HYSTERESIS = 0.04;
-
-/** @emoji 📶 Resolves LOD with Schmitt-style hysteresis so orbit zoom cannot flip bands every frame at a threshold. */
-export function resolveLodLabelFromThresholdsHysteresis(
-	zoom: number,
-	t: LodZoomThresholds,
-	previous: LodKind | null,
-): LodKind {
-	if (previous === null) {
-		return resolveLodLabelFromThresholds(zoom, t);
 	}
-	const h = LOD_ZOOM_HYSTERESIS;
-	const raw = resolveLodLabelFromThresholds(zoom, t);
-	if (raw === previous) {
-		return previous;
-	}
-	const order: LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-	const prevIdx = order.indexOf(previous);
-	const rawIdx = order.indexOf(raw);
-	if (prevIdx < 0 || rawIdx < 0) {
-		return raw;
-	}
-	const boundaries = [t.minimapMaxZoom, t.overviewMaxZoom, t.compactMaxZoom, t.normalMaxZoom, t.detailMaxZoom];
-	const boundary = boundaries[Math.min(prevIdx, rawIdx)];
-	if (boundary === undefined) {
-		return raw;
-	}
-	if (rawIdx > prevIdx && zoom < boundary + h) {
-		return previous;
-	}
-	if (rawIdx < prevIdx && zoom > boundary - h) {
-		return previous;
-	}
-	return raw;
-}
 
 /** @emoji 📏 Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
 export function pseudoZoomFromOrbitDistance(distance: number, reference: number): number {
@@ -468,87 +445,14 @@ export interface LodContextValue {
 	readonly gridSnapEnabled: boolean;
 }
 
-type LodListener = () => void;
-
-/** @emoji 📶 LOD band store updated from the render loop; React reads via {@link useLod}. */
-class LodRuntime {
-	private readonly listeners = new Set<LodListener>();
-	private cachedSnapshot: LodContextValue;
-	lod: LodKind = "normal";
-	gridFactor: number;
-	gridSnapEnabled: boolean;
-
-	constructor(gridFactor: number, gridSnapEnabled: boolean, initialLod: LodKind = "normal") {
-		this.gridFactor = gridFactor;
-		this.gridSnapEnabled = gridSnapEnabled;
-		this.lod = initialLod;
-		this.cachedSnapshot = this.buildSnapshot();
-	}
-
-	readonly subscribe = (listener: LodListener): (() => void) => {
-		this.listeners.add(listener);
-		return () => {
-			this.listeners.delete(listener);
-		};
-	};
-
-	readonly snapshot = (): LodContextValue => this.cachedSnapshot;
-
-	private buildSnapshot(): LodContextValue {
-		return {
-			lod: this.lod,
-			lodGridStepWorld: lodVisibleGridSnapStepWorld(this.lod, this.gridFactor),
-			gridFactor: this.gridFactor,
-			gridSnapEnabled: this.gridSnapEnabled,
-		};
-	}
-
-	private refreshSnapshot(): void {
-		this.cachedSnapshot = this.buildSnapshot();
-	}
-
-	syncConfig(gridFactor: number, gridSnapEnabled: boolean): void {
-		if (this.gridFactor === gridFactor && this.gridSnapEnabled === gridSnapEnabled) {
-			return;
-		}
-		this.gridFactor = gridFactor;
-		this.gridSnapEnabled = gridSnapEnabled;
-		this.refreshSnapshot();
-		this.emit();
-	}
-
-	setLod(lod: LodKind): boolean {
-		if (this.lod === lod) {
-			return false;
-		}
-		this.lod = lod;
-		this.refreshSnapshot();
-		this.emit();
-		return true;
-	}
-
-	private emit(): void {
-		for (const listener of this.listeners) {
-			listener();
-		}
-	}
-}
-
-const LodRuntimeContext = createContext<LodRuntime | null>(null);
+const LodContext = createContext<LodContextValue | null>(null);
 
 /** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
 export function useLod(): LodContextValue {
-	const rt = useContext(LodRuntimeContext);
-	if (!rt) throw new Error("Scene LOD missing");
-	return useSyncExternalStore(rt.subscribe, rt.snapshot, rt.snapshot);
+	const v = useContext(LodContext);
+	if (!v) throw new Error("Scene LOD missing");
+	return v;
 }
-
-export interface SceneChunkLayoutValue {
-	readonly chunkSize: number;
-	readonly maxDistance: number;
-}
-
-const SceneChunkLayoutContext = createContext<SceneChunkLayoutValue | null>(null);
 
 function LodGridHelper() {
 	const lod = useLod();
@@ -571,18 +475,20 @@ function LodGridHelper() {
 
 function LodFrameRunner(props: {
 	readonly lodKindRef: MutableRefObject<LodKind>;
-	readonly lodRuntime: LodRuntime;
 	readonly thresholds: LodZoomThresholds;
 	readonly distanceReference: number;
+	readonly gridFactor: number;
+	readonly gridSnapEnabled: boolean;
 	readonly automaticLod: boolean;
 	readonly pinnedLod: LodKind | undefined;
+	readonly onCtx: (next: LodContextValue) => void;
 	readonly onLodChange?: (lod: LodKind) => void;
 }) {
 	const cam = useThree((s) => s.camera);
 	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
-	const invalidate = useThree((s) => s.invalidate);
 	const tmpT = useMemo(() => new Vector3(), []);
 	const prevLod = useRef<LodKind | null>(null);
+	const ctxSig = useRef("");
 	useFrame(() => {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
@@ -590,15 +496,22 @@ function LodFrameRunner(props: {
 		const next =
 			!props.automaticLod && props.pinnedLod !== undefined
 				? props.pinnedLod
-				: resolveLodLabelFromThresholdsHysteresis(pseudo, props.thresholds, prevLod.current);
+				: resolveLodLabelFromThresholds(pseudo, props.thresholds);
 		props.lodKindRef.current = next;
-		const lodChanged = props.lodRuntime.setLod(next);
+		const lodGridStepWorld = lodVisibleGridSnapStepWorld(next, props.gridFactor);
+		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+		if (ctxSig.current !== sig) {
+			ctxSig.current = sig;
+			props.onCtx({
+				lod: next,
+				lodGridStepWorld,
+				gridFactor: props.gridFactor,
+				gridSnapEnabled: props.gridSnapEnabled,
+			});
+		}
 		if (prevLod.current !== next) {
 			prevLod.current = next;
 			props.onLodChange?.(next);
-			invalidate();
-		} else if (lodChanged) {
-			invalidate();
 		}
 	});
 	return null;
@@ -616,27 +529,45 @@ function LodBridge(props: {
 	readonly pinnedLod: LodKind | undefined;
 	readonly onLodChange?: (lod: LodKind) => void;
 }) {
-	const lodRuntime = useMemo(
-		() => new LodRuntime(props.gridFactor, props.gridSnapEnabled, props.lodKindRef.current),
-		[props.gridFactor, props.gridSnapEnabled, props.lodKindRef],
+	const [lodCtx, setLodCtx] = useState<LodContextValue>(() => ({
+		lod: "normal",
+		lodGridStepWorld: lodVisibleGridSnapStepWorld("normal", props.gridFactor),
+		gridFactor: props.gridFactor,
+		gridSnapEnabled: props.gridSnapEnabled,
+	}));
+	const onCtx = useCallback(
+		(next: LodContextValue) => {
+			setLodCtx((prev) => {
+				if (
+					prev.lod === next.lod &&
+					prev.lodGridStepWorld === next.lodGridStepWorld &&
+					prev.gridFactor === next.gridFactor &&
+					prev.gridSnapEnabled === next.gridSnapEnabled
+				) {
+					return prev;
+				}
+				return next;
+			});
+		},
+		[],
 	);
-	useEffect(() => {
-		lodRuntime.syncConfig(props.gridFactor, props.gridSnapEnabled);
-	}, [lodRuntime, props.gridFactor, props.gridSnapEnabled]);
+	const v = useMemo(() => lodCtx, [lodCtx]);
 	return (
-		<LodRuntimeContext.Provider value={lodRuntime}>
+		<LodContext.Provider value={v}>
 			<LodFrameRunner
 				lodKindRef={props.lodKindRef}
-				lodRuntime={lodRuntime}
 				thresholds={props.thresholds}
 				distanceReference={props.distanceReference}
+				gridFactor={props.gridFactor}
+				gridSnapEnabled={props.gridSnapEnabled}
 				automaticLod={props.automaticLod}
 				pinnedLod={props.pinnedLod}
+				onCtx={onCtx}
 				onLodChange={props.onLodChange}
 			/>
 			{props.showLodGrid ? <LodGridHelper /> : null}
 			{props.children}
-		</LodRuntimeContext.Provider>
+		</LodContext.Provider>
 	);
 }
 //#endregion 📶Lod
@@ -1182,74 +1113,51 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
 	return { records, attractions, tree, version };
 }
 
-function quantizePoseComponent(value: number): number {
-	return Math.round(value * 1000) / 1000;
-}
-
-function quantizeFixtureObjectPose(object: FixtureObjectV1): string {
-	const o = object.origin.map(quantizePoseComponent).join(",");
-	const q = object.orientation?.map(quantizePoseComponent).join(",") ?? "";
-	const s =
-		object.scale === undefined
-			? ""
-			: typeof object.scale === "number"
-				? String(quantizePoseComponent(object.scale))
-				: object.scale.map(quantizePoseComponent).join(",");
-	return `${object.id}|${o}|${q}|${s}`;
-}
-
-/** @emoji 🔑 Stable fingerprint for external fixture resync (structure + quantized poses; ignores object reference identity). */
+/** @emoji 🔑 Stable fingerprint for external fixture resync (ignores object reference identity). */
 export function fixtureStateFingerprint(fixture: FixtureV1): string {
 	const attractionIds = fixture.attractions.map((a) => a.id).join("\0");
 	const objectIds = fixture.objects.map((o) => o.id).join("\0");
-	const poses = fixture.objects.map(quantizeFixtureObjectPose).join("\0");
-	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}\0${poses}`;
+	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}`;
 }
 
-function attractionsEqual(a: readonly AttractionProps[], b: readonly AttractionProps[]): boolean {
-	if (a.length !== b.length) {
-		return false;
-	}
-	for (let i = 0; i < a.length; i++) {
-		const left = a[i]!;
-		const right = b[i]!;
-		if (left.id !== right.id || left.attracting !== right.attracting || left.attracted !== right.attracted) {
-			return false;
-		}
-	}
-	return true;
-}
-
-function snapshotMatchesFixture(state: ObjectStateSnapshot, fixture: FixtureV1): boolean {
-	if (!attractionsEqual(state.attractions, fixture.attractions)) {
-		return false;
-	}
-	if (state.records.size !== fixture.objects.length) {
-		return false;
-	}
-	for (const object of fixture.objects) {
-		const record = state.records.get(object.id);
-		if (!record) {
-			return false;
-		}
-		if (
-			objectPoseKey(object.id, object.origin, object.orientation, object.scale) !==
-			objectPoseKey(record.id, record.origin, record.orientation, record.scale)
-		) {
-			return false;
-		}
-	}
-	return true;
+/** @emoji 📍 Fingerprint of object poses for syncing fixture moves without resetting attractions. */
+export function fixturePoseFingerprint(fixture: FixtureV1): string {
+	return fixture.objects
+		.map((object) => {
+			const o = object.origin.join(",");
+			const q = object.orientation?.join(",") ?? "";
+			const s =
+				object.scale === undefined
+					? ""
+					: typeof object.scale === "number"
+						? String(object.scale)
+						: object.scale.join(",");
+			return `${object.id}|${o}|${q}|${s}`;
+		})
+		.join("\0");
 }
 
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
 	switch (action.type) {
 		case "init": {
-			if (snapshotMatchesFixture(state, action.fixture)) {
-				return state;
-			}
 			const records = fixtureToRecords(action.fixture.objects);
 			return buildSnapshot(records, action.fixture.attractions, state.version + 1);
+		}
+		case "syncPoses": {
+			const records = new Map(state.records);
+			for (const object of action.fixture.objects) {
+				const cur = records.get(object.id);
+				if (!cur) {
+					continue;
+				}
+				records.set(object.id, {
+					...cur,
+					origin: object.origin,
+					orientation: object.orientation,
+					scale: object.scale,
+				});
+			}
+			return buildSnapshot(records, state.attractions, state.version + 1);
 		}
 		case "addAttraction": {
 			const edges = attractionEdgesFromAttractions(state.attractions);
@@ -1345,19 +1253,22 @@ export function SceneObjectStateProvider(props: {
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
-	const snapshotRef = useRef(snapshot);
-	snapshotRef.current = snapshot;
+	const syncedPoseFingerprintRef = useRef<string | null>(null);
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
+	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
-		if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
+		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
+			syncedFixtureFingerprintRef.current = fixtureFingerprint;
+			syncedPoseFingerprintRef.current = poseFingerprint;
+			dispatch({ type: "init", fixture: props.fixture });
 			return;
 		}
-		syncedFixtureFingerprintRef.current = fixtureFingerprint;
-		if (snapshotMatchesFixture(snapshot, props.fixture)) {
+		if (syncedPoseFingerprintRef.current === poseFingerprint) {
 			return;
 		}
-		dispatch({ type: "init", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint]);
+		syncedPoseFingerprintRef.current = poseFingerprint;
+		dispatch({ type: "syncPoses", fixture: props.fixture });
+	}, [props.fixture, fixtureFingerprint, poseFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			dispatch({ type: "relocate", payload });
@@ -1367,12 +1278,6 @@ export function SceneObjectStateProvider(props: {
 	);
 	const handleConnect = useCallback(
 		(payload: AttractionPayload) => {
-			const attractingObjectId = parseVortexFullId(payload.attracting).objectId;
-			const attractedObjectId = parseVortexFullId(payload.attracted).objectId;
-			const edges = attractionEdgesFromAttractions(snapshotRef.current.attractions);
-			if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
-				return;
-			}
 			const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
 			dispatch({
 				type: "addAttraction",
@@ -1401,16 +1306,11 @@ function useSceneObjectState(): SceneObjectStateContextValue {
 	return v;
 }
 
-function attractionIdsFingerprint(attractions: readonly AttractionProps[]): string {
-	return attractions.map((a) => a.id).join("\0");
-}
-
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
 	const state = useContext(SceneObjectStateContext);
-	const attractionFp = state ? attractionIdsFingerprint(state.snapshot.attractions) : "";
 	return useMemo(
 		() => (state ? blockedVortexFullIdsFromAttractions(state.snapshot.attractions) : fallback),
-		[state, attractionFp, fallback],
+		[state, fallback, state?.snapshot.attractions, state?.snapshot.version],
 	);
 }
 
@@ -1439,7 +1339,6 @@ function useAttractingChildIds(objectId: string): readonly string[] {
 
 const ObjectItemById = memo(function ObjectItemById(props: {
 	readonly objectId: string;
-	readonly layoutOrigin: Vec3;
 	readonly selected?: boolean;
 	readonly relocate?: RelocateMode | false;
 }) {
@@ -1497,35 +1396,19 @@ export interface SceneObjectsProps {
 /** @emoji 🧊 Renders all scene objects from central state (id-keyed; survives ownership changes). */
 export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps) {
 	const { snapshot } = useSceneObjectState();
-	const chunkLayout = useContext(SceneChunkLayoutContext);
 	const ids = useMemo(() => [...snapshot.records.keys()].sort(), [snapshot.records, snapshot.version]);
-	const items = useMemo(
-		() =>
-			ids.map((id) => {
-				const record = snapshot.records.get(id);
-				if (!record) {
-					return null;
-				}
-				return (
-					<ObjectItemById
-						key={id}
-						objectId={id}
-						layoutOrigin={record.origin}
-						selected={props.selectedObjectId === id}
-						relocate={props.relocate}
-					/>
-				);
-			}),
-		[ids, props.relocate, props.selectedObjectId, snapshot.records],
+	return (
+		<>
+			{ids.map((id) => (
+				<ObjectItemById
+					key={id}
+					objectId={id}
+					selected={props.selectedObjectId === id}
+					relocate={props.relocate}
+				/>
+			))}
+		</>
 	);
-	if (chunkLayout) {
-		return (
-			<Chunks chunkSize={chunkLayout.chunkSize} maxDistance={chunkLayout.maxDistance}>
-				{items}
-			</Chunks>
-		);
-	}
-	return <>{items}</>;
 });
 
 /** @emoji 🌲 Logical attraction tree roots (wormholes) for structure-only composition. */
@@ -1543,7 +1426,7 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 /** @emoji 🧲 Renders all attraction endpoint lines in one frame loop (avoids N×useFrame churn). */
 export const SceneAttractions = memo(function SceneAttractions() {
 	const { snapshot } = useSceneObjectState();
-	return <SceneAttractionLineBatch attractions={snapshot.attractions} poseVersion={snapshot.version} />;
+	return <SceneAttractionLineBatch attractions={snapshot.attractions} />;
 });
 //#endregion 🕸️AttractionGraph
 
@@ -1699,11 +1582,11 @@ const CSS_SELECTED_MESH = "var(--color-primary)";
 const CSS_SELECTED_LINE = "var(--color-primary)";
 const CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
 const CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
-const CSS_HOVERED_MESH = "var(--color-accent)";
+const CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
 const CSS_HOVERED_LINE = "var(--color-accent)";
 const CSS_NEUTRAL_MESH = "var(--color-panel)";
 const CSS_NEUTRAL_LINE = "var(--color-element)";
-const CSS_DISABLED_MESH = "var(--color-muted-foreground)";
+const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
 const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_ENDPOINT_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_LINE = "var(--color-accent)";
@@ -1769,53 +1652,18 @@ function probeCssComputed(property: "color" | "backgroundColor", value: string):
 	return out;
 }
 
-/** @emoji 🎨 Converts browser-resolved CSS (incl. oklab) to a hex/rgb string Three.js Color accepts. */
-export function normalizeColorForThree(computed: string, fallback: string): string {
-	if (!computed || computed === "rgba(0, 0, 0, 0)" || /var\s*\(/i.test(computed)) {
-		return fallback;
-	}
-	if (!/oklab|oklch|lab\(|color\(/i.test(computed)) {
-		try {
-			return `#${new Color(computed).getHexString()}`;
-		} catch {
-			return fallback;
-		}
-	}
-	if (typeof document === "undefined") {
-		return fallback;
-	}
-	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
-	if (!ctx) {
-		return fallback;
-	}
-	try {
-		ctx.fillStyle = computed;
-		const normalized = ctx.fillStyle;
-		if (normalized.startsWith("#")) {
-			return normalized;
-		}
-		return `#${new Color(normalized).getHexString()}`;
-	} catch {
-		return fallback;
-	}
-}
-
 function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
 	const raw = probeCssComputed(property, expr);
-	return normalizeColorForThree(raw, fallback);
+	if (!raw || raw === "rgba(0, 0, 0, 0)") {
+		return fallback;
+	}
+	return raw;
 }
-
-const meshStyleColorsResolved = new Map<Exclude<MeshStyleKind, "original">, MeshStyleColors>();
 
 /** @emoji 🎨 Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
 export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 	if (style === "original") {
 		return null;
-	}
-	const cached = meshStyleColorsResolved.get(style);
-	if (cached) {
-		return cached;
 	}
 	const fb = MESH_STYLE_HEADLESS[style];
 	const meshExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
@@ -1832,24 +1680,22 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 		highlighted: CSS_HIGHLIGHTED_LINE,
 		disabled: CSS_DISABLED_LINE,
 	};
-	const resolved: MeshStyleColors = {
+	return {
 		meshColor: resolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
 		lineColor: resolveCssColor("color", lineExprs[style], fb.lineColor),
 		emissiveColor: resolveCssColor("color", lineExprs[style], fb.emissiveColor),
 		emissiveIntensity: fb.emissiveIntensity,
 		opacity: fb.opacity,
 	};
-	meshStyleColorsResolved.set(style, resolved);
-	return resolved;
 }
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
 	const mat = new MeshStandardMaterial({
-		color: new Color(normalizeColorForThree(color, state.meshColor)),
+		color: new Color(color),
 		metalness: 0,
 		roughness: 1,
 	});
-	mat.emissive.set(normalizeColorForThree(state.emissiveColor, state.emissiveColor));
+	mat.emissive.set(state.emissiveColor);
 	mat.emissiveIntensity = state.emissiveIntensity;
 	mat.transparent = state.opacity < 1;
 	mat.opacity = state.opacity;
@@ -1857,7 +1703,7 @@ function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshSt
 }
 
 function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
-	const mat = new LineBasicMaterial({ color: new Color(normalizeColorForThree(color, state.lineColor)) });
+	const mat = new LineBasicMaterial({ color: new Color(color) });
 	mat.transparent = state.opacity < 1;
 	mat.opacity = state.opacity;
 	return mat;
@@ -1898,7 +1744,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
 		}
 		if (object instanceof Points) {
 			object.material = new PointsMaterial({
-				color: new Color(normalizeColorForThree(colors.lineColor, "#ffffff")),
+				color: new Color(colors.lineColor),
 				size: 1,
 				transparent: colors.opacity < 1,
 				opacity: colors.opacity,
@@ -2067,8 +1913,6 @@ export interface RegistryValue {
 	relocateMode: RelocateMode;
 	activeRelocateObjectId: string | null;
 	setActiveRelocateObjectId: (id: string | null) => void;
-	transformDragObjectId: string | null;
-	setTransformDragObjectId: (id: string | null) => void;
 	attractionDragActive: boolean;
 	attractionDragAttractingFullId: string | null;
 	attractionCompatibleAttractedFullIds: ReadonlySet<string>;
@@ -2160,34 +2004,26 @@ export function chunkDistanceVisible(args: {
 function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
 	const { camera } = useThree();
 	const centerTmp = useMemo(() => new Vector3(), []);
-	const keysRef = useRef(chunkKeys);
-	keysRef.current = chunkKeys;
-	const visibleRef = useRef<ReadonlySet<string>>(new Set());
-	const lastSigRef = useRef("");
 	const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
 	useFrame(() => {
 		const camPos = camera.position;
-		const next = new Set(visibleRef.current);
-		for (const key of keysRef.current) {
-			const [ix, iy, iz] = key.split("|").map(Number);
-			centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
-			const show = chunkDistanceVisible({
-				camPos,
-				chunkCenter: centerTmp,
-				chunkSize,
-				maxDist,
-				wasVisible: next.has(key),
-			});
-			if (show) next.add(key);
-			else next.delete(key);
-		}
-		const sig = [...next].sort().join(",");
-		if (sig === lastSigRef.current) {
-			return;
-		}
-		lastSigRef.current = sig;
-		visibleRef.current = next;
-		setVisible(next);
+		setVisible((prev) => {
+			const next = new Set(prev);
+			for (const key of chunkKeys) {
+				const [ix, iy, iz] = key.split("|").map(Number);
+				centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
+				const show = chunkDistanceVisible({
+					camPos,
+					chunkCenter: centerTmp,
+					chunkSize,
+					maxDist,
+					wasVisible: next.has(key),
+				});
+				if (show) next.add(key);
+				else next.delete(key);
+			}
+			return setEquals(prev, next) ? prev : next;
+		});
 	});
 	return visible;
 }
@@ -2216,15 +2052,9 @@ export function objectPoseKey(
 	orientation: Quat | undefined,
 	scale: number | Vec3 | undefined,
 ): string {
-	const o = (orientation ?? ([0, 0, 0, 1] as Quat)).map(quantizePoseComponent).join(",");
-	const originQ = origin.map(quantizePoseComponent).join(",");
-	const sc =
-		scale === undefined
-			? "1"
-			: typeof scale === "number"
-				? String(quantizePoseComponent(scale))
-				: scale.map(quantizePoseComponent).join(",");
-	return `${id}|${originQ}|${o}|${sc}`;
+	const o = orientation ?? ([0, 0, 0, 1] as Quat);
+	const sc = scale === undefined ? 1 : typeof scale === "number" ? scale : scale.join(",");
+	return `${id}|${origin.join(",")}|${o.join(",")}|${sc}`;
 }
 
 /** @emoji 📍 Writes fixture pose onto an object group; avoids R3F controlled transforms so vortex children follow relocate. */
@@ -2412,9 +2242,8 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 	readonly mode: RelocateMode;
 	readonly translationSnap: number | undefined;
 	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
-	readonly onTransformDragChange: (dragging: boolean) => void;
 }) {
-	const reg = useRegistryCore();
+	const reg = useRegistry();
 	const scene = useThree((s) => s.scene);
 	return createPortal(
 		<TransformControls
@@ -2422,7 +2251,6 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 			mode={props.mode}
 			translationSnap={props.translationSnap}
 			onMouseDown={() => {
-				props.onTransformDragChange(true);
 				const g = props.object;
 				props.beforeRef.current = {
 					origin: g.position.clone(),
@@ -2431,7 +2259,6 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 				};
 			}}
 			onMouseUp={() => {
-				props.onTransformDragChange(false);
 				const before = props.beforeRef.current;
 				if (!before) return;
 				const g = props.object;
@@ -2460,34 +2287,32 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 
 export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const group = useRef<Group>(null);
-	const transformDraggingRef = useRef(false);
 	const {
 		registerObject,
 		selectionMode,
 		setSelectedObjectIds,
 		onSelect,
-		setTransformDragObjectId,
+		setActiveRelocateObjectId,
+		activeRelocateObjectId,
 		relocateMode,
-	} = useRegistryCore();
-	const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
+		attractionDragActive,
+		attractionIndirectPickAwait,
+		attractionCompatibleAttractedFullIds,
+	} = useRegistry();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
-	const [tcReady, setTcReady] = useState(false);
+	const [tcTarget, setTcTarget] = useState<Group | null>(null);
+	const [pointerHovered, setPointerHovered] = useState(false);
 
-	const bindObjectGroup = useCallback(
-		(node: Group | null) => {
-			group.current = node;
-			registerObject(props.id, props.objectKind, node);
-		},
-		[props.id, props.objectKind, registerObject],
-	);
+	useEffect(() => {
+		registerObject(props.id, props.objectKind, group.current);
+		return () => {
+			registerObject(props.id, props.objectKind, null);
+		};
+	}, [props.id, props.objectKind, registerObject]);
 
-	const onTransformDragChange = useCallback(
-		(dragging: boolean) => {
-			transformDraggingRef.current = dragging;
-			setTransformDragObjectId(dragging ? props.id : null);
-		},
-		[props.id, setTransformDragObjectId],
-	);
+	useEffect(() => {
+		if (group.current) setTcTarget(group.current);
+	}, [props.selected, props.id, activeRelocateObjectId]);
 
 	const linkHighlighted = useMemo(() => {
 		if (props.highlighted === true) {
@@ -2509,9 +2334,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				disabled: props.disabled,
 				selected: props.selected,
 				highlighted: linkHighlighted,
-				hovered: props.hovered === true,
+				hovered: props.hovered === true || pointerHovered,
 			}),
-		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted],
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
 	);
 
 	const handlePointerDown = useCallback(
@@ -2525,6 +2350,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				setSelectedObjectIds([props.id]);
 				onSelect?.({ objectIds: [props.id], vortexIds: [] });
 			}
+			setActiveRelocateObjectId(props.id);
 		},
 		[
 			attractionDragActive,
@@ -2533,9 +2359,25 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			props.disabled,
 			props.id,
 			selectionMode,
+			setActiveRelocateObjectId,
 			setSelectedObjectIds,
 		],
 	);
+
+	const handlePointerOver = useCallback(
+		(e: { stopPropagation: () => void }) => {
+			e.stopPropagation();
+			if (!props.disabled) {
+				setPointerHovered(true);
+			}
+		},
+		[props.disabled],
+	);
+
+	const handlePointerOut = useCallback((e: { stopPropagation: () => void }) => {
+		e.stopPropagation();
+		setPointerHovered(false);
+	}, []);
 
 	const poseKey = useMemo(
 		() => objectPoseKey(props.id, props.origin, props.orientation, props.scale),
@@ -2543,13 +2385,11 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	);
 	useLayoutEffect(() => {
 		const g = group.current;
-		const ready = props.selected && g !== null;
-		setTcReady((prev) => (prev === ready ? prev : ready));
-		if (!g || transformDraggingRef.current) {
+		if (!g) {
 			return;
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
-	}, [poseKey, props.selected, props.origin, props.orientation, props.scale]);
+	}, [poseKey]);
 	const lodCtx = useLod();
 	const mode = props.relocate ?? relocateMode;
 	const transSnap =
@@ -2559,15 +2399,17 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		lodCtx.lodGridStepWorld > 0
 			? lodCtx.lodGridStepWorld
 			: undefined;
-	const tcObject = tcReady ? group.current : null;
-	const showTc = props.selected && props.relocate !== false && tcObject;
+	const showTc =
+		props.selected && activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
 
 	return (
 		<>
 			<group
-				ref={bindObjectGroup}
+				ref={group}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
+				onPointerOver={handlePointerOver}
+				onPointerOut={handlePointerOut}
 				userData={{
 					sceneObjectId: props.id,
 					sceneMeshStyle: meshStyle,
@@ -2583,14 +2425,13 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				)}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
-			{showTc && tcObject && (
+			{showTc && tcTarget && (
 				<ObjectTransformControls
-					object={tcObject}
+					object={tcTarget}
 					objectId={props.id}
 					mode={mode}
 					translationSnap={transSnap}
 					beforeRef={beforeRef}
-					onTransformDragChange={onTransformDragChange}
 				/>
 			)}
 		</>
@@ -2660,15 +2501,9 @@ export const Vortex = memo(function Vortex(
 	props: VortexProps & { objectId: string; objectKind?: string },
 ) {
 	const root = useRef<Group | null>(null);
-	const reg = useRegistryCore();
-	const drag = useRegistryDrag();
+	const reg = useRegistry();
 	const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
 	const r = props.radius ?? 0.35;
-
-	const registerVortexRef = useRef(reg.registerVortex);
-	const unregisterVortexRef = useRef(reg.unregisterVortex);
-	registerVortexRef.current = reg.registerVortex;
-	unregisterVortexRef.current = reg.unregisterVortex;
 
 	useEffect(() => {
 		const getter = () => {
@@ -2678,22 +2513,17 @@ export const Vortex = memo(function Vortex(
 			root.current.getWorldPosition(v);
 			return v;
 		};
-		registerVortexRef.current(fullId, getter);
+		reg.registerVortex(fullId, getter);
 		return () => {
-			unregisterVortexRef.current(fullId);
+			reg.unregisterVortex(fullId);
 		};
-	}, [fullId]);
-
-	const registerBindingRef = useRef(reg.registerVortexBinding);
-	const unregisterBindingRef = useRef(reg.unregisterVortexBinding);
-	registerBindingRef.current = reg.registerVortexBinding;
-	unregisterBindingRef.current = reg.unregisterVortexBinding;
+	}, [fullId, reg]);
 
 	const bindRoot = useCallback(
 		(node: Group | null) => {
 			root.current = node;
 			if (node) {
-				registerBindingRef.current(
+				reg.registerVortexBinding(
 					{
 						fullId,
 						objectId: props.objectId,
@@ -2704,20 +2534,20 @@ export const Vortex = memo(function Vortex(
 					node,
 				);
 			} else {
-				unregisterBindingRef.current(fullId);
+				reg.unregisterVortexBinding(fullId);
 			}
 		},
-		[fullId, props.objectId, props.objectKind, props.vortexKind, r],
+		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
 	const lodCtx = useLod();
-	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = drag.attractionDragAttractingFullId === fullId
+	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
 		? "attracting"
-		: drag.attractionHoverRingFullId === fullId
+		: reg.attractionHoverRingFullId === fullId
 			? "ring"
-			: drag.attractionIndirectPickAwait?.candidates.includes(fullId) === true
+			: reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true
 				? "indirectRing"
-				: drag.attractionCompatibleAttractedFullIds.has(fullId)
+				: reg.attractionCompatibleAttractedFullIds.has(fullId)
 					? "compatible"
 					: "none";
 
@@ -2740,12 +2570,12 @@ export const Vortex = memo(function Vortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
-	const inIndirectRing = drag.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
+	const inIndirectRing = reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
 	const linger =
-		(drag.attractionDragActive &&
-			(drag.attractionDragAttractingFullId === fullId ||
-				drag.attractionHoverRingFullId === fullId ||
-				drag.attractionCompatibleAttractedFullIds.has(fullId))) ||
+		(reg.attractionDragActive &&
+			(reg.attractionDragAttractingFullId === fullId ||
+				reg.attractionHoverRingFullId === fullId ||
+				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
 	const drawHandleBody = handlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
 	const pickProxy = handlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
@@ -2800,14 +2630,8 @@ export const Magnet = memo(function Magnet(props: MagnetProps) {
 //#region 🧲SceneAttraction
 const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 	readonly attractions: readonly AttractionProps[];
-	readonly poseVersion: number;
 }) {
-	const reg = useRegistryCore();
-	const drag = useRegistryDrag();
-	const linesDirtyRef = useRef(true);
-	useEffect(() => {
-		linesDirtyRef.current = true;
-	}, [props.poseVersion, props.attractions]);
+	const reg = useRegistry();
 	const mat = useMemo(() => {
 		const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
 		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true });
@@ -2818,14 +2642,6 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 		geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
 	}, [geo, props.attractions.length]);
 	useFrame(() => {
-		if (!props.attractions.length) {
-			return;
-		}
-		const needsLive = linesDirtyRef.current || drag.attractionDragActive;
-		if (!needsLive) {
-			return;
-		}
-		linesDirtyRef.current = false;
 		const pos = geo.attributes.position as Float32BufferAttribute;
 		let write = 0;
 		for (const attraction of props.attractions) {
@@ -2856,7 +2672,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 });
 
 export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
-	return <SceneAttractionLineBatch attractions={[props]} poseVersion={0} />;
+	return <SceneAttractionLineBatch attractions={[props]} />;
 });
 //#endregion 🧲SceneAttraction
 
@@ -2873,7 +2689,7 @@ export const Attraction = memo(function Attraction(props: { attracting: Vec3; at
 
 //#region ✋Relocate
 export function useSceneRelocate(objectId: string) {
-	const reg = useRegistryCore();
+	const reg = useRegistry();
 	return {
 		mode: reg.relocateMode,
 		start: () => reg.setActiveRelocateObjectId(objectId),
@@ -2885,43 +2701,16 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
-function SceneBootInvalidate() {
-	const invalidate = useThree((s) => s.invalidate);
-	useEffect(() => {
-		invalidate();
-	}, [invalidate]);
-	return null;
-}
-
 function OrbitGated() {
-	const core = useRegistryCore();
-	const drag = useRegistryDrag();
-	const invalidate = useThree((s) => s.invalidate);
-	const gate =
-		drag.attractionDragActive ||
-		drag.attractionIndirectPickAwait !== null ||
-		core.transformDragObjectId !== null;
-	const onControlsChange = useCallback(() => {
-		invalidate();
-	}, [invalidate]);
-	return (
-		<OrbitControls
-			makeDefault
-			enableDamping={false}
-			enabled={!gate}
-			onChange={onControlsChange}
-			onStart={onControlsChange}
-			onEnd={onControlsChange}
-		/>
-	);
+	const reg = useRegistry();
+	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
+	return <OrbitControls makeDefault enabled={!gate} />;
 }
 
 /** @emoji 📷 Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
 function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3 }) {
 	const { camera } = useThree();
 	const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
-	const controlsRef = useRef(controls);
-	controlsRef.current = controls;
 	const seededFor = useRef("");
 	const seedKey = `${props.position.join(",")}|${props.target.join(",")}`;
 	useLayoutEffect(() => {
@@ -2931,66 +2720,55 @@ function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3
 		seededFor.current = seedKey;
 		camera.position.set(props.position[0], props.position[1], props.position[2]);
 		camera.updateProjectionMatrix();
-		const orbit = controlsRef.current;
-		if (orbit?.target) {
-			orbit.target.set(props.target[0], props.target[1], props.target[2]);
-			orbit.update();
+		if (controls?.target) {
+			controls.target.set(props.target[0], props.target[1], props.target[2]);
+			controls.update();
 		}
-	}, [camera, props.position, props.target, seedKey]);
+	}, [camera, controls, props.position, props.target, seedKey]);
 	return null;
 }
 
 function AttractionThreeBinder() {
-	const reg = useRegistryCore();
-	const attachRef = useRef(reg.attachAttractionThreeEnv);
-	attachRef.current = reg.attachAttractionThreeEnv;
+	const reg = useRegistry();
 	const t = useThree();
 	useLayoutEffect(() => {
-		attachRef.current({ camera: t.camera, gl: t.gl, scene: t.scene });
-		return () => attachRef.current(null);
-	}, [t.camera, t.gl, t.scene]);
+		reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
+		return () => reg.attachAttractionThreeEnv(null);
+	}, [reg, t.camera, t.gl, t.scene]);
 	return null;
 }
 
 function AttractionWindowBridge() {
-	const reg = useRegistryCore();
-	const drag = useRegistryDrag();
-	const dragRef = useRef(drag);
-	dragRef.current = drag;
+	const reg = useRegistry();
 	const invalidate = useThree((s) => s.invalidate);
-	const attractionBusy = drag.attractionDragActive || drag.attractionIndirectPickAwait !== null;
+	const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	useEffect(() => {
 		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
-			const d = dragRef.current;
-			if (d.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
-			else if (d.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
+			if (reg.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
+			else if (reg.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onUp = (e: PointerEvent) => {
-			if (dragRef.current.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
+			if (reg.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onDown = (e: PointerEvent) => {
 			if (e.button !== 0) return;
-			if (dragRef.current.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
+			if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
 			invalidate();
 		};
-		window.addEventListener("pointermove", onMove);
-		window.addEventListener("pointerup", onUp, { capture: true });
-		window.addEventListener("pointerdown", onDown, true);
-		return () => {
-			window.removeEventListener("pointermove", onMove);
-			window.removeEventListener("pointerup", onUp, true);
-			window.removeEventListener("pointerdown", onDown, true);
-		};
+		const bindings = new SceneEventBindingController();
+		bindings.listen(window, "pointermove", onMove);
+		bindings.listen(window, "pointerup", onUp, { capture: true });
+		bindings.listen(window, "pointerdown", onDown, true);
+		return () => bindings.dispose();
 	}, [reg, attractionBusy, invalidate]);
 	return null;
 }
 
 function AttractionRubberBand() {
-	const reg = useRegistryCore();
-	const drag = useRegistryDrag();
+	const reg = useRegistry();
 	const geo = useMemo(() => {
 		const g = new BufferGeometry();
 		g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
@@ -3003,14 +2781,14 @@ function AttractionRubberBand() {
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
 		const attractionLine =
-			(drag.attractionDragActive || drag.attractionIndirectPickAwait !== null) && drag.attractionDragAttractingFullId ? true : false;
+			(reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
 		if (!attractionLine) {
 			pos.setXYZ(0, 0, 0, 0);
 			pos.setXYZ(1, 0, 0, 0);
 			pos.needsUpdate = true;
 			return;
 		}
-		const a = reg.getVortexWorld(drag.attractionDragAttractingFullId);
+		const a = reg.getVortexWorld(reg.attractionDragAttractingFullId);
 		const b = reg.attractionEndWorldRef.current;
 		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 			pos.setXYZ(0, a.x, a.y, a.z);
@@ -3032,16 +2810,6 @@ function AttractionRubberBand() {
 	return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
-function quantizeCameraComponent(value: number): number {
-	return Math.round(value * 100) / 100;
-}
-
-function quantizeCameraState(position: readonly number[], target: readonly number[], zoom: number): string {
-	const p = position.map(quantizeCameraComponent);
-	const t = target.map(quantizeCameraComponent);
-	return JSON.stringify({ p, t, z: quantizeCameraComponent(zoom) });
-}
-
 function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: CameraState) => void }) {
 	const { camera } = useThree();
 	const controls = useThree((s) => s.controls as { target: Vector3 } | null);
@@ -3052,7 +2820,11 @@ function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: Camer
 			return;
 		}
 		const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
-		const snap = quantizeCameraState(camera.position.toArray(), tgt.toArray(), zoom);
+		const snap = JSON.stringify({
+			p: camera.position.toArray(),
+			t: tgt.toArray(),
+			z: zoom,
+		});
 		if (snap === last.current) {
 			return;
 		}
@@ -3101,16 +2873,6 @@ function RegistryProvider({
 }) {
 	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
-	const [transformDragObjectId, setTransformDragObjectId] = useState<string | null>(null);
-	useEffect(() => {
-		const clearTransformDrag = () => setTransformDragObjectId(null);
-		window.addEventListener("pointerup", clearTransformDrag);
-		window.addEventListener("pointercancel", clearTransformDrag);
-		return () => {
-			window.removeEventListener("pointerup", clearTransformDrag);
-			window.removeEventListener("pointercancel", clearTransformDrag);
-		};
-	}, []);
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -3141,38 +2903,6 @@ function RegistryProvider({
 	const ndcRef = useRef(new Vector2());
 	const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
 	const hitScratchRef = useRef(new Vector3());
-	const lastAttractionTargetRingRef = useRef("");
-	const externalsRef = useRef({
-		onSelect,
-		onConnect,
-		onProximityConnect,
-		onIndirectConnect,
-		onAttractionCompatibleObjects,
-		onAttractionTargetRing,
-		onRelocate,
-	});
-	externalsRef.current = {
-		onSelect,
-		onConnect,
-		onProximityConnect,
-		onIndirectConnect,
-		onAttractionCompatibleObjects,
-		onAttractionTargetRing,
-		onRelocate,
-	};
-
-	const emitAttractionTargetRing = useCallback((payload: AttractionTargetRingPayload) => {
-		const handler = externalsRef.current.onAttractionTargetRing;
-		if (!handler) {
-			return;
-		}
-		const sig = attractionTargetRingSignature(payload);
-		if (lastAttractionTargetRingRef.current === sig) {
-			return;
-		}
-		lastAttractionTargetRingRef.current = sig;
-		handler(payload);
-	}, []);
 
 	const registerVortex = useCallback((fullId: string, getter: VortexGetter) => {
 		vortexGettersRef.current.set(fullId, getter);
@@ -3215,8 +2945,8 @@ function RegistryProvider({
 		setAttractionCompatibleAttractedFullIds(new Set());
 		setAttractionHoverRingFullId(null);
 		setAttractionIndirectPickAwait(null);
-		emitAttractionTargetRing({ attracting: "", objectId: null, vortexFullIds: [] });
-	}, [emitAttractionTargetRing]);
+		onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
+	}, [onAttractionTargetRing]);
 
 	const beginAttractionDragFromVortex = useCallback(
 		(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
@@ -3252,9 +2982,9 @@ function RegistryProvider({
 			setAttractionCompatibleAttractedFullIds(compat);
 			setAttractionHoverRingFullId(null);
 			setActiveRelocateObjectId(null);
-			externalsRef.current.onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
+			onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
 		},
-		[blockedVortexFullIds, kindCatalogs, kindCompatibility],
+		[blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
 	);
 
 	const collectPickRoots = useCallback((): Object3D[] => {
@@ -3285,13 +3015,13 @@ function RegistryProvider({
 			setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
 			if (ring) {
 				const meta = vortexMetaRef.current.get(ring);
-				emitAttractionTargetRing({
+				onAttractionTargetRing?.({
 					attracting: session.attractingFullId,
 					objectId: meta?.objectId ?? null,
-					vortexFullIds: [ring],
+					vortexFullIds: ring ? [ring] : [],
 				});
 			} else {
-				emitAttractionTargetRing({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
+				onAttractionTargetRing?.({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
 			}
 			const hitWorld = hitScratchRef.current;
 			if (hits.length > 0) {
@@ -3317,7 +3047,7 @@ function RegistryProvider({
 				});
 			} else session.snapAttractedFullId = null;
 		},
-		[blockedVortexFullIds, collectPickRoots, emitAttractionTargetRing, lodKindRef],
+		[blockedVortexFullIds, collectPickRoots, lodKindRef, onAttractionTargetRing],
 	);
 
 	const commitAttractionPointer = useCallback(
@@ -3349,8 +3079,8 @@ function RegistryProvider({
 			const snapId = session.snapAttractedFullId;
 			if (snapId && attractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
 				const p = { attracting: session.attractingFullId, attracted: snapId };
-				externalsRef.current.onConnect?.(p);
-				externalsRef.current.onProximityConnect?.(p);
+				onConnect?.(p);
+				onProximityConnect?.(p);
 				cancelAttractionDrag();
 				return;
 			}
@@ -3365,7 +3095,7 @@ function RegistryProvider({
 					!blockedVortexFullIds.has(vf) &&
 					vortexMetaRef.current.get(vf)?.objectId !== session.attractingObjectId
 				) {
-					externalsRef.current.onConnect?.({ attracting: attractingFull, attracted: vf });
+					onConnect?.({ attracting: attractingFull, attracted: vf });
 					cancelAttractionDrag();
 					return;
 				}
@@ -3380,8 +3110,8 @@ function RegistryProvider({
 					}
 					if (candidates.length === 1) {
 						const p = { attracting: attractingFull, attracted: candidates[0]! };
-						externalsRef.current.onConnect?.(p);
-						externalsRef.current.onIndirectConnect?.(p);
+						onConnect?.(p);
+						onIndirectConnect?.(p);
 						cancelAttractionDrag();
 						return;
 					}
@@ -3395,7 +3125,7 @@ function RegistryProvider({
 							attractedObjectId: oid,
 							candidates,
 						});
-						emitAttractionTargetRing({
+						onAttractionTargetRing?.({
 							attracting: attractingFull,
 							objectId: oid,
 							vortexFullIds: candidates,
@@ -3406,7 +3136,15 @@ function RegistryProvider({
 			}
 			cancelAttractionDrag();
 		},
-		[blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, emitAttractionTargetRing],
+		[
+			blockedVortexFullIds,
+			cancelAttractionDrag,
+			collectPickRoots,
+			onConnect,
+			onIndirectConnect,
+			onAttractionTargetRing,
+			onProximityConnect,
+		],
 	);
 
 	const updateIndirectPickPointer = useCallback(
@@ -3455,8 +3193,8 @@ function RegistryProvider({
 				const vf = readVortexFullIdFromObject(h.object);
 				if (vf && awaitPick.candidates.includes(vf)) {
 					const p = { attracting: awaitPick.attractingFullId, attracted: vf };
-					externalsRef.current.onConnect?.(p);
-					externalsRef.current.onIndirectConnect?.(p);
+					onConnect?.(p);
+					onIndirectConnect?.(p);
 					cancelAttractionDrag();
 					ev?.stopImmediatePropagation();
 					return;
@@ -3464,7 +3202,7 @@ function RegistryProvider({
 			}
 			cancelAttractionDrag();
 		},
-		[cancelAttractionDrag, collectPickRoots],
+		[cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
 	);
 
 	const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
@@ -3488,7 +3226,7 @@ function RegistryProvider({
 		[proximityRadius],
 	);
 
-	const coreValue = useMemo(
+	const value = useMemo<RegistryValue>(
 		() => ({
 			registerVortex,
 			unregisterVortex,
@@ -3508,19 +3246,21 @@ function RegistryProvider({
 			relocateMode,
 			activeRelocateObjectId,
 			setActiveRelocateObjectId,
-			transformDragObjectId,
-			setTransformDragObjectId,
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
-			onSelect: (snap: SelectionSnapshot) => externalsRef.current.onSelect?.(snap),
-			onConnect: (p: AttractionPayload) => externalsRef.current.onConnect?.(p),
-			onProximityConnect: (p: AttractionPayload) => externalsRef.current.onProximityConnect?.(p),
-			onIndirectConnect: (p: AttractionPayload) => externalsRef.current.onIndirectConnect?.(p),
-			onAttractionCompatibleObjects: (p: AttractionCompatibleObjectsPayload) =>
-				externalsRef.current.onAttractionCompatibleObjects?.(p),
-			onAttractionTargetRing: emitAttractionTargetRing,
-			onRelocate: (p: RelocatePayload) => externalsRef.current.onRelocate?.(p),
+			onSelect,
+			onConnect,
+			onProximityConnect,
+			onIndirectConnect,
+			onAttractionCompatibleObjects,
+			onAttractionTargetRing,
+			onRelocate,
 			attachAttractionThreeEnv,
 			updateAttractionPointer,
 			commitAttractionPointer,
@@ -3545,11 +3285,21 @@ function RegistryProvider({
 			selectionMode,
 			relocateMode,
 			activeRelocateObjectId,
-			transformDragObjectId,
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
-			emitAttractionTargetRing,
+			onSelect,
+			onConnect,
+			onProximityConnect,
+			onIndirectConnect,
+			onAttractionCompatibleObjects,
+			onAttractionTargetRing,
+			onRelocate,
 			attachAttractionThreeEnv,
 			updateAttractionPointer,
 			commitAttractionPointer,
@@ -3558,28 +3308,7 @@ function RegistryProvider({
 		],
 	);
 
-	const dragValue = useMemo<RegistryDragState>(
-		() => ({
-			attractionDragActive,
-			attractionDragAttractingFullId,
-			attractionCompatibleAttractedFullIds,
-			attractionHoverRingFullId,
-			attractionIndirectPickAwait,
-		}),
-		[
-			attractionDragActive,
-			attractionDragAttractingFullId,
-			attractionCompatibleAttractedFullIds,
-			attractionHoverRingFullId,
-			attractionIndirectPickAwait,
-		],
-	);
-
-	return (
-		<RegistryCoreContext.Provider value={coreValue}>
-			<RegistryDragContext.Provider value={dragValue}>{children}</RegistryDragContext.Provider>
-		</RegistryCoreContext.Provider>
-	);
+	return <RegistryContext.Provider value={value}>{children}</RegistryContext.Provider>;
 }
 
 function Chunks({
@@ -3595,10 +3324,9 @@ function Chunks({
 		const map = new Map<string, ReactNode[]>();
 		Children.forEach(children, (child) => {
 			if (!isValidElement(child)) return;
-			const p = child.props as { layoutOrigin?: Vec3; origin?: Vec3 };
-			const origin = p.layoutOrigin ?? p.origin;
-			if (!origin) return;
-			const k = chunkKey(origin, chunkSize);
+			const p = child.props as { origin?: Vec3 };
+			if (!p?.origin) return;
+			const k = chunkKey(p.origin, chunkSize);
 			const arr = map.get(k) ?? [];
 			arr.push(child);
 			map.set(k, arr);
@@ -3618,6 +3346,16 @@ function Chunks({
 	);
 }
 
+function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[]; rest: ReactNode[] } {
+	const chunked: ReactNode[] = [];
+	const rest: ReactNode[] = [];
+	Children.forEach(children, (c) => {
+		if (isValidElement(c) && (c.props as { origin?: Vec3 }).origin !== undefined) chunked.push(c);
+		else rest.push(c);
+	});
+	return { chunked, rest };
+}
+
 function Inner(props: CanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
 	const lodKindRef = useRef<LodKind>("normal");
@@ -3633,10 +3371,7 @@ function Inner(props: CanvasProps) {
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
 	const zoom = camProp?.zoom ?? 1;
-	const chunkLayout = useMemo(
-		(): SceneChunkLayoutValue => ({ chunkSize, maxDistance: maxDist }),
-		[chunkSize, maxDist],
-	);
+	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
 	const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
 	const blocked = useLiveBlockedVortexFullIds(blockedFallback);
 	return (
@@ -3669,7 +3404,6 @@ function Inner(props: CanvasProps) {
 			>
 				<PerspectiveCamera makeDefault near={0.2} far={500_000} fov={50} />
 				<SceneCameraSeed position={pos} target={tgt} />
-				<SceneBootInvalidate />
 				<OrbitGated />
 				<AttractionThreeBinder />
 				<AttractionWindowBridge />
@@ -3677,29 +3411,21 @@ function Inner(props: CanvasProps) {
 				<CameraReporter zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
-				<SceneChunkLayoutContext.Provider value={chunkLayout}>{children}</SceneChunkLayoutContext.Provider>
+				<Chunks chunkSize={chunkSize} maxDistance={maxDist}>
+					{chunked}
+				</Chunks>
+				<group data-scene-unchunked>{rest}</group>
 			</LodBridge>
 		</RegistryProvider>
 	);
 }
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
-	const {
-		children,
-		className,
-		style,
-		onLodChange,
-		domain = DEFAULT_DOMAIN,
-		automaticLod = true,
-		lod,
-		...rest
-	} = props;
-	const [orbitLod, setOrbitLod] = useState<LodKind>("normal");
-	const pinnedLod = !automaticLod && lod !== undefined && isLodKind(lod) ? lod : null;
-	const displayLod = pinnedLod ?? orbitLod;
+	const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
+	const [shellLod, setShellLod] = useState<LodKind>("normal");
 	const handleLod = useCallback(
 		(l: LodKind) => {
-			setOrbitLod((prev) => (prev === l ? prev : l));
+			setShellLod(l);
 			onLodChange?.(l);
 		},
 		[onLodChange],
@@ -3710,7 +3436,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 			style={{ width: "100%", height: "100%", ...style }}
 			data-scene-domain={domain}
 			data-scene-root
-			data-scene-lod={displayLod}
+			data-scene-lod={shellLod}
 		>
 			<Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
 				<Inner {...rest} domain={domain} onLodChange={handleLod}>
@@ -3723,9 +3449,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 
 /** @emoji 🧪 Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
 export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
-	const reg = useRegistryCore();
-	const regRef = useRef(reg);
-	regRef.current = reg;
+	const reg = useRegistry();
 	const setSelectedId = props.setSelectedId;
 	useEffect(() => {
 		const w = window as unknown as {
@@ -3738,19 +3462,18 @@ export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string
 		};
 		w.__scenePlayActivate = (id: string) => {
 			setSelectedId(id);
-			regRef.current.setSelectedObjectIds([id]);
+			reg.setActiveRelocateObjectId(id);
 		};
 		w.__scenePlayClearSelection = () => {
 			setSelectedId(null);
-			regRef.current.setSelectedObjectIds([]);
-			regRef.current.setTransformDragObjectId(null);
+			reg.setActiveRelocateObjectId(null);
 		};
 		return () => {
 			delete w.__scenePlaySelect;
 			delete w.__scenePlayActivate;
 			delete w.__scenePlayClearSelection;
 		};
-	}, [setSelectedId]);
+	}, [setSelectedId, reg]);
 	return null;
 }
 
@@ -3780,16 +3503,6 @@ if (import.meta.vitest) {
 			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
 			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
 			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
-		});
-	});
-	describe("resolveLodLabelFromThresholdsHysteresis", () => {
-		it("holds the previous band near a threshold until zoom moves past hysteresis", () => {
-			const t = DEFAULT_LOD_ZOOM_THRESHOLDS;
-			const b = t.compactMaxZoom;
-			expect(resolveLodLabelFromThresholdsHysteresis(b - 0.01, t, "normal")).toBe("normal");
-			expect(resolveLodLabelFromThresholdsHysteresis(b - LOD_ZOOM_HYSTERESIS - 0.02, t, "normal")).toBe("compact");
-			expect(resolveLodLabelFromThresholdsHysteresis(b + 0.01, t, "compact")).toBe("compact");
-			expect(resolveLodLabelFromThresholdsHysteresis(b + LOD_ZOOM_HYSTERESIS + 0.02, t, "compact")).toBe("normal");
 		});
 	});
 	describe("lodZoomThresholdsForDomain", () => {
@@ -3962,16 +3675,6 @@ if (import.meta.vitest) {
 			expect(resolveMeshStyle({})).toBe(DEFAULT_MESH_STYLE);
 		});
 	});
-	describe("normalizeColorForThree", () => {
-		it("falls back when computed color is empty", () => {
-			expect(normalizeColorForThree("", "#112233")).toBe("#112233");
-		});
-		it("converts oklab computed strings to hex", () => {
-			const hex = normalizeColorForThree("oklab(0.383091 0.0498137 0.0139739)", "#ff0000");
-			expect(hex.startsWith("#")).toBe(true);
-			expect(hex).not.toContain("oklab");
-		});
-	});
 	describe("meshStyleColors", () => {
 		it("returns null for original and colors for neutral", () => {
 			expect(meshStyleColors("original")).toBeNull();
@@ -4032,72 +3735,6 @@ if (import.meta.vitest) {
 	describe("resolveWireKindForVortex", () => {
 		it("falls back to default wire id", () => {
 			expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
-		});
-	});
-	describe("fixtureStateFingerprint", () => {
-		it("ignores sub-millimeter pose jitter via quantization", () => {
-			const base = {
-				schema: "elements.scene.fixture/v1" as const,
-				camera: { position: [0, 0, 0] as Vec3, target: [0, 0, 1] as Vec3, zoom: 1 },
-				attractions: [] as AttractionProps[],
-			};
-			const a = {
-				...base,
-				objects: [
-					{
-						id: "a",
-						meshUrl: "/m.glb",
-						origin: [1.0001, 2, 3] as Vec3,
-						orientation: [0, 0, 0, 1] as Quat,
-						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
-					},
-				],
-			};
-			const b = {
-				...base,
-				objects: [
-					{
-						id: "a",
-						meshUrl: "/m.glb",
-						origin: [1.0002, 2, 3] as Vec3,
-						orientation: [0, 0, 0, 1] as Quat,
-						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
-					},
-				],
-			};
-			expect(fixtureStateFingerprint(a)).toBe(fixtureStateFingerprint(b));
-		});
-		it("changes when a pose moves beyond quantization", () => {
-			const base = {
-				schema: "elements.scene.fixture/v1" as const,
-				camera: { position: [0, 0, 0] as Vec3, target: [0, 0, 1] as Vec3, zoom: 1 },
-				attractions: [] as AttractionProps[],
-			};
-			const a = {
-				...base,
-				objects: [
-					{
-						id: "a",
-						meshUrl: "/m.glb",
-						origin: [1, 2, 3] as Vec3,
-						orientation: [0, 0, 0, 1] as Quat,
-						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
-					},
-				],
-			};
-			const b = {
-				...base,
-				objects: [
-					{
-						id: "a",
-						meshUrl: "/m.glb",
-						origin: [2, 2, 3] as Vec3,
-						orientation: [0, 0, 0, 1] as Quat,
-						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
-					},
-				],
-			};
-			expect(fixtureStateFingerprint(a)).not.toBe(fixtureStateFingerprint(b));
 		});
 	});
 	describe("wouldAttractionEdgeIntroduceCycle", () => {

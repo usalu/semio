@@ -10,6 +10,24 @@ import {
 	NoEventPriority,
 } from "react-reconciler/constants";
 
+type BoardListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+class BoardEventBindingController {
+	private readonly cleanups: Array<() => void> = [];
+
+	listen(target: BoardListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+		if (!target) return;
+		target.addEventListener(kind, listener, options);
+		this.cleanups.push(() => target.removeEventListener(kind, listener, options));
+	}
+
+	dispose(): void {
+		while (this.cleanups.length > 0) {
+			this.cleanups.pop()?.();
+		}
+	}
+}
+
 // #region 🔖GpuWasmBridge
 import initBoardWasm, {
 	boardComputeEdgeBezier,
@@ -3818,26 +3836,20 @@ export class BoardRenderer {
 		}
 		this.canvas.tabIndex = 0;
 		this.canvas.style.touchAction = "none";
-		this.canvas.addEventListener("contextmenu", this.handleContextMenu as EventListener);
-		this.canvas.addEventListener("pointerdown", this.handlePointerDown as EventListener);
-		this.canvas.addEventListener("pointermove", this.handlePointerMove as EventListener);
-		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
-		this.canvas.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		this.canvas.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
-		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
+		const bindings = new BoardEventBindingController();
+		bindings.listen(this.canvas, "contextmenu", this.handleContextMenu as EventListener);
+		bindings.listen(this.canvas, "pointerdown", this.handlePointerDown as EventListener);
+		bindings.listen(this.canvas, "pointermove", this.handlePointerMove as EventListener);
+		bindings.listen(this.canvas, "pointerup", this.handlePointerUp as EventListener);
+		bindings.listen(this.canvas, "pointerleave", this.handlePointerLeave as EventListener);
+		bindings.listen(this.canvas, "wheel", this.handleWheel as EventListener, { passive: false });
+		bindings.listen(globalThis, "keydown", this.handleWindowKeyDown as EventListener, true);
+		(this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings = bindings;
 	}
 
 	private detachCanvasListeners(): void {
-		if (!this.canvas) {
-			return;
-		}
-		this.canvas.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
-		this.canvas.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
-		this.canvas.removeEventListener("pointermove", this.handlePointerMove as EventListener);
-		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
-		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
-		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
-		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
+		(this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings?.dispose();
+		(this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings = undefined;
 	}
 
 	/** @emoji 🎨 Reapplies scene `selected` / `highlighted` from committed selection and preselection only. */
