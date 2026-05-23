@@ -797,6 +797,76 @@ function undirectedComponents(objectIds: readonly string[], edges: readonly Attr
 	return components;
 }
 
+/** @emoji 🔄 True when `attractingObjectId → attractedObjectId` closes a directed cycle in attraction edges. */
+export function wouldAttractionEdgeIntroduceCycle(
+	edges: readonly AttractionEdge[],
+	attractingObjectId: string,
+	attractedObjectId: string,
+): boolean {
+	if (!attractingObjectId || !attractedObjectId || attractingObjectId === attractedObjectId) {
+		return true;
+	}
+	const outgoing = new Map<string, string[]>();
+	for (const edge of edges) {
+		const next = outgoing.get(edge.attractingObjectId) ?? [];
+		next.push(edge.attractedObjectId);
+		outgoing.set(edge.attractingObjectId, next);
+	}
+	const stack = [attractedObjectId];
+	const seen = new Set<string>();
+	while (stack.length) {
+		const id = stack.pop()!;
+		if (id === attractingObjectId) {
+			return true;
+		}
+		if (seen.has(id)) {
+			continue;
+		}
+		seen.add(id);
+		for (const child of outgoing.get(id) ?? []) {
+			stack.push(child);
+		}
+	}
+	return false;
+}
+
+function parentOwnershipCycleMemberIds(
+	parentByObjectId: ReadonlyMap<string, string | null>,
+	startId: string,
+): readonly string[] | null {
+	const order: string[] = [];
+	const index = new Map<string, number>();
+	let cur: string | null = startId;
+	while (cur) {
+		const at = index.get(cur);
+		if (at !== undefined) {
+			return order.slice(at);
+		}
+		index.set(cur, order.length);
+		order.push(cur);
+		cur = parentByObjectId.get(cur) ?? null;
+	}
+	return null;
+}
+
+/** @emoji ✂️ Clears one parent link per ownership cycle so {@link SceneAttractionTree} stays a forest. */
+function breakOwnershipParentCycles(parentByObjectId: Map<string, string | null>): void {
+	for (;;) {
+		let cycle: readonly string[] | null = null;
+		for (const id of parentByObjectId.keys()) {
+			cycle = parentOwnershipCycleMemberIds(parentByObjectId, id);
+			if (cycle?.length) {
+				break;
+			}
+		}
+		if (!cycle?.length) {
+			return;
+		}
+		const detach = cycle.slice().sort().at(-1)!;
+		parentByObjectId.set(detach, null);
+	}
+}
+
 /** @emoji 🕸️ Resolves a forest from attraction edges: wormhole roots, closest-to-wormhole parent when multiply attracted. */
 export function resolveSceneAttractionTree(args: {
 	readonly objectIds: readonly string[];
@@ -898,6 +968,8 @@ export function resolveSceneAttractionTree(args: {
 			wormholeDistanceByObjectId.set(id, explicit.has(id) ? 0 : Number.POSITIVE_INFINITY);
 		}
 	}
+
+	breakOwnershipParentCycles(parentByObjectId);
 
 	const attractingByObjectId = new Map<string, string[]>();
 	for (const id of args.objectIds) {
@@ -1023,6 +1095,13 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
 	return { records, attractions, tree, version };
 }
 
+/** @emoji 🔑 Stable fingerprint for external fixture resync (ignores object reference identity). */
+export function fixtureStateFingerprint(fixture: FixtureV1): string {
+	const attractionIds = fixture.attractions.map((a) => a.id).join("\0");
+	const objectIds = fixture.objects.map((o) => o.id).join("\0");
+	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}`;
+}
+
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
 	switch (action.type) {
 		case "init": {
@@ -1030,6 +1109,12 @@ function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateActio
 			return buildSnapshot(records, action.fixture.attractions, state.version + 1);
 		}
 		case "addAttraction": {
+			const edges = attractionEdgesFromAttractions(state.attractions);
+			const attractingObjectId = parseVortexFullId(action.attraction.attracting).objectId;
+			const attractedObjectId = parseVortexFullId(action.attraction.attracted).objectId;
+			if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
+				return state;
+			}
 			const attractions = [...state.attractions, action.attraction];
 			return buildSnapshot(state.records, attractions, state.version + 1);
 		}
@@ -1116,14 +1201,15 @@ export function SceneObjectStateProvider(props: {
 	const [snapshot, dispatch] = useReducer(objectStateReducer, props.fixture, (fixture) =>
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
-	const syncedFixtureRef = useRef<FixtureV1 | null>(null);
+	const syncedFixtureFingerprintRef = useRef<string | null>(null);
+	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
-		if (syncedFixtureRef.current === props.fixture) {
+		if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
 			return;
 		}
-		syncedFixtureRef.current = props.fixture;
+		syncedFixtureFingerprintRef.current = fixtureFingerprint;
 		dispatch({ type: "init", fixture: props.fixture });
-	}, [props.fixture]);
+	}, [props.fixture, fixtureFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			dispatch({ type: "relocate", payload });
@@ -1159,6 +1245,14 @@ function useSceneObjectState(): SceneObjectStateContextValue {
 		throw new Error("SceneObjectStateProvider missing");
 	}
 	return v;
+}
+
+function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
+	const state = useContext(SceneObjectStateContext);
+	return useMemo(
+		() => (state ? blockedVortexFullIdsFromAttractions(state.snapshot.attractions) : fallback),
+		[state, fallback, state?.snapshot.attractions, state?.snapshot.version],
+	);
 }
 
 /** @emoji 🪝 Relocate handler that updates central object state and cascades to attracted descendants. */
@@ -1216,12 +1310,20 @@ const ObjectItemById = memo(function ObjectItemById(props: {
 });
 
 /** @emoji 🌲 Declares attraction tree structure; meshes mount flat via {@link SceneObjects} so ids stay stable on reparent. */
-export const ObjectTreeNode = memo(function ObjectTreeNode(props: { readonly objectId: string }) {
+export const ObjectTreeNode = memo(function ObjectTreeNode(props: {
+	readonly objectId: string;
+	readonly visitedIds?: readonly string[];
+}) {
 	const attracting = useAttractingChildIds(props.objectId);
+	const visited = props.visitedIds ?? [];
+	if (visited.includes(props.objectId)) {
+		return null;
+	}
+	const nextVisited = visited.length ? [...visited, props.objectId] : [props.objectId];
 	return (
 		<>
 			{attracting.map((childId) => (
-				<ObjectTreeNode key={childId} objectId={childId} />
+				<ObjectTreeNode key={childId} objectId={childId} visitedIds={nextVisited} />
 			))}
 		</>
 	);
@@ -1262,16 +1364,10 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 	);
 });
 
-/** @emoji 🧲 Renders attractions from central object state. */
+/** @emoji 🧲 Renders all attraction endpoint lines in one frame loop (avoids N×useFrame churn). */
 export const SceneAttractions = memo(function SceneAttractions() {
 	const { snapshot } = useSceneObjectState();
-	return (
-		<>
-			{snapshot.attractions.map((attraction) => (
-				<SceneAttraction key={attraction.id} {...attraction} />
-			))}
-		</>
-	);
+	return <SceneAttractionLineBatch attractions={snapshot.attractions} />;
 });
 //#endregion 🕸️AttractionGraph
 
@@ -2453,27 +2549,33 @@ export const Magnet = memo(function Magnet(props: MagnetProps) {
 //#endregion 🧲Magnet
 
 //#region 🧲SceneAttraction
-export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
+const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
+	readonly attractions: readonly AttractionProps[];
+}) {
 	const reg = useRegistry();
-	const geo = useMemo(() => {
-		const g = new BufferGeometry();
-		g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
-		return g;
-	}, []);
 	const mat = useMemo(() => {
 		const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
 		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true });
 	}, []);
+	const geo = useMemo(() => new BufferGeometry(), []);
+	useLayoutEffect(() => {
+		const vertexCount = Math.max(props.attractions.length * 2, 2);
+		geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
+	}, [geo, props.attractions.length]);
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
-		const a = reg.getVortexWorld(props.attracting);
-		const b = reg.getVortexWorld(props.attracted);
-		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
-			pos.setXYZ(0, a.x, a.y, a.z);
-			pos.setXYZ(1, b.x, b.y, b.z);
-		} else {
-			pos.setXYZ(0, 0, 0, 0);
-			pos.setXYZ(1, 0, 0, 0);
+		let write = 0;
+		for (const attraction of props.attractions) {
+			const a = reg.getVortexWorld(attraction.attracting);
+			const b = reg.getVortexWorld(attraction.attracted);
+			if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
+				pos.setXYZ(write, a.x, a.y, a.z);
+				pos.setXYZ(write + 1, b.x, b.y, b.z);
+			} else {
+				pos.setXYZ(write, 0, 0, 0);
+				pos.setXYZ(write + 1, 0, 0, 0);
+			}
+			write += 2;
 		}
 		pos.needsUpdate = true;
 	});
@@ -2484,14 +2586,14 @@ export const SceneAttraction = memo(function SceneAttraction(props: AttractionPr
 		},
 		[geo, mat],
 	);
-	return (
-		<line
-			geometry={geo}
-			material={mat}
-			raycast={() => null}
-			userData={{ sceneAttractionId: props.id }}
-		/>
-	);
+	if (!props.attractions.length) {
+		return null;
+	}
+	return <lineSegments geometry={geo} material={mat} raycast={() => null} />;
+});
+
+export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
+	return <SceneAttractionLineBatch attractions={[props]} />;
 });
 //#endregion 🧲SceneAttraction
 
@@ -2520,10 +2622,31 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
-function OrbitGated({ target }: { target: Vec3 }) {
+function OrbitGated() {
 	const reg = useRegistry();
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
-	return <OrbitControls makeDefault enabled={!gate} target={target as [number, number, number]} />;
+	return <OrbitControls makeDefault enabled={!gate} />;
+}
+
+/** @emoji 📷 Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
+function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3 }) {
+	const { camera } = useThree();
+	const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
+	const seededFor = useRef("");
+	const seedKey = `${props.position.join(",")}|${props.target.join(",")}`;
+	useLayoutEffect(() => {
+		if (seededFor.current === seedKey) {
+			return;
+		}
+		seededFor.current = seedKey;
+		camera.position.set(props.position[0], props.position[1], props.position[2]);
+		camera.updateProjectionMatrix();
+		if (controls?.target) {
+			controls.target.set(props.target[0], props.target[1], props.target[2]);
+			controls.update();
+		}
+	}, [camera, controls, props.position, props.target, seedKey]);
+	return null;
 }
 
 function AttractionThreeBinder() {
@@ -2611,28 +2734,28 @@ function AttractionRubberBand() {
 	return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
-function CameraReporter({
-	target,
-	zoom,
-	onCamera,
-}: {
-	target: Vec3;
-	zoom: number;
-	onCamera?: (s: CameraState) => void;
-}) {
+function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: CameraState) => void }) {
 	const { camera } = useThree();
+	const controls = useThree((s) => s.controls as { target: Vector3 } | null);
+	const targetScratch = useMemo(() => new Vector3(), []);
 	const last = useRef("");
 	useFrame(() => {
+		if (!onCamera) {
+			return;
+		}
+		const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
 		const snap = JSON.stringify({
 			p: camera.position.toArray(),
-			t: [...target],
+			t: tgt.toArray(),
 			z: zoom,
 		});
-		if (snap === last.current) return;
+		if (snap === last.current) {
+			return;
+		}
 		last.current = snap;
-		onCamera?.({
+		onCamera({
 			position: camera.position.toArray() as unknown as Vec3,
-			target,
+			target: tgt.toArray() as unknown as Vec3,
 			zoom,
 		});
 	});
@@ -3173,7 +3296,8 @@ function Inner(props: CanvasProps) {
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
 	const zoom = camProp?.zoom ?? 1;
 	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
-	const blocked = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
+	const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
+	const blocked = useLiveBlockedVortexFullIds(blockedFallback);
 	return (
 		<RegistryProvider
 			lodKindRef={lodKindRef}
@@ -3202,12 +3326,13 @@ function Inner(props: CanvasProps) {
 				pinnedLod={pinnedLod}
 				onLodChange={props.onLodChange}
 			>
-				<PerspectiveCamera makeDefault position={pos} near={0.2} far={500_000} fov={50} />
-				<OrbitGated target={tgt} />
+				<PerspectiveCamera makeDefault near={0.2} far={500_000} fov={50} />
+				<SceneCameraSeed position={pos} target={tgt} />
+				<OrbitGated />
 				<AttractionThreeBinder />
 				<AttractionWindowBridge />
 				<AttractionRubberBand />
-				<CameraReporter target={tgt} zoom={zoom} onCamera={props.onCamera} />
+				<CameraReporter zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
 				<Chunks chunkSize={chunkSize} maxDistance={maxDist}>
@@ -3536,7 +3661,30 @@ if (import.meta.vitest) {
 			expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
 		});
 	});
+	describe("wouldAttractionEdgeIntroduceCycle", () => {
+		it("detects a closing edge on an existing chain", () => {
+			const edges = [
+				{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
+				{ attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
+			];
+			expect(wouldAttractionEdgeIntroduceCycle(edges, "c", "a")).toBe(true);
+			expect(wouldAttractionEdgeIntroduceCycle(edges, "a", "d")).toBe(false);
+		});
+	});
 	describe("resolveSceneAttractionTree", () => {
+		it("breaks ownership cycles in cyclic attraction components", () => {
+			const tree = resolveSceneAttractionTree({
+				objectIds: ["a", "b", "c"],
+				edges: [
+					{ attractingObjectId: "a", attractedObjectId: "b", attractionId: "t1" },
+					{ attractingObjectId: "b", attractedObjectId: "c", attractionId: "t2" },
+					{ attractingObjectId: "c", attractedObjectId: "a", attractionId: "t3" },
+				],
+			});
+			for (const id of ["a", "b", "c"]) {
+				expect(parentOwnershipCycleMemberIds(tree.parentByObjectId, id)).toBeNull();
+			}
+		});
 		it("picks parent closer to wormhole when multiply attracted", () => {
 			const tree = resolveSceneAttractionTree({
 				objectIds: ["w", "a", "b", "c"],

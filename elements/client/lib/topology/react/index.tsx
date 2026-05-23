@@ -561,11 +561,11 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 	const onRelocate = useSceneObjectRelocate();
 	const onConnect = useSceneObjectConnect();
 	const { scene: s } = props.bindings;
-	const sceneRest = props.scene ?? {};
+	const { camera: _liveCamera, ...sceneRest } = props.scene ?? {};
 	return (
 		<Scene
 			className="min-h-0 flex-1"
-			camera={sceneRest.camera ?? props.fixture.camera}
+			camera={props.fixture.camera}
 			blockedVortexFullIds={props.blocked}
 			{...s}
 			{...sceneRest}

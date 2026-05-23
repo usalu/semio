@@ -288,7 +288,7 @@ function TopologySceneWindow(): ReactElement {
 					bindings={s.bindings}
 					relocateMode={s.relocateMode}
 					selectedObjectId={s.sceneSelected}
-					scene={{ camera: s.sceneCamera, ...topologySceneChromeDefaults(), ...s.sceneLodProps }}
+					scene={{ ...topologySceneChromeDefaults(), ...s.sceneLodProps }}
 				/>
 			</div>
 		</div>

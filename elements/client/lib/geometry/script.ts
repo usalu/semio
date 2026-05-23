@@ -93,6 +93,12 @@ function emppCommand(): string {
 		: join(emsdkRoot(), "upstream", "emscripten", "em++");
 }
 
+function emcmakeCommand(): string {
+	return process.platform === "win32"
+		? join(emsdkRoot(), "upstream", "emscripten", "emcmake.bat")
+		: join(emsdkRoot(), "upstream", "emscripten", "emcmake");
+}
+
 function ensureEmscripten(): string {
 	if (hasTool("em++")) return "em++";
 	const root = emsdkRoot();
@@ -120,46 +126,46 @@ function wasmSourcePath(): string {
 }
 
 function wasmNeedsBuild(): boolean {
-	const output = wasmOutputPath();
-	if (!existsSync(output)) return true;
-	return statSync(wasmSourcePath()).mtimeMs > statSync(output).mtimeMs;
+	return true;
+}
+
+function openCascadeDir(): string {
+	const value = process.env.OpenCASCADE_DIR ?? process.env.OPENCASCADE_DIR;
+	if (!value) {
+		console.error("OpenCASCADE_DIR is required to build the real TopologicCore wasm kernel.");
+		console.error("Point it at an Emscripten-compatible OpenCASCADEConfig.cmake package directory.");
+		process.exit(1);
+	}
+	return value;
 }
 
 function buildWasm(force = false): void {
 	if (!force && !wasmNeedsBuild()) return;
+	ensureEmscripten();
 	const outDir = join(cwd, "wasm", "generated");
 	mkdirSync(outDir, { recursive: true });
-	const empp = ensureEmscripten();
+	const buildDir = join(workspaceRoot, ".repo", "cache", "elements-geometry-topologic-wasm");
+	mkdirSync(buildDir, { recursive: true });
 	const cacheDir = join(workspaceRoot, ".repo", "cache", "emscripten-cache");
 	mkdirSync(cacheDir, { recursive: true });
-	const compiler = shellQuote(empp);
-	const commandLine = [
-		compiler,
-		shellQuote(wasmSourcePath()),
-		"-std=c++23",
-		"-O2",
-		"--bind",
-		"-lembind",
-		"-s",
-		"ENVIRONMENT=web,worker",
-		"-s",
-		"MODULARIZE=1",
-		"-s",
-		"EXPORT_ES6=1",
-		"-s",
-		"EXPORT_NAME=createTopologicKernelModule",
-		"-s",
-		"WASM_ASYNC_COMPILATION=0",
-		"-s",
-		"SINGLE_FILE=1",
-		"-s",
-		"ALLOW_MEMORY_GROWTH=1",
-		"-s",
-		"FILESYSTEM=0",
-		"-o",
-		shellQuote(wasmOutputPath()),
+	const configureLine = [
+		shellQuote(emcmakeCommand()),
+		"cmake",
+		"-S",
+		shellQuote(join(cwd, "topologic")),
+		"-B",
+		shellQuote(buildDir),
+		"-DCMAKE_BUILD_TYPE=Release",
+		"-DTOPOLOGICCORE_BUILD_SHARED=OFF",
+		"-DTOPOLOGIC_BUILD_PYTHON_BINDINGS=OFF",
+		"-DTOPOLOGIC_BUILD_WASM_BRIDGE=ON",
+		`-DOpenCASCADE_DIR=${shellQuote(openCascadeDir())}`,
 	].join(" ");
-	runShell(commandLine, { cwd, env: { ...env, EM_CACHE: cacheDir } });
+	runShell(configureLine, { cwd, env: { ...env, EM_CACHE: cacheDir } });
+	runShell(`cmake --build ${shellQuote(buildDir)} --config Release --target TopologicWasmKernel`, {
+		cwd,
+		env: { ...env, EM_CACHE: cacheDir },
+	});
 }
 
 if (command === "wasm") {
