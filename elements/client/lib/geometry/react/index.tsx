@@ -66,17 +66,35 @@ interface TopologicSceneValue {
 	readonly onTransformCommit?: (id: string, transform: TopologicTransform) => void;
 	readonly transformMode: TopologicTransformMode;
 	readonly selectableKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
+	readonly visibleKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
+	readonly isEntitySelectable?: (entity: TopologicEntity) => boolean;
+	readonly isEntityVisible?: (entity: TopologicEntity) => boolean;
 }
 
 function disableRaycast(): null {
 	return null;
 }
 
+/** @emoji 👁️ Returns whether a topologic kind is drawn in the viewport (defaults to visible). */
+export function isTopologicKindVisible(
+	visibleKinds: Readonly<Partial<Record<TopologicKind, boolean>>> | undefined,
+	kind: TopologicKind,
+): boolean {
+	if (!visibleKinds) return true;
+	return visibleKinds[kind] ?? true;
+}
+
 function isEntitySelectable(scene: TopologicSceneValue, entityId: string): boolean {
-	if (!scene.selectableKinds) return true;
 	const entity = scene.session.getEntity(entityId);
 	if (!entity) return false;
+	if (scene.isEntitySelectable) return scene.isEntitySelectable(entity);
+	if (!scene.selectableKinds) return true;
 	return scene.selectableKinds[entity.kind] ?? true;
+}
+
+function isEntityVisible(scene: TopologicSceneValue, entity: TopologicEntity): boolean {
+	if (scene.isEntityVisible) return scene.isEntityVisible(entity);
+	return isTopologicKindVisible(scene.visibleKinds, entity.kind);
 }
 
 const TopologicSceneContext = createContext<TopologicSceneValue | null>(null);
@@ -425,7 +443,7 @@ function TopologicTransformGumball(): ReactElement | null {
 		() => (scene.selectedId ? collectDragAttachIds(scene.session, scene.selectedId) : []),
 		[scene.selectedId, scene.session],
 	);
-	if (!scene.selectedId || !object) return null;
+	if (!scene.onTransformCommit || !scene.selectedId || !object) return null;
 	return (
 		<TransformControls
 			object={object}
@@ -474,6 +492,9 @@ export interface TopologicViewportProps {
 	readonly fixture: TopologicFixtureV1;
 	readonly selectedId?: string | null;
 	readonly selectableKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
+	readonly visibleKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
+	readonly isEntitySelectable?: (entity: TopologicEntity) => boolean;
+	readonly isEntityVisible?: (entity: TopologicEntity) => boolean;
 	readonly onSelect?: (id: string | null) => void;
 	readonly onTransformCommit?: (id: string, transform: TopologicTransform) => void;
 	readonly transformMode?: TopologicTransformMode;
@@ -504,10 +525,29 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 			onTransformCommit: props.onTransformCommit,
 			transformMode: props.transformMode ?? "translate",
 			selectableKinds: props.selectableKinds,
+			visibleKinds: props.visibleKinds,
+			isEntitySelectable: props.isEntitySelectable,
+			isEntityVisible: props.isEntityVisible,
 		}),
-		[props.onSelect, props.onTransformCommit, props.selectableKinds, props.selectedId, props.transformMode, registerObject, session, version],
+		[
+			props.isEntitySelectable,
+			props.isEntityVisible,
+			props.onSelect,
+			props.onTransformCommit,
+			props.selectableKinds,
+			props.visibleKinds,
+			props.selectedId,
+			props.transformMode,
+			registerObject,
+			session,
+			version,
+		],
 	);
 	const traversal = useMemo(() => collectSceneEntries(session), [session]);
+	const visibleEntries = useMemo(
+		() => traversal.entries.filter((entry) => isEntityVisible(value, entry.entity)),
+		[traversal.entries, value],
+	);
 	return (
 		<TopologicSceneContext.Provider value={value}>
 			<ambientLight intensity={0.55} />
@@ -515,7 +555,7 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 			<directionalLight position={[-8, 6, -6]} intensity={0.45} />
 			<gridHelper args={[32, 32, "#334155", "#1e293b"]} />
 			<axesHelper args={[3.5]} />
-			{traversal.entries.map((entry) => (
+			{visibleEntries.map((entry) => (
 				<Topology key={entry.entity.id} entry={entry} />
 			))}
 			<TopologicTransformGumball />
@@ -597,6 +637,12 @@ if (import.meta.vitest) {
 				[[0, 0, 0], [1, 0, 0]],
 				[[1, 0, 0], [1, 1, 0]],
 			]);
+		});
+
+		it("treats missing visible kind entries as visible", () => {
+			expect(isTopologicKindVisible(undefined, "vertex")).toBe(true);
+			expect(isTopologicKindVisible({ vertex: false }, "vertex")).toBe(false);
+			expect(isTopologicKindVisible({ vertex: false }, "edge")).toBe(true);
 		});
 	});
 }
