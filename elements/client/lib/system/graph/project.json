@@ -1,0 +1,5 @@
+{
+	"name": "@elements/system-graph",
+	"$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {}
+}

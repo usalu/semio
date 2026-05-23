@@ -1,0 +1,7 @@
+{
+	"name": "@elements/system-graph",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"description": "elements · system · graph"
+}

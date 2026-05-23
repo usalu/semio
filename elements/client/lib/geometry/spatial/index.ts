@@ -2,7 +2,8 @@ import {
 	bsplineApprox,
 	compound,
 	face as brepFace,
-	init,
+	getKernel,
+	initFromOC,
 	line,
 	mesh,
 	meshEdges,
@@ -17,6 +18,8 @@ import {
 	type BufferGeometryData,
 	type LineGeometryData,
 } from "brepjs";
+import createOpenCascade from "brepjs-opencascade/src/brepjs_single.js";
+import openCascadeWasmUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
 
 //#region 🔖Kinds
 export const TOPOLOGIC_KINDS = ["topology", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster"] as const;
@@ -136,9 +139,44 @@ export interface SpatialRenderable {
 //#region 🔖Kernel
 let kernelPromise: Promise<void> | null = null;
 
+function stripWindowsDriveSlash(pathname: string): string {
+	return /^\/[A-Za-z]:/.test(pathname) ? pathname.slice(1) : pathname;
+}
+
+function fileUrlToPathname(fileUrl: string): string {
+	return stripWindowsDriveSlash(decodeURIComponent(new URL(fileUrl).pathname));
+}
+
+function resolveOpenCascadeWasmLocation(): string {
+	const isNodeLike = typeof process !== "undefined" && typeof process.versions?.node === "string";
+	if (openCascadeWasmUrl.startsWith("file:///")) {
+		const pathname = fileUrlToPathname(openCascadeWasmUrl);
+		if (isNodeLike) {
+			return pathname.replaceAll("/", "\\");
+		}
+		return `/@fs/${pathname.replaceAll("\\", "/")}`;
+	}
+	if (openCascadeWasmUrl.startsWith("/@fs/")) {
+		const fsPath = openCascadeWasmUrl.slice("/@fs/".length);
+		return isNodeLike ? fsPath.replaceAll("/", "\\") : openCascadeWasmUrl;
+	}
+	return openCascadeWasmUrl;
+}
+
 /** @emoji ⚙️ Ensures the brepjs kernel is initialized once for the spatial adapter. */
 export function ensureSpatialKernelLoaded(): Promise<void> {
-	kernelPromise ??= init().then(() => undefined);
+	kernelPromise ??= (async () => {
+		try {
+			getKernel();
+			return;
+		} catch {
+			const wasmLocation = resolveOpenCascadeWasmLocation();
+			const oc = await createOpenCascade({
+				locateFile: (fileName: string) => (fileName.endsWith(".wasm") ? wasmLocation : fileName),
+			});
+			initFromOC(oc);
+		}
+	})();
 	return kernelPromise;
 }
 //#endregion 🔖Kernel
