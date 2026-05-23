@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/react.tsx — Board play: triptych Nakagin views, in-app fixture drag shelf, selection inspector, `UI` shell (same `@elements/ui` + globals pattern as semio rendering / algorithms).
+// 💻 elements/client/lib/system/renderer/react/windows/board/board-play-host.tsx — Host outside play bundle: board play React tree and mount.
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -30,6 +30,7 @@ import {
   WorkbenchView,
   createWindowLayout,
   getLevelBgClass,
+  mountReactApp,
   registerDeclarativeWindowBody,
   registerUiBoardSurfaceHost,
   StaticTreePanelDefinition,
@@ -59,7 +60,7 @@ import {
   type ReactNode,
 } from "react";
 
-import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
+import nakaginFixtureJson from "./play/fixtures/nakagin-capsule-tower.board.json";
 import {
   BOARD_BUILTIN_PORT_HANDLE_KIND,
   BOARD_CAMERA_ZOOM_MAX,
@@ -116,14 +117,14 @@ import {
   buildBoardPlayOverviewDeclarativeBody,
   buildBoardPlaySelectionDeclarativeBody,
   type BoardPlayPaneId,
-} from "./index.ts";
-import "./globals.css";
+} from "./play/index.ts";
+import "./play/globals.css";
 // #endregion 📥Imports
 
 const NAKAGIN_BOARD_PLAY_KIND_CATALOGS = mergeBoardKindCatalogBundleByRowId({ ...BOARD_DEFAULT_KIND_CATALOG_BUNDLE }, boardFixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {});
 
 // #region 🔖Kinds
-export type { BoardPlayPaneId } from "./index.ts";
+export type { BoardPlayPaneId } from "./play/index.ts";
 
 const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
 const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
@@ -2619,5 +2620,10 @@ function BoardPlayApp(): ReactElement {
 
 export function createBoardPlayElement(): ReactElement {
   return <BoardPlayApp />;
+}
+
+/** @emoji 🚀 Vite host entry: mounts board play into `#root`. */
+export function mountBoardPlay(): void {
+  mountReactApp(createBoardPlayElement());
 }
 // #endregion 🔖Entrypoint

@@ -13,5 +13,22 @@
 		"brepjs": "^18.20.3",
 		"brepjs-opencascade": "^0.15.6"
 	},
+	"devDependencies": {
+		"@elements/ui": "workspace:*",
+		"@elements/ui-shell": "workspace:*",
+		"@react-three/drei": "^10.7.7",
+		"@react-three/fiber": "^9.4.2",
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"@types/three": "^0.180.0",
+		"@vitejs/plugin-react": "^5.1.2",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"three": "^0.180.0",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^3.2.4"
+	},
 	"bundleKind": "library"
 }

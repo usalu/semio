@@ -241,6 +241,8 @@ export abstract class Controller {
 //#endregion 🔖CommandBus
 
 //#region 🔖WorkbenchWindowKind
+import type { ShellWindowMeasure } from "./ui-protocol.ts";
+
 /** @emoji 🪟 Declarative window kind; React renderer maps `bodyKey` to a component. */
 export class WorkbenchWindowKind {
 	constructor(
@@ -248,7 +250,7 @@ export class WorkbenchWindowKind {
 		readonly label: string,
 		readonly bodyKey: string,
 		readonly iconId?: string,
-		readonly measures: readonly import("./ui-protocol.ts").ShellWindowMeasure[] = [],
+		readonly measures: readonly ShellWindowMeasure[] = [],
 	) {}
 }
 //#endregion 🔖WorkbenchWindowKind

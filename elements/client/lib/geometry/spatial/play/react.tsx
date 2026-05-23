@@ -2,7 +2,7 @@
 // 💻 elements/client/lib/geometry/spatial/play/react.tsx — Host adapter: icons, declarative registration, spatial surface hosts (DOM/React only here).
 // #endregion 🧲Header
 
-import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "@elements/ui-shell";
+import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "../../../ui/index.ts";
 import {
 	LevelProvider,
 	WorkbenchView,
@@ -14,7 +14,7 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
-} from "@elements/ui";
+} from "../../../system/renderer/react/index.tsx";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
@@ -35,7 +35,7 @@ import {
 	buildSpatialWorkbenchApp,
 	buildSpatialWorkbenchDeclarativePanel,
 } from "./index.ts";
-import { Workbench } from "@elements/ui-shell";
+import { Workbench } from "../../../ui/index.ts";
 
 import "./globals.css";
 

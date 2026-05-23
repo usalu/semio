@@ -1,8 +1,8 @@
 // #region 🧲Header
-// 💻 elements/client/lib/geometry/spatial/play/react.tsx — Host adapter: icons, declarative registration, spatial surface hosts (DOM/React only here).
+// 💻 elements/client/lib/geometry/spatial/geometry-spatial-play-host.tsx — Host outside play bundle: spatial play mount and React surfaces.
 // #endregion 🧲Header
 
-import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "@elements/ui-shell";
+import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "../../ui/index.ts";
 import {
 	LevelProvider,
 	WorkbenchView,
@@ -14,7 +14,7 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
-} from "@elements/ui";
+} from "../../system/renderer/react/index.tsx";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
@@ -34,10 +34,10 @@ import {
 	buildSpatialPlayDeclarativeBody,
 	buildSpatialWorkbenchApp,
 	buildSpatialWorkbenchDeclarativePanel,
-} from "./index.ts";
-import { Workbench } from "@elements/ui-shell";
+} from "./play/index.ts";
+import { Workbench } from "../../ui/index.ts";
 
-import "./globals.css";
+import "./play/globals.css";
 
 const EMPTY_KINDS = Object.fromEntries(
 	["topology", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster"].map((kind) => [kind, true]),
@@ -145,18 +145,17 @@ export async function bootstrapSpatialWorkbench(): Promise<Workbench> {
 	return workbench;
 }
 
-const rootElement = typeof document === "undefined" ? null : document.getElementById("root");
-if (rootElement) {
-	void bootstrapSpatialWorkbench().then((workbench) => {
-		mountReactApp(
-			<LevelProvider>
-				<WorkbenchView
-					workbench={workbench}
-					className={getLevelBgClass(0)}
-					defaultAppId="elements-geometry-spatial"
-					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
-				/>
-			</LevelProvider>,
-		);
-	});
+/** @emoji 🚀 Vite host entry: mounts spatial play into `#root`. */
+export async function mountSpatialPlay(): Promise<void> {
+	const workbench = await bootstrapSpatialWorkbench();
+	mountReactApp(
+		<LevelProvider>
+			<WorkbenchView
+				workbench={workbench}
+				className={getLevelBgClass(0)}
+				defaultAppId="elements-geometry-spatial"
+				initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+			/>
+		</LevelProvider>,
+	);
 }

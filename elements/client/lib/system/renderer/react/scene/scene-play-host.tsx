@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/scene/play/react.tsx — React runtime for scene play: surface controls, LOD providers, scene canvas, and shell mounting.
+// 💻 elements/client/lib/system/renderer/react/scene/scene-play-host.tsx — Host outside play bundle: scene play React tree and mount.
 // #endregion 🧲Header
 
 import { useGLTF } from "@react-three/drei";
@@ -16,6 +16,7 @@ import {
 	Workbench,
 	WorkbenchView,
 	getLevelBgClass,
+	mountReactApp,
 	registerDeclarativeWindowBody,
 	registerUiScene3DSurfaceHost,
 	useApp,
@@ -25,8 +26,8 @@ import {
 } from "@elements/ui";
 import * as React from "react";
 
-import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
-import "./globals.css";
+import nakaginSceneFixtureJson from "./play/fixtures/nakagin-capsule-tower.scene.json";
+import "./play/globals.css";
 import {
 	LS_DEVICE,
 	LS_EXPERTISE,
@@ -44,7 +45,7 @@ import {
 	parseStoredExpertise,
 	parseStoredTheme,
 	type ScenePlaySnapshot,
-} from "./index.ts";
+} from "./play/index.ts";
 import {
 	Canvas3D,
 	SceneObjectStateContext,
@@ -371,4 +372,9 @@ class PlayApp extends React.Component {
 
 export function createScenePlayElement(): React.ReactElement {
 	return <PlayApp />;
+}
+
+/** @emoji 🚀 Vite host entry: mounts scene play into `#root`. */
+export function mountScenePlay(): void {
+	mountReactApp(createScenePlayElement());
 }

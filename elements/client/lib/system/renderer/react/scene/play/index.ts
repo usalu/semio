@@ -11,10 +11,10 @@ import {
 	WorkbenchWindowKind,
 	createStackLayout,
 	type ShellWindowBodyViewContext,
+	Expertise,
 	type ShellWindowMeasure,
 	type UiNode,
 } from "@elements/ui-shell";
-import { Expertise } from "@elements/ui-shell";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {

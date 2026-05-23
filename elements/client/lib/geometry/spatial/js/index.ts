@@ -959,9 +959,9 @@ if (import.meta.vitest) {
 			expect(fixture).not.toBeNull();
 			const bindings = await ensureTopologicWasmLoaded();
 			expect(bindings.parseFixture(topologyJson)?.schema).toBe("elements.geometry.topologic.fixture/v1");
-			expect(bindings.edgeCurve(fixture!, "edge-floor-front").length).toBeGreaterThanOrEqual(2);
+			expect(bindings.edgeCurve(fixture!, "edge-arc").length).toBeGreaterThanOrEqual(2);
 			const packet = buildTopologicRenderPacketV1(fixture!);
-			expect(packet?.entries.find((entry) => entry.id === "edge-floor-front")?.points).toBeInstanceOf(Float32Array);
+			expect(packet?.entries.find((entry) => entry.id === "edge-arc")?.points).toBeInstanceOf(Float32Array);
 		});
 	});
 }

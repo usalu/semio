@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/topology/play/react.tsx — Class-based topology play runtime for paired board and scene surfaces.
+// 💻 elements/client/lib/topology/topology-play-host.tsx — Host outside play bundle: topology play React tree and mount.
 // #endregion 🧲Header
 
 import { useGLTF } from "@react-three/drei";
@@ -18,12 +18,13 @@ import {
 	WorkbenchView,
 	createDefaultLayout,
 	getLevelBgClass,
+	mountReactApp,
 	type CommandBus,
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
 
-import nakaginBoardJson from "../../board/play/fixtures/nakagin-capsule-tower.board.json";
+import nakaginBoardJson from "../system/renderer/react/windows/board/play/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardLodAutomaticSelectLabel,
@@ -34,8 +35,8 @@ import {
 	type BoardFixtureV1,
 	type BoardLodModeKind,
 	type CameraState,
-} from "../../board/index.ts";
-import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
+} from "../system/renderer/react/windows/board/index.ts";
+import nakaginSceneJson from "../system/renderer/react/scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
 	isLodKind,
@@ -46,7 +47,7 @@ import {
 	type LodKind as SceneLodKind,
 	type LodModeKind as SceneLodModeKind,
 	type RelocateMode as SceneRelocateMode,
-} from "../../scene/index.tsx";
+} from "../system/renderer/react/scene/index.tsx";
 import {
 	buildTopologyDualSurfaceBindings,
 	parseTopologyFixtureV1,
@@ -57,8 +58,8 @@ import {
 	topologySceneChromeDefaults,
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
-import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
-import "./globals.css";
+import topologyManifestJson from "./play/fixtures/nakagin-capsule-tower.topology.json";
+import "./play/globals.css";
 
 const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
 
@@ -474,6 +475,11 @@ class TopologyPlayApp extends React.Component {
 
 export function createTopologyPlayElement(): React.ReactElement {
 	return <TopologyPlayApp />;
+}
+
+/** @emoji 🚀 Vite host entry: mounts topology play into `#root`. */
+export function mountTopologyPlay(): void {
+	mountReactApp(createTopologyPlayElement());
 }
 
 if (import.meta.vitest) {

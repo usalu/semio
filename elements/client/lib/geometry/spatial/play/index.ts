@@ -14,7 +14,7 @@ import {
 	type ShellWindowBodyViewContext,
 	type ShellToolItem,
 	type UiNode,
-} from "@elements/ui-shell";
+} from "../../../ui/index.ts";
 
 import topologyJson from "../../play/fixtures/topology.json";
 import {
@@ -26,7 +26,6 @@ import {
 	loadTopologicFixtureV1,
 	spatialKindLabel,
 	updateTopologicFixtureTransformV1,
-	type SpatialDetailsPanelState,
 	type SpatialModel,
 	type SpatialStatus,
 	type SpatialSurfaceKindFilter,

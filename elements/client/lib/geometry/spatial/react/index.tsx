@@ -1,4 +1,4 @@
-import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "@elements/ui";
+import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "../../../system/renderer/react/index.tsx";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
@@ -15,13 +15,11 @@ import {
 	parseTopologicFixtureV1,
 	spatialKindLabel,
 	transformProps,
-	type SpatialDetailsPanelState,
 	type SpatialRenderable,
 	type SpatialStatus,
 	type SpatialSurfaceKindFilter,
 	type SpatialSurfaceSnapshot,
 	type TopologicTransform,
-	type SpatialWorkbenchPanelState,
 	type TopologicKind,
 } from "../js/index.ts";
 
@@ -171,7 +169,9 @@ function SpatialViewportScene(props: {
 			};
 			setDraggingId(id);
 			try {
-				event.nativeEvent.target instanceof Element && event.nativeEvent.target.setPointerCapture?.(event.pointerId);
+				if (event.nativeEvent.target instanceof Element) {
+					event.nativeEvent.target.setPointerCapture?.(event.pointerId);
+				}
 			} catch {
 				// Ignore pointer capture failures from synthetic or unsupported targets.
 			}
