@@ -7,79 +7,23 @@ import { createRoot } from "react-dom/client";
 
 import {
 	TOPOLOGIC_KINDS,
+	buildSpatialDetailsPanelState,
 	buildSpatialModel,
-	listRenderablesByKind,
+	buildSpatialWorkbenchPanelState,
+	listSpatialViewportRenderables,
 	parseTopologicFixtureV1,
+	spatialKindLabel,
 	transformProps,
-	type SpatialModel,
+	type SpatialDetailsPanelState,
 	type SpatialRenderable,
+	type SpatialStatus,
+	type SpatialSurfaceKindFilter,
+	type SpatialSurfaceSnapshot,
+	type SpatialWorkbenchPanelState,
 	type TopologicKind,
-	type Topology,
 } from "../js/index.ts";
 
-//#region 🔖Kinds
-export type SpatialStatus = "loading" | "ready" | "error";
-export type SpatialSurfaceKindFilter = TopologicKind | "all";
-
-export interface SpatialSurfaceSnapshot {
-	readonly status: SpatialStatus;
-	readonly fixtureLabel?: string;
-	readonly model: SpatialModel | null;
-	readonly focusedKind: SpatialSurfaceKindFilter;
-	readonly selectedId: string | null;
-	readonly query: string;
-	readonly error: string | null;
-	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
-	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
-	readonly setFocusedKind: (kind: SpatialSurfaceKindFilter) => void;
-	readonly setSelectedId: (id: string | null) => void;
-	readonly setQuery: (query: string) => void;
-}
-//#endregion 🔖Kinds
-
 //#region 🔖Helpers
-export function kindLabel(kind: SpatialSurfaceKindFilter): string {
-	if (kind === "all") return "All";
-	if (kind === "cellComplex") return "CellComplex";
-	return kind.charAt(0).toUpperCase() + kind.slice(1);
-}
-
-export function formatEnabledKindsLabel(kinds: Readonly<Record<TopologicKind, boolean>>): string {
-	const enabled = TOPOLOGIC_KINDS.filter((kind) => kinds[kind]);
-	return enabled.length === TOPOLOGIC_KINDS.length ? "all" : enabled.join(", ") || "none";
-}
-
-function matchesSurfaceQuery(node: Topology, query: string): boolean {
-	const value = query.trim().toLowerCase();
-	if (!value) return true;
-	const haystack = [node.id, node.label, node.kind, node.entity.description]
-		.filter((entry): entry is string => Boolean(entry))
-		.join(" ")
-		.toLowerCase();
-	return haystack.includes(value);
-}
-
-export function listPanelNodes(snapshot: SpatialSurfaceSnapshot): readonly Topology[] {
-	if (!snapshot.model) return [];
-	const nodes = snapshot.focusedKind === "all" ? snapshot.model.nodes : snapshot.model.listByKind(snapshot.focusedKind);
-	return nodes.filter((node) => snapshot.visibleKinds[node.kind] && matchesSurfaceQuery(node, snapshot.query));
-}
-
-function filterRenderableForest(renderable: SpatialRenderable, visibleKinds: Readonly<Record<TopologicKind, boolean>>): readonly SpatialRenderable[] {
-	const children = renderable.children?.flatMap((child) => filterRenderableForest(child, visibleKinds)) ?? [];
-	if (!visibleKinds[renderable.kind]) return children;
-	return [{ ...renderable, children: children.length > 0 ? children : undefined }];
-}
-
-function listViewportRenderables(snapshot: SpatialSurfaceSnapshot): readonly SpatialRenderable[] {
-	if (!snapshot.model) return [];
-	if (snapshot.focusedKind === "all") {
-		return snapshot.model.rootNodes().flatMap((node) => filterRenderableForest(node.toRenderable(snapshot.model!), snapshot.visibleKinds));
-	}
-	if (!snapshot.visibleKinds[snapshot.focusedKind]) return [];
-	return listRenderablesByKind(snapshot.model, snapshot.focusedKind);
-}
-
 function selectedColor(color: string | undefined, selected: boolean, fallback: string): string {
 	if (selected) return "#fb7185";
 	return color ?? fallback;
@@ -91,9 +35,6 @@ function statusToneClass(status: SpatialStatus): string {
 	return "border-border bg-muted text-muted-foreground";
 }
 
-function snapshotSelection(snapshot: SpatialSurfaceSnapshot): Topology | null {
-	return snapshot.selectedId && snapshot.model ? snapshot.model.get(snapshot.selectedId) ?? null : null;
-}
 //#endregion 🔖Helpers
 
 //#region 🔖Scene
@@ -162,7 +103,10 @@ export function SpatialViewport(props: {
 	readonly snapshot: SpatialSurfaceSnapshot;
 	readonly onSelect: (id: string | null) => void;
 }): React.ReactElement {
-	const renderables = React.useMemo(() => listViewportRenderables(props.snapshot), [props.snapshot]);
+	const renderables = React.useMemo(
+		() => listSpatialViewportRenderables({ model: props.snapshot.model, focusedKind: props.snapshot.focusedKind, visibleKinds: props.snapshot.visibleKinds }),
+		[props.snapshot],
+	);
 	return (
 		<Canvas camera={{ position: [10, 10, 12], fov: 45 }} onPointerMissed={() => props.onSelect(null)}>
 			<color attach="background" args={["#020617"]} />
@@ -201,7 +145,7 @@ export function SpatialSurface(props: {
 							</ToolbarItem>
 							<ToolbarItem>
 								<span className="font-medium text-foreground">Focus:</span>
-								<span>{kindLabel(props.snapshot.focusedKind)}</span>
+								<span>{spatialKindLabel(props.snapshot.focusedKind)}</span>
 							</ToolbarItem>
 							<ToolbarItem>
 								<span className="font-medium text-foreground">Query:</span>
@@ -236,9 +180,26 @@ const EMPTY_SNAPSHOT: SpatialSurfaceSnapshot = {
 	error: null,
 	selectableKinds: EMPTY_KINDS,
 	visibleKinds: EMPTY_KINDS,
-	setFocusedKind: () => undefined,
 	setSelectedId: () => undefined,
-	setQuery: () => undefined,
+	workbenchPanel: buildSpatialWorkbenchPanelState({
+		fixtureLabel: undefined,
+		model: null,
+		focusedKind: "all",
+		selectedId: null,
+		query: "",
+		selectableKinds: EMPTY_KINDS,
+		visibleKinds: EMPTY_KINDS,
+		setFocusedKind: () => undefined,
+		setSelectedId: () => undefined,
+		setQuery: () => undefined,
+	}),
+	detailsPanel: buildSpatialDetailsPanelState({
+		status: "loading",
+		model: null,
+		focusedKind: "all",
+		selectedId: null,
+		query: "",
+	}),
 };
 
 export const SpatialPlayWindowBody: React.FC = () => {
@@ -255,54 +216,53 @@ export const SpatialPlayWindowBody: React.FC = () => {
 };
 
 export function SpatialWorkbenchPanel(props: { readonly snapshot: SpatialSurfaceSnapshot }): React.ReactElement {
-	const snapshot = props.snapshot;
-	const entities = React.useMemo(() => listPanelNodes(snapshot), [snapshot]);
+	const panel = props.snapshot.workbenchPanel;
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-3" data-e2e-spatial-workbench-panel>
 			<div className="grid gap-2 text-xs text-muted-foreground">
 				<div className="rounded-lg border border-border bg-background px-3 py-2" data-e2e-spatial-visible-kinds>
-					<span className="font-medium text-foreground">Visible</span>: {formatEnabledKindsLabel(snapshot.visibleKinds)}
+					<span className="font-medium text-foreground">Visible</span>: {panel.visibleKindsLabel}
 				</div>
 				<div className="rounded-lg border border-border bg-background px-3 py-2" data-e2e-spatial-selectable-kinds>
-					<span className="font-medium text-foreground">Selectable</span>: {formatEnabledKindsLabel(snapshot.selectableKinds)}
+					<span className="font-medium text-foreground">Selectable</span>: {panel.selectableKindsLabel}
 				</div>
 			</div>
 			<div>
 				<div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Filter</div>
-				<Input data-e2e-spatial-query placeholder="Filter ids, labels, and kinds" value={snapshot.query} onChange={(event) => snapshot.setQuery(event.target.value)} />
+				<Input data-e2e-spatial-query placeholder="Filter ids, labels, and kinds" value={panel.query} onChange={(event) => panel.setQuery(event.target.value)} />
 			</div>
 			<div>
 				<div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Focus</div>
 				<div className="grid grid-cols-2 gap-2">
-					{(["all", ...TOPOLOGIC_KINDS] as const).map((kind) => (
-						<Button className="justify-start rounded-lg" key={kind} onClick={() => snapshot.setFocusedKind(kind)} size="sm" variant={snapshot.focusedKind === kind ? "default" : "outline"}>
-							{kindLabel(kind)}
+					{panel.focusOptions.map((option) => (
+						<Button className="justify-start rounded-lg" key={option.kind} onClick={() => panel.setFocusedKind(option.kind)} size="sm" variant={option.active ? "default" : "outline"}>
+							{option.label}
 						</Button>
 					))}
 				</div>
 			</div>
 			<div className="min-h-0 flex-1 overflow-auto">
 				<div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-					<span>{snapshot.fixtureLabel ?? "topology"}</span>
-					<span className="rounded-full border border-border bg-muted px-2 py-0.5" data-e2e-spatial-entity-count>{entities.length}</span>
+					<span>{panel.fixtureLabel ?? "topology"}</span>
+					<span className="rounded-full border border-border bg-muted px-2 py-0.5" data-e2e-spatial-entity-count>{panel.entityCount}</span>
 				</div>
 				<div className="space-y-2">
-					{entities.map((entity) => (
+					{panel.entities.map((entity) => (
 						<button
-							className={`w-full rounded-lg border px-3 py-3 text-left transition-colors ${snapshot.selectedId === entity.id ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background hover:bg-muted/60"}`}
+							className={`w-full rounded-lg border px-3 py-3 text-left transition-colors ${entity.selected ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background hover:bg-muted/60"}`}
 							data-e2e-spatial-entity={entity.id}
 							key={entity.id}
-							onClick={() => snapshot.setSelectedId(entity.id)}
+							onClick={() => panel.setSelectedId(entity.id)}
 							type="button"
 						>
 							<div className="flex items-center justify-between gap-3">
 								<div className="text-sm font-medium text-foreground">{entity.label}</div>
-								<div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{entity.kind}</div>
+								<div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{entity.kindLabel}</div>
 							</div>
 							<div className="mt-1 text-xs text-muted-foreground">{entity.id}</div>
 						</button>
 					))}
-					{entities.length === 0 ? <p className="text-sm text-muted-foreground">No entities match the current filter.</p> : null}
+					{panel.entities.length === 0 ? <p className="text-sm text-muted-foreground">No entities match the current filter.</p> : null}
 				</div>
 			</div>
 		</div>
@@ -310,20 +270,19 @@ export function SpatialWorkbenchPanel(props: { readonly snapshot: SpatialSurface
 }
 
 export function SpatialDetailsPanel(props: { readonly snapshot: SpatialSurfaceSnapshot }): React.ReactElement {
-	const snapshot = props.snapshot;
-	const selected = snapshotSelection(snapshot);
+	const details = props.snapshot.detailsPanel;
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-3" data-e2e-spatial-details-panel>
 			<div className="rounded-lg border border-border bg-background px-3 py-3 text-sm">
 				<div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Selection</div>
-				<div className="mt-2 font-medium text-foreground" data-e2e-spatial-selection-label>{selected ? selected.label : "No entity selected"}</div>
-				<div className="mt-1 text-xs text-muted-foreground" data-e2e-spatial-selection-kind>{selected?.kind ?? snapshot.focusedKind}</div>
-				{selected?.entity.description ? <p className="mt-2 text-xs text-muted-foreground">{selected.entity.description}</p> : null}
+				<div className="mt-2 font-medium text-foreground" data-e2e-spatial-selection-label>{details.selectedLabel}</div>
+				<div className="mt-1 text-xs text-muted-foreground" data-e2e-spatial-selection-kind>{details.selectedKindLabel}</div>
+				{details.description ? <p className="mt-2 text-xs text-muted-foreground">{details.description}</p> : null}
 			</div>
 			<div className="rounded-lg border border-border bg-background px-3 py-3 text-xs text-muted-foreground">
-				<div><span className="font-medium text-foreground">Status</span>: {snapshot.status}</div>
-				<div className="mt-1"><span className="font-medium text-foreground">Focus</span>: {kindLabel(snapshot.focusedKind)}</div>
-				<div className="mt-1"><span className="font-medium text-foreground">Query</span>: {snapshot.query.trim() || "none"}</div>
+				<div><span className="font-medium text-foreground">Status</span>: {details.status}</div>
+				<div className="mt-1"><span className="font-medium text-foreground">Focus</span>: {details.focusedKindLabel}</div>
+				<div className="mt-1"><span className="font-medium text-foreground">Query</span>: {details.query}</div>
 			</div>
 		</div>
 	);
@@ -379,6 +338,9 @@ if (import.meta.vitest) {
 				const [focusedKind, setFocusedKind] = React.useState<SpatialSurfaceKindFilter>("all");
 				const [selectedId, setSelectedId] = React.useState<string | null>(null);
 				const [query, setQuery] = React.useState("");
+				const setFocusedKindCommand = (kind: SpatialSurfaceKindFilter) => setFocusedKind(kind);
+				const setSelectedIdCommand = (id: string | null) => setSelectedId(id);
+				const setQueryCommand = (nextQuery: string) => setQuery(nextQuery);
 				const snapshot: SpatialSurfaceSnapshot = {
 					status: "ready",
 					fixtureLabel: fixture?.label,
@@ -389,9 +351,26 @@ if (import.meta.vitest) {
 					error: null,
 					selectableKinds: EMPTY_KINDS,
 					visibleKinds: EMPTY_KINDS,
-					setFocusedKind,
-					setSelectedId,
-					setQuery,
+					setSelectedId: setSelectedIdCommand,
+					workbenchPanel: buildSpatialWorkbenchPanelState({
+						fixtureLabel: fixture?.label,
+						model,
+						focusedKind,
+						selectedId,
+						query,
+						selectableKinds: EMPTY_KINDS,
+						visibleKinds: EMPTY_KINDS,
+						setFocusedKind: setFocusedKindCommand,
+						setSelectedId: setSelectedIdCommand,
+						setQuery: setQueryCommand,
+					}),
+					detailsPanel: buildSpatialDetailsPanelState({
+						status: "ready",
+						model,
+						focusedKind,
+						selectedId,
+						query,
+					}),
 				};
 				setFocusedKindRef = setFocusedKind;
 				setSelectedIdRef = setSelectedId;

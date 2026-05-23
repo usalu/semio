@@ -6,21 +6,27 @@ import * as React from "react";
 import topologyJson from "../../play/fixtures/topology.json";
 import {
 	TOPOLOGIC_KINDS,
+	buildSpatialDetailsPanelState,
 	buildSpatialModel,
+	buildSpatialWorkbenchPanelState,
 	ensureSpatialKernelLoaded,
 	loadTopologicFixtureV1,
+	spatialKindLabel,
+	type SpatialDetailsPanelState,
 	type SpatialModel,
+	type SpatialStatus,
+	type SpatialSurfaceKindFilter,
+	type SpatialSurfaceSnapshot,
 	type TopologicFixtureV1,
 	type TopologicKind,
 } from "../js/index.ts";
-import { SpatialDetailsPanelBody, SpatialPlayWindowBody, SpatialWorkbenchPanelBody, type SpatialStatus, type SpatialSurfaceKindFilter, type SpatialSurfaceSnapshot } from "../react/index.tsx";
+import { SpatialDetailsPanelBody, SpatialPlayWindowBody, SpatialWorkbenchPanelBody } from "../react/index.tsx";
 
 import "./globals.css";
 
 //#region 🔖Helpers
 function kindLabel(kind: TopologicKind): string {
-	if (kind === "cellComplex") return "CellComplex";
-	return kind.charAt(0).toUpperCase() + kind.slice(1);
+	return spatialKindLabel(kind);
 }
 
 function createAllKindsEnabled(): Record<TopologicKind, boolean> {
@@ -164,6 +170,9 @@ export class SpatialPlayShellController extends Controller {
 	}
 
 	getSnapshot(): SpatialSurfaceSnapshot {
+		const setFocusedKind = (kind: SpatialSurfaceKindFilter) => this.commandBus.dispatch(this.id, "setFocusedKind", { kind });
+		const setSelectedId = (id: string | null) => this.commandBus.dispatch(this.id, "setSelectedId", { id });
+		const setQuery = (query: string) => this.commandBus.dispatch(this.id, "setQuery", { query });
 		return {
 			status: this.status,
 			fixtureLabel: this.fixture?.label,
@@ -174,9 +183,26 @@ export class SpatialPlayShellController extends Controller {
 			error: this.error,
 			selectableKinds: this.selectableKinds,
 			visibleKinds: this.visibleKinds,
-			setFocusedKind: (kind) => this.commandBus.dispatch(this.id, "setFocusedKind", { kind }),
-			setSelectedId: (id) => this.commandBus.dispatch(this.id, "setSelectedId", { id }),
-			setQuery: (query) => this.commandBus.dispatch(this.id, "setQuery", { query }),
+			setSelectedId,
+			workbenchPanel: buildSpatialWorkbenchPanelState({
+				fixtureLabel: this.fixture?.label,
+				model: this.model,
+				focusedKind: this.focusedKind,
+				selectedId: this.selectedId,
+				query: this.query,
+				selectableKinds: this.selectableKinds,
+				visibleKinds: this.visibleKinds,
+				setFocusedKind,
+				setSelectedId,
+				setQuery,
+			}),
+			detailsPanel: buildSpatialDetailsPanelState({
+				status: this.status,
+				model: this.model,
+				focusedKind: this.focusedKind,
+				selectedId: this.selectedId,
+				query: this.query,
+			}),
 		};
 	}
 }

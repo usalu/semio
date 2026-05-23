@@ -134,6 +134,59 @@ export interface SpatialRenderable {
 	readonly point?: { readonly position: Vec3; readonly radius: number };
 	readonly children?: readonly SpatialRenderable[];
 }
+
+export type SpatialStatus = "loading" | "ready" | "error";
+export type SpatialSurfaceKindFilter = TopologicKind | "all";
+
+export interface SpatialPanelKindOption {
+	readonly kind: SpatialSurfaceKindFilter;
+	readonly label: string;
+	readonly active: boolean;
+}
+
+export interface SpatialWorkbenchPanelEntry {
+	readonly id: string;
+	readonly label: string;
+	readonly kindLabel: string;
+	readonly selected: boolean;
+}
+
+export interface SpatialWorkbenchPanelState {
+	readonly fixtureLabel?: string;
+	readonly visibleKindsLabel: string;
+	readonly selectableKindsLabel: string;
+	readonly query: string;
+	readonly focusOptions: readonly SpatialPanelKindOption[];
+	readonly entityCount: number;
+	readonly entities: readonly SpatialWorkbenchPanelEntry[];
+	readonly setFocusedKind: (kind: SpatialSurfaceKindFilter) => void;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly setQuery: (query: string) => void;
+}
+
+export interface SpatialDetailsPanelState {
+	readonly selectedLabel: string;
+	readonly selectedKindLabel: string;
+	readonly description?: string;
+	readonly status: SpatialStatus;
+	readonly focusedKindLabel: string;
+	readonly query: string;
+}
+
+export interface SpatialSurfaceSnapshot {
+	readonly status: SpatialStatus;
+	readonly fixtureLabel?: string;
+	readonly model: SpatialModel | null;
+	readonly focusedKind: SpatialSurfaceKindFilter;
+	readonly selectedId: string | null;
+	readonly query: string;
+	readonly error: string | null;
+	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly workbenchPanel: SpatialWorkbenchPanelState;
+	readonly detailsPanel: SpatialDetailsPanelState;
+}
 //#endregion 🔖Kinds
 
 //#region 🔖Kernel
@@ -577,6 +630,112 @@ export function buildSpatialModel(fixture: TopologicFixtureV1): SpatialModel {
 /** @emoji 📚 Lists renderables for one topologic kind. */
 export function listRenderablesByKind(model: SpatialModel, kind: TopologicKind): readonly SpatialRenderable[] {
 	return model.listByKind(kind).map((node) => node.toRenderable(model));
+}
+
+/** @emoji 🏷️ Formats one spatial kind for panel labels and tool text. */
+export function spatialKindLabel(kind: SpatialSurfaceKindFilter): string {
+	if (kind === "all") return "All";
+	if (kind === "cellComplex") return "CellComplex";
+	return kind.charAt(0).toUpperCase() + kind.slice(1);
+}
+
+/** @emoji 🧾 Summarizes enabled spatial kind toggles for panel chrome. */
+export function formatEnabledSpatialKindsLabel(kinds: Readonly<Record<TopologicKind, boolean>>): string {
+	const enabled = TOPOLOGIC_KINDS.filter((kind) => kinds[kind]);
+	return enabled.length === TOPOLOGIC_KINDS.length ? "all" : enabled.join(", ") || "none";
+}
+
+function matchesSpatialPanelQuery(node: Topology, query: string): boolean {
+	const value = query.trim().toLowerCase();
+	if (!value) return true;
+	const haystack = [node.id, node.label, node.kind, node.entity.description]
+		.filter((entry): entry is string => Boolean(entry))
+		.join(" ")
+		.toLowerCase();
+	return haystack.includes(value);
+}
+
+/** @emoji 📚 Projects visible/filter-matching nodes for workbench browsing outside the renderer. */
+export function listSpatialPanelNodes(args: {
+	readonly model: SpatialModel | null;
+	readonly focusedKind: SpatialSurfaceKindFilter;
+	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly query: string;
+}): readonly Topology[] {
+	if (!args.model) return [];
+	const nodes = args.focusedKind === "all" ? args.model.nodes : args.model.listByKind(args.focusedKind);
+	return nodes.filter((node) => args.visibleKinds[node.kind] && matchesSpatialPanelQuery(node, args.query));
+}
+
+function filterSpatialRenderableForest(renderable: SpatialRenderable, visibleKinds: Readonly<Record<TopologicKind, boolean>>): readonly SpatialRenderable[] {
+	const children = renderable.children?.flatMap((child) => filterSpatialRenderableForest(child, visibleKinds)) ?? [];
+	if (!visibleKinds[renderable.kind]) return children;
+	return [{ ...renderable, children: children.length > 0 ? children : undefined }];
+}
+
+/** @emoji 🪟 Projects viewport renderables from class-side visibility and focus state. */
+export function listSpatialViewportRenderables(args: {
+	readonly model: SpatialModel | null;
+	readonly focusedKind: SpatialSurfaceKindFilter;
+	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
+}): readonly SpatialRenderable[] {
+	if (!args.model) return [];
+	if (args.focusedKind === "all") {
+		return args.model.rootNodes().flatMap((node) => filterSpatialRenderableForest(node.toRenderable(args.model!), args.visibleKinds));
+	}
+	if (!args.visibleKinds[args.focusedKind]) return [];
+	return listRenderablesByKind(args.model, args.focusedKind);
+}
+
+function selectedSpatialNode(model: SpatialModel | null, selectedId: string | null): Topology | null {
+	return selectedId && model ? model.get(selectedId) ?? null : null;
+}
+
+/** @emoji 🧭 Builds renderer-agnostic state for the workbench browsing tab. */
+export function buildSpatialWorkbenchPanelState(args: {
+	readonly fixtureLabel?: string;
+	readonly model: SpatialModel | null;
+	readonly focusedKind: SpatialSurfaceKindFilter;
+	readonly selectedId: string | null;
+	readonly query: string;
+	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly setFocusedKind: (kind: SpatialSurfaceKindFilter) => void;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly setQuery: (query: string) => void;
+}): SpatialWorkbenchPanelState {
+	const entities = listSpatialPanelNodes({ model: args.model, focusedKind: args.focusedKind, visibleKinds: args.visibleKinds, query: args.query });
+	return {
+		fixtureLabel: args.fixtureLabel,
+		visibleKindsLabel: formatEnabledSpatialKindsLabel(args.visibleKinds),
+		selectableKindsLabel: formatEnabledSpatialKindsLabel(args.selectableKinds),
+		query: args.query,
+		focusOptions: (["all", ...TOPOLOGIC_KINDS] as const).map((kind) => ({ kind, label: spatialKindLabel(kind), active: args.focusedKind === kind })),
+		entityCount: entities.length,
+		entities: entities.map((entity) => ({ id: entity.id, label: entity.label, kindLabel: entity.kind, selected: args.selectedId === entity.id })),
+		setFocusedKind: args.setFocusedKind,
+		setSelectedId: args.setSelectedId,
+		setQuery: args.setQuery,
+	};
+}
+
+/** @emoji 🔎 Builds renderer-agnostic state for the selection details tab. */
+export function buildSpatialDetailsPanelState(args: {
+	readonly status: SpatialStatus;
+	readonly model: SpatialModel | null;
+	readonly focusedKind: SpatialSurfaceKindFilter;
+	readonly selectedId: string | null;
+	readonly query: string;
+}): SpatialDetailsPanelState {
+	const selected = selectedSpatialNode(args.model, args.selectedId);
+	return {
+		selectedLabel: selected ? selected.label : "No entity selected",
+		selectedKindLabel: selected?.kind ?? spatialKindLabel(args.focusedKind),
+		description: selected?.entity.description,
+		status: args.status,
+		focusedKindLabel: spatialKindLabel(args.focusedKind),
+		query: args.query.trim() || "none",
+	};
 }
 
 /** @emoji 📐 Converts a transform into R3F-friendly tuples. */

@@ -193,6 +193,7 @@ export function geometryPlayModeFromApp(activeModeId: string | null): GeometryPl
 //#endregion 🔖Controls
 
 //#region 🔖GeometryPlayWorkbench
+export const GEOMETRY_PLAY_BODY_KEY = "elements.geometry.play.window";
 export const GEOMETRY_PLAY_SCENE3D_SURFACE_ID = "elements.geometry.topologic/v1";
 export const GEOMETRY_PLAY_CONTROLLER_ID = "geometry-play";
 
@@ -485,6 +486,89 @@ export interface GeometryPlaySnapshot {
 	readonly onTransformCommit: (id: string, transform: TopologicTransform) => void;
 }
 
+/** @emoji 🧩 Declarative window chrome + viewport handle for host {@link UiRenderer} (no React in geometry play core). */
+export function buildGeometryPlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+	const app = ctx.workbench.getActiveApp();
+	const ctrl = app?.controller as GeometryPlayShellController | undefined;
+	ctrl?.reconcileSelectionForActiveMode(ctx.activeModeId);
+	if (!ctrl) {
+		return {
+			type: "stack",
+			direction: "vertical",
+			padding: "none",
+			children: [{ type: "text", value: "Missing geometry controller" }],
+		};
+	}
+	let play: GeometryPlaySnapshot | null = null;
+	try {
+		play = ctrl.getSnapshot();
+	} catch {
+		return {
+			type: "stack",
+			direction: "vertical",
+			padding: "none",
+			children: [{ type: "text", value: "Geometry wasm failed to load" }],
+		};
+	}
+	if (!play) {
+		return {
+			type: "stack",
+			direction: "vertical",
+			padding: "none",
+			children: [{ type: "text", value: "Loading geometry wasm…" }],
+		};
+	}
+	const mode = geometryPlayModeFromApp(ctx.activeModeId);
+	const activeSession = mode === "analyze" ? play.analyzeSession : play.session;
+	const activeSelectableEntities =
+		mode === "analyze" ? listAnalyzeSelectableEntities(activeSession, play.analyzeSelectableKinds) : listSelectableEntities(activeSession, play.selectableKinds);
+	const activeSelectedEntity = play.selectedId ? activeSession.getEntity(play.selectedId) : null;
+	return {
+		type: "stack",
+		direction: "vertical",
+		padding: "none",
+		children: [
+			{
+				type: "stack",
+				direction: "horizontal",
+				gap: "tight",
+				padding: "standard",
+				children: [
+					{ type: "text", value: mode, emphasize: true, dataAttributes: { "e2e-geometry-mode": mode } },
+					{ type: "text", value: mode === "edit" ? play.transformMode : "locked", emphasize: true, dataAttributes: { "e2e-geometry-transform-mode": mode === "edit" ? play.transformMode : "locked" } },
+					{
+						type: "text",
+						value:
+							mode === "analyze"
+								? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeSelectableKinds), ANALYZE_KINDS.length)
+								: formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.selectableKinds), TOPOLOGIC_KINDS.length),
+						dataAttributes: { "e2e-geometry-selection-kinds": "1" },
+					},
+					{
+						type: "text",
+						value:
+							mode === "analyze"
+								? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeVisibleKinds), ANALYZE_KINDS.length)
+								: formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.visibleKinds), TOPOLOGIC_KINDS.length),
+						dataAttributes: { "e2e-geometry-visible-kinds": "1" },
+					},
+					{
+						type: "text",
+						value: activeSelectedEntity ? topologicEntityLabel(activeSelectedEntity) : "—",
+						dataAttributes: { "e2e-geometry-selection": activeSelectedEntity ? topologicEntityLabel(activeSelectedEntity) : "none" },
+					},
+					{ type: "text", value: String(activeSelectableEntities.length) },
+				],
+			},
+			{
+				type: "scene3d",
+				surfaceId: GEOMETRY_PLAY_SCENE3D_SURFACE_ID,
+				controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+			},
+		],
+	};
+}
+
 /** @emoji 🧩 Builds the single-app geometry play registration for a {@link Workbench}. */
 export function buildGeometryPlayWorkbenchApp(controller: GeometryPlayShellController): WorkbenchApp {
 	const app = new WorkbenchApp(
@@ -565,6 +649,29 @@ if (import.meta.vitest) {
 			expect(ctrl.selectableKinds.vertex).toBe(false);
 			bus.dispatch(GEOMETRY_PLAY_CONTROLLER_ID, "setTransformMode", { mode: "rotate", pressed: true });
 			expect(ctrl.transformMode).toBe("rotate");
+		});
+
+		it("declarative window body ends with topologic scene3d surface binding", async () => {
+			const bus = new CommandBus();
+			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
+			const wb = new Workbench();
+			const ctrl = new GeometryPlayShellController(bus, () => wb.notify(), fixture);
+			wb.addApp(buildGeometryPlayWorkbenchApp(ctrl));
+			const tree = buildGeometryPlayDeclarativeBody({
+				workbench: wb,
+				windowKindId: GEOMETRY_PLAY_WINDOW_ID,
+				bodyKey: GEOMETRY_PLAY_BODY_KEY,
+				activeModeId: "edit",
+				generation: wb.generation,
+			});
+			expect(tree.type).toBe("stack");
+			if (tree.type !== "stack") return;
+			const last = tree.children[tree.children.length - 1];
+			expect(last).toEqual({
+				type: "scene3d",
+				surfaceId: GEOMETRY_PLAY_SCENE3D_SURFACE_ID,
+				controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+			});
 		});
 
 		it("derives analyze solids, parts, and semantic surfaces from the shipped fixture", async () => {

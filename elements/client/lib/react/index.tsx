@@ -57,9 +57,13 @@ import {
 	createTabStackLayout,
 	createWindowLayout,
 	Expertise,
+	getDeclarativeWindowBodyFactory,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
+	registerDeclarativeWindowBody,
 	resolveWorkbenchAppState,
+	type ShellWindowBodyViewContext,
+	unregisterDeclarativeWindowBody,
 } from "@elements/ui-shell";
 
 export {
@@ -82,10 +86,31 @@ export {
 	createTabStackLayout,
 	createWindowLayout,
 	Expertise,
+	getDeclarativeWindowBodyFactory,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
+	registerDeclarativeWindowBody,
 	resolveWorkbenchAppState,
+	type ShellWindowBodyViewContext,
+	unregisterDeclarativeWindowBody,
 } from "@elements/ui-shell";
+
+export type {
+	JsonPrimitive,
+	JsonValue,
+	ShellCommandDescriptor,
+	ShellStyleSpec,
+	UiButtonNode,
+	UiNode,
+	UiScene3DHostSurfaceNode,
+	UiSeparatorNode,
+	UiStackNode,
+	UiTextNode,
+} from "@elements/ui-shell";
+
+import { UiRenderer, registerUiScene3DSurfaceHost, unregisterUiScene3DSurfaceHost } from "./ui-declarative-renderer.tsx";
+
+export { UiRenderer, registerUiScene3DSurfaceHost, unregisterUiScene3DSurfaceHost };
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -22931,6 +22956,29 @@ export function registerSidePanelBody(bodyKey: string, Component: React.Componen
 
 function shellWindowKindsToGolden(windowKinds: readonly WorkbenchWindowKind[]): UIWindowKindDefinition[] {
 	return windowKinds.map((wk) => {
+		const declarativeFactory = getDeclarativeWindowBodyFactory(wk.bodyKey);
+		if (declarativeFactory) {
+			const windowKindId = wk.id;
+			const bodyKey = wk.bodyKey;
+			const ShellDeclarativeWindowBody: React.FC = () => {
+				const { workbench, activeModeId } = useApp();
+				const generation = React.useSyncExternalStore(
+					(listener) => workbench.subscribe(listener),
+					() => workbench.generation,
+					() => 0,
+				);
+				const ctx: ShellWindowBodyViewContext = {
+					workbench,
+					windowKindId,
+					bodyKey,
+					activeModeId: activeModeId ?? null,
+					generation,
+				};
+				const node = declarativeFactory(ctx);
+				return <UiRenderer node={node} commandBus={workbench.commandBus} />;
+			};
+			return { id: wk.id, label: wk.label, component: ShellDeclarativeWindowBody };
+		}
 		const Body =
 			windowBodyByKey.get(wk.bodyKey) ??
 			(() => (
