@@ -236,6 +236,40 @@ export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onC
   return <>{rows}</>;
 }
 
+type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+class DOMEventBindingController {
+  private readonly cleanups: Array<() => void> = [];
+
+  listen(target: DOMListenerTarget | null | undefined, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+    if (!target) return;
+    target.addEventListener(type, listener, options);
+    this.cleanups.push(() => target.removeEventListener(type, listener, options));
+  }
+
+  dispose(): void {
+    while (this.cleanups.length > 0) {
+      this.cleanups.pop()?.();
+    }
+  }
+}
+
+function getDocumentBody(): HTMLElement | null {
+  return typeof document === "undefined" ? null : document.body;
+}
+
+function getElementById<T extends HTMLElement = HTMLElement>(id: string): T | null {
+  return typeof document === "undefined" ? null : (document.getElementById(id) as T | null);
+}
+
+function queryElement<T extends Element = HTMLElement>(selector: string, root?: ParentNode | null): T | null {
+  return (root ?? (typeof document === "undefined" ? null : document))?.querySelector(selector) as T | null;
+}
+
+function renderPortalInto(children: React.ReactNode, container: Element | DocumentFragment | null | undefined): React.ReactNode {
+  return container ? createPortal(children, container) : null;
+}
+
 function renderContextMenuTrigger(point: { x: number; y: number } | null): React.ReactNode {
   const trigger = (
     <DropdownMenuPrimitive.Trigger asChild>
@@ -253,7 +287,7 @@ function renderContextMenuTrigger(point: { x: number; y: number } | null): React
       />
     </DropdownMenuPrimitive.Trigger>
   );
-  return typeof document === "undefined" ? trigger : createPortal(trigger, document.body);
+  return renderPortalInto(trigger, getDocumentBody()) ?? trigger;
 }
 
 export interface ContextMenuProps {
@@ -364,20 +398,18 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         onOpenChange(false);
       }
     };
-    window.addEventListener("pointerdown", handlePointerDown, false);
-    window.addEventListener("keydown", handleKeyDown, false);
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown, false);
-      window.removeEventListener("keydown", handleKeyDown, false);
-    };
+    const bindings = new DOMEventBindingController();
+    bindings.listen(window, "pointerdown", handlePointerDown, false);
+    bindings.listen(window, "keydown", handleKeyDown, false);
+    return () => bindings.dispose();
   }, [items.length, onOpenChange, open, position?.x, position?.y]);
   if (!items.length) {
     return null;
   }
-  if (!open || !position || typeof document === "undefined") {
+  if (!open || !position) {
     return null;
   }
-  return createPortal(
+  return renderPortalInto(
     <div
       className={contextMenuContentClassName}
       onContextMenu={(event) => event.preventDefault()}
@@ -387,7 +419,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     >
       {renderFixedContextMenuItems(items, close)}
     </div>,
-    document.body,
+    getDocumentBody(),
   );
 };
 
@@ -15229,12 +15261,13 @@ function ResizableHandle({
     setIsDragging(true);
     externalOnMouseDown?.(e as any);
 
+    const bindings = new DOMEventBindingController();
     const handleMouseUp = () => {
       setIsDragging(false);
-      document.removeEventListener("mouseup", handleMouseUp, true);
+      bindings.dispose();
     };
 
-    document.addEventListener("mouseup", handleMouseUp, true);
+    bindings.listen(document, "mouseup", handleMouseUp, true);
   };
 
   const handleMouseEnter: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -18864,6 +18897,7 @@ const Panel: React.FC<PanelProps> = ({
     setIsResizing(true);
     const startPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
     const startSize = size;
+    const bindings = new DOMEventBindingController();
     const handleMouseMove = (e: MouseEvent) => {
       const currentPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
       const delta = currentPos - startPos;
@@ -18879,11 +18913,10 @@ const Panel: React.FC<PanelProps> = ({
     };
     const handleMouseUp = () => {
       setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      bindings.dispose();
     };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    bindings.listen(document, "mousemove", handleMouseMove);
+    bindings.listen(document, "mouseup", handleMouseUp);
   };
   const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
   const borderClass =
@@ -19546,7 +19579,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   React.useEffect(() => {
     if (windowRef.current) {
       const stack = windowRef.current.closest(".lm_item.lm_stack");
-      const header = stack?.querySelector(".lm_header") as HTMLElement | null;
+      const header = queryElement<HTMLElement>(".lm_header", stack);
       setHeaderElement(header);
     }
   }, []);
@@ -19584,7 +19617,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     <LevelProvider level="window">
       <div ref={windowRef} onDoubleClick={onDoubleClick} className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, className)}>
         {headerElement
-          ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
+          ? renderPortalInto(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
@@ -19646,7 +19679,7 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
   React.useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
-      const element = document.getElementById(focusedItemId);
+      const element = getElementById(focusedItemId);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         if (onFocusComplete) {
@@ -19941,7 +19974,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         if (keys.length > 0 && keys.every((k) => Object.is((state as any)[k], partial[k]))) return;
         if (api.__suppressTransform && keys.length === 1 && keys[0] === "transform") {
           const t = partial.transform;
-          const el = document.querySelector(".react-flow__viewport") as HTMLElement;
+          const el = queryElement<HTMLElement>(".react-flow__viewport");
           if (el) el.style.transform = `translate(${t[0]}px, ${t[1]}px) scale(${t[2]})`;
           api.__pendingTransform = t;
           return;
@@ -22361,13 +22394,14 @@ const UICanvas: React.FC<{
         layoutRef.current = layout;
 
         const handleResize = () => layout.updateSize();
-        window.addEventListener("resize", handleResize);
+        const bindings = new DOMEventBindingController();
+        bindings.listen(window, "resize", handleResize);
 
         lifecycle.registerCleanup(() => {
           if (layoutRef.current === layout) {
             layoutRef.current = null;
           }
-          window.removeEventListener("resize", handleResize);
+          bindings.dispose();
           setPortals([]);
           try {
             layout.destroy();
@@ -22394,11 +22428,11 @@ const UICanvas: React.FC<{
 
         const clickGoldenLayoutControl = (selector: string) => {
           const stackElement = portal.element.closest(".lm_item.lm_stack") as HTMLElement | null;
-          const controlElement = stackElement?.querySelector(selector) as HTMLElement | null;
+          const controlElement = queryElement<HTMLElement>(selector, stackElement);
           controlElement?.click();
         };
 
-        return createPortal(
+        return renderPortalInto(
           <Window
             key={portal.key}
             id={portal.windowKind.id}
@@ -23099,7 +23133,7 @@ type ElementsDomRoot = HTMLElement & { __elementsReactRoot?: Root };
 
 export function mountReactApp(element: React.ReactElement, rootId = "root"): void {
   if (typeof document === "undefined") return;
-  const rootElement = document.getElementById(rootId) as ElementsDomRoot | null;
+  const rootElement = getElementById<ElementsDomRoot>(rootId);
   if (!rootElement) {
     throw new Error(`React root #${rootId} missing.`);
   }

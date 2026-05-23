@@ -473,6 +473,7 @@ type LodListener = () => void;
 /** @emoji 📶 LOD band store updated from the render loop; React reads via {@link useLod}. */
 class LodRuntime {
 	private readonly listeners = new Set<LodListener>();
+	private cachedSnapshot: LodContextValue;
 	lod: LodKind = "normal";
 	gridFactor: number;
 	gridSnapEnabled: boolean;
@@ -481,6 +482,7 @@ class LodRuntime {
 		this.gridFactor = gridFactor;
 		this.gridSnapEnabled = gridSnapEnabled;
 		this.lod = initialLod;
+		this.cachedSnapshot = this.buildSnapshot();
 	}
 
 	readonly subscribe = (listener: LodListener): (() => void) => {
@@ -490,12 +492,20 @@ class LodRuntime {
 		};
 	};
 
-	readonly snapshot = (): LodContextValue => ({
-		lod: this.lod,
-		lodGridStepWorld: lodVisibleGridSnapStepWorld(this.lod, this.gridFactor),
-		gridFactor: this.gridFactor,
-		gridSnapEnabled: this.gridSnapEnabled,
-	});
+	readonly snapshot = (): LodContextValue => this.cachedSnapshot;
+
+	private buildSnapshot(): LodContextValue {
+		return {
+			lod: this.lod,
+			lodGridStepWorld: lodVisibleGridSnapStepWorld(this.lod, this.gridFactor),
+			gridFactor: this.gridFactor,
+			gridSnapEnabled: this.gridSnapEnabled,
+		};
+	}
+
+	private refreshSnapshot(): void {
+		this.cachedSnapshot = this.buildSnapshot();
+	}
 
 	syncConfig(gridFactor: number, gridSnapEnabled: boolean): void {
 		if (this.gridFactor === gridFactor && this.gridSnapEnabled === gridSnapEnabled) {
@@ -503,6 +513,7 @@ class LodRuntime {
 		}
 		this.gridFactor = gridFactor;
 		this.gridSnapEnabled = gridSnapEnabled;
+		this.refreshSnapshot();
 		this.emit();
 	}
 
@@ -511,6 +522,7 @@ class LodRuntime {
 			return false;
 		}
 		this.lod = lod;
+		this.refreshSnapshot();
 		this.emit();
 		return true;
 	}

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Geometry package task router: `bun ./script.ts <dev|build|test|wasm> [args…]` — builds the Topologic wasm bridge, runs the R3F play harness, and executes focused Vitest checks. */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 const cwd = import.meta.dir;
@@ -93,10 +94,60 @@ function emppCommand(): string {
 		: join(emsdkRoot(), "upstream", "emscripten", "em++");
 }
 
-function emcmakeCommand(): string {
-	return process.platform === "win32"
-		? join(emsdkRoot(), "upstream", "emscripten", "emcmake.bat")
-		: join(emsdkRoot(), "upstream", "emscripten", "emcmake");
+function vcpkgRoot(): string {
+	return process.env.VCPKG_ROOT ?? join(workspaceRoot, ".repo", "cache", "vcpkg");
+}
+
+function emscriptenToolchainFile(): string {
+	return join(emsdkRoot(), "upstream", "emscripten", "cmake", "Modules", "Platform", "Emscripten.cmake");
+}
+
+function ensureVcpkg(): void {
+	const root = vcpkgRoot();
+	const vcpkgExe = join(root, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
+	if (!existsSync(root)) {
+		mkdirSync(join(workspaceRoot, ".repo", "cache"), { recursive: true });
+		runShell(`git clone --depth 1 https://github.com/microsoft/vcpkg.git ${shellQuote(root)}`, { cwd: workspaceRoot });
+	}
+	if (!existsSync(vcpkgExe)) {
+		if (process.platform === "win32") {
+			runShell(`cmd.exe /c ${shellQuote(join(root, "bootstrap-vcpkg.bat"))} -disableMetrics`, { cwd: root });
+		} else {
+			runShell(`bash ${shellQuote(join(root, "bootstrap-vcpkg.sh"))} -disableMetrics`, { cwd: root });
+		}
+	}
+}
+
+function wasmBuildEnv(): NodeJS.ProcessEnv {
+	const emsdk = emsdkRoot();
+	const emscripten = join(emsdk, "upstream", "emscripten");
+	const upstreamBin = join(emsdk, "upstream", "bin");
+	const separator = process.platform === "win32" ? ";" : ":";
+	const pathPrefix = [join(homedir(), ".local", "bin"), emscripten, upstreamBin]
+		.filter((entry) => existsSync(entry))
+		.join(separator);
+	return {
+		...env,
+		EMSDK: emsdk,
+		EM_CACHE: join(workspaceRoot, ".repo", "cache", "emscripten-cache"),
+		VCPKG_ROOT: vcpkgRoot(),
+		VCPKG_DISABLE_METRICS: "1",
+		VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "2",
+		PATH: pathPrefix ? `${pathPrefix}${separator}${env.PATH ?? ""}` : env.PATH,
+	};
+}
+
+function purgeStaleWasmCmakeCache(buildDir: string): void {
+	const cacheFile = join(buildDir, "CMakeCache.txt");
+	if (!existsSync(cacheFile)) return;
+	const content = readFileSync(cacheFile, "utf8");
+	if (
+		content.includes("OpenCASCADE_DIR-NOTFOUND") ||
+		!content.includes("wasm32-emscripten") ||
+		content.includes("CMAKE_GENERATOR:INTERNAL=MinGW Makefiles")
+	) {
+		rmSync(buildDir, { recursive: true, force: true });
+	}
 }
 
 function ensureEmscripten(): string {
@@ -132,29 +183,40 @@ function wasmNeedsBuild(): boolean {
 function buildWasm(force = false): void {
 	if (!force && !wasmNeedsBuild()) return;
 	ensureEmscripten();
+	ensureVcpkg();
 	const outDir = join(cwd, "wasm", "generated");
 	mkdirSync(outDir, { recursive: true });
 	const buildDir = join(workspaceRoot, ".repo", "cache", "elements-geometry-topologic-wasm");
+	purgeStaleWasmCmakeCache(buildDir);
 	mkdirSync(buildDir, { recursive: true });
-	const cacheDir = join(workspaceRoot, ".repo", "cache", "emscripten-cache");
-	mkdirSync(cacheDir, { recursive: true });
+	const topologicDir = join(cwd, "topologic");
+	const wasmEnv = wasmBuildEnv();
+	const vcpkgCmake = join(vcpkgRoot(), "scripts", "buildsystems", "vcpkg.cmake");
 	const configureLine = [
-		shellQuote(emcmakeCommand()),
 		"cmake",
+		"-G",
+		"Ninja",
 		"-S",
-		shellQuote(join(cwd, "topologic")),
+		shellQuote(topologicDir),
 		"-B",
 		shellQuote(buildDir),
 		"-DCMAKE_BUILD_TYPE=Release",
+		`-DCMAKE_TOOLCHAIN_FILE=${shellQuote(vcpkgCmake)}`,
+		`-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${shellQuote(emscriptenToolchainFile())}`,
+		"-DVCPKG_TARGET_TRIPLET=wasm32-emscripten",
+		`-DVCPKG_MANIFEST_DIR=${shellQuote(topologicDir)}`,
+		`-DVCPKG_OVERLAY_TRIPLETS=${shellQuote(join(topologicDir, "triplets"))}`,
+		"-DVCPKG_FEATURE_FLAGS=manifests",
 		"-DTOPOLOGICCORE_BUILD_SHARED=OFF",
 		"-DTOPOLOGIC_BUILD_PYTHON_BINDINGS=OFF",
 		"-DTOPOLOGIC_BUILD_WASM_BRIDGE=ON",
 	].join(" ");
-	runShell(configureLine, { cwd, env: { ...env, EM_CACHE: cacheDir } });
-	runShell(`cmake --build ${shellQuote(buildDir)} --config Release --target TopologicWasmKernel`, {
-		cwd,
-		env: { ...env, EM_CACHE: cacheDir },
-	});
+	runShell(configureLine, { cwd, env: wasmEnv });
+	runShell(`cmake --build ${shellQuote(buildDir)} --target TopologicWasmKernel`, { cwd, env: wasmEnv });
+	if (!existsSync(wasmOutputPath())) {
+		console.error(`[wasm] expected output missing: ${wasmOutputPath()}`);
+		process.exit(1);
+	}
 }
 
 if (command === "wasm") {
