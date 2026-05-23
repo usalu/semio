@@ -1,9 +1,10 @@
 import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "@elements/ui";
 import { OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
+import { Matrix4, Plane, Raycaster, Vector2, Vector3 } from "three";
 
 import {
 	TOPOLOGIC_KINDS,
@@ -19,11 +20,16 @@ import {
 	type SpatialStatus,
 	type SpatialSurfaceKindFilter,
 	type SpatialSurfaceSnapshot,
+	type TopologicTransform,
 	type SpatialWorkbenchPanelState,
 	type TopologicKind,
 } from "../js/index.ts";
 
 //#region 🔖Helpers
+function nextSpatialTransformPosition(transform: TopologicTransform | undefined, position: readonly [number, number, number]): TopologicTransform {
+	return { ...transform, position };
+}
+
 function selectedColor(color: string | undefined, selected: boolean, fallback: string): string {
 	if (selected) return "#fb7185";
 	return color ?? fallback;
@@ -35,29 +41,47 @@ function statusToneClass(status: SpatialStatus): string {
 	return "border-border bg-muted text-muted-foreground";
 }
 
+interface SpatialDragStartArgs {
+	readonly id: string;
+	readonly event: ThreeEvent<PointerEvent>;
+	readonly group: THREE.Group | null;
+}
+
+interface SpatialDragState {
+	readonly id: string;
+	readonly pointerId: number;
+	readonly plane: Plane;
+	readonly offset: Vector3;
+	readonly parentWorldInverse: Matrix4;
+}
+
 //#endregion 🔖Helpers
 
 //#region 🔖Scene
 function SpatialRenderableNode(props: {
 	readonly renderable: SpatialRenderable;
+	readonly draggingId: string | null;
 	readonly selectedId: string | null;
 	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly onSelect: (id: string | null) => void;
+	readonly onDragStart: (args: SpatialDragStartArgs) => void;
 }): React.ReactElement {
 	const { position, quaternion, scale } = transformProps(props.renderable.transform);
+	const groupRef = React.useRef<THREE.Group | null>(null);
 	const selected = props.renderable.id === props.selectedId;
 	const selectable = props.selectableKinds[props.renderable.kind];
 	const fill = props.renderable.fill;
 	const edges = props.renderable.edges;
 	const point = props.renderable.point;
 	const select = selectable
-		? (event: { stopPropagation(): void }) => {
+		? (event: ThreeEvent<PointerEvent>) => {
 			event.stopPropagation();
 			props.onSelect(props.renderable.id);
+			props.onDragStart({ id: props.renderable.id, event, group: groupRef.current });
 		}
 		: undefined;
 	return (
-		<group position={position} quaternion={quaternion} scale={scale}>
+		<group ref={groupRef} position={position} quaternion={quaternion} scale={scale}>
 			{fill ? (
 				<mesh onPointerDown={select}>
 					<bufferGeometry>
@@ -93,9 +117,114 @@ function SpatialRenderableNode(props: {
 				</mesh>
 			) : null}
 			{props.renderable.children?.map((child) => (
-				<SpatialRenderableNode key={child.id} renderable={child} selectedId={props.selectedId} selectableKinds={props.selectableKinds} onSelect={props.onSelect} />
+				<SpatialRenderableNode
+					key={child.id}
+					renderable={child}
+					draggingId={props.draggingId}
+					selectedId={props.selectedId}
+					selectableKinds={props.selectableKinds}
+					onSelect={props.onSelect}
+					onDragStart={props.onDragStart}
+				/>
 			))}
 		</group>
+	);
+}
+
+function SpatialViewportScene(props: {
+	readonly snapshot: SpatialSurfaceSnapshot;
+	readonly renderables: readonly SpatialRenderable[];
+	readonly onSelect: (id: string | null) => void;
+}): React.ReactElement {
+	const { camera, gl } = useThree();
+	const [draggingId, setDraggingId] = React.useState<string | null>(null);
+	const dragStateRef = React.useRef<SpatialDragState | null>(null);
+	const pointerRef = React.useRef(new Vector2());
+	const raycasterRef = React.useRef(new Raycaster());
+	const planePointRef = React.useRef(new Vector3());
+	const planeNormalRef = React.useRef(new Vector3());
+	const worldOriginRef = React.useRef(new Vector3());
+
+	const endDrag = React.useCallback((pointerId?: number) => {
+		if (pointerId !== undefined && dragStateRef.current?.pointerId !== pointerId) return;
+		dragStateRef.current = null;
+		setDraggingId(null);
+	}, []);
+
+	const beginDrag = React.useCallback(
+		(args: SpatialDragStartArgs) => {
+			const { event, group, id } = args;
+			if (!group) return;
+			group.updateWorldMatrix(true, false);
+			group.getWorldPosition(worldOriginRef.current);
+			camera.getWorldDirection(planeNormalRef.current).normalize();
+			const plane = new Plane().setFromNormalAndCoplanarPoint(planeNormalRef.current.clone(), worldOriginRef.current.clone());
+			const hitPoint = event.ray.intersectPlane(plane, planePointRef.current.clone());
+			if (!hitPoint) return;
+			const parentWorldInverse = group.parent ? group.parent.matrixWorld.clone().invert() : new Matrix4();
+			dragStateRef.current = {
+				id,
+				pointerId: event.pointerId,
+				plane,
+				offset: hitPoint.clone().sub(worldOriginRef.current),
+				parentWorldInverse,
+			};
+			setDraggingId(id);
+			try {
+				event.nativeEvent.target instanceof Element && event.nativeEvent.target.setPointerCapture?.(event.pointerId);
+			} catch {
+				// Ignore pointer capture failures from synthetic or unsupported targets.
+			}
+		},
+		[camera],
+	);
+
+	React.useEffect(() => {
+		if (!draggingId) return;
+		const ownerDocument = gl.domElement.ownerDocument;
+		const handlePointerMove = (event: PointerEvent) => {
+			const dragState = dragStateRef.current;
+			if (!dragState || dragState.pointerId !== event.pointerId) return;
+			const rect = gl.domElement.getBoundingClientRect();
+			pointerRef.current.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+			raycasterRef.current.setFromCamera(pointerRef.current, camera);
+			const hitPoint = raycasterRef.current.ray.intersectPlane(dragState.plane, planePointRef.current);
+			if (!hitPoint) return;
+			const localPoint = hitPoint.clone().sub(dragState.offset).applyMatrix4(dragState.parentWorldInverse);
+			const nextPosition: readonly [number, number, number] = [localPoint.x, localPoint.y, localPoint.z];
+			const currentTransform = props.snapshot.model?.get(dragState.id)?.transform;
+			props.snapshot.setEntityTransform(dragState.id, nextSpatialTransformPosition(currentTransform, nextPosition));
+		};
+		const handlePointerEnd = (event: PointerEvent) => endDrag(event.pointerId);
+		ownerDocument.addEventListener("pointermove", handlePointerMove);
+		ownerDocument.addEventListener("pointerup", handlePointerEnd);
+		ownerDocument.addEventListener("pointercancel", handlePointerEnd);
+		return () => {
+			ownerDocument.removeEventListener("pointermove", handlePointerMove);
+			ownerDocument.removeEventListener("pointerup", handlePointerEnd);
+			ownerDocument.removeEventListener("pointercancel", handlePointerEnd);
+		};
+	}, [camera, draggingId, endDrag, gl.domElement, props.snapshot]);
+
+	return (
+		<>
+			<color attach="background" args={["#020617"]} />
+			<ambientLight intensity={0.75} />
+			<directionalLight intensity={1.1} position={[8, 14, 10]} />
+			<gridHelper args={[24, 24, "#1e293b", "#0f172a"]} position={[0, -2.25, 0]} />
+			{props.renderables.map((renderable) => (
+				<SpatialRenderableNode
+					key={renderable.id}
+					renderable={renderable}
+					draggingId={draggingId}
+					selectedId={props.snapshot.selectedId}
+					selectableKinds={props.snapshot.selectableKinds}
+					onSelect={props.onSelect}
+					onDragStart={beginDrag}
+				/>
+			))}
+			<OrbitControls enabled={!draggingId} makeDefault />
+		</>
 	);
 }
 
@@ -109,20 +238,7 @@ export function SpatialViewport(props: {
 	);
 	return (
 		<Canvas camera={{ position: [10, 10, 12], fov: 45 }} onPointerMissed={() => props.onSelect(null)}>
-			<color attach="background" args={["#020617"]} />
-			<ambientLight intensity={0.75} />
-			<directionalLight intensity={1.1} position={[8, 14, 10]} />
-			<gridHelper args={[24, 24, "#1e293b", "#0f172a"]} position={[0, -2.25, 0]} />
-			{renderables.map((renderable) => (
-				<SpatialRenderableNode
-					key={renderable.id}
-					renderable={renderable}
-					selectedId={props.snapshot.selectedId}
-					selectableKinds={props.snapshot.selectableKinds}
-					onSelect={props.onSelect}
-				/>
-			))}
-			<OrbitControls makeDefault />
+			<SpatialViewportScene snapshot={props.snapshot} renderables={renderables} onSelect={props.onSelect} />
 		</Canvas>
 	);
 }
@@ -181,6 +297,7 @@ const EMPTY_SNAPSHOT: SpatialSurfaceSnapshot = {
 	selectableKinds: EMPTY_KINDS,
 	visibleKinds: EMPTY_KINDS,
 	setSelectedId: () => undefined,
+	setEntityTransform: () => undefined,
 	workbenchPanel: buildSpatialWorkbenchPanelState({
 		fixtureLabel: undefined,
 		model: null,
@@ -352,6 +469,7 @@ if (import.meta.vitest) {
 					selectableKinds: EMPTY_KINDS,
 					visibleKinds: EMPTY_KINDS,
 					setSelectedId: setSelectedIdCommand,
+					setEntityTransform: () => undefined,
 					workbenchPanel: buildSpatialWorkbenchPanelState({
 						fixtureLabel: fixture?.label,
 						model,

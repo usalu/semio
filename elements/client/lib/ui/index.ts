@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** 🧱 `@elements/ui-shell` — Framework-free workbench graph: {@link Workbench} → {@link WorkbenchApp} → {@link Mode}; toolbars dispatch via {@link CommandBus}; window bodies addressable by `bodyKey` for the React renderer. */
+/** 🧱 `@elements/ui-shell` — Framework-free workbench graph plus declarative {@link UiNode} window bodies, {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}; toolbars dispatch via {@link CommandBus}; window bodies use `bodyKey` for React host or {@link registerDeclarativeWindowBody}. */
 // #endregion 🧲Header
 
 //#region 🔖Layout

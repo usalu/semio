@@ -184,6 +184,7 @@ export interface SpatialSurfaceSnapshot {
 	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly setSelectedId: (id: string | null) => void;
+	readonly setEntityTransform: (id: string, transform: TopologicTransform) => void;
 	readonly workbenchPanel: SpatialWorkbenchPanelState;
 	readonly detailsPanel: SpatialDetailsPanelState;
 }
@@ -605,15 +606,16 @@ export class SpatialModel {
 					},
 			};
 		} else {
-			const childRenderables = !fill && !edges ? node.children(this).map((child) => child.toRenderable(this)) : undefined;
+			const hasChildren = node.childIds().length > 0;
+			const childRenderables = hasChildren ? node.children(this).map((child) => child.toRenderable(this)) : undefined;
 			renderable = {
 				id: node.id,
 				kind: node.kind,
 				label: node.label,
 				style: node.style,
 				transform: node.transform,
-				fill,
-				edges,
+				fill: hasChildren ? undefined : fill,
+				edges: hasChildren ? undefined : edges,
 				children: childRenderables,
 			};
 		}
@@ -769,6 +771,8 @@ if (import.meta.vitest) {
 				expect(cell).toBeInstanceOf(Cell);
 				const renderable = cell.toRenderable(model);
 				expect((renderable.fill?.position.length ?? 0) > 0 || (renderable.children?.length ?? 0) > 0).toBe(true);
+				const rootRenderable = model.rootNodes()[0]?.toRenderable(model);
+				expect(rootRenderable?.children?.length ?? 0).toBeGreaterThan(0);
 			},
 			60000,
 		);

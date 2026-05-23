@@ -12,6 +12,7 @@ import {
 	ensureSpatialKernelLoaded,
 	loadTopologicFixtureV1,
 	spatialKindLabel,
+	updateTopologicFixtureTransformV1,
 	type SpatialDetailsPanelState,
 	type SpatialModel,
 	type SpatialStatus,
@@ -19,6 +20,7 @@ import {
 	type SpatialSurfaceSnapshot,
 	type TopologicFixtureV1,
 	type TopologicKind,
+	type TopologicTransform,
 } from "../js/index.ts";
 import { SpatialDetailsPanelBody, SpatialPlayWindowBody, SpatialWorkbenchPanelBody } from "../react/index.tsx";
 
@@ -136,6 +138,16 @@ export class SpatialPlayShellController extends Controller {
 		if (!this.isSelectableId(this.selectedId)) this.selectedId = null;
 	}
 
+	private updateEntityTransform(id: string, transform: TopologicTransform): void {
+		if (!this.fixture || !this.model?.get(id)) return;
+		const nextFixture = updateTopologicFixtureTransformV1(this.fixture, id, transform);
+		if (!nextFixture) return;
+		this.fixture = nextFixture;
+		this.model = buildSpatialModel(nextFixture);
+		this.status = "ready";
+		this.error = null;
+	}
+
 	override run(command: string, args?: unknown): void {
 		switch (command) {
 			case "toggleSelectableKind": {
@@ -161,6 +173,11 @@ export class SpatialPlayShellController extends Controller {
 				this.query = (args as { query: string }).query;
 				break;
 			}
+			case "setEntityTransform": {
+				const { id, transform } = args as { id: string; transform: TopologicTransform };
+				this.updateEntityTransform(id, transform);
+				break;
+			}
 			default:
 				break;
 		}
@@ -172,6 +189,7 @@ export class SpatialPlayShellController extends Controller {
 	getSnapshot(): SpatialSurfaceSnapshot {
 		const setFocusedKind = (kind: SpatialSurfaceKindFilter) => this.commandBus.dispatch(this.id, "setFocusedKind", { kind });
 		const setSelectedId = (id: string | null) => this.commandBus.dispatch(this.id, "setSelectedId", { id });
+		const setEntityTransform = (id: string, transform: TopologicTransform) => this.commandBus.dispatch(this.id, "setEntityTransform", { id, transform });
 		const setQuery = (query: string) => this.commandBus.dispatch(this.id, "setQuery", { query });
 		return {
 			status: this.status,
@@ -184,6 +202,7 @@ export class SpatialPlayShellController extends Controller {
 			selectableKinds: this.selectableKinds,
 			visibleKinds: this.visibleKinds,
 			setSelectedId,
+			setEntityTransform,
 			workbenchPanel: buildSpatialWorkbenchPanelState({
 				fixtureLabel: this.fixture?.label,
 				model: this.model,
@@ -294,6 +313,15 @@ if (import.meta.vitest) {
 			expect(controller.getSnapshot().selectedId).toBe(selectedId);
 			bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "toggleVisibleKind", { kind: "cell" });
 			expect(controller.getSnapshot().selectedId).toBeNull();
+		});
+
+		it("updates one selected entity transform through controller commands", async () => {
+			const fixture = await loadTopologicFixtureV1(topologyJson as unknown);
+			expect(fixture).not.toBeNull();
+			const bus = new CommandBus();
+			const controller = new SpatialPlayShellController(bus, () => undefined, fixture);
+			bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setEntityTransform", { id: "face-front", transform: { position: [2, 3, 4] } });
+			expect(controller.getSnapshot().model?.get("face-front")?.transform?.position).toEqual([2, 3, 4]);
 		});
 	});
 }
