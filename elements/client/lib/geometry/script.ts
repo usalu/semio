@@ -173,12 +173,30 @@ function wasmBuildEnv(): NodeJS.ProcessEnv {
 		...(emsdkNode ? { EMSDK_NODE: emsdkNode.replaceAll("\\", "/") } : {}),
 		VCPKG_ROOT: vcpkgRoot(),
 		VCPKG_DISABLE_METRICS: "1",
-		VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "2",
+		VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "1",
 		PATH: pathPrefix ? `${pathPrefix}${separator}${env.PATH ?? ""}` : env.PATH,
 	};
 }
 
+function purgeCorruptWasmVcpkgInstall(buildDir: string): void {
+	const infoDir = join(buildDir, "vcpkg_installed", "vcpkg", "info");
+	if (!existsSync(infoDir)) return;
+	const required = [
+		"freetype_2.14.3_wasm32-emscripten.list",
+		"opencascade_8.0.0_wasm32-emscripten.list",
+	];
+	if (required.every((name) => existsSync(join(infoDir, name)))) return;
+	rmSync(join(buildDir, "vcpkg_installed"), { recursive: true, force: true });
+	rmSync(join(buildDir, "CMakeCache.txt"), { force: true });
+	rmSync(join(buildDir, "CMakeFiles"), { recursive: true, force: true });
+}
+
 function purgeStaleWasmCmakeCache(buildDir: string): void {
+	const installLog = join(buildDir, "vcpkg-manifest-install.log");
+	if (existsSync(installLog) && readFileSync(installLog, "utf8").includes("vcpkg install failed")) {
+		rmSync(buildDir, { recursive: true, force: true });
+		return;
+	}
 	const cacheFile = join(buildDir, "CMakeCache.txt");
 	if (!existsSync(cacheFile)) return;
 	const content = readFileSync(cacheFile, "utf8");
@@ -233,6 +251,7 @@ function buildWasm(force = false): void {
 	mkdirSync(outDir, { recursive: true });
 	const buildDir = join(workspaceRoot, ".repo", "cache", "elements-geometry-topologic-wasm");
 	purgeStaleWasmCmakeCache(buildDir);
+	purgeCorruptWasmVcpkgInstall(buildDir);
 	mkdirSync(buildDir, { recursive: true });
 	const topologicDir = join(cwd, "topologic");
 	const wasmEnv = wasmBuildEnv();

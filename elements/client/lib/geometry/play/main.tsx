@@ -4,6 +4,7 @@
 
 import { getLevelBgClass, LevelProvider, mountReactApp, WorkbenchView } from "@elements/ui";
 
+//#region 🔖Mount
 import "./globals.css";
 import { bootstrapGeometryPlayWorkbench } from "./react.tsx";
 
@@ -14,3 +15,4 @@ void bootstrapGeometryPlayWorkbench().then((workbench) => {
 		</LevelProvider>,
 	);
 });
+//#endregion 🔖Mount

@@ -99,6 +99,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@elements/ui": "workspace:*",
+        "@elements/ui-shell": "workspace:*",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
         "lucide-react": "^0.536.0",
@@ -206,6 +207,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@elements/ui": "workspace:*",
+        "@elements/ui-shell": "workspace:*",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
         "lucide-react": "^0.536.0",

@@ -17,13 +17,13 @@ import {
 } from "react";
 import { CylinderGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial } from "three";
 
-import { TopologicSceneGraph } from "../react/index.tsx";
+import { TopologicSceneGraph } from "../../react/index.tsx";
 import {
 	ensureTopologicWasmLoaded,
 	parseTopologicFixtureV1,
 	type TopologicEntity,
 	type TopologicFixtureV1,
-} from "../wasm/index.ts";
+} from "../../wasm/index.ts";
 
 //#region 🔖Core
 export interface Point3D {
@@ -869,7 +869,7 @@ if (import.meta.vitest) {
 		});
 
 		it("parses a wasm-built cylinder fixture and builds a render packet", async () => {
-			const { buildTopologicRenderPacketV1 } = await import("../wasm/index.ts");
+			const { buildTopologicRenderPacketV1 } = await import("../../wasm/index.ts");
 			await ensureTopologicWasmLoaded();
 			const engine = new TopologicCadEngine();
 			const parsed = engine.createCylinder({ x: 0, y: 1, z: 0 }, 1.5, 2) as TopologicFixtureV1 | null;
