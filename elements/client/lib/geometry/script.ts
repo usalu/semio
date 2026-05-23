@@ -129,16 +129,6 @@ function wasmNeedsBuild(): boolean {
 	return true;
 }
 
-function openCascadeDir(): string {
-	const value = process.env.OpenCASCADE_DIR ?? process.env.OPENCASCADE_DIR;
-	if (!value) {
-		console.error("OpenCASCADE_DIR is required to build the real TopologicCore wasm kernel.");
-		console.error("Point it at an Emscripten-compatible OpenCASCADEConfig.cmake package directory.");
-		process.exit(1);
-	}
-	return value;
-}
-
 function buildWasm(force = false): void {
 	if (!force && !wasmNeedsBuild()) return;
 	ensureEmscripten();
@@ -159,7 +149,6 @@ function buildWasm(force = false): void {
 		"-DTOPOLOGICCORE_BUILD_SHARED=OFF",
 		"-DTOPOLOGIC_BUILD_PYTHON_BINDINGS=OFF",
 		"-DTOPOLOGIC_BUILD_WASM_BRIDGE=ON",
-		`-DOpenCASCADE_DIR=${shellQuote(openCascadeDir())}`,
 	].join(" ");
 	runShell(configureLine, { cwd, env: { ...env, EM_CACHE: cacheDir } });
 	runShell(`cmake --build ${shellQuote(buildDir)} --config Release --target TopologicWasmKernel`, {

@@ -2,10 +2,27 @@
 #include <cmath>
 #include <cstddef>
 #include <cctype>
+#include <list>
+#include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include <Cell.h>
+#include <CellComplex.h>
+#include <Cluster.h>
+#include <Edge.h>
+#include <Face.h>
+#include <Shell.h>
+#include <Topology.h>
+#include <Vertex.h>
+#include <Wire.h>
+#include <Utilities/CellUtility.h>
+#include <Utilities/EdgeUtility.h>
+#include <Utilities/FaceUtility.h>
+#include <Utilities/TopologyUtility.h>
 
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
@@ -13,6 +30,15 @@
 namespace {
 
 using emscripten::val;
+using TopologicCore::Cell;
+using TopologicCore::CellComplex;
+using TopologicCore::Cluster;
+using TopologicCore::Edge;
+using TopologicCore::Face;
+using TopologicCore::Shell;
+using TopologicCore::Topology;
+using TopologicCore::Vertex;
+using TopologicCore::Wire;
 
 constexpr const char* kSchema = "elements.geometry.topologic.fixture/v1";
 constexpr const char* kKinds[] = {
@@ -26,6 +52,17 @@ constexpr const char* kKinds[] = {
 	"cellComplex",
 	"cluster",
 };
+
+struct AnalyzePoint3 {
+	double x;
+	double y;
+	double z;
+};
+
+val make_analyze_point3(const AnalyzePoint3& point);
+val style_for_analyze_kind(const std::string& kind);
+val analyze_metadata(const std::string& kind, const bool selectable, const std::string& parent_id = "");
+bool nearly_equal(const double left, const double right, const double epsilon = 1e-9);
 
 bool is_array(const val& value) {
 	return val::global("Array").call<bool>("isArray", value);
@@ -414,22 +451,282 @@ val parse_fixture(const val& raw) {
 	return fixture;
 }
 
+struct TopologicBuildContext {
+	val fixture;
+	std::unordered_map<std::string, Topology::Ptr> topology_by_id;
+	std::unordered_set<std::string> building_ids;
+};
+
+Vertex::Ptr origin_vertex() {
+	static Vertex::Ptr origin = Vertex::ByCoordinates(0.0, 0.0, 0.0);
+	return origin;
+}
+
+AnalyzePoint3 point3_from_vertex(const Vertex::Ptr& vertex) {
+	const auto [x, y, z] = vertex->Coordinates();
+	return { x, y, z };
+}
+
+val make_surface_from_points(const std::vector<AnalyzePoint3>& points, const std::vector<std::uint32_t>& triangles) {
+	val vertices = val::array();
+	for (const AnalyzePoint3& point : points) vertices.call<void>("push", make_analyze_point3(point));
+	val triangle_values = val::array();
+	for (const std::uint32_t triangle : triangles) triangle_values.call<void>("push", static_cast<unsigned>(triangle));
+	val surface = val::object();
+	surface.set("vertices", vertices);
+	surface.set("triangles", triangle_values);
+	return surface;
+}
+
+Topology::Ptr apply_topologic_transform(const Topology::Ptr& topology, const val& transform) {
+	if (!topology || !is_record(transform)) return topology;
+	const val normalized = normalize_transform(transform);
+	Topology::Ptr current = topology;
+	const val scale = normalized["scale"];
+	if (scale.typeOf().as<std::string>() == "number") {
+		const double factor = scale.as<double>();
+		if (!nearly_equal(factor, 1.0)) current = TopologicUtilities::TopologyUtility::Scale(current, origin_vertex(), factor, factor, factor);
+	} else {
+		const double sx = scale[0].as<double>();
+		const double sy = scale[1].as<double>();
+		const double sz = scale[2].as<double>();
+		if (!nearly_equal(sx, 1.0) || !nearly_equal(sy, 1.0) || !nearly_equal(sz, 1.0)) current = TopologicUtilities::TopologyUtility::Scale(current, origin_vertex(), sx, sy, sz);
+	}
+	const double qx = normalized["rotation"][0].as<double>();
+	const double qy = normalized["rotation"][1].as<double>();
+	const double qz = normalized["rotation"][2].as<double>();
+	const double qw = normalized["rotation"][3].as<double>();
+	const double tx = normalized["position"][0].as<double>();
+	const double ty = normalized["position"][1].as<double>();
+	const double tz = normalized["position"][2].as<double>();
+	const double xx = qx * qx;
+	const double yy = qy * qy;
+	const double zz = qz * qz;
+	const double xy = qx * qy;
+	const double xz = qx * qz;
+	const double yz = qy * qz;
+	const double wx = qw * qx;
+	const double wy = qw * qy;
+	const double wz = qw * qz;
+	return TopologicUtilities::TopologyUtility::Transform(
+		current,
+		tx,
+		ty,
+		tz,
+		1.0 - 2.0 * (yy + zz),
+		2.0 * (xy - wz),
+		2.0 * (xz + wy),
+		2.0 * (xy + wz),
+		1.0 - 2.0 * (xx + zz),
+		2.0 * (yz - wx),
+		2.0 * (xz - wy),
+		2.0 * (yz + wx),
+		1.0 - 2.0 * (xx + yy)
+	);
+}
+
+Topology::Ptr build_topologic_entity(TopologicBuildContext& context, const std::string& entity_id);
+
+std::list<Vertex::Ptr> build_face_loop_vertices(const val& vertices) {
+	std::list<Vertex::Ptr> loop;
+	for (std::size_t index = 0; index < array_length(vertices); index += 1) {
+		const val point = vertices[index];
+		loop.push_back(Vertex::ByCoordinates(point[0].as<double>(), point[1].as<double>(), point[2].as<double>()));
+	}
+	return loop;
+}
+
+std::list<Face::Ptr> faces_from_shell_entity(TopologicBuildContext& context, const val& shell_entity) {
+	std::list<Face::Ptr> faces;
+	for (std::size_t index = 0; index < array_length(shell_entity["faces"]); index += 1) {
+		const auto face = std::dynamic_pointer_cast<Face>(build_topologic_entity(context, shell_entity["faces"][index].as<std::string>()));
+		if (face) faces.push_back(face);
+	}
+	return faces;
+}
+
+Topology::Ptr build_topologic_entity(TopologicBuildContext& context, const std::string& entity_id) {
+	if (context.topology_by_id.contains(entity_id)) return context.topology_by_id.at(entity_id);
+	if (context.building_ids.contains(entity_id)) return nullptr;
+	const val entity = find_entity(context.fixture, entity_id);
+	if (entity.isUndefined()) return nullptr;
+	context.building_ids.insert(entity_id);
+	const std::string kind = entity["kind"].as<std::string>();
+	Topology::Ptr topology;
+	if (kind == "vertex") {
+		const val point = entity["point"];
+		topology = Vertex::ByCoordinates(point[0].as<double>(), point[1].as<double>(), point[2].as<double>());
+	} else if (kind == "edge") {
+		auto start = std::dynamic_pointer_cast<Vertex>(build_topologic_entity(context, entity["vertices"][0].as<std::string>()));
+		auto end = std::dynamic_pointer_cast<Vertex>(build_topologic_entity(context, entity["vertices"][1].as<std::string>()));
+		if (start && end) topology = Edge::ByStartVertexEndVertex(start, end);
+	} else if (kind == "wire") {
+		std::list<Edge::Ptr> edges;
+		for (std::size_t index = 0; index < array_length(entity["edges"]); index += 1) {
+			auto edge = std::dynamic_pointer_cast<Edge>(build_topologic_entity(context, entity["edges"][index].as<std::string>()));
+			if (edge) edges.push_back(edge);
+		}
+		if (!edges.empty()) topology = Wire::ByEdges(edges);
+	} else if (kind == "face") {
+		if (array_length(entity["wires"]) > 0) {
+			auto outer = std::dynamic_pointer_cast<Wire>(build_topologic_entity(context, entity["wires"][0].as<std::string>()));
+			std::list<Wire::Ptr> inner;
+			for (std::size_t index = 1; index < array_length(entity["wires"]); index += 1) {
+				auto wire = std::dynamic_pointer_cast<Wire>(build_topologic_entity(context, entity["wires"][index].as<std::string>()));
+				if (wire) inner.push_back(wire);
+			}
+			if (outer) topology = inner.empty() ? Face::ByExternalBoundary(outer) : Face::ByExternalInternalBoundaries(outer, inner);
+		} else if (is_record(entity["surface"]) && is_array(entity["surface"]["vertices"])) {
+			std::list<std::list<Vertex::Ptr>> loops;
+			loops.push_back(build_face_loop_vertices(entity["surface"]["vertices"]));
+			topology = TopologicUtilities::FaceUtility::ByVertices(loops);
+		}
+	} else if (kind == "shell") {
+		std::list<Face::Ptr> faces;
+		for (std::size_t index = 0; index < array_length(entity["faces"]); index += 1) {
+			auto face = std::dynamic_pointer_cast<Face>(build_topologic_entity(context, entity["faces"][index].as<std::string>()));
+			if (face) faces.push_back(face);
+		}
+		if (!faces.empty()) topology = Shell::ByFaces(faces);
+	} else if (kind == "cell") {
+		std::list<Shell::Ptr> shells;
+		for (std::size_t index = 0; index < array_length(entity["shells"]); index += 1) {
+			auto shell = std::dynamic_pointer_cast<Shell>(build_topologic_entity(context, entity["shells"][index].as<std::string>()));
+			if (shell) shells.push_back(shell);
+		}
+		if (shells.size() == 1) topology = Cell::ByShell(shells.front());
+		else if (!shells.empty()) {
+			std::list<Face::Ptr> faces;
+			for (const auto& shell : shells) {
+				std::list<Face::Ptr> shell_faces;
+				shell->Faces(shell, shell_faces);
+				faces.insert(faces.end(), shell_faces.begin(), shell_faces.end());
+			}
+			if (!faces.empty()) topology = Cell::ByFaces(faces);
+		}
+	} else if (kind == "cellComplex") {
+		std::list<Cell::Ptr> cells;
+		for (std::size_t index = 0; index < array_length(entity["cells"]); index += 1) {
+			auto cell = std::dynamic_pointer_cast<Cell>(build_topologic_entity(context, entity["cells"][index].as<std::string>()));
+			if (cell) cells.push_back(cell);
+		}
+		if (!cells.empty()) topology = CellComplex::ByCells(cells);
+	} else if (kind == "cluster" || kind == "topology") {
+		std::list<Topology::Ptr> members;
+		const val refs = kind == "cluster" ? entity["topologies"] : entity["members"];
+		for (std::size_t index = 0; index < array_length(refs); index += 1) {
+			auto member = build_topologic_entity(context, refs[index].as<std::string>());
+			if (member) members.push_back(member);
+		}
+		if (!members.empty()) topology = Cluster::ByTopologies(members);
+	}
+	if (topology) topology = apply_topologic_transform(topology, entity["transform"]);
+	context.building_ids.erase(entity_id);
+	context.topology_by_id[entity_id] = topology;
+	return topology;
+}
+
+std::vector<AnalyzePoint3> face_vertices(const Face::Ptr& face) {
+	std::list<Vertex::Ptr> vertices;
+	face->Vertices(face, vertices);
+	std::vector<AnalyzePoint3> out;
+	out.reserve(vertices.size());
+	for (const auto& vertex : vertices) out.push_back(point3_from_vertex(vertex));
+	return out;
+}
+
+std::pair<std::vector<AnalyzePoint3>, std::vector<std::uint32_t>> triangulate_face_points(const Face::Ptr& face) {
+	std::vector<AnalyzePoint3> points;
+	std::vector<std::uint32_t> triangles;
+	std::list<Face::Ptr> triangle_faces;
+	TopologicUtilities::FaceUtility::Triangulate(face, 0.001, triangle_faces);
+	for (const auto& triangle_face : triangle_faces) {
+		std::list<Vertex::Ptr> triangle_vertices;
+		triangle_face->Vertices(triangle_face, triangle_vertices);
+		if (triangle_vertices.size() < 3) continue;
+		const std::uint32_t base = static_cast<std::uint32_t>(points.size());
+		std::size_t pushed = 0;
+		for (const auto& vertex : triangle_vertices) {
+			if (pushed == 3) break;
+			points.push_back(point3_from_vertex(vertex));
+			pushed += 1;
+		}
+		if (pushed == 3) {
+			triangles.push_back(base);
+			triangles.push_back(base + 1);
+			triangles.push_back(base + 2);
+		}
+	}
+	if (!triangles.empty()) return { points, triangles };
+	const std::vector<AnalyzePoint3> polygon = face_vertices(face);
+	if (polygon.size() >= 3) {
+		points = polygon;
+		for (std::uint32_t index = 1; index + 1 < static_cast<std::uint32_t>(polygon.size()); index += 1) {
+			triangles.push_back(0);
+			triangles.push_back(index);
+			triangles.push_back(index + 1);
+		}
+	}
+	return { points, triangles };
+}
+
+val face_entity_from_topologic_face(const Face::Ptr& face, const std::string& id, const std::string& label, const std::string& kind, const bool selectable, const std::string& parent_id = "") {
+	const auto [points, triangles] = triangulate_face_points(face);
+	val entity = val::object();
+	entity.set("id", id);
+	entity.set("kind", std::string("face"));
+	entity.set("label", label);
+	entity.set("wires", val::array());
+	entity.set("surface", make_surface_from_points(points, triangles));
+	entity.set("style", style_for_analyze_kind(kind));
+	entity.set("metadata", analyze_metadata(kind, selectable, parent_id));
+	return entity;
+}
+
+bool same_face_shape(const Face::Ptr& left, const Face::Ptr& right) {
+	return left && right && left->GetOcctFace().IsSame(right->GetOcctFace());
+}
+
+std::vector<Cell::Ptr> cells_from_topology(const Topology::Ptr& topology) {
+	std::vector<Cell::Ptr> out;
+	if (!topology) return out;
+	if (auto cell = std::dynamic_pointer_cast<Cell>(topology)) {
+		out.push_back(cell);
+		return out;
+	}
+	std::list<Cell::Ptr> cells;
+	topology->Cells(topology, cells);
+	for (const auto& cell : cells) out.push_back(cell);
+	return out;
+}
+
+std::string face_orientation_kind(const Face::Ptr& face, const std::string& exposure) {
+	auto sample = TopologicUtilities::FaceUtility::InternalVertex(face, 0.0001);
+	double u = 0.5;
+	double v = 0.5;
+	if (sample) TopologicUtilities::FaceUtility::ParametersAtVertex(face, sample, u, v);
+	const auto normal = TopologicUtilities::FaceUtility::NormalAtParameters(face, u, v);
+	return std::string("surface.") + exposure + (std::abs(normal.Z()) > 0.9 ? ".horizontal" : ".vertical");
+}
+
 val vertex_point(const val& fixture, const std::string& entity_id) {
-	const val entity = find_entity(fixture, entity_id);
-	if (entity.isUndefined() || entity["kind"].as<std::string>() != "vertex") return val::null();
-	return transform_point(entity["point"], entity["transform"]);
+	const val parsed = parse_fixture(fixture);
+	if (parsed.isNull()) return val::null();
+	TopologicBuildContext context { parsed };
+	auto vertex = std::dynamic_pointer_cast<Vertex>(build_topologic_entity(context, entity_id));
+	if (!vertex) return val::null();
+	return make_analyze_point3(point3_from_vertex(vertex));
 }
 
 val edge_curve(const val& fixture, const std::string& entity_id) {
-	const val entity = find_entity(fixture, entity_id);
-	if (entity.isUndefined() || entity["kind"].as<std::string>() != "edge") return val::array();
-	if (is_array(entity["curve"]) && array_length(entity["curve"]) >= 2) return entity["curve"];
-	const val start = vertex_point(fixture, entity["vertices"][0].as<std::string>());
-	const val end = vertex_point(fixture, entity["vertices"][1].as<std::string>());
-	if (start.isNull() || end.isNull()) return val::array();
+	const val parsed = parse_fixture(fixture);
+	if (parsed.isNull()) return val::array();
+	TopologicBuildContext context { parsed };
+	auto edge = std::dynamic_pointer_cast<Edge>(build_topologic_entity(context, entity_id));
+	if (!edge) return val::array();
 	val out = val::array();
-	out.call<void>("push", start);
-	out.call<void>("push", end);
+	if (auto start = edge->StartVertex()) out.call<void>("push", make_analyze_point3(point3_from_vertex(start)));
+	if (auto end = edge->EndVertex()) out.call<void>("push", make_analyze_point3(point3_from_vertex(end)));
 	return out;
 }
 
@@ -462,12 +759,6 @@ val render_scale_for_entity(const val& entity) {
 	};
 	return create_float32_array(values);
 }
-
-struct AnalyzePoint3 {
-	double x;
-	double y;
-	double z;
-};
 
 struct AnalyzeBounds {
 	AnalyzePoint3 min;
@@ -557,11 +848,14 @@ std::vector<float> pack_local_points(const std::vector<AnalyzePoint3>& points, c
 	return out;
 }
 
-val build_render_packet_entry(const val& fixture, const val& entity) {
+val build_render_packet_entry(const val& fixture, TopologicBuildContext& context, const val& entity) {
 	val entry = val::object();
 	entry.set("id", entity["id"].as<std::string>());
 	entry.set("kind", entity["kind"].as<std::string>());
-	const val position = render_position_for_entity(fixture, entity);
+	const std::string kind = entity["kind"].as<std::string>();
+	const auto topology = build_topologic_entity(context, entity["id"].as<std::string>());
+	val position = render_position_for_entity(fixture, entity);
+	if (topology && kind != "face" && kind != "edge" && kind != "vertex") position = make_analyze_point3(point3_from_vertex(topology->CenterOfMass()));
 	std::vector<float> position_values = {
 		static_cast<float>(position[0].as<double>()),
 		static_cast<float>(position[1].as<double>()),
@@ -577,7 +871,6 @@ val build_render_packet_entry(const val& fixture, const val& entity) {
 	};
 	entry.set("rotation", create_float32_array(rotation_values));
 	entry.set("scale", render_scale_for_entity(entity));
-	const std::string kind = entity["kind"].as<std::string>();
 	if (kind == "edge") {
 		const val curve = edge_curve(fixture, entity["id"].as<std::string>());
 		std::vector<AnalyzePoint3> points;
@@ -589,25 +882,26 @@ val build_render_packet_entry(const val& fixture, const val& entity) {
 		entry.set("points", create_float32_array(pack_local_points(points, anchor)));
 	}
 	if (kind == "face") {
-		const val vertices = entity["surface"]["vertices"];
-		std::vector<AnalyzePoint3> points;
-		for (std::size_t index = 0; index < array_length(vertices); index += 1) points.push_back(read_world_point3(vertices[index]));
-		const AnalyzePoint3 anchor = centroid_of_points(points);
+		auto face = std::dynamic_pointer_cast<Face>(topology);
+		const auto [points, triangles] = face ? triangulate_face_points(face) : std::pair<std::vector<AnalyzePoint3>, std::vector<std::uint32_t>>({}, {});
+		std::vector<AnalyzePoint3> local_points = points;
+		if (local_points.empty() && is_record(entity["surface"])) {
+			const val vertices = entity["surface"]["vertices"];
+			for (std::size_t index = 0; index < array_length(vertices); index += 1) local_points.push_back(read_world_point3(vertices[index]));
+		}
+		const AnalyzePoint3 anchor = centroid_of_points(local_points);
 		entry.set("position", create_float32_array({ static_cast<float>(anchor.x), static_cast<float>(anchor.y), static_cast<float>(anchor.z) }));
 		entry.set("rotation", create_float32_array({ 0.0f, 0.0f, 0.0f, 1.0f }));
 		entry.set("scale", create_float32_array({ 1.0f, 1.0f, 1.0f }));
-		entry.set("points", create_float32_array(pack_local_points(points, anchor)));
-		std::vector<std::uint32_t> triangles;
-		const val raw_triangles = entity["surface"]["triangles"];
-		triangles.reserve(array_length(raw_triangles));
-		for (std::size_t index = 0; index < array_length(raw_triangles); index += 1) triangles.push_back(static_cast<std::uint32_t>(raw_triangles[index].as<unsigned>()));
-		entry.set("triangles", create_uint32_array(triangles));
+		entry.set("points", create_float32_array(pack_local_points(local_points, anchor)));
+		if (!triangles.empty()) entry.set("triangles", create_uint32_array(triangles));
 	}
 	return entry;
 }
 
 void append_render_packet_entries(
 	const val& fixture,
+	TopologicBuildContext& context,
 	const std::string& entity_id,
 	std::unordered_set<std::string>& visited,
 	std::unordered_set<std::string>& revisited,
@@ -620,18 +914,19 @@ void append_render_packet_entries(
 		return;
 	}
 	visited.insert(entity_id);
-	entries.call<void>("push", build_render_packet_entry(fixture, entity));
-	for (const std::string& child_id : child_ids(entity)) append_render_packet_entries(fixture, child_id, visited, revisited, entries);
+	entries.call<void>("push", build_render_packet_entry(fixture, context, entity));
+	for (const std::string& child_id : child_ids(entity)) append_render_packet_entries(fixture, context, child_id, visited, revisited, entries);
 }
 
 val build_render_packet(const val& fixture) {
 	const val parsed = parse_fixture(fixture);
 	if (parsed.isNull()) return val::null();
+	TopologicBuildContext context { parsed };
 	val entries = val::array();
 	std::unordered_set<std::string> visited;
 	std::unordered_set<std::string> revisited;
 	const val roots = parsed["roots"];
-	for (std::size_t index = 0; index < array_length(roots); index += 1) append_render_packet_entries(parsed, roots[index].as<std::string>(), visited, revisited, entries);
+	for (std::size_t index = 0; index < array_length(roots); index += 1) append_render_packet_entries(parsed, context, roots[index].as<std::string>(), visited, revisited, entries);
 	val revisited_ids = val::array();
 	for (const std::string& entity_id : revisited) revisited_ids.call<void>("push", entity_id);
 	val packet = val::object();
@@ -1264,44 +1559,85 @@ std::vector<val> create_component_faces(const AnalyzeVoxelComponent& component, 
 val derive_analyze_fixture(const val& fixture) {
 	const val parsed = parse_fixture(fixture);
 	if (parsed.isNull()) return val::null();
-	const std::vector<AnalyzeCellBoundsInfo> cells = collect_cell_bounds(parsed);
-	const AnalyzeGridPartition partition = create_grid_partition(cells);
-	const std::vector<AnalyzeVoxelComponent> components = collect_voxel_components(partition);
-	const std::vector<AnalyzeFaceRectInfo> surface_patches = merge_surface_patches(split_semantic_surface_patches(parsed, cells));
+	TopologicBuildContext context { parsed };
+	struct AnalyzeCellInfo {
+		std::string id;
+		std::string label;
+		Cell::Ptr cell;
+	};
+	std::vector<AnalyzeCellInfo> cells;
+	const val parsed_topologies = parsed["topologies"];
+	for (std::size_t index = 0; index < array_length(parsed_topologies); index += 1) {
+		const val entity = parsed_topologies[index];
+		if (entity["kind"].as<std::string>() != "cell") continue;
+		auto cell = std::dynamic_pointer_cast<Cell>(build_topologic_entity(context, entity["id"].as<std::string>()));
+		if (!cell) continue;
+		cells.push_back({ entity["id"].as<std::string>(), is_nonempty_string(entity["label"]) ? entity["label"].as<std::string>() : entity["id"].as<std::string>(), cell });
+	}
 	val topologies = val::array();
 	std::vector<std::string> root_members;
 	int surface_count = 0;
-	int none_count = 0;
 	int difference_count = 0;
 	int intersection_count = 0;
-	for (const AnalyzeFaceRectInfo& patch : surface_patches) {
+	std::vector<Face::Ptr> shared_faces;
+	for (std::size_t left = 0; left < cells.size(); left += 1) {
+		for (std::size_t right = left + 1; right < cells.size(); right += 1) {
+			std::list<Face::Ptr> current_shared;
+			cells[left].cell->SharedFaces(cells[right].cell, current_shared);
+			for (const auto& face : current_shared) {
+				bool exists = false;
+				for (const auto& existing : shared_faces) {
+					if (same_face_shape(existing, face)) {
+						exists = true;
+						break;
+					}
+				}
+				if (!exists) shared_faces.push_back(face);
+			}
+		}
+	}
+	for (const auto& face : shared_faces) {
 		surface_count += 1;
+		const std::string kind = face_orientation_kind(face, "internal");
 		const std::string id = "analyze.surface." + std::to_string(surface_count);
-		const std::string label = "Surface " + humanize_analyze_kind(patch.kind) + " " + std::to_string(surface_count);
-		topologies.call<void>("push", create_rectangle_face(id, label, patch.axis, patch.plane, patch.u0, patch.u1, patch.v0, patch.v1, patch.kind, true));
+		topologies.call<void>("push", face_entity_from_topologic_face(face, id, "Surface " + humanize_analyze_kind(kind) + " " + std::to_string(surface_count), kind, true));
 		root_members.push_back(id);
 	}
-	for (const AnalyzeCellBoundsInfo& cell : cells) {
-		const std::string solid_id = "analyze.solid." + cell.cell_id;
-		const std::string label = "Solid " + cell.label;
+	for (const auto& cell_info : cells) {
+		std::list<Face::Ptr> faces;
+		cell_info.cell->Faces(cell_info.cell, faces);
+		for (const auto& face : faces) {
+			bool internal = false;
+			for (const auto& shared : shared_faces) {
+				if (same_face_shape(face, shared)) {
+					internal = true;
+					break;
+				}
+			}
+			if (internal) continue;
+			surface_count += 1;
+			const std::string kind = face_orientation_kind(face, "external");
+			const std::string id = "analyze.surface." + std::to_string(surface_count);
+			topologies.call<void>("push", face_entity_from_topologic_face(face, id, "Surface " + humanize_analyze_kind(kind) + " " + std::to_string(surface_count), kind, true));
+			root_members.push_back(id);
+		}
+	}
+	for (const auto& cell_info : cells) {
+		const std::string solid_id = "analyze.solid." + cell_info.id;
+		const std::string label = "Solid " + cell_info.label;
 		val solid = val::object();
 		solid.set("id", solid_id);
 		solid.set("kind", std::string("topology"));
 		solid.set("label", label);
 		std::vector<std::string> member_ids;
-		const val cell_entity = find_entity(parsed, cell.cell_id);
-		for (std::size_t shell_index = 0; shell_index < array_length(cell_entity["shells"]); shell_index += 1) {
-			const val shell = find_entity(parsed, cell_entity["shells"][shell_index].as<std::string>());
-			if (shell.isUndefined()) continue;
-			for (std::size_t face_index = 0; face_index < array_length(shell["faces"]); face_index += 1) {
-				const std::string source_face_id = shell["faces"][face_index].as<std::string>();
-				const val source_face = find_entity(parsed, source_face_id);
-				if (source_face.isUndefined()) continue;
-				const std::string cloned_face_id = solid_id + ".face." + source_face_id;
-				const std::string cloned_face_label = label + " " + (is_nonempty_string(source_face["label"]) ? source_face["label"].as<std::string>() : source_face_id);
-				topologies.call<void>("push", clone_analyze_face(source_face, cloned_face_id, cloned_face_label, "solid", false, solid_id));
-				member_ids.push_back(cloned_face_id);
-			}
+		std::list<Face::Ptr> faces;
+		cell_info.cell->Faces(cell_info.cell, faces);
+		int face_index = 0;
+		for (const auto& face : faces) {
+			face_index += 1;
+			const std::string cloned_face_id = solid_id + ".face." + std::to_string(face_index);
+			topologies.call<void>("push", face_entity_from_topologic_face(face, cloned_face_id, label + " Face " + std::to_string(face_index), "solid", false, solid_id));
+			member_ids.push_back(cloned_face_id);
 		}
 		solid.set("members", make_string_array(member_ids));
 		solid.set("style", style_for_analyze_kind("solid"));
@@ -1309,26 +1645,46 @@ val derive_analyze_fixture(const val& fixture) {
 		topologies.call<void>("push", solid);
 		root_members.push_back(solid_id);
 	}
-	for (const AnalyzeVoxelComponent& component : components) {
-		int label_count = 0;
-		if (component.overlap == "none") label_count = ++none_count;
-		else if (component.overlap == "difference") label_count = ++difference_count;
-		else label_count = ++intersection_count;
-		const std::string kind = "part." + component.overlap;
-		const std::string label = "Part " + humanize_analyze_kind(kind) + " " + std::to_string(label_count);
-		const std::vector<val> faces = create_component_faces(component, partition, label, kind);
-		val part = val::object();
-		part.set("id", component.component_id);
+	int part_count = 0;
+	auto append_part_cells = [&](const std::vector<Cell::Ptr>& part_cells, const std::string& kind, int& kind_count) {
+		for (const auto& part_cell : part_cells) {
+			kind_count += 1;
+			part_count += 1;
+			const std::string part_id = "analyze.part." + std::to_string(part_count);
+			const std::string label = "Part " + humanize_analyze_kind(kind) + " " + std::to_string(kind_count);
+			val part = val::object();
+			part.set("id", part_id);
 		part.set("kind", std::string("topology"));
 		part.set("label", label);
 		std::vector<std::string> member_ids;
-		for (const val& face : faces) member_ids.push_back(face["id"].as<std::string>());
-		part.set("members", make_string_array(member_ids));
-		part.set("style", style_for_analyze_kind(kind));
-		part.set("metadata", analyze_metadata(kind, true));
-		topologies.call<void>("push", part);
-		for (const val& face : faces) topologies.call<void>("push", face);
-		root_members.push_back(component.component_id);
+			std::list<Face::Ptr> part_faces;
+			part_cell->Faces(part_cell, part_faces);
+			int part_face_index = 0;
+			for (const auto& face : part_faces) {
+				part_face_index += 1;
+				const std::string face_id = part_id + ".face." + std::to_string(part_face_index);
+				topologies.call<void>("push", face_entity_from_topologic_face(face, face_id, label + " Face " + std::to_string(part_face_index), kind, false, part_id));
+				member_ids.push_back(face_id);
+			}
+			part.set("members", make_string_array(member_ids));
+			part.set("style", style_for_analyze_kind(kind));
+			part.set("metadata", analyze_metadata(kind, true));
+			topologies.call<void>("push", part);
+			root_members.push_back(part_id);
+		}
+	};
+	for (std::size_t index = 0; index < cells.size(); index += 1) {
+		Topology::Ptr difference = cells[index].cell;
+		for (std::size_t other = 0; other < cells.size(); other += 1) {
+			if (other == index) continue;
+			difference = difference ? difference->Difference(cells[other].cell) : nullptr;
+		}
+		append_part_cells(cells_from_topology(difference), "part.difference", difference_count);
+	}
+	for (std::size_t left = 0; left < cells.size(); left += 1) {
+		for (std::size_t right = left + 1; right < cells.size(); right += 1) {
+			append_part_cells(cells_from_topology(cells[left].cell->Intersect(cells[right].cell)), "part.intersection", intersection_count);
+		}
 	}
 	val out = val::object();
 	out.set("schema", std::string(kSchema));
