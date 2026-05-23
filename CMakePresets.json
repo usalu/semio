@@ -54,10 +54,13 @@
     },
     {
       "name": "windows",
-      "displayName": "Windows C++23",
+      "displayName": "Windows C++23 (Visual Studio 2026)",
       "inherits": "base",
       "generator": "Visual Studio 18 2026",
       "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_INSTANCE": "$penv{CMAKE_GENERATOR_INSTANCE}"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",

@@ -44,7 +44,7 @@ function runSync(args: string[], options: { cwd?: string } = {}): void {
 		shell: true,
 		stdio: "inherit",
 	});
-	if (result.error) {
+	if (result.error && result.status == null) {
 		console.error(result.error);
 		process.exit(1);
 	}
@@ -60,7 +60,7 @@ function runShell(commandLine: string, options: { cwd?: string; env?: NodeJS.Pro
 		shell: true,
 		stdio: "inherit",
 	});
-	if (result.error) {
+	if (result.error && result.status == null) {
 		console.error(result.error);
 		process.exit(1);
 	}

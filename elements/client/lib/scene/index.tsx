@@ -1038,6 +1038,7 @@ interface ObjectStateSnapshot {
 
 type ObjectStateAction =
 	| { readonly type: "init"; readonly fixture: FixtureV1 }
+	| { readonly type: "syncPoses"; readonly fixture: FixtureV1 }
 	| { readonly type: "relocate"; readonly payload: RelocatePayload }
 	| { readonly type: "addAttraction"; readonly attraction: AttractionProps }
 	| { readonly type: "removeObject"; readonly objectId: string };
@@ -1102,11 +1103,44 @@ export function fixtureStateFingerprint(fixture: FixtureV1): string {
 	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}`;
 }
 
+/** @emoji 📍 Fingerprint of object poses for syncing fixture moves without resetting attractions. */
+export function fixturePoseFingerprint(fixture: FixtureV1): string {
+	return fixture.objects
+		.map((object) => {
+			const o = object.origin.join(",");
+			const q = object.orientation?.join(",") ?? "";
+			const s =
+				object.scale === undefined
+					? ""
+					: typeof object.scale === "number"
+						? String(object.scale)
+						: object.scale.join(",");
+			return `${object.id}|${o}|${q}|${s}`;
+		})
+		.join("\0");
+}
+
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
 	switch (action.type) {
 		case "init": {
 			const records = fixtureToRecords(action.fixture.objects);
 			return buildSnapshot(records, action.fixture.attractions, state.version + 1);
+		}
+		case "syncPoses": {
+			const records = new Map(state.records);
+			for (const object of action.fixture.objects) {
+				const cur = records.get(object.id);
+				if (!cur) {
+					continue;
+				}
+				records.set(object.id, {
+					...cur,
+					origin: object.origin,
+					orientation: object.orientation,
+					scale: object.scale,
+				});
+			}
+			return buildSnapshot(records, state.attractions, state.version + 1);
 		}
 		case "addAttraction": {
 			const edges = attractionEdgesFromAttractions(state.attractions);
@@ -1202,16 +1236,31 @@ export function SceneObjectStateProvider(props: {
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
+	const syncedPoseFingerprintRef = useRef<string | null>(null);
+	const skipPoseSyncOnceRef = useRef(false);
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
+	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
-		if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
+		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
+			syncedFixtureFingerprintRef.current = fixtureFingerprint;
+			syncedPoseFingerprintRef.current = poseFingerprint;
+			skipPoseSyncOnceRef.current = false;
+			dispatch({ type: "init", fixture: props.fixture });
 			return;
 		}
-		syncedFixtureFingerprintRef.current = fixtureFingerprint;
-		dispatch({ type: "init", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint]);
+		if (syncedPoseFingerprintRef.current === poseFingerprint) {
+			return;
+		}
+		syncedPoseFingerprintRef.current = poseFingerprint;
+		if (skipPoseSyncOnceRef.current) {
+			skipPoseSyncOnceRef.current = false;
+			return;
+		}
+		dispatch({ type: "syncPoses", fixture: props.fixture });
+	}, [props.fixture, fixtureFingerprint, poseFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
+			skipPoseSyncOnceRef.current = true;
 			dispatch({ type: "relocate", payload });
 			props.onRelocate?.(payload);
 		},
@@ -1877,12 +1926,32 @@ export interface RegistryValue {
 	onRelocate?: (p: RelocatePayload) => void;
 }
 
-const RegistryContext = createContext<RegistryValue | null>(null);
+/** @emoji 🎯 Attraction-drag UI state isolated so orbit idle frames do not re-render every object. */
+export interface RegistryDragState {
+	readonly attractionDragActive: boolean;
+	readonly attractionDragAttractingFullId: string | null;
+	readonly attractionCompatibleAttractedFullIds: ReadonlySet<string>;
+	readonly attractionHoverRingFullId: string | null;
+	readonly attractionIndirectPickAwait: AttractionIndirectPickAwait | null;
+}
 
-function useRegistry(): RegistryValue {
-	const v = useContext(RegistryContext);
+const RegistryCoreContext = createContext<Omit<RegistryValue, keyof RegistryDragState> | null>(null);
+const RegistryDragContext = createContext<RegistryDragState | null>(null);
+
+function useRegistryCore(): Omit<RegistryValue, keyof RegistryDragState> {
+	const v = useContext(RegistryCoreContext);
 	if (!v) throw new Error("Scene registry missing");
 	return v;
+}
+
+function useRegistryDrag(): RegistryDragState {
+	const v = useContext(RegistryDragContext);
+	if (!v) throw new Error("Scene registry drag missing");
+	return v;
+}
+
+function useRegistry(): RegistryValue {
+	return { ...useRegistryCore(), ...useRegistryDrag() };
 }
 //#endregion 🎯Registry
 
@@ -2164,7 +2233,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 	readonly translationSnap: number | undefined;
 	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
 }) {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
 	const scene = useThree((s) => s.scene);
 	return createPortal(
 		<TransformControls
@@ -2216,10 +2285,8 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		setActiveRelocateObjectId,
 		activeRelocateObjectId,
 		relocateMode,
-		attractionDragActive,
-		attractionIndirectPickAwait,
-		attractionCompatibleAttractedFullIds,
-	} = useRegistry();
+	} = useRegistryCore();
+	const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const [pointerHovered, setPointerHovered] = useState(false);
@@ -2422,7 +2489,8 @@ export const Vortex = memo(function Vortex(
 	props: VortexProps & { objectId: string; objectKind?: string },
 ) {
 	const root = useRef<Group | null>(null);
-	const reg = useRegistry();
+	const reg = useRegistryCore();
+	const drag = useRegistryDrag();
 	const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
 	const r = props.radius ?? 0.35;
 
@@ -2462,13 +2530,13 @@ export const Vortex = memo(function Vortex(
 	);
 
 	const lodCtx = useLod();
-	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
+	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = drag.attractionDragAttractingFullId === fullId
 		? "attracting"
-		: reg.attractionHoverRingFullId === fullId
+		: drag.attractionHoverRingFullId === fullId
 			? "ring"
-			: reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true
+			: drag.attractionIndirectPickAwait?.candidates.includes(fullId) === true
 				? "indirectRing"
-				: reg.attractionCompatibleAttractedFullIds.has(fullId)
+				: drag.attractionCompatibleAttractedFullIds.has(fullId)
 					? "compatible"
 					: "none";
 
@@ -2491,12 +2559,12 @@ export const Vortex = memo(function Vortex(
 		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
 	);
 
-	const inIndirectRing = reg.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
+	const inIndirectRing = drag.attractionIndirectPickAwait?.candidates.includes(fullId) === true;
 	const linger =
-		(reg.attractionDragActive &&
-			(reg.attractionDragAttractingFullId === fullId ||
-				reg.attractionHoverRingFullId === fullId ||
-				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
+		(drag.attractionDragActive &&
+			(drag.attractionDragAttractingFullId === fullId ||
+				drag.attractionHoverRingFullId === fullId ||
+				drag.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
 	const drawHandleBody = handlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
 	const pickProxy = handlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
@@ -2610,7 +2678,7 @@ export const Attraction = memo(function Attraction(props: { attracting: Vec3; at
 
 //#region ✋Relocate
 export function useSceneRelocate(objectId: string) {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
 	return {
 		mode: reg.relocateMode,
 		start: () => reg.setActiveRelocateObjectId(objectId),
@@ -2623,9 +2691,9 @@ const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
 function OrbitGated() {
-	const reg = useRegistry();
-	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
-	return <OrbitControls makeDefault enabled={!gate} />;
+	const drag = useRegistryDrag();
+	const gate = drag.attractionDragActive || drag.attractionIndirectPickAwait !== null;
+	return <OrbitControls makeDefault enableDamping={false} enabled={!gate} />;
 }
 
 /** @emoji 📷 Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
@@ -2650,7 +2718,7 @@ function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3
 }
 
 function AttractionThreeBinder() {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
 	const t = useThree();
 	useLayoutEffect(() => {
 		reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
@@ -2660,9 +2728,10 @@ function AttractionThreeBinder() {
 }
 
 function AttractionWindowBridge() {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
+	const drag = useRegistryDrag();
 	const invalidate = useThree((s) => s.invalidate);
-	const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
+	const attractionBusy = drag.attractionDragActive || drag.attractionIndirectPickAwait !== null;
 	useEffect(() => {
 		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
@@ -2692,7 +2761,8 @@ function AttractionWindowBridge() {
 }
 
 function AttractionRubberBand() {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
+	const drag = useRegistryDrag();
 	const geo = useMemo(() => {
 		const g = new BufferGeometry();
 		g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
@@ -3150,7 +3220,7 @@ function RegistryProvider({
 		[proximityRadius],
 	);
 
-	const value = useMemo<RegistryValue>(
+	const coreValue = useMemo(
 		() => ({
 			registerVortex,
 			unregisterVortex,
@@ -3170,11 +3240,6 @@ function RegistryProvider({
 			relocateMode,
 			activeRelocateObjectId,
 			setActiveRelocateObjectId,
-			attractionDragActive,
-			attractionDragAttractingFullId,
-			attractionCompatibleAttractedFullIds,
-			attractionHoverRingFullId,
-			attractionIndirectPickAwait,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -3209,11 +3274,6 @@ function RegistryProvider({
 			selectionMode,
 			relocateMode,
 			activeRelocateObjectId,
-			attractionDragActive,
-			attractionDragAttractingFullId,
-			attractionCompatibleAttractedFullIds,
-			attractionHoverRingFullId,
-			attractionIndirectPickAwait,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -3232,7 +3292,28 @@ function RegistryProvider({
 		],
 	);
 
-	return <RegistryContext.Provider value={value}>{children}</RegistryContext.Provider>;
+	const dragValue = useMemo<RegistryDragState>(
+		() => ({
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
+		}),
+		[
+			attractionDragActive,
+			attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId,
+			attractionIndirectPickAwait,
+		],
+	);
+
+	return (
+		<RegistryCoreContext.Provider value={coreValue}>
+			<RegistryDragContext.Provider value={dragValue}>{children}</RegistryDragContext.Provider>
+		</RegistryCoreContext.Provider>
+	);
 }
 
 function Chunks({

@@ -398,6 +398,7 @@ ensure_cpp_toolchain() {
     else
       log "Homebrew not available; install CMake and Ninja before running native C++ builds."
     fi
+    export CMAKE_PRESET="${CMAKE_PRESET:-macos}"
     ;;
   Linux)
     if command -v apt-get >/dev/null 2>&1; then
@@ -411,8 +412,12 @@ ensure_cpp_toolchain() {
     else
       log "apt-get not available; install CMake, Ninja, pkg-config, and uuid headers with your system package manager."
     fi
+    export CMAKE_PRESET="${CMAKE_PRESET:-linux}"
     ;;
   esac
+  if command -v bun >/dev/null 2>&1; then
+    (cd "$REPO_ROOT" && bun ./script.ts cpp setup) || log "C++ vcpkg bootstrap via bun ./script.ts cpp setup failed."
+  fi
 }
 #endregion 🔖EnsureCpp
 

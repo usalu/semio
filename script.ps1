@@ -104,6 +104,38 @@ function Test-WingetPackageInstalled {
     return $LASTEXITCODE -eq 0 -and (($output | Out-String) -match [Regex]::Escape($Id))
 }
 
+function Remove-LegacyVisualStudio2022Toolchain {
+    $legacyPackageIds = @(
+        "Microsoft.VisualStudio.2022.BuildTools",
+        "Microsoft.VisualStudio.2022.Community",
+        "Microsoft.VisualStudio.2022.Professional",
+        "Microsoft.VisualStudio.2022.Enterprise"
+    )
+    foreach ($packageId in $legacyPackageIds) {
+        if (-not (Test-WingetPackageInstalled -Id $packageId)) {
+            continue
+        }
+        Write-Step "Removing legacy Visual Studio 2022 package $packageId…"
+        & winget uninstall --exact --id $packageId --accept-source-agreements --disable-interactivity --silent
+        if ($LASTEXITCODE -ne 0) {
+            Write-Step "winget uninstall returned $LASTEXITCODE for $packageId (continuing)."
+        }
+    }
+    foreach ($legacyPath in @(
+            "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022",
+            "${env:ProgramFiles}\Microsoft Visual Studio\2022"
+        )) {
+        if (-not (Test-Path -LiteralPath $legacyPath)) {
+            continue
+        }
+        Write-Step "Removing legacy Visual Studio 2022 directory $legacyPath…"
+        Remove-Item -LiteralPath $legacyPath -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $legacyPath) {
+            Write-Step "Legacy Visual Studio 2022 directory remains at $legacyPath; complete removal may require an elevated shell or reboot."
+        }
+    }
+}
+
 function Sync-WingetPackage {
     param(
         [string]$Id,
@@ -738,6 +770,7 @@ Refresh-CurrentProcessPath
 
 #region 🧰MachineInstall
 if (-not $SkipMachineInstall) {
+    Remove-LegacyVisualStudio2022Toolchain
     Sync-WingetPackage -Id "Git.Git" -Label "Git"
     Sync-WingetPackage -Id "GitHub.GitLFS" -Label "Git LFS"
     Sync-WingetPackage -Id "GitHub.cli" -Label "GitHub CLI"
@@ -755,7 +788,12 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.8" -Label ".NET SDK 8.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
-    Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Visual Studio Build Tools" -AdditionalArguments @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+    $vs2026CppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+    if (Test-WingetPackageInstalled -Id "Microsoft.VisualStudio.Community") {
+        Sync-WingetPackage -Id "Microsoft.VisualStudio.Community" -Label "Visual Studio 2026 Community" -AdditionalArguments $vs2026CppOverride
+    } else {
+        Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Visual Studio 2026 Build Tools" -AdditionalArguments $vs2026CppOverride
+    }
     Sync-WingetPackage -Id "Axosoft.GitKraken" -Label "GitKraken Desktop"
     Sync-WingetPackage -Id "GitKraken.cli" -Label "GitKraken CLI"
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
@@ -796,6 +834,8 @@ if (-not $SkipMachineInstall) {
 $playwrightPath = Join-Path $repoRoot "node_modules\.cache\ms-playwright"
 Ensure-Directory -Path $playwrightPath
 Set-UserEnvironmentVariable -Name "DEVCONTAINER" -Value "false"
+Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".repo\cache\vcpkg")
+Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
 Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
