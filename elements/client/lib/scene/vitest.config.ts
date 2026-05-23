@@ -12,7 +12,7 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.tsx"],
+		include: ["index.tsx", "play/index.tsx"],
 		passWithNoTests: true,
 	},
 });
