@@ -1,0 +1,11 @@
+{
+  "title": "App Selection And Hover Framework",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Generalize selection and hover across apps via framework AppPointerFocusStore; CAD play hierarchy hover syncs with 3D canvas.",
+  "summary": "Added framework/core AppPointerFocusStore for shared selection+hover with per-surface arbitration. CAD spatial play wires hierarchy pointer hover to InteractionRepl via hoveredPickKey; TreeDataItem gains onPointerEnter/Leave. Tests pass for @framework/core and @cad/js/renderer.",
+  "goal": "🎯r26-02/🎯runningsketchpad",
+  "sessions": [
+    "⚪673fb3faa73748aba7d374e611d746e1"
+  ]
+}

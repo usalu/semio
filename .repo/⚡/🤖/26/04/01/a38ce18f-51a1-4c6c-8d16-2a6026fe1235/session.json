@@ -330,7 +330,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
+                "old_string": "class TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
                 "new_string": ""
               },
               {
@@ -370,7 +370,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
+                "old_string": "class TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
                 "new_string": ""
               },
               {
@@ -410,7 +410,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class DesignVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a design.\n    DesignVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖design🛠️designvariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
+                "old_string": "class DesignVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a design.\n    DesignVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖design🛠️designvariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
                 "new_string": ""
               },
               {
@@ -462,7 +462,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class DesignVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a design.\n    DesignVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖design🛠️designvariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
+                "old_string": "class DesignVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a design.\n    DesignVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖design🛠️designvariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\n",
                 "new_string": ""
               },
               {
@@ -514,7 +514,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class DesignViewField(RealField, abc.ABC):\n    \"\"\"Field mixin for the view of a design.\n    DesignViewField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖design🛠️designviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)\n    \"\"\"\n\n    view: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)",
+                "old_string": "class DesignViewField(RealField, abc.ABC):\n    \"\"\"Field mixin for the view of a design.\n    DesignViewField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖design🛠️designviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)\n    \"\"\"\n\n    view: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)",
                 "new_string": ""
               }
             ],
@@ -542,7 +542,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class DesignViewField(RealField, abc.ABC):\n    \"\"\"Field mixin for the view of a design.\n    DesignViewField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖design🛠️designviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)\n    \"\"\"\n\n    view: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)",
+                "old_string": "class DesignViewField(RealField, abc.ABC):\n    \"\"\"Field mixin for the view of a design.\n    DesignViewField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖design🛠️designviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)\n    \"\"\"\n\n    view: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)",
                 "new_string": ""
               }
             ],
@@ -1294,7 +1294,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "/**\n * Parses DesignIdFromVariant from serialized input.\n * MUST produce a valid in-memory representation.\n * [👤semio📚js💻semio🔖kit🪨parsedesignidfromvariant](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)\n **/\nexport const parseDesignIdFromVariant = (variant: string): string =\u003e {\n  return variant.split(\"-\")[0];\n};",
+                "old_string": "/**\n * Parses DesignIdFromVariant from serialized input.\n * MUST produce a valid in-memory representation.\n * [🏘️semio📚js💻semio🔖kit🪨parsedesignidfromvariant](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)\n **/\nexport const parseDesignIdFromVariant = (variant: string): string =\u003e {\n  return variant.split(\"-\")[0];\n};",
                 "new_string": ""
               }
             ],
@@ -1322,7 +1322,7 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "/**\n * Parses DesignIdFromVariant from serialized input.\n * MUST produce a valid in-memory representation.\n * [👤semio📚js💻semio🔖kit🪨parsedesignidfromvariant](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)\n **/\nexport const parseDesignIdFromVariant = (variant: string): string =\u003e {\n  return variant.split(\"-\")[0];\n};",
+                "old_string": "/**\n * Parses DesignIdFromVariant from serialized input.\n * MUST produce a valid in-memory representation.\n * [🏘️semio📚js💻semio🔖kit🪨parsedesignidfromvariant](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)\n **/\nexport const parseDesignIdFromVariant = (variant: string): string =\u003e {\n  return variant.split(\"-\")[0];\n};",
                 "new_string": ""
               }
             ],
@@ -2373,8 +2373,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVirtualField(RealField, abc.ABC):",
-                "new_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\nclass TypeVirtualField(RealField, abc.ABC):"
+                "old_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVirtualField(RealField, abc.ABC):",
+                "new_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\nclass TypeVirtualField(RealField, abc.ABC):"
               }
             ],
             "file_path": "/workspaces/semio/semio/py/main.py"
@@ -2401,8 +2401,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVirtualField(RealField, abc.ABC):",
-                "new_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\nclass TypeVirtualField(RealField, abc.ABC):"
+                "old_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVirtualField(RealField, abc.ABC):",
+                "new_string": "class TypeStockField(RealField, abc.ABC):\n    \"\"\"Field mixin for the stock of a type.\n    TypeStockField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)\n    \"\"\"\n\n    stock: int = pydantic.Field(default=2147483647)\n\n\nclass TypeVariantField(RealField, abc.ABC):\n    \"\"\"Field mixin for the variant of a type.\n    TypeVariantField MUST declare exactly one field with appropriate constraints.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)\n    \"\"\"\n\n    variant: str = pydantic.Field(default=\"\", max_length=NAME_LENGTH_LIMIT)\n\n\nclass TypeVirtualField(RealField, abc.ABC):"
               }
             ],
             "file_path": "/workspaces/semio/semio/py/main.py"
@@ -2429,8 +2429,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeId(TypeNameField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass",
-                "new_string": "class TypeId(TypeNameField, TypeVariantField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass"
+                "old_string": "class TypeId(TypeNameField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass",
+                "new_string": "class TypeId(TypeNameField, TypeVariantField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass"
               }
             ],
             "file_path": "/workspaces/semio/semio/py/main.py"
@@ -2457,8 +2457,8 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "class TypeId(TypeNameField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass",
-                "new_string": "class TypeId(TypeNameField, TypeVariantField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass"
+                "old_string": "class TypeId(TypeNameField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass",
+                "new_string": "class TypeId(TypeNameField, TypeVariantField, Id):\n    \"\"\"Identity fields for uniquely identifying a type.\n    TypeId MUST contain all fields that uniquely identify a type.\n    [🏘️semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)\n    \"\"\"\n\n    pass"
               }
             ],
             "file_path": "/workspaces/semio/semio/py/main.py"

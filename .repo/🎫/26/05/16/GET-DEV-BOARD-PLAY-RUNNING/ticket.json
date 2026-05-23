@@ -1,0 +1,17 @@
+{
+  "title": "Get Dev Board Play Running",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Fix the worktree so `bun i` succeeds and the development board play target can run. Initial failure: `@semio/sketchpad@*`, `@semio/sketchpad@^0.1.0`, and `semio@file:../../client/lib/rs/pkg` fail to resolve during `bun install`. Scope: inspect and update existing package/Nx/script configuration for the board play path and related local workspace packages, then validate install and runtime as far as feasible.",
+  "summary": "Completed the remaining Windows OS 123 fix in the early Nx startup path. The existing `bun nx` wrapper now disables Nx plugin isolation and uses a short Nx socket directory before launching the real Nx binary, preventing Windows named-pipe/plugin-worker startup from failing before the board target runs. Verified the exact `bun nx run @elements/board:dev` command under simulated inspector variables reached Vite ready on port 6012, returned HTTP 200, and spawned no plugin workers under the current Nx parent. Stopped only the test process tree after verification. Re-ran `bun nx run @elements/board:build` successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1421"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪8538c5989b1f471e98b7444cae36e7f2",
+    "⚪9efdd9ab236a408daa663bcfc1cfe989",
+    "⚪8e42034103864ac4bcb2a3a1412e10b9",
+    "⚪4d7d41f87212426f81db5e26357da827"
+  ]
+}

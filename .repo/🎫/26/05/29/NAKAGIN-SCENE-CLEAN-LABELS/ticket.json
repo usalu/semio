@@ -1,0 +1,14 @@
+{
+  "title": "Nakagin Scene Clean Labels",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Elements scene play: migrate nakagin-capsule-tower.scene.json with human-readable labels for objects and vortices from original metabolism asset; clean non-semio kind ids in fixture; UI shows labels only (no id pollution). One-off migration script in ticket folder.",
+  "summary": "One-off migrate-nakagin-scene-labels.mts baked human-readable object labels (type · piece), vortex labels from handle catalog, and clean kind ids (no semio UUIDs) into nakagin-capsule-tower.scene.json. Scene play UI (hierarchy, inspector, e2e selected hook) shows labels only via scenePlayFixtureRowLabel/scenePlaySelectionLabel; VortexProps.label parsed from fixture. Vitest 100/100 and scene e2e 10/10 pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1498"
+  },
+  "goal": "🎯r2602🎯apps",
+  "sessions": [
+    "⚪5051145f2f264fe29c8715501dcc5d47"
+  ]
+}

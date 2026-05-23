@@ -1,0 +1,5 @@
+{
+	"name": "@framework/playground",
+	"private": true,
+	"workspaces": ["core", "renderer/react"]
+}

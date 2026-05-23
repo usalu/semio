@@ -1,0 +1,22 @@
+[package]
+name = "infinite_cavas"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
+fontdb = { version = "0.23.0", default-features = false }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

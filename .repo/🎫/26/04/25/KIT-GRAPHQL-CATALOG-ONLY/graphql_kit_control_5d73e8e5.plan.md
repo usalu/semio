@@ -27,16 +27,16 @@ isProject: false
 
 ## Status (milestone, 2026-04-25)
 
-| Area | State | Notes |
-|------|--------|--------|
-| **Map coverage** | Done | `kitGraphqlMapReadCommand`, `readKit` / `readKitDesign`, `kitGraphqlExecuteRead`, `kitGraphqlExecuteStoreCommand` switch document the live JS mapping; Rust enum path is unchanged. |
-| **JS reads** | In progress (major slice) | `KitStoreClient.executeRead`, worker `executeRead`, catalog getters use typed read batches via GraphQL `execute` — not ad-hoc `kitGraphqlKit*Shallow` on that path. |
-| **JS writes / VCS** | Not done | `executeChangeKitCommands`, field patches, `kitGraphqlExecuteStoreCommand` tagged JSON, and direct WASM helpers remain the active write path. |
-| **Rust GraphQL** | Not done | `GraphWork::KitStoreCommand` / `run_kit_store` still in use; `KitStoreNode` and id-based resolvers not removed. |
-| **Schema artifacts** | Not done | `semio/graphql/schema.graphql` (control-plane style with `kitStore(input: …)`) still diverges from the WASM-embedded `query { kitStore { … } }` surface. |
-| **Tests** | In progress | Embedded Vitest; `npx tsc --noEmit` in `semio/js` passes. Some Vitest cases still fail for unrelated issues (Nakagin, python/sqlrepresentation, etc.). |
+| Area                 | State                     | Notes                                                                                                                                                                               |
+| -------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Map coverage**     | Done                      | `kitGraphqlMapReadCommand`, `readKit` / `readKitDesign`, `kitGraphqlExecuteRead`, `kitGraphqlExecuteStoreCommand` switch document the live JS mapping; Rust enum path is unchanged. |
+| **JS reads**         | In progress (major slice) | `KitStoreClient.executeRead`, worker `executeRead`, catalog getters use typed read batches via GraphQL `execute` — not ad-hoc `kitGraphqlKit*Shallow` on that path.                 |
+| **JS writes / VCS**  | Not done                  | `executeChangeKitCommands`, field patches, `kitGraphqlExecuteStoreCommand` tagged JSON, and direct WASM helpers remain the active write path.                                       |
+| **Rust GraphQL**     | Not done                  | `GraphWork::KitStoreCommand` / `run_kit_store` still in use; `KitStoreNode` and id-based resolvers not removed.                                                                     |
+| **Schema artifacts** | Not done                  | `semio/graphql/schema.graphql` (control-plane style with `kitStore(input: …)`) still diverges from the WASM-embedded `query { kitStore { … } }` surface.                            |
+| **Tests**            | In progress               | Embedded Vitest; `npx tsc --noEmit` in `semio/js` passes. Some Vitest cases still fail for unrelated issues (Nakagin, python/sqlmodel, etc.).                                       |
 
-**What “finished plan” means here:** the migration is a multi-sprint program; this document is the single source of truth for target shape, sequencing, and honest progress. The checklist below is the definition of done for the *whole* program (not all completed yet).
+**What “finished plan” means here:** the migration is a multi-sprint program; this document is the single source of truth for target shape, sequencing, and honest progress. The checklist below is the definition of done for the _whole_ program (not all completed yet).
 
 **Tracking:** open/close work under the repo’s ticket/goal process (`ticket_open` / `ticket_close` per `AGENTS.md`).
 

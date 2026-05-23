@@ -1,0 +1,20 @@
+{
+    "id": "04e9b156-97a8-4db0-8bb1-f582c5955a79",
+    "name": "Balcony",
+    "isAbstract": true,
+    "createdAt": "2025-11-23T01:10:21.293Z",
+    "updatedAt": "2025-11-23T01:10:21.293Z",
+    "families": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "2df6bbea-349b-4a91-8e12-cb734110e854",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "typology": {
+        "id": "typology-capsule"
+    }
+}

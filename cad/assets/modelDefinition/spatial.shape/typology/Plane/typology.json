@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "spatial.shape.surface.plane",
+  "version": "1.0.0",
+  "label": "Plane",
+  "description": "Typology produced by surface.plane.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "surface.plane"
+  ],
+  "primitiveKinds": [
+    "face"
+  ]
+}

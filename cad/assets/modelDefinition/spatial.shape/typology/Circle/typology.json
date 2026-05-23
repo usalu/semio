@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "spatial.shape.curve.circle",
+  "version": "1.0.0",
+  "label": "Circle",
+  "description": "Typology produced by curve.circle.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "curve.circle"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Fields vs Computed Fields Sections in Target Schema",
+  "emoji": "📑",
+  "status": "closed",
+  "description": "Split # Fields vs # Computed Fields on Connector Representation Type Design Kit in target.schema.graphql",
+  "summary": "Added explicit # Computed Fields sections between stored # Fields and connection-heavy fields on Connector, Representation, Type, Design, and Kit (matching Piece’s Fields→Computed-only split). graphql-core build_ast_schema OK; parses_target_schema test OK.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1403"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪891c28ad43024017b9bae0b991798156"
+  ]
+}

@@ -228,7 +228,7 @@ technology:
     scheme: "{{repo-id}}{{technology-kind-emoji}}{{flat-technology-code}}"
     examples:
       - "🧰repo"
-      - "👤semio"
+      - "🏘️semio"
   uri:
     scheme: "{{repo-id}}{{technologies-name}}/{{technology-name}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -263,7 +263,7 @@ bundles:
   id:
     scheme: "{{technology-id}}📦"
     examples:
-      - "👤semio📦"
+      - "🏘️semio📦"
       - "🧰repo📦"
   uri:
     scheme: "{{repo-id}}{{bundles-name}}/{{technology-name}}"
@@ -276,8 +276,8 @@ bundle:
     scheme: "{{technology-id}}{{bundle-kind-emoji}}{{flat-bundle-code}}"
     examples:
       - "🌱mono🪆repo"
-      - "👤semio📚js"
-      - "🧰repo⌨️cli"
+      - "🏘️semio📚js"
+      - "🧰repo⌨️client"
   uri:
     scheme: "{{repo-id}}{{bundles-name}}/{{technology-name}}/{{bundle-name}}"
     examples:
@@ -291,9 +291,9 @@ folders:
   id:
     scheme: "{{(bundle-id|folder-id)?}}📁"
     examples:
-      - "👤semio📚js📁"
-      - "🧰repo⌨️cli📁"
-      - "👤semio📚js🗃️sketchpad📁"
+      - "🏘️semio📚js📁"
+      - "🧰repo⌨️client📁"
+      - "🏘️semio📚js🗃️sketchpad📁"
   uri:
     scheme: "{{repo-id}}{{folders-name}}/{{folder-path-with-uri-encoded-names}}"
     examples:
@@ -308,7 +308,7 @@ folder:
   id:
     scheme: "{{(parent-bundle-id|parent-folder-id)?}}{{folder-kind-emoji}}{{flat-folder-name}}"
     examples:
-      - "👤semio📚js🗃️sketchpad"
+      - "🏘️semio📚js🗃️sketchpad"
       - "🛅devcontainer"
   uri:
     scheme: "{{repo-id}}{{folders-name}}/{{folder-path-with-uri-encoded-names}}"
@@ -323,7 +323,7 @@ files:
     scheme: "{{folder-id}}📄"
     examples:
       - "🛅devcontainer📄"
-      - "👤semio📚js🗃️sketchpad📄"
+      - "🏘️semio📚js🗃️sketchpad📄"
   uri:
     scheme: "{{repo-id}}{{folder-name}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -355,7 +355,7 @@ file:
   id:
     scheme: "{{folder-id}}{{file-kind-emoji}}{{flat-file-name-with-extension*}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx"
       - "🛅devcontainer⚙️devcontainerjson"
   uri:
     scheme: "{{repo-id}}{{file-name}}/{{uri-encoded-identifying-path}}"
@@ -369,7 +369,7 @@ lines:
   id:
     scheme: "{{file-id}}📌"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx📌"
   uri:
     scheme: "{{repo-id}}{{lines-name}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -379,7 +379,7 @@ line:
   id:
     scheme: "{{file-id}}📌{{linenumber}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌3872"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx📌3872"
   uri:
     scheme: "{{repo-id}}{{line-name}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -391,7 +391,7 @@ ranges:
   id:
     scheme: "{{file-id}}📌📌"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌📌"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx📌📌"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -401,7 +401,7 @@ range:
   id:
     scheme: "{{file-id}}📌{{start-linenumber}}📌{{end-linenumber}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -413,7 +413,7 @@ sections:
   id:
     scheme: "{{(file-id|section-id)?}}🔖"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -423,8 +423,8 @@ section:
   id:
     scheme: "{{(file-id|parent-section-id)?}}🔖{{flat-section-name}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -437,7 +437,7 @@ definitions:
   id:
     scheme: "{{deltaable-id}}🏷️"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -452,7 +452,7 @@ definition:
   id:
     scheme: "{{section-id}}{{definition-kind-emoji}}{{flat-definition-name}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -464,7 +464,7 @@ requirements:
   id:
     scheme: "{{requireable-parent-id}}💯"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx💯"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx💯"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -474,7 +474,7 @@ requirement:
   id:
     scheme: "{{requirements-id}}{{flat-requirement-name}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx💯onlyonemachine"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx💯onlyonemachine"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -486,7 +486,7 @@ specs:
   id:
     scheme: "{{(testable-id|test-id)?}}🔳"
     examples:
-      - "👤semio🔳kit🔳design🔳"
+      - "🏘️semio🔳kit🔳design🔳"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -496,7 +496,7 @@ spec:
   id:
     scheme: "{{specs-id}}{{flat-spec-name}}"
     examples:
-      - "👤semio🔳kit🔳design🔳flat"
+      - "🏘️semio🔳kit🔳design🔳flat"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -534,7 +534,7 @@ tickets:
     scheme: "{{deltaable-id}}🎫"
     examples:
       - "🎯r26021🎯runningsketchpad🎫"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -556,7 +556,7 @@ drafts:
   id:
     scheme: "{{resource-id}}📝"
     examples:
-      - "🧰repo⌨️cli📝"
+      - "🧰repo⌨️client📝"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -566,7 +566,7 @@ draft:
   id:
     scheme: "{{resource-id}}📝{{flat-title}}"
     examples:
-      - "🧰repo⌨️cli📝newarchitecture"
+      - "🧰repo⌨️client📝newarchitecture"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -578,7 +578,7 @@ todos:
   id:
     scheme: "{{resource-id}}✅"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -588,7 +588,7 @@ todo:
   id:
     scheme: "{{resource-id}}✅{{flat-title}}"
     examples:
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅introducepropersyncmechanism"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore✅introducepropersyncmechanism"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -601,7 +601,7 @@ policies:
     scheme: "{{(resource-kind|resource-id)?}}👮"
     examples:
       - "💻👮"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -612,7 +612,7 @@ policy:
     scheme: "{{(resource-kind|resource-id)?}}👮{{flat-name}}"
     examples:
       - "💻👮godfiles"
-      - "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore"
+      - "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store👮onlyonestore"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -656,7 +656,7 @@ breach:
   id:
     scheme: "{{policy-id}}🚫{{affected}}🔍{{(line-id|range-id)}}{{second-id}}"
     examples:
-      - "💻👮godfiles🚫👤semio📚js🗃️sketchpad💻designstorets📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"
+      - "💻👮godfiles🚫🏘️semio📚js🗃️sketchpad💻designstorets📌3872📌3875🎆26🌙02☀️14⏰19⌚07⏱️12"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -868,7 +868,7 @@ changes:
 # 🔢 Metrics
 
 - 🟥762🟩847➕85
-- 👤semio🟥211🟩156➖55
+- 🏘️semio🟥211🟩156➖55
 ```
 
 ## 📛 Entities
@@ -1208,7 +1208,7 @@ event:
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
           pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
-          ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+          ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "🏘️semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
       ended:
         DATA:
           session: "{{session-id}}"
@@ -1216,7 +1216,7 @@ event:
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
           pages: ["{{web-page-url}}"] # e.g. https://reactflow.dev/api-reference/react-flow
-          ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "👤semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
+          ranges: ["{{affected-range-id}}"] # resolve the query and list all affected ranges e.g. "🏘️semio📚js🗃️sketchpad💻designtsx📌3872📌3875"
         error: "{{error-message-from-failed-search}}" # When this is non-empty then it means that the search failed. The error message of the failed search.
 
     code:
@@ -1248,7 +1248,7 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand",]
+          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand",]
           timeout: "{{timeout}}" # seconds e.g. 600
       ended:
         DATA:
@@ -1256,8 +1256,8 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
-          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand"]
 
     build:
       starting:
@@ -1266,15 +1266,15 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          bundles: ["{{bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
+          bundles: ["{{bundle-id}}"] # e.g. ["🧰repo⌨️client","🏘️semio📚js"]
       ended:
         DATA:
           session: "{{session-id}}"
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
-          failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
+          succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰repo⌨️client","🏘️semio📚js"]
+          failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰repo⌨️client","🏘️semio📚js"]
 
     terminal:
       starting:

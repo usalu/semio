@@ -4,6 +4,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    cmake \
+    ninja-build \
+    pkg-config \
+    uuid-dev \
     curl \
     wget \
     fontconfig \
@@ -12,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-mono \
     fonts-noto \
     ripgrep \
-    socat \
+    cloc \
     netcat-openbsd \
     iproute2 \
     net-tools \
@@ -57,13 +61,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     libatomic1 \
+    openjdk-21-jre-headless \
     netbase \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/apt/keyrings /var/lib/neo4j/plugins \
+    && wget -O - https://debian.neo4j.com/neotechnology.gpg.key | gpg --dearmor -o /etc/apt/keyrings/neotechnology.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/neotechnology.gpg] https://debian.neo4j.com stable 5' > /etc/apt/sources.list.d/neo4j.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends neo4j \
+    && wget -O /var/lib/neo4j/plugins/apoc-core-5.26.4-core.jar https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-core/5.26.4/apoc-core-5.26.4-core.jar \
+    && wget -O /var/lib/neo4j/plugins/apoc-5.26.4-extended.jar https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/5.26.4/apoc-5.26.4-extended.jar \
+    && chown -R neo4j:neo4j /var/lib/neo4j/plugins \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 
 USER vscode
+
+ENV BUN_INSTALL=/home/vscode/.bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data-terminal
+ENV NEO4J_URI=bolt://localhost:7687
+ENV NEO4J_USERNAME=neo4j
+ENV NEO4J_PASSWORD=password
+ENV NEO4J_TELEMETRY=false
 
 RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.gitkraken \

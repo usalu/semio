@@ -12,11 +12,13 @@
 // Root Vitest configuration aggregating all workspace test projects.
 // Configuration MUST reference all workspace vite config files that define tests.
 
+// #region 🔌Adapters
 import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
 
 export default defineConfig({
   test: {
-    projects: ["./semio/js/vite.config.ts", "./semio/react/vite.config.ts"],
+    projects: ["./semio/client/lib/js/vite.config.ts", "./semio/client/lib/react/vite.config.ts"],
   },
 });
 

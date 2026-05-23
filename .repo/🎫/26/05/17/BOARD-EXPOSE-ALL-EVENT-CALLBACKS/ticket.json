@@ -1,0 +1,11 @@
+{
+  "title": "Board Expose All Event Callbacks",
+  "emoji": "📋",
+  "status": "closed",
+  "description": "Expose optional React callbacks on elements Board for every BoardRenderer event: change, camera/viewport, select, hover, contextmenu, node/edge lifecycle (create, change, move, delete), graph child/parent deltas, fixtureDrop, invalidate; add viewport alias and drag/zoom/pan splits where they map to existing emits. Extend BoardEventMap and tests.",
+  "summary": "Extended BoardEventMap with wire lifecycle, nodeCreate, edgeChange, proximity/indirect connect payloads; Rust host now emits proximityConnect and indirectConnect after edgeCreate on the matching gestures; BoardScene emits wireCreate/wireDestroy, nodeDelete, edgeDelete on remove; graph observation tracks wire signatures and no longer seeds lastGraphObservation in the constructor so first-delta nodeCreate is correct; BoardCanvas exposes optional React callbacks for all events including onCamera/onViewportChange/onPan/onZoom, onConnect, onDrag (nodeMove), aggregates onCreate/onDelete, and wires contextmenu passthrough. Tests extended for nodeCreate, edgeChange, wire events, and Rust drain assertions.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪82f756445c5343558ddf2d52ad4c3d1c"
+  ]
+}

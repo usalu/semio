@@ -1,0 +1,191 @@
+{
+  "kit": "architect.harness.kit.semio.json",
+  "cases": [
+    {
+      "name": "e2e_filter_nakagin_design",
+      "tier": "e2e",
+      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name",
+      "expect": {
+        "columns": ["name"],
+        "minRows": 1,
+        "maxRows": 1,
+        "rowContains": [{ "name": "Nakagin Capsule Tower" }]
+      }
+    },
+    {
+      "name": "e2e_list_all_design_names",
+      "tier": "e2e",
+      "query": "MATCH (d:Design) RETURN d.name AS name",
+      "expect": {
+        "columns": ["name"],
+        "minRows": 2,
+        "valuesInclude": { "name": ["Nakagin Capsule Tower", "Other Pavilion"] }
+      }
+    },
+    {
+      "name": "e2e_match_type_by_name",
+      "tier": "e2e",
+      "query": "MATCH (t:Type) WHERE t.name = 'KindBeta' RETURN t.name AS name",
+      "expect": {
+        "columns": ["name"],
+        "minRows": 1,
+        "rowContains": [{ "name": "KindBeta" }]
+      }
+    },
+    {
+      "name": "e2e_return_limit_one_design",
+      "tier": "e2e",
+      "query": "MATCH (d:Design) RETURN d.name AS name LIMIT 1",
+      "expect": {
+        "columns": ["name"],
+        "minRows": 1,
+        "maxRows": 1
+      }
+    },
+    {
+      "name": "e2e_call_session_end",
+      "tier": "e2e",
+      "runtime": "empty",
+      "query": "CALL session.end() YIELD ok",
+      "expect": { "minRows": 1 }
+    },
+    {
+      "name": "memory_two_designs_where_ne",
+      "tier": "memory",
+      "query": "MATCH (d:Design) WHERE d.name != 'Other Pavilion' RETURN d.name AS name",
+      "graphqlResponses": [
+        {
+          "data": {
+            "session": {
+              "stores": {
+                "edges": [
+                  {
+                    "node": {
+                      "wip": {
+                        "theKit": {
+                          "kit": {
+                            "designs": {
+                              "edges": [
+                                {
+                                  "node": {
+                                    "id": "c3000000-0000-4000-8000-000000000001",
+                                    "hash": "des-tower-h",
+                                    "name": "Nakagin Capsule Tower"
+                                  }
+                                },
+                                {
+                                  "node": {
+                                    "id": "c3000000-0000-4000-8000-000000000002",
+                                    "hash": "des-other-h",
+                                    "name": "Other Pavilion"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "columns": ["name"],
+        "minRows": 1,
+        "valuesInclude": { "name": ["Nakagin Capsule Tower"] },
+        "valuesExclude": { "name": ["Other Pavilion"] }
+      }
+    },
+    {
+      "name": "memory_types_multi_row",
+      "tier": "memory",
+      "query": "MATCH (t:Type) RETURN t.name AS name",
+      "graphqlResponses": [
+        {
+          "data": {
+            "session": {
+              "stores": {
+                "edges": [
+                  {
+                    "node": {
+                      "wip": {
+                        "theKit": {
+                          "kit": {
+                            "types": {
+                              "edges": [
+                                { "node": { "id": "ta", "hash": "ha", "name": "KindAlpha" } },
+                                { "node": { "id": "tb", "hash": "hb", "name": "KindBeta" } },
+                                { "node": { "id": "tg", "hash": "hg", "name": "KindGamma" } }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "columns": ["name"],
+        "minRows": 3,
+        "valuesInclude": { "name": ["KindAlpha", "KindBeta", "KindGamma"] }
+      }
+    },
+    {
+      "name": "memory_call_session_end",
+      "tier": "memory",
+      "query": "CALL session.end() YIELD ok",
+      "graphqlResponses": [
+        {
+          "data": {
+            "session": {
+              "end": { "ok": true, "errors": [] }
+            }
+          }
+        }
+      ],
+      "expect": { "minRows": 1 }
+    },
+    {
+      "name": "memory_call_subscription_session",
+      "tier": "memory",
+      "query": "CALL subscription.session() YIELD session.id AS id",
+      "graphqlResponses": [
+        { "data": { "session": { "id": "s1", "hash": "h1" } } }
+      ],
+      "expect": { "minRows": 1 }
+    },
+    {
+      "name": "plan_design_node_props_filter",
+      "tier": "plan",
+      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name",
+      "expect": { "minFilterSteps": 1 }
+    },
+    {
+      "name": "plan_design_and_type_patterns",
+      "tier": "plan",
+      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}), (t:Type {name: 'KindBeta'}) RETURN d.name AS dn, t.name AS tn",
+      "expect": { "minGraphQlSteps": 2 }
+    },
+    {
+      "name": "plan_nakagin_multipattern_join",
+      "tier": "plan",
+      "query": "MATCH (pi:Piece)-[:HAS]->(b:Blueprint)-[:IS]->(t:Type)-[:HAS]->(cr:Connector),(cr)<-[:REFERENCES]-(s:Side)<-[:HAS {parent: true}]-(cn:Connection)<-[:HAS]-(d:Design {name: 'Nakagin Capsule Tower'}) RETURN pi",
+      "expect": { "minGraphQlSteps": 1, "joinVars": ["cr"] }
+    },
+    {
+      "name": "parse_rel_parent_props",
+      "tier": "parse",
+      "query": "MATCH (s:Side)<-[:HAS {parent: true}]-(cn:Connection) RETURN s",
+      "expect": { "hasReturn": true }
+    }
+  ]
+}

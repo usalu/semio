@@ -1,0 +1,11 @@
+{
+  "title": "Fix Engagement Option Text Sizing",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Engagement options inside a window use ButtonGroupItem without the text prop, so labels don't get proper padding/typography and get clipped in the fixed h-medium button group. Pass text/icon correctly so option labels fit their text size.",
+  "summary": "Engagement window options rendered labels as ButtonGroupItem children, inheriting square aspect-square sizing inside the fixed h-medium button group and clipping longer transition labels. Options now pass icon and text props so labels use proper padding, text-xs, and aspect-auto width.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪241ee85dd5b64700b6eaa6a137695635"
+  ]
+}

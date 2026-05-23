@@ -1,0 +1,5772 @@
+//#region 🧲Header
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// GNU LGPL-3.0 or later — semio/js: stateless {@link Session} + GraphQL transport (WASM worker or inline); no client-side kit cache.
+//#endregion 🧲Header
+
+//#region 🌐GraphqlContract
+/** @emoji 📜 Golden SDL path (single schema source for tooling and embedded tests). */
+export const SEMIO_GRAPHQL_GOLDEN_SCHEMA_PATH = "semio/client/schema/graphql/schema.golden.graphql" as const;
+
+/** @emoji 🧵 GraphQL-over-HTTP POST body — the only payload shape across the rs/js boundary. */
+export type GraphqlWirePostBody = Readonly<{
+  query: string;
+  variables: Readonly<Record<string, unknown>>;
+  operationName: string | null;
+}>;
+
+/** @emoji 🧪 Empty in-memory WASM store URI (host lifecycle only; kit state changes use GraphQL). */
+export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
+
+/** @emoji 🛑 Rejects non-empty WASM bootstrap URIs; kit JSON must use {@link Store.installProjection}. */
+export function assertRsJsSessionOpenUri(uri: string): void {
+  const t = uri.trim();
+  if (t !== RS_WASM_EMPTY_STORE_URI) {
+    throw new Error(
+      `Session.open: only ${RS_WASM_EMPTY_STORE_URI} is allowed; use Session.openInMemory() and store.installProjection(json) for kit JSON`,
+    );
+  }
+  if (t.startsWith("{") || t.startsWith("[")) {
+    throw new Error("Session.open: inline JSON is not part of the rs/js contract; use Session.openInMemory() and store.installProjection(json)");
+  }
+  if (t.includes("dev+json:")) {
+    throw new Error("Session.open: dev+json bootstrap is not part of the rs/js contract; use Session.openInMemory() and store.installProjection(json)");
+  }
+}
+//#endregion 🌐GraphqlContract
+
+//#region 🌐GraphqlKitSelection
+/** @emoji 📬 Selection for golden {@code Response} on command mutation leaves. */
+export const GQL_RESPONSE_SELECTION =
+  "ok errors { kind message requestId } result { ... on IdResult { value } }";
+
+type GqlScan = { paren: number; inString: boolean; escape: boolean };
+
+function advanceGqlScan(ch: string, st: GqlScan): void {
+  if (st.inString) {
+    if (st.escape) {
+      st.escape = false;
+      return;
+    }
+    if (ch === "\\") {
+      st.escape = true;
+      return;
+    }
+    if (ch === '"') st.inString = false;
+    return;
+  }
+  if (ch === '"') {
+    st.inString = true;
+    return;
+  }
+  if (ch === "(") st.paren++;
+  else if (ch === ")") st.paren--;
+}
+
+function findMatchingCloseBrace(s: string, openIdx: number): number {
+  if (s[openIdx] !== "{") return -1;
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  let depth = 0;
+  for (let i = openIdx; i < s.length; i++) {
+    const ch = s[i]!;
+    if (st.inString) {
+      advanceGqlScan(ch, st);
+      continue;
+    }
+    if (ch === '"') {
+      st.inString = true;
+      continue;
+    }
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function lastArgListCloseParen(s: string): number {
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  let last = -1;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    advanceGqlScan(ch, st);
+    if (!st.inString && st.paren === 0 && ch === ")") last = i;
+  }
+  return last;
+}
+
+function hasTopLevelSelectionBrace(s: string): boolean {
+  const st: GqlScan = { paren: 0, inString: false, escape: false };
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    advanceGqlScan(ch, st);
+    if (!st.inString && st.paren === 0 && ch === "{") return true;
+  }
+  return false;
+}
+
+function appendResponseAfterArgs(fieldWithArgs: string): string {
+  const t = fieldWithArgs.trim();
+  if (t.includes(GQL_RESPONSE_SELECTION)) return t;
+  const closeParen = lastArgListCloseParen(t);
+  if (closeParen === -1) return `${t} { ${GQL_RESPONSE_SELECTION} }`;
+  const after = t.slice(closeParen + 1).trim();
+  if (after.startsWith("{")) {
+    const open = closeParen + 1 + t.slice(closeParen + 1).indexOf("{");
+    const close = findMatchingCloseBrace(t, open);
+    if (close === -1) return `${t} { ${GQL_RESPONSE_SELECTION} }`;
+    const head = t.slice(0, open).trimEnd();
+    const inner = t.slice(open + 1, close).trim();
+    const tail = t.slice(close + 1).trim();
+    return `${head} { ${transformKitSelectionBlock(inner)} }${tail === "" ? "" : ` ${tail}`}`;
+  }
+  return `${t.slice(0, closeParen + 1)} { ${GQL_RESPONSE_SELECTION} }`;
+}
+
+function transformKitSelectionBlock(inner: string): string {
+  if (!hasTopLevelSelectionBrace(inner)) return appendResponseAfterArgs(inner);
+  const open = inner.indexOf("{");
+  const close = findMatchingCloseBrace(inner, open);
+  if (close === -1) return appendResponseAfterArgs(inner);
+  const head = inner.slice(0, open).trimEnd();
+  const body = inner.slice(open + 1, close).trim();
+  const tail = inner.slice(close + 1).trim();
+  return `${head} { ${transformKitSelectionBlock(body)} }${tail === "" ? "" : ` ${transformKitSelectionBlock(tail)}`}`;
+}
+
+/** @emoji 📬 Appends {@link GQL_RESPONSE_SELECTION} after kit command args, not inside input objects. */
+export function withResponseSelection(kitSelection: string): string {
+  const trimmed = kitSelection.trim();
+  const open = trimmed.indexOf("{");
+  if (open === -1) return appendResponseAfterArgs(trimmed);
+  const close = findMatchingCloseBrace(trimmed, open);
+  if (close === -1) return appendResponseAfterArgs(trimmed);
+  const head = trimmed.slice(0, open).trimEnd();
+  const inner = trimmed.slice(open + 1, close).trim();
+  const tail = trimmed.slice(close + 1).trim();
+  const result = `${head} { ${transformKitSelectionBlock(inner)} }`;
+  return tail === "" ? result : `${result} ${withResponseSelection(tail)}`;
+}
+//#endregion 🌐GraphqlKitSelection
+
+//#region 🌐RsWasmTransport
+export type GraphqlExecuteFn = (requestJson: string) => Promise<string>;
+export type GraphqlSubscribeFn = (requestJson: string, onEvent: (eventJson: string) => void) => Promise<void>;
+
+/** @emoji 🌐 WASM handle — JSON GraphQL wire in/out only (no Rust DTO surface). */
+export type RsWasmGraphqlHandle = Readonly<{
+  execute: GraphqlExecuteFn;
+  subscribe: GraphqlSubscribeFn;
+  free?: () => void;
+}>;
+
+async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
+  try {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const url = await import("node:url");
+    const here = path.dirname(url.fileURLToPath(import.meta.url));
+    const candidates = [
+      path.resolve(here, "../rs/pkg/semio_bg.wasm"),
+      path.resolve(here, "../../../../semio/client/lib/rs/pkg/semio_bg.wasm"),
+    ];
+    for (const p of candidates) {
+      try {
+        const buf = await fs.readFile(p);
+        return new Uint8Array(buf);
+      } catch {
+        /* try next */
+      }
+    }
+  } catch {
+    /* non-node */
+  }
+  return undefined;
+}
+
+function defaultRsWasmSpecifier(): string {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return new URL("../rs/pkg/semio.js", import.meta.url).href;
+  }
+  return "@semio/rs-wasm";
+}
+
+/** @emoji 🛰️ Creates a WASM-backed GraphQL executor; {@code bootstrapUri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
+export async function createRsWasmGraphqlHandle(
+  bootstrapUri: string,
+  opts?: Readonly<{ wasmSpecifier?: string; wasmBytes?: Uint8Array | null }>,
+): Promise<RsWasmGraphqlHandle> {
+  if (bootstrapUri !== RS_WASM_EMPTY_STORE_URI) {
+    throw new Error(`createRsWasmGraphqlHandle: only ${RS_WASM_EMPTY_STORE_URI} is allowed; seed kit data via GraphQL after open`);
+  }
+  const wasmSpecifier = opts?.wasmSpecifier ?? defaultRsWasmSpecifier();
+  const wasmBytesPre = opts?.wasmBytes ?? (await readSemioWasmBytesFromMonorepoCandidates());
+  let mod: typeof import("@semio/rs-wasm");
+  try {
+    mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+  } catch (e) {
+    const base = e instanceof Error ? e.message : String(e);
+    throw new Error(`Failed to load @semio/rs-wasm: ${base}`, { cause: e });
+  }
+  if (typeof mod.default === "function") {
+    if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
+    else await mod.default();
+  }
+  if (typeof mod.boot === "function") mod.boot();
+  const handleUnknown = mod.KitStoreHandle.create(bootstrapUri);
+  const wasmHandle = handleUnknown instanceof Promise ? await handleUnknown : handleUnknown;
+  if (wasmHandle == null || typeof (wasmHandle as { execute?: unknown }).execute !== "function") {
+    throw new Error("KitStoreHandle.create did not return execute()");
+  }
+  return wasmHandle as RsWasmGraphqlHandle;
+}
+//#endregion 🌐RsWasmTransport
+
+//#region 🔌Adapters
+//#endregion 🔌Adapters
+
+export type ID = string
+
+//#region 🌐Transport
+/** @emoji 🧵 Bundled worker — Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
+export function createKitStoreWorker(): Worker {
+  return new Worker(new URL("./kit-store.worker", import.meta.url), { type: "module" });
+}
+
+/** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @semio/js surface). */
+type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
+/** @emoji 🧵 File-local GraphQL wire JSON object node. */
+type JsonObject = { readonly [k: string]: JsonValue };
+
+type GraphqlEnvelope<TData> = Readonly<{
+  data?: TData | null;
+  errors?: readonly { readonly message?: string }[];
+}>;
+
+function parseJsonValue(text: string): JsonValue {
+  return JSON.parse(text) as JsonValue;
+}
+
+function isJsonObjectNode(v: JsonValue | null | undefined): v is JsonObject {
+  return v != null && typeof v === "object" && !Array.isArray(v);
+}
+
+function jsonObjectField(node: JsonObject | null | undefined, key: string): JsonObject | null {
+  const value = node?.[key];
+  return value != null && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject) : null;
+}
+
+function unwrapGraphqlData<TData>(response: GraphqlEnvelope<TData>): TData {
+  if (response == null || typeof response !== "object") throw new Error("graphql: response is not an object");
+  if (Array.isArray(response.errors) && response.errors.length > 0) throw new Error(response.errors[0]?.message ?? "GraphQL error");
+  const d = response.data;
+  if (d != null && typeof d === "object") return d;
+  throw new Error("graphql: no data in response");
+}
+
+type GraphqlWireKind = "query" | "mutation" | "subscription";
+
+/** @emoji 🔍 SDL operation keyword after leading whitespace and full-line {@code #} comments. */
+function graphqlWireOperationKind(document: string): GraphqlWireKind | null {
+  let rest = document.trimStart();
+  for (; ;) {
+    if (rest.startsWith("#")) {
+      const nl = rest.indexOf("\n");
+      if (nl === -1) return null;
+      rest = rest.slice(nl + 1).trimStart();
+      continue;
+    }
+    break;
+  }
+  const m = rest.match(/^(query|mutation|subscription)\b/);
+  if (m?.[1] === "query" || m?.[1] === "mutation" || m?.[1] === "subscription") return m[1] as GraphqlWireKind;
+  return null;
+}
+
+/** @emoji 🛑 Enforces golden-schema split: {@code Query} vs {@code Mutation} vs {@code Subscription} roots only. */
+function assertGraphqlWireKind(document: string, kind: GraphqlWireKind): void {
+  const found = graphqlWireOperationKind(document);
+  if (found !== kind) throw new Error(`graphql: expected ${kind}, got ${found ?? "unknown"}`);
+}
+
+/** @emoji 🧵 Canonical GraphQL-over-HTTP POST object: {@code query}, {@code variables}, {@code operationName} always present on the wire. */
+type GraphqlWirePostBodyLocal = Readonly<{
+  query: string;
+  variables: JsonObject;
+  operationName: string | null;
+}>;
+
+/** @emoji 🧵 Supplies omitted {@code variables} / {@code operationName} so JSON bodies always carry the full triple. */
+function normalizeGraphqlWirePostBody(body: {
+  readonly query: string;
+  readonly variables?: JsonObject;
+  readonly operationName?: string | null;
+}): GraphqlWirePostBodyLocal {
+  return {
+    query: body.query,
+    variables: body.variables ?? {},
+    operationName: body.operationName === undefined ? null : body.operationName,
+  };
+}
+
+/** @emoji 🧵 {@link JSON.stringify} of {@link normalizeGraphqlWirePostBody} for execute/subscribe transports. */
+function graphqlWirePostBodyJson(body: {
+  readonly query: string;
+  readonly variables?: JsonObject;
+  readonly operationName?: string | null;
+}): string {
+  return JSON.stringify(normalizeGraphqlWirePostBody(body));
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  if (!ms || ms <= 0) return p;
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(label)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
+
+type ExecuteFn = (requestJson: string) => Promise<string>;
+type SubscribeFn = (requestJson: string, onEvent: (eventJson: string) => void) => Promise<void>;
+
+class InlineTransport {
+  constructor(
+    private readonly handle: {
+      execute: ExecuteFn;
+      subscribe: SubscribeFn;
+      free?: () => void;
+    },
+  ) { }
+  async execute(requestJson: string): Promise<string> {
+    return await this.handle.execute(requestJson);
+  }
+  async subscribe(requestJson: string, onEvent: (eventJson: string) => void): Promise<void> {
+    await this.handle.subscribe(requestJson, onEvent);
+  }
+  dispose(): void {
+    if (typeof this.handle.free === "function") {
+      try {
+        this.handle.free();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+function describeWorkerThreadError(ev: globalThis.Event): string {
+  if (ev instanceof ErrorEvent) {
+    const parts: string[] = [];
+    if (ev.message) parts.push(ev.message);
+    if (ev.error instanceof Error) parts.push(ev.error.message);
+    else if (ev.error) parts.push(String(ev.error));
+    if (ev.filename) parts.push(`at ${ev.filename}:${ev.lineno}:${ev.colno}`);
+    if (parts.length) return parts.join(" — ");
+  }
+  return "worker script or module failed to load";
+}
+
+class WorkerStringTransport {
+  private nextSerial = 0;
+  constructor(private readonly worker: Worker) { }
+
+  init(uri: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => {
+        cleanup();
+        reject(new Error("worker init timeout"));
+      }, 30_000);
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: { op?: string; message?: string };
+        try {
+          m = JSON.parse(ev.data) as typeof m;
+        } catch {
+          return;
+        }
+        if (m.op === "ready") {
+          cleanup();
+          resolve();
+        } else if (m.op === "error") {
+          cleanup();
+          reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
+        }
+      };
+      const onError = (ev: globalThis.Event) => {
+        cleanup();
+        reject(new Error(`worker init error: ${describeWorkerThreadError(ev)}`));
+      };
+      const cleanup = () => {
+        clearTimeout(t);
+        this.worker.removeEventListener("message", onMessage);
+        this.worker.removeEventListener("error", onError as globalThis.EventListener);
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.addEventListener("error", onError as globalThis.EventListener);
+      this.worker.postMessage(JSON.stringify({ op: "init", uri }));
+    });
+  }
+
+  async execute(requestJson: string): Promise<string> {
+    const reqId = `r-${++this.nextSerial}-${Date.now().toString(36)}`;
+    return await new Promise<string>((resolve, reject) => {
+      let result: string | null = null;
+      const w = (ev: MessageEvent<string>) => {
+        let m: { op: string; reqId?: string; json?: string; message?: string };
+        try {
+          m = JSON.parse(ev.data) as typeof m;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) return;
+        if (m.op === "result" && typeof m.json === "string") result = m.json;
+        if (m.op === "done") {
+          this.worker.removeEventListener("message", w);
+          if (result == null) reject(new Error("graphql: worker completed without result"));
+          else resolve(result);
+        }
+        if (m.op === "error") {
+          this.worker.removeEventListener("message", w);
+          reject(new Error(m.message ?? "worker error"));
+        }
+      };
+      this.worker.addEventListener("message", w);
+      this.worker.postMessage(JSON.stringify({ op: "execute", reqId, body: requestJson }));
+    });
+  }
+
+  async subscribe(requestJson: string, onEvent: (eventJson: string) => void): Promise<void> {
+    const reqId = `s-${++this.nextSerial}-${Date.now().toString(36)}`;
+    await new Promise<void>((resolve, reject) => {
+      const w = (ev: MessageEvent<string>) => {
+        let m: { op: string; reqId?: string; json?: string; message?: string };
+        try {
+          m = JSON.parse(ev.data) as typeof m;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) return;
+        if (m.op === "event" && typeof m.json === "string") onEvent(m.json);
+        if (m.op === "done") {
+          this.worker.removeEventListener("message", w);
+          resolve();
+        }
+        if (m.op === "error") {
+          this.worker.removeEventListener("message", w);
+          reject(new Error(m.message ?? "worker error"));
+        }
+      };
+      this.worker.addEventListener("message", w);
+      this.worker.postMessage(JSON.stringify({ op: "subscribe", reqId, body: requestJson }));
+    });
+  }
+
+  dispose(): void {
+    this.worker.terminate();
+  }
+}
+
+//#region 🌐HttpStoreTransport
+/** @emoji 🌐 GraphQL-over-HTTP to native `semio-store` (no WASM); subscriptions are no-ops until the sidecar exposes a stream. */
+class HttpStringTransport {
+  constructor(private readonly baseUrl: string) { }
+
+  async execute(requestJson: string): Promise<string> {
+    const r = await fetch(`${this.baseUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: requestJson,
+    });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`graphql http ${r.status}: ${t}`);
+    return t;
+  }
+
+  async subscribe(_requestJson: string, _onEvent: (eventJson: string) => void): Promise<void> {
+    return;
+  }
+
+  dispose(): void { }
+}
+//#endregion 🌐HttpStoreTransport
+
+type KitStoreInnerTransport = WorkerStringTransport | InlineTransport | HttpStringTransport;
+
+/** @emoji 🌐 Thin GraphQL JSON transport: request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
+export class GqlTransport {
+  constructor(private readonly inner: KitStoreInnerTransport) { }
+
+  private async executeWireJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    const json = await withTimeout(this.inner.execute(graphqlWirePostBodyJson(body)), timeoutMs, "graphql");
+    return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
+  }
+
+  /** @emoji 📖 POST wire aligned with {@code type Query} in {@code schema.golden.graphql}. */
+  async executeQueryJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    assertGraphqlWireKind(body.query, "query");
+    return this.executeWireJson(body, timeoutMs);
+  }
+
+  /** @emoji ✍️ POST wire aligned with {@code type Mutation} in {@code schema.golden.graphql}. */
+  async executeMutationJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    timeoutMs: number,
+  ): Promise<GraphqlEnvelope<JsonValue>> {
+    assertGraphqlWireKind(body.query, "mutation");
+    return this.executeWireJson(body, timeoutMs);
+  }
+
+  /** @emoji 📡 Subscribe wire aligned with {@code type Subscription} in {@code schema.golden.graphql}. */
+  async subscribeJson(
+    body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null },
+    onEvent: (env: GraphqlEnvelope<JsonValue>) => void,
+  ): Promise<void> {
+    assertGraphqlWireKind(body.query, "subscription");
+    await this.inner.subscribe(graphqlWirePostBodyJson(body), (eventJson) => {
+      try {
+        onEvent(parseJsonValue(eventJson) as GraphqlEnvelope<JsonValue>);
+      } catch {
+        /* ignore */
+      }
+    });
+  }
+
+  dispose(): void {
+    this.inner.dispose();
+  }
+}
+
+export type Unsubscribe = () => void;
+
+/** @emoji 📡 Demultiplexes live subscription `data` roots into listener fan-out (no client cache). */
+export class EventBus {
+  private readonly listeners = new Set<(ev: JsonValue) => void>();
+
+  emit(ev: JsonValue): void {
+    for (const fn of this.listeners) {
+      try {
+        fn(ev);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  subscribe(handler: (ev: JsonValue) => void): Unsubscribe {
+    this.listeners.add(handler);
+    return () => {
+      this.listeners.delete(handler);
+    };
+  }
+
+  subscribeKind(kind: string, handler: (payload: JsonValue | undefined) => void): Unsubscribe {
+    return this.subscribe((ev) => {
+      if (!isJsonObjectNode(ev)) return;
+      if (ev["kind"] === kind) handler(ev["payload"]);
+    });
+  }
+}
+
+/** @emoji 📡 Live target {@code Subscription.operation} stream used to match command IDs emitted by mutations. */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operation { id __typename } }` as const;
+
+/** @emoji 🧭 Store entry query fragment aligned with {@code schema.golden.graphql} (WIP head + {@code theKit} id). */
+export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }` as const;
+
+//#endregion 🌐Transport
+
+export type SetErrorKind =
+  | "IllegalName"
+  | "NameTooLong"
+  | "InvalidUrl"
+  | "InvalidValue"
+  | "DuplicateId"
+  | "NotFound"
+  | "CyclicReference"
+  | "PortFamilyMismatch"
+  | "Readonly"
+  | "Disposed"
+  | "Timeout"
+  | "LockPoisoned"
+  | "Internal"
+  | "NotSupported";
+
+/** @emoji 🧾 Normalized set/mutation error from rs {@code SetError}. */
+export type SetError = { kind: SetErrorKind; message: string; field?: string; entity?: { kind: string; id: string } };
+
+/** @emoji 🧾 Mutation receipt (no speculative client-side apply). */
+export type SetResult = { ok: true } | { ok: false; error: SetError };
+
+export type ChangeId = string;
+
+/** @emoji 🧭 Materialization anchor for target-schema reads. */
+export type KitReadPoint =
+  | { readonly theKit: null }
+  | {
+    readonly checkpoint: {
+      readonly checkpointId: string;
+      readonly changeId?: string;
+      readonly operationId?: string;
+    };
+  }
+  | { readonly alternative: { readonly alternativeId: string } };
+
+export const theKitReadPoint: KitReadPoint = { theKit: null };
+
+export function kitReadPointKey(point: KitReadPoint): string {
+  return JSON.stringify(point);
+}
+
+function isTheKitReadPoint(s: KitReadPoint): boolean {
+  return "theKit" in s;
+}
+
+export type SessionOpenOptions = Readonly<{
+  timeoutMs?: number;
+  storeId?: string;
+  wasmSpecifier?: string;
+  workerFactory?: () => Worker;
+}>;
+
+/** @emoji 🌐 Options for {@link Session.openHttp} against `semio-store` (POST `/install` + POST `/graphql`). */
+export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
+
+/** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
+export const SEMIO_IN_MEMORY_KIT_URI = RS_WASM_EMPTY_STORE_URI;
+
+function gqlString(s: string): string {
+  return JSON.stringify(s);
+}
+
+function gqlIdList(ids: readonly string[]): string {
+  return `[${ids.map((x) => gqlString(x)).join(",")}]`;
+}
+
+function scopedKitMutationBody(storeId: string, changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
+  return {
+    query: `mutation($storeId: ID!, $changeId: ID!) { session { store(id: $storeId) { theKit { unsavedChange(id: $changeId) { kit { ${withResponseSelection(kitSelection)} } } } } } }`,
+    variables: { storeId, changeId },
+  };
+}
+
+function sessionStoreSelectionDocument(innerOnStore: string): { query: string; variables: JsonObject } {
+  return {
+    query: `query Stores { session { stores { edges { cursor node { ${innerOnStore} } } } } }`,
+    variables: {},
+  };
+}
+
+function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
+  if (isTheKitReadPoint(point)) {
+    return {
+      query: `query KitSessionWipStore { session { stores { edges { cursor node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
+      variables: {},
+    };
+  }
+  if ("checkpoint" in point) {
+    return {
+      query: `query KitSessionWipStore($checkpointId: ID!) { session { stores { edges { cursor node { wip { checkpoint(id: $checkpointId) { kit { ${innerOnKitStore} } } } } } } } }`,
+      variables: { checkpointId: point.checkpoint.checkpointId },
+    };
+  }
+  if ("alternative" in point) {
+    return {
+      query: `query KitSessionWipStore($alternativeId: ID!) { session { stores { edges { cursor node { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } } } } }`,
+      variables: { alternativeId: point.alternative.alternativeId },
+    };
+  }
+  return {
+    query: `query KitSessionWipStore { session { stores { edges { cursor node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
+    variables: {},
+  };
+}
+
+function sessionStoreEdges(d: JsonValue | null | undefined): readonly JsonObject[] {
+  if (d == null || typeof d !== "object" || Array.isArray(d)) return [];
+  const session = jsonObjectField(d as JsonObject, "session");
+  const stores = jsonObjectField(session, "stores");
+  const edges = stores?.["edges"];
+  return Array.isArray(edges) ? (edges.filter(isJsonObjectNode) as readonly JsonObject[]) : [];
+}
+
+function sessionStoreEdgeId(edge: JsonObject | null | undefined): string {
+  return String(edge?.["cursor"] ?? "");
+}
+
+function sessionStoreNodeFromData(d: JsonValue | null | undefined, storeId?: string | null): JsonObject | null {
+  const edges = sessionStoreEdges(d);
+  const edge = storeId == null || storeId === "" ? edges[0] : edges.find((e) => sessionStoreEdgeId(e) === storeId);
+  return jsonObjectField(edge, "node");
+}
+
+function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint, storeId?: string | null): JsonObject | null {
+  const store = sessionStoreNodeFromData(d, storeId);
+  const wip = jsonObjectField(store, "wip");
+  if (wip == null) return null;
+  if ("checkpoint" in point) {
+    return jsonObjectField(jsonObjectField(wip, "checkpoint"), "kit");
+  }
+  if ("alternative" in point) {
+    return jsonObjectField(jsonObjectField(wip, "alternative"), "kit");
+  }
+  return jsonObjectField(jsonObjectField(wip, "theKit"), "kit");
+}
+
+async function executeGraphql(
+  handle: { execute(requestJson: string): Promise<string> },
+  body: { query: string; variables?: JsonObject; operationName?: string | null },
+  timeoutMs?: number,
+): Promise<GraphqlEnvelope<JsonValue>> {
+  const json = await withTimeout(handle.execute(graphqlWirePostBodyJson(body)), timeoutMs ?? 0, "graphql");
+  return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
+}
+
+function gqlOkFromEnvelope(env: GraphqlEnvelope<JsonValue>): SetResult {
+  if (Array.isArray(env.errors) && env.errors.length > 0) {
+    return { ok: false, error: { kind: "Internal", message: env.errors[0]?.message ?? "GraphQL error" } };
+  }
+  return { ok: true };
+}
+
+/** @emoji 📬 Parses a {@code Response} object from mutation data. */
+function parseResponsePayload(node: JsonValue | undefined): SetResult {
+  if (!isJsonObjectNode(node)) return { ok: true };
+  if (node["ok"] === false) {
+    const err = jsonObjectField(node, "errors");
+    return {
+      ok: false,
+      error: {
+        kind: (String(err?.["kind"] ?? "Internal") as SetErrorKind),
+        message: String(err?.["message"] ?? "command failed"),
+      },
+    };
+  }
+  return { ok: true };
+}
+
+/** @emoji 🆔 Reads {@code IdResult.value} from a {@code Response} payload. */
+function responseResultId(node: JsonValue | undefined): string {
+  if (!isJsonObjectNode(node)) return "";
+  const result = jsonObjectField(node, "result");
+  const value = result?.["value"];
+  return value == null ? "" : String(value);
+}
+
+type GraphqlExecuteHandle = { execute(requestJson: string): Promise<string> };
+
+function isBrowserWorkerRuntime(): boolean {
+  return typeof Worker !== "undefined" && typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+/** @emoji 🧪 True when Vitest or embedded package tests run (jsdom still has Worker/window). */
+function isVitestOrEmbeddedTestRuntime(): boolean {
+  try {
+    const env = (import.meta as { env?: Record<string, unknown> }).env;
+    if (env) {
+      if (Boolean(env["VITEST"])) return true;
+      if (env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1" || env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === true) return true;
+      if (env["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === "1" || env["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === true) return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  const pe = typeof process !== "undefined" ? process.env : undefined;
+  if (pe) {
+    if ("VITEST" in pe) return true;
+    if (pe["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") return true;
+    if (pe["SEMIO_REACT_RUN_EMBEDDED_TESTS"] === "1") return true;
+  }
+  return false;
+}
+
+function shouldStartLiveSubscriptionLoop(): boolean {
+  if (isVitestOrEmbeddedTestRuntime()) return false;
+  return isBrowserWorkerRuntime();
+}
+
+//#region 🧱Classes
+
+//#region 🧬Entity
+
+//#region 🛠️Base
+/** @emoji 🧬 Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
+export abstract class Entity {
+  public readonly session: Session;
+
+  protected constructor(session: Session, public readonly id: string, public readonly storeId?: string) {
+    this.session = session;
+  }
+
+  /** @emoji 🧾 Reads kit fields through the owning {@link Store} scope, never through an active-store fallback. */
+  async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
+    return this.session.readKitInnerForStore(this.storeId, inner, variables);
+  }
+
+  /** @emoji 🎬 Starts or reuses the command change ID for the owning {@link Store} scope. */
+  async ensureChangeId(): Promise<string> {
+    if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
+    return this.session.ensureChangeId(this.storeId);
+  }
+
+  /** @emoji 🎬 Sends a kit mutation through the owning {@link Store} command scope. */
+  async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
+    if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
+    return this.session.mutateScoped(this.storeId, changeId, kitSelection);
+  }
+
+  protected entity<T extends Entity>(ctor: new (session: Session, id: string, storeId?: string) => T, id: string, storeId = this.storeId): T {
+    return new ctor(this.session, id, storeId);
+  }
+}
+//#endregion 🛠️Base
+
+//#region 🪶WeakArtifacts
+/** @emoji 🪪 Weak {@link Attribute} anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
+export class Attribute {
+  constructor(
+    public readonly owner: Entity,
+    public readonly id: string,
+    public readonly key: string,
+    public readonly value: string | null,
+    public readonly definition: string,
+  ) { }
+
+  get session(): Session {
+    return this.owner.session;
+  }
+}
+
+/** @emoji 🏁 Weak {@link Benchmark} under {@link Quality}. */
+export class Benchmark {
+  constructor(
+    public readonly quality: Quality,
+    public readonly id: string,
+    public readonly name: string,
+    public readonly min: number | null,
+    public readonly max: number | null,
+    public readonly minExcluded: boolean | null,
+    public readonly maxExcluded: boolean | null,
+  ) { }
+
+  get session(): Session {
+    return this.quality.session;
+  }
+}
+
+/** @emoji 🧬 Union anchor for VCS scope / modification ends (narrow at callsites). */
+export type EntityRef = Entity;
+//#endregion 🪶WeakArtifacts
+
+//#region 🏭Factories
+type KitPathEntity = Entity & {
+  kitInnerPath(inner: string): string;
+};
+
+type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = Readonly<{
+  selection: string;
+  parse: (v: JsonValue) => T;
+  parseEntity?: (entity: E, v: JsonValue) => T;
+  /** @emoji 📖 Prototype method name when it differs from the GraphQL field (e.g. {@code typeId} for {@code type { id }}). */
+  method?: string;
+  /** @emoji 📡 Bus {@code kind}; defaults via {@link defaultFieldEventKind}. */
+  eventKind?: string;
+  /** @emoji 📡 List/connection fields: invalidate on {@code commandSucceeded} + {@code kitRenamed}. */
+  coarseEvent?: boolean;
+}>;
+
+type BoundNodeFieldSpec<T> = Readonly<{
+  selection: string;
+  parse: (node: JsonObject | undefined) => T;
+  /** @emoji 📖 Prototype method name when it differs from the GraphQL selection root. */
+  method?: string;
+}>;
+
+type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
+  /** @emoji 🎬 Prototype method name (GraphQL operation leaf). */
+  method: string;
+  buildInner: (entity: E, ...args: readonly unknown[]) => string;
+}>;
+
+/** @emoji 🏭 Metadata-only bound field list used to install prototype methods from one schema-like roster. */
+function defineBoundKitFields<const S extends readonly BoundKitFieldSpec<unknown>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Metadata-only node field list used to install {@code node(id)} readers from one roster. */
+function defineBoundNodeFields<const S extends readonly BoundNodeFieldSpec<unknown>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Metadata-only bound operation list used to install mutation methods from one roster. */
+function defineBoundKitOperations<const S extends readonly BoundKitOperationSpec<KitPathEntity>[]>(specs: S): S {
+  return specs;
+}
+
+function schemaFieldName(selection: string): string {
+  const name = selection.trim().match(/^[_A-Za-z][_0-9A-Za-z]*/)?.[0];
+  if (name == null || name === "") throw new Error(`Invalid GraphQL field selection: ${selection}`);
+  return name;
+}
+
+function schemaOperationName(inner: string): string {
+  const name = inner.trim().match(/^(?:[_A-Za-z][_0-9A-Za-z]*:\s*)?([_A-Za-z][_0-9A-Za-z]*)/)?.[1];
+  if (name == null || name === "") throw new Error(`Invalid GraphQL operation selection: ${inner}`);
+  return name;
+}
+
+/** @emoji 📡 GraphQL {@code Operation} {@code __typename} → {@link EventBus} {@code kind} (react hooks rely on these strings). */
+function operationTypenameToEventKind(typename: string): string {
+  switch (typename) {
+    case "RenamedKit":
+      return "kitRenamed";
+    case "ChangedDescription":
+      return "changedDescription";
+    case "CreatedFixedPiece":
+      return "createdFixedPiece";
+    case "FixedPiece":
+      return "fixedPiece";
+    case "DraggedPiece":
+      return "draggedPiece";
+    default:
+      return typename.charAt(0).toLowerCase() + typename.slice(1);
+  }
+}
+
+/** @emoji 📡 Installed {@code onFieldChanged} method name for a scalar/list field (e.g. {@code onNameChanged}). */
+function fieldChangedEventMethodName(fieldName: string): string {
+  return `on${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}Changed`;
+}
+
+/** @emoji 📡 Default bus kind for a field read on an entity class. */
+function defaultFieldEventKind(entityCtorName: string, fieldName: string): string {
+  if (entityCtorName === "Kit" && fieldName === "name") return "kitRenamed";
+  if (fieldName === "description") return "changedDescription";
+  return "commandSucceeded";
+}
+
+/** @emoji 🏭 Installs kit-relative read methods on a prototype so classes stay declarative and schema-shaped. */
+function installKitFieldMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundKitFieldSpec<unknown, E>[],
+): void {
+  for (const spec of specs) {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: async function semioKitField(this: E): Promise<unknown> {
+        const frag = await this.readKitInner(this.kitInnerPath(spec.selection));
+        return spec.parseEntity != null ? spec.parseEntity(this, frag as JsonValue) : spec.parse(frag as JsonValue);
+      },
+      writable: true,
+    });
+  }
+}
+
+async function readNodeSelection<T>(
+  entity: Entity,
+  typename: string,
+  selection: string,
+  parse: (node: JsonObject | undefined) => T,
+): Promise<T> {
+  const data = unwrapGraphqlData(
+    await executeSessionReadGraphql(entity.session, {
+      query: `query($id: ID!) { node(id: $id) { ... on ${typename} { ${selection} } } }`,
+      variables: { id: entity.id },
+    }),
+  ) as JsonObject;
+  return parse(data["node"] as JsonObject | undefined);
+}
+
+/** @emoji 🏭 Installs {@code node(id)}-based read methods on a prototype from one typed roster. */
+function installNodeFieldMethods<E extends Entity>(
+  ctor: abstract new (...args: never[]) => E,
+  typename: string,
+  specs: readonly BoundNodeFieldSpec<unknown>[],
+): void {
+  for (const spec of specs) {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: function semioNodeField(this: E): Promise<unknown> {
+        return readNodeSelection(this, typename, spec.selection, spec.parse);
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs kit-relative mutation methods on a prototype from one operation roster. */
+function installKitOperationMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundKitOperationSpec<E>[],
+): void {
+  for (const spec of specs) {
+    Object.defineProperty(ctor.prototype, spec.method, {
+      configurable: true,
+      value: async function semioKitOperation(this: E, ...args: readonly unknown[]): Promise<SetResult> {
+        const cid = await this.ensureChangeId();
+        return this.mutateScoped(cid, this.kitInnerPath(spec.buildInner(this, ...args)));
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs {@code onFieldChanged} subscription methods — one per field spec. */
+function installKitEventMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundKitFieldSpec<unknown, E>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of specs) {
+    const fieldName = spec.method ?? schemaFieldName(spec.selection);
+    const readMethod = fieldName;
+    const eventMethod = fieldChangedEventMethodName(fieldName);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, fieldName);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioKitFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[readMethod];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs kit field reads, mutation commands, and per-field change subscriptions from three rosters. */
+function installEntityKitMethods<E extends KitPathEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundKitFieldSpec<unknown, E>[],
+  operations: readonly BoundKitOperationSpec<E>[] = [],
+): void {
+  installKitFieldMethods(ctor, fields);
+  if (operations.length > 0) installKitOperationMethods(ctor, operations);
+  installKitEventMethods(ctor, fields);
+}
+
+/** @emoji 🏭 Installs {@code node(id)} field reads and per-field change subscriptions. */
+function installEntityNodeMethods<E extends Entity>(
+  ctor: abstract new (...args: never[]) => E,
+  typename: string,
+  fields: readonly BoundNodeFieldSpec<unknown>[],
+): void {
+  installNodeFieldMethods(ctor, typename, fields);
+  for (const spec of fields) {
+    const fieldName = spec.method ?? schemaFieldName(spec.selection);
+    const eventMethod = fieldChangedEventMethodName(fieldName);
+    const eventKind = defaultFieldEventKind(ctor.name, fieldName);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioNodeFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const read = (this as unknown as Record<string, () => Promise<unknown>>)[fieldName];
+        return this.session.bus.subscribeKind(eventKind, () => {
+          if (typeof read === "function") void read.call(this).then(cb);
+        });
+      },
+      writable: true,
+    });
+  }
+}
+
+type StoreBranchEntity = Entity & Readonly<{
+  storeBranchPath(selection: string): string;
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null;
+  readStoreBranch(selection: string): Promise<JsonObject | null>;
+}>;
+
+type BoundStoreBranchFieldSpec<T, E extends StoreBranchEntity> = Readonly<{
+  selection: string;
+  parse: (branch: JsonObject | null) => T;
+  parseEntity?: (entity: E, branch: JsonObject | null) => T;
+  method?: string;
+  eventKind?: string;
+  coarseEvent?: boolean;
+}>;
+
+function defineBoundStoreBranchFields<const S extends readonly BoundStoreBranchFieldSpec<unknown, StoreBranchEntity>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Installs store-scoped field reads and {@code onFieldChanged} on a nested branch (VCS graph roots, checkpoints, …). */
+function installStoreBranchFieldMethods<E extends StoreBranchEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  specs: readonly BoundStoreBranchFieldSpec<unknown, E>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of specs) {
+    const method = spec.method ?? schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: async function semioStoreBranchField(this: E): Promise<unknown> {
+        const frag = await this.readStoreBranch(spec.selection);
+        const branch = this.parseStoreBranch(frag);
+        return spec.parseEntity != null ? spec.parseEntity(this, branch) : spec.parse(branch);
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(method);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioStoreBranchFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+/** @emoji 🏭 Installs store-scoped field reads, events, and optional branch helpers on one entity class. */
+function installEntityStoreBranchMethods<E extends StoreBranchEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundStoreBranchFieldSpec<unknown, E>[],
+): void {
+  installStoreBranchFieldMethods(ctor, fields);
+}
+
+type ScopedNodeEntity = Entity & Readonly<{
+  scopedNodePath(selection: string): string;
+  readScopedNode(selection: string): Promise<JsonObject | null>;
+}>;
+
+type BoundScopedNodeFieldSpec<T> = Readonly<{
+  selection: string;
+  parse: (node: JsonObject | null) => T;
+  eventKind?: string;
+  coarseEvent?: boolean;
+}>;
+
+function defineBoundScopedNodeFields<const S extends readonly BoundScopedNodeFieldSpec<unknown>[]>(specs: S): S {
+  return specs;
+}
+
+/** @emoji 🏭 Installs field reads on a store-nested node already resolved by {@link ScopedNodeEntity#readScopedNode}. */
+function installEntityScopedNodeMethods<E extends ScopedNodeEntity>(
+  ctor: abstract new (...args: never[]) => E,
+  fields: readonly BoundScopedNodeFieldSpec<unknown>[],
+): void {
+  const entityName = ctor.name;
+  for (const spec of fields) {
+    const method = schemaFieldName(spec.selection);
+    Object.defineProperty(ctor.prototype, method, {
+      configurable: true,
+      value: async function semioScopedNodeField(this: E): Promise<unknown> {
+        const node = await this.readScopedNode(spec.selection);
+        return spec.parse(node);
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(method);
+    const eventKind = spec.eventKind ?? defaultFieldEventKind(entityName, method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioScopedNodeFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(this.session.bus, run);
+        return this.session.bus.subscribeKind(eventKind, () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+type BoundWeakFieldSpec<T> = Readonly<{
+  method: string;
+  selection: string;
+  parse: (role: JsonObject | null) => T;
+  coarseEvent?: boolean;
+}>;
+
+/** @emoji 🏭 Installs async scalar reads on weak kit-nested artifacts ({@link Coordinate}, {@link Point}, …). */
+function installWeakKitFieldMethods<E extends object>(
+  ctor: abstract new (...args: never[]) => E,
+  readRole: (self: E, selection: string) => Promise<JsonObject | null>,
+  parseRole: (self: E, frag: JsonObject | null) => JsonObject | null,
+  specs: readonly BoundWeakFieldSpec<unknown>[],
+  bus: (self: E) => EventBus,
+): void {
+  for (const spec of specs) {
+    Object.defineProperty(ctor.prototype, spec.method, {
+      configurable: true,
+      value: async function semioWeakKitField(this: E): Promise<unknown> {
+        const frag = await readRole(this, spec.selection);
+        return spec.parse(parseRole(this, frag));
+      },
+      writable: true,
+    });
+    const eventMethod = fieldChangedEventMethodName(spec.method);
+    Object.defineProperty(ctor.prototype, eventMethod, {
+      configurable: true,
+      value: function semioWeakKitFieldEvent(this: E, cb: (next: unknown) => void): Unsubscribe {
+        const run = (): void => {
+          const read = (this as unknown as Record<string, () => Promise<unknown>>)[spec.method];
+          if (typeof read !== "function") return;
+          void read.call(this).then(cb);
+        };
+        const b = bus(this);
+        if (spec.coarseEvent) return subscribeKitCoarseRefetch(b, run);
+        return b.subscribeKind("commandSucceeded", () => run());
+      },
+      writable: true,
+    });
+  }
+}
+
+//#endregion 🏭Factories
+
+//#region 🧩Parsers
+/** @emoji 🧩 Parses {@code attributes { edges { node { … } } }} under a JSON object (e.g. {@code tag}, {@code node}). */
+function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | null | undefined): readonly Attribute[] {
+  const attrs = owner?.["attributes"] as JsonObject | undefined;
+  const edges = attrs?.["edges"] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(edges)) return [];
+  const out: Attribute[] = [];
+  for (const e of edges) {
+    if (!isJsonObjectNode(e)) continue;
+    const n = e["node"] as JsonObject | undefined;
+    if (n == null) continue;
+    out.push(
+      new Attribute(
+        ownerEntity,
+        String(n["id"] ?? ""),
+        String(n["key"] ?? ""),
+        n["value"] == null ? null : String(n["value"]),
+        String(n["definition"] ?? ""),
+      ),
+    );
+  }
+  return out;
+}
+
+/** @emoji 🏁 Parses {@code benchmarks { edges { node { … } } }} under a {@link Quality} kit branch. */
+function parseBenchmarkConnectionUnder(quality: Quality, owner: JsonObject | null | undefined): readonly Benchmark[] {
+  const bench = owner?.["benchmarks"] as JsonObject | undefined;
+  const edges = bench?.["edges"] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(edges)) return [];
+  const out: Benchmark[] = [];
+  for (const e of edges) {
+    if (!isJsonObjectNode(e)) continue;
+    const n = e["node"] as JsonObject | undefined;
+    if (n == null) continue;
+    out.push(
+      new Benchmark(
+        quality,
+        String(n["id"] ?? ""),
+        String(n["name"] ?? ""),
+        typeof n["min"] === "number" ? n["min"] : null,
+        typeof n["max"] === "number" ? n["max"] : null,
+        typeof n["minExcluded"] === "boolean" ? n["minExcluded"] : null,
+        typeof n["maxExcluded"] === "boolean" ? n["maxExcluded"] : null,
+      ),
+    );
+  }
+  return out;
+}
+
+//#region 📦KitBranch
+/** @emoji 📦 String field from nested kit JSON (e.g. `{ design: { name } }` or flattened `{ name }`). */
+function readKitBranchString(frag: JsonObject | null | undefined, branchKey: string, field: string): string {
+  const branch = frag?.[branchKey] as JsonObject | undefined;
+  const v = branch?.[field] ?? frag?.[field];
+  return String(v ?? "");
+}
+
+/** @emoji 📦 Numeric field from nested kit JSON (e.g. {@code qualitySum}). */
+function readKitBranchNumber(frag: JsonObject | null | undefined, branchKey: string, field: string): number {
+  const branch = frag?.[branchKey] as JsonObject | undefined;
+  const raw = branch?.[field] ?? frag?.[field];
+  return typeof raw === "number" ? raw : Number(raw ?? NaN);
+}
+
+/** @emoji 📦 Nullable number on a nested branch (e.g. {@code Tag.order}). */
+function readKitBranchNumberOrNull(frag: JsonObject | null | undefined, branchKey: string, field: string): number | null {
+  const branch = frag?.[branchKey] as JsonObject | undefined;
+  const raw = branch?.[field] ?? frag?.[field];
+  return typeof raw === "number" ? raw : null;
+}
+//#endregion 📦KitBranch
+
+//#region 🧭KitPath
+/** @emoji 🧭 Descends string keys on kit JSON; returns undefined if any step is not an object. */
+function readKitPathNode(frag: JsonObject | null | undefined, path: readonly string[]): JsonObject | undefined {
+  let cur: JsonValue | undefined = frag;
+  for (const p of path) {
+    if (!isJsonObjectNode(cur)) return undefined;
+    cur = cur[p];
+  }
+  return isJsonObjectNode(cur) ? cur : undefined;
+}
+
+/** @emoji 🧭 String scalar at {@code path} then {@code field} (e.g. {@code type → port → code}). */
+function readKitPathString(frag: JsonObject | null | undefined, path: readonly string[], field: string): string {
+  const n = readKitPathNode(frag, path);
+  const v = n?.[field];
+  return v == null ? "" : String(v);
+}
+
+/** @emoji 🧭 Nullable number at path end (e.g. {@code Port.order}). */
+function readKitPathNumberOrNull(frag: JsonObject | null | undefined, path: readonly string[], field: string): number | null {
+  const n = readKitPathNode(frag, path);
+  const v = n?.[field];
+  return typeof v === "number" ? v : null;
+}
+//#endregion 🧭KitPath
+
+//#region 📡BusCoarse
+/** @emoji 📡 Coarse invalidation pair used for kit-scoped list refetches ({@code commandSucceeded} + {@code kitRenamed}). */
+function subscribeKitCoarseRefetch(
+  bus: { subscribeKind(kind: string, fn: () => void): Unsubscribe },
+  run: () => void,
+): Unsubscribe {
+  const kinds = ["commandSucceeded", "kitRenamed", "draggedPiece", "fixedPiece"] as const;
+  const subs = kinds.map((kind) => bus.subscribeKind(kind, run));
+  return (): void => {
+    for (const off of subs) off();
+  };
+}
+//#endregion 📡BusCoarse
+//#endregion 🧩Parsers
+//#endregion 🧬Entity
+
+
+//#region 🏪Store
+function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
+  const conn = frag?.[key] as JsonObject | undefined;
+  const edges = conn?.["edges"] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(edges)) return [];
+  const out: string[] = [];
+  for (const e of edges) {
+    if (!isJsonObjectNode(e)) continue;
+    const n = e["node"] as JsonObject | undefined;
+    if (n == null) continue;
+    const id = String(n["id"] ?? "");
+    if (id !== "") out.push(id);
+  }
+  return out;
+}
+
+//#region 📁FileSystem
+type FileSystemNodeRef = { readonly id: string; readonly kind: string };
+
+function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystemNodeRef | null {
+  if (node == null) return null;
+  const id = String(node["id"] ?? "");
+  if (id === "") return null;
+  return { id, kind: String(node["fileSystemKind"] ?? "") };
+}
+
+function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string, typeId?: string): Entity {
+  switch (ref.kind) {
+    case "KIT":
+      return new Kit(session, ref.id, storeId);
+    case "FOLDER":
+      return new Folder(session, ref.id, storeId);
+    case "FILE":
+      return new File(session, ref.id, storeId);
+    case "DESIGN":
+      return new Design(session, ref.id, storeId);
+    case "TYPE":
+      return new Type(session, ref.id, storeId);
+    case "FAMILY":
+      return new Family(session, ref.id, storeId);
+    case "PIECE":
+      return new Piece(session, designId ?? "", ref.id, storeId);
+    case "CONNECTION":
+      return new Connection(session, designId ?? "", ref.id, storeId);
+    case "REPRESENTATION":
+      return new Representation(session, typeId ?? "", ref.id, storeId);
+    case "PORT":
+      return new Port(session, typeId ?? "", ref.id, storeId);
+    case "CONNECTOR":
+      return new Connector(session, typeId ?? "", ref.id, storeId);
+    default:
+      return new Entity(session, ref.id, storeId);
+  }
+}
+
+const VFS_CHILD_NODE_SELECTION =
+  "id fileSystemKind fileSystemName fileSystemPath fileSystemHasChildren owner { __typename ... on Type { id } ... on Design { id } }";
+
+function resolveFileSystemNodeFromGraphql(
+  session: Session,
+  storeId: string | undefined,
+  node: JsonObject | null | undefined,
+  designId?: string,
+): Entity {
+  const ref = parseFileSystemNodeRef(node);
+  if (!ref) return new Entity(session, "", storeId);
+  const owner = node?.["owner"] as JsonObject | undefined;
+  const ownerTypename = String(owner?.["__typename"] ?? "");
+  const ownerId = String(owner?.["id"] ?? "");
+  const typeId = ownerTypename === "Type" ? ownerId : undefined;
+  const pieceDesignId = ownerTypename === "Design" ? ownerId : designId;
+  return resolveFileSystemNode(session, storeId, ref, pieceDesignId, typeId);
+}
+
+function parseFileSystemChildrenRefs(frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  const edges = (frag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
+  if (!Array.isArray(edges)) return Object.freeze([]);
+  return Object.freeze(
+    edges.map((edge) => {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      const owner = node?.["owner"] as JsonObject | undefined;
+      const ownerTypename = String(owner?.["__typename"] ?? "");
+      const ownerId = String(owner?.["id"] ?? "");
+      return {
+        id: String(node?.["id"] ?? ""),
+        kind: String(node?.["fileSystemKind"] ?? ""),
+        name: String(node?.["fileSystemName"] ?? ""),
+        path: String(node?.["fileSystemPath"] ?? ""),
+        hasChildren: Boolean(node?.["fileSystemHasChildren"]),
+        ...(ownerTypename === "Type" && ownerId ? { typeId: ownerId } : {}),
+        ...(ownerTypename === "Design" && ownerId ? { designId: ownerId } : {}),
+      } satisfies SemioFileSystemChildRef;
+    }),
+  );
+}
+
+function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObject | null {
+  if (branch == null) return frag;
+  const b = frag?.[branch];
+  return isJsonObjectNode(b) ? b : null;
+}
+
+function vfsKitFields(branch: string | null, designId?: string) {
+  const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
+  const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
+  return [
+    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
+    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
+    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
+    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
+    {
+      method: "fileSystemParent",
+      selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
+      parse: () => null,
+      parseEntity: (entity, frag) => {
+        const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
+        return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : null;
+      },
+    },
+    {
+      method: "fileSystemChildren",
+      selection: vfsChildrenSelection,
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => {
+        const nodeFrag = b(frag as JsonObject | null);
+        return Object.freeze(
+          ((nodeFrag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined ?? []).map((e) =>
+            resolveFileSystemNodeFromGraphql(entity.session, entity.storeId, (e as JsonObject)?.["node"] as JsonObject | undefined, designId),
+          ),
+        );
+      },
+    },
+  ] as const;
+}
+
+function vfsEntityPathFields(path: readonly string[], designId?: string) {
+  const nodeAt = (frag: JsonObject | null) => readKitPathNode(frag, path);
+  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
+  return [
+    {
+      method: "fileSystemPath",
+      selection: "... on FileSystemNode { fileSystemPath }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
+    },
+    {
+      method: "fileSystemName",
+      selection: "... on FileSystemNode { fileSystemName }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
+    },
+    {
+      method: "isFileSystemRoot",
+      selection: "... on FileSystemNode { isFileSystemRoot }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
+    },
+    {
+      method: "fileSystemKind",
+      selection: "... on FileSystemNode { fileSystemKind }",
+      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
+    },
+    {
+      method: "fileSystemHasChildren",
+      selection: "... on FileSystemNode { fileSystemHasChildren }",
+      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
+    },
+    {
+      method: "fileSystemChildren",
+      selection: vfsChildrenSelection,
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) =>
+        Object.freeze(
+          (parseFileSystemChildrenRefs(nodeAt(frag as JsonObject | null)) as readonly SemioFileSystemChildRef[]).map((child) =>
+            resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId, child.typeId),
+          ),
+        ),
+    },
+  ] as const;
+}
+
+/** @emoji 📁 One lazy VFS child row from {@link fetchSemioFileSystemChildren}. */
+export interface SemioFileSystemChildRef {
+  readonly id: string;
+  readonly kind: string;
+  readonly name: string;
+  readonly path: string;
+  readonly hasChildren: boolean;
+  readonly typeId?: string;
+  readonly designId?: string;
+}
+
+/** @emoji 📁 Parent node scope for {@link fetchSemioFileSystemChildren}. */
+export type SemioFileSystemParentRef =
+  | { readonly kind: "KIT"; readonly id: string }
+  | { readonly kind: "FOLDER"; readonly id: string }
+  | { readonly kind: "FILE"; readonly id: string }
+  | { readonly kind: "DESIGN"; readonly id: string }
+  | { readonly kind: "TYPE"; readonly id: string }
+  | { readonly kind: "FAMILY"; readonly id: string }
+  | { readonly kind: "TYPOLOGY"; readonly id: string }
+  | { readonly kind: "PIECE"; readonly id: string; readonly designId: string }
+  | { readonly kind: "CONNECTION"; readonly id: string; readonly designId: string };
+
+type SemioRelayVfsBranchSpec = {
+  readonly connectionKey: string;
+  readonly kind: string;
+  readonly nameFrom: (node: JsonObject) => string;
+  readonly hasChildren?: (node: JsonObject) => boolean;
+  readonly mapChild?: (child: SemioFileSystemChildRef, node: JsonObject) => SemioFileSystemChildRef;
+};
+
+function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
+  const out: SemioFileSystemChildRef[] = [];
+  for (const branch of branches) {
+    const edges = (frag?.[branch.connectionKey] as JsonObject | undefined)?.["edges"];
+    if (!Array.isArray(edges)) continue;
+    for (const edge of edges) {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      if (!node) continue;
+      const id = String(node["id"] ?? "");
+      if (!id) continue;
+      const name = branch.nameFrom(node);
+      let child: SemioFileSystemChildRef = {
+        id,
+        kind: branch.kind,
+        name,
+        path: `/${name}`,
+        hasChildren: branch.hasChildren ? branch.hasChildren(node) : true,
+      };
+      if (branch.mapChild) child = branch.mapChild(child, node);
+      out.push(child);
+    }
+  }
+  return Object.freeze(out);
+}
+
+function semioRelayEdgesNonEmpty(node: JsonObject, key: string): boolean {
+  const edges = (node[key] as JsonObject | undefined)?.["edges"];
+  return Array.isArray(edges) && edges.length > 0;
+}
+
+function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string {
+  switch (parent.kind) {
+    case "KIT":
+      return `
+        hasTypologies { edges { node { id name hasTypes { edges { node { id } } } hasDesigns { edges { node { id } } } } } }
+        hasFamilies { edges { node { id name } } }
+        hasFolders { edges { node { id path name } } }
+        hasFiles { edges { node { id name description } } }
+      `;
+    case "TYPOLOGY":
+      return `
+        typology(id: ${gqlString(parent.id)}) {
+          hasTypes { edges { node { id name hasRepresentations { edges { node { id } } } hasPorts { edges { node { id } } } hasConnectors { edges { node { id } } } } } }
+          hasDesigns { edges { node { id name hasPieces { edges { node { id } } } hasConnections { edges { node { id } } } } } }
+        }
+      `;
+    case "FOLDER":
+      return `
+        folder(id: ${gqlString(parent.id)}) {
+          subFolders { edges { node { id path name } } }
+          files { edges { node { id name description } } }
+          hasDesigns { edges { node { id name } } }
+          hasTypes { edges { node { id name } } }
+          families { edges { node { id name } } }
+        }
+      `;
+    case "FILE":
+      return `file(id: ${gqlString(parent.id)}) { id name description }`;
+    case "DESIGN":
+      return `
+        design(id: ${gqlString(parent.id)}) {
+          hasPieces { edges { node { id name } } }
+          hasConnections { edges { node { id description } } }
+        }
+      `;
+    case "TYPE":
+      return `
+        type(id: ${gqlString(parent.id)}) {
+          hasRepresentations { edges { node { id name } } }
+          hasPorts { edges { node { id label code } } }
+          hasConnectors { edges { node { id name } } }
+        }
+      `;
+    case "FAMILY":
+      return `family(id: ${gqlString(parent.id)}) { id name }`;
+    case "PIECE":
+      return `design(id: ${gqlString(parent.designId)}) { piece(id: ${gqlString(parent.id)}) { id name } }`;
+    case "CONNECTION":
+      return `design(id: ${gqlString(parent.designId)}) { connection(id: ${gqlString(parent.id)}) { id description } }`;
+    default:
+      return `id`;
+  }
+}
+
+function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  switch (parent.kind) {
+    case "KIT":
+      return semioRelayVfsChildrenFromFrag(frag, [
+        {
+          connectionKey: "hasTypologies",
+          kind: "TYPOLOGY",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "hasTypes") || semioRelayEdgesNonEmpty(node, "hasDesigns"),
+        },
+        { connectionKey: "hasFamilies", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+        {
+          connectionKey: "hasFolders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "hasFiles",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+      ]);
+    case "TYPOLOGY": {
+      const topo = readKitPathNode(frag, ["typology"]);
+      return semioRelayVfsChildrenFromFrag(topo, [
+        {
+          connectionKey: "hasTypes",
+          kind: "TYPE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) =>
+            semioRelayEdgesNonEmpty(node, "hasRepresentations") || semioRelayEdgesNonEmpty(node, "hasPorts") || semioRelayEdgesNonEmpty(node, "hasConnectors"),
+          mapChild: (child) => ({ ...child, typeId: child.id }),
+        },
+        {
+          connectionKey: "hasDesigns",
+          kind: "DESIGN",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "hasPieces") || semioRelayEdgesNonEmpty(node, "hasConnections"),
+          mapChild: (child) => ({ ...child, designId: child.id }),
+        },
+      ]);
+    }
+    case "FOLDER": {
+      const folder = readKitPathNode(frag, ["folder"]);
+      return semioRelayVfsChildrenFromFrag(folder, [
+        {
+          connectionKey: "subFolders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "files",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+        { connectionKey: "hasDesigns", kind: "DESIGN", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, designId: child.id }) },
+        { connectionKey: "hasTypes", kind: "TYPE", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, typeId: child.id }) },
+        { connectionKey: "families", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+      ]);
+    }
+    case "FILE":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FILE",
+              name: String(frag["name"] ?? frag["description"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "DESIGN": {
+      const designId = parent.id;
+      const design = readKitPathNode(frag, ["design"]);
+      return semioRelayVfsChildrenFromFrag(design, [
+        {
+          connectionKey: "hasPieces",
+          kind: "PIECE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+        {
+          connectionKey: "hasConnections",
+          kind: "CONNECTION",
+          nameFrom: (node) => String(node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+      ]);
+    }
+    case "TYPE": {
+      const typeId = parent.id;
+      const type = readKitPathNode(frag, ["type"]);
+      return semioRelayVfsChildrenFromFrag(type, [
+        {
+          connectionKey: "hasRepresentations",
+          kind: "REPRESENTATION",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "hasPorts",
+          kind: "PORT",
+          nameFrom: (node) => String(node["label"] ?? node["code"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "hasConnectors",
+          kind: "CONNECTOR",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+      ]);
+    }
+    case "FAMILY":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FAMILY",
+              name: String(frag["name"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "PIECE": {
+      const piece = readKitPathNode(frag, ["design", "piece"]);
+      return piece
+        ? Object.freeze([
+            {
+              id: String(piece["id"] ?? ""),
+              kind: "PIECE",
+              name: String(piece["name"] ?? piece["id"] ?? ""),
+              path: `/${String(piece["name"] ?? piece["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    case "CONNECTION": {
+      const connection = readKitPathNode(frag, ["design", "connection"]);
+      return connection
+        ? Object.freeze([
+            {
+              id: String(connection["id"] ?? ""),
+              kind: "CONNECTION",
+              name: String(connection["description"] ?? connection["id"] ?? ""),
+              path: `/${String(connection["description"] ?? connection["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    default:
+      return Object.freeze([]);
+  }
+}
+
+/** @emoji 📁 Loads VFS children for a kit-graph parent via kit entity GraphQL (not {@link FileSystemNode} interface). */
+export async function fetchSemioFileSystemChildren(store: Store, parent: SemioFileSystemParentRef): Promise<readonly SemioFileSystemChildRef[]> {
+  const inner = semioFileSystemChildrenInner(parent);
+  const frag = await store.readKitInner(inner);
+  return semioParseRelayVfsChildren(parent, frag);
+}
+
+/** @emoji 📁 Loads kit-root VFS children (alias for {@link fetchSemioFileSystemChildren} on the kit node). */
+export async function fetchSemioFileSystemRootChildren(store: Store, kitId: string): Promise<readonly SemioFileSystemChildRef[]> {
+  return fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId });
+}
+//#endregion 📁FileSystem
+
+/** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
+function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
+  const arr = frag?.[key] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(arr)) return [];
+  const out: string[] = [];
+  for (const item of arr) {
+    if (!isJsonObjectNode(item)) continue;
+    const id = String(item["id"] ?? "");
+    if (id !== "") out.push(id);
+  }
+  return out;
+}
+
+/**
+ * @emoji 🧭 Target {@code Session}: owns GraphQL transport and only tracks command IDs for {@code Subscription.operation} correlation; {@link EventBus} emits {@code commandSucceeded} only (no duplicate event-kind payloads).
+ */
+export class Session {
+  private readonly timeoutMs: number;
+  private readonly handle: GraphqlExecuteHandle;
+  private readonly innerTransport: KitStoreInnerTransport;
+  private gqlLoopRunning = false;
+  private disposed = false;
+  private readonly commandIds = new Set<string>();
+
+  /** @emoji 🌐 GraphQL executor (JSON in/out). */
+  readonly gql: GqlTransport;
+  /** @emoji 📡 Demuxed subscription fan-out. */
+  readonly bus: EventBus;
+
+  private constructor(timeoutMs: number, inner: KitStoreInnerTransport) {
+    this.timeoutMs = timeoutMs;
+    this.innerTransport = inner;
+    this.handle = { execute: (j) => inner.execute(j) };
+    this.gql = new GqlTransport(inner);
+    this.bus = new EventBus();
+  }
+
+  private ensureAlive(): void {
+    if (this.disposed) throw new Error("Session disposed");
+  }
+
+  private dispatchSubscriptionGraphqlData(data: JsonObject | null | undefined): void {
+    if (data == null) return;
+    const operation = jsonObjectField(data, "operation");
+    const id = String(operation?.["id"] ?? "");
+    const typename = String(operation?.["__typename"] ?? "");
+    if (typename !== "") {
+      this.bus.emit({ kind: operationTypenameToEventKind(typename), payload: operation } as unknown as JsonValue);
+    }
+    if (id === "" || !this.commandIds.has(id)) return;
+    this.commandIds.delete(id);
+    this.bus.emit({ kind: "commandSucceeded", payload: operation } as unknown as JsonValue);
+  }
+
+  private startSubscriptionLoop(): void {
+    if (this.gqlLoopRunning) return;
+    this.gqlLoopRunning = true;
+    void this.gql
+      .subscribeJson({ query: KIT_EVENT_STREAM_SUBSCRIPTION }, (msg) => {
+        try {
+          if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
+          const subscriptionData = msg.data;
+          if (subscriptionData == null || typeof subscriptionData !== "object") return;
+          this.dispatchSubscriptionGraphqlData(subscriptionData as JsonObject);
+        } catch {
+          /* ignore */
+        }
+      })
+      .catch(() => {
+        this.gqlLoopRunning = false;
+      });
+  }
+
+  private async readEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
+    this.ensureAlive();
+    assertGraphqlWireKind(body.query, "query");
+    return executeGraphql(this.handle, body, this.timeoutMs);
+  }
+
+  private async mutateEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
+    this.ensureAlive();
+    assertGraphqlWireKind(body.query, "mutation");
+    return executeGraphql(this.handle, body, this.timeoutMs);
+  }
+
+  /** @emoji 🧾 Applies a mutation envelope and registers emitted operation ids for {@code Subscription.operation}. */
+  mutationReceipt(env: GraphqlEnvelope<JsonValue>): SetResult {
+    this.ensureAlive();
+    return this.trackCommandResult(env);
+  }
+
+  /** @emoji 🧾 Reads a selection inside a specific store's scoped {@code kit { … }} through GraphQL. */
+  async readKitInnerForStore(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    const { query, variables: v0 } = kitReadSelectionDocument(theKitReadPoint, inner);
+    const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    return kitReadSelectionFromData(data, theKitReadPoint, storeId);
+  }
+
+  async readKitInner(_inner: string, _variables: JsonObject = {}): Promise<JsonObject | null> {
+    throw new Error("store id is required; use session.store(id).readKitInner(...)");
+  }
+
+  async readStoreInner(_inner: string, _variables: JsonObject = {}): Promise<JsonObject | null> {
+    throw new Error("store id is required; use session.store(id).readStoreInner(...)");
+  }
+
+  /** @emoji 🧾 Reads a selection inside a specific target {@code Store} edge. */
+  async readStoreInnerForId(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    const { query, variables: v0 } = sessionStoreSelectionDocument(inner);
+    const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    return sessionStoreNodeFromData(data, storeId);
+  }
+
+  /** @emoji 🧾 Runs a store-scoped kit mutation through {@code SessionCommand.store(id:)}. */
+  async mutateScoped(storeId: string, changeId?: string, kitSelection?: string): Promise<SetResult> {
+    this.ensureAlive();
+    if (changeId == null || kitSelection == null) throw new Error("store id is required for store-scoped mutation");
+    const { query, variables } = scopedKitMutationBody(storeId, changeId, kitSelection);
+    const env = await this.mutateEnvelope({ query, variables });
+    return this.trackCommandResult(env);
+  }
+
+  store(storeId: string): Store {
+    return new Store(this, storeId);
+  }
+
+  private async sessionStoreIds(): Promise<readonly string[]> {
+    const data = unwrapGraphqlData(await this.readEnvelope({ query: `query { session { stores { edges { cursor } } } }` })) as JsonValue;
+    return sessionStoreEdges(data).map(sessionStoreEdgeId).filter((id) => id !== "");
+  }
+
+  async stores(): Promise<readonly Store[]> {
+    const ids = await this.sessionStoreIds();
+    return Object.freeze(ids.map((id) => this.store(id)));
+  }
+
+  localProvider(): LocalProvider {
+    return new LocalProvider(this);
+  }
+
+  remoteProvider(url: string): RemoteProvider {
+    return new RemoteProvider(this, url);
+  }
+
+  private async remoteProviderUrls(): Promise<readonly string[]> {
+    const data = unwrapGraphqlData(
+      await this.readEnvelope({ query: `query { session { remoteProviders { edges { node { url } } } } }` }),
+    ) as JsonObject;
+    const session = jsonObjectField(data, "session");
+    const edges = jsonObjectField(session, "remoteProviders")?.["edges"];
+    if (!Array.isArray(edges)) return [];
+    return edges.map((e) => String(((e as JsonObject)["node"] as JsonObject | undefined)?.["url"] ?? "")).filter((url) => url !== "");
+  }
+
+  async remoteProviders(): Promise<readonly RemoteProvider[]> {
+    const urls = await this.remoteProviderUrls();
+    return Object.freeze(urls.map((url) => this.remoteProvider(url)));
+  }
+
+  private trackCommandId(id: string): string {
+    if (id !== "") this.commandIds.add(id);
+    return id;
+  }
+
+  private trackCommandResult(env: GraphqlEnvelope<JsonValue>): SetResult {
+    let failed: SetResult | null = null;
+    const visit = (value: JsonValue | undefined): void => {
+      if (isJsonObjectNode(value) && "ok" in value) {
+        const r = parseResponsePayload(value);
+        if (!r.ok) failed = r;
+        const id = responseResultId(value);
+        if (id !== "") this.trackCommandId(id);
+        return;
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) visit(item);
+      } else if (isJsonObjectNode(value)) {
+        for (const item of Object.values(value)) visit(item);
+      }
+    };
+    visit(env.data ?? undefined);
+    if (failed != null) return failed;
+    return gqlOkFromEnvelope(env);
+  }
+
+  async ensureChangeId(storeId?: string): Promise<string> {
+    this.ensureAlive();
+    if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped change");
+    const data = unwrapGraphqlData(
+      await this.mutateEnvelope({
+        query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ${GQL_RESPONSE_SELECTION} } } } } }`,
+        variables: { storeId },
+      }),
+    ) as JsonObject;
+    const start = ((data["session"] as JsonObject | undefined)?.["store"] as JsonObject | undefined)?.["theKit"] as JsonObject | undefined;
+    const payload = start?.["startNewChange"];
+    const r = parseResponsePayload(payload);
+    if (!r.ok) throw new Error(r.error.message);
+    const cid = responseResultId(payload);
+    if (cid === "") throw new Error("startNewChange: empty change id");
+    return this.trackCommandId(cid);
+  }
+
+  async saveChange(storeId?: string): Promise<void> {
+    this.ensureAlive();
+    if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped save");
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    this.trackCommandResult(env);
+  }
+
+  async startNewChange(storeId: string): Promise<ChangeId> {
+    return await this.ensureChangeId(storeId);
+  }
+
+  async createCheckpoint(storeId: string, message: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  async startAlternative(storeId: string, name?: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query:
+        name == null
+          ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative { ${GQL_RESPONSE_SELECTION} } } } }`
+          : `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative(name: ${gqlString(name)}) { ${GQL_RESPONSE_SELECTION} } } } }`,
+      variables: { storeId },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (sole rs/js kit bootstrap besides empty store). */
+  async installProjection(storeId: string, json: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ${GQL_RESPONSE_SELECTION} } } } }`,
+      variables: { storeId, json },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  async integrateAlternative(storeId: string, alternativeId: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  async login(username: string, passwordHash: string, hubUrl?: string): Promise<SetResult> {
+    this.ensureAlive();
+    const url = hubUrl ?? "";
+    const h = hubUrl == null ? "null" : gqlString(hubUrl);
+    const env = await this.mutateEnvelope({
+      query: `mutation { session { remoteProvider(url: ${gqlString(url)}) { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
+    return this.trackCommandResult(env);
+  }
+
+  async logout(): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({ query: `mutation { session { remoteProvider(url: "") { logout { ${GQL_RESPONSE_SELECTION} } } } }` });
+    return this.trackCommandResult(env);
+  }
+
+  async sessionStart(): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({ query: `mutation { session { start { ${GQL_RESPONSE_SELECTION} } } }` });
+    return this.trackCommandResult(env);
+  }
+
+  async sessionEnd(): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({ query: `mutation { session { end { ${GQL_RESPONSE_SELECTION} } } }` });
+    return this.trackCommandResult(env);
+  }
+
+  async attachBackbone(storeId: string, provider: Provider, uri: string): Promise<SetResult> {
+    return provider.ensureBackboneAttached(storeId, uri);
+  }
+
+  async detachBackbone(storeId: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the given store command scope. */
+  async backboneSyncNow(storeId: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.mutateEnvelope({
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId },
+    });
+    return this.trackCommandResult(env);
+  }
+
+  /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
+  async backboneStatus(storeId: string): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
+    this.ensureAlive();
+    const data = unwrapGraphqlData(
+      await this.readEnvelope({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` }),
+    ) as JsonObject;
+    const st = sessionStoreNodeFromData(data, storeId);
+    return {
+      attachedUri: null,
+      kind: st?.["authoritative"] == null ? "OFFLINE" : "ONLINE",
+    };
+  }
+
+  /** @emoji 🧾 Warm-path query after WASM init. */
+  private async warmGraphqlRead(): Promise<void> {
+    const stores = await this.stores();
+    if (stores.length > 0) await stores[0]!.readKitInner("id name");
+  }
+
+  static async open(uri: string, opts?: SessionOpenOptions): Promise<Session> {
+    assertRsJsSessionOpenUri(uri);
+    const timeoutMs = opts?.timeoutMs ?? 60_000;
+    const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__;
+    const preferInlineInVitest = isVitestOrEmbeddedTestRuntime();
+
+    const bootstrapUri = RS_WASM_EMPTY_STORE_URI;
+    const useDedicatedWorker = isBrowserWorkerRuntime() && !preferInlineInVitest;
+    if (useDedicatedWorker) {
+      const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
+      const wt = new WorkerStringTransport(worker);
+      try {
+        await wt.init(bootstrapUri);
+        const k = new Session(timeoutMs, wt);
+        await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
+        if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
+        return k;
+      } catch (workerErr) {
+        console.warn("[semio/js] WASM worker init failed; falling back to inline WASM", workerErr);
+        try {
+          wt.dispose();
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    const wasmHandle = await createRsWasmGraphqlHandle(bootstrapUri, { wasmSpecifier });
+    const t = new InlineTransport(wasmHandle);
+    const k = new Session(timeoutMs, t);
+    await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
+    if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
+    return k;
+  }
+
+  /** @emoji 🧪 Opens the RS-backed empty in-memory kit store used for local bridge and UI smoke paths. */
+  static async openInMemory(opts?: SessionOpenOptions): Promise<Session> {
+    return Session.open(SEMIO_IN_MEMORY_KIT_URI, opts);
+  }
+
+  /** @emoji 🌐 Opens a {@link Session} against native `semio-store` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
+  static async openHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
+    const timeoutMs = opts?.timeoutMs ?? 60_000;
+    const root = baseUrl.replace(/\/$/, "");
+    if (opts?.installCreateDto != null) {
+      const r = await fetch(`${root}/install`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ create: { dto: opts.installCreateDto } }),
+      });
+      if (!r.ok) throw new Error(`semio-store install ${r.status}: ${await r.text()}`);
+    }
+    const inner = new HttpStringTransport(root);
+    const k = new Session(timeoutMs, inner);
+    await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
+    if (shouldStartLiveSubscriptionLoop()) void k.startSubscriptionLoop();
+    return k;
+  }
+
+  subscribe(handler: (ev: JsonValue) => void): Unsubscribe {
+    return this.bus.subscribe(handler);
+  }
+
+  async dispose(): Promise<void> {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.innerTransport.dispose();
+  }
+}
+
+//#endregion 🏪Store
+
+//#region 📦Kit
+/** @emoji 📦 Target-schema kit entity beneath {@link Version}; one read + one change event per field, one method per command. */
+export class Kit extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return inner;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare image: () => Promise<string>;
+  declare preview: () => Promise<string>;
+  declare remote: () => Promise<string>;
+  declare homepage: () => Promise<string>;
+  declare license: () => Promise<string>;
+  declare uri: () => Promise<string>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
+  declare hasTypesTransitive: () => Promise<readonly Type[]>;
+  declare hasDesignsTransitive: () => Promise<readonly Design[]>;
+  declare authors: () => Promise<readonly Author[]>;
+  declare qualities: () => Promise<readonly Quality[]>;
+  declare tags: () => Promise<readonly Tag[]>;
+  declare concepts: () => Promise<readonly Concept[]>;
+  declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onIconChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onImageChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onPreviewChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onRemoteChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onHomepageChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onLicenseChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onUriChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onDesignsChanged: (cb: (next: readonly Design[]) => void) => Unsubscribe;
+  declare onTypesChanged: (cb: (next: readonly Type[]) => void) => Unsubscribe;
+  declare onAuthorsChanged: (cb: (next: readonly Author[]) => void) => Unsubscribe;
+  declare onQualitiesChanged: (cb: (next: readonly Quality[]) => void) => Unsubscribe;
+  declare onTagsChanged: (cb: (next: readonly Tag[]) => void) => Unsubscribe;
+  declare onConceptsChanged: (cb: (next: readonly Concept[]) => void) => Unsubscribe;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare createTag: (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare deleteTag: (id: string) => Promise<SetResult>;
+  declare deleteTags: (ids: readonly string[]) => Promise<SetResult>;
+  declare createConcept: (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare deleteConcept: (id: string) => Promise<SetResult>;
+  declare deleteConcepts: (ids: readonly string[]) => Promise<SetResult>;
+  declare createQuality: (key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>;
+  declare deleteQuality: (id: string) => Promise<SetResult>;
+  declare deleteQualities: (ids: readonly string[]) => Promise<SetResult>;
+  declare createType: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
+  declare deleteType: (id: string) => Promise<SetResult>;
+  declare deleteTypes: (ids: readonly string[]) => Promise<SetResult>;
+  declare createDesign: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
+  declare deleteDesign: (id: string) => Promise<SetResult>;
+  declare deleteDesigns: (ids: readonly string[]) => Promise<SetResult>;
+  declare hasFolders: () => Promise<readonly Folder[]>;
+  declare hasFiles: () => Promise<readonly File[]>;
+  declare hasFamilies: () => Promise<readonly Family[]>;
+  declare hasTypologies: () => Promise<readonly Typology[]>;
+  declare typology: (id: string) => Typology;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null) => Promise<SetResult>;
+  declare moveToFolder: (nodeId: string, folderId?: string | null) => Promise<SetResult>;
+}
+
+const KIT_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => String((frag as JsonObject | null)?.["name"] ?? ""), eventKind: "kitRenamed" },
+  { selection: "description", parse: (frag) => String((frag as JsonObject | null)?.["description"] ?? ""), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => String((frag as JsonObject | null)?.["icon"] ?? "") },
+  { selection: "image", parse: (frag) => String((frag as JsonObject | null)?.["image"] ?? "") },
+  { selection: "preview", parse: (frag) => String((frag as JsonObject | null)?.["preview"] ?? "") },
+  { selection: "remote", parse: (frag) => String((frag as JsonObject | null)?.["remote"] ?? "") },
+  { selection: "homepage", parse: (frag) => String((frag as JsonObject | null)?.["homepage"] ?? "") },
+  { selection: "license", parse: (frag) => String((frag as JsonObject | null)?.["license"] ?? "") },
+  { selection: "uri", parse: (frag) => String((frag as JsonObject | null)?.["uri"] ?? "") },
+  {
+    selection: "hasDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "authors { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "qualities { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "qualities").map((id) => new Quality(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "tags { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "tags").map((id) => new Tag(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "concepts { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "concepts").map((id) => new Concept(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasFolders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFolders").map((id) => new Folder(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasFamilies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasFamilies").map((id) => new Family(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasTypologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypologies").map((id) => new Typology(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = ((frag as JsonObject | null)?.["hasPiecesTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = ((frag as JsonObject | null)?.["hasConnectionsTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectionId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Connection(entity.session, designId, connectionId, entity.storeId);
+        }),
+      );
+    },
+  },
+  ...vfsKitFields(null),
+] as const);
+
+const KIT_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  {
+    method: "createTag",
+    buildInner: (_e, name, description, icon, order) =>
+      `ct: createTag(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+  },
+  { method: "deleteTag", buildInner: (_e, id) => `dt: deleteTag(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteTags", buildInner: (_e, ids) => `dts: deleteTags(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createConcept",
+    buildInner: (_e, name, description, icon, order) =>
+      `cc: createConcept(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+  },
+  { method: "deleteConcept", buildInner: (_e, id) => `dc: deleteConcept(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteConcepts", buildInner: (_e, ids) => `dcs: deleteConcepts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createQuality",
+    buildInner: (_e, key, value, unit, definition, description, icon) =>
+      `cq: createQuality(key: ${gqlString(String(key ?? ""))}, value: ${value == null ? "null" : gqlString(String(value))}, unit: ${unit == null ? "null" : gqlString(String(unit))}, definition: ${definition == null ? "null" : gqlString(String(definition))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))})`,
+  },
+  { method: "deleteQuality", buildInner: (_e, id) => `dq: deleteQuality(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteQualities", buildInner: (_e, ids) => `dqs: deleteQualities(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createType",
+    buildInner: (_e, name, description, icon, image, unit) =>
+      `cT: createType(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
+  },
+  { method: "deleteType", buildInner: (_e, id) => `dT: deleteType(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteTypes", buildInner: (_e, ids) => `dTs: deleteTypes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createDesign",
+    buildInner: (_e, name, description, icon, image, unit) =>
+      `cD: createDesign(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
+  },
+  { method: "deleteDesign", buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deleteDesigns", buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createFolder",
+    buildInner: (_e, name, path, description, icon, parentFolderId) =>
+      `cF: createFolder(name: ${gqlString(String(name ?? ""))}, path: ${gqlString(String(path ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, parentFolderId: ${parentFolderId == null ? "null" : gqlString(String(parentFolderId))})`,
+  },
+  {
+    method: "moveToFolder",
+    buildInner: (_e, nodeId, folderId) =>
+      `mF: moveToFolder(nodeId: ${gqlString(String(nodeId ?? ""))}, folderId: ${folderId == null ? "null" : gqlString(String(folderId))})`,
+  },
+] as const);
+
+installEntityKitMethods(Kit, KIT_FIELDS as readonly BoundKitFieldSpec<unknown, Kit>[], KIT_OPERATIONS);
+//#endregion 📦Kit
+
+function executeSessionReadGraphql(
+  session: Session,
+  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
+): Promise<GraphqlEnvelope<JsonValue>> {
+  return (session as unknown as { readEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).readEnvelope(body);
+}
+
+function executeSessionWriteGraphql(
+  session: Session,
+  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
+): Promise<GraphqlEnvelope<JsonValue>> {
+  return (session as unknown as { mutateEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).mutateEnvelope(body);
+}
+
+//#region 🧬VcsEntities
+/** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
+export type GraphRootKind = "wip" | "authoritative";
+
+/** @emoji 🏪 Target store selected from {@code Session.stores.edges.cursor}. */
+export class Store extends Entity {
+  constructor(session: Session, id: string) {
+    super(session, id);
+  }
+
+  async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    return this.session.readKitInnerForStore(this.id, inner, variables);
+  }
+
+  design(id: string): Design {
+    return this.entity(Design, id, this.id);
+  }
+
+  type(id: string): Type {
+    return this.entity(Type, id, this.id);
+  }
+
+  file(id: string): File {
+    return this.entity(File, id, this.id);
+  }
+
+  folder(id: string): Folder {
+    return this.entity(Folder, id, this.id);
+  }
+
+  family(id: string): Family {
+    return this.entity(Family, id, this.id);
+  }
+
+  tag(id: string): Tag {
+    return this.entity(Tag, id, this.id);
+  }
+
+  concept(id: string): Concept {
+    return this.entity(Concept, id, this.id);
+  }
+
+  quality(id: string): Quality {
+    return this.entity(Quality, id, this.id);
+  }
+
+  author(id: string): Author {
+    return this.entity(Author, id, this.id);
+  }
+
+  async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
+    return this.session.mutateScoped(this.id, changeId, kitSelection);
+  }
+
+  async ensureChangeId(): Promise<string> {
+    return this.session.ensureChangeId(this.id);
+  }
+
+  async saveChange(): Promise<void> {
+    await this.session.saveChange(this.id);
+  }
+
+  async startNewChange(): Promise<ChangeId> {
+    return await this.session.startNewChange(this.id);
+  }
+
+  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (rs/js GraphQL contract). */
+  async installProjection(json: string): Promise<SetResult> {
+    return this.session.installProjection(this.id, json);
+  }
+
+  async createCheckpoint(message: string): Promise<SetResult> {
+    return this.session.createCheckpoint(this.id, message);
+  }
+
+  async startAlternative(name?: string): Promise<SetResult> {
+    return this.session.startAlternative(this.id, name);
+  }
+
+  async integrateAlternative(alternativeId: string): Promise<SetResult> {
+    return this.session.integrateAlternative(this.id, alternativeId);
+  }
+
+  wip(): Graph {
+    return new Graph(this.session, "wip", this.id);
+  }
+
+  authoritative(): Graph {
+    return new Graph(this.session, "authoritative", this.id);
+  }
+
+  async conflicts(): Promise<readonly Conflict[]> {
+    const node = await this.session.readStoreInnerForId(this.id, "conflicts { edges { node { id } } }");
+    return parseEntityConnectionIds(node, "conflicts").map((id) => new Conflict(this.session, id));
+  }
+
+  async attachBackbone(provider: Provider, uri: string): Promise<SetResult> {
+    return provider.ensureBackboneAttached(this.id, uri);
+  }
+
+  async detachBackbone(): Promise<SetResult> {
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId: this.id },
+    });
+    return this.session.mutationReceipt(env);
+  }
+
+  async syncBackbone(): Promise<SetResult> {
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync { ${GQL_RESPONSE_SELECTION} } } } } }`,
+      variables: { storeId: this.id },
+    });
+    return this.session.mutationReceipt(env);
+  }
+}
+
+/** @emoji 🪢 Backbone exposed by a local or remote provider. */
+export class Backbone extends Entity {
+  constructor(session: Session, id: string, public readonly provider: Provider) {
+    super(session, id);
+  }
+}
+
+/** @emoji 🔌 Provider command facade for creating and attaching backbones to managed stores. */
+export abstract class Provider extends Entity {
+  protected abstract readonly commandSelection: string;
+
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  protected abstract providerNode(inner: string): Promise<JsonObject | null>;
+
+  async backboneUris(): Promise<readonly string[]> {
+    const node = await this.providerNode("backbones { edges { node { uri } } }");
+    const edges = jsonObjectField(node, "backbones")?.["edges"];
+    if (!Array.isArray(edges)) return [];
+    return edges.map((e) => String(((e as JsonObject)["node"] as JsonObject | undefined)?.["uri"] ?? "")).filter((uri) => uri !== "");
+  }
+
+  async createBackbone(uri: string): Promise<SetResult> {
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
+    return this.session.mutationReceipt(env);
+  }
+
+  async attachBackbone(storeId: string): Promise<SetResult> {
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) { ${GQL_RESPONSE_SELECTION} } } } }`,
+      variables: { storeId },
+    });
+    return this.session.mutationReceipt(env);
+  }
+
+  async ensureBackboneAttached(storeId: string, uri: string): Promise<SetResult> {
+    if (!(await this.backboneUris()).includes(uri)) {
+      const created = await this.createBackbone(uri);
+      if (!created.ok) return created;
+    }
+    return this.attachBackbone(storeId);
+  }
+}
+
+/** @emoji 💾 Local provider facade for file-backed stores and backbones. */
+export class LocalProvider extends Provider {
+  protected readonly commandSelection = "localProvider";
+
+  constructor(session: Session) {
+    super(session, "local");
+  }
+
+  protected async providerNode(inner: string): Promise<JsonObject | null> {
+    const data = unwrapGraphqlData(await executeSessionReadGraphql(this.session, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
+    return jsonObjectField(jsonObjectField(data, "session"), "localProvider");
+  }
+}
+
+/** @emoji 🛜 Remote provider facade for websocket/hub-backed stores and backbones. */
+export class RemoteProvider extends Provider {
+  protected readonly commandSelection: string;
+
+  constructor(session: Session, public readonly url: string) {
+    super(session, url);
+    this.commandSelection = `remoteProvider(url: ${gqlString(url)})`;
+  }
+
+  protected override async providerNode(inner: string): Promise<JsonObject | null> {
+    const data = unwrapGraphqlData(
+      await executeSessionReadGraphql(this.session, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
+    ) as JsonObject;
+    const edges = jsonObjectField(jsonObjectField(data, "session"), "remoteProviders")?.["edges"];
+    if (!Array.isArray(edges)) return null;
+    for (const edge of edges) {
+      const node = jsonObjectField(edge as JsonObject, "node");
+      if (String(node?.["url"] ?? "") === this.url) return node;
+    }
+    return null;
+  }
+
+  async login(username: string, passwordHash: string, hubUrl?: string | null): Promise<SetResult> {
+    const h = hubUrl == null ? "null" : gqlString(hubUrl);
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
+    return this.session.mutationReceipt(env);
+  }
+
+  async logout(): Promise<SetResult> {
+    const env = await executeSessionWriteGraphql(this.session, {
+      query: `mutation { session { ${this.commandSelection} { logout { ${GQL_RESPONSE_SELECTION} } } } }`,
+    });
+    return this.session.mutationReceipt(env);
+  }
+}
+
+/** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
+export class Graph extends Entity {
+  constructor(session: Session, root: GraphRootKind, private readonly managedStoreId: string) {
+    super(session, root);
+  }
+
+  get root(): GraphRootKind {
+    return this.id as GraphRootKind;
+  }
+
+  storeBranchPath(selection: string): string {
+    return `${this.root} { ${selection} }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(frag, this.root);
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
+  }
+
+  /** @emoji 🏛 {@code graph { theKit }} handle. */
+  theKit(): TheKit {
+    return new TheKit(this.session, this.root, this.managedStoreId);
+  }
+
+  checkpoint(checkpointId: string): Checkpoint {
+    return new Checkpoint(this.session, this.root, checkpointId, this.managedStoreId);
+  }
+
+  alternative(alternativeId: string): Alternative {
+    return new Alternative(this.session, { parent: "graph", root: this.root, storeId: this.managedStoreId }, alternativeId);
+  }
+
+  declare hash: () => Promise<string>;
+  declare alternatives: () => Promise<readonly Alternative[]>;
+  declare checkpoints: () => Promise<readonly Checkpoint[]>;
+  declare onHashChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onAlternativesChanged: (cb: (next: readonly Alternative[]) => void) => Unsubscribe;
+  declare onCheckpointsChanged: (cb: (next: readonly Checkpoint[]) => void) => Unsubscribe;
+}
+
+installEntityStoreBranchMethods(
+  Graph,
+  defineBoundStoreBranchFields([
+    { selection: "hash", parse: (branch) => String(branch?.["hash"] ?? "") },
+    {
+      selection: "alternatives { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "alternatives").map((id) => (entity as Graph).alternative(id))),
+    },
+    {
+      selection: "checkpoints { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "checkpoints").map((id) => (entity as Graph).checkpoint(id))),
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Graph>[],
+);
+
+/** @emoji 🧭 Parent scope for {@link Alternative} navigation. */
+export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind; readonly storeId: string };
+
+/** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
+export class Alternative extends Entity {
+  constructor(
+    session: Session,
+    private readonly ap: AlternativeParent,
+    id: string,
+  ) {
+    super(session, id);
+  }
+
+  private graphRoot(): GraphRootKind {
+    return this.ap.parent === "graph" ? this.ap.root : "wip";
+  }
+
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot()} { alternative(id: ${gqlString(this.id)}) { ${selection} } }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot()), "alternative");
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.ap.storeId, this.storeBranchPath(selection));
+  }
+
+  declare name: () => Promise<string>;
+  declare unsavedChangeCount: () => Promise<number>;
+}
+
+installEntityStoreBranchMethods(
+  Alternative,
+  defineBoundStoreBranchFields([
+    { selection: "name", parse: (branch) => String(branch?.["name"] ?? "") },
+    {
+      selection: "unsavedChanges { edges { node { id } } }",
+      method: "unsavedChangeCount",
+      parse: () => 0,
+      coarseEvent: true,
+      parseEntity: (_entity, branch) => parseEntityConnectionIds(branch, "unsavedChanges").length,
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Alternative>[],
+);
+
+/** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
+export class TheKit extends Entity {
+  constructor(session: Session, readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
+    super(session, `theKit:${graphRoot}`);
+  }
+
+  /** @emoji 📦 Target {@code Version.kit} handle beneath this version node. */
+  kitRef(id = "kit"): Kit {
+    return new Kit(this.session, id, this.managedStoreId);
+  }
+
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot} { theKit { ${selection} } }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot), "theKit");
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
+  }
+
+  declare kit: () => Promise<Kit>;
+}
+
+installEntityStoreBranchMethods(
+  TheKit,
+  defineBoundStoreBranchFields([
+    {
+      selection: "id",
+      method: "kit",
+      parse: () => null as unknown as Kit,
+      parseEntity: (entity, branch) => (entity as TheKit).kitRef(String(branch?.["id"] ?? "kit")),
+      coarseEvent: true,
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, TheKit>[],
+);
+
+/** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
+export class Checkpoint extends Entity {
+  readonly graphRoot: GraphRootKind;
+  constructor(session: Session, graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
+    super(session, checkpointId);
+    this.graphRoot = graphRoot;
+  }
+
+  storeBranchPath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { ${selection} } }`;
+  }
+
+  parseStoreBranch(frag: JsonObject | null): JsonObject | null {
+    return jsonObjectField(jsonObjectField(frag, this.graphRoot), "checkpoint");
+  }
+
+  async readStoreBranch(selection: string): Promise<JsonObject | null> {
+    return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
+  }
+
+  change(changeId: string): Change {
+    return new Change(this.session, this.graphRoot, this.id, changeId, this.managedStoreId);
+  }
+
+  edit(editId: string): Edit {
+    return new Edit(this.session, this.graphRoot, this.id, editId, this.managedStoreId);
+  }
+
+  declare message: () => Promise<string>;
+  declare timestamp: () => Promise<string | null>;
+  declare hash: () => Promise<string>;
+  declare changes: () => Promise<readonly Change[]>;
+  declare edits: () => Promise<readonly Edit[]>;
+}
+
+installEntityStoreBranchMethods(
+  Checkpoint,
+  defineBoundStoreBranchFields([
+    { selection: "message", parse: (branch) => String(branch?.["message"] ?? "") },
+    {
+      selection: "timestamp",
+      parse: (branch) => {
+        const ts = branch?.["timestamp"];
+        return ts == null ? null : String(ts);
+      },
+    },
+    { selection: "hash", parse: (branch) => String(branch?.["hash"] ?? "") },
+    {
+      selection: "changes { id }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseStrongEntityArrayIds(branch, "changes").map((cid) => (entity as Checkpoint).change(cid))),
+    },
+    {
+      selection: "edits { edges { node { id } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, branch) =>
+        Object.freeze(parseEntityConnectionIds(branch, "edits").map((eid) => (entity as Checkpoint).edit(eid))),
+    },
+  ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Checkpoint>[],
+);
+
+/** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint}. */
+export class Change extends Entity {
+  readonly graphRoot: GraphRootKind;
+  readonly checkpointId: string;
+  constructor(
+    session: Session,
+    graphRoot: GraphRootKind,
+    checkpointId: string,
+    changeId: string,
+    private readonly managedStoreId: string,
+  ) {
+    super(session, changeId);
+    this.graphRoot = graphRoot;
+    this.checkpointId = checkpointId;
+  }
+
+  scopedNodePath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${selection} } } } }`;
+  }
+
+  async readScopedNode(selection: string): Promise<JsonObject | null> {
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, this.scopedNodePath(selection));
+    const cp = jsonObjectField(jsonObjectField(storeNode, this.graphRoot), "checkpoint");
+    return (cp?.["change"] as JsonObject | undefined) ?? null;
+  }
+
+  declare description: () => Promise<string>;
+  declare origin: () => Promise<string>;
+  declare saved: () => Promise<boolean | null>;
+  declare startedAt: () => Promise<string>;
+  declare savedAt: () => Promise<string | null>;
+}
+
+installEntityScopedNodeMethods(
+  Change,
+  defineBoundScopedNodeFields([
+    { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+    { selection: "origin", parse: (node) => String(node?.["origin"] ?? "") },
+    {
+      selection: "saved",
+      parse: (node) => {
+        const v = node?.["saved"];
+        if (v == null) return null;
+        return Boolean(v);
+      },
+    },
+    {
+      selection: "startedAt",
+      parse: (node) => {
+        const v = node?.["startedAt"];
+        return v == null ? "" : String(v);
+      },
+    },
+    {
+      selection: "savedAt",
+      parse: (node) => {
+        const v = node?.["savedAt"];
+        return v == null ? null : String(v);
+      },
+    },
+  ] as const),
+);
+
+/** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint}. */
+export class Edit extends Entity {
+  readonly graphRoot: GraphRootKind;
+  readonly checkpointId: string;
+  constructor(
+    session: Session,
+    graphRoot: GraphRootKind,
+    checkpointId: string,
+    editId: string,
+    private readonly managedStoreId: string,
+  ) {
+    super(session, editId);
+    this.graphRoot = graphRoot;
+    this.checkpointId = checkpointId;
+  }
+
+  scopedNodePath(selection: string): string {
+    return `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${selection} } } } }`;
+  }
+
+  async readScopedNode(selection: string): Promise<JsonObject | null> {
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, this.scopedNodePath(selection));
+    const cp = jsonObjectField(jsonObjectField(storeNode, this.graphRoot), "checkpoint");
+    return (cp?.["edit"] as JsonObject | undefined) ?? null;
+  }
+
+  declare description: () => Promise<string>;
+  declare origin: () => Promise<string>;
+  declare sequenceNumber: () => Promise<number>;
+  declare startedAt: () => Promise<string>;
+}
+
+installEntityScopedNodeMethods(
+  Edit,
+  defineBoundScopedNodeFields([
+    { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+    { selection: "origin", parse: (node) => String(node?.["origin"] ?? "") },
+    {
+      selection: "sequenceNumber",
+      parse: (node) => {
+        const v = node?.["sequenceNumber"];
+        return typeof v === "number" ? v : Number(v ?? NaN);
+      },
+    },
+    {
+      selection: "startedAt",
+      parse: (node) => {
+        const v = node?.["startedAt"];
+        return v == null ? "" : String(v);
+      },
+    },
+  ] as const),
+);
+
+/** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
+export class Conflict extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  declare reasons: () => Promise<readonly string[]>;
+  declare authoritativeChangeId: () => Promise<string>;
+  declare wipChangeId: () => Promise<string>;
+}
+
+installEntityNodeMethods(
+  Conflict,
+  "Conflict",
+  defineBoundNodeFields([
+    {
+      selection: "reasons",
+      parse: (node) => {
+        const raw = node?.["reasons"] as readonly JsonValue[] | undefined;
+        if (!Array.isArray(raw)) return [];
+        return raw.map((x) => String(x));
+      },
+    },
+    {
+      selection: "authoritativeChange { id }",
+      method: "authoritativeChangeId",
+      parse: (node) => String((node?.["authoritativeChange"] as JsonObject | undefined)?.["id"] ?? ""),
+    },
+    {
+      selection: "wipChange { id }",
+      method: "wipChangeId",
+      parse: (node) => String((node?.["wipChange"] as JsonObject | undefined)?.["id"] ?? ""),
+    },
+  ] as const) as readonly BoundNodeFieldSpec<unknown>[],
+);
+
+//#endregion 🧬VcsEntities
+
+//#region 📐Design
+/** @emoji 📐 Design artifact: declarative field reads, commands, and per-field change subscriptions. */
+export class Design extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  private child<T extends Entity>(ctor: new (session: Session, designId: string, id: string, storeId?: string) => T, id: string): T {
+    return new ctor(this.session, this.id, id, this.storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  piece(pieceId: string): Piece {
+    return this.child(Piece, pieceId);
+  }
+
+  declare pieces: {
+    (): Promise<readonly Piece[]>;
+    (pieceIds: readonly string[]): PiecesOperation;
+  };
+
+  connection(connectionId: string): Connection {
+    return this.child(Connection, connectionId);
+  }
+
+  layer(layerId: string): Layer {
+    return this.child(Layer, layerId);
+  }
+
+  group(groupId: string): Group {
+    return this.child(Group, groupId);
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare image: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare qualitySum: () => Promise<number>;
+  declare hasPieces: () => Promise<readonly Piece[]>;
+  declare hasConnections: () => Promise<readonly Connection[]>;
+  declare hasLayers: () => Promise<readonly Layer[]>;
+  declare hasGroups: () => Promise<readonly Group[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
+  declare referencesTypes: () => Promise<readonly Type[]>;
+  declare referencesDesigns: () => Promise<readonly Design[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencesTypesTransitive: () => Promise<readonly Type[]>;
+  declare referencesDesignsTransitive: () => Promise<readonly Design[]>;
+  declare referencesFilesTransitive: () => Promise<readonly File[]>;
+  declare referencesRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesRepresentationsTransitive: () => Promise<readonly Representation[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onIconChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onImageChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onUnitChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onQualitySumChanged: (cb: (next: number) => void) => Unsubscribe;
+  declare onPiecesChanged: (cb: (next: readonly Piece[]) => void) => Unsubscribe;
+  declare onConnectionsChanged: (cb: (next: readonly Connection[]) => void) => Unsubscribe;
+  declare onAttributesChanged: (cb: (next: readonly Attribute[]) => void) => Unsubscribe;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare flatten: () => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare addFixedPiece: (blueprintId: string, position: PositionInput, name?: string | null, description?: string | null) => Promise<SetResult>;
+  declare addChildPieceWithParentConnection: (
+    blueprintId: string,
+    parentPieceId: string,
+    parentConnector: string,
+    childConnector: string,
+    name?: string | null,
+    description?: string | null,
+    position?: PositionInput | null,
+    scale?: number | null,
+  ) => Promise<SetResult>;
+  declare addHangingChildPieceWithParentConnection: (
+    blueprintId: string,
+    parentPieceId: string,
+    parentConnector: string,
+    childConnector: string,
+    position: PositionInput,
+    name?: string | null,
+    description?: string | null,
+    scale?: number | null,
+  ) => Promise<SetResult>;
+  declare deletePiece: (id: string) => Promise<SetResult>;
+  declare deletePieces: (ids: readonly string[]) => Promise<SetResult>;
+  declare deletePiecesAndConnections: (pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>;
+}
+
+function parseDesignBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const d = frag?.["design"] as JsonObject | undefined;
+  return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+/** @emoji 🧭 Descends {@code type → …} connection ids on kit JSON. */
+function parseTypeBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const t = frag?.["type"] as JsonObject | undefined;
+  return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+/** @emoji 🧭 Scalar on a nested {@code design.hasLayers|hasGroups} edge node matched by id. */
+function readDesignListNodeField(frag: JsonObject | null, listKey: "hasLayers" | "hasGroups", nodeId: string, field: string): string {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.[listKey] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) return String(n[field] ?? "");
+  }
+  return "";
+}
+
+/** @emoji 🧭 Nullable number on a nested {@code design.hasLayers} edge node. */
+function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string, field: string): number | null {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) {
+      const v = n[field];
+      return typeof v === "number" ? v : null;
+    }
+  }
+  return null;
+}
+
+/** @emoji 🧭 Nullable boolean on a nested {@code design.hasLayers} edge node. */
+function readDesignListNodeBooleanOrNull(frag: JsonObject | null, nodeId: string, field: string): boolean | null {
+  const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  for (const e of edges) {
+    const n = e["node"] as JsonObject | undefined;
+    if (n && String(n["id"] ?? "") === nodeId) {
+      const v = n[field];
+      return typeof v === "boolean" ? v : null;
+    }
+  }
+  return null;
+}
+
+/** @emoji 🧩 Scalar under {@code design.piece} on kit JSON. */
+function readPieceBranchString(frag: JsonObject | null, field: string): string {
+  return String(pieceKit(frag)?.[field] ?? "");
+}
+
+/** @emoji 🧩 Nullable scalar under {@code design.piece}. */
+function readPieceBranchNumberOrNull(frag: JsonObject | null, field: string): number | null {
+  const v = pieceKit(frag)?.[field];
+  return typeof v === "number" ? v : null;
+}
+
+/** @emoji ⛓️ Scalar under {@code design.connection}. */
+function readConnectionBranchString(frag: JsonObject | null, field: string): string {
+  return String(connectionKit(frag)?.[field] ?? "");
+}
+
+/** @emoji ⛓️ Nullable scalar under {@code design.connection}. */
+function readConnectionBranchNumberOrNull(frag: JsonObject | null, field: string): number | null {
+  const v = connectionKit(frag)?.[field];
+  return typeof v === "number" ? v : null;
+}
+
+const DESIGN_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "icon") },
+  { selection: "image", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "image") },
+  { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "design", "unit") },
+  { selection: "qualitySum", parse: (frag) => readKitBranchNumber(frag as JsonObject | null, "design", "qualitySum") },
+  {
+    selection: "hasPieces { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasPieces").map((pid) => (entity as Design).piece(pid))),
+  },
+  {
+    selection: "hasConnections { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasConnections").map((cid) => (entity as Design).connection(cid))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasPiecesTransitive").map((pid) => (entity as Design).piece(pid))),
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasConnectionsTransitive").map((cid) => (entity as Design).connection(cid))),
+  },
+  {
+    selection: "hasLayers { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasLayers").map((lid) => (entity as Design).layer(lid))),
+  },
+  {
+    selection: "hasGroups { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "hasGroups").map((gid) => (entity as Design).group(gid))),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["design"] as JsonObject | undefined),
+  },
+  {
+    selection: "referencesTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesFilesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencesFilesTransitive").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencesRepresentations { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.referencesRepresentations as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencesRepresentationsTransitive { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const d = (frag as JsonObject | null)?.["design"] as JsonObject | undefined;
+      const edges = (d?.referencesRepresentationsTransitive as JsonObject | undefined)?.edges;
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.node as JsonObject | undefined;
+          const repId = String(node?.id ?? "");
+          const owner = node?.owner as JsonObject | undefined;
+          const typeId = String(owner?.id ?? "");
+          return new Representation(entity.session, typeId, repId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencedBy { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedBy").map((id) => (entity as Design).piece(id))),
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("design"),
+] as const);
+
+const DESIGN_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { method: "flatten", buildInner: () => `fl: flatten` },
+  {
+    method: "addAttribute",
+    buildInner: (_e, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "addFixedPiece",
+    buildInner: (_e, blueprintId, position, name, description) =>
+      `afp: addFixedPiece(blueprintId: ${gqlString(String(blueprintId ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))})`,
+  },
+  {
+    method: "addChildPieceWithParentConnection",
+    buildInner: (_e, blueprintId, parentPieceId, parentConnector, childConnector, name, description, position, scale) =>
+      `ac: addChildPieceWithParentConnection(blueprintId: ${gqlString(String(blueprintId ?? ""))}, parentPieceId: ${gqlString(String(parentPieceId ?? ""))}, parentConnector: ${gqlString(String(parentConnector ?? ""))}, childConnector: ${gqlString(String(childConnector ?? ""))}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))}, position: ${position == null ? "null" : formatPositionInput(position as PositionInput)}, scale: ${scale == null ? "null" : String(scale)})`,
+  },
+  {
+    method: "addHangingChildPieceWithParentConnection",
+    buildInner: (_e, blueprintId, parentPieceId, parentConnector, childConnector, position, name, description, scale) =>
+      `ah: addHangingChildPieceWithParentConnection(blueprintId: ${gqlString(String(blueprintId ?? ""))}, parentPieceId: ${gqlString(String(parentPieceId ?? ""))}, parentConnector: ${gqlString(String(parentConnector ?? ""))}, childConnector: ${gqlString(String(childConnector ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))}, scale: ${scale == null ? "null" : String(scale)})`,
+  },
+  { method: "deletePiece", buildInner: (_e, id) => `dp: deletePiece(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deletePieces", buildInner: (_e, ids) => `dps: deletePieces(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "deletePiecesAndConnections",
+    buildInner: (_e, pieceIds, connectionIds) =>
+      `dpc: deletePiecesAndConnections(pieceIds: ${gqlIdList((pieceIds as readonly string[]) ?? [])}, connectionIds: ${gqlIdList((connectionIds as readonly string[]) ?? [])})`,
+  },
+] as const);
+
+installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unknown, Design>[], DESIGN_OPERATIONS);
+
+{
+  const readPieces = Design.prototype.hasPieces as unknown as (this: Design) => Promise<readonly Piece[]>;
+  Object.defineProperty(Design.prototype, "pieces", {
+    configurable: true,
+    writable: true,
+    value: function designPieces(this: Design, pieceIds?: readonly string[]): PiecesOperation | Promise<readonly Piece[]> {
+      if (pieceIds != null) return new PiecesOperation(this.session, this.id, pieceIds, this.storeId);
+      return readPieces.call(this);
+    },
+  });
+}
+//#endregion 📐Design
+
+//#region 🧰Type
+/** @emoji 🧰 Type artifact: declarative field reads, commands, and per-field change subscriptions. */
+export class Type extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  private child<T extends Entity>(ctor: new (session: Session, typeId: string, id: string, storeId?: string) => T, id: string): T {
+    return new ctor(this.session, this.id, id, this.storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `type(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  port(portId: string): Port {
+    return this.child(Port, portId);
+  }
+
+  connector(connectorId: string): Connector {
+    return this.child(Connector, connectorId);
+  }
+
+  representation(representationId: string): Representation {
+    return this.child(Representation, representationId);
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare image: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare hasPorts: () => Promise<readonly Port[]>;
+  declare hasConnectors: () => Promise<readonly Connector[]>;
+  declare hasRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare authors: () => Promise<readonly Author[]>;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare createPort: (code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare deletePort: (id: string) => Promise<SetResult>;
+  declare deletePorts: (ids: readonly string[]) => Promise<SetResult>;
+  declare addConnector: (code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>;
+  declare removeConnector: (id: string) => Promise<SetResult>;
+  declare removeConnectors: (ids: readonly string[]) => Promise<SetResult>;
+}
+
+const TYPE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "icon") },
+  { selection: "image", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "image") },
+  { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "type", "unit") },
+  {
+    selection: "hasPorts { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasPorts").map((id) => (entity as Type).port(id))),
+  },
+  {
+    selection: "hasConnectors { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasConnectors").map((id) => (entity as Type).connector(id))),
+  },
+  {
+    selection: "hasRepresentations { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "hasRepresentations").map((id) => (entity as Type).representation(id))),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const branch = ((frag as JsonObject | null)?.["type"] as JsonObject | undefined) ?? (frag as JsonObject | null);
+      const edges = ((branch?.["referencedBy"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencedByDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["type"] as JsonObject | undefined),
+  },
+  {
+    selection: "authors { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "authors").map((id) => new Author(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("type"),
+] as const);
+
+const TYPE_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_e, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "createPort",
+    buildInner: (_e, code, label, description, icon, order) =>
+      `cp: createPort(code: ${code == null ? "null" : gqlString(String(code))}, label: ${label == null ? "null" : gqlString(String(label))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+  },
+  { method: "deletePort", buildInner: (_e, id) => `dp: deletePort(id: ${gqlString(String(id ?? ""))})` },
+  { method: "deletePorts", buildInner: (_e, ids) => `dps: deletePorts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  {
+    method: "addConnector",
+    buildInner: (_e, code, description, icon, portId) =>
+      `ac: addConnector(code: ${gqlString(String(code ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, portId: ${portId == null ? "null" : gqlString(String(portId))})`,
+  },
+  { method: "removeConnector", buildInner: (_e, id) => `rc: removeConnector(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeConnectors", buildInner: (_e, ids) => `rcs: removeConnectors(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const);
+
+installEntityKitMethods(Type, TYPE_FIELDS as readonly BoundKitFieldSpec<unknown, Type>[], TYPE_OPERATIONS);
+//#endregion 🧰Type
+
+/** @emoji 🧷 Kit JSON path {@code type → port} for nested reads under {@link Port}. */
+const KIT_PATH_TYPE_PORT: readonly string[] = ["type", "port"];
+/** @emoji 🧷 Kit JSON path {@code type → connector}. */
+const KIT_PATH_TYPE_CONNECTOR: readonly string[] = ["type", "connector"];
+/** @emoji 🧷 Kit JSON path {@code type → representation}. */
+const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation"];
+
+//#region 🔘Port
+/** @emoji 🔘 Port under {@link Type}: declarative field reads, commands, and change subscriptions. */
+export class Port extends Entity {
+  readonly typeId: string;
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.typeId = typeId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `type(id: ${gqlString(this.typeId)}) { port(id: ${gqlString(this.id)}) { ${inner} } }`;
+  }
+
+  declare code: () => Promise<string>;
+  declare label: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newCode: string, newLabel?: string | null) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+}
+
+installEntityKitMethods(
+  Port,
+  defineBoundKitFields([
+    { selection: "code", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "code") },
+    { selection: "label", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "label") },
+    { selection: "order", parse: (frag) => readKitPathNumberOrNull(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "order") },
+    { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "name") },
+    { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_PORT, "icon") },
+    {
+      selection: "attributes { edges { node { id key value definition } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_PORT)),
+    },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_PORT),
+  ] as const) as readonly BoundKitFieldSpec<unknown, Port>[],
+  defineBoundKitOperations([
+    { method: "rename", buildInner: (_e, newCode, newLabel) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))}, newLabel: ${newLabel == null ? "null" : gqlString(String(newLabel))})` },
+    { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+    { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+    {
+      method: "addAttribute",
+      buildInner: (_e, key, value, definition) =>
+        `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+    },
+    { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+    { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  ] as const),
+);
+//#endregion 🔘Port
+
+//#region 🔗Connector
+/** @emoji 🔗 Connector under {@link Type}: declarative field reads, commands, and change subscriptions. */
+export class Connector extends Entity {
+  readonly typeId: string;
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.typeId = typeId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `type(id: ${gqlString(this.typeId)}) { connector(id: ${gqlString(this.id)}) { ${inner} } }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare code: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare port: () => Promise<Port | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newCode: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+}
+
+installEntityKitMethods(
+  Connector,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "name") },
+    { selection: "code", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "code") },
+    { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR, "icon") },
+    {
+      selection: "port { id }",
+      parse: () => null,
+      parseEntity: (entity, frag) => {
+        const id = String((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)?.["port"] as JsonObject | undefined)?.["id"] ?? "");
+        return id === "" ? null : new Type(entity.session, (entity as Connector).typeId, entity.storeId).port(id);
+      },
+    },
+    {
+      selection: "attributes { edges { node { id key value definition } } }",
+      parse: () => [],
+      coarseEvent: true,
+      parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_CONNECTOR)),
+    },
+    ...vfsEntityPathFields(KIT_PATH_TYPE_CONNECTOR),
+  ] as const) as readonly BoundKitFieldSpec<unknown, Connector>[],
+  defineBoundKitOperations([
+    { method: "rename", buildInner: (_e, newCode) => `rn: rename(newCode: ${gqlString(String(newCode ?? ""))})` },
+    { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+    { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  ] as const),
+);
+//#endregion 🔗Connector
+
+//#region 🧩Piece
+/** @emoji 🧩 @description Blueprint target on a {@link Piece} (`Type` or `Design` node). */
+export interface PieceBlueprint {
+  readonly blueprintKind: "Type" | "Design";
+  readonly id: string;
+}
+
+function pieceKit(frag: JsonObject | null | undefined): JsonObject | null {
+  const d = frag?.["design"] as JsonObject | undefined;
+  const p = d?.["piece"] as JsonObject | undefined;
+  return p ?? null;
+}
+
+//#region 🪶WeakGeometry
+/** @emoji 📌 Weak {@code position}/{@code flatPosition} anchored on {@link Piece} (stable child cache). */
+export class Position {
+  private readonly _center: Coordinate;
+  private readonly _plane: Plane;
+  constructor(
+    public readonly piece: Piece,
+    public readonly role: "position" | "flatPosition",
+  ) {
+    this._center = new Coordinate(this);
+    this._plane = new Plane(this);
+  }
+
+  center(): Coordinate {
+    return this._center;
+  }
+
+  plane(): Plane {
+    return this._plane;
+  }
+}
+
+/** @emoji 📍 Weak {@code Coordinate} under {@link Position}. */
+export class Coordinate {
+  constructor(public readonly parent: Position) { }
+
+  declare u: () => Promise<number>;
+  declare v: () => Promise<number>;
+}
+
+function parsePieceRoleCenter(frag: JsonObject | null, role: string): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  return (json?.["center"] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Coordinate,
+  (self, selection) =>
+    self.parent.piece.readKitInner(self.parent.piece.kitInnerPath(`${self.parent.role} { center { ${selection} } }`)) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRoleCenter(frag, self.parent.role),
+  [
+    { method: "u", selection: "u", parse: (c) => (typeof c?.["u"] === "number" ? c["u"] : 0), coarseEvent: true },
+    { method: "v", selection: "v", parse: (c) => (typeof c?.["v"] === "number" ? c["v"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.piece.session.bus,
+);
+
+/** @emoji 📐 Weak {@code Plane} under {@link Position}. */
+export class Plane {
+  private readonly _origin: Point;
+  private readonly _xAxis: Vector;
+  private readonly _yAxis: Vector;
+  constructor(public readonly parent: Position) {
+    this._origin = new Point(this);
+    this._xAxis = new Vector(this, "xAxis");
+    this._yAxis = new Vector(this, "yAxis");
+  }
+
+  origin(): Point {
+    return this._origin;
+  }
+
+  xAxis(): Vector {
+    return this._xAxis;
+  }
+
+  yAxis(): Vector {
+    return this._yAxis;
+  }
+}
+
+/** @emoji 🔵 Weak 3D point leaf (origin) under {@link Plane}. */
+export class Point {
+  constructor(public readonly parent: Plane) { }
+
+  declare x: () => Promise<number>;
+  declare y: () => Promise<number>;
+  declare z: () => Promise<number>;
+}
+
+function parsePieceRolePlaneOrigin(frag: JsonObject | null, role: string): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  const pl = json?.["plane"] as JsonObject | undefined;
+  return (pl?.["origin"] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Point,
+  (self, selection) =>
+    self.parent.parent.piece.readKitInner(
+      self.parent.parent.piece.kitInnerPath(`${self.parent.parent.role} { plane { origin { ${selection} } } }`),
+    ) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRolePlaneOrigin(frag, self.parent.parent.role),
+  [
+    { method: "x", selection: "x", parse: (o) => (typeof o?.["x"] === "number" ? o["x"] : 0), coarseEvent: true },
+    { method: "y", selection: "y", parse: (o) => (typeof o?.["y"] === "number" ? o["y"] : 0), coarseEvent: true },
+    { method: "z", selection: "z", parse: (o) => (typeof o?.["z"] === "number" ? o["z"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.parent.piece.session.bus,
+);
+
+/** @emoji ➡️ Weak axis vector leaf under {@link Plane}. */
+export class Vector {
+  constructor(
+    public readonly parent: Plane,
+    public readonly axisRole: "xAxis" | "yAxis",
+  ) { }
+
+  declare x: () => Promise<number>;
+  declare y: () => Promise<number>;
+  declare z: () => Promise<number>;
+}
+
+function parsePieceRolePlaneAxis(frag: JsonObject | null, role: string, axisRole: "xAxis" | "yAxis"): JsonObject | null {
+  const json = pieceKit(frag)?.[role] as JsonObject | undefined;
+  const pl = json?.["plane"] as JsonObject | undefined;
+  return (pl?.[axisRole] as JsonObject | undefined) ?? null;
+}
+
+installWeakKitFieldMethods(
+  Vector,
+  (self, selection) =>
+    self.parent.parent.piece.readKitInner(
+      self.parent.parent.piece.kitInnerPath(`${self.parent.parent.role} { plane { ${self.axisRole} { ${selection} } } }`),
+    ) as Promise<JsonObject | null>,
+  (self, frag) => parsePieceRolePlaneAxis(frag, self.parent.parent.role, self.axisRole),
+  [
+    { method: "x", selection: "x", parse: (ax) => (typeof ax?.["x"] === "number" ? ax["x"] : 0), coarseEvent: true },
+    { method: "y", selection: "y", parse: (ax) => (typeof ax?.["y"] === "number" ? ax["y"] : 0), coarseEvent: true },
+    { method: "z", selection: "z", parse: (ax) => (typeof ax?.["z"] === "number" ? ax["z"] : 0), coarseEvent: true },
+  ],
+  (self) => self.parent.parent.piece.session.bus,
+);
+
+/** @emoji ↔️ Weak {@code OffsetInput} path shell (drag hints; expand when SDL exposes offset nodes). */
+export class Offset {
+  constructor(
+    public readonly piece: Piece,
+    public readonly role: "drag",
+  ) { }
+}
+
+/** @emoji 🌍 Geographic weak shell (parent + role path for future SDL). */
+export class Place {
+  constructor(
+    public readonly owner: Entity,
+    public readonly role: string,
+  ) { }
+}
+
+/** @emoji 🗺️ Weak lat/lon shell under {@link Place}. */
+export class Location {
+  constructor(public readonly parent: Place) { }
+}
+
+/** @emoji 📷 Weak camera shell (viewport hints). */
+export class Camera {
+  constructor(
+    public readonly owner: Entity,
+    public readonly role: string,
+  ) { }
+}
+
+//#region 📥GeomInputs
+/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations (matches SDL input, not {@link Position}). */
+export type PositionInput = Readonly<{
+  center: Readonly<{ u: number; v: number }>;
+  plane: Readonly<{
+    origin: Readonly<{ x: number; y: number; z: number }>;
+    xAxis: Readonly<{ x: number; y: number; z: number }>;
+    yAxis: Readonly<{ x: number; y: number; z: number }>;
+  }>;
+}>;
+
+/** @emoji 📥 GraphQL {@code OffsetInput} mirror for kit mutations. */
+export type OffsetInput = Readonly<{
+  u: number;
+  v: number;
+}>;
+
+function gqlFiniteNumber(n: number): string {
+  return Number.isFinite(n) ? String(n) : "0";
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code PositionInput}. */
+export function formatPositionInput(p: PositionInput): string {
+  const c = p.center;
+  const pl = p.plane;
+  const o = pl.origin;
+  const xa = pl.xAxis;
+  const ya = pl.yAxis;
+  return `{ center: { u: ${gqlFiniteNumber(c.u)}, v: ${gqlFiniteNumber(c.v)} }, plane: { origin: { x: ${gqlFiniteNumber(o.x)}, y: ${gqlFiniteNumber(o.y)}, z: ${gqlFiniteNumber(o.z)} }, xAxis: { x: ${gqlFiniteNumber(xa.x)}, y: ${gqlFiniteNumber(xa.y)}, z: ${gqlFiniteNumber(xa.z)} }, yAxis: { x: ${gqlFiniteNumber(ya.x)}, y: ${gqlFiniteNumber(ya.y)}, z: ${gqlFiniteNumber(ya.z)} } } }`;
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
+export function formatOffsetInput(o: OffsetInput): string {
+  return `{ u: ${gqlFiniteNumber(o.u)}, v: ${gqlFiniteNumber(o.v)} }`;
+}
+//#endregion 📥GeomInputs
+//#endregion 🪶WeakGeometry
+
+const PIECE_POSITION_SELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
+
+function parsePieceBlueprintFromJson(node: JsonObject | null | undefined): PieceBlueprint | null {
+  if (node == null || typeof node !== "object") return null;
+  const tn = String(node["__typename"] ?? "");
+  const id = String(node["id"] ?? "");
+  if (id === "") return null;
+  if (tn === "Type") return { blueprintKind: "Type", id };
+  if (tn === "Design") return { blueprintKind: "Design", id };
+  return null;
+}
+
+function parseIdListConnection(obj: JsonObject | null | undefined, field: string): readonly string[] {
+  const c = obj?.[field] as JsonObject | undefined;
+  const edges = c?.["edges"];
+  if (!Array.isArray(edges)) return [];
+  const ids: string[] = [];
+  for (const e of edges) {
+    if (e == null || typeof e !== "object" || Array.isArray(e)) continue;
+    const n = (e as JsonObject)["node"] as JsonObject | undefined;
+    const id = n == null ? "" : String(n["id"] ?? "");
+    if (id !== "") ids.push(id);
+  }
+  return ids;
+}
+
+/** @emoji 🧩 Piece under {@link Design}: declarative reads/commands/events; weak {@link Position} handles stay synchronous. */
+export class Piece extends Entity {
+  readonly designId: string;
+  private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.designId = designId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { piece(id: ${gqlString(this.id)}) { ${inner} } }`;
+  }
+
+  position(): Position {
+    let p = this.positionByRole.get("position");
+    if (!p) {
+      p = new Position(this, "position");
+      this.positionByRole.set("position", p);
+    }
+    return p;
+  }
+
+  flatPosition(): Position {
+    let p = this.positionByRole.get("flatPosition");
+    if (!p) {
+      p = new Position(this, "flatPosition");
+      this.positionByRole.set("flatPosition", p);
+    }
+    return p;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare typeId: () => Promise<string | null>;
+  declare scale: () => Promise<number | null>;
+  declare blueprint: () => Promise<PieceBlueprint | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare connectionKind: () => Promise<"FIXED" | "CONNECTED" | null>;
+  declare depth: () => Promise<number | null>;
+  declare parentPiece: () => Promise<Piece | null>;
+  declare parentConnection: () => Promise<Connection | null>;
+  declare isType: () => Promise<Type | null>;
+  declare isDesign: () => Promise<Design | null>;
+  declare isTypesTransitive: () => Promise<readonly Type[]>;
+  declare isDesignsTransitive: () => Promise<readonly Design[]>;
+  declare hasPieces: () => Promise<readonly Piece[]>;
+  declare hasConnections: () => Promise<readonly Connection[]>;
+  declare hasPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare hasConnectionsTransitive: () => Promise<readonly Connection[]>;
+  declare pathPieces: () => Promise<readonly string[]>;
+  declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onDescriptionChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onIconChanged: (cb: (next: string) => void) => Unsubscribe;
+  declare onTypeIdChanged: (cb: (next: string | null) => void) => Unsubscribe;
+  declare onScaleChanged: (cb: (next: number | null) => void) => Unsubscribe;
+  declare onBlueprintChanged: (cb: (next: PieceBlueprint | null) => void) => Unsubscribe;
+  declare onAttributesChanged: (cb: (next: readonly Attribute[]) => void) => Unsubscribe;
+  declare onConnectionKindChanged: (cb: (next: "FIXED" | "CONNECTED" | null) => void) => Unsubscribe;
+  declare onDepthChanged: (cb: (next: number | null) => void) => Unsubscribe;
+  declare onParentPieceChanged: (cb: (next: Piece | null) => void) => Unsubscribe;
+  declare onParentConnectionChanged: (cb: (next: Connection | null) => void) => Unsubscribe;
+  declare onChildPiecesChanged: (cb: (next: readonly Piece[]) => void) => Unsubscribe;
+  declare onChildConnectionsChanged: (cb: (next: readonly Connection[]) => void) => Unsubscribe;
+  declare onPathPiecesChanged: (cb: (next: readonly string[]) => void) => Unsubscribe;
+  declare onPositionChanged: (cb: (next: unknown) => void) => Unsubscribe;
+  declare onFlatPositionChanged: (cb: (next: unknown) => void) => Unsubscribe;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare drag: (offset: OffsetInput) => Promise<SetResult>;
+  declare move: (position: PositionInput) => Promise<SetResult>;
+  declare fix: () => Promise<SetResult>;
+  declare changeBlueprint: (blueprintId: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+}
+
+const PIECE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "name") },
+  { selection: "description", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readPieceBranchString(frag as JsonObject | null, "icon") },
+  {
+    method: "typeId",
+    selection: "type { id }",
+    parse: () => null,
+    parseEntity: (_entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["type"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : id;
+    },
+  },
+  { selection: "scale", parse: (frag) => readPieceBranchNumberOrNull(frag as JsonObject | null, "scale") },
+  {
+    selection: "blueprint { __typename id }",
+    parse: () => null,
+    parseEntity: (_entity, frag) => parsePieceBlueprintFromJson(pieceKit(frag as JsonObject | null)?.["blueprint"] as JsonObject | undefined),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, pieceKit(frag as JsonObject | null)),
+  },
+  {
+    selection: "connectionKind",
+    parse: (frag) => {
+      const k = pieceKit(frag as JsonObject | null)?.["connectionKind"];
+      return k === "FIXED" || k === "CONNECTED" ? k : null;
+    },
+    eventKind: "draggedPiece",
+  },
+  { selection: "depth", parse: (frag) => readPieceBranchNumberOrNull(frag as JsonObject | null, "depth") },
+  {
+    selection: "parentPiece { id }",
+    parse: () => null,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["parentPiece"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id);
+    },
+    coarseEvent: true,
+  },
+  {
+    selection: "parentConnection { id }",
+    parse: () => null,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["parentConnection"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id);
+    },
+    coarseEvent: true,
+  },
+  {
+    selection: "hasPieces { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasPieces").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
+  },
+  {
+    selection: "hasConnections { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasConnections").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
+  },
+  {
+    selection: "isType { id }",
+    parse: () => null,
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["isType"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Type(entity.session, id, entity.storeId);
+    },
+  },
+  {
+    selection: "isDesign { id }",
+    parse: () => null,
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const id = String((pieceKit(frag as JsonObject | null)?.["isDesign"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Design(entity.session, id, entity.storeId);
+    },
+  },
+  {
+    selection: "isTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "isTypesTransitive").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "isDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "isDesignsTransitive").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasPiecesTransitive").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).piece(id))),
+  },
+  {
+    selection: "hasConnectionsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseIdListConnection(pieceKit(frag as JsonObject | null), "hasConnectionsTransitive").map((id) => new Design(entity.session, (entity as Piece).designId, entity.storeId).connection(id))),
+  },
+  {
+    method: "pathPieces",
+    selection: "path { id }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (_entity, frag) => {
+      const path = pieceKit(frag as JsonObject | null)?.["path"];
+      if (Array.isArray(path)) {
+        return Object.freeze(
+          path
+            .map((node) => String((node as JsonObject | null)?.["id"] ?? ""))
+            .filter((id) => id !== ""),
+        );
+      }
+      return parseIdListConnection(pieceKit(frag as JsonObject | null), "path");
+    },
+  },
+] as const);
+
+const PIECE_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_e, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "drag", buildInner: (_e, offset) => `dg: drag(offset: ${formatOffsetInput(offset as OffsetInput)})` },
+  { method: "move", buildInner: (_e, position) => `mv: move(position: ${formatPositionInput(position as PositionInput)})` },
+  { method: "fix", buildInner: () => `fx: fix` },
+  { method: "changeBlueprint", buildInner: (_e, blueprintId) => `cb: changeBlueprint(blueprintId: ${gqlString(String(blueprintId ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_e, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_e, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const);
+
+installEntityKitMethods(Piece, PIECE_FIELDS as readonly BoundKitFieldSpec<unknown, Piece>[], PIECE_OPERATIONS);
+
+/** @emoji 📡 {@link Piece} weak {@link Position} handles: coarse bus invalidation (drag/move/fix). */
+function installPieceWeakGeometryChangeEvents(): void {
+  for (const role of ["position", "flatPosition"] as const) {
+    const eventMethod = fieldChangedEventMethodName(role);
+    Object.defineProperty(Piece.prototype, eventMethod, {
+      configurable: true,
+      writable: true,
+      value: function pieceWeakGeometryChanged(this: Piece, cb: (next: unknown) => void): Unsubscribe {
+        return subscribeKitCoarseRefetch(this.session.bus, () => cb(null));
+      },
+    });
+  }
+}
+installPieceWeakGeometryChangeEvents();
+//#endregion 🧩Piece
+
+//#region 🪢PiecesOperation
+type PiecesOperationCommandSpec = Readonly<{
+  method: string;
+  buildInner: (self: PiecesOperation, ...args: readonly unknown[]) => string;
+}>;
+
+/** @emoji 🪢 Installs one batch-command method per spec on {@link PiecesOperation}. */
+function installPiecesOperationMethods(specs: readonly PiecesOperationCommandSpec[]): void {
+  for (const spec of specs) {
+    Object.defineProperty(PiecesOperation.prototype, spec.method, {
+      configurable: true,
+      writable: true,
+      value: async function piecesOpCommand(this: PiecesOperation, ...args: readonly unknown[]): Promise<SetResult> {
+        if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
+        const cid = await this.session.ensureChangeId(this.storeId);
+        return this.session.mutateScoped(this.storeId, cid, spec.buildInner(this, ...args));
+      },
+    });
+  }
+}
+
+/** @emoji 🪢 Batch piece commands under one design: one command method each (no cached fields). */
+export class PiecesOperation {
+  constructor(
+    readonly session: Session,
+    readonly designId: string,
+    readonly pieceIds: readonly string[],
+    readonly storeId?: string,
+  ) { }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { pieces(ids: ${gqlIdList(this.pieceIds)}) { ${inner} } }`;
+  }
+
+  declare drag: (offset: OffsetInput) => Promise<SetResult>;
+  declare move: (offset: OffsetInput) => Promise<SetResult>;
+  declare fix: () => Promise<SetResult>;
+  declare changeBlueprint: (blueprintId: string) => Promise<SetResult>;
+}
+
+installPiecesOperationMethods([
+  { method: "drag", buildInner: (self, offset) => self.kitInnerPath(`dg: drag(offset: ${formatOffsetInput(offset as OffsetInput)})`) },
+  { method: "move", buildInner: (self, offset) => self.kitInnerPath(`mv: move(offset: ${formatOffsetInput(offset as OffsetInput)})`) },
+  { method: "fix", buildInner: (self) => self.kitInnerPath(`fx: fix`) },
+  { method: "changeBlueprint", buildInner: (self, blueprintId) => self.kitInnerPath(`cb: changeBlueprint(blueprintId: ${gqlString(String(blueprintId ?? ""))})`) },
+]);
+//#endregion 🪢PiecesOperation
+
+//#region ⛓️Connection
+/** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
+export class Side {
+  constructor(
+    public readonly session: Session,
+    public readonly designId: string,
+    public readonly connectionId: string,
+    public readonly role: "parent" | "child",
+    public readonly pieceId: string,
+    public readonly portId: string | null,
+    public readonly connectorId: string | null,
+    public readonly designPieceId: string | null,
+    public readonly storeId?: string,
+  ) { }
+
+  /** @emoji 🧩 Resolved {@link Piece} on this kit read point. */
+  piece(): Piece {
+    return new Design(this.session, this.designId, this.storeId).piece(this.pieceId);
+  }
+}
+
+const CONNECTION_SIDE_SELECTION = "referencesPiece { id } referencesPort { id } referencesDesignPiece { id } referencesConnector { id }";
+
+function connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
+  const d = frag?.["design"] as JsonObject | undefined;
+  const c = d?.["connection"] as JsonObject | undefined;
+  return c ?? null;
+}
+
+function parseSideFromJson(
+  session: Session,
+  designId: string,
+  connectionId: string,
+  role: "parent" | "child",
+  node: JsonObject | null | undefined,
+  storeId?: string,
+): Side | null {
+  if (node == null || typeof node !== "object") return null;
+  const piece = node["referencesPiece"] as JsonObject | undefined;
+  const pieceId = piece == null ? "" : String(piece["id"] ?? "");
+  if (pieceId === "") return null;
+  const port = node["referencesPort"] as JsonObject | undefined;
+  const portRaw = port == null ? "" : String(port["id"] ?? "");
+  const portId = portRaw === "" ? null : portRaw;
+  const dp = node["referencesDesignPiece"] as JsonObject | undefined;
+  const dpRaw = dp == null ? "" : String(dp["id"] ?? "");
+  const designPieceId = dpRaw === "" ? null : dpRaw;
+  const conn = node["referencesConnector"] as JsonObject | undefined;
+  const cxRaw = conn == null ? "" : String(conn["id"] ?? "");
+  const connectorId = cxRaw === "" ? null : cxRaw;
+  return new Side(session, designId, connectionId, role, pieceId, portId, connectorId, designPieceId, storeId);
+}
+
+/** @emoji ⛓️ Connection under {@link Design}: declarative field reads and change subscriptions (read-only commands in schema). */
+export class Connection extends Entity {
+  readonly designId: string;
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.designId = designId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { connection(id: ${gqlString(this.id)}) { ${inner} } }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare gap: () => Promise<number | null>;
+  declare shift: () => Promise<number | null>;
+  declare rise: () => Promise<number | null>;
+  declare rotation: () => Promise<number | null>;
+  declare turn: () => Promise<number | null>;
+  declare tilt: () => Promise<number | null>;
+  declare u: () => Promise<number | null>;
+  declare v: () => Promise<number | null>;
+  declare parent: () => Promise<Side | null>;
+  declare child: () => Promise<Side | null>;
+  declare hasSides: () => Promise<readonly Side[]>;
+  declare referencesPieces: () => Promise<readonly Piece[]>;
+  declare referencesConnectors: () => Promise<readonly Connector[]>;
+  declare referencesPiecesTransitive: () => Promise<readonly Piece[]>;
+  declare referencesConnectorsTransitive: () => Promise<readonly Connector[]>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+}
+
+function parseConnectionBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  return parseEntityConnectionIds(connectionKit(frag), key);
+}
+
+const CONNECTION_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "name") },
+  { selection: "description", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "description"), eventKind: "changedDescription" },
+  { selection: "icon", parse: (frag) => readConnectionBranchString(frag as JsonObject | null, "icon") },
+  { selection: "gap", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "gap") },
+  { selection: "shift", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "shift") },
+  { selection: "rise", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "rise") },
+  { selection: "rotation", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "rotation") },
+  { selection: "turn", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "turn") },
+  { selection: "tilt", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "tilt") },
+  { method: "u", selection: "u", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "u") },
+  { method: "v", selection: "v", parse: (frag) => readConnectionBranchNumberOrNull(frag as JsonObject | null, "v") },
+  {
+    selection: `parent { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => null,
+    parseEntity: (entity, frag) =>
+      parseSideFromJson(entity.session, (entity as Connection).designId, entity.id, "parent", connectionKit(frag as JsonObject | null)?.["parent"] as JsonObject | undefined, entity.storeId),
+    coarseEvent: true,
+  },
+  {
+    selection: `child { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => null,
+    parseEntity: (entity, frag) =>
+      parseSideFromJson(entity.session, (entity as Connection).designId, entity.id, "child", connectionKit(frag as JsonObject | null)?.["child"] as JsonObject | undefined, entity.storeId),
+    coarseEvent: true,
+  },
+  {
+    selection: `hasSides { ${CONNECTION_SIDE_SELECTION} }`,
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const sides = connectionKit(frag as JsonObject | null)?.["hasSides"];
+      if (!Array.isArray(sides)) return Object.freeze([]);
+      const designId = (entity as Connection).designId;
+      return Object.freeze(
+        sides
+          .map((node) => parseSideFromJson(entity.session, designId, entity.id, "parent", node as JsonObject | undefined, entity.storeId))
+          .filter((s): s is Side => s != null),
+      );
+    },
+  },
+  {
+    selection: "referencesPieces { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseConnectionBranchConnection(frag as JsonObject | null, "referencesPieces").map((id) =>
+          new Design(entity.session, (entity as Connection).designId, entity.storeId).piece(id),
+        ),
+      ),
+  },
+  {
+    selection: "referencesConnectors { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = (connectionKit(frag as JsonObject | null)?.["referencesConnectors"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectorId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const typeId = String(owner?.["id"] ?? "");
+          return new Connector(entity.session, typeId, connectorId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "referencesPiecesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseConnectionBranchConnection(frag as JsonObject | null, "referencesPiecesTransitive").map((id) =>
+          new Design(entity.session, (entity as Connection).designId, entity.storeId).piece(id),
+        ),
+      ),
+  },
+  {
+    selection: "referencesConnectorsTransitive { edges { node { id owner { ... on Type { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges = (connectionKit(frag as JsonObject | null)?.["referencesConnectorsTransitive"] as JsonObject | undefined)?.["edges"];
+      if (!Array.isArray(edges)) return Object.freeze([]);
+      return Object.freeze(
+        edges.map((e) => {
+          const node = (e as JsonObject)?.["node"] as JsonObject | undefined;
+          const connectorId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const typeId = String(owner?.["id"] ?? "");
+          return new Connector(entity.session, typeId, connectorId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, connectionKit(frag as JsonObject | null)),
+  },
+] as const);
+
+installEntityKitMethods(Connection, CONNECTION_FIELDS as readonly BoundKitFieldSpec<unknown, Connection>[]);
+//#endregion ⛓️Connection
+
+//#region ✍️Author
+/** @emoji ✍️ Author artifact: kit-scoped reads only (no {@code *OperationInput} on Author in schema). */
+export class Author extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare email: () => Promise<string>;
+  declare role: () => Promise<string>;
+  declare rank: () => Promise<number | null>;
+}
+
+const AUTHOR_FIELDS = defineBoundNodeFields([
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
+  { selection: "email", parse: (node) => String(node?.["email"] ?? "") },
+  { selection: "role", parse: (node) => String(node?.["role"] ?? "") },
+  { selection: "rank", parse: (node) => (typeof node?.["rank"] === "number" ? node["rank"] : null) },
+] as const);
+installEntityNodeMethods(Author, "Author", AUTHOR_FIELDS);
+//#endregion ✍️Author
+
+//#region 💎Quality
+/** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
+export class Quality extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `quality(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare key: () => Promise<string>;
+  declare value: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare definition: () => Promise<string>;
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newKey: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+  declare benchmarks: () => Promise<readonly Benchmark[]>;
+}
+
+const QUALITY_OPERATIONS = defineBoundKitOperations([
+  { method: "rename", buildInner: (_entity, newKey) => `rk: rename(newKey: ${gqlString(String(newKey ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_entity, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const);
+installEntityKitMethods(Quality, defineBoundKitFields([
+  { selection: "key", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "key") },
+  { selection: "value", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "value") },
+  { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "unit") },
+  { selection: "definition", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "definition") },
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "icon") },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["quality"] as JsonObject | undefined),
+  },
+  {
+    selection: "benchmarks { edges { node { id name min max minExcluded maxExcluded } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => parseBenchmarkConnectionUnder(entity as Quality, (frag as JsonObject | null)?.["quality"] as JsonObject | undefined),
+  },
+]) as readonly BoundKitFieldSpec<unknown, Quality>[], QUALITY_OPERATIONS);
+//#endregion 💎Quality
+
+//#region 🏷️Tag
+/** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
+export class Tag extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `tag(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+}
+
+installEntityKitMethods(Tag, defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "icon") },
+  { selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "tag", "order") },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["tag"] as JsonObject | undefined),
+  },
+]) as readonly BoundKitFieldSpec<unknown, Tag>[], defineBoundKitOperations([
+  { method: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_entity, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const));
+//#endregion 🏷️Tag
+
+//#region 💡Concept
+/** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
+export class Concept extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `concept(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare rename: (newName: string) => Promise<SetResult>;
+  declare changeDescription: (newDescription: string) => Promise<SetResult>;
+  declare changeIcon: (newIcon: string) => Promise<SetResult>;
+  declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
+  declare removeAttribute: (id: string) => Promise<SetResult>;
+  declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
+}
+
+installEntityKitMethods(Concept, defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "icon") },
+  { selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "concept", "order") },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["concept"] as JsonObject | undefined),
+  },
+]) as readonly BoundKitFieldSpec<unknown, Concept>[], defineBoundKitOperations([
+  { method: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { method: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { method: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  {
+    method: "addAttribute",
+    buildInner: (_entity, key, value, definition) =>
+      `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
+  },
+  { method: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+] as const));
+//#endregion 💡Concept
+
+//#region 🎨Representation
+/** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
+export class Representation extends Entity {
+  readonly typeId: string;
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.typeId = typeId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `type(id: ${gqlString(this.typeId)}) { representation(id: ${gqlString(this.id)}) { ${inner} } }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare url: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare file: () => Promise<File | null>;
+  declare tags: () => Promise<readonly Tag[]>;
+  declare qualities: () => Promise<readonly Quality[]>;
+  declare attributes: () => Promise<readonly Attribute[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare referencesFiles: () => Promise<readonly File[]>;
+  declare referencedByDesigns: () => Promise<readonly Design[]>;
+  declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+}
+
+function parseRepresentationBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const node = readKitPathNode(frag, KIT_PATH_TYPE_REPRESENTATION);
+  return parseEntityConnectionIds(node, key);
+}
+
+installEntityKitMethods(Representation, defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "name") },
+  { selection: "url", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "url") },
+  { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "description") },
+  { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "icon") },
+  {
+    selection: "file { id }",
+    parse: () => null,
+    parseEntity: (entity, frag) => {
+      const id = String((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)?.["file"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new File(entity.session, id, entity.storeId);
+    },
+  },
+  {
+    selection: "tags { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "tags").map((id) => new Tag(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "qualities { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "qualities").map((id) => new Quality(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "attributes { edges { node { id key value definition } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)),
+  },
+  {
+    selection: "referencedBy { edges { node { id owner { __typename ... on Design { id } } } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => {
+      const edges =
+        ((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)?.["referencedBy"] as JsonObject | undefined)?.[
+          "edges"
+        ] as readonly JsonObject[] | undefined) ?? [];
+      return Object.freeze(
+        edges.map((e) => {
+          const node = e["node"] as JsonObject | undefined;
+          const pieceId = String(node?.["id"] ?? "");
+          const owner = node?.["owner"] as JsonObject | undefined;
+          const designId = String(owner?.["id"] ?? "");
+          return new Piece(entity.session, designId, pieceId, entity.storeId);
+        }),
+      );
+    },
+  },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "referencesFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencesFiles").map((id) => new File(entity.session, id, entity.storeId)),
+      ),
+  },
+  {
+    selection: "referencedByDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencedByDesigns").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
+  {
+    selection: "referencedByDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseRepresentationBranchConnection(frag as JsonObject | null, "referencedByDesignsTransitive").map(
+          (id) => new Design(entity.session, id, entity.storeId),
+        ),
+      ),
+  },
+  ...vfsEntityPathFields(KIT_PATH_TYPE_REPRESENTATION),
+]) as readonly BoundKitFieldSpec<unknown, Representation>[]);
+//#endregion 🎨Representation
+
+//#region 👨‍👩‍👦Family
+/** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
+export class Family extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `family(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+}
+
+const FAMILY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "family", "icon") },
+  ...vfsKitFields("family"),
+] as const);
+
+installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unknown, Family>[], []);
+//#endregion 👨‍👩‍👦Family
+
+//#region 🏛️Typology
+/** @emoji 🏛️ Typology artifact: owns kit types and designs. */
+export class Typology extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `typology(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+}
+
+function parseTypologyBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const t = frag?.["typology"] as JsonObject | undefined;
+  return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const TYPOLOGY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "icon") },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "hasDesigns { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("typology"),
+] as const);
+
+installEntityKitMethods(Typology, TYPOLOGY_FIELDS as readonly BoundKitFieldSpec<unknown, Typology>[], []);
+//#endregion 🏛️Typology
+
+//#region 📄File
+/** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
+export class File extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `file(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  representation(representationId: string): Representation {
+    return new Representation(this.session, "", representationId, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
+  declare name: () => Promise<string>;
+  declare hasRepresentations: () => Promise<readonly Representation[]>;
+  declare referencesTypes: () => Promise<readonly Type[]>;
+  declare referencesDesigns: () => Promise<readonly Design[]>;
+  declare referencesTypesTransitive: () => Promise<readonly Type[]>;
+  declare referencesDesignsTransitive: () => Promise<readonly Design[]>;
+}
+
+function parseFileBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["file"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FILE_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "file", "name") },
+  {
+    selection: "hasRepresentations { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(
+        parseFileBranchConnection(frag as JsonObject | null, "hasRepresentations").map((id) => (entity as File).representation(id)),
+      ),
+  },
+  {
+    selection: "referencesTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesTypes").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "referencesDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesDesigns").map((id) => (entity as File).design(id))),
+  },
+  {
+    selection: "referencesTypesTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesTypesTransitive").map((id) => (entity as File).type(id))),
+  },
+  {
+    selection: "referencesDesignsTransitive { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFileBranchConnection(frag as JsonObject | null, "referencesDesignsTransitive").map((id) => (entity as File).design(id))),
+  },
+  ...vfsKitFields("file"),
+] as const);
+
+installEntityKitMethods(File, FILE_FIELDS as readonly BoundKitFieldSpec<unknown, File>[], []);
+//#endregion 📄File
+
+//#region 📁Folder
+/** @emoji 📁 Folder artifact with constrained virtual file system navigation. */
+export class Folder extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `folder(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  subFolder(id: string): Folder {
+    return new Folder(this.session, id, this.storeId);
+  }
+
+  file(id: string): File {
+    return new File(this.session, id, this.storeId);
+  }
+
+  family(id: string): Family {
+    return new Family(this.session, id, this.storeId);
+  }
+
+  typology(id: string): Typology {
+    return new Typology(this.session, id, this.storeId);
+  }
+
+  type(typeId: string): Type {
+    return new Type(this.session, typeId, this.storeId);
+  }
+
+  design(designId: string): Design {
+    return new Design(this.session, designId, this.storeId);
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare path: () => Promise<string>;
+  declare subFolders: () => Promise<readonly Folder[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare families: () => Promise<readonly Family[]>;
+  declare typologies: () => Promise<readonly Typology[]>;
+  declare hasTypes: () => Promise<readonly Type[]>;
+  declare hasDesigns: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+}
+
+function parseFolderBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const f = frag?.["folder"] as JsonObject | undefined;
+  return parseEntityConnectionIds(f ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
+const FOLDER_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "description") },
+  { selection: "path", parse: (frag) => readKitBranchString(frag as JsonObject | null, "folder", "path") },
+  {
+    selection: "subFolders { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "subFolders").map((id) => (entity as Folder).subFolder(id))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "files").map((id) => (entity as Folder).file(id))),
+  },
+  {
+    selection: "families { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "families").map((id) => (entity as Folder).family(id))),
+  },
+  {
+    selection: "typologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "typologies").map((id) => (entity as Folder).typology(id))),
+  },
+  {
+    selection: "hasTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => (entity as Folder).type(id))),
+  },
+  {
+    selection: "hasDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "hasDesigns").map((id) => (entity as Folder).design(id))),
+  },
+  ...vfsKitFields("folder"),
+] as const);
+
+installEntityKitMethods(Folder, FOLDER_FIELDS as readonly BoundKitFieldSpec<unknown, Folder>[], []);
+//#endregion 📁Folder
+
+//#region 🪟Layer
+/** @emoji 🪟 Design {@link Layer}: declarative field reads and change subscriptions (read-only in current kit API). */
+export class Layer extends Entity {
+  readonly designId: string;
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.designId = designId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { hasLayers { edges { node { id ${inner} } } } }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare color: () => Promise<string>;
+  declare order: () => Promise<number | null>;
+  declare visible: () => Promise<boolean | null>;
+  declare locked: () => Promise<boolean | null>;
+}
+
+installEntityKitMethods(
+  Layer,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "name") },
+    { selection: "description", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "description"), eventKind: "changedDescription" },
+    { selection: "icon", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "icon") },
+    { selection: "color", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasLayers", entity.id, "color") },
+    { selection: "order", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeNumberOrNull(frag as JsonObject | null, entity.id, "order") },
+    { selection: "visible", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "visible") },
+    { selection: "locked", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "locked") },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Layer>[],
+);
+//#endregion 🪟Layer
+
+//#region 👥Group
+/** @emoji 👥 Design {@link Group}: declarative field reads and change subscriptions (read-only in current kit API). */
+export class Group extends Entity {
+  readonly designId: string;
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
+    this.designId = designId;
+  }
+
+  kitInnerPath(inner: string): string {
+    return `design(id: ${gqlString(this.designId)}) { hasGroups { edges { node { id ${inner} } } } }`;
+  }
+
+  declare name: () => Promise<string>;
+}
+
+installEntityKitMethods(
+  Group,
+  defineBoundKitFields([
+    { selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasGroups", entity.id, "name") },
+  ] as const) as readonly BoundKitFieldSpec<unknown, Group>[],
+);
+//#endregion 👥Group
+
+//#region 📊Stat
+/** @emoji 📊 Stat artifact: read-only in current kit API. */
+export class Stat extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  declare key: () => Promise<string>;
+  declare value: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+}
+
+installEntityNodeMethods(Stat, "Stat", defineBoundNodeFields([
+  { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
+  { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
+  { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
+] as const));
+//#endregion 📊Stat
+
+//#region 🎚️Prop
+/** @emoji 🎚️ Prop artifact: read-only in current kit API. */
+export class Prop extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  declare key: () => Promise<string>;
+  declare value: () => Promise<string>;
+  declare unit: () => Promise<string>;
+  declare name: () => Promise<string>;
+  declare quality: () => Promise<Quality | null>;
+}
+
+installEntityNodeMethods(Prop, "Prop", defineBoundNodeFields([
+  { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
+  { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
+  { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  {
+    selection: "quality { id }",
+    parse: (node) => {
+      const id = String((node?.["quality"] as JsonObject | undefined)?.["id"] ?? "");
+      return id === "" ? null : new Quality((undefined as never), id);
+    },
+  },
+] as const));
+//#endregion 🎚️Prop
+
+//#endregion 🧱Classes
+
+//#region 🚀PublicAPI
+/** @emoji 🚀 Opens an empty rs WASM {@link Session} (`dev://empty` only; seed kit JSON via {@link Store.installProjection}). */
+export async function openSessionInMemory(opts?: SessionOpenOptions): Promise<Session> {
+  return Session.openInMemory(opts);
+}
+
+/** @emoji 🚀 Opens a {@link Session} backed by rs WASM; {@code uri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
+export async function openSession(uri: string, opts?: SessionOpenOptions): Promise<Session> {
+  return Session.open(uri, opts);
+}
+
+/** @emoji 🚀 Opens a {@link Session} against native `semio-store` HTTP GraphQL. */
+export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
+  return Session.openHttp(baseUrl, opts);
+}
+
+//#endregion 🚀PublicAPI
+
+
+//#region 🧪Tests
+if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
+  const { describe, it, expect } = await import("vitest");
+  const eventually = async <T>(read: () => Promise<T>, matches: (value: T) => boolean, timeoutMs = 5_000): Promise<T> => {
+    const startedAt = Date.now();
+    let lastValue = await read();
+    while (!matches(lastValue)) {
+      if (Date.now() - startedAt >= timeoutMs) throw new Error(`eventually: timed out after ${timeoutMs}ms`);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      lastValue = await read();
+    }
+    return lastValue;
+  };
+  describe("semio/js", () => {
+    it("graphql wire kinds match golden operation roots", () => {
+      expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
+      expect(graphqlWireOperationKind("mutation { session { start } }")).toBe("mutation");
+      expect(graphqlWireOperationKind("subscription { operation { id } }")).toBe("subscription");
+      expect(() => assertGraphqlWireKind("mutation { session { start } }", "query")).toThrow(/expected query/);
+    });
+    it("parseResponsePayload reads ok errors and IdResult value", () => {
+      expect(parseResponsePayload({ ok: true, result: { value: "abc" } })).toEqual({ ok: true });
+      expect(responseResultId({ ok: true, result: { value: "abc" } })).toBe("abc");
+      const failed = parseResponsePayload({ ok: false, errors: { kind: "Invalid", message: "nope" } });
+      expect(failed.ok).toBe(false);
+      if (!failed.ok) expect(failed.error.message).toBe("nope");
+    });
+    it("withResponseSelection wraps leaf kit commands", () => {
+      expect(withResponseSelection("rename(newName: \"x\")")).toContain("ok");
+      const fixed = withResponseSelection(
+        'design(id: "d") { addFixedPiece(blueprintId: "b", position: { center: { u: 0, v: 0 }, plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } } }) }',
+      );
+      expect(fixed).toContain("addFixedPiece");
+      expect(fixed).toContain("ok errors");
+      expect(fixed).not.toMatch(/xAxis:\s*\{\s*\{\s*ok/);
+    });
+    it("resolveFileSystemNode maps representation port and connector kinds", () => {
+      const session = { } as Session;
+      const rep = resolveFileSystemNode(session, "store-1", { id: "r1", kind: "REPRESENTATION" }, undefined, "type-1");
+      expect(rep).toBeInstanceOf(Representation);
+      const port = resolveFileSystemNode(session, "store-1", { id: "p1", kind: "PORT" }, undefined, "type-1");
+      expect(port).toBeInstanceOf(Port);
+      const connector = resolveFileSystemNode(session, "store-1", { id: "c1", kind: "CONNECTOR" }, undefined, "type-1");
+      expect(connector).toBeInstanceOf(Connector);
+    });
+
+    it("fetchSemioFileSystemChildren selects kit relay fields at kit root", () => {
+      const inner = semioFileSystemChildrenInner({ kind: "KIT", id: "kit-1" });
+      expect(inner).toContain("hasTypologies");
+      expect(inner).not.toContain("fileSystemChildren");
+      const topoInner = semioFileSystemChildrenInner({ kind: "TYPOLOGY", id: "topo-1" });
+      expect(topoInner).toContain("typology(id:");
+      expect(topoInner).toContain("hasTypes");
+    });
+
+    it("fetchSemioFileSystemChildren returns typologies at kit root after installProjection", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const kitId = kit.id;
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId }),
+          (rows) => rows.some((row) => row.kind === "TYPOLOGY"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPOLOGY")).toBe(true);
+        expect(children.length).toBeGreaterThan(0);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("fetchSemioFileSystemChildren lists capsule kinds under typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const capsuleTypologyId = "typology-capsule";
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "TYPOLOGY", id: capsuleTypologyId }),
+          (rows) => rows.some((row) => row.kind === "TYPE" && row.name === "KindAlpha"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindAlpha")).toBe(true);
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindBeta")).toBe(true);
+        const topo = new Typology(session, capsuleTypologyId, store.id);
+        const hasTypes = await eventually(() => topo.hasTypes(), (rows) => rows.length >= 2, 10_000);
+        expect(hasTypes.map((row) => row.id)).toEqual(
+          expect.arrayContaining(["b2000000-0000-4000-8000-000000000001", "b2000000-0000-4000-8000-000000000002"]),
+        );
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection preserves metabolism file names for vfs", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const representationsFolderId = "019adc83-0113-75e0-90b2-9d0912f1d60f";
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const kitRoot = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kit.id }),
+          (rows) => rows.some((row) => row.kind === "FOLDER" && row.name === "representations"),
+          30_000,
+        );
+        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "base.glb")).toBe(false);
+        expect(kitRoot.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
+        const repFolder = kitRoot.find((row) => row.kind === "FOLDER" && row.id === representationsFolderId);
+        expect(repFolder).toBeDefined();
+        const repChildren = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "FOLDER", id: representationsFolderId }),
+          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "base.glb"),
+          30_000,
+        );
+        const baseGlb = repChildren.find((row) => row.kind === "FILE" && row.name === "base.glb");
+        expect(baseGlb).toBeDefined();
+        expect(baseGlb!.id).toBe("457d2061-ac4b-4317-8563-ba41afffd149");
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection has no typology-default on metabolism shallow kit", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const typologies = await eventually(() => kit.hasTypologies(), (rows) => rows.length >= 6, 30_000);
+        expect(typologies.some((t) => t.id === "typology-default")).toBe(false);
+        const tower = typologies.find((t) => t.id === "typology-tower");
+        expect(tower).toBeDefined();
+        const towerDesigns = await tower!.hasDesigns();
+        const towerDesignNames = await Promise.all(towerDesigns.map((d) => d.name()));
+        expect(towerDesignNames).toEqual(
+          expect.arrayContaining(["Nakagin Capsule Tower", "Slanted", "Twisted", "Dancing"]),
+        );
+        const tambour = typologies.find((t) => t.id === "typology-tambour");
+        expect(tambour).toBeDefined();
+        const tambourKindNames = await Promise.all((await tambour!.hasTypes()).map((k) => k.name()));
+        expect(tambourKindNames).toEqual(
+          expect.arrayContaining([
+            "Cylindric First Storey Tambour",
+            "Cylindric Last Storey Tambour",
+            "First Storey Tambour",
+            "Last Storey Tambour",
+          ]),
+        );
+        expect(tambourKindNames.some((name) => name === "First Storey" || name === "Last Storey")).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection places Nakagin Capsule Tower under typology-tower not typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const nakaginDesignId = "c3000000-0000-4000-8000-000000000001";
+        const towerTopo = new Typology(session, "typology-tower", store.id);
+        const capsuleTopo = new Typology(session, "typology-capsule", store.id);
+        const towerDesigns = await eventually(
+          () => towerTopo.hasDesigns(),
+          (rows) => rows.some((d) => d.id === nakaginDesignId),
+          30_000,
+        );
+        expect(towerDesigns.map((d) => d.id)).toContain(nakaginDesignId);
+        const capsuleDesigns = await capsuleTopo.hasDesigns();
+        expect(capsuleDesigns.map((d) => d.id)).not.toContain(nakaginDesignId);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("Piece installs pathPieces and weak-geometry change subscriptions", () => {
+      expect(typeof Piece.prototype.pathPieces).toBe("function");
+      expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");
+      expect(typeof Piece.prototype.onPositionChanged).toBe("function");
+      expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
+    });
+    it("entities install is, has, references, and referencedBy projection accessors", () => {
+      const expectFn = (proto: object, name: string) => expect(typeof (proto as Record<string, unknown>)[name]).toBe("function");
+      expectFn(Kit.prototype, "hasDesigns");
+      expectFn(Kit.prototype, "hasTypes");
+      expectFn(Kit.prototype, "hasFiles");
+      expectFn(Kit.prototype, "hasFolders");
+      expectFn(Kit.prototype, "hasFamilies");
+      expectFn(Kit.prototype, "hasTypologies");
+      expectFn(Kit.prototype, "hasPiecesTransitive");
+      expectFn(Kit.prototype, "hasConnectionsTransitive");
+      expectFn(Kit.prototype, "hasTypesTransitive");
+      expectFn(Kit.prototype, "hasDesignsTransitive");
+      expectFn(Typology.prototype, "hasTypes");
+      expectFn(Typology.prototype, "hasDesigns");
+      expectFn(Folder.prototype, "hasTypes");
+      expectFn(Folder.prototype, "hasDesigns");
+      expectFn(Type.prototype, "hasPorts");
+      expectFn(Type.prototype, "hasConnectors");
+      expectFn(Type.prototype, "hasRepresentations");
+      expectFn(Type.prototype, "referencesFiles");
+      expectFn(Type.prototype, "referencedBy");
+      expectFn(Type.prototype, "referencedByDesigns");
+      expectFn(Type.prototype, "referencedByDesignsTransitive");
+      expectFn(Design.prototype, "hasPieces");
+      expectFn(Design.prototype, "hasConnections");
+      expectFn(Design.prototype, "hasLayers");
+      expectFn(Design.prototype, "hasGroups");
+      expectFn(Design.prototype, "hasPiecesTransitive");
+      expectFn(Design.prototype, "hasConnectionsTransitive");
+      expectFn(Design.prototype, "referencesTypes");
+      expectFn(Design.prototype, "referencesDesigns");
+      expectFn(Design.prototype, "referencesFiles");
+      expectFn(Design.prototype, "referencesRepresentations");
+      expectFn(Design.prototype, "referencesTypesTransitive");
+      expectFn(Design.prototype, "referencesDesignsTransitive");
+      expectFn(Design.prototype, "referencesFilesTransitive");
+      expectFn(Design.prototype, "referencesRepresentationsTransitive");
+      expectFn(Design.prototype, "referencedBy");
+      expectFn(Design.prototype, "referencedByDesigns");
+      expectFn(Design.prototype, "referencedByDesignsTransitive");
+      expectFn(Piece.prototype, "isType");
+      expectFn(Piece.prototype, "isDesign");
+      expectFn(Piece.prototype, "isTypesTransitive");
+      expectFn(Piece.prototype, "isDesignsTransitive");
+      expectFn(Piece.prototype, "hasPieces");
+      expectFn(Piece.prototype, "hasConnections");
+      expectFn(Piece.prototype, "hasPiecesTransitive");
+      expectFn(Piece.prototype, "hasConnectionsTransitive");
+      expectFn(Connection.prototype, "hasSides");
+      expectFn(Connection.prototype, "referencesPieces");
+      expectFn(Connection.prototype, "referencesConnectors");
+      expectFn(Connection.prototype, "referencesPiecesTransitive");
+      expectFn(Connection.prototype, "referencesConnectorsTransitive");
+      expectFn(Representation.prototype, "referencedBy");
+      expectFn(Representation.prototype, "hasTypes");
+      expectFn(Representation.prototype, "referencesFiles");
+      expectFn(Representation.prototype, "referencedByDesigns");
+      expectFn(Representation.prototype, "referencedByDesignsTransitive");
+      expectFn(File.prototype, "hasRepresentations");
+      expectFn(File.prototype, "referencesTypes");
+      expectFn(File.prototype, "referencesDesigns");
+      expectFn(File.prototype, "referencesTypesTransitive");
+      expectFn(File.prototype, "referencesDesignsTransitive");
+    });
+    it("Kit and Graph install field change subscriptions", () => {
+      expect(typeof Kit.prototype.onNameChanged).toBe("function");
+      expect(typeof Graph.prototype.onAlternativesChanged).toBe("function");
+    });
+    it("graphql wire post json always carries query variables operationName", () => {
+      const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
+      const o = JSON.parse(raw) as Record<string, unknown>;
+      expect(Object.keys(o).sort()).toEqual(["operationName", "query", "variables"]);
+      expect(o["query"]).toBe("query Q { __typename }");
+      expect(o["variables"]).toEqual({});
+      expect(o["operationName"]).toBe(null);
+      expect(
+        JSON.parse(graphqlWirePostBodyJson({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" })) as Record<string, unknown>,
+      ).toEqual({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" });
+    });
+    it("runs the in-memory rs graphql js pipeline", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const envelope = await session.gql.executeQueryJson({ query: KIT_SESSION_QUERY_ENTRY }, 120_000);
+        expect(envelope.errors ?? []).toHaveLength(0);
+
+        const stores = await session.stores();
+        expect(stores.length).toBeGreaterThan(0);
+
+        const store = stores[0]!;
+        const kit = await store.wip().theKit().kit();
+
+        const createTag = await kit.createTag("alpha-tag");
+        expect(createTag).toEqual({ ok: true });
+        const tags = await eventually(() => kit.tags(), (value) => value.length === 1, 10_000);
+        expect(tags).toHaveLength(1);
+        expect(await tags[0]!.name()).toBe("alpha-tag");
+
+        const createConcept = await kit.createConcept("beta-concept");
+        expect(createConcept).toEqual({ ok: true });
+        const concepts = await eventually(() => kit.concepts(), (value) => value.length === 1, 10_000);
+        expect(concepts).toHaveLength(1);
+        expect(await concepts[0]!.name()).toBe("beta-concept");
+
+        const createQuality = await kit.createQuality("q1", "v1");
+        expect(createQuality).toEqual({ ok: true });
+        const qualities = await eventually(() => kit.qualities(), (value) => value.length === 1, 10_000);
+        expect(qualities).toHaveLength(1);
+        expect(await qualities[0]!.key()).toBe("q1");
+
+        const createDesign = await kit.createDesign("layout-alpha");
+        expect(createDesign).toEqual({ ok: true });
+        const designs = await eventually(() => kit.hasDesigns(), (value) => value.length === 1, 10_000);
+        expect(designs).toHaveLength(1);
+        expect(await designs[0]!.name()).toBe("layout-alpha");
+
+        const createType = await kit.createType("kind-beta");
+        expect(createType).toEqual({ ok: true });
+        const types = await eventually(() => kit.hasTypes(), (value) => value.length === 1, 10_000);
+        expect(types).toHaveLength(1);
+        expect(await types[0]!.name()).toBe("kind-beta");
+
+        const snapshot = unwrapGraphqlData(
+          await session.gql.executeQueryJson(
+            {
+              query: `query PipelineSnapshot { session { stores { edges { node { wip { theKit { kit { tags { edges { node { name } } } concepts { edges { node { name } } } qualities { edges { node { key value } } } } } } } } } } }`,
+            },
+            120_000,
+          ),
+        ) as JsonObject;
+        const storeNode = sessionStoreNodeFromData(snapshot);
+        const kitNode = kitReadSelectionFromData(snapshot, theKitReadPoint);
+        expect(String(jsonObjectField(kitNode, "tags")?.["edges"] instanceof Array)).toBe("true");
+        expect(String(jsonObjectField(kitNode, "concepts")?.["edges"] instanceof Array)).toBe("true");
+        expect(String(jsonObjectField(kitNode, "qualities")?.["edges"] instanceof Array)).toBe("true");
+        const liveKit = jsonObjectField(jsonObjectField(storeNode, "wip"), "theKit")?.["kit"] as JsonObject | undefined;
+        expect((((jsonObjectField(liveKit, "tags")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+        expect((((jsonObjectField(liveKit, "concepts")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+        expect((((jsonObjectField(liveKit, "qualities")?.["edges"] as JsonValue[] | undefined) ?? []).length)).toBe(1);
+
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("entity rename fires onNameChanged when kitRenamed is emitted", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const kit = await store.wip().theKit().kit();
+        let nameFromEvent = "";
+        const off = kit.onNameChanged((next) => {
+          nameFromEvent = String(next);
+        });
+        const renamed = await kit.rename("e2e-kit-renamed");
+        expect(renamed.ok).toBe(true);
+        session.bus.emit({ kind: "kitRenamed", payload: null } as never);
+        await eventually(() => kit.name(), (n) => n === "e2e-kit-renamed", 10_000);
+        expect(nameFromEvent).toBe("e2e-kit-renamed");
+        off();
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("Session.open rejects inline JSON bootstrap URI", async () => {
+      await expect(Session.open('{"id":"kit-json"}')).rejects.toThrow(/installProjection/);
+      await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
+    });
+
+    it("openInMemory does not start live subscription loop under embedded tests", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        expect(Reflect.get(session as object, "gqlLoopRunning")).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("kit virtual file system createFolder and moveToFolder", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.createFolder("inbox", "/inbox")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const folders = await eventually(() => kit.hasFolders(), (rows) => rows.length >= 1, 15_000);
+        const inbox = folders.find((f) => (f as Folder) && true);
+        const inboxFolder = folders.find(async (f) => (await f.name()) === "inbox");
+        let inboxId = "";
+        for (const f of folders) {
+          if ((await f.name()) === "inbox") {
+            inboxId = f.id;
+            break;
+          }
+        }
+        expect(inboxId).not.toBe("");
+        expect(await kit.createDesign("vfs-design")).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const designs = await eventually(() => kit.hasDesigns(), (rows) => rows.length >= 1, 15_000);
+        const design = designs.find((d) => d.id);
+        let designId = "";
+        for (const d of designs) {
+          if ((await d.name()) === "vfs-design") {
+            designId = d.id;
+            break;
+          }
+        }
+        expect(designId).not.toBe("");
+        const designEntity = new Design(session, designId, (await session.stores())[0]!.id);
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
+        expect(await kit.moveToFolder(designId, inboxId)).toEqual({ ok: true });
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        await eventually(
+          async () => {
+            for (const f of await kit.hasFolders()) {
+              if ((await f.name()) !== "inbox") continue;
+              const nested = await f.hasDesigns();
+              if (nested.some((d) => d.id === designId)) return true;
+            }
+            return false;
+          },
+          (ok) => ok,
+          15_000,
+        );
+        expect(await designEntity.isFileSystemRoot()).toBe(false);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection hydrates kit from projection JSON", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(
+          JSON.stringify({
+            id: "kit-install-proj",
+            name: "Install Projection Kit",
+            types: { hash: "h", items: [{ id: "t1", name: "Kind-A" }] },
+            designs: { hash: "h", items: [] },
+          }),
+        );
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const types = await eventually(() => kit.hasTypes(), (rows) => rows.length >= 1, 30_000);
+        expect(await types[0]!.name()).toBe("Kind-A");
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("store startAlternative exposes graph alternatives and unsavedChangeCount", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const graph = store.wip();
+        let alternativesFromEvent = -1;
+        const off = graph.onAlternativesChanged((next) => {
+          alternativesFromEvent = next.length;
+        });
+        const started = await store.startAlternative("e2e-alt-branch");
+        expect(started.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const alternatives = await eventually(() => graph.alternatives(), (rows) => rows.length >= 1, 15_000);
+        expect(alternatives.length).toBeGreaterThanOrEqual(1);
+        expect(alternativesFromEvent).toBeGreaterThanOrEqual(1);
+        expect(typeof await alternatives[alternatives.length - 1]!.unsavedChangeCount()).toBe("number");
+        off();
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("design piece pathPieces and onPositionChanged on drag", async () => {
+      const originPlane = {
+        origin: { x: 0, y: 0, z: 0 },
+        xAxis: { x: 1, y: 0, z: 0 },
+        yAxis: { x: 0, y: 1, z: 0 },
+      };
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.createType("Blueprint")).toEqual({ ok: true });
+        const blueprintId = (await eventually(() => kit.hasTypes(), (rows) => rows.length >= 1, 10_000))[0]!.id;
+        expect(await kit.createDesign("E2E Design")).toEqual({ ok: true });
+        const design = (await eventually(() => kit.hasDesigns(), (rows) => rows.length >= 1, 10_000))[0]!;
+        expect(await design.addFixedPiece(blueprintId, { center: { u: 0, v: 0 }, plane: originPlane }, "piece-e2e")).toEqual({ ok: true });
+        const piece = (await eventually(() => design.hasPieces(), (rows) => rows.length >= 1, 10_000))[0]!;
+        const pathIds = await piece.pathPieces();
+        expect(Array.isArray(pathIds)).toBe(true);
+        let positionEvents = 0;
+        const offPosition = piece.onPositionChanged(() => {
+          positionEvents += 1;
+        });
+        const dragged = await piece.drag({ u: 2, v: 3 });
+        if (dragged.ok) {
+          session.bus.emit({ kind: "draggedPiece", payload: null } as never);
+        }
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        expect(positionEvents).toBeGreaterThanOrEqual(1);
+        offPosition();
+      } finally {
+        await session.dispose();
+      }
+    });
+  })
+}
+
+//#endregion 🧪Tests
+

@@ -1,73 +1,105 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "cli": {
+    "packageManager": "bun"
+  },
+  "useDaemonProcess": false,
+  "defaultBase": "⛳wip",
+  "workspaceLayout": {
+    "appsDir": "semio",
+    "libsDir": "semio"
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "sharedGlobals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/rustfmt.toml",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum",
+      "{workspaceRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock",
+      "{workspaceRoot}/CMakeLists.txt",
+      "{workspaceRoot}/CMakePresets.json",
+      "{workspaceRoot}/Monorepo.sln",
+      "{workspaceRoot}/eslint.config.mjs",
+      "{workspaceRoot}/.dependency-cruiser.cjs"
+    ],
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
+    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
+    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"],
+    "cpp": [
+      "{workspaceRoot}/CMakeLists.txt",
+      "{workspaceRoot}/CMakePresets.json",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.h",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.hpp",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cpp",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/*.cmake",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/**/CMakeLists.txt",
+      "{workspaceRoot}/elements/client/lib/geometry/topologic/vcpkg.json"
+    ]
+  },
   "targetDefaults": {
+    "setup": {
+      "inputs": ["sharedGlobals"],
+      "cache": true
+    },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
+      "dependsOn": ["^lint"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
       "cache": true
     },
     "dev": {
       "cache": false
     },
     "test": {
-      "dependsOn": [
-        "^test"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
-      "cache": true
-    },
-    "publish:test": {
-      "dependsOn": [
-        "^publish:test"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
+      "dependsOn": ["^test"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "publish": {
-      "dependsOn": [
-        "^publish"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
+      "dependsOn": ["^publish"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "update": {
-      "dependsOn": [
-        "^update"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{projectRoot}/.env*"
-      ],
+      "dependsOn": ["^update"],
+      "inputs": ["default", "^default"],
       "cache": true
+    }
+  },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzePackageJson": true,
+      "analyzeSourceFiles": false
     }
   },
   "plugins": [
     {
+      "plugin": "@nx/js",
+      "options": {
+        "analyzePackageJson": true,
+        "analyzeSourceFiles": false
+      }
+    },
+    {
       "plugin": "@nxlv/python",
+      "options": {}
+    },
+    {
+      "plugin": "./repo/lib/js/nx-plugin.mjs",
       "options": {}
     }
   ]

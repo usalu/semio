@@ -1,0 +1,11 @@
+{
+  "title": "Ui Context Menu Suppress Default",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "All UI elements can have a special context menu. When no context menu is registered, nothing happens (not even the browser context menu showing).",
+  "summary": "Updated `ContextMenu` so right-click always calls `preventDefault()` on the host; the Radix menu opens only when `items` is non-empty. Previously an empty `items` prop passed children through unchanged and the browser context menu still appeared. Added vitest coverage for the empty-items suppress path and the registered-menu open path.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪e3607bb977134635b6b40abb66a232ef"
+  ]
+}

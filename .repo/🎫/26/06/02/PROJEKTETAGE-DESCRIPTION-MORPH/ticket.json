@@ -1,0 +1,16 @@
+{
+  "title": "Projektetage Description Morph",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix projektetage intro: long description does not morph into short description on goal slide. Root cause: duplicate data-id on flow interactive wrapper vs h2.",
+  "summary": "Restored Über-uns intro text morph: reveal.js skips FLIP when both translate and scale are false; re-enabled measure via revealIntroFlowTextMeasureForAutoAnimate (grid-row Y + fixed slot X). Removed deck-wide opacity-only autoAnimateStyles. Grid layout unchanged.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪c9ef2d38807944f8bc129126c1f12100",
+    "⚪a631b76ea33f42a2ac787a0ff141eb78",
+    "⚪3123225f88784fb7bb637d13f9e4b84c",
+    "⚪394e1dcdb94e4614b599433ea67b607c",
+    "⚪fe89702290104ca5a35b55aecf7be0e7",
+    "⚪9fa13004658f4c3890a8180f7e271b9e"
+  ]
+}

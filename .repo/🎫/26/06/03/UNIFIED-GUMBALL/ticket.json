@@ -1,0 +1,9 @@
+{
+  "id": "26/06/03/UNIFIED-GUMBALL",
+  "title": "Unified Gumball",
+  "goal": "framework",
+  "client": "cursor-chat",
+  "llm": "gpt-5-5",
+  "status": "closed",
+  "summary": "Added shared Rhino-style UnifiedGumball in ui/react with per-axis move, plane move, rotate, and scale handles shown simultaneously. Wired into puzzle 3d ObjectTransformControls and CAD SpatialTransformGumball, replacing single-mode drei TransformControls. Play toolbars now toggle gumball handle groups via GumballConfig."
+}

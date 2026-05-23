@@ -1,0 +1,5 @@
+{
+	"name": "@framework/presentation",
+	"private": true,
+	"workspaces": ["core", "renderer/react"]
+}

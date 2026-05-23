@@ -1,0 +1,18 @@
+{
+  "title": "Unified Renderer-Neutral Store Abstraction",
+  "emoji": "🗄️",
+  "status": "closed",
+  "description": "Introduce abstract Store\u003cTSnapshot\u003e in @framework/core, controller-owned store registry, Component extends Store, renderer useStore hooks, sketchpad SemioKitStore + local store, puzzle play controllers provide domain stores. Full unification, no backwards compat.",
+  "summary": "Playground renderer now uses controller-owned stores end-to-end: usePuzzle3dPlaySnapshot binds via useControllerStore(PUZZLE_3D_PLAY_STORE_ID); TopologyStoreProvider resolves domain store from TopologyStoreBridge on controller.getStore(TOPOLOGY_PLAY_STORE_ID). Exported useStore, useControllerStore, Store from playground renderer. Exported TopologyStoreBridge from puzzle 5d play. All prior store abstraction work intact. Tests: playground renderer 13/13, sketchpad js 4/4.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "0cd71f44",
+    "local": "unified_store_abstraction_0cd71f44.plan.md"
+  },
+  "sessions": [
+    "⚪1578323ce62a47fea81152d88dd88c28",
+    "⚪31bbebe1153444889dc835106766d5fe",
+    "⚪c3d31e88ee5b482b8a27f42828549723"
+  ]
+}

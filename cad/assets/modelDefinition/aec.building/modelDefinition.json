@@ -1,0 +1,11 @@
+{
+	"schema": "spatial.modelDefinition/v1",
+	"id": "aec.building",
+	"version": "1.0.0",
+	"label": "General Building",
+	"description": "General building typologies and canonical construction actions.",
+	"kinds": [
+		"action",
+		"typology"
+	]
+}

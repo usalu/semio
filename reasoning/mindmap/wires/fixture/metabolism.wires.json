@@ -1,0 +1,194 @@
+{
+  "schema": "reasoning.wires.fixture/v1",
+  "source": {
+    "kitPath": "semio/fixtures/metabolism.kit.light.semio.json",
+    "kitId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+    "kitName": "Metabolism"
+  },
+  "identities": [
+    {
+      "identityId": 1,
+      "label": "Metabolism",
+      "nodeId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+    },
+    {
+      "identityId": 2,
+      "label": "Capsule",
+      "nodeId": "71749140-9db9-43f6-bd81-d89011667b80",
+      "identityKind": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80"
+    },
+    {
+      "identityId": 3,
+      "label": "Base",
+      "nodeId": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+    },
+    {
+      "identityId": 4,
+      "label": "Bridge",
+      "nodeId": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+      "identityKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35"
+    },
+    {
+      "identityId": 5,
+      "label": "Capital",
+      "nodeId": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+      "identityKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
+    },
+    {
+      "identityId": 6,
+      "label": "Tambour",
+      "nodeId": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
+      "identityKind": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571"
+    },
+    {
+      "identityId": 7,
+      "label": "Tower",
+      "nodeId": "wires-identity-tower",
+      "identityKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
+    }
+  ],
+  "relationships": [
+    { "relationshipId": 1, "sourceIdentityId": 1, "targetIdentityId": 2, "kind": "owns", "edgeId": "wires-rel-owns-capsule" },
+    { "relationshipId": 2, "sourceIdentityId": 1, "targetIdentityId": 3, "kind": "owns", "edgeId": "wires-rel-owns-base" },
+    { "relationshipId": 3, "sourceIdentityId": 1, "targetIdentityId": 4, "kind": "owns", "edgeId": "wires-rel-owns-bridge" },
+    { "relationshipId": 4, "sourceIdentityId": 1, "targetIdentityId": 5, "kind": "owns", "edgeId": "wires-rel-owns-capital" },
+    { "relationshipId": 5, "sourceIdentityId": 1, "targetIdentityId": 6, "kind": "owns", "edgeId": "wires-rel-owns-tambour" },
+    { "relationshipId": 6, "sourceIdentityId": 1, "targetIdentityId": 7, "kind": "owns", "edgeId": "wires-rel-owns-tower" },
+    { "relationshipId": 7, "sourceIdentityId": 2, "targetIdentityId": 3, "kind": "references", "edgeId": "wires-rel-ref-base" },
+    { "relationshipId": 8, "sourceIdentityId": 4, "targetIdentityId": 5, "kind": "is", "edgeId": "wires-rel-is-capital" },
+    { "relationshipId": 9, "sourceIdentityId": 6, "targetIdentityId": 2, "kind": "has", "edgeId": "wires-rel-has-capsule" }
+  ],
+  "board": {
+    "schema": "reasoning.mindmap.fixture/v1",
+    "camera": { "x": 0, "y": 0, "zoom": 0.55 },
+    "meta": {
+      "kindCatalogs": {
+        "relationshipKinds": [
+          { "color": "#64748b", "directed": false, "id": "wires.owns", "name": "Owns", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-diamond" },
+          { "color": "#0ea5e9", "directed": false, "id": "wires.is", "name": "Is", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-arrow" },
+          { "color": "#a855f7", "directed": false, "id": "wires.references", "name": "References", "pattern": "dashed", "stroke": "1.5", "targetTip": "fine-arrow" },
+          { "color": "#22c55e", "directed": false, "id": "wires.has", "name": "Has", "pattern": "solid", "stroke": "2", "targetTip": "open-diamond" }
+        ],
+        "identityKinds": [
+          {
+            "color": "#f8fafc",
+            "id": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
+            "name": "Capsule",
+            "shape": "circle"
+          },
+          {
+            "color": "#e2e8f0",
+            "id": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+            "name": "Base",
+            "shape": "rectangle"
+          },
+          {
+            "color": "#cbd5e1",
+            "id": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+            "name": "Bridge",
+            "shape": "rectangle"
+          },
+          {
+            "color": "#94a3b8",
+            "id": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+            "name": "Capital",
+            "shape": "rectangle"
+          },
+          {
+            "color": "#64748b",
+            "id": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
+            "name": "Tambour",
+            "shape": "circle"
+          }
+        ]
+      },
+      "wires": {
+        "allowedIdentityIds": [1, 2, 3, 4, 5, 6, 7]
+      }
+    },
+    "nodes": [
+      {
+        "height": 48,
+        "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "root": true,
+        "shape": "rectangle",
+        "text": "Metabolism",
+        "width": 48,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "71749140-9db9-43f6-bd81-d89011667b80",
+        "nodeKind": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
+        "radius": 22,
+        "shape": "circle",
+        "text": "Capsule",
+        "x": 280,
+        "y": 0
+      },
+      {
+        "height": 40,
+        "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "shape": "rectangle",
+        "text": "Base",
+        "width": 40,
+        "x": 140,
+        "y": 243
+      },
+      {
+        "height": 40,
+        "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+        "nodeKind": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+        "shape": "rectangle",
+        "text": "Bridge",
+        "width": 40,
+        "x": -140,
+        "y": 243
+      },
+      {
+        "height": 40,
+        "id": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+        "nodeKind": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+        "shape": "rectangle",
+        "text": "Capital",
+        "width": 40,
+        "x": -280,
+        "y": 0
+      },
+      {
+        "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
+        "nodeKind": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
+        "radius": 22,
+        "shape": "circle",
+        "text": "Tambour",
+        "x": -140,
+        "y": -243
+      },
+      {
+        "height": 40,
+        "id": "wires-identity-tower",
+        "nodeKind": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+        "shape": "rectangle",
+        "text": "Tower",
+        "width": 40,
+        "x": 140,
+        "y": -243
+      }
+    ],
+    "edges": [
+      { "id": "wires-rel-owns-capsule", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "71749140-9db9-43f6-bd81-d89011667b80" },
+      { "id": "wires-rel-owns-base", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" },
+      { "id": "wires-rel-owns-bridge", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "0e240cd2-7f98-42b6-af39-34e7ee4fad35" },
+      { "id": "wires-rel-owns-capital", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" },
+      { "id": "wires-rel-owns-tambour", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "1b1fcf80-0acc-4456-bc16-71f69c5df571" },
+      { "id": "wires-rel-owns-tower", "source": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", "target": "wires-identity-tower" },
+      { "id": "wires-rel-ref-base", "source": "71749140-9db9-43f6-bd81-d89011667b80", "target": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4" },
+      { "id": "wires-rel-is-capital", "source": "0e240cd2-7f98-42b6-af39-34e7ee4fad35", "target": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e" },
+      { "id": "wires-rel-has-capsule", "source": "1b1fcf80-0acc-4456-bc16-71f69c5df571", "target": "71749140-9db9-43f6-bd81-d89011667b80" }
+    ]
+  }
+}

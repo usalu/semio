@@ -1,0 +1,388 @@
+{
+    "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+    "name": "Bridge",
+    "representations": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "25d3b9cb-454e-4639-9688-223457f0c375",
+                "name": "bridge",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "60ace9d9-441d-412a-8c91-69e7993fafee",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "748e11ee-38e9-4e27-9fa8-6e6812a67902",
+                "name": "bridge",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "64003882-e928-4797-8a2c-3eff2fe6672d",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "e5d3da8f-0af7-44fa-9c76-1faef79c8f77",
+                "name": "833a270493",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "219bae4a-c46f-429e-84fe-4c9578d87809",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "1c9cb85c-3dff-46eb-a61e-3b6012373bfd",
+                "name": "bridge",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "bc3a4802-5b4c-4140-a7f6-4ad96337f956",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "8106296f-4320-48b4-bfe1-bea87e181213",
+                "name": "c7c924a1d6",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "0128e985-92ca-400e-a542-2ffeee759d1f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "2a4a9623-c932-4f01-9697-a9df8edd9170",
+                "name": "bridge",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "0e72fdac-3e8b-4d79-9059-4b8d0e5ef8e1",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "connectors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "b6b3121a-252b-4ba7-ac8d-152c1d0fece6",
+                "name": "e",
+                "t": 0.25,
+                "point": {
+                    "x": 5.6,
+                    "y": -1.3,
+                    "z": 0
+                },
+                "direction": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🧴 The middle of the east side of the plattform.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "props": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "f9e36a75-4f21-43e8-81e8-aa55a27f4c01",
+                            "quality": {
+                                "id": "57e73feb-2abb-55ca-aa5e-dcb681776237",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "48558771-3860-4918-ba95-f8b4069326c2",
+                "name": "w",
+                "t": 0.75,
+                "point": {
+                    "x": 0,
+                    "y": -1.3,
+                    "z": 0
+                },
+                "direction": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🧽 The middle of the west side of the plattform.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "props": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "1d895b3c-3548-47e6-8fd1-d31dea056636",
+                            "quality": {
+                                "id": "b9812fff-c5be-5fa5-9a02-077e9ff09177",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "props": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "8b69979f-a2d1-427b-b649-e5fbf0c8f3ab",
+                "quality": {
+                    "id": "9a71931b-2837-571d-9169-83229724d78f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "5.6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "6bb99035-d79d-4972-adcb-904c920159d4",
+                "quality": {
+                    "id": "3f17d8c5-c460-555f-be31-a99797da842c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "30c7ba68-5140-40a9-8da0-d7f49bf460b9",
+                "quality": {
+                    "id": "e4c4a387-32a6-52d2-b0bb-a5e452272eb2",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "68bcf991-d575-471c-a850-b9ba80d19cd4",
+                "quality": {
+                    "id": "6f32e795-2224-5b55-be90-6a1745c4aeeb",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "0.4",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "628f2f9a-07ce-4193-956f-b947435d3878",
+                "quality": {
+                    "id": "0121fb9c-374e-53aa-8118-4d3eb421337c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c366707b-d0ca-4842-aba4-df8342522125",
+                "quality": {
+                    "id": "64c6503a-d6fe-5874-9449-83289d105141",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.5",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "a9507581-7e6c-4aa3-976f-0cc84ed5762d",
+                "quality": {
+                    "id": "0277667d-d058-576b-a0ac-ee48fc04728f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "20",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "f70869f7-87cd-4758-a048-3bb9b6b86fe1",
+                "quality": {
+                    "id": "0c4588c1-f88f-544b-b41b-b5af6d52a1b5",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "10",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "ab360b33-6881-4de0-8c53-896712c36641",
+                "quality": {
+                    "id": "49e9512a-b7f7-5c60-bdee-b52871c9a14a",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "8",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "f56255cf-6d73-42ca-bdd6-1e9941c200ad",
+                "quality": {
+                    "id": "47de7486-1a85-5087-ae70-26eb605118ae",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "cc1b59c3-cf35-45b2-89cc-7f72e38f6192",
+                "quality": {
+                    "id": "63b2504f-ef83-5491-917f-c80b4100377b",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "125",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "45d6bebf-9ba9-46e3-9a26-9daf65c25f66",
+                "quality": {
+                    "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "65973",
+                "unit": "€",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "36c30ca9-b2c7-4662-ac8d-b4ff0cab5a18",
+                "quality": {
+                    "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "880",
+                "unit": "€/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b3ba39a5-4a29-46d1-9a65-2e9d925fe797",
+                "quality": {
+                    "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "5864",
+                "unit": "kgCO2e",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "stock": 2147483647,
+    "virtual": false,
+    "unit": "m",
+    "createdAt": "2025-11-23T01:10:21.108Z",
+    "updatedAt": "2025-11-23T01:10:21.108Z",
+    "authors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "ccc17ba0-d386-4a15-be85-1e2f2c56cea1",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "icon": "",
+    "image": "images/bridge.png",
+    "description": "🏢 A bridge with two segments an addition on the west along the main path.",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "typology": {
+        "id": "typology-bridge"
+    }
+}

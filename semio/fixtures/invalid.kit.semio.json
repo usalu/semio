@@ -1,0 +1,220 @@
+{
+    "id": "019ab664-0000-0000-0000-000000000001",
+    "name": "Invalid Kit",
+    "qualities": [
+        {
+            "id": "019ab664-7777-7777-7777-777777777777",
+            "name": "Duplicate Quality Name",
+            "key": "duplicate-quality"
+        },
+        {
+            "id": "019ab664-8888-8888-8888-888888888888",
+            "name": "Duplicate Quality Name",
+            "key": "duplicate-quality-2"
+        }
+    ],
+    "files": [
+        {
+            "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
+            "name": "duplicate-file.txt",
+            "remote": "file1.txt"
+        },
+        {
+            "id": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+            "name": "duplicate-file.txt",
+            "remote": "file2.txt"
+        }
+    ],
+    "folders": [
+        {
+            "id": "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
+            "name": "duplicate-folder"
+        },
+        {
+            "id": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+            "name": "duplicate-folder"
+        }
+    ],
+    "typologies": {
+        "hash": "typology-migration-stub",
+        "items": [
+            {
+                "id": "typology-base",
+                "name": "Base",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": [
+                        {
+                            "id": "019ab664-1111-1111-1111-111111111111",
+                            "name": "Duplicate File.txt",
+                            "representations": [
+                                {
+                                    "id": "019ab664-1111-1111-1111-111111110001",
+                                    "name": "duplicate-file.txt",
+                                    "file": {
+                                        "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000"
+                                    }
+                                },
+                                {
+                                    "id": "019ab664-1111-1111-1111-111111110002",
+                                    "name": "duplicate-file.txt",
+                                    "file": {
+                                        "id": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+                                    "name": "Duplicate Connector Name",
+                                    "t": 0,
+                                    "point": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "z": 0
+                                    },
+                                    "direction": {
+                                        "x": 0,
+                                        "y": 1,
+                                        "z": 0
+                                    }
+                                },
+                                {
+                                    "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+                                    "name": "Duplicate Connector Name",
+                                    "t": 0.5,
+                                    "point": {
+                                        "x": 1,
+                                        "y": 0,
+                                        "z": 0
+                                    },
+                                    "direction": {
+                                        "x": 0,
+                                        "y": 1,
+                                        "z": 0
+                                    }
+                                }
+                            ],
+                            "typology": {
+                                "id": "typology-base"
+                            }
+                        },
+                        {
+                            "id": "019ab664-2222-2222-2222-222222222222",
+                            "name": "Duplicate Type Name",
+                            "typology": {
+                                "id": "typology-base"
+                            }
+                        }
+                    ]
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
+                    "items": [
+                        {
+                            "id": "019ab664-3333-3333-3333-333333333333",
+                            "name": "Duplicate Design Name",
+                            "pieces": [
+                                {
+                                    "id": "019ab664-4444-4444-4444-444444444444",
+                                    "name": "Duplicate Piece Name",
+                                    "type": {
+                                        "id": "019ab664-1111-1111-1111-111111111111"
+                                    },
+                                    "pose": {
+                                        "plane": {
+                                            "origin": {
+                                                "x": 0,
+                                                "y": 0,
+                                                "z": 0
+                                            },
+                                            "xAxis": {
+                                                "x": 1,
+                                                "y": 0,
+                                                "z": 0
+                                            },
+                                            "yAxis": {
+                                                "x": 0,
+                                                "y": 1,
+                                                "z": 0
+                                            }
+                                        },
+                                        "center": null
+                                    }
+                                },
+                                {
+                                    "id": "019ab664-5555-5555-5555-555555555555",
+                                    "name": "Duplicate Piece Name",
+                                    "type": {
+                                        "id": "019ab664-2222-2222-2222-222222222222"
+                                    },
+                                    "pose": {
+                                        "plane": {
+                                            "origin": {
+                                                "x": 5,
+                                                "y": 0,
+                                                "z": 0
+                                            },
+                                            "xAxis": {
+                                                "x": 1,
+                                                "y": 0,
+                                                "z": 0
+                                            },
+                                            "yAxis": {
+                                                "x": 0,
+                                                "y": 1,
+                                                "z": 0
+                                            }
+                                        },
+                                        "center": null
+                                    }
+                                }
+                            ],
+                            "connections": [
+                                {
+                                    "id": "019ab664-3333-3333-3333-333333333333",
+                                    "parent": {
+                                        "piece": {
+                                            "id": "019ab664-4444-4444-4444-444444444444"
+                                        },
+                                        "connector": {
+                                            "id": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+                                        }
+                                    },
+                                    "child": {
+                                        "piece": {
+                                            "id": "019ab664-5555-5555-5555-555555555555"
+                                        },
+                                        "connector": {
+                                            "id": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+                                        }
+                                    }
+                                }
+                            ],
+                            "layers": [
+                                {
+                                    "id": "019ab664-3333-3333-3333-333333330001",
+                                    "path": "Duplicate.Layer.Path"
+                                },
+                                {
+                                    "id": "019ab664-3333-3333-3333-333333330002",
+                                    "path": "Duplicate.Layer.Path"
+                                }
+                            ],
+                            "typology": {
+                                "id": "typology-base"
+                            }
+                        },
+                        {
+                            "id": "019ab664-6666-6666-6666-666666666666",
+                            "name": "Duplicate Design Name",
+                            "typology": {
+                                "id": "typology-base"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

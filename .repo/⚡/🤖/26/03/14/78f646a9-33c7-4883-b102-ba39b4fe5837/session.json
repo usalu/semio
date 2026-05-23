@@ -30,14 +30,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻index"
+            "id": "🧩elements🛅ui💻index"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻index📌1📌31"
+          "🧩elements🛅ui💻index📌1📌31"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚56⏱️31",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -120,14 +120,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻index"
+            "id": "🧩elements🛅ui💻index"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻index📌1📌31"
+          "🧩elements🛅ui💻index📌1📌31"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚56⏱️44",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -970,14 +970,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚00⏱️20",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1016,14 +1016,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚00⏱️37",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1060,14 +1060,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚00⏱️42",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1106,14 +1106,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚00⏱️59",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1150,14 +1150,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️03",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1196,14 +1196,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️18",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1239,14 +1239,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️22",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1282,14 +1282,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️22",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1323,14 +1323,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️35",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1364,14 +1364,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️37",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1409,14 +1409,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️49",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1454,14 +1454,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚01⏱️51",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1692,14 +1692,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚02⏱️51",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1774,14 +1774,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚03⏱️10",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1864,14 +1864,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚03⏱️25",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1941,14 +1941,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚03⏱️56",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -1984,14 +1984,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚03⏱️56",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2027,14 +2027,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚03⏱️56",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2074,14 +2074,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚04⏱️12",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2115,14 +2115,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚04⏱️12",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2156,14 +2156,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚04⏱️14",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2201,14 +2201,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌563"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚04⏱️23",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2246,14 +2246,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼ontologytreestories📌1📌270"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚04⏱️32",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2321,14 +2321,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️00",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2362,14 +2362,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️14",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2403,14 +2403,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️15",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2448,14 +2448,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️44",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2493,14 +2493,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️44",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2537,14 +2537,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚05⏱️51",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2583,14 +2583,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚06⏱️15",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2626,14 +2626,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚06⏱️19",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2667,14 +2667,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚06⏱️39",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -2712,14 +2712,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8424"
+          "🧩elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚07⏱️06",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3226,14 +3226,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻globals"
+            "id": "🧩elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻globals📌1📌1136"
+          "🧩elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️44",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3269,14 +3269,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻theme"
+            "id": "🧩elements🛅ui💻theme"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻theme📌1📌208"
+          "🧩elements🛅ui💻theme📌1📌208"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️45",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3310,14 +3310,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻globals"
+            "id": "🧩elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻globals📌1📌1136"
+          "🧩elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚11⏱️01",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3355,14 +3355,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻globals"
+            "id": "🧩elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻globals📌1📌1136"
+          "🧩elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚11⏱️10",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3400,14 +3400,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻theme"
+            "id": "🧩elements🛅ui💻theme"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻theme📌1📌208"
+          "🧩elements🛅ui💻theme📌1📌208"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚11⏱️10",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3518,14 +3518,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui⚙️tailwindconfig"
+            "id": "🧩elements🛅ui⚙️tailwindconfig"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui⚙️tailwindconfig📌1📌83"
+          "🧩elements🛅ui⚙️tailwindconfig📌1📌83"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚12⏱️42",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3600,14 +3600,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui⚙️tailwindconfig"
+            "id": "🧩elements🛅ui⚙️tailwindconfig"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui⚙️tailwindconfig📌1📌83"
+          "🧩elements🛅ui⚙️tailwindconfig📌1📌83"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚13⏱️08",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",
@@ -3690,14 +3690,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui⚙️tailwindconfig"
+            "id": "🧩elements🛅ui⚙️tailwindconfig"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "claude-4.6-opus-high-thinking",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui⚙️tailwindconfig📌1📌83"
+          "🧩elements🛅ui⚙️tailwindconfig📌1📌83"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚13⏱️34",
         "session": "⚪78f646a933c74883b102ba39b4fe5837",

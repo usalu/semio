@@ -3,6 +3,10 @@
 #region 🔖PostStart
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
+SSH_SIGNING_KEY="${HOME}/.ssh/id_ed25519_signing"
+SSH_SIGNING_PUBLIC_KEY="${SSH_SIGNING_KEY}.pub"
+SSH_AGENT_SOCKET="${HOME}/.ssh/semio-ssh-agent.sock"
+SSH_AGENT_ENV="${HOME}/.ssh/semio-ssh-agent.env"
 #region 🔖EmojiFonts
 configure_emoji_fonts() {
   sudo mkdir -p /etc/fonts
@@ -49,7 +53,7 @@ configure_emoji_fonts() {
   <!-- Force emoji rendering for color emoji -->
   <match target="pattern">
     <test name="family">
-      <string>Noto Color Emoji</family>
+      <string>Noto Color Emoji</string>
     </test>
     <edit name="fontformat" mode="assign">
       <string>TrueType</string>
@@ -94,6 +98,212 @@ echo "✅ Fixed ownership for persisted volume mounts."
 #region 🔖EmojiFonts
 configure_emoji_fonts
 #endregion 🔖EmojiFonts
+#region 🔖Neo4jEnv
+configure_neo4j_compose_env() {
+  local profile_script="/etc/profile.d/99-semio-neo4j-mcp.sh"
+  sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
+export NEO4J_URI=bolt://localhost:7687
+export NEO4J_USERNAME=neo4j
+export NEO4J_PASSWORD=password
+export NEO4J_DATABASE=semio
+export NEO4J_TELEMETRY=false
+NEO4JPROFILE
+  sudo chmod 0644 "$profile_script" || true
+  local marker="#region 🔌Neo4jMcp"
+  local bashrc="${HOME}/.bashrc"
+  if [ -f "$bashrc" ] && ! grep -Fq "$marker" "$bashrc" 2>/dev/null; then
+    cat >>"$bashrc" <<'BASHRC'
+
+#region 🔌Neo4jMcp
+if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+  # shellcheck source=/dev/null
+  . /etc/profile.d/99-semio-neo4j-mcp.sh
+fi
+#endregion 🔌Neo4jMcp
+BASHRC
+  fi
+  if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+    # shellcheck source=/dev/null
+    . /etc/profile.d/99-semio-neo4j-mcp.sh
+  fi
+  echo "✅ Neo4j MCP env (bolt://localhost:7687 in the semio devcontainer) installed for login shells and this session."
+}
+
+configure_neo4j_compose_env
+#endregion 🔖Neo4jEnv
+#region 🗄️Neo4jService
+migrate_neo4j_community_graph_semio() {
+  local databases="/var/lib/neo4j/data/databases"
+  if [ ! -d "$databases" ]; then
+    return 0
+  fi
+  if [ -d "${databases}/semio" ]; then
+    return 0
+  fi
+  if [ ! -d "${databases}/neo4j" ]; then
+    return 0
+  fi
+  echo "🧾 Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named semio (replacing legacy neo4j)."
+  sudo neo4j stop >/dev/null 2>&1 || true
+  sudo rm -rf /var/lib/neo4j/data/*
+}
+
+configure_neo4j_server() {
+  if ! command -v neo4j >/dev/null 2>&1; then
+    echo "⚠️ Neo4j is not installed in this devcontainer image."
+    return 1
+  fi
+
+  migrate_neo4j_community_graph_semio
+
+  local conf="/etc/neo4j/neo4j.conf"
+  sudo mkdir -p /var/lib/neo4j/data /var/log/neo4j /var/run/neo4j
+  sudo chown -R neo4j:neo4j /var/lib/neo4j /var/log/neo4j /var/run/neo4j
+
+  set_neo4j_conf_value() {
+    local key="$1"
+    local value="$2"
+    if sudo grep -Eq "^[#[:space:]]*${key}=" "$conf"; then
+      sudo sed -i -E "s|^[#[:space:]]*${key}=.*|${key}=${value}|" "$conf"
+    else
+      printf '%s=%s\n' "$key" "$value" | sudo tee -a "$conf" >/dev/null
+    fi
+  }
+
+  set_neo4j_conf_value "server.default_listen_address" "0.0.0.0"
+  set_neo4j_conf_value "server.bolt.listen_address" ":7687"
+  set_neo4j_conf_value "server.http.listen_address" ":7474"
+  set_neo4j_conf_value "dbms.usage_report.enabled" "false"
+  set_neo4j_conf_value "server.directories.import" "/workspaces/semio"
+  set_neo4j_conf_value "dbms.security.procedures.allowlist" "apoc.*"
+  set_neo4j_conf_value "dbms.security.procedures.unrestricted" "apoc.*"
+  set_neo4j_conf_value "initial.dbms.default_database" "semio"
+
+  sudo tee /etc/neo4j/apoc.conf >/dev/null <<'APOCCONF'
+apoc.export.file.enabled=true
+apoc.import.file.enabled=true
+apoc.import.file.use_neo4j_config=false
+APOCCONF
+
+  if [ ! -f /var/lib/neo4j/data/dbms/auth.ini ] && [ ! -f /var/lib/neo4j/data/dbms/auth ]; then
+    sudo neo4j-admin dbms set-initial-password "${NEO4J_PASSWORD:-password}" >/dev/null
+  fi
+}
+
+start_neo4j_server() {
+  if command -v nc >/dev/null 2>&1 && nc -z localhost 7687 2>/dev/null; then
+    echo "✅ Neo4j is already running at bolt://localhost:7687."
+    return 0
+  fi
+
+  sudo neo4j start >/tmp/semio-neo4j-start.log 2>&1 || {
+    echo "⚠️ Neo4j failed to start. Last startup log lines:"
+    tail -40 /tmp/semio-neo4j-start.log || true
+    return 1
+  }
+}
+
+wait_for_neo4j_bolt() {
+  for _ in $(seq 1 60); do
+    if command -v nc >/dev/null 2>&1 && nc -z localhost 7687 2>/dev/null; then
+      return 0
+    fi
+    if timeout 1 bash -c "echo >/dev/tcp/localhost/7687" 2>/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
+}
+
+if configure_neo4j_server && start_neo4j_server && wait_for_neo4j_bolt; then
+  echo "✅ Neo4j is running inside the semio devcontainer at bolt://localhost:7687."
+else
+  echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
+fi
+#endregion 🗄️Neo4jService
+#region 🧾Neo4jCypherPersistence
+extra_neo4j_graph_names_from_env() {
+  [ -z "${NEO4J_EXTRA_GRAPH_DATABASES:-}" ] && return 0
+  local _ifs=$IFS
+  IFS=,
+  local s n
+  for s in $NEO4J_EXTRA_GRAPH_DATABASES; do
+    n="$(echo "$s" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -n "$n" ] && printf '%s\n' "$n"
+  done
+  IFS=$_ifs
+}
+
+ensure_neo4j_schema_files() {
+  local technologies=("semio" "elements" "coda" "reuse")
+  local ex
+  while IFS= read -r ex; do
+    [ -n "$ex" ] && technologies+=("$ex")
+  done < <(extra_neo4j_graph_names_from_env)
+  local schema_dir="$WORKSPACE/.repo/🛂"
+  mkdir -p "$schema_dir"
+  for technology in "${technologies[@]}"; do
+    local schema_file="$schema_dir/$technology.cypher"
+    if [ ! -f "$schema_file" ]; then
+      cat >"$schema_file" <<EOF
+// SPDX-License-Identifier: AGPL-3.0-only
+// Neo4j Cypher persistence for $technology.
+// Keep this file replayable with cypher-shell or APOC.
+EOF
+    fi
+  done
+}
+
+neo4j_schema_cypher_uri() {
+  local technology="$1"
+  printf 'file:///workspaces/semio/.repo/\\uD83D\\uDEC2/%s.cypher' "$technology"
+}
+
+reload_neo4j_from_repo_cypher() {
+  local graph_db="${NEO4J_DATABASE:-semio}"
+  if ! command -v cypher-shell >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "RETURN 1 AS ok;" >/dev/null 2>&1; then
+    echo "⚠️ Neo4j Bolt unreachable for database ${graph_db}; skip cypher reload from repo."
+    return 0
+  fi
+  local apoc_procedure_count
+  apoc_procedure_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
+  if [ "$apoc_procedure_count" != "2" ]; then
+    echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
+    return 0
+  fi
+  echo "🧾 Neo4j: clearing graph in database ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
+  cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
+    echo "⚠️ Neo4j wipe failed; skipping cypher file import."
+    return 0
+  }
+  local imported=0
+  local technologies=("semio" "elements" "coda" "reuse")
+  local ex
+  while IFS= read -r ex; do
+    [ -n "$ex" ] && technologies+=("$ex")
+  done < <(extra_neo4j_graph_names_from_env)
+  for technology in "${technologies[@]}"; do
+    local schema_file="$WORKSPACE/.repo/🛂/$technology.cypher"
+    local schema_uri
+    schema_uri="$(neo4j_schema_cypher_uri "$technology")"
+    if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
+      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" >/dev/null
+      imported=$((imported + 1))
+    fi
+  done
+  echo "✅ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
+  if command -v bun >/dev/null 2>&1 && [ -n "${WORKSPACE:-}" ]; then
+    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./script.ts purge neo4j) || echo "⚠️ Neo4j legacy-property prune skipped."
+  fi
+}
+
+ensure_neo4j_schema_files
+reload_neo4j_from_repo_cypher || echo "⚠️ Neo4j APOC Cypher reload skipped."
+#endregion 🧾Neo4jCypherPersistence
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"
@@ -143,11 +353,70 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
 fi
 echo "✅ Marked workspace + submodules as safe.directory for git."
 #endregion 🔖GitSafe
-#region 🔖PythonVenv
-if [ -d "$WORKSPACE/.venv" ]; then
-  source "$WORKSPACE/.venv/bin/activate"
+#region 🔐GitSshSigning
+ensure_shell_loads_ssh_agent() {
+  local bashrc="${HOME}/.bashrc"
+  local marker="#region 🔐SemioSshAgent"
+  if [ -f "$bashrc" ] && grep -Fq "$marker" "$bashrc"; then
+    return 0
+  fi
+  cat >>"$bashrc" <<'SHELLRC'
+
+#region 🔐SemioSshAgent
+if [ -f "$HOME/.ssh/semio-ssh-agent.env" ]; then
+  . "$HOME/.ssh/semio-ssh-agent.env" >/dev/null 2>&1 || true
 fi
-echo "✅ Activated Python virtual environment."
+#endregion 🔐SemioSshAgent
+SHELLRC
+}
+
+start_ssh_signing_agent() {
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+  rm -f "$SSH_AGENT_SOCKET"
+  eval "$(ssh-agent -a "$SSH_AGENT_SOCKET" -s)" >/dev/null
+  {
+    echo "export SSH_AUTH_SOCK=$SSH_AGENT_SOCKET"
+    echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
+  } >"$SSH_AGENT_ENV"
+  chmod 600 "$SSH_AGENT_ENV"
+}
+
+configure_git_ssh_signing() {
+  if [ ! -f "$SSH_SIGNING_PUBLIC_KEY" ]; then
+    echo "⚠️  SSH signing public key not found, skipping git SSH signing setup."
+    return 0
+  fi
+  if [ -f "$SSH_SIGNING_KEY" ]; then
+    chmod 600 "$SSH_SIGNING_KEY"
+  fi
+  chmod 644 "$SSH_SIGNING_PUBLIC_KEY"
+
+  git config --global gpg.format ssh
+  git config --global gpg.ssh.program ssh-keygen
+  git config --global user.signingkey "$SSH_SIGNING_PUBLIC_KEY"
+  git config --global commit.gpgsign true
+  git config --global tag.gpgsign true
+
+  if [ ! -S "$SSH_AGENT_SOCKET" ] || ! SSH_AUTH_SOCK="$SSH_AGENT_SOCKET" ssh-add -l >/dev/null 2>&1; then
+    start_ssh_signing_agent
+  fi
+  ensure_shell_loads_ssh_agent
+  echo "✅ Configured SSH commit signing agent."
+  if ! SSH_AUTH_SOCK="$SSH_AGENT_SOCKET" ssh-add -l 2>/dev/null | grep -Fq "$(ssh-keygen -lf "$SSH_SIGNING_PUBLIC_KEY" | awk '{print $2}')"; then
+    echo "⚠️  Unlock signing once per container session with: ssh-add $SSH_SIGNING_KEY"
+  fi
+}
+
+configure_git_ssh_signing
+#endregion 🔐GitSshSigning
+#region 🔖PythonVenv
+if [ -f "$WORKSPACE/.venv/bin/activate" ]; then
+  source "$WORKSPACE/.venv/bin/activate"
+  echo "✅ Activated Python virtual environment."
+else
+  echo "ℹ️ Python virtual environment is not present for this container OS yet."
+fi
 #endregion 🔖PythonVenv
 echo "✅ Environment ready."
 #endregion 🔖PostStart

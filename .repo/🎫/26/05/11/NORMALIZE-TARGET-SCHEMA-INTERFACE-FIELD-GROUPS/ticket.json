@@ -1,0 +1,14 @@
+{
+  "title": "Normalize Target Schema Interface Field Groups",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Normalize semio/graphql/target.schema.graphql so inherited fields are grouped under the interface that actually defines them. For example, WeakEntity/StrongEntity implementors should use # Node for id and # Entity for hash/owner/owns, and concrete Artifact/Diff/Modification/Modifications/Operation shapes should split inherited fields into the correct interface groups instead of lumping them under # WeakEntity or # StrongEntity. Validate the schema still parses after the comment-only cleanup.",
+  "summary": "Normalized semio/graphql/target.schema.graphql inherited field-group comments so fields now sit under the interface that actually defines them: Node for id, Entity for hash/owner/owns, RichStrongEntity vs Artifact splits for artifact hierarchies, and concrete Modifications/Operation markers where entity-specific fields begin. Verified no legacy # WeakEntity/# StrongEntity group markers remain in the schema and validated SDL parsing with graphql buildSchema.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1409"
+  },
+  "goal": "🎯alignrustgqliface🎯geom🎯relaywithtargetschemagraphqlworkeraregions",
+  "sessions": [
+    "⚪c8c3c649de1b4fd8b61b6b0c3c9e0519"
+  ]
+}

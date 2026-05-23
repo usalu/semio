@@ -1,0 +1,1028 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "curve.construct",
+  "version": "1.0.0",
+  "label": "Construct Curve",
+  "key": "c",
+  "invocation": "callable",
+  "guards": [
+    {
+      "name": "hasCurveResult",
+      "expr": {
+        "kind": "any",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "wireId"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "wireIds"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "curves"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "targets"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "points"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "machine": {
+    "initial": "choose_mode",
+    "states": [
+      {
+        "name": "choose_mode",
+        "on": [
+          {
+            "event": "mode.line",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "1",
+                "label": "Line",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "line"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "curve.line",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.polyline",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "2",
+                "label": "Polyline",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "polyline"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "curve.polyline",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.arc",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "3",
+                "label": "Arc",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "arc"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "curve.arc",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.circle",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "4",
+                "label": "Circle",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "circle"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "curve.circle",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.interpolate",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "5",
+                "label": "Interpolate",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "interpolate"
+                    }
+                  },
+                  {
+                    "op": "interaction.call",
+                    "interaction": "curve.interpolateCurve",
+                    "outputs": [
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireId"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "wireIds"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curves"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "targets"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "points"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "target": {
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "kind": "path",
+                          "root": "context",
+                          "segments": [
+                            {
+                              "kind": "field",
+                              "name": "curveConstructMode"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.pickWires",
+            "transitions": [
+              {
+                "target": "pick_wires",
+                "key": "6",
+                "label": "Pick wires (loft)",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "curveConstructMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "pickWires"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pick_wires",
+        "selection": {
+          "accept": [
+            "wire",
+            "edge"
+          ],
+          "multiple": true,
+          "prompt": "Pick curves for loft / tween"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "pick_wires",
+                "key": "s",
+                "label": "Add",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "curves"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Finish pick"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "choose_mode",
+        "items": [
+          {
+            "kind": "label",
+            "id": "choose-curve",
+            "role": "prompt",
+            "text": "Curve: 1=line 2=polyline 3=arc 4=circle 5=interpolate 6=pick wires (loft)",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "pick_wires",
+        "items": [
+          {
+            "kind": "label",
+            "id": "pick-wires-hint",
+            "role": "prompt",
+            "text": "Select curves, then Finish pick",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasCurveResult",
+    "fromStates": [
+      "committed"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {}
+    }
+  }
+}

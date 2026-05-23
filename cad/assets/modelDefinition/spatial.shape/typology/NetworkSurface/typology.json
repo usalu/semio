@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "spatial.shape.surface.network-srf",
+  "version": "1.0.0",
+  "label": "Network Surface",
+  "description": "Typology produced by surface.network-srf.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "surface.networkSrf"
+  ],
+  "primitiveKinds": [
+    "face"
+  ]
+}

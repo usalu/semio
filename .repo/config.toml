@@ -1,0 +1,9 @@
+[logging]
+# Write per-session session.json hook logs under .repo/⚡/🤖/...
+session = false
+# Include derived agent.<op>.<phase> events (only applies when session = true)
+operations = true
+# Track agent plan steps in session.json (only applies when session = true)
+plan = true
+# Detail per event: "minimal" (event only) | "standard" (+ response) | "full" (+ raw native input)
+detail = "standard"

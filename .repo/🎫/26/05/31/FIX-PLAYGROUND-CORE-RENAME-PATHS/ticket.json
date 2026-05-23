@@ -1,0 +1,11 @@
+{
+  "title": "Fix Playground Core Rename Paths",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "cad play 404: GET framework/product/playground/core/core.ts — file renamed to index.ts; update package exports and all vite/tsconfig aliases.",
+  "summary": "Playground core entry was renamed from core.ts to index.ts but Vite aliases and package exports still pointed at core.ts, causing cad play 404 on @fs …/core/core.ts. Updated createPlaygroundPlayViteConfig, package.json exports, vitest/tsconfig aliases across cad, puzzle, sketchpad, and playground packages. Verified @cad/js/renderer build and @framework/playground/core tests pass.",
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
+  "sessions": [
+    "⚪c852f57c20ba4cc2903be53833ee410a"
+  ]
+}

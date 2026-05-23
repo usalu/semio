@@ -7,52 +7,54 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "go run ./repo/claude hook Notification",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "command": "go run ./repo/claude hook PermissionRequest",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "command": "go run ./repo/claude hook TaskCompleted",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "command": "go run ./repo/claude hook TeammateIdle",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ]
-  },
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {},
+  // "hooks": {
+  //   "Notification": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "command": "bun ./script.ts dev mcp stdio claude hook Notification",
+  //           "type": "command"
+  //         }
+  //       ],
+  //       "matcher": ""
+  //     }
+  //   ],
+  //   "PermissionRequest": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "command": "bun ./script.ts dev mcp stdio claude hook PermissionRequest",
+  //           "type": "command"
+  //         }
+  //       ],
+  //       "matcher": ""
+  //     }
+  //   ],
+  //   "TaskCompleted": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "command": "bun ./script.ts dev mcp stdio claude hook TaskCompleted",
+  //           "type": "command"
+  //         }
+  //       ],
+  //       "matcher": ""
+  //     }
+  //   ],
+  //   "TeammateIdle": [
+  //     {
+  //       "hooks": [
+  //         {
+  //           "command": "bun ./script.ts dev mcp stdio claude hook TeammateIdle",
+  //           "type": "command"
+  //         }
+  //       ],
+  //       "matcher": ""
+  //     }
+  //   ]
+  // },
   "permissions": {
     "allow": [
       "Read(net/Semio.Grasshopper/Semio.Grasshopper.cs)",

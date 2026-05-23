@@ -1,0 +1,12 @@
+{
+  "ticket": "FIELD-ONLY-KIT-READS-CQRS-CLASSES",
+  "phaseReference": "phase-0-1-js-done.json",
+  "files": [
+    "semio/assets/index.ts",
+    "semio/algorithms/tsconfig.json",
+    "semio/ui/index.tsx",
+    "semio/ui/tsconfig.json",
+    "semio/ui/tailwind.config.ts"
+  ],
+  "summary": "semio/ui: plain JSON diagram/scene types (Piece/Connection/KitKindPlain/SceneCamera), kitSurface + kitJsRows, pickPreferredRepresentation, JsonObject-based MCP diagramDesign, tests and algorithm panel fixes; imports wire types from @semio/js. semio/ui + semio/algorithms tsconfig: vitest/globals for semio/js embedded tests in tsc graph. semio/assets: stricter Metabolism kit row access + readonly-friendly buildLookup. semio/algorithms/index.ts may show in workspace diff from parallel work (openKit path)."
+}

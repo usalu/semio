@@ -1,0 +1,14 @@
+{
+  "title": "Semio Rs Remove Projection Tiers",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Remove semio/rs projection tier structs and names (Full/Metadata/Shallow/Ref wire types): collapse to *Bundle + Id, drop GraphQL metadata/shallow/full fields, regen schema, fix JS/py/storybook.",
+  "summary": "Automated strip of projection tiers failed: substring KitMetadata→KitBundle broke ReadKitMetadataCommand into duplicate ReadKitBundleCommand. lib.rs restored from git blob; builds again. Scratch script in ticket folder documents approach; full removal needs explicit command/GraphQL refactors, not global replace.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1390"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪23f879563ecc4eeaa990683a8c7562be"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Semio Rs New Architecture",
+  "emoji": "🦀",
+  "status": "closed",
+  "description": "Rebuild semio/rs/lib.rs as a clean greenfield skeleton matching semio/graphql/target.schema.graphql: one struct per GraphQL type with a main impl + an #[Object] impl, all pub fn async, a single global emit_event, and a parent/child web-worker topology where the parent routes Query.wip and Query.authoritative to two child workers. Wire one end-to-end operation (CreatedFixedPiece) through the full path as the reference flow.",
+  "summary": "Refactored semio/rs to in-memory Arc references with no value cloning. Every entity (Connector, Representation, Type, Side, Connection, Piece, Design, Kit, Change, Transaction, Draft, Checkpoint, Alternative, Graph, Session, Conflict, all Op*) is now constructed once as Arc\u003cSelf\u003e; every mutable field lives behind async_lock::RwLock\u003cFieldT\u003e; owned children switched to RwLock\u003cVec\u003cArc\u003cT\u003e\u003e\u003e; back-references switched to Weak\u003cParent\u003e. Constructors return Arc\u003cSelf\u003e; all mutators take \u0026self via interior write-locks. All #[Object] resolvers return Arc\u003cChild\u003e / Option\u003cArc\u003cChild\u003e\u003e / Vec\u003cArc\u003cChild\u003e\u003e for relationships and deref a single per-field read-guard for value leaves; owners upgrade Weak. ParentRuntime now holds Arc\u003cGraph\u003e directly (snapshot helpers deleted); Query.wip / Query.authoritative return Arc\u003cGraph\u003e. Operation structs carry Arc\u003cEntity\u003e payloads; KitEvent variants wrap Arc\u003cOp\u003e; OperationKind / OperationIface unions / interface dispatch over Arc\u003c*\u003e variants. Single emit_event preserved (guard test still pins the canonical signature). Fixed an unrelated EventBus dead-lock by setting set_await_active(false) on the broadcast Sender so emits no longer block when there are no active subscribers. Added two new tests: no_deep_clone_on_traversal (Arc::strong_count guard around a deep GraphQL query) and mutation_visible_without_resnapshotting (two reads across a mutation prove in-place mutability). cargo check passes for both native and wasm32-unknown-unknown; cargo test --lib passes with all 6 tests green.",
+  "goal": "🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "d7b81250",
+    "local": "semio_rs_new_arch_d7b81250.plan.md"
+  },
+  "sessions": [
+    "⚪aee278dc4aef4b3fac63cda46ffa6450",
+    "⚪15ce10426dd64013809fe82d914ff618"
+  ]
+}

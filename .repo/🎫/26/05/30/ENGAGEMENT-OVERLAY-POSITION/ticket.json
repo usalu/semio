@@ -1,0 +1,12 @@
+{
+  "title": "Engagement Overlay Position",
+  "emoji": "💬",
+  "status": "closed",
+  "description": "Position engagement as transparent overlay at center bottom with panel spacing-double offset",
+  "summary": "Window engagement overlay uses z-window (5) instead of z-overlay (20) so it stacks above window content but below side panels (z-panel / inline zIndex 20). Test asserts z-window on window-engagement-overlay.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e47d06c343f741abb16607fdef0ca780",
+    "⚪3d681da517d64fb69a72e90a22f495cf"
+  ]
+}

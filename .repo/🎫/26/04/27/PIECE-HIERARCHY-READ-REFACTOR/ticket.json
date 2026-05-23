@@ -1,0 +1,14 @@
+{
+  "title": "Piece Hierarchy Read Refactor",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Piece Hierarchy Read Refactor",
+  "summary": "Piece hierarchy reads moved to PieceStore; ChangeDesignCommand::apply delegates flattened piece/connection variants to ChangePieceCommands/ChangeConnectionCommands with owned clones for \u0026self match. Verified: cargo check -p semio, cargo test generated_schema_sdl_matches, cargo test -p semio-store --bin semio-store, npx nx build semio/graphql.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1387"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8de50b7425e54869a6ed5442dc2fbb67"
+  ]
+}

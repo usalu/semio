@@ -1,0 +1,16 @@
+{
+  "title": "Projektetage Focus Label Morph",
+  "emoji": "🔀",
+  "status": "closed",
+  "description": "Fix slides 8→9 (catalogue-focus → catalogue-labels): many-to-one tile morph via per-tile ghosts with same data-id at label position. reveal.js cannot FLIP visibility:hidden ghosts.",
+  "summary": "8→9 many-to-one now morphs from live slide-8 tile geometry: syncManyToOneGhostMorphFramesFromDom measures each focus tile (including drag/resize) and applies morph frame + crop vars to label-slide target ghosts via setProperty before FLIP; declared revealMorphFromFrame only used as React fallback. Focus tiles keep canvasLiveTransform for data-id anchors. 91 tests pass.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪0c92cdf33cb042428d8c609a495f5a30",
+    "⚪3800591bd5084899bcb1a50de59f4536",
+    "⚪bf80bdce068844119ce9f6240f305474",
+    "⚪4cef837a86e648dab4910329dc121124",
+    "⚪12f5dbba8bc5418a98e95621de6bf6d4",
+    "⚪97466316a7084377bddab12940791413"
+  ]
+}

@@ -1,0 +1,37 @@
+# W7 blocked — gate not satisfied
+
+**Workpackage:** W7 (operations), `//#region ⚙️ operation`  
+**Ticket folder:** `.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/`  
+**When:** 2026-05-11 (gate evaluation after short poll)
+
+## Prerequisite files missing
+
+The following files were **not present** in this ticket folder after **6 polls** at **10s** intervals (~60s total):
+
+- `W1.complete`
+- `W2.complete`
+- `W3.complete`
+- `W4.complete`
+- `W5.complete`
+- `W6.complete`
+
+(No `W1.complete` … `W6.complete` were found elsewhere in the repo at gate time.)
+
+## `cargo check` did not pass
+
+- **Command:** `cargo check -p semio` (workspace root `c:\git\semio`)
+- **Result:** **FAILED** (exit code **101**)
+- **Summary:** `could not compile semio (lib) due to 76 previous errors; 1 warning emitted`
+- **Full output:** `W7.check.log` (same ticket folder)
+
+Representative failures include unresolved `crate::vcs::ReadVersion` / `WriteVersion`, missing `frozen` / `KitReadPointInput`, missing `Graph` fields (`drafts`, `parent_root_for_active_draft`, `op_history`), and missing methods (`materialized_kit_for_draft`, `saved_change_connection_for_main_line`), among others.
+
+## Scope not executed
+
+Per gate: **no** changes to `semio/rs/lib.rs` for `kit_operation_enum!`, `scope_enum!`, `input_enum!`, `operation_family!`, or unified `apply_to`. **`W7.complete` was not created.**
+
+## Next steps for unblock
+
+1. Add `W1.complete` … `W6.complete` to this ticket folder (or align the coordinator on where those gates are recorded).
+2. Restore a **green** `cargo check -p semio` on `main` / integration branch (W0/W1–W6 integration).
+3. Re-run W7: then implement operation macros in `lib.rs` only and emit `W7.complete` plus a successful `W7.check.log`.

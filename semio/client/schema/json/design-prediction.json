@@ -1,0 +1,230 @@
+{
+    "$defs": {
+        "Connection": {
+            "description": "Prediction fields for LLM-based connection inference.",
+            "properties": {
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "title": "Description",
+                    "type": "string"
+                },
+                "gap": {
+                    "default": 0,
+                    "title": "Gap",
+                    "type": "number"
+                },
+                "shift": {
+                    "default": 0,
+                    "title": "Shift",
+                    "type": "number"
+                },
+                "rise": {
+                    "default": 0,
+                    "title": "Rise",
+                    "type": "number"
+                },
+                "rotation": {
+                    "default": 0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
+                    "title": "Rotation",
+                    "type": "number"
+                },
+                "turn": {
+                    "default": 0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
+                    "title": "Turn",
+                    "type": "number"
+                },
+                "tilt": {
+                    "default": 0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
+                    "title": "Tilt",
+                    "type": "number"
+                },
+                "u": {
+                    "default": 0,
+                    "title": "U",
+                    "type": "number"
+                },
+                "v": {
+                    "default": 0,
+                    "title": "V",
+                    "type": "number"
+                },
+                "parent": {
+                    "$ref": "#/$defs/Side"
+                },
+                "child": {
+                    "$ref": "#/$defs/Side"
+                }
+            },
+            "required": [
+                "parent",
+                "child"
+            ],
+            "title": "Connection",
+            "type": "object"
+        },
+        "ConnectorId": {
+            "description": "\ud83d\udd16Identity fields for uniquely identifying a connector.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "maxLength": 128,
+                    "title": "Id",
+                    "type": "string"
+                }
+            },
+            "title": "ConnectorId",
+            "type": "object"
+        },
+        "DesignId": {
+            "description": "\ud83d\udd16Identity fields for uniquely identifying a design.",
+            "properties": {
+                "name": {
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "DesignId",
+            "type": "object"
+        },
+        "PieceId": {
+            "description": "\ud83d\udd16Identity fields for uniquely identifying a piece.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "maxLength": 128,
+                    "title": "Id",
+                    "type": "string"
+                }
+            },
+            "title": "PieceId",
+            "type": "object"
+        },
+        "Piece": {
+            "description": "\ud83d\udd16Prediction fields for LLM-based piece inference.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "maxLength": 128,
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "title": "Description",
+                    "type": "string"
+                },
+                "type": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/TypeId"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "designPiece": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DesignId"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "title": "Piece",
+            "type": "object"
+        },
+        "Side": {
+            "description": "\ud83d\udd16Prediction fields for LLM-based side inference.",
+            "properties": {
+                "piece": {
+                    "$ref": "#/$defs/PieceId"
+                },
+                "designPiece": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PieceId"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "connector": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ConnectorId"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "required": [
+                "piece"
+            ],
+            "title": "Side",
+            "type": "object"
+        },
+        "TypeId": {
+            "description": "\ud83d\udd16Identity fields for uniquely identifying a type.",
+            "properties": {
+                "name": {
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "TypeId",
+            "type": "object"
+        }
+    },
+    "description": "\ud83d\udd16Prediction fields for LLM-based design inference.",
+    "properties": {
+        "description": {
+            "default": "",
+            "maxLength": 512,
+            "title": "Description",
+            "type": "string"
+        },
+        "pieces": {
+            "items": {
+                "$ref": "#/$defs/Piece"
+            },
+            "title": "Pieces",
+            "type": "array"
+        },
+        "connections": {
+            "items": {
+                "$ref": "#/$defs/Connection"
+            },
+            "title": "Connections",
+            "type": "array"
+        }
+    },
+    "title": "Design",
+    "type": "object"
+}

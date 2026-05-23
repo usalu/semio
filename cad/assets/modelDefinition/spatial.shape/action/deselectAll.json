@@ -1,0 +1,36 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "selection.deselectAll",
+  "version": "1.0.0",
+  "label": "DeselectAll",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "deselectAll"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        }
+      },
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

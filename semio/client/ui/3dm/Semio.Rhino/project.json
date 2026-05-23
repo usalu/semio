@@ -1,0 +1,30 @@
+{
+  "name": "@semio/rhino",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
+        "command": "dotnet build",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
+        "command": "dotnet build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
+        "command": "dotnet test ../Semio.Rhino.Tests/Semio.Rhino.Tests.csproj",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

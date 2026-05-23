@@ -1,0 +1,2458 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "primitive.box",
+  "version": "1.0.0",
+  "label": "Box",
+  "key": "b",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "ready",
+      "committed",
+      "first_corner_length_prompt"
+    ],
+    "groundPointerMoveStates": [
+      "first_corner",
+      "first_corner_other_or_length",
+      "diagonal_rubber",
+      "cube_diagonal_rubber",
+      "cube_other_corner",
+      "three_point_edge",
+      "three_point_width",
+      "vertical_width",
+      "center_corner",
+      "cube_center_corner"
+    ],
+    "heightDragStates": [
+      "first_corner_height"
+    ],
+    "verticalRodStates": [
+      "vertical_end"
+    ],
+    "heightConfirmState": "first_corner_height",
+    "lengthEntry": [
+      {
+        "state": "first_corner_other_or_length",
+        "anchor": "origin",
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      },
+      {
+        "state": "diagonal_rubber",
+        "anchor": "diagA",
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      },
+      {
+        "state": "cube_diagonal_rubber",
+        "anchor": "diagA",
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      },
+      {
+        "state": "cube_other_corner",
+        "anchor": "origin",
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      },
+      {
+        "state": "center_corner",
+        "anchor": "rectCenter",
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      }
+    ],
+    "scalarEntry": [
+      {
+        "state": "first_corner_height",
+        "event": "set.height",
+        "field": "height",
+        "commit": "confirm",
+        "axisAnchor": "corner",
+        "axisFloor": "origin",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
+      }
+    ]
+  },
+  "requires": {
+    "kernel": {
+      "operations": [
+        "solid.createBox",
+        "entity.tessellate"
+      ]
+    }
+  },
+  "guards": [
+    {
+      "name": "hasValidBox",
+      "expr": {
+        "kind": "all",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "binop",
+            "op": ">",
+            "left": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            },
+            "right": {
+              "kind": "const",
+              "value": 0
+            }
+          },
+          {
+            "kind": "binop",
+            "op": ">",
+            "left": {
+              "kind": "abs",
+              "arg": {
+                "kind": "binop",
+                "op": "-",
+                "left": {
+                  "kind": "path",
+                  "root": "context",
+                  "segments": [
+                    {
+                      "kind": "field",
+                      "name": "corner"
+                    },
+                    {
+                      "kind": "index",
+                      "index": 0
+                    }
+                  ]
+                },
+                "right": {
+                  "kind": "path",
+                  "root": "context",
+                  "segments": [
+                    {
+                      "kind": "field",
+                      "name": "origin"
+                    },
+                    {
+                      "kind": "index",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            },
+            "right": {
+              "kind": "const",
+              "value": 1e-9
+            }
+          },
+          {
+            "kind": "binop",
+            "op": ">",
+            "left": {
+              "kind": "abs",
+              "arg": {
+                "kind": "binop",
+                "op": "-",
+                "left": {
+                  "kind": "path",
+                  "root": "context",
+                  "segments": [
+                    {
+                      "kind": "field",
+                      "name": "corner"
+                    },
+                    {
+                      "kind": "index",
+                      "index": 1
+                    }
+                  ]
+                },
+                "right": {
+                  "kind": "path",
+                  "root": "context",
+                  "segments": [
+                    {
+                      "kind": "field",
+                      "name": "origin"
+                    },
+                    {
+                      "kind": "index",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            },
+            "right": {
+              "kind": "const",
+              "value": 1e-9
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "boxModePoint",
+      "expr": {
+        "kind": "binop",
+        "op": "==",
+        "left": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "boxMode"
+            }
+          ]
+        },
+        "right": {
+          "kind": "const",
+          "value": "point"
+        }
+      }
+    },
+    {
+      "name": "boxModeDiagonal",
+      "expr": {
+        "kind": "binop",
+        "op": "==",
+        "left": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "boxMode"
+            }
+          ]
+        },
+        "right": {
+          "kind": "const",
+          "value": "diagonal"
+        }
+      }
+    },
+    {
+      "name": "boxModeThreePoint",
+      "expr": {
+        "kind": "binop",
+        "op": "==",
+        "left": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "boxMode"
+            }
+          ]
+        },
+        "right": {
+          "kind": "const",
+          "value": "threePoint"
+        }
+      }
+    },
+    {
+      "name": "boxModeVertical",
+      "expr": {
+        "kind": "binop",
+        "op": "==",
+        "left": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "boxMode"
+            }
+          ]
+        },
+        "right": {
+          "kind": "const",
+          "value": "vertical"
+        }
+      }
+    },
+    {
+      "name": "boxModeCenter",
+      "expr": {
+        "kind": "binop",
+        "op": "==",
+        "left": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "boxMode"
+            }
+          ]
+        },
+        "right": {
+          "kind": "const",
+          "value": "center"
+        }
+      }
+    }
+  ],
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "first_corner",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "point"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_corner",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.point",
+            "transitions": [
+              {
+                "key": "t",
+                "label": "Point",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "point"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.diagonal",
+            "transitions": [
+              {
+                "key": "d",
+                "label": "Diagonal",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "diagonal"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.threePoint",
+            "transitions": [
+              {
+                "key": "p",
+                "label": "3Point",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "threePoint"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.vertical",
+            "transitions": [
+              {
+                "key": "v",
+                "label": "Vertical",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "vertical"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.center",
+            "transitions": [
+              {
+                "key": "e",
+                "label": "Center",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "boxMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "center"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "guard": "boxModePoint",
+                "target": "first_corner_other_or_length",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "origin"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "guard": "boxModeDiagonal",
+                "target": "diagonal_rubber",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "diagA"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "guard": "boxModeThreePoint",
+                "target": "three_point_edge",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "p0"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "guard": "boxModeVertical",
+                "target": "vertical_end",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "origin"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "action",
+                    "action": "box.initPeakAboveOrigin",
+                    "params": {}
+                  }
+                ]
+              },
+              {
+                "guard": "boxModeCenter",
+                "target": "center_corner",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "rectCenter"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_corner_other_or_length",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "corner"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "corner"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.cube",
+            "transitions": [
+              {
+                "target": "cube_other_corner",
+                "key": "u",
+                "label": "Cube"
+              }
+            ]
+          },
+          {
+            "event": "mode.length",
+            "transitions": [
+              {
+                "target": "first_corner_length_prompt",
+                "key": "l",
+                "label": "Length"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_corner_length_prompt",
+        "on": [
+          {
+            "event": "set.footprint",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "key": "w",
+                "label": "Apply L×W",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.cornerFromLengthWidth",
+                    "params": {}
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "diagonal_rubber",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "corner"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.aabbFromDiagonalCorners",
+                    "params": {}
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.cube",
+            "transitions": [
+              {
+                "target": "cube_diagonal_rubber",
+                "key": "u",
+                "label": "Cube",
+                "effects": [
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "corner"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cube_diagonal_rubber",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "corner"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "ready",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.aabbFromDiagonalCorners",
+                    "params": {}
+                  },
+                  {
+                    "op": "action",
+                    "action": "box.setCubeHeightFromFootprint",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "three_point_edge",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "three_point_width",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "p1"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "clear",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "three_point_width",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.tripletRubber",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.tripletCommit",
+                    "params": {}
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "vertical_end",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.peakFromOriginZ",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "vertical_width"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "vertical_width",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.verticalRubberCorner",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.verticalFinalizeFootprint",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "center_corner",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.rubberCornerFromCenter",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "first_corner_height",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.rubberCornerFromCenter",
+                    "params": {}
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 0.25
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.cube",
+            "transitions": [
+              {
+                "target": "cube_center_corner",
+                "key": "u",
+                "label": "Cube"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cube_center_corner",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.rubberSquareFromCenter",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "ready",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.rubberSquareFromCenter",
+                    "params": {}
+                  },
+                  {
+                    "op": "action",
+                    "action": "box.setCubeHeightFromFootprint",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cube_other_corner",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.snapSquareFootprint",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "ready",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "box.snapSquareFootprint",
+                    "params": {}
+                  },
+                  {
+                    "op": "action",
+                    "action": "box.setCubeHeightFromFootprint",
+                    "params": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_corner_height",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "let",
+                      "bindings": [
+                        {
+                          "name": "z0",
+                          "value": {
+                            "kind": "path",
+                            "root": "context",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "origin"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "z1",
+                          "value": {
+                            "kind": "path",
+                            "root": "event",
+                            "segments": [
+                              {
+                                "kind": "field",
+                                "name": "point"
+                              },
+                              {
+                                "kind": "index",
+                                "index": 2
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "in": {
+                        "kind": "binop",
+                        "op": "+",
+                        "left": {
+                          "kind": "abs",
+                          "arg": {
+                            "kind": "binop",
+                            "op": "-",
+                            "left": {
+                              "kind": "var",
+                              "name": "z1"
+                            },
+                            "right": {
+                              "kind": "var",
+                              "name": "z0"
+                            }
+                          }
+                        },
+                        "right": {
+                          "kind": "const",
+                          "value": 0.01
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "set.height",
+            "transitions": [
+              {
+                "key": "h",
+                "label": "Apply typed height",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "value"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "ready",
+                "guard": "hasValidBox",
+                "key": "Enter",
+                "label": "Accept height"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ready",
+        "on": [
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "guard": "hasValidBox",
+                "key": "f",
+                "label": "Finalize"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "first_corner",
+        "items": [
+          {
+            "kind": "point",
+            "id": "first-cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "label",
+            "id": "hint-first",
+            "role": "prompt",
+            "text": "Choose mode (panel), then click construction plane (XY @ Z=0)",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.45
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "first_corner_other_or_length",
+        "items": [
+          {
+            "kind": "point",
+            "id": "origin-marker",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "first_corner_length_prompt",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-lw",
+            "role": "prompt",
+            "text": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": "origin-marker",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "diagonal_rubber",
+        "items": [
+          {
+            "kind": "point",
+            "id": "diag-a",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "diagA"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "diagA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "cube_diagonal_rubber",
+        "items": [
+          {
+            "kind": "point",
+            "id": "diag-a",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "diagA"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "diagA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "three_point_edge",
+        "items": [
+          {
+            "kind": "point",
+            "id": "p0-mark",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "p0"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "edge-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "p0"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "three_point_width",
+        "items": [
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "previewA"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "previewB"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "vertical_end",
+        "items": [
+          {
+            "kind": "point",
+            "id": "origin-marker",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "z-peek",
+            "role": "handle",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "peak"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "vertical_width",
+        "items": [
+          {
+            "kind": "point",
+            "id": "origin-marker",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "center_corner",
+        "items": [
+          {
+            "kind": "point",
+            "id": "center-mark",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "rectCenter"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "cube_center_corner",
+        "items": [
+          {
+            "kind": "point",
+            "id": "center-mark",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "rectCenter"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "cube_other_corner",
+        "items": [
+          {
+            "kind": "point",
+            "id": "origin-marker",
+            "role": "anchor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "const",
+              "value": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "state": "first_corner_height",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint-height",
+            "role": "prompt",
+            "text": "Height (Z): drag teal wall, Apply height, click plane, or Accept",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "linear-handle",
+            "id": "height-handle",
+            "role": "handle",
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "ready",
+        "items": [
+          {
+            "kind": "box-preview",
+            "id": "preview",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "committed",
+        "items": [
+          {
+            "kind": "box-preview",
+            "id": "preview-committed",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasValidBox",
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "primitive.createBoxFromCorners",
+      "params": {
+        "cornerA": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "origin"
+            }
+          ]
+        },
+        "cornerB": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "corner"
+            }
+          ]
+        },
+        "height": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "height"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "produces": {
+    "typology": "spatial.shape.primitive.box"
+  }
+}

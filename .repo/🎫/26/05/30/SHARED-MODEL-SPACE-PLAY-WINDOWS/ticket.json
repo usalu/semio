@@ -1,0 +1,12 @@
+{
+  "title": "Shared Model Space Across Play Windows",
+  "status": "closed",
+  "description": "CAD spatial play quad: all renderer windows must keep showing their model-definition view when another window is focused or receives play interaction; one shared ModelSpace with per-pane viewport binding.",
+  "summary": "Fixed quad play windows dropping geometry when another pane was focused. Root cause: the shape viewport used the provider's active documentModel and activeModelDefinitionId, so focusing building/energy/structure switched the shape canvas to that definition (often with no committed meshes). Each pane now binds to its own row in flushedModelsByDefinitionId via spatialPlayPaneModel; shape PlaySession always edits spatial.shape through commitModelForDefinition. focusModelDefinition only updates chrome focus (flush + active id) without bumping modelDefinitionRevision, and history/snapshot reset is tied to interaction/asset changes instead of every revision bump. All 43 cad/js/renderer vitest tests pass.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "files": {
+    "created": [".repo/🎫/26/05/30/SHARED-MODEL-SPACE-PLAY-WINDOWS/ticket.json"],
+    "updated": ["cad/js/renderer/play/main.tsx"],
+    "removed": []
+  }
+}

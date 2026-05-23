@@ -1,0 +1,11 @@
+{
+  "title": "Board Icon Scale Min Side And Bbox Union",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Board detail icons: union usvg layer+stroke+fill+viewport bounds instead of stroke-first tiny box; scale = min(avail)/min(content short side) with degenerate guard; bump icon cache key fragment so stale entries miss.",
+  "summary": "Icon fit: content bounds are now the union of usvg root abs_layer_bounding_box, abs_stroke_bounding_box, abs_bounding_box, and document size at origin—avoids tiny stroke-only boxes that blew up scale. Uniform scale uses min(available width,height) / min(bbox width,height) so the shorter SVG side maps to the shorter inset side (longer side clips inside existing clip). Cache key bumped to v3. Repaired BoardHost (link_screen_preview field + defaults), Interaction::LinkDragSnap end_world on pointer move, wire_curve Option\u003cf64\u003e deref, pointer_up preview clear, and wire target handle existence check so the crate builds again. wasm-pack release OK; Vitest run in board package.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪7935f8069f9a4adcaf3fab1b6854c083"
+  ]
+}

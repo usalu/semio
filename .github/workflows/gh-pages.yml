@@ -10,20 +10,31 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
-        uses: actions/checkout@v4
-      - name: Install, build, and upload your site
-        uses: withastro/action@v3
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          path: ./js/docs
-          node-version: 22
-          package-manager: npm@npm@10.8.2
+          bun-version: latest
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ hashFiles('nx.json') }}
+          restore-keys: |
+            nx-${{ runner.os }}-
+      - name: Install and build docs site
+        run: |
+          bun install --frozen-lockfile
+          bun nx run @semio/docs:build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: semio/sites/docs/dist
 
   deploy:
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

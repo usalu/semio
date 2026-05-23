@@ -6286,22 +6286,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbaritem",
+            "id": "🧩elements🛅ui💻elements✂️navbaritem",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4420📌4460"
+          "🧩elements🛅ui💻elements📌4420📌4460"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚21⏱️52",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6340,22 +6340,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbaritem",
+            "id": "🧩elements🛅ui💻elements✂️navbaritem",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4420📌4460"
+          "🧩elements🛅ui💻elements📌4420📌4460"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚22⏱️11",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6470,22 +6470,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbaritem",
+            "id": "🧩elements🛅ui💻elements✂️navbaritem",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4414📌4455"
+          "🧩elements🛅ui💻elements📌4414📌4455"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚22⏱️31",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6524,22 +6524,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbaritem",
+            "id": "🧩elements🛅ui💻elements✂️navbaritem",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4414📌4455"
+          "🧩elements🛅ui💻elements📌4414📌4455"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚22⏱️43",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6654,14 +6654,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4438📌4452"
+          "🧩elements🛅ui💻elements📌4438📌4452"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚23⏱️04",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6700,14 +6700,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4438📌4452"
+          "🧩elements🛅ui💻elements📌4438📌4452"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚23⏱️12",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6824,18 +6824,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4430📌4460"
+          "🧩elements🛅ui💻elements📌4430📌4460"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚23⏱️33",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -6874,18 +6874,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️navbarprops",
+            "id": "🧩elements🛅ui💻elements✂️navbarprops",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️navbar",
+            "id": "🧩elements🛅ui💻elements🛠️navbar",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌4430📌4460"
+          "🧩elements🛅ui💻elements📌4430📌4460"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚23⏱️44",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -7406,30 +7406,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popover",
+            "id": "🧩elements🛅ui💻elements🛠️popover",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popovercontent",
+            "id": "🧩elements🛅ui💻elements🛠️popovercontent",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popovertrigger",
+            "id": "🧩elements🛅ui💻elements🛠️popovertrigger",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌705📌775"
+          "🧩elements🛅ui💻elements📌705📌775"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚25⏱️28",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",
@@ -7468,30 +7468,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popover",
+            "id": "🧩elements🛅ui💻elements🛠️popover",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popovercontent",
+            "id": "🧩elements🛅ui💻elements🛠️popovercontent",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️popovertrigger",
+            "id": "🧩elements🛅ui💻elements🛠️popovertrigger",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌705📌775"
+          "🧩elements🛅ui💻elements📌705📌775"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚25⏱️42",
         "session": "⚪7f9f306e4fc8486a91d3bac869454325",

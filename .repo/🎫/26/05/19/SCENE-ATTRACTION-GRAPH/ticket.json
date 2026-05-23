@@ -1,0 +1,14 @@
+{
+  "title": "Scene Attraction Graph",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Scene graph from objects and attractions: wormhole roots per component, multi-parent resolves to closer-to-wormhole owner, central object state with id-only React components, child survives parent destroy on reparent.",
+  "summary": "Implemented central scene object state (SceneObjectStateProvider) with resolved attraction ownership: wormhole roots per component, multi-parent picks attractor closer to wormhole. React renders id-keyed SceneObjects flat for stable instances on reparent; ObjectTreeNode/SceneAttractionTreeRoots declare tree structure; translate relocate cascades to attracted descendants. Fixed parent-distance bug (use completed BFS dist map). parseFixtureV1 reads attractions or legacy ties field. Play and topology panes use new providers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1449"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
+  "sessions": [
+    "⚪249f9664d297424c9526f784327eec4c"
+  ]
+}

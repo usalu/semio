@@ -1,0 +1,14 @@
+{
+  "title": "Projektetage Intro Flow Drag Scale",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix projektetage intro slides 0-6 where dragging text shoots elements out quickly; slide 9 (canvas) works. Root cause likely sectionVisualScale using tall nested reveal stack offsetHeight vs viewport-sized client rect.",
+  "summary": "Fixed amplified intro flow drag (double movement application).\n\nRoot cause: while dragging, `translate3d` moved the content and a layout effect remeasured ink inside the wrapper, then reapplied `left`/`top` as percentages from the already-translated position — movement was applied twice (feels like hundreds of px from a few px).\n\nFix:\n- Do not apply ink percentage frame (`contentInkStyle`) while `flowPixelOffset` is active; only `translate3d`.\n- Freeze ink remeasurement during `gesturing` so drag does not retrigger layout feedback.\n\nIntro drag test asserts ~80px translate for 80px pointer travel and empty content left/top during drag.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪b9caca74d18f4d7e83b5afacd69c8df4",
+    "⚪4a6952624ee5411099e4d19122f4fced",
+    "⚪6c561b798c2e4baabb596810be7825c8",
+    "⚪8a90ceab689540efa2fa5f05b7ee496c"
+  ]
+}

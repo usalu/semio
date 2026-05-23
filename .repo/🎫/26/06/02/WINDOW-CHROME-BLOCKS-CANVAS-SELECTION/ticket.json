@@ -1,0 +1,11 @@
+{
+  "title": "Window Chrome Blocks Canvas Selection",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Window engagement overlay and measures rail block rectangle selection on canvas play surfaces; clicks on the right trigger browser text selection instead of passing through to the canvas.",
+  "summary": "Fixed window engagement overlay and measures rail stealing pointer events from canvas selection. Engagement overlay is now pointer-events-none with a narrow top-left hover zone; measures stack is pointer-events-none with pointer-events-auto only on tiles. Added select-none on puzzle canvas container and a regression test.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪8d4bf95c36594a95949db2b66e3ba5ef"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "linefem",
+  "version": "1.0.0",
+  "label": "Line Fem",
+  "description": "Derives line FEM typology objects from spatial.shape geometry.",
+  "source": {
+    "modelDefinition": "spatial.shape"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "typologies": [
+    "structure.linefem.lineelement"
+  ]
+}

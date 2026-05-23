@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio/react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@semio/react` bundle when restored.",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@semio/js": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

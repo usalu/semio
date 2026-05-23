@@ -1,0 +1,7 @@
+{
+  "title": "Make Repo Logging Configurable",
+  "status": "closed",
+  "description": "Introduce .repo/config.toml to control hook logging (session files, operations, plan, detail). Default session file logging off.",
+  "summary": "Added .repo/config.toml with [logging] (session off by default, operations, plan, detail). Repo CLI loads config in writeHookArtifacts and gates session.json writes, derived repo-operation events, plan tracking, and native/response detail. Extended repo/client/cli tests; focused hook/config tests pass.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repocli"
+}

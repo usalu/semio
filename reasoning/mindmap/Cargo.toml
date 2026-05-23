@@ -1,0 +1,13 @@
+[package]
+name = "reasoning_mindmap"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph_normal_directed = { path = "../../mathematical/graph/normal/directed" }
+infinite_cavas = { path = "../../infinite/cavas/vello" }

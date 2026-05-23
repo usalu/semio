@@ -1,0 +1,228 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "measure.distance",
+  "version": "1.0.0",
+  "label": "Distance",
+  "key": "d",
+  "guards": [
+    {
+      "name": "hasBothVertices",
+      "expr": {
+        "kind": "all",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "vertexA"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "vertexB"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "machine": {
+    "initial": "selectA",
+    "states": [
+      {
+        "name": "selectA",
+        "selection": {
+          "accept": [
+            "vertex"
+          ],
+          "multiple": false,
+          "prompt": "Pick first vertex"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "selectB",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "vertexA"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectA"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "selectB",
+        "selection": {
+          "accept": [
+            "vertex"
+          ],
+          "multiple": false,
+          "prompt": "Pick second vertex"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "ready",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "vertexB"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectA"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ready",
+        "on": [
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "guard": "hasBothVertices"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasBothVertices",
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "measure.vertexDistance",
+      "params": {
+        "a": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "vertexA"
+            }
+          ]
+        },
+        "b": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "vertexB"
+            }
+          ]
+        }
+      }
+    },
+    "outputDataPath": {
+      "root": "context",
+      "segments": [
+        {
+          "kind": "field",
+          "name": "distance"
+        }
+      ]
+    }
+  },
+  "produces": {
+    "typology": "spatial.shape.measure.length"
+  }
+}

@@ -56,7 +56,7 @@ Refactored ID system to entity-emoji-prefix format. Updated GetArtifactID, GetAr
 
 Entity emoji prefix format: `entityEmoji + kindEmoji + value`
 
-- project: 🏗️👤semio (entity=🏗️, kind=👤, value=semio)
+- project: 🏗️🏘️semio (entity=🏗️, kind=👤, value=semio)
 - bundle: 📦📚semio/js (entity=📦, kind=📚, value=semio/js)
 - folder: 📁🛅semio/js/src (entity=📁, kind=🛅, value=semio/js/src)
 - file: 📄💻main.go (entity=📄, kind=💻, value=main.go)

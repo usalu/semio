@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@reasoning/mindmap/react",
+  "version": "0.1.0",
+  "description": "reasoning · mindmap react",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @reasoning/mindmap/react:test"
+  },
+  "dependencies": {
+    "@puzzle/2d/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "reasoning/mindmap/react"
+  },
+  "bundleKind": "library"
+}

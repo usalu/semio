@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "spatial.shape.curve.arc",
+  "version": "1.0.0",
+  "label": "Arc",
+  "description": "Typology produced by curve.arc.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "curve.arc"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
+  ]
+}

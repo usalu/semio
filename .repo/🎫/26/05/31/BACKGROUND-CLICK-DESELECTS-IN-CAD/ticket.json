@@ -1,0 +1,11 @@
+{
+  "title": "Background Click Deselects in Cad",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "When pressing/clicking in the CAD viewport background (empty space), selection should clear — same as marquee selection with no hits in default mode.",
+  "summary": "Clicking the CAD viewport background (no pick hit) now clears selection in default modifier mode, matching marquee selection with zero hits. Shared clearSelectionOnEmptyBackgroundPick helper in canvas pointer-up handler; unit test for replMergeSelectionPickInView with empty pick.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪ec4158a2419648e3b569fdfb54afb9d9"
+  ]
+}

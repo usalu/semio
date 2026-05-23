@@ -1,0 +1,11 @@
+{
+  "title": "Remove Morph Bridge Slides",
+  "emoji": "🌉",
+  "status": "closed",
+  "description": "Remove all auto-derived morph bridge slides from framework presentation expandThoughtSlides and related code/tests.",
+  "summary": "Removed auto-derived morph bridge slides from `expandThoughtSlides`: no more `--bridge` render slides, `derived` flag, `morphBridgeDirect`, or bridge arrangement builders. Expansion now only adds morph ghosts and auto-animate run ids. Declarative `settleBeforeMorphTo` is preserved (added on catalogue-focus in 33.projektetage). Intro deck is 7 render slides; universities bookmark is v=5. All `@framework/presentation/core` and renderer tests pass.",
+  "goal": "🎯framework🎯presentation",
+  "sessions": [
+    "⚪b03e21905be74d0d954b939a15218c6a"
+  ]
+}

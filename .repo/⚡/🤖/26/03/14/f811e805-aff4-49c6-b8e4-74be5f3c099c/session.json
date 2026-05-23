@@ -14270,18 +14270,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️addiconsize",
+            "id": "🧩elements🛅ui💻elements🛠️addiconsize",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 89
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3440📌3540"
+          "🧩elements🛅ui💻elements📌3440📌3540"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚37⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -14320,18 +14320,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️addiconsize",
+            "id": "🧩elements🛅ui💻elements🛠️addiconsize",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 89
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3440📌3540"
+          "🧩elements🛅ui💻elements📌3440📌3540"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚37⏱️53",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -15030,14 +15030,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 53
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3478📌3530"
+          "🧩elements🛅ui💻elements📌3478📌3530"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -15076,14 +15076,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 53
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3478📌3530"
+          "🧩elements🛅ui💻elements📌3478📌3530"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -15124,7 +15124,7 @@
         "new": "    const dropdownProps = props as ToggleDropdownProps\u003cT\u003e;\n    const {\n      items,\n      value: controlledValue,\n      defaultValue,\n      pressed,\n      defaultPressed,\n      onPressedChange,\n      id,\n      showLabel,\n      className,\n      dropdownId,\n      dropdownSide = \"bottom\",\n      dropdownAlign = \"start\",\n      dropdownSideOffset = 4,\n      dropdownAvoidCollisions = true,\n      dropdownInstant = false,\n      dropdownContentClassName,\n      open: controlledOpen,\n      onOpenChange,\n      onValueChange,\n    } = dropdownProps;",
         "old": "    const dropdownProps = props as ToggleDropdownProps\u003cT\u003e;\n    const {\n      items,\n      value: controlledValue,\n      defaultValue,\n      pressed,\n      defaultPressed,\n      id,\n      showLabel,\n      className,\n      dropdownId,\n      dropdownSide = \"bottom\",\n      dropdownAlign = \"start\",\n      dropdownSideOffset = 4,\n      dropdownAvoidCollisions = true,\n      dropdownInstant = false,\n      dropdownContentClassName,\n      open: controlledOpen,\n      onOpenChange,\n      onValueChange,\n    } = dropdownProps;",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️49",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15164,7 +15164,7 @@
         "new": "    const dropdownProps = props as ToggleDropdownProps\u003cT\u003e;\n    const {\n      items,\n      value: controlledValue,\n      defaultValue,\n      pressed,\n      defaultPressed,\n      onPressedChange,\n      id,\n      showLabel,\n      className,\n      dropdownId,\n      dropdownSide = \"bottom\",\n      dropdownAlign = \"start\",\n      dropdownSideOffset = 4,\n      dropdownAvoidCollisions = true,\n      dropdownInstant = false,\n      dropdownContentClassName,\n      open: controlledOpen,\n      onOpenChange,\n      onValueChange,\n    } = dropdownProps;",
         "old": "    const dropdownProps = props as ToggleDropdownProps\u003cT\u003e;\n    const {\n      items,\n      value: controlledValue,\n      defaultValue,\n      pressed,\n      defaultPressed,\n      id,\n      showLabel,\n      className,\n      dropdownId,\n      dropdownSide = \"bottom\",\n      dropdownAlign = \"start\",\n      dropdownSideOffset = 4,\n      dropdownAvoidCollisions = true,\n      dropdownInstant = false,\n      dropdownContentClassName,\n      open: controlledOpen,\n      onOpenChange,\n      onValueChange,\n    } = dropdownProps;",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15278,18 +15278,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️toggledropdownprops",
+            "id": "🧩elements🛅ui💻elements✂️toggledropdownprops",
             "loc": 18
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toggleprops",
+            "id": "🧩elements🛅ui💻elements✂️toggleprops",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3278📌3302"
+          "🧩elements🛅ui💻elements📌3278📌3302"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️50",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -15328,18 +15328,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️toggledropdownprops",
+            "id": "🧩elements🛅ui💻elements✂️toggledropdownprops",
             "loc": 18
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toggleprops",
+            "id": "🧩elements🛅ui💻elements✂️toggleprops",
             "loc": 2
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3278📌3302"
+          "🧩elements🛅ui💻elements📌3278📌3302"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚49⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -31899,14 +31899,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 79
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3452📌3530"
+          "🧩elements🛅ui💻elements📌3452📌3530"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -31945,14 +31945,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 79
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3452📌3530"
+          "🧩elements🛅ui💻elements📌3452📌3530"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -31991,14 +31991,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 96
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3530📌3630"
+          "🧩elements🛅ui💻elements📌3530📌3630"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️22",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32037,14 +32037,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 96
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3530📌3630"
+          "🧩elements🛅ui💻elements📌3530📌3630"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32083,18 +32083,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3420"
+          "🧩elements🛅ui💻elements📌3349📌3420"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️44",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32133,18 +32133,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3420"
+          "🧩elements🛅ui💻elements📌3349📌3420"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️54",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32183,14 +32183,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 21
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3605📌3630"
+          "🧩elements🛅ui💻elements📌3605📌3630"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32229,14 +32229,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 21
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3605📌3630"
+          "🧩elements🛅ui💻elements📌3605📌3630"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32277,7 +32277,7 @@
         "new": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n          id: id,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "old": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      id={id}\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32317,7 +32317,7 @@
         "new": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n          id: id,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "old": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      id={id}\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32355,14 +32355,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 29
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3452📌3480"
+          "🧩elements🛅ui💻elements📌3452📌3480"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32401,14 +32401,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 29
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3452📌3480"
+          "🧩elements🛅ui💻elements📌3452📌3480"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32447,18 +32447,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3380"
+          "🧩elements🛅ui💻elements📌3349📌3380"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32497,18 +32497,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3380"
+          "🧩elements🛅ui💻elements📌3349📌3380"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32547,14 +32547,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 21
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3585📌3605"
+          "🧩elements🛅ui💻elements📌3585📌3605"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚49⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32593,14 +32593,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toggle",
+            "id": "🧩elements🛅ui💻elements🛠️toggle",
             "loc": 21
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3585📌3605"
+          "🧩elements🛅ui💻elements📌3585📌3605"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚49⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32877,18 +32877,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️addiconsize",
+            "id": "🧩elements🛅ui💻elements🛠️addiconsize",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3380📌3445"
+          "🧩elements🛅ui💻elements📌3380📌3445"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚53⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -32927,18 +32927,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️addiconsize",
+            "id": "🧩elements🛅ui💻elements🛠️addiconsize",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroupitem",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroupitem",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3380📌3445"
+          "🧩elements🛅ui💻elements📌3380📌3445"
         ],
         "second": "🎆26🌙03☀️14⏰17⌚53⏱️15",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -34639,7 +34639,7 @@
         "new": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      id={id}\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "old": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n          id: id,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️03",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34679,7 +34679,7 @@
         "new": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      id={id}\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "old": "  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;\n  const value = pressed !== undefined ? (pressed ? \"on\" : \"\") : undefined;\n  return (\n    \u003cToggleGroup\n      showLabel={showLabel}\n      kind=\"single\"\n      value={value}\n      defaultValue={pressed === undefined \u0026\u0026 defaultPressed ? \"on\" : undefined}\n      onValueChange={(val: string) =\u003e onPressedChange?.(val === \"on\")}\n      className={className}\n      items={[\n        {\n          value: \"on\",\n          icon: addIconSize(icon),\n          text: text,\n          id: id,\n        },\n      ]}\n    /\u003e\n  );\n}",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34717,14 +34717,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3365"
+          "🧩elements🛅ui💻elements📌3349📌3365"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️22",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -34763,14 +34763,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3365"
+          "🧩elements🛅ui💻elements📌3349📌3365"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -34811,7 +34811,7 @@
         "new": "function ToggleGroup({ className, id, showLabel, items, kind = \"single\", ...restProps }: ToggleGroupProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const divideClass = getLevelDivideElementClass(level);\n\n  const controlledValue = (restProps as any).value;\n  const rootDataState = kind === \"single\" \u0026\u0026 controlledValue !== undefined ? (controlledValue ? \"on\" : \"off\") : undefined;\n\n  const toggleGroupElement = (\n    \u003cToggleGroupPrimitive.Root data-slot=\"toggle-group\" data-state={rootDataState} id={id} type={kind} className={cn(\"group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x\", borderClass, divideClass, className)} {...(restProps as any)}\u003e\n      \u003cToggleGroupContext.Provider value={{ level }}\u003e\n        {items.map((item) =\u003e (\n          \u003cToggleGroupItem key={item.value} {...item} /\u003e\n        ))}\n      \u003c/ToggleGroupContext.Provider\u003e\n    \u003c/ToggleGroupPrimitive.Root\u003e\n  );",
         "old": "function ToggleGroup({ className, id, showLabel, items, kind = \"single\", ...restProps }: ToggleGroupProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const divideClass = getLevelDivideElementClass(level);\n\n  const toggleGroupElement = (\n    \u003cToggleGroupPrimitive.Root data-slot=\"toggle-group\" id={id} type={kind} className={cn(\"group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x\", borderClass, divideClass, className)} {...(restProps as any)}\u003e\n      \u003cToggleGroupContext.Provider value={{ level }}\u003e\n        {items.map((item) =\u003e (\n          \u003cToggleGroupItem key={item.value} {...item} /\u003e\n        ))}\n      \u003c/ToggleGroupContext.Provider\u003e\n    \u003c/ToggleGroupPrimitive.Root\u003e\n  );",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34851,7 +34851,7 @@
         "new": "function ToggleGroup({ className, id, showLabel, items, kind = \"single\", ...restProps }: ToggleGroupProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const divideClass = getLevelDivideElementClass(level);\n\n  const controlledValue = (restProps as any).value;\n  const rootDataState = kind === \"single\" \u0026\u0026 controlledValue !== undefined ? (controlledValue ? \"on\" : \"off\") : undefined;\n\n  const toggleGroupElement = (\n    \u003cToggleGroupPrimitive.Root data-slot=\"toggle-group\" data-state={rootDataState} id={id} type={kind} className={cn(\"group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x\", borderClass, divideClass, className)} {...(restProps as any)}\u003e\n      \u003cToggleGroupContext.Provider value={{ level }}\u003e\n        {items.map((item) =\u003e (\n          \u003cToggleGroupItem key={item.value} {...item} /\u003e\n        ))}\n      \u003c/ToggleGroupContext.Provider\u003e\n    \u003c/ToggleGroupPrimitive.Root\u003e\n  );",
         "old": "function ToggleGroup({ className, id, showLabel, items, kind = \"single\", ...restProps }: ToggleGroupProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const divideClass = getLevelDivideElementClass(level);\n\n  const toggleGroupElement = (\n    \u003cToggleGroupPrimitive.Root data-slot=\"toggle-group\" id={id} type={kind} className={cn(\"group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x\", borderClass, divideClass, className)} {...(restProps as any)}\u003e\n      \u003cToggleGroupContext.Provider value={{ level }}\u003e\n        {items.map((item) =\u003e (\n          \u003cToggleGroupItem key={item.value} {...item} /\u003e\n        ))}\n      \u003c/ToggleGroupContext.Provider\u003e\n    \u003c/ToggleGroupPrimitive.Root\u003e\n  );",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️55",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -35371,14 +35371,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3360"
+          "🧩elements🛅ui💻elements📌3349📌3360"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚13⏱️19",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -35417,14 +35417,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3360"
+          "🧩elements🛅ui💻elements📌3349📌3360"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚13⏱️31",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -37121,14 +37121,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3365"
+          "🧩elements🛅ui💻elements📌3349📌3365"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚26⏱️40",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -37167,14 +37167,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3365"
+          "🧩elements🛅ui💻elements📌3349📌3365"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚26⏱️52",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -38545,14 +38545,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3362"
+          "🧩elements🛅ui💻elements📌3349📌3362"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚32⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
@@ -38591,14 +38591,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements🛠️togglegroup",
+            "id": "🧩elements🛅ui💻elements🛠️togglegroup",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌3349📌3362"
+          "🧩elements🛅ui💻elements📌3349📌3362"
         ],
         "second": "🎆26🌙03☀️14⏰18⌚32⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",

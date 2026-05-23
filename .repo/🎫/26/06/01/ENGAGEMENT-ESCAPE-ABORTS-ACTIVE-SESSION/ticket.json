@@ -1,0 +1,11 @@
+{
+  "title": "Engagement Escape Aborts Active Session",
+  "emoji": "⎋",
+  "status": "closed",
+  "description": "When Escape is pressed while window engagement is active, abort the engagement (cancel interaction, clear command, dismiss chrome) via onAbort wired from CAD/puzzle play through ui Window capture.",
+  "summary": "Escape aborts active window engagement via EngagementInput.onAbort.\n\n- ui/react: onAbort on EngagementInput; routeWindowEngagementEscape on Window capture; Engagement Escape calls onAbort (closes possibles list first).\n- cad: buildInteractionReplEngagement wires onAbort to handleEscapeKey; global Escape also runs when focus is on engagement input; cad play engagementAbort bus command.\n- puzzle/playground: engagementAbort command; puzzle clears cmd line and exits brush on abort.\n\nTests: @ui/react 101 passed.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪14cb0b71a66846b38b5d4d039b96d033"
+  ]
+}

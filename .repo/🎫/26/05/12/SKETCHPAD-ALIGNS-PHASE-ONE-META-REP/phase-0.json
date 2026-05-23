@@ -1,0 +1,36 @@
+{
+  "date": "2026-05-12",
+  "planId": "09fc9816",
+  "sources": [
+    "semio/graphql/target.schema.graphql",
+    "semio/rs/lib.rs (KitStoreHandle wasm_bridge)"
+  ],
+  "entityRegionMap": {
+    "Kit": "🧱Classes/🎒Kit",
+    "Design": "🧱Classes/📐Design",
+    "Type": "🧱Classes/🧰Type",
+    "Port": "🧱Classes/🔘Port",
+    "Connector": "🧱Classes/🔗Connector",
+    "Piece": "🧱Classes/🧩Piece",
+    "PiecesOperations": "🧱Classes/🪢PiecesOperations",
+    "Connection": "🧱Classes/⛓️Connection",
+    "Author": "🧱Classes/✍️Author",
+    "Quality": "🧱Classes/💎Quality",
+    "Tag": "🧱Classes/🏷️Tag",
+    "Concept": "🧱Classes/💡Concept",
+    "Representation": "🧱Classes/🎨Representation",
+    "Family": "🧱Classes/👨‍👩‍👦Family",
+    "FileEntity": "🧱Classes/📄File",
+    "FolderEntity": "🧱Classes/📁Folder",
+    "LayerEntity": "🧱Classes/🪟Layer",
+    "GroupEntity": "🧱Classes/👥Group",
+    "StatEntity": "🧱Classes/📊Stat",
+    "PropEntity": "🧱Classes/🎚️Prop",
+    "WeakEntities": "🪶WeakEntities"
+  },
+  "graphqlEntrypoints": {
+    "query": "Query.session / wip / node(id)",
+    "mutation": "Mutation.session / hydrateKitStoreBundleJson",
+    "subscription": "Subscription.event (Json)"
+  }
+}

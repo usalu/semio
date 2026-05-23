@@ -1,0 +1,18 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.linefem.lineelement",
+  "version": "1.0.0",
+  "label": "Line Element",
+  "description": "Derived structural element represented with line mesh.",
+  "actions": [
+    "structure.linefem.constructLineElementFrom2PointsAndHeight",
+    "structure.linefem.constructLineElementFromCurveAndHeight",
+    "structure.linefem.constructLineElementFromSurface"
+  ],
+  "interactions": [
+    "structure.linefem.constructLineElement"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Projektetage Reveal Presentation",
+  "status": "closed",
+  "description": "Nx-integrated reveal.js presentation at mit-bestand/präsentation/33.projektetage with @ui/react styling, playground iframe embeds, and dev/production URL switching via playgroundEmbedUrl.",
+  "summary": "Removed empty-frame causes: intro morph ghosts, IntroArrangementSection, presentation-intro-slide/stack CSS, and custom autoAnimateStyles. Each intro arrangement now renders only its declared placements via ArrangementSection; reveal.js owns centering and auto-animate defaults. Kept relaxHiddenPreflight and minimal goal nowrap CSS.",
+  "goal": "🎯mitbestand",
+  "sessions": [
+    "⚪cbb72fbe25dd449982ea468572735bf6",
+    "⚪54b2f60d961b4bb6b4871c42b7d4cca7",
+    "⚪1f31f7ca2c2642419cdf022aa07c9ff4",
+    "⚪cc3149a6565d4adcb0a94619c350a383",
+    "⚪e175bbc026004630bf20e04e5116d409",
+    "⚪6de6c9d702df40d39cb0fed8938ba40a",
+    "⚪20a54e2bfaa24e529885652520fde061",
+    "⚪d8ee508941c44d228a6f38e9a5299358",
+    "⚪9288bce17dd64902a20af6c81d72cc4a",
+    "⚪b4b59d0c6edb460da62c82414009133b"
+  ]
+}

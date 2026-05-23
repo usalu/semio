@@ -1,0 +1,11 @@
+{
+  "title": "All Windows Engagement Type To Active",
+  "emoji": "⌨️",
+  "status": "closed",
+  "description": "Every playground window must have engagement.input. Typing anywhere in the app routes to the active window engagement command (puzzle 2d/3d/5d play).",
+  "summary": "Every playground window kind must expose engagement.input; printable keys and Escape route to the active window via document-level capture on Mode.\n\n- framework/playground/core: enforceWindowKindsEngagementInput + test\n- framework/playground/renderer/react: windowKindsToGolden enforces; enforcePuzzle3dPlayWindowEngagement skips undefined\n- ui/react: Mode document keydown capture for engagement routing (canvas focus)\n- puzzle/2d/play: engagement on all panes + bus commands + test\n- puzzle/5d/play: engagement on 2d/3d windows + bus commands\n- puzzle/3d/play: app runtime placeholder engagement\n\nTests: @ui/react 104, @framework/playground/core 8, @framework/playground/renderer/react 17, @puzzle/2d/play 11, @puzzle/5d/play 6.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪9ab20d9989504f59b37fcb894c197820"
+  ]
+}

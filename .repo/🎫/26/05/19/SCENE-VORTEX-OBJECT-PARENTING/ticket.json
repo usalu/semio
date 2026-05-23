@@ -1,0 +1,14 @@
+{
+  "title": "Scene Vortex Object Parenting",
+  "emoji": "🌀",
+  "status": "closed",
+  "description": "Vortices fly wildly in the scene when objects are moved. They must be children of their object in the Three.js graph and follow object transform during relocate. Fix SceneObject controlled transform fighting TransformControls.",
+  "summary": "Vortices flew during relocate because SceneObject used R3F-controlled position/quaternion/scale that fought TransformControls each frame while vortex handles are separate groups under the object. Pose is now applied via sceneApplyObjectPose in useLayoutEffect (keyed by sceneObjectPoseKey) so relocate mutates the group imperatively and vortex children follow. Added an attachments subgroup for vortices/magnets and sceneUpdateWorldMatrixChain before getWorldPosition for ties/link snap. Vitest 24 passed; Playwright had GPU/context-loss flakes unrelated to this diff.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1447"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪f9b3f03f9f754b2193dc51b3a05cb8f0"
+  ]
+}

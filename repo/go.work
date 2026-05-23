@@ -1,13 +1,13 @@
-go 1.25.0
+go 1.25.5
 
 use (
-	./claude
 	./client
-	./codex
-	./copilot
-	./cursor
-	./go
-	./kiro
-	./mcp
-	./server
+	./client/mcp
+	./client/mcp/claude
+	./client/mcp/codex
+	./client/mcp/copilot
+	./client/mcp/cursor
+	./client/mcp/kiro
+	./lib/go
+	./server/coordinator
 )

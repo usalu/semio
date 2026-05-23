@@ -1,0 +1,17 @@
+//#region DedupeDuplicateOperationCommands
+// Collapse accidental duplicate `:Command` rows sharing `name` (e.g. legacy `RenamedKit` renamed to `RenameKit` while `MERGE (Command {name:'RenameKit'})` already created a second row). Requires APOC `apoc.refactor.mergeNodes`.
+MATCH (c:Command)
+WITH c.name AS nm, collect(c) AS grp
+WHERE size(grp) > 1
+CALL apoc.refactor.mergeNodes(grp, {properties: "discard", mergeRels: true})
+YIELD node
+RETURN count(*) AS mergedCommandGroups;
+
+MATCH (d:Data)
+WHERE d.soleOwnerKey IS NOT NULL
+WITH d.soleOwnerKey AS sk, d.name AS nm, collect(d) AS grp
+WHERE size(grp) > 1
+CALL apoc.refactor.mergeNodes(grp, {properties: "discard", mergeRels: true})
+YIELD node
+RETURN count(*) AS mergedArgumentDataGroups;
+//#endregion DedupeDuplicateOperationCommands

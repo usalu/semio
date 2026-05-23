@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.structure.onewayreinforcedconcreteslab",
+  "version": "1.0.0",
+  "label": "One Way Reinforced Concrete Slab",
+  "actions": [
+    "structure.structure.constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight",
+    "structure.structure.constructOneWayReinforcedConcreteSlabFromCurveAndHeight",
+    "structure.structure.constructOneWayReinforcedConcreteSlabFromSurface"
+  ],
+  "interactions": [
+    "structure.structure.constructOneWayReinforcedConcreteSlab"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

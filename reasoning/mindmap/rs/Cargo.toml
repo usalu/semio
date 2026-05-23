@@ -1,0 +1,13 @@
+[package]
+name = "reasoning_mindmap_rs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+puzzle_2d = { path = "../../../puzzle/2d/rs" }
+reasoning_mindmap = { path = ".." }

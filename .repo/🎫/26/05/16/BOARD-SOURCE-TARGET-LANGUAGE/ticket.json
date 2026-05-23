@@ -1,0 +1,11 @@
+{
+  "title": "Board Source Target Language Cleanup",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "Remove remaining in/out and from-style naming from board link gestures and engine edge structs; use source/target consistently.",
+  "summary": "Third pass on board naming: reconciler mountEdge/commitUpdate use sourceHandle/targetHandle; subtree snapshot doc uses Edge.source→Edge.target wording; play remapIdInSelections uses replacedId/replacementId with doc; Rust hierarchical redraw uses hierarchical_opts; fixture directed-node pairs use source_node_id/target_node_id and incoming_edge_count_by_node; link-drag locals use optional_target_handle_id/target_handle_id. nx run @elements/board:test passed.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪17b7da03573443bf94b84e0f807483ce"
+  ]
+}

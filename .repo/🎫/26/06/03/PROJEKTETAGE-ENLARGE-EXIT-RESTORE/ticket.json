@@ -1,0 +1,15 @@
+{
+  "title": "Projektetage Enlarge Exit Restore",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When pressing enlarge on figures/pdf in projektetage then pressing smaller (exit enlarge), nothing happens. Must restore the pre-enlarge disposition frame (including drag/resize), not the original declared frame.",
+  "summary": "Fixed dead exit-enlarge (smaller) control when a disposition is enlarged.\n\nRoot cause: slide reset hotspot host (`z-index: 70`, 5rem top-right) sat above enlarged dispositions (`z-index: 50`) and used `pointer-events: auto` on the whole hotspot, swallowing hover/clicks on the enlarge button.\n\nFix: `pointer-events: none` on slide-reset host (button still receives events when visible via `--near`), raise enlarged disposition action bar to `z-index: 80`, keep exit-enlarge controls visible while enlarged even if selection cleared, retain pre-enlarge stash restore from prior work.\n\n108 renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1532"
+  },
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪7357343f12e14b1faeba44e42cb878e7",
+    "⚪f8180287fbf748f09bce73d6718499d0"
+  ]
+}

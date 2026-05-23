@@ -1,0 +1,11 @@
+{
+  "title": "Morph From Ephemeral Disposition",
+  "emoji": "🔀",
+  "status": "closed",
+  "description": "In the presentation renderer, all morphs must start from the current disposition including ephemeral modifications (drag/resize/fullscreen). Text morphs in intro are already correct, but canvas-framed tiles (e.g. slide 7 to 8) reset the ephemeral modification first and then transition, because the data-id morph anchor wrapper stays at the declared frame while only the inner content is translated. Fix so the morph anchor reflects the effective ephemeral rect at slide-change time.",
+  "summary": "Fixed canvas-framed dispositions (figure tiles, etc.) so morphs start from the current disposition including ephemeral modifications. The reveal.js auto-animate `data-id` morph anchor lives on the interactive wrapper; it previously stayed pinned to the declared frame during a drag/resize while only the inner content was translated, so reveal captured the declared (un-modified) frame as the morph `from` and navigating e.g. tiles from slide 7 to 8 reset the ephemeral modification before transitioning. The wrapper frame is now placed on the live ephemeral rect (canvasLiveTransform) so the morph anchor reflects the dragged/resized frame at slide-change time and auto-animate morphs from it. Removed the obsolete canvasDispositionDragContentStyle helper plus its two pure-function unit tests, and updated the canvas drag/resize integration tests to assert the wrapper carries the ephemeral frame. Flow text dispositions (intro) already morphed correctly because their data-id sits on the translated content. All 63 renderer tests pass.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪39968ad99a3949b38edf118a0708b4c9"
+  ]
+}

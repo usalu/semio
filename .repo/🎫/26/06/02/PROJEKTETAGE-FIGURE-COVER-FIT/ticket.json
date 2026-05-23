@@ -1,0 +1,11 @@
+{
+  "title": "Projektetage Figure Cover Fit",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix figure disposition distortions on projektetage slide 8 (Bauteilkatalog) and elsewhere. Per presentation AGENTS.md: embodiments MUST NOT distort; always filled, scaled to shorter-side, centered, cover arbitrary target size. Root cause: figureCropBackgroundVars uses stretch-fill at rest instead of uniform cover.",
+  "summary": "Fixed distorted figure dispositions on projektetage Bauteilkatalog (slide 8) and all crop tiles.\n\nRoot cause: `figureCropBackgroundVars` used stretch-fill at rest (different background-size X/Y), violating presentation spec: embodiments must cover the frame with uniform shorter-side scale and centering.\n\nFix: Apply the same cover scale and center position to rest CSS vars as morph vars; fallback without frame uses max(stretchWidth, stretchHeight). Non-crop figures use `object-fit: cover` always (was `contain` at rest).\n\n68 renderer tests pass.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪b4c63e9a05c24b7b97d69d71ded3d8e8"
+  ]
+}

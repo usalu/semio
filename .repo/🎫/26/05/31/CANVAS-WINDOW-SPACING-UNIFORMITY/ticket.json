@@ -1,0 +1,11 @@
+{
+  "title": "Canvas Window Spacing Uniformity",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Fix vertical spacing between left and right canvas windows to match horizontal spacing and canvas edge insets.",
+  "summary": "Unified canvas window gutters with edge insets: ResizableHandle is orientation-aware and uses var(--spacing-double) for width/height; Mode splitters pass orientation; Canvas/HorizontalWindows/VerticalWindows use p-double and gap-double. Added vertical-split gutter test.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪f1e71326aa5c41a5953493a35e717620"
+  ]
+}

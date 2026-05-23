@@ -1,0 +1,150 @@
+{
+  "ui": {
+    "nav": {
+      "back": {
+        "label": {
+          "normal": "Go back",
+          "beginner": "Go back"
+        }
+      },
+      "forward": {
+        "label": {
+          "normal": "Go forward",
+          "beginner": "Go forward"
+        }
+      },
+      "up": {
+        "label": {
+          "normal": "Go up one level",
+          "beginner": "Go up one level"
+        }
+      }
+    },
+    "search": {
+      "toggle": {
+        "label": {
+          "normal": "Search",
+          "beginner": "Search"
+        }
+      },
+      "close": {
+        "label": {
+          "normal": "Close search",
+          "beginner": "Close search"
+        }
+      }
+    },
+    "panelToggle": {
+      "workbench": {
+        "label": {
+          "normal": "Workbench",
+          "beginner": "Workbench"
+        }
+      }
+    },
+    "toolbar": {
+      "group": {
+        "parent": {
+          "label": {
+            "normal": "Tool",
+            "beginner": "Tool"
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "layout": {
+      "normal": {
+        "label": {
+          "normal": "Normal layout",
+          "beginner": "Use the standard layout optimized for mouse and keyboard."
+        }
+      },
+      "desktop": {
+        "label": {
+          "normal": "Desktop layout",
+          "beginner": "Use the desktop layout optimized for large screens."
+        }
+      },
+      "tablet": {
+        "label": {
+          "normal": "Tablet layout",
+          "beginner": "Use the tablet layout optimized for medium screens."
+        }
+      },
+      "mobile": {
+        "label": {
+          "normal": "Mobile layout",
+          "beginner": "Use the mobile layout optimized for small screens."
+        }
+      }
+    },
+    "compact": {
+      "label": {
+        "normal": "Compact",
+        "beginner": "Show icon-only buttons and toggles to save space"
+      }
+    },
+    "mode": {
+      "dev": {
+        "label": {
+          "normal": "Developer mode",
+          "beginner": "Show developer tools and advanced options."
+        }
+      },
+      "user": {
+        "label": {
+          "normal": "User mode",
+          "beginner": "Show standard user port."
+        }
+      },
+      "beginner": {
+        "label": {
+          "normal": "Beginner mode",
+          "beginner": "Show full guidance, tutorials, and detailed tooltips."
+        }
+      },
+      "normal": {
+        "label": {
+          "normal": "Normal mode",
+          "beginner": "Show contextual help without tutorials."
+        }
+      }
+    },
+    "expertise": {
+      "beginner": {
+        "label": {
+          "normal": "Beginner",
+          "beginner": "Show full guidance and tutorials."
+        }
+      },
+      "normal": {
+        "label": {
+          "normal": "Normal",
+          "beginner": "Show contextual help."
+        }
+      },
+      "expert": {
+        "label": {
+          "normal": "Expert",
+          "beginner": "Hide guidance."
+        }
+      }
+    }
+  },
+  "tooltip": {
+    "manual": {
+      "label": {
+        "normal": "Manual",
+        "beginner": "Manual"
+      }
+    },
+    "tutorial": {
+      "label": {
+        "normal": "Tutorial",
+        "beginner": "Tutorial"
+      }
+    }
+  }
+}

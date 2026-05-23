@@ -1,0 +1,31 @@
+{
+  "name": "@semio/docs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/lib/sketchpad/docs",
+        "command": "bun ./script.ts dev --port 4321",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/lib/sketchpad/docs",
+        "command": "vite build",
+        "forwardAllArgs": true
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/client/lib/sketchpad/docs",
+        "commands": ["vite build", "bun publish"],
+        "parallel": false,
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

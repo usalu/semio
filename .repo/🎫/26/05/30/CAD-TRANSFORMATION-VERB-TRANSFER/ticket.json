@@ -1,0 +1,11 @@
+{
+  "title": "Cad Transformation Verb Transfer",
+  "emoji": "🔄",
+  "status": "closed",
+  "description": "Rename transformation verb from transform to transfer everywhere in cad (ModelSpace.transfer, UI labels, play toolbar ids/categories, tests). Keep geometric edit actions transform.move etc. and noun Transformation types.",
+  "summary": "Renamed model-definition transformation verb from transform to transfer across cad: ModelSpace.transfer(), play/renderer UI (Transfer from/to, status messages), CadPlayToolbarState transfersTo/transfersFrom, cad.play.transfer.* tool ids, and AppToolCategory transfer in framework (replacing transform). Geometric edit actions (transform.move, etc.) and Transformation noun types unchanged. All @cad/js/core (342), @cad/js/renderer (51), and @framework/core (18) tests pass.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪ee635c744aae45a9aa4b12966ab2887d"
+  ]
+}

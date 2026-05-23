@@ -1,0 +1,97 @@
+[project]
+name = "semio-engine"
+version = "4.4.0"
+description = "⚙️️️Shared fat client for all desktop apps in semio 🏘️"
+authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+requires-python = ">=3.14,<3.15"
+license = "AGPL-3.0-or-later"
+maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+dependencies = [
+    "semio",
+    "ariadne>=0.26.0",
+    "fastapi[standard]>=0.115.12",
+    "jinja2>=3.1.6",
+    "lark>=1.2.2",
+    "loguru>=0.7.3",
+    "networkx>=3.5",
+    "numpy>=2.2.6",
+    "openai>=1.83.0",
+    "pint>=0.24.4",
+    "pydantic>=2.11.5",
+    "pyside6>=6.9.1",
+    "python-dotenv>=1.1.0",
+    "pytransform3d>=3.14.1",
+    "requests>=2.32.3",
+    "sqlalchemy>=2.0.41",
+    "sqlmodel>=0.0.24",
+    "starlette>=0.46.2",
+    "uvicorn[standard]>=0.34.3",
+    "mcp[cli]>=1.25.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/usalu/semio"
+Repository = "https://github.com/usalu/semio"
+
+[project.scripts]
+run = "main:run"
+dev = "main:dev"
+
+[dependency-groups]
+test = ["pytest>=8.4.0,<10", "deepdiff>=8.5.0,<9", "pytest-cov>=6.1.1,<8"]
+dev = []
+build = ["pyinstaller>=6.13.0,<7"]
+
+[tool.uv]
+default-groups = ["test", "dev", "build"]
+
+[tool.uv.sources]
+semio = { workspace = true }
+
+[tool.hatch.build.targets.sdist]
+include = ["main.py"]
+
+[tool.hatch.build.targets.wheel]
+include = ["main.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__",
+    "def __str__",
+    "def client__str__",
+    "def list_client__str__",
+
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise InvalidDatabase",
+    "raise InvalidBackend",
+
+    "if __name__ == .__main__.:",
+    "def main():",
+    "if app.debug:",
+
+    "@(abc\\.)?abstractmethod",
+]
+
+ignore_errors = true
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"
+
+[tool.ruff]
+line-length = 250
+
+[tool.pyright]
+disable = ["reportMissingImports"]
+
+[tool.pytest.ini_options]
+python_files = ["main.py", "test_*.py", "*_test.py", "*.test.py"]
+testpaths = ["."]
+addopts = "--import-mode=importlib"

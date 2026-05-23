@@ -1,0 +1,19 @@
+{
+  "title": "Focus Active Window Engagement Input",
+  "emoji": "⌨️",
+  "status": "closed",
+  "description": "When a window is active and has engagement, auto-focus the engagement input. Fix CAD play typing hitting all panes (global key capture + replIsQueryTypingTarget). Wire window activation to focus model definition.",
+  "summary": "Engagement inline completion now splits ghost text into label-cased prefix (semibold) and muted suffix (e.g. typing b for Box shows B+ox). Tab applies prefix+suffix. Popover rows use engagementHighlightedLabel with detail-aware emphasis. Tests updated for b→Box and split-label queries.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪c05610cb1b334f46b076bcd7406d0ff4",
+    "⚪2975526520ba4aac8cd59ef6fefbf7fe",
+    "⚪08dd13f9e773413dae31837c4db9b34a",
+    "⚪a20b98195204488fac8a7c6f58a5bb7e",
+    "⚪cf4f861c7dd04b2795a668758ac1f862",
+    "⚪743886e412904acdb22beb8cfe3aa462",
+    "⚪75c10c80397d4d79a73c9e3cf26362e0",
+    "⚪e3cd8f691551418087cd14771a097c2e",
+    "⚪109ba70d965c489e9676bd201d49d42f"
+  ]
+}

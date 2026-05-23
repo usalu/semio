@@ -1,0 +1,8 @@
+{
+  "title": "Cad Transform Tool Gumball",
+  "emoji": "🎛",
+  "status": "closed",
+  "description": "Add transform toolbar category with move, rotate, scale toggles (mutually exclusive). Show gumball for all selected objects when active; apply transforms to primitives on use.",
+  "summary": "Added transform toolbar category (move, rotate, scale) with mutually exclusive toggles in CAD play. When a tool is active and primitives are selected, SpatialTransformGumball shows at selection centroid and commits vertex transforms via transformGumballMatrixDiff. Extended AppToolCategory with transform; implemented transform.rotate/scale action capabilities. Tests: core 342 pass, renderer gumball + play toolbar tests pass.",
+  "goal": "🎯r2603"
+}

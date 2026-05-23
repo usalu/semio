@@ -1,0 +1,20 @@
+{
+  "title": "Elements Ui App Mode Window Engagement",
+  "emoji": "⚛️",
+  "status": "closed",
+  "description": "Reimplement Golden Layout-style docking in pure React Mode (tab stacks, resize, drag-dock, maximize, close; no persistence/popout). Restore golden-layout for sketchpad LayoutCanvas.",
+  "summary": "Refined Mode dock drag preview UX: dragged tab/window pops out as a small floating preview while moving; on valid drop targets the float hides and feedback snaps to the landing spot—tab-only chip + insert line + stack body highlight for tab merges, edge band + compact window preview for splits. Source tab collapses and source body shows placeholder during drag. Fixed same-stack reorder index mapping when the drag source is excluded from tab-bar hit testing (readLayoutAtPath + clamp to shortened stack length). All 47 vitest tests pass; Storybook QuadLayout drag verified merging Detail into Overview tab stack.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1496"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "5813ffd3",
+    "local": "elements_ui_components_5813ffd3.plan.md"
+  },
+  "sessions": [
+    "⚪8dd9c9bd1e5a4120b3b4438efac95b94",
+    "⚪db7fe7151701426a9b91a7e4984f67a9"
+  ]
+}

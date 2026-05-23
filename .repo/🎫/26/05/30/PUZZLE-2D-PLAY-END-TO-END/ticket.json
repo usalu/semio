@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 2d Play End To End",
+  "emoji": "🎮",
+  "status": "closed",
+  "description": "Make puzzle 2d play work end-to-end: fix vite/build blockers (3d export renames breaking 5d/platform chain), verify dev server and e2e.",
+  "summary": "Puzzle 2D play works end-to-end: Nakagin fixtures load from puzzle/*/fixture/ (not @puzzle/assets). Playground host imports fixed (boardFixtureNodeCaption, IconSelector, windowMeasuresToGolden). Platform uses compose5d from @puzzle/5d/react. Vitest 3/3 and Playwright e2e \"opens board background\" pass.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪bc55c56d8ac94a73863015385b5737f2"
+  ]
+}

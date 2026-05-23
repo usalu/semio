@@ -4,10 +4,13 @@
   "prompt": "file://../../AGENTS.md",
   "mcpServers": {
     "repo": {
-      "command": "go",
+      "command": "bun",
       "args": [
-        "run",
-        "./repo/kiro"
+        "./script.ts",
+        "dev",
+        "mcp",
+        "stdio",
+        "kiro"
       ]
     }
   },
@@ -94,33 +97,35 @@
     "file://../../CLAUDE.md",
     "file://../../GEMINI.md"
   ],
-  "hooks": {
-    "agentSpawn": [
-      {
-        "command": "go run ./repo/mcp hook agentSpawn kiro-cli"
-      }
-    ],
-    "userPromptSubmit": [
-      {
-        "command": "go run ./repo/mcp hook userPromptSubmit kiro-cli"
-      }
-    ],
-    "preToolUse": [
-      {
-        "command": "go run ./repo/mcp hook preToolUse kiro-cli"
-      }
-    ],
-    "postToolUse": [
-      {
-        "command": "go run ./repo/mcp hook postToolUse kiro-cli"
-      }
-    ],
-    "stop": [
-      {
-        "command": "go run ./repo/mcp hook stop kiro-cli"
-      }
-    ]
-  },
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {},
+  // "hooks": {
+  //   "agentSpawn": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
+  //     }
+  //   ],
+  //   "userPromptSubmit": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
+  //     }
+  //   ],
+  //   "preToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
+  //     }
+  //   ],
+  //   "postToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
+  //     }
+  //   ],
+  //   "stop": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio kiro hook stop"
+  //     }
+  //   ]
+  // },
   "includeMcpJson": true,
   "welcomeMessage": "Ready to work on the semio monorepo."
 }

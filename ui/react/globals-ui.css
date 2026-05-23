@@ -1,0 +1,145 @@
+.docs-content {
+  color: var(--foreground);
+  .aside-note {
+    @apply my-4 p-4 border;
+    background-color: var(--info-bg);
+    color: var(--info-foreground);
+    border-color: var(--info-border);
+    border-inline-start-width: var(--spacing);
+  }
+  .aside-tip {
+    @apply my-4 p-4 border;
+    background-color: var(--success-bg);
+    color: var(--success-foreground);
+    border-color: var(--success-border);
+    border-inline-start-width: var(--spacing);
+  }
+  .aside-caution {
+    @apply my-4 p-4 border;
+    background-color: var(--warning-bg);
+    color: var(--warning-foreground);
+    border-color: var(--warning-border);
+    border-inline-start-width: var(--spacing);
+  }
+  .aside-danger {
+    @apply my-4 p-4 border;
+    background-color: var(--destructive-bg);
+    color: var(--destructive-foreground);
+    border-color: var(--destructive-border);
+    border-inline-start-width: var(--spacing);
+  }
+
+  .leading-none {
+    line-height: 1;
+  }
+}
+
+.fullscreen #navbar,
+.fullscreen #semio\.sketchpad\.navbar,
+.fullscreen [data-slot="navbar"] {
+  position: relative;
+  transform: translateY(0);
+  transition: none;
+  z-index: var(--z-navbar);
+}
+
+.fullscreen #navbar:hover,
+.fullscreen #navbar:focus-within,
+.fullscreen #semio\.sketchpad\.navbar:hover,
+.fullscreen #semio\.sketchpad\.navbar:focus-within,
+.fullscreen [data-slot="navbar"]:hover,
+.fullscreen [data-slot="navbar"]:focus-within {
+  transform: translateY(0);
+}
+
+.fullscreen #footer {
+  position: relative;
+  transform: translateY(0);
+  transition: none;
+  z-index: var(--z-footer);
+}
+
+.fullscreen #footer:hover,
+.fullscreen #footer:focus-within {
+  transform: translateY(0);
+}
+
+.fullscreen:has(#navbar:hover) #navbar,
+.fullscreen:has(#semio\.sketchpad\.navbar:hover) #semio\.sketchpad\.navbar,
+.fullscreen:has([data-slot="navbar"]:hover) [data-slot="navbar"],
+.fullscreen:has(#footer:hover) #footer {
+  transform: translateY(0);
+}
+
+@media (pointer: coarse) {
+  .fullscreen #navbar,
+  .fullscreen #semio\.sketchpad\.navbar,
+  .fullscreen [data-slot="navbar"],
+  .fullscreen #footer {
+    transition: none;
+  }
+}
+
+/* #navbar {
+  -webkit-app-region: window-drag;
+} */
+
+/* #region ❄️TreeSpacing
+/* Vertical rhythm is owned by TreeBranchContent (margin-top via layout effect).
+ * Section wrappers only get a divider between adjacent top-level sections.
+ */
+
+[data-slot="tree-section-wrapper"] + [data-slot="tree-section-wrapper"] {
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+/* #endregion ❄️*/
+
+/* #region 🎃TreeHoverPath
+/* Tree hover path highlight: when a row is hovered, ancestor branch containers
+ * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
+ * [data-tree-hover-path="row"]. Guide lines and elbows on the path are rendered
+ * 1.5× thicker in a brighter/darker theme-aware tone. */
+
+[data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line] {
+  width: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+
+[data-tree-hover-path="row"] [data-slot="tree-branch-elbow"] {
+  height: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+/* #endregion 🎃TreeHoverPath */
+
+/* #region 👻PanelGhost */
+[data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor]) {
+  opacity: 0.05;
+  pointer-events: none;
+  transition: opacity 150ms;
+  scrollbar-width: none;
+}
+
+[data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor])::-webkit-scrollbar {
+  display: none;
+}
+
+[data-ghost="true"] :not([data-active-interaction]):not([data-active-ancestor]):not(:is([data-active-interaction] *, [data-active-ancestor] *)) {
+  scrollbar-width: none;
+}
+
+[data-ghost="true"] :not([data-active-interaction]):not([data-active-ancestor]):not(:is([data-active-interaction] *, [data-active-ancestor] *))::-webkit-scrollbar {
+  display: none;
+}
+
+[data-ghost="true"] [data-dim][data-active-ancestor] {
+  opacity: 1;
+}
+
+[data-ghost="true"] [data-active-interaction] {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* #endregion 👻PanelGhost */
+

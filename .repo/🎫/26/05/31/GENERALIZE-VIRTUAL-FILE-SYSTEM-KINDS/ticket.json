@@ -1,0 +1,11 @@
+{
+  "title": "Generalize Virtual File System Kinds",
+  "emoji": "📁",
+  "status": "closed",
+  "description": "Generalize virtual file system: FileNodeKind (id, name, icon, description, descriptors), DescriptorKind (Time, Avatar, etc), FileNode with fileNodeKindId and descriptor values that become table columns.",
+  "summary": "Generalized virtual file system with FileNodeKind, DescriptorKind (text, time, avatar), FileNode.fileNodeKindId + descriptorValues, and schema-driven table columns. Updated ui/react VirtualFileSystem, framework/platform/core models + VirtualFileSystemController.getSchema(), sketchpad VFS, platform renderer, and Storybook.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪82fb54a2b9fb486eab4b93cfd37a95ea"
+  ]
+}
