@@ -2538,19 +2538,23 @@ function AttractionThreeBinder() {
 
 function AttractionWindowBridge() {
 	const reg = useRegistry();
+	const invalidate = useThree((s) => s.invalidate);
 	const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	useEffect(() => {
 		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
 			if (reg.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
 			else if (reg.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
+			invalidate();
 		};
 		const onUp = (e: PointerEvent) => {
 			if (reg.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
+			invalidate();
 		};
 		const onDown = (e: PointerEvent) => {
 			if (e.button !== 0) return;
 			if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
+			invalidate();
 		};
 		window.addEventListener("pointermove", onMove);
 		window.addEventListener("pointerup", onUp, { capture: true });
@@ -2560,7 +2564,7 @@ function AttractionWindowBridge() {
 			window.removeEventListener("pointerup", onUp, true);
 			window.removeEventListener("pointerdown", onDown, true);
 		};
-	}, [reg, attractionBusy]);
+	}, [reg, attractionBusy, invalidate]);
 	return null;
 }
 
@@ -3233,7 +3237,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 			data-scene-root
 			data-scene-lod={shellLod}
 		>
-			<Canvas gl={{ antialias: true }} dpr={[1, 2]}>
+			<Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
 				<Inner {...rest} domain={domain} onLodChange={handleLod}>
 					{children}
 				</Inner>

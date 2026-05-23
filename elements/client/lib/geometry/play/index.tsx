@@ -122,6 +122,18 @@ function formatEnabledKindsLabel(enabledKinds: readonly string[], totalCount: nu
 	return enabledKinds.length === totalCount ? "all" : enabledKinds.join(",") || "none";
 }
 
+function areAllKindsEnabled<TKind extends string>(order: readonly TKind[], kinds: Readonly<Record<TKind, boolean>>): boolean {
+	return order.every((kind) => kinds[kind]);
+}
+
+function setKindGroup<TKind extends string>(
+	current: Readonly<Record<TKind, boolean>>,
+	order: readonly TKind[],
+	enabled: boolean,
+): Record<TKind, boolean> {
+	return Object.fromEntries(order.map((kind) => [kind, enabled])) as Record<TKind, boolean>;
+}
+
 function geometryKindToolbarToggles<TKind extends string>(
 	prefix: "selection" | "filter",
 	order: readonly TKind[],
@@ -143,18 +155,40 @@ function geometryAnalyzeToolbarToggles(
 	prefix: "selection" | "filter",
 	kinds: Record<AnalyzeKind, boolean>,
 	toggle: (kind: AnalyzeKind) => void,
+	toggleGroup: (group: readonly AnalyzeKind[], enabled: boolean) => void,
 ): UIToolbarItem[] {
+	const surfacesEnabled = areAllKindsEnabled(ANALYZE_SURFACE_KINDS, kinds);
+	const partsEnabled = areAllKindsEnabled(ANALYZE_PART_KINDS, kinds);
 	const items: UIToolbarItem[] = [
-		...geometryKindToolbarToggles(prefix, ANALYZE_SURFACE_KINDS, analyzeKindLabel, kinds, toggle),
-		{ id: `geometry.${prefix}.group.surface.separator`, kind: "separator", order: ANALYZE_SURFACE_KINDS.length },
+		{
+			id: `geometry.${prefix}.group.surface`,
+			kind: "toggle",
+			text: "Surfaces",
+			onPressedChange: () => toggleGroup(ANALYZE_SURFACE_KINDS, !surfacesEnabled),
+			order: 0,
+			pressed: surfacesEnabled,
+		},
+		...geometryKindToolbarToggles(prefix, ANALYZE_SURFACE_KINDS, analyzeKindLabel, kinds, toggle).map((item) => ({
+			...item,
+			order: (item.order ?? 0) + 1,
+		})),
+		{ id: `geometry.${prefix}.group.surface.separator`, kind: "separator", order: ANALYZE_SURFACE_KINDS.length + 1 },
+		{
+			id: `geometry.${prefix}.group.part`,
+			kind: "toggle",
+			text: "Parts",
+			onPressedChange: () => toggleGroup(ANALYZE_PART_KINDS, !partsEnabled),
+			order: ANALYZE_SURFACE_KINDS.length + 2,
+			pressed: partsEnabled,
+		},
 		...geometryKindToolbarToggles(prefix, ANALYZE_PART_KINDS, analyzeKindLabel, kinds, toggle).map((item) => ({
 			...item,
-			order: (item.order ?? 0) + ANALYZE_SURFACE_KINDS.length + 1,
+			order: (item.order ?? 0) + ANALYZE_SURFACE_KINDS.length + 3,
 		})),
-		{ id: `geometry.${prefix}.group.part.separator`, kind: "separator", order: ANALYZE_SURFACE_KINDS.length + ANALYZE_PART_KINDS.length + 1 },
+		{ id: `geometry.${prefix}.group.part.separator`, kind: "separator", order: ANALYZE_SURFACE_KINDS.length + ANALYZE_PART_KINDS.length + 3 },
 		...geometryKindToolbarToggles(prefix, ["solid"], analyzeKindLabel, kinds, toggle).map((item) => ({
 			...item,
-			order: (item.order ?? 0) + ANALYZE_SURFACE_KINDS.length + ANALYZE_PART_KINDS.length + 2,
+			order: (item.order ?? 0) + ANALYZE_SURFACE_KINDS.length + ANALYZE_PART_KINDS.length + 4,
 		})),
 	];
 	return items;
@@ -376,20 +410,24 @@ function GeometryPlayController(): ReactElement {
 						label: "Analyze",
 						tools: {
 							selection: [
-								...geometryAnalyzeToolbarToggles("selection", analyzeSelectableKinds, (kind) =>
+									...geometryAnalyzeToolbarToggles("selection", analyzeSelectableKinds, (kind) =>
 									setAnalyzeSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
+										(group, enabled) => setAnalyzeSelectableKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
 								),
-								{ id: "geometry.analyze.selection.separator.clear", kind: "separator" as const, order: ANALYZE_KINDS.length + 2 },
+								{ id: "geometry.analyze.selection.separator.clear", kind: "separator" as const, order: ANALYZE_KINDS.length + 4 },
 								{
 									id: "geometry.analyze.selection.clear",
 									icon: <BoxSelect className="size-4" aria-hidden />,
 									label: "Clear",
 									onClick: () => setSelectedId(null),
-									order: ANALYZE_KINDS.length + 3,
+									order: ANALYZE_KINDS.length + 5,
 								},
 							],
-							filter: geometryAnalyzeToolbarToggles("filter", analyzeVisibleKinds, (kind) =>
-								setAnalyzeVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
+							filter: geometryAnalyzeToolbarToggles(
+								"filter",
+								analyzeVisibleKinds,
+								(kind) => setAnalyzeVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
+								(group, enabled) => setAnalyzeVisibleKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
 							),
 						},
 					},
@@ -501,6 +539,17 @@ if (import.meta.vitest) {
 			expect(formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, all), TOPOLOGIC_KINDS.length)).toBe("all");
 			expect(formatEnabledKindsLabel(["vertex", "edge"], TOPOLOGIC_KINDS.length)).toBe("vertex,edge");
 			expect(formatEnabledKindsLabel([], TOPOLOGIC_KINDS.length)).toBe("none");
+		});
+
+		it("adds analyze group toggles for surfaces and parts", () => {
+			const items = geometryAnalyzeToolbarToggles(
+				"selection",
+				createAllKindsEnabled(ANALYZE_KINDS),
+				() => undefined,
+				() => undefined,
+			);
+			expect(items.some((item) => item.id === "geometry.selection.group.surface")).toBe(true);
+			expect(items.some((item) => item.id === "geometry.selection.group.part")).toBe(true);
 		});
 
 		it("derives analyze solids, parts, and semantic surfaces from the shipped fixture", async () => {

@@ -472,6 +472,20 @@ struct AnalyzeMergedGridRect {
 	int v_end;
 };
 
+struct AnalyzeFaceRectInfo {
+	std::string cell_id;
+	std::string face_id;
+	std::string label;
+	char axis;
+	double plane;
+	double u0;
+	double u1;
+	double v0;
+	double v1;
+	bool positive_side;
+	std::string kind;
+};
+
 bool starts_with(const std::string& value, const std::string& prefix) {
 	return value.rfind(prefix, 0) == 0;
 }
@@ -816,6 +830,242 @@ std::vector<val> create_box_faces(const std::string& prefix, const std::string& 
 	};
 }
 
+bool nearly_equal(const double left, const double right, const double epsilon = 1e-9) {
+	return std::abs(left - right) <= epsilon;
+}
+
+bool intervals_overlap(const double left_start, const double left_end, const double right_start, const double right_end, const double epsilon = 1e-9) {
+	return std::min(left_end, right_end) - std::max(left_start, right_start) > epsilon;
+}
+
+double axis_min(const AnalyzeBounds& bounds, const char axis) {
+	if (axis == 'x') return bounds.min.x;
+	if (axis == 'y') return bounds.min.y;
+	return bounds.min.z;
+}
+
+double axis_max(const AnalyzeBounds& bounds, const char axis) {
+	if (axis == 'x') return bounds.max.x;
+	if (axis == 'y') return bounds.max.y;
+	return bounds.max.z;
+}
+
+std::pair<double, double> face_projection_u(const AnalyzeBounds& bounds, const char axis) {
+	if (axis == 'x') return { bounds.min.y, bounds.max.y };
+	return { bounds.min.x, bounds.max.x };
+}
+
+std::pair<double, double> face_projection_v(const AnalyzeBounds& bounds, const char axis) {
+	if (axis == 'x' || axis == 'y') return { bounds.min.z, bounds.max.z };
+	return { bounds.min.y, bounds.max.y };
+}
+
+AnalyzeFaceRectInfo create_face_rect_info(const AnalyzeCellBoundsInfo& cell, const val& face) {
+	const val vertices = face["surface"]["vertices"];
+	double min_x = vertices[0][0].as<double>();
+	double max_x = min_x;
+	double min_y = vertices[0][1].as<double>();
+	double max_y = min_y;
+	double min_z = vertices[0][2].as<double>();
+	double max_z = min_z;
+	for (std::size_t index = 1; index < array_length(vertices); index += 1) {
+		const double x = vertices[index][0].as<double>();
+		const double y = vertices[index][1].as<double>();
+		const double z = vertices[index][2].as<double>();
+		min_x = std::min(min_x, x);
+		max_x = std::max(max_x, x);
+		min_y = std::min(min_y, y);
+		max_y = std::max(max_y, y);
+		min_z = std::min(min_z, z);
+		max_z = std::max(max_z, z);
+	}
+	AnalyzeFaceRectInfo out = {
+		cell.cell_id,
+		face["id"].as<std::string>(),
+		is_nonempty_string(face["label"]) ? face["label"].as<std::string>() : face["id"].as<std::string>(),
+		'z',
+		min_z,
+		min_x,
+		max_x,
+		min_y,
+		max_y,
+		false,
+		std::string(),
+	};
+	if (nearly_equal(min_x, max_x)) {
+		out.axis = 'x';
+		out.plane = min_x;
+		out.u0 = min_y;
+		out.u1 = max_y;
+		out.v0 = min_z;
+		out.v1 = max_z;
+	} else if (nearly_equal(min_y, max_y)) {
+		out.axis = 'y';
+		out.plane = min_y;
+		out.u0 = min_x;
+		out.u1 = max_x;
+		out.v0 = min_z;
+		out.v1 = max_z;
+	} else {
+		out.axis = 'z';
+		out.plane = min_z;
+		out.u0 = min_x;
+		out.u1 = max_x;
+		out.v0 = min_y;
+		out.v1 = max_y;
+	}
+	const double min_plane = axis_min(cell.bounds, out.axis);
+	const double max_plane = axis_max(cell.bounds, out.axis);
+	out.positive_side = nearly_equal(out.plane, max_plane) || std::abs(out.plane - max_plane) < std::abs(out.plane - min_plane);
+	return out;
+}
+
+std::vector<AnalyzeFaceRectInfo> collect_cell_face_rects(const val& fixture, const std::vector<AnalyzeCellBoundsInfo>& cells) {
+	std::vector<AnalyzeFaceRectInfo> faces;
+	for (const AnalyzeCellBoundsInfo& cell : cells) {
+		const val cell_entity = find_entity(fixture, cell.cell_id);
+		if (cell_entity.isUndefined()) continue;
+		for (std::size_t shell_index = 0; shell_index < array_length(cell_entity["shells"]); shell_index += 1) {
+			const val shell = find_entity(fixture, cell_entity["shells"][shell_index].as<std::string>());
+			if (shell.isUndefined()) continue;
+			for (std::size_t face_index = 0; face_index < array_length(shell["faces"]); face_index += 1) {
+				const val face = find_entity(fixture, shell["faces"][face_index].as<std::string>());
+				if (face.isUndefined()) continue;
+				faces.push_back(create_face_rect_info(cell, face));
+			}
+		}
+	}
+	return faces;
+}
+
+bool face_patch_is_internal(const AnalyzeFaceRectInfo& face, const AnalyzeCellBoundsInfo& other, const double u, const double v, const double epsilon = 1e-9) {
+	const auto [other_u0, other_u1] = face_projection_u(other.bounds, face.axis);
+	const auto [other_v0, other_v1] = face_projection_v(other.bounds, face.axis);
+	if (u < other_u0 + epsilon || u > other_u1 - epsilon || v < other_v0 + epsilon || v > other_v1 - epsilon) return false;
+	const double other_min = axis_min(other.bounds, face.axis);
+	const double other_max = axis_max(other.bounds, face.axis);
+	if (face.positive_side) return other_min < face.plane + epsilon && other_max > face.plane + epsilon;
+	return other_min < face.plane - epsilon && other_max > face.plane - epsilon;
+}
+
+std::vector<AnalyzeFaceRectInfo> split_semantic_surface_patches(const val& fixture, const std::vector<AnalyzeCellBoundsInfo>& cells) {
+	std::vector<AnalyzeFaceRectInfo> patches;
+	const std::vector<AnalyzeFaceRectInfo> faces = collect_cell_face_rects(fixture, cells);
+	for (const AnalyzeFaceRectInfo& face : faces) {
+		std::vector<double> us = { face.u0, face.u1 };
+		std::vector<double> vs = { face.v0, face.v1 };
+		for (const AnalyzeCellBoundsInfo& other : cells) {
+			if (other.cell_id == face.cell_id) continue;
+			const auto [other_u0, other_u1] = face_projection_u(other.bounds, face.axis);
+			const auto [other_v0, other_v1] = face_projection_v(other.bounds, face.axis);
+			if (!intervals_overlap(face.u0, face.u1, other_u0, other_u1) || !intervals_overlap(face.v0, face.v1, other_v0, other_v1)) continue;
+			const double other_min = axis_min(other.bounds, face.axis);
+			const double other_max = axis_max(other.bounds, face.axis);
+			const bool reaches_plane = face.positive_side ? other_min < face.plane + 1e-9 && other_max > face.plane + 1e-9 : other_min < face.plane - 1e-9 && other_max > face.plane - 1e-9;
+			if (!reaches_plane) continue;
+			us.push_back(std::max(face.u0, other_u0));
+			us.push_back(std::min(face.u1, other_u1));
+			vs.push_back(std::max(face.v0, other_v0));
+			vs.push_back(std::min(face.v1, other_v1));
+		}
+		us = unique_sorted(us);
+		vs = unique_sorted(vs);
+		for (std::size_t u_index = 0; u_index + 1 < us.size(); u_index += 1) {
+			for (std::size_t v_index = 0; v_index + 1 < vs.size(); v_index += 1) {
+				const double patch_u0 = us[u_index];
+				const double patch_u1 = us[u_index + 1];
+				const double patch_v0 = vs[v_index];
+				const double patch_v1 = vs[v_index + 1];
+				if (patch_u1 - patch_u0 <= 1e-9 || patch_v1 - patch_v0 <= 1e-9) continue;
+				const double center_u = interval_center(patch_u0, patch_u1);
+				const double center_v = interval_center(patch_v0, patch_v1);
+				bool internal = false;
+				for (const AnalyzeCellBoundsInfo& other : cells) {
+					if (other.cell_id == face.cell_id) continue;
+					if (face_patch_is_internal(face, other, center_u, center_v)) {
+						internal = true;
+						break;
+					}
+				}
+				patches.push_back({
+					face.cell_id,
+					face.face_id,
+					face.label,
+					face.axis,
+					face.plane,
+					patch_u0,
+					patch_u1,
+					patch_v0,
+					patch_v1,
+					face.positive_side,
+					std::string("surface.") + (internal ? "internal" : "external") + (face.axis == 'y' ? ".horizontal" : ".vertical"),
+				});
+			}
+		}
+	}
+	return patches;
+}
+
+std::vector<AnalyzeFaceRectInfo> merge_surface_patches(const std::vector<AnalyzeFaceRectInfo>& patches) {
+	std::unordered_map<std::string, std::vector<AnalyzeFaceRectInfo>> groups;
+	for (const AnalyzeFaceRectInfo& patch : patches) groups[std::string(1, patch.axis) + ":" + std::to_string(patch.plane) + ":" + patch.kind].push_back(patch);
+	std::vector<AnalyzeFaceRectInfo> merged;
+	for (const auto& [key, group] : groups) {
+		std::vector<double> us;
+		std::vector<double> vs;
+		for (const AnalyzeFaceRectInfo& patch : group) {
+			us.push_back(patch.u0);
+			us.push_back(patch.u1);
+			vs.push_back(patch.v0);
+			vs.push_back(patch.v1);
+		}
+		us = unique_sorted(us);
+		vs = unique_sorted(vs);
+		std::vector<std::vector<std::string>> grid(us.size() > 0 ? us.size() - 1 : 0, std::vector<std::string>(vs.size() > 0 ? vs.size() - 1 : 0, std::string()));
+		for (std::size_t u_index = 0; u_index + 1 < us.size(); u_index += 1) {
+			for (std::size_t v_index = 0; v_index + 1 < vs.size(); v_index += 1) {
+				const double center_u = interval_center(us[u_index], us[u_index + 1]);
+				const double center_v = interval_center(vs[v_index], vs[v_index + 1]);
+				for (const AnalyzeFaceRectInfo& patch : group) {
+					if (center_u <= patch.u0 + 1e-9 || center_u >= patch.u1 - 1e-9 || center_v <= patch.v0 + 1e-9 || center_v >= patch.v1 - 1e-9) continue;
+					grid[u_index][v_index] = patch.kind;
+					break;
+				}
+			}
+		}
+		for (const AnalyzeMergedGridRect& rect : merge_tagged_grid(grid)) {
+			merged.push_back({
+				group.front().cell_id,
+				group.front().face_id,
+				group.front().label,
+				group.front().axis,
+				group.front().plane,
+				us[rect.u_start],
+				us[rect.u_end],
+				vs[rect.v_start],
+				vs[rect.v_end],
+				group.front().positive_side,
+				group.front().kind,
+			});
+		}
+	}
+	return merged;
+}
+
+val clone_analyze_face(const val& source_face, const std::string& id, const std::string& label, const std::string& kind, const bool selectable, const std::string& parent_id = "") {
+	val face = val::object();
+	face.set("id", id);
+	face.set("kind", std::string("face"));
+	face.set("label", label);
+	face.set("wires", val::array());
+	face.set("surface", clone_surface(source_face["surface"]));
+	const val transform = clone_transform(source_face["transform"]);
+	if (!transform.isUndefined()) face.set("transform", transform);
+	face.set("style", style_for_analyze_kind(kind));
+	face.set("metadata", analyze_metadata(kind, selectable, parent_id));
+	return face;
+}
+
 std::vector<val> create_component_faces(const AnalyzeVoxelComponent& component, const AnalyzeGridPartition& partition, const std::string& label, const std::string& kind) {
 	std::vector<val> faces;
 	auto component_has_voxel = [&component](const int x_index, const int y_index, const int z_index) {
@@ -863,80 +1113,46 @@ val derive_analyze_fixture(const val& fixture) {
 	const std::vector<AnalyzeCellBoundsInfo> cells = collect_cell_bounds(parsed);
 	const AnalyzeGridPartition partition = create_grid_partition(cells);
 	const std::vector<AnalyzeVoxelComponent> components = collect_voxel_components(partition);
+	const std::vector<AnalyzeFaceRectInfo> surface_patches = merge_surface_patches(split_semantic_surface_patches(parsed, cells));
 	val topologies = val::array();
 	std::vector<std::string> root_members;
 	int surface_count = 0;
 	int none_count = 0;
 	int difference_count = 0;
 	int intersection_count = 0;
-	for (int axis_index = 0; axis_index < 3; axis_index += 1) {
-		const char axis = axis_index == 0 ? 'x' : axis_index == 1 ? 'y' : 'z';
-		const std::vector<double>& values = axis == 'x' ? partition.xs : axis == 'y' ? partition.ys : partition.zs;
-		const std::vector<double>& u_values = axis == 'x' ? partition.ys : partition.xs;
-		const std::vector<double>& v_values = axis == 'z' ? partition.ys : partition.zs;
-		for (int plane_index = 0; plane_index < static_cast<int>(values.size()); plane_index += 1) {
-			std::vector<std::vector<std::string>> grid;
-			if (axis == 'x') {
-				grid.assign(partition.ys.size() > 0 ? partition.ys.size() - 1 : 0, std::vector<std::string>(partition.zs.size() > 0 ? partition.zs.size() - 1 : 0, std::string()));
-				for (int y_index = 0; y_index < static_cast<int>(partition.ys.size()) - 1; y_index += 1) {
-					for (int z_index = 0; z_index < static_cast<int>(partition.zs.size()) - 1; z_index += 1) {
-						const AnalyzeVoxelCell* left = plane_index > 0 ? find_analyze_voxel(partition, plane_index - 1, y_index, z_index) : nullptr;
-						const AnalyzeVoxelCell* right = plane_index < static_cast<int>(partition.xs.size()) - 1 ? find_analyze_voxel(partition, plane_index, y_index, z_index) : nullptr;
-						const std::string left_key = left == nullptr ? std::string() : left->owner_key;
-						const std::string right_key = right == nullptr ? std::string() : right->owner_key;
-						if (left_key == right_key) continue;
-						grid[static_cast<std::size_t>(y_index)][static_cast<std::size_t>(z_index)] = !left || !right ? "surface.external.vertical" : "surface.internal.vertical";
-					}
-				}
-			} else if (axis == 'y') {
-				grid.assign(partition.xs.size() > 0 ? partition.xs.size() - 1 : 0, std::vector<std::string>(partition.zs.size() > 0 ? partition.zs.size() - 1 : 0, std::string()));
-				for (int x_index = 0; x_index < static_cast<int>(partition.xs.size()) - 1; x_index += 1) {
-					for (int z_index = 0; z_index < static_cast<int>(partition.zs.size()) - 1; z_index += 1) {
-						const AnalyzeVoxelCell* bottom = plane_index > 0 ? find_analyze_voxel(partition, x_index, plane_index - 1, z_index) : nullptr;
-						const AnalyzeVoxelCell* top = plane_index < static_cast<int>(partition.ys.size()) - 1 ? find_analyze_voxel(partition, x_index, plane_index, z_index) : nullptr;
-						const std::string bottom_key = bottom == nullptr ? std::string() : bottom->owner_key;
-						const std::string top_key = top == nullptr ? std::string() : top->owner_key;
-						if (bottom_key == top_key) continue;
-						grid[static_cast<std::size_t>(x_index)][static_cast<std::size_t>(z_index)] = !bottom || !top ? "surface.external.horizontal" : "surface.internal.horizontal";
-					}
-				}
-			} else {
-				grid.assign(partition.xs.size() > 0 ? partition.xs.size() - 1 : 0, std::vector<std::string>(partition.ys.size() > 0 ? partition.ys.size() - 1 : 0, std::string()));
-				for (int x_index = 0; x_index < static_cast<int>(partition.xs.size()) - 1; x_index += 1) {
-					for (int y_index = 0; y_index < static_cast<int>(partition.ys.size()) - 1; y_index += 1) {
-						const AnalyzeVoxelCell* front = plane_index > 0 ? find_analyze_voxel(partition, x_index, y_index, plane_index - 1) : nullptr;
-						const AnalyzeVoxelCell* back = plane_index < static_cast<int>(partition.zs.size()) - 1 ? find_analyze_voxel(partition, x_index, y_index, plane_index) : nullptr;
-						const std::string front_key = front == nullptr ? std::string() : front->owner_key;
-						const std::string back_key = back == nullptr ? std::string() : back->owner_key;
-						if (front_key == back_key) continue;
-						grid[static_cast<std::size_t>(x_index)][static_cast<std::size_t>(y_index)] = !front || !back ? "surface.external.vertical" : "surface.internal.vertical";
-					}
-				}
-			}
-			for (const AnalyzeMergedGridRect& rect : merge_tagged_grid(grid)) {
-				surface_count += 1;
-				const std::string id = "analyze.surface." + std::to_string(surface_count);
-				const std::string label = "Surface " + humanize_analyze_kind(rect.tag) + " " + std::to_string(surface_count);
-				topologies.call<void>("push", create_rectangle_face(id, label, axis, values[plane_index], u_values[rect.u_start], u_values[rect.u_end], v_values[rect.v_start], v_values[rect.v_end], rect.tag, true));
-				root_members.push_back(id);
-			}
-		}
+	for (const AnalyzeFaceRectInfo& patch : surface_patches) {
+		surface_count += 1;
+		const std::string id = "analyze.surface." + std::to_string(surface_count);
+		const std::string label = "Surface " + humanize_analyze_kind(patch.kind) + " " + std::to_string(surface_count);
+		topologies.call<void>("push", create_rectangle_face(id, label, patch.axis, patch.plane, patch.u0, patch.u1, patch.v0, patch.v1, patch.kind, true));
+		root_members.push_back(id);
 	}
 	for (const AnalyzeCellBoundsInfo& cell : cells) {
 		const std::string solid_id = "analyze.solid." + cell.cell_id;
 		const std::string label = "Solid " + cell.label;
-		const std::vector<val> faces = create_box_faces(solid_id + ".face", label, cell.bounds, "solid", false, solid_id);
 		val solid = val::object();
 		solid.set("id", solid_id);
 		solid.set("kind", std::string("topology"));
 		solid.set("label", label);
 		std::vector<std::string> member_ids;
-		for (const val& face : faces) member_ids.push_back(face["id"].as<std::string>());
+		const val cell_entity = find_entity(parsed, cell.cell_id);
+		for (std::size_t shell_index = 0; shell_index < array_length(cell_entity["shells"]); shell_index += 1) {
+			const val shell = find_entity(parsed, cell_entity["shells"][shell_index].as<std::string>());
+			if (shell.isUndefined()) continue;
+			for (std::size_t face_index = 0; face_index < array_length(shell["faces"]); face_index += 1) {
+				const std::string source_face_id = shell["faces"][face_index].as<std::string>();
+				const val source_face = find_entity(parsed, source_face_id);
+				if (source_face.isUndefined()) continue;
+				const std::string cloned_face_id = solid_id + ".face." + source_face_id;
+				const std::string cloned_face_label = label + " " + (is_nonempty_string(source_face["label"]) ? source_face["label"].as<std::string>() : source_face_id);
+				topologies.call<void>("push", clone_analyze_face(source_face, cloned_face_id, cloned_face_label, "solid", false, solid_id));
+				member_ids.push_back(cloned_face_id);
+			}
+		}
 		solid.set("members", make_string_array(member_ids));
 		solid.set("style", style_for_analyze_kind("solid"));
 		solid.set("metadata", analyze_metadata("solid", true));
 		topologies.call<void>("push", solid);
-		for (const val& face : faces) topologies.call<void>("push", face);
 		root_members.push_back(solid_id);
 	}
 	for (const AnalyzeVoxelComponent& component : components) {
