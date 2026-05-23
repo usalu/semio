@@ -23,7 +23,6 @@ import {
 	Group,
 	Quaternion,
 	Vector3,
-	type Object3D,
 } from "three";
 
 import {
@@ -41,26 +40,64 @@ import {
 	type TopologicTransform,
 	TopologicVertexEntity,
 	TopologicWireEntity,
+	updateTopologicFixtureTransformKernelV1,
 	ensureTopologicWasmLoaded,
 	loadTopologicFixtureV1,
 	type Vec3,
 } from "../wasm/index.ts";
-import {
-	centroid,
-	collectContainerPickPoints,
-	collectDragAttachIds,
-	computePickBounds,
-	edgeModelPoints,
-	normalizeTransform,
-	resolveEntityGroupTransform,
-	TopologicWasmSession,
-} from "../runtime/index.ts";
+
+//#region 🔖Session
+function childIds(entity: TopologicEntity): readonly string[] {
+	if (entity.kind === "topology") return entity.members;
+	if (entity.kind === "wire") return entity.edges;
+	if (entity.kind === "face") return entity.wires;
+	if (entity.kind === "shell") return entity.faces;
+	if (entity.kind === "cell") return entity.shells;
+	if (entity.kind === "cellComplex") return entity.cells;
+	if (entity.kind === "cluster") return entity.topologies;
+	if (entity.kind === "edge") return entity.vertices;
+	return [];
+}
+
+class TopologicSceneSession {
+	readonly entityById: ReadonlyMap<string, TopologicEntity>;
+
+	constructor(readonly fixture: TopologicFixtureV1) {
+		this.entityById = new Map(fixture.topologies.map((entity) => [entity.id, entity]));
+	}
+
+	getEntity(id: string): TopologicEntity | undefined {
+		return this.entityById.get(id);
+	}
+
+	childrenOf(id: string): readonly TopologicEntity[] {
+		const entity = this.entityById.get(id);
+		if (!entity) return [];
+		return childIds(entity)
+			.map((childId) => this.entityById.get(childId))
+			.filter((child): child is TopologicEntity => Boolean(child));
+	}
+
+	vertexPoint(id: string): Vec3 | null {
+		const entity = this.entityById.get(id);
+		return entity?.kind === "vertex" ? entity.point : null;
+	}
+}
+
+function edgeDisplayPoints(session: TopologicSceneSession, edge: TopologicEdgeEntity): readonly Vec3[] {
+	if (edge.curve && edge.curve.length >= 2) return edge.curve;
+	return edge.vertices.map((vertexId) => {
+		const vertex = session.getEntity(vertexId);
+		return vertex?.kind === "vertex" ? vertex.point : ([0, 0, 0] as Vec3);
+	});
+}
+//#endregion 🔖Session
 
 //#region 🔖Context
 export type TopologicTransformMode = "translate" | "rotate" | "scale";
 
 interface TopologicSceneValue {
-	readonly session: TopologicWasmSession;
+	readonly session: TopologicSceneSession;
 	readonly selectedId: string | null;
 	readonly registerObject: (id: string, object: Group | null) => void;
 	readonly objectById: ReadonlyMap<string, Group>;
@@ -204,11 +241,13 @@ function transformProps(transform: TopologicTransform | undefined): {
 	readonly quaternion: readonly [number, number, number, number];
 	readonly scale: readonly [number, number, number];
 } {
-	const normalized = normalizeTransform(transform);
-	const scale = typeof normalized.scale === "number" ? [normalized.scale, normalized.scale, normalized.scale] : normalized.scale;
+	const position = transform?.position ?? [0, 0, 0];
+	const quaternion = transform?.rotation ?? [0, 0, 0, 1];
+	const nextScale = transform?.scale ?? 1;
+	const scale = typeof nextScale === "number" ? [nextScale, nextScale, nextScale] : nextScale;
 	return {
-		position: normalized.position,
-		quaternion: normalized.rotation,
+		position,
+		quaternion,
 		scale,
 	};
 }
@@ -273,7 +312,7 @@ interface TopologyTraversalResult {
 	readonly revisitedIds: readonly string[];
 }
 
-export function collectSceneEntries(session: TopologicWasmSession): TopologyTraversalResult {
+export function collectSceneEntries(session: TopologicSceneSession): TopologyTraversalResult {
 	const entries: ResolvedTopologyEntry[] = [];
 	const visited = new Set<string>();
 	const revisitedIds = new Set<string>();
@@ -285,7 +324,7 @@ export function collectSceneEntries(session: TopologicWasmSession): TopologyTrav
 			return;
 		}
 		visited.add(entity.id);
-		entries.push({ entity, transform: resolveEntityGroupTransform(session, entity, entity.transform) });
+		entries.push({ entity, transform: entity.transform });
 		for (const child of session.childrenOf(entity.id)) {
 			visit(child.id);
 		}
@@ -301,28 +340,7 @@ function TopologyAnchor(props: { readonly entityId: string; readonly transform: 
 }
 
 function TopologicContainer(props: { readonly entityId: string; readonly transform?: TopologicTransform }): ReactElement {
-	const scene = useTopologicScene();
-	const bounds = useMemo(() => {
-		const points = collectContainerPickPoints(scene.session, props.entityId);
-		return computePickBounds(points);
-	}, [props.entityId, scene.session]);
-	const select = useCallback(() => scene.onSelect?.(props.entityId), [props.entityId, scene.onSelect]);
-	if (!bounds || !isEntitySelectable(scene, props.entityId)) {
-		return <TopologyAnchor entityId={props.entityId} transform={props.transform} />;
-	}
-	return (
-		<TopologicGroup entityId={props.entityId} transform={props.transform}>
-			<mesh
-				onPointerDown={(event) => {
-					event.stopPropagation();
-					select();
-				}}
-			>
-				<boxGeometry args={bounds.size} />
-				<meshBasicMaterial transparent opacity={0} depthWrite={false} />
-			</mesh>
-		</TopologicGroup>
-	);
+	return <TopologyAnchor entityId={props.entityId} transform={props.transform} />;
 }
 
 export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly transform?: TopologicTransform }): ReactElement {
@@ -344,21 +362,19 @@ export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly
 export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
-	const points = useMemo(() => edgeModelPoints(scene.session, props.entity), [props.entity, scene.session]);
-	const anchor = useMemo(() => centroid(points), [points]);
-	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
+	const points = useMemo(() => edgeDisplayPoints(scene.session, props.entity), [props.entity, scene.session]);
 	const pickRadius = edgePickRadius(props.entity, 2);
 	const selectable = isEntitySelectable(scene, props.entity.id);
 	const select = useCallback(() => scene.onSelect?.(props.entity.id), [props.entity.id, scene.onSelect]);
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<Line
-				points={localPoints}
+				points={points}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
 				lineWidth={topologyLineWidth(props.entity, 2)}
 				raycast={disableRaycast}
 			/>
-			{selectable ? <TopologicEdgePick points={localPoints} radius={pickRadius} onSelect={select} /> : null}
+			{selectable ? <TopologicEdgePick points={points} radius={pickRadius} onSelect={select} /> : null}
 		</TopologicGroup>
 	);
 }
@@ -371,9 +387,7 @@ export function Face(props: { readonly entity: TopologicFaceEntity; readonly tra
 	const scene = useTopologicScene();
 	const selectable = isEntitySelectable(scene, props.entity.id);
 	const selected = useIsSelected(props.entity.id);
-	const anchor = useMemo(() => centroid(props.entity.surface.vertices), [props.entity.surface.vertices]);
-	const vertices = useMemo(() => props.entity.surface.vertices.map((point) => offsetPoint(point, anchor)), [anchor, props.entity.surface.vertices]);
-	const geometry = useFaceGeometry(vertices, props.entity.surface.triangles);
+	const geometry = useFaceGeometry(props.entity.surface.vertices, props.entity.surface.triangles);
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<mesh geometry={geometry} raycast={selectable ? undefined : disableRaycast}>
@@ -423,51 +437,16 @@ export function Topology(props: { readonly entry: ResolvedTopologyEntry }): Reac
 //#endregion 🔖Kinds
 
 //#region 🔖Transform
-function isSceneDescendantOf(node: Object3D, ancestor: Object3D): boolean {
-	let current: Object3D | null = node.parent;
-	while (current) {
-		if (current === ancestor) return true;
-		current = current.parent;
-	}
-	return false;
-}
-
-function canAttachForDrag(object: Object3D, child: Object3D): boolean {
-	if (object === child) return false;
-	return !isSceneDescendantOf(object, child);
-}
-
 function TopologicTransformGumball(): ReactElement | null {
 	const scene = useTopologicScene();
-	const attachedRef = useRef<ReadonlyArray<{ readonly childId: string; readonly parent: Object3D }>>([]);
 	const object = scene.selectedId ? scene.objectById.get(scene.selectedId) : null;
-	const dragAttachIds = useMemo(
-		() => (scene.selectedId ? collectDragAttachIds(scene.session, scene.selectedId) : []),
-		[scene.selectedId, scene.session],
-	);
 	if (!scene.onTransformCommit || !scene.selectedId || !object) return null;
 	return (
 		<TransformControls
 			object={object}
 			mode={scene.transformMode}
 			space="world"
-			onMouseDown={() => {
-				attachedRef.current = dragAttachIds.flatMap((linkedId) => {
-					const child = scene.objectById.get(linkedId);
-					if (!child?.parent || !canAttachForDrag(object, child)) return [];
-					return [{ childId: linkedId, parent: child.parent }];
-				});
-				for (const { childId } of attachedRef.current) {
-					const child = scene.objectById.get(childId);
-					if (child) object.attach(child);
-				}
-			}}
 			onMouseUp={() => {
-				for (const { childId, parent } of attachedRef.current) {
-					const child = scene.objectById.get(childId);
-					if (child) parent.attach(child);
-				}
-				attachedRef.current = [];
 				const position: Vec3 = [object.position.x, object.position.y, object.position.z];
 				const rotation: TopologicTransform["rotation"] = [
 					object.quaternion.x,
@@ -508,7 +487,7 @@ export interface TopologicViewportProps {
 function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "style" | "backgroundColor">): ReactElement {
 	const objectMapRef = useRef(new Map<string, Group>());
 	const [version, setVersion] = useState(0);
-	const session = useMemo(() => new TopologicWasmSession(props.fixture), [props.fixture]);
+	const session = useMemo(() => new TopologicSceneSession(props.fixture), [props.fixture]);
 	const registerObject = useCallback((id: string, object: Group | null) => {
 		const current = objectMapRef.current.get(id) ?? null;
 		if (object === current) return;
@@ -597,7 +576,7 @@ if (import.meta.vitest) {
 			]);
 		});
 
-		it("keeps edge group transforms world-aligned for translate gumball axes", async () => {
+		it("updates selected entity transforms through the kernel adapter", async () => {
 			const fixture = (await loadTopologicFixtureV1({
 				schema: "elements.geometry.topologic.fixture/v1",
 				roots: ["root"],
@@ -605,18 +584,11 @@ if (import.meta.vitest) {
 					{ id: "root", kind: "topology", members: ["edge"] },
 					{ id: "start", kind: "vertex", point: [0, 0, 0] },
 					{ id: "end", kind: "vertex", point: [3, 4, 0] },
-					{
-						id: "edge",
-						kind: "edge",
-						vertices: ["start", "end"],
-						transform: { rotation: [0, 0, 0.3826834323650898, 0.9238795325112867] },
-					},
+					{ id: "edge", kind: "edge", vertices: ["start", "end"] },
 				],
 			})) as TopologicFixtureV1;
-			const session = new TopologicWasmSession(fixture);
-			const edge = session.getEntity("edge") as TopologicEdgeEntity;
-			const group = resolveEntityGroupTransform(session, edge, edge.transform);
-			expect(group?.rotation).toEqual([0, 0, 0, 1]);
+			const updated = updateTopologicFixtureTransformKernelV1(fixture, "edge", { position: [1, 2, 3] });
+			expect((updated?.topologies.find((entity) => entity.id === "edge") as TopologicEdgeEntity | undefined)?.transform).toEqual({ position: [1, 2, 3] });
 		});
 
 		it("builds pick segments for straight and curved edges", () => {

@@ -14,13 +14,55 @@ import {
 	deriveAnalyzeTopologicFixtureV1,
 	ensureTopologicWasmLoaded,
 	loadTopologicFixtureV1,
+	updateTopologicFixtureTransformKernelV1,
 	type TopologicEntity,
 	type TopologicFixtureV1,
 	type TopologicKind,
 	type TopologicTransform,
 } from "../wasm/index.ts";
-import { topologicEntityLabel, TopologicWasmSession, updateTopologicFixtureTransform } from "../runtime/index.ts";
 import "./globals.css";
+
+//#region 🔖Session
+function childIds(entity: TopologicEntity): readonly string[] {
+	if (entity.kind === "topology") return entity.members;
+	if (entity.kind === "wire") return entity.edges;
+	if (entity.kind === "face") return entity.wires;
+	if (entity.kind === "shell") return entity.faces;
+	if (entity.kind === "cell") return entity.shells;
+	if (entity.kind === "cellComplex") return entity.cells;
+	if (entity.kind === "cluster") return entity.topologies;
+	if (entity.kind === "edge") return entity.vertices;
+	return [];
+}
+
+class TopologicPlaySession {
+	readonly entityById: ReadonlyMap<string, TopologicEntity>;
+
+	constructor(readonly fixture: TopologicFixtureV1) {
+		this.entityById = new Map(fixture.topologies.map((entity) => [entity.id, entity]));
+	}
+
+	getEntity(id: string): TopologicEntity | undefined {
+		return this.entityById.get(id);
+	}
+
+	listByKind(kind: TopologicKind): readonly TopologicEntity[] {
+		return this.fixture.topologies.filter((entity) => entity.kind === kind);
+	}
+
+	childrenOf(id: string): readonly TopologicEntity[] {
+		const entity = this.entityById.get(id);
+		if (!entity) return [];
+		return childIds(entity)
+			.map((childId) => this.entityById.get(childId))
+			.filter((child): child is TopologicEntity => Boolean(child));
+	}
+}
+
+function topologicEntityLabel(entity: TopologicEntity): string {
+	return entity.label ?? entity.id;
+}
+//#endregion 🔖Session
 
 //#region 🔖Ids
 const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
@@ -65,9 +107,9 @@ const ANALYZE_KIND_SET = new Set<string>(ANALYZE_KINDS);
 //#region 🔖Context
 interface GeometryPlayValue {
 	readonly fixture: TopologicFixtureV1;
-	readonly session: TopologicWasmSession;
+	readonly session: TopologicPlaySession;
 	readonly analyzeFixture: TopologicFixtureV1;
-	readonly analyzeSession: TopologicWasmSession;
+	readonly analyzeSession: TopologicPlaySession;
 	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly analyzeSelectableKinds: Readonly<Record<AnalyzeKind, boolean>>;
@@ -208,16 +250,16 @@ function isAnalyzeEntityVisible(entity: TopologicEntity, visibleKinds: Readonly<
 	return kind ? visibleKinds[kind] : false;
 }
 
-function listSelectableEntities(session: TopologicWasmSession, selectableKinds: Readonly<Record<TopologicKind, boolean>>) {
+function listSelectableEntities(session: TopologicPlaySession, selectableKinds: Readonly<Record<TopologicKind, boolean>>) {
 	return session.fixture.topologies.filter((entity) => selectableKinds[entity.kind]);
 }
 
-function listAnalyzeSelectableEntities(session: TopologicWasmSession, selectableKinds: Readonly<Record<AnalyzeKind, boolean>>) {
+function listAnalyzeSelectableEntities(session: TopologicPlaySession, selectableKinds: Readonly<Record<AnalyzeKind, boolean>>) {
 	return session.fixture.topologies.filter((entity) => isAnalyzeEntitySelectable(entity, selectableKinds));
 }
 
 function isSelectableEntity(
-	session: TopologicWasmSession,
+	session: TopologicPlaySession,
 	selectableKinds: Readonly<Record<TopologicKind, boolean>>,
 	id: string | null,
 ): boolean {
@@ -226,7 +268,7 @@ function isSelectableEntity(
 	return Boolean(entity && selectableKinds[entity.kind]);
 }
 
-function isAnalyzeSelectableEntity(session: TopologicWasmSession, selectableKinds: Readonly<Record<AnalyzeKind, boolean>>, id: string | null): boolean {
+function isAnalyzeSelectableEntity(session: TopologicPlaySession, selectableKinds: Readonly<Record<AnalyzeKind, boolean>>, id: string | null): boolean {
 	if (!id) return false;
 	const entity = session.getEntity(id);
 	return Boolean(entity && isAnalyzeEntitySelectable(entity, selectableKinds));
@@ -295,9 +337,9 @@ function GeometryPlayWindow(): ReactElement {
 function GeometryPlayController(): ReactElement {
 	const [fixture, setFixture] = useState<TopologicFixtureV1 | null>(null);
 	const [loadError, setLoadError] = useState<Error | null>(null);
-	const session = useMemo(() => (fixture ? new TopologicWasmSession(fixture) : null), [fixture]);
+	const session = useMemo(() => (fixture ? new TopologicPlaySession(fixture) : null), [fixture]);
 	const analyzeFixture = useMemo(() => (fixture ? deriveAnalyzeTopologicFixtureV1(fixture) : null), [fixture]);
-	const analyzeSession = useMemo(() => (analyzeFixture ? new TopologicWasmSession(analyzeFixture) : null), [analyzeFixture]);
+	const analyzeSession = useMemo(() => (analyzeFixture ? new TopologicPlaySession(analyzeFixture) : null), [analyzeFixture]);
 	const [selectableKinds, setSelectableKinds] = useState<Record<TopologicKind, boolean>>(() => createAllKindsEnabled(TOPOLOGIC_KINDS));
 	const [visibleKinds, setVisibleKinds] = useState<Record<TopologicKind, boolean>>(() => createAllKindsEnabled(TOPOLOGIC_KINDS));
 	const [analyzeSelectableKinds, setAnalyzeSelectableKinds] = useState<Record<AnalyzeKind, boolean>>(() => createAllKindsEnabled(ANALYZE_KINDS));
@@ -353,7 +395,10 @@ function GeometryPlayController(): ReactElement {
 					},
 					setTransformMode,
 					onTransformCommit: (id, transform) =>
-						setFixture((current) => (current ? updateTopologicFixtureTransform(current, id, transform) : current)),
+						setFixture((current) => {
+							if (!current) return current;
+							return updateTopologicFixtureTransformKernelV1(current, id, transform) ?? current;
+						}),
 				}
 				: null,
 		[analyzeFixture, analyzeSelectableKinds, analyzeSession, analyzeVisibleKinds, fixture, selectableKinds, selectedId, session, transformMode, visibleKinds],
@@ -521,7 +566,7 @@ if (import.meta.vitest) {
 
 		it("ships at least one selectable entity for every topologic kind", async () => {
 			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
-			const session = new TopologicWasmSession(fixture);
+			const session = new TopologicPlaySession(fixture);
 			for (const kind of TOPOLOGIC_KINDS) {
 				expect(session.listByKind(kind).length).toBeGreaterThan(0);
 			}
@@ -553,7 +598,7 @@ if (import.meta.vitest) {
 		it("derives analyze solids, parts, and semantic surfaces from the shipped fixture", async () => {
 			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
 			const analyzeFixture = deriveAnalyzeTopologicFixtureV1(fixture);
-			const analyzeSession = new TopologicWasmSession(analyzeFixture);
+			const analyzeSession = new TopologicPlaySession(analyzeFixture);
 			const selectable = analyzeFixture.topologies.filter((entity) => entity.metadata?.analyzeSelectable === true);
 			expect(selectable.filter((entity) => entity.metadata?.analyzeGroup === "solid")).toHaveLength(3);
 			expect(selectable.filter((entity) => entity.metadata?.analyzeKind === "part.difference")).toHaveLength(3);
