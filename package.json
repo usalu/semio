@@ -54,8 +54,7 @@
     "cpp:build": "bun nx run workspace:cpp-build --",
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun ./script.ts publish",
-    "purge": "bun ./script.ts purge",
-    "seed:neo4j-metabolism-light-kit": "nx run workspace:seed-neo4j-metabolism-light-kit"
+    "purge": "bun ./script.ts purge"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",

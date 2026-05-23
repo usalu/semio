@@ -9,7 +9,6 @@ import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, partitionNeo4jGraphCliArgv } from "./generate.neo4j.gen.ts";
-import { seedMetabolismLightKitNeo4j } from "./seed.metabolism.light.kit.neo4j.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
@@ -696,19 +695,6 @@ export class PublishScript extends Script {
 }
 //#endregion 🔖PublishScript
 
-//#region 🔖SeedScript
-export class SeedScript extends Script {
-  run(segments: string[]): void {
-    if (segments[0] === "neo4j" && segments[1] === "metabolism-light-kit") {
-      seedMetabolismLightKitNeo4j(this.root);
-      return;
-    }
-    console.error("[seed] usage: bun ./script.ts seed neo4j metabolism-light-kit");
-    process.exit(1);
-  }
-}
-//#endregion 🔖SeedScript
-
 //#region 🔖PurgeScript
 export class PurgeScript extends Script {
   run(segments: string[]): void {
@@ -746,13 +732,12 @@ const registry = new Map<string, Script>([
   ["cpp", new CppScript(WORKSPACE_ROOT)],
   ["publish", new PublishScript(WORKSPACE_ROOT)],
   ["purge", new PurgeScript(WORKSPACE_ROOT)],
-  ["seed", new SeedScript(WORKSPACE_ROOT)],
 ]);
 
 async function main(): Promise<void> {
   const segments = process.argv.slice(2);
   if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge|seed> [segments…]");
+    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge> [segments…]");
     process.exit(1);
   }
   const verb = segments[0];

@@ -144,6 +144,10 @@ export function parseTopologicFixtureV1(raw: unknown): TopologicFixtureV1 | null
 	return (getTopologicJsBindings().parseFixture(raw) as TopologicFixtureV1 | null) ?? null;
 	}
 
+export function deriveAnalyzeTopologicFixtureV1(fixture: TopologicFixtureV1): TopologicFixtureV1 | null {
+	return (getTopologicJsBindings().deriveAnalyzeFixture(fixture) as TopologicFixtureV1 | null) ?? null;
+	}
+
 export async function loadTopologicFixtureV1(raw: unknown): Promise<TopologicFixtureV1 | null> {
 	await ensureTopologicJsBindingsLoaded();
 	return parseTopologicFixtureV1(raw);
@@ -578,6 +582,7 @@ export class TopologicWasmSession {
 
 export interface TopologicWasmBindings {
 	readonly parseFixture: (raw: unknown) => TopologicFixtureV1 | null;
+	readonly deriveAnalyzeFixture: (fixture: TopologicFixtureV1) => TopologicFixtureV1 | null;
 	readonly createSession: (fixture: TopologicFixtureV1) => TopologicWasmSession;
 }
 
@@ -585,6 +590,7 @@ export async function ensureTopologicWasmLoaded(): Promise<TopologicWasmBindings
 	await ensureTopologicJsBindingsLoaded();
 	return {
 		parseFixture: parseTopologicFixtureV1,
+		deriveAnalyzeFixture: deriveAnalyzeTopologicFixtureV1,
 		createSession: (fixture) => new TopologicWasmSession(fixture),
 	};
 	}

@@ -2,6 +2,7 @@ import createTopologicKernelModule from "../wasm/generated/topologic-kernel.js";
 
 export interface TopologicJsBindings {
 	readonly parseFixture: (raw: unknown) => unknown;
+	readonly deriveAnalyzeFixture: (fixture: unknown) => unknown;
 	readonly vertexPoint: (fixture: unknown, id: string) => unknown;
 	readonly edgeCurve: (fixture: unknown, id: string) => unknown;
 	readonly updateFixtureTransform: (fixture: unknown, entityId: string, transform: unknown) => unknown;
