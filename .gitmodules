@@ -5,6 +5,6 @@
 	path = mit-bestand/recherche
 	url = https://github.com/usalu/recherche
 [submodule "elements/client/lib/geometry/topologic"]
-	path = elements/client/lib/geometry/topologic
+	path = elements/renderer/react/windows/geometry/topologic
 	url = https://github.com/usalu/Topologic
 	ignore = all
