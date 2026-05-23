@@ -42,10 +42,10 @@ const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
 interface GeometryPlayValue {
 	readonly fixture: TopologicFixtureV1;
 	readonly session: TopologicWasmSession;
-	readonly selectedKind: TopologicKind;
+	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
 	readonly selectedId: string | null;
 	readonly transformMode: TopologicTransformMode;
-	readonly setSelectedKind: (kind: TopologicKind) => void;
+	readonly toggleSelectableKind: (kind: TopologicKind) => void;
 	readonly setSelectedId: (id: string | null) => void;
 	readonly setTransformMode: (mode: TopologicTransformMode) => void;
 	readonly onTransformCommit: (id: string, transform: TopologicTransform) => void;
@@ -73,9 +73,28 @@ function geometryKindLabel(kind: TopologicKind): string {
 	return kind.charAt(0).toUpperCase() + kind.slice(1);
 }
 
+function createSelectableKinds(): Record<TopologicKind, boolean> {
+	return Object.fromEntries(TOPOLOGIC_KINDS.map((kind) => [kind, true])) as Record<TopologicKind, boolean>;
+}
+
+function listSelectableEntities(session: TopologicWasmSession, selectableKinds: Readonly<Record<TopologicKind, boolean>>) {
+	return session.fixture.topologies.filter((entity) => selectableKinds[entity.kind]);
+}
+
+function isSelectableEntity(
+	session: TopologicWasmSession,
+	selectableKinds: Readonly<Record<TopologicKind, boolean>>,
+	id: string | null,
+): boolean {
+	if (!id) return false;
+	const entity = session.getEntity(id);
+	return Boolean(entity && selectableKinds[entity.kind]);
+}
+
 function GeometryPlayWindow(): ReactElement {
 	const play = useGeometryPlay();
-	const entitiesOfKind = play.session.listByKind(play.selectedKind);
+	const selectableEntities = listSelectableEntities(play.session, play.selectableKinds);
+	const enabledKinds = TOPOLOGIC_KINDS.filter((kind) => play.selectableKinds[kind]);
 	const selectedEntity = play.selectedId ? play.session.getEntity(play.selectedId) : null;
 	return (
 		<div className="flex h-full w-full flex-col">
@@ -87,7 +106,7 @@ function GeometryPlayWindow(): ReactElement {
 						</ToolbarItem>
 						{TOPOLOGIC_KINDS.map((kind) => (
 							<ToolbarItem key={kind}>
-								<button type="button" className={geometryToolbarToggleClass(play.selectedKind === kind)} title={`Show ${geometryKindLabel(kind)} entities`} onClick={() => play.setSelectedKind(kind)}>
+								<button type="button" className={geometryToolbarToggleClass(play.selectableKinds[kind])} title={`${play.selectableKinds[kind] ? "Disable" : "Enable"} ${geometryKindLabel(kind)} selection`} onClick={() => play.toggleSelectableKind(kind)}>
 									<span className="px-0.5">{geometryKindLabel(kind)}</span>
 								</button>
 							</ToolbarItem>
@@ -125,13 +144,13 @@ function GeometryPlayWindow(): ReactElement {
 							</button>
 						</ToolbarItem>
 						<ToolbarItem>
-							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{play.selectedKind}</span>
+							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{enabledKinds.length === TOPOLOGIC_KINDS.length ? "all" : enabledKinds.join(",") || "none"}</span>
 						</ToolbarItem>
 						<ToolbarItem>
 							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{selectedEntity ? topologicEntityLabel(selectedEntity) : "—"}</span>
 						</ToolbarItem>
 						<ToolbarItem>
-							<span className="text-muted-foreground px-1 text-xs">{entitiesOfKind.length}</span>
+							<span className="text-muted-foreground px-1 text-xs">{selectableEntities.length}</span>
 						</ToolbarItem>
 					</ToolbarGroup>
 				</ToolbarZone>
@@ -155,7 +174,7 @@ function GeometryPlayController(): ReactElement {
 	const [fixture, setFixture] = useState<TopologicFixtureV1 | null>(null);
 	const [loadError, setLoadError] = useState<Error | null>(null);
 	const session = useMemo(() => (fixture ? new TopologicWasmSession(fixture) : null), [fixture]);
-	const [selectedKind, setSelectedKind] = useState<TopologicKind>("topology");
+	const [selectableKinds, setSelectableKinds] = useState<Record<TopologicKind, boolean>>(() => createSelectableKinds());
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [transformMode, setTransformMode] = useState<TopologicTransformMode>("translate");
 
@@ -177,11 +196,10 @@ function GeometryPlayController(): ReactElement {
 
 	useEffect(() => {
 		if (!session) return;
-		const selected = selectedId ? session.getEntity(selectedId) : null;
-		if (!selected || selected.kind !== selectedKind) {
-			setSelectedId(session.listByKind(selectedKind)[0]?.id ?? null);
+		if (!isSelectableEntity(session, selectableKinds, selectedId)) {
+			setSelectedId(null);
 		}
-	}, [selectedId, selectedKind, session]);
+	}, [selectedId, selectableKinds, session]);
 
 	const value = useMemo<GeometryPlayValue | null>(
 		() =>
@@ -189,17 +207,21 @@ function GeometryPlayController(): ReactElement {
 				? {
 					fixture,
 					session,
-					selectedKind,
+					selectableKinds,
 					selectedId,
 					transformMode,
-					setSelectedKind,
-					setSelectedId,
+					toggleSelectableKind: (kind) => setSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
+					setSelectedId: (id) => {
+						if (!id || isSelectableEntity(session, selectableKinds, id)) {
+							setSelectedId(id);
+						}
+					},
 					setTransformMode,
 					onTransformCommit: (id, transform) =>
 						setFixture((current) => (current ? updateTopologicFixtureTransform(current, id, transform) : current)),
 				}
 				: null,
-		[fixture, selectedId, selectedKind, session, transformMode],
+		[fixture, selectableKinds, selectedId, session, transformMode],
 	);
 
 	const apps = useMemo<UIAppConfig[]>(
@@ -245,6 +267,20 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("geometry play fixture", () => {
+		it("enables selection for every kind by default", () => {
+			expect(createSelectableKinds()).toEqual({
+				topology: true,
+				vertex: true,
+				edge: true,
+				wire: true,
+				face: true,
+				shell: true,
+				cell: true,
+				cellComplex: true,
+				cluster: true,
+			});
+		});
+
 		it("renders through wasm fixture load without changing hook order", async () => {
 			const container = document.createElement("div");
 			document.body.appendChild(container);

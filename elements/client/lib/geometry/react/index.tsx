@@ -129,14 +129,27 @@ function TopologicGroup(props: {
 //#endregion 🔖Groups
 
 //#region 🔖Geometry
-function useFaceGeometry(face: TopologicFaceEntity): BufferGeometry {
+function centroid(points: readonly Vec3[]): Vec3 {
+	if (points.length === 0) return [0, 0, 0];
+	const sum = points.reduce<[number, number, number]>(
+		(accumulator, point) => [accumulator[0] + point[0], accumulator[1] + point[1], accumulator[2] + point[2]],
+		[0, 0, 0],
+	);
+	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length];
+}
+
+function offsetPoint(point: Vec3, anchor: Vec3): Vec3 {
+	return [point[0] - anchor[0], point[1] - anchor[1], point[2] - anchor[2]];
+}
+
+function useFaceGeometry(vertices: readonly Vec3[], triangles: readonly number[]): BufferGeometry {
 	const geometry = useMemo(() => {
 		const next = new BufferGeometry();
-		next.setAttribute("position", new Float32BufferAttribute(face.surface.vertices.flat(), 3));
-		next.setIndex([...face.surface.triangles]);
+		next.setAttribute("position", new Float32BufferAttribute(vertices.flat(), 3));
+		next.setIndex([...triangles]);
 		next.computeVertexNormals();
 		return next;
-	}, [face.surface.triangles, face.surface.vertices]);
+	}, [triangles, vertices]);
 	useEffect(() => () => geometry.dispose(), [geometry]);
 	return geometry;
 }
@@ -216,9 +229,10 @@ export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly
 	const selected = useIsSelected(props.entity.id);
 	const color = selectedColor(topologyColor(props.entity, "#38bdf8"), selected);
 	const radius = props.entity.radius ?? props.entity.style?.pointSize ?? 0.12;
+	const transform = composeTransform(props.transform ?? props.entity.transform, { position: props.entity.point });
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
-			<mesh position={props.entity.point}>
+		<TopologicGroup entityId={props.entity.id} transform={transform}>
+			<mesh>
 				<sphereGeometry args={[radius, 24, 24]} />
 				<meshStandardMaterial color={color} transparent opacity={topologyOpacity(props.entity, 1)} />
 			</mesh>
@@ -230,10 +244,13 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
 	const points = scene.session.edgeCurve(props.entity.id);
+	const anchor = useMemo(() => centroid(points), [points]);
+	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
+	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={transform}>
 			<Line
-				points={points}
+				points={localPoints}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
 				lineWidth={topologyLineWidth(props.entity, 2)}
 			/>
@@ -244,15 +261,26 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 export function Wire(props: { readonly entity: TopologicWireEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
+	const wireCurves = useMemo(
+		() =>
+			props.entity.edges
+				.map((edgeId) => {
+					const edge = scene.session.getEntity(edgeId);
+					if (!edge || edge.kind !== "edge") return null;
+					return { edge, edgeId, points: scene.session.edgeCurve(edgeId) };
+				})
+				.filter((entry): entry is { edge: TopologicEdgeEntity; edgeId: string; points: readonly Vec3[] } => Boolean(entry)),
+		[props.entity.edges, scene.session],
+	);
+	const anchor = useMemo(() => centroid(wireCurves.flatMap((entry) => [...entry.points])), [wireCurves]);
+	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
-			{props.entity.edges.map((edgeId) => {
-				const edge = scene.session.getEntity(edgeId);
-				if (!edge || edge.kind !== "edge") return null;
+		<TopologicGroup entityId={props.entity.id} transform={transform}>
+			{wireCurves.map(({ edge, edgeId, points }) => {
 				return (
 					<Line
 						key={edgeId}
-						points={scene.session.edgeCurve(edgeId)}
+						points={points.map((point) => offsetPoint(point, anchor))}
 						color={selectedColor(topologyColor(props.entity, edge.style?.color ?? "#34d399"), selected)}
 						lineWidth={topologyLineWidth(props.entity, edge.style?.lineWidth ?? 1.5)}
 					/>
@@ -264,9 +292,12 @@ export function Wire(props: { readonly entity: TopologicWireEntity; readonly tra
 
 export function Face(props: { readonly entity: TopologicFaceEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const selected = useIsSelected(props.entity.id);
-	const geometry = useFaceGeometry(props.entity);
+	const anchor = useMemo(() => centroid(props.entity.surface.vertices), [props.entity.surface.vertices]);
+	const vertices = useMemo(() => props.entity.surface.vertices.map((point) => offsetPoint(point, anchor)), [anchor, props.entity.surface.vertices]);
+	const geometry = useFaceGeometry(vertices, props.entity.surface.triangles);
+	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.transform ?? props.entity.transform}>
+		<TopologicGroup entityId={props.entity.id} transform={transform}>
 			<mesh geometry={geometry}>
 				<meshStandardMaterial
 					color={selectedColor(topologyColor(props.entity, "#fbbf24"), selected)}
