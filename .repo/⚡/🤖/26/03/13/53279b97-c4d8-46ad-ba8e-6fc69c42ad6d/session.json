@@ -1702,34 +1702,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories✂️story",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories✂️story",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️canvasdemo",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️canvasdemo",
             "loc": 3
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️createlevelrender",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️createlevelrender",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️windowcontent",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️windowcontent",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🪨default",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🪨default",
             "loc": 19
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🪨meta",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🪨meta",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories📌1📌80"
+          "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories📌1📌80"
         ],
         "second": "🎆26🌙03☀️13⏰23⌚59⏱️22",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -1822,34 +1822,34 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories✂️story",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories✂️story",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️canvasdemo",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️canvasdemo",
             "loc": 3
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️createlevelrender",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️createlevelrender",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🛠️windowcontent",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🛠️windowcontent",
             "loc": 1
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🪨default",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🪨default",
             "loc": 19
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories🪨meta",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories🪨meta",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🛅storybook🗃️stories🗃️elements🥼canvasstories📌1📌80"
+          "👤semio📚js🛅storybook🗃️stories🧩elements🥼canvasstories📌1📌80"
         ],
         "second": "🎆26🌙03☀️13⏰23⌚59⏱️30",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",

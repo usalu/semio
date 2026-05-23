@@ -1,0 +1,11 @@
+{
+  "title": "Align Metabolism Kit Fixture To Light Graph",
+  "emoji": "📦",
+  "status": "closed",
+  "description": "Align semio/assets/fixtures/metabolism.kit.semio.json graph structure with metabolism.kit.light.semio.json (hash/items relation blocks per golden schema).",
+  "summary": "Aligned metabolism.kit.semio.json bundle graph with the light fixture and backbone rules: wip key order matches light (checkpoints before theKit before alternatives); removed persisted drafts from wip; added theKit with id + BlockHashedList savedChanges/unsavedChanges (hash/items per golden wire, not bare arrays); stripped frozenRoot from wip checkpoints; authoritative/stage now mirror the previous minimal stub shape but drop drafts and include the same theKit envelope (left as minimal heads instead of light’s {} so DevBackboneBundleDoc-style serde stays valid). Added ticket scripts fix_metabolism_bundle.mjs and recover_auth.mjs for reproducibility. Attempted cargo test and go test: cargo failed with Windows LNK1104 on proc-macro DLLs; go test failed missing ../assets/semio path (pre-existing asset layout).",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪69598505aed745ad932f4fd87cd6ee4e"
+  ]
+}

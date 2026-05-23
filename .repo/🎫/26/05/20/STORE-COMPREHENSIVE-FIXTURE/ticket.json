@@ -1,0 +1,16 @@
+{
+  "title": "Store Comprehensive Fixture",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Create semio/assets/semio kit-store comprehensive fixture exercising all store reads, writes, alternatives, backbone commands; golden ops+expected pair; wire semio-store and semio/rs tests.",
+  "summary": "Expanded kit-store.comprehensive.semio.json to 34 in-process GraphQL steps, 2 native backbone replay steps, and 3 sidecar steps covering 43 feature tags (reads, VCS mutations, replay engines, backbone, session). Fixed schema_gap_surfaces macro reassembly ($crate paths, ::paste for OutputType registration) and restore_and_e2e pipeline. All kit_store_comprehensive + semio-store comprehensive/sidecar E2E tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1461"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪e483a8772dab43a2a7769c251fb89cae",
+    "⚪df734666cb75471d9d835bd5cf105c7d",
+    "⚪e2924cf8121f45d0b7a97d956efcac41"
+  ]
+}

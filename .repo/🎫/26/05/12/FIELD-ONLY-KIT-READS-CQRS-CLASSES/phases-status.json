@@ -1,0 +1,60 @@
+{
+  "ticket": "26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES",
+  "plan": ".repo/🎫/26/05/12/SKETCHPAD-FIELD-HOOKS-MIGRATION/field-only_kit_reads_refactor_09fc9816.plan.md",
+  "phases": [
+    {
+      "id": 0,
+      "name": "Foundation (GqlTransport, EventBus, worker, react bridges)",
+      "status": "done",
+      "notes": "Present on CQRS root `semio/js/index.ts` + `kit-store.worker.ts` + `semio/react/index.tsx`. Legacy host duplicated for kit-store consumers.",
+      "evidence_commands": [
+        "rg GqlTransport EventBus semio/js/index.ts",
+        "read semio/js/kit-store.worker.ts (GraphQL JSON worker)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Per-entity field reads + ops in js/react vs target.schema.graphql",
+      "status": "partial",
+      "notes": "CQRS root has broad entity coverage + hooks; host entry restores pre-CQRS aggregate APIs for sketchpad. Full schema-1:1 parity and naming (`useKitName` vs `*Field`) remain incremental.",
+      "evidence_commands": [
+        "rg \"^export function use\" semio/react/index.tsx | wc (manual)",
+        "bun nx run @semio/js:test",
+        "bun nx run @semio/react:test"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "sketchpad/index.tsx — banned patterns / field-only hooks",
+      "status": "partial",
+      "notes": "Sketchpad still uses `@semio/react/host` (legacy kit registry, snapshots, scopes). Negative vitest still only checks direct `@semio/js` imports. True plan Phase 2 requires migrating call sites to CQRS root.",
+      "evidence_commands": [
+        "rg \"@semio/react/host\" semio/sketchpad/index.tsx"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Deletion sweep (legacy exports)",
+      "status": "partial",
+      "notes": "Legacy exports moved to `@semio/react/host` + `@semio/js/legacy-host` instead of deleted, until sketchpad migration completes.",
+      "evidence_commands": ["n/a — intentional shim"]
+    },
+    {
+      "id": 4,
+      "name": "Validation CI (layers, tsc, vitest, sketchpad dev)",
+      "status": "done",
+      "notes": "Fixed workspace `depcruise` to use `npx --yes dependency-cruiser@16`. Extended `semio/sketchpad/tsconfig.json` so `npx tsc -p semio/sketchpad` includes node/vitest/rs-wasm types for pulled-in js sources.",
+      "evidence_commands": [
+        "bun nx run workspace:depcruise",
+        "npx tsc --noEmit -p semio/js/tsconfig.json",
+        "npx tsc --noEmit -p semio/react/tsconfig.json",
+        "npx tsc --noEmit -p semio/sketchpad/tsconfig.json",
+        "npx tsc --noEmit -p semio/ui/tsconfig.json",
+        "npx tsc --noEmit -p semio/algorithms/tsconfig.json",
+        "bun nx run @semio/js:test",
+        "bun nx run @semio/react:test",
+        "bun nx run @semio/sketchpad:dev → sketchpad-dev.txt (http://localhost:5176/)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Required Owner Fields in Target Schema",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Make owner fields required (!) on entities where ownership is always present in target.schema.graphql.",
+  "summary": "All concrete entity owner unions now use non-null owner fields (owner: XOwner!) across weak geometry, diffs, attributes, catalog types, piece/connection/design/kit, VCS, and Operation implementations; Diff and Operation interfaces likewise require owner. graphql-core parse verified.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪16c76479c48046bf9d9432737f130be5"
+  ]
+}

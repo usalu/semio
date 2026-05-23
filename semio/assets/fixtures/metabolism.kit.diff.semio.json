@@ -1,0 +1,694 @@
+{
+  "name": "Metabolism Modified",
+  "version": "r25.08-1",
+  "description": "Modified version for comprehensive diff testing",
+  "icon": "modified-icon.svg",
+  "image": "modified-image.png",
+  "remote": "https://modified.example.com/archive.tar.gz",
+  "homepage": "https://modified.example.com",
+  "license": "MIT-Modified",
+  "preview": "modified-preview.png",
+  "types": {
+    "removed": [
+      {
+        "id": "71749140-9db9-43f6-bd81-d89011667b80"
+      }
+    ],
+    "modified": [
+      {
+        "type": {
+          "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+        },
+        "diff": {
+          "name": "Base Modified",
+          "stock": 42,
+          "virtual": true,
+          "unit": "cm",
+          "icon": "updated-base-icon.svg",
+          "image": "updated-base-image.png",
+          "description": "Updated base type description",
+          "representations": {
+            "removed": [
+              {
+                "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3"
+              }
+            ],
+            "modified": [
+              {
+                "representation": {
+                  "id": "c2aded58-7995-4ea5-b990-91bd44482bcb"
+                },
+                "diff": {
+                  "name": "base_1to500_modified",
+                  "tags": [
+                    {
+                      "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                    }
+                  ]
+                }
+              }
+            ],
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000001",
+                "name": "new-test-representation",
+                "tags": [
+                  {
+                    "id": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+                  }
+                ],
+                "file": {
+                  "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+                },
+                "description": "A newly added representation",
+                "attributes": []
+              }
+            ]
+          },
+          "connectors": {
+            "removed": [
+              {
+                "id": "c5465220-19ba-4443-8f1d-617c832dd13c"
+              }
+            ],
+            "modified": [
+              {
+                "connector": {
+                  "id": "d25a91ed-b124-4e5b-8e7e-af832541c953"
+                },
+                "diff": {
+                  "name": "c1-modified",
+                  "description": "Updated connector description",
+                  "mandatory": true,
+                  "t": 0.75,
+                  "point": {
+                    "x": 28.6,
+                    "y": 27.7,
+                    "z": 22.5
+                  },
+                  "direction": {
+                    "x": 1,
+                    "y": 0,
+                    "z": -1
+                  },
+                  "attributes": {
+                    "added": [
+                      {
+                        "id": "019caa00-0000-7000-a000-000000000002",
+                        "key": "conn.meta",
+                        "value": "test",
+                        "definition": "Connector attribute"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000003",
+                "name": "new-connector",
+                "t": 0.5,
+                "point": {
+                  "x": 1,
+                  "y": 1,
+                  "z": 1
+                },
+                "direction": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                },
+                "description": "Newly added connector",
+                "port": {
+                  "id": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+                },
+                "mandatory": true,
+                "props": [],
+                "attributes": []
+              }
+            ]
+          },
+          "attributes": {
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000004",
+                "key": "type.meta",
+                "value": "test-value",
+                "definition": "Type attribute"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000005",
+        "name": "New Comprehensive Type",
+        "isAbstract": false,
+        "folder": "new-type-folder",
+        "representations": [
+          {
+            "id": "019caa00-0000-7000-a000-00000000000b",
+            "name": "new-representation",
+            "tags": [
+              {
+                "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+              }
+            ],
+            "file": {
+              "id": "457d2061-ac4b-4317-8563-ba41afffd149"
+            },
+            "description": "New representation",
+            "attributes": [
+              {
+                "id": "019caa00-0000-7000-a000-00000000000c",
+                "key": "new.representation.attr",
+                "value": "val"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "id": "019caa00-0000-7000-a000-000000000007",
+            "name": "test-connector",
+            "t": 0,
+            "point": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "direction": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            },
+            "description": "Test connector",
+            "port": {
+              "id": "019ab243-21f3-7380-93c6-994a9a023448"
+            },
+            "mandatory": false,
+            "props": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000008",
+                "quality": {
+                  "id": "019caa00-0000-7000-a000-000000000009"
+                },
+                "value": "100",
+                "attributes": []
+              }
+            ],
+            "attributes": [
+              {
+                "id": "019caa00-0000-7000-a000-00000000000a",
+                "key": "new.conn.attr",
+                "value": "val"
+              }
+            ]
+          }
+        ],
+        "props": [
+          {
+            "id": "019caa00-0000-7000-a000-00000000000d",
+            "quality": {
+              "id": "019caa00-0000-7000-a000-00000000000e"
+            },
+            "value": "yes",
+            "attributes": []
+          }
+        ],
+        "stock": 100,
+        "virtual": true,
+        "unit": "mm",
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z",
+        "location": {
+          "id": "019caa00-0000-7000-a000-000000000006"
+        },
+        "authors": [
+          {
+            "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+          }
+        ],
+        "concepts": [
+          {
+            "id": "019adc5e-9205-7364-a213-66fda12e5120"
+          }
+        ],
+        "icon": "new-type-icon.svg",
+        "image": "new-type-image.png",
+        "description": "A new type added for testing",
+        "attributes": [
+          {
+            "id": "019caa00-0000-7000-a000-00000000000f",
+            "key": "new.type.attr",
+            "value": "new-val",
+            "definition": "New attribute"
+          }
+        ]
+      }
+    ]
+  },
+  "designs": {
+    "removed": [
+      {
+        "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+      },
+      {
+        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
+      },
+      {
+        "id": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
+      },
+      {
+        "id": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
+      },
+      {
+        "id": "d7e12638-9749-471b-937e-a6e5523778ff"
+      },
+      {
+        "id": "79fa8945-b47d-4896-965f-f921067cbae2"
+      },
+      {
+        "id": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf"
+      },
+      {
+        "id": "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+      },
+      {
+        "id": "019ab4e0-cb2a-7613-a16a-ae086e331c95"
+      }
+    ],
+    "modified": [
+      {
+        "design": {
+          "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
+        },
+        "diff": {
+          "name": "Capsule Dream Modified",
+          "unit": "cm",
+          "icon": "updated-design-icon.svg",
+          "image": "updated-design-image.png",
+          "description": "Updated design description",
+          "authors": [
+            {
+              "id": "5c2e7719-dec3-4f21-9c47-b7081410219a"
+            },
+            {
+              "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+            }
+          ],
+          "pieces": {
+            "removed": [
+              {
+                "id": "739c5e32-217f-4d03-b7b6-78b9c0cda46a"
+              }
+            ],
+            "modified": [
+              {
+                "piece": {
+                  "id": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
+                },
+                "diff": {
+                  "name": "piece-modified",
+                  "isHidden": true,
+                  "isLocked": true,
+                  "description": "Updated piece description"
+                }
+              }
+            ],
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000010",
+                "name": "new-test-piece",
+                "scale": 1.5,
+                "mirrorPlane": {
+                  "origin": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                  }
+                },
+                "description": "New piece for testing",
+                "props": [],
+                "attributes": [],
+                "pose": {
+                  "plane": {
+                    "origin": {
+                      "x": 5,
+                      "y": 5,
+                      "z": 5
+                    },
+                    "xAxis": {
+                      "x": 1,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "yAxis": {
+                      "x": 0,
+                      "y": 1,
+                      "z": 0
+                    }
+                  },
+                  "center": {
+                    "u": 3,
+                    "v": 7
+                  }
+                }
+              }
+            ]
+          },
+          "connections": {
+            "removed": [
+              {
+                "id": "c18d2e83-0821-4ab7-9547-494021854fc1"
+              },
+              {
+                "id": "23d871a4-a4a9-46b2-bc25-9d196d8c0418"
+              },
+              {
+                "id": "d75e9ac3-bb29-403e-9ec2-90f4f4e0dbe7"
+              }
+            ],
+            "modified": [
+              {
+                "connection": {
+                  "id": "883929fa-4fea-4eae-bc93-ae08b7271527"
+                },
+                "diff": {
+                  "gap": 100,
+                  "shift": 50.8,
+                  "rise": 25,
+                  "rotation": 45,
+                  "turn": 90,
+                  "tilt": 15,
+                  "u": -0.43000000000000005,
+                  "v": 0.5700000000000001,
+                  "description": "Updated connection description"
+                }
+              }
+            ],
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000011",
+                "parent": {},
+                "child": {},
+                "gap": 10,
+                "shift": 5,
+                "rise": 2,
+                "rotation": 0,
+                "turn": 0,
+                "tilt": 0,
+                "u": 0,
+                "v": 0,
+                "description": "New test connection",
+                "attributes": []
+              }
+            ]
+          },
+          "attributes": {
+            "added": [
+              {
+                "id": "019caa00-0000-7000-a000-000000000012",
+                "key": "design.new.attr",
+                "value": "new-design-attr",
+                "definition": "New design attribute"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000016",
+        "name": "New Comprehensive Design",
+        "families": [],
+        "isAbstract": false,
+        "folder": "new-design-folder",
+        "pieces": [
+          {
+            "id": "019caa00-0000-7000-a000-000000000013",
+            "name": "new-design-piece-1",
+            "scale": 1,
+            "props": [],
+            "attributes": [],
+            "pose": {
+              "plane": {
+                "origin": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "xAxis": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "yAxis": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                }
+              },
+              "center": null
+            }
+          },
+          {
+            "id": "019caa00-0000-7000-a000-000000000014",
+            "name": "new-design-piece-2",
+            "scale": 1,
+            "props": [],
+            "attributes": [],
+            "pose": {
+              "plane": {
+                "origin": {
+                  "x": 10,
+                  "y": 0,
+                  "z": 0
+                },
+                "xAxis": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "yAxis": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                }
+              },
+              "center": null
+            }
+          }
+        ],
+        "_connections": [
+          {
+            "id": "019caa00-0000-7000-a000-000000000018",
+            "parent": {},
+            "child": {},
+            "gap": 0,
+            "description": "New design connection",
+            "attributes": []
+          }
+        ],
+        "stats": [],
+        "props": [
+          {
+            "id": "019caa00-0000-7000-a000-000000000019",
+            "quality": {
+              "id": "019caa00-0000-7000-a000-00000000001a"
+            },
+            "value": "test",
+            "attributes": []
+          }
+        ],
+        "layers": [
+          {
+            "id": "019caa00-0000-7000-a000-000000000015",
+            "path": "default",
+            "attributes": []
+          }
+        ],
+        "activeLayer": {
+          "id": "019caa00-0000-7000-a000-000000000015"
+        },
+        "groups": [],
+        "canScale": true,
+        "canMirror": false,
+        "unit": "mm",
+        "location": {
+          "id": "019caa00-0000-7000-a000-000000000017"
+        },
+        "authors": [
+          {
+            "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+          }
+        ],
+        "concepts": [
+          {
+            "id": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+          }
+        ],
+        "icon": "new-design-icon.svg",
+        "image": "new-design-image.png",
+        "description": "New design for testing",
+        "attributes": [
+          {
+            "id": "019caa00-0000-7000-a000-00000000001b",
+            "key": "new.design.attr",
+            "value": "val"
+          }
+        ],
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z"
+      }
+    ]
+  },
+  "tags": {
+    "removed": [
+      {
+        "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+      }
+    ],
+    "modified": [
+      {
+        "tag": {
+          "id": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+        },
+        "diff": {
+          "name": "representation/vnd.3dm Modified"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-00000000001c",
+        "name": "New Test Tag",
+        "description": "New tag",
+        "icon": "test-tag.svg",
+        "attributes": [
+          {
+            "id": "019caa00-0000-7000-a000-00000000001d",
+            "key": "tag.source",
+            "value": "generator"
+          }
+        ]
+      }
+    ]
+  },
+  "concepts": {
+    "removed": [
+      {
+        "id": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+      }
+    ],
+    "modified": [
+      {
+        "concept": {
+          "id": "019adc5e-9205-7364-a213-66fda12e5120"
+        },
+        "diff": {
+          "name": "organic-city Modified"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-00000000001e",
+        "name": "New Concept",
+        "description": "New",
+        "icon": "concept.svg",
+        "attributes": []
+      }
+    ]
+  },
+  "files": {
+    "removed": [
+      {
+        "id": "457d2061-ac4b-4317-8563-ba41afffd149"
+      }
+    ],
+    "modified": [
+      {
+        "file": {
+          "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+        },
+        "diff": {
+          "name": "updated-base_1to500.3dm"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000021",
+        "name": "new-file.txt",
+        "remote": "https://example.com/new-file.txt",
+        "folder": {
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        },
+        "size": 42,
+        "hash": "sha256:newfilehash",
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z"
+      }
+    ]
+  },
+  "folders": {
+    "modified": [
+      {
+        "folder": {
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        },
+        "diff": {
+          "name": "representations-modified"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000022",
+        "name": "test-folder",
+        "parent": {
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        },
+        "description": "New folder",
+        "attributes": [],
+        "createdAt": "2025-12-23T13:40:58.750Z"
+      }
+    ]
+  },
+  "authors": {
+    "modified": [
+      {
+        "author": {
+          "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+        },
+        "diff": {
+          "name": "Ueli Saluz Modified",
+          "email": "modified@semio-tech.org"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000020",
+        "name": "Test Author",
+        "email": "test@example.com",
+        "attributes": []
+      }
+    ]
+  }
+}

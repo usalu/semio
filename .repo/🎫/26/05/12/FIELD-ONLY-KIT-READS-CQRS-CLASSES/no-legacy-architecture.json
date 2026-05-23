@@ -1,0 +1,32 @@
+{
+  "ticketId": "2026/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES",
+  "appEntrySurfacesOnly": [
+    "semio/js/index.ts",
+    "semio/react/index.tsx",
+    "semio/sketchpad/index.tsx"
+  ],
+  "forbiddenModuleSpecifiers": [
+    "@semio/react/host",
+    "@semio/js/legacy-host",
+    "semio/react/host",
+    "semio/js/legacy-host"
+  ],
+  "forbiddenSourceBasenames": [
+    "sketchpad-runtime.tsx",
+    "kit-wasm-store.ts"
+  ],
+  "deletedLegacyPaths": [
+    "semio/react/host (package subpath / folder — removed; only @semio/react root export)",
+    "semio/js/legacy-host (removed; consumers use @semio/js root)",
+    "semio/sketchpad/sketchpad-runtime.tsx (must not exist as entry; inlined into sketchpad/index.tsx)",
+    "semio/**/kit-wasm-store.ts (must not exist as kit bridge; use @semio/js + @semio/react)"
+  ],
+  "validationCommandsRun": [
+    "npx tsc --noEmit -p semio/js",
+    "npx tsc --noEmit -p semio/react",
+    "npx tsc --noEmit -p semio/sketchpad",
+    "cd semio/sketchpad && npx vite build"
+  ],
+  "notes": "Flat re-exports on @semio/js: DiffStatus and OperationResult<T> surfaced at package root for @semio/react re-exports. kitStoreFromKitStoreClient re-exported from @semio/react for sketchpad.",
+  "coordinator": "Entry surfaces: semio/js/index.ts, semio/react/index.tsx, semio/sketchpad/index.tsx only. No @semio/react/host, @semio/js/legacy-host, sketchpad-runtime.tsx, or kit-wasm-store.ts."
+}

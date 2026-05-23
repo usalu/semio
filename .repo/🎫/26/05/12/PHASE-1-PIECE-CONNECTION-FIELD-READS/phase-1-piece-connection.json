@@ -1,0 +1,134 @@
+{
+  "ticket": "2026/05/12/PHASE-1-PIECE-CONNECTION-FIELD-READS",
+  "scope": "Phase 1 — Piece, PiecesOperations, Connection only (field-only kit reads + PieceOperationInput / PiecesOperationInput mutations)",
+  "schemaRefs": {
+    "pieceOperationInput": "semio/graphql/target.schema.graphql#PieceOperationInput",
+    "piecesOperationInput": "semio/graphql/target.schema.graphql#PiecesOperationInput",
+    "pieceType": "semio/graphql/target.schema.graphql#Piece",
+    "connectionType": "semio/graphql/target.schema.graphql#Connection"
+  },
+  "js": {
+    "regions": ["🧩Piece", "🪢PiecesOperations", "⛓️Connection"],
+    "pieceReads": [
+      "readName",
+      "readDescription",
+      "readIcon",
+      "readScale",
+      "readPosition",
+      "readFlatPosition",
+      "readPlane",
+      "readCenter",
+      "readFlatPlane",
+      "readFlatCenter",
+      "readBlueprint",
+      "readAttributes",
+      "readConnectionKind",
+      "readParentPieceId",
+      "readParentConnectionId",
+      "readChildPieceIds",
+      "readChildConnectionIds",
+      "readDepth"
+    ],
+    "pieceMutations": [
+      "rename",
+      "changeDescription",
+      "drag",
+      "move",
+      "fix",
+      "changeBlueprint",
+      "addAttribute",
+      "removeAttribute",
+      "removeAttributes"
+    ],
+    "piecesOperationsMutations": ["drag", "move", "fix", "changeBlueprint"],
+    "connectionReads": [
+      "readName",
+      "readDescription",
+      "readIcon",
+      "readGap",
+      "readShift",
+      "readRise",
+      "readRotation",
+      "readTurn",
+      "readTilt",
+      "readU",
+      "readV",
+      "readConnected",
+      "readConnecting",
+      "readAttributes"
+    ],
+    "newExportedTypes": ["PieceBlueprintWire", "ConnectionSideWire"],
+    "ancillaryFixForTsc": {
+      "file": "semio/js/index.ts",
+      "region": "🔘Port",
+      "note": "React already exposed usePortCode/usePortLabel/…; Port gained matching read* methods so `npx tsc -p semio/react` succeeds."
+    }
+  },
+  "react": {
+    "regions": ["🧩Piece", "🪢Pieces", "⛓️Connection"],
+    "pieceHooks": {
+      "selector": ["usePiece"],
+      "reads": [
+        "usePieceName",
+        "usePieceDescription",
+        "usePieceIcon",
+        "usePieceScale",
+        "usePiecePosition",
+        "usePieceFlatPosition",
+        "usePiecePlane",
+        "usePieceCenter",
+        "usePieceFlatPlane",
+        "usePieceFlatCenter",
+        "usePieceBlueprint",
+        "usePieceAttributes",
+        "usePieceConnectionKind",
+        "usePieceParentPieceId",
+        "usePieceParentConnectionId",
+        "usePieceChildPieceIds",
+        "usePieceChildConnectionIds",
+        "usePieceDepth"
+      ],
+      "writes": [
+        "useRenamePiece",
+        "useChangePieceDescription",
+        "useDragPiece",
+        "useMovePiece",
+        "useFixPiece",
+        "useChangePieceBlueprint",
+        "useAddPieceAttribute",
+        "useRemovePieceAttribute",
+        "useRemovePieceAttributes"
+      ]
+    },
+    "piecesHooks": ["useDragPieces", "useMovePieces", "useFixPieces", "useChangePiecesBlueprint"],
+    "connectionHooks": {
+      "selector": ["useConnection"],
+      "reads": [
+        "useConnectionGap",
+        "useConnectionShift",
+        "useConnectionRise",
+        "useConnectionRotation",
+        "useConnectionTurn",
+        "useConnectionTilt",
+        "useConnectionU",
+        "useConnectionV",
+        "useConnectionConnected",
+        "useConnectionConnecting",
+        "useConnectionName",
+        "useConnectionDescription",
+        "useConnectionIcon",
+        "useConnectionAttributes"
+      ],
+      "removed": ["useConnectionGapField (replaced by useConnectionGap)"]
+    }
+  },
+  "verification": {
+    "tsc": [
+      "npx tsc --noEmit -p semio/js/tsconfig.json",
+      "npx tsc --noEmit -p semio/react/tsconfig.json"
+    ],
+    "tscExitCode": 0,
+    "vitestReact": "semio/react — `npx vitest run` (1 test, passed)",
+    "embeddedJsTests": "semio/js — guarded by SEMIO_JS_RUN_EMBEDDED_TESTS=1; added Piece.readName + Connection.readConnected stub tests (not executed in default vitest run for index.ts)"
+  }
+}

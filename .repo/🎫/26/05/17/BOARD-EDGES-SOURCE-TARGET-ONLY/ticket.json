@@ -1,0 +1,11 @@
+{
+  "title": "Board Edges Source Target Only",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Unify board edge JSON and code to only use `source`/`target` (remove `from`/`to`, `in`/`out` aliases) across elements board: fixtures, generator scripts, assets, Rust readers, TS parser/tests.",
+  "summary": "Board fixture edges and JSX now use only `source`/`target`: `parseBoardFixtureV1` rejects legacy `from`/`to`; Rust `fixture_edge_handle_ids_from_object` reads only those keys; Nakagin generator `kitConnectionEnds` returns `{source,target}` and emitted edges use the same; rewrote `.storybook/fixtures/nakagin-capsule-tower.board.json` (179 edges); `Board.stories.tsx` types and `\u003cEdge source target /\u003e` aligned with `BoardEdgeProps`. Vitest in `elements/client/lib/board` 65 passed; `cargo check -p elements_board --target wasm32-unknown-unknown` passed.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8e0976db982c465c973f3b833831da32"
+  ]
+}

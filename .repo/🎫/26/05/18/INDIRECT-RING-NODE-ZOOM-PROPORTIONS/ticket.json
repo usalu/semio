@@ -1,0 +1,14 @@
+{
+  "title": "Indirect Ring Node Zoom Proportions",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Fix board indirect-connect ring vs node proportions when zooming: ring must not push handles outward on zoom out; ring–node spacing and handle marker scale should stay visually consistent.",
+  "summary": "Indirect-connect ghost ring offset is now proportional to node half-extent (0.7×) in world space instead of a fixed 28 CSS px gap scaled by 1/zoom. Ring handles and node body now scale together when zooming so the ring no longer pushes handles outward on zoom out. Shared `indirect_node_half_extent` helper; test asserts stable rim-to-ring ratio across zoom.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1429"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪3116633482c1473986d95ebb7779c082"
+  ]
+}

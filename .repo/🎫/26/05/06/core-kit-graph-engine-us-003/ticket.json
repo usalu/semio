@@ -1,0 +1,7 @@
+{
+  "id": "2026/05/06/core-kit-graph-engine-us-003",
+  "title": "Implement Semio Rs Core Kit Graph Engine",
+  "story": "US-003",
+  "status": "closed",
+  "summary": "Pointer-backed kit graph slots, kit_graph_engine module, deterministic semantic diffs, projectionFingerprint aligned with golden, apply_semantic_op_json."
+}

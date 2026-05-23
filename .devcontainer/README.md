@@ -2,11 +2,63 @@
 
 Devcontainer configuration and lifecycle scripts.
 
+# Neo4j Desktop and MCP
+
+The monorepo registers Neo4j MCP servers in `.mcp.json` and per-client copies. They use `uvx mcp-neo4j-cypher` against graph database **`semio`** (Neo4j Community: one user database per DBMS, named `semio` via `initial.dbms.default_database`).
+
+MCP server ids include **`neo4j-semio`**, **`neo4j-elements`**, **`neo4j-coda`**, **`neo4j-reuse`**, **`neo4j-metabolism`** (argv targets Bolt graph **`metabolism`**), and **`neo4j-extra`** (targets **`NEO4J_EXTRA_GRAPH_DATABASE`** when set).
+**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. On DBMS editions that support multiple user databases, create the product graphs **`elements`**, **`coda`**, **`reuse`**, and any extra Bolt names you list in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated) so `bun run generate` and MCP can target them. Graph argv for `neo4j-*` / `generate neo4j`: one or more tokens joined with `-` (e.g. `… neo4j my graph` → database `my-graph`). On **Neo4j Community**, only **one** standard user graph exists per DBMS; use **Enterprise** (or equivalent) for multiple isolated graphs, or point every MCP entry at your single graph name. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
+
+Native Neo4j Desktop connection:
+
+- URL: **`bolt://127.0.0.1:7687`**
+- User: **`neo4j`**
+- Password: **`password`**
+- Browser: **`http://127.0.0.1:7474`**
+- Database: **`semio`**
+
+**Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
+
+**Neo4j Desktop remote connection for devcontainers:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:
+
+1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` on Windows, or `nc -vz 127.0.0.1 7687` on macOS/Linux.
+2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.
+3. Browser: **`http://127.0.0.1:7474`** with the same credentials.
+
+**Database:** The devcontainer’s sole user graph database is named **`semio`** (not `neo4j`). Legacy stores that still have only `neo4j` are cleared once on post-start so the DBMS can bootstrap `semio`.
+
 # Docs
 
 ## devcontainer.json
 
 Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and Playwright cache under `node_modules`.
+
+## docker-compose.yml
+
+Compose stack for the devcontainer: **`semio`** only. Neo4j is installed in the **`semio`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.repo/🛂`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`semio`**.
+
+## Neo4j Cypher Persistence
+
+APOC Core and APOC Extended are installed in the **`semio`** image and configured for file import/export. The canonical repo persistence paths are:
+
+- **`.repo/🛂/semio.cypher`**
+- **`.repo/🛂/elements.cypher`**
+- **`.repo/🛂/coda.cypher`**
+- **`.repo/🛂/reuse.cypher`**
+
+On devcontainer start, **`post-start.sh`** imports non-empty schema files with **`apoc.cypher.runFile`** only when the live database is empty. Export technology-scoped graph state with APOC query exports instead of dumping the whole database, for example:
+
+```cypher
+CALL apoc.export.cypher.query(
+  'MATCH (n:Semio) OPTIONAL MATCH (n)-[r]->(m:Semio) RETURN n, r, m',
+  '/workspaces/semio/.repo/\uD83D\uDEC2/semio.cypher',
+  {format: 'cypher-shell'}
+);
+```
+
+## semio-entrypoint.sh
+
+Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`semio`**.
 
 ## post-create.sh
 
@@ -14,7 +66,7 @@ Devcontainer provisioning steps for dependency installs, including Playwright br
 
 ## post-start.sh
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, writes Neo4j MCP environment defaults, configures and starts the local Neo4j service, checks **`localhost:7687`**, and activates the Python virtual environment.
 
 ## post-attach.sh
 

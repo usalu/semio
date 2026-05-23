@@ -1,0 +1,22 @@
+{
+  "name": "@coda/assistant",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/client/ui/assistant",
+        "command": "uv run main.py",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/client/ui/assistant",
+        "command": "bunx vite build --config vite.mcp-app.config.ts",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

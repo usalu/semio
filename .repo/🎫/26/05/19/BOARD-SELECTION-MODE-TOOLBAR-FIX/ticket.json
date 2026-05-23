@@ -1,0 +1,14 @@
+{
+  "title": "Board Selection Mode Toolbar Fix",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Fix board toolbar selection modes: Ctrl and Shift should switch between default, additive, subtractive, and invertive modes, and the default mode must be visible in the toolbar. Validate behavior with existing tests or targeted runtime checks.",
+  "summary": "Added the board selection default mode to the toolbar, made default the initial selection mode, mapped the public default mode to WASM replace behavior, passed Ctrl/Meta and Shift through pointer down/move/up, and added coverage for default/Shift/Ctrl/Ctrl+Shift selection behavior. Validation: `bun nx run @elements/board:test` passed Rust tests and Vitest; the full target then failed in unrelated Playwright checks for the board background context menu and Redraw toolbar. Focused runtime probe against board play confirmed one Default toolbar button and Shift/Ctrl/Ctrl+Shift/plain selection transitions with no console errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1451"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e3b6c5cf5be348a29c2157134fa94b01"
+  ]
+}

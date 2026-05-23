@@ -1,0 +1,19 @@
+{
+  "title": "Sketchpad Field Hooks Migration",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Migrate semio/sketchpad/index.tsx to field-only kit reads: schema 1:1 hooks from @semio/react, inline sub-selections, [op,opStatus] mutations, 🎨Sketchpad regions, 🧪NegativeGrep vitest. No edits to semio/js or semio/react.",
+  "summary": "semio/react §7.1.2 schema-hook migration blocked: @semio/js no longer exports symbols the 18k-line react bundle and sketchpad import; semio/js still fails tsc; Piece lacks read* for field hooks. Added footer pointer to react-blocker.json; artefact at .repo/🎫/26/05/12/field-only-kit-reads-cqrs-classes/react-blocker.json.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1413"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "09fc9816",
+    "local": "field-only_kit_reads_refactor_09fc9816.plan.md"
+  },
+  "sessions": [
+    "⚪ef002037c0654a378f1b99283d80c755"
+  ]
+}

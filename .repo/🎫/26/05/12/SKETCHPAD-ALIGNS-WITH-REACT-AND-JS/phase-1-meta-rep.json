@@ -1,0 +1,38 @@
+{
+  "date": "2026-05-12",
+  "planId": "09fc9816",
+  "phase": 1,
+  "scope": [
+    "Author",
+    "Quality",
+    "Tag",
+    "Concept",
+    "Representation",
+    "W-BulkyExtras",
+    "WeakEntities"
+  ],
+  "js": {
+    "file": "semio/js/index.ts",
+    "wireParsers": "🧬Entity/🧩WireParsers — shared parseAttributeConnectionUnder for tag/concept/quality/representation attributes edges",
+    "readOnlyEntities": ["Author", "Representation", "Family", "FileEntity", "FolderEntity", "LayerEntity", "GroupEntity", "StatEntity", "PropEntity"],
+    "representation": {
+      "planLodHook": "useRepresentationLod",
+      "schemaField": "qualities",
+      "jsMethod": "readQualityIds",
+      "note": "GraphQL Representation has qualities, not lod; React hook useRepresentationLod reads quality id list per field-only naming from plan."
+    },
+    "weakEntities": {
+      "AttributeWire": "Added definition:string to match Attribute type",
+      "BenchmarkWire": "Extended with min/max/minExcluded/maxExcluded for Quality.readBenchmarks"
+    }
+  },
+  "react": {
+    "file": "semio/react/index.tsx",
+    "regions": ["✍️Author", "💎Quality", "🏷️Tag", "💡Concept", "🎨Representation"],
+    "contextsAdded": ["RepresentationEntityContextProvider", "useRepresentationEntity"],
+    "readOnlyHooks": "Author and Representation export only bindFieldToReact-based reads (no bindOpToReact for those entities)"
+  },
+  "verify": {
+    "tsc": "npx tsc -p semio/js/tsconfig.json --noEmit && npx tsc -p semio/react/tsconfig.json --noEmit (cwd semio/js and semio/react respectively)"
+  }
+}

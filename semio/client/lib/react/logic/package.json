@@ -1,0 +1,40 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio/react",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "semio · react",
+  "exports": {
+    ".": "./index.tsx"
+  },
+  "dependencies": {
+    "@semio/js": "*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@semio/assets": "^1.0.0",
+    "@types/node": "^25.0.8",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "cross-env": "^10.1.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "semio/client/lib/react"
+  },
+  "bundleKind": "library"
+}

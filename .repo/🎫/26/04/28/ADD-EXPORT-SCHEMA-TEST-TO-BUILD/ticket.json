@@ -1,0 +1,13 @@
+{
+  "title": "Add Export Schema Test to Build",
+  "emoji": "📜",
+  "status": "open",
+  "description": "The `npx nx build semio/graphql` command runs `cargo test export_semio_graphql_schema_file -- --ignored --nocapture` to write the GraphQL SDL to `semio/graphql/schema.graphql`. This test exists in `lib.old.rs` but was not ported to the current `lib.rs`, so the build produces 0 tests and the schema file is never updated. Add the `export_semio_graphql_schema_file` ignored test to the `tests` module in `semio/rs/lib.rs`, using `block_on(crate::gql::sdl())` to generate the SDL.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1393"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪83190e4f213b40fdaac8db4df6717c1e"
+  ]
+}

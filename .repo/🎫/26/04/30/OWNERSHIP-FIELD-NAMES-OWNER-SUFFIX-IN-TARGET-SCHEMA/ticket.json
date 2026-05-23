@@ -1,0 +1,10 @@
+{
+  "title": "Ownership Field Names Owner Suffix in Target Schema",
+  "emoji": "📛",
+  "status": "open",
+  "description": "Rename all ownership bridge fields in semio/graphql/target.schema.graphql from ownerFoo pattern to fooOwner (owner suffix second), including ownerEntity→entityOwner and Diff/Operation shared fields (ownerDiffs→diffsOwner, etc.). Align Entity interface with entityOwner: OwnerEntity and update commented StrongEntity stub.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪6fc6cb229b4b4344a61d3d58b982f29a"
+  ]
+}

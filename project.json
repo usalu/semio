@@ -1,0 +1,229 @@
+{
+  "name": "workspace",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": ".",
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts setup"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts start"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev",
+        "forwardAllArgs": true
+      }
+    },
+    "dev-storybook": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-mcp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev mcp",
+        "forwardAllArgs": true
+      }
+    },
+    "dev-mcp-engine": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev mcp engine",
+        "forwardAllArgs": true
+      }
+    },
+    "dev-mcp-repo": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev mcp repo",
+        "forwardAllArgs": true
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-neo4j": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts generate neo4j",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-neo4j-migrate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./.repo/🎫/26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN/migrate.neo4j.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts lint",
+        "forwardAllArgs": true
+      }
+    },
+    "lint-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts lint repo"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts format"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts test storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "build-storybook": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts build storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "cpp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-setup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp setup",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-configure": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-setup"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp configure",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-configure"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp build",
+        "forwardAllArgs": true
+      }
+    },
+    "cpp-test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["cpp-build"],
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts cpp test",
+        "forwardAllArgs": true
+      }
+    },
+    "setup-storybook": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bunx playwright install --with-deps chromium",
+        "env": {
+          "PLAYWRIGHT_BROWSERS_PATH": "node_modules/.cache/ms-playwright"
+        }
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts publish",
+        "forwardAllArgs": true
+      }
+    },
+    "purge": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts purge",
+        "forwardAllArgs": true
+      }
+    },
+    "seed-neo4j-metabolism-light-kit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts seed neo4j metabolism-light-kit",
+        "forwardAllArgs": true,
+        "env": {
+          "NEO4J_DATABASE": "metabolism"
+        }
+      }
+    }
+  }
+}

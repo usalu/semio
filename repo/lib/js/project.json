@@ -1,0 +1,22 @@
+{
+  "name": "@repo/lib",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "repo/lib/js",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{workspaceRoot}/repo/lib/js",
+        "command": "bunx tsc -p tsconfig.json --noEmit"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{workspaceRoot}/repo/lib/js",
+        "command": "bun test"
+      }
+    }
+  }
+}

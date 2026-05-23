@@ -2,12 +2,9 @@
   "name": "@semio/assets",
   "version": "1.0.0",
   "type": "module",
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/assets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": ".",
   "projectType": "library",
-  "scripts": {
-    "build": "node -e \"console.log('@semio/assets is a source-only workspace and does not require a build step.')\""
-  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

@@ -2225,30 +2225,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🛠️getabsolutepath",
+            "id": "🧩elements🛅ui🛅storybook💻main🛠️getabsolutepath",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 22
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨dirname",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨dirname",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨filename",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨filename",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨require",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨require",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌1📌60"
+          "🧩elements🛅ui🛅storybook💻main📌1📌60"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚16⏱️05",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2287,30 +2287,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🛠️getabsolutepath",
+            "id": "🧩elements🛅ui🛅storybook💻main🛠️getabsolutepath",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 22
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨dirname",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨dirname",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨filename",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨filename",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨require",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨require",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌1📌60"
+          "🧩elements🛅ui🛅storybook💻main📌1📌60"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚16⏱️16",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2349,14 +2349,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 55
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌60📌120"
+          "🧩elements🛅ui🛅storybook💻main📌60📌120"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚16⏱️21",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2395,14 +2395,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 55
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌60📌120"
+          "🧩elements🛅ui🛅storybook💻main📌60📌120"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚16⏱️33",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2659,22 +2659,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories✂️story",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories✂️story",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories🪨default",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories🪨default",
             "loc": 42
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories🪨meta",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories🪨meta",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories📌1📌80"
+          "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚17⏱️27",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2713,22 +2713,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories✂️story",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories✂️story",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories🪨default",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories🪨default",
             "loc": 42
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories🪨meta",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories🪨meta",
             "loc": 8
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️aggregation🥼treestories📌1📌80"
+          "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️aggregation🥼treestories📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚17⏱️39",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2767,13 +2767,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻preview"
+            "id": "🧩elements🛅ui🛅storybook💻preview"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻preview📌1📌80"
+          "🧩elements🛅ui🛅storybook💻preview📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚17⏱️59",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2812,13 +2812,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻preview"
+            "id": "🧩elements🛅ui🛅storybook💻preview"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻preview📌1📌80"
+          "🧩elements🛅ui🛅storybook💻preview📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚18⏱️13",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -2935,7 +2935,7 @@
         "new": "    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@elements/ui\": resolve(__dirname, \"..\"),\n      \"@semio/js\": resolve(__dirname, \"../../../semio/js\"),\n      \"@coda/desktop\": resolve(__dirname, \"../../../coda/desktop\"),\n    };",
         "old": "    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@elements/ui\": resolve(__dirname, \"..\"),\n      \"@semio/js\": resolve(__dirname, \"../../../semio/js\"),\n    };",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook💻main",
+        "path": "🧩elements🛅ui🛅storybook💻main",
         "second": "🎆26🌙03☀️14⏰00⌚18⏱️48",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl"
@@ -2975,7 +2975,7 @@
         "new": "    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@elements/ui\": resolve(__dirname, \"..\"),\n      \"@semio/js\": resolve(__dirname, \"../../../semio/js\"),\n      \"@coda/desktop\": resolve(__dirname, \"../../../coda/desktop\"),\n    };",
         "old": "    config.resolve = config.resolve || {};\n    config.resolve.alias = {\n      ...(config.resolve.alias || {}),\n      \"@elements/ui\": resolve(__dirname, \"..\"),\n      \"@semio/js\": resolve(__dirname, \"../../../semio/js\"),\n    };",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook💻main",
+        "path": "🧩elements🛅ui🛅storybook💻main",
         "second": "🎆26🌙03☀️14⏰00⌚18⏱️58",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl"
@@ -3015,7 +3015,7 @@
         "new": "  stories: [\"./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\", \"./stories/coda/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],",
         "old": "  stories: [\"./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook💻main",
+        "path": "🧩elements🛅ui🛅storybook💻main",
         "second": "🎆26🌙03☀️14⏰00⌚19⏱️03",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl"
@@ -3055,7 +3055,7 @@
         "new": "  stories: [\"./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\", \"./stories/coda/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],",
         "old": "  stories: [\"./stories/elements/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)\"],",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook💻main",
+        "path": "🧩elements🛅ui🛅storybook💻main",
         "second": "🎆26🌙03☀️14⏰00⌚19⏱️16",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl"
@@ -3873,18 +3873,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🛠️codathemewrapper",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🛠️codathemewrapper",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🪨treppenraumreport",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🪨treppenraumreport",
             "loc": 22
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌80"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚24⏱️29",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -3923,18 +3923,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🛠️codathemewrapper",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🛠️codathemewrapper",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🪨treppenraumreport",
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories🪨treppenraumreport",
             "loc": 22
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌80"
+          "🧩elements🛅ui🛅storybook🗃️stories🗃️coda🥼validationtreestories📌1📌80"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚24⏱️40",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -4610,30 +4610,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🛠️getabsolutepath",
+            "id": "🧩elements🛅ui🛅storybook💻main🛠️getabsolutepath",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 22
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨dirname",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨dirname",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨filename",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨filename",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨require",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨require",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌1📌60"
+          "🧩elements🛅ui🛅storybook💻main📌1📌60"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚26⏱️35",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -4672,30 +4672,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🛠️getabsolutepath",
+            "id": "🧩elements🛅ui🛅storybook💻main🛠️getabsolutepath",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 22
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨dirname",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨dirname",
             "loc": 2
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨filename",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨filename",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨require",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨require",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌1📌60"
+          "🧩elements🛅ui🛅storybook💻main📌1📌60"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚26⏱️49",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -4734,14 +4734,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 41
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌60📌100"
+          "🧩elements🛅ui🛅storybook💻main📌60📌100"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚26⏱️52",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",
@@ -4780,14 +4780,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook💻main🪨config",
+            "id": "🧩elements🛅ui🛅storybook💻main🪨config",
             "loc": 41
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook💻main📌60📌100"
+          "🧩elements🛅ui🛅storybook💻main📌60📌100"
         ],
         "second": "🎆26🌙03☀️14⏰00⌚27⏱️06",
         "session": "⚪53279b97c4d846adba8e6fc69c42ad6d",

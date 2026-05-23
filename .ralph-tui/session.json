@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "sessionId": "205b4032-ce5d-4414-9a09-de1e62aad79c",
+  "status": "running",
+  "startedAt": "2026-05-06T20:59:23.997Z",
+  "updatedAt": "2026-05-07T09:49:03.842Z",
+  "currentIteration": 7,
+  "maxIterations": 10,
+  "tasksCompleted": 7,
+  "isPaused": false,
+  "agentPlugin": "cursor",
+  "trackerState": {
+    "plugin": "json",
+    "prdPath": "./tasks/prd.json",
+    "totalTasks": 8,
+    "tasks": [
+      {
+        "id": "US-001",
+        "title": "Align Kit Asset Contracts With Snapshot + Change History Model",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-002",
+        "title": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-003",
+        "title": "Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-004",
+        "title": "Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-005",
+        "title": "Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-006",
+        "title": "Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-007",
+        "title": "Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
+        "status": "completed",
+        "completedInSession": true
+      },
+      {
+        "id": "US-008",
+        "title": "Sketchpad Integration Demonstrating End-To-End Store Workflows",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "status": "completed",
+      "taskId": "US-001",
+      "taskTitle": "Align Kit Asset Contracts With Snapshot + Change History Model",
+      "taskCompleted": true,
+      "durationMs": 1197781,
+      "startedAt": "2026-05-06T20:59:34.384Z",
+      "endedAt": "2026-05-06T21:19:32.165Z"
+    },
+    {
+      "iteration": 2,
+      "status": "completed",
+      "taskId": "US-002",
+      "taskTitle": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
+      "taskCompleted": true,
+      "durationMs": 455430,
+      "startedAt": "2026-05-06T21:19:34.107Z",
+      "endedAt": "2026-05-06T21:27:09.537Z"
+    },
+    {
+      "iteration": 3,
+      "status": "completed",
+      "taskId": "US-003",
+      "taskTitle": "Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)",
+      "taskCompleted": true,
+      "durationMs": 415866,
+      "startedAt": "2026-05-06T21:27:11.487Z",
+      "endedAt": "2026-05-06T21:34:07.353Z"
+    },
+    {
+      "iteration": 4,
+      "status": "completed",
+      "taskId": "US-004",
+      "taskTitle": "Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs",
+      "taskCompleted": true,
+      "durationMs": 626357,
+      "startedAt": "2026-05-06T21:34:09.319Z",
+      "endedAt": "2026-05-06T21:44:35.676Z"
+    },
+    {
+      "iteration": 5,
+      "status": "completed",
+      "taskId": "US-005",
+      "taskTitle": "Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql",
+      "taskCompleted": true,
+      "durationMs": 189242,
+      "startedAt": "2026-05-06T21:44:37.508Z",
+      "endedAt": "2026-05-06T21:47:46.750Z"
+    },
+    {
+      "iteration": 6,
+      "status": "completed",
+      "taskId": "US-006",
+      "taskTitle": "Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching",
+      "taskCompleted": true,
+      "durationMs": 1325649,
+      "startedAt": "2026-05-06T21:47:48.670Z",
+      "endedAt": "2026-05-06T22:09:54.319Z"
+    },
+    {
+      "iteration": 7,
+      "status": "completed",
+      "taskId": "US-007",
+      "taskTitle": "Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks",
+      "taskCompleted": true,
+      "durationMs": 279162,
+      "startedAt": "2026-05-06T22:09:56.208Z",
+      "endedAt": "2026-05-06T22:14:35.370Z"
+    }
+  ],
+  "skippedTaskIds": [],
+  "cwd": "/workspaces/semio",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}

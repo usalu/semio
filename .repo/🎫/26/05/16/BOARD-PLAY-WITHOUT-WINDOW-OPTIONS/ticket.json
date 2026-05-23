@@ -1,0 +1,10 @@
+{
+  "title": "Board Play Without Window Options",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Board play should not show window options rail unless kinds define options.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪1f3e496d7b6a4baab656dbc2e407b421"
+  ]
+}

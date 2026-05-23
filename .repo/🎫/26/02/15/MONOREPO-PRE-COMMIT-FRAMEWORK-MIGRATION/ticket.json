@@ -1,8 +1,0 @@
-{
-  "title": "Monorepo Pre-Commit Framework Migration",
-  "emoji": "📝",
-  "status": "closed",
-  "description": "Replace husky with a global pre-commit setup for the monorepo.",
-  "summary": "Migrated monorepo pre-commit to pre-commit.com and validated install/run.",
-  "goal": "🎯aioptimizedrepo"
-}

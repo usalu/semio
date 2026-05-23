@@ -1,0 +1,14 @@
+{
+  "title": "Board Modifier Selection Modes",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Board selection: add replace (default) merge mode; modifier chords Ctrl=subtractive, Shift=additive, Ctrl+Shift=invertive override toolbar mode on pointer; extend WASM pointerDownScreen with ctrl/meta flag; remove shift+empty pan (middle-button pan only). Update play toolbar default to replace and add Replace control.",
+  "summary": "Area-select modifier chord bridge (window keydown/keyup during marquee) now only runs for physical modifier keys (Shift/Ctrl/Meta/Alt via event.code) and ignores event.repeat. Other hotkeys no longer call pointerMoveScreen with wrong modifier state, which was clearing or corrupting the live selection display.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪34957778b3ea4e34b69345d137e28ddb",
+    "⚪fe250b60efb84c5fa5dd66bdf9892837",
+    "⚪f6c334fee36143d7b6a4d2cdc475a293",
+    "⚪8991f703b7bc4ec1b6a9059c1e1fadae"
+  ]
+}

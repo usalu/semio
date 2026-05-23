@@ -1,0 +1,36 @@
+{
+  "name": "@repo/client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "go run ./repo/client/mcp",
+        "env": {
+          "GOWORK": "go.work"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun -e \"import { execFileSync } from 'node:child_process'; execFileSync('go', ['build', '-o', process.platform === 'win32' ? 'repo/client/client.exe' : 'repo/client/client', './repo/client/mcp'], { stdio: 'inherit' });\"",
+        "env": {
+          "GOWORK": "go.work"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client",
+        "command": "go test -timeout 120s -count=1 -v ./...",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

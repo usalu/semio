@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Kit Operation Signatures",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Normalize semio/rs KitOperation signatures so every operation variant is shaped as { scope, input }, with ids moved into dedicated scope structs and non-id payload moved into input structs. Update the pure to_diff and to_backwards pipeline and any affected command conversion or worker execution paths in semio/rs/lib.rs. Validate with focused Rust checks/tests if available.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1408"
+  },
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪05e1077c3fbd469fbf8f1dd5e81814aa"
+  ]
+}

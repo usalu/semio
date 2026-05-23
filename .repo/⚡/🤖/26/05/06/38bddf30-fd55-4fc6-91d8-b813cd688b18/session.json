@@ -1,0 +1,531 @@
+{
+  "id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+  "uri": "repo://session/38bddf30-fd55-4fc6-91d8-b813cd688b18",
+  "client": "cursor-chat",
+  "second": "2026-05-06T20:39:37Z",
+  "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-05-06T20:39:37Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "is_background_agent": false,
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "sessionStart",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-06T20:39:44Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/home/vscode/.claude/skills/ralph-tui-create-json/SKILL.md"
+          },
+          "tool_use_id": "tool_685e7437-bac9-473a-bb20-a4110165bb2",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-06T20:39:44Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "content": "---\nname: ralph-tui-create-json\ndescription: \"Convert PRDs to prd.json format for ralph-tui execution. Creates JSON task files with user stories, acceptance criteria, and dependencies. Triggers on: create prd.json, convert to json, ralph json, create json tasks.\"\n---\n\n# Ralph TUI - Create JSON Tasks\n\nConverts PRDs to prd.json format for ralph-tui autonomous execution.\n\n\u003e **Note:** This skill is bundled with ralph-tui's JSON tracker plugin. Future tracker plugins (Linear, GitHub Issues, etc.) will bundle their own task creation skills.\n\n\u003e **⚠️ CRITICAL:** The output MUST be a FLAT JSON object with \"name\" and \"userStories\" at the ROOT level. DO NOT wrap content in a \"prd\" object or use \"tasks\" array. See \"Schema Anti-Patterns\" section below.\n\n---\n\n## The Job\n\nTake a PRD (markdown file or text) and create a prd.json file:\n1. **Extract Quality Gates** from the PRD's \"Quality Gates\" section\n2. Parse user stories from the PRD\n3. Append quality gates to each story's acceptance criteria\n4. Set up dependencies between stories\n5. Output ready for `ralph-tui run --prd \u003cpath\u003e`\n\n---\n\n## Step 1: Extract Quality Gates\n\nLook for the \"Quality Gates\" section in the PRD:\n\n```markdown\n## Quality Gates\n\nThese commands must pass for every user story:\n- `pnpm typecheck` - Type checking\n- `pnpm lint` - Linting\n\nFor UI stories, also include:\n- Verify in browser using dev-browser skill\n```\n\nExtract:\n- **Universal gates:** Commands that apply to ALL stories (e.g., `pnpm typecheck`)\n- **UI gates:** Commands that apply only to UI stories (e.g., browser verification)\n\n**If no Quality Gates section exists:** Ask the user what commands should pass, or use a sensible default like `npm run typecheck`.\n\n---\n\n## Output Format\n\nThe JSON file MUST be a FLAT object at the root level:\n\n```json\n{\n  \"name\": \"[Project name from PRD or directory]\",\n  \"branchName\": \"ralph/[feature-name-kebab-case]\",\n  \"description\": \"[Feature description from PRD]\",\n  \"userStories\": [\n    {\n      \"id\": \"US-001\",\n      \"title\": \"[Story title]\",\n      \"description\": \"As a [user], I want [feature] so that [benefit]\",\n      \"acceptanceCriteria\": [\n        \"Criterion 1 from PRD\",\n        \"Criterion 2 from PRD\",\n        \"pnpm typecheck passes\",\n        \"pnpm lint passes\"\n      ],\n      \"priority\": 1,\n      \"passes\": false,\n      \"notes\": \"\",\n      \"dependsOn\": []\n    },\n    {\n      \"id\": \"US-002\",\n      \"title\": \"[UI Story that depends on US-001]\",\n      \"description\": \"...\",\n      \"acceptanceCriteria\": [\n        \"...\",\n        \"pnpm typecheck passes\",\n        \"pnpm lint passes\",\n        \"Verify in browser using dev-browser skill\"\n      ],\n      \"priority\": 2,\n      \"passes\": false,\n      \"notes\": \"\",\n      \"dependsOn\": [\"US-001\"]\n    }\n  ]\n}\n```\n\n---\n\n## CRITICAL: Schema Anti-Patterns (DO NOT USE)\n\nThe following patterns are INVALID and will cause validation errors:\n\n### ❌ WRONG: Wrapper object\n\n```json\n{\n  \"prd\": {\n    \"name\": \"...\",\n    \"userStories\": [...]\n  }\n}\n```\n\nThis wraps everything in a \"prd\" object. **DO NOT DO THIS.** The \"name\" and \"userStories\" fields must be at the ROOT level.\n\n### ❌ WRONG: Using \"tasks\" instead of \"userStories\"\n\n```json\n{\n  \"name\": \"...\",\n  \"tasks\": [...]\n}\n```\n\nThe array is called **\"userStories\"**, not \"tasks\".\n\n### ❌ WRONG: Complex nested structures\n\n```json\n{\n  \"metadata\": {...},\n  \"overview\": {...},\n  \"migration_strategy\": {\n    \"phases\": [...]\n  }\n}\n```\n\nEven if the PRD describes phases/milestones/sprints, you MUST flatten these into a single \"userStories\" array.\n\n### ❌ WRONG: Using \"status\" instead of \"passes\"\n\n```json\n{\n  \"userStories\": [{\n    \"id\": \"US-001\",\n    \"status\": \"open\"  // WRONG!\n  }]\n}\n```\n\nUse `\"passes\": false` for incomplete stories, `\"passes\": true` for completed.\n\n### ✅ CORRECT: Flat structure at root\n\n```json\n{\n  \"name\": \"Android Kotlin Migration\",\n  \"branchName\": \"ralph/kotlin-migration\",\n  \"userStories\": [\n    {\"id\": \"US-001\", \"title\": \"Create Scraper interface\", \"passes\": false, \"dependsOn\": []},\n    {\"id\": \"US-002\", \"title\": \"Implement WeebCentralScraper\", \"passes\": false, \"dependsOn\": [\"US-001\"]}\n  ]\n}\n```\n\n---\n\n## Story Size: The #1 Rule\n\n**Each story must be completable in ONE ralph-tui iteration (~one agent context window).**\n\nRalph-tui spawns a fresh agent instance per iteration with no memory of previous work. If a story is too big, the agent runs out of context before finishing.\n\n### Right-sized stories:\n- Add a database column + migration\n- Add a UI component to an existing page\n- Update a server action with new logic\n- Add a filter dropdown to a list\n\n### Too big (split these):\n- \"Build the entire dashboard\" → Split into: schema, queries, UI components, filters\n- \"Add authentication\" → Split into: schema, middleware, login UI, session handling\n- \"Refactor the API\" → Split into one story per endpoint or pattern\n\n**Rule of thumb:** If you can't describe the change in 2-3 sentences, it's too big.\n\n---\n\n## Dependencies with `dependsOn`\n\nUse the `dependsOn` array to specify which stories must complete first:\n\n```json\n{\n  \"id\": \"US-002\",\n  \"title\": \"Create API endpoints\",\n  \"dependsOn\": [\"US-001\"],  // Won't be selected until US-001 passes\n  ...\n}\n```\n\nRalph-tui will:\n- Show US-002 as \"blocked\" until US-001 completes\n- Never select US-002 for execution while US-001 is open\n- Include \"Prerequisites: US-001\" in the prompt when working on US-002\n\n**Correct dependency order:**\n1. Schema/database changes (no dependencies)\n2. Backend logic (depends on schema)\n3. UI components (depends on backend)\n4. Integration/polish (depends on UI)\n\n---\n\n## Acceptance Criteria: Quality Gates + Story-Specific\n\nEach story's acceptance criteria should include:\n1. **Story-specific criteria** from the PRD (what this story accomplishes)\n2. **Quality gates** from the PRD's Quality Gates section (appended at the end)\n\n### Good criteria (verifiable):\n- \"Add `status` column to tasks table with default 'open'\"\n- \"Filter dropdown has options: All, Open, Closed\"\n- \"Clicking delete shows confirmation dialog\"\n\n### Bad criteria (vague):\n- ❌ \"Works correctly\"\n- ❌ \"User can do X easily\"\n- ❌ \"Good UX\"\n- ❌ \"Handles edge cases\"\n\n---\n\n## Conversion Rules\n\n1. **Extract Quality Gates** from PRD first\n2. **Each user story → one JSON entry**\n3. **IDs**: Sequential (US-001, US-002, etc.)\n4. **Priority**: Based on dependency order (1 = highest)\n5. **dependsOn**: Array of story IDs this story requires\n6. **All stories**: `passes: false` and empty `notes`\n7. **branchName**: Derive from feature name, kebab-case, prefixed with `ralph/`\n8. **Acceptance criteria**: Story criteria + quality gates appended\n9. **UI stories**: Also append UI-specific gates (browser verification)\n\n---\n\n## Output Location\n\nDefault: `./tasks/prd.json` (alongside the PRD markdown files)\n\nThis keeps all PRD-related files together in the `tasks/` directory.\n\nOr specify a different path - ralph-tui will use it with:\n```bash\nralph-tui run --prd ./path/to/prd.json\n```\n\n---\n\n## Example\n\n**Input PRD:**\n```markdown\n# PRD: Task Priority System\n\nAdd priority levels to tasks.\n\n## Quality Gates\n\nThese commands must pass for every user story:\n- `pnpm typecheck` - Type checking\n- `pnpm lint` - Linting\n\nFor UI stories, also include:\n- Verify in browser using dev-browser skill\n\n## User Stories\n\n### US-001: Add priority field to database\n**Description:** As a developer, I need to store task priority.\n\n**Acceptance Criteria:**\n- [ ] Add priority column: 1-4 (default 2)\n- [ ] Migration runs successfully\n\n### US-002: Display priority badge on task cards\n**Description:** As a user, I want to see task priority at a glance.\n\n**Acceptance Criteria:**\n- [ ] Badge shows P1/P2/P3/P4 with colors\n- [ ] Badge visible without hovering\n\n### US-003: Add priority filter dropdown\n**Description:** As a user, I want to filter tasks by priority.\n\n**Acceptance Criteria:**\n- [ ] Filter dropdown: All, P1, P2, P3, P4\n- [ ] Filter persists in URL\n```\n\n**Output prd.json:**\n```json\n{\n  \"name\": \"Task Priority System\",\n  \"branchName\": \"ralph/task-priority\",\n  \"description\": \"Add priority levels to tasks\",\n  \"userStories\": [\n    {\n      \"id\": \"US-001\",\n      \"title\": \"Add priority field to database\",\n      \"description\": \"As a developer, I need to store task priority.\",\n      \"acceptanceCriteria\": [\n        \"Add priority column: 1-4 (default 2)\",\n        \"Migration runs successfully\",\n        \"pnpm typecheck passes\",\n        \"pnpm lint passes\"\n      ],\n      \"priority\": 1,\n      \"passes\": false,\n      \"notes\": \"\",\n      \"dependsOn\": []\n    },\n    {\n      \"id\": \"US-002\",\n      \"title\": \"Display priority badge on task cards\",\n      \"description\": \"As a user, I want to see task priority at a glance.\",\n      \"acceptanceCriteria\": [\n        \"Badge shows P1/P2/P3/P4 with colors\",\n        \"Badge visible without hovering\",\n        \"pnpm typecheck passes\",\n        \"pnpm lint passes\",\n        \"Verify in browser using dev-browser skill\"\n      ],\n      \"priority\": 2,\n      \"passes\": false,\n      \"notes\": \"\",\n      \"dependsOn\": [\"US-001\"]\n    },\n    {\n      \"id\": \"US-003\",\n      \"title\": \"Add priority filter dropdown\",\n      \"description\": \"As a user, I want to filter tasks by priority.\",\n      \"acceptanceCriteria\": [\n        \"Filter dropdown: All, P1, P2, P3, P4\",\n        \"Filter persists in URL\",\n        \"pnpm typecheck passes\",\n        \"pnpm lint passes\",\n        \"Verify in browser using dev-browser skill\"\n      ],\n      \"priority\": 3,\n      \"passes\": false,\n      \"notes\": \"\",\n      \"dependsOn\": [\"US-002\"]\n    }\n  ]\n}\n```\n\n---\n\n## Running with ralph-tui\n\nAfter creating prd.json:\n```bash\nralph-tui run --prd ./tasks/prd.json\n```\n\nRalph-tui will:\n1. Load stories from prd.json\n2. Select the highest-priority story with `passes: false` and no blocking dependencies\n3. Generate a prompt with story details + acceptance criteria\n4. Run the agent to implement the story\n5. Mark `passes: true` on completion\n6. Repeat until all stories pass\n\n---\n\n## Checklist Before Saving\n\n- [ ] Extracted Quality Gates from PRD (or asked user if missing)\n- [ ] Each story completable in one iteration\n- [ ] Stories ordered by dependency (schema → backend → UI)\n- [ ] `dependsOn` correctly set for each story\n- [ ] Quality gates appended to every story's acceptance criteria\n- [ ] UI stories have browser verification (if specified in Quality Gates)\n- [ ] Acceptance criteria are verifiable (not vague)\n- [ ] No circular dependencies\n",
+          "file_path": "/home/vscode/.claude/skills/ralph-tui-create-json/SKILL.md",
+          "attachments": [],
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-06T20:39:45Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "content": "# PRD: Kit Store Architecture (Contracts-First, Multi-Backbone, Pointer-Based RS Core)\n\n## Overview\n\nReplace the current incomplete kit persistence and layering across `semio/assets/semio`, `semio/graphql`, `semio/rs`, `semio/js`, `semio/react`, and `semio/sketchpad` with a single coherent **kit store architecture**:\n\n- **One root kit snapshot per kit graph**; all history is modeled as an **ordered list of semantic kit changes** (operations + inputs).\n- **Everything is async** end-to-end in `semio/rs`, including backbone IO and GraphQL resolution paths that touch persistence or replay.\n- **Persist only operations + inputs** on backbones (never persist computed kit diffs); **every operation produces a kit diff** in-memory when applied/replayed.\n- **Multiple attachable/detachable backbones at runtime**, notably:\n  - **Dev backbone**: single JSON file.\n  - **Local backbone**: a folder containing `.semio/` with `wip.db`, `staged.db`, `authoratitive.db`, `conflicts.db`, and `blobs/BLOBHASH.EXT` content-addressed blobs.\n- **`semio/rs` is the in-memory source of truth** for kit graphs while attached; UI reads/writes through **`semio/js` → `semio/react`**, with **`useSyncExternalStore` only for kit state** and **granular invalidation** aligned to RS events (no React-wide blind refetch when a narrower projection updates).\n- IPC/schema boundary remains **`semio/graphql/schema.graphql`** (Relay-style extension with owners/children/hashes as already established in the schema direction).\n\nThis PRD is **contracts-first**: finalize contracts (assets + GraphQL) before locking Rust internals, then implement RS, then JS/React, then prove it in sketchpad.\n\n## Goals\n\n- Establish an **unambiguous kit versioning/history model**: root snapshot + ordered semantic changes for **checkpoints, drafts, and transactions**.\n- Provide **two backbone implementations** (dev JSON + local multi-db/blobs) with **attach/detach** runtime switching without leaking backbone details into React.\n- Ensure **`semio/graphql` covers snapshots, diffs, connections, operations, and backbone lifecycle** end-to-end as the primary “done” signal.\n- Ensure **`semio/js` exposes RS capabilities as conventional OO APIs** using RxJS internally, **without duplicating kit caching/state ownership** in JS.\n- Ensure **`semio/react` composes only `semio/js`**, exporting **`[STATE, SETSTATE, STATUS] = use*(…)`** hooks for settable surfaces, and **`useSyncExternalStore`** kit subscriptions that update **only when the subscribed projection changes**.\n- Deliver **`semio/sketchpad` as the integration acceptance surface** demonstrating checkpoints/drafts/transactions + backbone attach/detach.\n\n## Quality Gates\n\nThese commands must pass for **every** user story (run from repo root unless a story explicitly scopes a subdirectory):\n\n**TypeScript packages (`@semio/js`, `@semio/react`, `@semio/sketchpad`, and any touched workspace packages):**\n- `npm --workspace @semio/js run build` — TS typecheck (`tsc --noEmit`)\n- `npm --workspace @semio/react run build` — TS typecheck (`tsc --noEmit`)\n- `npm --workspace @semio/sketchpad run build` — production build gate for sketchpad when sketchpad files change\n\n**Rust (`semio/rs`) when Rust code or GraphQL export wiring changes:**\n- `cargo test --manifest-path semio/rs/Cargo.toml`\n- `cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings`\n\n**GraphQL schema drift gate when schema contract changes:**\n- `npx nx build semio/graphql` — regenerates/validates schema export flow tied to `semio/rs` tests (`semio/graphql/project.json`)\n\n**Embedded/unit tests when behavior changes in TS layers:**\n- `npm --workspace @semio/js test`\n- `npm --workspace @semio/react test`\n\nFor **UI / sketchpad** stories, also include:\n- Verify in browser using the **dev-browser skill** (manual/visual flow verification in addition to automated checks)\n\n## User Stories\n\n### US-001: Align Kit Asset Contracts With Snapshot + Change History Model\n\nAs a contributor, I want the canonical kit asset shapes under `semio/assets/semio` (including patterns exemplified by `semio/assets/semio/metabolism.new.kit.semio.json`) to match the target architecture so that contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.\n\n**Acceptance Criteria:**\n- [ ] Document and encode the intended kit graph model as **one root snapshot + ordered semantic changes**, consistent with how checkpoints/drafts/transactions should serialize references (IDs/hashes only where required by external interchange; internal RS remains pointer-first).\n- [ ] Update or replace incompatible example assets/schemas in `semio/assets/semio` needed for the new model (**greenfield replacement**, no legacy compatibility requirement).\n- [ ] Provide at least **one minimal golden fixture** pair: **( persisted op log inputs ) → ( expected derived snapshot hash or structural invariant checks )** suitable for automated testing (exact mechanism chosen in RS tests).\n\n### US-002: Finalize `semio/graphql` Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle\n\nAs an integrator, I want `semio/graphql/schema.graphql` to fully specify the kit store surface (Relay-style patterns already present: owners/children/hashes) so `semio/rs` can implement a single GraphQL target without ad hoc gaps.\n\n**Acceptance Criteria:**\n- [ ] GraphQL supports querying **readable states** broadly (not “one global active kit”): selectors/parameters explicitly identify which readable state/graph projection is queried.\n- [ ] GraphQL supports initiating writes against explicitly identified **writable states** (draft/transaction flows), producing **async-command style outcomes** consistent with existing patterns like `Command`/`commandSucceeded` already present in the schema direction.\n- [ ] Schema covers **snapshots**, **diffs**, **connections**, **semantic operations**, **ordered change sequences**, and **checkpoint/draft/transaction** linkage consistent with the asset model.\n- [ ] Schema includes backbone operations needed for this epic: **attach**, **detach**, and **capability discovery** sufficient for dev JSON vs local `.semio/` backends (without exposing backbone-internal SQL details to clients).\n\n### US-003: Implement `semio/rs` Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)\n\nAs a library author, I want `semio/rs` to represent kit graphs internally with **stable pointers/handles** (not ID-string resolution as the primary internal mechanism) and to allow **reads on any readable state** and **writes on any writable state**, so hosts can implement complex parallel editing workflows safely.\n\n**Acceptance Criteria:**\n- [ ] Internal graph resolution uses **pointer/handle-based referencing** for hot paths; any externally-facing IDs are translated at GraphQL/IPC boundaries only.\n- [ ] Applying a semantic operation computes a **kit diff** deterministically from **operation + input** (diff not persisted).\n- [ ] Core APIs are **async** for operations that may touch execution queues, IO readiness, or backbone-mediated persistence scheduling.\n- [ ] Remove or rewrite incompatible surfaces aggressively per greenfield rule (**no legacy API parity**).\n\n### US-004: Implement Attachable Backbones — Dev JSON And Local `.semio/` Multi-DB + Blobs\n\nAs a user/developer, I want two backbone implementations so kits can be developed locally with a single file while still supporting a realistic on-disk layout for local workspaces.\n\n**Acceptance Criteria:**\n- [ ] **Dev backbone** persists and replays **operation + input** records from **one JSON file** (atomic rewrite strategy documented; crash safety expectations documented).\n- [ ] **Local backbone** persists under `.semio/` using separate SQLite databases: `wip.db`, `staged.db`, `authoratitive.db`, `conflicts.db`, plus `blobs/BLOBHASH.EXT` for referenced payloads.\n- [ ] Backbones can be **attached/detached at runtime** without restarting sketchpad in dev workflows (detach semantics define what remains cached vs cleared).\n- [ ] Replay from persisted ops reproduces the same derived snapshot/diff behavior as in-memory application (**golden test hooked to US-001 fixture**).\n\n### US-005: Implement GraphQL Target In `semio/rs` Matching `semio/graphql/schema.graphql`\n\nAs a host integrator, I want `semio/rs` to implement the GraphQL target directly so all IPC semantics remain in schema, not bespoke channels.\n\n**Acceptance Criteria:**\n- [ ] `async-graphql` schema/types implement the updated `semio/graphql/schema.graphql` surface required by US-002 for this epic’s scope.\n- [ ] Computed fields (**diffs, derived views, caches**) resolve without requiring clients to persist diffs; caching semantics remain explicit (what is memoized, what invalidates).\n- [ ] GraphQL export/build wiring remains consistent with `npx nx build semio/graphql`.\n\n### US-006: Rebuild `semio/js` Facade Over `semio/rs` Using RxJS Without JS-Layer Kit Caching\n\nAs an app developer, I want `semio/js` to expose clean OO APIs that hide RS’s internal architecture while preserving correct async behavior.\n\n**Acceptance Criteria:**\n- [ ] Public JS API does not introduce a second source of truth for kit graphs (**no kit state machine duplicated in JS** beyond ergonomic wrappers).\n- [ ] Uses RxJS internally for eventing/streams where appropriate; external API remains conventional OO ergonomics (methods + objects), not “Rx-first required” for consumers.\n- [ ] Extend existing embedded tests in `semio/js` (do not add new test files) to cover new facade behaviors related to subscriptions/progress/error channels as applicable.\n\n### US-007: Rebuild `semio/react` Hooks Over `semio/js` With `useSyncExternalStore` Kit Subscriptions And Tuple Hooks\n\nAs a UI developer, I want React bindings that avoid over-fetching and match the repo’s hook conventions.\n\n**Acceptance Criteria:**\n- [ ] Hooks consume **only** `semio/js` (no direct RS imports from React code).\n- [ ] Settable hooks follow **`[STATE, SETSTATE, STATUS] = use*(…)`** naming/shape where applicable.\n- [ ] Kit state uses **`useSyncExternalStore`** wired to **subscribe + snapshot** callbacks provided by `semio/js`.\n- [ ] Demonstrably granular updates: reading a narrow projection (example: a single piece “flat plane”) triggers React updates **only** when that projection’s backing RS signal reports an update (test strategy may use deterministic RS emitters + React testing utilities).\n- [ ] Extend existing embedded tests in `semio/react` (do not add new test files).\n\n### US-008: Sketchpad Integration Demonstrating End-To-End Store Workflows\n\nAs a reviewer, I want `semio/sketchpad` to prove checkpoints/drafts/transactions workflows plus backbone attach/detach against real GraphQL/Relay-shaped usage patterns.\n\n**Acceptance Criteria:**\n- [ ] Sketchpad demonstrates creating/navigating **checkpoint/draft/transaction** timelines using ordered semantic changes (UX minimal but real; avoid decorative mocks).\n- [ ] Sketchpad demonstrates switching between **dev JSON backbone** and **local `.semio/` backbone** (attach/detach), without violating layering rules.\n- [ ] Extend existing sketchpad tests (Playwright embedded tests) rather than introducing new test harness files.\n- [ ] Browser verification performed via **dev-browser skill** for at least one happy path + one failure path (e.g., conflict surfaced via `conflicts.db` semantics).\n\n## Functional Requirements\n\n- **FR-1:** The system must persist **only** `{operationKind, inputPayload}` records (plus necessary indexing metadata) on backbones; it must **never** require persisted kit diffs for correctness.\n- **FR-2:** Applying any semantic operation must yield a **kit diff** available to readers/query fields defined by GraphQL.\n- **FR-3:** The kit graph must maintain exactly **one root snapshot reference per graph**; all mutations must be expressible as appends/replays of ordered semantic changes scoped to checkpoint/draft/transaction containers.\n- **FR-4:** `semio/rs` must support **multiple readable states** concurrently and **writes targeting explicitly selected writable states**.\n- **FR-5:** Backbone attach/detach must be safe against ongoing async operations; semantics must define cancellation vs draining vs error propagation.\n- **FR-6:** Dev backbone must operate from **one JSON file** containing the persisted op log (implementation chooses compaction strategy; must be documented).\n- **FR-7:** Local backbone must create/use `.semio/` containing **`wip.db`**, **`staged.db`**, **`authoratitive.db`**, **`conflicts.db`**, and **`blobs/BLOBHASH.EXT`**.\n- **FR-8:** IPC must remain **`semio/graphql/schema.graphql`**-based; no parallel IPC channel is introduced for kit store functionality.\n- **FR-9:** `semio/js` must not cache kit graphs independently of `semio/rs` ownership rules; caching belongs in RS’s computed/cache layers only.\n- **FR-10:** `semio/react` must use **`useSyncExternalStore`** for kit-derived UI state subscription boundaries aligned with RS granular invalidation signals.\n\n## Non-Goals\n\n- Backwards compatibility with pre-refactor kit APIs or interim bridges.\n- Supporting multiple technologies mixing (**elements**, **coda**, **semio**) beyond existing repo separation rules.\n- Remote/network synchronization protocols, CRDT merges, or multi-user realtime collaboration (unless already explicitly present in schema—otherwise defer).\n- Final UX polish pass across sketchpad beyond what’s needed to prove correctness.\n\n## Technical Considerations\n\n- **Contracts-first sequencing:** US-001 → US-002 precede deep RS implementation work to reduce rework.\n- **SQLite assumption for `*.db` files** unless proven incompatible during implementation; keep backbone SQL schemas internal to RS/backbone modules.\n- **`async-graphql` dependency already exists in `semio/rs`**; GraphQL implementation should align with its async execution model.\n- **Relay-shaped caching**: hashes/owners/children patterns must remain coherent between GraphQL schema and RS resolver caching keys.\n- **WASM vs native**: preserve existing crate constraints (`cdylib`/`rlib`) where relevant; GraphQL surface should remain identical across targets where feasible.\n\n## Success Metrics\n\n- **Primary:** GraphQL supports snapshots/diffs/connections/semantic operations/backbone lifecycle end-to-end with sketchpad exercising realistic flows.\n- **Secondary:** RS replay tests demonstrate persisted op logs reproduce deterministic derived structure/hash invariants from golden fixtures.\n- **Secondary:** React tests demonstrate subscription granularity avoids unnecessary rerenders for narrow projections.\n\n## Open Questions\n\n- Confirm interpretation of your **`1`**: intended **pnpm**, but repo uses **npm**—keep npm gates above?\n- Confirm **`2–5`**: assumed **2A, 3A, 4A, 5A**—especially whether checkpoint/draft/transaction persistence matches **one unified ordered op list model with differing metadata** vs splitting persisted responsibilities across DB roles more aggressively.\n- Filename spelling: standardize on **`authoritative.db`** vs your specified **`authoratitive.db`** (pick one; propagate consistently).\n- Exact semantics for what resides in **`staged.db` vs wip.db`** vs authoritative replay ordering during attach (needs a short state-machine appendix during implementation).",
+          "file_path": "/workspaces/semio/tasks/prd-kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core.md",
+          "attachments": [],
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-06T20:39:45Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/home/vscode/.claude/skills/ralph-tui-create-json/SKILL.md"
+          },
+          "tool_output": "{\"file_path\":\"/home/vscode/.claude/skills/ralph-tui-create-json/SKILL.md\",\"content_length\":10357}",
+          "duration": 20.753,
+          "tool_use_id": "tool_685e7437-bac9-473a-bb20-a4110165bb2",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-06T20:39:45Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/tasks/prd-kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core.md"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/tasks/prd-kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core.md\",\"content_length\":15302}",
+          "duration": 26.774,
+          "tool_use_id": "tool_ab80b3fa-34d2-4e83-ba92-682560147be",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-06T20:40:16Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/tasks/prd.json"
+          },
+          "tool_use_id": "tool_9201da37-1829-49a4-b03e-31d296a47ca",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-06T20:40:17Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/tasks/prd.json"
+          },
+          "error_message": "File not found: /workspaces/semio/tasks/prd.json",
+          "failure_type": "error",
+          "duration": 1.044,
+          "tool_use_id": "tool_9201da37-1829-49a4-b03e-31d296a47ca",
+          "is_interrupt": false,
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "postToolUseFailure",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-05-06T20:40:17Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/tasks/prd.json",
+            "content": "{\n  \"name\": \"Kit Store Architecture (Contracts-First, Multi-Backbone, Pointer-Based RS Core)\",\n  \"branchName\": \"ralph/kit-store-architecture-contracts-multi-backbone\",\n  \"description\": \"Replace incomplete kit persistence with one root snapshot per kit graph, ordered semantic changes, async semio/rs core, dev JSON and local .semio/ backbones, GraphQL IPC, semio/js facade with RxJS, semio/react useSyncExternalStore hooks, and sketchpad integration.\",\n  \"userStories\": [\n    {\n      \"id\": \"US-001\",\n      \"title\": \"Align Kit Asset Contracts With Snapshot + Change History Model\",\n      \"description\": \"As a contributor, I want the canonical kit asset shapes under semio/assets/semio to match the target architecture (one root snapshot + ordered semantic changes) so contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.\",\n      \"acceptanceCriteria\": [\n        \"Document and encode the intended kit graph model as one root snapshot + ordered semantic changes, consistent with how checkpoints/drafts/transactions should serialize references (IDs/hashes only where required by external interchange; internal RS remains pointer-first).\",\n        \"Update or replace incompatible example assets/schemas in semio/assets/semio needed for the new model (greenfield replacement, no legacy compatibility requirement).\",\n        \"Provide at least one minimal golden fixture pair: (persisted op log inputs) → (expected derived snapshot hash or structural invariant checks) suitable for automated testing (exact mechanism chosen in RS tests).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 1,\n      \"passes\": false,\n      \"dependsOn\": [],\n      \"labels\": [\"assets\", \"contracts\", \"fixtures\"]\n    },\n    {\n      \"id\": \"US-002\",\n      \"title\": \"Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle\",\n      \"description\": \"As an integrator, I want semio/graphql/schema.graphql to fully specify the kit store surface (Relay-style patterns: owners/children/hashes) so semio/rs can implement a single GraphQL target without ad hoc gaps.\",\n      \"acceptanceCriteria\": [\n        \"GraphQL supports querying readable states broadly (not one global active kit): selectors/parameters explicitly identify which readable state/graph projection is queried.\",\n        \"GraphQL supports initiating writes against explicitly identified writable states (draft/transaction flows), producing async-command style outcomes consistent with existing patterns like Command/commandSucceeded already present in the schema direction.\",\n        \"Schema covers snapshots, diffs, connections, semantic operations, ordered change sequences, and checkpoint/draft/transaction linkage consistent with the asset model.\",\n        \"Schema includes backbone operations needed for this epic: attach, detach, and capability discovery sufficient for dev JSON vs local .semio/ backends (without exposing backbone-internal SQL details to clients).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 2,\n      \"passes\": false,\n      \"dependsOn\": [\"US-001\"],\n      \"labels\": [\"graphql\", \"contracts\", \"ipc\"]\n    },\n    {\n      \"id\": \"US-003\",\n      \"title\": \"Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)\",\n      \"description\": \"As a library author, I want semio/rs to represent kit graphs internally with stable pointers/handles (not ID-string resolution as the primary internal mechanism) and to allow reads on any readable state and writes on any writable state, so hosts can implement complex parallel editing workflows safely.\",\n      \"acceptanceCriteria\": [\n        \"Internal graph resolution uses pointer/handle-based referencing for hot paths; any externally-facing IDs are translated at GraphQL/IPC boundaries only.\",\n        \"Applying a semantic operation computes a kit diff deterministically from operation + input (diff not persisted).\",\n        \"Core APIs are async for operations that may touch execution queues, IO readiness, or backbone-mediated persistence scheduling.\",\n        \"Remove or rewrite incompatible surfaces aggressively per greenfield rule (no legacy API parity).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 3,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\"],\n      \"labels\": [\"rust\", \"core\", \"async\"]\n    },\n    {\n      \"id\": \"US-004\",\n      \"title\": \"Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs\",\n      \"description\": \"As a user/developer, I want two backbone implementations so kits can be developed locally with a single file while still supporting a realistic on-disk layout for local workspaces.\",\n      \"acceptanceCriteria\": [\n        \"Dev backbone persists and replays operation + input records from one JSON file (atomic rewrite strategy documented; crash safety expectations documented).\",\n        \"Local backbone persists under .semio/ using separate SQLite databases: wip.db, staged.db, authoratitive.db, conflicts.db, plus blobs/BLOBHASH.EXT for referenced payloads.\",\n        \"Backbones can be attached/detached at runtime without restarting sketchpad in dev workflows (detach semantics define what remains cached vs cleared).\",\n        \"Replay from persisted ops reproduces the same derived snapshot/diff behavior as in-memory application (golden test hooked to US-001 fixture).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 4,\n      \"passes\": false,\n      \"dependsOn\": [\"US-003\"],\n      \"labels\": [\"rust\", \"persistence\", \"backbone\"]\n    },\n    {\n      \"id\": \"US-005\",\n      \"title\": \"Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql\",\n      \"description\": \"As a host integrator, I want semio/rs to implement the GraphQL target directly so all IPC semantics remain in schema, not bespoke channels.\",\n      \"acceptanceCriteria\": [\n        \"async-graphql schema/types implement the updated semio/graphql/schema.graphql surface required by US-002 for this epic’s scope.\",\n        \"Computed fields (diffs, derived views, caches) resolve without requiring clients to persist diffs; caching semantics remain explicit (what is memoized, what invalidates).\",\n        \"GraphQL export/build wiring remains consistent with npx nx build semio/graphql.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 5,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\", \"US-003\", \"US-004\"],\n      \"labels\": [\"rust\", \"graphql\", \"async-graphql\"]\n    },\n    {\n      \"id\": \"US-006\",\n      \"title\": \"Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching\",\n      \"description\": \"As an app developer, I want semio/js to expose clean OO APIs that hide RS’s internal architecture while preserving correct async behavior.\",\n      \"acceptanceCriteria\": [\n        \"Public JS API does not introduce a second source of truth for kit graphs (no kit state machine duplicated in JS beyond ergonomic wrappers).\",\n        \"Uses RxJS internally for eventing/streams where appropriate; external API remains conventional OO ergonomics (methods + objects), not Rx-first required for consumers.\",\n        \"Extend existing embedded tests in semio/js (do not add new test files) to cover new facade behaviors related to subscriptions/progress/error channels as applicable.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 6,\n      \"passes\": false,\n      \"dependsOn\": [\"US-005\"],\n      \"labels\": [\"typescript\", \"js\", \"rxjs\", \"facade\"]\n    },\n    {\n      \"id\": \"US-007\",\n      \"title\": \"Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks\",\n      \"description\": \"As a UI developer, I want React bindings that avoid over-fetching and match the repo’s hook conventions.\",\n      \"acceptanceCriteria\": [\n        \"Hooks consume only semio/js (no direct RS imports from React code).\",\n        \"Settable hooks follow [STATE, SETSTATE, STATUS] = use*(…) naming/shape where applicable.\",\n        \"Kit state uses useSyncExternalStore wired to subscribe + snapshot callbacks provided by semio/js.\",\n        \"Demonstrably granular updates: reading a narrow projection (example: a single piece flat plane) triggers React updates only when that projection’s backing RS signal reports an update (test strategy may use deterministic RS emitters + React testing utilities).\",\n        \"Extend existing embedded tests in semio/react (do not add new test files).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 7,\n      \"passes\": false,\n      \"dependsOn\": [\"US-006\"],\n      \"labels\": [\"typescript\", \"react\", \"hooks\", \"useSyncExternalStore\"]\n    },\n    {\n      \"id\": \"US-008\",\n      \"title\": \"Sketchpad Integration Demonstrating End-To-End Store Workflows\",\n      \"description\": \"As a reviewer, I want semio/sketchpad to prove checkpoints/drafts/transactions workflows plus backbone attach/detach against real GraphQL/Relay-shaped usage patterns.\",\n      \"acceptanceCriteria\": [\n        \"Sketchpad demonstrates creating/navigating checkpoint/draft/transaction timelines using ordered semantic changes (UX minimal but real; avoid decorative mocks).\",\n        \"Sketchpad demonstrates switching between dev JSON backbone and local .semio/ backbone (attach/detach), without violating layering rules.\",\n        \"Extend existing sketchpad tests (Playwright embedded tests) rather than introducing new test harness files.\",\n        \"Browser verification performed via dev-browser skill for at least one happy path + one failure path (e.g., conflict surfaced via conflicts.db semantics).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\",\n        \"Verify in browser using the dev-browser skill (manual/visual flow verification in addition to automated checks)\"\n      ],\n      \"priority\": 8,\n      \"passes\": false,\n      \"dependsOn\": [\"US-004\", \"US-007\"],\n      \"labels\": [\"sketchpad\", \"integration\", \"ui\", \"e2e\"]\n    }\n  ]\n}\n"
+          },
+          "tool_use_id": "tool_9201da37-1829-49a4-b03e-31d296a47ca",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-05-06T20:40:18Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "file_path": "/workspaces/semio/tasks/prd.json",
+          "edits": [
+            {
+              "old_string": "",
+              "new_string": "{\n  \"name\": \"Kit Store Architecture (Contracts-First, Multi-Backbone, Pointer-Based RS Core)\",\n  \"branchName\": \"ralph/kit-store-architecture-contracts-multi-backbone\",\n  \"description\": \"Replace incomplete kit persistence with one root snapshot per kit graph, ordered semantic changes, async semio/rs core, dev JSON and local .semio/ backbones, GraphQL IPC, semio/js facade with RxJS, semio/react useSyncExternalStore hooks, and sketchpad integration.\",\n  \"userStories\": [\n    {\n      \"id\": \"US-001\",\n      \"title\": \"Align Kit Asset Contracts With Snapshot + Change History Model\",\n      \"description\": \"As a contributor, I want the canonical kit asset shapes under semio/assets/semio to match the target architecture (one root snapshot + ordered semantic changes) so contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.\",\n      \"acceptanceCriteria\": [\n        \"Document and encode the intended kit graph model as one root snapshot + ordered semantic changes, consistent with how checkpoints/drafts/transactions should serialize references (IDs/hashes only where required by external interchange; internal RS remains pointer-first).\",\n        \"Update or replace incompatible example assets/schemas in semio/assets/semio needed for the new model (greenfield replacement, no legacy compatibility requirement).\",\n        \"Provide at least one minimal golden fixture pair: (persisted op log inputs) → (expected derived snapshot hash or structural invariant checks) suitable for automated testing (exact mechanism chosen in RS tests).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 1,\n      \"passes\": false,\n      \"dependsOn\": [],\n      \"labels\": [\"assets\", \"contracts\", \"fixtures\"]\n    },\n    {\n      \"id\": \"US-002\",\n      \"title\": \"Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle\",\n      \"description\": \"As an integrator, I want semio/graphql/schema.graphql to fully specify the kit store surface (Relay-style patterns: owners/children/hashes) so semio/rs can implement a single GraphQL target without ad hoc gaps.\",\n      \"acceptanceCriteria\": [\n        \"GraphQL supports querying readable states broadly (not one global active kit): selectors/parameters explicitly identify which readable state/graph projection is queried.\",\n        \"GraphQL supports initiating writes against explicitly identified writable states (draft/transaction flows), producing async-command style outcomes consistent with existing patterns like Command/commandSucceeded already present in the schema direction.\",\n        \"Schema covers snapshots, diffs, connections, semantic operations, ordered change sequences, and checkpoint/draft/transaction linkage consistent with the asset model.\",\n        \"Schema includes backbone operations needed for this epic: attach, detach, and capability discovery sufficient for dev JSON vs local .semio/ backends (without exposing backbone-internal SQL details to clients).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 2,\n      \"passes\": false,\n      \"dependsOn\": [\"US-001\"],\n      \"labels\": [\"graphql\", \"contracts\", \"ipc\"]\n    },\n    {\n      \"id\": \"US-003\",\n      \"title\": \"Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)\",\n      \"description\": \"As a library author, I want semio/rs to represent kit graphs internally with stable pointers/handles (not ID-string resolution as the primary internal mechanism) and to allow reads on any readable state and writes on any writable state, so hosts can implement complex parallel editing workflows safely.\",\n      \"acceptanceCriteria\": [\n        \"Internal graph resolution uses pointer/handle-based referencing for hot paths; any externally-facing IDs are translated at GraphQL/IPC boundaries only.\",\n        \"Applying a semantic operation computes a kit diff deterministically from operation + input (diff not persisted).\",\n        \"Core APIs are async for operations that may touch execution queues, IO readiness, or backbone-mediated persistence scheduling.\",\n        \"Remove or rewrite incompatible surfaces aggressively per greenfield rule (no legacy API parity).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 3,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\"],\n      \"labels\": [\"rust\", \"core\", \"async\"]\n    },\n    {\n      \"id\": \"US-004\",\n      \"title\": \"Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs\",\n      \"description\": \"As a user/developer, I want two backbone implementations so kits can be developed locally with a single file while still supporting a realistic on-disk layout for local workspaces.\",\n      \"acceptanceCriteria\": [\n        \"Dev backbone persists and replays operation + input records from one JSON file (atomic rewrite strategy documented; crash safety expectations documented).\",\n        \"Local backbone persists under .semio/ using separate SQLite databases: wip.db, staged.db, authoratitive.db, conflicts.db, plus blobs/BLOBHASH.EXT for referenced payloads.\",\n        \"Backbones can be attached/detached at runtime without restarting sketchpad in dev workflows (detach semantics define what remains cached vs cleared).\",\n        \"Replay from persisted ops reproduces the same derived snapshot/diff behavior as in-memory application (golden test hooked to US-001 fixture).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 4,\n      \"passes\": false,\n      \"dependsOn\": [\"US-003\"],\n      \"labels\": [\"rust\", \"persistence\", \"backbone\"]\n    },\n    {\n      \"id\": \"US-005\",\n      \"title\": \"Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql\",\n      \"description\": \"As a host integrator, I want semio/rs to implement the GraphQL target directly so all IPC semantics remain in schema, not bespoke channels.\",\n      \"acceptanceCriteria\": [\n        \"async-graphql schema/types implement the updated semio/graphql/schema.graphql surface required by US-002 for this epic’s scope.\",\n        \"Computed fields (diffs, derived views, caches) resolve without requiring clients to persist diffs; caching semantics remain explicit (what is memoized, what invalidates).\",\n        \"GraphQL export/build wiring remains consistent with npx nx build semio/graphql.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 5,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\", \"US-003\", \"US-004\"],\n      \"labels\": [\"rust\", \"graphql\", \"async-graphql\"]\n    },\n    {\n      \"id\": \"US-006\",\n      \"title\": \"Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching\",\n      \"description\": \"As an app developer, I want semio/js to expose clean OO APIs that hide RS’s internal architecture while preserving correct async behavior.\",\n      \"acceptanceCriteria\": [\n        \"Public JS API does not introduce a second source of truth for kit graphs (no kit state machine duplicated in JS beyond ergonomic wrappers).\",\n        \"Uses RxJS internally for eventing/streams where appropriate; external API remains conventional OO ergonomics (methods + objects), not Rx-first required for consumers.\",\n        \"Extend existing embedded tests in semio/js (do not add new test files) to cover new facade behaviors related to subscriptions/progress/error channels as applicable.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 6,\n      \"passes\": false,\n      \"dependsOn\": [\"US-005\"],\n      \"labels\": [\"typescript\", \"js\", \"rxjs\", \"facade\"]\n    },\n    {\n      \"id\": \"US-007\",\n      \"title\": \"Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks\",\n      \"description\": \"As a UI developer, I want React bindings that avoid over-fetching and match the repo’s hook conventions.\",\n      \"acceptanceCriteria\": [\n        \"Hooks consume only semio/js (no direct RS imports from React code).\",\n        \"Settable hooks follow [STATE, SETSTATE, STATUS] = use*(…) naming/shape where applicable.\",\n        \"Kit state uses useSyncExternalStore wired to subscribe + snapshot callbacks provided by semio/js.\",\n        \"Demonstrably granular updates: reading a narrow projection (example: a single piece flat plane) triggers React updates only when that projection’s backing RS signal reports an update (test strategy may use deterministic RS emitters + React testing utilities).\",\n        \"Extend existing embedded tests in semio/react (do not add new test files).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 7,\n      \"passes\": false,\n      \"dependsOn\": [\"US-006\"],\n      \"labels\": [\"typescript\", \"react\", \"hooks\", \"useSyncExternalStore\"]\n    },\n    {\n      \"id\": \"US-008\",\n      \"title\": \"Sketchpad Integration Demonstrating End-To-End Store Workflows\",\n      \"description\": \"As a reviewer, I want semio/sketchpad to prove checkpoints/drafts/transactions workflows plus backbone attach/detach against real GraphQL/Relay-shaped usage patterns.\",\n      \"acceptanceCriteria\": [\n        \"Sketchpad demonstrates creating/navigating checkpoint/draft/transaction timelines using ordered semantic changes (UX minimal but real; avoid decorative mocks).\",\n        \"Sketchpad demonstrates switching between dev JSON backbone and local .semio/ backbone (attach/detach), without violating layering rules.\",\n        \"Extend existing sketchpad tests (Playwright embedded tests) rather than introducing new test harness files.\",\n        \"Browser verification performed via dev-browser skill for at least one happy path + one failure path (e.g., conflict surfaced via conflicts.db semantics).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\",\n        \"Verify in browser using the dev-browser skill (manual/visual flow verification in addition to automated checks)\"\n      ],\n      \"priority\": 8,\n      \"passes\": false,\n      \"dependsOn\": [\"US-004\", \"US-007\"],\n      \"labels\": [\"sketchpad\", \"integration\", \"ui\", \"e2e\"]\n    }\n  ]\n}\n"
+            }
+          ],
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "afterFileEdit",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-05-06T20:40:18Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/tasks/prd.json",
+            "content": "{\n  \"name\": \"Kit Store Architecture (Contracts-First, Multi-Backbone, Pointer-Based RS Core)\",\n  \"branchName\": \"ralph/kit-store-architecture-contracts-multi-backbone\",\n  \"description\": \"Replace incomplete kit persistence with one root snapshot per kit graph, ordered semantic changes, async semio/rs core, dev JSON and local .semio/ backbones, GraphQL IPC, semio/js facade with RxJS, semio/react useSyncExternalStore hooks, and sketchpad integration.\",\n  \"userStories\": [\n    {\n      \"id\": \"US-001\",\n      \"title\": \"Align Kit Asset Contracts With Snapshot + Change History Model\",\n      \"description\": \"As a contributor, I want the canonical kit asset shapes under semio/assets/semio to match the target architecture (one root snapshot + ordered semantic changes) so contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.\",\n      \"acceptanceCriteria\": [\n        \"Document and encode the intended kit graph model as one root snapshot + ordered semantic changes, consistent with how checkpoints/drafts/transactions should serialize references (IDs/hashes only where required by external interchange; internal RS remains pointer-first).\",\n        \"Update or replace incompatible example assets/schemas in semio/assets/semio needed for the new model (greenfield replacement, no legacy compatibility requirement).\",\n        \"Provide at least one minimal golden fixture pair: (persisted op log inputs) → (expected derived snapshot hash or structural invariant checks) suitable for automated testing (exact mechanism chosen in RS tests).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 1,\n      \"passes\": false,\n      \"dependsOn\": [],\n      \"labels\": [\"assets\", \"contracts\", \"fixtures\"]\n    },\n    {\n      \"id\": \"US-002\",\n      \"title\": \"Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle\",\n      \"description\": \"As an integrator, I want semio/graphql/schema.graphql to fully specify the kit store surface (Relay-style patterns: owners/children/hashes) so semio/rs can implement a single GraphQL target without ad hoc gaps.\",\n      \"acceptanceCriteria\": [\n        \"GraphQL supports querying readable states broadly (not one global active kit): selectors/parameters explicitly identify which readable state/graph projection is queried.\",\n        \"GraphQL supports initiating writes against explicitly identified writable states (draft/transaction flows), producing async-command style outcomes consistent with existing patterns like Command/commandSucceeded already present in the schema direction.\",\n        \"Schema covers snapshots, diffs, connections, semantic operations, ordered change sequences, and checkpoint/draft/transaction linkage consistent with the asset model.\",\n        \"Schema includes backbone operations needed for this epic: attach, detach, and capability discovery sufficient for dev JSON vs local .semio/ backends (without exposing backbone-internal SQL details to clients).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 2,\n      \"passes\": false,\n      \"dependsOn\": [\"US-001\"],\n      \"labels\": [\"graphql\", \"contracts\", \"ipc\"]\n    },\n    {\n      \"id\": \"US-003\",\n      \"title\": \"Implement semio/rs Core Kit Graph Engine (Async, Pointer-Internal, Multi-State)\",\n      \"description\": \"As a library author, I want semio/rs to represent kit graphs internally with stable pointers/handles (not ID-string resolution as the primary internal mechanism) and to allow reads on any readable state and writes on any writable state, so hosts can implement complex parallel editing workflows safely.\",\n      \"acceptanceCriteria\": [\n        \"Internal graph resolution uses pointer/handle-based referencing for hot paths; any externally-facing IDs are translated at GraphQL/IPC boundaries only.\",\n        \"Applying a semantic operation computes a kit diff deterministically from operation + input (diff not persisted).\",\n        \"Core APIs are async for operations that may touch execution queues, IO readiness, or backbone-mediated persistence scheduling.\",\n        \"Remove or rewrite incompatible surfaces aggressively per greenfield rule (no legacy API parity).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 3,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\"],\n      \"labels\": [\"rust\", \"core\", \"async\"]\n    },\n    {\n      \"id\": \"US-004\",\n      \"title\": \"Implement Attachable Backbones — Dev JSON And Local .semio/ Multi-DB + Blobs\",\n      \"description\": \"As a user/developer, I want two backbone implementations so kits can be developed locally with a single file while still supporting a realistic on-disk layout for local workspaces.\",\n      \"acceptanceCriteria\": [\n        \"Dev backbone persists and replays operation + input records from one JSON file (atomic rewrite strategy documented; crash safety expectations documented).\",\n        \"Local backbone persists under .semio/ using separate SQLite databases: wip.db, staged.db, authoratitive.db, conflicts.db, plus blobs/BLOBHASH.EXT for referenced payloads.\",\n        \"Backbones can be attached/detached at runtime without restarting sketchpad in dev workflows (detach semantics define what remains cached vs cleared).\",\n        \"Replay from persisted ops reproduces the same derived snapshot/diff behavior as in-memory application (golden test hooked to US-001 fixture).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 4,\n      \"passes\": false,\n      \"dependsOn\": [\"US-003\"],\n      \"labels\": [\"rust\", \"persistence\", \"backbone\"]\n    },\n    {\n      \"id\": \"US-005\",\n      \"title\": \"Implement GraphQL Target In semio/rs Matching semio/graphql/schema.graphql\",\n      \"description\": \"As a host integrator, I want semio/rs to implement the GraphQL target directly so all IPC semantics remain in schema, not bespoke channels.\",\n      \"acceptanceCriteria\": [\n        \"async-graphql schema/types implement the updated semio/graphql/schema.graphql surface required by US-002 for this epic’s scope.\",\n        \"Computed fields (diffs, derived views, caches) resolve without requiring clients to persist diffs; caching semantics remain explicit (what is memoized, what invalidates).\",\n        \"GraphQL export/build wiring remains consistent with npx nx build semio/graphql.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 5,\n      \"passes\": false,\n      \"dependsOn\": [\"US-002\", \"US-003\", \"US-004\"],\n      \"labels\": [\"rust\", \"graphql\", \"async-graphql\"]\n    },\n    {\n      \"id\": \"US-006\",\n      \"title\": \"Rebuild semio/js Facade Over semio/rs Using RxJS Without JS-Layer Kit Caching\",\n      \"description\": \"As an app developer, I want semio/js to expose clean OO APIs that hide RS’s internal architecture while preserving correct async behavior.\",\n      \"acceptanceCriteria\": [\n        \"Public JS API does not introduce a second source of truth for kit graphs (no kit state machine duplicated in JS beyond ergonomic wrappers).\",\n        \"Uses RxJS internally for eventing/streams where appropriate; external API remains conventional OO ergonomics (methods + objects), not Rx-first required for consumers.\",\n        \"Extend existing embedded tests in semio/js (do not add new test files) to cover new facade behaviors related to subscriptions/progress/error channels as applicable.\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 6,\n      \"passes\": false,\n      \"dependsOn\": [\"US-005\"],\n      \"labels\": [\"typescript\", \"js\", \"rxjs\", \"facade\"]\n    },\n    {\n      \"id\": \"US-007\",\n      \"title\": \"Rebuild semio/react Hooks Over semio/js With useSyncExternalStore Kit Subscriptions And Tuple Hooks\",\n      \"description\": \"As a UI developer, I want React bindings that avoid over-fetching and match the repo’s hook conventions.\",\n      \"acceptanceCriteria\": [\n        \"Hooks consume only semio/js (no direct RS imports from React code).\",\n        \"Settable hooks follow [STATE, SETSTATE, STATUS] = use*(…) naming/shape where applicable.\",\n        \"Kit state uses useSyncExternalStore wired to subscribe + snapshot callbacks provided by semio/js.\",\n        \"Demonstrably granular updates: reading a narrow projection (example: a single piece flat plane) triggers React updates only when that projection’s backing RS signal reports an update (test strategy may use deterministic RS emitters + React testing utilities).\",\n        \"Extend existing embedded tests in semio/react (do not add new test files).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\"\n      ],\n      \"priority\": 7,\n      \"passes\": false,\n      \"dependsOn\": [\"US-006\"],\n      \"labels\": [\"typescript\", \"react\", \"hooks\", \"useSyncExternalStore\"]\n    },\n    {\n      \"id\": \"US-008\",\n      \"title\": \"Sketchpad Integration Demonstrating End-To-End Store Workflows\",\n      \"description\": \"As a reviewer, I want semio/sketchpad to prove checkpoints/drafts/transactions workflows plus backbone attach/detach against real GraphQL/Relay-shaped usage patterns.\",\n      \"acceptanceCriteria\": [\n        \"Sketchpad demonstrates creating/navigating checkpoint/draft/transaction timelines using ordered semantic changes (UX minimal but real; avoid decorative mocks).\",\n        \"Sketchpad demonstrates switching between dev JSON backbone and local .semio/ backbone (attach/detach), without violating layering rules.\",\n        \"Extend existing sketchpad tests (Playwright embedded tests) rather than introducing new test harness files.\",\n        \"Browser verification performed via dev-browser skill for at least one happy path + one failure path (e.g., conflict surfaced via conflicts.db semantics).\",\n        \"npm --workspace @semio/js run build\",\n        \"npm --workspace @semio/react run build\",\n        \"npm --workspace @semio/sketchpad run build\",\n        \"cargo test --manifest-path semio/rs/Cargo.toml\",\n        \"cargo clippy --manifest-path semio/rs/Cargo.toml --all-targets -- -D warnings\",\n        \"npx nx build semio/graphql\",\n        \"npm --workspace @semio/js test\",\n        \"npm --workspace @semio/react test\",\n        \"Verify in browser using the dev-browser skill (manual/visual flow verification in addition to automated checks)\"\n      ],\n      \"priority\": 8,\n      \"passes\": false,\n      \"dependsOn\": [\"US-004\", \"US-007\"],\n      \"labels\": [\"sketchpad\", \"integration\", \"ui\", \"e2e\"]\n    }\n  ]\n}\n"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/tasks/prd.json\",\"success\":true}",
+          "duration": 200.741,
+          "tool_use_id": "tool_9201da37-1829-49a4-b03e-31d296a47ca",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-05-06T20:40:20Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Shell",
+          "tool_input": {
+            "command": "node -e \"const j=require('/workspaces/semio/tasks/prd.json'); if(!j.name||!j.userStories) throw new Error('schema'); if(j.prd||j.tasks||j.phases) throw new Error('forbidden'); j.userStories.forEach((s,i)=\u003e{if(s.passes!==false)throw new Error('passes'+i); if(!Array.isArray(s.dependsOn))throw new Error('deps'+i);}); console.log('OK', j.userStories.length,'stories');\"",
+            "cwd": "",
+            "timeout": 30000
+          },
+          "tool_use_id": "8cb8f256-9194-41a4-bc4c-1abeb6cabdbd",
+          "cwd": "",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-05-06T20:40:20Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "command": "node -e \"const j=require('/workspaces/semio/tasks/prd.json'); if(!j.name||!j.userStories) throw new Error('schema'); if(j.prd||j.tasks||j.phases) throw new Error('forbidden'); j.userStories.forEach((s,i)=\u003e{if(s.passes!==false)throw new Error('passes'+i); if(!Array.isArray(s.dependsOn))throw new Error('deps'+i);}); console.log('OK', j.userStories.length,'stories');\"",
+          "cwd": "",
+          "sandbox": false,
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "beforeShellExecution",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-05-06T20:40:22Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "command": "node -e \"const j=require('/workspaces/semio/tasks/prd.json'); if(!j.name||!j.userStories) throw new Error('schema'); if(j.prd||j.tasks||j.phases) throw new Error('forbidden'); j.userStories.forEach((s,i)=\u003e{if(s.passes!==false)throw new Error('passes'+i); if(!Array.isArray(s.dependsOn))throw new Error('deps'+i);}); console.log('OK', j.userStories.length,'stories');\"",
+          "output": "OK 8 stories\n",
+          "duration": 421.816,
+          "sandbox": false,
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "afterShellExecution",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-05-06T20:40:22Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "tool_name": "Shell",
+          "tool_input": {
+            "command": "node -e \"const j=require('/workspaces/semio/tasks/prd.json'); if(!j.name||!j.userStories) throw new Error('schema'); if(j.prd||j.tasks||j.phases) throw new Error('forbidden'); j.userStories.forEach((s,i)=\u003e{if(s.passes!==false)throw new Error('passes'+i); if(!Array.isArray(s.dependsOn))throw new Error('deps'+i);}); console.log('OK', j.userStories.length,'stories');\"",
+            "cwd": "",
+            "timeout": 30000
+          },
+          "tool_output": "{\"output\":\"OK 8 stories\\n\",\"exitCode\":0}",
+          "duration": 421.816,
+          "tool_use_id": "8cb8f256-9194-41a4-bc4c-1abeb6cabdbd",
+          "cwd": "",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-06T20:40:25Z",
+        "session": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "generation_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "model": "composer-2",
+          "reason": "completed",
+          "duration_ms": 48935,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "session_id": "38bddf30-fd55-4fc6-91d8-b813cd688b18",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2026.05.05-84a231c",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/38bddf30-fd55-4fc6-91d8-b813cd688b18/38bddf30-fd55-4fc6-91d8-b813cd688b18.jsonl"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

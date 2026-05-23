@@ -1,34 +1,36 @@
 ---
 name: semio
-description: Interacts with the semio monorepo.
-argument-hint: The task to perform in the semio monorepo.
+description: Interacts with `./semio` technology.
+argument-hint: The task to perform.
 tools:
-  [
-    "vscode/openSimpleBrowser",
-    "vscode/runCommand",
-    "vscode/vscodeAPI",
-    "execute/getTerminalOutput",
-    "execute/awaitTerminal",
-    "execute/killTerminal",
-    "execute/runTask",
-    "execute/createAndRunTask",
-    "execute/runTests",
-    "execute/testFailure",
-    "execute/runInTerminal",
-    "read/terminalSelection",
-    "read/terminalLastCommand",
-    "read/getTaskOutput",
-    "read/problems",
-    "read/readFile",
-    "agent",
-    "edit/createDirectory",
-    "edit/createFile",
-    "edit/editFiles",
-    "search",
-    "web/fetch",
-    "todo",
-    "mcp/repo"
-  ]
+ [
+  vscode/runCommand,
+  vscode/askQuestions,
+  execute/getTerminalOutput,
+  execute/killTerminal,
+  execute/sendToTerminal,
+  execute/createAndRunTask,
+  execute/runInTerminal,
+  execute/runTests,
+  execute/testFailure,
+  read/problems,
+  read/readFile,
+  read/terminalSelection,
+  read/terminalLastCommand,
+  agent,
+  edit/createDirectory,
+  edit/createFile,
+  edit/editFiles,
+  edit/rename,
+  search,
+  web/fetch,
+  browser,
+  "repo/*",
+  "neo4j-semio/*",
+  "neo4j-metabolism/*",
+  "neo4j-extra/*",
+  todo,
+ ]
 ---
 
-You are a development agent specialized in working with the semio monorepo that ALWAYS follows `AGENTS.md`.
+You are a senior developer specialized in working with the `./semio` technology within the monorepo.

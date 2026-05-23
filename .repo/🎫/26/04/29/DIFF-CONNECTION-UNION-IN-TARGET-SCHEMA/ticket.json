@@ -1,0 +1,11 @@
+{
+  "title": "DiffConnection Union in Target Schema",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Add union DiffConnection for concrete diff relay connections and wire Diffs/AttributesDiff diffs fields.",
+  "summary": "Introduced union DiffConnection = PlaneDiffConnection | PositionDiffConnection | LocationDiffConnection | AttributeDiffConnection | PlaceDiffConnection (declared after PlaceDiffConnection, still inside Place entity region). Replaced Diffs.diffs and AttributesDiff.diffs field types from EntityConnection to DiffConnection. graphql-core parse OK.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8bf88b090b1847ac87e2336f4540e001"
+  ]
+}

@@ -43702,8 +43702,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
-            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
+            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
+            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
           },
           "tool_use_id": "toolu_vrtx_01QUMxTB1bhu6YKziqV3cBrE__vscode-1776256534904",
           "cwd": "c:\\git\\semio"
@@ -43730,8 +43730,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
-            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
+            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
+            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
           },
           "tool_use_id": "toolu_vrtx_01QUMxTB1bhu6YKziqV3cBrE__vscode-1776256534904",
           "cwd": "c:\\git\\semio"
@@ -43786,8 +43786,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
-            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
+            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
+            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01QUMxTB1bhu6YKziqV3cBrE__vscode-1776256534904",
@@ -43872,8 +43872,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "c:\\git\\semio\\semio\\sketchpad\\index.tsx",
-            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
-            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
+            "newString": "      },\n    };\n  },\n  \"semio.qualityApp.setPanelVisibility\": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult =\u003e {\n    const currentPanelVisibility = context.qualityApp.panelVisibility;\n    const hasChange = Object.keys(panelVisibility).some((key) =\u003e currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);\n    if (!hasChange) {\n      return { diff: {} };\n    }\n    return {\n      diff: {\n        panelVisibility,\n      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)",
+            "oldString": "      },\n    };\n  },\n};\n\n// #endregion 💧Commands\n\n// #region 🎈Store\n// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01QUMxTB1bhu6YKziqV3cBrE__vscode-1776256534904",

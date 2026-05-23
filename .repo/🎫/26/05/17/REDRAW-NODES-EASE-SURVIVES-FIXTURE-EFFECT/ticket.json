@@ -1,0 +1,11 @@
+{
+  "title": "Redraw Nodes Ease Survives Fixture Effect",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Nodes redraw camera RAF was cancelled on every fixture commit by useEffect([boardRedrawPlaying, fixture]) else branch; remove cancel so layout-started ease survives patchFixture.",
+  "summary": "Root cause: useEffect([boardRedrawPlaying, fixture]) else-if (!suppress) cancelled boardPlayNodesRedrawCameraAnimRafRef on every fixture update, so after useLayoutEffect scheduled the nodes-redraw camera RAF, the same commit’s useEffect tore it down—instant jump to triptych. Removed that cancel; nodes RAF is still cleared on redraw play start, post-play override arm, override display effect, and layout cleanup.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪986d8473924b461c9b4c0dd6df274284"
+  ]
+}

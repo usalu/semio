@@ -1,0 +1,25 @@
+{
+  "title": "Refactor Semio JS General Mechanisms",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
+  "summary": "Parallel explore agents mapped Rust geom wire vs entity::Arc, JS regions, and React hook gaps. Implemented plan slice: JsonValue/JsonObject are file-local in semio/js (no public wire re-exports); algorithms uses GqlWireObject; ui uses PlainJsonObject/PlainJsonValue and drops @semio/js JSON imports; react adds useAttachBackbone, useDetachBackbone, useBackboneSyncNow, useBackboneStatus. Verified tsc for js/react/ui/algorithms/sketchpad, vitest semio/js (11), nx workspace:depcruise. cargo test -p semio not run (artifact dir file lock).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "51ba1616",
+    "local": "single-source_entity_layers_51ba1616.plan.md"
+  },
+  "sessions": [
+    "⚪61b88a4a22ef4bd0a4466d15c01c8cc3",
+    "⚪8423dd8ed14e41b080fb2536eb924913",
+    "⚪80779f4983de4fc98480d9e8c7141808",
+    "⚪e27ce55562c1455491b24cd2a1665d87",
+    "⚪c9b2865e7c1a49fc82d3d49c2e8bbf9a",
+    "⚪5896a3497f3b4b499b112b90a94a2f14",
+    "⚪510432f5bf94449cb7b5b60c63e4a866",
+    "⚪d99ba45506d74101a61b8cc19fb77497",
+    "⚪a480583ba86944d396faf51a07945af3",
+    "⚪6852a9a78e91482b9c31f564f5a9840d"
+  ]
+}

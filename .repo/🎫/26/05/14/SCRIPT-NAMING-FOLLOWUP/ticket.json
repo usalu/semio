@@ -1,0 +1,23 @@
+{
+  "id": "2026/05/14/SCRIPT-NAMING-FOLLOWUP",
+  "title": "Script Naming Followup",
+  "summary": "Finished launch.json build/publish argv migration; removed nx publish:test defaults; renamed Grasshopper value-list generator to generate.grasshopper.value-lists.script.ts; renamed Yak helper scripts to command-first names; replaced desktop integration runner with test.desktop.script.ts and electron-forge start; fixed yak publish.script.ts JSDoc; updated README and DOCS.",
+  "files": [
+    ".vscode/launch.json",
+    "nx.json",
+    "README.md",
+    "semio/DOCS.md",
+    "semio/client/ui/gh/Semio.Grasshopper/build.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/generate.grasshopper.value-lists.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/publish.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/setup.yak.login.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/publish.yak.yank.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/publish.yak.unyank.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/test.yak.push.script.ts",
+    "semio/client/ui/gh/Semio.Grasshopper/yak/test.yak.search.script.ts",
+    "semio/client/ui/desktop/project.json",
+    "semio/client/ui/desktop/main.ts",
+    "semio/client/ui/desktop/test/test.desktop.script.ts"
+  ],
+  "status": "closed"
+}

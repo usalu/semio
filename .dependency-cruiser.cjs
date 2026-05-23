@@ -32,6 +32,16 @@ module.exports = {
       from: { path: "^semio/js" },
       to: { path: "^semio/sketchpad" },
     },
+    {
+      name: "no-js-wildcard-to-rs-wasm",
+      severity: "error",
+      comment: "Only rs-wasm-transport.ts and kit-store.worker.ts may import @semio/rs-wasm.",
+      from: {
+        path: "^semio/client/lib/js",
+        pathNot: ["^semio/client/lib/js/rs-wasm-transport\\.ts$", "^semio/client/lib/js/kit-store\\.worker\\.ts$"],
+      },
+      to: { path: "^semio/client/lib/rs/pkg" },
+    },
   ],
   options: {
     doNotFollow: { path: "node_modules" },

@@ -17599,7 +17599,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories📌1📌40"
+          "🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories📌1📌40"
         ],
         "second": "🎆26🌙03☀️12⏰09⌚29⏱️47",
         "session": "⚪9916a30f03b14670b7b8361490a6e5c0",
@@ -17694,7 +17694,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories📌1📌40"
+          "🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories📌1📌40"
         ],
         "second": "🎆26🌙03☀️12⏰09⌚29⏱️57",
         "session": "⚪9916a30f03b14670b7b8361490a6e5c0",
@@ -17941,18 +17941,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories✂️story",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories✂️story",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories🪨meta",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories🪨meta",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories📌1📌40"
+          "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories📌1📌40"
         ],
         "second": "🎆26🌙03☀️12⏰09⌚31⏱️01",
         "session": "⚪9916a30f03b14670b7b8361490a6e5c0",
@@ -17995,18 +17995,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories✂️story",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories✂️story",
             "loc": 2
           },
           {
-            "id": "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories🪨meta",
+            "id": "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories🪨meta",
             "loc": 11
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio📚js🛅storybook🗃️stories🗃️elements🗃️aggregation🥼resizablestories📌1📌40"
+          "👤semio📚js🛅storybook🗃️stories🧩elements🗃️aggregation🥼resizablestories📌1📌40"
         ],
         "second": "🎆26🌙03☀️12⏰09⌚31⏱️23",
         "session": "⚪9916a30f03b14670b7b8361490a6e5c0",
