@@ -1,0 +1,21 @@
+{
+  "title": "Board Clean Refactor",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor @elements/board and board integration (topology, sketchpad) to be clean: remove legacy APIs, unify naming, consolidate exports, fix inconsistencies, ensure tests pass.",
+  "summary": "Legacy board/sketchpad paths removed in favor of clean mechanisms: WASM kind-catalog tests use `name` (not `label`); kit board diagram uses topology helpers `topologyKitBoardHandleAngle` and `topologyBoardCenterFromTopLeft`; `schema_gap_surfaces` rebuilt via ticket script (single @names list, explicit `gap_surface_families!` + register with `::paste::paste!`, region bounded to next meta //#region). Tests: @elements/board 80 cargo + 75 vitest + 6 playwright; @elements/topology 14 vitest + 1 playwright; `cargo check -p semio` passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1459"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪07369d2f766b41299436b2a9acef4991",
+    "⚪8ae9df003c504398a1b78b579c802479",
+    "⚪b2b60f557ec5434da124417bf2b4f505",
+    "⚪b0056d8d035148f1bae664bcc487bb3b",
+    "⚪594d5484a34b4927bb42fef4ed2128cb",
+    "⚪d90349a6e2514f4aa4975bda83092441",
+    "⚪86ce3e0a0da04e26a37f490777fb7250",
+    "⚪79ca165d5ecd4ac280bf97c6af2c99f8"
+  ]
+}

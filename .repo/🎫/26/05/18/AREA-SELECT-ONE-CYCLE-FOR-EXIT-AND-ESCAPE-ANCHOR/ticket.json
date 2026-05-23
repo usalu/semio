@@ -1,0 +1,11 @@
+{
+  "title": "Area Select One Cycle For Exit And Escape Anchor",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Selection exit + Escape anchor: during rectangle/lasso drag do not update exit chrome per move; on pointer_up commit apply one transition from initial_ids to final; cancel clears exit; emit anchorIds on area commit for TS Escape restore.",
+  "summary": "Rectangle/lasso preview uses set_selection_ids_gestured_preview so exit chrome does not update on each pointer_move. commit_area_select_from_initial runs on pointer_up (and tiny-move click clear) with exit transition from initial_ids to final hits and emits anchorIds for TS Escape restore. cancel_area_select clears exit chrome and restores selection without a synthetic exit transition. TS select handler applies anchorIds to selectionPreviousForEscape and skips captureSelectionForEscapeUndo when anchorIds present. Added board_host_area_select_freezes_exit_highlight_until_commit.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪93046ef00af34017a49a21fba5461f41"
+  ]
+}

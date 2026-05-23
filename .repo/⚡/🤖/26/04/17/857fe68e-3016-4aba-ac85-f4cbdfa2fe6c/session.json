@@ -27,8 +27,8 @@
           "tool_name": "Edit",
           "tool_input": {
             "file_path": "c:\\git\\semio\\.vscode\\launch.json",
-            "old_string": "      \"name\": \"🛠️dev👤semio📚server\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-session\",",
-            "new_string": "      \"name\": \"🛠️dev👤semio📚hub\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-hub\",",
+            "old_string": "      \"name\": \"🛠️dev🏘️semio📚server\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-session\",",
+            "new_string": "      \"name\": \"🛠️dev🏘️semio📚hub\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-hub\",",
             "replace_all": false
           },
           "permission_suggestions": []

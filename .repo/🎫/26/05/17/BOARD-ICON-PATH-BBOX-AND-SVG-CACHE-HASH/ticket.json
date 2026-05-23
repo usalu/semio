@@ -1,0 +1,10 @@
+{
+  "title": "Board Icon Path Bbox And Svg Cache Hash",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "Board icons: tight bbox by walking usvg path abs bounds; icon cache key hash(resolved svg)+colors so runtime iconKind/svg changes invalidate; wasm clearIconVectorCache + TS BoardRenderer wrapper; keep contain fit.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪5ab6719c4ea34a9cb51cc105ced0b10d"
+  ]
+}

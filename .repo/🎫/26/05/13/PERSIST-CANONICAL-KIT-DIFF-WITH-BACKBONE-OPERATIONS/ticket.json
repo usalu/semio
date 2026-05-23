@@ -1,0 +1,11 @@
+{
+  "title": "Persist Canonical Kit Diff With Backbone Operations",
+  "emoji": "📦",
+  "status": "closed",
+  "description": "Persist structured CanonicalKitDiff as kitDiff on OperationStepDto / SQLite beside kit operation input; wire ChildRuntime createFixedPiece recording; migration for _op_log.kit_diff_json; tests.",
+  "summary": "Removed KitRecordedStep: Change again stores only Vec\u003cKitOperation\u003e. Bundle OperationStepDto.kitDiff is filled in DevBackboneBundleDoc::edit_dto_from_runtime_change by replaying the same ordering as materialization (new Graph::scratch_kit_before_forward_step) and calling each operation's to_diff + canonical_kit_diff_to_wire_json. record_op_in_open_transaction stays input-only; backbone still gets kit wire from ChildRuntime after to_diff.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪320e693fb9504126bd027ff0f6f65c41"
+  ]
+}

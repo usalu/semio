@@ -1,0 +1,36 @@
+{
+  "name": "@coda/desktop",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/client/ui/desktop",
+        "command": "bunx electron-forge start",
+        "env": {
+          "ELECTRON_DISABLE_SANDBOX": "1"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/client/ui/desktop",
+        "command": "bunx electron-forge make",
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=8192"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/client/ui/desktop",
+        "command": "electron-forge publish",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

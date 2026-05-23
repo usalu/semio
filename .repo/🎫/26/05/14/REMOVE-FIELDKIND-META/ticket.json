@@ -1,0 +1,6 @@
+{
+  "id": "26/05/14/REMOVE-FIELDKIND-META",
+  "title": "Remove Fieldkind Meta Module",
+  "description": "Drop legacy `Module` `FieldKind` and persisted `Enum` literal nodes; kit member shapes are `Data` / `Computation` / `Reference` only. Align Neo4j GraphQL SDL and fulltext index.",
+  "summary": "Added idempotent migration region `RemoveFieldKindMetaModule`, removed `Enum` from `semio_name_fulltext`, updated `semio/dev/schema/neo4j/schema.graphql` (no `Enum` type, no `Module.enums`). Verification asserts zero `FieldKind` modules and zero `Enum` nodes after migrate."
+}

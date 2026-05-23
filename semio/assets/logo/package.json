@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/assets/logo",
   "projectType": "library",
-  "scripts": {
-    "dev": "tsx watch logo.ts",
-    "build": "tsx logo.ts"
-  },
   "dependencies": {
     "jsdom": "^24.1.3"
   },

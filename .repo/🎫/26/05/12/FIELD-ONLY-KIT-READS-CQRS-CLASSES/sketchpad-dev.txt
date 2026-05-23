@@ -1,0 +1,6 @@
+Sketchpad Vite (nx run @semio/sketchpad:dev) after @semio/react/host + @semio/js/legacy-host bridge:
+
+Local: http://localhost:5176/
+(5173–5175 were busy from prior dev servers.)
+
+No esbuild "No matching export" scan failure observed in this run.

@@ -1,0 +1,11 @@
+{
+  "title": "Export Live Metabolism Graph",
+  "emoji": "🫀",
+  "status": "closed",
+  "description": "Export the live Neo4j metabolism database to .repo/🛂/metabolism.cypher using the general generate script (bun ./script.ts generate neo4j metabolism).",
+  "summary": "Exported live Neo4j metabolism graph to .repo/🛂/metabolism.cypher via NEO4J_EXTRA_GRAPH_DATABASES=metabolism and bun ./script.ts generate neo4j metabolism. APOC: 3780 nodes, 5980 relationships, ~1.06 MB. See ticket export-log.md.",
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo",
+  "sessions": [
+    "⚪c181709bf04242d29a0299bc2ae88696"
+  ]
+}

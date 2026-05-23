@@ -1,0 +1,6 @@
+- `syncBaselineFromViewportCamera`: only updates `boardPlayPaneCamerasBaseline[activePaneId]`.
+- Redraw play start: seeds chase ref from current baseline per pane; no `setBoardPlayPaneCamerasBaseline(triptych(...))`.
+- Chase while playing: damps only `activePaneId` toward `triptychCamerasFromFixture`; other panes unchanged.
+- Post-play ease + final baseline commit: `blendTriptychCamerasActivePaneOnly` + merge only active pane from `triptych` on last rAF.
+- Nodes-redraw camera ease: same active-pane-only blend.
+- Removed unused `blendTriptychCameras` and `dampTriptychCamerasLinear` (replaced by per-pane damping).

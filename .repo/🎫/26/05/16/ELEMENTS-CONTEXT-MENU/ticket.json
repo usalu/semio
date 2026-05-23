@@ -1,0 +1,20 @@
+{
+  "title": "Elements Context Menu Mechanism",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Unified prop-based contextMenu across @elements/ui, board Node/Edge/Handle, and UIWindowKindDefinition. Radix @radix-ui/react-context-menu, BoardEventMap.contextmenu with hit-test, ContextMenuController on BoardCanvas, vitest and Playwright coverage.",
+  "summary": "Implemented ContextMenuItem, ContextMenu, ContextMenuController, and renderContextMenuItems using existing @radix-ui/react-dropdown-menu (right-click + invisible anchor; avoids new npm dep blocked by workspace). Extended Card, DiagramNode, UIWindowKindDefinition, and UICanvas portals. Board: BoardEventMap.contextmenu from canvas after pointerMoveScreen hit-test; BoardCanvas builds target menu map from descriptors; contextMenu on Node/Edge/Handle and BoardCanvas background. Board play demos node/edge/window/canvas menus. Vitest: descriptor preservation + contextmenu emission; Playwright: background menu on overview canvas. Ran: npx vitest run in elements/client/lib/board (34 passed).",
+  "github": {
+    "issue": ""
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [],
+  "files": [
+    "elements/client/lib/react/index.tsx",
+    "elements/client/lib/react/package.json",
+    "elements/client/lib/board/index.ts",
+    "elements/client/lib/board/index.tsx",
+    "elements/client/lib/board/play/index.tsx",
+    "elements/client/lib/board/play/e2e/board-play-gpu.spec.ts"
+  ]
+}

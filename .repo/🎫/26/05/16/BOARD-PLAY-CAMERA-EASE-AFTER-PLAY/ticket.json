@@ -1,0 +1,11 @@
+{
+  "title": "Board Play Camera Ease After Play",
+  "emoji": "📷",
+  "status": "closed",
+  "description": "After redraw play stops, avoid instant camera jump: hold 1s then ease cameras to triptych fit over 2s (smoothstep). Suppress camera basis tick during animation.",
+  "summary": "After redraw play stops, camera no longer snaps to triptych: hold pinned cameras 1s, then 2s smoothstep blend (slow–fast–slow) of all three pane cameras toward fresh triptych from current fixture; exponential zoom interpolation. Suppress camera-basis tick bumps during ease; cancel pending ease on play restart. Settings blurb updated.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪29ebca2df21349aea67cdb849337ae7e"
+  ]
+}

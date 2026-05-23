@@ -9,13 +9,17 @@
     "PWDEBUG": "console"
   },
   "eslint.useFlatConfig": true,
-  "eslint.packageManager": "npm",
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.packageManager": "bun",
+  "terminal.integrated.env.windows": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
+  "terminal.integrated.env.linux": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
+  "terminal.integrated.env.osx": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [
     {
       "directory": "elements/ui",
@@ -27,14 +31,17 @@
     }
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "always"
   },
   "workbench.externalBrowser": "chrome",
-  "workbench.trustedDomains": [
-    "*"
-  ],
+  "workbench.trustedDomains": ["*"],
   "remote.autoForwardPorts": true,
   "remote.portsAttributes": {
+    "6010": {
+      "label": "Monorepo Storybook",
+      "onAutoForward": "openBrowser"
+    },
     "6274": {
       "label": "MCP Inspector UI",
       "onAutoForward": "openBrowser"
@@ -45,9 +52,6 @@
     }
   },
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "always"
-  },
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
@@ -61,14 +65,14 @@
   "[csharp]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
   },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": [
-    "--rootdir=${workspaceFolder}",
-    "semio/py",
-    "semio/engine"
-  ],
+  "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}", "semio/py", "semio/engine"],
   "python.testing.cwd": "${workspaceFolder}",
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "python.analysis.languageServerMode": "full",
@@ -82,14 +86,16 @@
     }
   ],
   "dotnet.defaultSolution": "Monorepo.sln",
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": false,
+  "cmake.buildDirectory": "${workspaceFolder}/.repo/cache/cmake/${presetName}",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
   "chat.agent.maxRequests": 5000,
   "editor.minimap.enabled": true,
   "[svg]": {
     "editor.defaultFormatter": "jock.svg"
   },
-  "rust-analyzer.linkedProjects": [
-    "semio/rs/Cargo.toml"
-  ],
+  "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
   "rust-analyzer.testExplorer": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
@@ -99,5 +105,17 @@
   ],
   "chat.subagents.allowInvocationsFromSubagents": false,
   "python.terminal.activateEnvironment": false,
-  "kiroAgent.configureMCP": "Disabled"
+  "kiroAgent.configureMCP": "Disabled",
+  "diffEditor.renderIndicators": false,
+  "diffEditor.renderGutterMenu": false,
+  "diffEditor.experimental.showEmptyDecorations": false,
+  "diffEditor.renderMarginRevertIcon": false,
+  "diffEditor.renderSideBySide": false,
+  "chat.editing.autoAcceptDelay": 0,
+  "chat.editing.confirmEditRequestRetry": false,
+  "chat.editing.confirmEditRequestRemoval": false,
+  "inlineChat.showDiff": false,
+  "inlineChat.accessibleDiffView": "off",
+  "cursor.composer.shouldAutoAcceptDiffs": true,
+  "cursor.diffs.useCharacterLevelDiffs": false
 }

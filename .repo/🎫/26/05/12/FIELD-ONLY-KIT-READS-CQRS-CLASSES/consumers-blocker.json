@@ -1,0 +1,4 @@
+{
+  "blocked": [],
+  "note": "No files skipped for react-only API in this pass. If KitStore-era Storybook harnesses remain under semio/algorithms/.storybook, align them to ../../index or list here when they still require removed KitStore."
+}

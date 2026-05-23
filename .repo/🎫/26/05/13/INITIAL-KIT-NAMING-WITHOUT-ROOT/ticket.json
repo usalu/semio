@@ -1,0 +1,11 @@
+{
+  "title": "Initial Kit Naming Without Root",
+  "emoji": "🌱",
+  "status": "closed",
+  "description": "Align semio Rust graph and dev backbone bundle naming with SDL: no conceptual \"root\" for kit materialization—only initialKit / initial_kit and a mutable working kit. Rename Graph::mutable_kit_root to mutable_kit, DevBackboneGraphHead.root JSON field to initial_kit (wire still initialKit), empty_root_value to empty_initial_kit_value, register_entities root region to kit, update tests and worker guards.",
+  "summary": "Renamed kit/graph \"root\" wording to SDL-aligned initial kit: Graph::mutable_kit_root → mutable_kit; DevBackboneGraphHead root JSON field → initial_kit (wire still initialKit); empty_root_value → empty_initial_kit_value; register_entities region root → kit; bundle and hydrate paths use initial_kit; tests and worker guard updated. Fixed OperationConnection to use entity_id (not row_id), create_alternative_from_tip RwLock guard lifetime, materialized_kit_for_workspace and record_operation_in_open_transaction to resolve workspace once and look up alternatives by resolved id; golden/SQLite replay tests remap legacy draftId to the live graph id; normalized scoped replay uses graph.id.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kitapp",
+  "sessions": [
+    "⚪08bc6be4e59b411db1a94843d5adc3ec"
+  ]
+}

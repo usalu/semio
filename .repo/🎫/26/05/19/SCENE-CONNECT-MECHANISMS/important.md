@@ -1,0 +1,1 @@
+Scene connect: link drag from vortex handles, board-style compat (specificity + important), direct / indirect / proximity commits, rubber band, orbit gate during drag, optional handleMeshUrl or children mesh, sphere fallback. Play wires kindCatalogs + blocked vortex ids from ties.

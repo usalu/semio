@@ -1,0 +1,1861 @@
+type AddedAttributeToConceptInput {
+	attribute: Attribute!
+}
+
+type AddedAttributeToPortInput {
+	attribute: Attribute!
+}
+
+type AddedAttributeToQualityInput {
+	attribute: Attribute!
+}
+
+type AddedAttributeToTagInput {
+	attribute: Attribute!
+}
+
+type AddedAttributesToConceptInput {
+	attributes: AttributeConnection!
+}
+
+type AddedAttributesToPortInput {
+	attributes: AttributeConnection!
+}
+
+type AddedAttributesToQualityInput {
+	attributes: AttributeConnection!
+}
+
+type AddedAttributesToTagInput {
+	attributes: AttributeConnection!
+}
+
+type Alternative implements Workspace & Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	start: Checkpoint!
+	checkpoints: [Checkpoint!]!
+	checkpoint: CheckpointConnection!
+	latestWipCheckpointAncestor: Checkpoint
+	savedChanges: ChangeConnection!
+	unsavedChanges: ChangeConnection!
+	kit: Kit!
+	change(id: ID!): Change
+}
+
+type AlternativeCommand {
+	version: ID!
+	integrateIntoTheKit: ID!
+}
+
+type AlternativeConnection {
+	edges: [AlternativeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AlternativeEdge {
+	cursor: String!
+	node: Alternative!
+}
+
+"""
+@emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` placeholder).
+"""
+interface Artifact {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+}
+
+type Attribute {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	key: String!
+	value: String
+	definition: String
+}
+
+type AttributeConnection {
+	edges: [AttributeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AttributeEdge {
+	cursor: String!
+	node: Attribute!
+}
+
+type Author {
+	id: ID!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
+	hash: String!
+}
+
+type AuthorConnection {
+	edges: [AuthorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AuthorEdge {
+	cursor: String!
+	node: Author!
+}
+
+"""
+@emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
+"""
+interface Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	status: BackboneStatus!
+}
+
+"""
+@emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
+"""
+interface BackboneCommand {
+	detach: ID!
+	sync: ID!
+}
+
+type BackboneConnection {
+	edges: [BackboneEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
+"""
+type BackboneEdge {
+	cursor: String!
+	node: Backbone!
+}
+
+"""
+@emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
+"""
+enum BackboneStatus {
+	OFFLINE
+	RECONNECTING
+	ONLINE
+}
+
+type Benchmark {
+	id: ID!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
+	hash: String!
+}
+
+type BenchmarkConnection {
+	edges: [BenchmarkEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type BenchmarkEdge {
+	cursor: String!
+	node: Benchmark!
+}
+
+union Blueprint = Type | Design
+
+type BlueprintConnection {
+	edges: [BlueprintEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type BlueprintEdge {
+	cursor: String!
+	node: Blueprint!
+}
+
+type Change implements StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	edits: EditConnection!
+	startedAt: Timestamp!
+	savedAt: Timestamp
+	saved: Boolean!
+	description: String!
+	origin: String!
+	"""
+	@emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+	"""
+	forwardOperationRecordIds: [ID!]!
+	"""
+	@emoji 🔗 Ordered  operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+	"""
+	backwardOperationRecordIds: [ID!]!
+}
+
+type ChangeConnection {
+	edges: [ChangeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangeEdge {
+	cursor: String!
+	node: Change!
+}
+
+type ChangedDescription implements Operation {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+	entity: Kit!
+}
+
+type Checkpoint implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	timestamp: Timestamp
+	authors: AuthorConnection!
+	"""
+	@emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
+	"""
+	parent: Checkpoint
+	"""
+	@emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
+	"""
+	ancestors: [Checkpoint!]!
+	"""
+	@emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
+	"""
+	initial: Kit
+	"""
+	@emoji 📦 SDL `Checkpoint.kit` — materialized kit at this checkpoint; until checkpoint-owned `changes` are wired, matches `initial`.
+	"""
+	kit: Kit
+	changes: ChangeConnection!
+	change(id: ID!): Change
+	edits: EditConnection!
+	edit(id: ID!): Edit
+	message: String!
+}
+
+type CheckpointConnection {
+	edges: [CheckpointEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CheckpointEdge {
+	cursor: String!
+	node: Checkpoint!
+}
+
+scalar Color
+
+type Concept implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String
+	icon: String
+	order: Int
+	attributes: AttributeConnection!
+	attribute(id: ID!): Attribute
+}
+
+type ConceptConnection {
+	edges: [ConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConceptEdge {
+	cursor: String!
+	node: Concept!
+}
+
+type ConceptOperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+}
+
+type Conflict implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	authoritativeChange: Change
+	wipChange: Change
+	reasons: [String!]!
+}
+
+type ConflictConnection {
+	edges: [ConflictEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConflictEdge {
+	cursor: String!
+	node: Conflict!
+}
+
+type Connection implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	connected: Side!
+	connecting: Side!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+	attributes: AttributeConnection!
+	attribute(id: ID!): Attribute
+}
+
+type ConnectionConnection {
+	edges: [ConnectionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectionEdge {
+	cursor: String!
+	node: Connection!
+}
+
+type Connector implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	code: String!
+	description: String!
+	icon: String!
+	port: Port
+	qualities: QualityConnection!
+	attributes: AttributeConnection!
+	quality(id: ID!): Quality
+	attribute(id: ID!): Attribute
+}
+
+type ConnectorConnection {
+	edges: [ConnectorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectorEdge {
+	cursor: String!
+	node: Connector!
+}
+
+type ConnectorOperationInput {
+	rename(newCode: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+}
+
+"""
+@emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
+"""
+type Coordinate implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	u: Float!
+	v: Float!
+}
+
+type CoordinateEdge implements EntityEdge {
+	cursor: String!
+	node: Coordinate!
+}
+
+input CoordinateInput {
+	u: Float!
+	v: Float!
+}
+
+type CreatedConceptInput {
+	concept: Concept!
+}
+
+type CreatedConceptsInput {
+	concepts: ConceptConnection!
+}
+
+type CreatedFixedPiece implements Operation {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+	piece: Piece!
+}
+
+type CreatedPortInput {
+	port: Port!
+}
+
+type CreatedPortsInput {
+	ports: PortConnection!
+}
+
+type CreatedQualitiesInput {
+	qualities: QualityConnection!
+}
+
+type CreatedQualityInput {
+	quality: Quality!
+}
+
+type CreatedTagInput {
+	tag: Tag!
+}
+
+type CreatedTagsInput {
+	tags: TagConnection!
+}
+
+type DeletedConceptInput {
+	hasInput: Boolean!
+}
+
+type DeletedConceptsInput {
+	hasInput: Boolean!
+}
+
+type DeletedPortInput {
+	hasInput: Boolean!
+}
+
+type DeletedPortsInput {
+	hasInput: Boolean!
+}
+
+type DeletedQualitiesInput {
+	hasInput: Boolean!
+}
+
+type DeletedQualityInput {
+	hasInput: Boolean!
+}
+
+type DeletedTagInput {
+	hasInput: Boolean!
+}
+
+type DeletedTagsInput {
+	hasInput: Boolean!
+}
+
+type Design implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: Location
+	unit: String
+	createdAt: Timestamp
+	updatedAt: Timestamp
+	pieces: PieceConnection!
+	piece(id: ID!): Piece
+	connections: ConnectionConnection!
+	connection(id: ID!): Connection
+	layers: LayerConnection!
+	groups: GroupConnection!
+	authors: AuthorConnection!
+	qualities: QualityConnection!
+	props: PropConnection!
+	attributes: AttributeConnection!
+	stats: StatConnection!
+	qualitySum(qualityId: ID!): Float!
+	references: DesignConnection!
+	referencedBy: PieceConnection!
+}
+
+type DesignConnection {
+	edges: [DesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DesignEdge {
+	cursor: String!
+	node: Design!
+}
+
+type DesignOperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	flatten: ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+	addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
+	addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
+	addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
+	piece(id: ID!): PieceOperationInput!
+	pieces(ids: [ID!]!): PiecesOperationInput!
+	deletePiece(id: ID!): ID!
+	deletePieces(ids: [ID!]!): ID!
+	deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+}
+
+"""
+@emoji 🌐 SDL `interface Diff` — hash-backed diff projection (placeholder + future `VectorDiff`, …).
+"""
+interface Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+"""
+@emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` placeholder).
+"""
+interface Document {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+	previewImage: File
+}
+
+type DraggedPiece implements Operation {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+	pieces: [Piece!]!
+}
+
+type Edit implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	forwards: OperationConnection!
+	backwards: OperationConnection!
+	sequenceNumber: Int!
+	startedAt: Timestamp!
+	finishedAt: Timestamp
+	finished: Boolean
+	description: String!
+	origin: String!
+	changes: [Change!]!
+}
+
+type EditConnection {
+	edges: [EditEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type EditEdge {
+	cursor: String!
+	node: Edit!
+}
+
+type EmptyArtifact implements Artifact {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+}
+
+type EmptyDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type EmptyDocument implements Document {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+	previewImage: File
+}
+
+type EmptyEvent implements Event {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	timestamp: Timestamp!
+	involves: EntityConnection
+}
+
+type EmptyModification implements Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type EmptyPubInput implements Input {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type EmptyRichStrong implements RichStrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+}
+
+"""
+@emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
+"""
+interface Entity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+"""
+@emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
+"""
+interface EntityConnection {
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+interface EntityEdge {
+	cursor: String!
+}
+
+"""
+@emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` placeholder).
+"""
+interface Event {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	timestamp: Timestamp!
+	involves: EntityConnection
+}
+
+"""
+@emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
+"""
+type Family {
+	id: ID!
+	name: String!
+	description: String
+	icon: String
+	hash: String!
+}
+
+type FamilyConnection {
+	edges: [FamilyEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FamilyEdge {
+	cursor: String!
+	node: Family!
+}
+
+type File {
+	id: ID!
+	url: String!
+	mime: String
+	size: Int
+	description: String
+	created: Timestamp
+	updated: Timestamp
+	hash: String!
+	tag(id: ID!): Tag
+	quality(id: ID!): Quality
+	attribute(id: ID!): Attribute
+}
+
+type FileBackbone implements Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	status: BackboneStatus!
+}
+
+type FileBackboneCommand implements BackboneCommand {
+	detach: ID!
+	sync: ID!
+}
+
+type FileConnection {
+	edges: [FileEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileEdge {
+	cursor: String!
+	node: File!
+}
+
+type FixedPiece implements Operation {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+	piece: Piece!
+}
+
+type Folder {
+	id: ID!
+	path: String!
+	description: String
+	hash: String!
+	file(id: ID!): File
+	subFolder(id: ID!): Folder
+	family(id: ID!): Family
+	type(id: ID!): Type
+	design(id: ID!): Design
+}
+
+type FolderConnection {
+	edges: [FolderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FolderEdge {
+	cursor: String!
+	node: Folder!
+}
+
+type Graph implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	theKit: Workspace!
+	initialKit: Kit
+	alternative(id: ID!): Alternative
+	alternatives: AlternativeConnection!
+	checkpoint(id: ID!): Checkpoint
+	checkpoints: CheckpointConnection!
+	release(id: ID!): Checkpoint
+	releases: CheckpointConnection!
+}
+
+type Group {
+	id: ID!
+	name: String!
+	description: String
+	color: String
+	icon: String
+	hash: String!
+	pieces: PieceConnection!
+	piece(id: ID!): Piece
+}
+
+type GroupConnection {
+	edges: [GroupEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type GroupEdge {
+	cursor: String!
+	node: Group!
+}
+
+"""
+@emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
+"""
+interface Input {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type Kit implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	checkpoint: Checkpoint
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	createdAt: Timestamp
+	updatedAt: Timestamp
+	version: String
+	design(id: ID!): Design
+	designs: DesignConnection!
+	type(id: ID!): Type
+	types: TypeConnection!
+	files: FileConnection!
+	folders: FolderConnection!
+	families: FamilyConnection!
+	authors: AuthorConnection!
+	concepts: ConceptConnection!
+	tags: TagConnection!
+	qualities: QualityConnection!
+	props: PropConnection!
+	attributes: AttributeConnection!
+	stats: StatConnection!
+	file(id: ID!): File
+	folder(id: ID!): Folder
+	family(id: ID!): Family
+	author(id: ID!): Author
+	concept(id: ID!): Concept
+	tag(id: ID!): Tag
+	quality(id: ID!): Quality
+	prop(id: ID!): Prop
+	attribute(id: ID!): Attribute
+	stat(id: ID!): Stat
+}
+
+type Layer {
+	id: ID!
+	name: String!
+	description: String
+	"""
+	@emoji 🏷️ Artifact `icon` on SDL `Layer`.
+	"""
+	icon: String!
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
+	hash: String!
+}
+
+type LayerConnection {
+	edges: [LayerEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LayerEdge {
+	cursor: String!
+	node: Layer!
+}
+
+type LocalProvider implements Entity & Node & StrongEntity & Provider {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+	uri: String!
+	stores: StoreConnection!
+	store(id: ID!): StoreCommand!
+}
+
+type LocalProviderCommand implements ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+}
+
+"""
+@emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
+"""
+type Location implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	longitude: Float!
+	latitude: Float!
+	altitude: Float!
+}
+
+type LocationEdge implements EntityEdge {
+	cursor: String!
+	node: Location!
+}
+
+"""
+@emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
+"""
+input LocationInput {
+	longitude: Float!
+	latitude: Float!
+	altitude: Float!
+}
+
+"""
+@emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
+"""
+interface Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type Mutation {
+	"""
+	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` Commands block.
+	"""
+	session: SessionCommand!
+}
+
+interface Node {
+	id: ID!
+}
+
+type Offset implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	u: Float!
+	v: Float!
+}
+
+type OffsetEdge implements EntityEdge {
+	cursor: String!
+	node: Offset!
+}
+
+input OffsetInput {
+	u: Float!
+	v: Float!
+}
+
+"""
+🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
+"""
+interface Operation implements StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+}
+
+type OperationConnection {
+	edges: [OperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type OperationEdge {
+	cursor: String!
+	node: Operation!
+}
+
+type OperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	createTag(name: String!, description: String, icon: String, order: Int): ID!
+	tag(id: ID!): TagOperationInput!
+	deleteTag(id: ID!): ID!
+	deleteTags(ids: [ID!]!): ID!
+	createConcept(name: String!, description: String, icon: String, order: Int): ID!
+	concept(id: ID!): ConceptOperationInput!
+	deleteConcept(id: ID!): ID!
+	deleteConcepts(ids: [ID!]!): ID!
+	createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
+	quality(id: ID!): QualityOperationInput!
+	deleteQuality(id: ID!): ID!
+	deleteQualities(ids: [ID!]!): ID!
+	createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
+	type(id: ID!): TypeOperationInput!
+	deleteType(id: ID!): ID!
+	deleteTypes(ids: [ID!]!): ID!
+	createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
+	design(id: ID!): DesignOperationInput!
+	deleteDesign(id: ID!): ID!
+	deleteDesigns(ids: [ID!]!): ID!
+}
+
+type PageInfo {
+	hasNextPage: Boolean!
+	hasPreviousPage: Boolean!
+	startCursor: String
+	endCursor: String
+}
+
+type PageInfoConnection implements EntityConnection {
+	edges: [PageInfoEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
+"""
+type PageInfoEdge {
+	cursor: String!
+	node: PageInfo!
+}
+
+type Piece implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	blueprint: Entity!
+	name: String
+	description: String
+	position: Position
+	scale: Float
+	connectionKind: PieceConnectionKind
+	flatPosition: Position!
+	replaceableBlueprints: BlueprintConnection!
+	parentConnection: Connection
+	childConnections: [Connection!]!
+	parentPiece: Piece
+	childPieces: [Piece!]!
+	depth: Int!
+	path: [Piece!]!
+	props: [Prop!]!
+	prop(id: ID!): Prop
+	attributes: [Attribute!]!
+	attribute(id: ID!): Attribute
+	childConnection(id: ID!): Connection
+	childPiece(id: ID!): Piece
+}
+
+type PieceConnection {
+	edges: [PieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+enum PieceConnectionKind {
+	FIXED
+	CONNECTED
+}
+
+type PieceEdge {
+	cursor: String!
+	node: Piece!
+}
+
+type PieceOperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	drag(offset: OffsetInput!): ID!
+	move(position: PositionInput!): ID!
+	fix: ID!
+	changeBlueprint(blueprintId: ID!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+}
+
+type PiecesOperationInput {
+	drag(offset: OffsetInput!): ID!
+	move(offset: OffsetInput!): ID!
+	fix: ID!
+	changeBlueprint(blueprintId: ID!): ID!
+}
+
+type Place implements StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type Plane implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	origin: Point!
+	xAxis: Vector!
+	yAxis: Vector!
+}
+
+type PlaneEdge implements EntityEdge {
+	cursor: String!
+	node: Plane!
+}
+
+input PlaneInput {
+	origin: PointInput!
+	xAxis: VectorInput!
+	yAxis: VectorInput!
+}
+
+type Point implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type PointEdge implements EntityEdge {
+	cursor: String!
+	node: Point!
+}
+
+input PointInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Port implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	code: String
+	label: String
+	order: Int
+	attribute(id: ID!): Attribute
+}
+
+type PortConnection {
+	edges: [PortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PortEdge {
+	cursor: String!
+	node: Port!
+}
+
+type PortOperationInput {
+	rename(newCode: String!, newLabel: String): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+}
+
+type Position implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	center: Coordinate!
+	plane: Plane!
+}
+
+type PositionEdge implements EntityEdge {
+	cursor: String!
+	node: Position!
+}
+
+input PositionInput {
+	center: CoordinateInput!
+	plane: PlaneInput!
+}
+
+type Prop {
+	id: ID!
+	key: String!
+	value: String!
+	unit: String
+	hash: String!
+	"""
+	@emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+	"""
+	attribute(id: ID!): Attribute
+}
+
+type PropConnection {
+	edges: [PropEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PropEdge {
+	cursor: String!
+	node: Prop!
+}
+
+"""
+@emoji 🛰️ Golden `interface Provider` — concrete [`LocalProvider`] / [`RemoteProvider`].
+"""
+interface Provider {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+}
+
+"""
+@emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
+"""
+interface ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+}
+
+type Quality implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	icon: String
+	benchmarks: BenchmarkConnection!
+	attributes: AttributeConnection!
+	attribute(id: ID!): Attribute
+}
+
+type QualityConnection {
+	edges: [QualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type QualityEdge {
+	cursor: String!
+	node: Quality!
+}
+
+type QualityOperationInput {
+	rename(newKey: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+}
+
+type Query {
+	"""
+	@emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+	"""
+	node(id: ID!): Node
+	"""
+	@emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+	"""
+	entity(hash: ID!): Entity
+	"""
+	@emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+	"""
+	session: Session!
+	"""
+	@emoji 🏪 Active [`Store`] for bundle tests and relay paths (same row as `LocalProvider.stores` / `Session.stores`).
+	"""
+	store: Store!
+}
+
+type RemoteProvider implements Entity & Node & StrongEntity & Provider {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+	url: String!
+}
+
+type RemoteProviderCommand implements ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+	login(username: String!, passwordHash: String!, hubUrl: String): ID!
+	logout: ID!
+}
+
+type RemoteProviderConnection {
+	edges: [RemoteProviderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemoteProviderEdge {
+	cursor: String!
+	node: RemoteProvider!
+}
+
+type RemovedAttributeFromConceptInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributeFromPortInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributeFromQualityInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributeFromTagInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributesFromConceptInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributesFromPortInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributesFromQualityInput {
+	hasInput: Boolean!
+}
+
+type RemovedAttributesFromTagInput {
+	hasInput: Boolean!
+}
+
+type RenamedConceptInput {
+	name: String!
+}
+
+type RenamedKit implements Operation {
+	id: ID!
+	requestId: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
+	kit: Kit!
+}
+
+type RenamedPortInput {
+	code: String!
+	label: String!
+}
+
+type RenamedQualityInput {
+	key: String!
+}
+
+type RenamedTagInput {
+	name: String!
+}
+
+type Representation implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	url: String!
+	description: String!
+	icon: String!
+	file: File
+	tags: TagConnection!
+	qualities: QualityConnection!
+	attributes: AttributeConnection!
+	tag(id: ID!): Tag
+	quality(id: ID!): Quality
+	attribute(id: ID!): Attribute
+}
+
+type RepresentationConnection {
+	edges: [RepresentationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RepresentationEdge {
+	cursor: String!
+	node: Representation!
+}
+
+"""
+@emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete rows).
+"""
+interface RichStrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+}
+
+type Session implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	startedAt: Timestamp
+	owner: Entity
+	owns: EntityConnection
+	"""
+	@emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
+	"""
+	alternatives: AlternativeConnection!
+	alternative(id: ID!): Alternative
+	theKit: Workspace!
+	stores: StoreConnection!
+	localProvider: LocalProvider!
+	remoteProviders: RemoteProviderConnection!
+}
+
+type SessionCommand {
+	start: ID!
+	end: ID!
+	store(id: ID!): StoreCommand!
+	localProvider: LocalProviderCommand!
+	remoteProvider(url: String!): RemoteProviderCommand!
+}
+
+type Side implements StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	piece: Piece!
+	port: Port
+	designPiece: Piece
+	connector: Connector
+}
+
+type Stat {
+	id: ID!
+	key: String!
+	value: String!
+	unit: String
+	description: String
+	hash: String!
+	"""
+	@emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+	"""
+	attribute(id: ID!): Attribute
+}
+
+type StatConnection {
+	edges: [StatEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StatEdge {
+	cursor: String!
+	node: Stat!
+}
+
+type Store {
+	"""
+	@emoji 🌐 Writable in-progress graph head.
+	"""
+	wip: Graph!
+	"""
+	@emoji 🧾 Authoritative graph head when available.
+	"""
+	authoritative: Graph
+	"""
+	@emoji ⚔️ Current conflict registry as a relay connection.
+	"""
+	conflicts: ConflictConnection!
+}
+
+type StoreCommand {
+	backbone: BackboneCommand!
+	theKit: VersionCommand
+	alternative(id: ID!): AlternativeCommand!
+	startAlternative(name: String): ID!
+}
+
+type StoreConnection implements EntityConnection {
+	edges: [StoreEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StoreEdge {
+	cursor: String!
+	node: Store!
+}
+
+"""
+@emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
+"""
+interface StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type Subscription {
+	"""
+	@emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
+	"""
+	session: Session!
+	"""
+	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (placeholder selection until operation cursor wiring lands).
+	"""
+	operation: Operation!
+}
+
+type Tag implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String
+	icon: String
+	order: Int
+	attributes: AttributeConnection!
+	attribute(id: ID!): Attribute
+}
+
+type TagConnection {
+	edges: [TagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TagEdge {
+	cursor: String!
+	node: Tag!
+}
+
+type TagOperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+}
+
+type TheKit implements Workspace & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	checkpoint: CheckpointConnection!
+	latestWipCheckpointAncestor: Checkpoint
+	savedChanges: ChangeConnection!
+	unsavedChanges: ChangeConnection!
+	kit: Kit!
+}
+
+scalar Timestamp
+
+type Type implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	image: String!
+	unit: String!
+	created: Timestamp
+	updated: Timestamp
+	connectors: ConnectorConnection!
+	ports: PortConnection!
+	port(id: ID!): Port
+	connector(id: ID!): Connector
+	representations: RepresentationConnection!
+	representation(id: ID!): Representation
+	bestRepresentation(tagIds: [ID!]!): Representation
+	authors: AuthorConnection!
+	concepts: ConceptConnection!
+	tags: TagConnection!
+	qualities: QualityConnection!
+	props: PropConnection!
+	attributes: AttributeConnection!
+	stats: StatConnection!
+	author(id: ID!): Author
+	concept(id: ID!): Concept
+	tag(id: ID!): Tag
+	quality(id: ID!): Quality
+	prop(id: ID!): Prop
+	attribute(id: ID!): Attribute
+	stat(id: ID!): Stat
+}
+
+type TypeConnection {
+	edges: [TypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypeEdge {
+	cursor: String!
+	node: Type!
+}
+
+type TypeOperationInput {
+	rename(newName: String!): ID!
+	changeDescription(newDescription: String!): ID!
+	changeIcon(newIcon: String!): ID!
+	addAttribute(key: String!, value: String!, definition: String!): ID!
+	removeAttribute(id: ID!): ID!
+	removeAttributes(ids: [ID!]!): ID!
+	createPort(code: String, label: String, description: String, icon: String, order: Int): ID!
+	port(id: ID!): PortOperationInput!
+	deletePort(id: ID!): ID!
+	deletePorts(ids: [ID!]!): ID!
+	addConnector(code: String!, description: String, icon: String, portId: ID): ID!
+	connector(id: ID!): ConnectorOperationInput!
+	removeConnector(id: ID!): ID!
+	removeConnectors(ids: [ID!]!): ID!
+}
+
+type UnsavedChangeCommand {
+	kit: OperationInput!
+	save: ID!
+}
+
+type UpdatedConceptDescriptionInput {
+	description: String!
+}
+
+type UpdatedConceptIconInput {
+	icon: String!
+}
+
+type UpdatedPortDescriptionInput {
+	description: String!
+}
+
+type UpdatedPortIconInput {
+	icon: String!
+}
+
+type UpdatedQualityDescriptionInput {
+	description: String!
+}
+
+type UpdatedQualityIconInput {
+	icon: String!
+}
+
+type UpdatedTagDescriptionInput {
+	description: String!
+}
+
+type UpdatedTagIconInput {
+	icon: String!
+}
+
+type Vector implements Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type VectorEdge implements EntityEdge {
+	cursor: String!
+	node: Vector!
+}
+
+input VectorInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type VersionCommand {
+	startNewChange: ID!
+	unsavedChange(id: ID!): UnsavedChangeCommand!
+	save: ID!
+	createCheckpoint(message: String!): ID!
+}
+
+"""
+@emoji 🏷️ SDL `VersionKind` (`INITIAL_KIT` | `MATERIALIZED`) on golden `Version`.
+"""
+enum VersionKind {
+	INITIAL_KIT
+	MATERIALIZED
+}
+
+"""
+@emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
+"""
+interface WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type WebsocketBackbone implements Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	status: BackboneStatus!
+}
+
+type WebsocketBackboneCommand implements BackboneCommand {
+	detach: ID!
+	sync: ID!
+}
+
+interface Workspace {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	checkpoint: CheckpointConnection!
+	latestWipCheckpointAncestor: Checkpoint
+	savedChanges: ChangeConnection!
+	unsavedChanges: ChangeConnection!
+	kit: Kit!
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}

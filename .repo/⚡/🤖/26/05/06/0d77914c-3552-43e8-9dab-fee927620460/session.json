@@ -1,0 +1,69 @@
+{
+  "id": "0d77914c-3552-43e8-9dab-fee927620460",
+  "uri": "repo://session/0d77914c-3552-43e8-9dab-fee927620460",
+  "client": "cursor-chat",
+  "second": "2026-05-06T20:01:39Z",
+  "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/0d77914c-3552-43e8-9dab-fee927620460/0d77914c-3552-43e8-9dab-fee927620460.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-05-06T20:01:39Z",
+        "session": "0d77914c-3552-43e8-9dab-fee927620460"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "generation_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "model": "composer-2",
+          "is_background_agent": false,
+          "session_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "hook_event_name": "sessionStart",
+          "cursor_version": "2026.04.30-4edb302",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "175b49570db1f9c049b365276a2309df21df4e86",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-06T20:01:45Z",
+        "session": "0d77914c-3552-43e8-9dab-fee927620460",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/0d77914c-3552-43e8-9dab-fee927620460/0d77914c-3552-43e8-9dab-fee927620460.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "generation_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "model": "composer-2",
+          "reason": "completed",
+          "duration_ms": 6942,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "session_id": "0d77914c-3552-43e8-9dab-fee927620460",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2026.04.30-4edb302",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@iek.uni-hannover.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/0d77914c-3552-43e8-9dab-fee927620460/0d77914c-3552-43e8-9dab-fee927620460.jsonl"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

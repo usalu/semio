@@ -1,0 +1,14 @@
+{
+  "title": "Board Tree Redraw Respects Locked Nodes",
+  "emoji": "📌",
+  "status": "closed",
+  "description": "Hierarchical tree redraw (`apply_hierarchical_tree_layout_to_fixture_v1_value` / `RedrawFixtureOptions` hierarchical-tree branch) must respect `lockedNodeIds` like force graph: pinned visible nodes keep their current fixture `x`/`y` on redraw; other nodes still receive Buchheim positions.",
+  "summary": "Hierarchical tree layout now honors `lockedNodeIds`: before writing Buchheim positions, visible locked graph nodes capture their current fixture centers and those coordinates are written back instead of the computed layout. `HierarchicalTreeLayoutOptions` gained `lockedNodeIds` (serde camelCase). The redraw dispatcher merges top-level `lockedNodeIds` into tree options like force graph. TypeScript `BoardRedrawLayoutOptions.hierarchicalTree` accepts optional `lockedNodeIds`. Added Rust tests `hierarchical_tree_pins_locked_root_coordinates`, `redraw_hierarchical_tree_nested_locked_node_ids_pins`, and Vitest `keeps locked node coordinates fixed on tree redraw`. Verified `cargo test` filters, wasm-pack release build, and full board Vitest.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1433"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪f1636364dc5a44c8bfc5fe81c0f746a7"
+  ]
+}

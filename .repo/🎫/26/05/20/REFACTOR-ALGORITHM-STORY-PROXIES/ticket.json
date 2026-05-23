@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Algorithm Story Proxies",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Refactor semio algorithm Storybook stories: shared hooks in semio/dev/algorithms/index.ts, thin story frames, unified flat/layout loading and diff preview helpers.",
+  "summary": "Refactored algorithm Storybook stack into thin IPO proxies: shared story hooks/helpers in semio/dev/algorithms/index.ts (useFlatDesignPreview, useFlattenPreview, useAlgorithmAsyncRun, useAlgorithmPieceSelection, mergeKitDesigns, designFromKit, previewDesignWithAppliedDiff, loadFlatDesignBundle). All IPO stories (Drag, Move, Delete, Flatten, CopyAndPaste, Cluster, FindReplaceable) now use shared hooks; duplicate effects and DesignEntity applyDiff paths removed. Vitest 5/5 pass.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪4d82145b3a1245f2ae274dc3ea5f62be"
+  ]
+}

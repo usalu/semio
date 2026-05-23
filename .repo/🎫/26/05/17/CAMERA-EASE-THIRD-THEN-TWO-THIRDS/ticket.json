@@ -1,0 +1,11 @@
+{
+  "title": "Camera Ease Third Then Two Thirds",
+  "emoji": "⏱️",
+  "status": "closed",
+  "description": "Post-redraw camera: single RAF timeline 3s total; hold first third then ease two thirds; remove setTimeout hold.",
+  "summary": "Replaced 1s setTimeout + 2s RAF with one RAF loop over BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS=3000: no camera state updates during first third (holdEnd=1000ms); blend u in [0,1] over remaining 2000ms. Removed hold timer ref. Settings blurb updated. Vitest 58 passed.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪d650550843244632bfcd27fe70c9f83a"
+  ]
+}

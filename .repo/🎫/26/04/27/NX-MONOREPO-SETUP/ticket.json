@@ -1,0 +1,11 @@
+{
+  "title": "Nx Monorepo Setup",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Align npm workspaces with Nx projects, tighten nx.json, standardize project metadata, validate graph and targets.",
+  "summary": "Normalized npm workspaces (removed semio/studio, added semio/store and semio/assets/images), tightened nx.json (defaultBase, namedInputs, workspaceLayout, targetDefaults with production inputs for build), aligned root/VS Code Nx project ids to package names, fixed package.json metadata and repository directories, and repaired semio/js strict TypeScript (GraphQL helpers, kitGraphqlJsonToReadonlyArray, isJsonObjectNode, VCS batch casts, KitColoredConnectorRowDto). Validation: npm install, npx nx show projects, npx nx build semio/graphql, npx nx run-many -t build -p @semio/js @repo/client @repo/server @elements/ui, npx nx test @semio/js.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪d3a3a586171341aa82da0f14d77a012b"
+  ]
+}

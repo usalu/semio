@@ -1,7 +1,42 @@
-# Codex MCP Server Configuration
-# See: https://github.com/openai/codex/blob/main/docs/config.md
-
 [mcp_servers.repo]
-command = "go"
-args = ["run", "./repo/codex"]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "stdio", "codex"]
 enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-semio]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "semio"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-elements]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "elements"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-coda]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "coda"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-reuse]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "reuse"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-metabolism]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-extra]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j"]
+enabled = true
+cwd = "."
+env = { NEO4J_DATABASE = "${env:NEO4J_EXTRA_GRAPH_DATABASE}" }

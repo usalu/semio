@@ -9,10 +9,10 @@
     <br/>
     <a href="https://play.semio-tech.com"><img src="semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
     <a href="https://docs.semio-tech.com"><img src="semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
+    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>
+     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The repository."></a>
     <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
     <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
@@ -59,60 +59,49 @@ Let me walk you through 🚶
    - [🐞 semio.ladybug](#-semioladybug-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#-principles-)
-   - [🏗️ Projects](#-projects-)
-   - [👤 semio](#-semio-)
-   - [🧰 semio-repo](#-semio-repo-)
-   - [🔬 coda](#-coda-)
-   - [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
-   - [🟦 Typescript](#-typescript-)
-   - [🐹 Go](#-go-)
-   - [🦀 Rust](#-rust-)
-   - [🟪 .NET](#-net-)
-   - [🐍 Python](#-python-)
+   - [🏗️ Technologies](#-technologies-)
+     - [👤 semio](#-semio-)
+     - [🧰 repo](#-repo-)
+     - [🔬 coda](#-coda-)
+     - [🧩 elements](#-elements-)
    - [🔀 Git](#-git-)
-   - [🦑 GitKraken](#-gitkraken-)
-   - [💬 Discord](#-discord-)
-   - [📢 Release](#-release-)
-   - [🏷️ Tag](#%EF%B8%8F-tag-)
-   - [🌿 Branch](#-branch-)
-   - [🗃️️ Commit](#%EF%B8%8F-commit-)
+     - [🦑 GitKraken](#-gitkraken-)
+     - [🔍 ripgrep](#-ripgrep-)
+     - [💬 Discord](#-discord-)
+     - [📢 Release](#-release-)
+     - [🏷️ Tag](#%EF%B8%8F-tag-)
+     - [🌿 Branch](#-branch-)
+     - [🗃️️ Commit](#%EF%B8%8F-commit-)
    - [🔀 Tools](#-git-)
-1. [🧑‍💻 Development](#-development-)
-
-- [🖥️ Systems](#-systems-)
-  - [🪟 Windows](#-windows-)
-  - [🍎 macOS](#-macos-)
-  - [🐧 Linux](#-linux-)
-- [📒 Tickets and reports](#-tickets-and-reports)
-- [🔌 Connector Numbers](#-port-numbers-)
-- [🤖 AI](#-ai-)
-  - [🛠️ Uses-Cases](#-uses-cases-)
-    - [⚖️ Decision Making](#-decision-making-)
-    - [🔁 Refactoring](#-refactoring-)
-    - [🐛 Bug Fixes](#-bug-fixes-)
-  - [⌨️️ Tools](#-tools-)
-    - [🌐 Web-Chat](#-web-chat-)
-      - [❄ ChatGPT](#-chatgpt-)
-      - [🌟 Gemini](#-gemini-)
-      - [AI studio](#-ai-studio-)
-    - [💻 Editor](#-editor-)
-      - [✈ Copilot](#-copilot-)
-      - [🖱️️ Cursor](#-cursor-)
-      - [🌊 Windsurf](#-windsurf-)
-    - [⌨️️ CLI](#-cli-)
-      - [⌨️️ Claude Code](#-claude-code-)
-      - [🧾 Codex](#-codex-)
-    - [☁ Cloud](#-cloud-)
-      - [🦑 Jules](#-jules-)
-    - [🔍 Agents](#-agents-)
-      - [↕ Reorderer](#-reorderer-)
-      - [🔁 Formatter](#-formatter-)
-    - [🤖 Models](#-models-)
-      - [Claude Opus 4.5](#-opus-45-)
-      - [GPT-5.2 Codex](#-gpt-52-codex-)
-      - [GPT-5.3 Codex](#-gpt-53-codex-)
-  - [🔄 CI/CD](#-cicd-)
-
+1. [🧑💻 Development](#-development-)
+   - [🖥️ Systems](#-systems-)
+     - [🪟 Windows](#-windows-)
+     - [🍎 macOS](#-macos-)
+     - [🐧 Linux](#-linux-)
+   - [🤖 AI](#-ai-)
+     - [🛠️ Uses-Cases](#-uses-cases-)
+       - [⚖️ Decision Making](#-decision-making-)
+       - [🔁 Refactoring](#-refactoring-)
+       - [🐛 Bug Fixes](#-bug-fixes-)
+     - [⌨️️ Tools](#-tools-)
+     - [🌐 Web-Chat](#-web-chat-)
+       - [❄ ChatGPT](#-chatgpt-)
+       - [🌟 Gemini](#-gemini-)
+       - [AI studio](#-ai-studio-)
+     - [💻 Editor](#-editor-)
+       - [✈ Copilot](#-copilot-)
+       - [🖱️️ Cursor](#-cursor-)
+     - [🌊 Windsurf](#-windsurf-)
+     - [⌨️️ CLI](#-cli-)
+       - [⌨️️ Claude Code](#-claude-code-)
+       - [🧾 Codex](#-codex-)
+     - [☁ Cloud](#-cloud-)
+       - [🦑 Jules](#-jules-)
+     - [🔍 Agents](#-agents-)
+       - [↕ Reorderer](#-reorderer-)
+       - [🔁 Formatter](#-formatter-)
+     - [🤖 Models](#-models-)
+   - [🔄 CI/CD](#-cicd-)
 1. [💯 Brand](#-brand-)
    - [✍ Concept](#%EF%B8%8F-concept-)
      - [✅ Do](#-do-)
@@ -134,11 +123,7 @@ Let me walk you through 🚶
 
 # 🛍 Products [↑](#-overview)
 
-> Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
-
-Work-in-progress artifacts stay bundled with the active ticket workspace so teams can trace temporary data without hunting global temp locations.
-The engine offers a dev/debug startup mode that waits for a debugger to attach before it runs.
-The engine can also run as a pure stdio MCP server for tool integrations.
+> Do you wonder how semio is interoperable? The reason is a shared [specification](#-requirements-) 🪢
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
@@ -146,60 +131,31 @@ The engine can also run as a pure stdio MCP server for tool integrations.
 
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
 
-Sketchpad uses semantic borders to communicate interactive element edges and window boundaries. Windows are separated from the canvas edge and from each other by a single spacing unit, and each window is outlined by a continuous border.
-
-Each window has a consistent set of icon actions (open in new window, maximize/minimize, close) that stays in the same position across window kinds.
-
-Sketchpad uses background levels to visually distinguish the base canvas from windows, panels, and transient UI surfaces.
-
-Sketchpad is a multi-window workspace: each app defines which window kinds it supports and window layouts persist so users can restore their preferred arrangement.
-
-In a multi-window workspace, exactly one window is active and its surface uses the active background color; table views follow the active window surface background.
-
-Hover and selection cues stay consistent across Home, Kit, Design, Type, Quality, Docs, and Feedback so focus follows your pointer and selection across the workspace.
-
-![sketchpad demo](/assets/images/sketchpad-demo.gif)
+![sketchpad demo](semio/assets/images/sketchpad-demo.gif)
 
 ## 👥 studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
-<!-- ![semio studio Demo](/assets/images/studio-demo.png) -->
+![semio studio Demo](semio/assets/images/studio-demo.png)
 
 ## ☁ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
-![Cloud Demo](/assets/images/cloud-demo.png)
+![Cloud Demo](semio/assets/images/cloud-demo.png)
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with semio ✍
 
-![semio assistant Demo](/assets/images/assistant-demo.png)
-
-## VS Code Extension [↑](#%EF%B8%8F-products-)
-
-The VS Code extension keeps tickets close to daily work with inline close or reopen actions that act on the selected ticket, commit visibility, and concise hover descriptions for quick scanning.
-Automation tooling rejects invalid arguments and non-file paths so MCP-driven workflows surface mistakes immediately.
-Ticket creation MUST require a Goal ID and interaction starts ALWAYS request a description, while file lists can be added later when needed.
-Ticket interaction and finish actions attach git-derived file lists and line totals scoped to the ticket files so progress and impact are visible from the ticket view.
-Code hygiene diagnostics ignore comment markers inside string literals so snippets and URLs stay clean of false comment warnings.
-Code hygiene diagnostics flag orphan definitions outside named sections so the file structure stays consistent.
-The command browser mirrors the repo command and subcommand hierarchy so discovery follows the same structure as the CLI.
-Problem list entries open in dedicated editor tabs so edits are immediately saveable.
-Contributor views merge ticket activity and file header credits into a per-person breakdown with line totals, grouped tickets, commits, bundles, and file navigation for quick context.
-The built-in Explorer adds a Sections panel that lists the current file structure (including JSON object keys), lets you jump to a section on click, supports F2 rename, and provides inline create-child, rename, delete, and drag-move actions.
-The `semio-repo: Navigate` command (`semio.navigate`) accepts any `semiorepo://` URI or plain artifact ID and opens the corresponding resource: files open in the editor, folders and bundles reveal in the Explorer, tickets open their `ticket.md`, goals open their `goal.json`, contributors and commits open GitHub in the browser, and sections and definitions jump to the correct line.
-The `semio-repo: Navigate to...` command (`semio.navigateTo`) opens a quick pick listing all tree nodes from the repo.
-Clicking any tree item in the Monorepo view navigates to its resource, including goals which open their `goal.json`.
-A URI handler registered for the `semiorepo` scheme means clicking `semiorepo://` links from terminals, markdown previews, or external applications triggers navigation within VS Code.
+![semio assistant Demo](semio/assets/images/assistant-demo.png)
 
 ## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
 
 A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for semio ⚡
 
-![semio Grasshopper Demo](/assets/images/grasshopper-demo.png)
+![semio Grasshopper Demo](semio/assets/images/grasshopper-demo.png)
 
 ## 🦏 semio.3dm [↑](#%EF%B8%8F-products-)
 
@@ -209,190 +165,17 @@ A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio �
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
 
-![Wasp Demo](/assets/images/wasp-demo.png)
+![Wasp Demo](semio/assets/images/wasp-demo.png)
 
 ## 🦌 semio.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
 
-![Monoceros Demo](/assets/images/monoceros-demo.png)
+![Monoceros Demo](semio/assets/images/monoceros-demo.png)
 
 ## 🐞 semio.ladybug [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
-
-# 📄 Specs [↑](#-overview)
-
-## 📦 Kit [↑](#-specs-)
-
-A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
-
-A [`kit`](#-kit-) is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
-
-A _static_ [`kit`](#-kit-) contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
-
-The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
-
-For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
-
-## 🏘 Design [↑](#-specs-)
-
-A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
-
-A [`design`](#-design-) is _proto_ (a _protodesign_) when it has no _parent_.
-
-_Children_ of a _parent_ are \_subdesigns.
-
-A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
-
-The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
-
-Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
-
-## 🏠 Type [↑](#-specs-)
-
-A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
-
-A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
-
-_Children_ of a _parent_ are \_subtypes.
-
-A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
-
-## 🔗 Connection [↑](#-specs-)
-
-A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
-
-The _translation_ is applied first, then the _rotation_ 🥈
-
-The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but there is no difference between them 🔄
-
-The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡
-
-A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
-
-## ⭕ Piece [↑](#-specs-)
-
-A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
-
-A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
-
-A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
-
-The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
-
-## ⚓ Connector [↑](#-specs-)
-
-A [`connector`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
-
-A [`connector`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
-
-A [`connector`](#-port-) can have a connector **port** and a list of **compatible ports** for explicit compatibility control 👨‍👩‍👧‍👦
-
-No **port** means the _default_ port and no **compatible ports** means the connector is compatible with all other connectors 🔑
-
-It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔
-
-A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
-
-## 💾 Model [↑](#-specs-)
-
-A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
-
-No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
-
-The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
-
-## 🏷️ Attribute [↑](#-specs-)
-
-A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
-
-The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
-
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
-
-The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
-
-- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
-- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
-- `°` for degree, `rad` for radian
-- `N` for newton, `kN` for kilonewton, `MN` for meganewton
-- `°C` for degree Celsius, `°F` for degree Fahrenheit
-- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
-- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
-- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
-- `kWh/m²a` for kilowatt-hour per square meter per year
-- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
-- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
-- …
-
-A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
-
-## 🏷️ Tag [↑](#-specs-)
-
-A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
-
-## ◳ Plane [↑](#-specs-)
-
-A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈
-
-The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
-
-## 🔗 Url [↑](#-specs-)
-
-A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
-
-A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
-
-## 🔢 Quality [↑](#-specs-)
-
-A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
-
-A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
-
-The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
-
-## 📊 Benchmark [↑](#-specs-)
-
-A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
-
-Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
-
-## 🏷️ Concept [↑](#-specs-)
-
-A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
-
-Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
-
-## 👤 Author [↑](#-specs-)
-
-An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
-
-Authors provide attribution and contact information for design ownership and collaboration 🤝
-
-## 📋 Layer [↑](#-specs-)
-
-A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
-
-Layers provide a way to group and manage pieces logically within complex designs 📑
-
-## 👥 Group [↑](#-specs-)
-
-A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
-
-Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
-
-## ⚙️️ Prop [↑](#-specs-)
-
-A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
-
-Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
-
-## 📈 Stat [↑](#-specs-)
-
-A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
-
-Stats provide computed or measured performance data for entire designs using the quality framework 📈
 
 # 🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)
 
@@ -587,6 +370,26 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
+## 🏗️ Technologies [↑](#-repo-)
+
+The monorepo organizes its code into distinct technologies, each serving a specific domain in the ecosystem:
+
+### [👤 semio](semio/README.md) [↑](#-technologies-)
+
+The core design-information-modeling technology, containing the main schema, engines, and domain implementations.
+
+### [🧰 repo](repo/README.md) [↑](#-technologies-)
+
+Infrastructure and tooling for the monorepo, including CLI, vscode integrations, MCP servers, and generic utilities.
+
+### [🔬 coda](coda/README.md) [↑](#-technologies-)
+
+A research project introducing an AI-first design assistant, bridging the semantic graph with interactive UI.
+
+### [🧩 elements](elements/README.md) [↑](#-technologies-)
+
+Shared React UI components and layouts used across the browser-based applications within the monorepo.
+
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
 
 ### 🦑 GitKraken [↑](#-git-)
@@ -598,6 +401,14 @@ We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git clie
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
+The devcontainer installs Linux GitKraken Desktop and bootstraps zero-touch local workspace config for the semio monorepo and its git submodules, so the default Semio workspace is ready after attach without manual repository grouping 🔀
+
+### 🔍 ripgrep [↑](#-git-)
+
+The devcontainer installs [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) for zero-touch codebase searching 🔎
+
+It is the fastest way to find anything in this monorepo ⚡
+
 ### 💬 Discord [↑](#-git-)
 
 Most git events are synchronized with our [repo channel](https://discord.com/channels/1338232508264747130/1339164626658525246) 💬
@@ -606,7 +417,7 @@ It is perfect to find the latest activities and the history 🔍
 
 ### 📢 Release [↑](#-gitstyle-)
 
-Every release contains a set of matching [specs](#-specs-), [bundles](#-bundles-), [examples](#-examples-) and [docs](#-docs-) 📦
+Every release contains a set of matching [requirements](#-requirements-), [bundles](#-bundles-), [examples](#-examples-) and [docs](#-docs-) 📦
 
 The release notes follow this format:
 
@@ -695,7 +506,7 @@ Different [ecosystems](#-ecosystems-) need different tools 🧰
 
 ## 🐳 Devcontainer (Recommended) [↑](#-development)
 
-The recommended way to develop is using the devcontainer which provides a consistent cross-platform environment.
+The recommended way to develop is using the devcontainer which provides a consistent cross-platform environment 🖥️
 
 **Prerequisites:**
 
@@ -711,125 +522,51 @@ The recommended way to develop is using the devcontainer which provides a consis
 
 The devcontainer includes:
 
-- Node.js 22.x, Go 1.24, Python 3.13, .NET SDK 7.0/8.0, Rust
+- Node.js 24 LTS, Go 1.26, Python 3.14, .NET SDK 8.0/9.0/10.0, Rust 1.92
 - All required VS Code extensions
 - Pre-configured development environment
 - Port forwarding for all dev servers (3000, 4000, 4321, 5678, 6006, 2507)
 
-## 🪟 Windows Setup (Legacy) [↑](#-development)
+## 🪟 Windows Setup [↑](#-development)
 
-For a complete setup you need:
+Native Windows development is zero-touch through the checked-in bootstrap script:
 
-- Windows 10 or 11
-- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
-- [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
-- [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
-- Python 3.14
-- [uv](https://docs.astral.sh/uv/)
-- [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
-
-If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
-
-Afterwards you can install uv with this command:
-
-```bash
-irm https://astral.sh/uv/install.ps1 | iex
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File script.ps1 setup
 ```
 
-Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️️
+The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
 
-## 🎫 Tickets [↑](#-development)
+- Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
+- Microsoft OpenJDK 21 and native Neo4j Desktop integration
+- Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
+- GitKraken Desktop + CLI, F3D, VS Code + `code`
+- Gemini CLI, TypeScript LSP, Pyright
+- repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
 
-Contributor workflows use tickets to track each task across interactions.
-A ticket interaction records a prompt, author, and is bounded by `{started, finished}` timestamps.
-Ticket workflows record file touch lists and per-file line diffs so work is auditable and easy to continue.
-Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place, and an `important.md` file for compulsory actions that must be completed before the ticket can be finished.
+After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
-## 🧰 Breachs [↑](#-development)
+Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Instance** named `semio`, set the initial password to `password`, and start it. The repo setup then enables APOC on that DBMS, restarts it when needed, and configures/imports through Bolt without editing Desktop internals:
 
-Contributor workflows include an automated code-quality report that highlights inline and multi-line comments (including JSDoc blocks), missing license headers, malformed region blocks, and empty regions before changes are shared.
-Comment scanning works uniformly across all supported languages (TypeScript, Go, Python, C#, Shell, Rust) through a single generic implementation in `BaseLanguage.ScanComments`. Each language declares its own string literal flavors (template literals for JS/TS, raw backtick strings for Go, triple-quoted strings for Python, verbatim `@""` strings for C#) so the scanner correctly ignores comment markers inside string contexts. Each language also declares its own skip directives (e.g. `eslint-`/`@ts-` for TypeScript, `nolint` for Go, `noqa`/`type: ignore` for Python, `pragma` for C#) which are excluded from comment breachs alongside the built-in `TODO` and `semio-ignore-` directives.
-It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
-Each reported problem includes a short reason and solution so contributors can resolve breachs quickly.
+- URL: `bolt://127.0.0.1:7687`
+- User: `neo4j`
+- Password: `password`
+- Browser: `http://127.0.0.1:7474`
+- Database: `neo4j`
 
-The `fix` command applies autofixes for all autofixable statutes: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻 semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
-After removing lines, a post-processing step collapses consecutive blank lines so the output stays clean.
-Non-autofixable breachs (missing header regions, unnamed region starts, orphan definitions) are reported but left for manual resolution.
+Native macOS and Linux use the same root router:
 
-## 🔌 Port Numbers [↑](#-development-)
+```bash
+bash ./script.sh setup
+```
 
-Overview of all connectors used during development and in final packages:
+IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `semio`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
 
-| Service    | Port   | Command / Package      | Notes                                                                           |
-| ---------- | ------ | ---------------------- | ------------------------------------------------------------------------------- |
-| Sketchpad  | `3000` | `dev js js sketchpad`  | Vite dev server for Sketchpad                                                   |
-| Play       | `4000` | `dev play`             | Vite dev server for Play                                                        |
-| Docs       | `4321` | `dev docs`             | Astro dev server (default)                                                      |
-| Storybook  | `6006` | `dev js js storybook`  | Storybook dev server (default)                                                  |
-| Playwright | `5173` | `npm test` (js)        | Test server for Playwright E2E tests                                            |
-| Engine     | `YYMM` | `semio/engine` package | Connector derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
+**Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 
-#### Running Tasks
+**Optional MCP graphs:** The **`neo4j-metabolism`** server runs `… mcp neo4j metabolism` (Bolt database `metabolism`, same argv pattern as the four product servers). For any other extra Bolt name without adding another MCP entry, set **`NEO4J_EXTRA_GRAPH_DATABASE`** and use **`neo4j-extra`** (it runs `… mcp neo4j` with no argv segments so `NEO4J_DATABASE` comes from that env). **`bun run generate`** uses **`NEO4J_EXTRA_GRAPH_DATABASES`** (plural, comma list) to include extra graphs in the APOC export loop alongside the four product graphs.
 
-Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and select from:
-
-**Root-level commands:**
-
-- `build` - Build all packages
-- `test` - Run all tests
-- `fix` - Run auto-fixes/formatters
-- `analyze` - Run non-mutating checks
-- `preflight` - Run all preflight checks (default build task)
-- `pre-commit` - Run the monorepo pre-commit pipeline (`preflight`)
-- `pre-commit:global:install` - Install a global git `pre-commit` hook that runs this pipeline in this repo
-- `update` - Update dependencies
-- `publish:test` - Publish to test servers
-- `publish` - Publish packages
-- `dev` - Start all dev servers
-- `dev js js storybook` - Start `semio/js` Storybook
-- `dev js js sketchpad` - Start `semio/js` Vite Sketchpad (connector `3000`)
-
-Run `npm run pre-commit:global:install` once per machine to replace project-local Husky hooks with a global git hook path (`~/.config/git/hooks`).
-
-**Workspace-specific commands:**
-
-- `build [workspace]` - e.g., `build js`, `build engine`, `build vscode`
-- `test [workspace]` - e.g., `test js`, `test engine`, `test vscode`
-- `preflight [workspace]` - e.g., `preflight js`, `preflight engine`
-- `dev [workspace]` - e.g., `dev js`, `dev engine`, `dev play`, `dev docs`
-
-#### Launch Configurations
-
-Press `F5` or use the Run and Debug panel to launch:
-
-**Development:**
-
-- `dev` - Start all services with Python debugger attached
-- `dev engine` / `dev js` / `dev play` / `dev docs` / `dev vscode` - Individual services
-- `dev js js storybook` / `dev js js sketchpad` - `semio/js` specialized dev entrypoints
-
-**Testing:**
-
-- `test` - Run all tests
-- `test js` / `test engine` / `test vscode` - Individual test suites
-
-**Fix / Analyze:**
-
-- `fix` - Run auto-fixes/formatters
-- `analyze` - Run non-mutating checks
-
-**Preflight:**
-
-- `preflight` - Run all preflight checks
-- `preflight js` / `preflight engine` / `preflight vscode` - Individual checks
-
-**Building:**
-
-- `build assets` / `build icons` / `build engine` / `build js` / `build docs` - Individual builds
-
-**Publishing:**
-
-- `update` / `publish:test` / `publish` - Root-level publishing commands
+**If you use Enterprise and an extra graph is missing:** Connect to the `system` database and run `CREATE DATABASE <name> IF NOT EXISTS;` then `START DATABASE <name> WAIT;` (use backticks around `<name>` if it contains `-` or other special characters), and refresh the database list.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 
@@ -887,11 +624,11 @@ The free quota is very quickly reached but resets regularly and hence we just us
 
 #### [AI studio](https://ai.google.com/studio) [↑](#-web-chat-)
 
-Good for larger experiments due to more generous free quota 🧪
+Good for larger experiments due to more generous free quota 🥼
 
 ### 💻 Editor [↑](#-tools-)
 
-#### ✈ [Copilot](.github/chatmodes) [↑](#-ai-)
+#### ✈ [Copilot](.github/agents/semio.agent.md) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -921,7 +658,7 @@ But in general, we don't use the chat because it is way too expensive 💰
 
 #### 🌊 Windsurf [↑](#-editor-)
 
-Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🧪
+Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🥼
 
 ### ⌨️️ CLI [↑](#-tools-)
 
@@ -934,6 +671,10 @@ Used for small bugs and focused fixes with strong repo context 🧠
 #### 🧾 Codex [↑](#-cli-)
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩
+
+The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./script.ts setup git` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
+
+Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./script.ts setup git` if you only need git symlink checkout, root alias files, and repo-managed hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁ Cloud [↑](#-tools-)
 
@@ -949,25 +690,17 @@ Used on the phone when no IDE is available 📱
 
 Used to ensure consistent order of source code, docs, …
 
-- [Claude Code Agent](.claude/agents/reorderer.md)
-- [GitHub Copilot Chatmode](.github/chatmodes/Reorder.chatmode.md)
+- [GitHub Agent](.github/agents/semio.agent.md)
 
 #### 🔁 Formatter [↑](#-agents-)
 
 Used to ensure consistent formatting of source code, docs, …
 
-- [Claude Code Agent](.claude/agents/formatter.md)
-- [GitHub Copilot Chatmode](.github/chatmodes/Formatter.chatmode.md)
+- [GitHub Agent](.github/agents/semio.agent.md)
 
 ### 🤖 Models [↑](#-ai-)
 
-The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** and **GPT-5.3 Codex** as alternatives 🧠
-
-#### Claude Opus 4.5 [↑](#-models-)
-
-#### GPT-5.2 Codex [↑](#-models-)
-
-#### GPT-5.3 Codex [↑](#-models-)
+The default model for agent work is the one native to the platform we use for the agent 🧠
 
 ## 🔄 CI/CD [↑](#-development-)
 
@@ -978,52 +711,19 @@ The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** 
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
-The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
+The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
+Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `bun ./script.ts setup git` once for symlinks and hooks, then use `pre-commit run --all-files` to run hooks on all files.
 
-# ♻ Ecosystems [↑](#-overview)
+# 🏘 [Examples](semio/examples) [↑](#-overview)
 
-Documentation for each ecosystem has been migrated to the respective bundle README.md files:
+## 🚀 [Starter](semio/examples/starters) [↑](#%EF%B8%8F-examples-)
 
-- [semio/js/README.md](semio/js/README.md) - JavaScript (React, TypeScript, Vite, Tailwind, Three.js)
-- [semio/net/README.md](semio/net/README.md) - .NET (C#, NuGet, Grasshopper)
-- [semio/py/README.md](semio/py/README.md) - Python (uv, Pydantic, SQLAlchemy)
+## 👋 [Hello semio](semio/examples/hello-semio) [↑](#%EF%B8%8F-examples-)
 
-# 📦 Bundles [↑](#-overview)
+## 🌈 [Geometry](semio/examples/geometry) [↑](#%EF%B8%8F-examples-)
 
-Documentation for each bundle has been migrated to the respective bundle README.md files:
-
-| Bundle             | README                                                       |
-| ------------------ | ------------------------------------------------------------ |
-| .devcontainer      | [.devcontainer/README.md](.devcontainer/README.md)           |
-| semio-repo/cli     | [semio-repo/cli/README.md](semio-repo/cli/README.md)         |
-| semio-repo/vscode  | [semio-repo/vscode/README.md](semio-repo/vscode/README.md)   |
-| semio-repo/server  | [semio-repo/server/README.md](semio-repo/server/README.md)   |
-| semio-repo/graphql | [semio-repo/graphql/README.md](semio-repo/graphql/README.md) |
-| semio-repo/sqlite  | [semio-repo/sqlite/README.md](semio-repo/sqlite/README.md)   |
-| semio              | [semio/README.md](semio/README.md)                           |
-| semio/js           | [semio/js/README.md](semio/js/README.md)                     |
-| semio/engine       | [semio/engine/README.md](semio/engine/README.md)             |
-| semio/desktop      | [semio/desktop/README.md](semio/desktop/README.md)           |
-| semio/docs         | [semio/docs/README.md](semio/docs/README.md)                 |
-| semio/play         | [semio/play/README.md](semio/play/README.md)                 |
-| semio/net          | [semio/net/README.md](semio/net/README.md)                   |
-| semio/py           | [semio/py/README.md](semio/py/README.md)                     |
-| semio/go           | [semio/go/README.md](semio/go/README.md)                     |
-| semio/rs           | [semio/rs/README.md](semio/rs/README.md)                     |
-| semio/assets       | [semio/assets/README.md](semio/assets/README.md)             |
-| semio/sketchpad    | [semio/sketchpad/README.md](semio/sketchpad/README.md)       |
-| semio/sqlite       | [semio/sqlite/README.md](semio/sqlite/README.md)             |
-
-# 🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
-
-## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)
-
-## 👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)
-
-## 🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)
-
-## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)
+## 🫀 [Metabolism](semio/examples/metabolism) [↑](#%EF%B8%8F-examples-)
 
 # 💯 Brand [↑](#-overview)
 
@@ -1042,7 +742,7 @@ Documentation for each bundle has been migrated to the respective bundle README.
 
 ## 🌈 Colors [↑](#-brand-)
 
-![Palette](/assets/lists/palette.png)
+![Palette](semio/assets/lists/palette.png)
 
 | Name                                   | Hex     | RGB         | HSL              | HSV (or HSB)     | CMYK          | Color            |
 | -------------------------------------- | ------- | ----------- | ---------------- | ---------------- | ------------- | ---------------- |
@@ -1104,7 +804,7 @@ We use it e.g. for:
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
-![Grayscale](/assets/lists/grayscale.png)
+![Grayscale](semio/assets/lists/grayscale.png)
 
 ## 📄 Typography [↑](#-brand-)
 
@@ -1117,6 +817,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - When things are analogical use the same sentence structure for it 🔄
 - One symbol after every sentance 💯
 - One symbol at a time 🥇
+- ➡️ No symbols ↔️ between blocks ⬅️
 - A symbol is preferably an emoji or otherwise unicode ⚖️
 - 📝 One symbol to summarize a title
 - 💡 One symbol to summarize a title description and one to think about in the end 🤔
@@ -1127,7 +828,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔
 
-### 🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)
+### 🔡 [Typesetting](semio/assets/README.md#fonts) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍
@@ -1146,7 +847,7 @@ The files in this repository are licensed under the [GNU Affero General Public L
 
 As a reference, different type of components have usually different licenses:
 
-- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+- software libraries and schemas: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 - applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 - examples: [MIT - The MIT License](https://mit-license.org)
 - templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
@@ -1164,7 +865,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".semio-repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -1192,7 +893,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".semio-repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -1201,21 +902,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".semio-repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".semio-repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".semio-repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -1223,14 +924,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".semio-repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".semio-repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

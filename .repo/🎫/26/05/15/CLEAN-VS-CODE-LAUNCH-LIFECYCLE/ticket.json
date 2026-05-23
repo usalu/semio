@@ -1,0 +1,13 @@
+{
+  "title": "Clean VS Code Launch Lifecycle",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Reorganize .vscode/launch.json so configurations follow lifecycle order, remove test/debug entries, and keep launch commands clean and aligned with repo conventions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1419"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
+  "sessions": [
+    "⚪a8d9c41ebc744665a428fec9f718b5e9"
+  ]
+}

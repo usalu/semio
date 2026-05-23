@@ -1,0 +1,3 @@
+# Bun workspace config — hoisted linker improves Electron / Playwright native deps.
+[install]
+linker = "hoisted"

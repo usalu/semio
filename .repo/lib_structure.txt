@@ -1,0 +1,78 @@
+7://#region ­ƒº¼ entity_dsl
+10:macro_rules! register_entities {
+15:macro_rules! register_operations {
+20:macro_rules! register_commands {
+26:macro_rules! register_output_types {
+34:macro_rules! command_family {
+40:macro_rules! command_interface {
+46:macro_rules! command_nav {
+52:macro_rules! operation_family {
+58:macro_rules! kit_operation_enum {
+64:macro_rules! scope_enum {
+70:macro_rules! input_enum {
+76:macro_rules! relay_collection {
+82:macro_rules! entity_interface_enums {
+154:macro_rules! entity_relay_sync {
+186:macro_rules! entity_full_family {
+198:macro_rules! entity_relay {
+230:macro_rules! entity_diffs {
+236:macro_rules! entity_input {
+254:macro_rules! entity_family {
+287:macro_rules! meta_arc_titled_entity {
+375:macro_rules! meta_quality_entity {
+479://#endregion ­ƒº¼ entity_dsl
+481://#region ­ƒåö id
+483:pub mod id {
+540://#endregion ­ƒåö id
+542://#region ÔÅ▒´©Å timestamp
+544:pub mod timestamp {
+565://#endregion ÔÅ▒´©Å timestamp
+567://#region ­ƒÜ¿ error
+569:pub mod error {
+605://#endregion ­ƒÜ¿ error
+607://#region ­ƒôÉ geom
+609:pub mod geom {
+956://#endregion ­ƒôÉ geom
+958://#region ­ƒ¬ó gql_relay
+962:pub mod gql_relay {
+1204://#endregion ­ƒ¬ó gql_relay
+1206://#region ­ƒÅÀ´©Å meta
+1208:pub mod meta {
+1556://#endregion ­ƒÅÀ´©Å meta
+1558://#region ­ƒ¬¬ hash
+1560:pub mod hash {
+1594://#endregion ­ƒ¬¬ hash
+1596://#region ­ƒôª kit
+1598:pub mod kit {
+4062://#endregion ­ƒôª kit
+4064://#region ­ƒÅÀ´©Å meta graphql
+4180://#endregion ­ƒÅÀ´©Å meta graphql
+4182://#region ­ƒî┐ vcs
+4184:pub mod vcs {
+5470://#endregion ­ƒî┐ vcs
+5472://#region ­ƒºÀ interface
+5474:pub mod interface {
+5758://#endregion ­ƒºÀ interface
+5760://#region ÔÜÖ´©Å operation
+5762:pub mod operation {
+7520://#endregion ÔÜÖ´©Å operation
+7522://#region ­ƒº« kit graph engine
+7524:pub mod kit_graph_engine {
+7616://#endregion ­ƒº« kit graph engine
+7618://#region ­ƒùä´©Å kit backbone persistence (native)
+7620:pub mod kit_backbone {
+9337://#endregion ­ƒùä´©Å kit backbone persistence (native)
+9339://#region ­ƒôú event
+9341:pub mod event {
+9438://#endregion ­ƒôú event
+9440://#region ­ƒºÁ worker
+9442:pub mod worker {
+9741://#endregion ­ƒºÁ worker
+9743://#region ­ƒîÉ gql
+9745:pub mod gql {
+11348://#endregion ­ƒîÉ gql
+11350://#region ­ƒöî wasm_bridge
+11353:pub mod wasm_bridge {
+11529://#endregion ­ƒöî wasm_bridge
+11531://#region ­ƒº¬ tests
+12561://#endregion ­ƒº¬ tests

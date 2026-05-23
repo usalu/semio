@@ -1,0 +1,11 @@
+{
+  "title": "Selection Exit Secondary Highlight",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Highlight graph elements that left the selection (old minus new) using secondary-themed Vello/2D styles; wire descriptor selectionExitHighlightIds from TS BoardRenderer through WASM sync; skip updates while area-select descriptor sync is deferred.",
+  "summary": "BoardRenderer tracks ids removed from the committed selection in selectionExitHighlightIds (skipped during area-select / deferred WASM descriptor sync). Descriptor JSON includes selectionExitHighlightIds for the WASM host. Rust BoardHost stores selection_exit_highlight, applies secondary-themed Vello colors for nodes, edges, handles, and wires not selected but in that set, with matching DOM theme keys and 2D overlay styles (node.selectionExit / handle.selectionExit). Added unit test board_host_sync_descriptor_applies_selection_exit_highlight_ids.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪52122d7e72094897a698b9790808227c"
+  ]
+}

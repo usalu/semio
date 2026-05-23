@@ -1,0 +1,9 @@
+W8 blocked at gate (2026-05-11).
+
+Gate requires BOTH:
+1. File W7.complete exists under this ticket folder — NOT PRESENT.
+2. cargo check passes in semio/rs — FAILED (exit 101, 76 errors; see W8.check.log).
+
+No command_nav refactor applied (would require gate + existing command_nav! macro in lib.rs).
+
+Next: land W7 and fix compile errors, then remove this file and rerun W8.

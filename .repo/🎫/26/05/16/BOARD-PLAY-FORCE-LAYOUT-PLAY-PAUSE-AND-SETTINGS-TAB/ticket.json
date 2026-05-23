@@ -1,0 +1,12 @@
+{
+  "title": "Board Play Force Layout Play Pause And Settings Tab",
+  "emoji": "⏯️",
+  "status": "closed",
+  "description": "Board play: add play/pause for force-layout tick loop in UI menu strip; move force layout numeric options to new Settings tab on right panel.",
+  "summary": "Fixed zoom resetting during force-layout play by pinning triptych camera basis to a ref snapshot while playing (cameraBasisTick bumps only when pausing or on play-start). Replaced settings number inputs with Slider controls: iterations apply-once, ideal edge, repulsion, gravity, play interval, tick iterations—tighter defaults and repulsion slider for smaller spreads. boardPlayForceLayoutOpts now passes repulsionStrength to WASM.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪dab029b4039f4f48bdfc77bdc7d584cd",
+    "⚪70f4e0ca322940ec99152d505e1bae79"
+  ]
+}

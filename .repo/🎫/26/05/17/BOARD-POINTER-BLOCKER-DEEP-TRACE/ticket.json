@@ -1,0 +1,11 @@
+{
+  "title": "Board Pointer Blocker Deep Trace",
+  "emoji": "🔎",
+  "status": "closed",
+  "description": "Board/canvas still non-interactive after OriginDocumentListener bubble + ContextMenuController bubble. Find any remaining capture listeners, overlays, or focus traps.",
+  "summary": "Board remained dead under hosts that register document capture listeners before the canvas bubble chain. Added optional window capture bridge for pointerdown/move/up/wheel (guarded off under Vitest via process.env.VITEST and import.meta.env.VITEST). Left contextmenu on the event surface only so Playwright synthetic contextmenu and real right-clicks still open menus. Repaired accidental duplicate method corruption during edit.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪22a5e9c59f584780a5c3ded06fa385fb"
+  ]
+}

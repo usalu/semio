@@ -1,0 +1,14 @@
+{
+  "title": "Disable Pre-Commit Git Hooks",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Make ./repo search incredibly performant by ensuring the search command runs on cached indices instead of rescanning the monorepo tree in memory on each query. Inspect the repo CLI search implementation, refactor the hot path to rely on the persisted cache/index, preserve existing search/filter behavior, extend existing tests, and validate with focused test runs.",
+  "summary": "Routed repo CLI search onto the persisted Bleve cache hot path instead of rescanning the tree in memory on each query. Search now queries the cached index, prunes the cached tree by matched ids, reuses a shared document-text builder for both in-memory and indexed search, and only requests section-rich trees when the filter actually needs them. Added an indexed-search regression test in the existing CLI test file. Validation: file diagnostics are clean. Attempted Nx test validation, but the existing @repo/client:test target is misconfigured on Windows (runs go test from repo/client without a go.mod). Direct go test also hits pre-existing unrelated test build failures in repo/client/cli/main_test.go (undefined requirementsPolicy/commentPolicy/docsPolicy).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1423"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪269beb8e16574209a5e1bd54c49af75c"
+  ]
+}

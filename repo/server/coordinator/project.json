@@ -1,0 +1,38 @@
+{
+  "name": "@repo/coordinator",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/server/coordinator",
+        "command": "go run .",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/server/coordinator",
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/server/coordinator",
+        "command": "go run .",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/server/coordinator",
+        "command": "bunx vitest run",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

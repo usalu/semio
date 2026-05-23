@@ -1,0 +1,3 @@
+W2 (meta) complete.
+
+Delivered macro-driven boilerplate reduction for meta roster entities (AttributeInput + sync SimpleObject shells + Tag/Concept/Quality Arc rows + Family relay) in semio/rs/lib.rs only. See W2.check.log for compile verification command (isolated target-dir due to shared build lock).

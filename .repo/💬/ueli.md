@@ -24,7 +24,46 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ###
 
+---
+
+How does r3f turn the imperative three.js api into declarative react api? How is the code architected?
+
+---
+
 ### 🦀 rs
+
+---
+
+We want to achieve an async version-controlled synchronized environment inside a wasm webworker.
+Key constraints:
+
+- background synchronized authoritative graph doesnt block any wip interaction
+- read on any data for any version at any time for all three graphs (kits are different for checkpoint and change - wip additionally has draft and transactions)
+- writes by user only inside transaction.
+- first-class non-blocking conflict resolution for drafts (e.g. if draft is moving pieces that were deleted on the authoratitive)
+
+First idea:
+
+- Use three webworkers with three event-sourced lanes + materialized read caches: wip, stage, authoritative
+- Use version (combination of checkpoint id and change id)
+- wip is the active one used by the ui
+- authoritative is exactly the one of the backbone
+- stage is the attempt to merge changes of wip into authoritative
+- synchronization between three graphs exclusively happens over changes (forwards and backwards operations)
+- local backbone (folder with .semio folder with four sqlite files: wip.db, stage.db, authoritative.db, conflicts.db and file blobs are globally stored under blobs/BLOBHASH.EXT)
+- dev backbone (everything embedded in one json file)
+
+Non-goals:
+
+- Dont leak backbone logic into target architecture (they are just at runtime attatchable and detachable persistence)
+- No general Json as part of graphql or rust - just hardcoded and typesafe buissness logic
+- dont change the target grapqhl schema structurally, only extend it
+
+How would you implement/refactor/rewrite semio/rs/lib.rs for this?
+
+#schema.graphql #semio/rs #metabolism.kit.semio.json
+
+---
 
 We have different backbones:
 
@@ -92,6 +131,27 @@ There is an event stream that returns results which contain the information.
 Now we want to implement a clean Typescript Store class.
 How would you architect this?
 
+### ⭕diagram
+
+---
+
+We want to develop a high-performant infinite-canvas diagram canvas component.
+
+We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). Nodes and edges are selectable and draggable. Nodes and edges are selectable and draggable.
+
+It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
+
+1. rs
+   Use https://github.com/linebender/vello Implement it in @semio/lib/diagram/rs/lib.rs
+2. js
+   typscript native bindings to rs. imperative like https://github.com/mrdoob/three.js/ Implement in @semio/lib/diagram/js/index.ts
+3. react
+   declarative react bindings to js. same architecture as https://github.com/pmndrs/react-three-fiber ontop of three.js. Implement in @semio/lib/diagram/react/index.tsx
+
+How would you architect this?
+
+---
+
 ## 🧰repo
 
 repo:
@@ -148,6 +208,40 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
 ##
+
+---
+
+Make sure everything strictly follows the naming pattern.
+Only these commands are allowed: `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, `purge`
+COMMAND.SUB...script.ts
+The only exception are the native os scripts that are called from the common script.
+e.g. setup.windows.script.ps1 must be called from setup.script.ts when on windows.
+Make sure get rid of all old scripts.
+FIx the duplicates. There are some ts file which are scripts that dont have the script naming.
+
+---
+
+The current monorepo doesnt use clean scripts.
+Remove all of them and replace them with clean new style:
+
+setup.windows.ps1 # all installs and configs needed to get any windows into a zero-touch monorepo
+start.windows.ps1 # called everytime the ide initializes (to get long-running services running, etc)
+setup.linux.sh
+start.linux.sh
+setup.mac.sh
+start.mac.sh
+
+Dont define any logic inside package files and instead always create files such as:
+
+dev.ts
+dev.mcp.ts
+...
+lint.ts
+build.ts
+
+Setup everything with bun and nx
+
+---
 
 The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for semio grasshopper, remove net 7
 Make sure everything runs, builds, tests, etc on all platforms.
@@ -278,6 +372,319 @@ This MUST NOT happen.
 
 Add a checkbox element which is an action that can be checked and unchecked.
 
+### 🏁board
+
+elements/board:
+
+---
+
+Make styling more consistent. Expand all elements (node, edge, handle, wire) by more styles and use element styling that are inline with the other element bundles/tokens etc: original (no modification), neutral (replace all colors for e.g. svgs by element colors such as foreground, background, etc.), hovered, selected (primary colored etc), highlighted (secondary colored etc), disabled.
+Extend an element to have a style prop (original, neutral, hovered, selected, highlighted, disabled).
+Then use the prop for all the features.
+This will get rid of all style incosistencies for stroke, color, filling color, etc
+Add a window option for original style (default false) that doesnt modify any imported elements such as svgs
+
+---
+
+All text inside shapes should be centered and not right aligned. When too long abbreviate it with …
+
+---
+
+Complete the ui.
+e.g. expand selection to include all kinds (node kinds, edge kinds, wire kinds can be selected and information must be editable in the details panel)
+e.g. create proper workbench panel with three tabs: Graph (Two sections Nodes with child handles sub tree items, Edges), Kinds (Three sections), Constraints (Show names with specificity. Use -- for bidirectional and -> for source to target)
+e.g. make all information changable in the details (dropdowns for every selection to switch kinds, etc)
+Add context menus for all actions depending on the selection (hide, lock, delete, etc)
+
+---
+
+Make sure to expose callbacks for all events.
+onChange
+onCreate
+onDelete
+onConnect
+onIndirectConnect
+onProximityConnect
+onDrag
+onZoom
+onPan
+onViewportChange
+onNodeCreat
+onNodeChange
+onEdgeChange
+onEdgeCreate
+onEdgeDelete
+onWireCreate
+onWIreChange
+onWireDestroy
+etc
+
+---
+
+Split the monolithic Redraw feature into two features:
+
+- Redraw handles
+- Redraw nodes
+
+For Redraw nodes make an option to automatically redraw handles as a toggle.
+Add mode dropdown (Graph, Tree)
+Add an additional button just for Redraw handles.
+This features changes t, so that the edge is the smallest path. Take the centers of the shapes and then reset the handles to the intersection point between the shape and the line.
+
+Currently the camera jumps at the end. Never jump.
+Wait for 1s without changing camera then in the next 2s zoom to the bounding box of the graph. Start slow then fast and end slow.
+
+---
+
+There should be 6 lods depending on the zoom level:
+Minimap:
+
+- no grid
+- no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
+- selection, hover, bounded drag
+- no indirect connect possible, no connect, no proxmity connect
+
+Overview:
+
+- Huge grid (500x500)
+- outlines on node, no labels, no labels
+- selection, hover, bounded drag
+- no indirect connect possible, no connect, no proxmity connect
+
+Compact:
+
+- Huge grid (100x100)
+- outlines on node, node with abbreviated labels
+- selection possible, nodes and edges are individually selectable, drag possible
+- indirect connect possible
+
+Normal
+
+- Huge grid with finer large grid (25x25)
+- handles, node with labels
+- selection possible, nodes and edges are individually selectable, drag possible
+- connect possible
+
+Detail:
+
+- Huge grid with large gird with finer medium grid (5x5)
+- handles with abbreviated label, node with icon and abbreviated label
+- selection possible, nodes and edges and handles are individually selectable, drag possible
+- connect possible, proximity connect possible
+
+Micro:
+
+- Huge grid with large gird with medium grid with finer small grid (1x1)
+- handles with icon, node with icon and label, selection possible, nodes and edges and handles are individually selectable, drag possible
+- connect possible, proximity connect possible
+
+Within one lod nothing changes.
+Make the trigger zoom points props (same range for every lod by default)
+
+---
+
+There is is exactly one selection and one preselection (exists only during select tool use).
+On left mouse click hold and drag a selection tool is started (either rectangle or lasso).
+A selection tool is using a preselection.
+The preselection is either finalized when the mouse click is released or discarded when escape is pressed.
+When discarded no selection changes.
+When there is a preselection it renders elements in two different styles: selected or highlighted.
+Selected when the element is preseselcted and not not part of the selection.
+Highlight when selected element is selected and not part of the preselection.
+
+---
+
+bounded drag (drag works within selected bounding rectangle normally you need to hit something selected)
+
+---
+
+All nodes and handles receive a new property: locked
+Make sure to extend the existing features e.g.
+No drag is possible
+no proximity connect possible to a hidden node or a hidden handle
+no indirect connect possible to a hidden node or a hidden handle
+no connect possible to a hidden node or a hidden handle
+redraw must leave the locked nodes untouched (hidden nodes are not updated, hidden edges dont produce forces)
+
+---
+
+All individual nodes, edges and handles receive a new property: hidden
+Make sure to extend the existing features e.g.
+no proximity connect possible to a hidden node or a hidden handle
+no indirect connect possible to a hidden node or a hidden handle
+no connect possible to a hidden node or a hidden handle
+redraw only takes visisble input (hidden nodes are not updated, hidden edges dont produce forces)
+
+---
+
+Introduce a new feature: indirect connect (with indirect handles)
+
+In normal lod, no handles are shown. But if a single node is selected then a ring of handles around it should appear (same handle kind just scaled up to 80% of node size with same styling as selected but with secondary color). If on of them is clicked then a wire is started. If the wire is dropped on a target node then the same ring appears with the handles from the target node. If one of the target handles is selected then the edge is created. Otherwise the wire is stopped. Make sure the ring appears ontop of the other nodes. As soon as it is over a node which is compatible (at least one free compatible handle) then the compatible node should also be shown with hover style.
+Special case: When only one handle is free then show no ring and directly create wire. Same for drop. Directly create edge.
+
+---
+
+Introduce a new feature: proximity connect
+
+When a node is not yet connected, then when it gets within the bounds of another node, the nearest compatible handles start to show a wire.
+When released then the wire is turned into an edge.
+
+This feature is not active in minimap and overview lod.
+
+---
+
+All nodes, handles, edges, wire must have a kind (referenced by id).
+Every kind provides default for a new instance.
+Every default can be overwritten by the instance.
+Kinds are passed centrally to the board.
+Kinds can be compatible with each other.
+Compatbility is passed centrally to the board.
+
+node kinds:
+id, label, icon (svg or emoji), shape [circle | rectangle, defaultShapeProps], stroke, color, defaultHandleKind, etc
+
+edge kinds:
+id, label, shape (line | bezier, defaultShapeProps), stroke, color, pattern, etc
+
+handle kinds:
+id, label, shape (circle | rectangle, defaultShapeProps), stroke, color, defaultWireKind, etc
+
+wire kinds:
+id, label, shape (line | bezier, defaultShapeProps), color, pattern, defaultEdgeKind, etc
+
+A compatiblity is a pair with source, target, bidirectional flag, important flag.
+
+General to Specific
+
+1. General (0,0,0,0)
+2. Node (0,0,0,1,0)
+3. Edge (0,0,1,0,0)
+4. Handle (0,1,0,0,0)
+5. Wire (1,0,0,0,0)
+
+The most specific compatibility wins. Important bypasses the specificity.
+
+Compatbility is used in several places. Currently it is used when a wire is drawn and it will not connect or snap to an incompatible handle.
+
+---
+
+Introduce a new entity besides graph, nodes, edges, handles: wire
+A wire is the temporary edge used e.g. when the user start clicking and dragging from a handle.
+
+---
+
+Add a grid snap option which snaps to the current visible grids. Add a toggle to the toolbar
+
+---
+
+Add icons to nodes and handles.
+icons can be either emoji, math (typist string), svg or image (png, jpg, etc)
+For svg use: https://github.com/linebender/vello_svg
+For typist string use typist and typist-svg: https://crates.io/crates/typst https://crates.io/crates/typst-svg
+
+---
+
+Two handles should be connectable. A preview should be shown, It should snap to other handles.
+
+---
+
+board:
+Rename from/to to source/target
+There is no in and out.
+
+---
+
+selecting edges should have the same mechanism as selecting nodes.
+Add a toolbar to ui (same as sketchpad).
+Select, Create as categories
+select: rectangle/lasso, additive/subtractive/invertive
+create: Circle, Recangle
+Change selection for composition. In the ui add three toggles: Nodes, Edges, Handles
+
+---
+
+Extend selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are four modes: default (just select new selection), additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
+Make sure that the selection has a special behaviour:
+When ending more left than started then partial selection is enough.
+When ending more right than started then full enclosing is necessary otherwise the edge or node is not selected.
+Make sure target can be set to nodes, edges, nodes&edges (default)
+holding down left button should trigger
+The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
+
+---
+
+Generalize nodes.
+There are circle nodes and rectangle nodes.
+accept text for each node
+
+---
+
+Add drag and drop functionality.
+Implement play elements/client/lib/board/play/index.html for board where you use the UI component from elements same as semio/dev/algorithms . Have three windows (2 columns half half and second column split in to horizontal rows). Load the .storybook/fixtures/nakagin-capsule-tower.board.json for all three windows with different zoom level, cameras and selection.
+Add dev command.
+
+---
+
+Create a test asset (no semio depency) which is just a board json and add a story to board and an end-to-end test in playwright. .storybook/fixtures/nakagin-capsule-tower.board.json . Map the center pieces and connections from the flat nakagin capsule tower semio/assets/fixtures/metabolism.kit.semio.json . The board coordinate system is in screen coordinates and the semio is cad coordinate system (x to the right, y to front, z up)
+
+---
+
+We want to develop a high-performant infinite-canvas diagram canvas component.
+We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). Nodes and edges are selectable and draggable.
+It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
+
+---
+
+### 🏙️scene
+
+elements scene:
+
+---
+
+Scene is a graph from objects and attraction.
+Attractions link objects.
+e.g. if an attracting objects moves, then all attraced objects move aswell.
+Due to the graph nature there can be cycles.
+Every connected component starts by a wormhole (root of the graph).
+When an object is attracted by two different objects it will always attract to the object which is closer to the wormhole.
+
+The obects in react are used as a tree.
+every object has a prop: attracting
+attracting holds all objects that are attracted to it.
+
+To avoid performance issue when ownerships change, keep a central object state.
+Then in the react components only pass ids.
+
+Make sure that when a parent is destroyed, the child instance survives if they just have a new parent.
+
+---
+
+Expand the mesh pool by more styles and use element styling that are inline with the other element bundles/tokens etc: original (no modification), neutral (replace all colors for meshes and edges by element colors such as foreground, background, etc.), hovered, selected (all meshes have primary colored material), highlighted (all meshes have primary colored material), disabled.
+Extend A mesh to have a style prop (original, neutral, hovered, selected, highlighted, disabled).
+Then use the prop for all the features.
+
+---
+
+---
+
+### topology
+
+---
+
+Create elements topology
+elements\client\lib\topology\react\index.tsx
+elements\client\lib\topology\play\index.html
+elements\client\lib\topology\fixtures\nakagin-capsule-tower.topology.json
+
+It is the combination of board and scene.
+Share as many props, events, etc as you can.
+Render both in play inside two different window kinds.
+
+---
+
 ## 🔬coda
 
 coda:
@@ -292,7 +699,7 @@ Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
-## 👤semio
+## 🏘️semio
 
 ###
 
@@ -310,6 +717,43 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+---
+
+Make sure dev sketchpad works end-to-end.
+
+semio/graphql:
+
+- You MUST NOT introduce any new type, interface, union, input.
+
+semio/js:
+
+- You MUST NOT introduce any new class, method, interface.
+
+semio/react:
+
+- You MUST NOT introduce any new hook, context.
+
+semio/sketchpad:
+
+- You MUST NOT introduce any new hook, context.
+
+---
+
+Somehow the term "row", Row, Rows slipped into the code.
+If two classes exist for the same this is a code smell.
+For every entity there is exactly one class, one hook, etc
+There must be no other terms like used in [schema.golden.graphql](semio/schema/graphql/schema.golden.graphql) .
+Check [lib.rs](semio/client/lib/rs/lib.rs) , [index.ts](semio/client/lib/js/index.ts) , [index.tsx](semio/client/lib/react/index.tsx)
+
+---
+
+semio/graphql, semio/rs, semio/js, semio/react, semio/sketchpad:
+We are in the middle of state managment refactor.
+Achieve the following first example of the new architecture:
+
+- Running sketchpad
+- When editing the name of the kit in kit app inside the details panel input then hook [kitName, renameKit, status] = useKitName() from semio/react is called. renameKit calls the KitStore class method rename(). The rename method sends a graphql request to semio/rs which returns a request id. Then as soon as the renamedKit subscription emits a response with the reuquest id the store updates the status of that request. The rename can be successful, pending, failed due to multiple reasons. One example is when it is too long. The sketchpad input for name should have a spinner on loading and show the error message on error. The whole time it is non-blocking. All the data is always kept on semio/rs and semio/js just rexports its using internally rxjs. semio/react uses useSyncExternalStore.
 
 ---
 
@@ -718,6 +1162,24 @@ There MUST be only one schema, no migrations or legacy api support.
 
 ---
 
+The main class of semio/js is Session. not Store, Not graph, not kit, etc
+
+There is no active store.
+There is one session.
+Every session can have multiple stores.
+You can attach/detach a backbone to a store.
+There are different backbone providers.
+
+All logic, caching, reads and writes over commands happens exclusively over graphql to lib.rs
+
+Local backbone uses the computer.
+File backbone is a single embedded json file.
+Folder backbone is single folder with .semio folder along with sqlite files (wip.db, stage.db, authoratitive.db, conflicts.db)
+There is a two way communication actor model between store and backbone.
+E.g. if the json file or the sqlite files are updated by other processes or the remote kit changes and an event is sent to the websocket backbone, then the changes must be reflected.
+
+---
+
 semio:
 The schema in the repo is not yet consistent.
 semio has been extended by version-control.
@@ -953,6 +1415,47 @@ semio/js:
 
 ---
 
+Currently kit class is the root that owns gqlTransport etc in index.ts
+Create a new class called Store that is the root.
+Kit is just a class beneath Version interface.
+Follow @target.schema.graphql
+
+---
+
+There MUST NOT be any kit state or caching in semio/js.
+The only state tracked in semio/js are request ids to match the events (some of them are responses to the requests).
+Every read MUST be directly forwarded to semio/rs.
+The complete communication between semio/js and semio/rs MUST be with completly typed graphql.
+
+---
+
+Get rid all \*Wire duplicates and rename all data types to Dto same as semio/rs.
+e.g. KitIdWire and KitId are both the same KitIdDto
+Make all Dtos read-only.
+Same for all others.
+
+---
+
+Refactor everything to have 100% acurate types.
+Record<> MUST NOT remain.
+unknown MUST NOT remain.
+Extend semio/rs which produces semio/graphql if necessary (both are unfinished and not clean)
+
+---
+
+Refactor the store, graphql, event, change code to be more consistent and more integrated.
+Align it perfectly with semio/rs
+Get rid of smelly old code.
+
+---
+
+Every single Event MUST be 100% semantic and typed.
+Every event has the kit change (forward kit change commands and inverse kit change commands)
+e.g. RenamedDesignEvent, DraggedFlatCenterPieceEvent
+Adjust semio/rs if necessary (it is not clean yet). You can use the generated semio/graphql to gain insights.
+
+---
+
 Everything MUST be 100% typesafe. No Record, no strings, no json.
 Extend semio/rs with semio/graphql if necessary.
 
@@ -1023,6 +1526,81 @@ export interface KitStoreClient {
 ### 🦀rs
 
 semio/rs:
+
+---
+
+The target graphql has significantly changed. Make sure to refactor to exactly yield this schema and refactor downstream semio/js, semio/react, semio/sketchpad.
+
+---
+
+Pieces MUST not have plane and center directly but have optional pose {center, plane} and always computed and cached flatPose.
+
+---
+
+Remove all FullDto, MetdataDto, ShallowDto from the implementation.
+Leave in semio/js the Dtos as grapqhl queries.
+Just remove it from semio/rs and hence from semio/graphql.
+
+---
+
+The code (including the exposed graphql api) is not clean.
+Start consolidating, aligning and refactoring everything.
+e.g. there are distinct *Store, *Node, *StoreNode implementations which must be merged into *Store.
+
+---
+
+Remove `coloredConnectors: [KitColoredConnectorDto!]!` completly from KitStore and instead add `color:Color`, to ConnectorStore.
+Previously it was a pure function that needed the complete kit.
+Now it MUST be object-oriented and cached (and only update when the depencies change).
+The color is derived from the port and the compatible ports from the connector.
+Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+
+---
+
+Remove `piecePlacement: [PiecePlacementMetadataDto!]!` completly from DesignStore and instead add `parentPiece:Piece`, `depth:Int` and `path:[Piece!]!` to PieceStore.
+Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+
+---
+
+The code (including the exposed graphql api) is not clean.
+Start consolidating, aligning and refactoring everything.
+
+E.g. in graphql:
+
+- Rename all type entities to \*Store (e.g. type Piece is PieceStore)
+- Remove all \*Row types. There are just FullDto, ShallowDto, MetadataDto, IdDto
+- Introduce proper enums for everything (e.g. backbone kind,)
+- Remove all scalars such as \*List (e.g. PieceFullList)
+- Remove all _Gql_ naming (e.g. GqlPlaneObject is just PlaneStore)
+- Remove all docstrings from graphql schema
+- Everything that is referenced in types MUST be other types when possible (e.g. ReplaceableCatalog has `designIds: [String!]!` but it should be `types: [Design!]!`
+- Add all parent container types to the entities and name them `container` (they have weak references in rust). e.g. type Representation is part of Type hence it MUST have: `container:Type!`. Design has `container:Kit!`, etc
+- Remove all \* Object suffixes (e.g. type TypeMetadataObject is just type TypeMetadataDto
+- Add all filters (such as ShallowDto, MetdataDto) to the main type (e.g. `type Design { metadata:DesignMetdataDto!, shallow:DesignShallowDto, ...}`
+
+You MUST NOT introduce new structs for in-memory and graphql objects.
+The only additional structs are \*Dtos which have serde functionality.
+
+---
+
+Currently there is just a general KitChange.
+Introduce a proper Tree where every Change is a KitChange
+DesignChange, TypeChange, PieceChange.
+Not that there is not always a 1to1 mapping betwenn Store and Change.
+e.g. ClusterDesignChange yiels a KitChange, not a DesignChange
+
+---
+
+Refactor the graphql, event, change code to be more consistent and more integrated.
+Get rid of smelly old code.
+
+---
+
+Currently there is just a general KitChange.
+Introduce a proper Tree where every Change is a KitChange
+DesignChange, TypeChange, PieceChange.
+Not that there is not always a 1to1 mapping betwenn Store and Change.
+e.g. ClusterDesignChange yiels a KitChange, not a DesignChange
 
 ---
 
@@ -1468,6 +2046,98 @@ Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
 
 semio/graphql:
 
+---
+
+Exten the target schema (target.schema.graphql)
+Extend every entity region with operations.
+Create unions.
+The more specific the better.
+Here a starting point:
+
+```md
+### Tags
+
+- CREATE_TAG / CREATE_TAGS
+- RENAME_TAG
+- UPDATE_TAG_DESCRIPTION
+- UPDATE_TAG_ICON
+- ADD_ATTRIBUTE_TO_TAG / ADD_ATTRIBUTES_TO_TAG
+- REMOVE_ATTRIBUTE_FROM_TAG / REMOVE_ATTRIBUTES_FROM_TAG
+- DELETE_TAG / DELETE_TAGS
+
+### Concepts
+
+- CREATE_CONCEPT / CREATE_CONCEPTS
+- RENAME_CONCEPT
+- UPDATE_CONCEPT_DESCRIPTION
+- UPDATE_CONCEPT_ICON
+- ADD_ATTRIBUTE_TO_CONCEPT / ADD_ATTRIBUTES_TO_CONCEPT
+- REMOVE_ATTRIBUTE_FROM_CONCEPT / REMOVE_ATTRIBUTES_FROM_CONCEPT
+- DELETE_CONCEPT / DELETE_CONCEPTS
+
+### Ports
+
+- CREATE_PORT / CREATE_PORTS
+- RENAME_PORT
+- UPDATE_PORT_DESCRIPTION
+- UPDATE_PORT_ICON
+- ADD_ATTRIBUTE_TO_PORT / ADD_ATTRIBUTES_TO_PORT
+- REMOVE_ATTRIBUTE_FROM_PORT / REMOVE_ATTRIBUTES_FROM_PORT
+- DELETE_PORT / DELETE_PORTS
+
+### Qualities
+
+- CREATE_QUALITY / CREATE_QUALITIES
+- RENAME_QUALITY
+- UPDATE_QUALITY_DESCRIPTION
+- UPDATE_QUALITY_ICON
+- ADD_ATTRIBUTE_TO_QUALITY / ADD_ATTRIBUTES_TO_QUALITY
+- REMOVE_ATTRIBUTE_FROM_QUALITY / REMOVE_ATTRIBUTES_FROM_QUALITY
+- DELETE_QUALITY / DELETE_QUALITIES
+
+### Types & Connectors
+
+- CREATE_TYPE / CREATE_TYPES
+- RENAME_TYPE
+- UPDATE_TYPE_DESCRIPTION
+- UPDATE_TYPE_ICON
+- ADD_ATTRIBUTE_TO_TYPE / ADD_ATTRIBUTES_TO_TYPE
+- REMOVE_ATTRIBUTE_FROM_TYPE / REMOVE_ATTRIBUTES_FROM_TYPE
+- DELETE_TYPE / DELETE_TYPES
+- ADD_CONNECTOR_TO_TYPE / ADD_CONNECTORS_TO_TYPE
+- RENAME_CONNECTOR_IN_TYPE
+- UPDATE_CONNECTOR_DESCRIPTION_IN_TYPE
+- UPDATE_CONNECTOR_ICON_IN_TYPE
+- REMOVE_CONNECTOR_FROM_TYPE / REMOVE_CONNECTORS_FROM_TYPE
+
+### Designs & Pieces
+
+- CREATE_DESIGN / CREATE_DESIGNS
+- DELETE_DESIGN / DELETE_DESIGNS
+- FLATTEN_DESIGN
+- ADD_ATTRIBUTE_TO_DESIGN / ADD_ATTRIBUTES_TO_DESIGN
+- REMOVE_ATTRIBUTE_FROM_DESIGN / REMOVE_ATTRIBUTES_FROM_DESIGN
+- ADD_FIXED_PIECE_TO_DESIGN
+- ADD_CHILD_PIECE_WITH_PARENT_CONNECTION_TO_DESIGN
+- ADD_CHILD_PIECES_WITH_PARENT_CONNECTIONS_TO_DESIGN
+- ADD_HANGING_CHILD_PIECE_WITH_PARENT_CONNECTION_TO_DESIGN
+- ADD_HANGING_CHILD_PIECES_WITH_PARENT_CONNECTIONS_TO_DESIGN
+- READ_PIECE_FROM_DESIGN
+- GET_ALTERNATIVE_PIECE_KIND_FOR_PIECE_IN_DESIGN
+- RENAME_PIECE_IN_DESIGN
+- UPDATE_PIECE_DESCRIPTION_IN_DESIGN
+- DRAG_PIECE_IN_DESIGN / DRAG_PIECES_IN_DESIGN
+- MOVE_PIECE_IN_DESIGN / MOVE_PIECES_IN_DESIGN
+- FIX_PIECE_IN_DESIGN / FIX_PIECES_IN_DESIGN
+- CHANGE_PIECE_TO_TYPE_IN_DESIGN / CHANGE_PIECES_TO_TYPE_IN_DESIGN
+- ADD_ATTRIBUTE_TO_PIECE / ADD_ATTRIBUTES_TO_PIECE
+- REMOVE_ATTRIBUTE_FROM_PIECE / REMOVE_ATTRIBUTES_FROM_PIECE
+- DELETE_PIECE_IN_DESIGN / DELETE_PIECES_IN_DESIGN
+- DELETE_PIECES_AND_CONNECTIONS_IN_DESIGN
+```
+
+---
+
 The schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.
 e.g. interactions dont exists anymore.
 
@@ -1510,6 +2180,41 @@ Update the rest to match metabolism json
 ### ⚛️react
 
 semio/react:
+
+---
+
+The useENTITY hooks are not implemented clean. Get rid of the resolve functions. Implement the logic to resolve directly.
+e.g. useDesign should not call resolveDesign but directly have the logic in there.
+usePiece then calls useDesign.
+
+---
+
+The hooks are not clean.
+The context hooks are not clean.
+No legacy or duplicated hooks. No Has Context.
+No id as part of hook name.
+No IdContext.
+No type from semio/js needed.
+No FieldReadState wrapper etc.
+
+The rules are simple:
+Every hook either returns an id or a atomic value type.
+Every entity hook has no paramter.
+Every field hook has exactly one optional id for the entity which takes presedence over the the the Context.
+e.g.
+useDesignContext: ID | null
+useDesign(): ID
+useDesignName(id?:ID): string
+useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
+
+---
+
+Refactor the hooks and scopes to be more consistent and more integrated with store, graphql, event, change code.
+Align it perfectly with semio/rs and semio/js.
+Get rid of smelly old code.
+
+---
+
 Create a react library that exports all semio hooks.
 
 Work with providers.
@@ -1544,6 +2249,35 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+---
+
+The rules are simple:
+Every hook either returns an id or a atomic value type.
+Every entity hook has no paramter.
+Every field hook has exactly one optional id for the entity which takes presedence over the the the Context.
+e.g.
+useDesignContext: ID | null
+useDesign(): ID
+useDesignName(id?:ID): string
+useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
+
+---
+
+semio/sketchpad is totally outdated.
+Refactor @file:index.tsx to exclusively use hook for fields and context providers following the react plan @file:refactor-react-composable-contexts_ec8b0106.plan.md
+Everything must follow @file:schema.golden.graphql schema
+You MUST NOT introduce any compatibility hooks or generated approach. Just manually replacing the old hooks with the new ones.
+
+---
+
+Alternatives have been introduced to semio. All changes are either made inside `the kit` (draft on the last checkpoint) or inside an alternative (draft on the last checkpoint).
+Add to semio/react context for switching between `the kit` and alternatives.
+Inside all kit editing apps add on the left of the footer a dropdown for choosing an alternative. If no alternative is selected then work in on `the kit`.
+Dont forget that all kit state is only inside semio/rs.
+
+---
+
 Extend the current Versions window kind to a complete VersionsApp.
 The KitApp, DesignApp, TypeApp are all bound to an active
 
@@ -1696,6 +2430,8 @@ The semio vscode bundle MUST be a seperate extension and MUST NOT be in repo. Th
 Abstract the Kit Store completly. Create a new semio bundle called studio that has the yjs kit provider. Pass it as a root prop to <Sketchpad kitStore>. Remove the yjs dependency completly from sketchpad.
 Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
 Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
+
+### ⭕diagram
 
 ### 🖥️desktop
 
@@ -2986,7 +3722,7 @@ but it should look like this:
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 👤semio
+│ ├─ 🏘️semio
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -3033,7 +3769,7 @@ but it should look something like this, always using the <kind> emoji before the
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 👤semio
+│ ├─ 🏘️semio
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -3094,7 +3830,7 @@ Header (lines 1-20)
 ```bash
 ./repo/cli/cli project list
 🔬coda
-👤semio
+🏘️semio
 🧰repo
 ```
 
@@ -3591,17 +4327,17 @@ The ids of sections and defintions are not correct.
 
 In the source code definition and section ids are also not correct
 
-section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
-definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
+definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
 
 e.g. `🧰repo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types§TicketCloseInput` or `🛠️repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput` should be only `🧰repo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseInput`
 go types are not currectly identified as ✂️
 
-file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
+file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
 
 The id of the projects contain an @ they shouldnt. The tests check for the correct ids.
 
-- [👤semio](repo://project/@SEMIO)
+- [🏘️semio](repo://project/@SEMIO)
 
 tpl
 
@@ -6214,7 +6950,7 @@ repo/cli/cli project list
 
 - [👤pycache](repo://p/u/__pycache__)
 - [🔬coda](repo://p/r/coda)
-- [👤semio](repo://p/u/semio)
+- [🏘️semio](repo://p/u/semio)
 - [🧰repo](repo://p/i/repo)
 
 TODO: introduce proper events for repo specific tool calls.
@@ -7518,7 +8254,7 @@ e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be som
 ```mermaid
 treemap-beta
 "Lines of Code (k)"
-    "👤semio"
+    "🏘️semio"
       "📚js"
         "🗃️skethcpad"
           "💻designtsx"
@@ -7554,7 +8290,7 @@ treemap-beta
 
 repo:
 The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
-e.g. 👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `👤semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
+e.g. 🏘️semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `🏘️semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
 
 ---
 
@@ -8135,11 +8871,48 @@ Steps:
    e.g. `git push origin 🐙ueli🎆26🌙04☀️20🚩`
 3. Squash all linear changes. If there are rebase conflicts, discard the changes until the rebase is successful.
    e.g. `git rebase -s -S -i HEAD~10`
-4. Checkout parent commit before the squashed commit
-5. Compute loc from the parent commit
-   e.g. on Windows: `cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust`
-6. Save the loc locally
-7. Checkout the squashed commit and rename
+4. Reset the
+   e.g.
+
+```
+🐙ueli🎆26🌙04☀️20🔀
+🎆26🌙04☀️20
+- 🧬 Finish GraphQL and OpenAPI store API surface
+- 🦀 Refactor Rust kit API to OO methods with async backbones
+- 🔧 Refactor Rust apply_diff implementation
+- 🧾 Normalize historical ticket status metadata
+- ♻️ Add reuse research knowledge base with prompts, taxonomy pages, and seed entities
+🎆26🌙04☀️19
+- 👪 Introduce Family as first-class entity across Semio languages and assets
+- 🧹 Remove parent fields from Type and Design entities
+- 🔄 Regenerate metabolism kit diffs after family migration
+- 🎯 Add goals MCP resource and refresh agent instructions
+🎆26🌙04☀️18
+- 🧱 Refactor Semio TypeScript kit object model
+🎆26🌙04☀️17
+- 🧰 Refactor Kit APIs to stateful OO flow across TypeScript, Go, Rust, Python, and .NET
+- 🧩 Reimplement kit diffs as JSON Patch on JSON kits
+- 🧪 Externalize shared fixtures and align cross-language test parity
+- 🧮 Add Merkle hash cache contract and fixtures for flattenDesign
+- 🧭 Add kit graph support and generated class documentation
+- 🏠 Rename Semio server to Semio Hub
+- 🕹️ Centralize Sketchpad state, logging, and store dispatch flow
+- ⚡ Fix Sketchpad drag, delete story, metabolism import, and flatten cache regressions
+- 📊 Add Semio benchmark coverage and VS Code launch support
+🎆26🌙04☀️16
+- 🛡️ Add admin dashboard and Kubernetes cluster deployment
+- 🔁 Enforce transactions and fix diff display flow
+- 🪟 Fix empty Kit and Design app viewers
+- 🔄 Fix GitHub synchronization CLI
+- 🌐 Fix Play site deployed asset loading
+- 📦 Separate Sketchpad runtime assets and remove bundled runtime artifacts
+- 🧭 Reorder Sketchpad toolbar groups
+- 🧹 Strip Semio, Coda, and Playwright MCP entries from agent configs
+🎆26🌙04☀️15
+- 🧭 Update repo CLI filtering, tests, and VS Code icon assets
+- 🛠️ Adjust devcontainer, MCP, Kiro, Cursor, and Windsurf agent configs
+Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
+```
 
 Introduce a command for renaming.
 Rename all files that are not git ignored.

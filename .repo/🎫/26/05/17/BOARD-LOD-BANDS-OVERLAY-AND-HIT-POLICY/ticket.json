@@ -1,0 +1,10 @@
+{
+  "title": "Board LOD Bands Overlay And Hit Policy",
+  "emoji": "📶",
+  "status": "open",
+  "description": "Align board WASM/TS with five zoom LODs: stack text overlay canvas above WebGPU so node captions paint above shapes; minimap skips discrete node/edge/handle hits and node drag while keeping marquee/lasso selection; overview shares indirect-handle ring + sole-handle indirect hits with normal; normal draws and hit-tests direct handles (not only detail/micro); optional detail handle abbreviated labels on overlay; grids unchanged except verify bands.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9b3104e0a78b4aa9901b0be63137290b"
+  ]
+}

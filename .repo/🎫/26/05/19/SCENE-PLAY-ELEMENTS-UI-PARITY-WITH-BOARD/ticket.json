@@ -1,0 +1,11 @@
+{
+  "title": "Scene Play Elements Ui Parity With Board",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Align scene play styling with board play: import elements react globals.css tailwind sources; LevelProvider window shell, getLevelBgClass window wrapper, useElementsSurfaceChrome, footer theme/device/expertise like board.",
+  "summary": "Scene play now pulls design tokens like board play: globals.css imports ../../react/globals.css with matching @source paths. ScenePlayApp uses LevelProvider level=window, outer h-screen shell with getLevelBgClass(\"window\"), UI with useElementsSurfaceChrome mobile bridge and footer with Theme/Device/Expertise selects (same localStorage keys as board play for dev parity). Relocate toolbar uses ToolbarItem asChild around Button like board.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e98cb4d9891e4fbdb8cf780def0363d2"
+  ]
+}

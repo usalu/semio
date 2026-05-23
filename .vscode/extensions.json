@@ -22,6 +22,8 @@
     "ms-dotnettools.vscode-dotnet-runtime",
     "ms-dotnettools.csharp",
     "ms-dotnettools.csdevkit",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools",
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",

@@ -16,7 +16,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["./semio/js/vite.config.ts", "./semio/react/vite.config.ts"],
+    projects: ["./semio/client/lib/js/vite.config.ts", "./semio/client/lib/react/vite.config.ts"],
   },
 });
 

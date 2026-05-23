@@ -1,0 +1,5 @@
+# Hypothesis G — Viewport vs React baseline drift
+
+Pan/zoom updates the WASM renderer camera via wheel handlers; `BoardCanvas` emits `onCamera` when the imperative camera changes. Board play kept `boardPlayPaneCamerasBaseline` only from programmatic updates, so after the user wheeled, `camerasByPane` (and the nodes-redraw `from` snapshot) could still reflect the old baseline while the eye was already at the wheeled transform. The ease then interpolated from the wrong `from`, which reads as an instant jump toward the new bbox fit.
+
+**Fix:** `syncBaselineFromViewportCamera` on the **active** pane only, wired as `onCamera`, updates all three pane baselines to match the live viewport (same triptych convention as `triptychCamerasFromFixture`). Skipped while redraw play is active, while `suppressCameraBasisSyncRef` is set, or while post-play `cameraDisplayOverrideByPane` is non-null. Functional `setBoardPlayPaneCamerasBaseline` skips updates when x/y/zoom are within epsilon of the current overview entry (all three stay in lockstep).

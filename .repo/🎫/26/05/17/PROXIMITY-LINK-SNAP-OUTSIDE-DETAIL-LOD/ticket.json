@@ -1,0 +1,11 @@
+{
+  "title": "Proximity Link Snap Outside Detail Lod",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Fix proximity link snap so it runs at overview/normal LOD (Nakagin default zoom), not only detail/micro.",
+  "summary": "Stacked a pointer-events-none text overlay canvas in BoardCanvas and bind it via BoardRenderer.attachTextOverlayCanvas so node and detail handle captions paint above the WebGPU layer. WASM host: minimap returns no discrete hit targets; overview keeps indirect ring + sole-handle hits without direct-handle resolve; normal/detail/micro draw and hit-test direct anchors; proximity link snap restricted to detail/micro again so normal/sole-target flows emit indirectConnect. Added detail LOD handle caption helper + catalog lookup cache, Handle.iconKind on the TS scene graph, and host tests for minimap, normal rim hits, overview omit-direct, plus removed obsolete overview proximity drag helper.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
+  "sessions": [
+    "⚪4cbf814f0feb4b7093b9a4a13d354a27"
+  ]
+}

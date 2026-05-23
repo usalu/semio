@@ -1,0 +1,13 @@
+{
+  "title": "Integrate Monorepo Storybook And Playwright",
+  "emoji": "✨",
+  "status": "open",
+  "description": "Create a monorepo-integrated Storybook and Playwright setup at the repository root, following the existing bun + nx + VS Code conventions already used by other projects. The root .storybook/main.ts currently exists but is empty. The result should behave like the other projects in this repo: Nx targets, bun-driven commands, VS Code launch/test friendliness, and end-to-end validation. Reuse existing patterns from package-local Storybook and Playwright setups where appropriate, but make the root integration actually run. Work end-to-end until the new setup is validated with real commands.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1418"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient",
+  "sessions": [
+    "⚪e44e9107febf4b35b7f1460386ff8606"
+  ]
+}
