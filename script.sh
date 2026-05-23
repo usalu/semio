@@ -84,26 +84,6 @@ configure_neo4j_shell_env() {
 }
 #endregion 🔖Neo4jEnv
 
-#region 🔖CodexMcp
-sync_codex_mcp_config() {
-  local template="$REPO_ROOT/.codex/config.toml"
-  [ -f "$template" ] || return 0
-  local target="$HOME/.codex/config.toml"
-  mkdir -p "$(dirname "$target")"
-  local tmp
-  tmp="$(mktemp)"
-  if [ -f "$target" ]; then
-    awk '
-      /^\[mcp_servers\./ { skip=1; next }
-      /^\[/ { skip=0 }
-      !skip { print }
-    ' "$target" >"$tmp"
-  fi
-  sed "s|cwd = \"\\.\"|cwd = \"$REPO_ROOT\"|g" "$template" >>"$tmp"
-  mv "$tmp" "$target"
-}
-#endregion 🔖CodexMcp
-
 #region 🔖Neo4jRuntime
 is_neo4j_reachable() {
   if command -v nc >/dev/null 2>&1; then
@@ -565,7 +545,6 @@ repo_bootstrap() {
 #region 🔖Main
 cd "$REPO_ROOT"
 configure_neo4j_shell_env
-sync_codex_mcp_config
 if [ "$SEMIO_SESSION_START" = "1" ]; then
   ensure_native_neo4j
   log "Native IDE session setup complete."

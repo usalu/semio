@@ -86,16 +86,6 @@ export class SetupScript extends Script {
 
   private runGit(): void {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
-    const repoClientCandidates = [join(this.root, "repo", "client", "client.exe"), join(this.root, "repo", "client", "client")];
-    const repoClientPath = repoClientCandidates.find((p) => existsSync(p));
-    if (repoClientPath) {
-      runCmd(repoClientPath, ["configure"], { cwd: this.root });
-    } else {
-      runCmd("go", ["run", "./repo/client/mcp", "configure"], {
-        cwd: this.root,
-        env: { ...process.env, GOWORK: join(this.root, "go.work") },
-      });
-    }
     const source = "AGENTS.md";
     for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
       const aliasPath = join(this.root, alias);

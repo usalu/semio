@@ -22816,15 +22816,14 @@ const AppPanelStatePreview: React.FC<{
 };
 
 const AppWorkbenchPanel: React.FC<{
+  activeModeLabel?: string | null;
   app: ResolvedAppConfig;
-}> = ({ app }) => {
-  const activeMode = app.modes?.find((mode) => mode.id === app.activeModeId) ?? null;
-
+}> = ({ activeModeLabel, app }) => {
   return (
     <div data-testid="app-panel.workbench" className="flex min-h-0 flex-col gap-small text-sm">
       <div>
         <div className="font-medium">{app.label}</div>
-        <div className="text-muted-foreground">{activeMode ? `Mode: ${activeMode.label}` : "Single-mode app"}</div>
+        <div className="text-muted-foreground">{activeModeLabel ? `Mode: ${activeModeLabel}` : "Single-mode app"}</div>
       </div>
       <div className="grid gap-single text-muted-foreground">
         <div>{`Windows: ${app.windowKinds.length}`}</div>
@@ -22836,13 +22835,13 @@ const AppWorkbenchPanel: React.FC<{
   );
 };
 
-function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {
   return [
     {
       id: APP_WORKBENCH_TAB_ID,
       icon: FolderIcon,
       order: 0,
-      content: <AppWorkbenchPanel app={app} />,
+      content: <AppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} />,
     },
   ];
 }
@@ -22876,10 +22875,12 @@ function createDefaultAppRightPanelTabs(app: ResolvedAppConfig): SidePanelTabCon
   ];
 }
 
-function withDefaultAppPanelTabs(app: ResolvedAppConfig): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {
+function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {
+  const defaultLeftPanelTabs = createDefaultAppLeftPanelTabs(app, activeModeLabel);
+  const defaultRightPanelTabs = createDefaultAppRightPanelTabs(app);
   return {
-    leftPanelTabs: mergeConfigEntries(createDefaultAppLeftPanelTabs(app), app.leftPanelTabs) ?? createDefaultAppLeftPanelTabs(app),
-    rightPanelTabs: mergeConfigEntries(createDefaultAppRightPanelTabs(app), app.rightPanelTabs) ?? createDefaultAppRightPanelTabs(app),
+    leftPanelTabs: mergeConfigEntries(defaultLeftPanelTabs, app.leftPanelTabs) ?? defaultLeftPanelTabs,
+    rightPanelTabs: mergeConfigEntries(defaultRightPanelTabs, app.rightPanelTabs) ?? defaultRightPanelTabs,
   };
 }
 
@@ -22975,7 +22976,8 @@ export const App: React.FC<AppProps> = ({
   if (!activeAppBase) return null;
   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;
   const activeApp = resolveAppConfig(activeAppBase, activeModeId);
-  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp);
+  const activeModeLabel = activeAppBase.modes?.find((mode) => mode.id === activeModeId)?.label ?? null;
+  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp, activeModeLabel);
 
   const hasModeNav = Boolean(activeAppBase.modes && activeAppBase.modes.length > 1);
   const setActiveModeId = (id: string) => {
@@ -24043,6 +24045,31 @@ if (treeVitest) {
       });
     });
 
+    it("synthesizes default workbench, details, options, and chat tabs for every app", () => {
+      const markup = renderToStaticMarkup(
+        <App
+          apps={[
+            {
+              id: "test",
+              label: "Test",
+              windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
+              defaultLayout: createTabStackLayout(["main"], ["Main"]),
+            },
+          ]}
+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+        />,
+      );
+
+      expect(markup).toContain('data-panel="leftSidePanel"');
+      expect(markup).toContain('data-panel="rightSidePanel"');
+      expect(markup).toContain('id="workbench"');
+      expect(markup).toContain('id="details"');
+      expect(markup).toContain('id="options"');
+      expect(markup).toContain('id="chat"');
+      expect(markup).toContain('data-testid="app-panel.workbench"');
+      expect(markup).not.toContain('data-testid="basic-chat-panel"');
+    });
+
     it("renders application side panels closed by default", () => {
       const TestIcon = () => <span data-testid="test-icon" />;
       const markup = renderToStaticMarkup(
@@ -24062,6 +24089,9 @@ if (treeVitest) {
 
       expect(markup).not.toContain('data-panel="leftSidePanel"');
       expect(markup).not.toContain('data-panel="rightSidePanel"');
+      expect(markup).toContain('data-slot="app-panel-toggle-group"');
+      expect(markup).toContain('id="ui.panelToggle.leftSidePanel"');
+      expect(markup).toContain('id="ui.panelToggle.rightSidePanel"');
     });
   });
 

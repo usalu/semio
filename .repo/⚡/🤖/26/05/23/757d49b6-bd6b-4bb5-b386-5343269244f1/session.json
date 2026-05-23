@@ -1860,6 +1860,417 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-05-23T13:43:49Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:43:40.920Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Fix default workbench panel mode label typing and add regression tests for synthesized tabs and permanent toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n const AppWorkbenchPanel: React.FC\u003c{\n+  activeModeLabel?: string | null;\n   app: ResolvedAppConfig;\n-}\u003e = ({ app }) =\u003e {\n-  const activeMode = app.modes?.find((mode) =\u003e mode.id === app.activeModeId) ?? null;\n- \n+}\u003e = ({ activeModeLabel, app }) =\u003e {\n   return (\n     \u003cdiv data-testid=\"app-panel.workbench\" className=\"flex min-h-0 flex-col gap-small text-sm\"\u003e\n       \u003cdiv\u003e\n         \u003cdiv className=\"font-medium\"\u003e{app.label}\u003c/div\u003e\n-        \u003cdiv className=\"text-muted-foreground\"\u003e{activeMode ? `Mode: ${activeMode.label}` : \"Single-mode app\"}\u003c/div\u003e\n+        \u003cdiv className=\"text-muted-foreground\"\u003e{activeModeLabel ? `Mode: ${activeModeLabel}` : \"Single-mode app\"}\u003c/div\u003e\n       \u003c/div\u003e\n       \u003cdiv className=\"grid gap-single text-muted-foreground\"\u003e\n         \u003cdiv\u003e{`Windows: ${app.windowKinds.length}`}\u003c/div\u003e\n         \u003cdiv\u003e{`Tools: ${app.tools?.length ?? 0}`}\u003c/div\u003e\n@@\n   );\n };\n \n-function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {\n+function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {\n   return [\n     {\n       id: APP_WORKBENCH_TAB_ID,\n       icon: FolderIcon,\n       order: 0,\n-      content: \u003cAppWorkbenchPanel app={app} /\u003e,\n+      content: \u003cAppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} /\u003e,\n     },\n   ];\n }\n@@\n-function withDefaultAppPanelTabs(app: ResolvedAppConfig): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+  const defaultLeftPanelTabs = createDefaultAppLeftPanelTabs(app, activeModeLabel);\n+  const defaultRightPanelTabs = createDefaultAppRightPanelTabs(app);\n   return {\n-    leftPanelTabs: mergeConfigEntries(createDefaultAppLeftPanelTabs(app), app.leftPanelTabs) ?? createDefaultAppLeftPanelTabs(app),\n-    rightPanelTabs: mergeConfigEntries(createDefaultAppRightPanelTabs(app), app.rightPanelTabs) ?? createDefaultAppRightPanelTabs(app),\n+    leftPanelTabs: mergeConfigEntries(defaultLeftPanelTabs, app.leftPanelTabs) ?? defaultLeftPanelTabs,\n+    rightPanelTabs: mergeConfigEntries(defaultRightPanelTabs, app.rightPanelTabs) ?? defaultRightPanelTabs,\n   };\n }\n@@\n   const activeAppBase = apps.find((app) =\u003e app.id === activeAppId) ?? apps[0];\n   const [activeModeByAppId, setActiveModeByAppId] = React.useState\u003cRecord\u003cstring, string\u003e\u003e({});\n   if (!activeAppBase) return null;\n   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;\n   const activeApp = resolveAppConfig(activeAppBase, activeModeId);\n-  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp);\n+  const activeModeLabel = activeAppBase.modes?.find((mode) =\u003e mode.id === activeModeId)?.label ?? null;\n+  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp, activeModeLabel);\n*** End Patch"
+          },
+          "tool_use_id": "call_4CxSyMEvROLz4aBjYs4HY3jp__vscode-1779542708687",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-05-23T13:44:02Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:43:59.509Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Fix default workbench panel mode label typing and add regression tests for synthesized tabs and permanent toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n const AppWorkbenchPanel: React.FC\u003c{\n+  activeModeLabel?: string | null;\n   app: ResolvedAppConfig;\n-}\u003e = ({ app }) =\u003e {\n-  const activeMode = app.modes?.find((mode) =\u003e mode.id === app.activeModeId) ?? null;\n- \n+}\u003e = ({ activeModeLabel, app }) =\u003e {\n   return (\n     \u003cdiv data-testid=\"app-panel.workbench\" className=\"flex min-h-0 flex-col gap-small text-sm\"\u003e\n       \u003cdiv\u003e\n         \u003cdiv className=\"font-medium\"\u003e{app.label}\u003c/div\u003e\n-        \u003cdiv className=\"text-muted-foreground\"\u003e{activeMode ? `Mode: ${activeMode.label}` : \"Single-mode app\"}\u003c/div\u003e\n+        \u003cdiv className=\"text-muted-foreground\"\u003e{activeModeLabel ? `Mode: ${activeModeLabel}` : \"Single-mode app\"}\u003c/div\u003e\n       \u003c/div\u003e\n       \u003cdiv className=\"grid gap-single text-muted-foreground\"\u003e\n         \u003cdiv\u003e{`Windows: ${app.windowKinds.length}`}\u003c/div\u003e\n         \u003cdiv\u003e{`Tools: ${app.tools?.length ?? 0}`}\u003c/div\u003e\n@@\n   );\n };\n \n-function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {\n+function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {\n   return [\n     {\n       id: APP_WORKBENCH_TAB_ID,\n       icon: FolderIcon,\n       order: 0,\n-      content: \u003cAppWorkbenchPanel app={app} /\u003e,\n+      content: \u003cAppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} /\u003e,\n     },\n   ];\n }\n@@\n-function withDefaultAppPanelTabs(app: ResolvedAppConfig): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+  const defaultLeftPanelTabs = createDefaultAppLeftPanelTabs(app, activeModeLabel);\n+  const defaultRightPanelTabs = createDefaultAppRightPanelTabs(app);\n   return {\n-    leftPanelTabs: mergeConfigEntries(createDefaultAppLeftPanelTabs(app), app.leftPanelTabs) ?? createDefaultAppLeftPanelTabs(app),\n-    rightPanelTabs: mergeConfigEntries(createDefaultAppRightPanelTabs(app), app.rightPanelTabs) ?? createDefaultAppRightPanelTabs(app),\n+    leftPanelTabs: mergeConfigEntries(defaultLeftPanelTabs, app.leftPanelTabs) ?? defaultLeftPanelTabs,\n+    rightPanelTabs: mergeConfigEntries(defaultRightPanelTabs, app.rightPanelTabs) ?? defaultRightPanelTabs,\n   };\n }\n@@\n   const activeAppBase = apps.find((app) =\u003e app.id === activeAppId) ?? apps[0];\n   const [activeModeByAppId, setActiveModeByAppId] = React.useState\u003cRecord\u003cstring, string\u003e\u003e({});\n   if (!activeAppBase) return null;\n   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;\n   const activeApp = resolveAppConfig(activeAppBase, activeModeId);\n-  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp);\n+  const activeModeLabel = activeAppBase.modes?.find((mode) =\u003e mode.id === activeModeId)?.label ?? null;\n+  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp, activeModeLabel);\n*** End Patch"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_4CxSyMEvROLz4aBjYs4HY3jp__vscode-1779542708687",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-05-23T13:44:04Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:43:59.509Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Fix default workbench panel mode label typing and add regression tests for synthesized tabs and permanent toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n const AppWorkbenchPanel: React.FC\u003c{\n+  activeModeLabel?: string | null;\n   app: ResolvedAppConfig;\n-}\u003e = ({ app }) =\u003e {\n-  const activeMode = app.modes?.find((mode) =\u003e mode.id === app.activeModeId) ?? null;\n- \n+}\u003e = ({ activeModeLabel, app }) =\u003e {\n   return (\n     \u003cdiv data-testid=\"app-panel.workbench\" className=\"flex min-h-0 flex-col gap-small text-sm\"\u003e\n       \u003cdiv\u003e\n         \u003cdiv className=\"font-medium\"\u003e{app.label}\u003c/div\u003e\n-        \u003cdiv className=\"text-muted-foreground\"\u003e{activeMode ? `Mode: ${activeMode.label}` : \"Single-mode app\"}\u003c/div\u003e\n+        \u003cdiv className=\"text-muted-foreground\"\u003e{activeModeLabel ? `Mode: ${activeModeLabel}` : \"Single-mode app\"}\u003c/div\u003e\n       \u003c/div\u003e\n       \u003cdiv className=\"grid gap-single text-muted-foreground\"\u003e\n         \u003cdiv\u003e{`Windows: ${app.windowKinds.length}`}\u003c/div\u003e\n         \u003cdiv\u003e{`Tools: ${app.tools?.length ?? 0}`}\u003c/div\u003e\n@@\n   );\n };\n \n-function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {\n+function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {\n   return [\n     {\n       id: APP_WORKBENCH_TAB_ID,\n       icon: FolderIcon,\n       order: 0,\n-      content: \u003cAppWorkbenchPanel app={app} /\u003e,\n+      content: \u003cAppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} /\u003e,\n     },\n   ];\n }\n@@\n-function withDefaultAppPanelTabs(app: ResolvedAppConfig): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {\n+  const defaultLeftPanelTabs = createDefaultAppLeftPanelTabs(app, activeModeLabel);\n+  const defaultRightPanelTabs = createDefaultAppRightPanelTabs(app);\n   return {\n-    leftPanelTabs: mergeConfigEntries(createDefaultAppLeftPanelTabs(app), app.leftPanelTabs) ?? createDefaultAppLeftPanelTabs(app),\n-    rightPanelTabs: mergeConfigEntries(createDefaultAppRightPanelTabs(app), app.rightPanelTabs) ?? createDefaultAppRightPanelTabs(app),\n+    leftPanelTabs: mergeConfigEntries(defaultLeftPanelTabs, app.leftPanelTabs) ?? defaultLeftPanelTabs,\n+    rightPanelTabs: mergeConfigEntries(defaultRightPanelTabs, app.rightPanelTabs) ?? defaultRightPanelTabs,\n   };\n }\n@@\n   const activeAppBase = apps.find((app) =\u003e app.id === activeAppId) ?? apps[0];\n   const [activeModeByAppId, setActiveModeByAppId] = React.useState\u003cRecord\u003cstring, string\u003e\u003e({});\n   if (!activeAppBase) return null;\n   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;\n   const activeApp = resolveAppConfig(activeAppBase, activeModeId);\n-  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp);\n+  const activeModeLabel = activeAppBase.modes?.find((mode) =\u003e mode.id === activeModeId)?.label ?? null;\n+  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp, activeModeLabel);\n*** End Patch"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_4CxSyMEvROLz4aBjYs4HY3jp__vscode-1779542708687",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-05-23T13:44:08Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:44:07.132Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Add App regressions for synthesized default panel tabs and always-visible navbar panel toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n   describe(\"layout helpers\", () =\u003e {\n     it(\"converts abstract layout nodes to GoldenLayout config\", () =\u003e {\n       expect(\n         layoutNodeToGoldenLayoutConfig({\n@@\n         },\n       );\n     });\n \n+    it(\"synthesizes default workbench, details, options, and chat tabs for every app\", () =\u003e {\n+      const markup = renderToStaticMarkup(\n+        \u003cApp\n+          apps={[\n+            {\n+              id: \"test\",\n+              label: \"Test\",\n+              windowKinds: [{ id: \"main\", label: \"Main\", component: () =\u003e \u003cdiv\u003eMain\u003c/div\u003e }],\n+              defaultLayout: createTabStackLayout([\"main\"], [\"Main\"]),\n+            },\n+          ]}\n+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}\n+        /\u003e,\n+      );\n+\n+      expect(markup).toContain('data-panel=\"leftSidePanel\"');\n+      expect(markup).toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('id=\"workbench\"');\n+      expect(markup).toContain('id=\"details\"');\n+      expect(markup).toContain('id=\"options\"');\n+      expect(markup).toContain('id=\"chat\"');\n+      expect(markup).toContain('data-testid=\"app-panel.workbench\"');\n+      expect(markup).toContain('data-testid=\"basic-chat-panel\"');\n+    });\n+\n     it(\"renders application side panels closed by default\", () =\u003e {\n       const TestIcon = () =\u003e \u003cspan data-testid=\"test-icon\" /\u003e;\n       const markup = renderToStaticMarkup(\n         \u003cApp\n           apps={[\n@@\n       );\n \n       expect(markup).not.toContain('data-panel=\"leftSidePanel\"');\n       expect(markup).not.toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('data-slot=\"app-panel-toggle-group\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.leftSidePanel\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.rightSidePanel\"');\n     });\n   });\n*** End Patch"
+          },
+          "tool_use_id": "call_eTWzHSAo1n6gBwDZoU5gMw4a__vscode-1779542708688",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-05-23T13:44:10Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:44:07.132Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Add App regressions for synthesized default panel tabs and always-visible navbar panel toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n   describe(\"layout helpers\", () =\u003e {\n     it(\"converts abstract layout nodes to GoldenLayout config\", () =\u003e {\n       expect(\n         layoutNodeToGoldenLayoutConfig({\n@@\n         },\n       );\n     });\n \n+    it(\"synthesizes default workbench, details, options, and chat tabs for every app\", () =\u003e {\n+      const markup = renderToStaticMarkup(\n+        \u003cApp\n+          apps={[\n+            {\n+              id: \"test\",\n+              label: \"Test\",\n+              windowKinds: [{ id: \"main\", label: \"Main\", component: () =\u003e \u003cdiv\u003eMain\u003c/div\u003e }],\n+              defaultLayout: createTabStackLayout([\"main\"], [\"Main\"]),\n+            },\n+          ]}\n+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}\n+        /\u003e,\n+      );\n+\n+      expect(markup).toContain('data-panel=\"leftSidePanel\"');\n+      expect(markup).toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('id=\"workbench\"');\n+      expect(markup).toContain('id=\"details\"');\n+      expect(markup).toContain('id=\"options\"');\n+      expect(markup).toContain('id=\"chat\"');\n+      expect(markup).toContain('data-testid=\"app-panel.workbench\"');\n+      expect(markup).toContain('data-testid=\"basic-chat-panel\"');\n+    });\n+\n     it(\"renders application side panels closed by default\", () =\u003e {\n       const TestIcon = () =\u003e \u003cspan data-testid=\"test-icon\" /\u003e;\n       const markup = renderToStaticMarkup(\n         \u003cApp\n           apps={[\n@@\n       );\n \n       expect(markup).not.toContain('data-panel=\"leftSidePanel\"');\n       expect(markup).not.toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('data-slot=\"app-panel-toggle-group\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.leftSidePanel\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.rightSidePanel\"');\n     });\n   });\n*** End Patch"
+          },
+          "tool_use_id": "call_eTWzHSAo1n6gBwDZoU5gMw4a__vscode-1779542708688",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-05-23T13:44:20Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:44:19.565Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Add App regressions for synthesized default panel tabs and always-visible navbar panel toggle group.",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx\n@@\n   describe(\"layout helpers\", () =\u003e {\n     it(\"converts abstract layout nodes to GoldenLayout config\", () =\u003e {\n       expect(\n         layoutNodeToGoldenLayoutConfig({\n@@\n         },\n       );\n     });\n \n+    it(\"synthesizes default workbench, details, options, and chat tabs for every app\", () =\u003e {\n+      const markup = renderToStaticMarkup(\n+        \u003cApp\n+          apps={[\n+            {\n+              id: \"test\",\n+              label: \"Test\",\n+              windowKinds: [{ id: \"main\", label: \"Main\", component: () =\u003e \u003cdiv\u003eMain\u003c/div\u003e }],\n+              defaultLayout: createTabStackLayout([\"main\"], [\"Main\"]),\n+            },\n+          ]}\n+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}\n+        /\u003e,\n+      );\n+\n+      expect(markup).toContain('data-panel=\"leftSidePanel\"');\n+      expect(markup).toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('id=\"workbench\"');\n+      expect(markup).toContain('id=\"details\"');\n+      expect(markup).toContain('id=\"options\"');\n+      expect(markup).toContain('id=\"chat\"');\n+      expect(markup).toContain('data-testid=\"app-panel.workbench\"');\n+      expect(markup).toContain('data-testid=\"basic-chat-panel\"');\n+    });\n+\n     it(\"renders application side panels closed by default\", () =\u003e {\n       const TestIcon = () =\u003e \u003cspan data-testid=\"test-icon\" /\u003e;\n       const markup = renderToStaticMarkup(\n         \u003cApp\n           apps={[\n@@\n       );\n \n       expect(markup).not.toContain('data-panel=\"leftSidePanel\"');\n       expect(markup).not.toContain('data-panel=\"rightSidePanel\"');\n+      expect(markup).toContain('data-slot=\"app-panel-toggle-group\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.leftSidePanel\"');\n+      expect(markup).toContain('id=\"ui.panelToggle.rightSidePanel\"');\n     });\n   });\n*** End Patch"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_eTWzHSAo1n6gBwDZoU5gMw4a__vscode-1779542708688",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-23T13:48:08Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:05.917Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "prompt": "You are still using tabs for options, chat, etc. Make sure to only use proper toggles in the navbar. Every Workbenc, Details, Options, Chat has its own tabs. Only display the tab bar when there is more than one tab",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-23T13:48:10Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:05.917Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "prompt": "You are still using tabs for options, chat, etc. Make sure to only use proper toggles in the navbar. Every Workbenc, Details, Options, Chat has its own tabs. Only display the tab bar when there is more than one tab",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-23T13:48:23Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:21.261Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 120,
+            "query": "side-panel-tabs|mobile-panel-tabs|app-panel-toggle-group|workbench|details|options|chat",
+            "isRegexp": true,
+            "includePattern": "**/elements/client/lib/react/index.tsx"
+          },
+          "tool_use_id": "call_1udvWtgzFEtetfKDOQCSxjce__vscode-1779542708703",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-23T13:48:23Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:21.255Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx",
+            "startLine": 19080,
+            "endLine": 19240
+          },
+          "tool_use_id": "call_h3EDJ9eOGP6RfeOVER5RXQLi__vscode-1779542708701",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-23T13:48:27Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:21.261Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 120,
+            "query": "side-panel-tabs|mobile-panel-tabs|app-panel-toggle-group|workbench|details|options|chat",
+            "isRegexp": true,
+            "includePattern": "**/elements/client/lib/react/index.tsx"
+          },
+          "tool_use_id": "call_1udvWtgzFEtetfKDOQCSxjce__vscode-1779542708703",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-05-23T13:48:27Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:21.255Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx",
+            "startLine": 19080,
+            "endLine": 19240
+          },
+          "tool_use_id": "call_h3EDJ9eOGP6RfeOVER5RXQLi__vscode-1779542708701",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-23T13:48:30Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:29.148Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 120,
+            "query": "side-panel-tabs|mobile-panel-tabs|app-panel-toggle-group|workbench|details|options|chat",
+            "isRegexp": true,
+            "includePattern": "**/elements/client/lib/react/index.tsx"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_1udvWtgzFEtetfKDOQCSxjce__vscode-1779542708703",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-23T13:48:30Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:29.629Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx",
+            "startLine": 22790,
+            "endLine": 23140
+          },
+          "tool_response": "",
+          "tool_use_id": "call_QnIfCIt7XzUfEN4cLdllm9pZ__vscode-1779542708702",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "849732614a99fbca5820c6b9fb256d3c7ff6246e",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-05-23T13:48:30Z",
+        "session": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-23T13:48:29.696Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "757d49b6-bd6b-4bb5-b386-5343269244f1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\elements\\client\\lib\\react\\index.tsx",
+            "startLine": 19080,
+            "endLine": 19240
+          },
+          "tool_response": "",
+          "tool_use_id": "call_h3EDJ9eOGP6RfeOVER5RXQLi__vscode-1779542708701",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
     }
   ]
 }

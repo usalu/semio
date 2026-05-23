@@ -458,45 +458,6 @@ function Set-TextSetting {
     Set-TextFileUtf8NoBom -Path $Path -Value $lines
 }
 
-function Sync-CodexMcpConfig {
-    param([string]$RepoRoot)
-
-    $templatePath = Join-Path $RepoRoot ".codex\config.toml"
-    if (-not (Test-Path -LiteralPath $templatePath)) {
-        return
-    }
-
-    $configPath = Join-HomePath @(".codex", "config.toml")
-    Ensure-Directory -Path (Split-Path -Parent $configPath)
-    $existing = ""
-    if (Test-Path -LiteralPath $configPath) {
-        $existing = Get-Content -LiteralPath $configPath -Raw
-    }
-
-    $kept = [System.Collections.Generic.List[string]]::new()
-    $skip = $false
-    foreach ($raw in (($existing -replace "`r`n", "`n") -split "`n")) {
-        $line = $raw.Trim()
-        if ($line.StartsWith("[") -and $line.EndsWith("]")) {
-            $section = $line.Trim("[", "]")
-            if ($section.StartsWith("mcp_servers.")) {
-                $skip = $true
-                continue
-            }
-            $skip = $false
-        }
-        if (-not $skip) {
-            $kept.Add($raw)
-        }
-    }
-
-    $repoRootToml = $RepoRoot -replace "\\", "\\"
-    $template = (Get-Content -LiteralPath $templatePath -Raw) -replace 'cwd = "\."', ('cwd = "{0}"' -f $repoRootToml)
-    $base = (($kept -join "`n").TrimEnd())
-    $content = if ($base) { $base + "`n`n" + $template.Trim() + "`n" } else { $template.Trim() + "`n" }
-    Set-TextFileUtf8NoBom -Path $configPath -Value ($content -split "`n")
-}
-
 function Install-Neo4jDesktopApoc {
     param([string]$RepoRoot)
 
@@ -847,7 +808,6 @@ Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
 Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
     Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
     Set-UserEnvironmentVariable -Name "NEO4J_DATABASE" -Value "semio"
-Sync-CodexMcpConfig -RepoRoot $repoRoot
 #endregion 🗂️UserState
 
 #region 🗄️Neo4jRuntime

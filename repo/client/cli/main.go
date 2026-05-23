@@ -12040,20 +12040,12 @@ type SandboxProvider interface {
 	Kind() string
 }
 
-// ⚙️EditorHookMapping is a compatibility alias for editor hook configuration metadata.
-// It intentionally aliases `ClientHookMapping` so editor providers can define only the fields they need
-// ⚙️(Client, ConfigPath) while keeping the richer mapping used by `configure`.
-type EditorHookMapping = ClientHookMapping
-
 // 📝EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 type EditorProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result HookResult) string
 	NativeEventFromHookEvent(event HookEvent, parentInfo string) string
-	GenerateHookConfig(repoRoot string) (string, error)
-	HookMapping() EditorHookMapping
 }
 
 // #endregion 🔭Provider Interfaces
@@ -12575,20 +12567,6 @@ type CopilotEditorProvider struct{}
 // 💿Kind holds the data fields for a Kind record.
 func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
 
-// ⚙️Configure holds the data fields for a Configure record.
-func (p *CopilotEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
-
 // 📡ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCopilotEvent(nativeEvent, toolKind)
@@ -12604,35 +12582,11 @@ func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parent
 	return vsCodeEventFromHookEvent(event, parentInfo)
 }
 
-// 🔶GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateCopilotConfig(repoRoot)
-}
-
-// 🗺️HookMapping holds the data fields for a HookMapping record.
-func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "copilot-chat", ConfigPath: ".github/hooks/repo.json"}
-}
-
 // 📝CursorEditorProvider holds the data fields for a cursor editor provider record.
 type CursorEditorProvider struct{}
 
 // 🏷️Kind holds the data fields for a Kind record.
 func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
-
-// 🔹Configure holds the data fields for a Configure record.
-func (p *CursorEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🔸ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12650,35 +12604,11 @@ func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentI
 	return ""
 }
 
-// ⬛GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateCursorConfig(repoRoot)
-}
-
-// ⬜HookMapping holds the data fields for a HookMapping record.
-func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json"}
-}
-
 // 💻WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
 type WindsurfEditorProvider struct{}
 
 // 🟥Kind holds the data fields for a Kind record.
 func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
-
-// 🟧Configure holds the data fields for a Configure record.
-func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🟨ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12696,35 +12626,11 @@ func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, paren
 	return ""
 }
 
-// 🟪GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateWindsurfConfig(repoRoot)
-}
-
-// 🟫HookMapping holds the data fields for a HookMapping record.
-func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json"}
-}
-
 // 💠ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
 type ClaudeCodeEditorProvider struct{}
 
 // 🔳Kind holds the data fields for a Kind record.
 func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
-
-// 🔲Configure holds the data fields for a Configure record.
-func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // ▪️ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12742,35 +12648,11 @@ func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, par
 	return ""
 }
 
-// ◽GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateClaudeCodeConfig(repoRoot)
-}
-
-// ◻️HookMapping holds the data fields for a HookMapping record.
-func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "claude-code", ConfigPath: ".claude/settings.json"}
-}
-
 // ◼️DroidEditorProvider holds the data fields for a droid editor provider record.
 type DroidEditorProvider struct{}
 
 // 🔵Kind holds the data fields for a Kind record.
 func (p *DroidEditorProvider) Kind() string { return "droid" }
-
-// 🔴Configure holds the data fields for a Configure record.
-func (p *DroidEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🟠ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12788,45 +12670,11 @@ func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentIn
 	return ""
 }
 
-// 🟣GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateDroidConfig(repoRoot)
-}
-
-// 🟤HookMapping holds the data fields for a HookMapping record.
-func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "droid", ConfigPath: ".factory/hooks.json"}
-}
-
 // ⚪CodexEditorProvider holds the data fields for a codex editor provider record.
 type CodexEditorProvider struct{}
 
 // ⚫Kind holds the data fields for a Kind record.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
-
-type codexMcpServerConfig struct {
-	Name    string
-	Command string
-	Args    []string
-	Enabled *bool
-	Cwd     string
-}
-
-// 🩵Configure holds the data fields for a Configure record.
-func (p *CodexEditorProvider) Configure(repoRoot string) error {
-	content, err := generateCodexConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	targetPath, err := resolveCodexConfigPath()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🩶ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12844,22 +12692,11 @@ func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentIn
 	return ""
 }
 
-// 💙GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
-
-// 💚HookMapping holds the data fields for a HookMapping record.
-func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "codex", ConfigPath: "~/.codex/config.toml"}
-}
-
 // 💛AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
 type AntigravityEditorProvider struct{}
 
 // 🧡Kind holds the data fields for a Kind record.
 func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
-
-// ❤️Configure holds the data fields for a Configure record.
-func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
 
 // 🤍ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12877,33 +12714,10 @@ func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, pa
 	return ""
 }
 
-// 💗GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return "", nil
-}
-
-// 💖HookMapping holds the data fields for a HookMapping record.
-func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
-}
-
 // 💝KiroEditorProvider holds the data fields for a kiro editor provider record.
 type KiroEditorProvider struct{}
 
 func (p *KiroEditorProvider) Kind() string { return "kiro-cli" }
-
-func (p *KiroEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 func (p *KiroEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveKiroEvent(nativeEvent, toolKind)
@@ -12916,14 +12730,6 @@ func (p *KiroEditorProvider) FormatHookOutput(hookEventName string, result HookR
 
 func (p *KiroEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
-}
-
-func (p *KiroEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateKiroConfig(repoRoot)
-}
-
-func (p *KiroEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "kiro-cli", ConfigPath: ".kiro/agents/repo.json"}
 }
 
 // #endregion 🎆Editor Providers
@@ -36292,620 +36098,17 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 // #region 🔷Configure
 // Configure command auto-generates native hook configs for all supported clients.
 
-// ⚙️ClientHookMapping maps client names to their native event configuration format.
-type ClientHookMapping struct {
-	Client     string
-	ConfigPath string
-	Generator  func(repoRoot string) (string, error)
-}
-
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "Auto-configure repo hooks for all supported clients",
+		Short: "No-op: repo config files are edited manually",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			repoRoot := config.Repo
-			if repoRoot == "" {
-				cwd, _ := os.Getwd()
-				repoRoot = findRepoRoot(cwd)
-			}
-			var errs []error
-			for _, provider := range AllEditorProviders() {
-				mapping := provider.HookMapping()
-				if err := provider.Configure(repoRoot); err != nil {
-					errs = append(errs, fmt.Errorf("%s: %w", provider.Kind(), err))
-					continue
-				}
-				if mapping.ConfigPath != "" {
-					fmt.Printf("✓ %s → %s\n", provider.Kind(), mapping.ConfigPath)
-				} else {
-					fmt.Printf("✓ %s configured\n", provider.Kind())
-				}
-			}
-			if err := configureGitHooks(repoRoot); err != nil {
-				errs = append(errs, fmt.Errorf("git hooks: %w", err))
-			} else {
-				fmt.Println("✓ git hooks configured")
-			}
-			if len(errs) > 0 {
-				for _, e := range errs {
-					fmt.Fprintf(os.Stderr, "✗ %v\n", e)
-				}
-				return fmt.Errorf("%d configuration(s) failed", len(errs))
-			}
+			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
 			return nil
 		},
 	}
 	return cmd
-}
-
-// 💿configureGitHooks holds the data fields for a configureGitHooks record.
-func configureGitHooks(repoRoot string) error {
-	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
-	if err := unsetLocalCoreHooksPath(repoRoot); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
-		return err
-	}
-	preCommitPath := filepath.Join(hooksDir, "pre-commit")
-	if err := os.Remove(preCommitPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
-	postCheckpointScript := `#!/usr/bin/env sh
-set -eu
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -z "$repo_root" ]; then
-  exit 0
-fi
-cd "$repo_root"
-if command -v go >/dev/null 2>&1; then
-	go run ./repo/client/mcp hook version.checkpoint.ended
-  exit $?
-fi
-if [ -f "$repo_root/repo/client/client" ]; then
-  ./repo/client/client hook version.checkpoint.ended
-  exit $?
-fi
-if [ -f "$repo_root/repo/client/client.exe" ]; then
-  "$repo_root/repo/client/client.exe" hook version.checkpoint.ended
-  exit $?
-fi
-exit 0
-`
-	if err := os.WriteFile(postCheckpointPath, []byte(postCheckpointScript), 0755); err != nil {
-		return err
-	}
-	return nil
-}
-
-// 🛤️unsetLocalCoreHooksPath holds the data fields for a unsetLocalCoreHooksPath record.
-func unsetLocalCoreHooksPath(repoRoot string) error {
-	cmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--get", "core.hooksPath")
-	out, err := cmd.Output()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return nil
-		}
-		return err
-	}
-	if strings.TrimSpace(string(out)) == "" {
-		return nil
-	}
-	unsetCmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--unset-all", "core.hooksPath")
-	if unsetErr := unsetCmd.Run(); unsetErr != nil {
-		return unsetErr
-	}
-	return nil
-}
-
-func getClientHookMappings() []ClientHookMapping {
-	var mappings []ClientHookMapping
-	for _, provider := range AllEditorProviders() {
-		m := provider.HookMapping()
-		if m.ConfigPath == "" {
-			continue
-		}
-		gen := provider.GenerateHookConfig
-		mappings = append(mappings, ClientHookMapping{Client: m.Client, ConfigPath: m.ConfigPath, Generator: gen})
-	}
-	return mappings
-}
-
-// ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
-func repoCliHookCommand() string {
-	return repoIdeHookCommand("")
-}
-
-func repoIdeHookCommand(client string) string {
-	slugs := map[string]string{
-		"claude-code":  "claude",
-		"codex":        "codex",
-		"copilot-chat": "copilot",
-		"cursor-chat":  "cursor",
-		"kiro-cli":     "kiro",
-	}
-	if slug, ok := slugs[client]; ok {
-		return fmt.Sprintf("bun ./script.ts dev mcp stdio %s", slug)
-	}
-	return "bun ./script.ts dev mcp stdio client"
-}
-
-// 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
-func generateCopilotConfig(repoRoot string) (string, error) {
-	c := repoIdeHookCommand("copilot-chat")
-	entry := func(cmd string) map[string]interface{} {
-		return map[string]interface{}{"type": "command", "command": cmd, "timeout": 30}
-	}
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"SessionStart": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SessionStart copilot-chat", c)),
-			},
-			"Stop": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook Stop copilot-chat", c)),
-			},
-			"SubagentStart": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SubagentStart copilot-chat", c)),
-			},
-			"SubagentStop": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SubagentStop copilot-chat", c)),
-			},
-			"UserPromptSubmit": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook UserPromptSubmit copilot-chat", c)),
-			},
-			"PreCompact": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PreCompact copilot-chat", c)),
-			},
-			"PreToolUse": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PreToolUse copilot-chat", c)),
-			},
-			"PostToolUse": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PostToolUse copilot-chat", c)),
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔶generateCursorConfig holds the data fields for a generateCursorConfig record.
-func generateCursorConfig(repoRoot string) (string, error) {
-	c := repoIdeHookCommand("cursor-chat")
-	config := map[string]interface{}{
-		"version": 1,
-		"hooks": map[string]interface{}{
-			"sessionStart": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook sessionStart cursor-chat", c)},
-			},
-			"sessionEnd": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook sessionEnd cursor-chat", c)},
-			},
-			"subagentStart": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook subagentStart cursor-chat", c)},
-			},
-			"subagentStop": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook subagentStop cursor-chat", c)},
-			},
-			"stop": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook stop cursor-chat", c)},
-			},
-			"beforeSubmitPrompt": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeSubmitPrompt cursor-chat", c)},
-			},
-			"preCompact": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook preCompact cursor-chat", c)},
-			},
-			"preToolUse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook preToolUse cursor-chat", c)},
-			},
-			"postToolUse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook postToolUse cursor-chat", c)},
-			},
-			"postToolUseFailure": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook postToolUseFailure cursor-chat", c)},
-			},
-			"beforeMCPExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeMCPExecution cursor-chat", c)},
-			},
-			"afterMCPExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterMCPExecution cursor-chat", c)},
-			},
-			"beforeReadFile": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeReadFile cursor-chat", c)},
-			},
-			"afterFileEdit": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterFileEdit cursor-chat", c)},
-			},
-			"beforeShellExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeShellExecution cursor-chat", c)},
-			},
-			"afterShellExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterShellExecution cursor-chat", c)},
-			},
-			"afterAgentResponse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterAgentResponse cursor-chat", c)},
-			},
-			"afterAgentThought": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterAgentThought cursor-chat", c)},
-			},
-			"beforeTabFileRead": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeTabFileRead cursor-chat", c)},
-			},
-			"afterTabFileEdit": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterTabFileEdit cursor-chat", c)},
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-func generateWindsurfConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"pre_user_prompt": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_user_prompt windsurf-chat", c), "show_output": false},
-			},
-			"post_cascade_response": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_cascade_response windsurf-chat", c), "show_output": false},
-			},
-			"post_setup_worktree": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_setup_worktree windsurf-chat", c), "show_output": false},
-			},
-			"pre_mcp_tool_use": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_mcp_tool_use windsurf-chat", c), "show_output": false},
-			},
-			"post_mcp_tool_use": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_mcp_tool_use windsurf-chat", c), "show_output": false},
-			},
-			"pre_read_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_read_code windsurf-chat", c), "show_output": false},
-			},
-			"post_read_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_read_code windsurf-chat", c), "show_output": false},
-			},
-			"pre_write_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_write_code windsurf-chat", c), "show_output": false},
-			},
-			"post_write_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_write_code windsurf-chat", c), "show_output": false},
-			},
-			"pre_run_command": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_run_command windsurf-chat", c), "show_output": true},
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-func resolveCodexConfigPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(homeDir, ".codex", "config.toml"), nil
-}
-
-func readCodexServerTemplate(repoRoot string) ([]codexMcpServerConfig, error) {
-	templatePath := filepath.Join(repoRoot, ".codex", "config.toml")
-	data, err := os.ReadFile(templatePath)
-	if err != nil {
-		return nil, err
-	}
-	return parseCodexMcpServers(string(data)), nil
-}
-
-func parseCodexMcpServers(content string) []codexMcpServerConfig {
-	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-	var servers []codexMcpServerConfig
-	var current *codexMcpServerConfig
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			current = nil
-			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
-			if strings.HasPrefix(section, "mcp_servers.") {
-				name := strings.TrimPrefix(section, "mcp_servers.")
-				servers = append(servers, codexMcpServerConfig{Name: name})
-				current = &servers[len(servers)-1]
-			}
-			continue
-		}
-		if current == nil {
-			continue
-		}
-		key, value, ok := strings.Cut(line, "=")
-		if !ok {
-			continue
-		}
-		key = strings.TrimSpace(key)
-		value = strings.TrimSpace(value)
-		switch key {
-		case "command":
-			current.Command = trimTomlString(value)
-		case "cwd":
-			current.Cwd = trimTomlString(value)
-		case "enabled":
-			enabled := strings.EqualFold(value, "true")
-			current.Enabled = &enabled
-		case "args":
-			current.Args = parseTomlStringArray(value)
-		}
-	}
-	return servers
-}
-
-func trimTomlString(value string) string {
-	trimmed := strings.TrimSpace(value)
-	if len(trimmed) >= 2 && strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"") {
-		if unquoted, err := strconv.Unquote(trimmed); err == nil {
-			return unquoted
-		}
-	}
-	return strings.Trim(trimmed, "\"")
-}
-
-func parseTomlStringArray(value string) []string {
-	trimmed := strings.TrimSpace(value)
-	if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
-		return nil
-	}
-	trimmed = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(trimmed, "["), "]"))
-	if trimmed == "" {
-		return nil
-	}
-	parts := strings.Split(trimmed, ",")
-	args := make([]string, 0, len(parts))
-	for _, part := range parts {
-		args = append(args, trimTomlString(part))
-	}
-	return args
-}
-
-func normalizeCodexServerConfigs(repoRoot string, servers []codexMcpServerConfig) []codexMcpServerConfig {
-	normalized := make([]codexMcpServerConfig, 0, len(servers))
-	for _, server := range servers {
-		entry := server
-		for i := 0; i < len(entry.Args)-1; i++ {
-			if entry.Args[i] == "--directory" && entry.Args[i+1] != "" && !filepath.IsAbs(entry.Args[i+1]) {
-				entry.Args[i+1] = filepath.Join(repoRoot, filepath.FromSlash(entry.Args[i+1]))
-			}
-		}
-		if entry.Cwd == "" {
-			entry.Cwd = repoRoot
-		} else if !filepath.IsAbs(entry.Cwd) {
-			entry.Cwd = filepath.Join(repoRoot, filepath.FromSlash(entry.Cwd))
-		}
-		normalized = append(normalized, entry)
-	}
-	return normalized
-}
-
-func renderCodexServerBlock(server codexMcpServerConfig) string {
-	var lines []string
-	lines = append(lines, fmt.Sprintf("[mcp_servers.%s]", server.Name))
-	lines = append(lines, fmt.Sprintf("command = %q", server.Command))
-	if server.Args != nil {
-		quotedArgs := make([]string, 0, len(server.Args))
-		for _, arg := range server.Args {
-			quotedArgs = append(quotedArgs, fmt.Sprintf("%q", arg))
-		}
-		lines = append(lines, fmt.Sprintf("args = [%s]", strings.Join(quotedArgs, ", ")))
-	}
-	if server.Enabled != nil {
-		lines = append(lines, fmt.Sprintf("enabled = %t", *server.Enabled))
-	}
-	if server.Cwd != "" {
-		lines = append(lines, fmt.Sprintf("cwd = %q", server.Cwd))
-	}
-	return strings.Join(lines, "\n")
-}
-
-func stripCodexServerBlocks(content string, names map[string]struct{}) string {
-	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-	var kept []string
-	skip := false
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
-			if strings.HasPrefix(section, "mcp_servers.") {
-				name := strings.TrimPrefix(section, "mcp_servers.")
-				_, skip = names[name]
-				if skip {
-					continue
-				}
-			} else {
-				skip = false
-			}
-		}
-		if skip {
-			continue
-		}
-		kept = append(kept, rawLine)
-	}
-	return strings.TrimRight(strings.Join(kept, "\n"), "\n")
-}
-
-func mergeCodexConfig(existing string, servers []codexMcpServerConfig) string {
-	serverNames := make(map[string]struct{}, len(servers))
-	for _, server := range servers {
-		serverNames[server.Name] = struct{}{}
-		switch server.Name {
-		case "repo":
-			serverNames["semio-repo"] = struct{}{}
-		}
-	}
-	base := stripCodexServerBlocks(existing, serverNames)
-	blocks := make([]string, 0, len(servers))
-	for _, server := range servers {
-		blocks = append(blocks, renderCodexServerBlock(server))
-	}
-	switch {
-	case base == "":
-		return strings.Join(blocks, "\n\n") + "\n"
-	case len(blocks) == 0:
-		return base + "\n"
-	default:
-		return base + "\n\n" + strings.Join(blocks, "\n\n") + "\n"
-	}
-}
-
-func generateCodexConfig(repoRoot string) (string, error) {
-	servers, err := readCodexServerTemplate(repoRoot)
-	if err != nil {
-		return "", err
-	}
-	normalizedServers := normalizeCodexServerConfigs(repoRoot, servers)
-	targetPath, err := resolveCodexConfigPath()
-	if err != nil {
-		return "", err
-	}
-	existing := ""
-	if data, readErr := os.ReadFile(targetPath); readErr == nil {
-		existing = string(data)
-	} else if !errors.Is(readErr, os.ErrNotExist) {
-		return "", readErr
-	}
-	return mergeCodexConfig(existing, normalizedServers), nil
-}
-
-// 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
-func generateClaudeCodeConfig(repoRoot string) (string, error) {
-	c := repoIdeHookCommand("claude-code")
-	existing := make(map[string]interface{})
-	settingsPath := filepath.Join(repoRoot, ".claude", "settings.json")
-	if data, err := os.ReadFile(settingsPath); err == nil {
-		_ = json.Unmarshal(data, &existing)
-	}
-	cursorHooksPath := filepath.Join(repoRoot, ".cursor", "hooks.json")
-	cursorHooksExist := false
-	if _, err := os.Stat(cursorHooksPath); err == nil {
-		cursorHooksExist = true
-	}
-	hookEntry := func(cmd string) []map[string]interface{} {
-		return []map[string]interface{}{
-			{
-				"matcher": "",
-				"hooks": []map[string]interface{}{
-					{"type": "command", "command": cmd},
-				},
-			},
-		}
-	}
-	if !cursorHooksExist {
-
-		existing["hooks"] = map[string]interface{}{
-			"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
-			"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
-			"SubagentStart":      hookEntry(fmt.Sprintf("%s hook SubagentStart claude-code", c)),
-			"SubagentStop":       hookEntry(fmt.Sprintf("%s hook SubagentStop claude-code", c)),
-			"Stop":               hookEntry(fmt.Sprintf("%s hook Stop claude-code", c)),
-			"UserPromptSubmit":   hookEntry(fmt.Sprintf("%s hook UserPromptSubmit claude-code", c)),
-			"PreCompact":         hookEntry(fmt.Sprintf("%s hook PreCompact claude-code", c)),
-			"PreToolUse":         hookEntry(fmt.Sprintf("%s hook PreToolUse claude-code", c)),
-			"PostToolUse":        hookEntry(fmt.Sprintf("%s hook PostToolUse claude-code", c)),
-			"PostToolUseFailure": hookEntry(fmt.Sprintf("%s hook PostToolUseFailure claude-code", c)),
-			"PermissionRequest":  hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
-			"TaskCompleted":      hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
-			"Notification":       hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
-			"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
-		}
-	} else {
-
-		// claude-code-exclusive events that cursor does not fire to avoid duplicate logging
-		// where cursor fires both .cursor/hooks.json (cursor-chat) and .claude/settings.json
-		// (claude-code) for the same event, causing cursor events to be misidentified.
-		existing["hooks"] = map[string]interface{}{
-			"PermissionRequest": hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
-			"TaskCompleted":     hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
-			"Notification":      hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
-			"TeammateIdle":      hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
-		}
-	}
-	out, err := json.MarshalIndent(existing, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔸generateDroidConfig holds the data fields for a generateDroidConfig record.
-func generateDroidConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	config := map[string]interface{}{
-		"hooks": map[string]string{
-			"SessionStart":     fmt.Sprintf("%s hook SessionStart droid", c),
-			"SessionEnd":       fmt.Sprintf("%s hook SessionEnd droid", c),
-			"SubagentStop":     fmt.Sprintf("%s hook SubagentStop droid", c),
-			"Stop":             fmt.Sprintf("%s hook Stop droid", c),
-			"UserPromptSubmit": fmt.Sprintf("%s hook UserPromptSubmit droid", c),
-			"PreCompact":       fmt.Sprintf("%s hook PreCompact droid", c),
-			"PreToolUse":       fmt.Sprintf("%s hook PreToolUse droid", c),
-			"PostToolUse":      fmt.Sprintf("%s hook PostToolUse droid", c),
-			"Notification":     fmt.Sprintf("%s hook Notification droid", c),
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔺generateKiroConfig holds the data fields for a generateKiroConfig record.
-func generateKiroConfig(repoRoot string) (string, error) {
-	c := repoIdeHookCommand("kiro-cli")
-	hook := func(cmd string) map[string]interface{} {
-		return map[string]interface{}{"command": cmd}
-	}
-	config := map[string]interface{}{
-		"name":           "repo",
-		"description":    "Interacts with the semio monorepo via repo CLI hooks and MCP tools",
-		"prompt":         "file://../../AGENTS.md",
-		"includeMcpJson": true,
-		"tools":          []string{"*"},
-		"allowedTools":   []string{"@repo", "@semio", "@coda"},
-		"hooks": map[string]interface{}{
-			"agentSpawn": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook agentSpawn kiro-cli", c)),
-			},
-			"userPromptSubmit": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook userPromptSubmit kiro-cli", c)),
-			},
-			"preToolUse": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook preToolUse kiro-cli", c)),
-			},
-			"postToolUse": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook postToolUse kiro-cli", c)),
-			},
-			"stop": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook stop kiro-cli", c)),
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
 }
 
 // #endregion 🔷Configure
