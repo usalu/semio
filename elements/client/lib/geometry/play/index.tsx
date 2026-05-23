@@ -7,7 +7,7 @@ import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
 import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 
-import topologyJson from "../fixtures/topology.json";
+import topologyJson from "./fixtures/topology.json";
 import { TopologicViewport, type TopologicTransformMode } from "../react/index.tsx";
 import {
 	TOPOLOGIC_KINDS,

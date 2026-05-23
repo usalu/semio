@@ -2,96 +2,67 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    // #region ⌨️ Keyboard
+    // #region 🚀 Programs
     {
       "name": "⌨️gemini",
       "type": "node-terminal",
       "request": "launch",
       "command": "gemini --yolo",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "1_keyboard",
-        "order": 10
-      }
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "⌨️kiro",
       "type": "node-terminal",
       "request": "launch",
       "command": "kiro-cli chat --trust-all-tools",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "1_keyboard",
-        "order": 20
-      }
+      "cwd": "${workspaceFolder}"
     },
-    // #endregion
-    // #region 🖱️ Mouse
     {
       "name": "🖱️f3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "f3d",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "2_mouse",
-        "order": 10
-      }
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🖱️gitkraken",
       "type": "node-terminal",
       "request": "launch",
       "command": "gitkraken --path \"${workspaceFolder}\"",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "2_mouse",
-        "order": 20
-      }
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🖱️mcpinspector",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run dev -- mcp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
       "env": {
         "CLIENT_PORT": "6274",
         "SERVER_PORT": "6277"
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "2_mouse",
-        "order": 30
-      },
+      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274)",
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🚀benchmark",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "go run ./repo/cli benchmark",
+      "cwd": "${workspaceFolder}"
+    },
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev📚storybook",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run dev:storybook",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "STORYBOOK_PORT": "6010"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 10
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev👤semio🌐hub",
+      "name": "🛠️dev👤semio📚hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-hub",
@@ -102,17 +73,32 @@
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
-        "group": "3_dev",
-        "order": 20,
         "reveal": "always",
         "panel": "dedicated"
+      }
+    },
+    {
+      "name": "🛠️dev👤elements📚ui📖storybook",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:elements:ui:storybook"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6006)",
+        "uriFormat": "%s"
       }
     },
     {
       "name": "🛠️dev👤semio🖱️3dm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/3dm-ui",
+      "command": "npx nx dev @semio/3dm-ui",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -131,8 +117,6 @@
         }
       },
       "presentation": {
-        "group": "3_dev",
-        "order": 30,
         "reveal": "always",
         "panel": "dedicated"
       },
@@ -144,21 +128,39 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️desktop",
-      "type": "node-terminal",
+      "name": "🛠️dev👤semio🧮algorithms📖storybook",
+      "type": "node",
       "request": "launch",
-      "command": "bun run dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:algorithms"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 40
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6007)",
+        "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev👤semio⚙️engine🤖mcp",
+      "name": "🛠️dev👤semio🖱️desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:desktop"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🛠️dev👤semio📚engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev mcp engine",
+      "command": "npm run mcp:inspector",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}"
@@ -180,10 +182,6 @@
         }
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 50
-      },
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274)",
@@ -191,34 +189,19 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️sketchpad🎛️play",
-      "type": "node-terminal",
+      "name": "🛠️dev👤semio🌐sites🎛️play",
+      "type": "node",
       "request": "launch",
-      "command": "bun nx run @semio/play:dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:sites:play"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 60
-      },
+      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://localhost:4000)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev📐elements🖱️geometry🎛️play",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @elements/geometry-play:dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 65
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
         "uriFormat": "%s"
       }
     },
@@ -232,10 +215,7 @@
         "SEMIO_STORE_PORT": "4010"
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 70
-      },
+      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
@@ -246,10 +226,7 @@
       "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/sketchpad",
-      "env": {
-        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
-      },
+      "command": "npx nx dev semio/sketchpad",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -268,10 +245,7 @@
         }
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 80
-      },
+      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://localhost:5173)",
@@ -279,7 +253,24 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🎗️vscode",
+      "name": "🛠️dev👤semio📚ui📖storybook",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:ui"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6008)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev👤semio⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -287,17 +278,13 @@
       ],
       "outFiles": [
         "${workspaceFolder}/semio/vscode/out/**/*.js"
-      ],
-      "presentation": {
-        "group": "3_dev",
-        "order": 90
-      }
+      ]
     },
     {
-      "name": "🛠️dev👤semio🎗️vscodeintegrated",
+      "name": "🛠️dev👤semio⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev @semio/vscode",
+      "command": "npx nx dev semio/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -317,8 +304,6 @@
         }
       },
       "presentation": {
-        "group": "3_dev",
-        "order": 100,
         "reveal": "always",
         "panel": "dedicated"
       },
@@ -326,14 +311,15 @@
     },
     {
       "name": "🛠️dev🔬coda🖱️desktop",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun nx run @coda/desktop:dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 110
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "🛠️dev🔬coda🤖mcp",
@@ -349,14 +335,10 @@
       ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
       },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "presentation": {
-        "group": "3_dev",
-        "order": 120
-      },
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
@@ -364,16 +346,16 @@
       }
     },
     {
-      "name": "🛠️dev🔬coda🤖mcpinspector",
+      "name": "🛠️dev🔬coda🤖mcp (with inspector)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev mcp",
+      "command": "npm run mcp:inspector",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}",
         "env": {
           "MCP_AUTO_OPEN_ENABLED": "false",
-          "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
+          "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
         }
       },
       "problemMatcher": {
@@ -393,10 +375,6 @@
         }
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 130
-      },
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
@@ -405,26 +383,27 @@
     },
     {
       "name": "🛠️dev🧰repo🤖mcp",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run dev -- mcp repo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
       },
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 140
-      },
+      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
-      "name": "🛠️dev🧰repo🎗️vscode",
+      "name": "🛠️dev🧰repo⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -432,17 +411,13 @@
       ],
       "outFiles": [
         "${workspaceFolder}/repo/vscode/out/**/*.js"
-      ],
-      "presentation": {
-        "group": "3_dev",
-        "order": 150
-      }
+      ]
     },
     {
-      "name": "🛠️dev🧰repo🎗️vscodeintegrated",
+      "name": "🛠️dev🧰repo⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx dev repo",
+      "command": "npx nx dev repo/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -462,230 +437,182 @@
         }
       },
       "presentation": {
-        "group": "3_dev",
-        "order": 160,
         "reveal": "always",
         "panel": "dedicated"
       },
       "cwd": "${workspaceFolder}"
     },
-    {
-      "name": "🛠️dev🧩elements🏁board",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @elements/board:dev",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "BOARD_PLAY_PORT": "6012"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 170
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6012)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩elements🏙️scene",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @elements/scene:dev",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "SCENE_PLAY_PORT": "6013"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 180
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
-        "uriFormat": "%s"
-      }
-    },
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦build📚storybook",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build:storybook",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 10
-      }
-    },
-    {
       "name": "📦build👤semio🖱️3dm",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- 3dm",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:3dm"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 20
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "📦build👤semio🏪assets",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- assets",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:assets"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 30
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "📦build👤semio🖱️desktop",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:desktop"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 40
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio⚙️engine",
-      "type": "node-terminal",
+      "name": "📦build👤semio📚engine",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- engine",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:engine"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 50
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio🔗graphql",
-      "type": "node-terminal",
+      "name": "📦build👤semio🌐sites",
+      "type": "node",
       "request": "launch",
-      "command": "bun nx run semio/graphql:build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:sites"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 60
-      }
-    },
-    {
-      "name": "📦build👤semio🖱️sketchpad",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run build -- sites",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 70
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "📦build🔬coda🖱️desktop",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- coda-desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 80
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "📦build🧰repo⌨️client",
-      "type": "node-terminal",
+      "name": "📦build🧰repo⌨️cli",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- repo-cli",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:repo-cli"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 90
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "📦build🧰repo⌨️server",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- repo-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:repo-server"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 100
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "📦build🧰repo🎗️vscode",
-      "type": "node-terminal",
+      "name": "📦build🧰repo🖱️vscode",
+      "type": "node",
       "request": "launch",
-      "command": "bun run build -- repo-vscode",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build:repo-vscode"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 110
-      }
+      "console": "integratedTerminal"
     },
     // #endregion
     // #region ⬆️ Publish
     {
       "name": "⬆️publish👤semio🖱️desktop",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run publish -- desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "publish:desktop"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "5_publish",
-        "order": 10
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad🎛️play",
-      "type": "node-terminal",
+      "name": "⬆️publish👤semio🌐play",
+      "type": "node",
       "request": "launch",
-      "command": "bun run publish -- play",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "publish:play"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "5_publish",
-        "order": 20
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad",
-      "type": "node-terminal",
+      "name": "⬆️publish👤semio🌐sketchpad",
+      "type": "node",
       "request": "launch",
-      "command": "bun run publish -- sketchpad",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "publish:sketchpad"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "5_publish",
-        "order": 30
-      }
+      "console": "integratedTerminal"
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad📖docs",
-      "type": "node-terminal",
+      "name": "⬆️publish👤semio🌐sites📖docs",
+      "type": "node",
       "request": "launch",
-      "command": "bun run publish -- docs",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "publish:docs"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "5_publish",
-        "order": 40
-      }
+      "console": "integratedTerminal"
     },
     {
       "name": "⬆️publish🔬coda🖱️desktop",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "bun run publish -- coda-desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "publish:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "5_publish",
-        "order": 50
-      }
+      "console": "integratedTerminal"
     }
     // #endregion
   ]

@@ -22,7 +22,7 @@ import {
 	boardFixtureMetaKindCompatibility,
 	mergeBoardKindCatalogBundleByRowId,
 } from "../../../../elements/client/lib/board/index";
-import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
+import nakaginCapsuleTowerBoardFixture from "../../../../elements/client/lib/board/play/fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {
 	title: "elements/board",

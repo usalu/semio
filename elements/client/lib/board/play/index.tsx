@@ -40,7 +40,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 
-import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
+import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
   BOARD_BUILTIN_PORT_HANDLE_KIND,
   BOARD_CAMERA_ZOOM_MAX,

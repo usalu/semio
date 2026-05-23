@@ -9,6 +9,7 @@ import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, partitionNeo4jGraphCliArgv } from "./generate.neo4j.gen.ts";
+import { seedMetabolismLightKitNeo4j } from "./seed.metabolism.light.kit.neo4j.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
@@ -86,6 +87,16 @@ export class SetupScript extends Script {
 
   private runGit(): void {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
+    const repoClientCandidates = [join(this.root, "repo", "client", "client.exe"), join(this.root, "repo", "client", "client")];
+    const repoClientPath = repoClientCandidates.find((p) => existsSync(p));
+    if (repoClientPath) {
+      runCmd(repoClientPath, ["configure"], { cwd: this.root });
+    } else {
+      runCmd("go", ["run", "./repo/client/mcp", "configure"], {
+        cwd: this.root,
+        env: { ...process.env, GOWORK: join(this.root, "go.work") },
+      });
+    }
     const source = "AGENTS.md";
     for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
       const aliasPath = join(this.root, alias);
@@ -438,34 +449,6 @@ export class TestScript extends Script {
       await this.runStorybookPlaywright();
       return;
     }
-    if (segments[0] === "repo-client") {
-      runCmd("go", ["test", "-timeout", "120s", "-count=1", "-v", "./repo/client/cli"], {
-        cwd: this.root,
-        env: { ...process.env, GOWORK: join(this.root, "go.work") },
-      });
-      return;
-    }
-    if (segments[0] === "repo-mcp") {
-      const packages: Record<string, string> = {
-        client: "./repo/client/mcp",
-        claude: "./repo/client/mcp/claude",
-        codex: "./repo/client/mcp/codex",
-        copilot: "./repo/client/mcp/copilot",
-        cursor: "./repo/client/mcp/cursor",
-        kiro: "./repo/client/mcp/kiro",
-      };
-      const slug = segments[1];
-      const selected = slug ? [packages[slug]] : Object.values(packages);
-      if (selected.some((pkg) => !pkg)) {
-        console.error(`[test.repo-mcp] unknown profile ${JSON.stringify(slug)}`);
-        process.exit(1);
-      }
-      runCmd("go", ["test", "-timeout", "120s", "-count=1", ...selected], {
-        cwd: this.root,
-        env: { ...process.env, GOWORK: join(this.root, "go.work") },
-      });
-      return;
-    }
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/js", "@semio/react"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "semio/graphql:build"], { cwd: this.root });
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
@@ -715,9 +698,8 @@ export class PublishScript extends Script {
 
 //#region 🔖SeedScript
 export class SeedScript extends Script {
-  async run(segments: string[]): Promise<void> {
+  run(segments: string[]): void {
     if (segments[0] === "neo4j" && segments[1] === "metabolism-light-kit") {
-      const { seedMetabolismLightKitNeo4j } = await import("./seed.metabolism.light.kit.neo4j.ts");
       seedMetabolismLightKitNeo4j(this.root);
       return;
     }

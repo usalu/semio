@@ -21,7 +21,7 @@ import {
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
 
-import nakaginBoardJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
+import nakaginBoardJson from "../../board/play/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardLodAutomaticSelectLabel,
@@ -33,7 +33,7 @@ import {
 	type BoardLodModeKind,
 	type CameraState,
 } from "../../board/index.ts";
-import nakaginSceneJson from "../../scene/fixtures/nakagin-capsule-tower.scene.json";
+import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	buildTopologyDualSurfaceBindings,
 	parseTopologyFixtureV1,
@@ -56,7 +56,7 @@ import {
 	type LodModeKind as SceneLodModeKind,
 	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
-import topologyManifestJson from "../fixtures/nakagin-capsule-tower.topology.json";
+import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 import "./globals.css";
 // #endregion 📥Imports
 

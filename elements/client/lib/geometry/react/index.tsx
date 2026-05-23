@@ -597,13 +597,13 @@ if (import.meta.vitest) {
 
 		it("parses the shipped fixture through the wasm facade contract", async () => {
 			const bindings = await ensureTopologicWasmLoaded();
-			const fixture = bindings.parseFixture((await import("../fixtures/topology.json")).default);
+			const fixture = bindings.parseFixture((await import("../play/fixtures/topology.json")).default);
 			expect(fixture?.schema).toBe("elements.geometry.topologic.fixture/v1");
 		});
 
 		it("collects every shipped topology from the rooted scene graph", async () => {
 			const bindings = await ensureTopologicWasmLoaded();
-			const fixture = bindings.parseFixture((await import("../fixtures/topology.json")).default);
+			const fixture = bindings.parseFixture((await import("../play/fixtures/topology.json")).default);
 			expect(fixture).toBeTruthy();
 			const traversal = collectSceneEntries(new TopologicWasmSession(fixture as TopologicFixtureV1));
 			expect(traversal.entries).toHaveLength((fixture as TopologicFixtureV1).topologies.length);

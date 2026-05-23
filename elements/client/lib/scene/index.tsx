@@ -43,7 +43,6 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import fixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./play/globals.css";
 import {
 	BufferGeometry,
@@ -3646,10 +3645,15 @@ function PlaySceneCanvas(props: {
 }
 
 function MainWindow() {
-	const fixture = useMemo(() => parseFixtureV1(fixtureJson as unknown), []);
+	const [fixture, setFixture] = useState<SceneFixtureV1 | null>(null);
 	const lodProps = useContext(PlayLodContext);
+	useEffect(() => {
+		void import("./play/fixtures/nakagin-capsule-tower.scene.json").then((mod) => {
+			setFixture(parseFixtureV1(mod.default as unknown));
+		});
+	}, []);
 	if (!fixture) {
-		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
+		return <div className="p-4 text-muted-foreground">Loading scene fixture…</div>;
 	}
 	return <PlayBody fixture={fixture} lodProps={lodProps} />;
 }
@@ -4012,8 +4016,9 @@ if (import.meta.vitest) {
 		});
 	});
 	describe("scene play fixture hook", () => {
-		it("parses nakagin fixture", () => {
-			const f = parseFixtureV1(fixtureJson as unknown);
+		it("parses nakagin fixture", async () => {
+			const mod = await import("./play/fixtures/nakagin-capsule-tower.scene.json");
+			const f = parseFixtureV1(mod.default as unknown);
 			expect(f?.domain).toBe("architecture");
 			expect(f?.attractions.length).toBeGreaterThan(0);
 			expect(f?.objects.length).toBeGreaterThan(0);
