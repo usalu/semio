@@ -104,38 +104,6 @@ function Test-WingetPackageInstalled {
     return $LASTEXITCODE -eq 0 -and (($output | Out-String) -match [Regex]::Escape($Id))
 }
 
-function Remove-LegacyVisualStudio2022Toolchain {
-    $legacyPackageIds = @(
-        "Microsoft.VisualStudio.2022.BuildTools",
-        "Microsoft.VisualStudio.2022.Community",
-        "Microsoft.VisualStudio.2022.Professional",
-        "Microsoft.VisualStudio.2022.Enterprise"
-    )
-    foreach ($packageId in $legacyPackageIds) {
-        if (-not (Test-WingetPackageInstalled -Id $packageId)) {
-            continue
-        }
-        Write-Step "Removing legacy Visual Studio 2022 package $packageId…"
-        & winget uninstall --exact --id $packageId --accept-source-agreements --disable-interactivity --silent
-        if ($LASTEXITCODE -ne 0) {
-            Write-Step "winget uninstall returned $LASTEXITCODE for $packageId (continuing)."
-        }
-    }
-    foreach ($legacyPath in @(
-            "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022",
-            "${env:ProgramFiles}\Microsoft Visual Studio\2022"
-        )) {
-        if (-not (Test-Path -LiteralPath $legacyPath)) {
-            continue
-        }
-        Write-Step "Removing legacy Visual Studio 2022 directory $legacyPath…"
-        Remove-Item -LiteralPath $legacyPath -Recurse -Force -ErrorAction SilentlyContinue
-        if (Test-Path -LiteralPath $legacyPath) {
-            Write-Step "Legacy Visual Studio 2022 directory remains at $legacyPath; complete removal may require an elevated shell or reboot."
-        }
-    }
-}
-
 function Sync-WingetPackage {
     param(
         [string]$Id,
@@ -770,7 +738,6 @@ Refresh-CurrentProcessPath
 
 #region 🧰MachineInstall
 if (-not $SkipMachineInstall) {
-    Remove-LegacyVisualStudio2022Toolchain
     Sync-WingetPackage -Id "Git.Git" -Label "Git"
     Sync-WingetPackage -Id "GitHub.GitLFS" -Label "Git LFS"
     Sync-WingetPackage -Id "GitHub.cli" -Label "GitHub CLI"

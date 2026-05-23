@@ -4,7 +4,17 @@
 
 // #region 📥Imports
 import { useGLTF } from "@react-three/drei";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type ReactElement,
+	type ReactNode,
+} from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -41,7 +51,7 @@ import {
 	TopologyScenePane,
 	topologyMirrorConnectHandlers,
 	topologyMirrorProximityHandlers,
-	topologySceneChromeDefaults,
+	TOPOLOGY_SCENE_CHROME_DEFAULTS,
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
 import {
@@ -176,7 +186,6 @@ interface TopologyPlayShellValue {
 	readonly bindings: ReturnType<typeof buildTopologyDualSurfaceBindings>;
 	readonly boardSelected: ReadonlySet<string>;
 	readonly boardCamera: CameraState;
-	readonly sceneCamera: CameraState;
 	readonly sceneSelected: string | null;
 	readonly relocateMode: SceneRelocateMode;
 	readonly sceneLodTag: SceneLodKind;
@@ -236,6 +245,10 @@ function TopologyBoardWindow(): ReactElement {
 
 function TopologySceneWindow(): ReactElement {
 	const s = useTopologyPlayShell();
+	const sceneCanvasProps = useMemo(
+		() => ({ ...TOPOLOGY_SCENE_CHROME_DEFAULTS, ...s.sceneLodProps }),
+		[s.sceneLodProps],
+	);
 	return (
 		<div className="flex h-full w-full flex-col">
 			<TopologyPlayChromeStrip
@@ -288,7 +301,7 @@ function TopologySceneWindow(): ReactElement {
 					bindings={s.bindings}
 					relocateMode={s.relocateMode}
 					selectedObjectId={s.sceneSelected}
-					scene={{ ...topologySceneChromeDefaults(), ...s.sceneLodProps }}
+					scene={sceneCanvasProps}
 				/>
 			</div>
 		</div>
@@ -306,9 +319,10 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 	const [boardSelected, setBoardSelected] = useState<ReadonlySet<string>>(() => new Set());
 	const [sceneSelected, setSceneSelected] = useState<string | null>(null);
 	const [boardCamera, setBoardCamera] = useState<CameraState>(() => ({ ...boardFixture.camera }));
-	const [sceneCamera, setSceneCamera] = useState<CameraState>(() => ({
-		...sceneFixture.camera,
-	}));
+	const sceneCameraRef = useRef<CameraState>({ ...sceneFixture.camera });
+	const onSceneCamera = useCallback((camera: CameraState) => {
+		sceneCameraRef.current = camera;
+	}, []);
 	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
 	const [boardLodTag, setBoardLodTag] = useState<BoardDrawLodKind>("normal");
 	const onBoardLodChange = useCallback((lod: BoardDrawLodKind) => setBoardLodTag(lod), []);
@@ -363,12 +377,12 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 				onBoardSelect,
 				onSceneSelect,
 				onBoardCamera: setBoardCamera,
-				onSceneCamera: setSceneCamera,
+				onSceneCamera,
 				onSceneLodChange: setSceneLodTag,
 				...mirrorConnect,
 				...mirrorProximity,
 			}),
-		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect],
+		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect, onSceneCamera],
 	);
 
 	useEffect(() => {
@@ -396,7 +410,6 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			bindings,
 			boardSelected,
 			boardCamera,
-			sceneCamera,
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,
@@ -417,7 +430,6 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			bindings,
 			boardSelected,
 			boardCamera,
-			sceneCamera,
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,

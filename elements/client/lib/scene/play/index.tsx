@@ -199,14 +199,14 @@ function playLodTierMenuLabel(tier: LodKind): string {
 
 const PlayLodContext = createContext<Pick<CanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
 
+const PlayLodDisplayContext = createContext<LodKind>("normal");
+
 const PlayRuntimeContext = createContext<{
-	readonly effectiveLod: LodKind;
 	readonly setEffectiveLod: (lod: LodKind) => void;
 } | null>(null);
 
 function windowKindsWithLodMeasures(
 	lodMode: LodModeKind,
-	effectiveLod: LodKind,
 	setLodMode: (mode: LodModeKind) => void,
 ): UIWindowKindDefinition[] {
 	return [
@@ -220,7 +220,7 @@ function windowKindsWithLodMeasures(
 					items: [
 						{
 							id: "automatic",
-							label: lodAutomaticSelectLabel(effectiveLod),
+							label: lodAutomaticSelectLabel("normal"),
 							value: LOD_MODE_AUTOMATIC,
 						},
 						...PLAY_LOD_TIERS.map((tier) => ({
@@ -255,8 +255,8 @@ function PlayBody({
 	const [proximityCount, setProximityCount] = useState(0);
 	const [connectCount, setConnectCount] = useState(0);
 	const [indirectCount, setIndirectCount] = useState(0);
+	const lodTag = useContext(PlayLodDisplayContext);
 	const runtime = useContext(PlayRuntimeContext);
-	const lodTag = runtime?.effectiveLod ?? "normal";
 	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
 	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
 	const blockedVortexFullIds = useMemo(
@@ -461,31 +461,30 @@ function PlayInner(): ReactElement {
 	);
 
 	const [lodMode, setLodMode] = useState<LodModeKind>(LOD_MODE_AUTOMATIC);
-	const [effectiveLod, setEffectiveLod] = useState<LodKind>("normal");
+	const [lodTag, setLodTag] = useState<LodKind>("normal");
 	const lodProps = useMemo(() => lodCanvasProps(lodMode), [lodMode]);
-	const runtime = useMemo(
-		() => ({ effectiveLod: effectiveLod, setEffectiveLod: setEffectiveLod }),
-		[effectiveLod],
-	);
+	const runtime = useMemo(() => ({ setEffectiveLod: setLodTag }), []);
 
 	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
 				id: PLAY_APP_ID,
 				label: "Scene play",
-				windowKinds: windowKindsWithLodMeasures(lodMode, effectiveLod, setLodMode),
+				windowKinds: windowKindsWithLodMeasures(lodMode, setLodMode),
 				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
 			},
 		],
-		[lodMode, effectiveLod],
+		[lodMode],
 	);
 
 	return (
-		<PlayLodContext.Provider value={lodProps}>
-			<PlayRuntimeContext.Provider value={runtime}>
-				<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
-			</PlayRuntimeContext.Provider>
-		</PlayLodContext.Provider>
+		<PlayLodDisplayContext.Provider value={lodTag}>
+			<PlayLodContext.Provider value={lodProps}>
+				<PlayRuntimeContext.Provider value={runtime}>
+					<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+				</PlayRuntimeContext.Provider>
+			</PlayLodContext.Provider>
+		</PlayLodDisplayContext.Provider>
 	);
 }
 

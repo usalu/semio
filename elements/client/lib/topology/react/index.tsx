@@ -354,9 +354,15 @@ export const TOPOLOGY_LOD_GRID_DEFAULTS: TopologyLodGridShared = {
 	gridSnapEnabled: true,
 };
 
-/** @emoji 🎚️ Scene-only chrome defaults aligned with the scene play harness in `elements/scene/index.tsx` (topology passes them via `scene` prop). */
+/** @emoji 🎚️ Scene-only chrome defaults aligned with the scene play harness (stable reference for memoized panes). */
+export const TOPOLOGY_SCENE_CHROME_DEFAULTS: Pick<
+	SceneCanvasProps,
+	"showLodGrid" | "proximityRadius" | "gridSnapEnabled"
+> = { showLodGrid: true, proximityRadius: 24, gridSnapEnabled: true };
+
+/** @deprecated Use {@link TOPOLOGY_SCENE_CHROME_DEFAULTS} — kept for callers that still invoke a factory. */
 export function topologySceneChromeDefaults(): Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "gridSnapEnabled"> {
-	return { showLodGrid: true, proximityRadius: 24, gridSnapEnabled: true };
+	return TOPOLOGY_SCENE_CHROME_DEFAULTS;
 }
 
 /** @emoji 🎚️ Merges paired fixture metas into the shared LOD/grid + catalog fields consumed by `buildTopologyDualSurfaceBindings`. */

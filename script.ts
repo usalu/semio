@@ -554,89 +554,40 @@ export class BuildScript extends Script {
 //#endregion 🔖BuildScript
 
 //#region 🔖CppScriptHelpers
-const LEGACY_WINDOWS_CMAKE_GENERATORS = ["Visual Studio 17 2022", "Visual Studio 16 2019", "Visual Studio 15 2017"];
+const WINDOWS_CMAKE_GENERATOR = "Visual Studio 18 2026";
 
 function vswhereExecutable(): string {
   const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
   return join(programFilesX86, "Microsoft Visual Studio", "Installer", "vswhere.exe");
 }
 
-function queryVisualStudio2026Instance(): { installPath: string; generatorInstance: string } | undefined {
+function queryVisualStudio2026InstallPath(): string | undefined {
   if (process.platform !== "win32") return undefined;
   const vswhere = vswhereExecutable();
   if (!existsSync(vswhere)) return undefined;
-  const query = (extraArgs: string[]) => {
-    const result = spawnSync(
-      vswhere,
-      ["-latest", "-version", "[18.0,19.0)", ...extraArgs, "-property", "installationPath", "-property", "installationVersion"],
-      { encoding: "utf8" },
-    );
-    if (result.status !== 0) return undefined;
-    const lines = result.stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const installPath = lines[0];
-    const installationVersion = lines[1];
-    if (!installPath) return undefined;
-    const generatorInstance = installationVersion ? `${installPath};version=${installationVersion}` : installPath;
-    return { installPath, generatorInstance };
-  };
-  const withVc = query(["-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64"]);
-  if (withVc) return withVc;
-  const anyVs = query([]);
-  if (anyVs) return anyVs;
-  const programFiles = process.env.ProgramFiles ?? "C:\\Program Files";
-  for (const edition of ["Community", "BuildTools", "Professional", "Enterprise"] as const) {
-    const installPath = join(programFiles, "Microsoft Visual Studio", "18", edition);
-    if (existsSync(join(installPath, "VC", "Tools", "MSVC"))) {
-      return { installPath, generatorInstance: installPath };
-    }
-  }
-  return undefined;
-}
-
-function visualStudioSetupExecutable(): string {
-  const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
-  return join(programFilesX86, "Microsoft Visual Studio", "Installer", "setup.exe");
-}
-
-function modifyVisualStudio2026CppWorkload(installPath: string): void {
-  const setup = visualStudioSetupExecutable();
-  if (!existsSync(setup)) return;
-  runCmd(setup, [
-    "modify",
-    "--installPath",
-    installPath,
-    "--add",
-    "Microsoft.VisualStudio.Workload.VCTools",
-    "--includeRecommended",
-    "--passive",
-    "--wait",
-  ], { cwd: WORKSPACE_ROOT });
-}
-
-function wingetInstallVisualStudio2026Cpp(): void {
-  const args = [
-    "install",
-    "--exact",
-    "--id",
-    "Microsoft.VisualStudio.BuildTools",
-    "--accept-package-agreements",
-    "--accept-source-agreements",
-    "--disable-interactivity",
-    "--silent",
-    "--override",
-    "--wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
-  ];
-  runCmd("winget", args, { cwd: WORKSPACE_ROOT });
+  const result = spawnSync(
+    vswhere,
+    [
+      "-latest",
+      "-version",
+      "[18.0,19.0)",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath",
+    ],
+    { encoding: "utf8" },
+  );
+  if (result.status !== 0) return undefined;
+  const installPath = result.stdout.trim();
+  return installPath || undefined;
 }
 //#endregion 🔖CppScriptHelpers
 
 //#region 🔖CppScript
 export class CppScript extends Script {
-  private windowsVsGeneratorInstance: string | undefined;
-
   run(segments: string[]): void {
     const command = segments[0] ?? "all";
     const preset = this.resolvePreset(segments.slice(1));
@@ -680,7 +631,7 @@ export class CppScript extends Script {
     this.ensureTool("cmake", "cmake");
     if (process.platform !== "win32") this.ensureTool("ninja", "ninja");
     this.ensureVcpkg();
-    if (process.platform === "win32") this.ensureWindowsVisualStudio2026();
+    if (process.platform === "win32") this.ensureWindowsMsvc();
   }
 
   private runConfigure(preset: string): void {
@@ -739,48 +690,25 @@ export class CppScript extends Script {
   }
 
   private cppEnv(): NodeJS.ProcessEnv {
-    const env = {
+    return {
       ...devToolingEnv(),
       CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL ?? "4",
       VCPKG_ROOT: this.vcpkgRoot(),
       VCPKG_DISABLE_METRICS: "1",
       VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "4",
     };
-    if (process.platform === "win32" && this.windowsVsGeneratorInstance) {
-      env.CMAKE_GENERATOR_INSTANCE = this.windowsVsGeneratorInstance;
-    }
-    return env;
   }
 
   private vcpkgRoot(): string {
     return process.env.VCPKG_ROOT || join(this.root, ".repo", "cache", "vcpkg");
   }
 
-  private ensureWindowsVisualStudio2026(): void {
+  private ensureWindowsMsvc(): void {
     if (process.platform !== "win32") return;
-    let instance = queryVisualStudio2026Instance();
-    if (!instance) {
-      const anyVs = spawnSync(vswhereExecutable(), ["-latest", "-version", "[18.0,19.0)", "-property", "installationPath"], {
-        encoding: "utf8",
-      });
-      const candidate = anyVs.stdout.trim();
-      if (candidate) {
-        console.log("[cpp] Adding VC++ build tools to Visual Studio 2026…");
-        modifyVisualStudio2026CppWorkload(candidate);
-        instance = queryVisualStudio2026Instance();
-      }
-    }
-    if (!instance && this.hasTool("winget")) {
-      console.log("[cpp] Visual Studio 2026 with VC++ tools not found; installing via winget…");
-      wingetInstallVisualStudio2026Cpp();
-      instance = queryVisualStudio2026Instance();
-    }
-    if (!instance) {
-      console.error("[cpp] Visual Studio 2026 with the Desktop development with C++ workload is required.");
-      console.error("[cpp] On native Windows run: .\\script.ps1 setup");
-      process.exit(1);
-    }
-    this.windowsVsGeneratorInstance = instance.generatorInstance;
+    if (queryVisualStudio2026InstallPath()) return;
+    console.error("[cpp] Visual Studio 2026 with the Desktop development with C++ workload is required.");
+    console.error("[cpp] On native Windows run: .\\script.ps1 setup");
+    process.exit(1);
   }
 
   private purgeStaleCmakeCache(preset: string): void {
@@ -788,24 +716,12 @@ export class CppScript extends Script {
     const cacheFile = join(cacheDir, "CMakeCache.txt");
     if (!existsSync(cacheFile)) return;
     const content = readFileSync(cacheFile, "utf8");
-    let remove = false;
-    if (process.platform === "win32") {
-      if (LEGACY_WINDOWS_CMAKE_GENERATORS.some((generator) => content.includes(generator))) {
-        remove = true;
-        console.log(`[cpp] Removing stale CMake cache for preset "${preset}" (legacy Visual Studio generator).`);
-      }
-      const expected = this.windowsVsGeneratorInstance ?? queryVisualStudio2026Instance()?.generatorInstance;
-      if (expected) {
-        const match = content.match(/^CMAKE_GENERATOR_INSTANCE:INTERNAL=(.+)$/m);
-        const cached = match?.[1]?.trim();
-        const normalize = (value: string) => value.replaceAll("/", "\\").toLowerCase();
-        if (cached && normalize(cached) !== normalize(expected)) {
-          remove = true;
-          console.log(`[cpp] Removing stale CMake cache for preset "${preset}" (Visual Studio instance changed).`);
-        }
-      }
+    const generatorMatch = content.match(/^CMAKE_GENERATOR:INTERNAL=(.+)$/m);
+    const cachedGenerator = generatorMatch?.[1]?.trim();
+    if (process.platform === "win32" && cachedGenerator && cachedGenerator !== WINDOWS_CMAKE_GENERATOR) {
+      console.log(`[cpp] Removing stale CMake cache for preset "${preset}" (generator ${cachedGenerator}).`);
+      rmSync(cacheDir, { recursive: true, force: true });
     }
-    if (remove) rmSync(cacheDir, { recursive: true, force: true });
   }
 }
 //#endregion 🔖CppScript

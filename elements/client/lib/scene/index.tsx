@@ -385,7 +385,43 @@ export function resolveLodLabelFromThresholds(zoom: number, t: LodZoomThresholds
 	if (z < t.normalMaxZoom) return "normal";
 	if (z < t.detailMaxZoom) return "detail";
 	return "micro";
+}
+
+const LOD_ZOOM_HYSTERESIS = 0.04;
+
+/** @emoji 📶 Resolves LOD with Schmitt-style hysteresis so orbit zoom cannot flip bands every frame at a threshold. */
+export function resolveLodLabelFromThresholdsHysteresis(
+	zoom: number,
+	t: LodZoomThresholds,
+	previous: LodKind | null,
+): LodKind {
+	if (previous === null) {
+		return resolveLodLabelFromThresholds(zoom, t);
 	}
+	const h = LOD_ZOOM_HYSTERESIS;
+	const raw = resolveLodLabelFromThresholds(zoom, t);
+	if (raw === previous) {
+		return previous;
+	}
+	const order: LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+	const prevIdx = order.indexOf(previous);
+	const rawIdx = order.indexOf(raw);
+	if (prevIdx < 0 || rawIdx < 0) {
+		return raw;
+	}
+	const boundaries = [t.minimapMaxZoom, t.overviewMaxZoom, t.compactMaxZoom, t.normalMaxZoom, t.detailMaxZoom];
+	const boundary = boundaries[Math.min(prevIdx, rawIdx)];
+	if (boundary === undefined) {
+		return raw;
+	}
+	if (rawIdx > prevIdx && zoom < boundary + h) {
+		return previous;
+	}
+	if (rawIdx < prevIdx && zoom > boundary - h) {
+		return previous;
+	}
+	return raw;
+}
 
 /** @emoji 📏 Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
 export function pseudoZoomFromOrbitDistance(distance: number, reference: number): number {
@@ -472,6 +508,7 @@ function LodFrameRunner(props: {
 }) {
 	const cam = useThree((s) => s.camera);
 	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+	const invalidate = useThree((s) => s.invalidate);
 	const tmpT = useMemo(() => new Vector3(), []);
 	const prevLod = useRef<LodKind | null>(null);
 	const ctxSig = useRef("");
@@ -482,10 +519,11 @@ function LodFrameRunner(props: {
 		const next =
 			!props.automaticLod && props.pinnedLod !== undefined
 				? props.pinnedLod
-				: resolveLodLabelFromThresholds(pseudo, props.thresholds);
+				: resolveLodLabelFromThresholdsHysteresis(pseudo, props.thresholds, prevLod.current);
 		props.lodKindRef.current = next;
 		const lodGridStepWorld = lodVisibleGridSnapStepWorld(next, props.gridFactor);
 		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+		let dirty = false;
 		if (ctxSig.current !== sig) {
 			ctxSig.current = sig;
 			props.onCtx({
@@ -494,10 +532,15 @@ function LodFrameRunner(props: {
 				gridFactor: props.gridFactor,
 				gridSnapEnabled: props.gridSnapEnabled,
 			});
+			dirty = true;
 		}
 		if (prevLod.current !== next) {
 			prevLod.current = next;
 			props.onLodChange?.(next);
+			dirty = true;
+		}
+		if (dirty) {
+			invalidate();
 		}
 	});
 	return null;
@@ -1262,14 +1305,19 @@ export function SceneObjectStateProvider(props: {
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
+	const snapshotRef = useRef(snapshot);
+	snapshotRef.current = snapshot;
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
 		if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
 			return;
 		}
 		syncedFixtureFingerprintRef.current = fixtureFingerprint;
+		if (snapshotMatchesFixture(snapshot, props.fixture)) {
+			return;
+		}
 		dispatch({ type: "init", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint]);
+	}, [props.fixture, fixtureFingerprint, snapshot]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			dispatch({ type: "relocate", payload });
@@ -1281,7 +1329,7 @@ export function SceneObjectStateProvider(props: {
 		(payload: AttractionPayload) => {
 			const attractingObjectId = parseVortexFullId(payload.attracting).objectId;
 			const attractedObjectId = parseVortexFullId(payload.attracted).objectId;
-			const edges = attractionEdgesFromAttractions(snapshot.attractions);
+			const edges = attractionEdgesFromAttractions(snapshotRef.current.attractions);
 			if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
 				return;
 			}
@@ -1296,7 +1344,7 @@ export function SceneObjectStateProvider(props: {
 			});
 			props.onConnect?.(payload);
 		},
-		[props.onConnect, snapshot.attractions],
+		[props.onConnect],
 	);
 	const value = useMemo<SceneObjectStateContextValue>(
 		() => ({ snapshot, dispatch, handleRelocate, handleConnect }),
@@ -1313,11 +1361,16 @@ function useSceneObjectState(): SceneObjectStateContextValue {
 	return v;
 }
 
+function attractionIdsFingerprint(attractions: readonly AttractionProps[]): string {
+	return attractions.map((a) => a.id).join("\0");
+}
+
 function useLiveBlockedVortexFullIds(fallback: ReadonlySet<string>): ReadonlySet<string> {
 	const state = useContext(SceneObjectStateContext);
+	const attractionFp = state ? attractionIdsFingerprint(state.snapshot.attractions) : "";
 	return useMemo(
 		() => (state ? blockedVortexFullIdsFromAttractions(state.snapshot.attractions) : fallback),
-		[state, fallback, state?.snapshot.attractions, state?.snapshot.version],
+		[state, attractionFp, fallback],
 	);
 }
 
@@ -1589,11 +1642,11 @@ const CSS_SELECTED_MESH = "var(--color-primary)";
 const CSS_SELECTED_LINE = "var(--color-primary)";
 const CSS_HIGHLIGHTED_MESH = "var(--color-primary)";
 const CSS_HIGHLIGHTED_LINE = "var(--color-primary)";
-const CSS_HOVERED_MESH = "color-mix(in oklab, var(--color-accent) 28%, var(--color-panel))";
+const CSS_HOVERED_MESH = "var(--color-accent)";
 const CSS_HOVERED_LINE = "var(--color-accent)";
 const CSS_NEUTRAL_MESH = "var(--color-panel)";
 const CSS_NEUTRAL_LINE = "var(--color-element)";
-const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
+const CSS_DISABLED_MESH = "var(--color-muted-foreground)";
 const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_ENDPOINT_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_LINE = "var(--color-accent)";
@@ -1659,18 +1712,53 @@ function probeCssComputed(property: "color" | "backgroundColor", value: string):
 	return out;
 }
 
-function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
-	const raw = probeCssComputed(property, expr);
-	if (!raw || raw === "rgba(0, 0, 0, 0)") {
+/** @emoji 🎨 Converts browser-resolved CSS (incl. oklab) to a hex/rgb string Three.js Color accepts. */
+export function normalizeColorForThree(computed: string, fallback: string): string {
+	if (!computed || computed === "rgba(0, 0, 0, 0)" || /var\s*\(/i.test(computed)) {
 		return fallback;
 	}
-	return raw;
+	if (!/oklab|oklch|lab\(|color\(/i.test(computed)) {
+		try {
+			return `#${new Color(computed).getHexString()}`;
+		} catch {
+			return fallback;
+		}
+	}
+	if (typeof document === "undefined") {
+		return fallback;
+	}
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+	if (!ctx) {
+		return fallback;
+	}
+	try {
+		ctx.fillStyle = computed;
+		const normalized = ctx.fillStyle;
+		if (normalized.startsWith("#")) {
+			return normalized;
+		}
+		return `#${new Color(normalized).getHexString()}`;
+	} catch {
+		return fallback;
+	}
 }
+
+function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
+	const raw = probeCssComputed(property, expr);
+	return normalizeColorForThree(raw, fallback);
+}
+
+const meshStyleColorsResolved = new Map<Exclude<MeshStyleKind, "original">, MeshStyleColors>();
 
 /** @emoji 🎨 Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
 export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 	if (style === "original") {
 		return null;
+	}
+	const cached = meshStyleColorsResolved.get(style);
+	if (cached) {
+		return cached;
 	}
 	const fb = MESH_STYLE_HEADLESS[style];
 	const meshExprs: Record<Exclude<MeshStyleKind, "original">, string> = {
@@ -1687,22 +1775,24 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 		highlighted: CSS_HIGHLIGHTED_LINE,
 		disabled: CSS_DISABLED_LINE,
 	};
-	return {
+	const resolved: MeshStyleColors = {
 		meshColor: resolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
 		lineColor: resolveCssColor("color", lineExprs[style], fb.lineColor),
 		emissiveColor: resolveCssColor("color", lineExprs[style], fb.emissiveColor),
 		emissiveIntensity: fb.emissiveIntensity,
 		opacity: fb.opacity,
 	};
+	meshStyleColorsResolved.set(style, resolved);
+	return resolved;
 }
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
 	const mat = new MeshStandardMaterial({
-		color: new Color(color),
+		color: new Color(normalizeColorForThree(color, state.meshColor)),
 		metalness: 0,
 		roughness: 1,
 	});
-	mat.emissive.set(state.emissiveColor);
+	mat.emissive.set(normalizeColorForThree(state.emissiveColor, state.emissiveColor));
 	mat.emissiveIntensity = state.emissiveIntensity;
 	mat.transparent = state.opacity < 1;
 	mat.opacity = state.opacity;
@@ -1710,7 +1800,7 @@ function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshSt
 }
 
 function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
-	const mat = new LineBasicMaterial({ color: new Color(color) });
+	const mat = new LineBasicMaterial({ color: new Color(normalizeColorForThree(color, state.lineColor)) });
 	mat.transparent = state.opacity < 1;
 	mat.opacity = state.opacity;
 	return mat;
@@ -1751,7 +1841,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
 		}
 		if (object instanceof Points) {
 			object.material = new PointsMaterial({
-				color: new Color(colors.lineColor),
+				color: new Color(normalizeColorForThree(colors.lineColor, "#ffffff")),
 				size: 1,
 				transparent: colors.opacity < 1,
 				opacity: colors.opacity,
@@ -2013,26 +2103,34 @@ export function chunkDistanceVisible(args: {
 function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, maxDist: number): ReadonlySet<string> {
 	const { camera } = useThree();
 	const centerTmp = useMemo(() => new Vector3(), []);
+	const keysRef = useRef(chunkKeys);
+	keysRef.current = chunkKeys;
+	const visibleRef = useRef<ReadonlySet<string>>(new Set());
+	const lastSigRef = useRef("");
 	const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
 	useFrame(() => {
 		const camPos = camera.position;
-		setVisible((prev) => {
-			const next = new Set(prev);
-			for (const key of chunkKeys) {
-				const [ix, iy, iz] = key.split("|").map(Number);
-				centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
-				const show = chunkDistanceVisible({
-					camPos,
-					chunkCenter: centerTmp,
-					chunkSize,
-					maxDist,
-					wasVisible: next.has(key),
-				});
-				if (show) next.add(key);
-				else next.delete(key);
-			}
-			return setEquals(prev, next) ? prev : next;
-		});
+		const next = new Set(visibleRef.current);
+		for (const key of keysRef.current) {
+			const [ix, iy, iz] = key.split("|").map(Number);
+			centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
+			const show = chunkDistanceVisible({
+				camPos,
+				chunkCenter: centerTmp,
+				chunkSize,
+				maxDist,
+				wasVisible: next.has(key),
+			});
+			if (show) next.add(key);
+			else next.delete(key);
+		}
+		const sig = [...next].sort().join(",");
+		if (sig === lastSigRef.current) {
+			return;
+		}
+		lastSigRef.current = sig;
+		visibleRef.current = next;
+		setVisible(next);
 	});
 	return visible;
 }
@@ -2061,9 +2159,15 @@ export function objectPoseKey(
 	orientation: Quat | undefined,
 	scale: number | Vec3 | undefined,
 ): string {
-	const o = orientation ?? ([0, 0, 0, 1] as Quat);
-	const sc = scale === undefined ? 1 : typeof scale === "number" ? scale : scale.join(",");
-	return `${id}|${origin.join(",")}|${o.join(",")}|${sc}`;
+	const o = (orientation ?? ([0, 0, 0, 1] as Quat)).map(quantizePoseComponent).join(",");
+	const originQ = origin.map(quantizePoseComponent).join(",");
+	const sc =
+		scale === undefined
+			? "1"
+			: typeof scale === "number"
+				? String(quantizePoseComponent(scale))
+				: scale.map(quantizePoseComponent).join(",");
+	return `${id}|${originQ}|${o}|${sc}`;
 }
 
 /** @emoji 📍 Writes fixture pose onto an object group; avoids R3F controlled transforms so vortex children follow relocate. */
@@ -2310,13 +2414,11 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	} = useRegistryCore();
 	const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
 	const beforeRef = useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
-	const [tcTarget, setTcTarget] = useState<Group | null>(null);
-	const [pointerHovered, setPointerHovered] = useState(false);
+	const [tcReady, setTcReady] = useState(false);
 
 	const bindObjectGroup = useCallback(
 		(node: Group | null) => {
 			group.current = node;
-			setTcTarget(node);
 			registerObject(props.id, props.objectKind, node);
 		},
 		[props.id, props.objectKind, registerObject],
@@ -2350,9 +2452,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				disabled: props.disabled,
 				selected: props.selected,
 				highlighted: linkHighlighted,
-				hovered: props.hovered === true || pointerHovered,
+				hovered: props.hovered === true,
 			}),
-		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted, pointerHovered],
+		[props.style, props.disabled, props.selected, props.hovered, linkHighlighted],
 	);
 
 	const handlePointerDown = useCallback(
@@ -2378,32 +2480,19 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		],
 	);
 
-	const handlePointerOver = useCallback(
-		(e: { stopPropagation: () => void }) => {
-			e.stopPropagation();
-			if (!props.disabled) {
-				setPointerHovered(true);
-			}
-		},
-		[props.disabled],
-	);
-
-	const handlePointerOut = useCallback((e: { stopPropagation: () => void }) => {
-		e.stopPropagation();
-		setPointerHovered(false);
-	}, []);
-
 	const poseKey = useMemo(
 		() => objectPoseKey(props.id, props.origin, props.orientation, props.scale),
 		[props.id, props.origin, props.orientation, props.scale],
 	);
 	useLayoutEffect(() => {
 		const g = group.current;
+		const ready = props.selected && g !== null;
+		setTcReady((prev) => (prev === ready ? prev : ready));
 		if (!g || transformDraggingRef.current) {
 			return;
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
-	}, [poseKey]);
+	}, [poseKey, props.selected, props.origin, props.orientation, props.scale]);
 	const lodCtx = useLod();
 	const mode = props.relocate ?? relocateMode;
 	const transSnap =
@@ -2413,7 +2502,8 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		lodCtx.lodGridStepWorld > 0
 			? lodCtx.lodGridStepWorld
 			: undefined;
-	const showTc = props.selected && props.relocate !== false && tcTarget;
+	const tcObject = tcReady ? group.current : null;
+	const showTc = props.selected && props.relocate !== false && tcObject;
 
 	return (
 		<>
@@ -2421,8 +2511,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				ref={bindObjectGroup}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
-				onPointerOver={handlePointerOver}
-				onPointerOut={handlePointerOut}
 				userData={{
 					sceneObjectId: props.id,
 					sceneMeshStyle: meshStyle,
@@ -2438,9 +2526,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				)}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
-			{showTc && tcTarget && (
+			{showTc && tcObject && (
 				<ObjectTransformControls
-					object={tcTarget}
+					object={tcObject}
 					objectId={props.id}
 					mode={mode}
 					translationSnap={transSnap}
@@ -2520,6 +2608,11 @@ export const Vortex = memo(function Vortex(
 	const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
 	const r = props.radius ?? 0.35;
 
+	const registerVortexRef = useRef(reg.registerVortex);
+	const unregisterVortexRef = useRef(reg.unregisterVortex);
+	registerVortexRef.current = reg.registerVortex;
+	unregisterVortexRef.current = reg.unregisterVortex;
+
 	useEffect(() => {
 		const getter = () => {
 			if (!root.current) return null;
@@ -2528,17 +2621,22 @@ export const Vortex = memo(function Vortex(
 			root.current.getWorldPosition(v);
 			return v;
 		};
-		reg.registerVortex(fullId, getter);
+		registerVortexRef.current(fullId, getter);
 		return () => {
-			reg.unregisterVortex(fullId);
+			unregisterVortexRef.current(fullId);
 		};
-	}, [fullId, reg]);
+	}, [fullId]);
+
+	const registerBindingRef = useRef(reg.registerVortexBinding);
+	const unregisterBindingRef = useRef(reg.unregisterVortexBinding);
+	registerBindingRef.current = reg.registerVortexBinding;
+	unregisterBindingRef.current = reg.unregisterVortexBinding;
 
 	const bindRoot = useCallback(
 		(node: Group | null) => {
 			root.current = node;
 			if (node) {
-				reg.registerVortexBinding(
+				registerBindingRef.current(
 					{
 						fullId,
 						objectId: props.objectId,
@@ -2549,10 +2647,10 @@ export const Vortex = memo(function Vortex(
 					node,
 				);
 			} else {
-				reg.unregisterVortexBinding(fullId);
+				unregisterBindingRef.current(fullId);
 			}
 		},
-		[fullId, props.objectId, props.objectKind, props.vortexKind, reg],
+		[fullId, props.objectId, props.objectKind, props.vortexKind, r],
 	);
 
 	const lodCtx = useLod();
@@ -2666,10 +2764,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 		if (!props.attractions.length) {
 			return;
 		}
-		const needsLive =
-			linesDirtyRef.current ||
-			drag.attractionDragActive ||
-			reg.transformDragObjectId !== null;
+		const needsLive = linesDirtyRef.current || drag.attractionDragActive;
 		if (!needsLive) {
 			return;
 		}
@@ -2736,17 +2831,32 @@ const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 function OrbitGated() {
 	const core = useRegistryCore();
 	const drag = useRegistryDrag();
+	const invalidate = useThree((s) => s.invalidate);
 	const gate =
 		drag.attractionDragActive ||
 		drag.attractionIndirectPickAwait !== null ||
 		core.transformDragObjectId !== null;
-	return <OrbitControls makeDefault enableDamping={false} enabled={!gate} />;
+	const onControlsChange = useCallback(() => {
+		invalidate();
+	}, [invalidate]);
+	return (
+		<OrbitControls
+			makeDefault
+			enableDamping={false}
+			enabled={!gate}
+			onChange={onControlsChange}
+			onStart={onControlsChange}
+			onEnd={onControlsChange}
+		/>
+	);
 }
 
 /** @emoji 📷 Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
 function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3 }) {
 	const { camera } = useThree();
 	const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
+	const controlsRef = useRef(controls);
+	controlsRef.current = controls;
 	const seededFor = useRef("");
 	const seedKey = `${props.position.join(",")}|${props.target.join(",")}`;
 	useLayoutEffect(() => {
@@ -2756,21 +2866,24 @@ function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3
 		seededFor.current = seedKey;
 		camera.position.set(props.position[0], props.position[1], props.position[2]);
 		camera.updateProjectionMatrix();
-		if (controls?.target) {
-			controls.target.set(props.target[0], props.target[1], props.target[2]);
-			controls.update();
+		const orbit = controlsRef.current;
+		if (orbit?.target) {
+			orbit.target.set(props.target[0], props.target[1], props.target[2]);
+			orbit.update();
 		}
-	}, [camera, controls, props.position, props.target, seedKey]);
+	}, [camera, props.position, props.target, seedKey]);
 	return null;
 }
 
 function AttractionThreeBinder() {
 	const reg = useRegistryCore();
+	const attachRef = useRef(reg.attachAttractionThreeEnv);
+	attachRef.current = reg.attachAttractionThreeEnv;
 	const t = useThree();
 	useLayoutEffect(() => {
-		reg.attachAttractionThreeEnv({ camera: t.camera, gl: t.gl, scene: t.scene });
-		return () => reg.attachAttractionThreeEnv(null);
-	}, [reg, t.camera, t.gl, t.scene]);
+		attachRef.current({ camera: t.camera, gl: t.gl, scene: t.scene });
+		return () => attachRef.current(null);
+	}, [t.camera, t.gl, t.scene]);
 	return null;
 }
 
@@ -2924,6 +3037,15 @@ function RegistryProvider({
 	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
 	const [transformDragObjectId, setTransformDragObjectId] = useState<string | null>(null);
+	useEffect(() => {
+		const clearTransformDrag = () => setTransformDragObjectId(null);
+		window.addEventListener("pointerup", clearTransformDrag);
+		window.addEventListener("pointercancel", clearTransformDrag);
+		return () => {
+			window.removeEventListener("pointerup", clearTransformDrag);
+			window.removeEventListener("pointercancel", clearTransformDrag);
+		};
+	}, []);
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -2955,21 +3077,37 @@ function RegistryProvider({
 	const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
 	const hitScratchRef = useRef(new Vector3());
 	const lastAttractionTargetRingRef = useRef("");
+	const externalsRef = useRef({
+		onSelect,
+		onConnect,
+		onProximityConnect,
+		onIndirectConnect,
+		onAttractionCompatibleObjects,
+		onAttractionTargetRing,
+		onRelocate,
+	});
+	externalsRef.current = {
+		onSelect,
+		onConnect,
+		onProximityConnect,
+		onIndirectConnect,
+		onAttractionCompatibleObjects,
+		onAttractionTargetRing,
+		onRelocate,
+	};
 
-	const emitAttractionTargetRing = useCallback(
-		(payload: AttractionTargetRingPayload) => {
-			if (!onAttractionTargetRing) {
-				return;
-			}
-			const sig = attractionTargetRingSignature(payload);
-			if (lastAttractionTargetRingRef.current === sig) {
-				return;
-			}
-			lastAttractionTargetRingRef.current = sig;
-			onAttractionTargetRing(payload);
-		},
-		[onAttractionTargetRing],
-	);
+	const emitAttractionTargetRing = useCallback((payload: AttractionTargetRingPayload) => {
+		const handler = externalsRef.current.onAttractionTargetRing;
+		if (!handler) {
+			return;
+		}
+		const sig = attractionTargetRingSignature(payload);
+		if (lastAttractionTargetRingRef.current === sig) {
+			return;
+		}
+		lastAttractionTargetRingRef.current = sig;
+		handler(payload);
+	}, []);
 
 	const registerVortex = useCallback((fullId: string, getter: VortexGetter) => {
 		vortexGettersRef.current.set(fullId, getter);
@@ -3049,9 +3187,9 @@ function RegistryProvider({
 			setAttractionCompatibleAttractedFullIds(compat);
 			setAttractionHoverRingFullId(null);
 			setActiveRelocateObjectId(null);
-			onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
+			externalsRef.current.onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
 		},
-		[blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
+		[blockedVortexFullIds, kindCatalogs, kindCompatibility],
 	);
 
 	const collectPickRoots = useCallback((): Object3D[] => {
@@ -3146,8 +3284,8 @@ function RegistryProvider({
 			const snapId = session.snapAttractedFullId;
 			if (snapId && attractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
 				const p = { attracting: session.attractingFullId, attracted: snapId };
-				onConnect?.(p);
-				onProximityConnect?.(p);
+				externalsRef.current.onConnect?.(p);
+				externalsRef.current.onProximityConnect?.(p);
 				cancelAttractionDrag();
 				return;
 			}
@@ -3162,7 +3300,7 @@ function RegistryProvider({
 					!blockedVortexFullIds.has(vf) &&
 					vortexMetaRef.current.get(vf)?.objectId !== session.attractingObjectId
 				) {
-					onConnect?.({ attracting: attractingFull, attracted: vf });
+					externalsRef.current.onConnect?.({ attracting: attractingFull, attracted: vf });
 					cancelAttractionDrag();
 					return;
 				}
@@ -3177,8 +3315,8 @@ function RegistryProvider({
 					}
 					if (candidates.length === 1) {
 						const p = { attracting: attractingFull, attracted: candidates[0]! };
-						onConnect?.(p);
-						onIndirectConnect?.(p);
+						externalsRef.current.onConnect?.(p);
+						externalsRef.current.onIndirectConnect?.(p);
 						cancelAttractionDrag();
 						return;
 					}
@@ -3203,15 +3341,7 @@ function RegistryProvider({
 			}
 			cancelAttractionDrag();
 		},
-		[
-			blockedVortexFullIds,
-			cancelAttractionDrag,
-			collectPickRoots,
-			emitAttractionTargetRing,
-			onConnect,
-			onIndirectConnect,
-			onProximityConnect,
-		],
+		[blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, emitAttractionTargetRing],
 	);
 
 	const updateIndirectPickPointer = useCallback(
@@ -3260,8 +3390,8 @@ function RegistryProvider({
 				const vf = readVortexFullIdFromObject(h.object);
 				if (vf && awaitPick.candidates.includes(vf)) {
 					const p = { attracting: awaitPick.attractingFullId, attracted: vf };
-					onConnect?.(p);
-					onIndirectConnect?.(p);
+					externalsRef.current.onConnect?.(p);
+					externalsRef.current.onIndirectConnect?.(p);
 					cancelAttractionDrag();
 					ev?.stopImmediatePropagation();
 					return;
@@ -3269,7 +3399,7 @@ function RegistryProvider({
 			}
 			cancelAttractionDrag();
 		},
-		[cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
+		[cancelAttractionDrag, collectPickRoots],
 	);
 
 	const attachAttractionThreeEnv = useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
@@ -3318,13 +3448,14 @@ function RegistryProvider({
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
-			onSelect,
-			onConnect,
-			onProximityConnect,
-			onIndirectConnect,
-			onAttractionCompatibleObjects,
-			onAttractionTargetRing,
-			onRelocate,
+			onSelect: (snap: SelectionSnapshot) => externalsRef.current.onSelect?.(snap),
+			onConnect: (p: AttractionPayload) => externalsRef.current.onConnect?.(p),
+			onProximityConnect: (p: AttractionPayload) => externalsRef.current.onProximityConnect?.(p),
+			onIndirectConnect: (p: AttractionPayload) => externalsRef.current.onIndirectConnect?.(p),
+			onAttractionCompatibleObjects: (p: AttractionCompatibleObjectsPayload) =>
+				externalsRef.current.onAttractionCompatibleObjects?.(p),
+			onAttractionTargetRing: emitAttractionTargetRing,
+			onRelocate: (p: RelocatePayload) => externalsRef.current.onRelocate?.(p),
 			attachAttractionThreeEnv,
 			updateAttractionPointer,
 			commitAttractionPointer,
@@ -3353,13 +3484,7 @@ function RegistryProvider({
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
-			onSelect,
-			onConnect,
-			onProximityConnect,
-			onIndirectConnect,
-			onAttractionCompatibleObjects,
-			onAttractionTargetRing,
-			onRelocate,
+			emitAttractionTargetRing,
 			attachAttractionThreeEnv,
 			updateAttractionPointer,
 			commitAttractionPointer,
@@ -3506,7 +3631,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 	const [shellLod, setShellLod] = useState<LodKind>("normal");
 	const handleLod = useCallback(
 		(l: LodKind) => {
-			setShellLod(l);
+			setShellLod((prev) => (prev === l ? prev : l));
 			onLodChange?.(l);
 		},
 		[onLodChange],
@@ -3519,7 +3644,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 			data-scene-root
 			data-scene-lod={shellLod}
 		>
-			<Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
+			<Canvas frameloop="always" gl={{ antialias: true }} dpr={[1, 2]}>
 				<Inner {...rest} domain={domain} onLodChange={handleLod}>
 					{children}
 				</Inner>
@@ -3531,6 +3656,8 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 /** @emoji 🧪 Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
 export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
 	const reg = useRegistryCore();
+	const regRef = useRef(reg);
+	regRef.current = reg;
 	const setSelectedId = props.setSelectedId;
 	useEffect(() => {
 		const w = window as unknown as {
@@ -3543,19 +3670,19 @@ export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string
 		};
 		w.__scenePlayActivate = (id: string) => {
 			setSelectedId(id);
-			reg.setSelectedObjectIds([id]);
+			regRef.current.setSelectedObjectIds([id]);
 		};
 		w.__scenePlayClearSelection = () => {
 			setSelectedId(null);
-			reg.setSelectedObjectIds([]);
-			reg.setTransformDragObjectId(null);
+			regRef.current.setSelectedObjectIds([]);
+			regRef.current.setTransformDragObjectId(null);
 		};
 		return () => {
 			delete w.__scenePlaySelect;
 			delete w.__scenePlayActivate;
 			delete w.__scenePlayClearSelection;
 		};
-	}, [setSelectedId, reg]);
+	}, [setSelectedId]);
 	return null;
 }
 
@@ -3585,6 +3712,16 @@ if (import.meta.vitest) {
 			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
 			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
 			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
+		});
+	});
+	describe("resolveLodLabelFromThresholdsHysteresis", () => {
+		it("holds the previous band near a threshold until zoom moves past hysteresis", () => {
+			const t = DEFAULT_LOD_ZOOM_THRESHOLDS;
+			const b = t.compactMaxZoom;
+			expect(resolveLodLabelFromThresholdsHysteresis(b - 0.01, t, "normal")).toBe("normal");
+			expect(resolveLodLabelFromThresholdsHysteresis(b - LOD_ZOOM_HYSTERESIS - 0.02, t, "normal")).toBe("compact");
+			expect(resolveLodLabelFromThresholdsHysteresis(b + 0.01, t, "compact")).toBe("compact");
+			expect(resolveLodLabelFromThresholdsHysteresis(b + LOD_ZOOM_HYSTERESIS + 0.02, t, "compact")).toBe("normal");
 		});
 	});
 	describe("lodZoomThresholdsForDomain", () => {
@@ -3755,6 +3892,16 @@ if (import.meta.vitest) {
 			expect(resolveMeshStyle({ highlighted: true, hovered: true })).toBe("highlighted");
 			expect(resolveMeshStyle({ hovered: true })).toBe("hovered");
 			expect(resolveMeshStyle({})).toBe(DEFAULT_MESH_STYLE);
+		});
+	});
+	describe("normalizeColorForThree", () => {
+		it("falls back when computed color is empty", () => {
+			expect(normalizeColorForThree("", "#112233")).toBe("#112233");
+		});
+		it("converts oklab computed strings to hex", () => {
+			const hex = normalizeColorForThree("oklab(0.383091 0.0498137 0.0139739)", "#ff0000");
+			expect(hex.startsWith("#")).toBe(true);
+			expect(hex).not.toContain("oklab");
 		});
 	});
 	describe("meshStyleColors", () => {
