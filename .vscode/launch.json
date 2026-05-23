@@ -223,6 +223,22 @@
       }
     },
     {
+      "name": "🛠️dev📐elements🖱️geometry🧭spatial",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @elements/geometry-spatial:dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 66
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6017)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev👤semio🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",

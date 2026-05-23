@@ -10,6 +10,8 @@
 		"@elements/ui-shell": "workspace:*",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.4.2",
+		"brepjs": "^18.20.3",
+		"brepjs-opencascade": "^0.15.6",
 		"lucide-react": "^0.536.0",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",

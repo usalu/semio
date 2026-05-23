@@ -10,6 +10,8 @@ const workspaceRoot = join(cwd, "../../../../");
 const segs = process.argv.slice(2);
 const command = segs[0];
 const extra = segs.slice(1);
+const spatialCommand = command === "spatial" ? extra[0] : null;
+const spatialExtra = command === "spatial" ? extra.slice(1) : extra;
 
 const env = {
 	...process.env,
@@ -233,6 +235,10 @@ function wasmOutputPath(): string {
 	return join(cwd, "wasm", "generated", "topologic-kernel.js");
 }
 
+function spatialRoot(): string {
+	return join(cwd, "spatial");
+}
+
 function wasmSourcePath(): string {
 	return join(cwd, "wasm", "topologic-kernel.cpp");
 }
@@ -284,7 +290,27 @@ function buildWasm(force = false): void {
 	}
 }
 
-if (command === "wasm") {
+function runSpatial(commandName: "dev" | "build" | "test", args: string[]): void {
+	const root = spatialRoot();
+	if (commandName === "dev") {
+		const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+		run(["x", "vite", "--host", host, ...args], { cwd: root });
+		return;
+	}
+	if (commandName === "build") {
+		runSync(["bun", "x", "vite", "build", ...args], { cwd: root });
+		return;
+	}
+	runSync(["bun", "x", "vitest", "run", "--config", "vitest.config.ts", ...args], { cwd: root });
+}
+
+if (command === "spatial" && spatialCommand === "dev") {
+	runSpatial("dev", spatialExtra);
+} else if (command === "spatial" && spatialCommand === "build") {
+	runSpatial("build", spatialExtra);
+} else if (command === "spatial" && spatialCommand === "test") {
+	runSpatial("test", spatialExtra);
+} else if (command === "wasm") {
 	buildWasm(true);
 } else if (command === "dev") {
 	buildWasm();
@@ -298,6 +324,6 @@ if (command === "wasm") {
 	buildWasm();
 	runSync(["bunx", "vitest", "run", "--config", "vitest.config.ts", ...extra]);
 } else {
-	console.error("usage: bun ./script.ts <dev|build|test|wasm> [args…]");
+	console.error("usage: bun ./script.ts <dev|build|test|wasm|spatial <dev|build|test>> [args…]");
 	process.exit(1);
 }
