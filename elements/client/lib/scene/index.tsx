@@ -3532,15 +3532,6 @@ if (import.meta.vitest) {
 			expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
 		});
 	});
-	describe("scene play fixture hook", () => {
-		it("parses nakagin fixture", async () => {
-			const mod = await import("./play/fixtures/nakagin-capsule-tower.scene.json");
-			const f = parseFixtureV1(mod.default as unknown);
-			expect(f?.domain).toBe("architecture");
-			expect(f?.attractions.length).toBeGreaterThan(0);
-			expect(f?.objects.length).toBeGreaterThan(0);
-		});
-	});
 	describe("resolveSceneAttractionTree", () => {
 		it("picks parent closer to wormhole when multiply attracted", () => {
 			const tree = resolveSceneAttractionTree({

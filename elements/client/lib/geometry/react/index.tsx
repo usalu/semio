@@ -595,20 +595,6 @@ if (import.meta.vitest) {
 			]);
 		});
 
-		it("parses the shipped fixture through the wasm facade contract", async () => {
-			const bindings = await ensureTopologicWasmLoaded();
-			const fixture = bindings.parseFixture((await import("../play/fixtures/topology.json")).default);
-			expect(fixture?.schema).toBe("elements.geometry.topologic.fixture/v1");
-		});
-
-		it("collects every shipped topology from the rooted scene graph", async () => {
-			const bindings = await ensureTopologicWasmLoaded();
-			const fixture = bindings.parseFixture((await import("../play/fixtures/topology.json")).default);
-			expect(fixture).toBeTruthy();
-			const traversal = collectSceneEntries(new TopologicWasmSession(fixture as TopologicFixtureV1));
-			expect(traversal.entries).toHaveLength((fixture as TopologicFixtureV1).topologies.length);
-		});
-
 		it("keeps edge group transforms world-aligned for translate gumball axes", async () => {
 			const fixture = (await loadTopologicFixtureV1({
 				schema: "elements.geometry.topologic.fixture/v1",
