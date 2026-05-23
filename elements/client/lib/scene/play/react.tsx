@@ -5,6 +5,7 @@
 import { useGLTF } from "@react-three/drei";
 import {
 	App,
+	applyElementsSurfaceChrome,
 	Button,
 	Expertise,
 	LevelProvider,
@@ -19,7 +20,6 @@ import {
 	ToolbarZone,
 	createStackLayout,
 	getLevelBgClass,
-	useElementsSurfaceChrome,
 	type AppConfig,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
@@ -27,17 +27,7 @@ import {
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
-import {
-	Suspense,
-	createContext,
-	memo,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-	type ReactElement,
-} from "react";
+import * as React from "react";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./globals.css";
@@ -57,6 +47,7 @@ import {
 import {
 	Canvas3D,
 	LOD_MODE_AUTOMATIC,
+	SceneObjectStateContext,
 	SceneAttractions,
 	SceneObjectStateProvider,
 	SceneObjects,
@@ -66,22 +57,21 @@ import {
 	lodAutomaticSelectLabel,
 	lodCanvasProps,
 	parseFixtureV1,
-	useSceneObjectConnect,
-	useSceneObjectRelocate,
 	type CanvasProps,
 	type FixtureV1,
 	type KindCatalogBundle,
 	type KindCompatEntry,
 	type LodKind,
 	type LodModeKind,
+	type SceneObjectStateContextValue,
 	type RelocateMode,
 } from "../index.tsx";
 
-const PlayLodContext = createContext<Pick<CanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
+const PlayLodContext = React.createContext<Pick<CanvasProps, "automaticLod" | "lod">>({ automaticLod: true });
 
-const PlayLodDisplayContext = createContext<LodKind>("normal");
+const PlayLodDisplayContext = React.createContext<LodKind>("normal");
 
-const PlayRuntimeContext = createContext<{
+const PlayRuntimeContext = React.createContext<{
 	readonly setEffectiveLod: (lod: LodKind) => void;
 } | null>(null);
 
@@ -127,52 +117,54 @@ function readExpertise(): Expertise {
 	}
 }
 
-function PlaySurfaceFooter(props: {
+class PlaySurfaceFooter extends React.Component<{
 	theme: ElementsSurfaceTheme;
 	device: ElementsSurfaceDevice;
 	expertise: Expertise;
 	onTheme: (v: ElementsSurfaceTheme) => void;
 	onDevice: (v: ElementsSurfaceDevice) => void;
 	onExpertise: (v: Expertise) => void;
-}): ReactElement {
-	const { theme, device, expertise, onDevice, onExpertise, onTheme } = props;
-	return (
-		<div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
-			<span className="shrink-0 text-xs text-muted-foreground">Theme</span>
-			<Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
-				<SelectTrigger className="h-medium w-30" id="scene-play-surface-theme" size="sm">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="system">System</SelectItem>
-					<SelectItem value="light">Light</SelectItem>
-					<SelectItem value="dark">Dark</SelectItem>
-				</SelectContent>
-			</Select>
-			<span className="shrink-0 text-xs text-muted-foreground">Device</span>
-			<Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
-				<SelectTrigger className="h-medium w-30" id="scene-play-surface-device" size="sm">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="desktop">Desktop</SelectItem>
-					<SelectItem value="tablet">Tablet</SelectItem>
-					<SelectItem value="mobile">Mobile</SelectItem>
-				</SelectContent>
-			</Select>
-			<span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
-			<Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
-				<SelectTrigger className="h-medium w-30" id="scene-play-surface-expertise" size="sm">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
-					<SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
-					<SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
-				</SelectContent>
-			</Select>
-		</div>
-	);
+}> {
+	render(): React.ReactElement {
+		const { theme, device, expertise, onDevice, onExpertise, onTheme } = this.props;
+		return (
+			<div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
+				<span className="shrink-0 text-xs text-muted-foreground">Theme</span>
+				<Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
+					<SelectTrigger className="h-medium w-30" id="scene-play-surface-theme" size="sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="system">System</SelectItem>
+						<SelectItem value="light">Light</SelectItem>
+						<SelectItem value="dark">Dark</SelectItem>
+					</SelectContent>
+				</Select>
+				<span className="shrink-0 text-xs text-muted-foreground">Device</span>
+				<Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
+					<SelectTrigger className="h-medium w-30" id="scene-play-surface-device" size="sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="desktop">Desktop</SelectItem>
+						<SelectItem value="tablet">Tablet</SelectItem>
+						<SelectItem value="mobile">Mobile</SelectItem>
+					</SelectContent>
+				</Select>
+				<span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
+				<Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
+					<SelectTrigger className="h-medium w-30" id="scene-play-surface-expertise" size="sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
+						<SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
+						<SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
+					</SelectContent>
+				</Select>
+			</div>
+		);
+	}
 }
 
 function windowKindsWithLodMeasures(
@@ -205,119 +197,153 @@ function windowKindsWithLodMeasures(
 	];
 }
 
-function PlayBody({
-	fixture,
-	lodProps,
-}: {
-	fixture: FixtureV1;
-	lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
-}) {
-	const [relocateMode, setRelocateMode] = useState<RelocateMode>("translate");
-	const [selectedId, setSelectedId] = useState<string | null>(null);
-	const [proximityCount, setProximityCount] = useState(0);
-	const [connectCount, setConnectCount] = useState(0);
-	const [indirectCount, setIndirectCount] = useState(0);
-	const lodTag = useContext(PlayLodDisplayContext);
-	const runtime = useContext(PlayRuntimeContext);
-	const kindCompatibility = useMemo(() => parseKindCompatibility(fixture.meta), [fixture.meta]);
-	const kindCatalogs = useMemo(() => parseKindCatalogs(fixture.meta), [fixture.meta]);
-	const blockedVortexFullIds = useMemo(() => blockedVortexFullIdsFromAttractions(fixture.attractions), [fixture.attractions]);
-
-	useEffect(() => {
-		const urls = [...new Set(fixture.objects.map((o) => o.meshUrl))];
-		for (const u of urls) {
-			useGLTF.preload(u);
-		}
-	}, [fixture.objects]);
-
-	const onSelect = useCallback((snap: { objectIds: readonly string[] }) => {
-		setSelectedId(snap.objectIds[0] ?? null);
-	}, []);
-
-	const onProximityConnect = useCallback(() => {
-		setProximityCount((c) => c + 1);
-	}, []);
-
-	const onConnect = useCallback(() => {
-		setConnectCount((c) => c + 1);
-	}, []);
-
-	const onIndirectConnect = useCallback(() => {
-		setIndirectCount((c) => c + 1);
-	}, []);
-
-	return (
-		<div className="flex h-full w-full flex-col">
-			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
-				<ToolbarZone>
-					<ToolbarGroup>
-						<ToolbarItem>
-							<Button variant={relocateMode === "translate" ? "default" : "outline"} size="sm" onClick={() => setRelocateMode("translate")}>
-								<Move3d className="mr-1 size-4" />
-								Translate
-							</Button>
-						</ToolbarItem>
-						<ToolbarItem>
-							<Button variant={relocateMode === "rotate" ? "default" : "outline"} size="sm" onClick={() => setRelocateMode("rotate")}>
-								<Rotate3d className="mr-1 size-4" />
-								Rotate
-							</Button>
-						</ToolbarItem>
-						<ToolbarItem>
-							<Button variant={relocateMode === "scale" ? "default" : "outline"} size="sm" onClick={() => setRelocateMode("scale")}>
-								<Scaling className="mr-1 size-4" />
-								Scale
-							</Button>
-						</ToolbarItem>
-					</ToolbarGroup>
-				</ToolbarZone>
-				<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-					<span data-e2e-selected>{selectedId ?? "—"}</span>
-					<span data-e2e-scene-lod>{lodTag}</span>
-					<span data-e2e-proximity-count>{proximityCount}</span>
-					<span data-e2e-connect-count>{connectCount}</span>
-					<span data-e2e-indirect-count>{indirectCount}</span>
-				</div>
-			</div>
-			<div className="relative min-h-0 flex-1">
-				<SceneObjectStateProvider fixture={fixture} onConnect={onConnect}>
-					<PlaySceneCanvas
-						fixture={fixture}
-						kindCatalogs={kindCatalogs}
-						kindCompatibility={kindCompatibility}
-						blockedVortexFullIds={blockedVortexFullIds}
-						lodProps={lodProps}
-						relocateMode={relocateMode}
-						runtime={runtime}
-						selectedId={selectedId}
-						setSelectedId={setSelectedId}
-						onSelect={onSelect}
-						onIndirectConnect={onIndirectConnect}
-						onProximityConnect={onProximityConnect}
-					/>
-				</SceneObjectStateProvider>
-			</div>
-		</div>
-	);
+interface PlayBodyProps {
+	readonly fixture: FixtureV1;
+	readonly lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
+	readonly lodTag: LodKind;
+	readonly runtime: { readonly setEffectiveLod: (lod: LodKind) => void } | null;
 }
 
-const PlaySceneCanvasContent = memo(function PlaySceneCanvasContent(props: {
+interface PlayBodyState {
+	readonly relocateMode: RelocateMode;
+	readonly selectedId: string | null;
+	readonly proximityCount: number;
+	readonly connectCount: number;
+	readonly indirectCount: number;
+}
+
+class PlayBody extends React.Component<PlayBodyProps, PlayBodyState> {
+	state: PlayBodyState = {
+		relocateMode: "translate",
+		selectedId: null,
+		proximityCount: 0,
+		connectCount: 0,
+		indirectCount: 0,
+	};
+
+	componentDidMount(): void {
+		this.preloadMeshes();
+	}
+
+	componentDidUpdate(prevProps: Readonly<PlayBodyProps>): void {
+		if (prevProps.fixture.objects !== this.props.fixture.objects) {
+			this.preloadMeshes();
+		}
+	}
+
+	private preloadMeshes(): void {
+		const urls = [...new Set(this.props.fixture.objects.map((object) => object.meshUrl))];
+		for (const url of urls) {
+			useGLTF.preload(url);
+		}
+	}
+
+	private readonly onSelect = (snap: { objectIds: readonly string[] }): void => {
+		this.setState({ selectedId: snap.objectIds[0] ?? null });
+	};
+
+	private readonly onProximityConnect = (): void => {
+		this.setState((current) => ({ proximityCount: current.proximityCount + 1 }));
+	};
+
+	private readonly onConnect = (): void => {
+		this.setState((current) => ({ connectCount: current.connectCount + 1 }));
+	};
+
+	private readonly onIndirectConnect = (): void => {
+		this.setState((current) => ({ indirectCount: current.indirectCount + 1 }));
+	};
+
+	render(): React.ReactElement {
+		const { fixture, lodProps, lodTag, runtime } = this.props;
+		const kindCompatibility = parseKindCompatibility(fixture.meta);
+		const kindCatalogs = parseKindCatalogs(fixture.meta);
+		const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(fixture.attractions);
+		return (
+			<div className="flex h-full w-full flex-col">
+				<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
+					<ToolbarZone>
+						<ToolbarGroup>
+							<ToolbarItem>
+								<Button variant={this.state.relocateMode === "translate" ? "default" : "outline"} size="sm" onClick={() => this.setState({ relocateMode: "translate" })}>
+									<Move3d className="mr-1 size-4" />
+									Translate
+								</Button>
+							</ToolbarItem>
+							<ToolbarItem>
+								<Button variant={this.state.relocateMode === "rotate" ? "default" : "outline"} size="sm" onClick={() => this.setState({ relocateMode: "rotate" })}>
+									<Rotate3d className="mr-1 size-4" />
+									Rotate
+								</Button>
+							</ToolbarItem>
+							<ToolbarItem>
+								<Button variant={this.state.relocateMode === "scale" ? "default" : "outline"} size="sm" onClick={() => this.setState({ relocateMode: "scale" })}>
+									<Scaling className="mr-1 size-4" />
+									Scale
+								</Button>
+							</ToolbarItem>
+						</ToolbarGroup>
+					</ToolbarZone>
+					<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+						<span data-e2e-selected>{this.state.selectedId ?? "—"}</span>
+						<span data-e2e-scene-lod>{lodTag}</span>
+						<span data-e2e-proximity-count>{this.state.proximityCount}</span>
+						<span data-e2e-connect-count>{this.state.connectCount}</span>
+						<span data-e2e-indirect-count>{this.state.indirectCount}</span>
+					</div>
+				</div>
+				<div className="relative min-h-0 flex-1">
+					<SceneObjectStateProvider fixture={fixture} onConnect={this.onConnect}>
+						<PlaySceneCanvas
+							fixture={fixture}
+							kindCatalogs={kindCatalogs}
+							kindCompatibility={kindCompatibility}
+							blockedVortexFullIds={blockedVortexFullIds}
+							lodProps={lodProps}
+							relocateMode={this.state.relocateMode}
+							runtime={runtime}
+							selectedId={this.state.selectedId}
+							setSelectedId={(selectedId) => this.setState({ selectedId })}
+							onSelect={this.onSelect}
+							onIndirectConnect={this.onIndirectConnect}
+							onProximityConnect={this.onProximityConnect}
+						/>
+					</SceneObjectStateProvider>
+				</div>
+			</div>
+		);
+	}
+}
+
+class PlayBodyHost extends React.Component<{ readonly fixture: FixtureV1; readonly lodProps: Pick<CanvasProps, "automaticLod" | "lod">; }> {
+	render(): React.ReactElement {
+		return (
+			<PlayLodDisplayContext.Consumer>
+				{(lodTag) => <PlayRuntimeContext.Consumer>{(runtime) => <PlayBody fixture={this.props.fixture} lodProps={this.props.lodProps} lodTag={lodTag} runtime={runtime} />}</PlayRuntimeContext.Consumer>}
+			</PlayLodDisplayContext.Consumer>
+		);
+	}
+}
+
+class PlaySceneCanvasContent extends React.Component<{
 	readonly selectedId: string | null;
 	readonly relocateMode: RelocateMode;
 	readonly setSelectedId: (id: string | null) => void;
-}) {
-	return (
-		<>
-			<ScenePlayTestBridge setSelectedId={props.setSelectedId} />
-			<Suspense fallback={null}>
-				<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
-				<SceneAttractions />
-			</Suspense>
-		</>
-	);
-});
+}> {
+	render(): React.ReactElement {
+		return (
+			<>
+				<ScenePlayTestBridge setSelectedId={this.props.setSelectedId} />
+				<React.Suspense fallback={null}>
+					<SceneObjects selectedObjectId={this.props.selectedId} relocate={this.props.relocateMode} />
+					<SceneAttractions />
+				</React.Suspense>
+			</>
+		);
+	}
+}
 
-function PlaySceneCanvas(props: {
+class PlaySceneCanvas extends React.Component<{
 	readonly fixture: FixtureV1;
 	readonly kindCatalogs: KindCatalogBundle | undefined;
 	readonly kindCompatibility: readonly KindCompatEntry[];
@@ -330,117 +356,146 @@ function PlaySceneCanvas(props: {
 	readonly onSelect: (snap: { objectIds: readonly string[] }) => void;
 	readonly onIndirectConnect: () => void;
 	readonly onProximityConnect: () => void;
-}) {
-	const onRelocate = useSceneObjectRelocate();
-	const onConnect = useSceneObjectConnect();
-	const sceneChildren = useMemo(
-		() => <PlaySceneCanvasContent relocateMode={props.relocateMode} selectedId={props.selectedId} setSelectedId={props.setSelectedId} />,
-		[props.relocateMode, props.selectedId, props.setSelectedId],
-	);
-	return (
-		<Canvas3D
-			className="absolute inset-0"
-			camera={props.fixture.camera}
-			domain={props.fixture.domain}
-			kindCatalogs={props.kindCatalogs}
-			kindCompatibility={props.kindCompatibility}
-			blockedVortexFullIds={props.blockedVortexFullIds}
-			proximityRadius={24}
-			relocateMode={props.relocateMode}
-			showLodGrid
-			gridSnapEnabled
-			{...props.lodProps}
-			onLodChange={props.runtime?.setEffectiveLod}
-			onSelect={props.onSelect}
-			onConnect={onConnect}
-			onIndirectConnect={props.onIndirectConnect}
-			onProximityConnect={props.onProximityConnect}
-			onRelocate={onRelocate}
-		>
-			{sceneChildren}
-		</Canvas3D>
-	);
-}
+}> {
+	static contextType = SceneObjectStateContext;
+	declare context: React.ContextType<typeof SceneObjectStateContext>;
 
-function MainWindow() {
-	const fixture = useMemo(() => parseFixtureV1(nakaginSceneFixtureJson as unknown), []);
-	const lodProps = useContext(PlayLodContext);
-	if (!fixture) {
-		return <div className="p-4 text-destructive">Invalid scene fixture</div>;
+	render(): React.ReactElement {
+		const state = this.context as SceneObjectStateContextValue | null;
+		if (!state) {
+			throw new Error("SceneObjectStateProvider missing");
+		}
+		return (
+			<Canvas3D
+				className="absolute inset-0"
+				camera={this.props.fixture.camera}
+				domain={this.props.fixture.domain}
+				kindCatalogs={this.props.kindCatalogs}
+				kindCompatibility={this.props.kindCompatibility}
+				blockedVortexFullIds={this.props.blockedVortexFullIds}
+				proximityRadius={24}
+				relocateMode={this.props.relocateMode}
+				showLodGrid
+				gridSnapEnabled
+				{...this.props.lodProps}
+				onLodChange={this.props.runtime?.setEffectiveLod}
+				onSelect={this.props.onSelect}
+				onConnect={state.handleConnect}
+				onIndirectConnect={this.props.onIndirectConnect}
+				onProximityConnect={this.props.onProximityConnect}
+				onRelocate={state.handleRelocate}
+			>
+				<PlaySceneCanvasContent relocateMode={this.props.relocateMode} selectedId={this.props.selectedId} setSelectedId={this.props.setSelectedId} />
+			</Canvas3D>
+		);
 	}
-	return <PlayBody fixture={fixture} lodProps={lodProps} />;
 }
 
-function PlayInner(): ReactElement {
-	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
-	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
-	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
-	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
+class MainWindow extends React.Component {
+	static contextType = PlayLodContext;
+	declare context: React.ContextType<typeof PlayLodContext>;
+	private readonly fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
 
-	useEffect(() => {
+	render(): React.ReactElement {
+		if (!this.fixture) {
+			return <div className="p-4 text-destructive">Invalid scene fixture</div>;
+		}
+		return <PlayBodyHost fixture={this.fixture} lodProps={this.context} />;
+	}
+}
+
+interface PlayInnerState {
+	readonly theme: ElementsSurfaceTheme;
+	readonly device: ElementsSurfaceDevice;
+	readonly expertise: Expertise;
+	readonly lodMode: LodModeKind;
+	readonly lodTag: LodKind;
+}
+
+class PlayInner extends React.Component<{}, PlayInnerState> {
+	state: PlayInnerState = {
+		theme: readTheme(),
+		device: readDevice(),
+		expertise: readExpertise(),
+		lodMode: LOD_MODE_AUTOMATIC,
+		lodTag: "normal",
+	};
+
+	private cleanupSurfaceChrome: (() => void) | null = null;
+
+	private readonly runtime = {
+		setEffectiveLod: (lod: LodKind) => {
+			this.setState((current) => ({ lodTag: current.lodTag === lod ? current.lodTag : lod }));
+		},
+	};
+
+	componentDidMount(): void {
+		this.applySurfaceChrome();
+		this.persistState();
+	}
+
+	componentDidUpdate(_prevProps: {}, prevState: Readonly<PlayInnerState>): void {
+		if (prevState.theme !== this.state.theme || prevState.device !== this.state.device || prevState.expertise !== this.state.expertise) {
+			this.applySurfaceChrome();
+			this.persistState();
+		}
+	}
+
+	componentWillUnmount(): void {
+		this.cleanupSurfaceChrome?.();
+	}
+
+	private applySurfaceChrome(): void {
+		this.cleanupSurfaceChrome?.();
+		this.cleanupSurfaceChrome = applyElementsSurfaceChrome({
+			theme: this.state.theme,
+			device: this.state.device,
+			expertise: this.state.expertise,
+		});
+	}
+
+	private persistState(): void {
 		try {
-			localStorage.setItem(LS_THEME, theme);
+			localStorage.setItem(LS_THEME, this.state.theme);
+			localStorage.setItem(LS_DEVICE, this.state.device);
+			localStorage.setItem(LS_EXPERTISE, this.state.expertise);
 		} catch {}
-	}, [theme]);
+	}
 
-	useEffect(() => {
-		try {
-			localStorage.setItem(LS_DEVICE, device);
-		} catch {}
-	}, [device]);
-
-	useEffect(() => {
-		try {
-			localStorage.setItem(LS_EXPERTISE, expertise);
-		} catch {}
-	}, [expertise]);
-
-	const surfaceFooterItems = useMemo<FooterItem[]>(
-		() => [
+	render(): React.ReactElement {
+		const surfaceFooterItems: FooterItem[] = [
 			{
-				content: <PlaySurfaceFooter device={device} expertise={expertise} onDevice={setDevice} onExpertise={setExpertise} onTheme={setTheme} theme={theme} />,
+				content: <PlaySurfaceFooter device={this.state.device} expertise={this.state.expertise} onDevice={(device) => this.setState({ device })} onExpertise={(expertise) => this.setState({ expertise })} onTheme={(theme) => this.setState({ theme })} theme={this.state.theme} />,
 				id: "scene-play-surface",
 				order: 0,
 			},
-		],
-		[device, expertise, theme],
-	);
-
-	const [lodMode, setLodMode] = useState<LodModeKind>(LOD_MODE_AUTOMATIC);
-	const [lodTag, setLodTag] = useState<LodKind>("normal");
-	const lodProps = useMemo(() => lodCanvasProps(lodMode), [lodMode]);
-	const runtime = useMemo(
-		() => ({
-			setEffectiveLod: (lod: LodKind) => {
-				setLodTag((prev) => (prev === lod ? prev : lod));
-			},
-		}),
-		[],
-	);
-
-	const apps = useMemo(() => [new ScenePlayDefinition(lodMode, setLodMode)], [lodMode]);
-
-	return (
-		<PlayLodDisplayContext.Provider value={lodTag}>
-			<PlayLodContext.Provider value={lodProps}>
-				<PlayRuntimeContext.Provider value={runtime}>
-					<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
-				</PlayRuntimeContext.Provider>
-			</PlayLodContext.Provider>
-		</PlayLodDisplayContext.Provider>
-	);
+		];
+		const lodProps = lodCanvasProps(this.state.lodMode);
+		const apps = [new ScenePlayDefinition(this.state.lodMode, (lodMode) => this.setState({ lodMode }))];
+		return (
+			<PlayLodDisplayContext.Provider value={this.state.lodTag}>
+				<PlayLodContext.Provider value={lodProps}>
+					<PlayRuntimeContext.Provider value={this.runtime}>
+						<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={this.state.device === "mobile"} />
+					</PlayRuntimeContext.Provider>
+				</PlayLodContext.Provider>
+			</PlayLodDisplayContext.Provider>
+		);
+	}
 }
 
-function PlayApp(): ReactElement {
-	return (
-		<LevelProvider level="window">
-			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-				<PlayInner />
-			</div>
-		</LevelProvider>
-	);
+class PlayApp extends React.Component {
+	render(): React.ReactElement {
+		return (
+			<LevelProvider level="window">
+				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+					<PlayInner />
+				</div>
+			</LevelProvider>
+		);
+	}
 }
 
-export function createScenePlayElement(): ReactElement {
+export function createScenePlayElement(): React.ReactElement {
 	return <PlayApp />;
 }

@@ -1240,7 +1240,7 @@ export interface SceneObjectStateContextValue {
 	readonly handleConnect: (payload: AttractionPayload) => void;
 }
 
-const SceneObjectStateContext = createContext<SceneObjectStateContextValue | null>(null);
+export const SceneObjectStateContext = createContext<SceneObjectStateContextValue | null>(null);
 
 /** @emoji 🗄️ Central scene object records, attractions, and resolved attraction ownership. */
 export function SceneObjectStateProvider(props: {

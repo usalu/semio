@@ -526,7 +526,7 @@ function BoardPlayToolbar(): ReactElement {
 
   return (
     <div className="pointer-events-none flex w-full justify-center px-2 py-1">
-      <ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-[var(--toolbar-gap)] px-2">
+      <ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-(--toolbar-gap) px-2">
         <ToolbarGroup className="min-w-0 items-center gap-1">
           <ToolbarItem>
             <span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Select</span>
@@ -1081,7 +1081,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
           <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
-      <div className="border-element bg-muted/30 flex min-h-[120px] cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragController.getProps()}>
+      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragController.getProps()}>
         <p className="font-medium">Active graph</p>
         <p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
       </div>
@@ -1820,7 +1820,7 @@ function BoardPlaySurfaceFooter(props: {
     <div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
       <span className="shrink-0 text-xs text-muted-foreground">Theme</span>
       <Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
-        <SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-theme" size="sm">
+        <SelectTrigger className="h-medium w-30" id="board-play-surface-theme" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -1831,7 +1831,7 @@ function BoardPlaySurfaceFooter(props: {
       </Select>
       <span className="shrink-0 text-xs text-muted-foreground">Device</span>
       <Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
-        <SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-device" size="sm">
+        <SelectTrigger className="h-medium w-30" id="board-play-surface-device" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -1842,7 +1842,7 @@ function BoardPlaySurfaceFooter(props: {
       </Select>
       <span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
       <Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
-        <SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-expertise" size="sm">
+        <SelectTrigger className="h-medium w-30" id="board-play-surface-expertise" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

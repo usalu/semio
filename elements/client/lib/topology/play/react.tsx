@@ -1,10 +1,9 @@
 // #region 🧲Header
-// 💻 elements/client/lib/topology/play/index.tsx — Topology play harness: paired Nakagin board+scene (`windowKinds`), shared dual-surface bindings from `../react`.
+// 💻 elements/client/lib/topology/play/react.tsx — Class-based topology play runtime for paired board and scene surfaces.
 // #endregion 🧲Header
 
-// #region 📥Imports
 import { useGLTF } from "@react-three/drei";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import * as React from "react";
 
 import {
 	App,
@@ -35,6 +34,17 @@ import {
 } from "../../board/index.ts";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
+	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
+	isLodKind,
+	parseFixtureV1,
+	lodAutomaticSelectLabel as sceneLodAutomaticSelectLabel,
+	lodCanvasProps as sceneLodCanvasProps,
+	type FixtureV1 as SceneFixtureV1,
+	type LodKind as SceneLodKind,
+	type LodModeKind as SceneLodModeKind,
+	type RelocateMode as SceneRelocateMode,
+} from "../../scene/index.tsx";
+import {
 	buildTopologyDualSurfaceBindings,
 	parseTopologyFixtureV1,
 	TopologyBoardPane,
@@ -44,23 +54,9 @@ import {
 	topologySceneChromeDefaults,
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
-import {
-	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
-	isLodKind,
-	parseFixtureV1,
-	lodAutomaticSelectLabel as sceneLodAutomaticSelectLabel,
-	lodCanvasProps as sceneLodCanvasProps,
-	type CameraState as SceneCameraState,
-	type FixtureV1 as SceneFixtureV1,
-	type LodKind as SceneLodKind,
-	type LodModeKind as SceneLodModeKind,
-	type RelocateMode as SceneRelocateMode,
-} from "../../scene/index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 import "./globals.css";
-// #endregion 📥Imports
 
-// #region 🏷️PlayIds
 const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
 
 const TOPOLOGY_PLAY_WINDOWS = {
@@ -75,100 +71,8 @@ const TOPOLOGY_PLAY_WINDOW_LABELS = {
 
 const TOPOLOGY_PLAY_LOD_TIERS_BOARD: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 const TOPOLOGY_PLAY_LOD_TIERS_SCENE: SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-
-function topologyPlayLodTierMenuLabel(tier: string): string {
-	return tier.charAt(0).toUpperCase() + tier.slice(1);
-}
-
-function topologyWindowKindsWithLodMeasures(
-	boardLodMode: BoardLodModeKind,
-	boardEffectiveLod: BoardDrawLodKind,
-	sceneLodMode: SceneLodModeKind,
-	sceneEffectiveLod: SceneLodKind,
-	setBoardLodMode: (mode: BoardLodModeKind) => void,
-	setSceneLodMode: (mode: SceneLodModeKind) => void,
-): UIWindowKindDefinition[] {
-	const boardLodMeasure: UIWindowKindDefinition["measures"] = [
-		{
-			id: `${TOPOLOGY_PLAY_WINDOWS.board}-lod`,
-			items: [
-				{
-					id: "automatic",
-					label: boardLodAutomaticSelectLabel(boardEffectiveLod),
-					value: BOARD_LOD_MODE_AUTOMATIC,
-				},
-				...TOPOLOGY_PLAY_LOD_TIERS_BOARD.map((tier) => ({
-					id: tier,
-					label: topologyPlayLodTierMenuLabel(tier),
-					value: tier,
-				})),
-			],
-			kind: "select",
-			label: "LOD",
-			onValueChange: (value) => {
-				if (value === BOARD_LOD_MODE_AUTOMATIC || isBoardDrawLodKind(value)) {
-					setBoardLodMode(value as BoardLodModeKind);
-				}
-			},
-			value: boardLodMode,
-		},
-	];
-	const sceneLodMeasure: UIWindowKindDefinition["measures"] = [
-		{
-			id: `${TOPOLOGY_PLAY_WINDOWS.scene}-lod`,
-			items: [
-				{
-					id: "automatic",
-					label: sceneLodAutomaticSelectLabel(sceneEffectiveLod),
-					value: SCENE_LOD_MODE_AUTOMATIC,
-				},
-				...TOPOLOGY_PLAY_LOD_TIERS_SCENE.map((tier) => ({
-					id: tier,
-					label: topologyPlayLodTierMenuLabel(tier),
-					value: tier,
-				})),
-			],
-			kind: "select",
-			label: "LOD",
-			onValueChange: (value) => {
-				if (value === SCENE_LOD_MODE_AUTOMATIC || isLodKind(value)) {
-					setSceneLodMode(value as SceneLodModeKind);
-				}
-			},
-			value: sceneLodMode,
-		},
-	];
-	return [
-		{
-			id: TOPOLOGY_PLAY_WINDOWS.board,
-			label: TOPOLOGY_PLAY_WINDOW_LABELS.board,
-			component: TopologyBoardWindow,
-			measures: boardLodMeasure,
-		},
-		{
-			id: TOPOLOGY_PLAY_WINDOWS.scene,
-			label: TOPOLOGY_PLAY_WINDOW_LABELS.scene,
-			component: TopologySceneWindow,
-			measures: sceneLodMeasure,
-		},
-	];
-}
-// #endregion 🏷️PlayIds
-
-// #region 🎛️Chrome
 const TOPOLOGY_PLAY_CHROME_STRIP_CLASS = "flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2";
 
-function TopologyPlayChromeStrip(props: { readonly leading: ReactNode; readonly trailing: ReactNode }): ReactElement {
-	return (
-		<div className={TOPOLOGY_PLAY_CHROME_STRIP_CLASS}>
-			<ToolbarZone>{props.leading}</ToolbarZone>
-			<div className="ml-auto flex flex-wrap items-center gap-3 text-xs text-muted-foreground">{props.trailing}</div>
-		</div>
-	);
-}
-// #endregion 🎛️Chrome
-
-// #region 🎛️Shell
 interface TopologyPlayShellValue {
 	readonly manifestLabel: string | undefined;
 	readonly boardFixture: BoardFixtureV1;
@@ -191,6 +95,174 @@ interface TopologyPlayShellValue {
 	readonly setSceneRelocateMode: (mode: SceneRelocateMode) => void;
 }
 
+interface TopologyPlayControllerState {
+	readonly relocateMode: SceneRelocateMode;
+	readonly boardSelected: ReadonlySet<string>;
+	readonly sceneSelected: string | null;
+	readonly boardCamera: CameraState;
+	readonly sceneCamera: CameraState;
+	readonly sceneLodTag: SceneLodKind;
+	readonly boardLodTag: BoardDrawLodKind;
+	readonly boardLodMode: BoardLodModeKind;
+	readonly sceneLodMode: SceneLodModeKind;
+	readonly connectBoard: number;
+	readonly connectScene: number;
+	readonly proximityBoard: number;
+	readonly proximityScene: number;
+}
+
+const TopologyPlayShellContext = React.createContext<TopologyPlayShellValue | null>(null);
+
+function topologyPlayLodTierMenuLabel(tier: string): string {
+	return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
+class TopologyPlayChromeStrip extends React.Component<{ readonly leading: React.ReactNode; readonly trailing: React.ReactNode }> {
+	render(): React.ReactElement {
+		return (
+			<div className={TOPOLOGY_PLAY_CHROME_STRIP_CLASS}>
+				<ToolbarZone>{this.props.leading}</ToolbarZone>
+				<div className="ml-auto flex flex-wrap items-center gap-3 text-xs text-muted-foreground">{this.props.trailing}</div>
+			</div>
+		);
+	}
+}
+
+class TopologyBoardWindow extends React.Component<{ readonly shell: TopologyPlayShellValue }> {
+	render(): React.ReactElement {
+		const s = this.props.shell;
+		return (
+			<div className="flex h-full w-full flex-col">
+				<TopologyPlayChromeStrip
+					leading={
+						<ToolbarGroup>
+							<ToolbarItem>
+								<span className="px-2 text-xs text-muted-foreground">{TOPOLOGY_PLAY_WINDOW_LABELS.board}</span>
+							</ToolbarItem>
+						</ToolbarGroup>
+					}
+					trailing={
+						<>
+							<span data-e2e-topology-manifest>{s.manifestLabel ?? "topology"}</span>
+							<span data-e2e-topology-board-selected>{[...s.boardSelected].join(", ") || "—"}</span>
+							<span data-e2e-topology-connect-board>{s.connectBoard}</span>
+							<span data-e2e-topology-proximity-board>{s.proximityBoard}</span>
+						</>
+					}
+				/>
+				<div className="relative min-h-0 flex-1">
+					<TopologyBoardPane fixture={s.boardFixture} bindings={s.bindings} selectedIds={s.boardSelected} board={{ camera: s.boardCamera, onLodChange: s.onBoardLodChange, ...s.boardLodProps }} />
+				</div>
+			</div>
+		);
+	}
+}
+
+class TopologyBoardWindowHost extends React.Component {
+	render(): React.ReactElement | null {
+		return <TopologyPlayShellContext.Consumer>{(shell) => (shell ? <TopologyBoardWindow shell={shell} /> : null)}</TopologyPlayShellContext.Consumer>;
+	}
+}
+
+class TopologySceneWindow extends React.Component<{ readonly shell: TopologyPlayShellValue }> {
+	render(): React.ReactElement {
+		const s = this.props.shell;
+		return (
+			<div className="flex h-full w-full flex-col">
+				<TopologyPlayChromeStrip
+					leading={
+						<ToolbarGroup>
+							<ToolbarItem asChild>
+								<Button variant={s.relocateMode === "translate" ? "default" : "outline"} size="sm" onClick={() => s.setSceneRelocateMode("translate")}>
+									<Move3d className="mr-1 size-4" />
+									Translate
+								</Button>
+							</ToolbarItem>
+							<ToolbarItem asChild>
+								<Button variant={s.relocateMode === "rotate" ? "default" : "outline"} size="sm" onClick={() => s.setSceneRelocateMode("rotate")}>
+									<Rotate3d className="mr-1 size-4" />
+									Rotate
+								</Button>
+							</ToolbarItem>
+							<ToolbarItem asChild>
+								<Button variant={s.relocateMode === "scale" ? "default" : "outline"} size="sm" onClick={() => s.setSceneRelocateMode("scale")}>
+									<Scaling className="mr-1 size-4" />
+									Scale
+								</Button>
+							</ToolbarItem>
+						</ToolbarGroup>
+					}
+					trailing={
+						<>
+							<span data-e2e-topology-scene-lod>{s.sceneLodTag}</span>
+							<span data-e2e-topology-scene-selected>{s.sceneSelected ?? "—"}</span>
+							<span data-e2e-topology-connect-scene>{s.connectScene}</span>
+							<span data-e2e-topology-proximity-scene>{s.proximityScene}</span>
+						</>
+					}
+				/>
+				<div className="relative min-h-0 flex-1">
+					<TopologyScenePane fixture={s.sceneFixture} bindings={s.bindings} relocateMode={s.relocateMode} selectedObjectId={s.sceneSelected} scene={{ ...topologySceneChromeDefaults(), ...s.sceneLodProps }} />
+				</div>
+			</div>
+		);
+	}
+}
+
+class TopologySceneWindowHost extends React.Component {
+	render(): React.ReactElement | null {
+		return <TopologyPlayShellContext.Consumer>{(shell) => (shell ? <TopologySceneWindow shell={shell} /> : null)}</TopologyPlayShellContext.Consumer>;
+	}
+}
+
+function topologyWindowKindsWithLodMeasures(
+	boardLodMode: BoardLodModeKind,
+	boardEffectiveLod: BoardDrawLodKind,
+	sceneLodMode: SceneLodModeKind,
+	sceneEffectiveLod: SceneLodKind,
+	setBoardLodMode: (mode: BoardLodModeKind) => void,
+	setSceneLodMode: (mode: SceneLodModeKind) => void,
+): UIWindowKindDefinition[] {
+	const boardLodMeasure: UIWindowKindDefinition["measures"] = [
+		{
+			id: `${TOPOLOGY_PLAY_WINDOWS.board}-lod`,
+			items: [
+				{ id: "automatic", label: boardLodAutomaticSelectLabel(boardEffectiveLod), value: BOARD_LOD_MODE_AUTOMATIC },
+				...TOPOLOGY_PLAY_LOD_TIERS_BOARD.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
+			],
+			kind: "select",
+			label: "LOD",
+			onValueChange: (value) => {
+				if (value === BOARD_LOD_MODE_AUTOMATIC || isBoardDrawLodKind(value)) {
+					setBoardLodMode(value as BoardLodModeKind);
+				}
+			},
+			value: boardLodMode,
+		},
+	];
+	const sceneLodMeasure: UIWindowKindDefinition["measures"] = [
+		{
+			id: `${TOPOLOGY_PLAY_WINDOWS.scene}-lod`,
+			items: [
+				{ id: "automatic", label: sceneLodAutomaticSelectLabel(sceneEffectiveLod), value: SCENE_LOD_MODE_AUTOMATIC },
+				...TOPOLOGY_PLAY_LOD_TIERS_SCENE.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
+			],
+			kind: "select",
+			label: "LOD",
+			onValueChange: (value) => {
+				if (value === SCENE_LOD_MODE_AUTOMATIC || isLodKind(value)) {
+					setSceneLodMode(value as SceneLodModeKind);
+				}
+			},
+			value: sceneLodMode,
+		},
+	];
+	return [
+		{ id: TOPOLOGY_PLAY_WINDOWS.board, label: TOPOLOGY_PLAY_WINDOW_LABELS.board, component: TopologyBoardWindowHost, measures: boardLodMeasure },
+		{ id: TOPOLOGY_PLAY_WINDOWS.scene, label: TOPOLOGY_PLAY_WINDOW_LABELS.scene, component: TopologySceneWindowHost, measures: sceneLodMeasure },
+	];
+}
+
 class TopologyPlayDefinition extends PureAppDefinition {
 	constructor(
 		private readonly boardLodMode: BoardLodModeKind,
@@ -207,21 +279,15 @@ class TopologyPlayDefinition extends PureAppDefinition {
 		return {
 			id: TOPOLOGY_PLAY_APP_ID,
 			label: "Topology play",
-			windowKinds: topologyWindowKindsWithLodMeasures(
-				this.boardLodMode,
-				this.boardLodTag,
-				this.sceneLodMode,
-				this.sceneLodTag,
-				this.setBoardLodMode,
-				this.setSceneLodMode,
-			),
-			defaultLayout: createDefaultLayout(
-				[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
-				"row",
-				[50, 50],
-				[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
-			),
+			windowKinds: topologyWindowKindsWithLodMeasures(this.boardLodMode, this.boardLodTag, this.sceneLodMode, this.sceneLodTag, this.setBoardLodMode, this.setSceneLodMode),
+			defaultLayout: createDefaultLayout([TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene], "row", [50, 50], [TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene]),
 		};
+	}
+}
+
+class InvalidTopologyWindow extends React.Component {
+	render(): React.ReactElement {
+		return <div className="p-4 text-destructive">Invalid board or scene fixture</div>;
 	}
 }
 
@@ -230,313 +296,143 @@ class InvalidTopologyPlayDefinition extends PureAppDefinition {
 		return {
 			id: TOPOLOGY_PLAY_APP_ID,
 			label: "Topology play",
-			windowKinds: [
-				{
-					id: "topology-error",
-					label: "Error",
-					component: () => <div className="p-4 text-destructive">Invalid board or scene fixture</div>,
-				},
-			],
+			windowKinds: [{ id: "topology-error", label: "Error", component: InvalidTopologyWindow }],
 			defaultLayout: createDefaultLayout(["topology-error"], "row", [100], ["Error"]),
 		};
 	}
 }
 
-const TopologyPlayShellContext = createContext<TopologyPlayShellValue | null>(null);
-
-function useTopologyPlayShell(): TopologyPlayShellValue {
-	const v = useContext(TopologyPlayShellContext);
-	if (!v) {
-		throw new Error("TopologyPlayShellContext missing");
-	}
-	return v;
-}
-
-function TopologyBoardWindow(): ReactElement {
-	const s = useTopologyPlayShell();
-	return (
-		<div className="flex h-full w-full flex-col">
-			<TopologyPlayChromeStrip
-				leading={
-					<ToolbarGroup>
-						<ToolbarItem>
-							<span className="px-2 text-xs text-muted-foreground">{TOPOLOGY_PLAY_WINDOW_LABELS.board}</span>
-						</ToolbarItem>
-					</ToolbarGroup>
-				}
-				trailing={
-					<>
-						<span data-e2e-topology-manifest>{s.manifestLabel ?? "topology"}</span>
-						<span data-e2e-topology-board-selected>{[...s.boardSelected].join(", ") || "—"}</span>
-						<span data-e2e-topology-connect-board>{s.connectBoard}</span>
-						<span data-e2e-topology-proximity-board>{s.proximityBoard}</span>
-					</>
-				}
-			/>
-			<div className="relative min-h-0 flex-1">
-				<TopologyBoardPane
-					fixture={s.boardFixture}
-					bindings={s.bindings}
-					selectedIds={s.boardSelected}
-					board={{ camera: s.boardCamera, onLodChange: s.onBoardLodChange, ...s.boardLodProps }}
-				/>
-			</div>
-		</div>
-	);
-}
-
-function TopologySceneWindow(): ReactElement {
-	const s = useTopologyPlayShell();
-	return (
-		<div className="flex h-full w-full flex-col">
-			<TopologyPlayChromeStrip
-				leading={
-					<ToolbarGroup>
-						<ToolbarItem asChild>
-							<Button
-								variant={s.relocateMode === "translate" ? "default" : "outline"}
-								size="sm"
-								onClick={() => s.setSceneRelocateMode("translate")}
-							>
-								<Move3d className="mr-1 size-4" />
-								Translate
-							</Button>
-						</ToolbarItem>
-						<ToolbarItem asChild>
-							<Button
-								variant={s.relocateMode === "rotate" ? "default" : "outline"}
-								size="sm"
-								onClick={() => s.setSceneRelocateMode("rotate")}
-							>
-								<Rotate3d className="mr-1 size-4" />
-								Rotate
-							</Button>
-						</ToolbarItem>
-						<ToolbarItem asChild>
-							<Button
-								variant={s.relocateMode === "scale" ? "default" : "outline"}
-								size="sm"
-								onClick={() => s.setSceneRelocateMode("scale")}
-							>
-								<Scaling className="mr-1 size-4" />
-								Scale
-							</Button>
-						</ToolbarItem>
-					</ToolbarGroup>
-				}
-				trailing={
-					<>
-						<span data-e2e-topology-scene-lod>{s.sceneLodTag}</span>
-						<span data-e2e-topology-scene-selected>{s.sceneSelected ?? "—"}</span>
-						<span data-e2e-topology-connect-scene>{s.connectScene}</span>
-						<span data-e2e-topology-proximity-scene>{s.proximityScene}</span>
-					</>
-				}
-			/>
-			<div className="relative min-h-0 flex-1">
-				<TopologyScenePane
-					fixture={s.sceneFixture}
-					bindings={s.bindings}
-					relocateMode={s.relocateMode}
-					selectedObjectId={s.sceneSelected}
-					scene={{ ...topologySceneChromeDefaults(), ...s.sceneLodProps }}
-				/>
-			</div>
-		</div>
-	);
-}
-// #endregion 🎛️Shell
-
-// #region 🎬PairedModel
-function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: SceneFixtureV1): {
-	readonly shellValue: TopologyPlayShellValue;
-	readonly apps: AppConfig[];
-} {
-	const manifest = useMemo(() => parseTopologyFixtureV1(topologyManifestJson as unknown), []);
-	const [relocateMode, setSceneRelocateMode] = useState<SceneRelocateMode>("translate");
-	const [boardSelected, setBoardSelected] = useState<ReadonlySet<string>>(() => new Set());
-	const [sceneSelected, setSceneSelected] = useState<string | null>(null);
-	const [boardCamera, setBoardCamera] = useState<CameraState>(() => ({ ...boardFixture.camera }));
-	const [sceneCamera, setSceneCamera] = useState<CameraState>(() => ({
-		...sceneFixture.camera,
-	}));
-	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
-	const [boardLodTag, setBoardLodTag] = useState<BoardDrawLodKind>("normal");
-	const onBoardLodChange = useCallback((lod: BoardDrawLodKind) => setBoardLodTag(lod), []);
-	const [boardLodMode, setBoardLodMode] = useState<BoardLodModeKind>(BOARD_LOD_MODE_AUTOMATIC);
-	const [sceneLodMode, setSceneLodMode] = useState<SceneLodModeKind>(SCENE_LOD_MODE_AUTOMATIC);
-	const boardLodProps = useMemo(() => boardLodCanvasProps(boardLodMode), [boardLodMode]);
-	const sceneLodProps = useMemo(() => sceneLodCanvasProps(sceneLodMode), [sceneLodMode]);
-	const [connectBoard, setConnectBoard] = useState(0);
-	const [connectScene, setConnectScene] = useState(0);
-	const [proximityBoard, setProximityBoard] = useState(0);
-	const [proximityScene, setProximityScene] = useState(0);
-
-	const sharedKinds = useMemo(
-		() =>
-			topologySharedKindsFromPairedMetas({
-				boardMeta: boardFixture.meta,
-				sceneMeta: sceneFixture.meta,
-			}),
-		[boardFixture.meta, sceneFixture.meta],
-	);
-
-	const onBoardSelect = useCallback((snap: { ids: readonly string[] }) => {
-		setBoardSelected(new Set(snap.ids));
-	}, []);
-
-	const onSceneSelect = useCallback((snap: { objectIds: readonly string[] }) => {
-		setSceneSelected(snap.objectIds[0] ?? null);
-	}, []);
-
-	const mirrorConnect = useMemo(
-		() =>
-			topologyMirrorConnectHandlers((p) => {
-				if (p.surface === "board") setConnectBoard((c) => c + 1);
-				else setConnectScene((c) => c + 1);
-			}),
-		[],
-	);
-
-	const mirrorProximity = useMemo(
-		() =>
-			topologyMirrorProximityHandlers((p) => {
-				if (p.surface === "board") setProximityBoard((c) => c + 1);
-				else setProximityScene((c) => c + 1);
-			}),
-		[],
-	);
-
-	const bindings = useMemo(
-		() =>
-			buildTopologyDualSurfaceBindings({
-				...sharedKinds,
-				onBoardSelect,
-				onSceneSelect,
-				onBoardCamera: setBoardCamera,
-				onSceneCamera: setSceneCamera,
-				onSceneLodChange: setSceneLodTag,
-				...mirrorConnect,
-				...mirrorProximity,
-			}),
-		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect],
-	);
-
-	useEffect(() => {
-		const urls = [...new Set(sceneFixture.objects.map((o) => o.meshUrl))];
-		for (const u of urls) {
-			useGLTF.preload(u);
-		}
-	}, [sceneFixture.objects]);
-
-	useEffect(() => {
-		if (!manifest) {
-			console.warn("[DEBUG] topology manifest parse failed");
+class TopologyPlayController extends React.Component<{ readonly boardFixture: BoardFixtureV1; readonly sceneFixture: SceneFixtureV1 }, TopologyPlayControllerState> {
+	private readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
+	private readonly mirrorConnect = topologyMirrorConnectHandlers((payload) => {
+		if (payload.surface === "board") {
+			this.setState((current) => ({ connectBoard: current.connectBoard + 1 }));
 			return;
 		}
-		if (manifest.label) {
-			console.log("[DEBUG] topology manifest", manifest.label);
+		this.setState((current) => ({ connectScene: current.connectScene + 1 }));
+	});
+	private readonly mirrorProximity = topologyMirrorProximityHandlers((payload) => {
+		if (payload.surface === "board") {
+			this.setState((current) => ({ proximityBoard: current.proximityBoard + 1 }));
+			return;
 		}
-	}, [manifest]);
+		this.setState((current) => ({ proximityScene: current.proximityScene + 1 }));
+	});
 
-	const shellValue = useMemo<TopologyPlayShellValue>(
-		() => ({
-			manifestLabel: manifest?.label,
-			boardFixture,
-			sceneFixture,
+	state: TopologyPlayControllerState = {
+		relocateMode: "translate",
+		boardSelected: new Set(),
+		sceneSelected: null,
+		boardCamera: { ...this.props.boardFixture.camera },
+		sceneCamera: { ...this.props.sceneFixture.camera },
+		sceneLodTag: "normal",
+		boardLodTag: "normal",
+		boardLodMode: BOARD_LOD_MODE_AUTOMATIC,
+		sceneLodMode: SCENE_LOD_MODE_AUTOMATIC,
+		connectBoard: 0,
+		connectScene: 0,
+		proximityBoard: 0,
+		proximityScene: 0,
+	};
+
+	componentDidMount(): void {
+		const urls = [...new Set(this.props.sceneFixture.objects.map((object) => object.meshUrl))];
+		for (const url of urls) {
+			useGLTF.preload(url);
+		}
+		if (!this.manifest) {
+			console.warn("[DEBUG] topology manifest parse failed");
+		} else if (this.manifest.label) {
+			console.log("[DEBUG] topology manifest", this.manifest.label);
+		}
+	}
+
+	private readonly onBoardLodChange = (lod: BoardDrawLodKind): void => {
+		this.setState({ boardLodTag: lod });
+	};
+
+	private readonly onBoardSelect = (snap: { ids: readonly string[] }): void => {
+		this.setState({ boardSelected: new Set(snap.ids) });
+	};
+
+	private readonly onSceneSelect = (snap: { objectIds: readonly string[] }): void => {
+		this.setState({ sceneSelected: snap.objectIds[0] ?? null });
+	};
+
+	private buildShellValue(): TopologyPlayShellValue {
+		const sharedKinds = topologySharedKindsFromPairedMetas({ boardMeta: this.props.boardFixture.meta, sceneMeta: this.props.sceneFixture.meta });
+		const bindings = buildTopologyDualSurfaceBindings({
+			...sharedKinds,
+			onBoardSelect: this.onBoardSelect,
+			onSceneSelect: this.onSceneSelect,
+			onBoardCamera: (boardCamera) => this.setState({ boardCamera }),
+			onSceneCamera: (sceneCamera) => this.setState({ sceneCamera }),
+			onSceneLodChange: (sceneLodTag) => this.setState({ sceneLodTag }),
+			...this.mirrorConnect,
+			...this.mirrorProximity,
+		});
+		return {
+			manifestLabel: this.manifest?.label,
+			boardFixture: this.props.boardFixture,
+			sceneFixture: this.props.sceneFixture,
 			bindings,
-			boardSelected,
-			boardCamera,
-			sceneCamera,
-			sceneSelected,
-			relocateMode,
-			sceneLodTag,
-			boardLodTag,
-			onBoardLodChange,
-			boardLodProps,
-			sceneLodProps,
-			connectBoard,
-			connectScene,
-			proximityBoard,
-			proximityScene,
-			setSceneRelocateMode,
-		}),
-		[
-			manifest?.label,
-			boardFixture,
-			sceneFixture,
-			bindings,
-			boardSelected,
-			boardCamera,
-			sceneCamera,
-			sceneSelected,
-			relocateMode,
-			sceneLodTag,
-			boardLodTag,
-			onBoardLodChange,
-			boardLodProps,
-			sceneLodProps,
-			connectBoard,
-			connectScene,
-			proximityBoard,
-			proximityScene,
-		],
-	);
+			boardSelected: this.state.boardSelected,
+			boardCamera: this.state.boardCamera,
+			sceneCamera: this.state.sceneCamera,
+			sceneSelected: this.state.sceneSelected,
+			relocateMode: this.state.relocateMode,
+			sceneLodTag: this.state.sceneLodTag,
+			boardLodTag: this.state.boardLodTag,
+			onBoardLodChange: this.onBoardLodChange,
+			boardLodProps: boardLodCanvasProps(this.state.boardLodMode),
+			sceneLodProps: sceneLodCanvasProps(this.state.sceneLodMode),
+			connectBoard: this.state.connectBoard,
+			connectScene: this.state.connectScene,
+			proximityBoard: this.state.proximityBoard,
+			proximityScene: this.state.proximityScene,
+			setSceneRelocateMode: (relocateMode) => this.setState({ relocateMode }),
+		};
+	}
 
-	const apps = useMemo(
-		() => [new TopologyPlayDefinition(boardLodMode, boardLodTag, sceneLodMode, sceneLodTag, setBoardLodMode, setSceneLodMode)],
-		[boardLodMode, boardLodTag, sceneLodMode, sceneLodTag],
-	);
-
-	return { shellValue, apps };
+	render(): React.ReactElement {
+		const shellValue = this.buildShellValue();
+		const apps = [new TopologyPlayDefinition(this.state.boardLodMode, this.state.boardLodTag, this.state.sceneLodMode, this.state.sceneLodTag, (boardLodMode) => this.setState({ boardLodMode }), (sceneLodMode) => this.setState({ sceneLodMode }))];
+		return (
+			<TopologyPlayShellContext.Provider value={shellValue}>
+				<App apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+			</TopologyPlayShellContext.Provider>
+		);
+	}
 }
-// #endregion 🎬PairedModel
 
-// #region 🎬Controller
-function TopologyPlayController({
-	boardFixture,
-	sceneFixture,
-}: {
-	readonly boardFixture: BoardFixtureV1;
-	readonly sceneFixture: SceneFixtureV1;
-}): ReactElement {
-	const { shellValue, apps } = useTopologyPairedPlayModel(boardFixture, sceneFixture);
-	return (
-		<TopologyPlayShellContext.Provider value={shellValue}>
-			<App apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
-		</TopologyPlayShellContext.Provider>
-	);
-}
-// #endregion 🎬Controller
-
-// #region 🚀Mount
 function invalidFixtureApps(): PureAppDefinition[] {
 	return [new InvalidTopologyPlayDefinition()];
 }
 
-function TopologyPlayApp(): ReactElement {
-	const boardFixture = useMemo(() => parseBoardFixtureV1(nakaginBoardJson as unknown), []);
-	const sceneFixture = useMemo(() => parseFixtureV1(nakaginSceneJson as unknown), []);
+class TopologyPlayApp extends React.Component {
+	private readonly boardFixture = parseBoardFixtureV1(nakaginBoardJson as unknown);
+	private readonly sceneFixture = parseFixtureV1(nakaginSceneJson as unknown);
 
-	if (!boardFixture || !sceneFixture) {
+	render(): React.ReactElement {
+		if (!this.boardFixture || !this.sceneFixture) {
+			return (
+				<LevelProvider>
+					<App apps={invalidFixtureApps()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+				</LevelProvider>
+			);
+		}
+
 		return (
 			<LevelProvider>
-				<App apps={invalidFixtureApps()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+				<TopologyPlayController boardFixture={this.boardFixture} sceneFixture={this.sceneFixture} />
 			</LevelProvider>
 		);
 	}
-
-	return (
-		<LevelProvider>
-			<TopologyPlayController boardFixture={boardFixture} sceneFixture={sceneFixture} />
-		</LevelProvider>
-	);
 }
 
-export function createTopologyPlayElement(): ReactElement {
+export function createTopologyPlayElement(): React.ReactElement {
 	return <TopologyPlayApp />;
 }
-// #endregion 🚀Mount
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -552,10 +448,7 @@ if (import.meta.vitest) {
 			expect(t?.schema).toBe("elements.topology.fixture/v1");
 		});
 		it("shared kinds merge metas like the play harness", () => {
-			const sk = topologySharedKindsFromPairedMetas({
-				boardMeta: undefined,
-				sceneMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
-			});
+			const sk = topologySharedKindsFromPairedMetas({ boardMeta: undefined, sceneMeta: { kindCompatibility: [{ source: "u", target: "v" }] } });
 			expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
 		});
 	});

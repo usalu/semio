@@ -461,39 +461,33 @@ function applyDocumentBodyBaseColors(): void {
 }
 
 /**
- * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
+ * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state and resets tooltip expertise.
  */
-export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  React.useEffect(() => {
-    setExpertiseProvider(() => expertise);
-    return () => {
-      setExpertiseProvider(() => Expertise.NORMAL);
-    };
-  }, [expertise]);
+export function applyElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): () => void {
+  setExpertiseProvider(() => expertise);
+  const cleanups: Array<() => void> = [() => setExpertiseProvider(() => Expertise.NORMAL)];
 
-  React.useEffect(() => {
-    if (typeof window === "undefined" || typeof document === "undefined") return undefined;
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
     const root = document.documentElement;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const bindings = new DOMEventBindingController();
-    const apply = (): void => {
+    const applyTheme = (): void => {
       const prefersDark = mq.matches;
       const dark = theme === "dark" || (theme === "system" && prefersDark);
       root.classList.toggle("dark", dark);
       applyDocumentBodyBaseColors();
     };
-    apply();
-    bindings.listen(mq, "change", apply);
-    return () => {
+    applyTheme();
+    bindings.listen(mq, "change", applyTheme);
+    cleanups.push(() => {
       bindings.dispose();
       root.classList.remove("dark");
       document.body.style.backgroundColor = "";
       document.body.style.color = "";
-    };
-  }, [theme]);
+    });
+  }
 
-  React.useEffect(() => {
-    if (typeof document === "undefined") return undefined;
+  if (typeof document !== "undefined") {
     const root = document.documentElement;
     root.dataset.uiDevice = device;
     if (device === "tablet") {
@@ -501,11 +495,24 @@ export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsS
     } else {
       root.classList.remove("touch");
     }
-    return () => {
+    cleanups.push(() => {
       delete root.dataset.uiDevice;
       root.classList.remove("touch");
-    };
-  }, [device]);
+    });
+  }
+
+  return () => {
+    while (cleanups.length > 0) {
+      cleanups.pop()?.();
+    }
+  };
+}
+
+/**
+ * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
+ */
+export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
+  React.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise }), [device, expertise, theme]);
 
   return { mobile: device === "mobile" };
 }
@@ -23109,7 +23116,7 @@ export interface UIPanelVisibility {
 /**
  * Context for the active UI app state and navigation.
  **/
-interface AppContextValue {
+export interface AppContextValue {
   activeAppId: string;
   setActiveAppId: (id: string) => void;
   activeApp: ResolvedAppConfig;
@@ -23144,7 +23151,7 @@ export async function mountAsyncReactApp(loadElement: () => Promise<React.ReactE
   mountReactApp(await loadElement(), rootId);
 }
 
-const AppContext = React.createContext<AppContextValue | undefined>(undefined);
+export const AppContext = React.createContext<AppContextValue | undefined>(undefined);
 
 /**
  * Hook to access the UI context.

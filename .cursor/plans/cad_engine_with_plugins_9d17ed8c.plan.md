@@ -4,25 +4,25 @@ overview: Introduce a pure, hexagonal CAD engine at `elements/client/lib/geometr
 todos:
   - id: ticket-open
     content: Open repo ticket `cad-engine-plugins` and associate with the most appropriate goal from `repo://goals`
-    status: in_progress
+    status: completed
   - id: core
     content: Write `🔖Core` + `🔖Commands` + `🔖Registry` + `🔖Plugins` regions (pure, zero three/wasm/r3f imports)
-    status: pending
+    status: completed
   - id: topologic-adapter
     content: Implement `TopologicCadEngine` adapter using existing `../wasm/index.ts` bindings, returning fixture-compatible entities
-    status: pending
+    status: completed
   - id: r3f-adapter
     content: Implement `ThreeGraphicsEngine` + `IPreviewMesh` adapter against a `THREE.Group` preview layer
-    status: pending
+    status: completed
   - id: canvas-ui
     content: Implement `<CadCanvas/>` and hooks (`useCadEngine`, `useActiveCommand`, `useCadCommit`, `useRegisterPlugin`) wiring R3F raycasting to engine pointer events
-    status: pending
+    status: completed
   - id: tests
     content: Extend inline `import.meta.vitest` block with purity, registry, cylinder-state-machine, and adapter-swappability tests; run `nx test @elements/geometry`
-    status: pending
+    status: completed
   - id: ticket-close
     content: Close ticket with summary and the touched file path
-    status: pending
+    status: completed
 isProject: false
 ---
 

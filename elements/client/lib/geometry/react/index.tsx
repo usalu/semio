@@ -460,7 +460,8 @@ export interface TopologicViewportProps {
 	readonly backgroundColor?: string;
 }
 
-function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "style" | "backgroundColor">): ReactElement {
+/** @emoji 🧭 R3F scene graph for a Topologic fixture (no outer `Canvas`; embed inside an existing R3F tree). */
+export function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "style" | "backgroundColor">): ReactElement {
 	const objectMapRef = useRef(new Map<string, Group>());
 	const [version, setVersion] = useState(0);
 	const session = useMemo(() => new TopologicSceneSession(props.fixture), [props.fixture]);

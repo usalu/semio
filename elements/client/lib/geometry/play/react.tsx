@@ -2,9 +2,10 @@
 // 💻 elements/client/lib/geometry/play/react.tsx — React runtime for geometry play: contexts, window body, controller, and React-specific tests.
 // #endregion 🧲Header
 
-import { App, LevelProvider, PureAppDefinition, getLevelBgClass, useApp, type AppConfig, type UIToolbarItem } from "@elements/ui";
+import { App, AppContext, LevelProvider, PureAppDefinition, getLevelBgClass, type AppConfig, type UIToolbarItem } from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
-import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
+import * as React from "react";
+import { act } from "react";
 import { createRoot } from "react-dom/client";
 
 import topologyJson from "./fixtures/topology.json";
@@ -60,13 +61,32 @@ interface GeometryPlayValue {
 	readonly onTransformCommit: (id: string, transform: TopologicTransform) => void;
 }
 
-const GeometryPlayContext = createContext<GeometryPlayValue | null>(null);
-
-function useGeometryPlay(): GeometryPlayValue {
-	const value = useContext(GeometryPlayContext);
-	if (!value) throw new Error("GeometryPlayContext missing");
-	return value;
+interface GeometryPlayToolbarState {
+	readonly analyzeSelectableKinds: Record<AnalyzeKind, boolean>;
+	readonly analyzeVisibleKinds: Record<AnalyzeKind, boolean>;
+	readonly selectableKinds: Record<TopologicKind, boolean>;
+	readonly transformMode: TopologicTransformMode;
+	readonly visibleKinds: Record<TopologicKind, boolean>;
 }
+
+interface GeometryPlayActions {
+	readonly toggleSelectableKind: (kind: TopologicKind) => void;
+	readonly toggleVisibleKind: (kind: TopologicKind) => void;
+	readonly toggleAnalyzeSelectableKind: (kind: AnalyzeKind) => void;
+	readonly toggleAnalyzeVisibleKind: (kind: AnalyzeKind) => void;
+	readonly setAnalyzeSelectableGroup: (group: readonly AnalyzeKind[], enabled: boolean) => void;
+	readonly setAnalyzeVisibleGroup: (group: readonly AnalyzeKind[], enabled: boolean) => void;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly setTransformMode: (mode: TopologicTransformMode) => void;
+}
+
+interface GeometryPlayControllerState extends GeometryPlayToolbarState {
+	readonly fixture: TopologicFixtureV1 | null;
+	readonly loadError: Error | null;
+	readonly selectedId: string | null;
+}
+
+const GeometryPlayContext = React.createContext<GeometryPlayValue | null>(null);
 
 function geometryKindToolbarToggles<TKind extends string>(
 	prefix: "selection" | "filter",
@@ -128,17 +148,8 @@ const GEOMETRY_PLAY_TRANSFORM_ICONS: Record<TopologicTransformMode, ReactElement
 
 class GeometryPlayDefinition extends PureAppDefinition {
 	constructor(
-		private readonly analyzeSelectableKinds: Record<AnalyzeKind, boolean>,
-		private readonly analyzeVisibleKinds: Record<AnalyzeKind, boolean>,
-		private readonly selectableKinds: Record<TopologicKind, boolean>,
-		private readonly transformMode: TopologicTransformMode,
-		private readonly visibleKinds: Record<TopologicKind, boolean>,
-		private readonly setAnalyzeSelectableKinds: React.Dispatch<React.SetStateAction<Record<AnalyzeKind, boolean>>>,
-		private readonly setAnalyzeVisibleKinds: React.Dispatch<React.SetStateAction<Record<AnalyzeKind, boolean>>>,
-		private readonly setSelectableKinds: React.Dispatch<React.SetStateAction<Record<TopologicKind, boolean>>>,
-		private readonly setSelectedId: React.Dispatch<React.SetStateAction<string | null>>,
-		private readonly setTransformMode: React.Dispatch<React.SetStateAction<TopologicTransformMode>>,
-		private readonly setVisibleKinds: React.Dispatch<React.SetStateAction<Record<TopologicKind, boolean>>>,
+		private readonly stateSnapshot: GeometryPlayToolbarState,
+		private readonly actions: GeometryPlayActions,
 	) {
 		super();
 	}
@@ -149,13 +160,13 @@ class GeometryPlayDefinition extends PureAppDefinition {
 			id: GEOMETRY_PLAY_APP_ID,
 			label: "Geometry play",
 			options: {
-				selectableKinds: this.selectableKinds,
-				visibleKinds: this.visibleKinds,
-				analyzeSelectableKinds: this.analyzeSelectableKinds,
-				analyzeVisibleKinds: this.analyzeVisibleKinds,
-				transformMode: this.transformMode,
+				selectableKinds: this.stateSnapshot.selectableKinds,
+				visibleKinds: this.stateSnapshot.visibleKinds,
+				analyzeSelectableKinds: this.stateSnapshot.analyzeSelectableKinds,
+				analyzeVisibleKinds: this.stateSnapshot.analyzeVisibleKinds,
+				transformMode: this.stateSnapshot.transformMode,
 			},
-			windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
+			windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindowHost }],
 			defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
 			defaultModeId: "edit",
 			modes: [
@@ -164,14 +175,14 @@ class GeometryPlayDefinition extends PureAppDefinition {
 					label: "Edit",
 					tools: {
 						selection: [
-							...geometryKindToolbarToggles("selection", TOPOLOGIC_KINDS, geometryKindLabel, this.selectableKinds, (kind) =>
-								this.setSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
+							...geometryKindToolbarToggles("selection", TOPOLOGIC_KINDS, geometryKindLabel, this.stateSnapshot.selectableKinds, (kind) =>
+								this.actions.toggleSelectableKind(kind),
 							),
 							{ id: "geometry.selection.separator.clear", kind: "separator" as const, order: selectionKindOrderBase },
-							{ id: "geometry.selection.clear", icon: <BoxSelect className="size-4" aria-hidden />, label: "Clear", onClick: () => this.setSelectedId(null), order: selectionKindOrderBase + 1 },
+							{ id: "geometry.selection.clear", icon: <BoxSelect className="size-4" aria-hidden />, label: "Clear", onClick: () => this.actions.setSelectedId(null), order: selectionKindOrderBase + 1 },
 						],
-						filter: geometryKindToolbarToggles("filter", TOPOLOGIC_KINDS, geometryKindLabel, this.visibleKinds, (kind) =>
-							this.setVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
+						filter: geometryKindToolbarToggles("filter", TOPOLOGIC_KINDS, geometryKindLabel, this.stateSnapshot.visibleKinds, (kind) =>
+							this.actions.toggleVisibleKind(kind),
 						),
 						actions: GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, order) => ({
 							id: `geometry.transform.${mode}`,
@@ -179,10 +190,10 @@ class GeometryPlayDefinition extends PureAppDefinition {
 							icon: GEOMETRY_PLAY_TRANSFORM_ICONS[mode],
 							label: mode.charAt(0).toUpperCase() + mode.slice(1),
 							onPressedChange: (pressed: boolean) => {
-								if (pressed) this.setTransformMode(mode);
+								if (pressed) this.actions.setTransformMode(mode);
 							},
 							order,
-							pressed: this.transformMode === mode,
+							pressed: this.stateSnapshot.transformMode === mode,
 						})),
 					},
 				},
@@ -191,18 +202,18 @@ class GeometryPlayDefinition extends PureAppDefinition {
 					label: "Analyze",
 					tools: {
 						selection: [
-							...geometryAnalyzeToolbarToggles("selection", this.analyzeSelectableKinds, (kind) =>
-								this.setAnalyzeSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
-								(group, enabled) => this.setAnalyzeSelectableKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
+							...geometryAnalyzeToolbarToggles("selection", this.stateSnapshot.analyzeSelectableKinds, (kind) =>
+								this.actions.toggleAnalyzeSelectableKind(kind),
+								(group, enabled) => this.actions.setAnalyzeSelectableGroup(group, enabled),
 							),
 							{ id: "geometry.analyze.selection.separator.clear", kind: "separator" as const, order: ANALYZE_KINDS.length + 4 },
-							{ id: "geometry.analyze.selection.clear", icon: <BoxSelect className="size-4" aria-hidden />, label: "Clear", onClick: () => this.setSelectedId(null), order: ANALYZE_KINDS.length + 5 },
+							{ id: "geometry.analyze.selection.clear", icon: <BoxSelect className="size-4" aria-hidden />, label: "Clear", onClick: () => this.actions.setSelectedId(null), order: ANALYZE_KINDS.length + 5 },
 						],
 						filter: geometryAnalyzeToolbarToggles(
 							"filter",
-							this.analyzeVisibleKinds,
-							(kind) => this.setAnalyzeVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
-							(group, enabled) => this.setAnalyzeVisibleKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
+							this.stateSnapshot.analyzeVisibleKinds,
+							(kind) => this.actions.toggleAnalyzeVisibleKind(kind),
+							(group, enabled) => this.actions.setAnalyzeVisibleGroup(group, enabled),
 						),
 					},
 				},
@@ -211,137 +222,220 @@ class GeometryPlayDefinition extends PureAppDefinition {
 	}
 }
 
-function GeometryPlayWindow(): ReactElement {
-	const play = useGeometryPlay();
-	const { activeModeId } = useApp();
-	const mode = geometryPlayModeFromApp(activeModeId);
-	const activeSession = mode === "analyze" ? play.analyzeSession : play.session;
-	const activeFixture = mode === "analyze" ? play.analyzeFixture : play.fixture;
-	const activeSelectableEntities = mode === "analyze" ? listAnalyzeSelectableEntities(activeSession, play.analyzeSelectableKinds) : listSelectableEntities(activeSession, play.selectableKinds);
-	const activeSelectedEntity = play.selectedId ? activeSession.getEntity(play.selectedId) : null;
-	useEffect(() => {
-		const selectedStillValid = mode === "analyze" ? isAnalyzeSelectableEntity(activeSession, play.analyzeSelectableKinds, play.selectedId) : isSelectableEntity(activeSession, play.selectableKinds, play.selectedId);
-		if (play.selectedId && !selectedStillValid) play.setSelectedId(null);
-	}, [activeSession, mode, play]);
-	return (
-		<div className="flex h-full w-full flex-col">
-			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
-				<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide" data-e2e-geometry-mode>{mode}</span>
-				<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide" data-e2e-geometry-transform-mode>{mode === "edit" ? play.transformMode : "locked"}</span>
-				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection-kinds>{mode === "analyze" ? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeSelectableKinds), ANALYZE_KINDS.length) : formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.selectableKinds), TOPOLOGIC_KINDS.length)}</span>
-				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-visible-kinds>{mode === "analyze" ? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeVisibleKinds), ANALYZE_KINDS.length) : formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.visibleKinds), TOPOLOGIC_KINDS.length)}</span>
-				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{activeSelectedEntity ? activeSelectedEntity.label ?? activeSelectedEntity.id : "—"}</span>
-				<span className="text-muted-foreground px-1 text-xs">{activeSelectableEntities.length}</span>
-			</div>
-			<div className="relative min-h-0 flex-1">
-				<TopologicViewport
-					fixture={activeFixture}
-					selectedId={play.selectedId}
-					selectableKinds={mode === "edit" ? play.selectableKinds : undefined}
-					visibleKinds={mode === "edit" ? play.visibleKinds : undefined}
-					isEntitySelectable={mode === "analyze" ? (entity) => isAnalyzeEntitySelectable(entity, play.analyzeSelectableKinds) : undefined}
-					isEntityVisible={mode === "analyze" ? (entity) => isAnalyzeEntityVisible(entity, play.analyzeVisibleKinds) : undefined}
-					onSelect={play.setSelectedId}
-					onTransformCommit={mode === "edit" ? play.onTransformCommit : undefined}
-					transformMode={play.transformMode}
-				/>
-			</div>
-		</div>
-	);
-}
+class GeometryPlayWindow extends React.Component<{ readonly play: GeometryPlayValue }> {
+	static contextType = AppContext;
+	declare context: React.ContextType<typeof AppContext>;
 
-export function GeometryPlayController(): ReactElement {
-	const [fixture, setFixture] = useState<TopologicFixtureV1 | null>(null);
-	const [loadError, setLoadError] = useState<Error | null>(null);
-	const session = useMemo(() => (fixture ? new TopologicPlaySession(fixture) : null), [fixture]);
-	const analyzeFixture = useMemo(() => (fixture ? deriveAnalyzeTopologicFixtureV1(fixture) : null), [fixture]);
-	const analyzeSession = useMemo(() => (analyzeFixture ? new TopologicPlaySession(analyzeFixture) : null), [analyzeFixture]);
-	const [selectableKinds, setSelectableKinds] = useState<Record<TopologicKind, boolean>>(() => createAllKindsEnabled(TOPOLOGIC_KINDS));
-	const [visibleKinds, setVisibleKinds] = useState<Record<TopologicKind, boolean>>(() => createAllKindsEnabled(TOPOLOGIC_KINDS));
-	const [analyzeSelectableKinds, setAnalyzeSelectableKinds] = useState<Record<AnalyzeKind, boolean>>(() => createAllKindsEnabled(ANALYZE_KINDS));
-	const [analyzeVisibleKinds, setAnalyzeVisibleKinds] = useState<Record<AnalyzeKind, boolean>>(() => createAllKindsEnabled(ANALYZE_KINDS));
-	const [selectedId, setSelectedId] = useState<string | null>(null);
-	const [transformMode, setTransformMode] = useState<TopologicTransformMode>("translate");
-
-	useEffect(() => {
-		let cancelled = false;
-		void ensureTopologicWasmLoaded()
-			.then(async () => {
-				const parsedFixture = await loadTopologicFixtureV1(topologyJson as unknown);
-				if (!parsedFixture) throw new Error("geometry topology fixture failed to parse");
-				if (!cancelled) setFixture(parsedFixture);
-			})
-			.catch((error) => {
-				if (!cancelled) setLoadError(error instanceof Error ? error : new Error(String(error)));
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, []);
-
-	useEffect(() => {
-		if (!session) return;
-		if (!isSelectableEntity(session, selectableKinds, selectedId)) {
-			setSelectedId(null);
-		}
-	}, [selectedId, selectableKinds, session]);
-
-	const value = useMemo<GeometryPlayValue | null>(
-		() =>
-			fixture && session && analyzeFixture && analyzeSession
-				? {
-					fixture,
-					session,
-					analyzeFixture,
-					analyzeSession,
-					selectableKinds,
-					visibleKinds,
-					analyzeSelectableKinds,
-					analyzeVisibleKinds,
-					selectedId,
-					transformMode,
-					setSelectedId: (id) => {
-						if (!id || isSelectableEntity(session, selectableKinds, id) || isAnalyzeSelectableEntity(analyzeSession, analyzeSelectableKinds, id)) {
-							setSelectedId(id);
-						}
-					},
-					setTransformMode,
-					onTransformCommit: (id, transform) =>
-						setFixture((current) => {
-							if (!current) return current;
-							return updateTopologicFixtureTransformKernelV1(current, id, transform) ?? current;
-						}),
-				}
-				: null,
-		[analyzeFixture, analyzeSelectableKinds, analyzeSession, analyzeVisibleKinds, fixture, selectableKinds, selectedId, session, transformMode, visibleKinds],
-	);
-
-	const apps = useMemo(
-		() => [new GeometryPlayDefinition(analyzeSelectableKinds, analyzeVisibleKinds, selectableKinds, transformMode, visibleKinds, setAnalyzeSelectableKinds, setAnalyzeVisibleKinds, setSelectableKinds, setSelectedId, setTransformMode, setVisibleKinds)],
-		[analyzeSelectableKinds, analyzeVisibleKinds, selectableKinds, transformMode, visibleKinds],
-	);
-
-	if (loadError) throw loadError;
-	if (!value) {
-		return <div className={`flex h-screen items-center justify-center text-sm text-muted-foreground ${getLevelBgClass("window")}`}>Loading geometry wasm…</div>;
+	componentDidMount(): void {
+		this.ensureSelectionValidity();
 	}
 
-	return (
-		<GeometryPlayContext.Provider value={value}>
-			<App apps={apps} defaultAppId={GEOMETRY_PLAY_APP_ID} className={getLevelBgClass(0)} />
-		</GeometryPlayContext.Provider>
-	);
+	componentDidUpdate(prevProps: Readonly<{ readonly play: GeometryPlayValue }>): void {
+		if (prevProps.play !== this.props.play || this.context?.activeModeId !== undefined) {
+			this.ensureSelectionValidity();
+		}
+	}
+
+	private ensureSelectionValidity(): void {
+		const { play } = this.props;
+		const mode = geometryPlayModeFromApp(this.context?.activeModeId ?? null);
+		const activeSession = mode === "analyze" ? play.analyzeSession : play.session;
+		const selectedStillValid =
+			mode === "analyze"
+				? isAnalyzeSelectableEntity(activeSession, play.analyzeSelectableKinds, play.selectedId)
+				: isSelectableEntity(activeSession, play.selectableKinds, play.selectedId);
+		if (play.selectedId && !selectedStillValid) {
+			play.setSelectedId(null);
+		}
+	}
+
+	render(): React.ReactElement {
+		const { play } = this.props;
+		const mode = geometryPlayModeFromApp(this.context?.activeModeId ?? null);
+		const activeSession = mode === "analyze" ? play.analyzeSession : play.session;
+		const activeFixture = mode === "analyze" ? play.analyzeFixture : play.fixture;
+		const activeSelectableEntities = mode === "analyze" ? listAnalyzeSelectableEntities(activeSession, play.analyzeSelectableKinds) : listSelectableEntities(activeSession, play.selectableKinds);
+		const activeSelectedEntity = play.selectedId ? activeSession.getEntity(play.selectedId) : null;
+		return (
+			<div className="flex h-full w-full flex-col">
+				<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
+					<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide" data-e2e-geometry-mode>{mode}</span>
+					<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide" data-e2e-geometry-transform-mode>{mode === "edit" ? play.transformMode : "locked"}</span>
+					<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection-kinds>{mode === "analyze" ? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeSelectableKinds), ANALYZE_KINDS.length) : formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.selectableKinds), TOPOLOGIC_KINDS.length)}</span>
+					<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-visible-kinds>{mode === "analyze" ? formatEnabledKindsLabel(listEnabledKinds(ANALYZE_KINDS, play.analyzeVisibleKinds), ANALYZE_KINDS.length) : formatEnabledKindsLabel(listEnabledKinds(TOPOLOGIC_KINDS, play.visibleKinds), TOPOLOGIC_KINDS.length)}</span>
+					<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{activeSelectedEntity ? activeSelectedEntity.label ?? activeSelectedEntity.id : "—"}</span>
+					<span className="text-muted-foreground px-1 text-xs">{activeSelectableEntities.length}</span>
+				</div>
+				<div className="relative min-h-0 flex-1">
+					<TopologicViewport
+						fixture={activeFixture}
+						selectedId={play.selectedId}
+						selectableKinds={mode === "edit" ? play.selectableKinds : undefined}
+						visibleKinds={mode === "edit" ? play.visibleKinds : undefined}
+						isEntitySelectable={mode === "analyze" ? (entity) => isAnalyzeEntitySelectable(entity, play.analyzeSelectableKinds) : undefined}
+						isEntityVisible={mode === "analyze" ? (entity) => isAnalyzeEntityVisible(entity, play.analyzeVisibleKinds) : undefined}
+						onSelect={play.setSelectedId}
+						onTransformCommit={mode === "edit" ? play.onTransformCommit : undefined}
+						transformMode={play.transformMode}
+					/>
+				</div>
+			</div>
+		);
+	}
 }
 
-function GeometryPlayApp(): ReactElement {
-	return (
-		<LevelProvider>
-			<GeometryPlayController />
-		</LevelProvider>
-	);
+class GeometryPlayWindowHost extends React.Component {
+	render(): React.ReactElement | null {
+		return <GeometryPlayContext.Consumer>{(play) => (play ? <GeometryPlayWindow play={play} /> : null)}</GeometryPlayContext.Consumer>;
+	}
 }
 
-export function createGeometryPlayElement(): ReactElement {
+export class GeometryPlayController extends React.Component<{}, GeometryPlayControllerState> {
+	state: GeometryPlayControllerState = {
+		fixture: null,
+		loadError: null,
+		selectableKinds: createAllKindsEnabled(TOPOLOGIC_KINDS),
+		visibleKinds: createAllKindsEnabled(TOPOLOGIC_KINDS),
+		analyzeSelectableKinds: createAllKindsEnabled(ANALYZE_KINDS),
+		analyzeVisibleKinds: createAllKindsEnabled(ANALYZE_KINDS),
+		selectedId: null,
+		transformMode: "translate",
+	};
+
+	private cancelled = false;
+
+	private readonly actions: GeometryPlayActions = {
+		toggleSelectableKind: (kind) => {
+			this.setState((current) => ({ selectableKinds: { ...current.selectableKinds, [kind]: !current.selectableKinds[kind] } }));
+		},
+		toggleVisibleKind: (kind) => {
+			this.setState((current) => ({ visibleKinds: { ...current.visibleKinds, [kind]: !current.visibleKinds[kind] } }));
+		},
+		toggleAnalyzeSelectableKind: (kind) => {
+			this.setState((current) => ({ analyzeSelectableKinds: { ...current.analyzeSelectableKinds, [kind]: !current.analyzeSelectableKinds[kind] } }));
+		},
+		toggleAnalyzeVisibleKind: (kind) => {
+			this.setState((current) => ({ analyzeVisibleKinds: { ...current.analyzeVisibleKinds, [kind]: !current.analyzeVisibleKinds[kind] } }));
+		},
+		setAnalyzeSelectableGroup: (group, enabled) => {
+			this.setState((current) => ({ analyzeSelectableKinds: { ...current.analyzeSelectableKinds, ...setKindGroup(current.analyzeSelectableKinds, group, enabled) } }));
+		},
+		setAnalyzeVisibleGroup: (group, enabled) => {
+			this.setState((current) => ({ analyzeVisibleKinds: { ...current.analyzeVisibleKinds, ...setKindGroup(current.analyzeVisibleKinds, group, enabled) } }));
+		},
+		setSelectedId: (id) => {
+			const value = this.createPlayValue();
+			if (!value || !id || isSelectableEntity(value.session, value.selectableKinds, id) || isAnalyzeSelectableEntity(value.analyzeSession, value.analyzeSelectableKinds, id)) {
+				this.setState({ selectedId: id });
+			}
+		},
+		setTransformMode: (mode) => {
+			this.setState({ transformMode: mode });
+		},
+	};
+
+	componentDidMount(): void {
+		void this.loadFixture();
+	}
+
+	componentDidUpdate(_prevProps: {}, prevState: Readonly<GeometryPlayControllerState>): void {
+		const currentValue = this.createPlayValue();
+		if (!currentValue) return;
+		if (
+			prevState.selectedId !== this.state.selectedId ||
+			prevState.fixture !== this.state.fixture ||
+			prevState.selectableKinds !== this.state.selectableKinds
+		) {
+			if (!isSelectableEntity(currentValue.session, currentValue.selectableKinds, this.state.selectedId)) {
+				if (this.state.selectedId !== null) {
+					this.setState({ selectedId: null });
+				}
+			}
+		}
+	}
+
+	componentWillUnmount(): void {
+		this.cancelled = true;
+	}
+
+	private async loadFixture(): Promise<void> {
+		try {
+			await ensureTopologicWasmLoaded();
+			const parsedFixture = await loadTopologicFixtureV1(topologyJson as unknown);
+			if (!parsedFixture) throw new Error("geometry topology fixture failed to parse");
+			if (!this.cancelled) {
+				this.setState({ fixture: parsedFixture, loadError: null });
+			}
+		} catch (error) {
+			if (!this.cancelled) {
+				this.setState({ loadError: error instanceof Error ? error : new Error(String(error)) });
+			}
+		}
+	}
+
+	private createPlayValue(): GeometryPlayValue | null {
+		if (!this.state.fixture) return null;
+		const session = new TopologicPlaySession(this.state.fixture);
+		const analyzeFixture = deriveAnalyzeTopologicFixtureV1(this.state.fixture);
+		const analyzeSession = new TopologicPlaySession(analyzeFixture);
+		return {
+			fixture: this.state.fixture,
+			session,
+			analyzeFixture,
+			analyzeSession,
+			selectableKinds: this.state.selectableKinds,
+			visibleKinds: this.state.visibleKinds,
+			analyzeSelectableKinds: this.state.analyzeSelectableKinds,
+			analyzeVisibleKinds: this.state.analyzeVisibleKinds,
+			selectedId: this.state.selectedId,
+			transformMode: this.state.transformMode,
+			setSelectedId: this.actions.setSelectedId,
+			setTransformMode: this.actions.setTransformMode,
+			onTransformCommit: (id, transform) => {
+				this.setState((current) => ({
+					fixture: current.fixture ? updateTopologicFixtureTransformKernelV1(current.fixture, id, transform) ?? current.fixture : current.fixture,
+				}));
+			},
+		};
+	}
+
+	render(): React.ReactElement {
+		if (this.state.loadError) throw this.state.loadError;
+		const value = this.createPlayValue();
+		if (!value) {
+			return <div className={`flex h-screen items-center justify-center text-sm text-muted-foreground ${getLevelBgClass("window")}`}>Loading geometry wasm…</div>;
+		}
+		const apps = [
+			new GeometryPlayDefinition(
+				{
+					analyzeSelectableKinds: this.state.analyzeSelectableKinds,
+					analyzeVisibleKinds: this.state.analyzeVisibleKinds,
+					selectableKinds: this.state.selectableKinds,
+					transformMode: this.state.transformMode,
+					visibleKinds: this.state.visibleKinds,
+				},
+				this.actions,
+			),
+		];
+		return (
+			<GeometryPlayContext.Provider value={value}>
+				<App apps={apps} defaultAppId={GEOMETRY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+			</GeometryPlayContext.Provider>
+		);
+	}
+}
+
+class GeometryPlayApp extends React.Component {
+	render(): React.ReactElement {
+		return (
+			<LevelProvider>
+				<GeometryPlayController />
+			</LevelProvider>
+		);
+	}
+}
+
+export function createGeometryPlayElement(): React.ReactElement {
 	return <GeometryPlayApp />;
 }
 
@@ -349,7 +443,7 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("geometry play react runtime", () => {
-		it("renders through wasm fixture load without changing hook order", async () => {
+		it("renders through wasm fixture load without hook-based controller logic", async () => {
 			const container = document.createElement("div");
 			document.body.appendChild(container);
 			const root = createRoot(container);
@@ -368,6 +462,7 @@ if (import.meta.vitest) {
 				});
 				expect(errors.some((entry) => entry.includes("change in the order of Hooks called by GeometryPlayController"))).toBe(false);
 				expect(errors.some((entry) => entry.includes("Rendered more hooks than during the previous render"))).toBe(false);
+				expect(container.textContent?.includes("Loading geometry wasm")).toBe(true);
 			} finally {
 				console.error = originalError;
 				(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = originalActEnvironment;
