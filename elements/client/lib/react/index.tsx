@@ -89,12 +89,14 @@ import {
   Info as InfoIcon,
   Lightbulb as LightbulbIcon,
   Maximize2 as Maximize2Icon,
+  MessageSquare as MessageSquareIcon,
   Minimize2 as Minimize2Icon,
   ArrowLeft as NavigateBackIcon,
   ArrowRight as NavigateForwardIcon,
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
   SearchIcon,
+  Settings2 as Settings2Icon,
   Shapes as BoardIconCatalogGlyphIcon,
   Sigma as BoardIconMathGlyphIcon,
   Smile as BoardIconEmojiGlyphIcon,
@@ -22496,6 +22498,7 @@ export interface UIToolbarItem {
   id: string;
   icon?: React.ReactNode;
   label?: string;
+  text?: string;
   onClick?: () => void;
   kind?: "button" | "toggle" | "separator";
   pressed?: boolean;
@@ -22517,7 +22520,7 @@ const UIToolbar: React.FC<{
 
   return (
     <div className={cn("flex items-center justify-center pointer-events-none", className)}>
-      <ToolbarZone className="pointer-events-auto">
+      <ToolbarZone className="pointer-events-auto max-w-full flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
         {sorted.map((item) => {
           if (item.kind === "separator") {
             return <ToolbarDivider key={item.id} />;
@@ -22526,12 +22529,12 @@ const UIToolbar: React.FC<{
             return (
               <ToolbarItem key={item.id}>
                 <Toggle
-                  kind={item.icon && !item.label ? "icon" : "default"}
+                  kind={item.icon && !item.text && !item.label ? "icon" : "default"}
                   id={item.id}
                   pressed={item.pressed ?? false}
                   onPressedChange={(p) => item.onPressedChange?.(p)}
                   icon={item.icon}
-                  text={item.label}
+                  text={item.text ?? item.label}
                 />
               </ToolbarItem>
             );
@@ -22540,7 +22543,7 @@ const UIToolbar: React.FC<{
             <ToolbarItem key={item.id}>
               <button onClick={item.onClick} className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer">
                 {item.icon}
-                {item.label && <span>{item.label}</span>}
+                {(item.text ?? item.label) && <span>{item.text ?? item.label}</span>}
               </button>
             </ToolbarItem>
           );
@@ -22783,43 +22786,121 @@ export function useApp(): AppContextValue {
   return ctx;
 }
 
+const APP_WORKBENCH_TAB_ID = "workbench";
+const APP_DETAILS_TAB_ID = "details";
+const APP_OPTIONS_TAB_ID = "options";
+const APP_CHAT_TAB_ID = "chat";
+
+function hasAppPanelValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
+  return true;
+}
+
+const AppPanelStatePreview: React.FC<{
+  emptyMessage: string;
+  testId: string;
+  value: unknown;
+}> = ({ emptyMessage, testId, value }) => {
+  if (!hasAppPanelValue(value)) {
+    return <div data-testid={`${testId}.empty`} className="text-sm text-muted-foreground">{emptyMessage}</div>;
+  }
+
+  return (
+    <pre data-testid={testId} className="text-xs leading-relaxed whitespace-pre-wrap break-words rounded-[3px] border bg-window p-small overflow-x-auto">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  );
+};
+
+const AppWorkbenchPanel: React.FC<{
+  app: ResolvedAppConfig;
+}> = ({ app }) => {
+  const activeMode = app.modes?.find((mode) => mode.id === app.activeModeId) ?? null;
+
+  return (
+    <div data-testid="app-panel.workbench" className="flex min-h-0 flex-col gap-small text-sm">
+      <div>
+        <div className="font-medium">{app.label}</div>
+        <div className="text-muted-foreground">{activeMode ? `Mode: ${activeMode.label}` : "Single-mode app"}</div>
+      </div>
+      <div className="grid gap-single text-muted-foreground">
+        <div>{`Windows: ${app.windowKinds.length}`}</div>
+        <div>{`Tools: ${app.tools?.length ?? 0}`}</div>
+        <div>{`Left tabs: ${app.leftPanelTabs?.length ?? 0}`}</div>
+        <div>{`Right tabs: ${app.rightPanelTabs?.length ?? 0}`}</div>
+      </div>
+    </div>
+  );
+};
+
+function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+  return [
+    {
+      id: APP_WORKBENCH_TAB_ID,
+      icon: FolderIcon,
+      order: 0,
+      content: <AppWorkbenchPanel app={app} />,
+    },
+  ];
+}
+
+function createDefaultAppRightPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+  return [
+    {
+      id: APP_DETAILS_TAB_ID,
+      icon: InfoIcon,
+      order: 0,
+      content: (
+        <AppPanelStatePreview
+          emptyMessage="No detail state is available for this app."
+          testId="app-panel.details"
+          value={{ selection: app.selection ?? {}, hover: app.hover ?? {} }}
+        />
+      ),
+    },
+    {
+      id: APP_OPTIONS_TAB_ID,
+      icon: Settings2Icon,
+      order: 1,
+      content: <AppPanelStatePreview emptyMessage="No options are available for this app." testId="app-panel.options" value={app.options ?? {}} />,
+    },
+    {
+      id: APP_CHAT_TAB_ID,
+      icon: MessageSquareIcon,
+      order: 2,
+      content: <BasicChatPanel id={`app.chat.${app.id}`} title={app.label} />,
+    },
+  ];
+}
+
+function withDefaultAppPanelTabs(app: ResolvedAppConfig): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {
+  return {
+    leftPanelTabs: mergeConfigEntries(createDefaultAppLeftPanelTabs(app), app.leftPanelTabs) ?? createDefaultAppLeftPanelTabs(app),
+    rightPanelTabs: mergeConfigEntries(createDefaultAppRightPanelTabs(app), app.rightPanelTabs) ?? createDefaultAppRightPanelTabs(app),
+  };
+}
+
 /**
  * Left panel toggle for the navbar.
  * Uses the first tab icon as the toggle icon.
  * Styled to match sketchpad: border border-element, h-medium.
  **/
-const UILeftPanelToggle: React.FC<{
-  tabs?: SidePanelTabConfig[];
-  visible: boolean;
-  onToggle: () => void;
-}> = ({ tabs, visible, onToggle }) => {
-  if (!tabs || tabs.length === 0) return null;
-  const Icon = tabs[0]?.icon;
-  return (
-    <div className="flex items-stretch border border-element overflow-hidden h-medium">
-      <Toggle kind="icon" id="ui.panelToggle.left" pressed={visible} onPressedChange={onToggle} className="border-0" icon={Icon ? <Icon size={16} /> : <ChevronLeftIcon className="size-small" />} />
-    </div>
-  );
-};
-
-/**
- * Right panel toggle for the navbar.
- * Uses the first tab icon as the toggle icon.
- * Styled to match sketchpad: border border-element, h-medium.
- **/
-const UIRightPanelToggle: React.FC<{
-  tabs?: SidePanelTabConfig[];
-  visible: boolean;
-  onToggle: () => void;
-}> = ({ tabs, visible, onToggle }) => {
-  if (!tabs || tabs.length === 0) return null;
-  const Icon = tabs[0]?.icon;
-  return (
-    <div className="flex items-stretch border border-element overflow-hidden h-medium">
-      <Toggle kind="icon" id="ui.panelToggle.right" pressed={visible} onPressedChange={onToggle} className="border-0" icon={Icon ? <Icon size={16} /> : <ChevronRightIcon className="size-small" />} />
-    </div>
-  );
-};
+const UIPanelToggleGroup: React.FC<{
+  leftIcon?: React.ReactNode;
+  leftPressed: boolean;
+  onLeftPressedChange: (pressed: boolean) => void;
+  onRightPressedChange: (pressed: boolean) => void;
+  rightIcon?: React.ReactNode;
+  rightPressed: boolean;
+}> = ({ leftIcon, leftPressed, onLeftPressedChange, onRightPressedChange, rightIcon, rightPressed }) => (
+  <div data-slot="app-panel-toggle-group" className="flex items-stretch border border-element overflow-hidden h-medium">
+    <Toggle kind="icon" id="ui.panelToggle.leftSidePanel" pressed={leftPressed} onPressedChange={onLeftPressedChange} className="border-0 rounded-none" icon={leftIcon ?? <ChevronLeftIcon className="size-small" />} />
+    <Toggle kind="icon" id="ui.panelToggle.rightSidePanel" pressed={rightPressed} onPressedChange={onRightPressedChange} className="border-0 border-l rounded-none" icon={rightIcon ?? <ChevronRightIcon className="size-small" />} />
+  </div>
+);
 
 /**
  * Domain-neutral composite component providing a full application shell.
@@ -22828,7 +22909,7 @@ const UIRightPanelToggle: React.FC<{
  * Every UI has: toolbar, search (Ctrl+P), panel toggles, back/forward/up navigation.
  * Every app has: find (Ctrl+F).
  * Every panel has: tree.
- * Fixed navbar layout: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
+ * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
 export const App: React.FC<AppProps> = ({
   apps,
@@ -22858,6 +22939,7 @@ export const App: React.FC<AppProps> = ({
     rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
   }));
   const [mobilePanelVisible, setMobilePanelVisible] = React.useState(false);
+  const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = React.useState<string | undefined>(undefined);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
   const detectedMobile = useMediaQuery(mobileQuery);
@@ -22893,9 +22975,8 @@ export const App: React.FC<AppProps> = ({
   if (!activeAppBase) return null;
   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;
   const activeApp = resolveAppConfig(activeAppBase, activeModeId);
+  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp);
 
-  const hasLeftPanel = activeApp.leftPanelTabs && activeApp.leftPanelTabs.length > 0;
-  const hasRightPanel = activeApp.rightPanelTabs && activeApp.rightPanelTabs.length > 0;
   const hasModeNav = Boolean(activeAppBase.modes && activeAppBase.modes.length > 1);
   const setActiveModeId = (id: string) => {
     setActiveModeByAppId((previousValue) => ({ ...previousValue, [activeAppBase.id]: id }));
@@ -22905,11 +22986,58 @@ export const App: React.FC<AppProps> = ({
   const mergedToolbarItems = [...globalTools, ...globalToolbarItems, ...(activeApp.tools ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // 🔷Merge all panel tabs for mobile mode
-  const mobilePanelTabs: SidePanelTabConfig[] = resolvedMobile ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
+  const mobilePanelTabs: SidePanelTabConfig[] = resolvedMobile ? [...leftPanelTabs, ...rightPanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
   const hasMobilePanelTabs = mobilePanelTabs.length > 0;
+  const firstLeftPanelTabId = leftPanelTabs[0]?.id;
+  const firstRightPanelTabId = rightPanelTabs[0]?.id;
+  const leftPanelIcon = leftPanelTabs[0]?.icon ? React.createElement(leftPanelTabs[0].icon, { size: 16 }) : <FolderIcon size={16} />;
+  const rightPanelIcon = rightPanelTabs[0]?.icon ? React.createElement(rightPanelTabs[0].icon, { size: 16 }) : <InfoIcon size={16} />;
 
-  // 🔎Fixed navbar: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles]
+  const handleMobilePanelToggle = React.useCallback(
+    (side: "left" | "right", pressed: boolean) => {
+      const nextTabId = side === "left" ? firstLeftPanelTabId : firstRightPanelTabId;
+      if (!nextTabId) return;
+      if (!pressed) {
+        const currentSideTabIds = side === "left" ? leftPanelTabs.map((tab) => tab.id) : rightPanelTabs.map((tab) => tab.id);
+        if (mobilePanelVisible && currentSideTabIds.includes(mobilePanelActiveTabId ?? "")) {
+          setMobilePanelVisible(false);
+        }
+        return;
+      }
+      setMobilePanelActiveTabId(nextTabId);
+      setMobilePanelVisible(true);
+    },
+    [firstLeftPanelTabId, firstRightPanelTabId, leftPanelTabs, mobilePanelActiveTabId, mobilePanelVisible, rightPanelTabs],
+  );
+
+  const mobileShowsLeftPanel = mobilePanelVisible && leftPanelTabs.some((tab) => tab.id === mobilePanelActiveTabId);
+  const mobileShowsRightPanel = mobilePanelVisible && rightPanelTabs.some((tab) => tab.id === mobilePanelActiveTabId);
+
+  // 🔎Fixed navbar: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles]
   const navbarItems: NavbarItem[] = [];
+
+  if (hasModeNav) {
+    navbarItems.push({
+      key: "modeNav",
+      content: (
+        <Select id={`ui.mode.select.${activeAppBase.id}`} onValueChange={setActiveModeId} value={activeModeId ?? undefined}>
+          <SelectTrigger className="h-medium w-30" id={`ui.mode.select.${activeAppBase.id}.trigger`} size="sm">
+            <SelectValue placeholder="Mode" />
+          </SelectTrigger>
+          <SelectContent>
+            {activeAppBase.modes!.map((mode) => (
+              <SelectItem key={mode.id} id={`ui.mode.select.${activeAppBase.id}.${mode.id}`} value={mode.id}>
+                <span className="flex items-center gap-single">
+                  {mode.icon ?? null}
+                  <span>{mode.label}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+    });
+  }
 
   // Navigation buttons (always present)
   navbarItems.push({
@@ -22959,21 +23087,6 @@ export const App: React.FC<AppProps> = ({
     });
   }
 
-  if (hasModeNav) {
-    navbarItems.push({
-      key: "modeNav",
-      content: (
-        <ButtonGroup id={`ui.modeNav.${activeAppBase.id}`}>
-          {activeAppBase.modes!.map((mode) => (
-            <ButtonGroupItem key={mode.id} id={`ui.modeNav.${activeAppBase.id}.${mode.id}`} className={cn(activeModeId === mode.id && "bg-active-base")} onClick={() => setActiveModeId(mode.id)}>
-              {mode.icon ?? <span className="text-xs">{mode.label}</span>}
-            </ButtonGroupItem>
-          ))}
-        </ButtonGroup>
-      ),
-    });
-  }
-
   // URI display (fills remaining space)
   navbarItems.push({
     key: "uri",
@@ -22993,38 +23106,28 @@ export const App: React.FC<AppProps> = ({
     content: <Toggle kind="icon" id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<SearchIcon size={16} />} />,
   });
 
-  if (resolvedMobile) {
-    // Mobile: single panel toggle for merged tabs
-    if (hasMobilePanelTabs) {
-      const FirstIcon = mobilePanelTabs[0]?.icon;
-      navbarItems.push({
-        key: "mobilePanel",
-        content: (
-          <div className="flex items-stretch border border-element overflow-hidden h-large">
-            <Toggle
-              kind="icon"
-              id="ui.panelToggle.mobile"
-              pressed={mobilePanelVisible}
-              onPressedChange={() => setMobilePanelVisible((prev) => !prev)}
-              className="border-0 px-small"
-              icon={FirstIcon ? <FirstIcon size={20} /> : <ChevronDownIcon className="size-medium" />}
-            />
-          </div>
-        ),
-      });
-    }
-  } else {
-    // Desktop: separate left and right panel toggles
-    navbarItems.push({
-      key: "leftPanel",
-      content: <UILeftPanelToggle tabs={activeApp.leftPanelTabs} visible={panelVisibility.leftSidePanel} onToggle={() => togglePanel("leftSidePanel")} />,
-    });
-
-    navbarItems.push({
-      key: "rightPanel",
-      content: <UIRightPanelToggle tabs={activeApp.rightPanelTabs} visible={panelVisibility.rightSidePanel} onToggle={() => togglePanel("rightSidePanel")} />,
-    });
-  }
+  navbarItems.push({
+    key: "panelToggles",
+    content: resolvedMobile ? (
+      <UIPanelToggleGroup
+        leftIcon={leftPanelIcon}
+        leftPressed={mobileShowsLeftPanel}
+        onLeftPressedChange={(pressed) => handleMobilePanelToggle("left", pressed)}
+        onRightPressedChange={(pressed) => handleMobilePanelToggle("right", pressed)}
+        rightIcon={rightPanelIcon}
+        rightPressed={mobileShowsRightPanel}
+      />
+    ) : (
+      <UIPanelToggleGroup
+        leftIcon={leftPanelIcon}
+        leftPressed={panelVisibility.leftSidePanel}
+        onLeftPressedChange={() => togglePanel("leftSidePanel")}
+        onRightPressedChange={() => togglePanel("rightSidePanel")}
+        rightIcon={rightPanelIcon}
+        rightPressed={panelVisibility.rightSidePanel}
+      />
+    ),
+  });
 
   const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -23064,29 +23167,31 @@ export const App: React.FC<AppProps> = ({
             resolvedMobile && hasMobilePanelTabs
               ? {
                   visible: mobilePanelVisible,
+                  activeTabId: mobilePanelActiveTabId,
+                  onActiveTabChange: setMobilePanelActiveTabId,
                   tabs: mobilePanelTabs,
                 }
               : undefined
           }
           leftSidePanel={
-            !resolvedMobile && hasLeftPanel
+            !resolvedMobile
               ? {
                   position: "left" as const,
                   visible: panelVisibility.leftSidePanel,
                   size: leftPanelSize,
                   onSizeChange: setLeftPanelSize,
-                  tabs: activeApp.leftPanelTabs!,
+                  tabs: leftPanelTabs,
                 }
               : undefined
           }
           rightSidePanel={
-            !resolvedMobile && hasRightPanel
+            !resolvedMobile
               ? {
                   position: "right" as const,
                   visible: panelVisibility.rightSidePanel,
                   size: rightPanelSize,
                   onSizeChange: setRightPanelSize,
-                  tabs: activeApp.rightPanelTabs!,
+                  tabs: rightPanelTabs,
                 }
               : undefined
           }
@@ -24020,6 +24125,28 @@ if (treeVitest) {
       expect(resolved.selection).toEqual({ base: true, mode: true });
       expect(resolved.options).toEqual({ snap: true, isolate: true });
       expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
+    });
+
+    it("renders a leading mode dropdown when an app has multiple modes", () => {
+      const markup = renderToStaticMarkup(
+        <App
+          apps={[
+            {
+              id: "app",
+              label: "App",
+              windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
+              defaultLayout: createTabStackLayout(["main"], ["Main"]),
+              modes: [
+                { id: "inspect", label: "Inspect" },
+                { id: "edit", label: "Edit" },
+              ],
+            },
+          ]}
+        />,
+      );
+
+      expect(markup).toContain('id="ui.mode.select.app.trigger"');
+      expect(markup).not.toContain('ui.modeNav.app');
     });
   });
 

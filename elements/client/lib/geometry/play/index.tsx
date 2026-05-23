@@ -2,14 +2,7 @@
 // 💻 elements/client/lib/geometry/play/index.tsx — Geometry play harness: Topologic all-kinds selector, single-window UI shell, and transform gumball editing for every entity kind.
 // #endregion 🧲Header
 
-import {
-	App,
-	LevelProvider,
-	createDefaultLayout,
-	getLevelBgClass,
-	useApp,
-	type AppConfig,
-} from "@elements/ui";
+import { App, LevelProvider, createDefaultLayout, getLevelBgClass, type AppConfig } from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
 import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -34,7 +27,8 @@ const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
 const GEOMETRY_PLAY_WINDOW_ID = "geometry-topologic-window";
 const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
 const GEOMETRY_PLAY_DEFAULT_LAYOUT = createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]);
-const GEOMETRY_PLAY_MODE_ICONS: Record<TopologicTransformMode, ReactElement> = {
+const GEOMETRY_PLAY_TRANSFORM_MODES = ["translate", "rotate", "scale"] as const satisfies readonly TopologicTransformMode[];
+const GEOMETRY_PLAY_TRANSFORM_ICONS: Record<TopologicTransformMode, ReactElement> = {
 	translate: <Move3d className="size-4" aria-hidden />,
 	rotate: <Rotate3d className="size-4" aria-hidden />,
 	scale: <Scaling className="size-4" aria-hidden />,
@@ -87,21 +81,7 @@ function isSelectableEntity(
 	return Boolean(entity && selectableKinds[entity.kind]);
 }
 
-function GeometryPlayModeSync(): null {
-	const { activeModeId } = useApp();
-	const play = useGeometryPlay();
-
-	useEffect(() => {
-		if ((activeModeId === "translate" || activeModeId === "rotate" || activeModeId === "scale") && play.transformMode !== activeModeId) {
-			play.setTransformMode(activeModeId);
-		}
-	}, [activeModeId, play]);
-
-	return null;
-}
-
 function GeometryPlayWindow(): ReactElement {
-	const { activeApp, activeModeId } = useApp();
 	const play = useGeometryPlay();
 	const selectableEntities = listSelectableEntities(play.session, play.selectableKinds);
 	const enabledKinds = TOPOLOGIC_KINDS.filter((kind) => play.selectableKinds[kind]);
@@ -109,13 +89,14 @@ function GeometryPlayWindow(): ReactElement {
 	return (
 		<div className="flex h-full w-full flex-col">
 			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
-				<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide">{activeModeId ?? activeApp.label}</span>
+				<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide" data-e2e-geometry-transform-mode>
+					{play.transformMode}
+				</span>
 				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{enabledKinds.length === TOPOLOGIC_KINDS.length ? "all" : enabledKinds.join(",") || "none"}</span>
 				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{selectedEntity ? topologicEntityLabel(selectedEntity) : "—"}</span>
 				<span className="text-muted-foreground px-1 text-xs">{selectableEntities.length}</span>
 			</div>
 			<div className="relative min-h-0 flex-1">
-				<GeometryPlayModeSync />
 				<TopologicViewport
 					fixture={play.fixture}
 					selectedId={play.selectedId}
@@ -184,13 +165,14 @@ function GeometryPlayController(): ReactElement {
 		[fixture, selectableKinds, selectedId, session, transformMode],
 	);
 
+	const selectionToolOrderBase = TOPOLOGIC_KINDS.length + 1;
+	const transformToolOrderBase = selectionToolOrderBase + 2;
 	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
-				defaultModeId: transformMode,
 				id: GEOMETRY_PLAY_APP_ID,
 				label: "Geometry play",
-				options: { selectableKinds },
+				options: { selectableKinds, transformMode },
 				tools: [
 					...TOPOLOGIC_KINDS.map((kind, order) => ({
 						id: `geometry.kind.${kind}`,
@@ -200,21 +182,27 @@ function GeometryPlayController(): ReactElement {
 						order,
 						pressed: selectableKinds[kind],
 					})),
-					{ id: "geometry.separator.selection", kind: "separator", order: TOPOLOGIC_KINDS.length + 1 },
+					{ id: "geometry.separator.selection", kind: "separator" as const, order: selectionToolOrderBase },
 					{
 						id: "geometry.selection.clear",
 						icon: <BoxSelect className="size-4" aria-hidden />,
 						label: "Clear",
 						onClick: () => setSelectedId(null),
-						order: TOPOLOGIC_KINDS.length + 2,
+						order: selectionToolOrderBase + 1,
 					},
+					{ id: "geometry.separator.transform", kind: "separator" as const, order: transformToolOrderBase },
+					...GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, index) => ({
+						id: `geometry.transform.${mode}`,
+						kind: "toggle" as const,
+						icon: GEOMETRY_PLAY_TRANSFORM_ICONS[mode],
+						label: mode.charAt(0).toUpperCase() + mode.slice(1),
+						onPressedChange: (pressed: boolean) => {
+							if (pressed) setTransformMode(mode);
+						},
+						order: transformToolOrderBase + 1 + index,
+						pressed: transformMode === mode,
+					})),
 				],
-				modes: (["translate", "rotate", "scale"] as const).map((mode) => ({
-					id: mode,
-					label: mode.charAt(0).toUpperCase() + mode.slice(1),
-					icon: GEOMETRY_PLAY_MODE_ICONS[mode],
-					options: { transformMode: mode },
-				})),
 				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
 				defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
 			},
@@ -304,8 +292,9 @@ if (import.meta.vitest) {
 			}
 		});
 
-		it("publishes transform modes for the shared App shell", () => {
-			expect(Object.keys(GEOMETRY_PLAY_MODE_ICONS)).toEqual(["translate", "rotate", "scale"]);
+		it("registers translate, rotate, and scale as toolbar transform tools", () => {
+			expect([...GEOMETRY_PLAY_TRANSFORM_MODES]).toEqual(["translate", "rotate", "scale"]);
+			expect(Object.keys(GEOMETRY_PLAY_TRANSFORM_ICONS)).toEqual(["translate", "rotate", "scale"]);
 		});
 	});
 }

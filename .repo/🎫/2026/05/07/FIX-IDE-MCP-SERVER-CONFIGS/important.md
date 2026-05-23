@@ -1,0 +1,1 @@
+Board parity: snap-based proximity (dual onConnect+onProximityConnect), indirect sole vs ring + pointer-down pick, removed world-radius link proximity fallback. ThreePerspectiveCamera import alias vs drei.
