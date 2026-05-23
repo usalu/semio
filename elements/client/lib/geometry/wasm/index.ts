@@ -115,6 +115,21 @@ export interface TopologicFixtureV1 {
 	readonly roots: readonly string[];
 	readonly topologies: readonly TopologicEntity[];
 }
+
+export interface TopologicRenderPacketEntryV1 {
+	readonly id: string;
+	readonly kind: TopologicKind;
+	readonly position: Float32Array;
+	readonly rotation: Float32Array;
+	readonly scale: Float32Array;
+	readonly points?: Float32Array;
+	readonly triangles?: Uint32Array;
+}
+
+export interface TopologicRenderPacketV1 {
+	readonly entries: readonly TopologicRenderPacketEntryV1[];
+	readonly revisitedIds: readonly string[];
+}
 //#endregion 🔖Kinds
 
 //#region 🔖Parsing
@@ -124,6 +139,10 @@ export function parseTopologicFixtureV1(raw: unknown): TopologicFixtureV1 | null
 
 export function deriveAnalyzeTopologicFixtureV1(fixture: TopologicFixtureV1): TopologicFixtureV1 | null {
 	return (getTopologicKernelBindings().deriveAnalyzeFixture(fixture) as TopologicFixtureV1 | null) ?? null;
+	}
+
+export function buildTopologicRenderPacketV1(fixture: TopologicFixtureV1): TopologicRenderPacketV1 | null {
+	return (getTopologicKernelBindings().buildRenderPacket(fixture) as TopologicRenderPacketV1 | null) ?? null;
 	}
 
 export async function loadTopologicFixtureV1(raw: unknown): Promise<TopologicFixtureV1 | null> {
@@ -157,6 +176,7 @@ export {
 export interface TopologicWasmBindings {
 	readonly parseFixture: (raw: unknown) => TopologicFixtureV1 | null;
 	readonly deriveAnalyzeFixture: (fixture: TopologicFixtureV1) => TopologicFixtureV1 | null;
+	readonly buildRenderPacket: (fixture: TopologicFixtureV1) => TopologicRenderPacketV1 | null;
 	readonly vertexPoint: (fixture: TopologicFixtureV1, id: string) => Vec3 | null;
 	readonly edgeCurve: (fixture: TopologicFixtureV1, id: string) => readonly Vec3[];
 	readonly updateFixtureTransform: (fixture: TopologicFixtureV1, entityId: string, transform: TopologicTransform) => TopologicFixtureV1 | null;
@@ -167,6 +187,7 @@ export async function ensureTopologicWasmLoaded(): Promise<TopologicWasmBindings
 	return {
 		parseFixture: parseTopologicFixtureV1,
 		deriveAnalyzeFixture: deriveAnalyzeTopologicFixtureV1,
+		buildRenderPacket: buildTopologicRenderPacketV1,
 		vertexPoint: vertexPointTopologicFixtureV1,
 		edgeCurve: edgeCurveTopologicFixtureV1,
 		updateFixtureTransform: updateTopologicFixtureTransformKernelV1,

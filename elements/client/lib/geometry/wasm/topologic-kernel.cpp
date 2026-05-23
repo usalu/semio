@@ -54,6 +54,18 @@ bool is_known_kind(const std::string& kind) {
 	return false;
 }
 
+val create_float32_array(const std::vector<float>& values) {
+	val out = val::global("Float32Array").new_(static_cast<unsigned>(values.size()));
+	for (std::size_t index = 0; index < values.size(); index += 1) out.set(index, values[index]);
+	return out;
+}
+
+val create_uint32_array(const std::vector<std::uint32_t>& values) {
+	val out = val::global("Uint32Array").new_(static_cast<unsigned>(values.size()));
+	for (std::size_t index = 0; index < values.size(); index += 1) out.set(index, values[index]);
+	return out;
+}
+
 val clone_vec3(const val& value) {
 	if (!is_array(value) || array_length(value) != 3) return val::null();
 	val out = val::array();
@@ -421,6 +433,36 @@ val edge_curve(const val& fixture, const std::string& entity_id) {
 	return out;
 }
 
+val render_position_for_entity(const val& fixture, const val& entity) {
+	const std::string kind = entity["kind"].as<std::string>();
+	if (kind == "vertex") return vertex_point(fixture, entity["id"].as<std::string>());
+	const val normalized = normalize_transform(entity["transform"]);
+	return normalized["position"];
+}
+
+val render_rotation_for_entity(const val& entity) {
+	return normalize_transform(entity["transform"])["rotation"];
+}
+
+val render_scale_for_entity(const val& entity) {
+	const val normalized = normalize_transform(entity["transform"]);
+	const val scale = normalized["scale"];
+	if (scale.typeOf().as<std::string>() == "number") {
+		std::vector<float> values = {
+			static_cast<float>(scale.as<double>()),
+			static_cast<float>(scale.as<double>()),
+			static_cast<float>(scale.as<double>()),
+		};
+		return create_float32_array(values);
+	}
+	std::vector<float> values = {
+		static_cast<float>(scale[0].as<double>()),
+		static_cast<float>(scale[1].as<double>()),
+		static_cast<float>(scale[2].as<double>()),
+	};
+	return create_float32_array(values);
+}
+
 struct AnalyzePoint3 {
 	double x;
 	double y;
@@ -485,6 +527,118 @@ struct AnalyzeFaceRectInfo {
 	bool positive_side;
 	std::string kind;
 };
+
+AnalyzePoint3 read_world_point3(const val& value) {
+	return { value[0].as<double>(), value[1].as<double>(), value[2].as<double>() };
+}
+
+AnalyzePoint3 centroid_of_points(const std::vector<AnalyzePoint3>& points) {
+	if (points.empty()) return { 0.0, 0.0, 0.0 };
+	double sum_x = 0.0;
+	double sum_y = 0.0;
+	double sum_z = 0.0;
+	for (const AnalyzePoint3& point : points) {
+		sum_x += point.x;
+		sum_y += point.y;
+		sum_z += point.z;
+	}
+	const double count = static_cast<double>(points.size());
+	return { sum_x / count, sum_y / count, sum_z / count };
+}
+
+std::vector<float> pack_local_points(const std::vector<AnalyzePoint3>& points, const AnalyzePoint3& anchor) {
+	std::vector<float> out;
+	out.reserve(points.size() * 3);
+	for (const AnalyzePoint3& point : points) {
+		out.push_back(static_cast<float>(point.x - anchor.x));
+		out.push_back(static_cast<float>(point.y - anchor.y));
+		out.push_back(static_cast<float>(point.z - anchor.z));
+	}
+	return out;
+}
+
+val build_render_packet_entry(const val& fixture, const val& entity) {
+	val entry = val::object();
+	entry.set("id", entity["id"].as<std::string>());
+	entry.set("kind", entity["kind"].as<std::string>());
+	const val position = render_position_for_entity(fixture, entity);
+	std::vector<float> position_values = {
+		static_cast<float>(position[0].as<double>()),
+		static_cast<float>(position[1].as<double>()),
+		static_cast<float>(position[2].as<double>()),
+	};
+	entry.set("position", create_float32_array(position_values));
+	const val rotation = render_rotation_for_entity(entity);
+	std::vector<float> rotation_values = {
+		static_cast<float>(rotation[0].as<double>()),
+		static_cast<float>(rotation[1].as<double>()),
+		static_cast<float>(rotation[2].as<double>()),
+		static_cast<float>(rotation[3].as<double>()),
+	};
+	entry.set("rotation", create_float32_array(rotation_values));
+	entry.set("scale", render_scale_for_entity(entity));
+	const std::string kind = entity["kind"].as<std::string>();
+	if (kind == "edge") {
+		const val curve = edge_curve(fixture, entity["id"].as<std::string>());
+		std::vector<AnalyzePoint3> points;
+		for (std::size_t index = 0; index < array_length(curve); index += 1) points.push_back(read_world_point3(curve[index]));
+		const AnalyzePoint3 anchor = centroid_of_points(points);
+		entry.set("position", create_float32_array({ static_cast<float>(anchor.x), static_cast<float>(anchor.y), static_cast<float>(anchor.z) }));
+		entry.set("rotation", create_float32_array({ 0.0f, 0.0f, 0.0f, 1.0f }));
+		entry.set("scale", create_float32_array({ 1.0f, 1.0f, 1.0f }));
+		entry.set("points", create_float32_array(pack_local_points(points, anchor)));
+	}
+	if (kind == "face") {
+		const val vertices = entity["surface"]["vertices"];
+		std::vector<AnalyzePoint3> points;
+		for (std::size_t index = 0; index < array_length(vertices); index += 1) points.push_back(read_world_point3(vertices[index]));
+		const AnalyzePoint3 anchor = centroid_of_points(points);
+		entry.set("position", create_float32_array({ static_cast<float>(anchor.x), static_cast<float>(anchor.y), static_cast<float>(anchor.z) }));
+		entry.set("rotation", create_float32_array({ 0.0f, 0.0f, 0.0f, 1.0f }));
+		entry.set("scale", create_float32_array({ 1.0f, 1.0f, 1.0f }));
+		entry.set("points", create_float32_array(pack_local_points(points, anchor)));
+		std::vector<std::uint32_t> triangles;
+		const val raw_triangles = entity["surface"]["triangles"];
+		triangles.reserve(array_length(raw_triangles));
+		for (std::size_t index = 0; index < array_length(raw_triangles); index += 1) triangles.push_back(static_cast<std::uint32_t>(raw_triangles[index].as<unsigned>()));
+		entry.set("triangles", create_uint32_array(triangles));
+	}
+	return entry;
+}
+
+void append_render_packet_entries(
+	const val& fixture,
+	const std::string& entity_id,
+	std::unordered_set<std::string>& visited,
+	std::unordered_set<std::string>& revisited,
+	val& entries
+) {
+	const val entity = find_entity(fixture, entity_id);
+	if (entity.isUndefined()) return;
+	if (visited.contains(entity_id)) {
+		revisited.insert(entity_id);
+		return;
+	}
+	visited.insert(entity_id);
+	entries.call<void>("push", build_render_packet_entry(fixture, entity));
+	for (const std::string& child_id : child_ids(entity)) append_render_packet_entries(fixture, child_id, visited, revisited, entries);
+}
+
+val build_render_packet(const val& fixture) {
+	const val parsed = parse_fixture(fixture);
+	if (parsed.isNull()) return val::null();
+	val entries = val::array();
+	std::unordered_set<std::string> visited;
+	std::unordered_set<std::string> revisited;
+	const val roots = parsed["roots"];
+	for (std::size_t index = 0; index < array_length(roots); index += 1) append_render_packet_entries(parsed, roots[index].as<std::string>(), visited, revisited, entries);
+	val revisited_ids = val::array();
+	for (const std::string& entity_id : revisited) revisited_ids.call<void>("push", entity_id);
+	val packet = val::object();
+	packet.set("entries", entries);
+	packet.set("revisitedIds", revisited_ids);
+	return packet;
+}
 
 bool starts_with(const std::string& value, const std::string& prefix) {
 	return value.rfind(prefix, 0) == 0;
@@ -1216,6 +1370,7 @@ val update_fixture_transform(const val& fixture, const std::string& entity_id, c
 EMSCRIPTEN_BINDINGS(topologic_kernel) {
 	emscripten::function("parseFixture", &parse_fixture);
 	emscripten::function("deriveAnalyzeFixture", &derive_analyze_fixture);
+	emscripten::function("buildRenderPacket", &build_render_packet);
 	emscripten::function("vertexPoint", &vertex_point);
 	emscripten::function("edgeCurve", &edge_curve);
 	emscripten::function("updateFixtureTransform", &update_fixture_transform);
