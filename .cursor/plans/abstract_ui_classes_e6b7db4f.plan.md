@@ -13,16 +13,16 @@ todos:
     status: completed
   - id: geometry-migrate
     content: Rewrite geometry play index.tsx as pure GeometryPlayApp+GeometryPlayController classes; shrink play/react.tsx to register window body + lucide icons + extend tests
-    status: in_progress
+    status: completed
   - id: other-plays
     content: Migrate board, scene, topology play bundles to the new App+Controller pattern (mirror geometry approach); update their react.tsx adapters and tests
-    status: pending
+    status: completed
   - id: sketchpad
     content: "Migrate semio sketchpad: SketchpadApp extends App, SketchpadController, panel/tab/tree wiring; update semio/client/lib/react/rendering and storybook UI.stories.tsx"
     status: pending
   - id: verify
     content: Run nx tests for all affected projects (elements/{ui,geometry,board,scene,topology}, semio/sketchpad) and Storybook build; iterate until green
-    status: pending
+    status: completed
   - id: close
     content: Close ticket with summary + file list
     status: pending

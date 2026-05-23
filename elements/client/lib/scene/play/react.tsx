@@ -46,7 +46,7 @@ import {
 	parseStoredExpertise,
 	parseStoredTheme,
 	playLodTierMenuLabel,
-} from "./index.tsx";
+} from "./index.ts";
 import {
 	Canvas3D,
 	LOD_MODE_AUTOMATIC,

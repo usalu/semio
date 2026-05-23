@@ -52,6 +52,11 @@ import {
 	WorkbenchApp,
 	WorkbenchWindowKind,
 	countShellAppTools,
+	createDefaultLayout,
+	createStackLayout,
+	createTabStackLayout,
+	createWindowLayout,
+	Expertise,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
 	resolveWorkbenchAppState,
@@ -72,6 +77,11 @@ export {
 	WorkbenchApp,
 	WorkbenchWindowKind,
 	countShellAppTools,
+	createDefaultLayout,
+	createStackLayout,
+	createTabStackLayout,
+	createWindowLayout,
+	Expertise,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
 	resolveWorkbenchAppState,
@@ -464,15 +474,6 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
 };
 
 // #endregion 🖱️ContextMenu
-
-/**
- * Expertise levels for label resolution.
- **/
-export enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
-}
 
 let _expertiseProvider: (() => Expertise) | undefined;
 
@@ -21909,50 +21910,6 @@ function isWindowLayout(value: unknown): value is UIWindowLayout {
   return isWindowLayoutAxisNode(candidate.root) || isWindowLayoutStackNode(candidate.root);
 }
 
-/**
- * Creates a single abstract window node.
- **/
-export function createWindowLayout(windowKindId: string, title?: string): UIWindowLayoutWindowNode {
-  return { kind: "window", windowKindId, ...(title ? { title } : {}) };
-}
-
-/**
- * Creates an abstract stack layout from window kind IDs.
- **/
-export function createStackLayout(windowKindIds: string[], titles?: string[]): UIWindowLayout {
-  return {
-    root: {
-      kind: "stack",
-      children: windowKindIds.map((windowKindId, index) => createWindowLayout(windowKindId, titles?.[index])),
-    },
-  };
-}
-
-/**
- * Creates a default abstract layout from window kind IDs and direction.
- * MUST generate one stack per window kind so apps own the layout structure.
- **/
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): UIWindowLayout {
-  return {
-    root: {
-      kind: direction,
-      children: windowIds.map((id, index) => ({
-        kind: "stack",
-        ...(sizes?.[index] !== undefined ? { size: sizes[index] } : {}),
-        children: [createWindowLayout(id, titles?.[index] ?? id)],
-      })),
-    },
-  };
-}
-
-/**
- * Creates a single stack where all windows appear as tabs.
- * Used for compact layouts where side-by-side windows are not practical.
- **/
-export function createTabStackLayout(windowIds: string[], titles?: string[]): UIWindowLayout {
-  return createStackLayout(windowIds, titles);
-}
-
 function convertLegacyGoldenNodeToWindowLayoutNode(value: unknown): UIWindowLayoutNode | UIWindowLayoutWindowNode | undefined {
   if (!value || typeof value !== "object") return undefined;
   const node = value as Record<string, unknown>;
@@ -22960,7 +22917,7 @@ export function registerShellTabIcon(iconId: string, Icon: LucideIcon): void {
 
 const windowBodyByKey = new Map<string, React.ComponentType<any>>();
 
-/** @emoji 🪟 Binds a `bodyKey` from {@link WindowKind} to a React window body component. */
+/** @emoji 🪟 Binds a `bodyKey` from {@link WorkbenchWindowKind} to a React window body component. */
 export function registerWindowBody(bodyKey: string, Component: React.ComponentType<any>): void {
 	windowBodyByKey.set(bodyKey, Component);
 }

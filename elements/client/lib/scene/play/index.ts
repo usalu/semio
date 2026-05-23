@@ -1,8 +1,8 @@
 // #region 🧲Header
-// 💻 elements/client/lib/scene/play/index.tsx — Scene play harness: Nakagin fixture, LOD toolbar, relocate modes, and Playwright hooks (fixtures live only under play/).
+// 💻 elements/client/lib/scene/play/index.ts — Scene play harness: Nakagin fixture metadata, LOD tiers, and localStorage keys (no React; mount via main.tsx).
 // #endregion 🧲Header
 
-import { Expertise, mountReactApp } from "@elements/ui";
+import { Expertise } from "@elements/ui-shell";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
@@ -82,9 +82,7 @@ export function playLodTierMenuLabel(tier: LodKind): string {
 export const PLAY_APP_ID = "elements-scene-play";
 //#endregion 🎬Play
 
-void import("./react.tsx").then((m) => {
-	mountReactApp(m.createScenePlayElement());
-});
+export { parseKindCatalogs, parseKindCompatibility };
 
 //#region 🧪Tests
 if (import.meta.vitest) {

@@ -41,6 +41,7 @@ import {
 	TopologicShellEntity,
 	TopologicTopologyEntity,
 	type TopologicTransform,
+	type TopologicTransformMode,
 	TopologicVertexEntity,
 	TopologicWireEntity,
 	updateTopologicFixtureTransformKernelV1,
@@ -48,6 +49,8 @@ import {
 	loadTopologicFixtureV1,
 	type Vec3,
 } from "../wasm/index.ts";
+
+export type { TopologicTransformMode };
 
 //#region 🔖Session
 function childIds(entity: TopologicEntity): readonly string[] {
@@ -76,8 +79,6 @@ class TopologicSceneSession {
 //#endregion 🔖Session
 
 //#region 🔖Context
-export type TopologicTransformMode = "translate" | "rotate" | "scale";
-
 interface TopologicSceneValue {
 	readonly session: TopologicSceneSession;
 	readonly selectedId: string | null;

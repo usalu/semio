@@ -1,22 +1,22 @@
 // #region 🧲Header
-// 💻 elements/client/lib/geometry/play/index.tsx — Geometry play harness: Topologic all-kinds selector, single-window UI shell, and transform gumball editing for every entity kind.
+// 💻 elements/client/lib/geometry/play/index.ts — Framework-free geometry play: Topologic session, shell controller, and {@link Workbench} wiring (no React).
 // #endregion 🧲Header
 
 import {
 	CommandBus,
 	Controller,
+	Workbench,
 	WorkbenchApp,
 	WorkbenchMode,
 	WorkbenchWindowKind,
 	createDefaultLayout,
-	mountReactApp,
 	type ShellToolItem,
-} from "@elements/ui";
+} from "@elements/ui-shell";
 
 import topologyJson from "./fixtures/topology.json";
-import type { TopologicTransformMode } from "../react/index.tsx";
 import {
 	TOPOLOGIC_KINDS,
+	TOPOLOGIC_TRANSFORM_MODES,
 	deriveAnalyzeTopologicFixtureV1,
 	ensureTopologicWasmLoaded,
 	loadTopologicFixtureV1,
@@ -25,9 +25,8 @@ import {
 	type TopologicFixtureV1,
 	type TopologicKind,
 	type TopologicTransform,
+	type TopologicTransformMode,
 } from "../wasm/index.ts";
-import "./globals.css";
-import * as React from "react";
 
 //#region 🔖Session
 function childIds(entity: TopologicEntity): readonly string[] {
@@ -76,7 +75,7 @@ export const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
 export const GEOMETRY_PLAY_WINDOW_ID = "geometry-topologic-window";
 export const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
 export const GEOMETRY_PLAY_DEFAULT_LAYOUT = createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]);
-export const GEOMETRY_PLAY_TRANSFORM_MODES = ["translate", "rotate", "scale"] as const satisfies readonly TopologicTransformMode[];
+export const GEOMETRY_PLAY_TRANSFORM_MODES = TOPOLOGIC_TRANSFORM_MODES;
 const GEOMETRY_PLAY_MODES = ["edit", "analyze"] as const;
 //#endregion 🔖Ids
 
@@ -474,7 +473,7 @@ export function buildGeometryPlayWorkbenchApp(controller: GeometryPlayShellContr
 		undefined,
 		controller,
 		GEOMETRY_PLAY_DEFAULT_LAYOUT as never,
-		new WorkbenchWindowKind(GEOMETRY_PLAY_WINDOW_ID, GEOMETRY_PLAY_WINDOW_LABEL, GEOMETRY_PLAY_BODY_KEY),
+		[new WorkbenchWindowKind(GEOMETRY_PLAY_WINDOW_ID, GEOMETRY_PLAY_WINDOW_LABEL, GEOMETRY_PLAY_BODY_KEY)],
 	);
 	app.defaultModeId = "edit";
 	app.addMode(controller.editMode);
@@ -483,16 +482,6 @@ export function buildGeometryPlayWorkbenchApp(controller: GeometryPlayShellContr
 	return app;
 }
 //#endregion 🔖GeometryPlayWorkbench
-
-void (async () => {
-	const [{ WorkbenchView, LevelProvider, getLevelBgClass, mountReactApp }, mod] = await Promise.all([import("@elements/ui"), import("./react.tsx")]);
-	const wb = await mod.bootstrapGeometryPlayWorkbench();
-	mountReactApp(
-		<LevelProvider>
-			<WorkbenchView workbench={wb} className={getLevelBgClass(0)} />
-		</LevelProvider>,
-	);
-})();
 
 //#region 🧪Tests
 if (import.meta.vitest) {

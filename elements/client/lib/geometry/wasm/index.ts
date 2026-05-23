@@ -27,6 +27,9 @@ export interface TopologicTransform {
 	readonly scale?: number | Vec3;
 }
 
+export const TOPOLOGIC_TRANSFORM_MODES = ["translate", "rotate", "scale"] as const;
+export type TopologicTransformMode = (typeof TOPOLOGIC_TRANSFORM_MODES)[number];
+
 export interface TopologicStyle {
 	readonly color?: string;
 	readonly edgeColor?: string;

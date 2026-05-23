@@ -30,6 +30,51 @@ export interface WindowLayout {
 }
 //#endregion 🔖Layout
 
+//#region 🔖LayoutFactories
+/** @emoji 🪟 Single window slot helper for {@link WindowLayout} trees. */
+export function createWindowLayout(windowKindId: string, title?: string): WindowLayoutWindowNode {
+	return { kind: "window", windowKindId, ...(title ? { title } : {}) };
+}
+
+/** @emoji 📚 Stack layout from ordered window kind ids. */
+export function createStackLayout(windowKindIds: string[], titles?: string[]): WindowLayout {
+	return {
+		root: {
+			kind: "stack",
+			children: windowKindIds.map((windowKindId, index) => createWindowLayout(windowKindId, titles?.[index])),
+		},
+	};
+}
+
+/** @emoji 🧱 Default row/column of one stack per window kind (Golden-style ownership). */
+export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): WindowLayout {
+	return {
+		root: {
+			kind: direction,
+			children: windowIds.map((id, index) => ({
+				kind: "stack" as const,
+				...(sizes?.[index] !== undefined ? { size: sizes[index] } : {}),
+				children: [createWindowLayout(id, titles?.[index] ?? id)],
+			})),
+		},
+	};
+}
+
+/** @emoji 📑 Single stack with every window as a tab group. */
+export function createTabStackLayout(windowIds: string[], titles?: string[]): WindowLayout {
+	return createStackLayout(windowIds, titles);
+}
+//#endregion 🔖LayoutFactories
+
+//#region 🔖Expertise
+/** @emoji 🎚 Surface expertise tier for chrome + label resolution. */
+export enum Expertise {
+	BEGINNER = "beginner",
+	NORMAL = "normal",
+	EXPERT = "expert",
+}
+//#endregion 🔖Expertise
+
 //#region 🔖Toolbar
 /** @emoji 🧰 Toolbar category ids shared by every app registration surface. */
 export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";

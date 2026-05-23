@@ -34,7 +34,7 @@ import {
 	listAnalyzeSelectableEntities,
 	listEnabledKinds,
 	listSelectableEntities,
-} from "./index.tsx";
+} from "./index.ts";
 import { TopologicViewport } from "../react/index.tsx";
 import { TOPOLOGIC_KINDS, ensureTopologicWasmLoaded, loadTopologicFixtureV1, type TopologicFixtureV1 } from "../wasm/index.ts";
 

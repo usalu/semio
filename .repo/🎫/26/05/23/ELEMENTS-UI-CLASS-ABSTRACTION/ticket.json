@@ -3,6 +3,6 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + semio algorithm shell; remove AppConfig/PureAppDefinition.",
-  "summary": "",
+  "summary": "Renamed shell class WindowKind → WorkbenchWindowKind (enum conflict). Extended WorkbenchView with resolvedWindowKindsOverride, slotToolbar, extraFooterItems, augmentPanelTabs. Migrated geometry (GeometryPlayShellController + bootstrap), board/scene/topology to Workbench + mountReactApp entrypoints. Storybook UI.stories rewritten for Workbench. Vitest @elements/ui: 46 passed. Out of scope this pass: semio sketchpad + rendering AlgorithmApp still on legacy UIAppConfig path; rename sketchpad-local AppConfig if desired.",
   "goal": "🎯elements🎯uibundle"
 }

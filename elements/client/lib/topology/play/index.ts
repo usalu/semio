@@ -1,8 +1,6 @@
 // #region 🧲Header
-// 💻 elements/client/lib/topology/play/index.tsx — Topology play bootstrap: non-React entry that defers to the React runtime module.
+// 💻 elements/client/lib/topology/play/index.ts — Framework-free topology play fixture tests (mount: main.tsx).
 // #endregion 🧲Header
-
-import { mountReactApp } from "@elements/ui";
 
 import nakaginBoardJson from "../../board/play/fixtures/nakagin-capsule-tower.board.json";
 import { parseBoardFixtureV1 } from "../../board/index.ts";
@@ -11,10 +9,7 @@ import { parseFixtureV1 } from "../../scene/index.tsx";
 import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../react/index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
-void import("./react.tsx").then((m) => {
-	mountReactApp(m.createTopologyPlayElement());
-});
-
+//#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("topology play fixtures", () => {
@@ -37,3 +32,4 @@ if (import.meta.vitest) {
 		});
 	});
 }
+//#endregion 🧪Tests
