@@ -2,64 +2,67 @@
 /**
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
-import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { Script, ScriptRouter, devToolingEnv, dispatchSubcommand, runCmd, runWorkspaceScriptMain, tryRun } from "./repo/lib/js/src/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import { Neo4jCypherExport, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, partitionNeo4jGraphCliArgv } from "./generate.neo4j.gen.ts";
-import { seedMetabolismLightKitNeo4j } from "./seed.metabolism.light.kit.neo4j.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
+const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap");
 
-//#region 🔖ScriptFramework
-/** 🧭Abstract workspace command; `run` receives argv segments after the verb (e.g. `dev mcp` → `["mcp"]`). */
-export abstract class Script {
-  constructor(protected readonly root: string) {}
-  abstract run(segments: string[]): void | Promise<void>;
-}
+export { Script };
 
-function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  execFileSync(cmd, args, {
-    stdio: "inherit",
-    cwd: opts.cwd ?? WORKSPACE_ROOT,
-    env: opts.env ?? process.env,
-  });
-}
-
-function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
-  const env = { ...process.env, ...extra };
-  delete env.NODE_OPTIONS;
-  delete env.VSCODE_INSPECTOR_OPTIONS;
-  env.NX_NATIVE_COMMAND_RUNNER ??= "false";
-  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
-  env.NX_TUI ??= "false";
-  return env;
-}
-
-function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  try {
-    runCmd(cmd, args, opts);
-  } catch {
-    /* optional */
+//#region 🔖NativeOsScript
+/** 🖥️Runs native bootstrap shells under `repo/native/bootstrap` (setup|start). */
+export class NativeOsScript extends Script {
+  run(segments: string[]): void {
+    const cmd = segments[0] ?? "setup";
+    const env = { ...process.env, SEMIO_REPO_ROOT: this.root };
+    if (process.platform === "win32") {
+      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "script.ps1");
+      if (!existsSync(ps1)) {
+        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/script.ps1.`);
+        process.exit(1);
+      }
+      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
+      return;
+    }
+    if (process.platform === "darwin" || process.platform === "linux") {
+      const sh = join(NATIVE_BOOTSTRAP_DIR, "script.sh");
+      if (!existsSync(sh)) {
+        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/script.sh.`);
+        process.exit(1);
+      }
+      runCmd("bash", [sh, cmd], { cwd: this.root, env });
+      return;
+    }
+    console.error(`[native] unsupported platform ${process.platform}`);
+    process.exit(1);
   }
 }
-//#endregion 🔖ScriptFramework
+//#endregion 🔖NativeOsScript
 
 //#region 🔖SetupScript
 export class SetupScript extends Script {
   run(segments: string[]): void {
-    if (segments[0] === "postinstall") {
-      this.runPostinstall();
+    if (!segments[0]) {
+      this.runFull();
       return;
     }
-    if (segments[0] === "git") {
-      this.runGit();
-      return;
-    }
-    this.runFull();
+    dispatchSubcommand(
+      segments,
+      {
+        postinstall: () => this.runPostinstall(),
+        git: () => this.runGit(),
+        native: (rest) => new NativeOsScript(this.root).run(rest),
+      },
+      "bun ./script.ts setup [postinstall|git|native]",
+    );
   }
 
   private runPostinstall(): void {
@@ -112,19 +115,8 @@ export class SetupScript extends Script {
 
   private runFull(): void {
     if (process.argv.includes("--with-native-os")) {
-      if (process.platform === "win32") {
-        const ps = join(this.root, "script.ps1");
-        if (existsSync(ps)) {
-          console.log("[setup] Windows native bootstrap…");
-          tryRun("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps, "setup"]);
-        }
-      } else if (process.platform === "darwin" || process.platform === "linux") {
-        const sh = join(this.root, "script.sh");
-        if (existsSync(sh)) {
-          console.log(`[setup] ${process.platform} native bootstrap…`);
-          tryRun("bash", [sh, "setup"]);
-        }
-      }
+      console.log(`[setup] ${process.platform} native bootstrap…`);
+      tryRun(BUN, [join(this.root, "script.ts"), "setup", "native"], { cwd: this.root });
     }
 
     console.log("[setup] uv sync…");
@@ -204,12 +196,8 @@ export class StartScript extends Script {
       return;
     }
 
-    if (process.platform === "win32") {
-      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(this.root, "script.ps1"), "start"], {
-        cwd: this.root,
-      });
-    } else if (process.platform === "darwin" || process.platform === "linux") {
-      runCmd("bash", [join(this.root, "script.sh"), "start"], { cwd: this.root });
+    if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
+      new NativeOsScript(this.root).run(["start"]);
     } else {
       console.log(`[start] Unsupported platform ${process.platform}.`);
     }
@@ -229,17 +217,20 @@ export class DevScript extends Script {
       await this.runStorybookStatic();
       return;
     }
-    if (segments[0] === "board") {
-      runCmd("bun", ["nx", "run", "@elements/board:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+    if (segments[0] === "2d") {
+      runCmd("bun", ["nx", "run", "@puzzle/2d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "scene") {
-      runCmd("bun", ["nx", "run", "@elements/scene:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+    if (segments[0] === "3d") {
+      runCmd("bun", ["nx", "run", "@puzzle/3d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "geometry") {
-      const extra = segments[1] === "play" ? segments.slice(2) : segments.slice(1);
-      runCmd("bun", ["nx", "run", "@elements/geometry-play:dev", ...extra], { cwd: this.root, env: devToolingEnv() });
+    if (segments[0] === "5d") {
+      runCmd("bun", ["nx", "run", "@puzzle/5d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
+    if (segments[0] === "cad") {
+      runCmd("bun", ["nx", "run", "@cad/js/renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "mcp") {
@@ -249,15 +240,41 @@ export class DevScript extends Script {
     runCmd("bun", ["nx", "run", "@semio/desktop:dev"], { cwd: this.root });
   }
 
+  private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
+    const scopeSegments: string[] = [];
+    const args: string[] = [];
+    let parsingScope = true;
+    for (const segment of segments) {
+      if (parsingScope && segment !== "--" && !segment.startsWith("-")) {
+        scopeSegments.push(segment);
+        continue;
+      }
+      parsingScope = false;
+      if (segment !== "--") args.push(segment);
+    }
+    const scope = scopeSegments.join("/");
+    if (scope && !/^[a-z0-9][a-z0-9/-]*$/i.test(scope)) {
+      console.error(`[dev.storybook] invalid scope ${JSON.stringify(scope)}`);
+      process.exit(1);
+    }
+    if (scope && !existsSync(join(this.root, ".storybook", "stories", ...scopeSegments))) {
+      console.error(`[dev.storybook] unknown scope ${JSON.stringify(scope)}`);
+      process.exit(1);
+    }
+    return { scope, args };
+  }
+
   private async runStorybook(extra: string[]): Promise<void> {
+    const storybook = this.parseStorybookSegments(extra);
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = process.env.STORYBOOK_PORT ?? "6010";
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
-    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...extra];
+    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...storybook.args];
     runCmd("bunx", storybookArgs, {
       cwd: this.root,
       env: {
         ...process.env,
+        STORYBOOK_SCOPE: storybook.scope,
         WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
         CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
       },
@@ -499,7 +516,7 @@ export class TestScript extends Script {
     });
     try {
       await this.waitForUrl(new URL("index.html", baseUrl).href, 120000);
-      runCmd("bunx", ["playwright", "test", ".storybook/board.spec.ts", "--config", ".storybook/playwright.config.ts"], {
+      runCmd("bunx", ["playwright", "test", ".storybook/puzzle-2d.spec.ts", "--config", ".storybook/playwright.config.ts"], {
         cwd: this.root,
         env: {
           ...process.env,
@@ -554,36 +571,60 @@ export class BuildScript extends Script {
 }
 //#endregion 🔖BuildScript
 
+//#region 🔖CppScriptHelpers
+const WINDOWS_CMAKE_GENERATOR = "Visual Studio 18 2026";
+
+function vswhereExecutable(): string {
+  const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
+  return join(programFilesX86, "Microsoft Visual Studio", "Installer", "vswhere.exe");
+}
+
+function queryVisualStudio2026InstallPath(): string | undefined {
+  if (process.platform !== "win32") return undefined;
+  const vswhere = vswhereExecutable();
+  if (!existsSync(vswhere)) return undefined;
+  const result = spawnSync(
+    vswhere,
+    [
+      "-latest",
+      "-version",
+      "[18.0,19.0)",
+      "-products",
+      "*",
+      "-requires",
+      "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "-property",
+      "installationPath",
+    ],
+    { encoding: "utf8" },
+  );
+  if (result.status !== 0) return undefined;
+  const installPath = result.stdout.trim();
+  return installPath || undefined;
+}
+//#endregion 🔖CppScriptHelpers
+
 //#region 🔖CppScript
 export class CppScript extends Script {
   run(segments: string[]): void {
-    const command = segments[0] ?? "all";
     const preset = this.resolvePreset(segments.slice(1));
-    if (command === "setup") {
-      this.runSetup();
-      return;
-    }
-    if (command === "configure") {
-      this.runConfigure(preset);
-      return;
-    }
-    if (command === "build") {
-      this.runBuild(preset);
-      return;
-    }
-    if (command === "test") {
-      this.runTest(preset);
-      return;
-    }
-    if (command === "all") {
-      this.runSetup();
-      this.runConfigure(preset);
-      this.runBuild(preset);
-      this.runTest(preset);
-      return;
-    }
-    console.error("[cpp] usage: bun ./script.ts cpp [setup|configure|build|test|all] [preset]");
-    process.exit(1);
+    dispatchSubcommand(
+      segments,
+      {
+        setup: () => this.runSetup(),
+        configure: () => this.runConfigure(preset),
+        build: () => this.runBuild(preset),
+        test: () => this.runTest(preset),
+        all: () => {
+          this.runSetup();
+          this.runConfigure(preset);
+          this.runBuild(preset);
+          this.runTest(preset);
+        },
+      },
+      "bun ./script.ts cpp [setup|configure|build|test|all] [preset]",
+      "all",
+    );
   }
 
   private resolvePreset(segments: string[]): string {
@@ -599,10 +640,12 @@ export class CppScript extends Script {
     this.ensureTool("cmake", "cmake");
     if (process.platform !== "win32") this.ensureTool("ninja", "ninja");
     this.ensureVcpkg();
+    if (process.platform === "win32") this.ensureWindowsMsvc();
   }
 
   private runConfigure(preset: string): void {
     this.runSetup();
+    this.purgeStaleCmakeCache(preset);
     runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv() });
   }
 
@@ -668,6 +711,27 @@ export class CppScript extends Script {
   private vcpkgRoot(): string {
     return process.env.VCPKG_ROOT || join(this.root, ".repo", "cache", "vcpkg");
   }
+
+  private ensureWindowsMsvc(): void {
+    if (process.platform !== "win32") return;
+    if (queryVisualStudio2026InstallPath()) return;
+    console.error("[cpp] Visual Studio 2026 with the Desktop development with C++ workload is required.");
+    console.error("[cpp] On native Windows run: bun ./script.ts setup native");
+    process.exit(1);
+  }
+
+  private purgeStaleCmakeCache(preset: string): void {
+    const cacheDir = join(this.root, ".repo", "cache", "cmake", preset);
+    const cacheFile = join(cacheDir, "CMakeCache.txt");
+    if (!existsSync(cacheFile)) return;
+    const content = readFileSync(cacheFile, "utf8");
+    const generatorMatch = content.match(/^CMAKE_GENERATOR:INTERNAL=(.+)$/m);
+    const cachedGenerator = generatorMatch?.[1]?.trim();
+    if (process.platform === "win32" && cachedGenerator && cachedGenerator !== WINDOWS_CMAKE_GENERATOR) {
+      console.log(`[cpp] Removing stale CMake cache for preset "${preset}" (generator ${cachedGenerator}).`);
+      rmSync(cacheDir, { recursive: true, force: true });
+    }
+  }
 }
 //#endregion 🔖CppScript
 
@@ -696,18 +760,28 @@ export class PublishScript extends Script {
 }
 //#endregion 🔖PublishScript
 
-//#region 🔖SeedScript
-export class SeedScript extends Script {
+//#region 🔖QueryScript
+export class QueryScript extends Script {
   run(segments: string[]): void {
-    if (segments[0] === "neo4j" && segments[1] === "metabolism-light-kit") {
-      seedMetabolismLightKitNeo4j(this.root);
+    const sub = segments[0] ?? "test";
+    const queryDir = join(this.root, "semio/client/lib/query");
+    if (sub === "build") {
+      runCmd(bun, [join(queryDir, "script.ts"), "build"], { cwd: this.root });
       return;
     }
-    console.error("[seed] usage: bun ./script.ts seed neo4j metabolism-light-kit");
+    if (sub === "wasm") {
+      runCmd(bun, [join(queryDir, "script.ts"), "wasm"], { cwd: this.root });
+      return;
+    }
+    if (sub === "test") {
+      runCmd(bun, [join(queryDir, "script.ts"), "test", ...segments.slice(1)], { cwd: this.root });
+      return;
+    }
+    console.error(`[query] unknown subcommand ${JSON.stringify(sub)}`);
     process.exit(1);
   }
 }
-//#endregion 🔖SeedScript
+//#endregion 🔖QueryScript
 
 //#region 🔖PurgeScript
 export class PurgeScript extends Script {
@@ -733,36 +807,20 @@ export class PurgeScript extends Script {
 //#endregion 🔖PurgeScript
 
 //#region 🔖Dispatch
-const registry = new Map<string, Script>([
-  ["nx", new NxScript(WORKSPACE_ROOT)],
-  ["setup", new SetupScript(WORKSPACE_ROOT)],
-  ["start", new StartScript(WORKSPACE_ROOT)],
-  ["dev", new DevScript(WORKSPACE_ROOT)],
-  ["generate", new GenerateScript(WORKSPACE_ROOT)],
-  ["lint", new LintScript(WORKSPACE_ROOT)],
-  ["format", new FormatScript(WORKSPACE_ROOT)],
-  ["test", new TestScript(WORKSPACE_ROOT)],
-  ["build", new BuildScript(WORKSPACE_ROOT)],
-  ["cpp", new CppScript(WORKSPACE_ROOT)],
-  ["publish", new PublishScript(WORKSPACE_ROOT)],
-  ["purge", new PurgeScript(WORKSPACE_ROOT)],
-  ["seed", new SeedScript(WORKSPACE_ROOT)],
-]);
+const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
+  .register("nx", NxScript)
+  .register("setup", SetupScript)
+  .register("start", StartScript)
+  .register("dev", DevScript)
+  .register("generate", GenerateScript)
+  .register("lint", LintScript)
+  .register("format", FormatScript)
+  .register("test", TestScript)
+  .register("build", BuildScript)
+  .register("cpp", CppScript)
+  .register("publish", PublishScript)
+  .register("purge", PurgeScript)
+  .register("query", QueryScript);
 
-async function main(): Promise<void> {
-  const segments = process.argv.slice(2);
-  if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge|seed> [segments…]");
-    process.exit(1);
-  }
-  const verb = segments[0];
-  const script = registry.get(verb);
-  if (!script) {
-    console.error(`unknown verb ${JSON.stringify(verb)}`);
-    process.exit(1);
-  }
-  await Promise.resolve(script.run(segments.slice(1)));
-}
-
-await main();
+await runWorkspaceScriptMain(router);
 //#endregion 🔖Dispatch

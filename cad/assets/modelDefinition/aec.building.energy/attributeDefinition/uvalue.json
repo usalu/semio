@@ -1,0 +1,19 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "spatial.shape.uvalue",
+  "version": "1.0.0",
+  "label": "U-Value",
+  "description": "Authored thermal transmittance for surfaces.",
+  "field": "uValue",
+  "targets": [
+    "object"
+  ],
+  "value": {
+    "kind": "string"
+  },
+  "geometrySelector": {
+    "kinds": [
+      "object"
+    ]
+  }
+}

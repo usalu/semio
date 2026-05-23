@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "box.initPeakAboveOrigin",
+  "version": "1.0.0",
+  "label": "BoxInitPeakAboveOrigin",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

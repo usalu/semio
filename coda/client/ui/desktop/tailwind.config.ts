@@ -8,12 +8,14 @@
 
 // #endregion 🧲Header
 
-// #region 🗄️Configuration
+// #region 🔌Adapters
 // Tailwind CSS configuration for the coda desktop application.
 // Configuration MUST include content glob patterns.
 
 import type { Config } from "tailwindcss";
+// #endregion 🔌Adapters
 
+// #region 🗄️Configuration
 /**
  * Tailwind CSS configuration with content paths for the coda desktop app.
  * Config MUST include content glob patterns.

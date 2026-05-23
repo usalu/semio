@@ -4,7 +4,9 @@
 // Health check endpoint. No auth required.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextResponse } from "next/server";
+// #endregion 🔌Adapters
 
 export async function GET() {
   return new NextResponse("ok", { status: 200 });

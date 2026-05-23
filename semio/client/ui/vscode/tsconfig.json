@@ -28,11 +28,11 @@
       "@semio/js/*": [
         "../js/*"
       ],
-      "@elements/ui": [
-        "../../elements/ui"
+      "@ui/react": [
+        "../../../ui/react"
       ],
-      "@elements/ui/*": [
-        "../../elements/ui/*"
+      "@ui/react/*": [
+        "../../../ui/react/*"
       ],
       "@semio/assets": [
         "../assets"

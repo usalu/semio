@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "spatial.shape.surface.sweep2",
+  "version": "1.0.0",
+  "label": "Sweep2",
+  "description": "Typology produced by surface.sweep2.",
+  "actions": [
+    "command.finish"
+  ],
+  "interactions": [
+    "surface.sweep2"
+  ],
+  "primitiveKinds": [
+    "face"
+  ]
+}

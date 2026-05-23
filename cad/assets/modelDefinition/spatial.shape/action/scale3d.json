@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "transform.scale3d",
+  "version": "1.0.0",
+  "label": "Scale3d",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

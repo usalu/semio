@@ -16,7 +16,7 @@
 # #endregion 🧲Header
 
 
-# #region ⛩️Imports
+# #region 🔌Adapters
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 
@@ -76,8 +76,35 @@ import pytransform3d.rotations
 
 import semio.client.lib.py.store as store
 
-# #endregion ⛩️Imports
+# #endregion 🔌Adapters
 
+# #region 🔌Ports
+class JsonCodecPort(typing.Protocol):
+    """📜 JSON encode/decode port (stdlib json implements in domain helpers)."""
+
+    def loads(self, data: str) -> typing.Any: ...
+
+    def dumps(self, value: typing.Any, **kwargs: typing.Any) -> str: ...
+
+
+class GraphQlSchemaPort(typing.Protocol):
+    """📜 GraphQL schema host port (graphene in 🔌Adapters implements)."""
+
+    def object_type(self, name: str, **fields: typing.Any) -> typing.Any: ...
+
+
+class _StdlibJsonCodec:
+    """📜 stdlib json adapter for {@link JsonCodecPort}."""
+
+    def loads(self, data: str) -> typing.Any:
+        return json.loads(data)
+
+    def dumps(self, value: typing.Any, **kwargs: typing.Any) -> str:
+        return json.dumps(value, **kwargs)
+
+
+json_codec: JsonCodecPort = _StdlibJsonCodec()
+# #endregion 🔌Ports
 
 # #region 🧩PydanticCompatibility
 class _SemioBaseRepresentation(pydantic.BaseModel):
@@ -931,7 +958,7 @@ class Plane(Table):
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -1091,7 +1118,7 @@ class Attribute(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -1651,7 +1678,7 @@ class Folder(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -1861,7 +1888,7 @@ def _bench(name: str, func):
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_json("metabolism.kit.semio.json")
+    kit_metabolism = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
     kit_original = {
         **kit_metabolism,
         "designs": [
@@ -1871,8 +1898,8 @@ def benchmark_main():
     kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
     def test_roundtrip():
-        serialized = json.dumps(kit_metabolism, indent=2)
-        deserialized = json.loads(serialized)
+        serialized = json_codec.dumps(kit_metabolism, indent=2)
+        deserialized = json_codec.loads(serialized)
         if not areKitsDictEqual(kit_metabolism, deserialized):
             raise AssertionError(
                 "Roundtrip/Metabolism output does not match test expectation"
@@ -2403,7 +2430,7 @@ class Prop(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -2678,7 +2705,7 @@ class Representation(
         if input is None:
             return cls(url="", file="")
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -2947,7 +2974,7 @@ class Connector(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -3325,7 +3352,7 @@ class Type(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -3757,7 +3784,7 @@ class Piece(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -3927,7 +3954,7 @@ class Side(BaseRepresentation):
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -4244,7 +4271,7 @@ class Connection(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -4829,7 +4856,7 @@ class Design(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -5215,7 +5242,7 @@ class Kit(
         if input is None:
             return cls()
         obj = (
-            json.loads(input)
+            json_codec.loads(input)
             if isinstance(input, str)
             else input
             if isinstance(input, dict)
@@ -9970,24 +9997,24 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
         )
         if _normalizeValue(bId) != _normalizeValue(aId):
             diff[refKey] = after.get(refKey)
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("concepts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("concepts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
     ):
         diff["concepts"] = after.get("concepts")
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("authors", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("authors", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
@@ -10169,12 +10196,12 @@ def _getRepresentationDiff(before: dict, after: dict) -> dict:
     )
     if _normalizeValue(bFileId) != _normalizeValue(aFileId):
         diff["file"] = after.get("file")
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("tags", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("tags", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
@@ -10235,24 +10262,24 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
         )
         if _normalizeValue(bId) != _normalizeValue(aId):
             diff[refKey] = after.get(refKey)
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("concepts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("concepts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
     ):
         diff["concepts"] = after.get("concepts")
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("authors", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("authors", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
@@ -10594,12 +10621,12 @@ def _getPortDiff(before: dict, after: dict) -> dict:
         diff["description"] = after.get("description")
     if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
         diff["icon"] = after.get("icon")
-    if json.dumps(
+    if json_codec.dumps(
         sorted(
             before.get("compatiblePorts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
         )
-    ) != json.dumps(
+    ) != json_codec.dumps(
         sorted(
             after.get("compatiblePorts", []),
             key=lambda x: x.get("id", "") if isinstance(x, dict) else str(x),
@@ -12109,8 +12136,8 @@ def copyDesignDict(
         elif isPpExclPcIncl:
             copied = _deepCopy(piece)
             flatPiece = flatPieceMap.get(pieceId, {})
-            centerValue = json.dumps(flatPiece.get("center", {"u": 0, "v": 0}))
-            planeValue = json.dumps(
+            centerValue = json_codec.dumps(flatPiece.get("center", {"u": 0, "v": 0}))
+            planeValue = json_codec.dumps(
                 flatPiece.get(
                     "plane",
                     {
@@ -12158,7 +12185,7 @@ def copyDesignDict(
                         attrs = cloned.setdefault("attributes", [])
                         attrs.append({"key": "semio.piece.origin", "value": "external"})
                         flatPiece = flatPieceMap.get(extId, {})
-                        centerValue = json.dumps(
+                        centerValue = json_codec.dumps(
                             flatPiece.get("center", {"u": 0, "v": 0})
                         )
                         attrs.append({"key": "semio.center", "value": centerValue})
@@ -12228,7 +12255,7 @@ def pasteDesignDict(
             for attr in piece.get("attributes", []):
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
-                        center = json.loads(attr["value"])
+                        center = json_codec.loads(attr["value"])
                     except json.JSONDecodeError, TypeError:
                         pass
         if center is not None:
@@ -12433,7 +12460,7 @@ def pasteDesignDict(
                                                     "value"
                                                 ):
                                                     try:
-                                                        flatParentCenter = json.loads(
+                                                        flatParentCenter = json_codec.loads(
                                                             attr["value"]
                                                         )
                                                         break
@@ -12452,7 +12479,7 @@ def pasteDesignDict(
                                                     "value"
                                                 ):
                                                     try:
-                                                        flatParentCenter = json.loads(
+                                                        flatParentCenter = json_codec.loads(
                                                             attr["value"]
                                                         )
                                                         break
@@ -12472,7 +12499,7 @@ def pasteDesignDict(
                                                 "key"
                                             ) == "semio.center" and attr.get("value"):
                                                 try:
-                                                    flatChildCenter = json.loads(
+                                                    flatChildCenter = json_codec.loads(
                                                         attr["value"]
                                                     )
                                                     break
@@ -12515,14 +12542,14 @@ def pasteDesignDict(
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 po = dict(copied.get("pose") or {})
-                                po["center"] = json.loads(attr["value"])
+                                po["center"] = json_codec.loads(attr["value"])
                                 copied["pose"] = po
                             except json.JSONDecodeError, TypeError:
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 po = dict(copied.get("pose") or {})
-                                po["plane"] = json.loads(attr["value"])
+                                po["plane"] = json_codec.loads(attr["value"])
                                 copied["pose"] = po
                             except json.JSONDecodeError, TypeError:
                                 pass
@@ -13106,7 +13133,7 @@ class ValidationResult:
         return {"problems": [i.toDict() for i in sortedProblems]}
 
     def serialize(self) -> str:
-        return json.dumps(self.toDict(), indent=2)
+        return json_codec.dumps(self.toDict(), indent=2)
 
 
 def _isId(s: str) -> bool:
@@ -13157,7 +13184,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
 
             if ia.constraintId == "id-unique":
                 continue
-            if json.dumps(_normalizeIds(fa.diff), sort_keys=True) != json.dumps(
+            if json_codec.dumps(_normalizeIds(fa.diff), sort_keys=True) != json_codec.dumps(
                 _normalizeIds(fb.diff), sort_keys=True
             ):
                 return False
@@ -13166,7 +13193,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
 
 def parseValidationResult(jsonStr: str) -> ValidationResult:
     """🔬Parse a validation result from a dictionary representation."""
-    data = json.loads(jsonStr)
+    data = json_codec.loads(jsonStr)
     problems = []
     for i in data["problems"]:
         fixes = [
@@ -13474,7 +13501,7 @@ def _makeFix(title: str, diff: dict) -> ValidationFix:
 
 def _deepCopy(obj: typing.Any) -> typing.Any:
     """🔖_deepCopy performs the _deepCopy operation."""
-    return json.loads(json.dumps(obj))
+    return json_codec.loads(json_codec.dumps(obj))
 
 
 def _newId() -> str:
@@ -15401,7 +15428,7 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
                 "SELECT data FROM kit_payload WHERE id = 1"
             ).fetchone()
             if payload_row and payload_row["data"]:
-                payload_dict = json.loads(payload_row["data"])
+                payload_dict = json_codec.loads(payload_row["data"])
         except sqlite3.OperationalError:
             payload_dict = {}
 
@@ -15676,7 +15703,7 @@ def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
             if os.path.exists(archive_path):
                 os.remove(archive_path)
 
-    kit_dict = json.loads(body.decode("utf-8"))
+    kit_dict = json_codec.loads(body.decode("utf-8"))
     files = _collect_kit_asset_files(kit_dict)
     return KitData(kit_dict), files
 
@@ -15755,7 +15782,7 @@ def edit_remote_kit(uri: str, diff: dict) -> KitData:
         _write_remote_kit_bytes(uri, body, "application/zip")
         return updated
 
-    body = json.dumps(_kit_to_dict(updated), ensure_ascii=False).encode("utf-8")
+    body = json_codec.dumps(_kit_to_dict(updated), ensure_ascii=False).encode("utf-8")
     _write_remote_kit_bytes(uri, body, content_type or "application/json")
     return updated
 
@@ -16257,7 +16284,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
 
     cursor.execute(
         "INSERT INTO kit_payload (id, data) VALUES (1, ?)",
-        (json.dumps(_kit_without_file_blobs(data), ensure_ascii=False),),
+        (json_codec.dumps(_kit_without_file_blobs(data), ensure_ascii=False),),
     )
 
     conn.commit()
@@ -16283,11 +16310,11 @@ class TransportKit:
         self.json = json_str
 
     def to_kit(self) -> KitData:
-        return KitData(json.loads(self.json))
+        return KitData(json_codec.loads(self.json))
 
     @staticmethod
     def from_kit(kit: KitData | dict) -> "TransportKit":
-        return TransportKit(json.dumps(_kit_to_dict(kit), ensure_ascii=False))
+        return TransportKit(json_codec.dumps(_kit_to_dict(kit), ensure_ascii=False))
 
 
 class ArchiveKit:
@@ -16395,7 +16422,7 @@ class DevKit(SyncKit):
 
     @staticmethod
     def from_json(json_str: str) -> "DevKit":
-        return DevKit(KitData(json.loads(json_str)))
+        return DevKit(KitData(json_codec.loads(json_str)))
 
 
 class LocalKit(SyncKit):
@@ -16545,7 +16572,7 @@ def _load_glb_mesh_from_bytes(
         return None
 
     try:
-        gltf = json.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
+        gltf = json_codec.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
     except Exception:
         return None
 
@@ -17291,9 +17318,9 @@ def _export_empty_scene(format: str) -> bytes:
         "nodes": [],
     }
     if format == ".gltf":
-        return json.dumps(empty_json).encode("utf-8")
+        return json_codec.dumps(empty_json).encode("utf-8")
     if format == ".glb":
-        json_str = json.dumps(empty_json, separators=(",", ":"))
+        json_str = json_codec.dumps(empty_json, separators=(",", ":"))
         while len(json_str) % 4 != 0:
             json_str += " "
         json_bytes = json_str.encode("utf-8")
@@ -17325,11 +17352,11 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
             )
             if gltf_key is not None:
                 gltf_value = exported[gltf_key]
-                gltf_json = json.loads(
+                gltf_json = json_codec.loads(
                     gltf_value.decode("utf-8")
                     if isinstance(gltf_value, bytes)
                     else (
-                        json.dumps(gltf_value)
+                        json_codec.dumps(gltf_value)
                         if isinstance(gltf_value, dict)
                         else str(gltf_value)
                     )
@@ -17350,15 +17377,15 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
                     image["uri"] = f"data:{mime};base64," + base64.b64encode(
                         exported[uri]
                     ).decode("ascii")
-                return json.dumps(gltf_json).encode("utf-8")
+                return json_codec.dumps(gltf_json).encode("utf-8")
             for key, value in exported.items():
                 if key.endswith(".gltf"):
                     if isinstance(value, bytes):
                         return value
                     if isinstance(value, dict):
-                        return json.dumps(value).encode("utf-8")
+                        return json_codec.dumps(value).encode("utf-8")
                     return str(value).encode("utf-8")
-            return json.dumps(exported).encode("utf-8")
+            return json_codec.dumps(exported).encode("utf-8")
         if isinstance(exported, bytes):
             return exported
         return str(exported).encode("utf-8")
@@ -17412,7 +17439,7 @@ def _glb_bytes_to_vertices_faces(
     if json_chunk is None:
         return None
     try:
-        gltf = json.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
+        gltf = json_codec.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
     except Exception:
         return None
     accessors = gltf.get("accessors", []) or []
@@ -19105,7 +19132,7 @@ def _test_find_design(kit: dict, name: str, parent_name: str = None) -> dict:
 
 
 def _test_flatten(design_name, parent_name=None):
-    kit_dict = _test_load_json("metabolism.kit.semio.json")
+    kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
     design = _test_find_design(kit_dict, design_name, parent_name)
 
     expected_design = next(
@@ -19235,7 +19262,7 @@ def _test_create_glb_blob(
     max_x = max(vertex[0] for vertex in vertices)
     max_y = max(vertex[1] for vertex in vertices)
     max_z = max(vertex[2] for vertex in vertices)
-    json_chunk = json.dumps(
+    json_chunk = json_codec.dumps(
         {
             "asset": {"version": "2.0"},
             "buffers": [{"byteLength": len(binary_chunk)}],
@@ -19295,9 +19322,9 @@ def _test_create_glb_blob(
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
-            kit_dict = _test_load_json("metabolism.kit.semio.json")
-            serialized = json.dumps(kit_dict)
-            deserialized = json.loads(serialized)
+            kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
+            serialized = json_codec.dumps(kit_dict)
+            deserialized = json_codec.loads(serialized)
             assert areKitsDictEqual(kit_dict, deserialized), (
                 "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
             )
@@ -19400,7 +19427,7 @@ class TestRoundtrip:
         def test_remote_kit_import_json_and_zip_then_edit(self):
             kit_dict = _test_build_workflow_kit()
             files = _collect_kit_asset_files(kit_dict)
-            json_body = json.dumps(kit_dict, ensure_ascii=False).encode("utf-8")
+            json_body = json_codec.dumps(kit_dict, ensure_ascii=False).encode("utf-8")
             zip_body = _test_build_workflow_archive_bytes(kit_dict, files)
             server, thread = _test_remote_kit_server(json_body, zip_body)
 
@@ -19555,7 +19582,7 @@ class TestFlattenMerkle:
             )
             before_hashes = computeFlatHashesDict(kit_before, design_before["id"])
 
-            kit_after = json.loads(json.dumps(kit_before))
+            kit_after = json_codec.loads(json_codec.dumps(kit_before))
             design_after = _flatten_merkle_find_design_by_path(
                 kit_after, case["designPath"]
             )
@@ -19670,7 +19697,7 @@ class TestFlattenMerkle:
 class TestChange:
     class TestMetabolism:
         def test_kit_change_forward_backward_inverse_behavior(self):
-            kit_original = _test_load_json("metabolism.kit.semio.json")
+            kit_original = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             kit_original["designs"] = [
                 d for d in kit_original.get("designs", []) if not d.get("parent")
             ]
@@ -19961,7 +19988,7 @@ class TestDesignWithDiff:
 class TestValidation:
     class TestMetabolism:
         def test_metabolism_kit_validate_empty_report(self):
-            valid_kit = _test_load_json("metabolism.kit.semio.json")
+            valid_kit = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             valid_result = validateKitDict(valid_kit)
             assert not valid_result.hasErrors()
 
@@ -19970,12 +19997,12 @@ class TestValidation:
             invalid_kit = _test_load_json("invalid.kit.semio.json")
             result = validateKitDict(invalid_kit)
             expected = parseValidationResult(
-                json.dumps(_test_load_json("validation.semio.json"))
+                json_codec.dumps(_test_load_json("validation.semio.json"))
             )
             assert areValidationResultsEqual(result, expected)
 
         def test_plain_descriptions_do_not_create_emoji_validation_problems(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
+            kit = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             kit["description"] = "Plain kit summary"
             for index, entry in enumerate(kit.get("types", [])):
                 entry["description"] = f"Repeated plain description {index % 2}"
@@ -20403,7 +20430,7 @@ class TestExportDesignRepresentation:
         )
         assert isinstance(result, bytes)
         assert len(result) > 0
-        parsed = json.loads(result.decode("utf-8"))
+        parsed = json_codec.loads(result.decode("utf-8"))
         assert "asset" in parsed
         assert "scenes" in parsed
 
@@ -20417,7 +20444,7 @@ class TestExportDesignRepresentation:
         result = export_design_representation(
             kit_dict, self._export_design_name, ".gltf"
         )
-        parsed = json.loads(result.decode("utf-8"))
+        parsed = json_codec.loads(result.decode("utf-8"))
         assert "nodes" in parsed
         assert "scenes" in parsed
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -20634,7 +20661,7 @@ class TestGetGeometricInsightsForRepresentation:
         REPORTS_REPRESENTATION_KPI_DIR.mkdir(parents=True, exist_ok=True)
         data = geometric_insights_to_report_dict(insights)
         (REPORTS_REPRESENTATION_KPI_DIR / "py.json").write_text(
-            json.dumps(data, indent=2, sort_keys=True), encoding="utf-8"
+            json_codec.dumps(data, indent=2, sort_keys=True), encoding="utf-8"
         )
 
         canonical_path = os.path.join(
@@ -20791,7 +20818,7 @@ class TestKitToMetaShallow:
     """🔖Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
         expected_meta = _test_load_json("metabolism.meta.kit.semio.json")
         expected_shallow = _test_load_json("metabolism.shallow.kit.semio.json")
 
@@ -20911,7 +20938,7 @@ class TestKitKind:
 
     def test_dev_kit_from_json(self):
         kit_dict = _test_build_workflow_kit()
-        json_str = json.dumps(kit_dict, ensure_ascii=False)
+        json_str = json_codec.dumps(kit_dict, ensure_ascii=False)
         dev = DevKit.from_json(json_str)
         assert dev.kit.name == kit_dict["name"]
 
@@ -20981,20 +21008,20 @@ class TestHash:
 
     def test_kit_diff_canonical_hash(self):
         hc = self._hash_cases["kitDiffHash"]
-        d = json.loads(hc["json"])
+        d = json_codec.loads(hc["json"])
         result = hash_kit_diff(d)
         assert result == hc["expected"]
 
     def test_kit_diff_deterministic(self):
         hc = self._hash_cases["kitDiffHash"]
-        d = json.loads(hc["json"])
+        d = json_codec.loads(hc["json"])
         h1 = hash_kit_diff(d)
         h2 = hash_kit_diff(d)
         assert h1 == h2
 
     def test_kit_diff_different_inputs(self):
         hc = self._hash_cases["kitDiffHash"]
-        d1 = json.loads(hc["json"])
+        d1 = json_codec.loads(hc["json"])
         d2 = {"name": "other"}
         assert hash_kit_diff(d1) != hash_kit_diff(d2)
 
@@ -21103,7 +21130,7 @@ class TestMaxChildren:
         }
         import json as _json
 
-        restored = _json.loads(_json.dumps(kit_dict))
+        restored = _json_codec.loads(_json_codec.dumps(kit_dict))
         assert restored["ports"][0]["maxChildren"] == 3
         assert restored["types"][0]["connectors"][0]["maxChildren"] == 5
 

@@ -7,7 +7,7 @@
   "main": ".vite/build/main.js",
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "@elements/ui": "*",
+    "@ui/react": "workspace:*",
     "@semio/js": "^0.1.0",
     "@semio/react": "^0.1.0",
     "@semio/sketchpad": "^0.1.0",

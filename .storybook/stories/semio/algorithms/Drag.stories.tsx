@@ -23,7 +23,7 @@ import {
   type AlgorithmWindowDef,
 } from "@semio/algorithms";
 
-import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
 import { DragDesign, DragOffset, DragPieces } from "@semio/assets";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };

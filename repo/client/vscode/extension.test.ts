@@ -6,7 +6,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
@@ -38,7 +38,7 @@ import {
   treeNodeToItem,
 } from "./extension";
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // 🔒#region 🎞️Constants
 const EXPECTED_COMMANDS = [
@@ -292,7 +292,7 @@ async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.Code
 // #region 🖇️Extension Activation
 suiteSetup(async function () {
   this.timeout(30000);
-  await openFixture("semio/metabolism.kit.semio.json");
+  await openFixture("semio/metabolism/wip/initialKit/kit.semio.json");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
@@ -389,7 +389,7 @@ suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
   test("Valid kit file produces no diagnostics", async function () {
-    const document = await openFixture("semio/metabolism.kit.semio.json");
+    const document = await openFixture("semio/metabolism/wip/initialKit/kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
   });
@@ -1964,7 +1964,7 @@ suite("CodeLens Behavior Test Suite", function () {
 suite("Semio VS Code Kit Editor Test Suite", () => {
   test("Kit file detection matches semio kit naming conventions", () => {
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.semio.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism/wip/initialKit/kit.semio.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit-metabolism.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.embedded.semio.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/jsonschema/kit.json"), false);

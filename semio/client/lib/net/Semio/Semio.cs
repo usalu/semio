@@ -13,8 +13,8 @@
 
 
 
-#region ⛩️Imports
-// Callers MUST import all required namespaces listed here.
+#region 🔌Adapters
+// Third-party imports MUST stay in this region; domain code uses port types below.
 using System.Collections;
 using System.Collections.Immutable;
 using System.Drawing;
@@ -49,7 +49,102 @@ using SharpGLTF.Scenes;
 using GltfRepresentation = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion ⛩️Imports
+#endregion 🔌Adapters
+
+#region 🔌Ports
+/// <summary>📜 JSON codec port implemented by Newtonsoft in 🔌Adapters.</summary>
+public interface ISemioJsonCodec
+{
+    string Serialize(object value);
+    T Deserialize<T>(string json);
+    string SerializeRepresentation(object obj, string indent = "");
+    T? DeserializeRepresentation<T>(string json);
+    string SerializeCamelIndented(object value);
+    object? ParseJsonRoot(string json);
+    string SerializeKitDiffValidation(object value);
+    T? DeserializeKitDiffValidation<T>(string json);
+}
+
+/// <summary>📜 Active JSON codec for domain serialization (defaults to Newtonsoft adapter).</summary>
+public static class SemioJson
+{
+    public static ISemioJsonCodec Codec { get; set; } = NewtonsoftSemioJsonCodec.Instance;
+}
+
+/// <summary>📜 Newtonsoft-backed JSON codec adapter.</summary>
+public sealed class NewtonsoftSemioJsonCodec : ISemioJsonCodec
+{
+    public static readonly NewtonsoftSemioJsonCodec Instance = new();
+
+    public string Serialize(object value) => JsonConvert.SerializeObject(value);
+
+    public T Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json)!;
+
+    public string SerializeRepresentation(object obj, string indent = "")
+    {
+        var isTabbed = indent.StartsWith("\t");
+        var formatting = string.IsNullOrEmpty(indent) ? Formatting.None : Formatting.Indented;
+        var settings = new JsonSerializerSettings { ContractResolver = new SemioContractResolver(), Formatting = formatting };
+        if (formatting == Formatting.None) return JsonConvert.SerializeObject(obj, settings);
+        var stringWriter = new StringWriter();
+        using (var jsonWriter = new JsonTextWriter(stringWriter))
+        {
+            jsonWriter.Formatting = Formatting.Indented;
+            jsonWriter.IndentChar = isTabbed ? '\t' : ' ';
+            jsonWriter.Indentation = indent.Length;
+            JsonSerializer.Create(settings).Serialize(jsonWriter, obj);
+        }
+        return stringWriter.ToString();
+    }
+
+    public T? DeserializeRepresentation<T>(string json) =>
+        JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+        });
+
+    public string SerializeCamelIndented(object value) =>
+        JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        });
+
+    public object? ParseJsonRoot(string json) => JsonConvert.DeserializeObject<JObject>(json);
+
+    private static readonly JsonSerializerSettings KitDiffValidationJson = new()
+    {
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        NullValueHandling = NullValueHandling.Include,
+    };
+
+    public string SerializeKitDiffValidation(object value) =>
+        JsonConvert.SerializeObject(value, KitDiffValidationJson);
+
+    public T? DeserializeKitDiffValidation<T>(string json) =>
+        JsonConvert.DeserializeObject<T>(json, KitDiffValidationJson);
+
+    private sealed class SemioContractResolver : CamelCasePropertyNamesContractResolver
+    {
+        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+        {
+            var property = base.CreateProperty(member, memberSerialization);
+            var declaringType = member.DeclaringType;
+            if (declaringType != null)
+            {
+                var shouldSerializeMethod = declaringType.GetMethod(
+                    $"ShouldSerialize{member.Name}",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (shouldSerializeMethod != null && shouldSerializeMethod.ReturnType == typeof(bool))
+                {
+                    property.ShouldSerialize = instance => (bool)(shouldSerializeMethod.Invoke(instance, null) ?? true);
+                }
+            }
+            return property;
+        }
+    }
+}
+#endregion 🔌Ports
 
 
 
@@ -288,42 +383,9 @@ public static class Utility
         return decoded;
     }
 
-    public static string Serialize(object obj, string indent = "")
-    {
-        var isTabbed = indent.StartsWith("\t");
-        var formatting = string.IsNullOrEmpty(indent) ? Formatting.None : Formatting.Indented;
-        var settings = new JsonSerializerSettings { ContractResolver = new SemioContractResolver(), Formatting = formatting };
-        if (formatting == Formatting.None) return JsonConvert.SerializeObject(obj, settings);
-        var stringWriter = new StringWriter();
-        using (var jsonWriter = new JsonTextWriter(stringWriter))
-        {
-            jsonWriter.Formatting = Formatting.Indented;
-            jsonWriter.IndentChar = isTabbed ? '\t' : ' ';
-            jsonWriter.Indentation = indent.Length;
-            JsonSerializer.Create(settings).Serialize(jsonWriter, obj);
-        }
-        return stringWriter.ToString();
-    }
+    public static string Serialize(object obj, string indent = "") => SemioJson.Codec.SerializeRepresentation(obj, indent);
 
-    public class SemioContractResolver : CamelCasePropertyNamesContractResolver
-    {
-        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-        {
-            var property = base.CreateProperty(member, memberSerialization);
-            var declaringType = member.DeclaringType;
-            if (declaringType != null)
-            {
-                var shouldSerializeMethod = declaringType.GetMethod($"ShouldSerialize{member.Name}", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                if (shouldSerializeMethod != null && shouldSerializeMethod.ReturnType == typeof(bool))
-                {
-                    property.ShouldSerialize = instance => (bool)(shouldSerializeMethod.Invoke(instance, null) ?? true);
-                }
-            }
-            return property;
-        }
-    }
-
-    public static T? Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), ObjectCreationHandling = ObjectCreationHandling.Replace });
+    public static T? Deserialize<T>(string json) => SemioJson.Codec.DeserializeRepresentation<T>(json);
 
     #region 🧬KitDocumentJson
 
@@ -1766,12 +1828,12 @@ public class ValidationResult
     {
         var sorted = Issues.OrderBy(i => i.ConstraintId).ThenBy(i => i.EntityId).ToList();
         var result = new { issues = sorted.Select(i => new { constraintId = i.ConstraintId, message = i.Message, entityKind = i.EntityKind, entityId = i.EntityId, fixes = i.Fixes.Select(f => new { title = f.Title, diff = f.Diff }) }) };
-        return JsonConvert.SerializeObject(result, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+        return SemioJson.Codec.SerializeCamelIndented(result);
     }
 
     public static ValidationResult Parse(string json)
     {
-        var data = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(json);
+        var data = SemioJson.Codec.ParseJsonRoot(json) as JObject;
         var result = new ValidationResult();
         var problemsToken = data?["problems"] ?? data?["issues"];
         if (problemsToken == null) return result;
@@ -11463,12 +11525,12 @@ public static class Api
 
     private static string UnsuccessfullResponseToString<T>(ApiResponse<T> response)
     {
-        return JsonConvert.SerializeObject(new
+        return SemioJson.Codec.Serialize(new
         {
             StatusCode = response.StatusCode.ToString(),
             Message = response.Error?.Content ?? "null",
             Request = response.RequestMessage?.ToString() ?? "null",
-            Headers = response.Headers?.ToString() ?? "null"
+            Headers = response.Headers?.ToString() ?? "null",
         });
     }
 

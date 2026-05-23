@@ -13,10 +13,11 @@
 // MUST resolve the user identity before rendering the dashboard.
 // MUST communicate with coda MCP server via the preload bridge.
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+// #region 🔌Adapters
+import React from "react";
 import { createRoot } from "react-dom/client";
-
-import { i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "../../../../elements/client/lib/react";
+import { elementUiI18n as i18next, initReactI18next, reactHostPort, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@ui/react";
+// #endregion 🔌Adapters
 
 import "./globals.css";
 
@@ -614,7 +615,7 @@ function EmptyState({ message, action }: { message: string; action?: React.React
  *MUST toggle visibility on header click.
  **/
 function Collapsible({ title, children, defaultOpen = false, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = reactHostPort.useState(defaultOpen);
   return (
     <div className="border border-border-window rounded-md overflow-hidden">
       <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-hover-window transition-colors cursor-pointer">
@@ -636,7 +637,7 @@ function Collapsible({ title, children, defaultOpen = false, badge }: { title: s
  *MUST display formatted JSON in a code block.
  **/
 function JsonViewer({ data }: { data: unknown }) {
-  const formatted = useMemo(() => {
+  const formatted = reactHostPort.useMemo(() => {
     try {
       return JSON.stringify(data, null, 2);
     } catch {
@@ -892,7 +893,7 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
   const witnessChildren = node.children.filter((c) => c.kind === "Witness");
   const nonWitnessChildren = node.children.filter((c) => c.kind !== "Witness");
   const useAlternatives = witnessChildren.length > 1;
-  const [activeWitnessIndex, setActiveWitnessIndex] = React.useState(0);
+  const [activeWitnessIndex, setActiveWitnessIndex] = reactHostPort.useState(0);
   const clampedIndex = useAlternatives ? Math.min(activeWitnessIndex, witnessChildren.length - 1) : 0;
 
   return (
@@ -986,12 +987,12 @@ function ValidationTree({ report, defaultExpanded = true }: { report: Validation
  *MUST refetch when uri or refreshKey changes.
  **/
 function useCodaResource<T>(uri: string, refreshKey: number = 0): { data: T | null; loading: boolean; error: string | null; refresh: () => void } {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [localRefresh, setLocalRefresh] = useState(0);
+  const [data, setData] = reactHostPort.useState<T | null>(null);
+  const [loading, setLoading] = reactHostPort.useState(true);
+  const [error, setError] = reactHostPort.useState<string | null>(null);
+  const [localRefresh, setLocalRefresh] = reactHostPort.useState(0);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -1025,7 +1026,7 @@ function useCodaResource<T>(uri: string, refreshKey: number = 0): { data: T | nu
     };
   }, [uri, refreshKey, localRefresh]);
 
-  const refresh = useCallback(() => setLocalRefresh((n) => n + 1), []);
+  const refresh = reactHostPort.useCallback(() => setLocalRefresh((n) => n + 1), []);
   return { data, loading, error, refresh };
 }
 
@@ -1052,17 +1053,17 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
   const loading = projectLoading || runLoading || iterLoading || reportLoading;
 
   const totalValidations = report?.validations?.length ?? 0;
-  const violatedCount = useMemo(() => {
+  const violatedCount = reactHostPort.useMemo(() => {
     if (!report?.validations) return 0;
     return report.validations.filter((v) => v.truth === "false").length;
   }, [report]);
 
-  const compliantCount = useMemo(() => {
+  const compliantCount = reactHostPort.useMemo(() => {
     if (!report?.validations) return 0;
     return report.validations.filter((v) => v.truth === "true").length;
   }, [report]);
 
-  const totalPropertyCount = useMemo(() => (properties ? countProperties(properties) : 0), [properties]);
+  const totalPropertyCount = reactHostPort.useMemo(() => (properties ? countProperties(properties) : 0), [properties]);
 
   if (loading) return <Spinner label="Loading dashboard..." />;
 
@@ -1713,7 +1714,7 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
  **/
 function TranslationsPage({ refreshKey }: { refreshKey: number }) {
   const { data: project } = useCodaResource<Project>("coda://project", refreshKey);
-  const targetIds = useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
+  const targetIds = reactHostPort.useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
 
   return (
     <div className="space-y-6">
@@ -1755,12 +1756,12 @@ function TranslationCard({ targetId, refreshKey }: { targetId: string; refreshKe
  **/
 function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh: () => void }) {
   const { data: project } = useCodaResource<Project>("coda://project", refreshKey);
-  const targetIds = useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
+  const targetIds = reactHostPort.useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
 
-  const [actionLog, setActionLog] = useState<Array<{ id: number; action: string; result: unknown; timestamp: string; success: boolean }>>([]);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [actionLog, setActionLog] = reactHostPort.useState<Array<{ id: number; action: string; result: unknown; timestamp: string; success: boolean }>>([]);
+  const [loading, setLoading] = reactHostPort.useState<string | null>(null);
 
-  const runTool = useCallback(
+  const runTool = reactHostPort.useCallback(
     async (name: string, args: Record<string, unknown>, label: string) => {
       setLoading(label);
       try {
@@ -1778,7 +1779,7 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
     [onRefresh],
   );
 
-  const runCall = useCallback(
+  const runCall = reactHostPort.useCallback(
     async (method: string, params: Record<string, unknown>, label: string) => {
       setLoading(label);
       try {
@@ -1882,10 +1883,10 @@ function TargetActionCard({
   runTool: (name: string, args: Record<string, unknown>, label: string) => void;
   runCall: (method: string, params: Record<string, unknown>, label: string) => void;
 }) {
-  const [manualMode, setManualMode] = useState<null | "translate" | "validate">(null);
-  const [manualInput, setManualInput] = useState("");
+  const [manualMode, setManualMode] = reactHostPort.useState<null | "translate" | "validate">(null);
+  const [manualInput, setManualInput] = reactHostPort.useState("");
 
-  const handleManualSubmit = useCallback(() => {
+  const handleManualSubmit = reactHostPort.useCallback(() => {
     if (!manualInput.trim() || !manualMode) return;
     try {
       const parsed = JSON.parse(manualInput);
@@ -1983,7 +1984,7 @@ function TargetActionCard({
  *MUST provide a textarea to paste fix results and submit them.
  **/
 function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | null; onSubmit: (result: unknown) => void; disabled: boolean }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = reactHostPort.useState("");
   const handleSubmit = () => {
     if (!input.trim()) return;
     try {
@@ -2018,7 +2019,7 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
  *MUST provide a text input for the fix prompt.
  **/
 function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix: (prompt: string) => void; disabled: boolean }) {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = reactHostPort.useState("");
   const handleSubmit = () => {
     if (prompt.trim()) {
       onFix(prompt.trim());
@@ -2059,15 +2060,15 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
  * MUST show event kind, timestamp, and full data payload.
  **/
 function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => void }) {
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = reactHostPort.useState("");
 
-  const filteredEvents = useMemo(() => {
+  const filteredEvents = reactHostPort.useMemo(() => {
     if (!filter.trim()) return events;
     const lower = filter.toLowerCase();
     return events.filter((e) => e.event.toLowerCase().includes(lower) || JSON.stringify(e.data).toLowerCase().includes(lower));
   }, [events, filter]);
 
-  const uniqueKinds = useMemo(() => {
+  const uniqueKinds = reactHostPort.useMemo(() => {
     const kinds = new Set(events.map((e) => e.event));
     return Array.from(kinds).sort();
   }, [events]);
@@ -2144,13 +2145,13 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
  * MUST call onProjectReady with the resolved project path on success.
  **/
 function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onProjectReady: (projectPath: string) => void; onMinimize: () => void; onMaximize: () => void; onClose: () => void }) {
-  const [mode, setMode] = useState<"choose" | "create" | "open">("choose");
-  const [projectName, setProjectName] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = reactHostPort.useState<"choose" | "create" | "open">("choose");
+  const [projectName, setProjectName] = reactHostPort.useState("");
+  const [selectedFolder, setSelectedFolder] = reactHostPort.useState<string | null>(null);
+  const [error, setError] = reactHostPort.useState<string | null>(null);
+  const [loading, setLoading] = reactHostPort.useState(false);
 
-  const handlePickFolder = useCallback(async () => {
+  const handlePickFolder = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
     if (folder) {
       setSelectedFolder(folder);
@@ -2158,7 +2159,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
     }
   }, []);
 
-  const handleCreate = useCallback(async () => {
+  const handleCreate = reactHostPort.useCallback(async () => {
     if (!projectName.trim()) {
       setError("Project name is required.");
       return;
@@ -2181,7 +2182,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
     }
   }, [projectName, selectedFolder, onProjectReady]);
 
-  const handleOpen = useCallback(async () => {
+  const handleOpen = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
     if (!folder) return;
     setLoading(true);
@@ -2393,16 +2394,16 @@ const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ cla
  * MUST provide sidebar navigation and page content area.
  **/
 function App() {
-  const [userId, setUserId] = useState<string>("");
-  const [projectPath, setProjectPath] = useState<string | null | undefined>(undefined);
-  const [currentPage, setCurrentPage] = useState<Page>("dashboard");
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidecarConnected, setSidecarConnected] = useState(false);
-  const [events, setEvents] = useState<CodaEvent[]>([]);
+  const [userId, setUserId] = reactHostPort.useState<string>("");
+  const [projectPath, setProjectPath] = reactHostPort.useState<string | null | undefined>(undefined);
+  const [currentPage, setCurrentPage] = reactHostPort.useState<Page>("dashboard");
+  const [refreshKey, setRefreshKey] = reactHostPort.useState(0);
+  const [sidebarCollapsed, setSidebarCollapsed] = reactHostPort.useState(false);
+  const [sidecarConnected, setSidecarConnected] = reactHostPort.useState(false);
+  const [events, setEvents] = reactHostPort.useState<CodaEvent[]>([]);
   const isCompactWindow = useMediaQuery("(max-width: 1100px)");
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     async function init() {
       try {
         const [id, path, connected] = await Promise.all([window.os.getUserId(), window.project.getPath(), window.coda.getConnectionStatus()]);
@@ -2418,7 +2419,7 @@ function App() {
     init();
   }, []);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     const refreshOn = new Set(["project_files_changed", "project_ready", "run_started", "iteration_started", "translation_saved", "report_saved", "validation_saved", "validation_completed", "translate_started"]);
     const unsubEvent = window.coda.onEvent((evt: CodaEvent) => {
       setEvents((prev) => [evt, ...prev]);
@@ -2433,23 +2434,23 @@ function App() {
     };
   }, []);
 
-  const handleClearEvents = useCallback(() => setEvents([]), []);
+  const handleClearEvents = reactHostPort.useCallback(() => setEvents([]), []);
 
-  const handleRefresh = useCallback(() => setRefreshKey((n) => n + 1), []);
+  const handleRefresh = reactHostPort.useCallback(() => setRefreshKey((n) => n + 1), []);
 
-  const handleMinimize = useCallback(() => {
+  const handleMinimize = reactHostPort.useCallback(() => {
     if (window.windowControls) window.windowControls.minimize();
   }, []);
 
-  const handleMaximize = useCallback(() => {
+  const handleMaximize = reactHostPort.useCallback(() => {
     if (window.windowControls) window.windowControls.maximize();
   }, []);
 
-  const handleClose = useCallback(() => {
+  const handleClose = reactHostPort.useCallback(() => {
     if (window.windowControls) window.windowControls.close();
   }, []);
 
-  useEffect(() => {
+  reactHostPort.useEffect(() => {
     setSidebarCollapsed(isCompactWindow);
   }, [isCompactWindow]);
 

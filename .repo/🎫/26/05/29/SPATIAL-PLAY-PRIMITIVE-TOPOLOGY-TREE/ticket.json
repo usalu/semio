@@ -1,0 +1,13 @@
+{
+  "title": "Spatial Play Primitive Topology Tree",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Nest vertices, faces, shells, etc. under primitive nodes in spatial play hierarchy tree.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1494"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a784f97241a54a0f9236655b728f5ccd"
+  ]
+}

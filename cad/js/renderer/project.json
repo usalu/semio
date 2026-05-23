@@ -1,0 +1,42 @@
+{
+  "name": "@cad/js/renderer",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cad/js/renderer",
+        "command": "bun ./script.ts dev",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6020",
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cad/js/renderer",
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "cad/js/renderer",
+        "command": "bun ./script.ts test",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

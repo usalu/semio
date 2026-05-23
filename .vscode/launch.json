@@ -72,7 +72,7 @@
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev📚storybook",
+      "name": "🛠️dev📖storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook",
@@ -83,6 +83,120 @@
       "presentation": {
         "group": "3_dev",
         "order": 10
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🎨ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 20
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧩puzzle2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:puzzle:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 30
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧩puzzle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:puzzle",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 40
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook👤semio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 50
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook👤semio🧪algorithms",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio:algorithms",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 60
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook👤semio🎨ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 70
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -103,7 +217,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 20,
+        "order": 80,
         "reveal": "always",
         "panel": "dedicated"
       }
@@ -132,7 +246,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 30,
+        "order": 90,
         "reveal": "always",
         "panel": "dedicated"
       },
@@ -151,7 +265,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 40
+        "order": 100
       }
     },
     {
@@ -207,19 +321,36 @@
       }
     },
     {
-      "name": "🛠️dev📐elements🖱️geometry🎛️play",
+      "name": "🛠️dev👤semio🧮query🧪test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/geometry-play:dev",
+      "command": "bun nx run @semio/query:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 65
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
-        "uriFormat": "%s"
+        "order": 68
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🧮query🦀build",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/query:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🧮query🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts query wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69.5
       }
     },
     {
@@ -470,13 +601,32 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧩elements🏁board",
+      "name": "🛠️dev🧭cad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/board:dev",
+      "command": "bun run dev:cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BOARD_PLAY_PORT": "6012"
+        "CAD_JS_RENDERER_PLAY_PORT": "6020"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 165
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle2d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_2D_PLAY_PORT": "6012"
       },
       "presentation": {
         "group": "3_dev",
@@ -489,13 +639,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩elements🏙️scene",
+      "name": "🛠️dev🧩puzzle3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/scene:dev",
+      "command": "bun run dev:puzzle:3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SCENE_PLAY_PORT": "6013"
+        "PUZZLE_3D_PLAY_PORT": "6013"
       },
       "presentation": {
         "group": "3_dev",
@@ -507,10 +657,29 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev🧩puzzle5d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:puzzle:5d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PUZZLE_5D_PLAY_PORT": "6014"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 185
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "uriFormat": "%s"
+      }
+    },
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦build📚storybook",
+      "name": "📦build📖storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:storybook",

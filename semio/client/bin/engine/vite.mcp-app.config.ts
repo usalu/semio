@@ -8,11 +8,13 @@
 
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+// #endregion 🔌Adapters
 
 // #region 🪵ZodJitlessPlugin
 // Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`

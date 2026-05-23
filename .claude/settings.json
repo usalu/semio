@@ -12,7 +12,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/claude hook Notification",
+            "command": "bun ./script.ts dev mcp stdio claude hook Notification",
             "type": "command"
           }
         ],
@@ -23,7 +23,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/claude hook PermissionRequest",
+            "command": "bun ./script.ts dev mcp stdio claude hook PermissionRequest",
             "type": "command"
           }
         ],
@@ -34,7 +34,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/claude hook TaskCompleted",
+            "command": "bun ./script.ts dev mcp stdio claude hook TaskCompleted",
             "type": "command"
           }
         ],
@@ -45,7 +45,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/claude hook TeammateIdle",
+            "command": "bun ./script.ts dev mcp stdio claude hook TeammateIdle",
             "type": "command"
           }
         ],

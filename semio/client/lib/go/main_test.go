@@ -494,7 +494,7 @@ func TestRoundtrip(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 
 		var kit Kit
-		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 
 		data, err := SerializeKit(kit)
 		if err != nil {
@@ -578,7 +578,7 @@ func TestDesignRepresentation(t *testing.T) {
 
 func TestKitFilterDesign(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 
 	var expected Kit
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
@@ -1046,7 +1046,7 @@ func TestFlattenMerkle(t *testing.T) {
 
 	t.Run("CachedFlattenReusesValues", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 		designId := flattenMerkleDesignId(t, kit, []string{"Nakagin Capsule Tower"})
 		_, firstCache := FlattenDesignCached(&kit, designId, nil)
 		if len(firstCache) == 0 {
@@ -1090,7 +1090,7 @@ func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", func(t *testing.T) {
 			var kitOriginal Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kitOriginal)
+			loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kitOriginal)
 			kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
 
 			var kitDiff KitDiff
@@ -1200,7 +1200,7 @@ func TestDelete(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Delete Third Tambour And First Small Tower Connection", func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+			loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 
 			var design *Design
 			for i := range kit.Designs {
@@ -1448,7 +1448,7 @@ func TestDrag(t *testing.T) {
 func TestMove(t *testing.T) {
 	t.Run("same drag fixture + move vector = plane and connection Jacobian diff", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 		var design Design
 		loadJSON(t, "drag/design.semio.json", &design)
 		var pieces Design
@@ -1884,7 +1884,7 @@ func TestCopyAndPaste(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Copy and Paste Roundtrip", func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+			loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 
 			var design *Design
 			design = findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
@@ -2090,7 +2090,7 @@ func TestValidation(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Metabolism Kit -> Validate = Empty report", func(t *testing.T) {
 			var validKit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &validKit)
+			loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &validKit)
 			validResult := ValidateKit(validKit)
 			if HasErrors(validResult) {
 				t.Errorf("Valid kit should not have errors, got %d problems", len(validResult.Problems))
@@ -2116,7 +2116,7 @@ func TestValidation(t *testing.T) {
 
 		t.Run("Plain descriptions do not create emoji validation problems", func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+			loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 			kitDescription := "Plain kit summary"
 			kit.Description = &kitDescription
 			for i := range kit.Types {
@@ -2171,7 +2171,7 @@ func TestDesignQualitySum(t *testing.T) {
 
 func TestExportDesignRepresentation(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
@@ -2255,7 +2255,7 @@ func TestExportDesignRepresentation(t *testing.T) {
 
 func TestExportDesignRepresentationSceneGraphReport(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
 		t.Fatal("Nakagin Capsule Tower design not found")
@@ -2353,7 +2353,7 @@ func TestGetGeometricInsightsForRepresentation_NakaginCapsuleTower(t *testing.T)
 func TestMetaShallow(t *testing.T) {
 	t.Run("KitMeta from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 		meta := ToKitMeta(kit)
 		if meta.Id != kit.Id {
 			t.Errorf("KitMeta.Id = %q, want %q", meta.Id, kit.Id)
@@ -2368,7 +2368,7 @@ func TestMetaShallow(t *testing.T) {
 
 	t.Run("KitShallow from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		loadJSON(t, "stores/metabolism/wip/initialKit/kit.semio.json", &kit)
 		shallow := ToKitShallow(kit)
 		if shallow.Id != kit.Id {
 			t.Errorf("KitShallow.Id = %q, want %q", shallow.Id, kit.Id)
@@ -3433,7 +3433,7 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 }
 
 func BenchmarkRoundtripMetabolism(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
@@ -3454,7 +3454,7 @@ func BenchmarkRoundtripMetabolism(b *testing.B) {
 }
 
 func BenchmarkDiffMetabolism(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	kitOriginal := kit
 	kitOriginal.Designs = nil
 	for _, design := range kit.Designs {
@@ -3485,7 +3485,7 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 }
 
 func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
 	b.ResetTimer()
 	start := time.Now()
@@ -3500,7 +3500,7 @@ func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
 }
 
 func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
 	b.ResetTimer()
 	start := time.Now()
@@ -3515,7 +3515,7 @@ func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
 }
 
 func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
 	b.ResetTimer()
 	start := time.Now()
@@ -3530,7 +3530,7 @@ func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
 }
 
 func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
 	b.ResetTimer()
 	start := time.Now()
@@ -3545,7 +3545,7 @@ func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
 }
 
 func BenchmarkFlattenDesign_CapsuleDream(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	d := benchFindDesign(kit, "Capsule Dream", "")
 	b.ResetTimer()
 	start := time.Now()
@@ -3574,7 +3574,7 @@ func BenchmarkValidateKit_Invalid(b *testing.B) {
 }
 
 func BenchmarkValidateKit_Metabolism(b *testing.B) {
-	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kit := benchLoadKitFile(b, "stores/metabolism/wip/initialKit/kit.semio.json")
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {

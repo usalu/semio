@@ -1,0 +1,18 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.solidfem.solidelement",
+  "version": "1.0.0",
+  "label": "Solid Element",
+  "description": "Derived structural element represented with solid mesh.",
+  "actions": [
+    "structure.solidfem.constructSolidElementFrom2PointsAndHeight",
+    "structure.solidfem.constructSolidElementFromCurveAndHeight",
+    "structure.solidfem.constructSolidElementFromSurface"
+  ],
+  "interactions": [
+    "structure.solidfem.constructSolidElement"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

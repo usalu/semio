@@ -15,10 +15,12 @@
 // Configuration MUST enable the React and Tailwind CSS plugins.
 // Configuration MUST pre-bundle heavy dependencies to avoid white screen in Electron.
 
+// #region 🔌Adapters
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import type { UserConfig } from "vite";
+// #endregion 🔌Adapters
 
 const configuration: UserConfig = {
   server: {
@@ -27,7 +29,7 @@ const configuration: UserConfig = {
     // because Electron's Chromium has a 6-connection-per-origin HTTP/1.1 limit
     // and the 80+ ESM module waterfall from elements.tsx stalls.
     warmup: {
-      clientFiles: ["./renderer.tsx", "../../../../elements/ui/index.tsx"],
+      clientFiles: ["./renderer.tsx", "../../../../ui/react/index.tsx"],
     },
     // Allow serving files from the entire monorepo since elements.tsx and
     // other dependencies live outside the desktop project root.
@@ -100,7 +102,7 @@ const configuration: UserConfig = {
     alias: {
       "@semio/js": path.resolve(__dirname, "../../../../semio/client/lib/js"),
       "@semio/assets": path.resolve(__dirname, "../../../../semio/assets"),
-      "@elements/ui": path.resolve(__dirname, "../../../../elements/ui"),
+      "@ui/react": path.resolve(__dirname, "../../../../ui/react"),
       "@coda/desktop": path.resolve(__dirname, "."),
     },
   },

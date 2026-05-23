@@ -1,27 +1,43 @@
-# @repo/lib
+# @repo/lib (JS)
 
-Stateless TypeScript facade for the repo CLI (`repo/client/client` or `client.exe`). Lint scripts use it to query entities via GraphQL subprocess calls and emit breaches to `.repo/cache/breaches/`.
+Repo policy lint facade and GraphQL CLI subprocess helpers.
 
-## Lint scripts
+## Bundle `script.ts` conventions
 
-- **File**: `<name>.<ext>.lint.script.ts` next to `<name>.<ext>` — default export receives `FileLinter`.
-- **Folder / bundle / technology**: `lint.script.ts` in a directory — runner resolves entity kind from `folder(path)` GraphQL.
+Every bundle or workspace router is a single `script.ts`. Implement commands as **`Script` subclasses** registered on a **`ScriptRouter`**, not long `if (command === …)` chains.
 
-## Cache
+```ts
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "./src/bundle-script.ts";
 
-Each run writes `.repo/cache/breaches/<sanitized-entity-id>.json` with `{ entityId, script, breachs }`.
+class TestScript extends BundleScript {
+  run(segments: string[]) {
+    runVitest(this.root, segments);
+  }
+}
 
-## Nx
-
-The workspace registers `./repo/lib/js/nx-plugin.mjs`, which matches `**/*lint.script.ts` (including `lint.script.ts`). Nx project inference typically **only includes git-tracked files** in the graph; untracked lint scripts will not get `breach-*` targets until they are added to version control.
-
-Run a script directly:
-
-```bash
-bun repo/lib/js/bin/lint.ts "path/to/foo.lint.script.ts"
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+await runBundleScriptMain(router, import.meta.url);
 ```
 
-## Env
+- **`BundleScript`**: `this.root` is the bundle directory; `this.repoRoot` is the monorepo root (`findRepoRoot`).
+- **`runBundleScriptMain(router, import.meta.url)`**: runs `policy` when `export const policy` is present, then dispatches argv.
+- **`runPolicyOnlyMain(import.meta.url)`**: policy-only bundles (no subcommands).
+- **Workspace root** (`/script.ts`): same `Script` base class with `ScriptRouter` over workspace verbs (see root `script.ts`).
+- **Native bootstrap**: `repo/native/bootstrap/script.ps1` / `script.sh` (invoked via `bun ./script.ts setup native` / `start`).
+- **Neo4j export**: `bun ./script.ts generate neo4j …` (live graph → `.repo/🛂` bundles; greenfield, no migration runner).
+- Helpers: `runCmd`, `runBun`, `runBunx`, `runViteDev`, `runViteBuild`, `runVitest`, `runWasmPackWebBuild`, `playPollingEnv`, `dispatchSubcommand`, `runWorkspaceScriptMain`, `devToolingEnv`, `spawnBunx`.
+- Nested verbs inside a command class use `dispatchSubcommand(segments, { … }, usage, defaultKey?)`.
 
-- `REPO_CLI_BIN` — path to repo client binary (default: `repo/client/client.exe` on Windows, else `repo/client/client` under workspace root).
-- `REPO_ROOT` — workspace root (default: detected from cwd).
+## Policy scripts (`script.ts` only)
+
+- **File**: `export const policyFile = "index.ts"` plus `export const policy = defineLint(...)` in the bundle `script.ts`.
+- **Folder / bundle / technology**: `export const policy = defineLint(...)` in `script.ts` at that directory — runner resolves entity kind from `folder(path)` GraphQL.
+
+Run:
+
+```bash
+bun path/to/script.ts policy
+bun repo/lib/js/bin/lint.ts path/to/script.ts
+```
+
+Nx registers `./repo/lib/js/nx-plugin.mjs`, which matches `**/script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).

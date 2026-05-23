@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "from_aec.building.structure",
+  "version": "1.0.0",
+  "label": "From Aec Building Structure",
+  "description": "Derives a solid finite element structural model from an aec.building.structure source model.",
+  "source": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure.fem.solid"
+  },
+  "typologies": [
+    "structure.solidfem.solidelement"
+  ]
+}

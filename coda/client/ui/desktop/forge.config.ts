@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-// #region 🗄️Configuration
+// #region 🔌Adapters
 // Electron Forge build configuration for the coda desktop application.
 // Configuration MUST define packager, makers, and plugins for Electron Forge.
 
@@ -25,7 +25,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const assistantBundleRoot = path.resolve(__dirname, "..", "assistant");
+// #endregion 🔌Adapters
 
+// #region 🗄️Configuration
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
  * Config MUST include VitePlugin with main, preload, and renderer entries.

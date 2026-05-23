@@ -1,0 +1,8 @@
+{
+  "title": "Fix Outdated Nx And Dev Configs",
+  "emoji": "🎫",
+  "status": "closed",
+  "summary": "Replaced stale @elements/spatial-play and @elements/geometry-play with @spatial/js-renderer-r3f across launch.json, script.ts, and package.json dev:spatial. Fixed @elements/board Nx cwd to elements/lib/board. Verified nx dev and bun run dev:spatial start Vite on port 6020."
+  "description": "Replace stale @elements/spatial-play and @elements/geometry-play Nx targets with @spatial/js-renderer-r3f; fix board project cwd; align launch.json port 6020; add dev:spatial script.",
+  "goal": "🎯r2602/🎯runningsketchpad"
+}

@@ -13,7 +13,7 @@
     }
   },
   "devDependencies": {
-    "@elements/ui": "workspace:*",
+    "@ui/react": "workspace:*",
     "@mdx-js/rollup": "^3.1.1",
     "@modelcontextprotocol/ext-apps": "^1.3.2",
     "@semio/assets": "*",

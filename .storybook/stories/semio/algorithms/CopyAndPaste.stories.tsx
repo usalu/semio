@@ -26,7 +26,7 @@ import {
   type VecValue,
 } from "@semio/algorithms";
 
-import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const pasteTargetDesign = nakaginPasteTargetDesign();

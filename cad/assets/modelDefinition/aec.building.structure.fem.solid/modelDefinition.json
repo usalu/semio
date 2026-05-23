@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.modelDefinition/v1",
+  "id": "aec.building.structure.fem.solid",
+  "version": "1.0.0",
+  "label": "Building Structure FEM Solid",
+  "description": "Solid finite element structural model definition assets.",
+  "kinds": [
+    "transformation",
+    "typology"
+  ]
+}

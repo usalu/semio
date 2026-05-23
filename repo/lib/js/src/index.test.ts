@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   NEO4J_GRAPH_DATABASE_NAMES,
   getAllNeo4jGraphExportSpecs,
@@ -6,8 +8,14 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { defineLint } from "./script.ts";
-import type { FileLinter } from "./linter.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot } from "./index.ts";
+import { defineLint, type FileLinter } from "./index.ts";
+import {
+  dependencyBoundaryBreachesForBundleDir,
+  dependencyBoundaryBreachesForFile,
+  isAdapterBoundaryFile,
+  parseTsImportSpecs,
+} from "./dependency-boundary.ts";
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
@@ -34,9 +42,86 @@ describe("Neo4j graph database registry", () => {
   });
 });
 
+describe("bundle-script", () => {
+  test("ScriptRouter usage lists registered commands", () => {
+    class A extends BundleScript {
+      run(): void {}
+    }
+    const router = new ScriptRouter(import.meta.dir).register("a", A).register("b", A);
+    expect(router.hasCommands()).toBe(true);
+    expect(router.usage()).toContain("a");
+    expect(router.usage()).toContain("b");
+  });
+
+  test("findRepoRoot reaches monorepo from repo/lib/js/src", () => {
+    const root = findRepoRoot(import.meta.dir);
+    expect(existsSync(join(root, "nx.json"))).toBe(true);
+  });
+
+  test("dispatchSubcommand invokes handler for first segment", () => {
+    let ran = "";
+    dispatchSubcommand(
+      ["go", "x"],
+      { go: (rest) => {
+        ran = rest.join(",");
+      } },
+      "unused",
+    );
+    expect(ran).toBe("x");
+  });
+});
+
 describe("defineLint", () => {
   test("returns same function", () => {
     const f = defineLint("x", (_l: FileLinter) => []);
     expect(typeof f).toBe("function");
+  });
+});
+
+describe("dependency-boundary", () => {
+  test("detects adapter region marker", () => {
+    expect(isAdapterBoundaryFile("pkg/foo.ts", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("pkg/main.py", "# #region 🔌Adapters\nimport fastapi")).toBe(true);
+    expect(isAdapterBoundaryFile("semio/client/lib/js/index.ts", "//#region 🌐RsWasmTransport\nexport async function x() {}")).toBe(true);
+    expect(isAdapterBoundaryFile("semio/client/lib/js/kit-store.worker.ts", "export async function x() {}")).toBe(true);
+    expect(isAdapterBoundaryFile("coda/client/bin/assistant/mcp-app.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("framework/platform/renderer/react/index.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
+  });
+
+  test("parseTsImportSpecs extracts module", () => {
+    expect(parseTsImportSpecs(`import { z } from "zod";`)).toEqual(["zod"]);
+  });
+
+  test("flags direct third-party import outside adapter", () => {
+    const content = `import { z } from "zod";\nexport const a = 1;\n`;
+    const file = "semio/client/lib/js/boundary-probe.ts";
+    const breachs = dependencyBoundaryBreachesForFile(
+      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      file,
+      content,
+      file,
+    );
+    expect(breachs.length).toBeGreaterThan(0);
+    expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
+  });
+
+  test("dependencyBoundaryBreachesForBundleDir walks nested tsx", () => {
+    const repoRoot = new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+    const dir = "framework/playground/renderer/react/puzzle";
+    const breachs = dependencyBoundaryBreachesForBundleDir(repoRoot, dir);
+    expect(breachs.every((b) => b.scope.startsWith("framework/playground/renderer/react/puzzle"))).toBe(true);
+  });
+
+  test("allows third-party import inside adapter region", () => {
+    const content = `// #region 🔌Adapters\nimport { NextResponse } from "next/server";\n// #endregion 🔌Adapters\nexport async function GET() { return NextResponse.json({}); }\n`;
+    const file = "repo/server/coordinator/app/api/v1/health/route.ts";
+    const breachs = dependencyBoundaryBreachesForFile(
+      new URL("../../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
+      file,
+      content,
+      file,
+    );
+    expect(breachs).toEqual([]);
   });
 });

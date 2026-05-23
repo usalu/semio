@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-// #region 🎋Preload
+// #region 🔌Adapters
 // Electron preload script exposing window controls, OS APIs, coda sidecar bridge, and event system.
 // Preload MUST use contextBridge to safely expose IPC methods.
 // Preload MUST expose event listener registration for sidecar events and connection status.

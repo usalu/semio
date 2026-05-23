@@ -1,14 +1,16 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
-// Specs: Vite single-file MCP App bundle for coda (elements/ui + ext-apps).
-// Summary: Mirrors semio/engine/vite.mcp-app.config.ts with @elements/ui and meshopt noop.
+// Specs: Vite single-file MCP App bundle for coda (@ui/react + ext-apps).
+// Summary: Mirrors semio/engine/vite.mcp-app.config.ts with @ui/react and meshopt noop.
 // #endregion Header
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+// #endregion 🔌Adapters
 
 function zodJitlessPlugin(): Plugin {
   return {
@@ -79,7 +81,7 @@ export default defineConfig({
   root: __dirname,
   resolve: {
     alias: {
-      "@elements/ui": path.resolve(__dirname, "../../elements/ui"),
+      "@ui/react": path.resolve(__dirname, "../../../ui/react"),
     },
   },
   build: {

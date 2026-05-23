@@ -1,0 +1,15 @@
+{
+  "title": "Rename Legacy Package Names End To End",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Monorepo refactor: update all legacy package names to match new folder structure and specs across code, package.json, project.json, nx, imports, variables, classes, and launch.json. No backwards compatibility.",
+  "summary": "Aligned package scopes with folder paths (folder = scope): legacy hyphenated names (@puzzle/2d-play, @framework/playground-renderer-react, @cad/js-core, @semio/architect, @elements/*, @spatial/*) now mirror directories (@puzzle/2d/play, @framework/playground/renderer/react, @cad/js/core, @semio/query, @ui/react). Updated package.json, project.json, imports, vitest/vite aliases, script.ts, launch.json, .storybook, semio/coda vite paths; regenerated bun.lock. Tests: playground renderer 4/4, puzzle 2d react 76/76, cad js core 336/336.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1509"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8b10fd9696284c4795749ababda3f4c1",
+    "⚪8428910bcb244123b49dadbfffbb591f"
+  ]
+}

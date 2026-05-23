@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.modelDefinition/v1",
+  "id": "aec.building.structure.fem.line",
+  "version": "1.0.0",
+  "label": "Building Structure FEM Line",
+  "description": "Line finite element structural model definition assets.",
+  "kinds": [
+    "transformation",
+    "typology"
+  ]
+}

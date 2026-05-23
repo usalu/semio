@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.structure.reinforcedconcretecolumn",
+  "version": "1.0.0",
+  "label": "Reinforced Concrete Column",
+  "actions": [
+    "structure.structure.constructReinforcedConcreteColumnFrom2PointsAndHeight",
+    "structure.structure.constructReinforcedConcreteColumnFromCurveAndHeight",
+    "structure.structure.constructReinforcedConcreteColumnFromSurface"
+  ],
+  "interactions": [
+    "structure.structure.constructReinforcedConcreteColumn"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

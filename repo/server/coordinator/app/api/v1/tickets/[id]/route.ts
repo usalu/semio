@@ -4,9 +4,11 @@
 // Ticket detail and claims endpoint.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { getTicket, listClaimsByTicket } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
+// #endregion 🔌Adapters
+
+import { getTicket, listClaimsByTicket, requireAuth, isAuthError } from "@/lib";
 
 export async function GET(
   request: NextRequest,

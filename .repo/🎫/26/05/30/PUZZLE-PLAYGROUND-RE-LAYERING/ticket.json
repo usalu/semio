@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle Playground Re-layering",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Clean shell+boot pattern for puzzle plays: boot*Play subpath exports, remove puzzleChrome, shared createPlaygroundPlayViteConfig.",
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪c0b08030d004480abbd3dbe9a8b47376"
+  ]
+}

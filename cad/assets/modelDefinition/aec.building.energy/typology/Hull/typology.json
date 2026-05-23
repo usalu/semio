@@ -1,0 +1,22 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "energy.energy.hull",
+  "version": "1.0.0",
+  "label": "Hull",
+  "description": "All external surfaces joined to a closed shell.",
+  "actions": [
+    "energy.energy.constructHullFrom2PointsAndHeight",
+    "energy.energy.constructHullFromCurveAndHeight",
+    "energy.energy.constructHullFromSurface"
+  ],
+  "interactions": [
+    "energy.energy.constructHull"
+  ],
+  "properties": [
+    "spatial.shape.volume",
+    "energy.heatedvolume"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

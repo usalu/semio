@@ -1,0 +1,42 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "selection.selectSolids",
+  "version": "1.0.0",
+  "label": "SelectSolids",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "selectKinds"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        },
+        "kinds": {
+          "kind": "const",
+          "value": [
+            "solid"
+          ]
+        }
+      },
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

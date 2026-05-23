@@ -178,8 +178,8 @@ class Program
 
     static void Main(string[] args)
     {
-        var kitMetabolism = LoadAsset<Kit>("metabolism.kit.semio.json");
-        var kitOriginal = LoadAsset<Kit>("metabolism.kit.semio.json");
+        var kitMetabolism = LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
+        var kitOriginal = LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
         kitOriginal.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
         var kitDiffed = LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");

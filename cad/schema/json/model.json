@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/model",
+  "title": "SpatialModel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "revision", "objects"],
+  "properties": {
+    "schema": { "const": "spatial.model/v1" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } }
+  },
+  "$defs": {
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "typology", "primitives"],
+      "properties": {
+        "id": { "type": "string" },
+        "typology": { "type": "string" },
+        "primitives": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/primitive" }
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "primitive": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]
+        },
+        "slot": { "type": "string" },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "kernelGeometry": {
+      "type": "object",
+      "description": "Kernel-private brepjs persistence graph.",
+      "additionalProperties": false,
+      "required": ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids"],
+      "properties": {
+        "anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } },
+        "vertices": { "type": "array", "items": { "$ref": "#/$defs/vertex" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+        "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
+        "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
+        "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
+        "solids": { "type": "array", "items": { "$ref": "#/$defs/solid" } }
+      }
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "position"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "vertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "edgeCurve": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "line" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center"],
+          "properties": { "kind": { "const": "arc" }, "center": { "$ref": "#/$defs/vec3" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "normal", "radius"],
+          "properties": {
+            "kind": { "const": "circle" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "normal", "majorAxis", "majorRadius", "minorRadius"],
+          "properties": {
+            "kind": { "const": "ellipse" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" },
+            "majorAxis": { "$ref": "#/$defs/vec3" },
+            "majorRadius": { "type": "number", "exclusiveMinimum": 0 },
+            "minorRadius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "poles", "degree"],
+          "properties": {
+            "kind": { "const": "nurbs" },
+            "poles": { "type": "array", "items": { "$ref": "#/$defs/vec3" }, "minItems": 2 },
+            "degree": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "weights": { "type": "array", "items": { "type": "number" } },
+            "knots": { "type": "array", "items": { "type": "number" } },
+            "multiplicities": { "type": "array", "items": { "type": "integer" } },
+            "periodic": { "type": "boolean" },
+            "rational": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "vertexIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "vertexIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 },
+        "curve": { "$ref": "#/$defs/edgeCurve" }
+      }
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "edgeIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "edgeIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "faceSurface": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "origin", "normal"],
+          "properties": {
+            "kind": { "const": "plane" },
+            "origin": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "radius"],
+          "properties": {
+            "kind": { "const": "sphere" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "wireIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "wireIds": { "type": "array", "items": { "type": "string" } },
+        "surface": { "$ref": "#/$defs/faceSurface" }
+      }
+    },
+    "shell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "faceIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "faceIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "solidPrimitive": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "cornerA", "cornerB", "height"],
+          "properties": {
+            "kind": { "const": "box" },
+            "cornerA": { "$ref": "#/$defs/vec3" },
+            "cornerB": { "$ref": "#/$defs/vec3" },
+            "height": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "radius"],
+          "properties": {
+            "kind": { "const": "sphere" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "base", "axis", "radius", "height"],
+          "properties": {
+            "kind": { "const": "cylinder" },
+            "base": { "$ref": "#/$defs/vec3" },
+            "axis": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+    "solid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "shellIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "shellIds": { "type": "array", "items": { "type": "string" } },
+        "solid": { "$ref": "#/$defs/solidPrimitive" }
+      }
+    }
+  }
+}

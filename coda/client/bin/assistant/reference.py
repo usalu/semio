@@ -1,9 +1,11 @@
+# #region 🔌Adapters
 import os
 
 from dotenv import load_dotenv
 from google import genai
 
 from semio.client.lib.py.main import *
+# #endregion 🔌Adapters
 
 # Getting files
 dir_path = os.path.dirname(os.path.abspath(__file__))

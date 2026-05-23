@@ -12,6 +12,7 @@
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 
+// #region 🔌Adapters
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -23,6 +24,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+// #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
   htmlParseStringifyEntry: string;
@@ -224,8 +226,7 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
-        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
-        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
+        { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
       ],
     },
     plugins: [

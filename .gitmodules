@@ -3,7 +3,4 @@
 	url = https://github.com/usalu/metabolism.git
 [submodule "reuse/recherche"]
 	path = mit-bestand/recherche
-	url = https://github.com/usalu/recherche
-[submodule "elements/client/lib/geometry/topologic"]
-	path = elements/client/lib/geometry/topologic
-	url = https://github.com/usalu/Topologic
+	url = https://github.com/usalu/recherche.git

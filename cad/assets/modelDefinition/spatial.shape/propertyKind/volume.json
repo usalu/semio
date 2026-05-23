@@ -1,0 +1,22 @@
+{
+	"schema": "spatial.property/v1",
+	"id": "spatial.shape.volume",
+	"version": "1.0.0",
+	"label": "Volume",
+	"description": "Derived volume for solid objects.",
+	"unit": "volume",
+	"sources": {
+		"typologies": [
+			"spatial.shape.solid.sphere",
+			"spatial.shape.solid.cylinder",
+			"spatial.shape.primitive.box",
+			"spatial.shape.solid.boolean-union",
+			"spatial.shape.solid.boolean-difference",
+			"spatial.shape.solid.boolean-intersection",
+			"spatial.shape.feature.extrude-wire"
+		]
+	},
+	"output": {
+		"volume": 0.0
+	}
+}

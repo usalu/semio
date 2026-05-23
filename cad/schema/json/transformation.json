@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/transformation",
+  "title": "SpatialTransformation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "label", "source", "target", "typologies"],
+  "properties": {
+    "schema": { "const": "spatial.transformation/v1" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelDefinition"],
+      "properties": {
+        "modelDefinition": { "type": "string" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelDefinition"],
+      "properties": {
+        "modelDefinition": { "type": "string" }
+      }
+    },
+    "typologies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  }
+}

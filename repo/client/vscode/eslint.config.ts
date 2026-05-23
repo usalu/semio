@@ -12,8 +12,10 @@
 // ESLint flat configuration for the VS Code extension package.
 // Configuration MUST export a valid ESLint flat config array.
 
+// #region 🔌Adapters
 import globals from "globals";
 import tseslint from "typescript-eslint";
+// #endregion 🔌Adapters
 
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.

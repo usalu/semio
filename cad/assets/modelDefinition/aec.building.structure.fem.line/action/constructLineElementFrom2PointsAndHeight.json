@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "structure.linefem.constructLineElementFrom2PointsAndHeight",
+  "version": "1.0.0",
+  "label": "Construct Line Element From 2 Points And Height",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

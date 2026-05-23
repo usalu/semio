@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": ["react", "react-dom", "vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@framework/playground": ["../../framework/playground/core/core.ts"],
+      "@framework/playground/renderer/react": ["../../framework/playground/renderer/react/index.tsx"],
+      "@ui/react": ["../../../ui/react/index.tsx"],
+      "@ui/react/*": ["../../../ui/react/*"]
+    }
+  },
+  "include": ["react/**/*.tsx", "play/**/*.tsx", "play/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "play/dist"]
+}

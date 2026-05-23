@@ -2,7 +2,7 @@
 // #region 🧲Header
 // 💻 .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
-// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), and module-worker-safe Vite behavior.
+// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), scope-aware dev slices via `STORYBOOK_SCOPE`, and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -21,10 +21,17 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
-const elementsUiDir = resolve(repoRootPath, "elements/client/lib/react");
-const semioUiDir = resolve(repoRootPath, "semio/client/lib/react/rendering");
-const semioReactEntryPath = resolve(repoRootPath, "semio/client/lib/react/logic/index.tsx");
-const semioJsEntryPath = resolve(repoRootPath, "semio/client/lib/js/index.ts");
+const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
+const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
+
+const uiReactDir = resolve(repoRootPath, "ui/react");
+const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
+const frameworkPlaygroundDir = resolve(repoRootPath, "framework/playground/core");
+const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/playground/renderer/react");
+const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
+const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
+const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
+const semioJsDir = resolve(repoRootPath, "semio/client/lib/js");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
 const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
@@ -41,8 +48,55 @@ function getAbsolutePath(value: string): string {
 	}
 }
 
+/** @emoji 🎯 True when `STORYBOOK_SCOPE` is unset (full Storybook) or matches `prefix` / `prefix/…`. */
+function storybookScopeMatches(prefix: string): boolean {
+	if (!storybookScope) return true;
+	return storybookScope === prefix || storybookScope.startsWith(`${prefix}/`);
+}
+
+const loadUiStack = storybookScopeMatches("ui");
+const loadPuzzleStack = storybookScopeMatches("puzzle");
+const loadSemioStack = storybookScopeMatches("semio");
+
+function buildStorybookAliases(): Record<string, string> {
+	const alias: Record<string, string> = {};
+	if (loadUiStack || loadPuzzleStack) {
+		alias["@ui/react"] = toVitePath(uiReactDir);
+		alias["@ui/styling"] = toVitePath(uiStylingDir);
+		alias["@framework/playground"] = toVitePath(frameworkPlaygroundDir);
+		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
+		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
+		alias["@puzzle/3d/react"] = toVitePath(puzzle3dReactDir);
+		alias["@puzzle/5d/react"] = toVitePath(puzzle5dReactDir);
+		alias["@coda/desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
+	}
+	if (loadSemioStack) {
+		alias["@semio/ui"] = toVitePath(uiReactDir);
+		alias["@semio/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
+		alias["@semio/react"] = toVitePath(semioJsDir);
+		alias["@semio/js"] = toVitePath(semioJsDir);
+		alias["@semio/rs-wasm"] = toVitePath(semioRsWasmEntryPath);
+		alias["@semio/assets"] = toVitePath(semioAssetsDir);
+		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
+		alias["@ui/react"] = toVitePath(uiReactDir);
+		alias["@ui/styling"] = toVitePath(uiStylingDir);
+	}
+	return alias;
+}
+
+function buildScopeWatchIgnores(): string[] {
+	if (!storybookScope) return [];
+	if ((loadUiStack || loadPuzzleStack) && !loadSemioStack) {
+		return ["**/semio/**", "**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
+	}
+	if (loadSemioStack && !loadUiStack && !loadPuzzleStack) {
+		return ["**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
+	}
+	return [];
+}
+
 const config: StorybookConfig = {
-	stories: ["./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"],
+	stories: [`./stories/${storybookScopePrefix}**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`],
 	addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
 	framework: {
 		name: getAbsolutePath("@storybook/react-vite"),
@@ -70,14 +124,7 @@ const config: StorybookConfig = {
 		// #endregion 🔖ResolvePackageExports
 		config.resolve.alias = {
 			...(config.resolve.alias || {}),
-			"@elements/ui": toVitePath(elementsUiDir),
-			"@elements/ui/elements": toVitePath(resolve(elementsUiDir, "index.tsx")),
-			"@semio/ui": toVitePath(semioUiDir),
-			"@semio/react": toVitePath(semioReactEntryPath),
-			"@semio/js": toVitePath(semioJsEntryPath),
-			"@semio/rs-wasm": toVitePath(semioRsWasmEntryPath),
-			"@semio/assets": toVitePath(semioAssetsDir),
-			"@semio/algorithms": toVitePath(semioAlgorithmsEntryPath),
+			...buildStorybookAliases(),
 		};
 		config.assetsInclude = [...(config.assetsInclude ?? []), "**/*.wasm"];
 		config.server = config.server || {};
@@ -89,6 +136,7 @@ const config: StorybookConfig = {
 		const currentWatch = config.server.watch && typeof config.server.watch === "object" ? config.server.watch : {};
 		const currentIgnored = currentWatch.ignored;
 		const ignoredList = Array.isArray(currentIgnored) ? currentIgnored : currentIgnored ? [currentIgnored] : [];
+		const scopeWatchIgnores = buildScopeWatchIgnores();
 		config.server.watch = {
 			...currentWatch,
 			usePolling: true,
@@ -100,6 +148,7 @@ const config: StorybookConfig = {
 				"**/dist/**",
 				"**/.git/**",
 				"**/node_modules/**",
+				...scopeWatchIgnores,
 			],
 		};
 
@@ -134,9 +183,20 @@ const config: StorybookConfig = {
 
 		config.optimizeDeps = config.optimizeDeps || {};
 		config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
-		config.optimizeDeps.exclude = Array.from(
-			new Set([...(config.optimizeDeps.exclude || []), "@semio/ui", "@semio/react", "@semio/js", "@semio/assets", "@elements/ui", "@elements/ui/elements"]),
-		);
+		const optimizeExclude = new Set<string>([
+			...(config.optimizeDeps.exclude || []),
+			"@ui/react",
+			"@framework/playground",
+			"@framework/playground/renderer/react",
+			"@puzzle/2d/react",
+		]);
+		if (loadSemioStack) {
+			optimizeExclude.add("@semio/ui");
+			optimizeExclude.add("@semio/react");
+			optimizeExclude.add("@semio/js");
+			optimizeExclude.add("@semio/assets");
+		}
+		config.optimizeDeps.exclude = Array.from(optimizeExclude);
 		config.optimizeDeps.esbuildOptions = {
 			...(config.optimizeDeps.esbuildOptions || {}),
 			target: "es2022",
@@ -148,12 +208,20 @@ const config: StorybookConfig = {
 			config.define = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("development"),
+				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
+				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
+				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
+				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(loadSemioStack),
 			};
 		} else {
 			config.mode = "production";
 			config.define = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("production"),
+				__STORYBOOK_SCOPE__: JSON.stringify(""),
+				__STORYBOOK_LOAD_UI__: JSON.stringify(true),
+				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(true),
+				__STORYBOOK_LOAD_SEMIO__: JSON.stringify(true),
 			};
 		}
 		config.worker = {

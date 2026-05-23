@@ -18,9 +18,12 @@
         "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_MANIFEST_DIR": "${sourceDir}/elements/client/lib/geometry/topologic",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/elements/client/lib/geometry/topologic/triplets",
         "VCPKG_FEATURE_FLAGS": "manifests",
         "SEMIO_CPP_TOPOLOGIC": "ON",
-        "SEMIO_CPP_ENABLE_TESTS": "ON"
+        "SEMIO_CPP_ENABLE_TESTS": "ON",
+        "TOPOLOGIC_BUILD_PYTHON_BINDINGS": "OFF",
+        "TOPOLOGIC_BUILD_WASM_BRIDGE": "OFF"
       }
     },
     {
@@ -54,7 +57,7 @@
     },
     {
       "name": "windows",
-      "displayName": "Windows C++23",
+      "displayName": "Windows C++23 (Visual Studio 2026)",
       "inherits": "base",
       "generator": "Visual Studio 18 2026",
       "architecture": "x64",
@@ -85,7 +88,7 @@
     {
       "name": "windows",
       "configurePreset": "windows",
-      "configuration": "Debug"
+      "configuration": "Release"
     },
     {
       "name": "cxx26",
@@ -111,7 +114,7 @@
     {
       "name": "windows",
       "configurePreset": "windows",
-      "configuration": "Debug",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }

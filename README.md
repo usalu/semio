@@ -532,7 +532,7 @@ The devcontainer includes:
 Native Windows development is zero-touch through the checked-in bootstrap script:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File script.ps1 setup
+bun ./script.ts setup native
 ```
 
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
@@ -557,10 +557,10 @@ Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Ins
 Native macOS and Linux use the same root router:
 
 ```bash
-bash ./script.sh setup
+bun ./script.ts setup native
 ```
 
-IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `semio`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
+IDE startup runs `bun ./script.ts start`, which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `semio`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
 
 **Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 

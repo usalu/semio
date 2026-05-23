@@ -1,31 +1,13 @@
 #!/usr/bin/env bun
-/**
- * 🧭 3dm UI router: `bun ./script.ts dev [vite args…]`.
- */
-import { spawn } from "node:child_process";
+/** 🧭 3dm UI router: `bun ./script.ts dev [vite args…]`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runViteBunxDevPlain } from "../../../../../repo/lib/js/src/index.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-
-if (segs[0] !== "dev") {
-  console.error("usage: bun ./script.ts dev [vite args…]");
-  process.exit(1);
+class DevScript extends BundleScript {
+  run(segments: string[]): void {
+    runViteBunxDevPlain(this.root, segments);
+  }
 }
 
-const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-const extra = segs.slice(1);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript);
 
-const env = {
-  ...process.env,
-  ...(process.env.WATCHPACK_POLLING !== undefined
-    ? {}
-    : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
-};
-
-const child = spawn("bunx", ["vite", "--host", host, ...extra], {
-  stdio: "inherit",
-  shell: true,
-  env,
-  cwd,
-});
-child.on("exit", (c) => process.exit(c ?? 0));
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

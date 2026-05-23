@@ -3,9 +3,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
-const desktopRoot = import.meta.dir;
-const segs = process.argv.slice(2);
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
 
 export async function runTests(options: {
   extensionDevelopmentPath?: string;
@@ -13,7 +11,7 @@ export async function runTests(options: {
   workspaceFolder?: string;
   launchArgs?: string[];
 } = {}) {
-  const extensionDevelopmentPath = path.resolve(options.extensionDevelopmentPath ?? desktopRoot);
+  const extensionDevelopmentPath = path.resolve(options.extensionDevelopmentPath ?? import.meta.dir);
   let extensionTestsPath = options.extensionTestsPath;
   if (!extensionTestsPath) {
     const cfgHref = pathToFileURL(path.join(extensionDevelopmentPath, ".semio-test.mjs")).href;
@@ -27,7 +25,7 @@ export async function runTests(options: {
     ...process.env,
     SEMIO_EXTENSION_TESTS_PATH: extensionTestsPath,
     SEMIO_E2E_KIT_FOLDER: process.env.SEMIO_E2E_KIT_FOLDER ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism"),
-    SEMIO_E2E_KIT_FILE: process.env.SEMIO_E2E_KIT_FILE ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism.kit.semio.json"),
+    SEMIO_E2E_KIT_FILE: process.env.SEMIO_E2E_KIT_FILE ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism/wip/initialKit/kit.semio.json"),
     ELECTRON_DISABLE_SANDBOX: "1",
   };
   if (options.workspaceFolder) {
@@ -51,12 +49,12 @@ export async function runTests(options: {
   });
 }
 
-if (segs[0] === "test") {
-  runTests().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-} else {
-  console.error("usage: bun ./script.ts test");
-  process.exit(1);
+class TestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runTests();
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
