@@ -33,6 +33,7 @@ import "./globals.css";
 const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
 const GEOMETRY_PLAY_WINDOW_ID = "geometry-topologic-window";
 const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
+const GEOMETRY_PLAY_DEFAULT_LAYOUT = createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]);
 const GEOMETRY_PLAY_MODE_ICONS: Record<TopologicTransformMode, ReactElement> = {
 	translate: <Move3d className="size-4" aria-hidden />,
 	rotate: <Rotate3d className="size-4" aria-hidden />,
@@ -189,14 +190,13 @@ function GeometryPlayController(): ReactElement {
 				defaultModeId: transformMode,
 				id: GEOMETRY_PLAY_APP_ID,
 				label: "Geometry play",
-				selection: { selectedId: selectedId ?? null },
 				options: { selectableKinds },
 				tools: [
 					...TOPOLOGIC_KINDS.map((kind, order) => ({
 						id: `geometry.kind.${kind}`,
 						kind: "toggle" as const,
-						label: geometryKindLabel(kind),
-						onPressedChange: () => value?.toggleSelectableKind(kind),
+						text: geometryKindLabel(kind),
+						onPressedChange: () => setSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
 						order,
 						pressed: selectableKinds[kind],
 					})),
@@ -205,7 +205,7 @@ function GeometryPlayController(): ReactElement {
 						id: "geometry.selection.clear",
 						icon: <BoxSelect className="size-4" aria-hidden />,
 						label: "Clear",
-						onClick: () => value?.setSelectedId(null),
+						onClick: () => setSelectedId(null),
 						order: TOPOLOGIC_KINDS.length + 2,
 					},
 				],
@@ -216,10 +216,10 @@ function GeometryPlayController(): ReactElement {
 					options: { transformMode: mode },
 				})),
 				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
-				defaultLayout: createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]),
+				defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
 			},
 		],
-		[selectedId, selectableKinds, transformMode, value],
+		[selectableKinds, transformMode],
 	);
 
 	if (loadError) throw loadError;

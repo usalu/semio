@@ -6,8 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/client/mcp",
-        "command": "go test ./..."
+        "command": "bun ./script.ts test repo-mcp client"
       }
     }
   }

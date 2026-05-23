@@ -418,7 +418,7 @@ function applyDocumentBodyBaseColors(): void {
 }
 
 /**
- * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link UIProps.mobile}.
+ * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
 export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
   React.useEffect(() => {
@@ -22525,7 +22525,14 @@ const UIToolbar: React.FC<{
           if (item.kind === "toggle") {
             return (
               <ToolbarItem key={item.id}>
-                <Toggle kind="icon" id={item.id} pressed={item.pressed ?? false} onPressedChange={(p) => item.onPressedChange?.(p)} icon={item.icon} />
+                <Toggle
+                  kind={item.icon && !item.label ? "icon" : "default"}
+                  id={item.id}
+                  pressed={item.pressed ?? false}
+                  onPressedChange={(p) => item.onPressedChange?.(p)}
+                  icon={item.icon}
+                  text={item.label}
+                />
               </ToolbarItem>
             );
           }
@@ -22642,8 +22649,6 @@ export function resolveAppConfig(app: AppConfig, requestedModeId?: string | null
   };
 }
 
-export type UIAppConfig = AppConfig;
-
 /**
  * URI history entry for navigation.
  **/
@@ -22737,8 +22742,6 @@ export interface AppProps {
   initialPanelVisibility?: UIPanelVisibility;
 }
 
-export type UIProps = AppProps;
-
 /**
  * Panel visibility state for the UI.
  **/
@@ -22779,8 +22782,6 @@ export function useApp(): AppContextValue {
   if (!ctx) throw new Error("useApp must be used within an App component");
   return ctx;
 }
-
-export const useUI = useApp;
 
 /**
  * Left panel toggle for the navbar.
@@ -23110,8 +23111,6 @@ export const App: React.FC<AppProps> = ({
     </AppContext.Provider>
   );
 };
-
-export const UI = App;
 
 /**
  * Internal component that syncs app-level find items into the UIFindContext.

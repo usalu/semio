@@ -36416,12 +36416,26 @@ func getClientHookMappings() []ClientHookMapping {
 
 // ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
 func repoCliHookCommand() string {
-	return "go run ./repo/client/mcp"
+	return repoIdeHookCommand("")
+}
+
+func repoIdeHookCommand(client string) string {
+	slugs := map[string]string{
+		"claude-code":  "claude",
+		"codex":        "codex",
+		"copilot-chat": "copilot",
+		"cursor-chat":  "cursor",
+		"kiro-cli":     "kiro",
+	}
+	if slug, ok := slugs[client]; ok {
+		return fmt.Sprintf("bun ./script.ts dev mcp stdio %s", slug)
+	}
+	return "bun ./script.ts dev mcp stdio client"
 }
 
 // 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
 func generateCopilotConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
+	c := repoIdeHookCommand("copilot-chat")
 	entry := func(cmd string) map[string]interface{} {
 		return map[string]interface{}{"type": "command", "command": cmd, "timeout": 30}
 	}
@@ -36462,7 +36476,7 @@ func generateCopilotConfig(repoRoot string) (string, error) {
 
 // 🔶generateCursorConfig holds the data fields for a generateCursorConfig record.
 func generateCursorConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
+	c := repoIdeHookCommand("cursor-chat")
 	config := map[string]interface{}{
 		"version": 1,
 		"hooks": map[string]interface{}{
@@ -36775,7 +36789,7 @@ func generateCodexConfig(repoRoot string) (string, error) {
 
 // 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
 func generateClaudeCodeConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
+	c := repoIdeHookCommand("claude-code")
 	existing := make(map[string]interface{})
 	settingsPath := filepath.Join(repoRoot, ".claude", "settings.json")
 	if data, err := os.ReadFile(settingsPath); err == nil {
@@ -36858,7 +36872,7 @@ func generateDroidConfig(repoRoot string) (string, error) {
 
 // 🔺generateKiroConfig holds the data fields for a generateKiroConfig record.
 func generateKiroConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
+	c := repoIdeHookCommand("kiro-cli")
 	hook := func(cmd string) map[string]interface{} {
 		return map[string]interface{}{"command": cmd}
 	}

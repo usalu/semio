@@ -21840,6 +21840,42 @@ func TestComputeCompositeFingerprintIgnoresUntrackedFiles(t *testing.T) {
 	}
 }
 
+func TestComputeCompositeFingerprintFallsBackWhenRecursiveSubmoduleStatusFails(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	childDir := initTestGitRepo(t, "main")
+	nestedDir := initTestGitRepo(t, "main")
+	run := func(dir string, args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v in %s failed: %s\n%s", args, dir, err, string(out))
+		}
+	}
+
+	run(tmpDir, "-c", "protocol.file.allow=always", "submodule", "add", childDir, "child")
+	run(tmpDir, "commit", "-am", "add child submodule")
+	childWorkTree := filepath.Join(tmpDir, "child")
+	run(childWorkTree, "config", "user.email", "test@test.com")
+	run(childWorkTree, "config", "user.name", "Test")
+	run(childWorkTree, "-c", "protocol.file.allow=always", "submodule", "add", nestedDir, "nested")
+	run(childWorkTree, "commit", "-am", "add nested submodule")
+
+	nestedGitDir := filepath.Join(tmpDir, ".git", "modules", "child", "modules", "nested")
+	if err := os.RemoveAll(nestedGitDir); err != nil {
+		t.Fatalf("failed to remove nested gitdir: %v", err)
+	}
+
+	_, meta := computeCompositeFingerprint(tmpDir)
+	if _, ok := meta.SubmodulePointers["child"]; !ok {
+		t.Fatalf("expected fallback submodule status to include child pointer, got %+v", meta.SubmodulePointers)
+	}
+	if _, ok := meta.SubmodulePointers["child/nested"]; ok {
+		t.Fatalf("expected broken nested submodule to be excluded after fallback, got %+v", meta.SubmodulePointers)
+	}
+}
+
 // 🆕initTestGitRepoWithRemote creates a git repo with a bare remote and returns (workDir, remoteDir).
 func initTestGitRepoWithRemote(t *testing.T) (string, string) {
 	t.Helper()
@@ -22921,9 +22957,9 @@ func TestLocCommand(t *testing.T) {
 	})
 	t.Run("locSortedRowKeysChurn total last", func(t *testing.T) {
 		rows := map[string]LocLangStats{
-			"Rust":       {Edited: 1},
-			"Go":         {Edited: 99},
-			locAggTotal:  {Edited: 100},
+			"Rust":      {Edited: 1},
+			"Go":        {Edited: 99},
+			locAggTotal: {Edited: 100},
 		}
 		ks := locSortedRowKeysChurn(rows)
 		if len(ks) != 3 || ks[0] != "Go" || ks[1] != "Rust" || ks[2] != locAggTotal {

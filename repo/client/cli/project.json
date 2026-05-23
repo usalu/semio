@@ -27,8 +27,8 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/client",
-        "command": "go test -timeout 120s -count=1 -v ./...",
+        "cwd": ".",
+        "command": "bun ./script.ts test repo-client",
         "forwardAllArgs": true
       }
     }

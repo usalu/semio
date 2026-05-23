@@ -1,0 +1,13 @@
+{
+  "title": "Fix IDE MCP Server Configs",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Fix outdated and broken IDE MCP server configurations so each IDE points at the current repo MCP server layout instead of stale paths such as C:\\git\\semio\\repo\\mcp. Inspect existing config files, update existing files only, keep changes cross-platform where possible, and validate the resulting commands or paths.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1468"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
+  "sessions": [
+    "⚪7e466ce54e4940fe85187358b80b8a6a"
+  ]
+}
