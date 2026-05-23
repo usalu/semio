@@ -23140,6 +23140,10 @@ export function mountReactApp(element: React.ReactElement, rootId = "root"): voi
   rootElement.__elementsReactRoot.render(element);
 }
 
+export async function mountAsyncReactApp(loadElement: () => Promise<React.ReactElement>, rootId = "root"): Promise<void> {
+  mountReactApp(await loadElement(), rootId);
+}
+
 const AppContext = React.createContext<AppContextValue | undefined>(undefined);
 
 /**

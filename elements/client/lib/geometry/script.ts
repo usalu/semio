@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Geometry package task router: `bun ./script.ts <dev|build|test|wasm> [args…]` — builds the Topologic wasm bridge, runs the R3F play harness, and executes focused Vitest checks. */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -70,14 +70,43 @@ function runShell(commandLine: string, options: { cwd?: string; env?: NodeJS.Pro
 	}
 }
 
-function hasTool(commandName: string): boolean {
+function hasTool(commandName: string, probeEnv: NodeJS.ProcessEnv = env): boolean {
 	const probe = spawnSync(process.platform === "win32" ? "where" : "which", [commandName], {
 		cwd,
-		env,
+		env: probeEnv,
 		shell: true,
 		stdio: "ignore",
 	});
 	return probe.status === 0;
+}
+
+function resolveUvTool(commandName: string): string {
+	const extension = process.platform === "win32" ? ".exe" : "";
+	const local = join(homedir(), ".local", "bin", `${commandName}${extension}`);
+	return existsSync(local) ? local : commandName;
+}
+
+function ensureUvTool(commandName: string, uvPackage: string): void {
+	if (hasTool(commandName)) return;
+	if (!hasTool("uv")) {
+		console.error(`[wasm] ${commandName} is required. Install uv or add ${commandName} to PATH.`);
+		process.exit(1);
+	}
+	runShell(`uv tool install --upgrade ${uvPackage}`, { cwd: workspaceRoot });
+	if (!hasTool(commandName)) {
+		console.error(`[wasm] ${commandName} is still missing after uv tool install ${uvPackage}.`);
+		process.exit(1);
+	}
+}
+
+function emsdkBundledExe(subdir: string, baseName: string): string | undefined {
+	const root = join(emsdkRoot(), subdir);
+	if (!existsSync(root)) return undefined;
+	const match = readdirSync(root, { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => join(root, entry.name, `${baseName}${process.platform === "win32" ? ".exe" : ""}`))
+		.find((candidate) => existsSync(candidate));
+	return match;
 }
 
 function emsdkRoot(): string {
@@ -122,14 +151,26 @@ function wasmBuildEnv(): NodeJS.ProcessEnv {
 	const emsdk = emsdkRoot();
 	const emscripten = join(emsdk, "upstream", "emscripten");
 	const upstreamBin = join(emsdk, "upstream", "bin");
+	const emsdkPython = emsdkBundledExe("python", "python");
+	const emsdkNode = emsdkBundledExe("node", "node");
 	const separator = process.platform === "win32" ? ";" : ":";
-	const pathPrefix = [join(homedir(), ".local", "bin"), emscripten, upstreamBin]
-		.filter((entry) => existsSync(entry))
+	const pathPrefix = [
+		join(homedir(), ".local", "bin"),
+		emsdk,
+		emscripten,
+		upstreamBin,
+		emsdkPython ? join(emsdkPython, "..") : "",
+		emsdkNode ? join(emsdkNode, "..") : "",
+	]
+		.filter((entry) => entry && existsSync(entry))
 		.join(separator);
 	return {
 		...env,
-		EMSDK: emsdk,
+		EMSDK: emsdk.replaceAll("\\", "/"),
+		EMSCRIPTEN_ROOT: emscripten.replaceAll("\\", "/"),
 		EM_CACHE: join(workspaceRoot, ".repo", "cache", "emscripten-cache"),
+		...(emsdkPython ? { EMSDK_PYTHON: emsdkPython.replaceAll("\\", "/") } : {}),
+		...(emsdkNode ? { EMSDK_NODE: emsdkNode.replaceAll("\\", "/") } : {}),
 		VCPKG_ROOT: vcpkgRoot(),
 		VCPKG_DISABLE_METRICS: "1",
 		VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "2",
@@ -143,8 +184,10 @@ function purgeStaleWasmCmakeCache(buildDir: string): void {
 	const content = readFileSync(cacheFile, "utf8");
 	if (
 		content.includes("OpenCASCADE_DIR-NOTFOUND") ||
+		content.includes("CMAKE_MAKE_PROGRAM-NOTFOUND") ||
 		!content.includes("wasm32-emscripten") ||
-		content.includes("CMAKE_GENERATOR:INTERNAL=MinGW Makefiles")
+		content.includes("CMAKE_GENERATOR:INTERNAL=MinGW Makefiles") ||
+		!existsSync(join(buildDir, "build.ninja"))
 	) {
 		rmSync(buildDir, { recursive: true, force: true });
 	}
@@ -182,6 +225,8 @@ function wasmNeedsBuild(): boolean {
 
 function buildWasm(force = false): void {
 	if (!force && !wasmNeedsBuild()) return;
+	ensureUvTool("cmake", "cmake");
+	ensureUvTool("ninja", "ninja");
 	ensureEmscripten();
 	ensureVcpkg();
 	const outDir = join(cwd, "wasm", "generated");
@@ -192,17 +237,18 @@ function buildWasm(force = false): void {
 	const topologicDir = join(cwd, "topologic");
 	const wasmEnv = wasmBuildEnv();
 	const vcpkgCmake = join(vcpkgRoot(), "scripts", "buildsystems", "vcpkg.cmake");
+	const cmake = resolveUvTool("cmake");
 	const configureLine = [
-		"cmake",
+		shellQuote(cmake),
 		"-G",
 		"Ninja",
+		`-DCMAKE_MAKE_PROGRAM=${shellQuote(resolveUvTool("ninja"))}`,
 		"-S",
 		shellQuote(topologicDir),
 		"-B",
 		shellQuote(buildDir),
 		"-DCMAKE_BUILD_TYPE=Release",
 		`-DCMAKE_TOOLCHAIN_FILE=${shellQuote(vcpkgCmake)}`,
-		`-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${shellQuote(emscriptenToolchainFile())}`,
 		"-DVCPKG_TARGET_TRIPLET=wasm32-emscripten",
 		`-DVCPKG_MANIFEST_DIR=${shellQuote(topologicDir)}`,
 		`-DVCPKG_OVERLAY_TRIPLETS=${shellQuote(join(topologicDir, "triplets"))}`,
@@ -212,7 +258,7 @@ function buildWasm(force = false): void {
 		"-DTOPOLOGIC_BUILD_WASM_BRIDGE=ON",
 	].join(" ");
 	runShell(configureLine, { cwd, env: wasmEnv });
-	runShell(`cmake --build ${shellQuote(buildDir)} --target TopologicWasmKernel`, { cwd, env: wasmEnv });
+	runShell(`${shellQuote(cmake)} --build ${shellQuote(buildDir)} --target TopologicWasmKernel`, { cwd, env: wasmEnv });
 	if (!existsSync(wasmOutputPath())) {
 		console.error(`[wasm] expected output missing: ${wasmOutputPath()}`);
 		process.exit(1);
