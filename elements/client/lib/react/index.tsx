@@ -37,6 +37,22 @@ import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import * as THREE from "three";
 
+import {
+	CommandBus,
+	Controller,
+	type ResolvedWorkbenchAppState,
+	type ShellAppTools,
+	type ShellFindItem,
+	type ShellFooterItem,
+	type ShellSearchItemSpec,
+	type ShellSideTabSpec,
+	type ShellToolItem,
+	Workbench,
+	WorkbenchApp,
+	WindowKind,
+	resolveWorkbenchAppState,
+} from "@elements/ui-shell";
+
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";

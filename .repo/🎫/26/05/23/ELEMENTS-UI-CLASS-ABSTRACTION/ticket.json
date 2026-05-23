@@ -1,0 +1,8 @@
+{
+  "title": "Elements UI Class Abstraction",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + semio algorithm shell; remove AppConfig/PureAppDefinition.",
+  "summary": "",
+  "goal": "🎯elements🎯uibundle"
+}
