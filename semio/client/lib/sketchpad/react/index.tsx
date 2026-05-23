@@ -34043,6 +34043,42 @@ const sketchpadTopologySceneCameraFromPieces = (pieces: readonly Piece[], placem
   };
 };
 
+const sketchpadTopologyCameraResetSignature = (pieces: readonly Piece[], placementByPiece: Map<string, any>): string =>
+  pieces
+    .map((piece) => {
+      const placement = placementByPiece.get(piece.id);
+      const center = sketchpadTopologyPieceCenter(piece, placementByPiece);
+      const plane = piece.plane;
+      return [
+        piece.id,
+        center.u,
+        center.v,
+        placement?.parentPieceId ?? "",
+        plane?.origin.x ?? "",
+        plane?.origin.y ?? "",
+        plane?.origin.z ?? "",
+        plane?.xAxis.x ?? "",
+        plane?.xAxis.y ?? "",
+        plane?.xAxis.z ?? "",
+        plane?.yAxis.x ?? "",
+        plane?.yAxis.y ?? "",
+        plane?.yAxis.z ?? "",
+      ].join(":");
+    })
+    .join("|");
+
+const sketchpadTopologyBoardCameraEquals = (a: ElementsBoardCameraState, b: ElementsBoardCameraState): boolean =>
+  a.x === b.x && a.y === b.y && a.zoom === b.zoom;
+
+const sketchpadTopologySceneCameraEquals = (a: ElementsSceneCameraState, b: ElementsSceneCameraState): boolean =>
+  a.zoom === b.zoom &&
+  a.position[0] === b.position[0] &&
+  a.position[1] === b.position[1] &&
+  a.position[2] === b.position[2] &&
+  a.target[0] === b.target[0] &&
+  a.target[1] === b.target[1] &&
+  a.target[2] === b.target[2];
+
 const sketchpadTopologyBuildBoardFixture = (args: {
   readonly pieces: readonly Piece[];
   readonly connections: readonly SemioConnection[];
@@ -34137,8 +34173,6 @@ const sketchpadTopologyBuildSceneFixture = (args: {
   readonly fileUrls: ReadonlyMap<string, string>;
   readonly files: readonly { id: string }[] | undefined;
   readonly selectedRepresentationTags: Record<string, string[]>;
-  readonly selectedPieceIds: ReadonlySet<string>;
-  readonly hoveredPieceIds: ReadonlySet<string>;
 }): SceneFixtureV1 => {
   const objects = args.showPieces
     ? args.pieces.map((piece) => {
@@ -34154,8 +34188,6 @@ const sketchpadTopologyBuildSceneFixture = (args: {
           orientation: transform.orientation,
           scale: transform.scale,
           label: sketchpadTopologyPieceLabel(piece, args.typeById, args.designById),
-          selected: args.selectedPieceIds.has(piece.id),
-          hovered: args.hoveredPieceIds.has(piece.id),
           vortices: connectors.map((connector, connectorIndex) => ({
             id: connector.id,
             vortexKind: "semio.connector",
@@ -34312,8 +34344,6 @@ const useDesignTopologyAdapter = () => {
         fileUrls,
         files: files as readonly { id: string }[] | undefined,
         selectedRepresentationTags: selectedRepresentationTags ?? {},
-        selectedPieceIds,
-        hoveredPieceIds,
       }),
     [
       pieces,
@@ -34326,22 +34356,21 @@ const useDesignTopologyAdapter = () => {
       fileUrls,
       files,
       selectedRepresentationTags,
-      selectedPieceIds,
-      hoveredPieceIds,
     ],
   );
 
   const initialBoardCamera = useMemo(() => sketchpadTopologyBoardCameraFromPieces(pieces, placementByPiece), [pieces, placementByPiece]);
   const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(initialBoardCamera);
-  useEffect(() => {
-    setBoardCamera(initialBoardCamera);
-  }, [initialBoardCamera]);
-
   const initialSceneCamera = useMemo(() => sketchpadTopologySceneCameraFromPieces(pieces, placementByPiece), [pieces, placementByPiece]);
   const [sceneCamera, setSceneCamera] = useState<ElementsSceneCameraState>(initialSceneCamera);
+  const cameraResetSignature = useMemo(() => sketchpadTopologyCameraResetSignature(pieces, placementByPiece), [pieces, placementByPiece]);
+  const cameraResetSignatureRef = useRef(cameraResetSignature);
   useEffect(() => {
-    setSceneCamera(initialSceneCamera);
-  }, [initialSceneCamera]);
+    if (cameraResetSignatureRef.current === cameraResetSignature) return;
+    cameraResetSignatureRef.current = cameraResetSignature;
+    setBoardCamera((prev) => (sketchpadTopologyBoardCameraEquals(prev, initialBoardCamera) ? prev : initialBoardCamera));
+    setSceneCamera((prev) => (sketchpadTopologySceneCameraEquals(prev, initialSceneCamera) ? prev : initialSceneCamera));
+  }, [cameraResetSignature, initialBoardCamera, initialSceneCamera]);
 
   const [relocateMode, setRelocateMode] = useState<ElementsSceneRelocateMode>("translate");
   const dragTransactionActiveRef = useRef(false);

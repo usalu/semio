@@ -29,10 +29,6 @@ import {
 import {
 	TOPOLOGIC_KINDS,
 	type TopologicKind,
-	centroid,
-	collectDragAttachIds,
-	collectContainerPickPoints,
-	computePickBounds,
 	TopologicCellComplexEntity,
 	TopologicCellEntity,
 	TopologicClusterEntity,
@@ -44,15 +40,21 @@ import {
 	TopologicTopologyEntity,
 	type TopologicTransform,
 	TopologicVertexEntity,
-	TopologicWasmSession,
 	TopologicWireEntity,
 	ensureTopologicWasmLoaded,
 	loadTopologicFixtureV1,
-	normalizeTransform,
-	edgeModelPoints,
-	resolveEntityGroupTransform,
 	type Vec3,
 } from "../wasm/index.ts";
+import {
+	centroid,
+	collectContainerPickPoints,
+	collectDragAttachIds,
+	computePickBounds,
+	edgeModelPoints,
+	normalizeTransform,
+	resolveEntityGroupTransform,
+	TopologicWasmSession,
+} from "../runtime/index.ts";
 
 //#region 🔖Context
 export type TopologicTransformMode = "translate" | "rotate" | "scale";

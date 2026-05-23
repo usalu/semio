@@ -11,17 +11,15 @@ import topologyJson from "./fixtures/topology.json";
 import { TopologicViewport, type TopologicTransformMode } from "../react/index.tsx";
 import {
 	TOPOLOGIC_KINDS,
-	TopologicWasmSession,
 	deriveAnalyzeTopologicFixtureV1,
 	ensureTopologicWasmLoaded,
 	loadTopologicFixtureV1,
-	topologicEntityLabel,
-	updateTopologicFixtureTransform,
 	type TopologicEntity,
 	type TopologicFixtureV1,
 	type TopologicKind,
 	type TopologicTransform,
 } from "../wasm/index.ts";
+import { topologicEntityLabel, TopologicWasmSession, updateTopologicFixtureTransform } from "../runtime/index.ts";
 import "./globals.css";
 
 //#region 🔖Ids
