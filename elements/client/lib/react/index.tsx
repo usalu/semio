@@ -19068,7 +19068,141 @@ export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
   order?: number;
-  content: React.ReactNode | (() => React.ReactNode);
+  tree: TreePanelSource;
+}
+
+export interface TreePanelConfig {
+  sections: TreeDataSection[];
+  dragAndDropController?: TreeDragAndDropController;
+  selectionMode?: TreeSelectionMode;
+  selectedIds?: string[];
+  defaultSelectedIds?: string[];
+  onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  emptyState?: React.ReactNode;
+  indentMultiplier?: number;
+  className?: string;
+}
+
+export interface TreePanelDefinition {
+  resolveTree(): TreePanelConfig;
+}
+
+export abstract class PureTreePanelDefinition implements TreePanelDefinition {
+  abstract resolveTree(): TreePanelConfig;
+}
+
+export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
+
+export interface SidePanelTabDefinition {
+  resolveTab(): SidePanelTabConfig;
+}
+
+export abstract class PureSidePanelTabDefinition implements SidePanelTabDefinition {
+  abstract resolveTab(): SidePanelTabConfig;
+}
+
+export class StaticTreePanelDefinition extends PureTreePanelDefinition {
+  constructor(private readonly config: TreePanelConfig) {
+    super();
+  }
+
+  resolveTree(): TreePanelConfig {
+    return this.config;
+  }
+}
+
+export class StaticSidePanelTabDefinition extends PureSidePanelTabDefinition {
+  constructor(private readonly config: SidePanelTabConfig) {
+    super();
+  }
+
+  resolveTab(): SidePanelTabConfig {
+    return this.config;
+  }
+}
+
+export type SidePanelTabSource = SidePanelTabConfig | SidePanelTabDefinition;
+
+function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
+  if (typeof (tree as TreePanelDefinition).resolveTree === "function") {
+    return (tree as TreePanelDefinition).resolveTree();
+  }
+  return tree;
+}
+
+function resolveSidePanelTabSource(tab: SidePanelTabSource): SidePanelTabConfig {
+  if (typeof (tab as SidePanelTabDefinition).resolveTab === "function") {
+    return (tab as SidePanelTabDefinition).resolveTab();
+  }
+  return tab;
+}
+
+function resolveSidePanelTabs(tabs: readonly SidePanelTabSource[] | undefined): SidePanelTabConfig[] | undefined {
+  return tabs?.map(resolveSidePanelTabSource);
+}
+
+export class PointerDragController<TElement extends HTMLElement = HTMLDivElement> {
+  private activePointerId: number | null = null;
+
+  constructor(
+    private readonly handlers: {
+      onStart?: (event: React.PointerEvent<TElement>) => void;
+      onMove?: (event: React.PointerEvent<TElement>) => void;
+      onEnd?: (event: React.PointerEvent<TElement>) => void;
+      onCancel?: (event: React.PointerEvent<TElement>) => void;
+    },
+  ) {}
+
+  getProps(): Pick<React.HTMLAttributes<TElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"> {
+    return {
+      onPointerDown: (event) => {
+        this.activePointerId = event.pointerId;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        this.handlers.onStart?.(event as React.PointerEvent<TElement>);
+      },
+      onPointerMove: (event) => {
+        if (this.activePointerId !== event.pointerId) return;
+        this.handlers.onMove?.(event as React.PointerEvent<TElement>);
+      },
+      onPointerUp: (event) => {
+        if (this.activePointerId !== event.pointerId) return;
+        this.activePointerId = null;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        this.handlers.onEnd?.(event as React.PointerEvent<TElement>);
+      },
+      onPointerCancel: (event) => {
+        if (this.activePointerId !== event.pointerId) return;
+        this.activePointerId = null;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        this.handlers.onCancel?.(event as React.PointerEvent<TElement>);
+      },
+    };
+  }
+}
+
+export class NativeDragAndDropController<TElement extends HTMLElement = HTMLDivElement> {
+  constructor(
+    private readonly handlers: {
+      onDragStart?: React.DragEventHandler<TElement>;
+      onDragEnd?: React.DragEventHandler<TElement>;
+      onDragOver?: React.DragEventHandler<TElement>;
+      onDrop?: React.DragEventHandler<TElement>;
+    },
+  ) {}
+
+  getProps(draggable = true): Pick<React.HTMLAttributes<TElement>, "draggable" | "onDragEnd" | "onDragOver" | "onDragStart" | "onDrop"> {
+    return {
+      draggable,
+      onDragStart: this.handlers.onDragStart,
+      onDragEnd: this.handlers.onDragEnd,
+      onDragOver: this.handlers.onDragOver,
+      onDrop: this.handlers.onDrop,
+    };
+  }
 }
 
 /**
@@ -19092,12 +19226,18 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
+  const sizeRef = React.useRef(size);
+  const resizeStartRef = React.useRef<{ pointerX: number; size: number } | null>(null);
+
+  React.useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
+  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -19108,31 +19248,34 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   };
   const resizeSide = position === "left" ? "right" : "left";
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    const startX = e.clientX;
-    const startSize = size;
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientX - startX;
-      let newSize: number;
-      if (position === "left") {
-        newSize = startSize + delta;
-      } else {
-        newSize = startSize - delta;
-      }
-      if (newSize >= minSize && newSize <= maxSize) {
-        onSizeChange?.(newSize);
-      }
-    };
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+  const resizeController = React.useMemo(
+    () =>
+      new PointerDragController<HTMLDivElement>({
+        onStart: (event) => {
+          event.preventDefault();
+          resizeStartRef.current = { pointerX: event.clientX, size: sizeRef.current };
+          setIsResizing(true);
+        },
+        onMove: (event) => {
+          const start = resizeStartRef.current;
+          if (!start) return;
+          const delta = event.clientX - start.pointerX;
+          const nextSize = position === "left" ? start.size + delta : start.size - delta;
+          if (nextSize >= minSize && nextSize <= maxSize) {
+            onSizeChange?.(nextSize);
+          }
+        },
+        onEnd: () => {
+          resizeStartRef.current = null;
+          setIsResizing(false);
+        },
+        onCancel: () => {
+          resizeStartRef.current = null;
+          setIsResizing(false);
+        },
+      }),
+    [maxSize, minSize, onSizeChange, position],
+  );
 
   const borderClass = resizeSide === "left" ? (isResizing || isResizeHovered ? "border-l-accent" : "border-l") : isResizing || isResizeHovered ? "border-r-accent" : "border-r";
 
@@ -19172,11 +19315,25 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
           </div>
         )}
         <Scrollable className="flex-1 min-h-0">
-          <div data-slot="side-panel-content" className="p-[10px]">
-            {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
+          <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
+            {activeTabTree ? (
+              <TreeStateProvider>
+                <Tree
+                  className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
+                  defaultSelectedIds={activeTabTree.defaultSelectedIds}
+                  dragAndDropController={activeTabTree.dragAndDropController}
+                  emptyState={activeTabTree.emptyState}
+                  indentMultiplier={activeTabTree.indentMultiplier}
+                  onSelectionChange={activeTabTree.onSelectionChange}
+                  sections={activeTabTree.sections}
+                  selectedIds={activeTabTree.selectedIds}
+                  selectionMode={activeTabTree.selectionMode}
+                />
+              </TreeStateProvider>
+            ) : null}
           </div>
         </Scrollable>
-        {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
+        {onSizeChange && <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizeController.getProps()} />}
       </div>
     </LevelProvider>
   );
@@ -19213,7 +19370,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
+  const activeTabTree = activeTab ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -19252,8 +19409,22 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
           </div>
         )}
         <Scrollable className="flex-1 min-h-0">
-          <div data-slot="mobile-panel-content" className="p-double">
-            {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
+          <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
+            {activeTabTree ? (
+              <TreeStateProvider>
+                <Tree
+                  className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
+                  defaultSelectedIds={activeTabTree.defaultSelectedIds}
+                  dragAndDropController={activeTabTree.dragAndDropController}
+                  emptyState={activeTabTree.emptyState}
+                  indentMultiplier={activeTabTree.indentMultiplier}
+                  onSelectionChange={activeTabTree.onSelectionChange}
+                  sections={activeTabTree.sections}
+                  selectedIds={activeTabTree.selectedIds}
+                  selectionMode={activeTabTree.selectionMode}
+                />
+              </TreeStateProvider>
+            ) : null}
           </div>
         </Scrollable>
       </div>
@@ -22703,8 +22874,8 @@ export interface AppModeConfig {
   tools?: AppTools;
   windowKinds?: UIWindowKindDefinition[];
   defaultLayout?: UIWindowLayout;
-  leftPanelTabs?: SidePanelTabConfig[];
-  rightPanelTabs?: SidePanelTabConfig[];
+  leftPanelTabs?: SidePanelTabSource[];
+  rightPanelTabs?: SidePanelTabSource[];
   toolbarContent?: React.ReactNode;
   footerItems?: FooterItem[];
   findItems?: UIFindItem[];
@@ -22722,8 +22893,8 @@ export interface AppConfig {
   tools?: AppTools;
   windowKinds: UIWindowKindDefinition[];
   defaultLayout: UIWindowLayout;
-  leftPanelTabs?: SidePanelTabConfig[];
-  rightPanelTabs?: SidePanelTabConfig[];
+  leftPanelTabs?: SidePanelTabSource[];
+  rightPanelTabs?: SidePanelTabSource[];
   toolbarContent?: React.ReactNode;
   footerItems?: FooterItem[];
   findItems?: UIFindItem[];
@@ -22789,8 +22960,8 @@ export function resolveAppConfig(app: AppConfig, requestedModeId?: string | null
     tools: mergeAppTools(app.tools, mode?.tools),
     windowKinds: mergeConfigEntries(app.windowKinds, mode?.windowKinds) ?? app.windowKinds,
     defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
-    leftPanelTabs: mergeConfigEntries(app.leftPanelTabs, mode?.leftPanelTabs),
-    rightPanelTabs: mergeConfigEntries(app.rightPanelTabs, mode?.rightPanelTabs),
+    leftPanelTabs: mergeConfigEntries(resolveSidePanelTabs(app.leftPanelTabs), resolveSidePanelTabs(mode?.leftPanelTabs)),
+    rightPanelTabs: mergeConfigEntries(resolveSidePanelTabs(app.rightPanelTabs), resolveSidePanelTabs(mode?.rightPanelTabs)),
     toolbarContent: mode?.toolbarContent ?? app.toolbarContent,
     footerItems: mergeConfigEntries(app.footerItems, mode?.footerItems),
     findItems: mergeConfigEntries(app.findItems, mode?.findItems),
@@ -22999,51 +23170,58 @@ const AppWorkbenchPanel: React.FC<{
 
 function createDefaultAppWorkbenchTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {
   return [
-    {
+    new StaticSidePanelTabDefinition({
       id: APP_WORKBENCH_TAB_ID,
       icon: FolderIcon,
       order: 0,
-      content: <AppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} />,
-    },
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: `${APP_WORKBENCH_TAB_ID}.summary`, content: <AppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} /> }],
+      }),
+    }).resolveTab(),
   ];
 }
 
 function createDefaultAppDetailsTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
   return [
-    {
+    new StaticSidePanelTabDefinition({
       id: APP_DETAILS_TAB_ID,
       icon: InfoIcon,
       order: 0,
-      content: (
-        <AppPanelStatePreview
-          emptyMessage="No detail state is available for this app."
-          testId="app-panel.details"
-          value={{ selection: app.selection ?? {}, hover: app.hover ?? {} }}
-        />
-      ),
-    },
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: `${APP_DETAILS_TAB_ID}.state`,
+            content: <AppPanelStatePreview emptyMessage="No detail state is available for this app." testId="app-panel.details" value={{ selection: app.selection ?? {}, hover: app.hover ?? {} }} />,
+          },
+        ],
+      }),
+    }).resolveTab(),
   ];
 }
 
 function createDefaultAppOptionsTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
   return [
-    {
+    new StaticSidePanelTabDefinition({
       id: APP_OPTIONS_TAB_ID,
       icon: Settings2Icon,
       order: 0,
-      content: <AppPanelStatePreview emptyMessage="No options are available for this app." testId="app-panel.options" value={app.options ?? {}} />,
-    },
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: `${APP_OPTIONS_TAB_ID}.state`, content: <AppPanelStatePreview emptyMessage="No options are available for this app." testId="app-panel.options" value={app.options ?? {}} /> }],
+      }),
+    }).resolveTab(),
   ];
 }
 
 function createDefaultAppChatTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
   return [
-    {
+    new StaticSidePanelTabDefinition({
       id: APP_CHAT_TAB_ID,
       icon: MessageSquareIcon,
       order: 0,
-      content: <BasicChatPanel id={`app.chat.${app.id}`} title={app.label} />,
-    },
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: `${APP_CHAT_TAB_ID}.content`, content: <BasicChatPanel id={`app.chat.${app.id}`} title={app.label} /> }],
+      }),
+    }).resolveTab(),
   ];
 }
 
@@ -24304,8 +24482,8 @@ if (treeVitest) {
               label: "Test",
               windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
               defaultLayout: createTabStackLayout(["main"], ["Main"]),
-              leftPanelTabs: [{ id: "left", icon: TestIcon, content: <div>Left panel</div> }],
-              rightPanelTabs: [{ id: "right", icon: TestIcon, content: <div>Right panel</div> }],
+              leftPanelTabs: [new StaticSidePanelTabDefinition({ id: "left", icon: TestIcon, tree: new StaticTreePanelDefinition({ sections: [{ id: "left.section", content: <div>Left panel</div> }] }) })],
+              rightPanelTabs: [new StaticSidePanelTabDefinition({ id: "right", icon: TestIcon, tree: new StaticTreePanelDefinition({ sections: [{ id: "right.section", content: <div>Right panel</div> }] }) })],
             },
           ]}
         />,
@@ -24330,8 +24508,8 @@ if (treeVitest) {
               label: "Test",
               windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
               defaultLayout: createTabStackLayout(["main"], ["Main"]),
-              leftPanelTabs: [{ id: "left-extra", icon: TestIcon, content: <div>Left panel</div> }],
-              rightPanelTabs: [{ id: "right-extra", icon: TestIcon, content: <div>Right panel</div> }],
+              leftPanelTabs: [new StaticSidePanelTabDefinition({ id: "left-extra", icon: TestIcon, tree: new StaticTreePanelDefinition({ sections: [{ id: "left-extra.section", content: <div>Left panel</div> }] }) })],
+              rightPanelTabs: [new StaticSidePanelTabDefinition({ id: "right-extra", icon: TestIcon, tree: new StaticTreePanelDefinition({ sections: [{ id: "right-extra.section", content: <div>Right panel</div> }] }) })],
             },
           ]}
           initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}

@@ -28,7 +28,17 @@ import {
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
-import { Suspense, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
+import {
+	Suspense,
+	createContext,
+	memo,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+	type ReactElement,
+} from "react";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./globals.css";
@@ -372,6 +382,20 @@ function PlayBody({
 	);
 }
 
+const PlaySceneCanvasContent = memo(function PlaySceneCanvasContent(props: {
+	readonly selectedId: string | null;
+	readonly relocateMode: RelocateMode;
+	readonly setSelectedId: (id: string | null) => void;
+}) {
+	return (
+		<>
+			<ScenePlayTestBridge setSelectedId={props.setSelectedId} />
+			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
+			<SceneAttractions />
+		</>
+	);
+});
+
 function PlaySceneCanvas(props: {
 	readonly fixture: FixtureV1;
 	readonly kindCatalogs: KindCatalogBundle | undefined;
@@ -388,6 +412,16 @@ function PlaySceneCanvas(props: {
 }) {
 	const onRelocate = useSceneObjectRelocate();
 	const onConnect = useSceneObjectConnect();
+	const sceneChildren = useMemo(
+		() => (
+			<PlaySceneCanvasContent
+				relocateMode={props.relocateMode}
+				selectedId={props.selectedId}
+				setSelectedId={props.setSelectedId}
+			/>
+		),
+		[props.relocateMode, props.selectedId, props.setSelectedId],
+	);
 	return (
 		<Canvas3D
 			className="absolute inset-0"
@@ -408,9 +442,7 @@ function PlaySceneCanvas(props: {
 			onProximityConnect={props.onProximityConnect}
 			onRelocate={onRelocate}
 		>
-			<ScenePlayTestBridge setSelectedId={props.setSelectedId} />
-			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
-			<SceneAttractions />
+			{sceneChildren}
 		</Canvas3D>
 	);
 }
@@ -479,7 +511,14 @@ function PlayInner(): ReactElement {
 	const [lodMode, setLodMode] = useState<LodModeKind>(LOD_MODE_AUTOMATIC);
 	const [lodTag, setLodTag] = useState<LodKind>("normal");
 	const lodProps = useMemo(() => lodCanvasProps(lodMode), [lodMode]);
-	const runtime = useMemo(() => ({ setEffectiveLod: setLodTag }), []);
+	const runtime = useMemo(
+		() => ({
+			setEffectiveLod: (lod: LodKind) => {
+				setLodTag((prev) => (prev === lod ? prev : lod));
+			},
+		}),
+		[],
+	);
 
 	const apps = useMemo(() => [new ScenePlayDefinition(lodMode, setLodMode)], [lodMode]);
 

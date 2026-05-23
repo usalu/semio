@@ -14,6 +14,7 @@ import {
 	useReducer,
 	useRef,
 	useState,
+	useSyncExternalStore,
 	type CSSProperties,
 	type MutableRefObject,
 	type ReactElement,
@@ -63,7 +64,7 @@ export const MESH_STYLE_KINDS = [
 /** @emoji 🎨 Homogeneous GLB presentation kind for pooled scene meshes ({@link MeshBody}). */
 export type MeshStyleKind = (typeof MESH_STYLE_KINDS)[number];
 /** @emoji 🎨 Default object mesh style when none is passed ({@link MeshBody}). */
-export const DEFAULT_MESH_STYLE: MeshStyleKind = "neutral";
+export const DEFAULT_MESH_STYLE: MeshStyleKind = "original";
 export type DomainKind = "urban" | "architecture" | "detailing" | "engineering";
 export type ScaleKind =
 	| "1to50000"
@@ -467,14 +468,75 @@ export interface LodContextValue {
 	readonly gridSnapEnabled: boolean;
 }
 
-const LodContext = createContext<LodContextValue | null>(null);
+type LodListener = () => void;
+
+/** @emoji 📶 LOD band store updated from the render loop; React reads via {@link useLod}. */
+class LodRuntime {
+	private readonly listeners = new Set<LodListener>();
+	lod: LodKind = "normal";
+	gridFactor: number;
+	gridSnapEnabled: boolean;
+
+	constructor(gridFactor: number, gridSnapEnabled: boolean, initialLod: LodKind = "normal") {
+		this.gridFactor = gridFactor;
+		this.gridSnapEnabled = gridSnapEnabled;
+		this.lod = initialLod;
+	}
+
+	readonly subscribe = (listener: LodListener): (() => void) => {
+		this.listeners.add(listener);
+		return () => {
+			this.listeners.delete(listener);
+		};
+	};
+
+	readonly snapshot = (): LodContextValue => ({
+		lod: this.lod,
+		lodGridStepWorld: lodVisibleGridSnapStepWorld(this.lod, this.gridFactor),
+		gridFactor: this.gridFactor,
+		gridSnapEnabled: this.gridSnapEnabled,
+	});
+
+	syncConfig(gridFactor: number, gridSnapEnabled: boolean): void {
+		if (this.gridFactor === gridFactor && this.gridSnapEnabled === gridSnapEnabled) {
+			return;
+		}
+		this.gridFactor = gridFactor;
+		this.gridSnapEnabled = gridSnapEnabled;
+		this.emit();
+	}
+
+	setLod(lod: LodKind): boolean {
+		if (this.lod === lod) {
+			return false;
+		}
+		this.lod = lod;
+		this.emit();
+		return true;
+	}
+
+	private emit(): void {
+		for (const listener of this.listeners) {
+			listener();
+		}
+	}
+}
+
+const LodRuntimeContext = createContext<LodRuntime | null>(null);
 
 /** @emoji 📶 Reads the live scene LOD band and grid snap step from canvas context. */
 export function useLod(): LodContextValue {
-	const v = useContext(LodContext);
-	if (!v) throw new Error("Scene LOD missing");
-	return v;
+	const rt = useContext(LodRuntimeContext);
+	if (!rt) throw new Error("Scene LOD missing");
+	return useSyncExternalStore(rt.subscribe, rt.snapshot, rt.snapshot);
 }
+
+export interface SceneChunkLayoutValue {
+	readonly chunkSize: number;
+	readonly maxDistance: number;
+}
+
+const SceneChunkLayoutContext = createContext<SceneChunkLayoutValue | null>(null);
 
 function LodGridHelper() {
 	const lod = useLod();
@@ -497,13 +559,11 @@ function LodGridHelper() {
 
 function LodFrameRunner(props: {
 	readonly lodKindRef: MutableRefObject<LodKind>;
+	readonly lodRuntime: LodRuntime;
 	readonly thresholds: LodZoomThresholds;
 	readonly distanceReference: number;
-	readonly gridFactor: number;
-	readonly gridSnapEnabled: boolean;
 	readonly automaticLod: boolean;
 	readonly pinnedLod: LodKind | undefined;
-	readonly onCtx: (next: LodContextValue) => void;
 	readonly onLodChange?: (lod: LodKind) => void;
 }) {
 	const cam = useThree((s) => s.camera);
@@ -511,7 +571,6 @@ function LodFrameRunner(props: {
 	const invalidate = useThree((s) => s.invalidate);
 	const tmpT = useMemo(() => new Vector3(), []);
 	const prevLod = useRef<LodKind | null>(null);
-	const ctxSig = useRef("");
 	useFrame(() => {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
@@ -521,25 +580,12 @@ function LodFrameRunner(props: {
 				? props.pinnedLod
 				: resolveLodLabelFromThresholdsHysteresis(pseudo, props.thresholds, prevLod.current);
 		props.lodKindRef.current = next;
-		const lodGridStepWorld = lodVisibleGridSnapStepWorld(next, props.gridFactor);
-		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
-		let dirty = false;
-		if (ctxSig.current !== sig) {
-			ctxSig.current = sig;
-			props.onCtx({
-				lod: next,
-				lodGridStepWorld,
-				gridFactor: props.gridFactor,
-				gridSnapEnabled: props.gridSnapEnabled,
-			});
-			dirty = true;
-		}
+		const lodChanged = props.lodRuntime.setLod(next);
 		if (prevLod.current !== next) {
 			prevLod.current = next;
 			props.onLodChange?.(next);
-			dirty = true;
-		}
-		if (dirty) {
+			invalidate();
+		} else if (lodChanged) {
 			invalidate();
 		}
 	});
@@ -558,45 +604,27 @@ function LodBridge(props: {
 	readonly pinnedLod: LodKind | undefined;
 	readonly onLodChange?: (lod: LodKind) => void;
 }) {
-	const [lodCtx, setLodCtx] = useState<LodContextValue>(() => ({
-		lod: "normal",
-		lodGridStepWorld: lodVisibleGridSnapStepWorld("normal", props.gridFactor),
-		gridFactor: props.gridFactor,
-		gridSnapEnabled: props.gridSnapEnabled,
-	}));
-	const onCtx = useCallback(
-		(next: LodContextValue) => {
-			setLodCtx((prev) => {
-				if (
-					prev.lod === next.lod &&
-					prev.lodGridStepWorld === next.lodGridStepWorld &&
-					prev.gridFactor === next.gridFactor &&
-					prev.gridSnapEnabled === next.gridSnapEnabled
-				) {
-					return prev;
-				}
-				return next;
-			});
-		},
-		[],
+	const lodRuntime = useMemo(
+		() => new LodRuntime(props.gridFactor, props.gridSnapEnabled, props.lodKindRef.current),
+		[props.gridFactor, props.gridSnapEnabled, props.lodKindRef],
 	);
-	const v = useMemo(() => lodCtx, [lodCtx]);
+	useEffect(() => {
+		lodRuntime.syncConfig(props.gridFactor, props.gridSnapEnabled);
+	}, [lodRuntime, props.gridFactor, props.gridSnapEnabled]);
 	return (
-		<LodContext.Provider value={v}>
+		<LodRuntimeContext.Provider value={lodRuntime}>
 			<LodFrameRunner
 				lodKindRef={props.lodKindRef}
+				lodRuntime={lodRuntime}
 				thresholds={props.thresholds}
 				distanceReference={props.distanceReference}
-				gridFactor={props.gridFactor}
-				gridSnapEnabled={props.gridSnapEnabled}
 				automaticLod={props.automaticLod}
 				pinnedLod={props.pinnedLod}
-				onCtx={onCtx}
 				onLodChange={props.onLodChange}
 			/>
 			{props.showLodGrid ? <LodGridHelper /> : null}
 			{props.children}
-		</LodContext.Provider>
+		</LodRuntimeContext.Provider>
 	);
 }
 //#endregion 📶Lod
@@ -1317,7 +1345,7 @@ export function SceneObjectStateProvider(props: {
 			return;
 		}
 		dispatch({ type: "init", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint, snapshot]);
+	}, [props.fixture, fixtureFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
 			dispatch({ type: "relocate", payload });
@@ -1399,6 +1427,7 @@ function useAttractingChildIds(objectId: string): readonly string[] {
 
 const ObjectItemById = memo(function ObjectItemById(props: {
 	readonly objectId: string;
+	readonly layoutOrigin: Vec3;
 	readonly selected?: boolean;
 	readonly relocate?: RelocateMode | false;
 }) {
@@ -1456,19 +1485,35 @@ export interface SceneObjectsProps {
 /** @emoji 🧊 Renders all scene objects from central state (id-keyed; survives ownership changes). */
 export const SceneObjects = memo(function SceneObjects(props: SceneObjectsProps) {
 	const { snapshot } = useSceneObjectState();
+	const chunkLayout = useContext(SceneChunkLayoutContext);
 	const ids = useMemo(() => [...snapshot.records.keys()].sort(), [snapshot.records, snapshot.version]);
-	return (
-		<>
-			{ids.map((id) => (
-				<ObjectItemById
-					key={id}
-					objectId={id}
-					selected={props.selectedObjectId === id}
-					relocate={props.relocate}
-				/>
-			))}
-		</>
+	const items = useMemo(
+		() =>
+			ids.map((id) => {
+				const record = snapshot.records.get(id);
+				if (!record) {
+					return null;
+				}
+				return (
+					<ObjectItemById
+						key={id}
+						objectId={id}
+						layoutOrigin={record.origin}
+						selected={props.selectedObjectId === id}
+						relocate={props.relocate}
+					/>
+				);
+			}),
+		[ids, props.relocate, props.selectedObjectId, snapshot.records],
 	);
+	if (chunkLayout) {
+		return (
+			<Chunks chunkSize={chunkLayout.chunkSize} maxDistance={chunkLayout.maxDistance}>
+				{items}
+			</Chunks>
+		);
+	}
+	return <>{items}</>;
 });
 
 /** @emoji 🌲 Logical attraction tree roots (wormholes) for structure-only composition. */
@@ -2828,6 +2873,14 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
+function SceneBootInvalidate() {
+	const invalidate = useThree((s) => s.invalidate);
+	useEffect(() => {
+		invalidate();
+	}, [invalidate]);
+	return null;
+}
+
 function OrbitGated() {
 	const core = useRegistryCore();
 	const drag = useRegistryDrag();
@@ -3530,9 +3583,10 @@ function Chunks({
 		const map = new Map<string, ReactNode[]>();
 		Children.forEach(children, (child) => {
 			if (!isValidElement(child)) return;
-			const p = child.props as { origin?: Vec3 };
-			if (!p?.origin) return;
-			const k = chunkKey(p.origin, chunkSize);
+			const p = child.props as { layoutOrigin?: Vec3; origin?: Vec3 };
+			const origin = p.layoutOrigin ?? p.origin;
+			if (!origin) return;
+			const k = chunkKey(origin, chunkSize);
 			const arr = map.get(k) ?? [];
 			arr.push(child);
 			map.set(k, arr);
@@ -3552,16 +3606,6 @@ function Chunks({
 	);
 }
 
-function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[]; rest: ReactNode[] } {
-	const chunked: ReactNode[] = [];
-	const rest: ReactNode[] = [];
-	Children.forEach(children, (c) => {
-		if (isValidElement(c) && (c.props as { origin?: Vec3 }).origin !== undefined) chunked.push(c);
-		else rest.push(c);
-	});
-	return { chunked, rest };
-}
-
 function Inner(props: CanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
 	const lodKindRef = useRef<LodKind>("normal");
@@ -3577,7 +3621,10 @@ function Inner(props: CanvasProps) {
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
 	const zoom = camProp?.zoom ?? 1;
-	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
+	const chunkLayout = useMemo(
+		(): SceneChunkLayoutValue => ({ chunkSize, maxDistance: maxDist }),
+		[chunkSize, maxDist],
+	);
 	const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
 	const blocked = useLiveBlockedVortexFullIds(blockedFallback);
 	return (
@@ -3610,6 +3657,7 @@ function Inner(props: CanvasProps) {
 			>
 				<PerspectiveCamera makeDefault near={0.2} far={500_000} fov={50} />
 				<SceneCameraSeed position={pos} target={tgt} />
+				<SceneBootInvalidate />
 				<OrbitGated />
 				<AttractionThreeBinder />
 				<AttractionWindowBridge />
@@ -3617,10 +3665,7 @@ function Inner(props: CanvasProps) {
 				<CameraReporter zoom={zoom} onCamera={props.onCamera} />
 				<ambientLight intensity={0.45} />
 				<directionalLight position={[120, 180, 80]} intensity={0.85} />
-				<Chunks chunkSize={chunkSize} maxDistance={maxDist}>
-					{chunked}
-				</Chunks>
-				<group data-scene-unchunked>{rest}</group>
+				<SceneChunkLayoutContext.Provider value={chunkLayout}>{children}</SceneChunkLayoutContext.Provider>
 			</LodBridge>
 		</RegistryProvider>
 	);
@@ -3644,7 +3689,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 			data-scene-root
 			data-scene-lod={shellLod}
 		>
-			<Canvas frameloop="always" gl={{ antialias: true }} dpr={[1, 2]}>
+			<Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
 				<Inner {...rest} domain={domain} onLodChange={handleLod}>
 					{children}
 				</Inner>
