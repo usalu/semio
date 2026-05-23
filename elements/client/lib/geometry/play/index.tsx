@@ -100,6 +100,7 @@ function GeometryPlayWindow(): ReactElement {
 				<TopologicViewport
 					fixture={play.fixture}
 					selectedId={play.selectedId}
+					selectableKinds={play.selectableKinds}
 					onSelect={play.setSelectedId}
 					onTransformCommit={play.onTransformCommit}
 					transformMode={play.transformMode}

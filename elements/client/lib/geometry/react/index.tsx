@@ -28,8 +28,11 @@ import {
 
 import {
 	TOPOLOGIC_KINDS,
+	type TopologicKind,
 	centroid,
 	collectDragAttachIds,
+	collectContainerPickPoints,
+	computePickBounds,
 	TopologicCellComplexEntity,
 	TopologicCellEntity,
 	TopologicClusterEntity,
@@ -62,6 +65,18 @@ interface TopologicSceneValue {
 	readonly onSelect?: (id: string | null) => void;
 	readonly onTransformCommit?: (id: string, transform: TopologicTransform) => void;
 	readonly transformMode: TopologicTransformMode;
+	readonly selectableKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
+}
+
+function disableRaycast(): null {
+	return null;
+}
+
+function isEntitySelectable(scene: TopologicSceneValue, entityId: string): boolean {
+	if (!scene.selectableKinds) return true;
+	const entity = scene.session.getEntity(entityId);
+	if (!entity) return false;
+	return scene.selectableKinds[entity.kind] ?? true;
 }
 
 const TopologicSceneContext = createContext<TopologicSceneValue | null>(null);
@@ -198,6 +213,7 @@ function TopologicGroup(props: {
 			quaternion={quaternion}
 			scale={scale}
 			onPointerDown={(event) => {
+				if (!isEntitySelectable(scene, props.entityId)) return;
 				event.stopPropagation();
 				scene.onSelect?.(props.entityId);
 			}}
@@ -264,13 +280,40 @@ function TopologyAnchor(props: { readonly entityId: string; readonly transform: 
 	return <TopologicGroup entityId={props.entityId} transform={props.transform} />;
 }
 
+function TopologicContainer(props: { readonly entityId: string; readonly transform?: TopologicTransform }): ReactElement {
+	const scene = useTopologicScene();
+	const bounds = useMemo(() => {
+		const points = collectContainerPickPoints(scene.session, props.entityId);
+		return computePickBounds(points);
+	}, [props.entityId, scene.session]);
+	const select = useCallback(() => scene.onSelect?.(props.entityId), [props.entityId, scene.onSelect]);
+	if (!bounds || !isEntitySelectable(scene, props.entityId)) {
+		return <TopologyAnchor entityId={props.entityId} transform={props.transform} />;
+	}
+	return (
+		<TopologicGroup entityId={props.entityId} transform={props.transform}>
+			<mesh
+				onPointerDown={(event) => {
+					event.stopPropagation();
+					select();
+				}}
+			>
+				<boxGeometry args={bounds.size} />
+				<meshBasicMaterial transparent opacity={0} depthWrite={false} />
+			</mesh>
+		</TopologicGroup>
+	);
+}
+
 export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly transform?: TopologicTransform }): ReactElement {
+	const scene = useTopologicScene();
+	const selectable = isEntitySelectable(scene, props.entity.id);
 	const selected = useIsSelected(props.entity.id);
 	const color = selectedColor(topologyColor(props.entity, "#38bdf8"), selected);
 	const radius = props.entity.radius ?? props.entity.style?.pointSize ?? 0.12;
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
-			<mesh>
+			<mesh raycast={selectable ? undefined : disableRaycast}>
 				<sphereGeometry args={[radius, 24, 24]} />
 				<meshStandardMaterial color={color} transparent opacity={topologyOpacity(props.entity, 1)} />
 			</mesh>
@@ -285,6 +328,7 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 	const anchor = useMemo(() => centroid(points), [points]);
 	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
 	const pickRadius = edgePickRadius(props.entity, 2);
+	const selectable = isEntitySelectable(scene, props.entity.id);
 	const select = useCallback(() => scene.onSelect?.(props.entity.id), [props.entity.id, scene.onSelect]);
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
@@ -292,9 +336,9 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 				points={localPoints}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
 				lineWidth={topologyLineWidth(props.entity, 2)}
-				raycast={() => null}
+				raycast={disableRaycast}
 			/>
-			<TopologicEdgePick points={localPoints} radius={pickRadius} onSelect={select} />
+			{selectable ? <TopologicEdgePick points={localPoints} radius={pickRadius} onSelect={select} /> : null}
 		</TopologicGroup>
 	);
 }
@@ -304,13 +348,15 @@ export function Wire(props: { readonly entity: TopologicWireEntity; readonly tra
 }
 
 export function Face(props: { readonly entity: TopologicFaceEntity; readonly transform?: TopologicTransform }): ReactElement {
+	const scene = useTopologicScene();
+	const selectable = isEntitySelectable(scene, props.entity.id);
 	const selected = useIsSelected(props.entity.id);
 	const anchor = useMemo(() => centroid(props.entity.surface.vertices), [props.entity.surface.vertices]);
 	const vertices = useMemo(() => props.entity.surface.vertices.map((point) => offsetPoint(point, anchor)), [anchor, props.entity.surface.vertices]);
 	const geometry = useFaceGeometry(vertices, props.entity.surface.triangles);
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
-			<mesh geometry={geometry}>
+			<mesh geometry={geometry} raycast={selectable ? undefined : disableRaycast}>
 				<meshStandardMaterial
 					color={selectedColor(topologyColor(props.entity, "#fbbf24"), selected)}
 					transparent
@@ -323,23 +369,23 @@ export function Face(props: { readonly entity: TopologicFaceEntity; readonly tra
 }
 
 export function Shell(props: { readonly entity: TopologicShellEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
+	return <TopologicContainer entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Cell(props: { readonly entity: TopologicCellEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
+	return <TopologicContainer entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function CellComplex(props: { readonly entity: TopologicCellComplexEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
+	return <TopologicContainer entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Cluster(props: { readonly entity: TopologicClusterEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
+	return <TopologicContainer entityId={props.entity.id} transform={props.transform} />;
 }
 
 function TopologyRoot(props: { readonly entity: TopologicTopologyEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
+	return <TopologicContainer entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Topology(props: { readonly entry: ResolvedTopologyEntry }): ReactElement | null {
@@ -427,6 +473,7 @@ function TopologicTransformGumball(): ReactElement | null {
 export interface TopologicViewportProps {
 	readonly fixture: TopologicFixtureV1;
 	readonly selectedId?: string | null;
+	readonly selectableKinds?: Readonly<Partial<Record<TopologicKind, boolean>>>;
 	readonly onSelect?: (id: string | null) => void;
 	readonly onTransformCommit?: (id: string, transform: TopologicTransform) => void;
 	readonly transformMode?: TopologicTransformMode;
@@ -456,8 +503,9 @@ function TopologicSceneGraph(props: Omit<TopologicViewportProps, "className" | "
 			onSelect: props.onSelect,
 			onTransformCommit: props.onTransformCommit,
 			transformMode: props.transformMode ?? "translate",
+			selectableKinds: props.selectableKinds,
 		}),
-		[props.onSelect, props.onTransformCommit, props.selectedId, props.transformMode, registerObject, session, version],
+		[props.onSelect, props.onTransformCommit, props.selectableKinds, props.selectedId, props.transformMode, registerObject, session, version],
 	);
 	const traversal = useMemo(() => collectSceneEntries(session), [session]);
 	return (

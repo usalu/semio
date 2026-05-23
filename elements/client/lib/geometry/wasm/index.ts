@@ -433,6 +433,50 @@ export function edgeModelPoints(session: TopologicWasmSession, edge: TopologicEd
 	});
 	}
 
+export function collectContainerPickPoints(session: TopologicWasmSession, entityId: string): readonly Vec3[] {
+	const points: Vec3[] = [];
+	for (const id of [entityId, ...collectDescendantIds(session, entityId)]) {
+		const entity = session.getEntity(id);
+		if (!entity) continue;
+		if (entity.kind === "face") {
+			for (const point of entity.surface.vertices) points.push(point);
+		}
+		if (entity.kind === "vertex") points.push(entity.point);
+	}
+	return points;
+	}
+
+export function computePickBounds(points: readonly Vec3[]): { center: Vec3; size: Vec3 } | null {
+	if (points.length === 0) return null;
+	let minX = Infinity;
+	let minY = Infinity;
+	let minZ = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	let maxZ = -Infinity;
+	for (const [x, y, z] of points) {
+		minX = Math.min(minX, x);
+		minY = Math.min(minY, y);
+		minZ = Math.min(minZ, z);
+		maxX = Math.max(maxX, x);
+		maxY = Math.max(maxY, y);
+		maxZ = Math.max(maxZ, z);
+	}
+	const minExtent = 0.2;
+	return {
+		center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
+		size: [
+			Math.max(maxX - minX, minExtent),
+			Math.max(maxY - minY, minExtent),
+			Math.max(maxZ - minZ, minExtent),
+		],
+	};
+	}
+
+function isContainerKind(kind: TopologicKind): boolean {
+	return kind === "topology" || kind === "shell" || kind === "cell" || kind === "cellComplex" || kind === "cluster";
+	}
+
 function entityGeometryAnchor(session: TopologicWasmSession, entity: TopologicEntity): Vec3 | null {
 	if (entity.kind === "vertex") return entity.point;
 	if (entity.kind === "edge") return centroid(edgeModelPoints(session, entity));
@@ -444,6 +488,10 @@ function entityGeometryAnchor(session: TopologicWasmSession, entity: TopologicEn
 		return centroid(points);
 	}
 	if (entity.kind === "face") return centroid(entity.surface.vertices);
+	if (isContainerKind(entity.kind)) {
+		const points = collectContainerPickPoints(session, entity.id);
+		return points.length > 0 ? centroid(points) : null;
+	}
 	return null;
 	}
 
@@ -598,6 +646,38 @@ if (import.meta.vitest) {
 	});
 
 	describe("updateTopologicFixtureTransform", () => {
+		it("builds container pick bounds from descendant face and vertex points", async () => {
+			const fixture = (await loadTopologicFixtureV1({
+				schema: "elements.geometry.topologic.fixture/v1",
+				roots: ["root"],
+				topologies: [
+					{ id: "root", kind: "topology", members: ["cell"] },
+					{ id: "v0", kind: "vertex", point: [0, 0, 0] },
+					{ id: "v1", kind: "vertex", point: [2, 0, 0] },
+					{ id: "v2", kind: "vertex", point: [0, 0, 2] },
+					{ id: "shell", kind: "shell", faces: ["face"] },
+					{
+						id: "face",
+						kind: "face",
+						wires: [],
+						surface: {
+							vertices: [
+								[0, 0, 0],
+								[2, 0, 0],
+								[0, 0, 2],
+							],
+							triangles: [0, 1, 2],
+						},
+					},
+					{ id: "cell", kind: "cell", shells: ["shell"] },
+				],
+			})) as TopologicFixtureV1;
+			const session = new TopologicWasmSession(fixture);
+			const bounds = computePickBounds(collectContainerPickPoints(session, "cell"));
+			expect(bounds?.center).toEqual([1, 0, 1]);
+			expect(bounds?.size).toEqual([2, 0.2, 2]);
+		});
+
 		it("limits drag attach to descendants so ancestors cannot create scene cycles", async () => {
 			const fixture = (await loadTopologicFixtureV1({
 				schema: "elements.geometry.topologic.fixture/v1",
