@@ -6,16 +6,19 @@ import { useGLTF } from "@react-three/drei";
 import * as React from "react";
 
 import {
-	App,
 	Button,
+	Controller,
 	LevelProvider,
 	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchWindowKind,
+	WorkbenchView,
 	createDefaultLayout,
 	getLevelBgClass,
-	PureAppDefinition,
-	type AppConfig,
+	type CommandBus,
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
@@ -263,42 +266,56 @@ function topologyWindowKindsWithLodMeasures(
 	];
 }
 
-class TopologyPlayDefinition extends PureAppDefinition {
-	constructor(
-		private readonly boardLodMode: BoardLodModeKind,
-		private readonly boardLodTag: BoardDrawLodKind,
-		private readonly sceneLodMode: SceneLodModeKind,
-		private readonly sceneLodTag: SceneLodKind,
-		private readonly setBoardLodMode: (mode: BoardLodModeKind) => void,
-		private readonly setSceneLodMode: (mode: SceneLodModeKind) => void,
-	) {
-		super();
+const TOPOLOGY_PLAY_SHELL_CONTROLLER_ID = "topology-play";
+
+class TopologyPlayShellController extends Controller {
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(TOPOLOGY_PLAY_SHELL_CONTROLLER_ID, commandBus, hostNotify);
 	}
 
-	resolveConfig(): AppConfig {
-		return {
-			id: TOPOLOGY_PLAY_APP_ID,
-			label: "Topology play",
-			windowKinds: topologyWindowKindsWithLodMeasures(this.boardLodMode, this.boardLodTag, this.sceneLodMode, this.sceneLodTag, this.setBoardLodMode, this.setSceneLodMode),
-			defaultLayout: createDefaultLayout([TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene], "row", [50, 50], [TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene]),
-		};
+	override run(_command: string, _args?: unknown): void {}
+}
+
+function buildTopologyWorkbenchApp(controller: TopologyPlayShellController): WorkbenchApp {
+	return new WorkbenchApp(
+		TOPOLOGY_PLAY_APP_ID,
+		"Topology play",
+		undefined,
+		controller,
+		createDefaultLayout([TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene], "row", [50, 50], [TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene]) as never,
+		[
+			new WorkbenchWindowKind(TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOW_LABELS.board, "elements.topology.placeholder"),
+			new WorkbenchWindowKind(TOPOLOGY_PLAY_WINDOWS.scene, TOPOLOGY_PLAY_WINDOW_LABELS.scene, "elements.topology.placeholder"),
+		],
+	);
+}
+
+function buildInvalidTopologyWorkbenchApp(controller: TopologyPlayShellController): WorkbenchApp {
+	return new WorkbenchApp(
+		TOPOLOGY_PLAY_APP_ID,
+		"Topology play",
+		undefined,
+		controller,
+		createDefaultLayout(["topology-error"], "row", [100], ["Error"]) as never,
+		[new WorkbenchWindowKind("topology-error", "Error", "elements.topology.placeholder")],
+	);
+}
+
+let invalidTopologyWorkbench: Workbench | null = null;
+
+function getInvalidTopologyWorkbench(): Workbench {
+	if (!invalidTopologyWorkbench) {
+		const wb = new Workbench();
+		const ctrl = new TopologyPlayShellController(wb.commandBus, () => wb.notify());
+		wb.addApp(buildInvalidTopologyWorkbenchApp(ctrl));
+		invalidTopologyWorkbench = wb;
 	}
+	return invalidTopologyWorkbench;
 }
 
 class InvalidTopologyWindow extends React.Component {
 	render(): React.ReactElement {
 		return <div className="p-4 text-destructive">Invalid board or scene fixture</div>;
-	}
-}
-
-class InvalidTopologyPlayDefinition extends PureAppDefinition {
-	resolveConfig(): AppConfig {
-		return {
-			id: TOPOLOGY_PLAY_APP_ID,
-			label: "Topology play",
-			windowKinds: [{ id: "topology-error", label: "Error", component: InvalidTopologyWindow }],
-			defaultLayout: createDefaultLayout(["topology-error"], "row", [100], ["Error"]),
-		};
 	}
 }
 
@@ -318,6 +335,8 @@ class TopologyPlayController extends React.Component<{ readonly boardFixture: Bo
 		}
 		this.setState((current) => ({ proximityScene: current.proximityScene + 1 }));
 	});
+
+	private topologyWorkbench: Workbench | null = null;
 
 	state: TopologyPlayControllerState = {
 		relocateMode: "translate",
@@ -396,17 +415,35 @@ class TopologyPlayController extends React.Component<{ readonly boardFixture: Bo
 
 	render(): React.ReactElement {
 		const shellValue = this.buildShellValue();
-		const apps = [new TopologyPlayDefinition(this.state.boardLodMode, this.state.boardLodTag, this.state.sceneLodMode, this.state.sceneLodTag, (boardLodMode) => this.setState({ boardLodMode }), (sceneLodMode) => this.setState({ sceneLodMode }))];
+		if (!this.topologyWorkbench) {
+			const wb = new Workbench();
+			const ctrl = new TopologyPlayShellController(wb.commandBus, () => wb.notify());
+			wb.addApp(buildTopologyWorkbenchApp(ctrl));
+			this.topologyWorkbench = wb;
+		}
+		const windowKinds = topologyWindowKindsWithLodMeasures(
+			this.state.boardLodMode,
+			this.state.boardLodTag,
+			this.state.sceneLodMode,
+			this.state.sceneLodTag,
+			(boardLodMode) => this.setState({ boardLodMode }),
+			(sceneLodMode) => this.setState({ sceneLodMode }),
+		);
 		return (
 			<TopologyPlayShellContext.Provider value={shellValue}>
-				<App apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+				<WorkbenchView
+					workbench={this.topologyWorkbench}
+					defaultAppId={TOPOLOGY_PLAY_APP_ID}
+					className={getLevelBgClass(0)}
+					resolvedWindowKindsOverride={windowKinds}
+				/>
 			</TopologyPlayShellContext.Provider>
 		);
 	}
 }
 
-function invalidFixtureApps(): PureAppDefinition[] {
-	return [new InvalidTopologyPlayDefinition()];
+function invalidTopologyWindowKinds(): UIWindowKindDefinition[] {
+	return [{ id: "topology-error", label: "Error", component: InvalidTopologyWindow }];
 }
 
 class TopologyPlayApp extends React.Component {
@@ -417,7 +454,12 @@ class TopologyPlayApp extends React.Component {
 		if (!this.boardFixture || !this.sceneFixture) {
 			return (
 				<LevelProvider>
-					<App apps={invalidFixtureApps()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+					<WorkbenchView
+						workbench={getInvalidTopologyWorkbench()}
+						defaultAppId={TOPOLOGY_PLAY_APP_ID}
+						className={getLevelBgClass(0)}
+						resolvedWindowKindsOverride={invalidTopologyWindowKinds()}
+					/>
 				</LevelProvider>
 			);
 		}

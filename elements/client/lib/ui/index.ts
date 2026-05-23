@@ -195,9 +195,9 @@ export abstract class Controller {
 }
 //#endregion 🔖CommandBus
 
-//#region 🔖WindowKind
+//#region 🔖WorkbenchWindowKind
 /** @emoji 🪟 Declarative window kind; React renderer maps `bodyKey` to a component. */
-export class WindowKind {
+export class WorkbenchWindowKind {
 	constructor(
 		readonly id: string,
 		readonly label: string,
@@ -205,13 +205,13 @@ export class WindowKind {
 		readonly iconId?: string,
 	) {}
 }
-//#endregion 🔖WindowKind
+//#endregion 🔖WorkbenchWindowKind
 
 //#region 🔖WorkbenchMode
 /** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
 export class WorkbenchMode {
 	tools: ShellAppTools = {};
-	windowKinds: WindowKind[] = [];
+	windowKinds: WorkbenchWindowKind[] = [];
 	defaultLayout?: WindowLayout;
 	leftTabs: ShellSideTabSpec[] = [];
 	rightTabs: ShellSideTabSpec[] = [];
@@ -262,7 +262,7 @@ export interface ResolvedWorkbenchAppState {
 	readonly label: string;
 	readonly iconId: string | undefined;
 	readonly tools: ShellAppTools | undefined;
-	readonly windowKinds: readonly WindowKind[];
+	readonly windowKinds: readonly WorkbenchWindowKind[];
 	readonly defaultLayout: WindowLayout;
 	readonly leftTabs: ShellSideTabSpec[];
 	readonly rightTabs: ShellSideTabSpec[];
@@ -308,7 +308,7 @@ export class WorkbenchApp {
 	readonly modes: WorkbenchMode[] = [];
 	defaultModeId?: string;
 	private activeModeIdOverride: string | null = null;
-	windowKinds: WindowKind[] = [];
+	windowKinds: WorkbenchWindowKind[] = [];
 	defaultLayout!: WindowLayout;
 	tools: ShellAppTools = {};
 	leftTabs: ShellSideTabSpec[] = [];
@@ -328,7 +328,7 @@ export class WorkbenchApp {
 		readonly iconId: string | undefined,
 		controller: Controller,
 		layout: WindowLayout,
-		windowKinds: readonly WindowKind[],
+		windowKinds: readonly WorkbenchWindowKind[],
 	) {
 		this.controller = controller;
 		this.defaultLayout = layout;

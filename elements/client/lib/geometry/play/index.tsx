@@ -7,7 +7,7 @@ import {
 	Controller,
 	WorkbenchApp,
 	WorkbenchMode,
-	WindowKind,
+	WorkbenchWindowKind,
 	createDefaultLayout,
 	mountReactApp,
 	type ShellToolItem,
@@ -474,7 +474,7 @@ export function buildGeometryPlayWorkbenchApp(controller: GeometryPlayShellContr
 		undefined,
 		controller,
 		GEOMETRY_PLAY_DEFAULT_LAYOUT as never,
-		[new WindowKind(GEOMETRY_PLAY_WINDOW_ID, GEOMETRY_PLAY_WINDOW_LABEL, GEOMETRY_PLAY_BODY_KEY)],
+		new WorkbenchWindowKind(GEOMETRY_PLAY_WINDOW_ID, GEOMETRY_PLAY_WINDOW_LABEL, GEOMETRY_PLAY_BODY_KEY),
 	);
 	app.defaultModeId = "edit";
 	app.addMode(controller.editMode);

@@ -2,6 +2,8 @@
 // 💻 elements/client/lib/board/play/index.tsx — Board play bootstrap: non-React entry that defers to the React runtime module.
 // #endregion 🧲Header
 
-import { mountAsyncReactApp } from "@elements/ui";
+import { mountReactApp } from "@elements/ui";
 
-void mountAsyncReactApp(async () => (await import("./react.tsx")).createBoardPlayElement());
+void import("./react.tsx").then((m) => {
+	mountReactApp(m.createBoardPlayElement());
+});

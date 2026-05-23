@@ -4,12 +4,11 @@
 
 import { useGLTF } from "@react-three/drei";
 import {
-	App,
 	applyElementsSurfaceChrome,
 	Button,
+	Controller,
 	Expertise,
 	LevelProvider,
-	PureAppDefinition,
 	Select,
 	SelectContent,
 	SelectItem,
@@ -18,9 +17,13 @@ import {
 	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchWindowKind,
+	WorkbenchView,
 	createStackLayout,
 	getLevelBgClass,
-	type AppConfig,
+	type CommandBus,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 	type FooterItem,
@@ -75,19 +78,25 @@ const PlayRuntimeContext = React.createContext<{
 	readonly setEffectiveLod: (lod: LodKind) => void;
 } | null>(null);
 
-class ScenePlayDefinition extends PureAppDefinition {
-	constructor(private readonly lodMode: LodModeKind, private readonly setLodMode: (mode: LodModeKind) => void) {
-		super();
+const SCENE_PLAY_SHELL_CONTROLLER_ID = "scene-play";
+
+class ScenePlayShellController extends Controller {
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(SCENE_PLAY_SHELL_CONTROLLER_ID, commandBus, hostNotify);
 	}
 
-	resolveConfig(): AppConfig {
-		return {
-			id: PLAY_APP_ID,
-			label: "Scene play",
-			windowKinds: windowKindsWithLodMeasures(this.lodMode, this.setLodMode),
-			defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
-		};
-	}
+	override run(_command: string, _args?: unknown): void {}
+}
+
+function buildScenePlayWorkbenchApp(controller: ScenePlayShellController): WorkbenchApp {
+	return new WorkbenchApp(
+		PLAY_APP_ID,
+		"Scene play",
+		undefined,
+		controller,
+		createStackLayout(["scene-main"], ["Scene"]) as never,
+		[new WorkbenchWindowKind("scene-main", "Scene", "elements.scene.placeholder")],
+	);
 }
 
 function readTheme(): ElementsSurfaceTheme {
@@ -423,6 +432,8 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 
 	private cleanupSurfaceChrome: (() => void) | null = null;
 
+	private boardWorkbench: Workbench | null = null;
+
 	private readonly runtime = {
 		setEffectiveLod: (lod: LodKind) => {
 			this.setState((current) => ({ lodTag: current.lodTag === lod ? current.lodTag : lod }));
@@ -471,12 +482,25 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 			},
 		];
 		const lodProps = lodCanvasProps(this.state.lodMode);
-		const apps = [new ScenePlayDefinition(this.state.lodMode, (lodMode) => this.setState({ lodMode }))];
+		const windowKinds = windowKindsWithLodMeasures(this.state.lodMode, (lodMode) => this.setState({ lodMode }));
+		if (!this.boardWorkbench) {
+			const wb = new Workbench();
+			const ctrl = new ScenePlayShellController(wb.commandBus, () => wb.notify());
+			wb.addApp(buildScenePlayWorkbenchApp(ctrl));
+			this.boardWorkbench = wb;
+		}
+		const workbench = this.boardWorkbench;
 		return (
 			<PlayLodDisplayContext.Provider value={this.state.lodTag}>
 				<PlayLodContext.Provider value={lodProps}>
 					<PlayRuntimeContext.Provider value={this.runtime}>
-						<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={this.state.device === "mobile"} />
+						<WorkbenchView
+							workbench={workbench}
+							defaultAppId={PLAY_APP_ID}
+							extraFooterItems={surfaceFooterItems}
+							mobile={this.state.device === "mobile"}
+							resolvedWindowKindsOverride={windowKinds}
+						/>
 					</PlayRuntimeContext.Provider>
 				</PlayLodContext.Provider>
 			</PlayLodDisplayContext.Provider>

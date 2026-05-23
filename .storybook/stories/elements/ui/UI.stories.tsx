@@ -1,558 +1,265 @@
 // #region 🧲Header
-
-// .elements/ui/.storybook/stories/elements/UI.stories.tsx
-
-// 2026 Ueli Saluz <ueli@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-
+// 💻 .storybook/stories/elements/ui/UI.stories.tsx — Storybook harness for {@link WorkbenchView} + {@link Workbench}.
 // #endregion 🧲Header
 
-import { App, BreadcrumbItemData, Tree, type AppConfig, type AppTools, type UIFindItem, type UISearchItem, createDefaultLayout } from "@elements/ui";
+import {
+	Controller,
+	Tree,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchView,
+	WorkbenchWindowKind,
+	createDefaultLayout,
+	registerElementIcon,
+	registerSidePanelBody,
+	registerWindowBody,
+	type AppTools,
+	type CommandBus,
+	type ShellFindItem,
+	type ShellSearchItemSpec,
+	type ShellSideTabSpec,
+	type ShellToolItem,
+} from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
-import { BarChart, BookOpen, ClipboardPaste, Copy, File, FileText, FolderOpen, Home, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
+import { BarChart, File, FileText, FolderOpen, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
+import * as React from "react";
 import { expect, userEvent, within } from "storybook/test";
 
-// #region 🎊UI
+const STORY_CTRL = "story-ui";
+
+class StoryUiController extends Controller {
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(STORY_CTRL, commandBus, hostNotify);
+	}
+
+	override run(_command: string, _args?: unknown): void {}
+}
+
+const ExplorerTree: React.FC = () => (
+	<Tree
+		sections={[
+			{
+				id: "explorer.src",
+				label: "src",
+				icon: <FolderOpen size={14} />,
+				defaultOpen: true,
+				items: [
+					{ id: "explorer.src.index", label: "index.ts", icon: <File size={14} /> },
+					{ id: "explorer.src.app", label: "app.tsx", icon: <File size={14} /> },
+				],
+			},
+		]}
+	/>
+);
+
+const PropertiesTree: React.FC = () => (
+	<Tree
+		sections={[
+			{
+				id: "properties.element",
+				label: "Element",
+				icon: <Info size={14} />,
+				defaultOpen: true,
+				items: [{ id: "properties.element.id", label: "id: editor-1" }],
+			},
+		]}
+	/>
+);
+
+const MetricsTree: React.FC = () => (
+	<Tree
+		sections={[
+			{
+				id: "metrics.performance",
+				label: "Performance",
+				icon: <BarChart size={14} />,
+				defaultOpen: true,
+				items: [{ id: "metrics.performance.fps", label: "FPS: 60" }],
+			},
+		]}
+	/>
+);
+
+let storyChromeReady = false;
+
+function ensureStoryWorkbenchChrome(): void {
+	if (storyChromeReady) return;
+	storyChromeReady = true;
+	registerElementIcon("story.icon.file-text", <FileText size={16} />);
+	registerElementIcon("story.icon.bar-chart", <BarChart size={16} />);
+	registerElementIcon("story.icon.layers", <Layers size={16} />);
+	registerElementIcon("story.icon.settings", <Settings size={16} />);
+	registerElementIcon("story.icon.info", <Info size={16} />);
+	registerElementIcon("story.icon.undo", <Undo size={14} />);
+	registerElementIcon("story.icon.redo", <Redo size={14} />);
+	registerElementIcon("story.icon.scissors", <Scissors size={14} />);
+	registerElementIcon("story.icon.save", <Save size={14} />);
+	registerWindowBody("story.body.editor", () => (
+		<div className="flex h-full items-center justify-center bg-window">
+			<h2 className="text-xl font-bold">Editor Window</h2>
+		</div>
+	));
+	registerWindowBody("story.body.preview", () => (
+		<div className="flex h-full items-center justify-center bg-panel">
+			<h2 className="text-xl font-bold">Preview Window</h2>
+		</div>
+	));
+	registerWindowBody("story.body.stats", () => (
+		<div className="flex h-full items-center justify-center bg-window">
+			<h2 className="text-xl font-bold">Statistics</h2>
+		</div>
+	));
+	registerSidePanelBody("story.panel.explorer", ExplorerTree);
+	registerSidePanelBody("story.panel.properties", PropertiesTree);
+	registerSidePanelBody("story.panel.metrics", MetricsTree);
+	registerSidePanelBody("story.panel.settings", () => <div className="p-2">Settings content.</div>);
+}
+
+const editorFindItems: ShellFindItem[] = [
+	{ id: "f1", label: "function handleClick", description: "Line 42", category: "Functions" },
+	{ id: "f2", label: "function renderEditor", description: "Line 87", category: "Functions" },
+];
+
+const storySearchRows: ShellSearchItemSpec[] = [
+	{ id: "s1", label: "index.ts", description: "Entry", category: "Files", iconId: "story.icon.file-text", controllerId: STORY_CTRL, command: "noop" },
+	{ id: "s2", label: "Button.tsx", description: "Component", category: "Components", iconId: "story.icon.file-text", controllerId: STORY_CTRL, command: "noop" },
+];
+
+function shellToolsFromAppTools(tools: AppTools | undefined): Record<string, readonly ShellToolItem[]> | undefined {
+	if (!tools) return undefined;
+	const out: Record<string, readonly ShellToolItem[]> = {};
+	for (const [category, list] of Object.entries(tools)) {
+		out[category] = (list as { id: string; kind?: "separator"; icon?: React.ReactNode; label?: string; onClick?: () => void; order?: number }[]).map((item) => {
+			if (item.kind === "separator") return { id: item.id, kind: "separator" as const, order: item.order };
+			const iconKey = `story.tool.icon.${item.id}`;
+			if (item.icon) registerElementIcon(iconKey, item.icon as React.ReactElement);
+			return {
+				id: item.id,
+				kind: "button" as const,
+				iconId: iconKey,
+				label: item.label,
+				order: item.order,
+				controllerId: STORY_CTRL,
+				command: "noop",
+			};
+		});
+	}
+	return out;
+}
+
+function buildTwoAppWorkbench(): Workbench {
+	ensureStoryWorkbenchChrome();
+	const wb = new Workbench();
+	const ctrl = new StoryUiController(wb.commandBus, () => wb.notify());
+	const editorTabsLeft: ShellSideTabSpec[] = [
+		{ id: "explorer", iconId: "story.icon.layers", order: 0, bodyKey: "story.panel.explorer" },
+		{ id: "settings", iconId: "story.icon.settings", order: 1, bodyKey: "story.panel.settings" },
+	];
+	const editorTabsRight: ShellSideTabSpec[] = [{ id: "properties", iconId: "story.icon.info", order: 0, bodyKey: "story.panel.properties" }];
+	const editorTools = shellToolsFromAppTools({
+		actions: [
+			{ id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
+			{ id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
+			{ id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 5 },
+		],
+	} as AppTools);
+	const editorApp = new WorkbenchApp(
+		"editor",
+		"Editor",
+		"story.icon.file-text",
+		ctrl,
+		createDefaultLayout(["editor", "preview"], "row", [60, 40]) as never,
+		[
+			new WorkbenchWindowKind("editor", "Editor", "story.body.editor"),
+			new WorkbenchWindowKind("preview", "Preview", "story.body.preview"),
+		],
+	);
+	editorApp.leftTabs = editorTabsLeft;
+	editorApp.rightTabs = editorTabsRight;
+	editorApp.tools = editorTools ?? {};
+	editorApp.findItems = editorFindItems;
+	editorApp.onFindSelect = (itemId) => console.log("Find selected:", itemId);
+	editorApp.footerItems = [
+		{ id: "status", text: "Ready", order: 0 },
+		{ id: "line", text: "Ln 42, Col 8", order: 1 },
+	];
+	const dashboardApp = new WorkbenchApp(
+		"dashboard",
+		"Dashboard",
+		"story.icon.bar-chart",
+		ctrl,
+		createDefaultLayout(["stats"]) as never,
+		[new WorkbenchWindowKind("stats", "Statistics", "story.body.stats")],
+	);
+	dashboardApp.leftTabs = [{ id: "metrics", iconId: "story.icon.bar-chart", order: 0, bodyKey: "story.panel.metrics" }];
+	dashboardApp.footerItems = [{ id: "last-updated", text: "Updated 2m ago", order: 0 }];
+	wb.addApp(editorApp);
+	wb.addApp(dashboardApp);
+	wb.searchItems = storySearchRows;
+	wb.globalFooterItems = [{ id: "version", text: "v1.0.0", order: 100 }];
+	return wb;
+}
 
 const meta = {
-  title: "elements/react/UI",
-  component: App,
-  parameters: {
-    layout: "fullscreen",
-  },
-  tags: ["autodocs"],
-} satisfies Meta<typeof App>;
+	title: "elements/react/UI",
+	component: WorkbenchView,
+	parameters: { layout: "fullscreen" },
+	tags: ["autodocs"],
+	render: () => <WorkbenchView workbench={buildTwoAppWorkbench()} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+} satisfies Meta<typeof WorkbenchView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// #region 🧿Windows
+export const Default: Story = {};
 
-const EditorWindow = () => (
-  <div className="flex items-center justify-center h-full bg-window">
-    <h2 className="text-xl font-bold">Editor Window</h2>
-  </div>
-);
-
-const PreviewWindow = () => (
-  <div className="flex items-center justify-center h-full bg-panel">
-    <h2 className="text-xl font-bold">Preview Window</h2>
-  </div>
-);
-
-const StatsWindow = () => (
-  <div className="flex items-center justify-center h-full bg-window">
-    <h2 className="text-xl font-bold">Statistics</h2>
-  </div>
-);
-
-// #endregion 🧿Windows
-
-// #region 🏆TreePanels
-
-const ExplorerTree = () => (
-  <Tree
-    sections={[
-      {
-        id: "explorer.src",
-        label: "src",
-        icon: <FolderOpen size={14} />,
-        defaultOpen: true,
-        items: [
-          { id: "explorer.src.index", label: "index.ts", icon: <File size={14} /> },
-          { id: "explorer.src.app", label: "app.tsx", icon: <File size={14} /> },
-          {
-            id: "explorer.src.components",
-            label: "components",
-            icon: <FolderOpen size={14} />,
-            defaultOpen: true,
-            items: [
-              { id: "explorer.src.components.button", label: "Button.tsx", icon: <File size={14} /> },
-              { id: "explorer.src.components.card", label: "Card.tsx", icon: <File size={14} /> },
-              { id: "explorer.src.components.layout", label: "Layout.tsx", icon: <File size={14} /> },
-            ],
-          },
-          {
-            id: "explorer.src.utils",
-            label: "utils",
-            icon: <FolderOpen size={14} />,
-            items: [
-              { id: "explorer.src.utils.helpers", label: "helpers.ts", icon: <File size={14} /> },
-              { id: "explorer.src.utils.constants", label: "constants.ts", icon: <File size={14} /> },
-            ],
-          },
-        ],
-      },
-      {
-        id: "explorer.public",
-        label: "public",
-        icon: <FolderOpen size={14} />,
-        items: [{ id: "explorer.public.favicon", label: "favicon.ico", icon: <File size={14} /> }],
-      },
-    ]}
-  />
-);
-
-const PropertiesTree = () => (
-  <Tree
-    sections={[
-      {
-        id: "properties.element",
-        label: "Element",
-        icon: <Info size={14} />,
-        defaultOpen: true,
-        items: [
-          { id: "properties.element.id", label: "id: editor-1" },
-          { id: "properties.element.kind", label: "kind: text" },
-          { id: "properties.element.visible", label: "visible: true" },
-        ],
-      },
-      {
-        id: "properties.style",
-        label: "Style",
-        icon: <Settings size={14} />,
-        defaultOpen: true,
-        items: [
-          { id: "properties.style.width", label: "width: 100%" },
-          { id: "properties.style.height", label: "height: auto" },
-          { id: "properties.style.padding", label: "padding: 16px" },
-        ],
-      },
-    ]}
-  />
-);
-
-const MetricsTree = () => (
-  <Tree
-    sections={[
-      {
-        id: "metrics.performance",
-        label: "Performance",
-        icon: <BarChart size={14} />,
-        defaultOpen: true,
-        items: [
-          { id: "metrics.performance.fps", label: "FPS: 60" },
-          { id: "metrics.performance.memory", label: "Memory: 128MB" },
-          { id: "metrics.performance.cpu", label: "CPU: 12%" },
-        ],
-      },
-      {
-        id: "metrics.network",
-        label: "Network",
-        icon: <BarChart size={14} />,
-        items: [
-          { id: "metrics.network.requests", label: "Requests: 42" },
-          { id: "metrics.network.latency", label: "Latency: 12ms" },
-        ],
-      },
-    ]}
-  />
-);
-
-// #endregion 🏆TreePanels
-
-// #region 🌟SearchItems
-
-const searchItems: UISearchItem[] = [
-  { id: "s1", label: "index.ts", description: "Main entry point", icon: <File size={14} />, category: "Files", onSelect: () => {} },
-  { id: "s2", label: "app.tsx", description: "Root application component", icon: <File size={14} />, category: "Files", onSelect: () => {} },
-  { id: "s3", label: "Button.tsx", description: "Button component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
-  { id: "s4", label: "Card.tsx", description: "Card component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
-  { id: "s5", label: "Layout.tsx", description: "Layout component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
-  { id: "s6", label: "Settings", description: "Application settings", icon: <Settings size={14} />, category: "Pages", onSelect: () => {} },
-  { id: "s7", label: "Documentation", description: "Read the docs", icon: <BookOpen size={14} />, category: "Pages", onSelect: () => {} },
-];
-
-// #endregion 🌟SearchItems
-
-// #region 🖲️FindItems
-
-const editorFindItems: UIFindItem[] = [
-  { id: "f1", label: "function handleClick", description: "Line 42", category: "Functions" },
-  { id: "f2", label: "function renderEditor", description: "Line 87", category: "Functions" },
-  { id: "f3", label: "const EDITOR_CONFIG", description: "Line 12", category: "Constants" },
-  { id: "f4", label: "interface EditorProps", description: "Line 5", category: "Interfaces" },
-  { id: "f5", label: "class EditorState", description: "Line 120", category: "Classes" },
-];
-
-// #endregion 🖲️FindItems
-
-// #region 👓ToolbarItems
-
-const editorToolbarTools: AppTools = {
-  actions: [
-    { id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
-    { id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
-    { id: "cut", icon: <Scissors size={14} />, onClick: () => {}, order: 2 },
-    { id: "copy", icon: <Copy size={14} />, onClick: () => {}, order: 3 },
-    { id: "paste", icon: <ClipboardPaste size={14} />, onClick: () => {}, order: 4 },
-    { id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 5 },
-  ],
-};
-
-// #endregion 👓ToolbarItems
-
-// #region 🦉Apps
-
-const editorApp: AppConfig = {
-  id: "editor",
-  label: "Editor",
-  icon: <FileText size={16} />,
-  windowKinds: [
-    { id: "editor", label: "Editor", component: EditorWindow },
-    { id: "preview", label: "Preview", component: PreviewWindow },
-  ],
-  defaultLayout: createDefaultLayout(["editor", "preview"], "row", [60, 40]),
-  leftPanelTabs: [
-    { id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> },
-    { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content.</div> },
-  ],
-  rightPanelTabs: [{ id: "properties", icon: Info, order: 0, content: <PropertiesTree /> }],
-  tools: editorToolbarTools,
-  footerItems: [
-    { id: "status", content: "Ready", order: 0 },
-    { id: "line", content: "Ln 42, Col 8", order: 1 },
-  ],
-  findItems: editorFindItems,
-  onFindSelect: (itemId) => console.log("Find selected:", itemId),
-};
-
-const dashboardApp: AppConfig = {
-  id: "dashboard",
-  label: "Dashboard",
-  icon: <BarChart size={16} />,
-  windowKinds: [{ id: "stats", label: "Statistics", component: StatsWindow }],
-  defaultLayout: createDefaultLayout(["stats"]),
-  leftPanelTabs: [{ id: "metrics", icon: BarChart, order: 0, content: <MetricsTree /> }],
-  footerItems: [{ id: "last-updated", content: "Updated 2m ago", order: 0 }],
-};
-
-// #endregion 🦉Apps
-
-// #region 💡Breadcrumb
-
-const breadcrumbItems: BreadcrumbItemData[] = [
-  {
-    id: "home",
-    content: (
-      <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-        <Home size={16} />
-      </a>
-    ),
-    options: [
-      { label: "Local Projects", href: "/?kind=local" },
-      { label: "Remote Projects", href: "/?kind=remote" },
-      { label: "Recent", href: "/?kind=recent" },
-    ],
-    onNavigate: (href) => console.log("Navigate to:", href),
-  },
-  {
-    id: "project",
-    content: <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">My Project</a>,
-    options: [
-      { label: "Project A", href: "/projects/a" },
-      { label: "Project B", href: "/projects/b" },
-      { label: "Project C", href: "/projects/c" },
-    ],
-    onNavigate: (href) => console.log("Navigate to:", href),
-  },
-  {
-    id: "artifactKind",
-    content: (
-      <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-        <FileText size={16} />
-      </a>
-    ),
-    options: [
-      { label: "Files", href: "/projects/a?kind=files" },
-      { label: "Components", href: "/projects/a?kind=components" },
-      { label: "Settings", href: "/projects/a?kind=settings" },
-    ],
-    onNavigate: (href) => console.log("Navigate to:", href),
-  },
-  {
-    id: "file",
-    content: <span className="text-foreground px-single flex items-center gap-single h-full">main.ts</span>,
-  },
-];
-
-// #endregion 💡Breadcrumb
-
-// #region 📮Stories
-
-export const Default: Story = {
-  args: {
-    apps: [editorApp, dashboardApp],
-    breadcrumbItems,
-    searchItems,
-    footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
-  },
-};
-
-export const SingleApp: Story = {
-  args: {
-    apps: [editorApp],
-    breadcrumbItems,
-    searchItems,
-  },
-};
-
-export const NoBreadcrumb: Story = {
-  args: {
-    apps: [editorApp, dashboardApp],
-    defaultAppId: "dashboard",
-    searchItems,
-  },
-};
-
-export const WithToolbarItems: Story = {
-  args: {
-    apps: [editorApp],
-    breadcrumbItems,
-    searchItems,
-    tools: { actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }] },
-  },
-};
-
-export const WithToolbarContent: Story = {
-  args: {
-    apps: [
-      {
-        ...editorApp,
-        tools: undefined,
-        toolbarContent: (
-          <div className="flex items-center gap-2 px-3 py-1 bg-panel border rounded-md shadow-sm pointer-events-auto">
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Undo</button>
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Redo</button>
-            <div className="w-px h-4 bg-border" />
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Save</button>
-          </div>
-        ),
-      },
-    ],
-    breadcrumbItems,
-  },
-};
-
-export const WithSearch: Story = {
-  args: {
-    apps: [
-      {
-        id: "minimal",
-        label: "Minimal",
-        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+P to search</div> }],
-        defaultLayout: createDefaultLayout(["main"]),
-      },
-    ],
-    searchItems,
-  },
-};
-
-export const WithFind: Story = {
-  args: {
-    apps: [
-      {
-        id: "code",
-        label: "Code",
-        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+F to find</div> }],
-        defaultLayout: createDefaultLayout(["main"]),
-        findItems: editorFindItems,
-        onFindSelect: (itemId) => console.log("Find selected:", itemId),
-      },
-    ],
-  },
-};
-
-export const WithTreePanels: Story = {
-  args: {
-    apps: [
-      {
-        id: "tree-demo",
-        label: "Tree Demo",
-        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Every panel has a tree</div> }],
-        defaultLayout: createDefaultLayout(["main"]),
-        leftPanelTabs: [{ id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> }],
-        rightPanelTabs: [{ id: "properties", icon: Info, order: 0, content: <PropertiesTree /> }],
-      },
-    ],
-    breadcrumbItems: [
-      {
-        id: "root",
-        content: (
-          <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-            <Home size={16} />
-          </a>
-        ),
-      },
-      {
-        id: "section",
-        content: <span className="text-foreground px-single flex items-center gap-single h-full">Workspace</span>,
-      },
-    ],
-    searchItems,
-  },
+export const Mobile: Story = {
+	render: () => <WorkbenchView workbench={buildTwoAppWorkbench()} mobile initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+	parameters: {
+		viewport: { defaultViewport: "mobile1" },
+		layout: "fullscreen",
+	},
+	decorators: [
+		(Story) => (
+			<div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+				<Story />
+			</div>
+		),
+	],
+	play: async ({ canvasElement }) => {
+		const documentBody = canvasElement.ownerDocument.body;
+		const mobilePanelToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.workbench");
+		expect(mobilePanelToggle).toBeTruthy();
+		await userEvent.click(mobilePanelToggle!);
+		expect(documentBody.querySelector('[data-panel="mobilePanel"]')).toBeTruthy();
+		expect(within(documentBody).getByText("src")).toBeTruthy();
+	},
 };
 
 export const FullFeatured: Story = {
-  args: {
-    apps: [editorApp, dashboardApp],
-    breadcrumbItems,
-    searchItems,
-    footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
-    tools: { actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }] },
-  },
-  play: async ({ canvasElement }) => {
-    const documentBody = canvasElement.ownerDocument.body;
-    const leftPanelToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.left");
-    const searchToggle = canvasElement.ownerDocument.getElementById("ui.search.toggle");
-    const findToggle = canvasElement.ownerDocument.getElementById("ui.find.toggle");
-
-    expect(leftPanelToggle).toBeTruthy();
-    expect(searchToggle).toBeTruthy();
-    expect(findToggle).toBeTruthy();
-
-    await userEvent.click(leftPanelToggle!);
-    expect(documentBody.querySelector('[data-panel="leftSidePanel"]')).toBeTruthy();
-    expect(within(documentBody).getByText("src")).toBeTruthy();
-
-    await userEvent.click(searchToggle!);
-    expect(canvasElement.ownerDocument.getElementById("ui.search.input")).toBeTruthy();
-
-    await userEvent.click(searchToggle!);
-    await userEvent.click(findToggle!);
-    expect(canvasElement.ownerDocument.getElementById("ui.find.input")).toBeTruthy();
-  },
+	render: () => {
+		const wb = buildTwoAppWorkbench();
+		wb.globalTools = shellToolsFromAppTools({
+			actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
+		} as AppTools);
+		return <WorkbenchView workbench={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
+	},
+	play: async ({ canvasElement }) => {
+		const documentBody = canvasElement.ownerDocument.body;
+		const workbenchToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.workbench");
+		const searchToggle = canvasElement.ownerDocument.getElementById("ui.search.toggle");
+		const findToggle = canvasElement.ownerDocument.getElementById("ui.find.toggle");
+		expect(workbenchToggle).toBeTruthy();
+		expect(searchToggle).toBeTruthy();
+		expect(findToggle).toBeTruthy();
+		await userEvent.click(workbenchToggle!);
+		expect(documentBody.querySelector('[data-panel="leftSidePanel"]')).toBeTruthy();
+		expect(within(documentBody).getByText("src")).toBeTruthy();
+		await userEvent.click(searchToggle!);
+		expect(canvasElement.ownerDocument.getElementById("ui.search.input")).toBeTruthy();
+		await userEvent.click(searchToggle!);
+		await userEvent.click(findToggle!);
+		expect(canvasElement.ownerDocument.getElementById("ui.find.input")).toBeTruthy();
+	},
 };
-
-export const ThreeColumnLayout: Story = {
-  args: {
-    apps: [
-      {
-        id: "three-col",
-        label: "Three Columns",
-        windowKinds: [
-            { id: "left", label: "Left", component: () => <div className="flex items-center justify-center h-full">Left</div> },
-            { id: "center", label: "Center", component: () => <div className="flex items-center justify-center h-full">Center</div> },
-            { id: "right", label: "Right", component: () => <div className="flex items-center justify-center h-full">Right</div> },
-          ],
-        defaultLayout: createDefaultLayout(["left", "center", "right"], "row", [25, 50, 25]),
-        leftPanelTabs: [{ id: "nav", icon: Layers, order: 0, content: <ExplorerTree /> }],
-        rightPanelTabs: [{ id: "props", icon: Info, order: 0, content: <PropertiesTree /> }],
-      },
-    ],
-    breadcrumbItems: [
-      {
-        id: "root",
-        content: (
-          <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
-            <Home size={16} />
-          </a>
-        ),
-      },
-      {
-        id: "section",
-        content: <span className="text-foreground px-single flex items-center gap-single h-full">Workspace</span>,
-      },
-    ],
-    searchItems,
-  },
-};
-
-export const MinimalApp: Story = {
-  args: {
-    apps: [
-      {
-        id: "minimal",
-        label: "Minimal",
-        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Minimal App</div> }],
-        defaultLayout: createDefaultLayout(["main"]),
-      },
-    ],
-  },
-};
-
-export const Mobile: Story = {
-  args: {
-    apps: [editorApp, dashboardApp],
-    breadcrumbItems: [breadcrumbItems[0], breadcrumbItems[3]],
-    searchItems,
-    footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
-    mobile: true,
-  },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
-    layout: "fullscreen",
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
-        <Story />
-      </div>
-    ),
-  ],
-  play: async ({ canvasElement }) => {
-    const documentBody = canvasElement.ownerDocument.body;
-    const mobilePanelToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.mobile");
-
-    expect(mobilePanelToggle).toBeTruthy();
-
-    await userEvent.click(mobilePanelToggle!);
-    expect(documentBody.querySelector('[data-panel="mobilePanel"]')).toBeTruthy();
-    expect(within(documentBody).getByText("src")).toBeTruthy();
-  },
-};
-
-export const MobileSingleApp: Story = {
-  args: {
-    apps: [editorApp],
-    breadcrumbItems: [breadcrumbItems[0], breadcrumbItems[3]],
-    searchItems,
-    mobile: true,
-  },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
-    layout: "fullscreen",
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
-        <Story />
-      </div>
-    ),
-  ],
-};
-
-export const MobileNoPanels: Story = {
-  args: {
-    apps: [
-      {
-        id: "viewer",
-        label: "Viewer",
-        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full text-lg">Full Screen Canvas</div> }],
-        defaultLayout: createDefaultLayout(["main"]),
-      },
-    ],
-    breadcrumbItems: [breadcrumbItems[0]],
-    mobile: true,
-  },
-  parameters: {
-    viewport: { defaultViewport: "mobile1" },
-    layout: "fullscreen",
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
-        <Story />
-      </div>
-    ),
-  ],
-};
-
-// #endregion 📮Stories
-
-// #endregion 🎊UI

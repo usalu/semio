@@ -50,7 +50,7 @@ import {
 	type ShellToolItem,
 	Workbench,
 	WorkbenchApp,
-	WindowKind,
+	WorkbenchWindowKind,
 	countShellAppTools,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
@@ -70,7 +70,7 @@ export {
 	type ShellToolItem,
 	Workbench,
 	WorkbenchApp,
-	WindowKind,
+	WorkbenchWindowKind,
 	countShellAppTools,
 	listPopulatedShellToolCategories,
 	mergeShellAppTools,
@@ -22972,7 +22972,7 @@ export function registerSidePanelBody(bodyKey: string, Component: React.Componen
 	sidePanelBodyByKey.set(bodyKey, Component);
 }
 
-function shellWindowKindsToGolden(windowKinds: readonly WindowKind[]): UIWindowKindDefinition[] {
+function shellWindowKindsToGolden(windowKinds: readonly WorkbenchWindowKind[]): UIWindowKindDefinition[] {
 	return windowKinds.map((wk) => {
 		const Body =
 			windowBodyByKey.get(wk.bodyKey) ??
@@ -23167,6 +23167,8 @@ export interface WorkbenchViewProps {
 	slotToolbar?: React.ReactNode;
 	/** @emoji 👣 Extra footer items merged after shell footers. */
 	extraFooterItems?: FooterItem[];
+	/** @emoji 📑 Merges legacy {@link SidePanelTabConfig} rows into workbench/details stacks (library + inspector trees). */
+	augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
 	/** @emoji 📂 Initial left/right panel visibility (e.g. open library + inspector on load). */
 	initialPanelVisibility?: UIPanelVisibility;
 }
@@ -23428,6 +23430,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	resolvedWindowKindsOverride,
 	slotToolbar,
 	extraFooterItems,
+	augmentPanelTabs,
 }) => {
 	const shellGen = React.useSyncExternalStore(
 		(onStoreChange) => workbench.subscribe(onStoreChange),
@@ -23512,7 +23515,12 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	const activeModeId = activeAppBase.getActiveModeId();
 	const activeApp = activeAppBase.resolve(activeModeId);
 	const activeModeLabel = activeAppBase.modes.find((mode) => mode.id === activeModeId)?.label ?? null;
-	const panelTabs = withDefaultAppPanelTabs(activeApp, activeModeLabel);
+	const panelTabsBase = withDefaultAppPanelTabs(activeApp, activeModeLabel);
+	const panelTabs = {
+		...panelTabsBase,
+		workbench: mergeConfigEntries(panelTabsBase.workbench, augmentPanelTabs?.workbench) ?? panelTabsBase.workbench,
+		details: mergeConfigEntries(panelTabsBase.details, augmentPanelTabs?.details) ?? panelTabsBase.details,
+	};
 	const workbenchTabs = panelTabs.workbench;
 	const detailsTabs = panelTabs.details;
 	const optionsTabs = panelTabs.options;
@@ -24645,7 +24653,7 @@ if (treeVitest) {
         }
         run(): void {}
       }
-      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WindowKind("main", "Main", "test.synth.main")]);
+      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WorkbenchWindowKind("main", "Main", "test.synth.main")]);
       registerWindowBody("test.synth.main", () => <div>Main</div>);
       wb.addApp(app);
       const markup = renderToStaticMarkup(<WorkbenchView workbench={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
@@ -24673,7 +24681,7 @@ if (treeVitest) {
       registerElementIcon("test.side.icon", <TestIcon />);
       registerSidePanelBody("test.left.body", () => <div>Left panel</div>);
       registerSidePanelBody("test.right.body", () => <div>Right panel</div>);
-      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WindowKind("main", "Main", "test.closed.main")]);
+      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WorkbenchWindowKind("main", "Main", "test.closed.main")]);
       registerWindowBody("test.closed.main", () => <div>Main</div>);
       app.leftTabs = [{ id: "left", iconId: "test.side.icon", order: 0, bodyKey: "test.left.body" }];
       app.rightTabs = [{ id: "right", iconId: "test.side.icon", order: 0, bodyKey: "test.right.body" }];
@@ -24701,7 +24709,7 @@ if (treeVitest) {
       registerElementIcon("test.side.icon2", <TestIcon />);
       registerSidePanelBody("test.left.extra.body", () => <div>Left panel</div>);
       registerSidePanelBody("test.right.extra.body", () => <div>Right panel</div>);
-      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WindowKind("main", "Main", "test.tabs.main")]);
+      const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WorkbenchWindowKind("main", "Main", "test.tabs.main")]);
       registerWindowBody("test.tabs.main", () => <div>Main</div>);
       app.leftTabs = [{ id: "left-extra", iconId: "test.side.icon2", order: 0, bodyKey: "test.left.extra.body" }];
       app.rightTabs = [{ id: "right-extra", iconId: "test.side.icon2", order: 0, bodyKey: "test.right.extra.body" }];
@@ -24753,7 +24761,7 @@ if (treeVitest) {
         }
         run(): void {}
       }
-      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [new WindowKind("base", "Base", "test.base")]);
+      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [new WorkbenchWindowKind("base", "Base", "test.base")]);
       app.tools = { selection: [{ id: "base-tool", kind: "button", label: "Base", controllerId: "tctrl", command: "x" }] };
       app.selection = { base: true };
       app.options = { snap: true };
@@ -24761,7 +24769,7 @@ if (treeVitest) {
       inspect.tools = { actions: [{ id: "mode-tool", kind: "button", label: "Mode", controllerId: "tctrl", command: "y" }] };
       inspect.selection = { mode: true };
       inspect.options = { isolate: true };
-      inspect.windowKinds = [new WindowKind("mode", "Mode", "test.mode")];
+      inspect.windowKinds = [new WorkbenchWindowKind("mode", "Mode", "test.mode")];
       app.addMode(inspect);
       app.defaultModeId = "inspect";
       const resolved = app.resolve("inspect");
@@ -24782,7 +24790,7 @@ if (treeVitest) {
         }
         run(): void {}
       }
-      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WindowKind("main", "Main", "test.mm.main")]);
+      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WorkbenchWindowKind("main", "Main", "test.mm.main")]);
       registerWindowBody("test.mm.main", () => <div>Main</div>);
       app.addMode(new WorkbenchMode("inspect", "Inspect", undefined));
       app.addMode(new WorkbenchMode("edit", "Edit", undefined));

@@ -22,21 +22,24 @@ import {
   ToolbarZone,
   Tree,
   TreeStateProvider,
-  App,
+  Controller,
   NativeDragAndDropController,
   PointerDragController,
   PureSidePanelTabDefinition,
+  Workbench,
+  WorkbenchApp,
+  WorkbenchWindowKind,
+  WorkbenchView,
   createWindowLayout,
   getLevelBgClass,
-  PureAppDefinition,
   StaticTreePanelDefinition,
   useElementsSurfaceChrome,
+  type CommandBus,
   type ContextMenuItem,
   type ElementsSurfaceDevice,
   type ElementsSurfaceTheme,
   type FooterItem,
   type TreeDataSection,
-  type AppConfig,
   type UIWindowKindDefinition,
   type UIWindowLayout,
 } from "@elements/ui";
@@ -362,29 +365,6 @@ class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
       tree: new StaticTreePanelDefinition({
         sections: [{ id: "board-play-settings.section", content: <BoardPlaySettingsPanel /> }],
       }),
-    };
-  }
-}
-
-class BoardPlayDefinition extends PureAppDefinition {
-  constructor(
-    private readonly boardPlayLayout: UIWindowLayout,
-    private readonly boardWindowKinds: UIWindowKindDefinition[],
-    private readonly onBoardPlayActiveWindowChange: (windowKindId: string) => void,
-  ) {
-    super();
-  }
-
-  resolveConfig(): AppConfig {
-    return {
-      defaultLayout: this.boardPlayLayout,
-      id: BOARD_PLAY_APP_ID,
-      label: "Board",
-      leftPanelTabs: [new BoardFixtureLibraryPanelDefinition()],
-      onActiveWindowChange: this.onBoardPlayActiveWindowChange,
-      rightPanelTabs: [new BoardSelectionInspectorPanelDefinition(), new BoardPlaySettingsPanelDefinition()],
-      toolbarContent: <BoardPlayToolbar />,
-      windowKinds: this.boardWindowKinds,
     };
   }
 }
@@ -1751,9 +1731,34 @@ const boardPlayLayout: UIWindowLayout = {
           { kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
         ],
       },
-    ],
+	],
   },
 };
+
+const BOARD_PLAY_SHELL_CONTROLLER_ID = "board-play";
+
+class BoardPlayShellController extends Controller {
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(BOARD_PLAY_SHELL_CONTROLLER_ID, commandBus, hostNotify);
+	}
+
+	override run(_command: string, _args?: unknown): void {}
+}
+
+function buildBoardPlayWorkbenchApp(controller: BoardPlayShellController): WorkbenchApp {
+	return new WorkbenchApp(
+		BOARD_PLAY_APP_ID,
+		"Board",
+		undefined,
+		controller,
+		boardPlayLayout as never,
+		[
+			new WorkbenchWindowKind("board-overview", "Overview", "elements.board.placeholder"),
+			new WorkbenchWindowKind("board-detail", "Zoom", "elements.board.placeholder"),
+			new WorkbenchWindowKind("board-selection", "Selection", "elements.board.placeholder"),
+		],
+	);
+}
 
 const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -2602,15 +2607,41 @@ function BoardPlayInner(): ReactElement {
     [boardLodModeByPane, boardEffectiveLodByPane, setBoardLodModeForPane],
   );
 
-  const boardPlayApp = useMemo(
-    () => new BoardPlayDefinition(boardPlayLayout, boardWindowKinds, onBoardPlayActiveWindowChange),
-    [boardWindowKinds, onBoardPlayActiveWindowChange],
+  const augmentPanelTabs = useMemo(
+    () => ({
+      workbench: [new BoardFixtureLibraryPanelDefinition().resolveTab()],
+      details: [new BoardSelectionInspectorPanelDefinition().resolveTab(), new BoardPlaySettingsPanelDefinition().resolveTab()],
+    }),
+    [],
   );
+
+  const boardWorkbenchRef = useRef<Workbench | null>(null);
+  if (!boardWorkbenchRef.current) {
+    const wb = new Workbench();
+    const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
+    wb.addApp(buildBoardPlayWorkbenchApp(ctrl));
+    boardWorkbenchRef.current = wb;
+  }
+  const boardWorkbench = boardWorkbenchRef.current;
+
+  useEffect(() => {
+    const app = boardWorkbench.apps[0];
+    if (app) app.onActiveWindowChange = onBoardPlayActiveWindowChange;
+  }, [boardWorkbench, onBoardPlayActiveWindowChange]);
 
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <App apps={[boardPlayApp]} defaultAppId={BOARD_PLAY_APP_ID} footerItems={surfaceFooterItems} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} mobile={mobile} />
+        <WorkbenchView
+          workbench={boardWorkbench}
+          defaultAppId={BOARD_PLAY_APP_ID}
+          augmentPanelTabs={augmentPanelTabs}
+          extraFooterItems={surfaceFooterItems}
+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+          mobile={mobile}
+          resolvedWindowKindsOverride={boardWindowKinds}
+          slotToolbar={<BoardPlayToolbar />}
+        />
       </BoardPlayLodRuntimeContext.Provider>
     </BoardPlayShellContext.Provider>
   );
