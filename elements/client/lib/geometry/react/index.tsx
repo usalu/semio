@@ -21,7 +21,7 @@ import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, type Object3
 import {
 	TOPOLOGIC_KINDS,
 	centroid,
-	collectDescendantIds,
+	collectDragAttachIds,
 	TopologicCellComplexEntity,
 	TopologicCellEntity,
 	TopologicClusterEntity,
@@ -37,7 +37,8 @@ import {
 	TopologicWireEntity,
 	ensureTopologicWasmLoaded,
 	normalizeTransform,
-	resolveEntityRenderTransform,
+	edgeModelPoints,
+	resolveEntityGroupTransform,
 	type Vec3,
 } from "../wasm/index.ts";
 
@@ -163,7 +164,7 @@ export function collectSceneEntries(session: TopologicWasmSession): TopologyTrav
 	const entries: ResolvedTopologyEntry[] = [];
 	const visited = new Set<string>();
 	const revisitedIds = new Set<string>();
-	const visit = (entityId: string, inheritedTransform: TopologicTransform | undefined): void => {
+	const visit = (entityId: string): void => {
 		const entity = session.getEntity(entityId);
 		if (!entity) return;
 		if (visited.has(entity.id)) {
@@ -171,13 +172,12 @@ export function collectSceneEntries(session: TopologicWasmSession): TopologyTrav
 			return;
 		}
 		visited.add(entity.id);
-		const transform = resolveEntityRenderTransform(session, entity, inheritedTransform);
-		entries.push({ entity, transform });
+		entries.push({ entity, transform: resolveEntityGroupTransform(session, entity, entity.transform) });
 		for (const child of session.childrenOf(entity.id)) {
-			visit(child.id, transform);
+			visit(child.id);
 		}
 	};
-	for (const rootId of session.fixture.roots) visit(rootId, undefined);
+	for (const rootId of session.fixture.roots) visit(rootId);
 	return { entries, revisitedIds: [...revisitedIds] };
 }
 //#endregion 🔖Traversal
@@ -204,7 +204,7 @@ export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly
 export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly transform?: TopologicTransform }): ReactElement {
 	const scene = useTopologicScene();
 	const selected = useIsSelected(props.entity.id);
-	const points = scene.session.edgeCurve(props.entity.id);
+	const points = useMemo(() => edgeModelPoints(scene.session, props.entity), [props.entity, scene.session]);
 	const anchor = useMemo(() => centroid(points), [points]);
 	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
 	return (
@@ -227,7 +227,7 @@ export function Wire(props: { readonly entity: TopologicWireEntity; readonly tra
 				.map((edgeId) => {
 					const edge = scene.session.getEntity(edgeId);
 					if (!edge || edge.kind !== "edge") return null;
-					return { edge, edgeId, points: scene.session.edgeCurve(edgeId) };
+					return { edge, edgeId, points: edgeModelPoints(scene.session, edge) };
 				})
 				.filter((entry): entry is { edge: TopologicEdgeEntity; edgeId: string; points: readonly Vec3[] } => Boolean(entry)),
 		[props.entity.edges, scene.session],
@@ -269,23 +269,23 @@ export function Face(props: { readonly entity: TopologicFaceEntity; readonly tra
 }
 
 export function Shell(props: { readonly entity: TopologicShellEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Cell(props: { readonly entity: TopologicCellEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function CellComplex(props: { readonly entity: TopologicCellComplexEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Cluster(props: { readonly entity: TopologicClusterEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 function TopologyRoot(props: { readonly entity: TopologicTopologyEntity; readonly transform?: TopologicTransform }): ReactElement {
-	return <TopologyAnchor entityId={props.entity.id} transform={props.transform ?? props.entity.transform} />;
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Topology(props: { readonly entry: ResolvedTopologyEntry }): ReactElement | null {
@@ -303,12 +303,26 @@ export function Topology(props: { readonly entry: ResolvedTopologyEntry }): Reac
 //#endregion 🔖Kinds
 
 //#region 🔖Transform
+function isSceneDescendantOf(node: Object3D, ancestor: Object3D): boolean {
+	let current: Object3D | null = node.parent;
+	while (current) {
+		if (current === ancestor) return true;
+		current = current.parent;
+	}
+	return false;
+}
+
+function canAttachForDrag(object: Object3D, child: Object3D): boolean {
+	if (object === child) return false;
+	return !isSceneDescendantOf(object, child);
+}
+
 function TopologicTransformGumball(): ReactElement | null {
 	const scene = useTopologicScene();
 	const attachedRef = useRef<ReadonlyArray<{ readonly childId: string; readonly parent: Object3D }>>([]);
 	const object = scene.selectedId ? scene.objectById.get(scene.selectedId) : null;
-	const descendantIds = useMemo(
-		() => (scene.selectedId ? collectDescendantIds(scene.session, scene.selectedId) : []),
+	const dragAttachIds = useMemo(
+		() => (scene.selectedId ? collectDragAttachIds(scene.session, scene.selectedId) : []),
 		[scene.selectedId, scene.session],
 	);
 	if (!scene.selectedId || !object) return null;
@@ -317,10 +331,10 @@ function TopologicTransformGumball(): ReactElement | null {
 			object={object}
 			mode={scene.transformMode}
 			onMouseDown={() => {
-				attachedRef.current = descendantIds.flatMap((childId) => {
-					const child = scene.objectById.get(childId);
-					if (!child?.parent) return [];
-					return [{ childId, parent: child.parent }];
+				attachedRef.current = dragAttachIds.flatMap((linkedId) => {
+					const child = scene.objectById.get(linkedId);
+					if (!child?.parent || !canAttachForDrag(object, child)) return [];
+					return [{ childId: linkedId, parent: child.parent }];
 				});
 				for (const { childId } of attachedRef.current) {
 					const child = scene.objectById.get(childId);

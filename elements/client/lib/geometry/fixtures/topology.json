@@ -241,6 +241,122 @@
 			"shells": ["shell-annex"],
 			"style": { "color": "#bfdbfe", "opacity": 0.14 }
 		},
+		{ "id": "splice-v0", "kind": "vertex", "point": [0.6, -1.0, -0.9], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v1", "kind": "vertex", "point": [4.0, -1.0, -0.9], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v2", "kind": "vertex", "point": [4.0, -1.0, 1.1], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v3", "kind": "vertex", "point": [0.6, -1.0, 1.1], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v4", "kind": "vertex", "point": [0.6, 1.0, -0.9], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v5", "kind": "vertex", "point": [4.0, 1.0, -0.9], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v6", "kind": "vertex", "point": [4.0, 1.0, 1.1], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-v7", "kind": "vertex", "point": [0.6, 1.0, 1.1], "style": { "color": "#94a3b8" } },
+		{ "id": "splice-e0", "kind": "edge", "vertices": ["splice-v0", "splice-v1"], "style": { "color": "#fecaca" } },
+		{ "id": "splice-e1", "kind": "edge", "vertices": ["splice-v1", "splice-v2"], "style": { "color": "#fecaca" } },
+		{ "id": "splice-e2", "kind": "edge", "vertices": ["splice-v2", "splice-v3"], "style": { "color": "#fecaca" } },
+		{ "id": "splice-e3", "kind": "edge", "vertices": ["splice-v3", "splice-v0"], "style": { "color": "#fecaca" } },
+		{ "id": "splice-e4", "kind": "edge", "vertices": ["splice-v4", "splice-v5"], "style": { "color": "#fca5a5" } },
+		{ "id": "splice-e5", "kind": "edge", "vertices": ["splice-v5", "splice-v6"], "style": { "color": "#fca5a5" } },
+		{ "id": "splice-e6", "kind": "edge", "vertices": ["splice-v6", "splice-v7"], "style": { "color": "#fca5a5" } },
+		{ "id": "splice-e7", "kind": "edge", "vertices": ["splice-v7", "splice-v4"], "style": { "color": "#fca5a5" } },
+		{ "id": "splice-e8", "kind": "edge", "vertices": ["splice-v0", "splice-v4"], "style": { "color": "#f87171" } },
+		{ "id": "splice-e9", "kind": "edge", "vertices": ["splice-v1", "splice-v5"], "style": { "color": "#f87171" } },
+		{ "id": "splice-e10", "kind": "edge", "vertices": ["splice-v2", "splice-v6"], "style": { "color": "#f87171" } },
+		{ "id": "splice-e11", "kind": "edge", "vertices": ["splice-v3", "splice-v7"], "style": { "color": "#f87171" } },
+		{
+			"id": "splice-wire-floor",
+			"kind": "wire",
+			"label": "Splice Floor Loop",
+			"edges": ["splice-e0", "splice-e1", "splice-e2", "splice-e3"],
+			"closed": true,
+			"style": { "color": "#fb7185", "lineWidth": 2 }
+		},
+		{
+			"id": "splice-wire-roof",
+			"kind": "wire",
+			"label": "Splice Roof Loop",
+			"edges": ["splice-e4", "splice-e5", "splice-e6", "splice-e7"],
+			"closed": true,
+			"style": { "color": "#ef4444", "lineWidth": 2 }
+		},
+		{ "id": "splice-wire-front", "kind": "wire", "edges": ["splice-e0", "splice-e9", "splice-e4", "splice-e8"], "closed": true, "style": { "color": "#fb923c" } },
+		{ "id": "splice-wire-right", "kind": "wire", "edges": ["splice-e1", "splice-e10", "splice-e5", "splice-e9"], "closed": true, "style": { "color": "#f97316" } },
+		{ "id": "splice-wire-back", "kind": "wire", "edges": ["splice-e2", "splice-e11", "splice-e6", "splice-e10"], "closed": true, "style": { "color": "#c084fc" } },
+		{ "id": "splice-wire-left", "kind": "wire", "edges": ["splice-e3", "splice-e8", "splice-e7", "splice-e11"], "closed": true, "style": { "color": "#22c55e" } },
+		{
+			"id": "splice-face-floor",
+			"kind": "face",
+			"label": "Splice Floor",
+			"wires": ["splice-wire-floor"],
+			"surface": {
+				"vertices": [[0.6, -1.0, -0.9], [4.0, -1.0, -0.9], [4.0, -1.0, 1.1], [0.6, -1.0, 1.1]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#fb7185", "opacity": 0.3 }
+		},
+		{
+			"id": "splice-face-roof",
+			"kind": "face",
+			"label": "Splice Roof",
+			"wires": ["splice-wire-roof"],
+			"surface": {
+				"vertices": [[0.6, 1.0, -0.9], [4.0, 1.0, -0.9], [4.0, 1.0, 1.1], [0.6, 1.0, 1.1]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#ef4444", "opacity": 0.24 }
+		},
+		{
+			"id": "splice-face-front",
+			"kind": "face",
+			"wires": ["splice-wire-front"],
+			"surface": {
+				"vertices": [[0.6, -1.0, -0.9], [4.0, -1.0, -0.9], [4.0, 1.0, -0.9], [0.6, 1.0, -0.9]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#fb923c", "opacity": 0.24 }
+		},
+		{
+			"id": "splice-face-right",
+			"kind": "face",
+			"wires": ["splice-wire-right"],
+			"surface": {
+				"vertices": [[4.0, -1.0, -0.9], [4.0, -1.0, 1.1], [4.0, 1.0, 1.1], [4.0, 1.0, -0.9]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#f97316", "opacity": 0.24 }
+		},
+		{
+			"id": "splice-face-back",
+			"kind": "face",
+			"wires": ["splice-wire-back"],
+			"surface": {
+				"vertices": [[4.0, -1.0, 1.1], [0.6, -1.0, 1.1], [0.6, 1.0, 1.1], [4.0, 1.0, 1.1]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#c084fc", "opacity": 0.24 }
+		},
+		{
+			"id": "splice-face-left",
+			"kind": "face",
+			"wires": ["splice-wire-left"],
+			"surface": {
+				"vertices": [[0.6, -1.0, 1.1], [0.6, -1.0, -0.9], [0.6, 1.0, -0.9], [0.6, 1.0, 1.1]],
+				"triangles": [0, 1, 2, 0, 2, 3]
+			},
+			"style": { "color": "#22c55e", "opacity": 0.24 }
+		},
+		{
+			"id": "shell-splice",
+			"kind": "shell",
+			"label": "Splice Shell",
+			"faces": ["splice-face-floor", "splice-face-roof", "splice-face-front", "splice-face-right", "splice-face-back", "splice-face-left"],
+			"style": { "color": "#fda4af", "opacity": 0.14 }
+		},
+		{
+			"id": "cell-splice",
+			"kind": "cell",
+			"label": "Splice Cell",
+			"shells": ["shell-splice"],
+			"style": { "color": "#fda4af", "opacity": 0.13 }
+		},
 		{
 			"id": "vertex-beacon",
 			"kind": "vertex",
@@ -303,7 +419,7 @@
 			"id": "cell-complex-campus",
 			"kind": "cellComplex",
 			"label": "Campus Cell Complex",
-			"cells": ["cell-room", "cell-annex"],
+			"cells": ["cell-room", "cell-annex", "cell-splice"],
 			"style": { "color": "#e879f9", "opacity": 0.1 }
 		},
 		{
