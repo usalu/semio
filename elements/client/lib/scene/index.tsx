@@ -310,6 +310,10 @@ export interface AttractionTargetRingPayload {
 	readonly vortexFullIds: readonly string[];
 }
 
+function attractionTargetRingSignature(payload: AttractionTargetRingPayload): string {
+	return `${payload.attracting}\0${payload.objectId ?? ""}\0${payload.vortexFullIds.join(",")}`;
+}
+
 export interface AttractionIndirectPickAwait {
 	readonly attractingFullId: string;
 	readonly attractedObjectId: string;
@@ -1038,7 +1042,6 @@ interface ObjectStateSnapshot {
 
 type ObjectStateAction =
 	| { readonly type: "init"; readonly fixture: FixtureV1 }
-	| { readonly type: "syncPoses"; readonly fixture: FixtureV1 }
 	| { readonly type: "relocate"; readonly payload: RelocatePayload }
 	| { readonly type: "addAttraction"; readonly attraction: AttractionProps }
 	| { readonly type: "removeObject"; readonly objectId: string };
@@ -1096,51 +1099,74 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
 	return { records, attractions, tree, version };
 }
 
-/** @emoji 🔑 Stable fingerprint for external fixture resync (ignores object reference identity). */
+function quantizePoseComponent(value: number): number {
+	return Math.round(value * 1000) / 1000;
+}
+
+function quantizeFixtureObjectPose(object: FixtureObjectV1): string {
+	const o = object.origin.map(quantizePoseComponent).join(",");
+	const q = object.orientation?.map(quantizePoseComponent).join(",") ?? "";
+	const s =
+		object.scale === undefined
+			? ""
+			: typeof object.scale === "number"
+				? String(quantizePoseComponent(object.scale))
+				: object.scale.map(quantizePoseComponent).join(",");
+	return `${object.id}|${o}|${q}|${s}`;
+}
+
+/** @emoji 🔑 Stable fingerprint for external fixture resync (structure + quantized poses; ignores object reference identity). */
 export function fixtureStateFingerprint(fixture: FixtureV1): string {
 	const attractionIds = fixture.attractions.map((a) => a.id).join("\0");
 	const objectIds = fixture.objects.map((o) => o.id).join("\0");
-	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}`;
+	const poses = fixture.objects.map(quantizeFixtureObjectPose).join("\0");
+	return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}\0${poses}`;
 }
 
-/** @emoji 📍 Fingerprint of object poses for syncing fixture moves without resetting attractions. */
-export function fixturePoseFingerprint(fixture: FixtureV1): string {
-	return fixture.objects
-		.map((object) => {
-			const o = object.origin.join(",");
-			const q = object.orientation?.join(",") ?? "";
-			const s =
-				object.scale === undefined
-					? ""
-					: typeof object.scale === "number"
-						? String(object.scale)
-						: object.scale.join(",");
-			return `${object.id}|${o}|${q}|${s}`;
-		})
-		.join("\0");
+function attractionsEqual(a: readonly AttractionProps[], b: readonly AttractionProps[]): boolean {
+	if (a.length !== b.length) {
+		return false;
+	}
+	for (let i = 0; i < a.length; i++) {
+		const left = a[i]!;
+		const right = b[i]!;
+		if (left.id !== right.id || left.attracting !== right.attracting || left.attracted !== right.attracted) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function snapshotMatchesFixture(state: ObjectStateSnapshot, fixture: FixtureV1): boolean {
+	if (!attractionsEqual(state.attractions, fixture.attractions)) {
+		return false;
+	}
+	if (state.records.size !== fixture.objects.length) {
+		return false;
+	}
+	for (const object of fixture.objects) {
+		const record = state.records.get(object.id);
+		if (!record) {
+			return false;
+		}
+		if (
+			objectPoseKey(object.id, object.origin, object.orientation, object.scale) !==
+			objectPoseKey(record.id, record.origin, record.orientation, record.scale)
+		) {
+			return false;
+		}
+	}
+	return true;
 }
 
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
 	switch (action.type) {
 		case "init": {
+			if (snapshotMatchesFixture(state, action.fixture)) {
+				return state;
+			}
 			const records = fixtureToRecords(action.fixture.objects);
 			return buildSnapshot(records, action.fixture.attractions, state.version + 1);
-		}
-		case "syncPoses": {
-			const records = new Map(state.records);
-			for (const object of action.fixture.objects) {
-				const cur = records.get(object.id);
-				if (!cur) {
-					continue;
-				}
-				records.set(object.id, {
-					...cur,
-					origin: object.origin,
-					orientation: object.orientation,
-					scale: object.scale,
-				});
-			}
-			return buildSnapshot(records, state.attractions, state.version + 1);
 		}
 		case "addAttraction": {
 			const edges = attractionEdgesFromAttractions(state.attractions);
@@ -1236,31 +1262,16 @@ export function SceneObjectStateProvider(props: {
 		buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0),
 	);
 	const syncedFixtureFingerprintRef = useRef<string | null>(null);
-	const syncedPoseFingerprintRef = useRef<string | null>(null);
-	const skipPoseSyncOnceRef = useRef(false);
 	const fixtureFingerprint = useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
-	const poseFingerprint = useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
 	useEffect(() => {
-		if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
-			syncedFixtureFingerprintRef.current = fixtureFingerprint;
-			syncedPoseFingerprintRef.current = poseFingerprint;
-			skipPoseSyncOnceRef.current = false;
-			dispatch({ type: "init", fixture: props.fixture });
+		if (syncedFixtureFingerprintRef.current === fixtureFingerprint) {
 			return;
 		}
-		if (syncedPoseFingerprintRef.current === poseFingerprint) {
-			return;
-		}
-		syncedPoseFingerprintRef.current = poseFingerprint;
-		if (skipPoseSyncOnceRef.current) {
-			skipPoseSyncOnceRef.current = false;
-			return;
-		}
-		dispatch({ type: "syncPoses", fixture: props.fixture });
-	}, [props.fixture, fixtureFingerprint, poseFingerprint]);
+		syncedFixtureFingerprintRef.current = fixtureFingerprint;
+		dispatch({ type: "init", fixture: props.fixture });
+	}, [props.fixture, fixtureFingerprint]);
 	const handleRelocate = useCallback(
 		(payload: RelocatePayload) => {
-			skipPoseSyncOnceRef.current = true;
 			dispatch({ type: "relocate", payload });
 			props.onRelocate?.(payload);
 		},
@@ -1268,6 +1279,12 @@ export function SceneObjectStateProvider(props: {
 	);
 	const handleConnect = useCallback(
 		(payload: AttractionPayload) => {
+			const attractingObjectId = parseVortexFullId(payload.attracting).objectId;
+			const attractedObjectId = parseVortexFullId(payload.attracted).objectId;
+			const edges = attractionEdgesFromAttractions(snapshot.attractions);
+			if (wouldAttractionEdgeIntroduceCycle(edges, attractingObjectId, attractedObjectId)) {
+				return;
+			}
 			const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
 			dispatch({
 				type: "addAttraction",
@@ -1279,7 +1296,7 @@ export function SceneObjectStateProvider(props: {
 			});
 			props.onConnect?.(payload);
 		},
-		[props.onConnect],
+		[props.onConnect, snapshot.attractions],
 	);
 	const value = useMemo<SceneObjectStateContextValue>(
 		() => ({ snapshot, dispatch, handleRelocate, handleConnect }),
@@ -1903,6 +1920,8 @@ export interface RegistryValue {
 	relocateMode: RelocateMode;
 	activeRelocateObjectId: string | null;
 	setActiveRelocateObjectId: (id: string | null) => void;
+	transformDragObjectId: string | null;
+	setTransformDragObjectId: (id: string | null) => void;
 	attractionDragActive: boolean;
 	attractionDragAttractingFullId: string | null;
 	attractionCompatibleAttractedFullIds: ReadonlySet<string>;
@@ -2232,6 +2251,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 	readonly mode: RelocateMode;
 	readonly translationSnap: number | undefined;
 	readonly beforeRef: MutableRefObject<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>;
+	readonly onTransformDragChange: (dragging: boolean) => void;
 }) {
 	const reg = useRegistryCore();
 	const scene = useThree((s) => s.scene);
@@ -2241,6 +2261,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 			mode={props.mode}
 			translationSnap={props.translationSnap}
 			onMouseDown={() => {
+				props.onTransformDragChange(true);
 				const g = props.object;
 				props.beforeRef.current = {
 					origin: g.position.clone(),
@@ -2249,6 +2270,7 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 				};
 			}}
 			onMouseUp={() => {
+				props.onTransformDragChange(false);
 				const before = props.beforeRef.current;
 				if (!before) return;
 				const g = props.object;
@@ -2277,13 +2299,13 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 
 export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const group = useRef<Group>(null);
+	const transformDraggingRef = useRef(false);
 	const {
 		registerObject,
 		selectionMode,
 		setSelectedObjectIds,
 		onSelect,
-		setActiveRelocateObjectId,
-		activeRelocateObjectId,
+		setTransformDragObjectId,
 		relocateMode,
 	} = useRegistryCore();
 	const { attractionDragActive, attractionIndirectPickAwait, attractionCompatibleAttractedFullIds } = useRegistryDrag();
@@ -2291,16 +2313,22 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	const [tcTarget, setTcTarget] = useState<Group | null>(null);
 	const [pointerHovered, setPointerHovered] = useState(false);
 
-	useEffect(() => {
-		registerObject(props.id, props.objectKind, group.current);
-		return () => {
-			registerObject(props.id, props.objectKind, null);
-		};
-	}, [props.id, props.objectKind, registerObject]);
+	const bindObjectGroup = useCallback(
+		(node: Group | null) => {
+			group.current = node;
+			setTcTarget(node);
+			registerObject(props.id, props.objectKind, node);
+		},
+		[props.id, props.objectKind, registerObject],
+	);
 
-	useEffect(() => {
-		if (group.current) setTcTarget(group.current);
-	}, [props.selected, props.id, activeRelocateObjectId]);
+	const onTransformDragChange = useCallback(
+		(dragging: boolean) => {
+			transformDraggingRef.current = dragging;
+			setTransformDragObjectId(dragging ? props.id : null);
+		},
+		[props.id, setTransformDragObjectId],
+	);
 
 	const linkHighlighted = useMemo(() => {
 		if (props.highlighted === true) {
@@ -2338,7 +2366,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 				setSelectedObjectIds([props.id]);
 				onSelect?.({ objectIds: [props.id], vortexIds: [] });
 			}
-			setActiveRelocateObjectId(props.id);
 		},
 		[
 			attractionDragActive,
@@ -2347,7 +2374,6 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 			props.disabled,
 			props.id,
 			selectionMode,
-			setActiveRelocateObjectId,
 			setSelectedObjectIds,
 		],
 	);
@@ -2373,7 +2399,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	);
 	useLayoutEffect(() => {
 		const g = group.current;
-		if (!g) {
+		if (!g || transformDraggingRef.current) {
 			return;
 		}
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
@@ -2387,13 +2413,12 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		lodCtx.lodGridStepWorld > 0
 			? lodCtx.lodGridStepWorld
 			: undefined;
-	const showTc =
-		props.selected && activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
+	const showTc = props.selected && props.relocate !== false && tcTarget;
 
 	return (
 		<>
 			<group
-				ref={group}
+				ref={bindObjectGroup}
 				visible={props.visible !== false}
 				onPointerDown={handlePointerDown}
 				onPointerOver={handlePointerOver}
@@ -2420,6 +2445,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 					mode={mode}
 					translationSnap={transSnap}
 					beforeRef={beforeRef}
+					onTransformDragChange={onTransformDragChange}
 				/>
 			)}
 		</>
@@ -2643,7 +2669,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 		const needsLive =
 			linesDirtyRef.current ||
 			drag.attractionDragActive ||
-			reg.activeRelocateObjectId !== null;
+			reg.transformDragObjectId !== null;
 		if (!needsLive) {
 			return;
 		}
@@ -2708,8 +2734,12 @@ const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region 🎬Scene
 function OrbitGated() {
+	const core = useRegistryCore();
 	const drag = useRegistryDrag();
-	const gate = drag.attractionDragActive || drag.attractionIndirectPickAwait !== null;
+	const gate =
+		drag.attractionDragActive ||
+		drag.attractionIndirectPickAwait !== null ||
+		core.transformDragObjectId !== null;
 	return <OrbitControls makeDefault enableDamping={false} enabled={!gate} />;
 }
 
@@ -2747,22 +2777,25 @@ function AttractionThreeBinder() {
 function AttractionWindowBridge() {
 	const reg = useRegistryCore();
 	const drag = useRegistryDrag();
+	const dragRef = useRef(drag);
+	dragRef.current = drag;
 	const invalidate = useThree((s) => s.invalidate);
 	const attractionBusy = drag.attractionDragActive || drag.attractionIndirectPickAwait !== null;
 	useEffect(() => {
 		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
-			if (drag.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
-			else if (drag.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
+			const d = dragRef.current;
+			if (d.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
+			else if (d.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onUp = (e: PointerEvent) => {
-			if (drag.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
+			if (dragRef.current.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onDown = (e: PointerEvent) => {
 			if (e.button !== 0) return;
-			if (drag.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
+			if (dragRef.current.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
 			invalidate();
 		};
 		window.addEventListener("pointermove", onMove);
@@ -2773,7 +2806,7 @@ function AttractionWindowBridge() {
 			window.removeEventListener("pointerup", onUp, true);
 			window.removeEventListener("pointerdown", onDown, true);
 		};
-	}, [drag, reg, attractionBusy, invalidate]);
+	}, [reg, attractionBusy, invalidate]);
 	return null;
 }
 
@@ -2890,6 +2923,7 @@ function RegistryProvider({
 }) {
 	const [selectedObjectIds, setSelectedObjectIds] = useState<readonly string[]>([]);
 	const [activeRelocateObjectId, setActiveRelocateObjectId] = useState<string | null>(null);
+	const [transformDragObjectId, setTransformDragObjectId] = useState<string | null>(null);
 	const [attractionDragActive, setAttractionDragActive] = useState(false);
 	const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = useState<string | null>(null);
 	const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = useState<ReadonlySet<string>>(new Set());
@@ -2920,6 +2954,22 @@ function RegistryProvider({
 	const ndcRef = useRef(new Vector2());
 	const planeRef = useRef(new Plane(new Vector3(0, 1, 0), 0));
 	const hitScratchRef = useRef(new Vector3());
+	const lastAttractionTargetRingRef = useRef("");
+
+	const emitAttractionTargetRing = useCallback(
+		(payload: AttractionTargetRingPayload) => {
+			if (!onAttractionTargetRing) {
+				return;
+			}
+			const sig = attractionTargetRingSignature(payload);
+			if (lastAttractionTargetRingRef.current === sig) {
+				return;
+			}
+			lastAttractionTargetRingRef.current = sig;
+			onAttractionTargetRing(payload);
+		},
+		[onAttractionTargetRing],
+	);
 
 	const registerVortex = useCallback((fullId: string, getter: VortexGetter) => {
 		vortexGettersRef.current.set(fullId, getter);
@@ -2962,8 +3012,8 @@ function RegistryProvider({
 		setAttractionCompatibleAttractedFullIds(new Set());
 		setAttractionHoverRingFullId(null);
 		setAttractionIndirectPickAwait(null);
-		onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
-	}, [onAttractionTargetRing]);
+		emitAttractionTargetRing({ attracting: "", objectId: null, vortexFullIds: [] });
+	}, [emitAttractionTargetRing]);
 
 	const beginAttractionDragFromVortex = useCallback(
 		(fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
@@ -3032,13 +3082,13 @@ function RegistryProvider({
 			setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
 			if (ring) {
 				const meta = vortexMetaRef.current.get(ring);
-				onAttractionTargetRing?.({
+				emitAttractionTargetRing({
 					attracting: session.attractingFullId,
 					objectId: meta?.objectId ?? null,
-					vortexFullIds: ring ? [ring] : [],
+					vortexFullIds: [ring],
 				});
 			} else {
-				onAttractionTargetRing?.({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
+				emitAttractionTargetRing({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
 			}
 			const hitWorld = hitScratchRef.current;
 			if (hits.length > 0) {
@@ -3064,7 +3114,7 @@ function RegistryProvider({
 				});
 			} else session.snapAttractedFullId = null;
 		},
-		[blockedVortexFullIds, collectPickRoots, lodKindRef, onAttractionTargetRing],
+		[blockedVortexFullIds, collectPickRoots, emitAttractionTargetRing, lodKindRef],
 	);
 
 	const commitAttractionPointer = useCallback(
@@ -3142,7 +3192,7 @@ function RegistryProvider({
 							attractedObjectId: oid,
 							candidates,
 						});
-						onAttractionTargetRing?.({
+						emitAttractionTargetRing({
 							attracting: attractingFull,
 							objectId: oid,
 							vortexFullIds: candidates,
@@ -3157,9 +3207,9 @@ function RegistryProvider({
 			blockedVortexFullIds,
 			cancelAttractionDrag,
 			collectPickRoots,
+			emitAttractionTargetRing,
 			onConnect,
 			onIndirectConnect,
-			onAttractionTargetRing,
 			onProximityConnect,
 		],
 	);
@@ -3263,6 +3313,8 @@ function RegistryProvider({
 			relocateMode,
 			activeRelocateObjectId,
 			setActiveRelocateObjectId,
+			transformDragObjectId,
+			setTransformDragObjectId,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -3297,6 +3349,7 @@ function RegistryProvider({
 			selectionMode,
 			relocateMode,
 			activeRelocateObjectId,
+			transformDragObjectId,
 			beginAttractionDragFromVortex,
 			cancelAttractionDrag,
 			findNearestProximityRelocate,
@@ -3490,11 +3543,12 @@ export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string
 		};
 		w.__scenePlayActivate = (id: string) => {
 			setSelectedId(id);
-			reg.setActiveRelocateObjectId(id);
+			reg.setSelectedObjectIds([id]);
 		};
 		w.__scenePlayClearSelection = () => {
 			setSelectedId(null);
-			reg.setActiveRelocateObjectId(null);
+			reg.setSelectedObjectIds([]);
+			reg.setTransformDragObjectId(null);
 		};
 		return () => {
 			delete w.__scenePlaySelect;
@@ -3763,6 +3817,72 @@ if (import.meta.vitest) {
 	describe("resolveWireKindForVortex", () => {
 		it("falls back to default wire id", () => {
 			expect(resolveWireKindForVortex("any", undefined)).toBe("board.wire.link");
+		});
+	});
+	describe("fixtureStateFingerprint", () => {
+		it("ignores sub-millimeter pose jitter via quantization", () => {
+			const base = {
+				schema: "elements.scene.fixture/v1" as const,
+				camera: { position: [0, 0, 0] as Vec3, target: [0, 0, 1] as Vec3, zoom: 1 },
+				attractions: [] as AttractionProps[],
+			};
+			const a = {
+				...base,
+				objects: [
+					{
+						id: "a",
+						meshUrl: "/m.glb",
+						origin: [1.0001, 2, 3] as Vec3,
+						orientation: [0, 0, 0, 1] as Quat,
+						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
+					},
+				],
+			};
+			const b = {
+				...base,
+				objects: [
+					{
+						id: "a",
+						meshUrl: "/m.glb",
+						origin: [1.0002, 2, 3] as Vec3,
+						orientation: [0, 0, 0, 1] as Quat,
+						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
+					},
+				],
+			};
+			expect(fixtureStateFingerprint(a)).toBe(fixtureStateFingerprint(b));
+		});
+		it("changes when a pose moves beyond quantization", () => {
+			const base = {
+				schema: "elements.scene.fixture/v1" as const,
+				camera: { position: [0, 0, 0] as Vec3, target: [0, 0, 1] as Vec3, zoom: 1 },
+				attractions: [] as AttractionProps[],
+			};
+			const a = {
+				...base,
+				objects: [
+					{
+						id: "a",
+						meshUrl: "/m.glb",
+						origin: [1, 2, 3] as Vec3,
+						orientation: [0, 0, 0, 1] as Quat,
+						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
+					},
+				],
+			};
+			const b = {
+				...base,
+				objects: [
+					{
+						id: "a",
+						meshUrl: "/m.glb",
+						origin: [2, 2, 3] as Vec3,
+						orientation: [0, 0, 0, 1] as Quat,
+						vortices: [{ id: "a:v1", position: [0, 0, 0] as Vec3 }],
+					},
+				],
+			};
+			expect(fixtureStateFingerprint(a)).not.toBe(fixtureStateFingerprint(b));
 		});
 	});
 	describe("wouldAttractionEdgeIntroduceCycle", () => {
