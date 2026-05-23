@@ -22,7 +22,7 @@ import {
   ToolbarZone,
   Tree,
   TreeStateProvider,
-  UI,
+  App,
   createWindowLayout,
   getLevelBgClass,
   useElementsSurfaceChrome,
@@ -31,7 +31,7 @@ import {
   type ElementsSurfaceTheme,
   type FooterItem,
   type TreeDataSection,
-  type UIAppConfig,
+  type AppConfig,
   type UIWindowKindDefinition,
   type UIWindowLayout,
 } from "@elements/ui";
@@ -2562,7 +2562,7 @@ function BoardPlayInner(): ReactElement {
     [boardLodModeByPane, boardEffectiveLodByPane, setBoardLodModeForPane],
   );
 
-  const boardPlayApp: UIAppConfig = useMemo(
+  const boardPlayApp: AppConfig = useMemo(
     () => ({
       defaultLayout: boardPlayLayout,
       id: BOARD_PLAY_APP_ID,
@@ -2582,7 +2582,7 @@ function BoardPlayInner(): ReactElement {
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <UI apps={[boardPlayApp]} defaultAppId={BOARD_PLAY_APP_ID} footerItems={surfaceFooterItems} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} mobile={mobile} />
+        <App apps={[boardPlayApp]} defaultAppId={BOARD_PLAY_APP_ID} footerItems={surfaceFooterItems} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} mobile={mobile} />
       </BoardPlayLodRuntimeContext.Provider>
     </BoardPlayShellContext.Provider>
   );

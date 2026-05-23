@@ -2,6 +2,7 @@ import { Clone, Line, OrbitControls, PerspectiveCamera, TransformControls, useGL
 import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import {
 	Button,
+	App,
 	Expertise,
 	LevelProvider,
 	Select,
@@ -12,14 +13,13 @@ import {
 	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
-	UI,
 	createStackLayout,
 	getLevelBgClass,
 	useElementsSurfaceChrome,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 	type FooterItem,
-	type UIAppConfig,
+	type AppConfig,
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
@@ -3714,7 +3714,7 @@ function PlayInner(): ReactElement {
 		[effectiveLod],
 	);
 
-	const apps = useMemo<UIAppConfig[]>(
+	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
 				id: PLAY_APP_ID,
@@ -3729,7 +3729,7 @@ function PlayInner(): ReactElement {
 	return (
 		<PlayLodContext.Provider value={lodProps}>
 			<PlayRuntimeContext.Provider value={runtime}>
-				<UI apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
+				<App apps={apps} defaultAppId={PLAY_APP_ID} footerItems={surfaceFooterItems} mobile={mobile} />
 			</PlayRuntimeContext.Provider>
 		</PlayLodContext.Provider>
 	);

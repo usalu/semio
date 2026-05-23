@@ -8,15 +8,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { createRoot } from "react-dom/client";
 
 import {
+	App,
 	Button,
 	LevelProvider,
 	ToolbarGroup,
 	ToolbarItem,
 	ToolbarZone,
-	UI,
 	createDefaultLayout,
 	getLevelBgClass,
-	type UIAppConfig,
+	type AppConfig,
 	type UIWindowKindDefinition,
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
@@ -299,7 +299,7 @@ function TopologySceneWindow(): ReactElement {
 // #region 🎬PairedModel
 function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: SceneFixtureV1): {
 	readonly shellValue: TopologyPlayShellValue;
-	readonly apps: UIAppConfig[];
+	readonly apps: AppConfig[];
 } {
 	const manifest = useMemo(() => parseTopologyFixtureV1(topologyManifestJson as unknown), []);
 	const [relocateMode, setSceneRelocateMode] = useState<SceneRelocateMode>("translate");
@@ -432,7 +432,7 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 		],
 	);
 
-	const apps = useMemo<UIAppConfig[]>(
+	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
 				id: TOPOLOGY_PLAY_APP_ID,
@@ -471,14 +471,14 @@ function TopologyPlayController({
 	const { shellValue, apps } = useTopologyPairedPlayModel(boardFixture, sceneFixture);
 	return (
 		<TopologyPlayShellContext.Provider value={shellValue}>
-			<UI apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+			<App apps={apps} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
 		</TopologyPlayShellContext.Provider>
 	);
 }
 // #endregion 🎬Controller
 
 // #region 🚀Mount
-function invalidFixtureApps(): UIAppConfig[] {
+function invalidFixtureApps(): AppConfig[] {
 	return [
 		{
 			id: TOPOLOGY_PLAY_APP_ID,
@@ -502,7 +502,7 @@ function TopologyPlayApp(): ReactElement {
 	if (!boardFixture || !sceneFixture) {
 		return (
 			<LevelProvider>
-				<UI apps={invalidFixtureApps()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+				<App apps={invalidFixtureApps()} defaultAppId={TOPOLOGY_PLAY_APP_ID} className={getLevelBgClass(0)} />
 			</LevelProvider>
 		);
 	}

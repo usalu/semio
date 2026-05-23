@@ -3,15 +3,12 @@
 // #endregion 🧲Header
 
 import {
+	App,
 	LevelProvider,
-	ToolbarDivider,
-	ToolbarGroup,
-	ToolbarItem,
-	ToolbarZone,
-	UI,
 	createDefaultLayout,
 	getLevelBgClass,
-	type UIAppConfig,
+	useApp,
+	type AppConfig,
 } from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
 import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
@@ -36,6 +33,11 @@ import "./globals.css";
 const GEOMETRY_PLAY_APP_ID = "elements-geometry-play";
 const GEOMETRY_PLAY_WINDOW_ID = "geometry-topologic-window";
 const GEOMETRY_PLAY_WINDOW_LABEL = "Topologic Playground";
+const GEOMETRY_PLAY_MODE_ICONS: Record<TopologicTransformMode, ReactElement> = {
+	translate: <Move3d className="size-4" aria-hidden />,
+	rotate: <Rotate3d className="size-4" aria-hidden />,
+	scale: <Scaling className="size-4" aria-hidden />,
+};
 //#endregion 🔖Ids
 
 //#region 🔖Context
@@ -61,13 +63,6 @@ function useGeometryPlay(): GeometryPlayValue {
 //#endregion 🔖Context
 
 //#region 🔖Controls
-function geometryToolbarToggleClass(active: boolean): string {
-	return [
-		"inline-flex shrink-0 items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors",
-		active ? "bg-accent text-accent-foreground border border-element" : "text-muted-foreground hover:bg-hover-panel border border-transparent",
-	].join(" ");
-}
-
 function geometryKindLabel(kind: TopologicKind): string {
 	if (kind === "cellComplex") return "CellComplex";
 	return kind.charAt(0).toUpperCase() + kind.slice(1);
@@ -91,7 +86,21 @@ function isSelectableEntity(
 	return Boolean(entity && selectableKinds[entity.kind]);
 }
 
+function GeometryPlayModeSync(): null {
+	const { activeModeId } = useApp();
+	const play = useGeometryPlay();
+
+	useEffect(() => {
+		if ((activeModeId === "translate" || activeModeId === "rotate" || activeModeId === "scale") && play.transformMode !== activeModeId) {
+			play.setTransformMode(activeModeId);
+		}
+	}, [activeModeId, play]);
+
+	return null;
+}
+
 function GeometryPlayWindow(): ReactElement {
+	const { activeApp, activeModeId } = useApp();
 	const play = useGeometryPlay();
 	const selectableEntities = listSelectableEntities(play.session, play.selectableKinds);
 	const enabledKinds = TOPOLOGIC_KINDS.filter((kind) => play.selectableKinds[kind]);
@@ -99,63 +108,13 @@ function GeometryPlayWindow(): ReactElement {
 	return (
 		<div className="flex h-full w-full flex-col">
 			<div className="flex shrink-0 gap-2 border-b border-border bg-muted/40 p-2">
-				<ToolbarZone>
-					<ToolbarGroup>
-						<ToolbarItem>
-							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Kinds</span>
-						</ToolbarItem>
-						{TOPOLOGIC_KINDS.map((kind) => (
-							<ToolbarItem key={kind}>
-								<button type="button" className={geometryToolbarToggleClass(play.selectableKinds[kind])} title={`${play.selectableKinds[kind] ? "Disable" : "Enable"} ${geometryKindLabel(kind)} selection`} onClick={() => play.toggleSelectableKind(kind)}>
-									<span className="px-0.5">{geometryKindLabel(kind)}</span>
-								</button>
-							</ToolbarItem>
-						))}
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<ToolbarItem>
-							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Transform</span>
-						</ToolbarItem>
-						<ToolbarItem>
-							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "translate")} title="Translate selection" onClick={() => play.setTransformMode("translate")}>
-								<Move3d className="size-4" aria-hidden />
-							</button>
-						</ToolbarItem>
-						<ToolbarItem>
-							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "rotate")} title="Rotate selection" onClick={() => play.setTransformMode("rotate")}>
-								<Rotate3d className="size-4" aria-hidden />
-							</button>
-						</ToolbarItem>
-						<ToolbarItem>
-							<button type="button" className={geometryToolbarToggleClass(play.transformMode === "scale")} title="Scale selection" onClick={() => play.setTransformMode("scale")}>
-								<Scaling className="size-4" aria-hidden />
-							</button>
-						</ToolbarItem>
-					</ToolbarGroup>
-					<ToolbarDivider />
-					<ToolbarGroup>
-						<ToolbarItem>
-							<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Selection</span>
-						</ToolbarItem>
-						<ToolbarItem>
-							<button type="button" className={geometryToolbarToggleClass(false)} title="Clear current selection" onClick={() => play.setSelectedId(null)}>
-								<BoxSelect className="size-4" aria-hidden />
-							</button>
-						</ToolbarItem>
-						<ToolbarItem>
-							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{enabledKinds.length === TOPOLOGIC_KINDS.length ? "all" : enabledKinds.join(",") || "none"}</span>
-						</ToolbarItem>
-						<ToolbarItem>
-							<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{selectedEntity ? topologicEntityLabel(selectedEntity) : "—"}</span>
-						</ToolbarItem>
-						<ToolbarItem>
-							<span className="text-muted-foreground px-1 text-xs">{selectableEntities.length}</span>
-						</ToolbarItem>
-					</ToolbarGroup>
-				</ToolbarZone>
+				<span className="text-muted-foreground px-1 text-xs font-semibold uppercase tracking-wide">{activeModeId ?? activeApp.label}</span>
+				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-kind>{enabledKinds.length === TOPOLOGIC_KINDS.length ? "all" : enabledKinds.join(",") || "none"}</span>
+				<span className="text-muted-foreground px-1 text-xs" data-e2e-geometry-selection>{selectedEntity ? topologicEntityLabel(selectedEntity) : "—"}</span>
+				<span className="text-muted-foreground px-1 text-xs">{selectableEntities.length}</span>
 			</div>
 			<div className="relative min-h-0 flex-1">
+				<GeometryPlayModeSync />
 				<TopologicViewport
 					fixture={play.fixture}
 					selectedId={play.selectedId}
@@ -224,16 +183,43 @@ function GeometryPlayController(): ReactElement {
 		[fixture, selectableKinds, selectedId, session, transformMode],
 	);
 
-	const apps = useMemo<UIAppConfig[]>(
+	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
+				defaultModeId: transformMode,
 				id: GEOMETRY_PLAY_APP_ID,
 				label: "Geometry play",
+				selection: { selectedId: selectedId ?? null },
+				options: { selectableKinds },
+				tools: [
+					...TOPOLOGIC_KINDS.map((kind, order) => ({
+						id: `geometry.kind.${kind}`,
+						kind: "toggle" as const,
+						label: geometryKindLabel(kind),
+						onPressedChange: () => value?.toggleSelectableKind(kind),
+						order,
+						pressed: selectableKinds[kind],
+					})),
+					{ id: "geometry.separator.selection", kind: "separator", order: TOPOLOGIC_KINDS.length + 1 },
+					{
+						id: "geometry.selection.clear",
+						icon: <BoxSelect className="size-4" aria-hidden />,
+						label: "Clear",
+						onClick: () => value?.setSelectedId(null),
+						order: TOPOLOGIC_KINDS.length + 2,
+					},
+				],
+				modes: (["translate", "rotate", "scale"] as const).map((mode) => ({
+					id: mode,
+					label: mode.charAt(0).toUpperCase() + mode.slice(1),
+					icon: GEOMETRY_PLAY_MODE_ICONS[mode],
+					options: { transformMode: mode },
+				})),
 				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
 				defaultLayout: createDefaultLayout([GEOMETRY_PLAY_WINDOW_ID], "row", [100], [GEOMETRY_PLAY_WINDOW_LABEL]),
 			},
 		],
-		[],
+		[selectedId, selectableKinds, transformMode, value],
 	);
 
 	if (loadError) throw loadError;
@@ -243,7 +229,7 @@ function GeometryPlayController(): ReactElement {
 
 	return (
 		<GeometryPlayContext.Provider value={value}>
-			<UI apps={apps} defaultAppId={GEOMETRY_PLAY_APP_ID} className={getLevelBgClass(0)} />
+			<App apps={apps} defaultAppId={GEOMETRY_PLAY_APP_ID} className={getLevelBgClass(0)} />
 		</GeometryPlayContext.Provider>
 	);
 }
@@ -316,6 +302,10 @@ if (import.meta.vitest) {
 			for (const kind of TOPOLOGIC_KINDS) {
 				expect(session.listByKind(kind).length).toBeGreaterThan(0);
 			}
+		});
+
+		it("publishes transform modes for the shared App shell", () => {
+			expect(Object.keys(GEOMETRY_PLAY_MODE_ICONS)).toEqual(["translate", "rotate", "scale"]);
 		});
 	});
 }

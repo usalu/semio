@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { BreadcrumbItemData, Tree, UI, UIAppConfig, UIFindItem, UISearchItem, UIToolbarItem, createDefaultLayout } from "@elements/ui";
+import { App, BreadcrumbItemData, Tree, type AppConfig, type UIFindItem, type UISearchItem, type UIToolbarItem, createDefaultLayout } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, BookOpen, ClipboardPaste, Copy, File, FileText, FolderOpen, Home, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
 import { expect, userEvent, within } from "storybook/test";
@@ -20,12 +20,12 @@ import { expect, userEvent, within } from "storybook/test";
 
 const meta = {
   title: "elements/react/UI",
-  component: UI,
+  component: App,
   parameters: {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof UI>;
+} satisfies Meta<typeof App>;
 
 export default meta;
 
@@ -199,7 +199,7 @@ const editorToolbarItems: UIToolbarItem[] = [
 
 // #region 🦉Apps
 
-const editorApp: UIAppConfig = {
+const editorApp: AppConfig = {
   id: "editor",
   label: "Editor",
   icon: <FileText size={16} />,
@@ -213,7 +213,7 @@ const editorApp: UIAppConfig = {
     { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content.</div> },
   ],
   rightPanelTabs: [{ id: "properties", icon: Info, order: 0, content: <PropertiesTree /> }],
-  toolbarItems: editorToolbarItems,
+  tools: editorToolbarItems,
   footerItems: [
     { id: "status", content: "Ready", order: 0 },
     { id: "line", content: "Ln 42, Col 8", order: 1 },
@@ -222,7 +222,7 @@ const editorApp: UIAppConfig = {
   onFindSelect: (itemId) => console.log("Find selected:", itemId),
 };
 
-const dashboardApp: UIAppConfig = {
+const dashboardApp: AppConfig = {
   id: "dashboard",
   label: "Dashboard",
   icon: <BarChart size={16} />,
@@ -315,7 +315,7 @@ export const WithToolbarItems: Story = {
     apps: [editorApp],
     breadcrumbItems,
     searchItems,
-    toolbarItems: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
+    tools: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
   },
 };
 
@@ -324,7 +324,7 @@ export const WithToolbarContent: Story = {
     apps: [
       {
         ...editorApp,
-        toolbarItems: undefined,
+        tools: undefined,
         toolbarContent: (
           <div className="flex items-center gap-2 px-3 py-1 bg-panel border rounded-md shadow-sm pointer-events-auto">
             <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Undo</button>
@@ -404,7 +404,7 @@ export const FullFeatured: Story = {
     breadcrumbItems,
     searchItems,
     footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
-    toolbarItems: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
+    tools: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
   },
   play: async ({ canvasElement }) => {
     const documentBody = canvasElement.ownerDocument.body;

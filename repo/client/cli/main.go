@@ -6878,7 +6878,7 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	meta.SuperHead = strings.TrimSpace(stdout)
 	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, repoRoot)
 	meta.SuperDirtyHash = hashString(statusOut)
-	subOut, _, _ := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
+	subOut := getSubmoduleStatus(repoRoot)
 	lines := strings.Split(strings.TrimSpace(subOut), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -6915,6 +6915,19 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + semioMetaHash + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
 	return fp, meta
+}
+
+// 🧭getSubmoduleStatus returns recursive submodule status when available.
+func getSubmoduleStatus(repoRoot string) string {
+	stdout, _, exitCode := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
+	if exitCode == 0 {
+		return stdout
+	}
+	fallback, _, fallbackExitCode := ExecCommand("git", []string{"submodule", "status"}, repoRoot)
+	if fallbackExitCode == 0 {
+		return fallback
+	}
+	return stdout
 }
 
 // ♻️hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
