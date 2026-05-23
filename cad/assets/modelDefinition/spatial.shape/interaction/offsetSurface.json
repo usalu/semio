@@ -1,0 +1,308 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "feature.offsetSurface",
+  "version": "1.0.0",
+  "label": "OffsetSurface",
+  "key": "o",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": [
+      "idle",
+      "selectSurface",
+      "setDistance",
+      "committed"
+    ],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "requires": {
+    "kernel": {
+      "operations": [
+        "face.resolveIds",
+        "face.offset",
+        "entity.tessellate"
+      ]
+    }
+  },
+  "guards": [
+    {
+      "name": "hasSurfaceAndDistance",
+      "expr": {
+        "kind": "all",
+        "args": [
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "surfaceId"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "exists",
+            "target": {
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "distance"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "binop",
+            "op": "!=",
+            "left": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "distance"
+                }
+              ]
+            },
+            "right": {
+              "kind": "const",
+              "value": 0
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "machine": {
+    "initial": "selectSurface",
+    "states": [
+      {
+        "name": "selectSurface",
+        "selection": {
+          "accept": [
+            "face"
+          ],
+          "multiple": false,
+          "prompt": "Pick face"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "setDistance",
+                "key": "i",
+                "label": "Pick surface",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "surfaceId"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "kernel.query",
+                    "query": "face.resolveIds",
+                    "assignTo": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "resolvedFaceIds"
+                        }
+                      ]
+                    },
+                    "params": {
+                      "kind": "face.resolveIds",
+                      "faceId": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          },
+                          {
+                            "kind": "index",
+                            "index": 0
+                          },
+                          {
+                            "kind": "field",
+                            "name": "id"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectSurface",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "setDistance",
+        "on": [
+          {
+            "event": "set.distance",
+            "transitions": [
+              {
+                "key": "n",
+                "label": "Apply offset",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "distance"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "value"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "guard": "hasSurfaceAndDistance",
+                "key": "Enter",
+                "label": "Commit offset"
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectSurface",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "setDistance",
+        "items": [
+          {
+            "kind": "entity-highlight",
+            "id": "surface",
+            "role": "semantic-selection",
+            "geometryEntityKind": "face",
+            "entityId": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "surfaceId"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasSurfaceAndDistance",
+    "fromStates": [
+      "setDistance",
+      "committed"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "feature.offsetFaces",
+      "params": {
+        "faceIds": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "resolvedFaceIds"
+            }
+          ]
+        },
+        "distance": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "distance"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "produces": {
+    "typology": "spatial.shape.feature.offset-surface"
+  }
+}

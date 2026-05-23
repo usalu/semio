@@ -1,17 +1,12 @@
 #!/usr/bin/env bun
-/**
- * 🧭 Grasshopper project router: `bun ./script.ts <build|test|generate> [segments…]`.
- */
+/** 🧭 Grasshopper project router: `bun ./script.ts <build|test|generate value-list>`. */
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/src/index.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-const verb = segs[0];
-
-function runGenerateValueList(): void {
-  const buildDir = join(cwd, "build");
+function runGenerateValueList(root: string): void {
+  const buildDir = join(root, "build");
   if (!existsSync(buildDir)) mkdirSync(buildDir);
   function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: string, valueColumn: string): void {
     const csvContent = readFileSync(csvPath, "utf-8");
@@ -29,32 +24,57 @@ function runGenerateValueList(): void {
     const lines = records.map((record: Record<string, string>) => `${record[keyColumn]} = "${record[valueColumn]}"`);
     writeFileSync(outputPath, lines.join("\n"), "utf-8");
   }
-  convertCsvToValueList(join(cwd, "..", "..", "..", "..", "..", "elements", "assets", "lists", "mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
-  convertCsvToValueList(join(cwd, "..", "..", "..", "..", "..", "elements", "assets", "lists", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
+  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
+  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
   console.log("✅ Value lists generated");
 }
 
-if (verb === "generate" && segs[1] === "value-list") {
-  runGenerateValueList();
-} else if (verb === "test") {
-  const fx = process.platform === "win32" ? "net48" : "net8.0";
-  execFileSync("dotnet", ["test", join(cwd, "Semio.Grasshopper.Tests", "Semio.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx], {
-    cwd,
-    stdio: "inherit",
-  });
-} else if (verb === "build") {
-  runGenerateValueList();
-  execFileSync("dotnet", ["clean", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });
-  execFileSync("dotnet", ["build", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });
-  const yakDistFolder = join(cwd, "yak", "dist");
-  if (existsSync(yakDistFolder)) rmSync(yakDistFolder, { recursive: true });
-  mkdirSync(yakDistFolder, { recursive: true });
-  const binFolder = join(cwd, "bin", "Debug", "net48");
-  for (const file of readdirSync(binFolder)) {
-    cpSync(join(binFolder, file), join(yakDistFolder, file), { force: true, recursive: true });
+class GenerateValueListScript extends BundleScript {
+  run(): void {
+    runGenerateValueList(this.root);
   }
-  console.log("✅ Grasshopper build complete");
-} else {
-  console.error("usage: bun ./script.ts <build|test|generate value-list>");
-  process.exit(1);
 }
+
+class GenerateScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments[0] === "value-list") {
+      new GenerateValueListScript(this.root, this.repoRoot).run();
+      return;
+    }
+    console.error("usage: bun ./script.ts generate value-list");
+    process.exit(1);
+  }
+}
+
+class TestScript extends BundleScript {
+  run(): void {
+    const fx = process.platform === "win32" ? "net48" : "net8.0";
+    execFileSync("dotnet", ["test", join(this.root, "Semio.Grasshopper.Tests", "Semio.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx], {
+      cwd: this.root,
+      stdio: "inherit",
+    });
+  }
+}
+
+class BuildScript extends BundleScript {
+  run(): void {
+    runGenerateValueList(this.root);
+    execFileSync("dotnet", ["clean", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root, stdio: "inherit" });
+    execFileSync("dotnet", ["build", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root, stdio: "inherit" });
+    const yakDistFolder = join(this.root, "yak", "dist");
+    if (existsSync(yakDistFolder)) rmSync(yakDistFolder, { recursive: true });
+    mkdirSync(yakDistFolder, { recursive: true });
+    const binFolder = join(this.root, "bin", "Debug", "net48");
+    for (const file of readdirSync(binFolder)) {
+      cpSync(join(binFolder, file), join(yakDistFolder, file), { force: true, recursive: true });
+    }
+    console.log("✅ Grasshopper build complete");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir)
+  .register("generate", GenerateScript)
+  .register("test", TestScript)
+  .register("build", BuildScript);
+
+await runBundleScriptMain(router, import.meta.url);

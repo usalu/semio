@@ -20,7 +20,36 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
-## 🧩semio
+## 🧩elements
+
+###
+
+---
+
+We are building a framework that allows users to create ui such as vscode. The framework has pure typescript classes and different renderers. We want the uis to be able to define extension possiblities. The uis (including the extensions) have no dom access. e.g. sketchpad should be a ui with a extension marketplace. How would architect our framework, so that ui can have extensions. The extensions should not be general to our framework but specific to the ui. How can we generalize this? The ui extensions should have vscode-like api. --- UI, App, Mode, WindowKind (table, diagram, scene), Window, Panel (Workbenchs, Details, Settings, Chat) Toolbar, ToolCategory, Tool, Command, Extension
+
+It is more complicated.
+sketchpad is a ui that has several apps.
+Every app has several modes.
+e.g. sketchpad has home app (one mode, one window kind: HomeTable), kit app (one mode, several window kinds: KitAppDiagram, KitAppTable), design app (two modes: edit and analyze. Edit has two window kinds: DesignEditDiagram, DesignEditScene. Analyze has one window kind: DesignAnalyzeScene), etc
+There are several plugins such as: Energy (contributes to DesignEditDiagram, DesignEditScene, DesignAnalyzeScene, etc), Structure, etc
+
+---
+
+### 🗿spatial
+
+---
+
+I want to create a pure typescript library for generating shapes called factories.
+I have a custom brep kernel (it internally uses brepjs)
+Every factory is a state machine (I want to use stately but behind an interface).
+Optionally a factory can be passed to a renderer for interactive usage (such as r3f https://www.brepjs.dev/integration/r3f) with undo/redo support, dynamic display on every state, etc
+The factories are pure typescript functions they must work headless and interactive.
+How would you architect this?
+
+---
+
+## 🏘️semio
 
 ###
 
@@ -163,7 +192,7 @@ Setup everything with docker compose for the server.
 Migrate all existing history to the database. When data is in different format, try to convert it to the new format otherwise drop it.
 Make sure to test everything before I deploy it on a Linux VM.
 
-## 🧰repo⌨️cli
+### ⌨️cli
 
 Whenever invoking this command, regardless of the port, the container is being killed aswell stopping all running work. Make sure that the agent hooks deny this and give a meaningful reason.
 kill $(lsof -t -i:9876)
@@ -370,7 +399,64 @@ This MUST NOT happen.
 
 ## 🧩elements
 
+###
+
+---
+
+We are starting a new a new architecture.
+@elements/lib/react/core MUST be pure react components, no classes.
+@elements/lib/framework/core MUST be pure typescript, no react, just classes.
+@elements/lib/framework/renderer/react is the first renderer to @elements/lib/framework/core.
+@elements/lib/playground is the first framework, just for building playgrounds (one app, one window kind, one fixture, selection, filter, workbench, details, options).
+Every downstream project MUST NOT import from @elements/lib/react and MUST only import from @elements/lib/framework .
+First goal: Get @elements/lib/react/core free from the depency of @elements/lib/framework
+Work in monolithic files but make sure to refactor/extend/change everything to achieve the architecture.
+
+Finish implementing @elements/lib/playground and setup @elements/lib/react/spatial/play to use the new playground.
+
+---
+
 Add a checkbox element which is an action that can be checked and unchecked.
+
+### ⚛️react
+
+---
+
+Make sure it is 100% shell free, react only library. The shells are moved to framework or playground.
+
+---
+
+The Ui, App, Mode, Window, Engagement react components are still adhoc and miss features.
+One ui has multiple apps (one active).
+One app has multiple modes (one active).
+One mode has multiple windows (one active).
+One window optionally has optionally engagement.
+The Engagement is a floating component with three lines: first buttons for the options, second input line, third status components.
+
+<Ui apps={apps} activeAppId={activeAppId}/>
+<App modes={modes} activeModeId={activeModeId}/>
+<Mode window={windows} activeWindowId={activeWindowId}/>
+<Window engagement={engagement?} />
+<Engagement input={input} options={options} status={status} />
+
+Make sure to implement missing behaviour, components, stories, etc
+
+---
+
+Add a commands to ui.
+Commands are registerable at UI-level, App-Level, Mode-Level, WindowKind-Level.
+Depending on what is active they will shown as suggestion or not.
+
+---
+
+Rename/Extend UI react component to App.
+An app has modes.
+Every app has an appwide tools, selection, hover, options, window kinds, etc
+Every mode extends tools, selection, hover, options, window kinds, etc
+e.g. all play bundles use this.
+Refactor everything
+
+---
 
 ### 🏁board
 
@@ -606,10 +692,10 @@ Change selection for composition. In the ui add three toggles: Nodes, Edges, Han
 Extend selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso
-Additionally there are four modes: default (just select new selection), additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
 Make sure that the selection has a special behaviour:
-When ending more left than started then partial selection is enough.
-When ending more right than started then full enclosing is necessary otherwise the edge or node is not selected.
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise the edge or node is not selected.
 Make sure target can be set to nodes, edges, nodes&edges (default)
 holding down left button should trigger
 The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
@@ -640,7 +726,47 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ### 🏙️scene
 
-elements scene:
+---
+
+All the objects and vortex dont have the proper labels from the original asset (nakagin capsule tower). Make sure that in the ui only the labels show. Just one time migration, no permanent links. Clean assets with clean non-id poluted play
+
+---
+
+Complete it. Add all props, onX callbacks, options, etc.
+Make sure that play displays and allows to modify all information.
+e.g. all objects can be deleted (and that it deletes all child vortices with it and stale attractions)
+e.g. object, vortex, etc are selectable and play shows all the details of the selection (with changable input, dropdown as for kinds, etc)
+
+---
+
+The extension must be written in cad-coordinate system but all e.g. glb imports are in glb coordinate system. e.g. currently the objects are flipped the cad z axis is currently on the cad y axis.
+
+---
+
+Generalize the concept of lod from a set of domain-driven 6 fixed lods to a open list and domain-neutral list of float. e.g. 50000 stands for 1to50000, 200 for 1to200, 0.5 for 2to1, etc
+Add automatic zoom driven lod, add depth-variable lod (the closer to the camera the more detailed) and a slider for forcing a specific lod.
+If an object doesnt have a representation for a specific lod, take the closest one. On equal distance pick the lower number lod.
+e.g. common ones are:
+1to50000
+1to25000
+1to10000
+1to5000
+1to2500
+1to1000
+1to1000
+1to500
+1to333
+1to200
+1to100
+1to50
+1to50
+1to33
+1to25
+1to10
+1to5
+1to1
+1to0.5
+1to0.25
 
 ---
 
@@ -684,20 +810,6 @@ Share as many props, events, etc as you can.
 Render both in play inside two different window kinds.
 
 ---
-
-## 🔬coda
-
-coda:
-
-coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
-
-coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
-Follow:
-Electron main starts helper on app launch or first use
-Communicate via structured JSON messages over stdio
-Add request IDs for request/response correlation
-Add timeouts, heartbeats, and auto-restart
-Keep the renderer isolated from native details
 
 ## 🏘️semio
 
@@ -2509,6 +2621,192 @@ All params of all components MUST have native data type equivalence. E.g. all da
 The passthrough components MUST show all available information. A lot of params are missing.
 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
+
+## 🗿spatial
+
+---
+
+Transfer the old ui into proper playground.
+A playground is an app that toolbar with tool categories (and active tool category)
+e.g. Save, Transform are both categories,
+
+---
+
+It should have 4 windows
+on the left top: shape
+on the left bottom: building
+on the right top: energy
+on the right bottom: structure classic
+
+---
+
+selection is adhoc and buggy.
+In general the renderer has one selection per model.
+Further every interaction state can have its own selection.
+
+---
+
+Primitives are available in all modelDefinitions
+Add a general primitve section with Show and Filter.
+Add all toggles for kind of primitives.
+Make sure that primitives can be selected.
+Make sure that for selected primitives the attributes are shown and can be edited (added/updated/edited). Make sure to only list the attributeKinds of the modelDefinition.
+
+---
+
+All interactions when possible should use the input. Make sure to setup the correct mechanisms.
+e.g. box interaction after one point was selected, a number can be typed in and the number should limit the length of the line. the display should keep on showing the cursor with a thin line to it but the line that is drawn just for the length.
+e.g. when in box after pressing the first point, the state is selecting the diagonal. The length should contrain the diagonal. When pressing the second diagonal point then pressing a number should cap the height.
+After an interaction is finalized, the input number should be cleared.
+e.g. in box when inside the height selection, it only grows in one direction. make sure to display the cursor with the fine height line and the extact height line where it is (either number or with no number the cursor closest point on the height line)
+
+---
+
+There are many construct\* actions for every typology but only one create interaction for every typology that yields exactly the args for one of the contruct actions. Make sure this pattern is applied strictly.
+
+---
+
+In order to deal with the problem that brepjs cant attach metdata directly, the kernel needs to be extended with a layer to track attributes and metadata. Further brepjs cant import/export json.
+We import and export with AP242 UDA STEP.
+Make sure that our framework cleanly roundtrips with step.
+See .repo/✍️/spatial-step-export-import.md plan
+
+---
+
+A big refactor is ongoing.
+Get rid of all the extra legacy topologic entities such as View, Extension, etc
+The new entities are just: ModelSpace, Primitive, Model, Object, Attribute
+The extension mechanism uses views to derive new models.
+All actions, interactions, attributeDefinition, modelDefinition, propertyDefinition, typologies needed for this are stored inside extensions as data.
+For geometry use the entities that brepjs is using for the kernel. Dont add any new terms, wrapper structures etc
+
+---
+
+The brepjs kernel doesnt support user data on geometry. this is a core feature from our geometry kernel.
+Hence when implementing our interface make sure that this fact doesnt leak into our layer. keep internal maps for attributes, etc
+
+---
+
+A big refactor is ongoing.
+Get rid of all the extra legacy topologic entities such as Vertext, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster, Part, Surface, Volume.
+The new editable entities are just: Model, Object, Geometry, Attribute
+The extension mechanism uses views to derive new models.
+All actions, interactions, attributeDefinition, modelDefinition, propertyDefinition, typologies needed for this are stored inside extensions as data.
+For geometry use the entities that brepjs is using for the kernel. Dont add any new terms, wrapper structures etc
+
+---
+
+There should be a general selection state outside the interaction. Every interaction has its own selection state and sometimes the interaction contributes to the selection when they finalize. e.g. SelectAll interaction
+
+---
+
+Add Save/Load functionality.
+Export a _.spatial.json with both "raw": ... and "analytic": ...
+_.raw.spatial.json with just both "raw"
+\*.analytic.spatial.json with just "analytic": ...
+
+On play add buttons with file pickers:
+Save (Selected) which only saves the selected from the current view (raw or analytic)
+Save (View) which saves everything from the current view (raw or analytic)
+Save (All) which saves everything from both views (raw or analytic)
+
+---
+
+Introduce selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
+Make sure that the selection has a special behaviour:
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise the elemtents are not selected.
+Partial or full is defined by the vertices. Partial means at least one vertex is covered. Full means all the vertices are covered.
+
+---
+
+The boolean logic is still not right.
+This is a very complex operation.
+On analytic view all boolean intersections of all cells are found and then from every cell the intersections are removed by boolean difference.
+Currently the difference parts are still original. You can tests this easily by taking two intersecting box cells, then calculating the volume and adding it up. Then analyze the cells and total volume of all the parts must be less.
+Make sure it is general for cells (any brep) and not just for boxes.
+
+---
+
+Introduce new editable geometry entity: Anchor
+
+Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
+
+Add new interaction createAnchor (first select or when only one matching entity is selected assume the user wants this one. then evaluate the geometry by taking the closest point of the cursor on the geometry).
+
+Add all different actions that exists and that are needed for the interaction.
+
+---
+
+Introduce a new cypher inspired query language called "construct". It must be cypher inspired.
+Implement the efficient engine in c:\git\semio\spatial\js\query\index.ts . Use chevrotain for ast.
+Extend the core, the kernel, etc to be able to resolve them.
+Follow the architecture from.repo/✍️/construct.md
+
+---
+
+Generalize the current command mechanism.
+Introduce actions.
+Rename command to interaction.
+Actions are pure non-interactive functions (createBoxFrom3Points(p1:Point, p2:Point, p3:Point))
+Interactions are interactive state machines.
+Interactions must work headless and inside a renderer.
+Interactions can use actions.
+Every interaction keeps track of the history of all state transitions and supports undo/redo for all states.
+Both actions and interactions are extendable at runtime.
+
+---
+
+The render should have snapping options: End, Mid, Cent, Int, Perp, Tan
+Depending on mode, the snapping points are calculated on the kernel or directly in the renderer.
+
+---
+
+Extend renderer into a full REPL.
+Keep history (two stacks) of all modifications.
+A modification is the command result and additionally the backwards diff (computed from current geometry and result diff).
+Readonly commands are not added to the command stack.
+During active command undo/redo works on the command states.
+Outside active command it undo/redo applies the backwards diff or the result diff.
+
+Generalize factories to commands.
+Until now factories were used to generate geometry.
+From now on they follow the pattern:
+geomtery in and geometry out
+They might be readonly (e.g. Distance, Area, etc)
+Make sure that selections are possible in the state machine.
+Make sure that state machines can switch between raw (Vertex, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster) and analytic (Surface, Part), and filter kinds.
+
+---
+
+Extend renderer with selection and hover (add toggles for each kind).
+Make sure that when something is clicked where multiple elements can be selected to show a small list with all selectable elements. When hovering over the list item, hover the corresponding 3d elements.
+
+---
+
+The current json schema is not statically typed. Make sure that keys never are dynamic.
+
+---
+
+Make sure no math is inside the core.
+Everything must be possible exclusively with the kernel (add it to a general interface).
+Make sure the brepjs kernel implements this interface.
+Additionally the renderer interface also implements a subset of operations (optimized for speed in trade for precision).
+Add an option: Fast|Precise to the play.
+When fast is selected everything that is possible is computed by the renderer. Only committed geometry always goes to the kernel.
+When precise is enabled, everything is computed by the kernel and the renderer is only displaying.
+
+---
+
+Make sure that the original plan is achieved @.repo/✍️/spatial.md
+Especially make sure that the brep kernel and the state machine are properly abstracted.
+The two specific implemtations must be used:
+@spatial/js/kernel-brepjs/index.ts @spatial/js/machine-stately/index.ts
+
+---
 
 ## 🧰repo
 
@@ -8959,7 +9257,21 @@ Names and description are not consistent with cli:
 - fix
 - tree
 
-## history
+## 🔬coda
+
+coda:
+
+coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
+
+coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
+Follow:
+Electron main starts helper on app launch or first use
+Communicate via structured JSON messages over stdio
+Add request IDs for request/response correlation
+Add timeouts, heartbeats, and auto-restart
+Keep the renderer isolated from native details
+
+## 📜history
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.

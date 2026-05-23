@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.structure.reinforcedconcreteinternalwall",
+  "version": "1.0.0",
+  "label": "Reinforced Concrete Internal Wall",
+  "actions": [
+    "structure.structure.constructReinforcedConcreteInternalWallFrom2PointsAndHeight",
+    "structure.structure.constructReinforcedConcreteInternalWallFromCurveAndHeight",
+    "structure.structure.constructReinforcedConcreteInternalWallFromSurface"
+  ],
+  "interactions": [
+    "structure.structure.constructReinforcedConcreteInternalWall"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

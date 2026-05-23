@@ -8,12 +8,14 @@
 
 // #endregion 🧲Header
 
-// #region 🗄️Configuration
+// #region 🔌Adapters
 // PostCSS plugin configuration for the coda desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 
 import { Config } from "postcss-load-config";
+// #endregion 🔌Adapters
 
+// #region 🗄️Configuration
 /**
  * PostCSS configuration with import and nesting plugins.
  * Config MUST include postcss-import and postcss-nesting plugins.

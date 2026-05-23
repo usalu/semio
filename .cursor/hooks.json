@@ -2,102 +2,102 @@
   "hooks": {
     "afterAgentResponse": [
       {
-        "command": "go run ./repo/cursor hook afterAgentResponse"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterAgentResponse"
       }
     ],
     "afterAgentThought": [
       {
-        "command": "go run ./repo/cursor hook afterAgentThought"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterAgentThought"
       }
     ],
     "afterFileEdit": [
       {
-        "command": "go run ./repo/cursor hook afterFileEdit"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterFileEdit"
       }
     ],
     "afterMCPExecution": [
       {
-        "command": "go run ./repo/cursor hook afterMCPExecution"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterMCPExecution"
       }
     ],
     "afterShellExecution": [
       {
-        "command": "go run ./repo/cursor hook afterShellExecution"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterShellExecution"
       }
     ],
     "afterTabFileEdit": [
       {
-        "command": "go run ./repo/cursor hook afterTabFileEdit"
+        "command": "bun ./script.ts dev mcp stdio cursor hook afterTabFileEdit"
       }
     ],
     "beforeMCPExecution": [
       {
-        "command": "go run ./repo/cursor hook beforeMCPExecution"
+        "command": "bun ./script.ts dev mcp stdio cursor hook beforeMCPExecution"
       }
     ],
     "beforeReadFile": [
       {
-        "command": "go run ./repo/cursor hook beforeReadFile"
+        "command": "bun ./script.ts dev mcp stdio cursor hook beforeReadFile"
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "go run ./repo/cursor hook beforeShellExecution"
+        "command": "bun ./script.ts dev mcp stdio cursor hook beforeShellExecution"
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "go run ./repo/cursor hook beforeSubmitPrompt"
+        "command": "bun ./script.ts dev mcp stdio cursor hook beforeSubmitPrompt"
       }
     ],
     "beforeTabFileRead": [
       {
-        "command": "go run ./repo/cursor hook beforeTabFileRead"
+        "command": "bun ./script.ts dev mcp stdio cursor hook beforeTabFileRead"
       }
     ],
     "postToolUse": [
       {
-        "command": "go run ./repo/cursor hook postToolUse"
+        "command": "bun ./script.ts dev mcp stdio cursor hook postToolUse"
       }
     ],
     "postToolUseFailure": [
       {
-        "command": "go run ./repo/cursor hook postToolUseFailure"
+        "command": "bun ./script.ts dev mcp stdio cursor hook postToolUseFailure"
       }
     ],
     "preCompact": [
       {
-        "command": "go run ./repo/cursor hook preCompact"
+        "command": "bun ./script.ts dev mcp stdio cursor hook preCompact"
       }
     ],
     "preToolUse": [
       {
-        "command": "go run ./repo/cursor hook preToolUse"
+        "command": "bun ./script.ts dev mcp stdio cursor hook preToolUse"
       }
     ],
     "sessionEnd": [
       {
-        "command": "go run ./repo/cursor hook sessionEnd"
+        "command": "bun ./script.ts dev mcp stdio cursor hook sessionEnd"
       }
     ],
     "sessionStart": [
       {
-        "command": "go run ./repo/cursor hook sessionStart"
+        "command": "bun ./script.ts dev mcp stdio cursor hook sessionStart"
       }
     ],
     "stop": [
       {
-        "command": "go run ./repo/cursor hook stop"
+        "command": "bun ./script.ts dev mcp stdio cursor hook stop"
       }
     ],
     "subagentStart": [
       {
-        "command": "go run ./repo/cursor hook subagentStart"
+        "command": "bun ./script.ts dev mcp stdio cursor hook subagentStart"
       }
     ],
     "subagentStop": [
       {
-        "command": "go run ./repo/cursor hook subagentStop"
+        "command": "bun ./script.ts dev mcp stdio cursor hook subagentStop"
       }
     ]
   },

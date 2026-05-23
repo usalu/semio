@@ -12,9 +12,11 @@
 // Vite build configuration for the VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 
+// #region 🔌Adapters
 import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
+// #endregion 🔌Adapters
 
 /**
  * Absolute file path of the current module.

@@ -1,15 +1,21 @@
+import { readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+
+/** @param {string} absScript */
+function scriptExportsPolicy(absScript) {
+  const text = readFileSync(absScript, "utf8");
+  return /\bexport\s+(const|function)\s+policy\b/.test(text);
+}
 
 /**
  * @param {string} workspaceRoot
  * @param {string} absScript
  */
-function extraLintInputs(workspaceRoot, absScript) {
-  const base = absScript.split(/[/\\]/).pop() ?? "";
-  if (base === "lint.script.ts") return [];
-  const m = base.match(/^(.+)\.([^.]+)\.lint\.script\.ts$/);
+function extraPolicyInputs(workspaceRoot, absScript) {
+  const text = readFileSync(absScript, "utf8");
+  const m = text.match(/export\s+const\s+policyFile\s*=\s*["']([^"']+)["']/);
   if (!m) return [];
-  const targetAbs = join(dirname(absScript), `${m[1]}.${m[2]}`);
+  const targetAbs = join(dirname(absScript), m[1]);
   const tr = relative(workspaceRoot, targetAbs).split("\\").join("/");
   return [`{workspaceRoot}/${tr}`];
 }
@@ -19,26 +25,26 @@ function extraLintInputs(workspaceRoot, absScript) {
  * @param {unknown} _options
  * @param {{ workspaceRoot: string }} context
  */
-function lintScriptProjects(configFiles, _options, context) {
+function policyScriptProjects(configFiles, _options, context) {
   const { workspaceRoot } = context;
   /** @param {string} p */
   const nxPath = (p) => p.split("\\").join("/");
 
   return configFiles
-    .filter(
-      (configFile) =>
-        !configFile.includes("node_modules") &&
-        !configFile.includes(".repo") &&
-        !configFile.includes("/dist/") &&
-        !configFile.includes("\\dist\\"),
-    )
+    .filter((configFile) => {
+      if (configFile.includes("node_modules") || configFile.includes(".repo") || configFile.includes("/dist/")) {
+        return false;
+      }
+      const abs = join(workspaceRoot, configFile);
+      return scriptExportsPolicy(abs);
+    })
     .map((configFile) => {
       const abs = join(workspaceRoot, configFile);
       const rel = nxPath(relative(workspaceRoot, abs));
       const projectRoot = dirname(abs);
       const slug = rel.replace(/[^a-zA-Z0-9_-]+/g, "_");
       const projectName = `breach-${slug}`;
-      const extraInputs = extraLintInputs(workspaceRoot, abs);
+      const extraInputs = extraPolicyInputs(workspaceRoot, abs);
       return [
         configFile,
         {
@@ -51,7 +57,7 @@ function lintScriptProjects(configFiles, _options, context) {
                   executor: "nx:run-commands",
                   options: {
                     cwd: workspaceRoot,
-                    command: `bun repo/lib/js/bin/lint.ts "${rel}"`,
+                    command: `bun "${rel}" policy`,
                   },
                   inputs: [`{workspaceRoot}/${rel}`, ...extraInputs],
                   outputs: [`{workspaceRoot}/.repo/cache/breaches`],
@@ -66,6 +72,6 @@ function lintScriptProjects(configFiles, _options, context) {
 }
 
 export default {
-  name: "@repo/lint-scripts-file",
-  createNodesV2: ["**/*lint.script.ts", lintScriptProjects],
+  name: "@repo/policy-scripts-file",
+  createNodesV2: ["**/script.ts", policyScriptProjects],
 };

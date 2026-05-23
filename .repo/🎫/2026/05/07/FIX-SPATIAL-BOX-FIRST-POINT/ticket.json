@@ -1,0 +1,19 @@
+{
+  "title": "Scene Lod Grid Handle Visibility",
+  "status": "open",
+  "summary": "Aligned scene link-up with board WASM: (1) proximityConnect uses drag snap target + tighter screen commit tolerance (handle px + radius in px via perspective), emits onConnect then onProximityConnect like edgeCreate+proximityConnect; removed world-radius drop fallback for link pointer-up. (2) indirectConnect on sole free compatible handle emits onConnect+onIndirectConnect; multi-handle drops enter LinkTargetNode-style state with ring highlights, rubber line, second pointer-down ray pick on ring handle or cancel on miss; window capture pointerdown. (3) Vortex meta radiusWorld for snap halos; ThreePerspectiveCamera import alias to avoid drei name clash.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",
+    "⚪5ccaf3db9f6c4d0eb07de7931c87ec31",
+    "⚪9dbdabec5df1461fbc6cba840bc7e0c8",
+    "⚪9473dcf949a34c07944d049844c20aaa",
+    "⚪5151cf0dbf854d8eb1df33d79497e4a9",
+    "⚪50d2387dc623473aaec475fd67fa7de1",
+    "⚪455e44626cdf468f826eb7240be4cd7f",
+    "⚪cab20e5efc0d409db84211c5f5de7bb1",
+    "⚪1d11b75978c9413a9ae576d6f43745f5",
+    "⚪89d70eda1b374619a383970fbbacbab3",
+    "⚪16e916c6e70a4bf08b3f9ef036b56495"
+  ]
+}

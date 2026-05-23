@@ -1,0 +1,38 @@
+[package]
+name = "puzzle_2d"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+build = "build.rs"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "lib.rs"
+
+[build-dependencies]
+serde_json = "1.0.140"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
+typst = "0.14.2"
+typst-svg = "0.14.2"
+typst-assets = { version = "0.14.2", features = ["fonts"] }
+comemo = "0.5.1"
+ecow = "0.2.6"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+data-url = "0.3.2"
+base64 = "0.22.1"
+fontdb = { version = "0.23.0", default-features = false }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+serde-wasm-bindgen = "0.6.5"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.transform.scale3d",
+  "version": "1.0.0",
+  "label": "Scale 3D",
+  "description": "Typology produced by transform.scale3d.",
+  "actions": [
+    "builtin.transform.scale3d"
+  ],
+  "interactions": [
+    "transform.scale3d"
+  ]
+}

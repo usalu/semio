@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 
 package semio
 
@@ -41,7 +41,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region 🎞️Constants
 

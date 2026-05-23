@@ -6,10 +6,8 @@
 
 // Monorepo CLI tool for repository management, analysis and code generation.
 
+// Per-IDE MCP server kind, native descriptions, plan/spec resolution, and hook dispatch.
 // #endregion 🧲Header
-
-// #region 🤸Preamble
-// Package declaration and dependency imports for the repo CLI.
 
 package client
 
@@ -25,6 +23,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/dustin/go-humanize"
+	"github.com/google/uuid"
+	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/language/ast"
+	"github.com/graphql-go/graphql/language/parser"
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"math"
@@ -43,23 +53,20 @@ import (
 	"text/template"
 	"time"
 	"unicode/utf8"
-
-	"github.com/Masterminds/sprig/v3"
-	"github.com/blevesearch/bleve/v2"
-	blevequery "github.com/blevesearch/bleve/v2/search/query"
-	"github.com/bmatcuk/doublestar/v4"
-	"github.com/dustin/go-humanize"
-	"github.com/google/uuid"
-	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/parser"
-	"github.com/mark3labs/mcp-go/mcp"
-	ignore "github.com/sabhiram/go-gitignore"
-	"github.com/spf13/cobra"
-	repopkg "github.com/usalu/semio/repo/go"
-	"gopkg.in/yaml.v3"
 	_ "modernc.org/sqlite"
+	blevequery "github.com/blevesearch/bleve/v2/search/query"
+	ignore "github.com/sabhiram/go-gitignore"
+	repopkg "github.com/usalu/semio/repo/go"
 )
+
+
+
+// #region 🤸Preamble
+// Package declaration and dependency imports for the repo CLI.
+
+
+// #region 🔌Adapters
+// #endregion 🔌Adapters
 
 // #endregion 🤸Preamble
 
@@ -6878,7 +6885,7 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	meta.SuperHead = strings.TrimSpace(stdout)
 	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, repoRoot)
 	meta.SuperDirtyHash = hashString(statusOut)
-	subOut, _, _ := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
+	subOut := getSubmoduleStatus(repoRoot)
 	lines := strings.Split(strings.TrimSpace(subOut), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -6915,6 +6922,19 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + semioMetaHash + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
 	return fp, meta
+}
+
+// 🧭getSubmoduleStatus returns recursive submodule status when available.
+func getSubmoduleStatus(repoRoot string) string {
+	stdout, _, exitCode := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
+	if exitCode == 0 {
+		return stdout
+	}
+	fallback, _, fallbackExitCode := ExecCommand("git", []string{"submodule", "status"}, repoRoot)
+	if fallbackExitCode == 0 {
+		return fallback
+	}
+	return stdout
 }
 
 // ♻️hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
@@ -12027,20 +12047,12 @@ type SandboxProvider interface {
 	Kind() string
 }
 
-// ⚙️EditorHookMapping is a compatibility alias for editor hook configuration metadata.
-// It intentionally aliases `ClientHookMapping` so editor providers can define only the fields they need
-// ⚙️(Client, ConfigPath) while keeping the richer mapping used by `configure`.
-type EditorHookMapping = ClientHookMapping
-
 // 📝EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 type EditorProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result HookResult) string
 	NativeEventFromHookEvent(event HookEvent, parentInfo string) string
-	GenerateHookConfig(repoRoot string) (string, error)
-	HookMapping() EditorHookMapping
 }
 
 // #endregion 🔭Provider Interfaces
@@ -12562,20 +12574,6 @@ type CopilotEditorProvider struct{}
 // 💿Kind holds the data fields for a Kind record.
 func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
 
-// ⚙️Configure holds the data fields for a Configure record.
-func (p *CopilotEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
-
 // 📡ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCopilotEvent(nativeEvent, toolKind)
@@ -12591,35 +12589,11 @@ func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parent
 	return vsCodeEventFromHookEvent(event, parentInfo)
 }
 
-// 🔶GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateCopilotConfig(repoRoot)
-}
-
-// 🗺️HookMapping holds the data fields for a HookMapping record.
-func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "copilot-chat", ConfigPath: ".github/hooks/repo.json"}
-}
-
 // 📝CursorEditorProvider holds the data fields for a cursor editor provider record.
 type CursorEditorProvider struct{}
 
 // 🏷️Kind holds the data fields for a Kind record.
 func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
-
-// 🔹Configure holds the data fields for a Configure record.
-func (p *CursorEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🔸ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12637,35 +12611,11 @@ func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentI
 	return ""
 }
 
-// ⬛GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateCursorConfig(repoRoot)
-}
-
-// ⬜HookMapping holds the data fields for a HookMapping record.
-func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json"}
-}
-
 // 💻WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
 type WindsurfEditorProvider struct{}
 
 // 🟥Kind holds the data fields for a Kind record.
 func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
-
-// 🟧Configure holds the data fields for a Configure record.
-func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🟨ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12683,35 +12633,11 @@ func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, paren
 	return ""
 }
 
-// 🟪GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateWindsurfConfig(repoRoot)
-}
-
-// 🟫HookMapping holds the data fields for a HookMapping record.
-func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json"}
-}
-
 // 💠ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
 type ClaudeCodeEditorProvider struct{}
 
 // 🔳Kind holds the data fields for a Kind record.
 func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
-
-// 🔲Configure holds the data fields for a Configure record.
-func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // ▪️ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12729,35 +12655,11 @@ func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, par
 	return ""
 }
 
-// ◽GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateClaudeCodeConfig(repoRoot)
-}
-
-// ◻️HookMapping holds the data fields for a HookMapping record.
-func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "claude-code", ConfigPath: ".claude/settings.json"}
-}
-
 // ◼️DroidEditorProvider holds the data fields for a droid editor provider record.
 type DroidEditorProvider struct{}
 
 // 🔵Kind holds the data fields for a Kind record.
 func (p *DroidEditorProvider) Kind() string { return "droid" }
-
-// 🔴Configure holds the data fields for a Configure record.
-func (p *DroidEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🟠ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12775,45 +12677,11 @@ func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentIn
 	return ""
 }
 
-// 🟣GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateDroidConfig(repoRoot)
-}
-
-// 🟤HookMapping holds the data fields for a HookMapping record.
-func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "droid", ConfigPath: ".factory/hooks.json"}
-}
-
 // ⚪CodexEditorProvider holds the data fields for a codex editor provider record.
 type CodexEditorProvider struct{}
 
 // ⚫Kind holds the data fields for a Kind record.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
-
-type codexMcpServerConfig struct {
-	Name    string
-	Command string
-	Args    []string
-	Enabled *bool
-	Cwd     string
-}
-
-// 🩵Configure holds the data fields for a Configure record.
-func (p *CodexEditorProvider) Configure(repoRoot string) error {
-	content, err := generateCodexConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	targetPath, err := resolveCodexConfigPath()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 // 🩶ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12831,22 +12699,11 @@ func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentIn
 	return ""
 }
 
-// 💙GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
-
-// 💚HookMapping holds the data fields for a HookMapping record.
-func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "codex", ConfigPath: "~/.codex/config.toml"}
-}
-
 // 💛AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
 type AntigravityEditorProvider struct{}
 
 // 🧡Kind holds the data fields for a Kind record.
 func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
-
-// ❤️Configure holds the data fields for a Configure record.
-func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
 
 // 🤍ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -12864,33 +12721,10 @@ func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, pa
 	return ""
 }
 
-// 💗GenerateHookConfig holds the data fields for a GenerateHookConfig record.
-func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return "", nil
-}
-
-// 💖HookMapping holds the data fields for a HookMapping record.
-func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
-}
-
 // 💝KiroEditorProvider holds the data fields for a kiro editor provider record.
 type KiroEditorProvider struct{}
 
 func (p *KiroEditorProvider) Kind() string { return "kiro-cli" }
-
-func (p *KiroEditorProvider) Configure(repoRoot string) error {
-	content, err := p.GenerateHookConfig(repoRoot)
-	if err != nil {
-		return err
-	}
-	mapping := p.HookMapping()
-	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(targetPath, []byte(content), 0644)
-}
 
 func (p *KiroEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveKiroEvent(nativeEvent, toolKind)
@@ -12903,14 +12737,6 @@ func (p *KiroEditorProvider) FormatHookOutput(hookEventName string, result HookR
 
 func (p *KiroEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
-}
-
-func (p *KiroEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
-	return generateKiroConfig(repoRoot)
-}
-
-func (p *KiroEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "kiro-cli", ConfigPath: ".kiro/agents/repo.json"}
 }
 
 // #endregion 🎆Editor Providers
@@ -15600,6 +15426,7 @@ const (
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
+	BreachDependencyBoundaryDirectImport               Statute = "dependency-boundary/import/direct-third-party"
 	BreachSemioDescriptionMissingEmoji                 Statute = "semio/description/missing-emoji"
 	BreachSemioDescriptionEmojiNotUnique               Statute = "semio/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
@@ -15996,6 +15823,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "semio.* files must be self-contained and not import from UI dependencies",
 		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
+		Autofixable: false,
+	},
+	BreachDependencyBoundaryDirectImport: {
+		Kind:        BreachDependencyBoundaryDirectImport,
+		Priority:    BreachPriorityHigh,
+		Reason:      "Third-party packages must only be imported in adapter regions or adapter paths",
+		Solution:    "Move the import into a //#region 🔌Adapter (or /adapters/) module and depend on a first-party port interface elsewhere",
 		Autofixable: false,
 	},
 	BreachSemioDescriptionMissingEmoji: {
@@ -17987,17 +17821,353 @@ func FindSection(sections []Section, name string) *Section {
 
 // #endregion 📝Sections
 
-// #region 🧊Policies
-// Policy definitions, context, checkers, and individual policy implementations.
-
-// 📜PolicyFunc is a function type for policy func callbacks.
 type PolicyFunc func(ctx *PolicyContext) []Breach
 
-// 💿policies holds the data fields for a policies record.
-var policies = []PolicyDef{}
+// ­ƒÆ┐policies holds the data fields for a policies record.
+var policies = []PolicyDef{
+	{
+		ID:          "code",
+		Name:        "Code",
+		Description: "Validates source file headers, sections, and comments",
+		Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "File",
+				Description: "File header region breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups:      []Territory{},
+				Kinds: []Statute{
+					BreachCodeFileMissingHeaderRegion,
+					BreachCodeFileWrongHeaderRegionFormat,
+					BreachCodeFileMissingContributors,
+					BreachCodeFileMissingSummary,
+					BreachCodeFileMissingLicense,
+					BreachCodeFileWrongLicense,
+					BreachCodeFileMissingRequirements,
+					BreachCodeFileMissingDocs,
+				},
+			},
+			{
+				Name:        "Section",
+				Description: "Section structure breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups: []Territory{
+					{
+						Name:        "Wrong Format",
+						Description: "Section format breachs",
+						Groups: []Territory{
+							{
+								Name:        "Summary",
+								Description: "Section summary format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatSummaryTooLong,
+								},
+							},
+							{
+								Name:        "Requirements",
+								Description: "Section requirements format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatRequirementsSplitBlock,
+								},
+							},
+						},
+						Kinds: []Statute{
+							BreachCodeSectionWrongFormat,
+							BreachCodeSectionWrongFormatNewlineAfterRegion,
+							BreachCodeSectionWrongFormatDocs,
+						},
+					},
+				},
+				Kinds: []Statute{
+					BreachCodeSectionEmpty,
+					BreachCodeSectionOrphanDefinition,
+					BreachCodeSectionMissingStartName,
+					BreachCodeSectionMissingEndName,
+					BreachCodeSectionNameMismatch,
+					BreachCodeSectionMissingSummary,
+					BreachCodeSectionMissingRequirements,
+					BreachCodeSectionMissingDocs,
+				},
+			},
+			{
+				Name:        "Definition",
+				Description: "Definition documentation breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups: []Territory{
+					{
+						Name:        "Wrong Format",
+						Description: "Definition format breachs",
+						Kinds: []Statute{
+							BreachCodeDefWrongFormat,
+							BreachCodeDefNotNativeDocstring,
+						},
+					},
+				},
+				Kinds: []Statute{
+					BreachCodeDefMissingSummary,
+					BreachCodeDefMissingRequirements,
+					BreachCodeDefMissingDocs,
+				},
+			},
+			{
+				Name:        "Comment",
+				Description: "Forbidden comment breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeCommentInline,
+					BreachCodeCommentBlock,
+					BreachCodeCommentJSDoc,
+				},
+			},
+			{
+				Name:        "Requirements",
+				Description: "Specification content breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeRequirementsSyntax,
+				},
+			},
+			{
+				Name:        "Unicode",
+				Description: "Unicode character breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeUnicodeEmojiVariation,
+				},
+			},
+			{
+				Name:        "Docs",
+				Description: "Documentation file breachs",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Kinds: []Statute{
+					BreachCodeDocsMissingReadme,
+				},
+			},
+			{
+				Name:        "Rust",
+				Description: "Rust-specific section breachs",
+				Scopes:      []string{"**/*.rs"},
+				Kinds: []Statute{
+					BreachCodeRustRegionComment,
+				},
+			},
+		},
+		Run: codePolicy,
+	},
+	{
+		ID:          "dev-docs",
+		Name:        "DevDocs",
+		Description: "Validates README.md and AGENTS.md documentation structure",
+		Scopes:      []string{"README.md", "AGENTS.md"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "File",
+				Description: "File documentation breachs",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingFile,
+					BreachDevDocsWrongFilePath,
+					BreachDevDocsWrongFileName,
+					BreachDevDocsWrongFileOrder,
+				},
+			},
+			{
+				Name:        "Folder",
+				Description: "Folder documentation breachs",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingFolder,
+					BreachDevDocsWrongFolderPath,
+					BreachDevDocsWrongFolderName,
+					BreachDevDocsWrongFolderOrder,
+				},
+			},
+			{
+				Name:        "Component",
+				Description: "Component documentation breachs",
+				Scopes:      []string{"README.md"},
+				Kinds: []Statute{
+					BreachDevDocsMissingComponent,
+					BreachDevDocsWrongComponentName,
+					BreachDevDocsWrongComponentOrder,
+				},
+			},
+		},
+		Run: devDocsPolicy,
+	},
+	{
+		ID:          "sketchpad",
+		Name:        "Sketchpad",
+		Description: "Validates sketchpad imports, state management, and hook patterns",
+		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Import restriction breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadImportThirdParty,
+				},
+			},
+			{
+				Name:        "State",
+				Description: "State management breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadStateMultipleMachines,
+					BreachSketchpadStateCreateActor,
+					BreachSketchpadStateYjsAppState,
+					BreachSketchpadStateForbiddenStore,
+				},
+			},
+			{
+				Name:        "Hooks",
+				Description: "Hook pattern breachs",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []Statute{
+					BreachSketchpadHooksNonTriadic,
+				},
+			},
+		},
+		Run: sketchpadPolicy,
+	},
+	{
+		ID:          "repo",
+		Name:        "Repo",
+		Description: "Validates strict repo command implementation parity and ticket tracking",
+		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Parity",
+				Description: "Command parity breachs",
+				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+				Kinds: []Statute{
+					BreachRepoMissingCommand,
+					BreachRepoMissingTicketTracking,
+				},
+			},
+		},
+		Run: repoPolicy,
+	},
+	{
+		ID:          "system",
+		Name:        "System",
+		Description: "Validates system configuration files like devcontainer and editor settings",
+		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Devcontainer",
+				Description: "Devcontainer configuration breachs",
+				Groups: []Territory{
+					{
+						Name:        "VSCode",
+						Description: "VSCode settings and extensions must be inside devcontainer.json",
+						Kinds: []Statute{
+							BreachSystemDevcontainerVscodeSettingsOutside,
+							BreachSystemDevcontainerVscodeExtensionsOutside,
+						},
+					},
+				},
+			},
+		},
+		Run: systemPolicy,
+	},
+	{
+		ID:          "folder",
+		Name:        "Folder",
+		Description: "Validates folder structure and detects illegal empty folders",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityLow,
+		Groups: []Territory{
+			{
+				Name:        "Illegal",
+				Description: "Illegal folder breachs",
+				Groups: []Territory{
+					{
+						Name:        "Empty",
+						Description: "Empty folders that should be removed",
+						Kinds: []Statute{
+							BreachFolderIllegalEmpty,
+						},
+					},
+				},
+			},
+		},
+		Run: folderPolicy,
+	},
+	{
+		ID:          "file",
+		Name:        "File",
+		Description: "Validates file existence against the godfile allowlist",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Illegal",
+				Description: "Illegal file breachs",
+				Groups: []Territory{
+					{
+						Name:        "Use Godfile",
+						Description: "Files not listed in .repo/files.json godfile",
+						Kinds: []Statute{
+							BreachFileIllegalUseGodfile,
+						},
+					},
+				},
+			},
+		},
+		Run: filePolicy,
+	},
+	{
+		ID:          "semio",
+		Name:        "Semio",
+		Description: "Validates that semio.* files are self-contained and do not import UI dependencies",
+		Scopes:      []string{"**/*.{ts,tsx}"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Import restriction breachs",
+				Groups: []Territory{
+					{
+						Name:        "No Ui Dependency",
+						Description: "semio.* files must not import from UI dependencies",
+						Kinds: []Statute{
+							BreachSemioNoUiDependency,
+						},
+					},
+				},
+			},
+		},
+		Run: semioPolicy,
+	},
+	{
+		ID:          "dependency-boundary",
+		Name:        "Dependency Boundary",
+		Description: "Third-party libraries must only be imported behind adapter boundaries",
+		Scopes:      []string{"**/*"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Direct third-party import breachs",
+				Scopes:      []string{"**/*"},
+				Kinds: []Statute{
+					BreachDependencyBoundaryDirectImport,
+				},
+			},
+		},
+		Run: dependencyBoundaryPolicy,
+	},
+}
 
-// 🎯FindPolicy MUST return nil when no match is found.
-// 🔎FindPolicy searches for and returns the matching policy.
+// ­ƒÄ»FindPolicy MUST return nil when no match is found.
+// ­ƒöÄFindPolicy searches for and returns the matching policy.
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -18007,14 +18177,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 	return PolicyDef{}, false
 }
 
-// 🏪GetPolicies MUST return the stored value without modification.
-// 📦GetPolicies returns the policies of the value.
+// ­ƒÅ¬GetPolicies MUST return the stored value without modification.
+// ­ƒôªGetPolicies returns the policies of the value.
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
-// 📪StreamPolicies MUST emit all matching entries and close the channel when done.
-// 🔍StreamPolicies streams the policies over a channel with optional filtering.
+// ­ƒô¬StreamPolicies MUST emit all matching entries and close the channel when done.
+// ­ƒöìStreamPolicies streams the policies over a channel with optional filtering.
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -18063,7 +18233,7 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 	return nil
 }
 
-// 📝PolicyContext holds the data fields for a policy context record.
+// ­ƒôØPolicyContext holds the data fields for a policy context record.
 type PolicyContext struct {
 	Scope              Scope
 	RootDir            string
@@ -18077,8 +18247,8 @@ type PolicyContext struct {
 	filesOverride      []string
 }
 
-// 🔷NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
-// 🆕NewPolicyContext creates and returns a new PolicyContext instance.
+// ­ƒöÀNewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
+// ­ƒåòNewPolicyContext creates and returns a new PolicyContext instance.
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -18090,15 +18260,15 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	}
 }
 
-// 📄NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
-// 📄NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
+// ­ƒôäNewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
+// ­ƒôäNewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
 	return ctx
 }
 
-// 📥Files MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôÑFiles MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
@@ -18111,8 +18281,8 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 	return files, nil
 }
 
-// 🛤️ReadText MUST return the full content from the given path.
-// 🔤ReadText reads and returns the text content.
+// ­ƒøñ´©ÅReadText MUST return the full content from the given path.
+// ­ƒöñReadText reads and returns the text content.
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -18130,7 +18300,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	return content
 }
 
-// 📑Sections MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôæSections MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -18144,8 +18314,8 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 	return sections
 }
 
-// ❌ParseIgnoreDirectives MUST return an error when the input is malformed.
-// 💾ParseIgnoreDirectives parses the input and returns the ignore directives result.
+// ÔØîParseIgnoreDirectives MUST return an error when the input is malformed.
+// ­ƒÆ¥ParseIgnoreDirectives parses the input and returns the ignore directives result.
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -18167,7 +18337,7 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 	return result
 }
 
-// 🔶IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒöÂIgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -18178,8 +18348,8 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	return ignores
 }
 
-// 🔹IsIgnored MUST return true only when the condition is met.
-// ❓IsIgnored reports whether the PolicyContext is ignored.
+// ­ƒö╣IsIgnored MUST return true only when the condition is met.
+// ÔØôIsIgnored reports whether the PolicyContext is ignored.
 func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statute) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -18198,8 +18368,8 @@ func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statut
 	return false
 }
 
-// 🆕CreateBreach MUST persist the new entity and return a reference to it.
-// ⚠️CreateBreach creates a new breach and persists it.
+// ­ƒåòCreateBreach MUST persist the new entity and return a reference to it.
+// ÔÜá´©ÅCreateBreach creates a new breach and persists it.
 func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope string, line int, col int, excerpt string) Breach {
 	return Breach{
 		ID:      buildBreachID(scope, line, col),
@@ -18212,7 +18382,7 @@ func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope strin
 	}
 }
 
-// 🧲extractFileFromScope holds the data fields for a extractFileFromScope record.
+// ­ƒº▓extractFileFromScope holds the data fields for a extractFileFromScope record.
 func extractFileFromScope(scope string) string {
 
 	if idx := strings.Index(scope, "#"); idx != -1 {
@@ -18225,8 +18395,8 @@ func extractFileFromScope(scope string) string {
 	return scope
 }
 
-// 🧹FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
-// 🔷FilterIgnored filters the ignored based on the given criteria.
+// ­ƒº╣FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
+// ­ƒöÀFilterIgnored filters the ignored based on the given criteria.
 func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	var result []Breach
 	for _, v := range breachs {
@@ -18238,18 +18408,18 @@ func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	return result
 }
 
-// 🧩specKeywordPattern holds the data fields for a specKeywordPattern record.
+// ­ƒº®specKeywordPattern holds the data fields for a specKeywordPattern record.
 var specKeywordPattern = regexp.MustCompile(`\b(MUST(\s+NOT)?|SHOULD(\s+NOT)?|SHALL(\s+NOT)?|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b`)
 
-// 🔸isSpecText holds the data fields for a isSpecText record.
+// ­ƒö©isSpecText holds the data fields for a isSpecText record.
 func isSpecText(text string) bool {
 	return specKeywordPattern.MatchString(text)
 }
 
-// 📐specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
+// ­ƒôÉspecImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
 var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
 
-// ⚡specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
+// ÔÜíspecImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
 var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
 
 func hasImplementationSyntax(text string) (bool, string) {
@@ -18265,7 +18435,7 @@ func hasImplementationSyntax(text string) (bool, string) {
 	return false, ""
 }
 
-// 🔺SpecLines MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒö║SpecLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -18325,14 +18495,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🔻IsSpecLine MUST return true only when the condition is met.
-// 🐙IsSpecLine reports whether the PolicyContext is spec line.
+// ­ƒö╗IsSpecLine MUST return true only when the condition is met.
+// ­ƒÉÖIsSpecLine reports whether the PolicyContext is spec line.
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
-// ⬛IsSpecBlock MUST return true only when the condition is met.
-// 🔒IsSpecBlock reports whether the PolicyContext is spec block.
+// Ô¼øIsSpecBlock MUST return true only when the condition is met.
+// ­ƒöÆIsSpecBlock reports whether the PolicyContext is spec block.
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -18342,7 +18512,7 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 	return false
 }
 
-// ⬜SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// Ô¼£SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -18420,13 +18590,13 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🟥IsSectionDocLine MUST return true only when the condition is met.
-// 🔹IsSectionDocLine reports whether the PolicyContext is section doc line.
+// ­ƒƒÑIsSectionDocLine MUST return true only when the condition is met.
+// ­ƒö╣IsSectionDocLine reports whether the PolicyContext is section doc line.
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
-// 📖DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// ­ƒôûDefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	if ctx.definitionDocCache == nil {
 		ctx.definitionDocCache = make(map[string]map[int]bool)
@@ -18539,8 +18709,8 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// 🟧IsDefinitionDocLine MUST return true only when the condition is met.
-// ▶️IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
+// ­ƒƒºIsDefinitionDocLine MUST return true only when the condition is met.
+// ÔûÂ´©ÅIsDefinitionDocLine reports whether the PolicyContext is definition doc line.
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
@@ -18554,14 +18724,1826 @@ func randomString(n int) string {
 	return string(b)
 }
 
-// ✔️CheckPolicies is a legacy no-op; breachs come from lint scripts and `.repo/cache/breaches`.
+// Ô£ö´©ÅCheckPolicies MUST run all applicable policies and aggregate breachs.
+// Ô£ö´©ÅCheckPolicies validates the policies and returns any breachs.
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach, error) {
-	return nil, nil
+	ctx := NewPolicyContext(scope, bundles)
+	return CheckPoliciesWithContext(ctx, policyIDs)
 }
 
-// 🟨CheckPoliciesWithContext is a legacy no-op; breachs come from lint scripts and `.repo/cache/breaches`.
+// ­ƒƒ¿CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
+// ­ƒöæCheckPoliciesWithContext validates the policies with context and returns any breachs.
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
-	return nil, nil
+	var breachs []Breach
+	var policiesToRun []PolicyDef
+	if len(policyIDs) > 0 {
+		for _, p := range policies {
+			for _, id := range policyIDs {
+				if p.ID == id {
+					policiesToRun = append(policiesToRun, p)
+					break
+				}
+			}
+		}
+	} else {
+		for _, p := range policies {
+			if matchesScope(p.Scopes, ctx.Scope) {
+				policiesToRun = append(policiesToRun, p)
+			}
+		}
+	}
+	for _, policy := range policiesToRun {
+		policyBreachs := policy.Run(ctx)
+		breachs = append(breachs, policyBreachs...)
+	}
+	return breachs, nil
+}
+
+// ­ƒö¡matchesScope holds the data fields for a matchesScope record.
+func matchesScope(policyScopes []string, targetScope Scope) bool {
+	for _, pattern := range policyScopes {
+		if pattern == "*" || pattern == "**/*" {
+			return true
+		}
+		if strings.HasPrefix(pattern, "semio") {
+			if targetScope.Kind == ScopeRepo || (targetScope.Kind == ScopeTechnology && strings.HasPrefix(targetScope.TechnologyName, pattern)) {
+				return true
+			}
+		}
+		if targetScope.Kind == ScopeRepo && strings.HasPrefix(pattern, "**/*.") {
+			return true
+		}
+		if targetScope.FilePath != "" {
+			normalizedTarget := NormalizePath(targetScope.FilePath)
+			normalizedPattern := NormalizePath(pattern)
+			if matched, _ := doublestar.Match(normalizedPattern, normalizedTarget); matched {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ­ƒƒ®headerPolicy holds the data fields for a headerPolicy record.
+func headerPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	agplMarkers := []string{"GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsHeaders() {
+			continue
+		}
+		sections := ctx.Sections(file)
+		var headerSection *Section
+		for i := range sections {
+			if strings.ToLower(sections[i].Name) == "header" {
+				headerSection = &sections[i]
+				break
+			}
+		}
+		if headerSection == nil {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing header region in %s", file),
+				BreachCodeFileMissingHeaderRegion,
+				file, 0, 0, ""))
+			continue
+		}
+		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
+		headerLines := strings.Split(headerContent, "\n")
+		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
+		hasContributors := false
+		for _, line := range headerLines {
+			if contributorPattern.MatchString(line) {
+				hasContributors = true
+				break
+			}
+		}
+		if !hasContributors {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing contributors in header of %s", file),
+				BreachCodeFileMissingContributors,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		}
+		hasLicense := false
+		for _, marker := range agplMarkers {
+			if strings.Contains(headerContent, marker) {
+				hasLicense = true
+				break
+			}
+		}
+		if !hasLicense {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing license in header of %s", file),
+				BreachCodeFileMissingLicense,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		} else {
+			wrongLicenses := []string{"MIT", "Apache", "BSD"}
+			hasWrongLicense := false
+			for _, wrong := range wrongLicenses {
+				if strings.Contains(headerContent, wrong) {
+					hasWrongLicense = true
+					break
+				}
+			}
+			if strings.Contains(headerContent, "GPL") && !strings.Contains(headerContent, "AGPL") && !strings.Contains(headerContent, "LGPL") {
+				hasWrongLicense = true
+			}
+			if hasWrongLicense {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Wrong license in header of %s", file),
+					BreachCodeFileWrongLicense,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+			}
+		}
+		commentPrefix := language.CommentPrefix()
+		hasSummary := false
+		seenLicense := false
+		licenseEnd := false
+		for _, line := range headerLines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
+				continue
+			}
+			if strings.HasPrefix(trimmed, commentPrefix+" #region") || strings.HasPrefix(trimmed, commentPrefix+" #endregion") {
+				continue
+			}
+			if !strings.HasPrefix(trimmed, commentPrefix) {
+				continue
+			}
+			commentText := strings.TrimSpace(strings.TrimPrefix(trimmed, commentPrefix))
+			if commentText == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
+				continue
+			}
+
+			if contributorPattern.MatchString(line) {
+				continue
+			}
+			isLicenseLine := false
+			for _, marker := range agplMarkers {
+				if strings.Contains(line, marker) {
+					seenLicense = true
+					isLicenseLine = true
+					break
+				}
+			}
+			if isLicenseLine {
+				continue
+			}
+			if !licenseEnd && seenLicense && (strings.Contains(commentText, "without") || strings.Contains(commentText, "program") || strings.Contains(commentText, "License") || strings.Contains(commentText, "http") || strings.Contains(commentText, "version") || strings.Contains(commentText, "terms") || strings.Contains(commentText, "WARRANTY") || strings.Contains(commentText, "PURPOSE") || strings.Contains(commentText, "General Public") || strings.Contains(commentText, "redistribute") || strings.Contains(commentText, "published") || strings.Contains(commentText, "Foundation") || strings.Contains(commentText, "received")) {
+				continue
+			}
+			if isSpecText(commentText) {
+				continue
+			}
+			if strings.HasPrefix(commentText, "TODO:") {
+				continue
+			}
+			hasSummary = true
+			break
+		}
+		if !hasSummary && !isTestOrBenchmarkFile(file) {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Missing summary in header of %s", file),
+				BreachCodeFileMissingSummary,
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒº¬isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
+func isTestOrBenchmarkFile(file string) bool {
+	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
+		return true
+	}
+	lowerPath := strings.ToLower(file)
+	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
+}
+
+// ­ƒôñisExportedDefinition holds the data fields for a isExportedDefinition record.
+func isExportedDefinition(name string, line string, langName string) bool {
+	return true
+}
+
+// ­ƒƒªrequiresDefinitionRequirements holds the data fields for a requiresDefinitionRequirements record.
+func requiresDefinitionRequirements(line string, langName string) bool {
+	trimmed := strings.TrimSpace(line)
+	switch langName {
+	case "typescript":
+		noExport := strings.TrimPrefix(trimmed, "export ")
+		noExport = strings.TrimLeft(noExport, "async abstract declare default ")
+		return strings.HasPrefix(noExport, "function ") || strings.HasPrefix(noExport, "class ")
+	case "go":
+		return strings.HasPrefix(trimmed, "func ")
+	case "python":
+		return strings.HasPrefix(trimmed, "def ") || strings.HasPrefix(trimmed, "class ") || strings.HasPrefix(trimmed, "async def ")
+	case "csharp":
+		return !strings.Contains(trimmed, " interface ") && !strings.Contains(trimmed, " enum ")
+	case "rust":
+		noPrefix := strings.TrimPrefix(trimmed, "pub ")
+		if strings.HasPrefix(noPrefix, "(") {
+			idx := strings.Index(noPrefix, ") ")
+			if idx >= 0 {
+				noPrefix = strings.TrimSpace(noPrefix[idx+2:])
+			}
+		}
+		return strings.HasPrefix(noPrefix, "fn ") || strings.HasPrefix(noPrefix, "struct ") || strings.HasPrefix(noPrefix, "impl ") || strings.HasPrefix(noPrefix, "trait ")
+	}
+	return true
+}
+
+// ­ƒƒ¬sectionPolicy holds the data fields for a sectionPolicy record.
+func sectionPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsSections() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		type stackItem struct {
+			name string
+			line int
+		}
+		var stack []stackItem
+		for i, line := range lines {
+			lineNum := i + 1
+			line = strings.TrimSuffix(line, "\r")
+			if matched, name := language.PolicySectionStartMatch(line); matched {
+				if name == "" {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
+						BreachCodeSectionMissingStartName,
+						file, lineNum, 0, strings.TrimSpace(line)))
+				}
+				stack = append(stack, stackItem{name: name, line: lineNum})
+				continue
+			}
+			if matched, endName := language.PolicySectionEndMatch(line); matched {
+				if len(stack) > 0 {
+					open := stack[len(stack)-1]
+					stack = stack[:len(stack)-1]
+					if open.name != "" {
+						if endName == "" {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
+								BreachCodeSectionMissingEndName,
+								file, lineNum, 0, strings.TrimSpace(line)))
+						} else if endName != open.name {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
+								BreachCodeSectionNameMismatch,
+								file, lineNum, 0, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
+						}
+					}
+				}
+			}
+		}
+		sections := ctx.Sections(file)
+		commentPrefix := language.CommentPrefix()
+		var checkSection func(s Section, parentPath string)
+		checkSection = func(s Section, parentPath string) {
+			sectionPath := s.Name
+			if parentPath != "" {
+				sectionPath = parentPath + "#" + s.Name
+			}
+			sectionContent := content[s.StartIndex:s.EndIndex]
+			sectionLines := strings.Split(sectionContent, "\n")
+			nonEmpty := 0
+			for _, line := range sectionLines[1 : len(sectionLines)-1] {
+				trimmed := strings.TrimSpace(line)
+				if trimmed != "" && !strings.HasPrefix(trimmed, "//") && !strings.HasPrefix(trimmed, "#") {
+					nonEmpty++
+				}
+			}
+			isExempt := s.Name == "Header"
+			if nonEmpty == 0 && len(s.Children) == 0 && !isExempt {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
+					BreachCodeSectionEmpty,
+					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine, 0, ""))
+			}
+			if s.StartLine < len(lines) && strings.TrimSpace(lines[s.StartLine]) == "" {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Blank line after region start marker in section \"%s\" in %s:%d", s.Name, file, s.StartLine+1),
+					BreachCodeSectionWrongFormatNewlineAfterRegion,
+					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine+1, 0, ""))
+			}
+			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
+				hasSummary := false
+				for i := 1; i < len(sectionLines)-1; i++ {
+					line := strings.TrimSpace(sectionLines[i])
+					if line == "" {
+						continue
+					}
+					if matched, _ := language.PolicySectionStartMatch(line); matched {
+						break
+					}
+					if matched, _ := language.PolicySectionEndMatch(line); matched {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					hasSummary = true
+				}
+				if !hasSummary {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Section \"%s\" is missing a summary comment in %s", s.Name, file),
+						BreachCodeSectionMissingSummary,
+						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
+				}
+			}
+			for _, child := range s.Children {
+				checkSection(child, sectionPath)
+			}
+		}
+		for _, s := range sections {
+			checkSection(s, "")
+		}
+		covered := make([]bool, len(lines))
+		var markCovered func(s Section)
+		markCovered = func(s Section) {
+			start := s.StartLine
+			if start < 1 {
+				start = 1
+			}
+			end := s.EndLine
+			if end < start {
+				end = start
+			}
+			if end > len(lines) {
+				end = len(lines)
+			}
+			for lineIndex := start; lineIndex <= end; lineIndex++ {
+				covered[lineIndex-1] = true
+			}
+			for _, child := range s.Children {
+				markCovered(child)
+			}
+		}
+		for _, s := range sections {
+			markCovered(s)
+		}
+		type lineRange struct {
+			start int
+			end   int
+		}
+		type defRange struct {
+			name  string
+			kind  string
+			start int
+			end   int
+		}
+		type orphanRangeInfo struct {
+			start          int
+			end            int
+			firstLine      string
+			isCommentBlock bool
+		}
+		orphanLines := make([]bool, len(lines))
+		for i, line := range lines {
+			if covered[i] {
+				continue
+			}
+			line = strings.TrimSuffix(line, "\r")
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
+				continue
+			}
+			if startMatched, _ := language.PolicySectionStartMatch(line); startMatched {
+				continue
+			}
+			if endMatched, _ := language.PolicySectionEndMatch(line); endMatched {
+				continue
+			}
+			orphanLines[i] = true
+		}
+		var orphanRanges []lineRange
+		inOrphan := false
+		startLine := 0
+		for i := 0; i < len(orphanLines); i++ {
+			if orphanLines[i] {
+				if !inOrphan {
+					inOrphan = true
+					startLine = i + 1
+				}
+			} else if inOrphan {
+				orphanRanges = append(orphanRanges, lineRange{start: startLine, end: i})
+				inOrphan = false
+			}
+		}
+		if inOrphan {
+			orphanRanges = append(orphanRanges, lineRange{start: startLine, end: len(lines)})
+		}
+		var defRanges []defRange
+		var realDefRanges []defRange
+		defExcerpts := make(map[string]string)
+		if language.SupportsDefinitions() {
+			parsedDefs := language.ParseDefinitions(content, lines)
+			for _, def := range parsedDefs {
+				defRanges = append(defRanges, defRange{name: def.Name, kind: def.Kind, start: def.Start, end: def.End})
+				realDefRanges = append(realDefRanges, defRange{name: def.Name, kind: def.Kind, start: def.Start, end: def.End})
+				defExcerpts[def.Name] = def.Excerpt
+			}
+		}
+		extraDefs := language.ExtraOrphanDefinitions(lines)
+		for _, def := range extraDefs {
+			defRanges = append(defRanges, defRange{name: def.Name, start: def.Start, end: def.End})
+			defExcerpts[def.Name] = def.Excerpt
+		}
+		var orphanInfos []orphanRangeInfo
+		for _, orphanRange := range orphanRanges {
+			firstLine := ""
+			isCommentBlock := true
+			for lineIndex := orphanRange.start; lineIndex <= orphanRange.end; lineIndex++ {
+				line := strings.TrimSuffix(lines[lineIndex-1], "\r")
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				if firstLine == "" {
+					firstLine = strings.TrimSpace(line)
+				}
+				if !strings.HasPrefix(strings.TrimSpace(line), commentPrefix) {
+					isCommentBlock = false
+				}
+			}
+			orphanInfos = append(orphanInfos, orphanRangeInfo{
+				start:          orphanRange.start,
+				end:            orphanRange.end,
+				firstLine:      firstLine,
+				isCommentBlock: isCommentBlock,
+			})
+			if isCommentBlock {
+				name := fmt.Sprintf("comment-block-%d", orphanRange.start)
+				defRanges = append(defRanges, defRange{name: name, start: orphanRange.start, end: orphanRange.end})
+				defExcerpts[name] = firstLine
+			}
+		}
+		reportedDefs := make(map[string]bool)
+		skipOrphans := isTestOrBenchmarkFile(file)
+		for _, orphanRange := range orphanInfos {
+			if skipOrphans {
+				continue
+			}
+			matched := false
+			for _, defRange := range defRanges {
+				if orphanRange.start <= defRange.end && orphanRange.end >= defRange.start {
+					if !reportedDefs[defRange.name] {
+						reportedDefs[defRange.name] = true
+						excerpt := defRange.name
+						if value, ok := defExcerpts[defRange.name]; ok && value != "" {
+							excerpt = value
+						}
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Orphan definition outside sections at %s:%d", file, defRange.start),
+							BreachCodeSectionOrphanDefinition,
+							fmt.Sprintf("%s::%s", file, defRange.name),
+							defRange.start, 0,
+							excerpt))
+					}
+					matched = true
+				}
+			}
+			if matched {
+				continue
+			}
+			name := fmt.Sprintf("orphan-block-%d", orphanRange.start)
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
+				BreachCodeSectionOrphanDefinition,
+				fmt.Sprintf("%s::%s", file, name),
+				orphanRange.start, 0,
+				orphanRange.firstLine))
+		}
+		var findSectionPathForLine func(secs []Section, lineNum int) string
+		findSectionPathForLine = func(secs []Section, lineNum int) string {
+			for _, s := range secs {
+				if lineNum < s.StartLine || lineNum > s.EndLine {
+					continue
+				}
+				childPath := findSectionPathForLine(s.Children, lineNum)
+				if childPath != "" {
+					return s.Name + "#" + childPath
+				}
+				return s.Name
+			}
+			return ""
+		}
+		for _, def := range realDefRanges {
+			isTestFile := isTestOrBenchmarkFile(file)
+			if isTestFile {
+				break
+			}
+			defLine := ""
+			if def.start-1 >= 0 && def.start-1 < len(lines) {
+				defLine = lines[def.start-1]
+			}
+			if !isExportedDefinition(def.name, defLine, language.Name()) {
+				continue
+			}
+			hasSummary := false
+			hasRequirements := false
+			isNativeDocstring := false
+			langName := language.Name()
+			if langName == "typescript" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 {
+					prevLine := strings.TrimSpace(lines[prevIdx])
+					if strings.HasSuffix(prevLine, "**/") || strings.HasSuffix(prevLine, "*/") {
+						isNativeDocstring = true
+						for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+							sline := strings.TrimSpace(lines[scanIdx])
+							isOpenLine := strings.HasPrefix(sline, "/**")
+							content := sline
+							if isOpenLine {
+								content = strings.TrimPrefix(content, "/**")
+							} else if strings.HasPrefix(content, "* ") {
+								content = content[2:]
+							} else if content == "*" || content == "*/" || content == "**/" {
+								if isOpenLine {
+									break
+								}
+								continue
+							}
+							content = strings.TrimSpace(content)
+							if strings.HasSuffix(content, "**/") || strings.HasSuffix(content, "*/") {
+								content = strings.TrimSpace(strings.TrimSuffix(strings.TrimSuffix(content, "**/"), "*/"))
+							}
+							if content == "" {
+								if isOpenLine {
+									break
+								}
+								continue
+							}
+							if strings.HasPrefix(content, "* ") {
+								content = strings.TrimSpace(content[2:])
+							}
+							if isSpecText(content) {
+								hasRequirements = true
+							} else {
+								hasSummary = true
+							}
+							if isOpenLine {
+								break
+							}
+						}
+					}
+				}
+			}
+			if langName == "csharp" || langName == "rust" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 && strings.HasPrefix(strings.TrimSpace(lines[prevIdx]), "///") {
+					isNativeDocstring = true
+					for lineIndex := prevIdx; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if !strings.HasPrefix(line, "///") {
+							break
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, "///"))
+						if commentText == "" {
+							continue
+						}
+						commentText = strings.TrimPrefix(commentText, "<summary>")
+						commentText = strings.TrimSuffix(commentText, "</summary>")
+						commentText = strings.TrimSpace(commentText)
+						if commentText == "<remarks>" || commentText == "</remarks>" || commentText == "" {
+							continue
+						}
+						if isSpecText(commentText) {
+							hasRequirements = true
+						} else {
+							hasSummary = true
+						}
+					}
+				}
+			}
+			if !isNativeDocstring && langName == "python" {
+				defLineRaw := lines[def.start-1]
+				parenDepth := 0
+				for _, ch := range defLineRaw {
+					if ch == '(' {
+						parenDepth++
+					}
+					if ch == ')' {
+						parenDepth--
+					}
+				}
+				bodyStart := def.start
+				if parenDepth > 0 {
+					for scanIdx := def.start; scanIdx < len(lines) && scanIdx < def.start+15; scanIdx++ {
+						for _, ch := range lines[scanIdx] {
+							if ch == '(' {
+								parenDepth++
+							}
+							if ch == ')' {
+								parenDepth--
+							}
+						}
+						if parenDepth <= 0 {
+							bodyStart = scanIdx + 1
+							break
+						}
+					}
+				}
+				for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+					trimmed := strings.TrimSpace(lines[bodyIdx])
+					if trimmed == "" {
+						continue
+					}
+					if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+						isNativeDocstring = true
+						quote := `"""`
+						if strings.HasPrefix(trimmed, `'''`) {
+							quote = `'''`
+						}
+						afterOpen := strings.TrimPrefix(trimmed, quote)
+						closeIdx := strings.Index(afterOpen, quote)
+						if closeIdx >= 0 {
+							content := strings.TrimSpace(afterOpen[:closeIdx])
+							if content != "" {
+								if isSpecText(content) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+						} else {
+							firstContent := strings.TrimSpace(afterOpen)
+							if firstContent != "" {
+								if isSpecText(firstContent) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+							for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+								sline := strings.TrimSpace(lines[scanIdx])
+								if sline == quote {
+									break
+								}
+								if strings.HasSuffix(sline, quote) {
+									content := strings.TrimSpace(strings.TrimSuffix(sline, quote))
+									if content != "" {
+										if isSpecText(content) {
+											hasRequirements = true
+										} else {
+											hasSummary = true
+										}
+									}
+									break
+								}
+								if sline == "" {
+									continue
+								}
+								if isSpecText(sline) {
+									hasRequirements = true
+								} else {
+									hasSummary = true
+								}
+							}
+						}
+					}
+					break
+				}
+			}
+			if langName == "python" && isNativeDocstring {
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText != "" {
+						isNativeDocstring = false
+						break
+					}
+				}
+			}
+			if !isNativeDocstring {
+				if langName == "go" {
+					isNativeDocstring = true
+				}
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					if isSpecText(commentText) {
+						hasRequirements = true
+					} else {
+						hasSummary = true
+					}
+				}
+			}
+			if !isNativeDocstring && (hasSummary || hasRequirements) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
+					BreachCodeDefNotNativeDocstring,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasSummary {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is missing a summary comment in %s:%d", def.name, file, def.start),
+					BreachCodeDefMissingSummary,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasRequirements && requiresDefinitionRequirements(defLine, language.Name()) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
+					BreachCodeDefMissingRequirements,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒôïCommentTemplateState holds the data fields for a comment template state record.
+type CommentTemplateState struct {
+	ExprDepth int
+}
+
+// ­ƒÆ¼CommentScanState holds the data fields for a comment scan state record.
+type CommentScanState struct {
+	InBlockComment          bool
+	BlockCommentStartLine   int
+	BlockCommentStartIndex  int
+	BlockCommentStartColumn int
+	BlockCommentIsJsDoc     bool
+	BlockCommentHasTodo     bool
+	InSingleQuote           bool
+	InDoubleQuote           bool
+	Templates               []CommentTemplateState
+	Escaped                 bool
+	InTodoBlock             bool
+	InRawBacktick           bool
+	InTripleDouble          bool
+	InTripleSingle          bool
+	InVerbatimString        bool
+}
+
+// ­ƒôíInTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
+func (state *CommentScanState) InTemplateRaw() bool {
+	if len(state.Templates) == 0 {
+		return false
+	}
+	return state.Templates[len(state.Templates)-1].ExprDepth == 0
+}
+
+// ­ƒƒ½commentPolicy holds the data fields for a commentPolicy record.
+func commentPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsComments() {
+			continue
+		}
+
+		lines := strings.Split(content, "\n")
+		langBreachs := language.ScanComments(ctx, file, content, lines)
+		breachs = append(breachs, langBreachs...)
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒÆátruncate holds the data fields for a truncate record.
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen]
+}
+
+// ­ƒö│requirementsPolicy holds the data fields for a requirementsPolicy record.
+func requirementsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsHeaders() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		sections := ctx.Sections(file)
+		prefix := language.CommentPrefix()
+		var headerSection *Section
+		for i := range sections {
+			if strings.ToLower(sections[i].Name) == "header" {
+				headerSection = &sections[i]
+				break
+			}
+		}
+		if headerSection != nil {
+			requirementsChildFound := false
+			for _, child := range headerSection.Children {
+				if strings.ToLower(child.Name) == "requirements" {
+					requirementsChildFound = true
+					for i := child.StartLine + 1; i < child.EndLine && i <= len(lines); i++ {
+						line := strings.TrimSpace(lines[i-1])
+						if line == "" {
+							continue
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+						if commentText == "" {
+							continue
+						}
+						if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+							breachs = append(breachs, ctx.CreateBreach(
+								fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+								BreachCodeRequirementsSyntax,
+								fmt.Sprintf("%s#Header/Requirements", file), i, 0, commentText))
+						}
+					}
+					break
+				}
+			}
+			if !requirementsChildFound {
+				for i := headerSection.StartLine + 1; i < headerSection.EndLine && i <= len(lines); i++ {
+					line := strings.TrimSpace(lines[i-1])
+					if line == "" {
+						continue
+					}
+					if !strings.HasPrefix(line, prefix) {
+						continue
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+					if commentText == "" {
+						continue
+					}
+					if !isSpecText(commentText) {
+						continue
+					}
+					if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+							BreachCodeRequirementsSyntax,
+							fmt.Sprintf("%s#Header", file), i, 0, commentText))
+					}
+				}
+			}
+		}
+		var checkSectionRequirements func(s Section)
+		checkSectionRequirements = func(s Section) {
+			if strings.ToLower(s.Name) == "header" {
+				return
+			}
+			for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
+				line := strings.TrimSpace(lines[i-1])
+				if line == "" {
+					continue
+				}
+				if !strings.HasPrefix(line, prefix) {
+					break
+				}
+				commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+				if !isSpecText(commentText) {
+					break
+				}
+				if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+						BreachCodeRequirementsSyntax,
+						fmt.Sprintf("%s#%s", file, s.Name), i, 0, commentText))
+				}
+			}
+			for _, child := range s.Children {
+				checkSectionRequirements(child)
+			}
+		}
+		for _, s := range sections {
+			checkSectionRequirements(s)
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒö▓codePolicy holds the data fields for a codePolicy record.
+func codePolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	breachs = append(breachs, headerPolicy(ctx)...)
+	breachs = append(breachs, sectionPolicy(ctx)...)
+	breachs = append(breachs, commentPolicy(ctx)...)
+	breachs = append(breachs, requirementsPolicy(ctx)...)
+	breachs = append(breachs, emojiPolicy(ctx)...)
+	breachs = append(breachs, docsPolicy(ctx)...)
+	return breachs
+}
+
+// ­ƒÿÇemojiPolicy holds the data fields for a emojiPolicy record.
+func emojiPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+
+	textDefaultEmojis := []string{
+		"\U0001F3D7",
+		"\u2328",
+		"\U0001F5B1",
+		"\U0001F5C3",
+		"\u2699",
+		"\u2696",
+		"\U0001F3F7",
+		"\U0001F6E0",
+		"\u2702",
+		"\U0001F6E1",
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		hasVS15 := strings.Contains(content, "\uFE0E")
+		hasMissingVS16 := false
+		for _, emoji := range textDefaultEmojis {
+			temp := strings.ReplaceAll(content, emoji+"\uFE0F", "")
+			if strings.Contains(temp, emoji) {
+				hasMissingVS16 = true
+				break
+			}
+		}
+
+		if hasVS15 || hasMissingVS16 {
+			lines := strings.Split(content, "\n")
+			for i, line := range lines {
+				lineHasVS15 := strings.Contains(line, "\uFE0E")
+				lineHasMissingVS16 := false
+				for _, emoji := range textDefaultEmojis {
+					temp := strings.ReplaceAll(line, emoji+"\uFE0F", "")
+					if strings.Contains(temp, emoji) {
+						lineHasMissingVS16 = true
+						break
+					}
+				}
+
+				if lineHasVS15 || lineHasMissingVS16 {
+					breachs = append(breachs, ctx.CreateBreach(
+						"Emoji must use colorful variation (VS16) and avoid text variation (VS15)",
+						BreachCodeUnicodeEmojiVariation,
+						file, i+1, 0, strings.TrimSpace(line)))
+				}
+			}
+		}
+	}
+	return breachs
+}
+
+// Ôû¬´©ÅdocsPolicy holds the data fields for a docsPolicy record.
+func docsPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind == ScopeFile || ctx.Scope.Kind == ScopeSection || ctx.Scope.Kind == ScopeDefinition {
+		return nil
+	}
+	var breachs []Breach
+	checked := make(map[string]bool)
+	for _, bundle := range ctx.Bundles {
+		bundleRoot := bundle.Root
+		if checked[bundleRoot] {
+			continue
+		}
+		checked[bundleRoot] = true
+		readmePath := filepath.Join(bundleRoot, "README.md")
+		absPath := filepath.Join(ctx.RootDir, readmePath)
+		if _, err := os.Stat(absPath); os.IsNotExist(err) {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # ­ƒÆ»Requirements sections", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+			continue
+		}
+		content := ctx.ReadText(readmePath)
+		if !strings.Contains(content, "# Summary") {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q README.md is missing # Summary section", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+		}
+		if !strings.Contains(content, "# ­ƒÆ»Requirements") {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Bundle %q README.md is missing # ­ƒÆ»Requirements section", bundle.Name),
+				BreachCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+		}
+	}
+	return breachs
+}
+
+// Ôû½´©ÅdevDocsPolicy holds the data fields for a devDocsPolicy record.
+func devDocsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	agentsContent := ctx.ReadText("AGENTS.md")
+	if agentsContent == "" {
+		return breachs
+	}
+	codebaseStart := strings.Index(agentsContent, "\n# Codebase")
+	if codebaseStart == -1 {
+		return breachs
+	}
+	codebaseContent := agentsContent[codebaseStart:]
+	nextH1 := strings.Index(codebaseContent[1:], "\n# ")
+	if nextH1 != -1 {
+		codebaseContent = codebaseContent[:nextH1+1]
+	}
+	fileSectionRegex := regexp.MustCompile(`(?m)^## ­ƒôä\s*(.+?)\s*$`)
+	folderSectionRegex := regexp.MustCompile(`(?m)^## ­ƒôü\s*(.+?)\s*$`)
+	fileMatches := fileSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	folderMatches := folderSectionRegex.FindAllStringSubmatchIndex(codebaseContent, -1)
+	var fileSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	var folderSections []struct {
+		path string
+		line int
+		pos  int
+	}
+	for _, match := range fileMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		fileSections = append(fileSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for _, match := range folderMatches {
+		path := codebaseContent[match[2]:match[3]]
+		lineNum := strings.Count(agentsContent[:codebaseStart+match[0]], "\n") + 1
+		folderSections = append(folderSections, struct {
+			path string
+			line int
+			pos  int
+		}{path: path, line: lineNum, pos: match[0]})
+	}
+	for i := 0; i < len(fileSections)-1; i++ {
+		if fileSections[i].path > fileSections[i+1].path {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
+				BreachDevDocsWrongFileOrder,
+				"AGENTS.md", fileSections[i+1].line, 0, ""))
+		}
+	}
+	for i := 0; i < len(folderSections)-1; i++ {
+		if folderSections[i].path > folderSections[i+1].path {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
+				BreachDevDocsWrongFolderOrder,
+				"AGENTS.md", folderSections[i+1].line, 0, ""))
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù¥sketchpadPolicy holds the data fields for a sketchpadPolicy record.
+func sketchpadPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	elementsFile := ""
+	for _, file := range files {
+		if strings.HasSuffix(file, "elements.tsx") {
+			elementsFile = file
+			break
+		}
+	}
+	thirdPartyPackages := []string{
+		"react", "xstate", "@radix-client", "@dnd-kit", "zustand", "immer",
+		"framer-motion", "lucide-react", "clsx", "tailwind", "three", "@react-three",
+	}
+	createMachineCount := 0
+	for _, file := range files {
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		isElementsFile := file == elementsFile
+		sections := ctx.Sections(file)
+		isStateManagementSection := func(lineNum int) bool {
+			for _, section := range sections {
+				if strings.Contains(strings.ToLower(section.Name), "state management") ||
+					strings.Contains(strings.ToLower(section.Name), "state-management") {
+					if lineNum >= section.StartLine && lineNum <= section.EndLine {
+						return true
+					}
+				}
+			}
+			return false
+		}
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !isElementsFile && strings.Contains(line, "import ") {
+				for _, pkg := range thirdPartyPackages {
+					importPattern := fmt.Sprintf(`from\s+['"]%s`, regexp.QuoteMeta(pkg))
+					if matched, _ := regexp.MatchString(importPattern, line); matched {
+						breachs = append(breachs, ctx.CreateBreach(
+							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
+							BreachSketchpadImportThirdParty,
+							file, lineNumber, 0, strings.TrimSpace(line)))
+						break
+					}
+				}
+			}
+			if strings.Contains(line, "createMachine(") || strings.Contains(line, "createMachine<") {
+				createMachineCount++
+				if createMachineCount > 1 {
+					breachs = append(breachs, ctx.CreateBreach(
+						"createMachine can only be used once in sketchpad",
+						BreachSketchpadStateMultipleMachines,
+						file, lineNumber, 0, strings.TrimSpace(line)))
+				}
+			}
+			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
+				breachs = append(breachs, ctx.CreateBreach(
+					"createActor is forbidden in sketchpad",
+					BreachSketchpadStateCreateActor,
+					file, lineNumber, 0, strings.TrimSpace(line)))
+			}
+			storePatterns := []string{"create(", "createStore(", "useStore("}
+			for _, pattern := range storePatterns {
+				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
+					if strings.Contains(line, "zustand") || strings.Contains(line, "store") {
+						breachs = append(breachs, ctx.CreateBreach(
+							"Stores outside of State Management sections are forbidden",
+							BreachSketchpadStateForbiddenStore,
+							file, lineNumber, 0, strings.TrimSpace(line)))
+					}
+				}
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù¢repoPolicy holds the data fields for a repoPolicy record.
+func repoPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+
+	canonicalCommands := []string{
+		"tree",
+		"ticket_open", "ticket_close", "ticket_reopen",
+		"goal_open", "goal_close", "goal_reopen",
+		"draft_create", "draft_delete",
+		"section_create", "section_move", "section_delete", "integrate", "extract",
+		"fix",
+	}
+
+	mainGoPath := "go/repo/main.go"
+	mainContent := ctx.ReadText(mainGoPath)
+	if mainContent != "" {
+		for _, cmd := range canonicalCommands {
+
+			mcpPattern := fmt.Sprintf("mcp.NewTool(\"%s\"", cmd)
+			if !strings.Contains(mainContent, mcpPattern) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Missing MCP registration for %s in go/repo/main.go", cmd),
+					BreachRepoMissingCommand,
+					mainGoPath, 1, 0, cmd))
+			}
+		}
+
+		trackingTokens := []string{
+			"ToolTicketOpen",
+			"ToolTicketClose",
+		}
+
+		for _, token := range trackingTokens {
+			if !strings.Contains(mainContent, token) {
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Missing ticket tracking function %s in go/repo/main.go", token),
+					BreachRepoMissingTicketTracking,
+					mainGoPath, 1, 0, token))
+			}
+		}
+	} else {
+		breachs = append(breachs, ctx.CreateBreach(
+			"Could not read go/repo/main.go for parity check",
+			BreachRepoMissingCommand,
+			mainGoPath, 1, 0, ""))
+	}
+
+	return ctx.FilterIgnored(breachs)
+}
+
+// Ôù╗´©ÅsystemPolicy holds the data fields for a systemPolicy record.
+func systemPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	settingsPath := filepath.Join(ctx.RootDir, ".vscode", "settings.json")
+	if _, err := os.Stat(settingsPath); err == nil {
+		breachs = append(breachs, ctx.CreateBreach(
+			"VSCode settings.json must be inside .devcontainer/devcontainer.json customizations.vscode.settings",
+			BreachSystemDevcontainerVscodeSettingsOutside,
+			".vscode/settings.json", 1, 0, ""))
+	}
+	extensionsPath := filepath.Join(ctx.RootDir, ".vscode", "extensions.json")
+	if _, err := os.Stat(extensionsPath); err == nil {
+		breachs = append(breachs, ctx.CreateBreach(
+			"VSCode extensions.json must be inside .devcontainer/devcontainer.json customizations.vscode.extensions",
+			BreachSystemDevcontainerVscodeExtensionsOutside,
+			".vscode/extensions.json", 1, 0, ""))
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// ­ƒôüfolderPolicy holds the data fields for a folderPolicy record.
+func folderPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
+	excludePrefixes := []string{
+		".git/",
+		".repo/",
+		"node_modules/",
+		".venv/",
+		".nx/",
+	}
+
+	err := filepath.WalkDir(ctx.RootDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		relPath, _ := filepath.Rel(ctx.RootDir, path)
+		relPath = NormalizePath(relPath)
+		if relPath == "." {
+			return nil
+		}
+		for _, prefix := range excludePrefixes {
+			if strings.HasPrefix(relPath+"/", prefix) {
+				return filepath.SkipDir
+			}
+		}
+
+		if isIgnoredByGitignore(filepath.Join(ctx.RootDir, relPath)) {
+			return filepath.SkipDir
+		}
+
+		f, readErr := os.Open(path)
+		if readErr != nil {
+			return nil
+		}
+		defer f.Close()
+		_, readErr = f.Readdirnames(1)
+		if readErr == io.EOF {
+			breachs = append(breachs, ctx.CreateBreach(
+				"Empty folder \""+relPath+"\" must be removed",
+				BreachFolderIllegalEmpty,
+				relPath+"/", 0, 0, relPath))
+		}
+		return nil
+	})
+	_ = err
+	return breachs
+}
+
+// Ôù╝´©ÅGodfile holds the data fields for a Godfile record.
+type Godfile struct {
+	Exact map[string]bool
+	Globs []string
+}
+
+// ­ƒöÁisGlobPattern holds the data fields for a isGlobPattern record.
+func isGlobPattern(value string) bool {
+	return strings.ContainsAny(value, "*?[{")
+}
+
+// ­ƒö┤loadGodfile holds the data fields for a loadGodfile record.
+func loadGodfile() (*Godfile, error) {
+	godfilePath := filepath.Join(rootDir, ".repo", "files.json")
+	data, err := os.ReadFile(godfilePath)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+	if err := json.Unmarshal(data, &files); err != nil {
+		return nil, err
+	}
+	result := &Godfile{
+		Exact: make(map[string]bool, len(files)),
+	}
+	for _, f := range files {
+		normalized := NormalizePath(f)
+		if isGlobPattern(normalized) {
+			result.Globs = append(result.Globs, normalized)
+			continue
+		}
+		result.Exact[normalized] = true
+	}
+	return result, nil
+}
+
+// ­ƒƒágodfileMatchesPath holds the data fields for a godfileMatchesPath record.
+func godfileMatchesPath(godfile *Godfile, relPath string) bool {
+	relPath = normalizeRepoPath(relPath)
+	if godfile.Exact[relPath] {
+		return true
+	}
+	for _, pattern := range godfile.Globs {
+		matched, err := doublestar.Match(pattern, relPath)
+		if err != nil {
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
+}
+
+// ­ƒƒífilePolicy holds the data fields for a filePolicy record.
+func filePolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
+	godfile, err := loadGodfile()
+	if err != nil {
+		return breachs
+	}
+	_ = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if isRepoExcludedPath(path) || strings.HasPrefix(d.Name(), ".git") || d.Name() == "node_modules" || d.Name() == ".venv" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if isRepoExcludedPath(path) || isGitIgnored(path) {
+			return nil
+		}
+		relPath := normalizeRepoPath(path)
+		if !godfileMatchesPath(godfile, relPath) {
+			breachs = append(breachs, ctx.CreateBreach(
+				"File \""+relPath+"\" is not listed in .repo/files.json",
+				BreachFileIllegalUseGodfile,
+				relPath, 0, 0, relPath))
+		}
+		return nil
+	})
+	return breachs
+}
+
+// ­ƒƒósemioPolicy validates that semio.* files do not import UI dependencies.
+func semioPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	uiPackages := []string{
+		"clsx", "tailwind-merge", "tailwind", "tailwindcss",
+		"three", "@react-three",
+		"react", "react-dom",
+		"framer-motion", "lucide-react",
+		"@radix-ui", "@radix-client",
+		"@dnd-kit",
+		"zustand",
+		"elements/ui",
+	}
+	for _, file := range files {
+		baseName := filepath.Base(file)
+		if !strings.HasPrefix(baseName, "semio.") {
+			continue
+		}
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !strings.Contains(line, "import ") {
+				continue
+			}
+			for _, pkg := range uiPackages {
+				importPattern := fmt.Sprintf(`from\s+['"].*%s`, regexp.QuoteMeta(pkg))
+				if matched, _ := regexp.MatchString(importPattern, line); matched {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("UI dependency '%s' is not allowed in semio.* files", pkg),
+						BreachSemioNoUiDependency,
+						file, lineNumber, 0, strings.TrimSpace(line)))
+					break
+				}
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+// 🔌dependencyBoundaryPolicy flags third-party imports outside adapter boundaries.
+func dependencyBoundaryPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	for _, file := range files {
+		if dependencyBoundarySkipFile(file) {
+			continue
+		}
+		manifestDir, thirdParty := loadThirdPartyDepsForFile(file)
+		if len(thirdParty) == 0 {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		if dependencyBoundaryFileIsAdapter(file, content) {
+			continue
+		}
+		lang := GetLanguage(file)
+		if lang == nil {
+			continue
+		}
+		importLines, _ := lang.ExtractImports(content)
+		for lineIdx, impLine := range importLines {
+			lineNumber := dependencyBoundaryImportLineNumber(content, impLine, lineIdx+1)
+			for _, spec := range parseThirdPartyImportSpecs(impLine, file) {
+				if !dependencyBoundaryIsThirdParty(spec, thirdParty) {
+					continue
+				}
+				breachs = append(breachs, ctx.CreateBreach(
+					fmt.Sprintf("Direct import of third-party %q must live in an adapter module", spec),
+					BreachDependencyBoundaryDirectImport,
+					file, lineNumber, 0, strings.TrimSpace(impLine)))
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
+}
+
+func dependencyBoundarySkipFile(file string) bool {
+	n := NormalizePath(file)
+	if strings.Contains(n, "/node_modules/") || strings.Contains(n, "\\node_modules\\") {
+		return true
+	}
+	if strings.Contains(n, "/.repo/") || strings.Contains(n, "/dist/") || strings.Contains(n, "/target/") {
+		return true
+	}
+	if strings.Contains(n, "/pkg/") && (strings.HasSuffix(n, "_bg.js") || strings.HasSuffix(n, ".wasm")) {
+		return true
+	}
+	base := filepath.Base(n)
+	if strings.HasSuffix(base, ".gen.ts") {
+		return true
+	}
+	if strings.Contains(base, ".test.") || strings.HasSuffix(base, "_test.go") || strings.HasSuffix(base, "Tests.cs") {
+		return true
+	}
+	switch filepath.Ext(n) {
+	case ".json", ".md", ".yaml", ".yml", ".toml", ".lock", ".svg", ".png", ".jpg", ".woff", ".woff2":
+		return true
+	}
+	return false
+}
+
+func dependencyBoundaryFileIsAdapter(file, content string) bool {
+	n := strings.ToLower(NormalizePath(file))
+	if strings.Contains(n, "/adapters/") || strings.Contains(n, "\\adapters\\") {
+		return true
+	}
+	if strings.Contains(n, "/external_adapters") || strings.HasSuffix(n, "external_adapters.rs") {
+		return true
+	}
+	if strings.Contains(n, "-transport.") || strings.HasSuffix(n, ".worker.ts") || strings.Contains(n, "kit-store.worker") {
+		return true
+	}
+	base := strings.ToLower(filepath.Base(n))
+	if strings.Contains(base, "adapter") {
+		return true
+	}
+	lower := strings.ToLower(content)
+	for _, marker := range []string{
+		"//#region 🔌adapter", "// #region 🔌adapter",
+		"# #region 🔌adapter", "#region 🔌adapter",
+		"//#region 🔌adapters", "// #region 🔌adapters",
+		"# #region 🔌adapters",
+		"//#region 🌐rswasmtransport", "// #region 🌐rswasmtransport",
+		"pub mod adapters", "mod adapters ",
+	} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string]struct{}) {
+	deps = make(map[string]struct{})
+	dir := NormalizePath(filepath.Dir(file))
+	for {
+		if dir == "." {
+			dir = ""
+		}
+		root := filepath.Join(rootDir, dir)
+		if FileExists(filepath.Join(root, "package.json")) {
+			dependencyBoundaryMergePackageJSON(filepath.Join(root, "package.json"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "Cargo.toml")) {
+			dependencyBoundaryMergeCargoToml(filepath.Join(root, "Cargo.toml"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "go.mod")) {
+			dependencyBoundaryMergeGoMod(filepath.Join(root, "go.mod"), deps)
+			return dir, deps
+		}
+		if FileExists(filepath.Join(root, "pyproject.toml")) {
+			dependencyBoundaryMergePyProject(filepath.Join(root, "pyproject.toml"), deps)
+			return dir, deps
+		}
+		csprojs, _ := filepath.Glob(filepath.Join(root, "*.csproj"))
+		if len(csprojs) > 0 {
+			dependencyBoundaryMergeCsproj(csprojs[0], deps)
+			return dir, deps
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return "", deps
+}
+
+func dependencyBoundaryMergePackageJSON(path string, deps map[string]struct{}) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(data, &raw) != nil {
+		return
+	}
+	for _, key := range []string{"dependencies", "devDependencies", "peerDependencies", "optionalDependencies"} {
+		if block, ok := raw[key]; ok {
+			var m map[string]string
+			if json.Unmarshal(block, &m) == nil {
+				for name, ver := range m {
+					if dependencyBoundaryIsInternalNpm(name, ver) {
+						continue
+					}
+					deps[name] = struct{}{}
+					if strings.HasPrefix(name, "@") {
+						parts := strings.SplitN(name, "/", 2)
+						if len(parts) == 2 {
+							deps[parts[0]+"/"+parts[1]] = struct{}{}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryIsInternalNpm(name, ver string) bool {
+	if strings.HasPrefix(name, "@semio/") || strings.HasPrefix(name, "@ui/") || strings.HasPrefix(name, "@cad/") ||
+		strings.HasPrefix(name, "@puzzle/") || strings.HasPrefix(name, "@framework/") || strings.HasPrefix(name, "@repo/") ||
+		strings.HasPrefix(name, "@elements/") || strings.HasPrefix(name, "@coda/") {
+		return true
+	}
+	return strings.HasPrefix(ver, "workspace:") || ver == "link:" || strings.HasPrefix(ver, "file:")
+}
+
+func dependencyBoundaryMergeCargoToml(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inDeps := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "[") {
+			inDeps = strings.HasPrefix(trim, "[dependencies]") || strings.HasPrefix(trim, "[dev-dependencies]") ||
+				strings.HasPrefix(trim, "[target.") && strings.Contains(trim, ".dependencies]")
+		}
+		if !inDeps || trim == "" || strings.HasPrefix(trim, "#") {
+			continue
+		}
+		if strings.Contains(trim, "=") && !strings.HasPrefix(trim, "[") {
+			name := strings.TrimSpace(strings.SplitN(trim, "=", 2)[0])
+			if name != "" && name != "path" {
+				deps[name] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergeGoMod(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inRequire := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "require (") {
+			inRequire = true
+			continue
+		}
+		if inRequire && trim == ")" {
+			inRequire = false
+			continue
+		}
+		if strings.HasPrefix(trim, "require ") && !strings.Contains(trim, "// indirect") {
+			fields := strings.Fields(trim)
+			if len(fields) >= 2 && !strings.HasPrefix(fields[1], "github.com/usalu/semio") {
+				deps[fields[1]] = struct{}{}
+			}
+		}
+		if inRequire {
+			fields := strings.Fields(trim)
+			if len(fields) >= 1 && !strings.HasPrefix(fields[0], "module") {
+				deps[fields[0]] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergePyProject(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	inDeps := false
+	for _, line := range strings.Split(data, "\n") {
+		trim := strings.TrimSpace(line)
+		if strings.HasPrefix(trim, "[") {
+			inDeps = strings.Contains(trim, "dependencies") || strings.Contains(trim, "optional-dependencies")
+		}
+		if inDeps && strings.Contains(trim, "=") && !strings.HasPrefix(trim, "[") {
+			name := strings.TrimSpace(strings.SplitN(trim, "=", 2)[0])
+			if name != "" {
+				deps[strings.ReplaceAll(name, "\"", "")] = struct{}{}
+			}
+		}
+	}
+}
+
+func dependencyBoundaryMergeCsproj(path string, deps map[string]struct{}) {
+	data, err := ReadTextFile(path)
+	if err != nil {
+		return
+	}
+	re := regexp.MustCompile(`<PackageReference\s+Include="([^"]+)"`)
+	for _, m := range re.FindAllStringSubmatch(data, -1) {
+		if len(m) > 1 {
+			deps[m[1]] = struct{}{}
+		}
+	}
+}
+
+func parseThirdPartyImportSpecs(importLine, file string) []string {
+	var specs []string
+	ext := strings.ToLower(filepath.Ext(file))
+	switch ext {
+	case ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs":
+		re := regexp.MustCompile(`(?:from|import)\s+['"]([^'"]+)['"]`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".go":
+		re := regexp.MustCompile(`"([^"]+)"`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 && !strings.HasPrefix(m[1], "github.com/usalu/semio") {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".py":
+		re := regexp.MustCompile(`^(?:from|import)\s+([a-zA-Z0-9_\.]+)`)
+		if m := re.FindStringSubmatch(strings.TrimSpace(importLine)); len(m) > 1 {
+			specs = append(specs, strings.SplitN(m[1], ".", 2)[0])
+		}
+	case ".cs":
+		re := regexp.MustCompile(`using\s+([A-Za-z0-9_.]+)`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				specs = append(specs, m[1])
+			}
+		}
+	case ".rs":
+		re := regexp.MustCompile(`(?:use|extern\s+crate)\s+([a-zA-Z0-9_:]+)`)
+		for _, m := range re.FindAllStringSubmatch(importLine, -1) {
+			if len(m) > 1 {
+				crate := strings.SplitN(m[1], "::", 2)[0]
+				specs = append(specs, crate)
+			}
+		}
+	}
+	return specs
+}
+
+func dependencyBoundaryIsThirdParty(spec string, deps map[string]struct{}) {
+	if spec == "" || strings.HasPrefix(spec, ".") || strings.HasPrefix(spec, "/") {
+		return false
+	}
+	if _, ok := deps[spec]; ok {
+		return true
+	}
+	if strings.HasPrefix(spec, "@") {
+		parts := strings.SplitN(spec, "/", 2)
+		if len(parts) == 2 {
+			if _, ok := deps[parts[0]+"/"+parts[1]]; ok {
+				return true
+			}
+		}
+	}
+	for dep := range deps {
+		if strings.HasPrefix(spec, dep) || strings.HasPrefix(dep, spec) {
+			return true
+		}
+		if strings.Contains(dep, "/") && strings.HasPrefix(spec, strings.SplitN(dep, "/", 2)[0]) {
+			return true
+		}
+	}
+	// Rust/Python root module heuristic
+	root := spec
+	if i := strings.IndexAny(spec, "./:"); i > 0 {
+		root = spec[:i]
+	}
+	if i := strings.Index(spec, "::"); i > 0 {
+		root = spec[:i]
+	}
+	if _, ok := deps[root]; ok {
+		return true
+	}
+	return false
+}
+
+func dependencyBoundaryImportLineNumber(content, importLine string, fallback int) int {
+	idx := strings.Index(content, importLine)
+	if idx < 0 {
+		return fallback
+	}
+	return strings.Count(content[:idx], "\n") + 1
 }
 
 // #endregion 🧊Policies
@@ -25822,7 +27804,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 // 🔧Fix MUST return a non-nil error when the operation fails.
 // 🔧Fix performs the fix operation on the repo context.
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	return nil, fmt.Errorf("fix was removed; handle autofix inside lint.script.ts")
+	return nil, fmt.Errorf("fix was removed; handle autofix inside script.ts policy export")
 }
 
 // 🏷️inferDefinitionKindFromLine holds the data fields for a inferDefinitionKindFromLine record.
@@ -36277,608 +38259,19 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 // #endregion 🦀Hooks
 
 // #region 🔷Configure
-// Configure command auto-generates native hook configs for all supported clients.
-
-// ⚙️ClientHookMapping maps client names to their native event configuration format.
-type ClientHookMapping struct {
-	Client     string
-	ConfigPath string
-	Generator  func(repoRoot string) (string, error)
-}
+// Configure command intentionally leaves repo config files untouched.
 
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "Auto-configure repo hooks for all supported clients",
+		Short: "No-op: repo config files are edited manually",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			repoRoot := config.Repo
-			if repoRoot == "" {
-				cwd, _ := os.Getwd()
-				repoRoot = findRepoRoot(cwd)
-			}
-			var errs []error
-			for _, provider := range AllEditorProviders() {
-				mapping := provider.HookMapping()
-				if err := provider.Configure(repoRoot); err != nil {
-					errs = append(errs, fmt.Errorf("%s: %w", provider.Kind(), err))
-					continue
-				}
-				if mapping.ConfigPath != "" {
-					fmt.Printf("✓ %s → %s\n", provider.Kind(), mapping.ConfigPath)
-				} else {
-					fmt.Printf("✓ %s configured\n", provider.Kind())
-				}
-			}
-			if err := configureGitHooks(repoRoot); err != nil {
-				errs = append(errs, fmt.Errorf("git hooks: %w", err))
-			} else {
-				fmt.Println("✓ git hooks configured")
-			}
-			if len(errs) > 0 {
-				for _, e := range errs {
-					fmt.Fprintf(os.Stderr, "✗ %v\n", e)
-				}
-				return fmt.Errorf("%d configuration(s) failed", len(errs))
-			}
+			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
 			return nil
 		},
 	}
 	return cmd
-}
-
-// 💿configureGitHooks holds the data fields for a configureGitHooks record.
-func configureGitHooks(repoRoot string) error {
-	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
-	if err := unsetLocalCoreHooksPath(repoRoot); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
-		return err
-	}
-	preCommitPath := filepath.Join(hooksDir, "pre-commit")
-	if err := os.Remove(preCommitPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
-	postCheckpointScript := `#!/usr/bin/env sh
-set -eu
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -z "$repo_root" ]; then
-  exit 0
-fi
-cd "$repo_root"
-if command -v go >/dev/null 2>&1; then
-	go run ./repo/client/mcp hook version.checkpoint.ended
-  exit $?
-fi
-if [ -f "$repo_root/repo/client/client" ]; then
-  ./repo/client/client hook version.checkpoint.ended
-  exit $?
-fi
-if [ -f "$repo_root/repo/client/client.exe" ]; then
-  "$repo_root/repo/client/client.exe" hook version.checkpoint.ended
-  exit $?
-fi
-exit 0
-`
-	if err := os.WriteFile(postCheckpointPath, []byte(postCheckpointScript), 0755); err != nil {
-		return err
-	}
-	return nil
-}
-
-// 🛤️unsetLocalCoreHooksPath holds the data fields for a unsetLocalCoreHooksPath record.
-func unsetLocalCoreHooksPath(repoRoot string) error {
-	cmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--get", "core.hooksPath")
-	out, err := cmd.Output()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return nil
-		}
-		return err
-	}
-	if strings.TrimSpace(string(out)) == "" {
-		return nil
-	}
-	unsetCmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--unset-all", "core.hooksPath")
-	if unsetErr := unsetCmd.Run(); unsetErr != nil {
-		return unsetErr
-	}
-	return nil
-}
-
-func getClientHookMappings() []ClientHookMapping {
-	var mappings []ClientHookMapping
-	for _, provider := range AllEditorProviders() {
-		m := provider.HookMapping()
-		if m.ConfigPath == "" {
-			continue
-		}
-		gen := provider.GenerateHookConfig
-		mappings = append(mappings, ClientHookMapping{Client: m.Client, ConfigPath: m.ConfigPath, Generator: gen})
-	}
-	return mappings
-}
-
-// ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
-func repoCliHookCommand() string {
-	return "go run ./repo/client/mcp"
-}
-
-// 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
-func generateCopilotConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	entry := func(cmd string) map[string]interface{} {
-		return map[string]interface{}{"type": "command", "command": cmd, "timeout": 30}
-	}
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"SessionStart": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SessionStart copilot-chat", c)),
-			},
-			"Stop": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook Stop copilot-chat", c)),
-			},
-			"SubagentStart": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SubagentStart copilot-chat", c)),
-			},
-			"SubagentStop": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook SubagentStop copilot-chat", c)),
-			},
-			"UserPromptSubmit": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook UserPromptSubmit copilot-chat", c)),
-			},
-			"PreCompact": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PreCompact copilot-chat", c)),
-			},
-			"PreToolUse": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PreToolUse copilot-chat", c)),
-			},
-			"PostToolUse": []map[string]interface{}{
-				entry(fmt.Sprintf("%s hook PostToolUse copilot-chat", c)),
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔶generateCursorConfig holds the data fields for a generateCursorConfig record.
-func generateCursorConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	config := map[string]interface{}{
-		"version": 1,
-		"hooks": map[string]interface{}{
-			"sessionStart": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook sessionStart cursor-chat", c)},
-			},
-			"sessionEnd": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook sessionEnd cursor-chat", c)},
-			},
-			"subagentStart": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook subagentStart cursor-chat", c)},
-			},
-			"subagentStop": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook subagentStop cursor-chat", c)},
-			},
-			"stop": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook stop cursor-chat", c)},
-			},
-			"beforeSubmitPrompt": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeSubmitPrompt cursor-chat", c)},
-			},
-			"preCompact": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook preCompact cursor-chat", c)},
-			},
-			"preToolUse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook preToolUse cursor-chat", c)},
-			},
-			"postToolUse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook postToolUse cursor-chat", c)},
-			},
-			"postToolUseFailure": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook postToolUseFailure cursor-chat", c)},
-			},
-			"beforeMCPExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeMCPExecution cursor-chat", c)},
-			},
-			"afterMCPExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterMCPExecution cursor-chat", c)},
-			},
-			"beforeReadFile": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeReadFile cursor-chat", c)},
-			},
-			"afterFileEdit": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterFileEdit cursor-chat", c)},
-			},
-			"beforeShellExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeShellExecution cursor-chat", c)},
-			},
-			"afterShellExecution": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterShellExecution cursor-chat", c)},
-			},
-			"afterAgentResponse": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterAgentResponse cursor-chat", c)},
-			},
-			"afterAgentThought": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterAgentThought cursor-chat", c)},
-			},
-			"beforeTabFileRead": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook beforeTabFileRead cursor-chat", c)},
-			},
-			"afterTabFileEdit": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook afterTabFileEdit cursor-chat", c)},
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-func generateWindsurfConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	config := map[string]interface{}{
-		"hooks": map[string]interface{}{
-			"pre_user_prompt": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_user_prompt windsurf-chat", c), "show_output": false},
-			},
-			"post_cascade_response": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_cascade_response windsurf-chat", c), "show_output": false},
-			},
-			"post_setup_worktree": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_setup_worktree windsurf-chat", c), "show_output": false},
-			},
-			"pre_mcp_tool_use": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_mcp_tool_use windsurf-chat", c), "show_output": false},
-			},
-			"post_mcp_tool_use": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_mcp_tool_use windsurf-chat", c), "show_output": false},
-			},
-			"pre_read_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_read_code windsurf-chat", c), "show_output": false},
-			},
-			"post_read_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_read_code windsurf-chat", c), "show_output": false},
-			},
-			"pre_write_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_write_code windsurf-chat", c), "show_output": false},
-			},
-			"post_write_code": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook post_write_code windsurf-chat", c), "show_output": false},
-			},
-			"pre_run_command": []map[string]interface{}{
-				{"command": fmt.Sprintf("%s hook pre_run_command windsurf-chat", c), "show_output": true},
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-func resolveCodexConfigPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(homeDir, ".codex", "config.toml"), nil
-}
-
-func readCodexServerTemplate(repoRoot string) ([]codexMcpServerConfig, error) {
-	templatePath := filepath.Join(repoRoot, ".codex", "config.toml")
-	data, err := os.ReadFile(templatePath)
-	if err != nil {
-		return nil, err
-	}
-	return parseCodexMcpServers(string(data)), nil
-}
-
-func parseCodexMcpServers(content string) []codexMcpServerConfig {
-	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-	var servers []codexMcpServerConfig
-	var current *codexMcpServerConfig
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			current = nil
-			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
-			if strings.HasPrefix(section, "mcp_servers.") {
-				name := strings.TrimPrefix(section, "mcp_servers.")
-				servers = append(servers, codexMcpServerConfig{Name: name})
-				current = &servers[len(servers)-1]
-			}
-			continue
-		}
-		if current == nil {
-			continue
-		}
-		key, value, ok := strings.Cut(line, "=")
-		if !ok {
-			continue
-		}
-		key = strings.TrimSpace(key)
-		value = strings.TrimSpace(value)
-		switch key {
-		case "command":
-			current.Command = trimTomlString(value)
-		case "cwd":
-			current.Cwd = trimTomlString(value)
-		case "enabled":
-			enabled := strings.EqualFold(value, "true")
-			current.Enabled = &enabled
-		case "args":
-			current.Args = parseTomlStringArray(value)
-		}
-	}
-	return servers
-}
-
-func trimTomlString(value string) string {
-	trimmed := strings.TrimSpace(value)
-	if len(trimmed) >= 2 && strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"") {
-		if unquoted, err := strconv.Unquote(trimmed); err == nil {
-			return unquoted
-		}
-	}
-	return strings.Trim(trimmed, "\"")
-}
-
-func parseTomlStringArray(value string) []string {
-	trimmed := strings.TrimSpace(value)
-	if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
-		return nil
-	}
-	trimmed = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(trimmed, "["), "]"))
-	if trimmed == "" {
-		return nil
-	}
-	parts := strings.Split(trimmed, ",")
-	args := make([]string, 0, len(parts))
-	for _, part := range parts {
-		args = append(args, trimTomlString(part))
-	}
-	return args
-}
-
-func normalizeCodexServerConfigs(repoRoot string, servers []codexMcpServerConfig) []codexMcpServerConfig {
-	normalized := make([]codexMcpServerConfig, 0, len(servers))
-	for _, server := range servers {
-		entry := server
-		for i := 0; i < len(entry.Args)-1; i++ {
-			if entry.Args[i] == "--directory" && entry.Args[i+1] != "" && !filepath.IsAbs(entry.Args[i+1]) {
-				entry.Args[i+1] = filepath.Join(repoRoot, filepath.FromSlash(entry.Args[i+1]))
-			}
-		}
-		if entry.Cwd == "" {
-			entry.Cwd = repoRoot
-		} else if !filepath.IsAbs(entry.Cwd) {
-			entry.Cwd = filepath.Join(repoRoot, filepath.FromSlash(entry.Cwd))
-		}
-		normalized = append(normalized, entry)
-	}
-	return normalized
-}
-
-func renderCodexServerBlock(server codexMcpServerConfig) string {
-	var lines []string
-	lines = append(lines, fmt.Sprintf("[mcp_servers.%s]", server.Name))
-	lines = append(lines, fmt.Sprintf("command = %q", server.Command))
-	if server.Args != nil {
-		quotedArgs := make([]string, 0, len(server.Args))
-		for _, arg := range server.Args {
-			quotedArgs = append(quotedArgs, fmt.Sprintf("%q", arg))
-		}
-		lines = append(lines, fmt.Sprintf("args = [%s]", strings.Join(quotedArgs, ", ")))
-	}
-	if server.Enabled != nil {
-		lines = append(lines, fmt.Sprintf("enabled = %t", *server.Enabled))
-	}
-	if server.Cwd != "" {
-		lines = append(lines, fmt.Sprintf("cwd = %q", server.Cwd))
-	}
-	return strings.Join(lines, "\n")
-}
-
-func stripCodexServerBlocks(content string, names map[string]struct{}) string {
-	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-	var kept []string
-	skip := false
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
-			if strings.HasPrefix(section, "mcp_servers.") {
-				name := strings.TrimPrefix(section, "mcp_servers.")
-				_, skip = names[name]
-				if skip {
-					continue
-				}
-			} else {
-				skip = false
-			}
-		}
-		if skip {
-			continue
-		}
-		kept = append(kept, rawLine)
-	}
-	return strings.TrimRight(strings.Join(kept, "\n"), "\n")
-}
-
-func mergeCodexConfig(existing string, servers []codexMcpServerConfig) string {
-	serverNames := make(map[string]struct{}, len(servers))
-	for _, server := range servers {
-		serverNames[server.Name] = struct{}{}
-		switch server.Name {
-		case "repo":
-			serverNames["semio-repo"] = struct{}{}
-		}
-	}
-	base := stripCodexServerBlocks(existing, serverNames)
-	blocks := make([]string, 0, len(servers))
-	for _, server := range servers {
-		blocks = append(blocks, renderCodexServerBlock(server))
-	}
-	switch {
-	case base == "":
-		return strings.Join(blocks, "\n\n") + "\n"
-	case len(blocks) == 0:
-		return base + "\n"
-	default:
-		return base + "\n\n" + strings.Join(blocks, "\n\n") + "\n"
-	}
-}
-
-func generateCodexConfig(repoRoot string) (string, error) {
-	servers, err := readCodexServerTemplate(repoRoot)
-	if err != nil {
-		return "", err
-	}
-	normalizedServers := normalizeCodexServerConfigs(repoRoot, servers)
-	targetPath, err := resolveCodexConfigPath()
-	if err != nil {
-		return "", err
-	}
-	existing := ""
-	if data, readErr := os.ReadFile(targetPath); readErr == nil {
-		existing = string(data)
-	} else if !errors.Is(readErr, os.ErrNotExist) {
-		return "", readErr
-	}
-	return mergeCodexConfig(existing, normalizedServers), nil
-}
-
-// 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
-func generateClaudeCodeConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	existing := make(map[string]interface{})
-	settingsPath := filepath.Join(repoRoot, ".claude", "settings.json")
-	if data, err := os.ReadFile(settingsPath); err == nil {
-		_ = json.Unmarshal(data, &existing)
-	}
-	cursorHooksPath := filepath.Join(repoRoot, ".cursor", "hooks.json")
-	cursorHooksExist := false
-	if _, err := os.Stat(cursorHooksPath); err == nil {
-		cursorHooksExist = true
-	}
-	hookEntry := func(cmd string) []map[string]interface{} {
-		return []map[string]interface{}{
-			{
-				"matcher": "",
-				"hooks": []map[string]interface{}{
-					{"type": "command", "command": cmd},
-				},
-			},
-		}
-	}
-	if !cursorHooksExist {
-
-		existing["hooks"] = map[string]interface{}{
-			"SessionStart":       hookEntry(fmt.Sprintf("%s hook SessionStart claude-code", c)),
-			"SessionEnd":         hookEntry(fmt.Sprintf("%s hook SessionEnd claude-code", c)),
-			"SubagentStart":      hookEntry(fmt.Sprintf("%s hook SubagentStart claude-code", c)),
-			"SubagentStop":       hookEntry(fmt.Sprintf("%s hook SubagentStop claude-code", c)),
-			"Stop":               hookEntry(fmt.Sprintf("%s hook Stop claude-code", c)),
-			"UserPromptSubmit":   hookEntry(fmt.Sprintf("%s hook UserPromptSubmit claude-code", c)),
-			"PreCompact":         hookEntry(fmt.Sprintf("%s hook PreCompact claude-code", c)),
-			"PreToolUse":         hookEntry(fmt.Sprintf("%s hook PreToolUse claude-code", c)),
-			"PostToolUse":        hookEntry(fmt.Sprintf("%s hook PostToolUse claude-code", c)),
-			"PostToolUseFailure": hookEntry(fmt.Sprintf("%s hook PostToolUseFailure claude-code", c)),
-			"PermissionRequest":  hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
-			"TaskCompleted":      hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
-			"Notification":       hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
-			"TeammateIdle":       hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
-		}
-	} else {
-
-		// claude-code-exclusive events that cursor does not fire to avoid duplicate logging
-		// where cursor fires both .cursor/hooks.json (cursor-chat) and .claude/settings.json
-		// (claude-code) for the same event, causing cursor events to be misidentified.
-		existing["hooks"] = map[string]interface{}{
-			"PermissionRequest": hookEntry(fmt.Sprintf("%s hook PermissionRequest claude-code", c)),
-			"TaskCompleted":     hookEntry(fmt.Sprintf("%s hook TaskCompleted claude-code", c)),
-			"Notification":      hookEntry(fmt.Sprintf("%s hook Notification claude-code", c)),
-			"TeammateIdle":      hookEntry(fmt.Sprintf("%s hook TeammateIdle claude-code", c)),
-		}
-	}
-	out, err := json.MarshalIndent(existing, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔸generateDroidConfig holds the data fields for a generateDroidConfig record.
-func generateDroidConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	config := map[string]interface{}{
-		"hooks": map[string]string{
-			"SessionStart":     fmt.Sprintf("%s hook SessionStart droid", c),
-			"SessionEnd":       fmt.Sprintf("%s hook SessionEnd droid", c),
-			"SubagentStop":     fmt.Sprintf("%s hook SubagentStop droid", c),
-			"Stop":             fmt.Sprintf("%s hook Stop droid", c),
-			"UserPromptSubmit": fmt.Sprintf("%s hook UserPromptSubmit droid", c),
-			"PreCompact":       fmt.Sprintf("%s hook PreCompact droid", c),
-			"PreToolUse":       fmt.Sprintf("%s hook PreToolUse droid", c),
-			"PostToolUse":      fmt.Sprintf("%s hook PostToolUse droid", c),
-			"Notification":     fmt.Sprintf("%s hook Notification droid", c),
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
-}
-
-// 🔺generateKiroConfig holds the data fields for a generateKiroConfig record.
-func generateKiroConfig(repoRoot string) (string, error) {
-	c := repoCliHookCommand()
-	hook := func(cmd string) map[string]interface{} {
-		return map[string]interface{}{"command": cmd}
-	}
-	config := map[string]interface{}{
-		"name":           "repo",
-		"description":    "Interacts with the semio monorepo via repo CLI hooks and MCP tools",
-		"prompt":         "file://../../AGENTS.md",
-		"includeMcpJson": true,
-		"tools":          []string{"*"},
-		"allowedTools":   []string{"@repo", "@semio", "@coda"},
-		"hooks": map[string]interface{}{
-			"agentSpawn": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook agentSpawn kiro-cli", c)),
-			},
-			"userPromptSubmit": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook userPromptSubmit kiro-cli", c)),
-			},
-			"preToolUse": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook preToolUse kiro-cli", c)),
-			},
-			"postToolUse": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook postToolUse kiro-cli", c)),
-			},
-			"stop": []map[string]interface{}{
-				hook(fmt.Sprintf("%s hook stop kiro-cli", c)),
-			},
-		},
-	}
-	out, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(out) + "\n", nil
 }
 
 // #endregion 🔷Configure
@@ -43384,3 +44777,856 @@ func searchLinesInFile(filePath string, pattern string) []int {
 }
 
 // #endregion 📰Missing Hook Functions
+
+// #region 🔖Missing Hook Functions
+
+
+// #region 🤸Preamble
+// Package client — MCP + hook helpers shared by repo/client/mcp and repo/client/mcp/{cursor,kiro,...}.
+
+
+
+// #endregion 🤸Preamble
+
+// #region 🪪McpClientKind
+// 🪪McpClientKind selects IDE-native MCP surface (descriptions, optional plan/spec fields).
+
+type McpClientKind string
+
+const (
+	McpClientGeneric McpClientKind = "generic"
+	McpClientCursor  McpClientKind = "cursor"
+	McpClientKiro    McpClientKind = "kiro"
+	McpClientCopilot McpClientKind = "copilot"
+	McpClientClaude  McpClientKind = "claude"
+	McpClientCodex   McpClientKind = "codex"
+)
+
+// HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
+func HookClientForMcpKind(kind McpClientKind) string {
+	switch kind {
+	case McpClientCursor:
+		return "cursor-chat"
+	case McpClientKiro:
+		return "kiro-cli"
+	case McpClientCopilot:
+		return "copilot-chat"
+	case McpClientClaude:
+		return "claude-code"
+	case McpClientCodex:
+		return "codex"
+	default:
+		return ""
+	}
+}
+
+// McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
+func McpKindFromResolvedClient(client string) McpClientKind {
+	switch strings.TrimSpace(client) {
+	case "cursor-chat", "cursor":
+		return McpClientCursor
+	case "kiro-cli":
+		return McpClientKiro
+	case "copilot-chat":
+		return McpClientCopilot
+	case "claude-code":
+		return McpClientClaude
+	case "codex":
+		return McpClientCodex
+	default:
+		return McpClientGeneric
+	}
+}
+
+// McpServerName returns the MCP server identifier string for the given kind.
+func McpServerName(kind McpClientKind) string {
+	switch kind {
+	case McpClientCursor:
+		return "repo-cursor"
+	case McpClientKiro:
+		return "repo-kiro"
+	case McpClientCopilot:
+		return "repo-copilot"
+	case McpClientClaude:
+		return "repo-claude"
+	case McpClientCodex:
+		return "repo-codex"
+	default:
+		return "repo"
+	}
+}
+
+// #endregion 🪪McpClientKind
+
+// #region 🗺️ResolvePlanSource
+// 🗺️ResolvePlanSource resolves a plan or spec id to an absolute filesystem path (file or directory).
+
+func ResolvePlanSource(kind McpClientKind, id string) (absPath string, isDir bool, err error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return "", false, fmt.Errorf("plan or spec id is empty")
+	}
+	root := strings.TrimSpace(rootDir)
+	if root == "" {
+		return "", false, fmt.Errorf("repository root is not set")
+	}
+	switch kind {
+	case McpClientCursor:
+		pattern := filepath.Join(root, ".cursor", "plans", "*_"+id+".plan.md")
+		matches, gerr := filepath.Glob(pattern)
+		if gerr != nil {
+			return "", false, gerr
+		}
+		if len(matches) == 0 {
+			return "", false, fmt.Errorf("no Cursor plan matches id %q (glob %s)", id, pattern)
+		}
+		if len(matches) > 1 {
+			return "", false, fmt.Errorf("ambiguous Cursor plan id %q: %d matches", id, len(matches))
+		}
+		return filepath.Clean(matches[0]), false, nil
+	case McpClientKiro:
+		dir := filepath.Join(root, ".kiro", "specs", id)
+		st, statErr := os.Stat(dir)
+		if statErr != nil {
+			return "", false, fmt.Errorf("Kiro spec %q: %w", id, statErr)
+		}
+		if !st.IsDir() {
+			return "", false, fmt.Errorf("Kiro spec %q is not a directory", id)
+		}
+		return filepath.Clean(dir), true, nil
+	case McpClientCopilot, McpClientClaude, McpClientCodex:
+		home, herr := os.UserHomeDir()
+		if herr != nil {
+			return "", false, herr
+		}
+		repoBase := filepath.Base(filepath.Clean(root))
+		var p string
+		switch kind {
+		case McpClientCopilot:
+			p = filepath.Join(home, ".copilot", "projects", repoBase, "memory", id+".md")
+		case McpClientClaude:
+			p = filepath.Join(home, ".claude", "plans", id+".md")
+		case McpClientCodex:
+			p = filepath.Join(home, ".codex", "memory", repoBase, id+".md")
+		}
+		st, statErr := os.Stat(p)
+		if statErr != nil {
+			return "", false, fmt.Errorf("plan file for id %q: %w", id, statErr)
+		}
+		if st.IsDir() {
+			return "", false, fmt.Errorf("expected file at %s", p)
+		}
+		return filepath.Clean(p), false, nil
+	default:
+		return "", false, fmt.Errorf("plan or spec attachment is not supported for mcp kind %q", kind)
+	}
+}
+
+// planClientTag returns the value stored in ticket.json for the plan attachment.
+func planClientTag(kind McpClientKind) string {
+	switch kind {
+	case McpClientCursor:
+		return "cursor"
+	case McpClientKiro:
+		return "kiro"
+	case McpClientCopilot:
+		return "copilot"
+	case McpClientClaude:
+		return "claude"
+	case McpClientCodex:
+		return "codex"
+	default:
+		return string(kind)
+	}
+}
+
+// ApplyTicketPlanFromIDs resolves plan_id or spec_id and attaches it to the ticket before save.
+func ApplyTicketPlanFromIDs(ticket *Ticket, kind McpClientKind, planID, specID string) error {
+	planID = strings.TrimSpace(planID)
+	specID = strings.TrimSpace(specID)
+	if planID == "" && specID == "" {
+		return nil
+	}
+	if planID != "" && specID != "" {
+		return fmt.Errorf("pass only one of plan_id or spec_id")
+	}
+	var resolveKind McpClientKind
+	var id string
+	switch kind {
+	case McpClientKiro:
+		if planID != "" {
+			return fmt.Errorf("use spec_id for Kiro, not plan_id")
+		}
+		resolveKind = McpClientKiro
+		id = specID
+	default:
+		if specID != "" {
+			return fmt.Errorf("use plan_id for this client, not spec_id")
+		}
+		resolveKind = kind
+		id = planID
+	}
+	src, isDir, err := ResolvePlanSource(resolveKind, id)
+	if err != nil {
+		return err
+	}
+	ticket.Plan = &TicketPlan{
+		Client: planClientTag(kind),
+		ID:     id,
+		Source: src,
+	}
+	_ = isDir // stored implicitly: directories use trailing handling in move
+	return nil
+}
+
+// #endregion 🗺️ResolvePlanSource
+
+// #region 📦MoveTicketPlan
+// 📦moveTicketPlanIntoFolder moves the attached plan/spec from Source into the ticket folder on close.
+
+func moveTicketPlanIntoFolder(ticket *Ticket) error {
+	if ticket == nil || ticket.Plan == nil || strings.TrimSpace(ticket.Plan.Source) == "" {
+		return nil
+	}
+	src := filepath.Clean(ticket.Plan.Source)
+	if ticket.FolderPath == "" {
+		return fmt.Errorf("ticket folder path is empty")
+	}
+	destName := filepath.Base(src)
+	dest := filepath.Join(ticket.FolderPath, destName)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		if _, err2 := os.Stat(dest); err2 == nil {
+			ticket.Plan.Local = destName
+			ticket.Plan.Source = ""
+			return nil
+		}
+		return fmt.Errorf("plan source %q missing and destination %q not found", src, dest)
+	}
+	st, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("plan source missing: %w", err)
+	}
+	if st.IsDir() {
+		if err := os.Rename(src, dest); err != nil {
+			if err := copyDirTree(src, dest); err != nil {
+				return fmt.Errorf("copy spec directory: %w", err)
+			}
+			if err := os.RemoveAll(src); err != nil {
+				return fmt.Errorf("remove spec source after copy: %w", err)
+			}
+		}
+	} else {
+		if err := MoveFile(src, dest); err != nil {
+			return fmt.Errorf("move plan file: %w", err)
+		}
+	}
+	ticket.Plan.Local = destName
+	ticket.Plan.Source = ""
+	return nil
+}
+
+func copyDirTree(srcRoot, dstRoot string) error {
+	return filepath.WalkDir(srcRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(srcRoot, path)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return os.MkdirAll(dstRoot, 0o755)
+		}
+		target := filepath.Join(dstRoot, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return err
+		}
+		return CopyFile(path, target)
+	})
+}
+
+// #endregion 📦MoveTicketPlan
+
+// #region 🗣️McpDescriptions
+// 🗣️mcpDesc picks a when-to-use string for tools, prompts, and resource titles (no cross-IDE leakage).
+
+func mcpDesc(kind McpClientKind, key string) string {
+	if kind == "" {
+		kind = McpClientGeneric
+	}
+	if m, ok := mcpDescriptionTable[key]; ok {
+		if s, ok2 := m[kind]; ok2 && s != "" {
+			return s
+		}
+		if s, ok3 := m[McpClientGeneric]; ok3 {
+			return s
+		}
+	}
+	return ""
+}
+
+// mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
+var mcpDescriptionTable = map[string]map[McpClientKind]string{
+	"prompt_enhance": {
+		McpClientGeneric:  "Use when you are about to add behavior and must align the change with repository rules before editing.",
+		McpClientCursor:   "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientKiro:     "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCopilot:  "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientClaude:   "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCodex:    "Use when Codex is about to add behavior and must align the change with repository rules before editing.",
+	},
+	"prompt_refactor": {
+		McpClientGeneric:  "Use when a refactor is required and you must not regress behavior or tests.",
+		McpClientCursor:   "Use when the Cursor agent must refactor without regressing behavior or tests.",
+		McpClientKiro:     "Use when the Kiro agent must refactor without regressing behavior or tests.",
+		McpClientCopilot:  "Use when the Copilot agent must refactor without regressing behavior or tests.",
+		McpClientClaude:   "Use when Claude Code must refactor without regressing behavior or tests.",
+		McpClientCodex:    "Use when Codex must refactor without regressing behavior or tests.",
+	},
+	"prompt_test": {
+		McpClientGeneric:  "Use when tests must be extended before you claim coverage for new paths.",
+		McpClientCursor:   "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
+		McpClientKiro:     "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
+		McpClientCopilot:  "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
+		McpClientClaude:   "Use when Claude Code must extend tests before claiming coverage for new paths.",
+		McpClientCodex:    "Use when Codex must extend tests before claiming coverage for new paths.",
+	},
+	"prompt_comply": {
+		McpClientGeneric:  "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
+		McpClientCursor:   "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientKiro:     "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCopilot:  "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientClaude:   "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCodex:    "Use when Codex must converge a red workspace to passing tests without deleting assertions.",
+	},
+	"res_root": {
+		McpClientGeneric: "Fetch when the session anchor for the repository root is required before any scoped read.",
+		McpClientCursor:  "Fetch when the Cursor session anchor for the repository root is required before any scoped read.",
+		McpClientKiro:    "Fetch when the Kiro session anchor for the repository root is required before any scoped read.",
+		McpClientCopilot: "Fetch when the Copilot session anchor for the repository root is required before any scoped read.",
+		McpClientClaude:  "Fetch when Claude Code needs the repository root anchor before any scoped read.",
+		McpClientCodex:   "Fetch when Codex needs the repository root anchor before any scoped read.",
+	},
+	"res_bundles": {
+		McpClientGeneric: "Fetch when bundle inventory is required before choosing a technology subtree.",
+		McpClientCursor:  "Fetch when bundle inventory is required before the Cursor agent chooses a technology subtree.",
+		McpClientKiro:    "Fetch when bundle inventory is required before the Kiro agent chooses a technology subtree.",
+		McpClientCopilot: "Fetch when bundle inventory is required before the Copilot agent chooses a technology subtree.",
+		McpClientClaude:  "Fetch when bundle inventory is required before Claude Code chooses a technology subtree.",
+		McpClientCodex:   "Fetch when bundle inventory is required before Codex chooses a technology subtree.",
+	},
+	"res_bundle_one": {
+		McpClientGeneric: "Fetch when a single bundle context gate is required before editing that bundle.",
+		McpClientCursor:  "Fetch when the Cursor agent needs one bundle context gate before editing that bundle.",
+		McpClientKiro:    "Fetch when the Kiro agent needs one bundle context gate before editing that bundle.",
+		McpClientCopilot: "Fetch when the Copilot agent needs one bundle context gate before editing that bundle.",
+		McpClientClaude:  "Fetch when Claude Code needs one bundle context gate before editing that bundle.",
+		McpClientCodex:   "Fetch when Codex needs one bundle context gate before editing that bundle.",
+	},
+	"res_folders": {
+		McpClientGeneric: "Fetch when folder enumeration is required before path-sensitive edits.",
+		McpClientCursor:  "Fetch when folder enumeration is required before the Cursor agent performs path-sensitive edits.",
+		McpClientKiro:    "Fetch when folder enumeration is required before the Kiro agent performs path-sensitive edits.",
+		McpClientCopilot: "Fetch when folder enumeration is required before the Copilot agent performs path-sensitive edits.",
+		McpClientClaude:  "Fetch when folder enumeration is required before Claude Code performs path-sensitive edits.",
+		McpClientCodex:   "Fetch when folder enumeration is required before Codex performs path-sensitive edits.",
+	},
+	"res_folder_one": {
+		McpClientGeneric: "Fetch when one folder subtree must be confirmed before moves or renames under it.",
+		McpClientCursor:  "Fetch when the Cursor agent must confirm one folder subtree before moves or renames under it.",
+		McpClientKiro:    "Fetch when the Kiro agent must confirm one folder subtree before moves or renames under it.",
+		McpClientCopilot: "Fetch when the Copilot agent must confirm one folder subtree before moves or renames under it.",
+		McpClientClaude:  "Fetch when Claude Code must confirm one folder subtree before moves or renames under it.",
+		McpClientCodex:   "Fetch when Codex must confirm one folder subtree before moves or renames under it.",
+	},
+	"res_files": {
+		McpClientGeneric: "Fetch when file listing is required before batch reads across a scope.",
+		McpClientCursor:  "Fetch when file listing is required before the Cursor agent batch-reads a scope.",
+		McpClientKiro:    "Fetch when file listing is required before the Kiro agent batch-reads a scope.",
+		McpClientCopilot: "Fetch when file listing is required before the Copilot agent batch-reads a scope.",
+		McpClientClaude:  "Fetch when file listing is required before Claude Code batch-reads a scope.",
+		McpClientCodex:   "Fetch when file listing is required before Codex batch-reads a scope.",
+	},
+	"res_file_one": {
+		McpClientGeneric: "Fetch when a single file identity must be verified before a targeted edit.",
+		McpClientCursor:  "Fetch when the Cursor agent must verify a single file identity before a targeted edit.",
+		McpClientKiro:    "Fetch when the Kiro agent must verify a single file identity before a targeted edit.",
+		McpClientCopilot: "Fetch when the Copilot agent must verify a single file identity before a targeted edit.",
+		McpClientClaude:  "Fetch when Claude Code must verify a single file identity before a targeted edit.",
+		McpClientCodex:   "Fetch when Codex must verify a single file identity before a targeted edit.",
+	},
+	"res_sections": {
+		McpClientGeneric: "Fetch when section discovery is required before region-scoped refactors.",
+		McpClientCursor:  "Fetch when section discovery is required before the Cursor agent runs region-scoped refactors.",
+		McpClientKiro:    "Fetch when section discovery is required before the Kiro agent runs region-scoped refactors.",
+		McpClientCopilot: "Fetch when section discovery is required before the Copilot agent runs region-scoped refactors.",
+		McpClientClaude:  "Fetch when section discovery is required before Claude Code runs region-scoped refactors.",
+		McpClientCodex:   "Fetch when section discovery is required before Codex runs region-scoped refactors.",
+	},
+	"res_section_one": {
+		McpClientGeneric: "Fetch when one section boundary must be loaded before a surgical edit inside that section.",
+		McpClientCursor:  "Fetch when the Cursor agent must load one section boundary before a surgical edit inside that section.",
+		McpClientKiro:    "Fetch when the Kiro agent must load one section boundary before a surgical edit inside that section.",
+		McpClientCopilot: "Fetch when the Copilot agent must load one section boundary before a surgical edit inside that section.",
+		McpClientClaude:  "Fetch when Claude Code must load one section boundary before a surgical edit inside that section.",
+		McpClientCodex:   "Fetch when Codex must load one section boundary before a surgical edit inside that section.",
+	},
+	"res_definitions": {
+		McpClientGeneric: "Fetch when definition discovery is required before symbol-level work.",
+		McpClientCursor:  "Fetch when definition discovery is required before the Cursor agent performs symbol-level work.",
+		McpClientKiro:    "Fetch when definition discovery is required before the Kiro agent performs symbol-level work.",
+		McpClientCopilot: "Fetch when definition discovery is required before the Copilot agent performs symbol-level work.",
+		McpClientClaude:  "Fetch when definition discovery is required before Claude Code performs symbol-level work.",
+		McpClientCodex:   "Fetch when definition discovery is required before Codex performs symbol-level work.",
+	},
+	"res_definition_one": {
+		McpClientGeneric: "Fetch when one definition record must be confirmed before renaming or extracting it.",
+		McpClientCursor:  "Fetch when the Cursor agent must confirm one definition record before renaming or extracting it.",
+		McpClientKiro:    "Fetch when the Kiro agent must confirm one definition record before renaming or extracting it.",
+		McpClientCopilot: "Fetch when the Copilot agent must confirm one definition record before renaming or extracting it.",
+		McpClientClaude:  "Fetch when Claude Code must confirm one definition record before renaming or extracting it.",
+		McpClientCodex:   "Fetch when Codex must confirm one definition record before renaming or extracting it.",
+	},
+	"res_tickets": {
+		McpClientGeneric: "Fetch when ticket inventory is required before choosing where to attach work.",
+		McpClientCursor:  "Fetch when ticket inventory is required before the Cursor agent chooses where to attach work.",
+		McpClientKiro:    "Fetch when ticket inventory is required before the Kiro agent chooses where to attach work.",
+		McpClientCopilot: "Fetch when ticket inventory is required before the Copilot agent chooses where to attach work.",
+		McpClientClaude:  "Fetch when ticket inventory is required before Claude Code chooses where to attach work.",
+		McpClientCodex:   "Fetch when ticket inventory is required before Codex chooses where to attach work.",
+	},
+	"res_ticket_one": {
+		McpClientGeneric: "Fetch when one ticket record must be read before closing or reopening that ticket.",
+		McpClientCursor:  "Fetch when the Cursor agent must read one ticket record before closing or reopening that ticket.",
+		McpClientKiro:    "Fetch when the Kiro agent must read one ticket record before closing or reopening that ticket.",
+		McpClientCopilot: "Fetch when the Copilot agent must read one ticket record before closing or reopening that ticket.",
+		McpClientClaude:  "Fetch when Claude Code must read one ticket record before closing or reopening that ticket.",
+		McpClientCodex:   "Fetch when Codex must read one ticket record before closing or reopening that ticket.",
+	},
+	"res_goals": {
+		McpClientGeneric: "Fetch when goal hierarchy is required before opening or linking a ticket.",
+		McpClientCursor:  "Fetch when goal hierarchy is required before the Cursor agent opens or links a ticket.",
+		McpClientKiro:    "Fetch when goal hierarchy is required before the Kiro agent opens or links a ticket.",
+		McpClientCopilot: "Fetch when goal hierarchy is required before the Copilot agent opens or links a ticket.",
+		McpClientClaude:  "Fetch when goal hierarchy is required before Claude Code opens or links a ticket.",
+		McpClientCodex:   "Fetch when goal hierarchy is required before Codex opens or links a ticket.",
+	},
+	"res_goal_one": {
+		McpClientGeneric: "Fetch when one goal record must be confirmed before milestone or ticket association.",
+		McpClientCursor:  "Fetch when the Cursor agent must confirm one goal record before milestone or ticket association.",
+		McpClientKiro:    "Fetch when the Kiro agent must confirm one goal record before milestone or ticket association.",
+		McpClientCopilot: "Fetch when the Copilot agent must confirm one goal record before milestone or ticket association.",
+		McpClientClaude:  "Fetch when Claude Code must confirm one goal record before milestone or ticket association.",
+		McpClientCodex:   "Fetch when Codex must confirm one goal record before milestone or ticket association.",
+	},
+	"res_policies": {
+		McpClientGeneric: "Fetch when policy inventory is required before an audit or autofix pass.",
+		McpClientCursor:  "Fetch when policy inventory is required before the Cursor agent starts an audit or autofix pass.",
+		McpClientKiro:    "Fetch when policy inventory is required before the Kiro agent starts an audit or autofix pass.",
+		McpClientCopilot: "Fetch when policy inventory is required before the Copilot agent starts an audit or autofix pass.",
+		McpClientClaude:  "Fetch when policy inventory is required before Claude Code starts an audit or autofix pass.",
+		McpClientCodex:   "Fetch when policy inventory is required before Codex starts an audit or autofix pass.",
+	},
+	"res_policy_one": {
+		McpClientGeneric: "Fetch when one policy scope must be verified before interpreting breaches.",
+		McpClientCursor:  "Fetch when the Cursor agent must verify one policy scope before interpreting breaches.",
+		McpClientKiro:    "Fetch when the Kiro agent must verify one policy scope before interpreting breaches.",
+		McpClientCopilot: "Fetch when the Copilot agent must verify one policy scope before interpreting breaches.",
+		McpClientClaude:  "Fetch when Claude Code must verify one policy scope before interpreting breaches.",
+		McpClientCodex:   "Fetch when Codex must verify one policy scope before interpreting breaches.",
+	},
+	"res_statutes": {
+		McpClientGeneric: "Fetch when breach-kind listing is required before triage ordering.",
+		McpClientCursor:  "Fetch when breach-kind listing is required before the Cursor agent orders triage.",
+		McpClientKiro:    "Fetch when breach-kind listing is required before the Kiro agent orders triage.",
+		McpClientCopilot: "Fetch when breach-kind listing is required before the Copilot agent orders triage.",
+		McpClientClaude:  "Fetch when breach-kind listing is required before Claude Code orders triage.",
+		McpClientCodex:   "Fetch when breach-kind listing is required before Codex orders triage.",
+	},
+	"res_statute_one": {
+		McpClientGeneric: "Fetch when one breach-kind record must be read before applying a fix strategy.",
+		McpClientCursor:  "Fetch when the Cursor agent must read one breach-kind record before applying a fix strategy.",
+		McpClientKiro:    "Fetch when the Kiro agent must read one breach-kind record before applying a fix strategy.",
+		McpClientCopilot: "Fetch when the Copilot agent must read one breach-kind record before applying a fix strategy.",
+		McpClientClaude:  "Fetch when Claude Code must read one breach-kind record before applying a fix strategy.",
+		McpClientCodex:   "Fetch when Codex must read one breach-kind record before applying a fix strategy.",
+	},
+	"res_contributors": {
+		McpClientGeneric: "Fetch when contributor listing is required before attributing sessions or checkpoints.",
+		McpClientCursor:  "Fetch when contributor listing is required before the Cursor agent attributes sessions or checkpoints.",
+		McpClientKiro:    "Fetch when contributor listing is required before the Kiro agent attributes sessions or checkpoints.",
+		McpClientCopilot: "Fetch when contributor listing is required before the Copilot agent attributes sessions or checkpoints.",
+		McpClientClaude:  "Fetch when contributor listing is required before Claude Code attributes sessions or checkpoints.",
+		McpClientCodex:   "Fetch when contributor listing is required before Codex attributes sessions or checkpoints.",
+	},
+	"res_contributor_one": {
+		McpClientGeneric: "Fetch when one contributor record must be read before ownership-sensitive edits.",
+		McpClientCursor:  "Fetch when the Cursor agent must read one contributor record before ownership-sensitive edits.",
+		McpClientKiro:    "Fetch when the Kiro agent must read one contributor record before ownership-sensitive edits.",
+		McpClientCopilot: "Fetch when the Copilot agent must read one contributor record before ownership-sensitive edits.",
+		McpClientClaude:  "Fetch when Claude Code must read one contributor record before ownership-sensitive edits.",
+		McpClientCodex:   "Fetch when Codex must read one contributor record before ownership-sensitive edits.",
+	},
+	"res_checkpoints": {
+		McpClientGeneric: "Fetch when checkpoint inventory is required before comparing versions.",
+		McpClientCursor:  "Fetch when checkpoint inventory is required before the Cursor agent compares versions.",
+		McpClientKiro:    "Fetch when checkpoint inventory is required before the Kiro agent compares versions.",
+		McpClientCopilot: "Fetch when checkpoint inventory is required before the Copilot agent compares versions.",
+		McpClientClaude:  "Fetch when checkpoint inventory is required before Claude Code compares versions.",
+		McpClientCodex:   "Fetch when checkpoint inventory is required before Codex compares versions.",
+	},
+	"res_checkpoint_one": {
+		McpClientGeneric: "Fetch when one checkpoint record must be read before tying hooks or tickets to history.",
+		McpClientCursor:  "Fetch when the Cursor agent must read one checkpoint record before tying hooks or tickets to history.",
+		McpClientKiro:    "Fetch when the Kiro agent must read one checkpoint record before tying hooks or tickets to history.",
+		McpClientCopilot: "Fetch when the Copilot agent must read one checkpoint record before tying hooks or tickets to history.",
+		McpClientClaude:  "Fetch when Claude Code must read one checkpoint record before tying hooks or tickets to history.",
+		McpClientCodex:   "Fetch when Codex must read one checkpoint record before tying hooks or tickets to history.",
+	},
+	"tool_ticket_open": {
+		McpClientGeneric:  "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
+		McpClientCursor:   "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientKiro:     "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
+		McpClientCopilot:  "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
+		McpClientClaude:   "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientCodex:    "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
+	},
+	"tool_ticket_close": {
+		McpClientGeneric:  "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
+		McpClientCursor:   "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientKiro:     "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
+		McpClientCopilot:  "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
+		McpClientClaude:   "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientCodex:    "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
+	},
+	"tool_ticket_reopen": {
+		McpClientGeneric:  "Use when work must continue on a closed ticket before any new edits land.",
+		McpClientCursor:   "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientKiro:     "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
+		McpClientCopilot:  "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
+		McpClientClaude:   "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientCodex:    "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
+	},
+	"tool_section_move": {
+		McpClientGeneric: "Use when a region rename is required and the surrounding file context is already loaded.",
+		McpClientCursor:  "Use when the Cursor agent must rename a region and the surrounding file context is already loaded.",
+		McpClientKiro:    "Use when the Kiro agent must rename a region and the surrounding file context is already loaded.",
+		McpClientCopilot: "Use when the Copilot agent must rename a region and the surrounding file context is already loaded.",
+		McpClientClaude:  "Use when Claude Code must rename a region and the surrounding file context is already loaded.",
+		McpClientCodex:   "Use when Codex must rename a region and the surrounding file context is already loaded.",
+	},
+	"tool_file_integrate": {
+		McpClientGeneric: "Use when two files must be merged at a named region boundary without losing section markers.",
+		McpClientCursor:  "Use when the Cursor agent must merge two files at a named region boundary without losing section markers.",
+		McpClientKiro:    "Use when the Kiro agent must merge two files at a named region boundary without losing section markers.",
+		McpClientCopilot: "Use when the Copilot agent must merge two files at a named region boundary without losing section markers.",
+		McpClientClaude:  "Use when Claude Code must merge two files at a named region boundary without losing section markers.",
+		McpClientCodex:   "Use when Codex must merge two files at a named region boundary without losing section markers.",
+	},
+	"tool_section_extract": {
+		McpClientGeneric: "Use when a region must be split out into its own file before shrinking the original module.",
+		McpClientCursor:  "Use when the Cursor agent must split a region into its own file before shrinking the original module.",
+		McpClientKiro:    "Use when the Kiro agent must split a region into its own file before shrinking the original module.",
+		McpClientCopilot: "Use when the Copilot agent must split a region into its own file before shrinking the original module.",
+		McpClientClaude:  "Use when Claude Code must split a region into its own file before shrinking the original module.",
+		McpClientCodex:   "Use when Codex must split a region into its own file before shrinking the original module.",
+	},
+	"tool_search": {
+		McpClientGeneric: "Use when you lack authoritative paths and must narrow the workspace before opening files.",
+		McpClientCursor:  "Use when the Cursor agent lacks authoritative paths and must narrow the workspace before opening files.",
+		McpClientKiro:    "Use when the Kiro agent lacks authoritative paths and must narrow the workspace before opening files.",
+		McpClientCopilot: "Use when the Copilot agent lacks authoritative paths and must narrow the workspace before opening files.",
+		McpClientClaude:  "Use when Claude Code lacks authoritative paths and must narrow the workspace before opening files.",
+		McpClientCodex:   "Use when Codex lacks authoritative paths and must narrow the workspace before opening files.",
+	},
+	"arg_plan_id": {
+		McpClientCursor:  "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
+		McpClientCopilot: "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
+		McpClientClaude:  "Set when a `.claude/plans/<id>.md` file exists and must be archived into the ticket on close.",
+		McpClientCodex:   "Set when a `.codex/memory/<repo>/<id>.md` file exists and must be archived into the ticket on close.",
+	},
+	"arg_spec_id": {
+		McpClientKiro: "Set when a `.kiro/specs/<id>/` directory exists and must be archived into the ticket on close.",
+	},
+}
+
+// #endregion 🗣️McpDescriptions
+
+// #region 🦀McpServerFactory
+// 🦀CreateMcpServer builds the MCP server for the given IDE kind (stdio).
+
+func CreateMcpServer(kind McpClientKind) *server.MCPServer {
+	if kind == "" {
+		kind = McpClientGeneric
+	}
+	s := server.NewMCPServer(
+		McpServerName(kind),
+		"1.0.0",
+		server.WithToolCapabilities(true),
+		server.WithPromptCapabilities(true),
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("enhance",
+			mcp.WithPromptDescription(mcpDesc(kind, "prompt_enhance")),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Context the agent must honor while enhancing."), mcp.RequiredArgument()),
+		),
+		handleEnhancePrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("refactor",
+			mcp.WithPromptDescription(mcpDesc(kind, "prompt_refactor")),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Refactor constraints the agent must honor."), mcp.RequiredArgument()),
+		),
+		handleRefactorPrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("test",
+			mcp.WithPromptDescription(mcpDesc(kind, "prompt_test")),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Coverage targets the agent must honor."), mcp.RequiredArgument()),
+		),
+		handleTestPrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("comply",
+			mcp.WithPromptDescription(mcpDesc(kind, "prompt_comply")),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Compliance constraints the agent must honor."), mcp.RequiredArgument()),
+		),
+		handleComplyPrompt,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://", mcpDesc(kind, "res_root"), mcp.WithMIMEType("text/plain")),
+		handleRepoResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://bundles", mcpDesc(kind, "res_bundles"), mcp.WithMIMEType("text/plain")),
+		handleBundlesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://bundle/{id}", mcpDesc(kind, "res_bundle_one")),
+		handleBundleResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://folders", mcpDesc(kind, "res_folders"), mcp.WithMIMEType("text/plain")),
+		handleFoldersResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://folder/{id}", mcpDesc(kind, "res_folder_one")),
+		handleFolderResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://files", mcpDesc(kind, "res_files"), mcp.WithMIMEType("text/plain")),
+		handleFilesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://file/{id}", mcpDesc(kind, "res_file_one")),
+		handleFileResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://sections/{id}", mcpDesc(kind, "res_sections")),
+		handleSectionsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://section/{id}", mcpDesc(kind, "res_section_one")),
+		handleSectionResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://definitions/{id}", mcpDesc(kind, "res_definitions")),
+		handleDefinitionsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://definition/{id}", mcpDesc(kind, "res_definition_one")),
+		handleDefinitionResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://tickets", mcpDesc(kind, "res_tickets"), mcp.WithMIMEType("text/plain")),
+		handleTicketsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://ticket/{id}", mcpDesc(kind, "res_ticket_one")),
+		handleTicketResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://goals", mcpDesc(kind, "res_goals"), mcp.WithMIMEType("text/plain")),
+		handleGoalsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://goal/{id}", mcpDesc(kind, "res_goal_one")),
+		handleGoalResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://policies", mcpDesc(kind, "res_policies"), mcp.WithMIMEType("text/plain")),
+		handlePoliciesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://policy/{id}", mcpDesc(kind, "res_policy_one")),
+		handlePolicyResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://statutes", mcpDesc(kind, "res_statutes"), mcp.WithMIMEType("text/plain")),
+		handleStatutesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://statute/{id}", mcpDesc(kind, "res_statute_one")),
+		handleStatuteResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://contributors", mcpDesc(kind, "res_contributors"), mcp.WithMIMEType("text/plain")),
+		handleContributorsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://contributor/{id}", mcpDesc(kind, "res_contributor_one")),
+		handleContributorResource,
+	)
+	s.AddResource(
+		mcp.NewResource("repo://checkpoints", mcpDesc(kind, "res_checkpoints"), mcp.WithMIMEType("text/plain")),
+		handleCheckpointsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("repo://checkpoint/{id}", mcpDesc(kind, "res_checkpoint_one")),
+		handleCheckpointResource,
+	)
+
+	openOpts := []mcp.ToolOption{
+		mcp.WithDescription(mcpDesc(kind, "tool_ticket_open")),
+		mcp.WithString("emoji", mcp.Required(), mcp.Description("Single emoji representing the ticket (e.g. '🎫', '🐛', '✨').")),
+		mcp.WithString("title", mcp.Required(), mcp.Description("Short title for the ticket. Shape is not enforced.")),
+		mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
+		mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
+		mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
+		mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
+		mcp.WithBoolean("no_management", mcp.Description("Skip GitHub issue creation and management.")),
+		mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
+		mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
+		mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
+	}
+	switch kind {
+	case McpClientCursor, McpClientCopilot, McpClientClaude, McpClientCodex:
+		openOpts = append(openOpts, mcp.WithString("plan_id", mcp.Description(mcpDesc(kind, "arg_plan_id"))))
+	case McpClientKiro:
+		openOpts = append(openOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))
+	}
+	s.AddTool(mcp.NewTool("ticket_open", openOpts...), newTicketOpenHandler(kind))
+
+	closeOpts := []mcp.ToolOption{
+		mcp.WithDescription(mcpDesc(kind, "tool_ticket_close")),
+		mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the work done.")),
+		mcp.WithArray("files", mcp.Description("Files created, updated, or removed during the ticket."), mcp.WithStringItems()),
+		mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to close the latest open ticket.")),
+		mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
+		mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
+	}
+	s.AddTool(mcp.NewTool("ticket_close", closeOpts...), newTicketCloseHandler(kind))
+
+	reopenOpts := []mcp.ToolOption{
+		mcp.WithDescription(mcpDesc(kind, "tool_ticket_reopen")),
+		mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to reopen the latest closed ticket.")),
+		mcp.WithString("prompt", mcp.Description("Updated or additional task description.")),
+		mcp.WithString("llm", mcp.Description("LLM to use for the reopened ticket.")),
+		mcp.WithString("client", mcp.Description("Agent client to use for the reopened ticket.")),
+		mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
+		mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
+		mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
+	}
+	switch kind {
+	case McpClientCursor, McpClientCopilot, McpClientClaude, McpClientCodex:
+		reopenOpts = append(reopenOpts, mcp.WithString("plan_id", mcp.Description(mcpDesc(kind, "arg_plan_id"))))
+	case McpClientKiro:
+		reopenOpts = append(reopenOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))
+	}
+	s.AddTool(mcp.NewTool("ticket_reopen", reopenOpts...), newTicketReopenHandler(kind))
+
+	s.AddTool(
+		mcp.NewTool("section_move",
+			mcp.WithDescription(mcpDesc(kind, "tool_section_move")),
+			mcp.WithString("file", mcp.Required(), mcp.Description("Path to the file containing the section.")),
+			mcp.WithString("old_name", mcp.Required(), mcp.Description("Current name of the section.")),
+			mcp.WithString("new_name", mcp.Required(), mcp.Description("New name for the section.")),
+		),
+		sectionMove,
+	)
+	s.AddTool(
+		mcp.NewTool("file_integrate",
+			mcp.WithDescription(mcpDesc(kind, "tool_file_integrate")),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Path to the source file.")),
+			mcp.WithString("target_section", mcp.Required(), mcp.Description("Name of the section in the target file to integrate into.")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file.")),
+			mcp.WithString("target_parent_section", mcp.Description("Name of the parent section in the target file.")),
+		),
+		sectionIntegrate,
+	)
+	s.AddTool(
+		mcp.NewTool("section_extract",
+			mcp.WithDescription(mcpDesc(kind, "tool_section_extract")),
+			mcp.WithString("source_file", mcp.Required(), mcp.Description("Path to the source file.")),
+			mcp.WithString("source_section", mcp.Required(), mcp.Description("Name of the section to extract.")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file where the section will be written.")),
+		),
+		sectionExtract,
+	)
+	s.AddTool(
+		mcp.NewTool("search",
+			mcp.WithDescription(mcpDesc(kind, "tool_search")),
+			mcp.WithString("query", mcp.Description("Space-separated keywords to search for.")),
+		),
+		mcpTree,
+	)
+	return s
+}
+
+// RunMcpServerFor starts the MCP stdio server for the given kind.
+func RunMcpServerFor(kind McpClientKind) error {
+	s := CreateMcpServer(kind)
+	return server.ServeStdio(s)
+}
+
+// #endregion 🦀McpServerFactory
+
+// #region 🪝TicketMcpHandlers
+func newTicketOpenHandler(kind McpClientKind) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return ticketOpenWithKind(ctx, request, kind)
+	}
+}
+
+func newTicketCloseHandler(kind McpClientKind) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		_ = kind
+		return ticketClose(ctx, request)
+	}
+}
+
+func newTicketReopenHandler(kind McpClientKind) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return ticketReopenWithKind(ctx, request, kind)
+	}
+}
+
+// RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
+func RunHookFor(kind McpClientKind, eventStr string, stdin []byte) error {
+	client := HookClientForMcpKind(kind)
+	if client == "" {
+		return fmt.Errorf("hooks are not available for mcp kind %q", kind)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	repoRoot := findRepoRoot(cwd)
+	SetRootDir(repoRoot)
+	var input json.RawMessage
+	if len(stdin) > 0 {
+		input = json.RawMessage(stdin)
+	}
+	return runHookExecution(client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
+}
+
+// RunMCPFor starts the MCP stdio server for the given IDE kind.
+func RunMCPFor(kind McpClientKind) error {
+	return RunMcpServerFor(kind)
+}
+
+// #endregion 🪝TicketMcpHandlers
+// #endregion 🔖Missing Hook Functions

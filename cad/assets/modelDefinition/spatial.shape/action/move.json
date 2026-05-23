@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "transform.move",
+  "version": "1.0.0",
+  "label": "Move",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

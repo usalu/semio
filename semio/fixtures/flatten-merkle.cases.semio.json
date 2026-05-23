@@ -1,0 +1,239 @@
+{
+  "description": "🌳Shared test cases for merkle-tree based plane/center hashing in flattenDesign. Each case loads a kit, selects a design by path, computes baseline flat merkle hashes, applies the listed mutations to a clone of the kit, recomputes hashes, and asserts that the set of pieces whose plane/center hash changed matches the expectations. Paths use dotted notation (e.g. 'plane.origin.x'). Pieces and connections are selected by their id.",
+  "parity": {
+    "description": "🧪Cross-language reference hashes: every implementation MUST produce these exact lowercase hex sha256 values for the listed pieces when flattening the specified design path of the given kit without mutations.",
+    "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+    "designPath": [
+      "Nakagin Capsule Tower"
+    ],
+    "expectedHashes": [
+      {
+        "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+        "planeHash": "ad8a923756fe73d84190135710c09cc3dafff280c5f23de5e98b6252d7958ba6",
+        "centerHash": "334c87eed98599cae04e43a9cba40308c344452c904bac5661e60cbc153c0ad0"
+      },
+      {
+        "pieceId": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952",
+        "planeHash": "8abc6a800a6e2ccff839dea3c9458c16cd6ea4672b81f886a6162837a28f952b",
+        "centerHash": "8ed02a0f649b2bb9a3d171e68e1fd8332f10045918fd32d7719a40eff12ce95d"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "nakagin_baseline_no_mutation",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [],
+      "expect": {
+        "planeHashesChangedAny": false,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_irrelevant_piece_description_keeps_hashes_stable",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "pieceField",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "path": "description",
+          "value": "mutated description should not affect hashes"
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": false,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_irrelevant_connection_description_keeps_hashes_stable",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "description",
+          "value": "mutated connection description"
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": false,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_root_piece_plane_origin_change_changes_all_plane_hashes",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "pieceField",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "path": "plane.origin.x",
+          "value": 5.25
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAll": true,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_root_piece_center_change_changes_all_center_hashes",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "pieceField",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "path": "center.u",
+          "value": 7.5
+        }
+      ],
+      "expect": {
+        "centerHashesChangedAll": true,
+        "planeHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_connection_gap_change_changes_plane_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "gap",
+          "value": 3.5
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": true,
+        "planeHashesChangedAll": false,
+        "centerHashesChangedAny": false,
+        "planeHashesChangedIncludes": [
+          "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+        ],
+        "planeHashesStableIncludes": [
+          "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+        ]
+      }
+    },
+    {
+      "name": "nakagin_connection_rotation_change_changes_plane_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "rotation",
+          "value": 45
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": true,
+        "centerHashesChangedAny": false,
+        "planeHashesChangedIncludes": [
+          "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+        ]
+      }
+    },
+    {
+      "name": "nakagin_connection_tilt_change_changes_plane_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "tilt",
+          "value": 10
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": true,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_connection_shift_change_changes_plane_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "shift",
+          "value": 1.5
+        }
+      ],
+      "expect": {
+        "planeHashesChangedAny": true,
+        "centerHashesChangedAny": false
+      }
+    },
+    {
+      "name": "nakagin_connection_u_change_changes_center_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "u",
+          "value": 5.5
+        }
+      ],
+      "expect": {
+        "centerHashesChangedAny": true,
+        "planeHashesChangedAny": false,
+        "centerHashesChangedIncludes": [
+          "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+        ]
+      }
+    },
+    {
+      "name": "nakagin_connection_v_change_changes_center_hashes_only",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ],
+      "mutations": [
+        {
+          "kind": "connectionField",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "path": "v",
+          "value": 4.25
+        }
+      ],
+      "expect": {
+        "centerHashesChangedAny": true,
+        "planeHashesChangedAny": false
+      }
+    }
+  ]
+}

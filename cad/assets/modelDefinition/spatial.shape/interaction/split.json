@@ -1,0 +1,389 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "edit.split",
+  "version": "1.0.0",
+  "label": "Split",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_objects_to_split",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_objects_to_split",
+        "selection": {
+          "accept": [
+            "edge",
+            "wire",
+            "face",
+            "solid"
+          ],
+          "multiple": true,
+          "prompt": "Select objects to split"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_objects_to_split",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "splitObjects"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "select_cutting_objects",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "select_cutting_objects",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_cutting_objects",
+        "selection": {
+          "accept": [
+            "edge",
+            "wire",
+            "face"
+          ],
+          "multiple": true,
+          "prompt": "Select cutting objects"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_cutting_objects",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "cutters"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_objects_to_split",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_objects_to_split-prompt",
+            "role": "prompt",
+            "text": "Select objects to split",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_objects_to_split-preview",
+            "role": "preview",
+            "previewKind": "split-objects",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "splitObjects"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "select_cutting_objects",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_cutting_objects-prompt",
+            "role": "prompt",
+            "text": "Select cutting objects",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_cutting_objects-preview",
+            "role": "preview",
+            "previewKind": "cutters",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cutters"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "edit.split"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "split"
+        }
+      }
+    }
+  },
+  "key": "5",
+  "produces": {
+    "typology": "spatial.shape.edit.split"
+  }
+}

@@ -12,8 +12,10 @@
 // Vite configuration for the Electron main process.
 // Configuration MUST export a valid Vite config object.
 
+// #region 🔌Adapters
 import { defineConfig } from "vite";
 import path from "path";
+// #endregion 🔌Adapters
 
 // Default Vite configuration for the Electron main process.
 // Export MUST define a valid Vite config.

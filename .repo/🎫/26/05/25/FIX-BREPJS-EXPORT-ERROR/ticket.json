@@ -1,0 +1,12 @@
+{
+  "title": "Fix Brepjs Export Error",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Investigate Vite runtime error: requested module brepjs.js does not provide an export named getCachedShapeKind at spatial/js/renderer-r3f index.ts:22. Explain root cause and likely fix without broad code changes.",
+  "summary": "Fixed the Vite brepjs missing export by replacing the non-public root import of getCachedShapeKind with public brepjs describe aliased as describeBrepShape, preserving cached shape-kind behavior without importing a non-exported symbol. Verified no remaining getCachedShapeKind references under spatial/js and forced a fresh @spatial/js-renderer-r3f Vite build successfully. @spatial/js-kernel-brepjs:test still fails in existing cell-complex decomposition tests unrelated to the import error.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪be09799716c5477db8d9c749dee091ca",
+    "⚪66683afb66f645be93c449838be11d89"
+  ]
+}

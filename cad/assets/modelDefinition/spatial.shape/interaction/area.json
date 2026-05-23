@@ -1,0 +1,171 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "measure.area",
+  "version": "1.0.0",
+  "label": "Area",
+  "key": "a",
+  "guards": [
+    {
+      "name": "hasFaceArea",
+      "expr": {
+        "kind": "notEmpty",
+        "target": {
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "resolvedFaceIds"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "machine": {
+    "initial": "selectFace",
+    "states": [
+      {
+        "name": "selectFace",
+        "selection": {
+          "accept": [
+            "face"
+          ],
+          "multiple": false,
+          "prompt": "Pick face"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "ready",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "pickedId"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "kernel.query",
+                    "query": "face.resolveIds",
+                    "assignTo": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "resolvedFaceIds"
+                        }
+                      ]
+                    },
+                    "params": {
+                      "kind": "face.resolveIds",
+                      "faceId": {
+                        "kind": "path",
+                        "root": "context",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "pickedId"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectFace"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ready",
+        "on": [
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "guard": "hasFaceArea"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "commit": {
+    "when": "hasFaceArea",
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "measure.faceArea",
+      "params": {
+        "faceId": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "resolvedFaceIds"
+            },
+            {
+              "kind": "index",
+              "index": 0
+            }
+          ]
+        }
+      }
+    },
+    "outputDataPath": {
+      "root": "context",
+      "segments": [
+        {
+          "kind": "field",
+          "name": "area"
+        }
+      ]
+    }
+  },
+  "produces": {
+    "typology": "spatial.shape.measure.area"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/view",
+  "title": "SpatialView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "label", "typologies"],
+  "properties": {
+    "schema": { "const": "spatial.view/v1" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "sourceTypologies": { "type": "array", "items": { "type": "string" } },
+    "allows": { "type": "array", "items": { "type": "string" } },
+    "typologies": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@puzzle/2d/react",
+  "version": "0.1.0",
+  "description": "puzzle · 2d react",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @puzzle/2d/react:test"
+  },
+	"dependencies": {
+		"@ui/react": "workspace:*",
+    "its-fine": "^2.0.0",
+    "lucide-react": "^0.536.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-reconciler": "^0.33.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-reconciler": "^0.28.9",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "puzzle/2d/react"
+  },
+  "bundleKind": "library"
+}

@@ -15,12 +15,13 @@
 
 # #endregion 📊Header
 
-# #region ⭐Imports
-# Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
+# #region 🔌Adapters
+# Third-party and stdlib imports for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
 
 import abc
 import argparse
+import collections
 import contextlib
 import copy
 import datetime
@@ -171,7 +172,7 @@ from semio_core import (
     validateKitDict,
 )
 
-# #endregion ⭐Imports
+# #endregion 🔌Adapters
 
 # #region 🪨Store
 # Store MUST provide the data access layer for kit operations via code-based routing.
@@ -2023,7 +2024,6 @@ _mcp_session_transactions: dict[typing.Any, Transaction] = {}
 _mcp_session_transaction_rollback: set[typing.Any] = set()
 _mcp_session_selection: dict[typing.Any, dict[str, list[str]]] = {}
 _mcp_session_camera: dict[typing.Any, dict[str, typing.Any]] = {}
-import collections
 _mcp_app_payloads: collections.OrderedDict[str, dict[str, typing.Any]] = collections.OrderedDict()
 _MCP_APP_PAYLOADS_MAX_SIZE = 100
 _mcp_app_file_blobs: dict[str, str] = {}
@@ -2055,7 +2055,13 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
 
 def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
     """🧭Load nearby canonical kit JSON used to restore links omitted by folder stores."""
-    for json_path in (folder / "metabolism.kit.semio.json", folder / "kit.json", folder.parent / "metabolism.kit.semio.json"):
+    for json_path in (
+        folder / "kit.semio.json",
+        folder / "kit.json",
+        folder / "wip" / "initialKit" / "kit.semio.json",
+        folder.parent / "kit.semio.json",
+        folder.parent / "wip" / "initialKit" / "kit.semio.json",
+    ):
         if json_path.exists():
             with open(json_path, "r", encoding="utf-8") as f:
                 return json.load(f)
@@ -2111,15 +2117,15 @@ def _load_kit_from_path(path: str) -> dict:
             else:
                 loaded_kit = KitOutput.representation_validate(kit).representation_dump()
             return _merge_reference_kit_links(loaded_kit, _load_reference_kit_json_for_folder(p))
-        for name in ("metabolism.kit.semio.json", "kit.json"):
+        for name in ("wip/initialKit/kit.semio.json", "kit.semio.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
                 with open(json_path, "r", encoding="utf-8") as f:
                     return json.load(f)
-        parent_json = p.parent / "metabolism.kit.semio.json"
-        if parent_json.exists():
-            with open(parent_json, "r", encoding="utf-8") as f:
-                return json.load(f)
+        for parent_json in (p.parent / "kit.semio.json", p.parent / "wip" / "initialKit" / "kit.semio.json"):
+            if parent_json.exists():
+                with open(parent_json, "r", encoding="utf-8") as f:
+                    return json.load(f)
     raise FileNotFoundError(f"Kit not found at path: {path}")
 
 
@@ -2373,7 +2379,7 @@ def _rollback_session_transaction(sid: int):
 def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
     """🟡Load a local kit into the session. Must be called before any kit operations.
 
-    Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing metabolism.kit.semio.json.
+    Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a split store folder containing wip/initialKit/kit.semio.json.
     """
     try:
         kit = _load_kit_from_path(path)
@@ -2697,7 +2703,7 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
 def _find_bundled_design_metadata(id: str) -> dict | None:
     """🧷Find bundled design metadata by id for reconstructing stateful tool payloads."""
     assets_dir = _engine_bundle_dir().parent / "assets" / "semio"
-    for kit_path in (assets_dir / "metabolism.kit.semio.json", assets_dir / "metabolism.shallow.kit.semio.json", assets_dir / "metabolism.meta.kit.semio.json"):
+    for kit_path in (assets_dir / "metabolism" / "wip" / "initialKit" / "kit.semio.json", assets_dir / "metabolism.shallow.kit.semio.json", assets_dir / "metabolism.meta.kit.semio.json"):
         if not kit_path.exists():
             continue
         try:
@@ -3917,11 +3923,13 @@ def dev():
 
 # #region 🥼Tests
 # Pytest suite lives in this module so the engine and tests share one unit of compilation.
+# #region 🔌Adapters
 import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
 from starlette.testclient import TestClient
+# #endregion 🔌Adapters
 
 engine = sys.modules[__name__]
 sys.modules["engine"] = engine
@@ -3936,7 +3944,7 @@ def _mcp_app_tool_payload(result: object) -> dict:
 
 # #region 👓Constants
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
-KIT_METABOLISM_PATH = ASSETS_DIR / "metabolism.kit.semio.json"
+KIT_METABOLISM_PATH = ASSETS_DIR / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
 METABOLISM_DIR = ASSETS_DIR / "metabolism"
 
 # #endregion 👓Constants
@@ -4495,7 +4503,7 @@ class TestMcp:
         assert mock_ctx.session in engine._mcp_session_kits
 
     def test_start_working_in_local_kit_loads_from_folder(self):
-        """🔖start_working_in_local_kit loads kit from folder containing metabolism.kit.semio.json."""
+        """🔖start_working_in_local_kit loads kit from a split store folder containing wip/initialKit/kit.semio.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)

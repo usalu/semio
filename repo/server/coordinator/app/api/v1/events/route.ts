@@ -4,11 +4,14 @@
 // Event ingestion and listing API.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { listEvents } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
-import { publishEvent } from "@/lib/events";
+// #endregion 🔌Adapters
+
+import { listEvents } from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
+import { publishEvent } from "@/lib";
 
 const EventSchema = z.object({
   kind: z.string().min(1),

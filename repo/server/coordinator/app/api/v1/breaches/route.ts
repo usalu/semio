@@ -4,9 +4,12 @@
 // Breach listing API.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { listBreaches } from "@/lib/db";
-import { requireAuth, isAuthError } from "@/lib/auth";
+// #endregion 🔌Adapters
+
+import { listBreaches } from "@/lib";
+import { requireAuth, isAuthError } from "@/lib";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

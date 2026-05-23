@@ -50,11 +50,11 @@
       "@semio/js/*": [
         "./*"
       ],
-      "@elements/ui": [
-        "../../elements/ui"
+      "@ui/react": [
+        "../../../ui/react"
       ],
-      "@elements/ui/*": [
-        "../../elements/ui/*"
+      "@ui/react/*": [
+        "../../../ui/react/*"
       ],
       "@semio/assets": [
         "../assets"
@@ -72,9 +72,7 @@
   },
   "include": [
     "index.ts",
-    "kit-store.worker.ts",
-    "graphql-contract.ts",
-    "rs-wasm-transport.ts"
+    "kit-store.worker.ts"
   ],
   "exclude": [
     "node_modules",

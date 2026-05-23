@@ -1,0 +1,26 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@framework/playground",
+	"version": "0.1.0",
+	"description": "framework · playground miniframework (one app, fixture, selection, filter, workbench, details)",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./core.ts"
+	},
+	"dependencies": {
+		"@ui/react": "workspace:*",
+		"clsx": "^2.1.1",
+		"lucide-react": "^0.536.0",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"tailwind-merge": "^3.3.1"
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"typescript": "^5.9.3"
+	},
+	"license": "LGPL-3.0-or-later",
+	"bundleKind": "library"
+}

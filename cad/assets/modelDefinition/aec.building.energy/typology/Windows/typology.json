@@ -1,0 +1,18 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "energy.energy.windows",
+  "version": "1.0.0",
+  "label": "Windows",
+  "description": "All external window surfaces.",
+  "actions": [
+    "energy.energy.constructWindowsFrom2PointsAndHeight",
+    "energy.energy.constructWindowsFromCurveAndHeight",
+    "energy.energy.constructWindowsFromSurface"
+  ],
+  "interactions": [
+    "energy.energy.constructWindows"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

@@ -4,10 +4,13 @@
   "prompt": "file://../../AGENTS.md",
   "mcpServers": {
     "repo": {
-      "command": "go",
+      "command": "bun",
       "args": [
-        "run",
-        "./repo/kiro"
+        "./script.ts",
+        "dev",
+        "mcp",
+        "stdio",
+        "kiro"
       ]
     }
   },
@@ -97,27 +100,27 @@
   "hooks": {
     "agentSpawn": [
       {
-        "command": "go run ./repo/mcp hook agentSpawn kiro-cli"
+        "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
       }
     ],
     "userPromptSubmit": [
       {
-        "command": "go run ./repo/mcp hook userPromptSubmit kiro-cli"
+        "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
       }
     ],
     "preToolUse": [
       {
-        "command": "go run ./repo/mcp hook preToolUse kiro-cli"
+        "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
       }
     ],
     "postToolUse": [
       {
-        "command": "go run ./repo/mcp hook postToolUse kiro-cli"
+        "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
       }
     ],
     "stop": [
       {
-        "command": "go run ./repo/mcp hook stop kiro-cli"
+        "command": "bun ./script.ts dev mcp stdio kiro hook stop"
       }
     ]
   },

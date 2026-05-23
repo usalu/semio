@@ -9,10 +9,13 @@
 // - Processes push events for contributor work tracking.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
-import { publishEvent } from "@/lib/events";
-import { removeContributorWorkForCheckpoint } from "@/lib/db";
+// #endregion 🔌Adapters
+
+import { publishEvent } from "@/lib";
+import { removeContributorWorkForCheckpoint } from "@/lib";
 
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 

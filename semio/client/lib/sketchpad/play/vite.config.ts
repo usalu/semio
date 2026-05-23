@@ -12,6 +12,7 @@
 // Vite build configuration for the play application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
+// #region 🔌Adapters
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -24,6 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+// #endregion 🔌Adapters
 
 /**
  * Absolute file path of the current module.
@@ -53,8 +55,7 @@ export default defineConfig(async () => {
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../react") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
-        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
+        { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
         { find: "vite/internal", replacement: viteInternalFallback },
       ],
     },

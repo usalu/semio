@@ -1,0 +1,13 @@
+{
+  "title": "Spatial Sphere Radius Preview",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "When selecting the radius in the spatial sphere interaction, display the sphere interactively during the selection instead of only after finalization.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1476"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪816f22161cf24ea49b9d594dd4407ae2"
+  ]
+}

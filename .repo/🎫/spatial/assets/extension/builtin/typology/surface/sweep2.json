@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.surface.sweep2",
+  "version": "1.0.0",
+  "label": "Sweep2",
+  "description": "Typology produced by surface.sweep2.",
+  "actions": [
+    "builtin.surface.sweep2"
+  ],
+  "interactions": [
+    "surface.sweep2"
+  ]
+}

@@ -1,39 +1,38 @@
 #!/usr/bin/env bun
-/**
- * 🧭 GraphQL schema bundle router: `bun ./script.ts build` exports `schema.graphql` from Rust tests.
- */
+/** 🧭 GraphQL schema bundle router: `bun ./script.ts build`. */
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/src/index.ts";
 
-const cwd = import.meta.dir;
-const segs = process.argv.slice(2);
-
-if (segs[0] === "build") {
-  const out = join(cwd, "schema.graphql");
-  const cargoTargetDir = join(cwd, "target");
-  execFileSync(
-    "cargo",
-    [
-      "test",
-      "--manifest-path",
-      join(cwd, "..", "..", "lib", "rs", "Cargo.toml"),
-      "export_semio_graphql_schema_file",
-      "--",
-      "--ignored",
-      "--nocapture",
-    ],
-    {
-      cwd,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        CARGO_BUILD_JOBS: "1",
-        CARGO_TARGET_DIR: cargoTargetDir,
-        SEMIO_GRAPHQL_SCHEMA_OUT: out,
+class BuildScript extends BundleScript {
+  run(): void {
+    const out = join(this.root, "schema.graphql");
+    const cargoTargetDir = join(this.root, "target");
+    execFileSync(
+      "cargo",
+      [
+        "test",
+        "--manifest-path",
+        join(this.root, "..", "..", "lib", "rs", "Cargo.toml"),
+        "export_semio_graphql_schema_file",
+        "--",
+        "--ignored",
+        "--nocapture",
+      ],
+      {
+        cwd: this.root,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          CARGO_BUILD_JOBS: "1",
+          CARGO_TARGET_DIR: cargoTargetDir,
+          SEMIO_GRAPHQL_SCHEMA_OUT: out,
+        },
       },
-    },
-  );
-} else {
-  console.error("usage: bun ./script.ts build");
-  process.exit(1);
+    );
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });

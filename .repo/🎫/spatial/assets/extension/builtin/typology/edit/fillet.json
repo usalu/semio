@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.edit.fillet",
+  "version": "1.0.0",
+  "label": "Fillet",
+  "description": "Typology produced by edit.fillet.",
+  "actions": [
+    "builtin.edit.fillet"
+  ],
+  "interactions": [
+    "edit.fillet"
+  ]
+}

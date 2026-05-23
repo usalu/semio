@@ -4,7 +4,9 @@
 // Next.js configuration for the repo server app.
 // #endregion 🧲Header
 
+// #region 🔌Adapters
 import type { NextConfig } from "next";
+// #endregion 🔌Adapters
 
 const nextConfig: NextConfig = {
   output: "standalone",

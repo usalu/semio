@@ -37,6 +37,72 @@
         }
       }
     },
+    "dev-storybook-ui": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook ui",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-puzzle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook puzzle",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-puzzle-2d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook puzzle 2d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-semio": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook semio",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-semio-algorithms": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook semio algorithms",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-semio-ui": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook semio ui",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -74,14 +140,6 @@
       "cache": false,
       "options": {
         "command": "bun ./script.ts generate neo4j",
-        "forwardAllArgs": true
-      }
-    },
-    "generate-neo4j-migrate": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./.repo/🎫/26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN/migrate.neo4j.script.ts",
         "forwardAllArgs": true
       }
     },
@@ -212,17 +270,6 @@
       "options": {
         "command": "bun ./script.ts purge",
         "forwardAllArgs": true
-      }
-    },
-    "seed-neo4j-metabolism-light-kit": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./script.ts seed neo4j metabolism-light-kit",
-        "forwardAllArgs": true,
-        "env": {
-          "NEO4J_DATABASE": "metabolism"
-        }
       }
     }
   }

@@ -9,8 +9,10 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
+// #region 🔌Adapters
 import path from "path";
 import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
 
 const semioWasmBg = path.resolve(__dirname, "../rs/pkg/semio_bg.wasm");
 

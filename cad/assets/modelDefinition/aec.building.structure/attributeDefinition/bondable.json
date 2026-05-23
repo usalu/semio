@@ -1,0 +1,28 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "spatial.shape.bondable",
+  "version": "1.0.0",
+  "label": "Bondable",
+  "description": "Marks geometry that may be unified with matching contacts.",
+  "field": "bondable",
+  "targets": [
+    "edge",
+    "wire",
+    "face",
+    "solid"
+  ],
+  "value": {
+    "kind": "boolean",
+    "allowedValues": [
+      true
+    ]
+  },
+  "geometrySelector": {
+    "kinds": [
+      "edge",
+      "wire",
+      "face",
+      "solid"
+    ]
+  }
+}

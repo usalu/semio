@@ -1,0 +1,10 @@
+{
+  "title": "Selection Commands",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Implement selection.apply action and built-in selection.* interactions (SelectAll, DeselectAll, InvertSelection, SelectVertices, …).",
+  "summary": "Selection commands: headless (runSelectionApply, ActionRegistry.run) and interactive (selection.* interactions) share executeSelectionApply. Construct CALL: every selection.* id registered as action; YIELD targets; ConstructQueryContext.selectionTargets seeds invert. Query + core tests pass.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [],
+  "files": ["spatial/js/core/index.ts", "spatial/js/renderer-r3f/index.tsx", "spatial/js/query/index.ts", "spatial/AGENTS.md"]
+}

@@ -12,8 +12,10 @@
 // Vite configuration for the Electron main process.
 // Configuration MUST export a valid Vite config object.
 
+// #region 🔌Adapters
 import { builtinModules } from "module";
 import { defineConfig } from "vite";
+// #endregion 🔌Adapters
 
 export default defineConfig({
   build: {

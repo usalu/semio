@@ -19,7 +19,7 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 ## Strict layering
 
 - **Up** (toward UI): `semio/react` imports this package for `KitStore` + wire types.
-- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs` (wire: `graphql-contract.ts`; WASM: `rs-wasm-transport.ts` + `kit-store.worker.ts` with `dev://empty` only). Kit JSON enters via `Store.installProjection`, never `Session.open` URIs. No imports from `semio/react` or `semio/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
+- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs` (wire + WASM in `index.ts` regions `GraphqlContract` / `RsWasmTransport`; `kit-store.worker.ts` with `dev://empty` only). Kit JSON enters via `Store.installProjection`, never `Session.open` URIs. No imports from `semio/react` or `semio/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
 
 ## Bidirectional actor model
 

@@ -14,7 +14,7 @@ package main
 
 // #endregion 🔑Package
 
-// #region ⛩️Imports
+// #region 🔌Adapters
 // Standard library and third-party imports MUST be grouped by origin.
 import (
 	"bufio"
@@ -43,7 +43,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// #endregion ⛩️Imports
+// #endregion 🔌Adapters
 
 // #region ⏱️Config
 // Server configuration loading from environment variables. MUST provide sensible defaults.

@@ -1,0 +1,13 @@
+{
+	"schema": "spatial.modelDefinition/v1",
+	"id": "aec.building.structure",
+	"version": "1.0.0",
+	"label": "Structure",
+	"description": "Structural analysis base model definition assets.",
+	"kinds": [
+		"attribute",
+		"property",
+		"transformation",
+		"typology"
+	]
+}

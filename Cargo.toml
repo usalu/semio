@@ -1,7 +1,8 @@
 [workspace]
 members = [
-    "elements/client/lib/board/rs",
+    "puzzle/2d/rs",
     "semio/client/lib/rs",
+    "semio/client/lib/query",
     "semio/client/bin/store",
     "semio/server/hub",
 ]

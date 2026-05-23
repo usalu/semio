@@ -1,0 +1,255 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "edit.join",
+  "version": "1.0.0",
+  "label": "Join",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_object_for_join",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_object_for_join",
+        "selection": {
+          "accept": [
+            "edge",
+            "wire",
+            "face"
+          ],
+          "multiple": true,
+          "prompt": "Select object for join"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_object_for_join",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "targets"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_object_for_join",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_object_for_join-prompt",
+            "role": "prompt",
+            "text": "Select object for join",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_object_for_join-preview",
+            "role": "preview",
+            "previewKind": "join-selection",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "edit.join"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "join"
+        }
+      }
+    }
+  },
+  "key": "6",
+  "produces": {
+    "typology": "spatial.shape.edit.join"
+  }
+}

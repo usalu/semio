@@ -6,7 +6,8 @@
 
 /// <reference lib="webworker" />
 
-import { RS_WASM_EMPTY_STORE_URI } from "./graphql-contract";
+/** @emoji 🧪 Empty in-memory WASM store URI (worker must not import full `@semio/js` index). */
+const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
 //#region 🧷WasmHandle
 type WasmKitHandle = {

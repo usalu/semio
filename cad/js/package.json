@@ -1,0 +1,8 @@
+{
+  "name": "@cad/js",
+  "private": true,
+  "workspaces": ["core", "kernel/brepjs", "machine/stately", "query", "renderer"],
+  "dependencies": {
+    "xstate": "^5"
+  }
+}

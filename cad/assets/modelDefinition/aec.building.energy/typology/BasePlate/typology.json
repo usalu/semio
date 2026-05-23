@@ -1,0 +1,16 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "energy.energy.baseplate",
+  "version": "1.0.0",
+  "label": "Base Plate",
+  "description": "Lowest external horizontal surface.",
+  "actions": [
+    "energy.energy.constructBasePlateFromSurface"
+  ],
+  "interactions": [
+    "energy.energy.constructBasePlate"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

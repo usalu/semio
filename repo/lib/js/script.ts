@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
 /** 🧭 `@repo/lib` router: `bun ./script.ts lint` runs the package lint target via Nx from the monorepo root. */
-import { execFileSync } from "node:child_process";
-import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "./src/index.ts";
 
-const cwd = import.meta.dir;
-const root = join(cwd, "..", "..", "..");
-const segs = process.argv.slice(2);
-
-if (segs[0] === "lint") {
-  execFileSync("bun", ["nx", "run", "@repo/lib:lint"], { cwd: root, stdio: "inherit" });
-} else {
-  console.error("usage: bun ./script.ts lint");
-  process.exit(1);
+class LintScript extends BundleScript {
+  run(): void {
+    runCmd(process.execPath, ["nx", "run", "@repo/lib:lint"], { cwd: this.repoRoot });
+  }
 }
+
+const router = new ScriptRouter(import.meta.dir).register("lint", LintScript);
+
+await runBundleScriptMain(router, import.meta.url);

@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "structure.structure.reinforcedconcreteexternalwall",
+  "version": "1.0.0",
+  "label": "Reinforced Concrete External Wall",
+  "actions": [
+    "structure.structure.constructReinforcedConcreteExternalWallFrom2PointsAndHeight",
+    "structure.structure.constructReinforcedConcreteExternalWallFromCurveAndHeight",
+    "structure.structure.constructReinforcedConcreteExternalWallFromSurface"
+  ],
+  "interactions": [
+    "structure.structure.constructReinforcedConcreteExternalWall"
+  ],
+  "primitiveKinds": [
+    "solid"
+  ]
+}

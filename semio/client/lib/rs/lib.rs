@@ -430,11 +430,41 @@ macro_rules! meta_quality_entity {
 
 //#endregion 🧬 entity_dsl
 
+//#region 🔌ExternalAdapters
+/// @emoji 🔌 Sole import surface for third-party crates used by `semio` (domain code uses `crate::external_adapters::*`).
+pub mod external_adapters {
+    pub use async_broadcast;
+    pub use async_channel;
+    pub use async_executor;
+    pub use async_graphql;
+    pub use async_lock;
+    pub use async_stream;
+    pub use blake3;
+    pub use futures_channel;
+    pub use futures_lite;
+    pub use futures_util;
+    pub use hex;
+    pub use nalgebra;
+    pub use paste;
+    pub use serde;
+    pub use serde_json;
+    pub use sha2;
+    pub use thiserror;
+    pub use uuid;
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use {chrono, rusqlite, tempfile, ureq, walkdir, zip};
+    #[cfg(target_arch = "wasm32")]
+    pub use {
+        base64, getrandom, js_sys, serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures, web_sys,
+    };
+}
+//#endregion 🔌ExternalAdapters
+
 //#region 🆔 id
 
 pub mod id {
     //! 🆔 Immutable uuid-v7 wrapper used by every entity.
-    use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+    use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
     use std::fmt;
 
     /// @emoji 🆔 Opaque node identifier (uuidv7 string); GraphQL wire name `ID` per target schema.
@@ -444,11 +474,11 @@ pub mod id {
     impl Id {
         /// 🆕 Mint a fresh uuid-v7 (timestamped, monotonic).
         pub async fn new() -> Self {
-            Self(uuid::Uuid::now_v7().to_string())
+            Self(crate::external_adapters::uuid::Uuid::now_v7().to_string())
         }
 
         pub(crate) fn new_sync() -> Self {
-            Self(uuid::Uuid::now_v7().to_string())
+            Self(crate::external_adapters::uuid::Uuid::now_v7().to_string())
         }
 
         pub fn as_str(&self) -> &str {
@@ -495,7 +525,7 @@ pub mod id {
 
 pub mod timestamp {
     //! ⏱️ ISO-8601 millisecond-precision timestamp scalar.
-    use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+    use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
 
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
     pub struct Timestamp(pub String);
@@ -520,7 +550,7 @@ pub mod timestamp {
 
 pub mod color {
     //! 🎨 Hex/CSS color token scalar matching golden `scalar Color`.
-    use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+    use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
 
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
     pub struct Color(pub String);
@@ -545,8 +575,8 @@ pub mod color {
 
 pub mod error {
     //! 🚨 Crate-wide error type wired through the event bus as `OperationFailed`.
-    use async_graphql::Object;
-    use thiserror::Error;
+    use crate::external_adapters::async_graphql::Object;
+    use crate::external_adapters::thiserror::Error;
 
     #[derive(Clone, Debug, Default, Error)]
     #[error("{kind}: {message}")]
@@ -606,7 +636,7 @@ pub mod error {
 
 pub mod geom {
     //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
-    use async_graphql::InputObject;
+    use crate::external_adapters::async_graphql::InputObject;
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "VectorInput")]
@@ -676,7 +706,7 @@ pub mod geom {
         //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::interface`].
         use std::sync::Arc;
 
-        use async_lock::RwLock;
+        use crate::external_adapters::async_lock::RwLock;
 
         use crate::hash::{h, merkle_node_str};
         use crate::id::Id;
@@ -954,7 +984,7 @@ pub mod geom {
 pub mod gql_relay {
     use std::sync::Arc;
 
-    use async_graphql::SimpleObject;
+    use crate::external_adapters::async_graphql::SimpleObject;
 
     use crate::hash::{h, merkle_collection};
     use crate::id::Id;
@@ -1230,7 +1260,7 @@ pub mod schema_gap_surfaces {
 
     use std::sync::Arc;
 
-    use async_graphql::SimpleObject;
+    use crate::external_adapters::async_graphql::SimpleObject;
 
     use crate::gql_relay::PageInfo;
 
@@ -1241,7 +1271,7 @@ pub mod schema_gap_surfaces {
                 pub hash: String,
             }
 
-            paste::paste! {
+            crate::external_adapters::paste::paste! {
                 #[derive(Clone, Debug, Default, SimpleObject)]
                 pub struct [<$Name Edge>] {
                     pub cursor: String,
@@ -1314,7 +1344,7 @@ pub mod schema_gap_surfaces {
 
     macro_rules! gap_surface_existing_relay {
         ($Base:ident) => {
-            paste::paste! {
+            crate::external_adapters::paste::paste! {
                 #[derive(Clone, Debug, Default, SimpleObject)]
                 pub struct [<$Base Edge>] {
                     pub cursor: String,
@@ -1884,7 +1914,7 @@ pub mod schema_gap_surfaces {
     macro_rules! register_gap_surface_family_connections {
         ($builder:expr, $($Name:ident),+ $(,)?) => {{
             let mut b = $builder;
-            $( b = b.register_output_type::<::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
+            $( b = b.register_output_type::<$crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
             b
         }};
     }
@@ -1942,7 +1972,7 @@ pub mod schema_gap_surfaces {
     macro_rules! register_gap_surface_existing_relay_connections {
         ($builder:expr, $($Name:ident),+ $(,)?) => {{
             let mut b = $builder;
-            $( b = b.register_output_type::<::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
+            $( b = b.register_output_type::<$crate::external_adapters::paste::paste! { $crate::schema_gap_surfaces::[<$Name Connection>] }>(); )+
             b
         }};
     }
@@ -1957,7 +1987,7 @@ pub mod schema_gap_surfaces {
 
 pub mod meta {
     //! 🏷️ Metadata: DTO [`SimpleObject`] shells plus Arc-backed [`Tag`]/[`Concept`]/[`Quality`] entities (SDL `Entity`).
-    use async_graphql::Object;
+    use crate::external_adapters::async_graphql::Object;
 
     use crate::id::Id;
     use crate::timestamp::Timestamp;
@@ -2309,7 +2339,7 @@ pub mod meta {
 
 pub mod hash {
     //! 🪪 Blake3 Merkle helpers: [`h`] for delimiter-joined parts; [`merkle_node_str`] for ordered own fields plus sorted child digests; [`merkle_collection`] for relay connection hashes.
-    use blake3::Hasher;
+    use crate::external_adapters::blake3::Hasher;
 
     pub fn h<S: AsRef<[u8]>>(parts: &[S]) -> String {
         let mut hasher = Hasher::new();
@@ -2379,8 +2409,8 @@ pub mod kit {
         //! 🏠 Types, their connectors and representations.
         use std::sync::{Arc, Weak};
 
-        use async_graphql::{Object, Union};
-        use async_lock::RwLock;
+        use crate::external_adapters::async_graphql::{Object, Union};
+        use crate::external_adapters::async_lock::RwLock;
 
         use crate::hash::h;
         use crate::id::Id;
@@ -2916,8 +2946,8 @@ pub mod kit {
             //! ⭕ Piece (instance of a Type or Design within a Design).
             use std::sync::{Arc, Weak};
 
-            use async_graphql::{Enum, Object};
-            use async_lock::RwLock;
+            use crate::external_adapters::async_graphql::{Enum, Object};
+            use crate::external_adapters::async_lock::RwLock;
 
             use crate::geom::entity::Position as PositionEntity;
             use crate::geom::PositionInput;
@@ -3119,8 +3149,8 @@ pub mod kit {
             //! 🔗 Connection between two piece sides + the Side value.
             use std::sync::{Arc, Weak};
 
-            use async_graphql::Object;
-            use async_lock::RwLock;
+            use crate::external_adapters::async_graphql::Object;
+            use crate::external_adapters::async_lock::RwLock;
 
             use crate::hash::h;
             use crate::id::Id;
@@ -3358,8 +3388,8 @@ pub mod kit {
         use std::collections::HashMap;
         use std::sync::{Arc, Weak};
 
-        use async_graphql::Object;
-        use async_lock::RwLock;
+        use crate::external_adapters::async_graphql::Object;
+        use crate::external_adapters::async_lock::RwLock;
 
         use crate::geom::entity::Location;
         use crate::hash::h;
@@ -3596,7 +3626,7 @@ pub mod kit {
     pub mod target_operations {
         use std::sync::Arc;
 
-        use async_graphql::SimpleObject;
+        use crate::external_adapters::async_graphql::SimpleObject;
 
         use crate::gql_relay::{AttributeConnection, ConceptConnection, PortConnection, QualityConnection, TagConnection};
         use crate::kit::r#type::Port;
@@ -3897,8 +3927,8 @@ pub mod kit {
     use std::collections::HashMap;
     use std::sync::{Arc, Weak};
 
-    use async_graphql::Object;
-    use async_lock::RwLock;
+    use crate::external_adapters::async_graphql::Object;
+    use crate::external_adapters::async_lock::RwLock;
 
     use crate::hash::h;
     use crate::id::Id;
@@ -4947,7 +4977,7 @@ pub mod kit {
 
 //#region 🏷️ meta graphql
 
-#[async_graphql::Object(name = "Tag")]
+#[crate::external_adapters::async_graphql::Object(name = "Tag")]
 impl crate::meta::Tag {
     pub async fn id(&self) -> crate::id::Id {
         self.id.clone()
@@ -4982,7 +5012,7 @@ impl crate::meta::Tag {
     }
 }
 
-#[async_graphql::Object(name = "Concept")]
+#[crate::external_adapters::async_graphql::Object(name = "Concept")]
 impl crate::meta::Concept {
     pub async fn id(&self) -> crate::id::Id {
         self.id.clone()
@@ -5017,7 +5047,7 @@ impl crate::meta::Concept {
     }
 }
 
-#[async_graphql::Object(name = "Quality")]
+#[crate::external_adapters::async_graphql::Object(name = "Quality")]
 impl crate::meta::Quality {
     pub async fn id(&self) -> crate::id::Id {
         self.id.clone()
@@ -5070,8 +5100,8 @@ pub mod vcs {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{Context, InputObject, Object};
-    use async_lock::RwLock;
+    use crate::external_adapters::async_graphql::{Context, InputObject, Object};
+    use crate::external_adapters::async_lock::RwLock;
 
     use crate::error::SemioError;
     use crate::hash::{h, merkle_node_str};
@@ -5083,7 +5113,7 @@ pub mod vcs {
 
     //#region 🏷️ golden_version_kind
     /// @emoji 🏷️ SDL `VersionKind` (`INITIAL_KIT` | `MATERIALIZED`) on golden `Version`.
-    #[derive(Clone, Copy, PartialEq, Eq, async_graphql::Enum)]
+    #[derive(Clone, Copy, PartialEq, Eq, crate::external_adapters::async_graphql::Enum)]
     pub enum VersionKind {
         #[graphql(name = "INITIAL_KIT")]
         InitialKit,
@@ -6227,7 +6257,7 @@ pub mod vcs {
         }
 
         /// 🛰️ WIP bootstrap: hydrate [`Graph::mutable_kit`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
-        pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
+        pub async fn new_overlay_from_initial_kit_projection_json(json: crate::external_adapters::serde_json::Value) -> Result<Arc<Self>, SemioError> {
             crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json).await
         }
 
@@ -6310,7 +6340,7 @@ pub mod vcs {
             self.started_at.read().await.clone()
         }
 
-        pub async fn owner(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+        pub async fn owner(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(Some(crate::gql::interfaces::EntityInterface::Graph(rt.wip_graph.clone())))
         }
@@ -6320,19 +6350,19 @@ pub mod vcs {
         }
 
         /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
-        pub async fn alternatives(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::AlternativeConnection> {
+        pub async fn alternatives(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::gql_relay::AlternativeConnection> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql_relay::AlternativeConnection::from_alternatives(rt.wip_graph.alternatives.read().await.clone()).await)
         }
 
-        pub async fn alternative(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<Alternative>>> {
+        pub async fn alternative(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<Option<Arc<Alternative>>> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             let alts = rt.wip_graph.alternatives.read().await;
             Ok(alts.iter().find(|a| a.id == id).cloned())
         }
 
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::WorkspaceInterface> {
+        pub async fn the_kit(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::gql::interfaces::WorkspaceInterface> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql::interfaces::WorkspaceInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
@@ -6342,12 +6372,12 @@ pub mod vcs {
         }
 
         #[graphql(name = "localProvider")]
-        pub async fn local_provider(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::gql::LocalProvider>> {
+        pub async fn local_provider(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Arc<crate::gql::LocalProvider>> {
             Ok(ctx.data::<Arc<crate::worker::ParentStore>>()?.local_provider.clone())
         }
 
         #[graphql(name = "remoteProviders")]
-        pub async fn remote_providers(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::RemoteProviderConnection> {
+        pub async fn remote_providers(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::gql::RemoteProviderConnection> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql::RemoteProviderConnection::from_providers(rt.remote_providers.read().await.clone()))
         }
@@ -6386,7 +6416,7 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+        pub async fn owner(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(rt.sessions.read().await.first().cloned().map(crate::gql::interfaces::EntityInterface::Session))
         }
@@ -6415,7 +6445,7 @@ pub mod vcs {
 pub mod interface {
     use std::sync::Arc;
 
-    use async_graphql::{Object, Union};
+    use crate::external_adapters::async_graphql::{Object, Union};
 
     use crate::geom::entity::{Coordinate, Location, Offset, Place, Plane, Point, Position, Vector};
     use crate::id::Id;
@@ -6715,7 +6745,7 @@ pub mod operation {
     //! event bus broadcasts shared references, never deep-copied entity data.
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{Interface, Object, Union};
+    use crate::external_adapters::async_graphql::{Interface, Object, Union};
 
     use crate::error::SemioError;
     use crate::geom::{OffsetInput, PositionInput};
@@ -8221,7 +8251,7 @@ pub mod operation {
     //#endregion 🧾 inputs
 
     /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, crate::external_adapters::async_graphql::Enum)]
     #[graphql(name = "BackboneKind")]
     pub enum BackboneKind {
         #[graphql(name = "DEV")]
@@ -8255,7 +8285,7 @@ pub mod operation {
 
     //#region 📜  operation record (kit bundle / operation log contract)
     /// @emoji 📜 One persisted  operation: stable id, kind string, JSON payload, monotonic sequence index.
-    #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Default, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "OperationRecord")]
     pub struct OperationRecord {
         pub id: Id,
@@ -8581,7 +8611,7 @@ pub mod operation {
     }
 
     /// ✅ Lightweight signal that a command was accepted (used by `commandSucceeded`).
-    #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Default, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "Command")]
     pub struct CommandReceipt {
         #[graphql(name = "requestId")]
@@ -8944,26 +8974,26 @@ pub mod kit_backbone {
     pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
     /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.semio.json`).
-    pub(crate) fn json_array_or_block_items_ref(v: &serde_json::Value) -> Option<&Vec<serde_json::Value>> {
+    pub(crate) fn json_array_or_block_items_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&Vec<crate::external_adapters::serde_json::Value>> {
         match v {
-            serde_json::Value::Array(a) => Some(a),
-            serde_json::Value::Object(o) => o.get("items").and_then(|x| x.as_array()),
+            crate::external_adapters::serde_json::Value::Array(a) => Some(a),
+            crate::external_adapters::serde_json::Value::Object(o) => o.get("items").and_then(|x| x.as_array()),
             _ => None,
         }
     }
 
     /// @emoji 📎 Mutable slice for hydrate / blob merge paths that must accept block lists or legacy arrays.
-    pub(crate) fn json_array_or_block_items_mut(v: &mut serde_json::Value) -> Option<&mut Vec<serde_json::Value>> {
+    pub(crate) fn json_array_or_block_items_mut(v: &mut crate::external_adapters::serde_json::Value) -> Option<&mut Vec<crate::external_adapters::serde_json::Value>> {
         match v {
-            serde_json::Value::Array(a) => Some(a),
-            serde_json::Value::Object(o) => o.get_mut("items").and_then(|x| x.as_array_mut()),
+            crate::external_adapters::serde_json::Value::Array(a) => Some(a),
+            crate::external_adapters::serde_json::Value::Object(o) => o.get_mut("items").and_then(|x| x.as_array_mut()),
             _ => None,
         }
     }
 
     //#region 🔖 dev_backbone_kit_operation_json
-    fn position_input_to_json(p: &crate::geom::PositionInput) -> serde_json::Value {
-        serde_json::json!({
+    fn position_input_to_json(p: &crate::geom::PositionInput) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "center": { "u": p.center.u, "v": p.center.v },
             "plane": {
                 "origin": { "x": p.plane.origin.x, "y": p.plane.origin.y, "z": p.plane.origin.z },
@@ -8975,8 +9005,8 @@ pub mod kit_backbone {
 
     //#region 🔖 dev_backbone_canonical_kit_diff_wire_json
     /// @emoji 📦 Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.semio.json` collection keys).
-    pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> serde_json::Value {
-        use serde_json::{Map, Value};
+    pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{Map, Value};
         let mut root = Map::new();
         let opt_s = |m: &mut Map<String, Value>, k: &str, v: &Option<String>| {
             if let Some(s) = v {
@@ -9019,8 +9049,8 @@ pub mod kit_backbone {
         Value::Object(root)
     }
 
-    fn types_collection_diff_wire(t: &crate::operation::TypesCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn types_collection_diff_wire(t: &crate::operation::TypesCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": t.modified.iter().map(|entity| json!({
@@ -9031,8 +9061,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn type_added_wire(entity: &crate::operation::TypeAdded) -> serde_json::Value {
-        use serde_json::json;
+    fn type_added_wire(entity: &crate::operation::TypeAdded) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::json;
         json!({
             "ownerId": entity.owner_id.as_str(),
             "id": entity.id.as_str(),
@@ -9044,8 +9074,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn type_scalar_diff_wire(d: &crate::operation::TypeScalarDiff) -> serde_json::Value {
-        use serde_json::{Map, Value};
+    fn type_scalar_diff_wire(d: &crate::operation::TypeScalarDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{Map, Value};
         let mut m = Map::new();
         if let Some(ref s) = d.name {
             m.insert("name".into(), Value::String(s.clone()));
@@ -9065,8 +9095,8 @@ pub mod kit_backbone {
         Value::Object(m)
     }
 
-    fn designs_collection_diff_wire(d: &crate::operation::DesignsCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn designs_collection_diff_wire(d: &crate::operation::DesignsCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": d.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": d.modified.iter().map(|entity| json!({
@@ -9077,8 +9107,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn design_added_wire(entity: &crate::operation::DesignAdded) -> serde_json::Value {
-        use serde_json::json;
+    fn design_added_wire(entity: &crate::operation::DesignAdded) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::json;
         json!({
             "ownerId": entity.owner_id.as_str(),
             "id": entity.id.as_str(),
@@ -9090,8 +9120,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn design_scalar_diff_wire(d: &crate::operation::DesignScalarDiff) -> serde_json::Value {
-        use serde_json::{Map, Value};
+    fn design_scalar_diff_wire(d: &crate::operation::DesignScalarDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{Map, Value};
         let mut m = Map::new();
         if let Some(ref s) = d.name {
             m.insert("name".into(), Value::String(s.clone()));
@@ -9108,9 +9138,9 @@ pub mod kit_backbone {
         Value::Object(m)
     }
 
-    fn design_diff_wire(d: &crate::operation::DesignDiff) -> serde_json::Value {
-        use serde_json::Value;
-        let mut o = serde_json::Map::new();
+    fn design_diff_wire(d: &crate::operation::DesignDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::Value;
+        let mut o = crate::external_adapters::serde_json::Map::new();
         o.insert("scalars".to_string(), design_scalar_diff_wire(&d.scalars));
         if let Some(p) = &d.pieces {
             o.insert("pieces".to_string(), pieces_collection_diff_wire(p));
@@ -9118,8 +9148,8 @@ pub mod kit_backbone {
         Value::Object(o)
     }
 
-    fn pieces_collection_diff_wire(p: &crate::operation::PiecesCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn pieces_collection_diff_wire(p: &crate::operation::PiecesCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": p.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "added": p.added.iter().map(wire_piece_added_json).collect::<Vec<Value>>(),
@@ -9130,9 +9160,9 @@ pub mod kit_backbone {
         })
     }
 
-    fn wire_piece_added_json(entity: &crate::operation::PieceAdded) -> serde_json::Value {
-        use serde_json::json;
-        let mut o = serde_json::Map::new();
+    fn wire_piece_added_json(entity: &crate::operation::PieceAdded) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::json;
+        let mut o = crate::external_adapters::serde_json::Map::new();
         o.insert("id".to_string(), json!(entity.id.as_str()));
         o.insert("blueprint_id".to_string(), json!(entity.blueprint_id.as_str()));
         o.insert("scale".to_string(), json!(entity.scale));
@@ -9143,11 +9173,11 @@ pub mod kit_backbone {
         if let Some(ref n) = entity.description {
             o.insert("description".to_string(), json!(n));
         }
-        serde_json::Value::Object(o)
+        crate::external_adapters::serde_json::Value::Object(o)
     }
 
-    fn piece_patch_wire(p: &crate::operation::PiecePatch) -> serde_json::Value {
-        use serde_json::{json, Map, Value};
+    fn piece_patch_wire(p: &crate::operation::PiecePatch) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Map, Value};
         let mut m = Map::new();
         if p.fix_piece {
             m.insert("fix_piece".into(), Value::Bool(true));
@@ -9167,8 +9197,8 @@ pub mod kit_backbone {
         Value::Object(m)
     }
 
-    fn tag_patch_wire(p: &crate::operation::TagPatch) -> serde_json::Value {
-        use serde_json::{Map, Value};
+    fn tag_patch_wire(p: &crate::operation::TagPatch) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{Map, Value};
         let mut m = Map::new();
         if let Some(ref s) = p.name {
             m.insert("name".into(), Value::String(s.clone()));
@@ -9182,8 +9212,8 @@ pub mod kit_backbone {
         Value::Object(m)
     }
 
-    fn tag_input_wire(t: &crate::meta::TagInput) -> serde_json::Value {
-        serde_json::json!({
+    fn tag_input_wire(t: &crate::meta::TagInput) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "name": t.name,
             "description": t.description,
             "icon": t.icon,
@@ -9192,8 +9222,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn tags_collection_diff_wire(t: &crate::operation::TagsCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn tags_collection_diff_wire(t: &crate::operation::TagsCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": t.modified.iter().map(|entity| json!({
@@ -9209,12 +9239,12 @@ pub mod kit_backbone {
         })
     }
 
-    fn concept_patch_wire(p: &crate::operation::ConceptPatch) -> serde_json::Value {
+    fn concept_patch_wire(p: &crate::operation::ConceptPatch) -> crate::external_adapters::serde_json::Value {
         tag_patch_wire(&crate::operation::TagPatch { name: p.name.clone(), description: p.description.clone(), icon: p.icon.clone() })
     }
 
-    fn concept_input_wire(c: &crate::meta::ConceptInput) -> serde_json::Value {
-        serde_json::json!({
+    fn concept_input_wire(c: &crate::meta::ConceptInput) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "name": c.name,
             "description": c.description,
             "icon": c.icon,
@@ -9223,8 +9253,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn concepts_collection_diff_wire(t: &crate::operation::ConceptsCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn concepts_collection_diff_wire(t: &crate::operation::ConceptsCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": t.modified.iter().map(|entity| json!({
@@ -9240,8 +9270,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn quality_patch_wire(p: &crate::operation::QualityPatch) -> serde_json::Value {
-        use serde_json::{Map, Value};
+    fn quality_patch_wire(p: &crate::operation::QualityPatch) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{Map, Value};
         let mut m = Map::new();
         if let Some(ref s) = p.description {
             m.insert("description".into(), Value::String(s.clone()));
@@ -9264,8 +9294,8 @@ pub mod kit_backbone {
         Value::Object(m)
     }
 
-    fn quality_input_wire(q: &crate::meta::QualityInput) -> serde_json::Value {
-        serde_json::json!({
+    fn quality_input_wire(q: &crate::meta::QualityInput) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "key": q.key,
             "value": q.value,
             "unit": q.unit,
@@ -9276,8 +9306,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn qualities_collection_diff_wire(t: &crate::operation::QualitiesCollectionDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+    fn qualities_collection_diff_wire(t: &crate::operation::QualitiesCollectionDiff) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
         json!({
             "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": t.modified.iter().map(|entity| json!({
@@ -9295,37 +9325,37 @@ pub mod kit_backbone {
     }
     //#endregion 🔖 dev_backbone_canonical_kit_diff_wire_json
 
-    fn kit_scope_json(s: &crate::operation::Scope) -> serde_json::Value {
+    fn kit_scope_json(s: &crate::operation::Scope) -> crate::external_adapters::serde_json::Value {
         use crate::operation::Scope;
         match s {
-            Scope::Kit => serde_json::json!("Kit"),
-            Scope::Entity { entity_id } => serde_json::json!({ "Entity": { "entity_id": entity_id.as_str() } }),
-            Scope::Tag { tag_id } => serde_json::json!({ "Tag": { "tag_id": tag_id.as_str() } }),
-            Scope::Tags { tag_ids } => serde_json::json!({ "Tags": { "tag_ids": tag_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>() } }),
-            Scope::Concept { concept_id } => serde_json::json!({ "Concept": { "concept_id": concept_id.as_str() } }),
-            Scope::Quality { quality_id } => serde_json::json!({ "Quality": { "quality_id": quality_id.as_str() } }),
-            Scope::CreateTag { owner_id, tag_id, attribute_ids } => serde_json::json!({
+            Scope::Kit => crate::external_adapters::serde_json::json!("Kit"),
+            Scope::Entity { entity_id } => crate::external_adapters::serde_json::json!({ "Entity": { "entity_id": entity_id.as_str() } }),
+            Scope::Tag { tag_id } => crate::external_adapters::serde_json::json!({ "Tag": { "tag_id": tag_id.as_str() } }),
+            Scope::Tags { tag_ids } => crate::external_adapters::serde_json::json!({ "Tags": { "tag_ids": tag_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>() } }),
+            Scope::Concept { concept_id } => crate::external_adapters::serde_json::json!({ "Concept": { "concept_id": concept_id.as_str() } }),
+            Scope::Quality { quality_id } => crate::external_adapters::serde_json::json!({ "Quality": { "quality_id": quality_id.as_str() } }),
+            Scope::CreateTag { owner_id, tag_id, attribute_ids } => crate::external_adapters::serde_json::json!({
                 "CreateTag": {
                     "owner_id": owner_id.as_str(),
                     "tag_id": tag_id.as_str(),
                     "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::CreateTags { owner_id, tag_ids, attribute_ids } => serde_json::json!({
+            Scope::CreateTags { owner_id, tag_ids, attribute_ids } => crate::external_adapters::serde_json::json!({
                 "CreateTags": {
                     "owner_id": owner_id.as_str(),
                     "tag_ids": tag_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                     "attribute_ids": attribute_ids.iter().map(|v| v.iter().map(|i| i.as_str()).collect::<Vec<_>>()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::CreateConcept { owner_id, concept_id, attribute_ids } => serde_json::json!({
+            Scope::CreateConcept { owner_id, concept_id, attribute_ids } => crate::external_adapters::serde_json::json!({
                 "CreateConcept": {
                     "owner_id": owner_id.as_str(),
                     "concept_id": concept_id.as_str(),
                     "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } => serde_json::json!({
+            Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } => crate::external_adapters::serde_json::json!({
                 "CreateQuality": {
                     "owner_id": owner_id.as_str(),
                     "quality_id": quality_id.as_str(),
@@ -9333,7 +9363,7 @@ pub mod kit_backbone {
                     "benchmark_ids": benchmark_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } => serde_json::json!({
+            Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } => crate::external_adapters::serde_json::json!({
                 "CreateFixedPiece": {
                     "design_id": design_id.as_str(),
                     "piece_id": piece_id.as_str(),
@@ -9341,41 +9371,41 @@ pub mod kit_backbone {
                     "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::PieceInDesign { design_id, piece_id } => serde_json::json!({ "PieceInDesign": { "design_id": design_id.as_str(), "piece_id": piece_id.as_str() } }),
-            Scope::PiecesInDesign { design_id, piece_ids } => serde_json::json!({
+            Scope::PieceInDesign { design_id, piece_id } => crate::external_adapters::serde_json::json!({ "PieceInDesign": { "design_id": design_id.as_str(), "piece_id": piece_id.as_str() } }),
+            Scope::PiecesInDesign { design_id, piece_ids } => crate::external_adapters::serde_json::json!({
                 "PiecesInDesign": {
                     "design_id": design_id.as_str(),
                     "piece_ids": piece_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
                 }
             }),
-            Scope::CreateDesign { owner_id, design_id } => serde_json::json!({
+            Scope::CreateDesign { owner_id, design_id } => crate::external_adapters::serde_json::json!({
                 "CreateDesign": { "owner_id": owner_id.as_str(), "design_id": design_id.as_str() }
             }),
-            Scope::CreateType { owner_id, type_id } => serde_json::json!({
+            Scope::CreateType { owner_id, type_id } => crate::external_adapters::serde_json::json!({
                 "CreateType": { "owner_id": owner_id.as_str(), "type_id": type_id.as_str() }
             }),
-            Scope::Design { design_id } => serde_json::json!({ "Design": { "design_id": design_id.as_str() } }),
-            Scope::Type { type_id } => serde_json::json!({ "Type": { "type_id": type_id.as_str() } }),
+            Scope::Design { design_id } => crate::external_adapters::serde_json::json!({ "Design": { "design_id": design_id.as_str() } }),
+            Scope::Type { type_id } => crate::external_adapters::serde_json::json!({ "Type": { "type_id": type_id.as_str() } }),
         }
     }
 
-    fn kit_attribute_input_json(a: &crate::meta::AttributeInput) -> serde_json::Value {
-        serde_json::json!({
+    fn kit_attribute_input_json(a: &crate::meta::AttributeInput) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "key": a.key,
             "value": a.value,
             "definition": a.definition,
         })
     }
 
-    fn kit_input_json(i: &crate::operation::Input) -> serde_json::Value {
+    fn kit_input_json(i: &crate::operation::Input) -> crate::external_adapters::serde_json::Value {
         use crate::operation::Input;
         match i {
-            Input::None => serde_json::json!("None"),
-            Input::Name { name } => serde_json::json!({ "Name": { "name": name } }),
-            Input::Description { description } => serde_json::json!({ "Description": { "description": description } }),
-            Input::Icon { icon } => serde_json::json!({ "Icon": { "icon": icon } }),
-            Input::Image { image } => serde_json::json!({ "Image": { "image": image } }),
-            Input::Tag { tag } => serde_json::json!({
+            Input::None => crate::external_adapters::serde_json::json!("None"),
+            Input::Name { name } => crate::external_adapters::serde_json::json!({ "Name": { "name": name } }),
+            Input::Description { description } => crate::external_adapters::serde_json::json!({ "Description": { "description": description } }),
+            Input::Icon { icon } => crate::external_adapters::serde_json::json!({ "Icon": { "icon": icon } }),
+            Input::Image { image } => crate::external_adapters::serde_json::json!({ "Image": { "image": image } }),
+            Input::Tag { tag } => crate::external_adapters::serde_json::json!({
                 "Tag": {
                     "tag": {
                         "name": tag.name,
@@ -9386,9 +9416,9 @@ pub mod kit_backbone {
                     }
                 }
             }),
-            Input::Tags { tags } => serde_json::json!({
+            Input::Tags { tags } => crate::external_adapters::serde_json::json!({
                 "Tags": {
-                    "tags": tags.iter().map(|t| serde_json::json!({
+                    "tags": tags.iter().map(|t| crate::external_adapters::serde_json::json!({
                         "name": t.name,
                         "description": t.description,
                         "icon": t.icon,
@@ -9397,7 +9427,7 @@ pub mod kit_backbone {
                     })).collect::<Vec<_>>()
                 }
             }),
-            Input::Concept { concept } => serde_json::json!({
+            Input::Concept { concept } => crate::external_adapters::serde_json::json!({
                 "Concept": {
                     "concept": {
                         "name": concept.name,
@@ -9408,7 +9438,7 @@ pub mod kit_backbone {
                     }
                 }
             }),
-            Input::Quality { quality } => serde_json::json!({
+            Input::Quality { quality } => crate::external_adapters::serde_json::json!({
                 "Quality": {
                     "quality": {
                         "key": quality.key,
@@ -9421,46 +9451,46 @@ pub mod kit_backbone {
                     }
                 }
             }),
-            Input::FixedPiece { position, name, description } => serde_json::json!({
+            Input::FixedPiece { position, name, description } => crate::external_adapters::serde_json::json!({
                 "FixedPiece": {
                     "position": position_input_to_json(position),
                     "name": name,
                     "description": description,
                 }
             }),
-            Input::Offset { offset } => serde_json::json!({ "Offset": { "offset": { "u": offset.u, "v": offset.v } } }),
-            Input::EntityScalars { name, description, icon, image, unit } => serde_json::json!({
+            Input::Offset { offset } => crate::external_adapters::serde_json::json!({ "Offset": { "offset": { "u": offset.u, "v": offset.v } } }),
+            Input::EntityScalars { name, description, icon, image, unit } => crate::external_adapters::serde_json::json!({
                 "EntityScalars": { "name": name, "description": description, "icon": icon, "image": image, "unit": unit }
             }),
         }
     }
 
-    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::Operation) -> serde_json::Value {
+    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::Operation) -> crate::external_adapters::serde_json::Value {
         use crate::operation::{Operation, Scope};
-        let pair = |scope: &Scope, input: &crate::operation::Input| serde_json::json!({ "scope": kit_scope_json(scope), "input": kit_input_json(input) });
+        let pair = |scope: &Scope, input: &crate::operation::Input| crate::external_adapters::serde_json::json!({ "scope": kit_scope_json(scope), "input": kit_input_json(input) });
         match op {
-            Operation::RenameKit { scope, input } => serde_json::json!({ "RenameKit": pair(scope, input) }),
-            Operation::ChangeDescription { scope, input } => serde_json::json!({ "ChangeDescription": pair(scope, input) }),
-            Operation::ChangeIcon { scope, input } => serde_json::json!({ "ChangeIcon": pair(scope, input) }),
-            Operation::ChangeImage { scope, input } => serde_json::json!({ "ChangeImage": pair(scope, input) }),
-            Operation::CreateTag { scope, input } => serde_json::json!({ "CreateTag": pair(scope, input) }),
-            Operation::CreateTags { scope, input } => serde_json::json!({ "CreateTags": pair(scope, input) }),
-            Operation::DeleteTag { scope, input } => serde_json::json!({ "DeleteTag": pair(scope, input) }),
-            Operation::DeleteTags { scope, input } => serde_json::json!({ "DeleteTags": pair(scope, input) }),
-            Operation::RenameTag { scope, input } => serde_json::json!({ "RenameTag": pair(scope, input) }),
-            Operation::CreateConcept { scope, input } => serde_json::json!({ "CreateConcept": pair(scope, input) }),
-            Operation::DeleteConcept { scope, input } => serde_json::json!({ "DeleteConcept": pair(scope, input) }),
-            Operation::CreateQuality { scope, input } => serde_json::json!({ "CreateQuality": pair(scope, input) }),
-            Operation::DeleteQuality { scope, input } => serde_json::json!({ "DeleteQuality": pair(scope, input) }),
-            Operation::CreateFixedPiece { scope, input } => serde_json::json!({ "CreateFixedPiece": pair(scope, input) }),
-            Operation::DeletePieceInDesign { scope, input } => serde_json::json!({ "DeletePieceInDesign": pair(scope, input) }),
-            Operation::DragPieceInDesign { scope, input } => serde_json::json!({ "DragPieceInDesign": pair(scope, input) }),
-            Operation::DragPiecesInDesign { scope, input } => serde_json::json!({ "DragPiecesInDesign": pair(scope, input) }),
-            Operation::FixPieceInDesign { scope, input } => serde_json::json!({ "FixPieceInDesign": pair(scope, input) }),
-            Operation::CreateDesign { scope, input } => serde_json::json!({ "CreateDesign": pair(scope, input) }),
-            Operation::CreateType { scope, input } => serde_json::json!({ "CreateType": pair(scope, input) }),
-            Operation::DeleteDesign { scope, input } => serde_json::json!({ "DeleteDesign": pair(scope, input) }),
-            Operation::DeleteType { scope, input } => serde_json::json!({ "DeleteType": pair(scope, input) }),
+            Operation::RenameKit { scope, input } => crate::external_adapters::serde_json::json!({ "RenameKit": pair(scope, input) }),
+            Operation::ChangeDescription { scope, input } => crate::external_adapters::serde_json::json!({ "ChangeDescription": pair(scope, input) }),
+            Operation::ChangeIcon { scope, input } => crate::external_adapters::serde_json::json!({ "ChangeIcon": pair(scope, input) }),
+            Operation::ChangeImage { scope, input } => crate::external_adapters::serde_json::json!({ "ChangeImage": pair(scope, input) }),
+            Operation::CreateTag { scope, input } => crate::external_adapters::serde_json::json!({ "CreateTag": pair(scope, input) }),
+            Operation::CreateTags { scope, input } => crate::external_adapters::serde_json::json!({ "CreateTags": pair(scope, input) }),
+            Operation::DeleteTag { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteTag": pair(scope, input) }),
+            Operation::DeleteTags { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteTags": pair(scope, input) }),
+            Operation::RenameTag { scope, input } => crate::external_adapters::serde_json::json!({ "RenameTag": pair(scope, input) }),
+            Operation::CreateConcept { scope, input } => crate::external_adapters::serde_json::json!({ "CreateConcept": pair(scope, input) }),
+            Operation::DeleteConcept { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteConcept": pair(scope, input) }),
+            Operation::CreateQuality { scope, input } => crate::external_adapters::serde_json::json!({ "CreateQuality": pair(scope, input) }),
+            Operation::DeleteQuality { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteQuality": pair(scope, input) }),
+            Operation::CreateFixedPiece { scope, input } => crate::external_adapters::serde_json::json!({ "CreateFixedPiece": pair(scope, input) }),
+            Operation::DeletePieceInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeletePieceInDesign": pair(scope, input) }),
+            Operation::DragPieceInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DragPieceInDesign": pair(scope, input) }),
+            Operation::DragPiecesInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DragPiecesInDesign": pair(scope, input) }),
+            Operation::FixPieceInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "FixPieceInDesign": pair(scope, input) }),
+            Operation::CreateDesign { scope, input } => crate::external_adapters::serde_json::json!({ "CreateDesign": pair(scope, input) }),
+            Operation::CreateType { scope, input } => crate::external_adapters::serde_json::json!({ "CreateType": pair(scope, input) }),
+            Operation::DeleteDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteDesign": pair(scope, input) }),
+            Operation::DeleteType { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteType": pair(scope, input) }),
         }
     }
 
@@ -9468,13 +9498,13 @@ pub mod kit_backbone {
         crate::id::Id::from(s)
     }
 
-    pub(crate) fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
-        let f2 = |o: &serde_json::Map<String, serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), SemioError> {
+    pub(crate) fn position_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
+        let f2 = |o: &crate::external_adapters::serde_json::Map<String, crate::external_adapters::serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), SemioError> {
             let u = o.get(a).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             let v = o.get(b).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             Ok((u, v))
         };
-        let f3 = |o: &serde_json::Map<String, serde_json::Value>| -> Result<(f64, f64, f64), SemioError> {
+        let f3 = |o: &crate::external_adapters::serde_json::Map<String, crate::external_adapters::serde_json::Value>| -> Result<(f64, f64, f64), SemioError> {
             let x = o.get("x").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             let y = o.get("y").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             let z = o.get("z").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
@@ -9487,20 +9517,32 @@ pub mod kit_backbone {
         } else {
             (0.0, 0.0)
         };
-        let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.plane"))?;
-        let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.origin"))?;
-        let (ox, oy, oz) = f3(origin)?;
-        let xa = plane_o.get("xAxis").or_else(|| plane_o.get("x_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.xAxis"))?;
-        let (xx, xy, xz) = f3(xa)?;
-        let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.yAxis"))?;
-        let (yx, yy, yz) = f3(ya)?;
+        let plane_o = v.get("plane").and_then(|x| x.as_object());
+        let (ox, oy, oz) = plane_o
+            .and_then(|p| p.get("origin"))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((0.0, 0.0, 0.0));
+        let (xx, xy, xz) = plane_o
+            .and_then(|p| p.get("xAxis").or_else(|| p.get("x_axis")))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((1.0, 0.0, 0.0));
+        let (yx, yy, yz) = plane_o
+            .and_then(|p| p.get("yAxis").or_else(|| p.get("y_axis")))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((0.0, 1.0, 0.0));
         Ok(crate::geom::PositionInput {
             center: crate::geom::CoordinateInput { u, v: vv },
             plane: crate::geom::PlaneInput { origin: crate::geom::PointInput { x: ox, y: oy, z: oz }, x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz }, y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz } },
         })
     }
 
-    fn kit_scope_from_json(v: &serde_json::Value) -> Result<crate::operation::Scope, SemioError> {
+    fn kit_scope_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Scope, SemioError> {
         use crate::operation::Scope;
         if let Some(s) = v.as_str() {
             if s == "Kit" {
@@ -9576,7 +9618,7 @@ pub mod kit_backbone {
         })
     }
 
-    fn attribute_input_from_json(v: &serde_json::Value) -> Result<crate::meta::AttributeInput, SemioError> {
+    fn attribute_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::meta::AttributeInput, SemioError> {
         let m = v.as_object().ok_or_else(|| SemioError::invalid("AttributeInput"))?;
         Ok(crate::meta::AttributeInput {
             key: m.get("key").and_then(|x| x.as_str()).unwrap_or("").to_string(),
@@ -9585,7 +9627,7 @@ pub mod kit_backbone {
         })
     }
 
-    fn kit_input_from_json(v: &serde_json::Value) -> Result<crate::operation::Input, SemioError> {
+    fn kit_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Input, SemioError> {
         use crate::operation::Input;
         if let Some(s) = v.as_str() {
             if s == "None" {
@@ -9691,7 +9733,7 @@ pub mod kit_backbone {
         })
     }
 
-    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+    pub(crate) fn kit_operation_from_step_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
         use crate::operation::Operation;
         let o = v.as_object().ok_or_else(|| SemioError::invalid("kit operation"))?;
         let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty kit operation"))?;
@@ -9725,7 +9767,7 @@ pub mod kit_backbone {
         })
     }
 
-    async fn stored_create_fixed_piece_operation(input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+    async fn stored_create_fixed_piece_operation(input: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
         let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("designId"))?);
         let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprintId"))?);
         let position = position_input_from_json(input.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
@@ -9738,7 +9780,7 @@ pub mod kit_backbone {
         })
     }
 
-    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
         match kind {
             "createFixedPiece" => stored_create_fixed_piece_operation(input).await,
             _ => kit_operation_from_step_json(input),
@@ -9747,27 +9789,27 @@ pub mod kit_backbone {
     //#endregion 🔖 dev_backbone_kit_operation_json
 
     //#region 🔖 dev_backbone_initial_kit_projection
-    pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> serde_json::Value {
+    pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> crate::external_adapters::serde_json::Value {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
         let name = kit.name.read().await.clone();
-        let types_items: Vec<serde_json::Value> = {
+        let types_items: Vec<crate::external_adapters::serde_json::Value> = {
             let tys = kit.types.read().await;
             let mut out = Vec::with_capacity(tys.len());
             for t in tys.iter() {
                 let tid = t.id.as_str();
                 let nm = t.name.read().await.clone();
-                out.push(serde_json::json!({"id": tid, "name": nm, "connectors": []}));
+                out.push(crate::external_adapters::serde_json::json!({"id": tid, "name": nm, "connectors": []}));
             }
             out
         };
-        let design_items: Vec<serde_json::Value> = {
+        let design_items: Vec<crate::external_adapters::serde_json::Value> = {
             let des = kit.designs.read().await;
             let mut out = Vec::with_capacity(des.len());
             for d in des.iter() {
                 let did = d.id.as_str();
                 let dn = d.name.read().await.clone();
-                let pieces: Vec<serde_json::Value> = {
+                let pieces: Vec<crate::external_adapters::serde_json::Value> = {
                     let pcs = d.pieces.read().await;
                     let mut pj = Vec::with_capacity(pcs.len());
                     for p in pcs.iter() {
@@ -9779,12 +9821,12 @@ pub mod kit_backbone {
                         let pv = position_input_to_json(&pos);
                         let scale = p.scale.read().await.unwrap_or(1.0);
                         let nm = p.name.read().await.clone().unwrap_or_default();
-                        pj.push(serde_json::json!({
+                        pj.push(crate::external_adapters::serde_json::json!({
                             "id": p.id.as_str(),
                             "name": nm,
                             "type": { "id": ty_id },
-                            "plane": pv.get("plane").cloned().unwrap_or_else(|| serde_json::json!({})),
-                            "center": pv.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0})),
+                            "plane": pv.get("plane").cloned().unwrap_or_else(|| crate::external_adapters::serde_json::json!({})),
+                            "center": pv.get("center").cloned().unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0})),
                             "scale": scale,
                             "color": "#000000",
                             "props": [],
@@ -9793,7 +9835,7 @@ pub mod kit_backbone {
                     }
                     pj
                 };
-                out.push(serde_json::json!({
+                out.push(crate::external_adapters::serde_json::json!({
                     "id": did,
                     "name": dn,
                     "pieces": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": pieces },
@@ -9802,54 +9844,54 @@ pub mod kit_backbone {
             }
             out
         };
-        let mut root = serde_json::Map::new();
-        root.insert("id".into(), serde_json::Value::String(kid.as_str().to_string()));
-        root.insert("name".into(), serde_json::Value::String(name));
+        let mut root = crate::external_adapters::serde_json::Map::new();
+        root.insert("id".into(), crate::external_adapters::serde_json::Value::String(kid.as_str().to_string()));
+        root.insert("name".into(), crate::external_adapters::serde_json::Value::String(name));
         if let Some(v) = kit.version.read().await.clone() {
-            root.insert("version".into(), serde_json::Value::String(v));
+            root.insert("version".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.description.read().await.clone() {
-            root.insert("description".into(), serde_json::Value::String(v));
+            root.insert("description".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.icon.read().await.clone() {
-            root.insert("icon".into(), serde_json::Value::String(v));
+            root.insert("icon".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.image.read().await.clone() {
-            root.insert("image".into(), serde_json::Value::String(v));
+            root.insert("image".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.preview.read().await.clone() {
-            root.insert("preview".into(), serde_json::Value::String(v));
+            root.insert("preview".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.remote.read().await.clone() {
-            root.insert("remote".into(), serde_json::Value::String(v));
+            root.insert("remote".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.homepage.read().await.clone() {
-            root.insert("homepage".into(), serde_json::Value::String(v));
+            root.insert("homepage".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.license.read().await.clone() {
-            root.insert("license".into(), serde_json::Value::String(v));
+            root.insert("license".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.uri.read().await.clone() {
-            root.insert("uri".into(), serde_json::Value::String(v));
+            root.insert("uri".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(ts) = kit.created.read().await.clone() {
-            root.insert("createdAt".into(), serde_json::Value::String(ts.0.clone()));
+            root.insert("createdAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
         }
         if let Some(ts) = kit.updated.read().await.clone() {
-            root.insert("updatedAt".into(), serde_json::Value::String(ts.0.clone()));
+            root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
         }
         root.insert(
             "types".into(),
-            serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items }),
+            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items }),
         );
         root.insert(
             "designs".into(),
-            serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
+            crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items }),
         );
-        serde_json::Value::Object(root)
+        crate::external_adapters::serde_json::Value::Object(root)
     }
 
-    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         if let Some(n) = json.get("name").and_then(|v| v.as_str()) {
             *kit.name.write().await = n.to_string();
         }
@@ -9928,7 +9970,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
-    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
@@ -9940,17 +9982,17 @@ pub mod kit_backbone {
         for pj in plist {
             let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
             let type_id_raw = match pj.get("type") {
-                Some(serde_json::Value::String(s)) => s.as_str(),
-                Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
+                Some(crate::external_adapters::serde_json::Value::String(s)) => s.as_str(),
+                Some(crate::external_adapters::serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
                 _ => {
                     return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
                 }
             };
             let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
             let pose = pj.get("pose");
-            let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
-            let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
-            let position = position_input_from_json(&serde_json::json!({ "plane": plane_val, "center": center_val }))?;
+            let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
+            let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
+            let position = position_input_from_json(&crate::external_adapters::serde_json::json!({ "plane": plane_val, "center": center_val }))?;
             let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
             let nm_opt = pj.get("name").and_then(|x| x.as_str());
             let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
@@ -9964,7 +10006,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
+    pub async fn graph_new_overlay_from_initial_projection_json(json: crate::external_adapters::serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
         let g = crate::vcs::Graph::new().await;
         {
             let mut slot = g.mutable_kit.write().await;
@@ -9987,7 +10029,7 @@ pub mod kit_backbone {
     //#endregion 🔖 dev_backbone_initial_kit_projection
 
     /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct BlockHashedList<T> {
         pub hash: String,
         pub items: Vec<T>,
@@ -10000,27 +10042,27 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🔗 `{id, hash}` typed reference to another node in the bundle (authors, qualities, ports, families, …).
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct HashRef {
         pub id: String,
         pub hash: String,
     }
 
     /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneBundleDoc {
         pub schema: String,
         pub wip: DevBackboneGraphHead,
         pub authoritative: DevBackboneGraphHead,
         pub stage: DevBackboneGraphHead,
         #[serde(default)]
-        pub conflicts: BlockHashedList<serde_json::Value>,
+        pub conflicts: BlockHashedList<crate::external_adapters::serde_json::Value>,
         #[serde(default)]
-        pub blobs: BlockHashedList<serde_json::Value>,
+        pub blobs: BlockHashedList<crate::external_adapters::serde_json::Value>,
     }
 
     /// @emoji 🌐 One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneGraphHead {
         pub id: String,
         pub hash: String,
@@ -10028,17 +10070,17 @@ pub mod kit_backbone {
         pub authors: BlockHashedList<HashRef>,
         /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
         #[serde(rename = "initialKit", default = "empty_initial_kit_value")]
-        pub initial_kit: serde_json::Value,
+        pub initial_kit: crate::external_adapters::serde_json::Value,
         #[serde(rename = "theKit", default)]
         pub the_kit: DevBackboneTheKitHead,
         #[serde(default)]
-        pub checkpoints: BlockHashedList<serde_json::Value>,
+        pub checkpoints: BlockHashedList<crate::external_adapters::serde_json::Value>,
         #[serde(default)]
         pub alternatives: BlockHashedList<DevBackboneAltHead>,
     }
 
     /// @emoji 🧭 Main kit version entity; version-scoped changes live here, not on the graph snapshot.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneTheKitHead {
         pub id: String,
         pub hash: String,
@@ -10055,7 +10097,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🌿 Alternative version entity; each alternative owns its own version-scoped changes.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneAltHead {
         pub id: String,
         pub hash: String,
@@ -10067,7 +10109,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🧾 Version change record containing ordered edits directly on `the kit` or an alternative.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct VersionChange {
         pub id: String,
         pub hash: String,
@@ -10084,7 +10126,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji ✏️ Version edit record with forward and backward  operation steps.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct VersionEdit {
         pub id: String,
         pub hash: String,
@@ -10105,7 +10147,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪡 One  operation step inside an edit.
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct OperationStep {
         pub id: String,
         pub hash: String,
@@ -10113,15 +10155,15 @@ pub mod kit_backbone {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default)]
-        pub input: serde_json::Value,
+        pub input: crate::external_adapters::serde_json::Value,
         /// @emoji 📦 Canonical [`crate::operation::CanonicalKitDiff`] JSON persisted beside `input` for audit and tooling (replay still uses `input`).
         #[serde(rename = "kitDiff", default, skip_serializing_if = "Option::is_none")]
-        pub kit_diff: Option<serde_json::Value>,
+        pub kit_diff: Option<crate::external_adapters::serde_json::Value>,
     }
 
     /// @emoji 🌱 Empty `initialKit` JSON snapshot for fresh dev backbones until a full metabolism-shaped [`Kit`] snapshot is persisted.
-    fn empty_initial_kit_value() -> serde_json::Value {
-        serde_json::json!({
+    fn empty_initial_kit_value() -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
             "hash": KIT_BUNDLE_HASH_STUB,
             "name": "",
             "types": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
@@ -10279,7 +10321,7 @@ pub mod kit_backbone {
             for cp in graph.checkpoints.read().await.iter() {
                 let msg = cp.message.read().await.clone().unwrap_or_default();
                 let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string());
-                bundle.wip.checkpoints.items.push(serde_json::json!({
+                bundle.wip.checkpoints.items.push(crate::external_adapters::serde_json::json!({
                     "id": cp.id.as_str(),
                     "hash": KIT_BUNDLE_HASH_STUB,
                     "timestamp": ts,
@@ -10306,13 +10348,13 @@ pub mod kit_backbone {
 
         /// @emoji 🔢 Blake3 hex digest of the UTF-8 blob wire (`data:` URL or raw); identical bytes ⇒ identical digest ⇒ one entity in [`DevBackboneBundleDoc::blobs`].
         pub(crate) fn digest_kit_blob_wire(wire: &str) -> String {
-            blake3::hash(wire.as_bytes()).to_hex().to_string()
+            crate::external_adapters::blake3::hash(wire.as_bytes()).to_hex().to_string()
         }
 
         /// @emoji 📦 Hoist each `files[].blob` into [`DevBackboneBundleDoc::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
         pub fn hoist_inline_file_blobs_for_storage(bundle: &mut DevBackboneBundleDoc) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
-            let mut collected: Vec<serde_json::Value> = Vec::new();
+            let mut collected: Vec<crate::external_adapters::serde_json::Value> = Vec::new();
             Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.initial_kit, &mut seen_digest, &mut collected);
             bundle.blobs.items.extend(collected);
             Self::purge_unreferenced_blobs(bundle);
@@ -10332,7 +10374,7 @@ pub mod kit_backbone {
             s
         }
 
-        fn collect_blob_hashes_from_kit_projection(kit: &serde_json::Value, out: &mut std::collections::HashSet<String>) {
+        fn collect_blob_hashes_from_kit_projection(kit: &crate::external_adapters::serde_json::Value, out: &mut std::collections::HashSet<String>) {
             let Some(files_val) = kit.get("files") else {
                 return;
             };
@@ -10347,7 +10389,7 @@ pub mod kit_backbone {
             }
         }
 
-        fn take_file_blobs_from_kit_json_into(kit: &mut serde_json::Value, seen_digest: &mut std::collections::HashSet<String>, out: &mut Vec<serde_json::Value>) {
+        fn take_file_blobs_from_kit_json_into(kit: &mut crate::external_adapters::serde_json::Value, seen_digest: &mut std::collections::HashSet<String>, out: &mut Vec<crate::external_adapters::serde_json::Value>) {
             let Some(files_holder) = kit.get_mut("files") else {
                 return;
             };
@@ -10362,9 +10404,9 @@ pub mod kit_backbone {
                     None => continue,
                 };
                 let digest = Self::digest_kit_blob_wire(&blob_str);
-                obj.insert("blobHash".to_string(), serde_json::Value::String(digest.clone()));
+                obj.insert("blobHash".to_string(), crate::external_adapters::serde_json::Value::String(digest.clone()));
                 if seen_digest.insert(digest.clone()) {
-                    out.push(serde_json::json!({
+                    out.push(crate::external_adapters::serde_json::json!({
                         "hash": digest,
                         "blob": blob_str,
                     }));
@@ -10373,11 +10415,11 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📎 Merge [`blobs`] into a kit projection clone for hydrate (`files[].blob` restored from `files[].blobHash`); does not mutate the persisted bundle JSON shape.
-        pub(crate) fn merge_bundle_file_blobs_into_kit_json(kit: &mut serde_json::Value, blobs: &[serde_json::Value]) {
+        pub(crate) fn merge_bundle_file_blobs_into_kit_json(kit: &mut crate::external_adapters::serde_json::Value, blobs: &[crate::external_adapters::serde_json::Value]) {
             if blobs.is_empty() {
                 return;
             }
-            let mut by_digest: std::collections::HashMap<String, serde_json::Value> = std::collections::HashMap::new();
+            let mut by_digest: std::collections::HashMap<String, crate::external_adapters::serde_json::Value> = std::collections::HashMap::new();
             for b in blobs {
                 let Some(d) = b.get("hash").and_then(|x| x.as_str()) else { continue };
                 if let Some(blob) = b.get("blob") {
@@ -10406,7 +10448,7 @@ pub mod kit_backbone {
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for  replay.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
-            let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
+            let bundle: Self = crate::external_adapters::serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
                 return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
             }
@@ -10437,7 +10479,7 @@ pub mod kit_backbone {
             bundle.authoritative.the_kit.id = kit_id.to_string();
             bundle.stage.the_kit.id = kit_id.to_string();
             // 🪧 First checkpoint anchors the kit at its initial empty projection (no changes yet).
-            bundle.wip.checkpoints.items.push(serde_json::json!({
+            bundle.wip.checkpoints.items.push(crate::external_adapters::serde_json::json!({
                 "id": checkpoint_id,
                 "hash": KIT_BUNDLE_HASH_STUB,
                 "timestamp": KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB,
@@ -10459,12 +10501,12 @@ pub mod kit_backbone {
         }
 
         /// @emoji ➕ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
-        pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: serde_json::Value) {
+        pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: crate::external_adapters::serde_json::Value) {
             self.append_unsaved_edit_with_origin(change_id, None, kind, input, None);
         }
 
         /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor plus optional persisted [`crate::operation::CanonicalKitDiff`] JSON.
-        pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: serde_json::Value, kit_diff: Option<serde_json::Value>) {
+        pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: crate::external_adapters::serde_json::Value, kit_diff: Option<crate::external_adapters::serde_json::Value>) {
             let changes = &mut self.wip.the_kit.unsaved_changes.items;
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
@@ -10483,7 +10525,7 @@ pub mod kit_backbone {
             };
             if changes[change_idx].edits.items.is_empty() {
                 changes[change_idx].edits.items.push(VersionEdit {
-                    id: uuid::Uuid::now_v7().to_string(),
+                    id: crate::external_adapters::uuid::Uuid::now_v7().to_string(),
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
                     forwards: BlockHashedList::default(),
                     backwards: BlockHashedList::default(),
@@ -10494,7 +10536,7 @@ pub mod kit_backbone {
                     origin: None,
                 });
             }
-            changes[change_idx].edits.items[0].forwards.items.push(OperationStep { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input, kit_diff });
+            changes[change_idx].edits.items[0].forwards.items.push(OperationStep { id: crate::external_adapters::uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input, kit_diff });
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
@@ -10513,8 +10555,8 @@ pub mod kit_backbone {
         pub workspace_id: String,
         pub transaction_id: String,
         pub kind: String,
-        pub input: serde_json::Value,
-        pub kit_diff: Option<serde_json::Value>,
+        pub input: crate::external_adapters::serde_json::Value,
+        pub kit_diff: Option<crate::external_adapters::serde_json::Value>,
     }
     //#endregion 🧾 wire format
 
@@ -10604,7 +10646,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         let parent = path.parent().ok_or_else(|| SemioError::invalid("kit-store bundle path has no parent directory"))?;
         std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create kit-store bundle parent: {e}")))?;
         let tmp = path.with_extension("tmp.semio-write");
-        let body = serde_json::to_string_pretty(doc).map_err(|e| SemioError::invalid(e.to_string()))?;
+        let body = crate::external_adapters::serde_json::to_string_pretty(doc).map_err(|e| SemioError::invalid(e.to_string()))?;
         std::fs::write(&tmp, body).map_err(|e| SemioError::invalid(format!("write temp kit-store bundle: {e}")))?;
         std::fs::rename(&tmp, path).map_err(|e| SemioError::invalid(format!("rename kit-store bundle: {e}")))?;
         Ok(())
@@ -10616,7 +10658,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
             return Ok(DevBackboneBundleDoc::template());
         }
         let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read kit-store bundle: {e}")))?;
-        serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse kit-store bundle: {e}")))
+        crate::external_adapters::serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse kit-store bundle: {e}")))
     }
     //#endregion ✍️ atomic json
 
@@ -10648,7 +10690,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         }
 
         /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &crate::external_adapters::serde_json::Value, kit_diff: Option<&crate::external_adapters::serde_json::Value>) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
             let _ = workspace_id;
             doc.append_unsaved_edit_with_origin(transaction_id.as_str(), None, kind, input.clone(), kit_diff.cloned());
@@ -10665,12 +10707,12 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl LocalBackboneAttached {
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &crate::external_adapters::serde_json::Value, kit_diff: Option<&crate::external_adapters::serde_json::Value>) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
             ensure_operation_log_kit_diff_json_column(&conn)?;
-            let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            let input_json = crate::external_adapters::serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
             let kit_json = match kit_diff {
-                Some(v) => Some(serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
+                Some(v) => Some(crate::external_adapters::serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
                 None => None,
             };
             conn.execute("INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![workspace_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json])
@@ -10689,9 +10731,9 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
                 let transaction_id: String = entity.get(1).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let kind: String = entity.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let input_json: String = entity.get(3).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
-                let input: serde_json::Value = serde_json::from_str(&input_json).map_err(|e| SemioError::invalid(e.to_string()))?;
-                let kit_diff: Option<serde_json::Value> = match entity.get::<_, Option<String>>(4) {
-                    Ok(Some(s)) if !s.is_empty() => Some(serde_json::from_str(&s).map_err(|e| SemioError::invalid(e.to_string()))?),
+                let input: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&input_json).map_err(|e| SemioError::invalid(e.to_string()))?;
+                let kit_diff: Option<crate::external_adapters::serde_json::Value> = match entity.get::<_, Option<String>>(4) {
+                    Ok(Some(s)) if !s.is_empty() => Some(crate::external_adapters::serde_json::from_str(&s).map_err(|e| SemioError::invalid(e.to_string()))?),
                     _ => None,
                 };
                 out.push(StoredOperation { workspace_id: draft_id_col, transaction_id, kind, input, kit_diff });
@@ -10736,7 +10778,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
             replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &crate::external_adapters::serde_json::Value, kit_diff: Option<&crate::external_adapters::serde_json::Value>) -> Result<(), SemioError> {
             match self {
                 AttachedBackbone::Dev(d) => d.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
                 AttachedBackbone::Local(l) => l.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
@@ -10753,12 +10795,12 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     //#endregion 🧩 attached variants
 
     /// @emoji 📑 US-001 golden JSON: top-level `operations` array.
-    pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
+    pub fn golden_operation_records_ref(src: &crate::external_adapters::serde_json::Value) -> Result<&Vec<crate::external_adapters::serde_json::Value>, SemioError> {
         src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| SemioError::invalid("golden operations missing `operations` array"))
     }
 
     /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
-    pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
+    pub fn stored_operations_from_golden_operations_json(src: &crate::external_adapters::serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
         let workspace_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
         let arr = golden_operation_records_ref(src)?;
@@ -10781,8 +10823,8 @@ pub mod event {
     //! 📣 The single emit point of the entire crate. Variants carry Arc-shared payloads.
     use std::sync::{Arc, Mutex};
 
-    use async_broadcast::{InactiveReceiver, Receiver, Sender};
-    use async_lock::Mutex as AsyncMutex;
+    use crate::external_adapters::async_broadcast::{InactiveReceiver, Receiver, Sender};
+    use crate::external_adapters::async_lock::Mutex as AsyncMutex;
 
     use crate::error::SemioError;
     use crate::operation;
@@ -10836,12 +10878,12 @@ pub mod event {
         tx: AsyncMutex<Sender<Event>>,
         keep_alive: InactiveReceiver<Event>,
         /// @emoji 🧷 Per-subscription [`Event`] fan-out keyed by watched canonical paths.
-        path_sinks: Mutex<Vec<(Vec<String>, async_channel::Sender<Event>)>>,
+        path_sinks: Mutex<Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)>>,
     }
 
     impl EventBus {
         pub fn new(capacity: usize) -> Arc<Self> {
-            let (mut tx, rx) = async_broadcast::broadcast(capacity);
+            let (mut tx, rx) = crate::external_adapters::async_broadcast::broadcast(capacity);
             tx.set_overflow(true);
             // No active receivers? still proceed (drop the message) instead of awaiting one.
             tx.set_await_active(false);
@@ -10850,7 +10892,7 @@ pub mod event {
 
         /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
         pub async fn emit_event(&self, ev: Event) {
-            let sinks: Vec<(Vec<String>, async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap().iter().map(|(p, t)| (p.clone(), t.clone())).collect();
+            let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap().iter().map(|(p, t)| (p.clone(), t.clone())).collect();
             for (paths, tx) in sinks {
                 if paths.is_empty() || ev.matches_watched_paths(&paths) {
                     let _ = tx.send(ev.clone()).await;
@@ -10866,8 +10908,8 @@ pub mod event {
         }
 
         /// @emoji 🔔 Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
-        pub fn subscribe_paths(&self, watched: &[String]) -> async_channel::Receiver<Event> {
-            let (tx, rx) = async_channel::unbounded();
+        pub fn subscribe_paths(&self, watched: &[String]) -> crate::external_adapters::async_channel::Receiver<Event> {
+            let (tx, rx) = crate::external_adapters::async_channel::unbounded();
             self.path_sinks.lock().unwrap().push((watched.to_vec(), tx));
             rx
         }
@@ -10885,8 +10927,8 @@ pub mod worker {
     //! Wasm: each child lives in a dedicated [`web_sys::Worker`]; messages cross via [`crate::wasm_bridge`].
     use std::sync::Arc;
 
-    use async_channel::{Receiver, Sender};
-    use async_lock::RwLock;
+    use crate::external_adapters::async_channel::{Receiver, Sender};
+    use crate::external_adapters::async_lock::RwLock;
 
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
@@ -10948,7 +10990,7 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(&self, workspace_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(&self, workspace_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<crate::external_adapters::serde_json::Value>) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
@@ -11001,8 +11043,8 @@ pub mod worker {
             let wip_graph = Graph::new().await;
             let auth_graph = Graph::new().await;
 
-            let (wip_tx, wip_rx) = async_channel::unbounded::<Command>();
-            let (auth_tx, auth_rx) = async_channel::unbounded::<Command>();
+            let (wip_tx, wip_rx) = crate::external_adapters::async_channel::unbounded::<Command>();
+            let (auth_tx, auth_rx) = crate::external_adapters::async_channel::unbounded::<Command>();
 
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
@@ -11028,14 +11070,14 @@ pub mod worker {
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
-        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: crate::external_adapters::serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
             let bus = EventBus::new(1024);
 
             let wip_graph = Graph::new_overlay_from_initial_kit_projection_json(json).await?;
             let auth_graph = Graph::new().await;
 
-            let (wip_tx, wip_rx) = async_channel::unbounded::<Command>();
-            let (auth_tx, auth_rx) = async_channel::unbounded::<Command>();
+            let (wip_tx, wip_rx) = crate::external_adapters::async_channel::unbounded::<Command>();
+            let (auth_tx, auth_rx) = crate::external_adapters::async_channel::unbounded::<Command>();
 
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
@@ -11061,10 +11103,10 @@ pub mod worker {
         }
 
         /// @emoji 🛰️ `POST /install` bootstrap: full `DevBackboneBundleDoc` JSON (schema `KIT_STORE_BUNDLE_SCHEMA`) or bare `initialKit` projection (same contract as GraphQL `StoreCommand.installProjection`).
-        pub async fn spawn_from_install_json_value(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        pub async fn spawn_from_install_json_value(json: crate::external_adapters::serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
             if json.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
                 let rt = ParentStore::spawn().await;
-                let s = serde_json::to_string(&json).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let s = crate::external_adapters::serde_json::to_string(&json).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                 crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
                 Ok(rt)
             } else {
@@ -11074,7 +11116,7 @@ pub mod worker {
 
         /// @emoji 📥 Hydrates the live WIP graph from kit projection or bundle JSON (`StoreCommand.installProjection`).
         pub async fn install_projection_json(&self, json: &str) -> Result<(), crate::error::SemioError> {
-            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| crate::error::SemioError::invalid(format!("installProjection json: {e}")))?;
+            let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(json).map_err(|e| crate::error::SemioError::invalid(format!("installProjection json: {e}")))?;
             if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
                 crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&self.wip_graph, json).await?;
             } else {
@@ -11127,7 +11169,7 @@ pub mod worker {
                         _ => {}
                     }
                 }
-                futures_lite::future::yield_now().await;
+                crate::external_adapters::futures_lite::future::yield_now().await;
             }
         }
 
@@ -11146,7 +11188,7 @@ pub mod worker {
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            std::thread::spawn(move || futures_lite::future::block_on(fut));
+            std::thread::spawn(move || crate::external_adapters::futures_lite::future::block_on(fut));
         }
     }
 
@@ -11249,9 +11291,9 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::{Context, Lookahead, Object, Schema, Subscription};
-    use async_stream::stream;
-    use futures_util::Stream;
+    use crate::external_adapters::async_graphql::{Context, Lookahead, Object, Schema, Subscription};
+    use crate::external_adapters::async_stream::stream;
+    use crate::external_adapters::futures_util::Stream;
     use std::pin::Pin;
     use std::sync::Arc;
 
@@ -11316,7 +11358,7 @@ pub mod gql {
     pub mod interfaces {
         use std::sync::{Arc, OnceLock, Weak};
 
-        use async_graphql::{Context, Interface, Object, SimpleObject};
+        use crate::external_adapters::async_graphql::{Context, Interface, Object, SimpleObject};
 
         use crate::geom::entity::{Coordinate, Location, Offset, Plane, Place, Point, Position, Vector};
         use crate::gql_relay::{
@@ -13133,7 +13175,7 @@ pub mod gql {
 
     //#region 🌐 runtime_hosting
     /// @emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
-    #[derive(Clone, Copy, PartialEq, Eq, async_graphql::Enum)]
+    #[derive(Clone, Copy, PartialEq, Eq, crate::external_adapters::async_graphql::Enum)]
     pub enum BackboneStatus {
         #[graphql(name = "OFFLINE")]
         Offline,
@@ -13200,7 +13242,7 @@ pub mod gql {
     }
 
     /// @emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
-    #[derive(Clone, async_graphql::Interface)]
+    #[derive(Clone, crate::external_adapters::async_graphql::Interface)]
     #[graphql(
         name = "Backbone",
         field(name = "id", ty = "crate::id::Id"),
@@ -13216,13 +13258,13 @@ pub mod gql {
     }
 
     /// @emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     pub struct BackboneEdge {
         pub cursor: String,
         pub node: BackboneInterface,
     }
 
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "BackboneConnection")]
     pub struct BackboneConnection {
         pub edges: Vec<BackboneEdge>,
@@ -13318,13 +13360,13 @@ pub mod gql {
         }
     }
 
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     pub struct RemoteProviderEdge {
         pub cursor: String,
         pub node: Arc<RemoteProvider>,
     }
 
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "RemoteProviderConnection")]
     pub struct RemoteProviderConnection {
         pub edges: Vec<RemoteProviderEdge>,
@@ -13356,7 +13398,7 @@ pub mod gql {
     }
 
     /// @emoji 🛰️ Golden `interface Provider` — concrete [`LocalProvider`] / [`RemoteProvider`].
-    #[derive(Clone, async_graphql::Interface)]
+    #[derive(Clone, crate::external_adapters::async_graphql::Interface)]
     #[graphql(
         name = "Provider",
         field(name = "id", ty = "crate::id::Id"),
@@ -13397,7 +13439,7 @@ pub mod gql {
     }
 
     /// @emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
-    #[derive(Clone, async_graphql::Interface)]
+    #[derive(Clone, crate::external_adapters::async_graphql::Interface)]
     #[graphql(
         name = "ProviderCommand",
         field(name = "createBackbone", method = "create_backbone", arg(name = "uri", ty = "String"), ty = "crate::operation::ResponseInterface"),
@@ -13422,12 +13464,12 @@ pub mod gql {
             crate::operation::CommandResponse::not_implemented().await.into()
         }
 
-        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, username, password_hash, hub_url, self);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
 
-        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn logout(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = ctx;
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -13441,14 +13483,14 @@ pub mod gql {
     #[derive(Clone)]
     pub struct Store;
 
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "StoreEdge")]
     pub struct StoreEdge {
         pub cursor: String,
         pub node: Store,
     }
 
-    #[derive(Clone, async_graphql::SimpleObject)]
+    #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "StoreConnection")]
     pub struct StoreConnection {
         pub edges: Vec<StoreEdge>,
@@ -13467,18 +13509,18 @@ pub mod gql {
     #[Object(name = "Store")]
     impl Store {
         /// @emoji 🌐 Writable in-progress graph head.
-        pub async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
+        pub async fn wip(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentStore>>()?.wip_graph.clone())
         }
 
         /// @emoji 🧾 Authoritative graph head when available.
         #[graphql(name = "authoritative")]
-        pub async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Arc<Graph>>> {
+        pub async fn authoritative(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<Arc<Graph>>> {
             Ok(Some(ctx.data::<Arc<ParentStore>>()?.auth_graph.clone()))
         }
 
         /// @emoji ⚔️ Current conflict registry as a relay connection.
-        pub async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
+        pub async fn conflicts(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::gql_relay::ConflictConnection> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let list = rt.conflicts.read().await.clone();
             Ok(crate::gql_relay::ConflictConnection::from_conflicts(list).await)
@@ -13490,13 +13532,13 @@ pub mod gql {
     #[Object]
     impl Query {
         /// @emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
-        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::gql::interfaces::NodeInterface>> {
+        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::NodeInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(crate::interface::resolve_node(rt.as_ref(), &id).await.and_then(kit_graph_nav_node_to_node_interface))
         }
 
         /// @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
-        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(match crate::interface::resolve_node(rt.as_ref(), &hash).await {
                 Some(crate::interface::KitGraphNavNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
@@ -13515,9 +13557,9 @@ pub mod gql {
         }
 
         /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
-        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
+        pub async fn session(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Arc<crate::vcs::Session>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
+            rt.sessions.read().await.first().cloned().ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))
         }
 
         /// @emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
@@ -13532,7 +13574,7 @@ pub mod gql {
 
     #[Object(name = "SessionCommand")]
     impl SessionCommand {
-        async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn start(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let _ = rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             let sid = rt
@@ -13541,11 +13583,11 @@ pub mod gql {
                 .await
                 .first()
                 .map(|s| s.id.clone())
-                .ok_or_else(|| async_graphql::Error::new("no session"))?;
+                .ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))?;
             Ok(crate::operation::CommandResponse::ok_id(sid).await.into())
         }
 
-        async fn end(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn end(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = ctx;
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -13584,7 +13626,7 @@ pub mod gql {
         }
 
         #[graphql(name = "startAlternative")]
-        async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let n = name.unwrap_or_default();
             match rt.wip_graph.create_alternative_from_tip(n, None).await {
@@ -13594,7 +13636,7 @@ pub mod gql {
         }
 
         #[graphql(name = "installProjection")]
-        async fn install_projection(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn install_projection(&self, ctx: &Context<'_>, json: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             match rt.install_projection_json(&json).await {
                 Ok(()) => Ok(crate::operation::CommandResponse::ok_request(crate::id::Id::new().await).await.into()),
@@ -13608,7 +13650,7 @@ pub mod gql {
     #[Object(name = "VersionCommand")]
     impl VersionCommand {
         #[graphql(name = "startNewChange")]
-        async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn start_new_change(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             let ws = rt.wip_graph.id.clone();
@@ -13618,17 +13660,17 @@ pub mod gql {
         }
 
         #[graphql(name = "unsavedChange")]
-        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeCommand> {
+        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<UnsavedChangeCommand> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             if let Some((_, tx)) = rt.wip_kit_scope.read().await.as_ref() {
                 if tx != &id {
-                    return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
+                    return Err(crate::external_adapters::async_graphql::Error::new("unsavedChange id does not match active change"));
                 }
             }
             Ok(UnsavedChangeCommand { change_id: id })
         }
 
-        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn save(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((workspace_id, tx_id)) = scope else {
@@ -13644,7 +13686,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createCheckpoint")]
-        async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, message);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -13671,7 +13713,7 @@ pub mod gql {
             OperationInput { change_id: self.change_id.clone() }
         }
 
-        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn save(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((workspace_id, tx_id)) = scope else {
@@ -13696,13 +13738,13 @@ pub mod gql {
 
     #[Object(name = "AlternativeCommand")]
     impl AlternativeCommand {
-        async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn version(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, &self.alternative_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
 
         #[graphql(name = "integrateIntoTheKit")]
-        async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, &self.alternative_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -13715,7 +13757,7 @@ pub mod gql {
     #[Object(name = "OperationInput")]
     impl OperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13729,7 +13771,7 @@ pub mod gql {
         }
 
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let entity_id = kit.workspace_kit_id().await;
@@ -13743,7 +13785,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createTag")]
-        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13770,19 +13812,19 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteTag")]
-        async fn delete_tag(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_tag(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteTag { scope: Scope::Tag { tag_id: id }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "deleteTags")]
-        async fn delete_tags(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_tags(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteTags { scope: Scope::Tags { tag_ids: ids }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "createConcept")]
-        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13809,13 +13851,13 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteConcept")]
-        async fn delete_concept(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_concept(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteConcept { scope: Scope::Concept { concept_id: id }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "deleteConcepts")]
-        async fn delete_concepts(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_concepts(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let mut last = crate::operation::CommandResponse::fail_msg("no concept ids").await;
             for id in ids {
@@ -13828,7 +13870,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createQuality")]
-        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13855,13 +13897,13 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteQuality")]
-        async fn delete_quality(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_quality(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteQuality { scope: Scope::Quality { quality_id: id }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "deleteQualities")]
-        async fn delete_qualities(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_qualities(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let mut last = crate::operation::CommandResponse::fail_msg("no quality ids").await;
             for id in ids {
@@ -13874,7 +13916,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13903,13 +13945,13 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteType")]
-        async fn delete_type(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_type(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteType { scope: Scope::Type { type_id: id }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "deleteTypes")]
-        async fn delete_types(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_types(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let mut last = crate::operation::CommandResponse::fail_msg("no type ids").await;
             for id in ids {
@@ -13922,7 +13964,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createDesign")]
-        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -13951,13 +13993,13 @@ pub mod gql {
         }
 
         #[graphql(name = "deleteDesign")]
-        async fn delete_design(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_design(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::DeleteDesign { scope: Scope::Design { design_id: id }, input: Input::None }).await.into())
         }
 
         #[graphql(name = "deleteDesigns")]
-        async fn delete_designs(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_designs(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let mut last = crate::operation::CommandResponse::fail_msg("no design ids").await;
             for id in ids {
@@ -13978,7 +14020,7 @@ pub mod gql {
     #[Object(name = "TagOperationInput")]
     impl TagOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(
                 rt,
@@ -13989,7 +14031,7 @@ pub mod gql {
             .into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(
                 rt,
@@ -14003,22 +14045,22 @@ pub mod gql {
             .into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14032,12 +14074,12 @@ pub mod gql {
     #[Object(name = "ConceptOperationInput")]
     impl ConceptOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(dispatch_unsaved_kit_operation(
                 rt,
@@ -14051,22 +14093,22 @@ pub mod gql {
             .into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14080,32 +14122,32 @@ pub mod gql {
     #[Object(name = "QualityOperationInput")]
     impl QualityOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_key);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14119,37 +14161,37 @@ pub mod gql {
     #[Object(name = "TypeOperationInput")]
     impl TypeOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "createPort")]
-        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, label, description, icon, order);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14157,17 +14199,17 @@ pub mod gql {
             PortOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
         }
         #[graphql(name = "deletePort")]
-        async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "deletePorts")]
-        async fn delete_ports(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_ports(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addConnector")]
-        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, description, icon, port_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14175,12 +14217,12 @@ pub mod gql {
             ConnectorOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
         }
         #[graphql(name = "removeConnector")]
-        async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeConnectors")]
-        async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14195,32 +14237,32 @@ pub mod gql {
     #[Object(name = "PortOperationInput")]
     impl PortOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_code, new_label);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14235,17 +14277,17 @@ pub mod gql {
     #[Object(name = "ConnectorOperationInput")]
     impl ConnectorOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_code);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14259,41 +14301,41 @@ pub mod gql {
     #[Object(name = "DesignOperationInput")]
     impl DesignOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeIcon")]
-        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_icon);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
-        async fn flatten(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn flatten(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -14326,7 +14368,7 @@ pub mod gql {
             description: Option<String>,
             position: Option<PositionInput>,
             scale: Option<f64>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, name, description, position, scale);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14342,7 +14384,7 @@ pub mod gql {
             name: Option<String>,
             description: Option<String>,
             scale: Option<f64>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14353,17 +14395,17 @@ pub mod gql {
             PiecesOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
         }
         #[graphql(name = "deletePiece")]
-        async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "deletePieces")]
-        async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "deletePiecesAndConnections")]
-        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, piece_ids, connection_ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14378,16 +14420,16 @@ pub mod gql {
     #[Object(name = "PieceOperationInput")]
     impl PieceOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_name);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, new_description);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
-        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -14404,31 +14446,31 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
-        async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, position);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
-        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn fix(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeBlueprint")]
-        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addAttribute")]
-        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, key, value, definition);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttribute")]
-        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "removeAttributes")]
-        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14442,7 +14484,7 @@ pub mod gql {
 
     #[Object(name = "PiecesOperationInput")]
     impl PiecesOperationInput {
-        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -14459,16 +14501,16 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
-        async fn r#move(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn r#move(&self, ctx: &Context<'_>, offset: OffsetInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, offset);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
-        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn fix(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "changeBlueprint")]
-        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, blueprint_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -14487,13 +14529,13 @@ pub mod gql {
 
     pub struct Subscription;
 
-    type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
-    type OperationStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::operation::OperationInterface>> + Send>>;
+    type SessionStream = Pin<Box<dyn Stream<Item = crate::external_adapters::async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
+    type OperationStream = Pin<Box<dyn Stream<Item = crate::external_adapters::async_graphql::Result<crate::operation::OperationInterface>> + Send>>;
 
     #[Subscription]
     impl Subscription {
         /// @emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
-        async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessionStream> {
+        async fn session(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<SessionStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("session", ctx);
@@ -14504,7 +14546,7 @@ pub mod gql {
                 loop {
                     let out = {
                         let g = rt.sessions.read().await;
-                        g.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
+                        g.first().cloned().ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))
                     };
                     match out {
                         Ok(s) => yield Ok(s),
@@ -14530,7 +14572,7 @@ pub mod gql {
         }
 
         /// @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
-        async fn operation(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationStream> {
+        async fn operation(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<OperationStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("operation", ctx);
@@ -14872,15 +14914,15 @@ pub mod gql {
 
     //#region 🌐native_http_graphql
     /// @emoji 🌐 Parses a GraphQL-over-HTTP JSON body (`query`, optional `variables`, optional `operationName`) into an async-graphql [`Request`].
-    pub fn graphql_request_from_json_str(body: &str) -> Result<async_graphql::Request, crate::error::SemioError> {
-        use async_graphql::Variables;
-        let v: serde_json::Value = serde_json::from_str(body).map_err(|e| crate::error::SemioError::invalid(format!("graphql json: {e}")))?;
+    pub fn graphql_request_from_json_str(body: &str) -> Result<crate::external_adapters::async_graphql::Request, crate::error::SemioError> {
+        use crate::external_adapters::async_graphql::Variables;
+        let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(body).map_err(|e| crate::error::SemioError::invalid(format!("graphql json: {e}")))?;
         let query = v
             .get("query")
             .and_then(|x| x.as_str())
             .ok_or_else(|| crate::error::SemioError::invalid("graphql json: missing query"))?
             .to_string();
-        let mut req = async_graphql::Request::new(query);
+        let mut req = crate::external_adapters::async_graphql::Request::new(query);
         if let Some(vars) = v.get("variables") {
             if !vars.is_null() {
                 req = req.variables(Variables::from_json(vars.clone()));
@@ -14906,7 +14948,7 @@ pub mod wasm_bridge {
     use std::sync::Arc;
     use std::sync::Mutex;
 
-    use async_graphql::{Request, Variables};
+    use crate::external_adapters::async_graphql::{Request, Variables};
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
 
@@ -14924,7 +14966,7 @@ pub mod wasm_bridge {
     }
 
     fn graphql_execute_request_from_str(s: &str) -> Result<Request, JsValue> {
-        let v: serde_json::Value = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
+        let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
         let query = v.get("query").and_then(|x| x.as_str()).ok_or_else(|| JsValue::from_str("graphql json: missing query"))?.to_string();
         let mut r = Request::new(query);
         if let Some(vars) = v.get("variables") {
@@ -14998,7 +15040,7 @@ pub mod wasm_bridge {
                 let mut req = graphql_execute_request_from_str(&req_str)?;
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let resp = schema.execute(req).await;
-                let json = serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let json = crate::external_adapters::serde_json::to_string(&crate::external_adapters::async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Ok(JsValue::from_str(&json))
             })
         }
@@ -15010,7 +15052,7 @@ pub mod wasm_bridge {
             let rt = self.rt.clone();
             let mtx = Arc::clone(&self.schema_mtx);
             future_to_promise(async move {
-                use futures_util::StreamExt;
+                use crate::external_adapters::futures_util::StreamExt;
 
                 let mut locked = mtx.lock().map_err(|_| JsValue::from_str("schema lock poisoned"))?;
                 if locked.is_none() {
@@ -15024,7 +15066,7 @@ pub mod wasm_bridge {
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
-                    let json = serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let json = crate::external_adapters::serde_json::to_string(&crate::external_adapters::async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     let msg = JsValue::from_str(&json);
                     if cb.call1(&JsValue::UNDEFINED, &msg).is_err() {
                         break;
@@ -15051,7 +15093,7 @@ pub mod kit_store_comprehensive_e2e {
     use std::path::Path;
     use std::path::PathBuf;
 
-    use async_graphql::{Request, Variables};
+    use crate::external_adapters::async_graphql::{Request, Variables};
 
     use crate::gql::{build_schema_for, AppSchema};
 
@@ -15086,7 +15128,7 @@ pub mod kit_store_comprehensive_e2e {
         out
     }
 
-    pub fn kit_store_json_pointer_get<'a>(v: &'a serde_json::Value, pointer: &str) -> Option<&'a serde_json::Value> {
+    pub fn kit_store_json_pointer_get<'a>(v: &'a crate::external_adapters::serde_json::Value, pointer: &str) -> Option<&'a crate::external_adapters::serde_json::Value> {
         let p = if pointer.starts_with('/') {
             pointer.to_string()
         } else {
@@ -15096,13 +15138,13 @@ pub mod kit_store_comprehensive_e2e {
     }
 
     /// @emoji 🪢 Reads a fixture capture scalar from a JSON leaf (`string` or `{ "value": "…" }` IdResult shape).
-    pub fn kit_store_capture_scalar(v: &serde_json::Value) -> Option<String> {
+    pub fn kit_store_capture_scalar(v: &crate::external_adapters::serde_json::Value) -> Option<String> {
         v.as_str()
             .map(str::to_string)
             .or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
     }
 
-    async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &serde_json::Value, engine: &str) {
+    async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &crate::external_adapters::serde_json::Value, engine: &str) {
         let workspace_id = g.id.clone();
         let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
         let golden_ops = crate::kit_backbone::golden_operation_records_ref(ops_json).expect("operations");
@@ -15133,7 +15175,7 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-    async fn kit_store_assert_golden_invariants(g: &std::sync::Arc<crate::vcs::Graph>, exp: &serde_json::Value) {
+    async fn kit_store_assert_golden_invariants(g: &std::sync::Arc<crate::vcs::Graph>, exp: &crate::external_adapters::serde_json::Value) {
         let inv = &exp["invariants"];
         let workspace_id = g.id.clone();
         let kit = g.materialized_kit_for_workspace(&workspace_id).await;
@@ -15152,7 +15194,7 @@ pub mod kit_store_comprehensive_e2e {
         }
         centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));
         assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
-        let expect_centers: Vec<[f64; 2]> = serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
+        let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
         assert_eq!(centers.len(), expect_centers.len(), "centers len");
         for (got, want) in centers.iter().zip(expect_centers.iter()) {
             assert!((got[0] - want[0]).abs() < 1e-9, "center u");
@@ -15164,13 +15206,13 @@ pub mod kit_store_comprehensive_e2e {
         assert_eq!(fp, exp_fp, "projectionFingerprint");
     }
 
-    async fn kit_store_run_comprehensive_graphql_step(step: &serde_json::Value, store_id: &str, vars: &mut std::collections::HashMap<String, String>, schema: &AppSchema) {
+    async fn kit_store_run_comprehensive_graphql_step(step: &crate::external_adapters::serde_json::Value, store_id: &str, vars: &mut std::collections::HashMap<String, String>, schema: &AppSchema) {
         let query = kit_store_substitute_fixture_vars(step["query"].as_str().expect("query"), store_id, vars);
         let mut request = Request::new(query);
         if let Some(v) = step.get("variables") {
-            let raw = serde_json::to_string(v).expect("variables serialize");
+            let raw = crate::external_adapters::serde_json::to_string(v).expect("variables serialize");
             let substituted = kit_store_substitute_fixture_vars(&raw, store_id, vars);
-            let parsed: serde_json::Value = serde_json::from_str(&substituted).expect("variables json");
+            let parsed: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&substituted).expect("variables json");
             request = request.variables(Variables::from_json(parsed));
         }
         let res = schema.execute(request).await;
@@ -15226,7 +15268,7 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-    pub fn kit_store_validate_comprehensive_fixture(fixture: &serde_json::Value) {
+    pub fn kit_store_validate_comprehensive_fixture(fixture: &crate::external_adapters::serde_json::Value) {
         assert_eq!(fixture["kind"].as_str(), Some("semio.kit_store.comprehensive"));
         assert!(fixture["schema"].as_str().is_some(), "schema");
         assert!(fixture["storeId"].as_str().is_some(), "storeId");
@@ -15243,7 +15285,7 @@ pub mod kit_store_comprehensive_e2e {
         assert!(kit_store_comprehensive_fixture_path().is_some(), "comprehensive fixture path");
     }
 
-    async fn kit_store_replay_golden_ops_backbone(ops_json: &serde_json::Value, exp: &serde_json::Value, backbone: &str) {
+    async fn kit_store_replay_golden_ops_backbone(ops_json: &crate::external_adapters::serde_json::Value, exp: &crate::external_adapters::serde_json::Value, backbone: &str) {
         let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
         match backbone {
             "devJson" => {
@@ -15261,7 +15303,7 @@ pub mod kit_store_comprehensive_e2e {
                 let uri_full = format!("file://{}", path.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
                 let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored_operations(&stored);
-                std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
+                std::fs::write(&path, crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
                 crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
                 let kit_arc = g.materialized_kit_for_workspace(&g.id).await;
                 let fp = crate::kit_graph_engine::projection_fingerprint_for_kit(kit_arc.as_ref()).await;
@@ -15288,10 +15330,10 @@ pub mod kit_store_comprehensive_e2e {
                 let db_path = proj_canon.join(".semio").join("wip.db");
                 let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
                 for operation in &stored {
-                    let input_json = serde_json::to_string(&operation.input).expect("input json");
+                    let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
                     conn.execute(
                         "INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-                        rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
+                        rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
                     )
                     .expect("insert operation entity");
                 }
@@ -15305,11 +15347,11 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-    async fn kit_store_run_comprehensive_fixture_steps(fixture: &serde_json::Value, rt: &std::sync::Arc<crate::worker::ParentStore>, schema: &AppSchema) {
+    async fn kit_store_run_comprehensive_fixture_steps(fixture: &crate::external_adapters::serde_json::Value, rt: &std::sync::Arc<crate::worker::ParentStore>, schema: &AppSchema) {
         let store_id = fixture["storeId"].as_str().expect("storeId");
         let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden ops+expected beside comprehensive fixture");
-        let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden ops")).expect("parse golden ops");
-        let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden ops")).expect("parse golden ops");
+        let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
         let mut vars = std::collections::HashMap::new();
         let mut replayed = false;
         for step in fixture["steps"].as_array().expect("steps") {
@@ -15349,7 +15391,7 @@ pub mod kit_store_comprehensive_e2e {
     }
 
     /// @emoji 🧪 Load and validate fixture, run GraphQL steps + native backbone steps (in-process ParentStore).
-    pub async fn run_in_process(fixture: &serde_json::Value) {
+    pub async fn run_in_process(fixture: &crate::external_adapters::serde_json::Value) {
         kit_store_validate_comprehensive_fixture(fixture);
         let rt = crate::worker::ParentStore::spawn().await;
         let schema = build_schema_for(rt.clone());
@@ -15357,11 +15399,11 @@ pub mod kit_store_comprehensive_e2e {
     }
 
     /// @emoji 🧪 Every `replayEngines` entry matches golden invariants on a fresh graph.
-    pub async fn run_all_replay_engines(fixture: &serde_json::Value) {
+    pub async fn run_all_replay_engines(fixture: &crate::external_adapters::serde_json::Value) {
         kit_store_validate_comprehensive_fixture(fixture);
         let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden paths");
-        let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read ops")).expect("parse ops");
-        let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read ops")).expect("parse ops");
+        let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
         for engine in fixture["replayEngines"].as_array().expect("replayEngines") {
             let engine = engine.as_str().expect("engine name");
             let g = crate::vcs::Graph::new().await;
@@ -15382,9 +15424,9 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::sync::Arc;
 
-    use async_graphql::{Request, Variables};
-    use futures_lite::future::block_on;
-    use serde_json::json;
+    use crate::external_adapters::async_graphql::{Request, Variables};
+    use crate::external_adapters::futures_lite::future::block_on;
+    use crate::external_adapters::serde_json::json;
 
     use crate::gql::AppSchema;
 
@@ -15441,7 +15483,7 @@ mod tests {
             eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.semio.json");
             return;
         };
-        let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
+        let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
         crate::kit_store_comprehensive_e2e::kit_store_validate_comprehensive_fixture(&fixture);
     }
 
@@ -15452,7 +15494,7 @@ mod tests {
                 eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_replay_engines_match_golden");
                 return;
             };
-            let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
+            let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
             crate::kit_store_comprehensive_e2e::run_all_replay_engines(&fixture).await;
         });
     }
@@ -15464,7 +15506,7 @@ mod tests {
                 eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.semio.json");
                 return;
             };
-            let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
+            let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
             crate::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
         });
     }
@@ -15535,7 +15577,7 @@ mod tests {
         ("the-kit".to_string(), tx_id)
     }
 
-    fn position_value() -> serde_json::Value {
+    fn position_value() -> crate::external_adapters::serde_json::Value {
         json!({
             "center": { "u": 0.0, "v": 0.0 },
             "plane": {
@@ -15547,7 +15589,7 @@ mod tests {
     }
 
     fn add_fixed_piece_vars(transaction_id: &str, design_id: &str) -> Variables {
-        Variables::from_value(async_graphql::value!({
+        Variables::from_value(crate::external_adapters::async_graphql::value!({
             "tx": transaction_id,
             "designId": design_id,
             "bp": "bp-new",
@@ -15677,9 +15719,9 @@ mod tests {
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let json_a = serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(g.as_ref()).await).expect("serialize bundle");
+            let json_a = crate::external_adapters::serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(g.as_ref()).await).expect("serialize bundle");
 
-            let v: serde_json::Value = serde_json::from_str(&json_a).expect("bundle parses");
+            let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&json_a).expect("bundle parses");
             assert_eq!(v["schema"].as_str().unwrap(), crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
             for k in ["wip", "authoritative", "stage", "conflicts", "blobs"].iter() {
                 assert!(v.get(*k).is_some(), "missing top-level key {k}");
@@ -15700,8 +15742,8 @@ mod tests {
             let rt_b = crate::worker::ParentStore::spawn().await;
             crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
 
-            let json_b = serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
-            let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
+            let json_b = crate::external_adapters::serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
+            let vb: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&json_b).expect("bundle b parses");
             assert_eq!(vb["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "the kit", "immutable baseline survives bundle round-trip");
         });
     }
@@ -15714,7 +15756,7 @@ mod tests {
                 r#"mutation($n: String!) {{ session {{ store(id: "test-store") {{ startAlternative(name: $n) {} }} }} }}"#,
                 GQL_RESPONSE_ID
             );
-            let res = schema.execute(Request::new(m).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" })))).await;
+            let res = schema.execute(Request::new(m).variables(Variables::from_value(crate::external_adapters::async_graphql::value!({ "n": "branch-a" })))).await;
             assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
             let id: String = res.data
                 .into_json()
@@ -15803,7 +15845,7 @@ mod tests {
                     }
                 }
             "#;
-            let vars = async_graphql::value!({
+            let vars = crate::external_adapters::async_graphql::value!({
                 "tx": tx_id,
                 "name": "alpha-tag",
             });
@@ -15841,7 +15883,7 @@ mod tests {
                     }}
                 }}"#
             );
-            let vars = async_graphql::value!({ "tx": tx_id, "name": "resp-tag" });
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "name": "resp-tag" });
             let res = schema.execute(Request::new(m).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createTag response mutation: {:?}", res.errors);
             let payload = res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["createTag"].clone();
@@ -15871,7 +15913,7 @@ mod tests {
                     }}
                 }}"#
             );
-            let vars = async_graphql::value!({ "tx": tx_id, "name": "Renamed Via Response" });
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "name": "Renamed Via Response" });
             let res = schema.execute(Request::new(m).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "rename response mutation: {:?}", res.errors);
             let payload = res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["rename"].clone();
@@ -15904,7 +15946,7 @@ mod tests {
                     }}
                 }}"#
             );
-            let vars = async_graphql::value!({ "tx": tx_id, "name": "tag-to-delete" });
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "name": "tag-to-delete" });
             let res = schema.execute(Request::new(create_m).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createTag: {:?}", res.errors);
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -15934,7 +15976,7 @@ mod tests {
                     }}
                 }}"#
             );
-            let vars = async_graphql::value!({ "tx": tx_id, "id": tag_id });
+            let vars = crate::external_adapters::async_graphql::value!({ "tx": tx_id, "id": tag_id });
             let res = schema.execute(Request::new(delete_m).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "deleteTag: {:?}", res.errors);
             let payload = res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["deleteTag"].clone();
@@ -15979,7 +16021,7 @@ mod tests {
             eprintln!("[DEBUG] skip golden_operations_fixture_uses_canonical_shape: missing golden ops");
             return;
         };
-        let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read golden ops")).expect("parse golden ops");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read golden ops")).expect("parse golden ops");
         assert!(ops_json.get("operations").and_then(|v| v.as_array()).is_some());
         assert!(ops_json.get("ops").is_none());
         let records = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations array");
@@ -16009,7 +16051,7 @@ mod tests {
                     }
                 }
             "#;
-            let vars = async_graphql::value!({
+            let vars = crate::external_adapters::async_graphql::value!({
                 "tx": tx_id,
                 "name": "beta-concept",
             });
@@ -16048,7 +16090,7 @@ mod tests {
                     }
                 }
             "#;
-            let vars = async_graphql::value!({
+            let vars = crate::external_adapters::async_graphql::value!({
                 "tx": tx_id,
                 "key": "q1",
                 "value": "v1",
@@ -16088,7 +16130,7 @@ mod tests {
                     }
                 }
             "#;
-            let vars = async_graphql::value!({
+            let vars = crate::external_adapters::async_graphql::value!({
                 "tx": tx_id,
                 "name": "layout-alpha",
             });
@@ -16129,7 +16171,7 @@ mod tests {
                     }
                 }
             "#;
-            let vars = async_graphql::value!({
+            let vars = crate::external_adapters::async_graphql::value!({
                 "tx": tx_id,
                 "name": "kind-beta",
             });
@@ -16171,7 +16213,7 @@ mod tests {
             let data = res.data.into_json().unwrap();
             let edges = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
             let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
-            assert!(any_piece, "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
+            assert!(any_piece, "expected at least one piece in wip; got: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
 
@@ -16188,7 +16230,7 @@ mod tests {
             let data = res.data.into_json().unwrap();
             let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
             let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
-            assert!(all_empty, "authoritative leaked pieces: {}", serde_json::to_string_pretty(&data).unwrap());
+            assert!(all_empty, "authoritative leaked pieces: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
 
@@ -16226,7 +16268,7 @@ mod tests {
         });
     }
 
-    fn relay_piece_count_wip(data: &serde_json::Value) -> usize {
+    fn relay_piece_count_wip(data: &crate::external_adapters::serde_json::Value) -> usize {
         let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
             return 0;
         };
@@ -16269,8 +16311,8 @@ mod tests {
                 eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing semio/assets/semio/kit-store.golden.*.json");
                 return;
             };
-            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
-            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+            let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
             let workspace_id = g.id.clone();
@@ -16309,7 +16351,7 @@ mod tests {
             }
             centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));
             assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
-            let expect_centers: Vec<[f64; 2]> = serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
+            let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
             assert_eq!(centers.len(), expect_centers.len(), "centers len");
             for (got, want) in centers.iter().zip(expect_centers.iter()) {
                 assert!((got[0] - want[0]).abs() < 1e-9, "center u");
@@ -16330,8 +16372,8 @@ mod tests {
                 eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing semio/assets/semio/kit-store.golden.*.json");
                 return;
             };
-            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
-            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+            let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
             let workspace_id = g.id.clone();
@@ -16363,8 +16405,8 @@ mod tests {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
 
-            let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
-            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+            let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let g = crate::vcs::Graph::new().await;
             let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
@@ -16378,7 +16420,7 @@ mod tests {
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
             let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored_operations(&stored);
-            std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
+            std::fs::write(&path, crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
 
@@ -16404,8 +16446,8 @@ mod tests {
             let uri_local = format!("local://{}", proj_canon.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
 
-            let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
-            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+            let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
             let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
@@ -16423,10 +16465,10 @@ mod tests {
             let db_path = proj_canon.join(".semio").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
             for operation in &stored {
-                let input_json = serde_json::to_string(&operation.input).expect("input json");
+                let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
                 conn.execute(
                     "INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-                    rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
+                    rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
                 )
                 .expect("insert  operation entity");
             }
@@ -16443,8 +16485,8 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.semio.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.new.kit.semio.json");
+        let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
             assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
         }
@@ -16453,10 +16495,55 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
+    fn position_input_defaults_when_plane_fields_missing() {
+        let v = crate::external_adapters::serde_json::json!({ "center": { "u": 1.0, "v": 2.0 } });
+        let p = crate::kit_backbone::position_input_from_json(&v).expect("position");
+        assert_eq!(p.center.u, 1.0);
+        assert_eq!(p.center.v, 2.0);
+        assert_eq!(p.plane.origin.x, 0.0);
+        assert_eq!(p.plane.x_axis.x, 1.0);
+        assert_eq!(p.plane.y_axis.y, 1.0);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn architect_fixtures_hydrate_and_cases_catalog() {
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+        let kit: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(
+            &std::fs::read_to_string(base.join("architect.harness.kit.semio.json")).expect("read harness kit"),
+        )
+        .expect("parse harness kit");
+        let doc: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(
+            &std::fs::read_to_string(base.join("architect.cases.semio.json")).expect("read architect cases"),
+        )
+        .expect("parse cases");
+        assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.semio.json"));
+        let cases = doc["cases"].as_array().expect("cases");
+        assert_eq!(cases.len(), 13);
+        for tier in ["e2e", "memory", "plan", "parse"] {
+            assert!(cases.iter().any(|c| c["tier"] == tier), "missing tier {tier}");
+        }
+        block_on(async {
+            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit)
+                .await
+                .expect("hydrate harness");
+            let mat = rt.wip_graph.materialized_head_kit().await;
+            let mut design_names = Vec::new();
+            for d in mat.designs.read().await.iter() {
+                design_names.push((*d.name.read().await).clone());
+            }
+            assert!(design_names.iter().any(|n| n == "Nakagin Capsule Tower"));
+            assert!(design_names.iter().any(|n| n == "Other Pavilion"));
+            assert_eq!(mat.types.read().await.len(), 3);
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.semio.json");
-        let v: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.kit.light.semio.json");
+        let v: crate::external_adapters::serde_json::Value =
+            crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
         let types_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("types").expect("types")).expect("types list");
         assert!(!types_arr.is_empty(), "expected seeded types");
@@ -16504,8 +16591,8 @@ mod tests {
     fn kit_store_bundle_template_round_trips_metabolism_top_level_keys() {
         // 🧾 The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
         let bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
-        let s = serde_json::to_string_pretty(&bundle).expect("serialize empty template");
-        let v: serde_json::Value = serde_json::from_str(&s).expect("parse template");
+        let s = crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize empty template");
+        let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&s).expect("parse template");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
             assert!(v.get(k).is_some(), "empty template missing `{k}`");
         }
@@ -16526,8 +16613,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn json_array_or_block_items_helpers_accept_legacy_or_block_lists() {
-        let flat = serde_json::json!([{"id":"a"}]);
-        let block = serde_json::json!({"hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB,"items":[{"id":"b"}]});
+        let flat = crate::external_adapters::serde_json::json!([{"id":"a"}]);
+        let block = crate::external_adapters::serde_json::json!({"hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB,"items":[{"id":"b"}]});
         assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&flat).unwrap().len(), 1);
         assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&block).unwrap()[0]["id"], "b");
         let mut m = block.clone();
@@ -16538,8 +16625,8 @@ mod tests {
     #[test]
     fn kit_bundle_purge_unreferenced_blob_entities() {
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
-        bundle.blobs.items.push(serde_json::json!({ "hash": "orphan_digest_deadbeef", "blob": "data:,x" }));
-        bundle.wip.initial_kit = serde_json::json!({
+        bundle.blobs.items.push(crate::external_adapters::serde_json::json!({ "hash": "orphan_digest_deadbeef", "blob": "data:,x" }));
+        bundle.wip.initial_kit = crate::external_adapters::serde_json::json!({
             "id": "k-purge",
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -16556,7 +16643,7 @@ mod tests {
         let blob_txt = "data:application/octet-stream;base64,QQ==";
         let dig = crate::kit_backbone::DevBackboneBundleDoc::digest_kit_blob_wire(blob_txt);
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
-        bundle.wip.initial_kit = serde_json::json!({
+        bundle.wip.initial_kit = crate::external_adapters::serde_json::json!({
             "id": "k-blob",
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -16612,10 +16699,10 @@ mod tests {
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let workspace_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append_operation(&workspace_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
+            bone.append_operation(&workspace_id, &tx_id, "kit.design.piece.createdFixedPiece", &crate::external_adapters::serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
-            let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
+            let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&raw).expect("parse on-disk bundle");
             for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
                 assert!(v.get(k).is_some(), "on-disk bundle missing `{k}` after append");
             }
@@ -16640,7 +16727,7 @@ mod tests {
     fn kit_store_bundle_append_unsaved_edit_creates_change_and_edit_paths() {
         // ➕ Appending to a fresh template materialises wip.theKit.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
-        bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
+        bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", crate::external_adapters::serde_json::json!({"hello": "world"}));
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "wip.theKit unsaved change created");
         let change = &bundle.wip.the_kit.unsaved_changes.items[0];
         assert_eq!(change.id, "change-y");
@@ -16654,7 +16741,7 @@ mod tests {
         assert!(bundle.stage.the_kit.unsaved_changes.items.is_empty(), "stage untouched");
 
         // Appending another step into the same change grows the same edit.
-        bundle.append_unsaved_edit("change-y", "kit.design.piece.deletedFixedPieces", serde_json::json!({"pieceIds": []}));
+        bundle.append_unsaved_edit("change-y", "kit.design.piece.deletedFixedPieces", crate::external_adapters::serde_json::json!({"pieceIds": []}));
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "no extra change");
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items.len(), 1, "no extra edit");
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
@@ -16680,7 +16767,7 @@ mod tests {
             assert_eq!(alt.name, "branch-a");
             assert!(alt.saved_changes.items.is_empty(), "alternative owns savedChanges");
             assert!(alt.unsaved_changes.items.is_empty(), "alternative owns unsavedChanges");
-            let raw = serde_json::to_value(&bundle).expect("bundle json");
+            let raw = crate::external_adapters::serde_json::to_value(&bundle).expect("bundle json");
             assert!(raw["wip"].get("savedChanges").is_none(), "graph must not own savedChanges");
             assert!(raw["wip"]["alternatives"]["items"][0].get("savedChanges").is_some(), "alternative must own savedChanges");
             assert!(raw["wip"]["alternatives"]["items"][0].get("unsavedChanges").is_some(), "alternative must own unsavedChanges");
@@ -16845,8 +16932,8 @@ mod tests {
     /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.semio.json");
-        let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
+        const FIXTURE: &str = include_str!("../../../fixtures/metabolism.kit.diff.semio.json");
+        let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("types").is_some(), "fixture must include types collection");
         assert!(raw.get("designs").is_some(), "fixture must include designs collection");
