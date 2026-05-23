@@ -16,11 +16,12 @@ import {
 	type ReactElement,
 	type ReactNode,
 } from "react";
-import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group } from "three";
+import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, type Object3D } from "three";
 
 import {
 	TOPOLOGIC_KINDS,
-	topologicTransformPoint,
+	centroid,
+	collectDescendantIds,
 	TopologicCellComplexEntity,
 	TopologicCellEntity,
 	TopologicClusterEntity,
@@ -36,6 +37,7 @@ import {
 	TopologicWireEntity,
 	ensureTopologicWasmLoaded,
 	normalizeTransform,
+	resolveEntityRenderTransform,
 	type Vec3,
 } from "../wasm/index.ts";
 
@@ -129,15 +131,6 @@ function TopologicGroup(props: {
 //#endregion 🔖Groups
 
 //#region 🔖Geometry
-function centroid(points: readonly Vec3[]): Vec3 {
-	if (points.length === 0) return [0, 0, 0];
-	const sum = points.reduce<[number, number, number]>(
-		(accumulator, point) => [accumulator[0] + point[0], accumulator[1] + point[1], accumulator[2] + point[2]],
-		[0, 0, 0],
-	);
-	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length];
-}
-
 function offsetPoint(point: Vec3, anchor: Vec3): Vec3 {
 	return [point[0] - anchor[0], point[1] - anchor[1], point[2] - anchor[2]];
 }
@@ -166,37 +159,6 @@ interface TopologyTraversalResult {
 	readonly revisitedIds: readonly string[];
 }
 
-function normalizeScaleVector(scale: TopologicTransform["scale"]): readonly [number, number, number] {
-	if (typeof scale === "number") return [scale, scale, scale];
-	return scale ?? [1, 1, 1];
-}
-
-function multiplyQuat(
-	a: readonly [number, number, number, number],
-	b: readonly [number, number, number, number],
-): readonly [number, number, number, number] {
-	const [ax, ay, az, aw] = a;
-	const [bx, by, bz, bw] = b;
-	return [
-		aw * bx + ax * bw + ay * bz - az * by,
-		aw * by - ax * bz + ay * bw + az * bx,
-		aw * bz + ax * by - ay * bx + az * bw,
-		aw * bw - ax * bx - ay * by - az * bz,
-	];
-}
-
-function composeTransform(parent: TopologicTransform | undefined, local: TopologicTransform | undefined): TopologicTransform | undefined {
-	if (!parent) return local;
-	if (!local) return parent;
-	const parentScale = normalizeScaleVector(parent.scale);
-	const localScale = normalizeScaleVector(local.scale);
-	return {
-		position: topologicTransformPoint(local.position ?? [0, 0, 0], parent),
-		rotation: multiplyQuat(parent.rotation ?? [0, 0, 0, 1], local.rotation ?? [0, 0, 0, 1]),
-		scale: [parentScale[0] * localScale[0], parentScale[1] * localScale[1], parentScale[2] * localScale[2]],
-	};
-}
-
 export function collectSceneEntries(session: TopologicWasmSession): TopologyTraversalResult {
 	const entries: ResolvedTopologyEntry[] = [];
 	const visited = new Set<string>();
@@ -209,7 +171,7 @@ export function collectSceneEntries(session: TopologicWasmSession): TopologyTrav
 			return;
 		}
 		visited.add(entity.id);
-		const transform = composeTransform(inheritedTransform, entity.transform);
+		const transform = resolveEntityRenderTransform(session, entity, inheritedTransform);
 		entries.push({ entity, transform });
 		for (const child of session.childrenOf(entity.id)) {
 			visit(child.id, transform);
@@ -229,9 +191,8 @@ export function Vertex(props: { readonly entity: TopologicVertexEntity; readonly
 	const selected = useIsSelected(props.entity.id);
 	const color = selectedColor(topologyColor(props.entity, "#38bdf8"), selected);
 	const radius = props.entity.radius ?? props.entity.style?.pointSize ?? 0.12;
-	const transform = composeTransform(props.transform ?? props.entity.transform, { position: props.entity.point });
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<mesh>
 				<sphereGeometry args={[radius, 24, 24]} />
 				<meshStandardMaterial color={color} transparent opacity={topologyOpacity(props.entity, 1)} />
@@ -246,9 +207,8 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 	const points = scene.session.edgeCurve(props.entity.id);
 	const anchor = useMemo(() => centroid(points), [points]);
 	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
-	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<Line
 				points={localPoints}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
@@ -273,9 +233,8 @@ export function Wire(props: { readonly entity: TopologicWireEntity; readonly tra
 		[props.entity.edges, scene.session],
 	);
 	const anchor = useMemo(() => centroid(wireCurves.flatMap((entry) => [...entry.points])), [wireCurves]);
-	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			{wireCurves.map(({ edge, edgeId, points }) => {
 				return (
 					<Line
@@ -295,9 +254,8 @@ export function Face(props: { readonly entity: TopologicFaceEntity; readonly tra
 	const anchor = useMemo(() => centroid(props.entity.surface.vertices), [props.entity.surface.vertices]);
 	const vertices = useMemo(() => props.entity.surface.vertices.map((point) => offsetPoint(point, anchor)), [anchor, props.entity.surface.vertices]);
 	const geometry = useFaceGeometry(vertices, props.entity.surface.triangles);
-	const transform = useMemo(() => composeTransform(props.transform ?? props.entity.transform, { position: anchor }), [anchor, props.entity.transform, props.transform]);
 	return (
-		<TopologicGroup entityId={props.entity.id} transform={transform}>
+		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<mesh geometry={geometry}>
 				<meshStandardMaterial
 					color={selectedColor(topologyColor(props.entity, "#fbbf24"), selected)}
@@ -347,13 +305,34 @@ export function Topology(props: { readonly entry: ResolvedTopologyEntry }): Reac
 //#region 🔖Transform
 function TopologicTransformGumball(): ReactElement | null {
 	const scene = useTopologicScene();
+	const attachedRef = useRef<ReadonlyArray<{ readonly childId: string; readonly parent: Object3D }>>([]);
 	const object = scene.selectedId ? scene.objectById.get(scene.selectedId) : null;
+	const descendantIds = useMemo(
+		() => (scene.selectedId ? collectDescendantIds(scene.session, scene.selectedId) : []),
+		[scene.selectedId, scene.session],
+	);
 	if (!scene.selectedId || !object) return null;
 	return (
 		<TransformControls
 			object={object}
 			mode={scene.transformMode}
+			onMouseDown={() => {
+				attachedRef.current = descendantIds.flatMap((childId) => {
+					const child = scene.objectById.get(childId);
+					if (!child?.parent) return [];
+					return [{ childId, parent: child.parent }];
+				});
+				for (const { childId } of attachedRef.current) {
+					const child = scene.objectById.get(childId);
+					if (child) object.attach(child);
+				}
+			}}
 			onMouseUp={() => {
+				for (const { childId, parent } of attachedRef.current) {
+					const child = scene.objectById.get(childId);
+					if (child) parent.attach(child);
+				}
+				attachedRef.current = [];
 				scene.onTransformCommit?.(scene.selectedId, {
 					position: [object.position.x, object.position.y, object.position.z],
 					rotation: [object.quaternion.x, object.quaternion.y, object.quaternion.z, object.quaternion.w],

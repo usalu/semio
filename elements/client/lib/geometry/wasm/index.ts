@@ -182,6 +182,146 @@ export function topologicTransformPoint(point: Vec3, transform: TopologicTransfo
 	];
 	}
 
+function normalizeScaleVector(scale: TopologicTransform["scale"]): Vec3 {
+	return normalizeScale(scale ?? 1);
+	}
+
+function multiplyQuat(
+	a: Quat,
+	b: Quat,
+): Quat {
+	const [ax, ay, az, aw] = a;
+	const [bx, by, bz, bw] = b;
+	return [
+		aw * bx + ax * bw + ay * bz - az * by,
+		aw * by - ax * bz + ay * bw + az * bx,
+		aw * bz + ax * by - ay * bx + az * bw,
+		aw * bw - ax * bx - ay * by - az * bz,
+	];
+	}
+
+export function composeTransforms(
+	parent: TopologicTransform | undefined,
+	local: TopologicTransform | undefined,
+): Required<TopologicTransform> {
+	if (!parent) return normalizeTransform(local);
+	if (!local) return normalizeTransform(parent);
+	const parentNormalized = normalizeTransform(parent);
+	const localNormalized = normalizeTransform(local);
+	const parentScale = normalizeScaleVector(parentNormalized.scale);
+	const localScale = normalizeScaleVector(localNormalized.scale);
+	return {
+		position: topologicTransformPoint(localNormalized.position, parentNormalized),
+		rotation: multiplyQuat(parentNormalized.rotation, localNormalized.rotation),
+		scale: [parentScale[0] * localScale[0], parentScale[1] * localScale[1], parentScale[2] * localScale[2]],
+	};
+	}
+
+export function inverseTransform(transform: TopologicTransform | undefined): Required<TopologicTransform> {
+	const normalized = normalizeTransform(transform);
+	const [sx, sy, sz] = normalizeScaleVector(normalized.scale);
+	const [qx, qy, qz, qw] = normalized.rotation;
+	const invRotation: Quat = [-qx, -qy, -qz, qw];
+	const invScale: Vec3 = [1 / sx, 1 / sy, 1 / sz];
+	const [px, py, pz] = normalized.position;
+	return {
+		position: topologicTransformPoint([-px, -py, -pz], { rotation: invRotation, scale: invScale }),
+		rotation: invRotation,
+		scale: invScale,
+	};
+	}
+
+export function centroid(points: readonly Vec3[]): Vec3 {
+	if (points.length === 0) return [0, 0, 0];
+	const sum = points.reduce<[number, number, number]>(
+		(accumulator, point) => [accumulator[0] + point[0], accumulator[1] + point[1], accumulator[2] + point[2]],
+		[0, 0, 0],
+	);
+	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length];
+	}
+
+export function collectDescendantIds(session: TopologicWasmSession, entityId: string): readonly string[] {
+	const descendants: string[] = [];
+	const visit = (id: string): void => {
+		for (const child of session.childrenOf(id)) {
+			descendants.push(child.id);
+			visit(child.id);
+		}
+	};
+	visit(entityId);
+	return descendants;
+	}
+
+function findEntityPathFromRoots(session: TopologicWasmSession, entityId: string): readonly string[] | null {
+	const visit = (id: string, path: readonly string[]): readonly string[] | null => {
+		const nextPath = [...path, id];
+		if (id === entityId) return nextPath;
+		for (const child of session.childrenOf(id)) {
+			const found = visit(child.id, nextPath);
+			if (found) return found;
+		}
+		return null;
+	};
+	for (const rootId of session.fixture.roots) {
+		const found = visit(rootId, []);
+		if (found) return found;
+	}
+	return null;
+	}
+
+export function resolveEntityRenderTransform(
+	session: TopologicWasmSession,
+	entity: TopologicEntity,
+	inherited: TopologicTransform | undefined,
+): TopologicTransform | undefined {
+	if (entity.kind === "vertex") {
+		return composeTransforms(composeTransforms(inherited, entity.transform), { position: entity.point });
+	}
+	if (entity.kind === "edge") {
+		const anchor = centroid(session.edgeCurve(entity.id));
+		return composeTransforms(composeTransforms(inherited, entity.transform), { position: anchor });
+	}
+	if (entity.kind === "wire") {
+		const points = entity.edges.flatMap((edgeId) => [...session.edgeCurve(edgeId)]);
+		const anchor = centroid(points);
+		return composeTransforms(composeTransforms(inherited, entity.transform), { position: anchor });
+	}
+	if (entity.kind === "face") {
+		const anchor = centroid(entity.surface.vertices);
+		return composeTransforms(composeTransforms(inherited, entity.transform), { position: anchor });
+	}
+	return composeTransforms(inherited, entity.transform);
+	}
+
+function applyTransformDeltaToEntity(entity: TopologicEntity, delta: TopologicTransform): TopologicEntity {
+	const { transform: _transform, ...rest } = entity;
+	if (entity.kind === "vertex") {
+		return { ...rest, kind: "vertex", point: topologicTransformPoint(entity.point, delta) };
+	}
+	if (entity.kind === "edge") {
+		return {
+			...rest,
+			kind: "edge",
+			vertices: entity.vertices,
+			...(entity.curve
+				? { curve: entity.curve.map((point) => topologicTransformPoint(point, delta)) as readonly Vec3[] }
+				: {}),
+		};
+	}
+	if (entity.kind === "face") {
+		return {
+			...rest,
+			kind: "face",
+			wires: entity.wires,
+			surface: {
+				vertices: entity.surface.vertices.map((point) => topologicTransformPoint(point, delta)),
+				triangles: entity.surface.triangles,
+			},
+		};
+	}
+	return rest as TopologicEntity;
+	}
+
 export function topologicEntityLabel(entity: TopologicEntity): string {
 	return entity.label ?? entity.id;
 	}
@@ -238,7 +378,28 @@ export function updateTopologicFixtureTransform(
 	entityId: string,
 	transform: TopologicTransform,
 ): TopologicFixtureV1 {
-	return getTopologicJsBindings().updateFixtureTransform(fixture, entityId, transform) as TopologicFixtureV1;
+	const session = new TopologicWasmSession(fixture);
+	const entity = session.getEntity(entityId);
+	if (!entity) return fixture;
+	const path = findEntityPathFromRoots(session, entityId);
+	if (!path) return fixture;
+	let inherited: TopologicTransform | undefined;
+	for (const pathId of path) {
+		const pathEntity = session.getEntity(pathId);
+		if (!pathEntity) return fixture;
+		if (pathId === entityId) break;
+		inherited = resolveEntityRenderTransform(session, pathEntity, inherited);
+	}
+	const previousWorld = resolveEntityRenderTransform(session, entity, inherited);
+	const nextWorld = normalizeTransform(transform);
+	const delta = composeTransforms(nextWorld, inverseTransform(previousWorld));
+	const affectedIds = new Set<string>([entityId, ...collectDescendantIds(session, entityId)]);
+	return {
+		...fixture,
+		topologies: fixture.topologies.map((topology) =>
+			affectedIds.has(topology.id) ? applyTransformDeltaToEntity(topology, delta) : topology,
+		),
+	};
 	}
 //#endregion 🔖Session
 
@@ -271,7 +432,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("updateTopologicFixtureTransform", () => {
-		it("updates only the targeted entity", async () => {
+		it("bakes a vertex drag into point geometry", async () => {
 			const fixture = await loadTopologicFixtureV1({
 				schema: "elements.geometry.topologic.fixture/v1",
 				roots: ["root"],
@@ -282,7 +443,49 @@ if (import.meta.vitest) {
 			}) as TopologicFixtureV1;
 			const updated = updateTopologicFixtureTransform(fixture, "vertex", { position: [3, 2, 1] });
 			const session = new TopologicWasmSession(updated);
-			expect(session.getEntity("vertex")).toMatchObject({ transform: { position: [3, 2, 1] } });
+			expect(session.getEntity("vertex")).toMatchObject({ point: [3, 2, 1] });
+			expect(session.getEntity("vertex")?.transform).toBeUndefined();
+		});
+
+		it("moves face descendants when a face is translated", async () => {
+			const fixture = (await loadTopologicFixtureV1({
+				schema: "elements.geometry.topologic.fixture/v1",
+				roots: ["root"],
+				topologies: [
+					{ id: "root", kind: "topology", members: ["face"] },
+					{ id: "v0", kind: "vertex", point: [0, 0, 0] },
+					{ id: "v1", kind: "vertex", point: [2, 0, 0] },
+					{ id: "v2", kind: "vertex", point: [2, 0, 2] },
+					{ id: "e0", kind: "edge", vertices: ["v0", "v1"] },
+					{ id: "e1", kind: "edge", vertices: ["v1", "v2"] },
+					{ id: "wire", kind: "wire", edges: ["e0", "e1"] },
+					{
+						id: "face",
+						kind: "face",
+						wires: ["wire"],
+						surface: {
+							vertices: [
+								[0, 0, 0],
+								[2, 0, 0],
+								[2, 0, 2],
+							],
+							triangles: [0, 1, 2],
+						},
+					},
+				],
+			})) as TopologicFixtureV1;
+			const session = new TopologicWasmSession(fixture);
+			const faceWorld = resolveEntityRenderTransform(session, session.getEntity("face") as TopologicFaceEntity, undefined);
+			const updated = updateTopologicFixtureTransform(fixture, "face", {
+				position: [faceWorld?.position?.[0] ?? 0, (faceWorld?.position?.[1] ?? 0) + 5, faceWorld?.position?.[2] ?? 0],
+				rotation: faceWorld?.rotation ?? [0, 0, 0, 1],
+				scale: faceWorld?.scale ?? 1,
+			});
+			const nextSession = new TopologicWasmSession(updated);
+			expect(nextSession.getEntity("v0")).toMatchObject({ point: [0, 5, 0] });
+			expect(nextSession.getEntity("v1")).toMatchObject({ point: [2, 5, 0] });
+			expect(nextSession.getEntity("v2")).toMatchObject({ point: [2, 5, 2] });
+			expect(nextSession.vertexPoint("v0")).toEqual([0, 5, 0]);
 		});
 
 		it("computes edge curves when vertices omit transforms", async () => {
