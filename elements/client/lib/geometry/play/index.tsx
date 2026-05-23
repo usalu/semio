@@ -2,7 +2,16 @@
 // 💻 elements/client/lib/geometry/play/index.tsx — Geometry play harness: Topologic all-kinds selector, single-window UI shell, and transform gumball editing for every entity kind.
 // #endregion 🧲Header
 
-import { createDefaultLayout, mountAsyncReactApp, type UIToolbarItem } from "@elements/ui";
+import {
+	CommandBus,
+	Controller,
+	WorkbenchApp,
+	WorkbenchMode,
+	WindowKind,
+	createDefaultLayout,
+	mountReactApp,
+	type ShellToolItem,
+} from "@elements/ui";
 
 import topologyJson from "./fixtures/topology.json";
 import type { TopologicTransformMode } from "../react/index.tsx";
@@ -18,6 +27,7 @@ import {
 	type TopologicTransform,
 } from "../wasm/index.ts";
 import "./globals.css";
+import * as React from "react";
 
 //#region 🔖Session
 function childIds(entity: TopologicEntity): readonly string[] {
@@ -180,7 +190,309 @@ export function geometryPlayModeFromApp(activeModeId: string | null): GeometryPl
 	return activeModeId === "analyze" ? "analyze" : "edit";
 }
 //#endregion 🔖Controls
-void mountAsyncReactApp(async () => (await import("./react.tsx")).createGeometryPlayElement());
+
+//#region 🔖GeometryPlayWorkbench
+export const GEOMETRY_PLAY_BODY_KEY = "elements.geometry.play.window";
+export const GEOMETRY_PLAY_CONTROLLER_ID = "geometry-play";
+
+export const GEOMETRY_PLAY_ICON_BOX_SELECT = "elements.geometry.icon.box-select";
+export const GEOMETRY_PLAY_ICON_MOVE_3D = "elements.geometry.icon.move-3d";
+export const GEOMETRY_PLAY_ICON_ROTATE_3D = "elements.geometry.icon.rotate-3d";
+export const GEOMETRY_PLAY_ICON_SCALE_3D = "elements.geometry.icon.scale-3d";
+
+function geometryKindShellToggles<TKind extends string>(
+	prefix: "selection" | "filter",
+	order: readonly TKind[],
+	labelForKind: (kind: TKind) => string,
+	kinds: Readonly<Record<TKind, boolean>>,
+	command: string,
+): ShellToolItem[] {
+	return order.map((kind, itemOrder) => ({
+		id: `geometry.${prefix}.kind.${kind}`,
+		kind: "toggle" as const,
+		text: labelForKind(kind),
+		order: itemOrder,
+		pressed: kinds[kind],
+		controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+		command,
+		args: { kind },
+	}));
+}
+
+function geometryAnalyzeShellToggles(
+	prefix: "selection" | "filter",
+	kinds: Readonly<Record<AnalyzeKind, boolean>>,
+	command: string,
+	groupCommand: string,
+): ShellToolItem[] {
+	const surfaceKinds = ANALYZE_KINDS.filter((kind) => kind.startsWith("surface.")) as readonly AnalyzeKind[];
+	const partKinds = ANALYZE_KINDS.filter((kind) => kind.startsWith("part.")) as readonly AnalyzeKind[];
+	const surfacesEnabled = surfaceKinds.every((kind) => kinds[kind]);
+	const partsEnabled = partKinds.every((kind) => kinds[kind]);
+	return [
+		{
+			id: `geometry.${prefix}.group.surface`,
+			kind: "toggle" as const,
+			text: "Surfaces",
+			order: 0,
+			pressed: surfacesEnabled,
+			controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+			command: groupCommand,
+			args: { kindIds: surfaceKinds, enabled: !surfacesEnabled },
+		},
+		...geometryKindShellToggles(prefix, surfaceKinds, analyzeKindLabel, kinds, command).map((item) => ({ ...item, order: (item.order ?? 0) + 1 })),
+		{ id: `geometry.${prefix}.group.surface.separator`, kind: "separator" as const, order: surfaceKinds.length + 1 },
+		{
+			id: `geometry.${prefix}.group.part`,
+			kind: "toggle" as const,
+			text: "Parts",
+			order: surfaceKinds.length + 2,
+			pressed: partsEnabled,
+			controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+			command: groupCommand,
+			args: { kindIds: partKinds, enabled: !partsEnabled },
+		},
+		...geometryKindShellToggles(prefix, partKinds, analyzeKindLabel, kinds, command).map((item) => ({ ...item, order: (item.order ?? 0) + surfaceKinds.length + 3 })),
+		{ id: `geometry.${prefix}.group.part.separator`, kind: "separator" as const, order: surfaceKinds.length + partKinds.length + 3 },
+		...geometryKindShellToggles(prefix, ["solid"], analyzeKindLabel, kinds, command).map((item) => ({ ...item, order: (item.order ?? 0) + surfaceKinds.length + partKinds.length + 4 })),
+	];
+}
+
+/** @emoji 🎮 Framework-free geometry play state and toolbar wiring for {@link Workbench}. */
+export class GeometryPlayShellController extends Controller {
+	readonly editMode = new WorkbenchMode("edit", "Edit", undefined);
+	readonly analyzeMode = new WorkbenchMode("analyze", "Analyze", undefined);
+	fixture: TopologicFixtureV1 | null;
+	loadError: Error | null = null;
+	selectableKinds: Record<TopologicKind, boolean>;
+	visibleKinds: Record<TopologicKind, boolean>;
+	analyzeSelectableKinds: Record<AnalyzeKind, boolean>;
+	analyzeVisibleKinds: Record<AnalyzeKind, boolean>;
+	selectedId: string | null;
+	transformMode: TopologicTransformMode;
+
+	constructor(commandBus: CommandBus, hostNotify: () => void, initialFixture: TopologicFixtureV1 | null = null) {
+		super(GEOMETRY_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.fixture = initialFixture;
+		this.selectableKinds = createAllKindsEnabled(TOPOLOGIC_KINDS);
+		this.visibleKinds = createAllKindsEnabled(TOPOLOGIC_KINDS);
+		this.analyzeSelectableKinds = createAllKindsEnabled(ANALYZE_KINDS);
+		this.analyzeVisibleKinds = createAllKindsEnabled(ANALYZE_KINDS);
+		this.selectedId = null;
+		this.transformMode = "translate";
+		if (initialFixture) this.rebuildShellModes();
+		else void this.bootstrapFixture();
+	}
+
+	private async bootstrapFixture(): Promise<void> {
+		try {
+			await ensureTopologicWasmLoaded();
+			const parsedFixture = await loadTopologicFixtureV1(topologyJson as unknown);
+			if (!parsedFixture) throw new Error("geometry topology fixture failed to parse");
+			this.fixture = parsedFixture;
+			this.loadError = null;
+		} catch (error) {
+			this.loadError = error instanceof Error ? error : new Error(String(error));
+		}
+		this.rebuildShellModes();
+		this.emit();
+	}
+
+	rebuildShellModes(): void {
+		const selectionKindOrderBase = TOPOLOGIC_KINDS.length;
+		this.editMode.tools = {
+			selection: [
+				...geometryKindShellToggles("selection", TOPOLOGIC_KINDS, geometryKindLabel, this.selectableKinds, "toggleSelectableKind"),
+				{ id: "geometry.selection.separator.clear", kind: "separator", order: selectionKindOrderBase },
+				{
+					id: "geometry.selection.clear",
+					kind: "button",
+					iconId: GEOMETRY_PLAY_ICON_BOX_SELECT,
+					label: "Clear",
+					order: selectionKindOrderBase + 1,
+					controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+					command: "setSelectedId",
+					args: { id: null },
+				},
+			],
+			filter: geometryKindShellToggles("filter", TOPOLOGIC_KINDS, geometryKindLabel, this.visibleKinds, "toggleVisibleKind"),
+			actions: GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, order) => ({
+				id: `geometry.transform.${mode}`,
+				kind: "toggle" as const,
+				iconId:
+					mode === "translate"
+						? GEOMETRY_PLAY_ICON_MOVE_3D
+						: mode === "rotate"
+							? GEOMETRY_PLAY_ICON_ROTATE_3D
+							: GEOMETRY_PLAY_ICON_SCALE_3D,
+				label: mode.charAt(0).toUpperCase() + mode.slice(1),
+				order,
+				pressed: this.transformMode === mode,
+				controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+				command: "setTransformMode",
+				args: { mode },
+			})),
+		};
+		this.analyzeMode.tools = {
+			selection: [
+				...geometryAnalyzeShellToggles("selection", this.analyzeSelectableKinds, "toggleAnalyzeSelectableKind", "setAnalyzeSelectableGroup"),
+				{ id: "geometry.analyze.selection.separator.clear", kind: "separator", order: ANALYZE_KINDS.length + 4 },
+				{
+					id: "geometry.analyze.selection.clear",
+					kind: "button",
+					iconId: GEOMETRY_PLAY_ICON_BOX_SELECT,
+					label: "Clear",
+					order: ANALYZE_KINDS.length + 5,
+					controllerId: GEOMETRY_PLAY_CONTROLLER_ID,
+					command: "setSelectedId",
+					args: { id: null },
+				},
+			],
+			filter: geometryAnalyzeShellToggles("filter", this.analyzeVisibleKinds, "toggleAnalyzeVisibleKind", "setAnalyzeVisibleGroup"),
+		};
+	}
+
+	override run(command: string, args?: unknown): void {
+		switch (command) {
+			case "toggleSelectableKind": {
+				const kind = (args as { kind: TopologicKind }).kind;
+				this.selectableKinds = { ...this.selectableKinds, [kind]: !this.selectableKinds[kind] };
+				break;
+			}
+			case "toggleVisibleKind": {
+				const kind = (args as { kind: TopologicKind }).kind;
+				this.visibleKinds = { ...this.visibleKinds, [kind]: !this.visibleKinds[kind] };
+				break;
+			}
+			case "toggleAnalyzeSelectableKind": {
+				const kind = (args as { kind: AnalyzeKind }).kind;
+				this.analyzeSelectableKinds = { ...this.analyzeSelectableKinds, [kind]: !this.analyzeSelectableKinds[kind] };
+				break;
+			}
+			case "toggleAnalyzeVisibleKind": {
+				const kind = (args as { kind: AnalyzeKind }).kind;
+				this.analyzeVisibleKinds = { ...this.analyzeVisibleKinds, [kind]: !this.analyzeVisibleKinds[kind] };
+				break;
+			}
+			case "setAnalyzeSelectableGroup": {
+				const { kindIds, enabled } = args as { kindIds: readonly AnalyzeKind[]; enabled: boolean };
+				this.analyzeSelectableKinds = { ...this.analyzeSelectableKinds, ...setKindGroup(this.analyzeSelectableKinds, [...kindIds], enabled) };
+				break;
+			}
+			case "setAnalyzeVisibleGroup": {
+				const { kindIds, enabled } = args as { kindIds: readonly AnalyzeKind[]; enabled: boolean };
+				this.analyzeVisibleKinds = { ...this.analyzeVisibleKinds, ...setKindGroup(this.analyzeVisibleKinds, [...kindIds], enabled) };
+				break;
+			}
+			case "setSelectedId": {
+				const id = (args as { id: string | null }).id;
+				if (!this.fixture) break;
+				const session = new TopologicPlaySession(this.fixture);
+				const analyzeFixture = deriveAnalyzeTopologicFixtureV1(this.fixture);
+				const analyzeSession = new TopologicPlaySession(analyzeFixture);
+				if (!id || isSelectableEntity(session, this.selectableKinds, id) || isAnalyzeSelectableEntity(analyzeSession, this.analyzeSelectableKinds, id)) {
+					this.selectedId = id;
+				}
+				break;
+			}
+			case "setTransformMode": {
+				const { pressed, mode } = args as { pressed?: boolean; mode?: TopologicTransformMode };
+				if (pressed && mode) this.transformMode = mode;
+				break;
+			}
+			default:
+				break;
+		}
+		this.ensureSelectionValidity();
+		this.rebuildShellModes();
+		this.emit();
+	}
+
+	commitEntityTransform(id: string, transform: TopologicTransform): void {
+		if (!this.fixture) return;
+		this.fixture = updateTopologicFixtureTransformKernelV1(this.fixture, id, transform) ?? this.fixture;
+		this.rebuildShellModes();
+		this.emit();
+	}
+
+	private ensureSelectionValidity(): void {
+		if (!this.fixture) return;
+		const session = new TopologicPlaySession(this.fixture);
+		const analyzeFixture = deriveAnalyzeTopologicFixtureV1(this.fixture);
+		const analyzeSession = new TopologicPlaySession(analyzeFixture);
+		if (!isSelectableEntity(session, this.selectableKinds, this.selectedId) && !isAnalyzeSelectableEntity(analyzeSession, this.analyzeSelectableKinds, this.selectedId)) {
+			this.selectedId = null;
+		}
+	}
+
+	getSnapshot(): GeometryPlaySnapshot | null {
+		if (this.loadError) throw this.loadError;
+		if (!this.fixture) return null;
+		const session = new TopologicPlaySession(this.fixture);
+		const analyzeFixture = deriveAnalyzeTopologicFixtureV1(this.fixture);
+		const analyzeSession = new TopologicPlaySession(analyzeFixture);
+		return {
+			fixture: this.fixture,
+			session,
+			analyzeFixture,
+			analyzeSession,
+			selectableKinds: this.selectableKinds,
+			visibleKinds: this.visibleKinds,
+			analyzeSelectableKinds: this.analyzeSelectableKinds,
+			analyzeVisibleKinds: this.analyzeVisibleKinds,
+			selectedId: this.selectedId,
+			transformMode: this.transformMode,
+			setSelectedId: (id) => this.commandBus.dispatch(this.id, "setSelectedId", { id }),
+			setTransformMode: (mode) => this.commandBus.dispatch(this.id, "setTransformMode", { mode, pressed: true }),
+			onTransformCommit: (id, transform) => this.commitEntityTransform(id, transform),
+		};
+	}
+}
+
+/** @emoji 🧭 Values consumed by the geometry play window body (React adapter). */
+export interface GeometryPlaySnapshot {
+	readonly fixture: TopologicFixtureV1;
+	readonly session: TopologicPlaySession;
+	readonly analyzeFixture: TopologicFixtureV1;
+	readonly analyzeSession: TopologicPlaySession;
+	readonly selectableKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly visibleKinds: Readonly<Record<TopologicKind, boolean>>;
+	readonly analyzeSelectableKinds: Readonly<Record<AnalyzeKind, boolean>>;
+	readonly analyzeVisibleKinds: Readonly<Record<AnalyzeKind, boolean>>;
+	readonly selectedId: string | null;
+	readonly transformMode: TopologicTransformMode;
+	readonly setSelectedId: (id: string | null) => void;
+	readonly setTransformMode: (mode: TopologicTransformMode) => void;
+	readonly onTransformCommit: (id: string, transform: TopologicTransform) => void;
+}
+
+/** @emoji 🧩 Builds the single-app geometry play registration for a {@link Workbench}. */
+export function buildGeometryPlayWorkbenchApp(controller: GeometryPlayShellController): WorkbenchApp {
+	const app = new WorkbenchApp(
+		GEOMETRY_PLAY_APP_ID,
+		"Geometry play",
+		undefined,
+		controller,
+		GEOMETRY_PLAY_DEFAULT_LAYOUT as never,
+		[new WindowKind(GEOMETRY_PLAY_WINDOW_ID, GEOMETRY_PLAY_WINDOW_LABEL, GEOMETRY_PLAY_BODY_KEY)],
+	);
+	app.defaultModeId = "edit";
+	app.addMode(controller.editMode);
+	app.addMode(controller.analyzeMode);
+	controller.rebuildShellModes();
+	return app;
+}
+//#endregion 🔖GeometryPlayWorkbench
+
+void (async () => {
+	const [{ WorkbenchView, LevelProvider, getLevelBgClass, mountReactApp }, mod] = await Promise.all([import("@elements/ui"), import("./react.tsx")]);
+	const wb = await mod.bootstrapGeometryPlayWorkbench();
+	mountReactApp(
+		<LevelProvider>
+			<WorkbenchView workbench={wb} className={getLevelBgClass(0)} />
+		</LevelProvider>,
+	);
+})();
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -233,6 +545,17 @@ if (import.meta.vitest) {
 		it("adds analyze group toggles for surfaces and parts", () => {
 			expect(ANALYZE_KINDS.filter((kind) => kind.startsWith("surface."))).not.toHaveLength(0);
 			expect(ANALYZE_KINDS.filter((kind) => kind.startsWith("part."))).not.toHaveLength(0);
+		});
+
+		it("toggles topology vertex selection via shell commands", async () => {
+			const bus = new CommandBus();
+			const fixture = (await loadTopologicFixtureV1(topologyJson as unknown)) as TopologicFixtureV1;
+			const ctrl = new GeometryPlayShellController(bus, () => undefined, fixture);
+			expect(ctrl.selectableKinds.vertex).toBe(true);
+			bus.dispatch(GEOMETRY_PLAY_CONTROLLER_ID, "toggleSelectableKind", { kind: "vertex" });
+			expect(ctrl.selectableKinds.vertex).toBe(false);
+			bus.dispatch(GEOMETRY_PLAY_CONTROLLER_ID, "setTransformMode", { mode: "rotate", pressed: true });
+			expect(ctrl.transformMode).toBe("rotate");
 		});
 
 		it("derives analyze solids, parts, and semantic surfaces from the shipped fixture", async () => {

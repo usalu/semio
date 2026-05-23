@@ -207,9 +207,9 @@ export class WindowKind {
 }
 //#endregion 🔖WindowKind
 
-//#region 🔖Mode
+//#region 🔖WorkbenchMode
 /** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
-export class Mode {
+export class WorkbenchMode {
 	tools: ShellAppTools = {};
 	windowKinds: WindowKind[] = [];
 	defaultLayout?: WindowLayout;
@@ -229,7 +229,7 @@ export class Mode {
 		readonly iconId: string | undefined,
 	) {}
 }
-//#endregion 🔖Mode
+//#endregion 🔖WorkbenchMode
 
 //#region 🔖Merge
 function mergeById<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
@@ -240,7 +240,7 @@ function mergeById<T extends { id: string }>(base: readonly T[] | undefined, ext
 	return [...merged.values()];
 }
 
-function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefined): Mode | null {
+function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefined): WorkbenchMode | null {
 	if (!app.modes.length) return null;
 	if (requestedModeId) {
 		const matching = app.modes.find((mode) => mode.id === requestedModeId);
@@ -257,6 +257,7 @@ function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefin
 //#region 🔖ResolvedState
 /** @emoji 📸 Merged view of app + active mode used by the React workbench bridge. */
 export interface ResolvedWorkbenchAppState {
+	readonly id: string;
 	readonly activeModeId: string | null;
 	readonly label: string;
 	readonly iconId: string | undefined;
@@ -281,6 +282,7 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 	const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
 	const mergedRight = mergeById(app.rightTabs, mode?.rightTabs) ?? app.rightTabs;
 	return {
+		id: app.id,
 		activeModeId: mode?.id ?? null,
 		label: mode?.label ?? app.label,
 		iconId: mode?.iconId ?? app.iconId,
@@ -303,7 +305,7 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 //#region 🔖WorkbenchApp
 /** @emoji 🧩 One registered app with modes, layout, and a primary {@link Controller}. */
 export class WorkbenchApp {
-	readonly modes: Mode[] = [];
+	readonly modes: WorkbenchMode[] = [];
 	defaultModeId?: string;
 	private activeModeIdOverride: string | null = null;
 	windowKinds: WindowKind[] = [];
@@ -333,7 +335,7 @@ export class WorkbenchApp {
 		this.windowKinds = [...windowKinds];
 	}
 
-	addMode(mode: Mode): void {
+	addMode(mode: WorkbenchMode): void {
 		this.modes.push(mode);
 	}
 
@@ -360,6 +362,7 @@ export class Workbench {
 	private readonly listeners = new Set<ShellSubscriber>();
 	readonly apps: WorkbenchApp[] = [];
 	activeAppId = "";
+	generation = 0;
 	uri = "/";
 	canGoBack = false;
 	canGoForward = false;
@@ -378,6 +381,7 @@ export class Workbench {
 	initialPanelVisibility?: { leftSidePanel: boolean; rightSidePanel: boolean };
 
 	notify(): void {
+		this.generation++;
 		for (const listener of this.listeners) listener();
 	}
 

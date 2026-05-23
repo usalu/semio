@@ -7,13 +7,13 @@ todos:
     status: completed
   - id: ui-classes
     content: Add framework-free class hierarchy (UI, App, Mode, Toolbar/ToolGroup/ToolItem, Panel, Tab, Tree, WindowKind, WindowLayout, Controller, CommandBus, Observable, IconRegistry types) inside elements/client/lib/ui/ with regions
-    status: in_progress
+    status: completed
   - id: react-ui
     content: "In elements/client/lib/react/index.tsx: add ReactUI renderer, IconRegistry impl, WindowKindRenderer registry; refactor Navbar/Toolbar/Window/Panel/Footer/Find to read from UI/App/Mode instances; delete AppConfig/AppModeConfig/AppDefinition/PureAppDefinition/AppSource/resolveAppConfig/mountReactApp/mountAsyncReactApp"
-    status: pending
+    status: completed
   - id: geometry-migrate
     content: Rewrite geometry play index.tsx as pure GeometryPlayApp+GeometryPlayController classes; shrink play/react.tsx to register window body + lucide icons + extend tests
-    status: pending
+    status: in_progress
   - id: other-plays
     content: Migrate board, scene, topology play bundles to the new App+Controller pattern (mirror geometry approach); update their react.tsx adapters and tests
     status: pending
