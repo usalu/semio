@@ -447,14 +447,20 @@ function entityGeometryAnchor(session: TopologicWasmSession, entity: TopologicEn
 	return null;
 	}
 
+function positionOnlyTransform(transform: TopologicTransform | undefined): TopologicTransform | undefined {
+	if (!transform?.position) return undefined;
+	return { position: transform.position };
+	}
+
 export function resolveEntityGroupTransform(
 	session: TopologicWasmSession,
 	entity: TopologicEntity,
 	frame: TopologicTransform | undefined,
 ): TopologicTransform | undefined {
 	const anchor = entityGeometryAnchor(session, entity);
-	if (!anchor) return frame;
-	return composeTransforms(frame, { position: anchor });
+	const framePosition = positionOnlyTransform(frame);
+	if (!anchor) return framePosition;
+	return composeTransforms(framePosition, { position: anchor });
 	}
 
 export function resolveEntityRenderTransform(

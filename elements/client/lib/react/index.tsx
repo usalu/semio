@@ -22550,22 +22550,99 @@ const UIToolbar: React.FC<{
  * An app has window kinds (with golden-layout) and registers
  * left/right side panel tabs, footer items, toolbar items, and find items.
  **/
-export interface UIAppConfig {
+export interface AppModeConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
+  tools?: UIToolbarItem[];
+  toolbarItems?: UIToolbarItem[];
+  windowKinds?: UIWindowKindDefinition[];
+  defaultLayout?: UIWindowLayout;
+  leftPanelTabs?: SidePanelTabConfig[];
+  rightPanelTabs?: SidePanelTabConfig[];
+  toolbarContent?: React.ReactNode;
+  footerItems?: FooterItem[];
+  findItems?: UIFindItem[];
+  onFindSelect?: (itemId: string) => void;
+  onActiveWindowChange?: (windowKindId: string) => void;
+  selection?: Record<string, unknown>;
+  hover?: Record<string, unknown>;
+  options?: Record<string, unknown>;
+}
+
+export interface AppConfig {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  tools?: UIToolbarItem[];
+  toolbarItems?: UIToolbarItem[];
   windowKinds: UIWindowKindDefinition[];
   defaultLayout: UIWindowLayout;
   leftPanelTabs?: SidePanelTabConfig[];
   rightPanelTabs?: SidePanelTabConfig[];
   toolbarContent?: React.ReactNode;
-  toolbarItems?: UIToolbarItem[];
   footerItems?: FooterItem[];
   findItems?: UIFindItem[];
   onFindSelect?: (itemId: string) => void;
   /** @emoji 🪟 Optional Golden Layout tab activation hook (`componentName` / window kind id). */
   onActiveWindowChange?: (windowKindId: string) => void;
+  selection?: Record<string, unknown>;
+  hover?: Record<string, unknown>;
+  options?: Record<string, unknown>;
+  defaultModeId?: string;
+  modes?: AppModeConfig[];
 }
+
+export interface ResolvedAppConfig extends Omit<AppConfig, "defaultModeId" | "modes"> {
+  activeModeId: string | null;
+}
+
+function mergeConfigEntries<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
+  if (!base?.length && !extension?.length) return undefined;
+  const merged = new Map<string, T>();
+  base?.forEach((entry) => merged.set(entry.id, entry));
+  extension?.forEach((entry) => merged.set(entry.id, entry));
+  return [...merged.values()];
+}
+
+function resolveAppMode(app: AppConfig, requestedModeId: string | null | undefined): AppModeConfig | null {
+  if (!app.modes?.length) return null;
+  if (requestedModeId) {
+    const matching = app.modes.find((mode) => mode.id === requestedModeId);
+    if (matching) return matching;
+  }
+  if (app.defaultModeId) {
+    const matching = app.modes.find((mode) => mode.id === app.defaultModeId);
+    if (matching) return matching;
+  }
+  return app.modes[0] ?? null;
+}
+
+export function resolveAppConfig(app: AppConfig, requestedModeId?: string | null): ResolvedAppConfig {
+  const mode = resolveAppMode(app, requestedModeId);
+  return {
+    ...app,
+    activeModeId: mode?.id ?? null,
+    icon: mode?.icon ?? app.icon,
+    label: mode?.label ?? app.label,
+    tools: mergeConfigEntries(app.tools ?? app.toolbarItems, mode?.tools ?? mode?.toolbarItems),
+    toolbarItems: undefined,
+    windowKinds: mergeConfigEntries(app.windowKinds, mode?.windowKinds) ?? app.windowKinds,
+    defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
+    leftPanelTabs: mergeConfigEntries(app.leftPanelTabs, mode?.leftPanelTabs),
+    rightPanelTabs: mergeConfigEntries(app.rightPanelTabs, mode?.rightPanelTabs),
+    toolbarContent: mode?.toolbarContent ?? app.toolbarContent,
+    footerItems: mergeConfigEntries(app.footerItems, mode?.footerItems),
+    findItems: mergeConfigEntries(app.findItems, mode?.findItems),
+    onFindSelect: mode?.onFindSelect ?? app.onFindSelect,
+    onActiveWindowChange: mode?.onActiveWindowChange ?? app.onActiveWindowChange,
+    selection: { ...(app.selection ?? {}), ...(mode?.selection ?? {}) },
+    hover: { ...(app.hover ?? {}), ...(mode?.hover ?? {}) },
+    options: { ...(app.options ?? {}), ...(mode?.options ?? {}) },
+  };
+}
+
+export type UIAppConfig = AppConfig;
 
 /**
  * URI history entry for navigation.
@@ -22638,8 +22715,8 @@ export function useUIHistory(initialUri = "/"): {
  * Props for the UI composite component.
  * Navbar is fixed: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
-export interface UIProps {
-  apps: UIAppConfig[];
+export interface AppProps {
+  apps: AppConfig[];
   defaultAppId?: string;
   uri?: string;
   onNavigate?: (uri: string) => void;
@@ -22651,6 +22728,7 @@ export interface UIProps {
   onGoUp?: () => void;
   footerItems?: FooterItem[];
   searchItems?: UISearchItem[];
+  tools?: UIToolbarItem[];
   toolbarItems?: UIToolbarItem[];
   mobile?: boolean;
   mobileQuery?: string;
@@ -22658,6 +22736,8 @@ export interface UIProps {
   /** @emoji 📂 Initial left/right panel visibility (e.g. open library + inspector on load). */
   initialPanelVisibility?: UIPanelVisibility;
 }
+
+export type UIProps = AppProps;
 
 /**
  * Panel visibility state for the UI.
@@ -22670,10 +22750,13 @@ export interface UIPanelVisibility {
 /**
  * Context for the active UI app state and navigation.
  **/
-interface UIContextValue {
+interface AppContextValue {
   activeAppId: string;
   setActiveAppId: (id: string) => void;
-  apps: UIAppConfig[];
+  activeApp: ResolvedAppConfig;
+  activeModeId: string | null;
+  setActiveModeId: (id: string) => void;
+  apps: AppConfig[];
   panelVisibility: UIPanelVisibility;
   togglePanel: (panel: keyof UIPanelVisibility) => void;
   uri: string;
@@ -22686,16 +22769,18 @@ interface UIContextValue {
   goUp: () => void;
 }
 
-const UIContext = React.createContext<UIContextValue | undefined>(undefined);
+const AppContext = React.createContext<AppContextValue | undefined>(undefined);
 
 /**
  * Hook to access the UI context.
  **/
-export function useUI(): UIContextValue {
-  const ctx = React.useContext(UIContext);
-  if (!ctx) throw new Error("useUI must be used within a UI component");
+export function useApp(): AppContextValue {
+  const ctx = React.useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within an App component");
   return ctx;
 }
+
+export const useUI = useApp;
 
 /**
  * Left panel toggle for the navbar.
@@ -22744,7 +22829,7 @@ const UIRightPanelToggle: React.FC<{
  * Every panel has: tree.
  * Fixed navbar layout: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
-export const UI: React.FC<UIProps> = ({
+export const App: React.FC<AppProps> = ({
   apps,
   defaultAppId,
   uri: uriProp = "/",
@@ -22757,6 +22842,7 @@ export const UI: React.FC<UIProps> = ({
   onGoUp,
   footerItems: globalFooterItems = [],
   searchItems = [],
+  tools: globalTools = [],
   toolbarItems: globalToolbarItems = [],
   mobile,
   mobileQuery = "(max-width: 767px)",
@@ -22801,14 +22887,21 @@ export const UI: React.FC<UIProps> = ({
     setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
   }, []);
 
-  const activeApp = apps.find((a) => a.id === activeAppId) ?? apps[0];
-  if (!activeApp) return null;
+  const activeAppBase = apps.find((app) => app.id === activeAppId) ?? apps[0];
+  const [activeModeByAppId, setActiveModeByAppId] = React.useState<Record<string, string>>({});
+  if (!activeAppBase) return null;
+  const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;
+  const activeApp = resolveAppConfig(activeAppBase, activeModeId);
 
   const hasLeftPanel = activeApp.leftPanelTabs && activeApp.leftPanelTabs.length > 0;
   const hasRightPanel = activeApp.rightPanelTabs && activeApp.rightPanelTabs.length > 0;
+  const hasModeNav = Boolean(activeAppBase.modes && activeAppBase.modes.length > 1);
+  const setActiveModeId = (id: string) => {
+    setActiveModeByAppId((previousValue) => ({ ...previousValue, [activeAppBase.id]: id }));
+  };
 
   // 🔖Merge toolbar items: global + app-specific
-  const mergedToolbarItems = [...globalToolbarItems, ...(activeApp.toolbarItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const mergedToolbarItems = [...globalTools, ...globalToolbarItems, ...(activeApp.tools ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // 🔷Merge all panel tabs for mobile mode
   const mobilePanelTabs: SidePanelTabConfig[] = resolvedMobile ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
@@ -22858,6 +22951,21 @@ export const UI: React.FC<UIProps> = ({
           {apps.map((app) => (
             <ButtonGroupItem key={app.id} id={`ui.appNav.${app.id}`} className={cn(activeAppId === app.id && "bg-active-base")} onClick={() => setActiveAppId(app.id)}>
               {app.icon ?? <span className="text-xs">{app.label}</span>}
+            </ButtonGroupItem>
+          ))}
+        </ButtonGroup>
+      ),
+    });
+  }
+
+  if (hasModeNav) {
+    navbarItems.push({
+      key: "modeNav",
+      content: (
+        <ButtonGroup id={`ui.modeNav.${activeAppBase.id}`}>
+          {activeAppBase.modes!.map((mode) => (
+            <ButtonGroupItem key={mode.id} id={`ui.modeNav.${activeAppBase.id}.${mode.id}`} className={cn(activeModeId === mode.id && "bg-active-base")} onClick={() => setActiveModeId(mode.id)}>
+              {mode.icon ?? <span className="text-xs">{mode.label}</span>}
             </ButtonGroupItem>
           ))}
         </ButtonGroup>
@@ -22923,10 +23031,13 @@ export const UI: React.FC<UIProps> = ({
   const toolbarElement = mergedToolbarItems.length > 0 ? <UIToolbar items={mergedToolbarItems} /> : activeApp.toolbarContent;
 
   return (
-    <UIContext.Provider
+    <AppContext.Provider
       value={{
         activeAppId,
         setActiveAppId,
+        activeApp,
+        activeModeId,
+        setActiveModeId,
         apps,
         panelVisibility,
         togglePanel,
@@ -22996,9 +23107,11 @@ export const UI: React.FC<UIProps> = ({
         {searchItems.length > 0 && <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />}
         <UIFind open={findOpen} onOpenChange={setFindOpen} />
       </UIFindProvider>
-    </UIContext.Provider>
+    </AppContext.Provider>
   );
 };
+
+export const UI = App;
 
 /**
  * Internal component that syncs app-level find items into the UIFindContext.
@@ -23829,7 +23942,7 @@ if (treeVitest) {
     it("renders application side panels closed by default", () => {
       const TestIcon = () => <span data-testid="test-icon" />;
       const markup = renderToStaticMarkup(
-        <UI
+        <App
           apps={[
             {
               id: "test",
@@ -23875,6 +23988,39 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="window-measure-heading"');
       expect(markup).toContain('data-slot="window-measure-float"');
       expect(markup).toContain('data-slot="window-measure-radio-item"');
+    });
+  });
+
+  describe("app modes", () => {
+    it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
+      const resolved = resolveAppConfig(
+        {
+          id: "app",
+          label: "App",
+          tools: [{ id: "base-tool", label: "Base", onClick: () => undefined }],
+          selection: { base: true },
+          options: { snap: true },
+          windowKinds: [{ id: "base", label: "Base", component: () => <div>base</div> }],
+          defaultLayout: createTabStackLayout(["base"], ["Base"]),
+          modes: [
+            {
+              id: "inspect",
+              label: "Inspect",
+              tools: [{ id: "mode-tool", label: "Mode", onClick: () => undefined }],
+              selection: { mode: true },
+              options: { isolate: true },
+              windowKinds: [{ id: "mode", label: "Mode", component: () => <div>mode</div> }],
+            },
+          ],
+        },
+        "inspect",
+      );
+
+      expect(resolved.activeModeId).toBe("inspect");
+      expect(resolved.tools?.map((tool) => tool.id)).toEqual(["base-tool", "mode-tool"]);
+      expect(resolved.selection).toEqual({ base: true, mode: true });
+      expect(resolved.options).toEqual({ snap: true, isolate: true });
+      expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
     });
   });
 

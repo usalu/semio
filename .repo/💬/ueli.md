@@ -372,6 +372,19 @@ This MUST NOT happen.
 
 Add a checkbox element which is an action that can be checked and unchecked.
 
+### ⚛️react
+
+---
+
+Rename/Extend UI react component to App.
+An app has modes.
+Every app has an appwide tools, selection, hover, options, window kinds, etc
+Every mode extends tools, selection, hover, options, window kinds, etc
+e.g. all play bundles use this.
+Refactor everything
+
+---
+
 ### 🏁board
 
 elements/board:

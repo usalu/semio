@@ -16,7 +16,15 @@ import {
 	type ReactElement,
 	type ReactNode,
 } from "react";
-import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, type Object3D } from "three";
+import {
+	BufferGeometry,
+	DoubleSide,
+	Float32BufferAttribute,
+	Group,
+	Quaternion,
+	Vector3,
+	type Object3D,
+} from "three";
 
 import {
 	TOPOLOGIC_KINDS,
@@ -36,6 +44,7 @@ import {
 	TopologicWasmSession,
 	TopologicWireEntity,
 	ensureTopologicWasmLoaded,
+	loadTopologicFixtureV1,
 	normalizeTransform,
 	edgeModelPoints,
 	resolveEntityGroupTransform,
@@ -79,6 +88,74 @@ function topologyOpacity(entity: { readonly style?: { readonly opacity?: number 
 
 function topologyLineWidth(entity: { readonly style?: { readonly lineWidth?: number } }, fallback: number): number {
 	return entity.style?.lineWidth ?? fallback;
+}
+
+function edgePickRadius(entity: { readonly style?: { readonly lineWidth?: number } }, fallback: number): number {
+	return Math.max(0.12, topologyLineWidth(entity, fallback) * 0.1);
+}
+
+export function edgePickSegments(points: readonly Vec3[]): ReadonlyArray<readonly [Vec3, Vec3]> {
+	const segments: [Vec3, Vec3][] = [];
+	for (let index = 0; index < points.length - 1; index += 1) {
+		segments.push([points[index], points[index + 1]]);
+	}
+	return segments;
+}
+
+function useSegmentPose(start: Vec3, end: Vec3): {
+	readonly position: Vec3;
+	readonly quaternion: readonly [number, number, number, number];
+	readonly length: number;
+} {
+	return useMemo(() => {
+		const direction = new Vector3(end[0] - start[0], end[1] - start[1], end[2] - start[2]);
+		const length = direction.length();
+		const quaternion = new Quaternion();
+		if (length > 1e-9) quaternion.setFromUnitVectors(new Vector3(0, 1, 0), direction.normalize());
+		return {
+			position: [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2],
+			quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
+			length,
+		};
+	}, [end, start]);
+}
+
+function TopologicEdgePickSegment(props: {
+	readonly start: Vec3;
+	readonly end: Vec3;
+	readonly radius: number;
+	readonly onSelect: () => void;
+}): ReactElement | null {
+	const pose = useSegmentPose(props.start, props.end);
+	if (pose.length < 1e-9) return null;
+	return (
+		<mesh
+			position={pose.position}
+			quaternion={pose.quaternion}
+			scale={[props.radius, pose.length, props.radius]}
+			onPointerDown={(event) => {
+				event.stopPropagation();
+				props.onSelect();
+			}}
+		>
+			<cylinderGeometry args={[1, 1, 1, 8]} />
+			<meshBasicMaterial transparent opacity={0} depthWrite={false} />
+		</mesh>
+	);
+}
+
+function TopologicEdgePick(props: {
+	readonly points: readonly Vec3[];
+	readonly radius: number;
+	readonly onSelect: () => void;
+}): ReactElement {
+	return (
+		<>
+			{edgePickSegments(props.points).map(([start, end]) => (
+				<TopologicEdgePickSegment key={`${start.join(",")}-${end.join(",")}`} start={start} end={end} radius={props.radius} onSelect={props.onSelect} />
+			))}
+		</>
+	);
 }
 
 function selectedColor(base: string, selected: boolean): string {
@@ -207,46 +284,23 @@ export function Edge(props: { readonly entity: TopologicEdgeEntity; readonly tra
 	const points = useMemo(() => edgeModelPoints(scene.session, props.entity), [props.entity, scene.session]);
 	const anchor = useMemo(() => centroid(points), [points]);
 	const localPoints = useMemo(() => points.map((point) => offsetPoint(point, anchor)), [anchor, points]);
+	const pickRadius = edgePickRadius(props.entity, 2);
+	const select = useCallback(() => scene.onSelect?.(props.entity.id), [props.entity.id, scene.onSelect]);
 	return (
 		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
 			<Line
 				points={localPoints}
 				color={selectedColor(topologyColor(props.entity, "#f8fafc"), selected)}
 				lineWidth={topologyLineWidth(props.entity, 2)}
+				raycast={() => null}
 			/>
+			<TopologicEdgePick points={localPoints} radius={pickRadius} onSelect={select} />
 		</TopologicGroup>
 	);
 }
 
 export function Wire(props: { readonly entity: TopologicWireEntity; readonly transform?: TopologicTransform }): ReactElement {
-	const scene = useTopologicScene();
-	const selected = useIsSelected(props.entity.id);
-	const wireCurves = useMemo(
-		() =>
-			props.entity.edges
-				.map((edgeId) => {
-					const edge = scene.session.getEntity(edgeId);
-					if (!edge || edge.kind !== "edge") return null;
-					return { edge, edgeId, points: edgeModelPoints(scene.session, edge) };
-				})
-				.filter((entry): entry is { edge: TopologicEdgeEntity; edgeId: string; points: readonly Vec3[] } => Boolean(entry)),
-		[props.entity.edges, scene.session],
-	);
-	const anchor = useMemo(() => centroid(wireCurves.flatMap((entry) => [...entry.points])), [wireCurves]);
-	return (
-		<TopologicGroup entityId={props.entity.id} transform={props.transform}>
-			{wireCurves.map(({ edge, edgeId, points }) => {
-				return (
-					<Line
-						key={edgeId}
-						points={points.map((point) => offsetPoint(point, anchor))}
-						color={selectedColor(topologyColor(props.entity, edge.style?.color ?? "#34d399"), selected)}
-						lineWidth={topologyLineWidth(props.entity, edge.style?.lineWidth ?? 1.5)}
-					/>
-				);
-			})}
-		</TopologicGroup>
-	);
+	return <TopologyAnchor entityId={props.entity.id} transform={props.transform} />;
 }
 
 export function Face(props: { readonly entity: TopologicFaceEntity; readonly transform?: TopologicTransform }): ReactElement {
@@ -330,6 +384,7 @@ function TopologicTransformGumball(): ReactElement | null {
 		<TransformControls
 			object={object}
 			mode={scene.transformMode}
+			space="world"
 			onMouseDown={() => {
 				attachedRef.current = dragAttachIds.flatMap((linkedId) => {
 					const child = scene.objectById.get(linkedId);
@@ -347,11 +402,21 @@ function TopologicTransformGumball(): ReactElement | null {
 					if (child) parent.attach(child);
 				}
 				attachedRef.current = [];
-				scene.onTransformCommit?.(scene.selectedId, {
-					position: [object.position.x, object.position.y, object.position.z],
-					rotation: [object.quaternion.x, object.quaternion.y, object.quaternion.z, object.quaternion.w],
-					scale: [object.scale.x, object.scale.y, object.scale.z],
-				});
+				const position: Vec3 = [object.position.x, object.position.y, object.position.z];
+				const rotation: TopologicTransform["rotation"] = [
+					object.quaternion.x,
+					object.quaternion.y,
+					object.quaternion.z,
+					object.quaternion.w,
+				];
+				const scale: TopologicTransform["scale"] = [object.scale.x, object.scale.y, object.scale.z];
+				const commitTransform: TopologicTransform =
+					scene.transformMode === "translate"
+						? { position }
+						: scene.transformMode === "rotate"
+							? { position, rotation }
+							: { position, rotation, scale };
+				scene.onTransformCommit?.(scene.selectedId, commitTransform);
 			}}
 		/>
 	);
@@ -454,6 +519,36 @@ if (import.meta.vitest) {
 			expect(fixture).toBeTruthy();
 			const traversal = collectSceneEntries(new TopologicWasmSession(fixture as TopologicFixtureV1));
 			expect(traversal.entries).toHaveLength((fixture as TopologicFixtureV1).topologies.length);
+		});
+
+		it("keeps edge group transforms world-aligned for translate gumball axes", async () => {
+			const fixture = (await loadTopologicFixtureV1({
+				schema: "elements.geometry.topologic.fixture/v1",
+				roots: ["root"],
+				topologies: [
+					{ id: "root", kind: "topology", members: ["edge"] },
+					{ id: "start", kind: "vertex", point: [0, 0, 0] },
+					{ id: "end", kind: "vertex", point: [3, 4, 0] },
+					{
+						id: "edge",
+						kind: "edge",
+						vertices: ["start", "end"],
+						transform: { rotation: [0, 0, 0.3826834323650898, 0.9238795325112867] },
+					},
+				],
+			})) as TopologicFixtureV1;
+			const session = new TopologicWasmSession(fixture);
+			const edge = session.getEntity("edge") as TopologicEdgeEntity;
+			const group = resolveEntityGroupTransform(session, edge, edge.transform);
+			expect(group?.rotation).toEqual([0, 0, 0, 1]);
+		});
+
+		it("builds pick segments for straight and curved edges", () => {
+			expect(edgePickSegments([[0, 0, 0], [2, 0, 0]])).toEqual([[[0, 0, 0], [2, 0, 0]]]);
+			expect(edgePickSegments([[0, 0, 0], [1, 0, 0], [1, 1, 0]])).toEqual([
+				[[0, 0, 0], [1, 0, 0]],
+				[[1, 0, 0], [1, 1, 0]],
+			]);
 		});
 	});
 }
