@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/scene/play/index.ts — Scene play harness: Nakagin fixture metadata, LOD tiers, and localStorage keys (no React; mount via main.tsx).
+// 💻 elements/client/lib/system/renderer/react/scene/play/index.ts — Scene play harness: Nakagin fixture metadata, LOD tiers, and localStorage keys (no React; mount via main.ts + scene-play-host).
 // #endregion 🧲Header
 
 import {

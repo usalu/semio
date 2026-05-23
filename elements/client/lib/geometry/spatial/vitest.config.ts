@@ -11,7 +11,7 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["js/index.ts", "react/index.tsx", "play/index.ts"],
+		include: ["js/index.ts", "react/index.tsx", "play/index.ts", "geometry-spatial-play-host.tsx"],
 		passWithNoTests: false,
 	},
 });

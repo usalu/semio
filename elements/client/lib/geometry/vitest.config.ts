@@ -12,7 +12,7 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["react/index.tsx", "play/index.ts", "play/react.tsx", "cad/react/index.tsx"],
+		include: ["react/index.tsx", "play/index.ts", "geometry-play-host.tsx", "cad/react/index.tsx"],
 		passWithNoTests: false,
 	},
 });
