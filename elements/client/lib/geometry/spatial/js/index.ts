@@ -595,7 +595,7 @@ export function transformProps(transform: TopologicTransform | undefined): {
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	const topologyJson = (await import("../play/fixtures/topology.json")).default;
+	const topologyJson = (await import("../../play/fixtures/topology.json")).default;
 
 	describe("spatial imperative core", () => {
 		it(

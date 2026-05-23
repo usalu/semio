@@ -11,7 +11,7 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.ts", "index.tsx"],
+		include: ["js/index.ts", "react/index.tsx", "play/index.ts"],
 		passWithNoTests: false,
 	},
 });
