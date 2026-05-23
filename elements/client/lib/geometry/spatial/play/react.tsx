@@ -1,0 +1,162 @@
+// #region 🧲Header
+// 💻 elements/client/lib/geometry/spatial/play/react.tsx — Host adapter: icons, declarative registration, spatial surface hosts (DOM/React only here).
+// #endregion 🧲Header
+
+import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "@elements/ui-shell";
+import {
+	LevelProvider,
+	WorkbenchView,
+	getLevelBgClass,
+	mountReactApp,
+	registerDeclarativeSidePanelBody,
+	registerDeclarativeWindowBody,
+	registerElementIcon,
+	registerUiPanelSurfaceHost,
+	registerUiScene3DSurfaceHost,
+	useApp,
+} from "@elements/ui";
+import { ListFilter, ScanSearch } from "lucide-react";
+import * as React from "react";
+
+import { SpatialDetailsPanel, SpatialSurface, SpatialWorkbenchPanel, type SpatialSurfaceSnapshot } from "../react/index.tsx";
+import {
+	SPATIAL_PLAY_BODY_KEY,
+	SPATIAL_PLAY_CONTROLLER_ID,
+	SPATIAL_PLAY_DETAILS_ICON_ID,
+	SPATIAL_PLAY_DETAILS_TAB_BODY_KEY,
+	SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID,
+	SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID,
+	SPATIAL_PLAY_SCENE3D_SURFACE_ID,
+	SPATIAL_PLAY_WORKBENCH_ICON_ID,
+	SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY,
+	SpatialPlayShellController,
+	buildSpatialDetailsDeclarativePanel,
+	buildSpatialPlayDeclarativeBody,
+	buildSpatialWorkbenchApp,
+	buildSpatialWorkbenchDeclarativePanel,
+} from "./index.ts";
+import { Workbench } from "@elements/ui-shell";
+
+import "./globals.css";
+
+const EMPTY_KINDS = Object.fromEntries(
+	["topology", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster"].map((kind) => [kind, true]),
+) as SpatialSurfaceSnapshot["selectableKinds"];
+
+const EMPTY_SNAPSHOT: SpatialSurfaceSnapshot = {
+	status: "loading",
+	fixtureLabel: undefined,
+	model: null,
+	focusedKind: "all",
+	selectedId: null,
+	query: "",
+	error: null,
+	selectableKinds: EMPTY_KINDS,
+	visibleKinds: EMPTY_KINDS,
+	setSelectedId: () => undefined,
+	setEntityTransform: () => undefined,
+	workbenchPanel: {
+		fixtureLabel: undefined,
+		visibleKindsLabel: "",
+		selectableKindsLabel: "",
+		query: "",
+		focusOptions: [],
+		entityCount: 0,
+		entities: [],
+		setFocusedKind: () => undefined,
+		setSelectedId: () => undefined,
+		setQuery: () => undefined,
+	},
+	detailsPanel: {
+		selectedLabel: "No entity selected",
+		selectedKindLabel: "all",
+		status: "loading",
+		focusedKindLabel: "All",
+		query: "none",
+	},
+};
+
+function useSpatialPlaySnapshot(): SpatialSurfaceSnapshot {
+	const { workbench } = useApp();
+	const generation = React.useSyncExternalStore(
+		(onStoreChange) => workbench.subscribe(onStoreChange),
+		() => workbench.generation,
+		() => 0,
+	);
+	void generation;
+	const ctrl = workbench.getActiveApp()?.controller as SpatialPlayShellController | undefined;
+	return ctrl?.getSnapshot() ?? EMPTY_SNAPSHOT;
+}
+
+function SpatialScene3DSurfaceHost({ node }: { readonly node: UiScene3DHostSurfaceNode }): React.ReactElement {
+	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
+		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial viewport binding</div>;
+	}
+	const snapshot = useSpatialPlaySnapshot();
+	return <SpatialSurface snapshot={snapshot} />;
+}
+
+function SpatialWorkbenchPanelHost({ node }: { readonly node: UiPanelHostSurfaceNode }): React.ReactElement {
+	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
+		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial workbench panel binding</div>;
+	}
+	const snapshot = useSpatialPlaySnapshot();
+	const { workbench } = useApp();
+	const bus = workbench.commandBus;
+	const panel = snapshot.workbenchPanel;
+	const panelSnapshot = {
+		...panel,
+		setFocusedKind: (kind: typeof panel.focusOptions[number]["kind"]) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setFocusedKind", { kind }),
+		setSelectedId: (id: string | null) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setSelectedId", { id }),
+		setQuery: (query: string) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setQuery", { query }),
+	};
+	return <SpatialWorkbenchPanel snapshot={{ ...snapshot, workbenchPanel: panelSnapshot }} />;
+}
+
+function SpatialDetailsPanelHost({ node }: { readonly node: UiPanelHostSurfaceNode }): React.ReactElement {
+	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
+		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial details panel binding</div>;
+	}
+	const snapshot = useSpatialPlaySnapshot();
+	return <SpatialDetailsPanel snapshot={snapshot} />;
+}
+
+let spatialPlayChromeRegistered = false;
+
+function registerSpatialPlayChrome(): void {
+	if (spatialPlayChromeRegistered) return;
+	spatialPlayChromeRegistered = true;
+	registerElementIcon(SPATIAL_PLAY_WORKBENCH_ICON_ID, <ListFilter className="size-4" aria-hidden />);
+	registerElementIcon(SPATIAL_PLAY_DETAILS_ICON_ID, <ScanSearch className="size-4" aria-hidden />);
+	registerUiScene3DSurfaceHost(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SpatialScene3DSurfaceHost);
+	registerUiPanelSurfaceHost(SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, SpatialWorkbenchPanelHost);
+	registerUiPanelSurfaceHost(SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, SpatialDetailsPanelHost);
+	registerDeclarativeWindowBody(SPATIAL_PLAY_BODY_KEY, buildSpatialPlayDeclarativeBody);
+	registerDeclarativeSidePanelBody(SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY, buildSpatialWorkbenchDeclarativePanel);
+	registerDeclarativeSidePanelBody(SPATIAL_PLAY_DETAILS_TAB_BODY_KEY, buildSpatialDetailsDeclarativePanel);
+}
+
+/** @emoji 🚀 Builds the workbench around the declarative spatial play surface. */
+export async function bootstrapSpatialWorkbench(): Promise<Workbench> {
+	registerSpatialPlayChrome();
+	const workbench = new Workbench();
+	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());
+	workbench.addApp(buildSpatialWorkbenchApp(controller));
+	return workbench;
+}
+
+const rootElement = typeof document === "undefined" ? null : document.getElementById("root");
+if (rootElement) {
+	void bootstrapSpatialWorkbench().then((workbench) => {
+		mountReactApp(
+			<LevelProvider>
+				<WorkbenchView
+					workbench={workbench}
+					className={getLevelBgClass(0)}
+					defaultAppId="elements-geometry-spatial"
+					initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+				/>
+			</LevelProvider>,
+		);
+	});
+}

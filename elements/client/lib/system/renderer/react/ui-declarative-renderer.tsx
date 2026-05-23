@@ -3,7 +3,16 @@
 // #endregion 🧲Header
 
 import type { CommandBus } from "@elements/ui-shell";
-import type { UiButtonNode, UiNode, UiScene3DHostSurfaceNode, UiSeparatorNode, UiStackNode, UiTextNode } from "@elements/ui-shell";
+import type {
+	UiBoardHostSurfaceNode,
+	UiButtonNode,
+	UiNode,
+	UiPanelHostSurfaceNode,
+	UiScene3DHostSurfaceNode,
+	UiSeparatorNode,
+	UiStackNode,
+	UiTextNode,
+} from "@elements/ui-shell";
 import { clsx, type ClassValue } from "clsx";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
@@ -27,6 +36,38 @@ export function unregisterUiScene3DSurfaceHost(surfaceId: string): void {
 	scene3dSurfaceHosts.delete(surfaceId);
 }
 //#endregion 🔖Scene3DRegistry
+
+//#region 🔖BoardRegistry
+type BoardSurfaceHost = React.ComponentType<{ readonly node: UiBoardHostSurfaceNode }>;
+
+const boardSurfaceHosts = new Map<string, BoardSurfaceHost>();
+
+/** @emoji 📋 Binds `surfaceId` from {@link UiBoardHostSurfaceNode} to a host board canvas. */
+export function registerUiBoardSurfaceHost(surfaceId: string, Component: BoardSurfaceHost): void {
+	boardSurfaceHosts.set(surfaceId, Component);
+}
+
+/** @emoji 🧹 Drops a board surface binding (tests). */
+export function unregisterUiBoardSurfaceHost(surfaceId: string): void {
+	boardSurfaceHosts.delete(surfaceId);
+}
+//#endregion 🔖BoardRegistry
+
+//#region 🔖PanelRegistry
+type PanelSurfaceHost = React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>;
+
+const panelSurfaceHosts = new Map<string, PanelSurfaceHost>();
+
+/** @emoji 📑 Binds `surfaceId` from {@link UiPanelHostSurfaceNode} to a host panel body. */
+export function registerUiPanelSurfaceHost(surfaceId: string, Component: PanelSurfaceHost): void {
+	panelSurfaceHosts.set(surfaceId, Component);
+}
+
+/** @emoji 🧹 Drops a panel surface binding (tests). */
+export function unregisterUiPanelSurfaceHost(surfaceId: string): void {
+	panelSurfaceHosts.delete(surfaceId);
+}
+//#endregion 🔖PanelRegistry
 
 //#region 🔖StackLayout
 function stackClass(spec: UiStackNode): string {
@@ -116,6 +157,38 @@ function renderScene3d(node: UiScene3DHostSurfaceNode): React.ReactElement {
 	);
 }
 
+function renderBoard(node: UiBoardHostSurfaceNode): React.ReactElement {
+	const Host = boardSurfaceHosts.get(node.surfaceId);
+	if (!Host) {
+		return (
+			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
+				Unsupported board surface &quot;{node.surfaceId}&quot;
+			</div>
+		);
+	}
+	return (
+		<div className="relative min-h-0 min-w-0 flex-1">
+			<Host node={node} />
+		</div>
+	);
+}
+
+function renderPanel(node: UiPanelHostSurfaceNode): React.ReactElement {
+	const Host = panelSurfaceHosts.get(node.surfaceId);
+	if (!Host) {
+		return (
+			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
+				Unsupported panel surface &quot;{node.surfaceId}&quot;
+			</div>
+		);
+	}
+	return (
+		<div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+			<Host node={node} />
+		</div>
+	);
+}
+
 function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: boolean): React.ReactElement {
 	switch (node.type) {
 		case "stack":
@@ -134,6 +207,10 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderSeparator(node, horizontalParent);
 		case "scene3d":
 			return renderScene3d(node);
+		case "board":
+			return renderBoard(node);
+		case "panel":
+			return renderPanel(node);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">

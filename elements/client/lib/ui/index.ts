@@ -248,6 +248,7 @@ export class WorkbenchWindowKind {
 		readonly label: string,
 		readonly bodyKey: string,
 		readonly iconId?: string,
+		readonly measures: readonly import("./ui-protocol.ts").ShellWindowMeasure[] = [],
 	) {}
 }
 //#endregion 🔖WorkbenchWindowKind
@@ -499,15 +500,41 @@ export function unregisterDeclarativeWindowBody(bodyKey: string): void {
 }
 //#endregion 🔖DeclarativeWindowBody
 
+//#region 🔖DeclarativeSidePanelBody
+/** @emoji 📑 View context for declarative side-panel tab bodies (same snapshot fields as window bodies). */
+export type ShellSidePanelBodyViewContext = ShellWindowBodyViewContext;
+
+const declarativeSidePanelBodyByKey = new Map<string, (ctx: ShellSidePanelBodyViewContext) => UiNode>();
+
+/** @emoji 📝 Registers a framework-free side-panel tree for `bodyKey`. */
+export function registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
+	declarativeSidePanelBodyByKey.set(bodyKey, build);
+}
+
+/** @emoji 🔍 Returns the declarative side-panel builder for `bodyKey`, if any. */
+export function getDeclarativeSidePanelBodyFactory(bodyKey: string): ((ctx: ShellSidePanelBodyViewContext) => UiNode) | undefined {
+	return declarativeSidePanelBodyByKey.get(bodyKey);
+}
+
+/** @emoji 🧹 Removes a declarative side-panel registration (tests). */
+export function unregisterDeclarativeSidePanelBody(bodyKey: string): void {
+	declarativeSidePanelBodyByKey.delete(bodyKey);
+}
+//#endregion 🔖DeclarativeSidePanelBody
+
 export type {
 	JsonPrimitive,
 	JsonValue,
 	ShellCommandDescriptor,
 	ShellStyleSpec,
+	UiBoardHostSurfaceNode,
 	UiButtonNode,
 	UiNode,
+	UiPanelHostSurfaceNode,
 	UiScene3DHostSurfaceNode,
 	UiSeparatorNode,
+	ShellWindowMeasure,
+	ShellWindowMeasureSelect,
 	UiStackNode,
 	UiTextNode,
 } from "./ui-protocol.ts";

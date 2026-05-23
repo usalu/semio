@@ -1,7 +1,20 @@
-import { LevelProvider, Workbench, WorkbenchView, getLevelBgClass, mountReactApp, registerElementIcon, registerWindowBody } from "@elements/ui";
-import { CommandBus, Controller, WorkbenchApp, WorkbenchMode, WorkbenchWindowKind, createDefaultLayout, type ShellToolItem } from "@elements/ui-shell";
-import { ListFilter, ScanSearch } from "lucide-react";
-import * as React from "react";
+// #region 🧲Header
+// 💻 elements/client/lib/geometry/spatial/play/index.ts — Framework-free spatial play: controller, declarative UI trees, workbench wiring (no React).
+// #endregion 🧲Header
+
+import {
+	CommandBus,
+	Controller,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchMode,
+	WorkbenchWindowKind,
+	createDefaultLayout,
+	type ShellSidePanelBodyViewContext,
+	type ShellWindowBodyViewContext,
+	type ShellToolItem,
+	type UiNode,
+} from "@elements/ui-shell";
 
 import topologyJson from "../../play/fixtures/topology.json";
 import {
@@ -22,9 +35,6 @@ import {
 	type TopologicKind,
 	type TopologicTransform,
 } from "../js/index.ts";
-import { SpatialDetailsPanelBody, SpatialPlayWindowBody, SpatialWorkbenchPanelBody } from "../react/index.tsx";
-
-import "./globals.css";
 
 //#region 🔖Helpers
 function kindLabel(kind: TopologicKind): string {
@@ -59,6 +69,9 @@ export const SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY = "elements.geometry.spatial.pa
 export const SPATIAL_PLAY_DETAILS_TAB_BODY_KEY = "elements.geometry.spatial.panel.details";
 export const SPATIAL_PLAY_WORKBENCH_ICON_ID = "elements.geometry.spatial.icon.workbench";
 export const SPATIAL_PLAY_DETAILS_ICON_ID = "elements.geometry.spatial.icon.details";
+export const SPATIAL_PLAY_SCENE3D_SURFACE_ID = "elements.geometry.spatial.scene/v1";
+export const SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID = "elements.geometry.spatial.panel.workbench/v1";
+export const SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID = "elements.geometry.spatial.panel.details/v1";
 const SPATIAL_PLAY_DEFAULT_LAYOUT = createDefaultLayout([SPATIAL_PLAY_WINDOW_ID], "row", [100], [SPATIAL_PLAY_WINDOW_LABEL]);
 //#endregion 🔖Ids
 
@@ -242,48 +255,55 @@ export function buildSpatialWorkbenchApp(controller: SpatialPlayShellController)
 	controller.run("setQuery", { query: "" });
 	return app;
 }
+
+function spatialControllerFromContext(ctx: ShellWindowBodyViewContext): SpatialPlayShellController | undefined {
+	return ctx.workbench.getActiveApp()?.controller as SpatialPlayShellController | undefined;
+}
+
+/** @emoji 🧩 Declarative main window: status strip + scene3d host surface. */
+export function buildSpatialPlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+	const ctrl = spatialControllerFromContext(ctx);
+	if (!ctrl) {
+		return { type: "stack", direction: "vertical", padding: "none", children: [{ type: "text", value: "Missing spatial controller" }] };
+	}
+	const snap = ctrl.getSnapshot();
+	return {
+		type: "stack",
+		direction: "vertical",
+		padding: "none",
+		children: [
+			{
+				type: "stack",
+				direction: "horizontal",
+				gap: "tight",
+				padding: "standard",
+				children: [
+					{ type: "text", value: snap.status, emphasize: true, dataAttributes: { "e2e-spatial-status": snap.status } },
+					{ type: "text", value: spatialKindLabel(snap.focusedKind), dataAttributes: { "e2e-spatial-focus": spatialKindLabel(snap.focusedKind) } },
+					{ type: "text", value: snap.query.trim() || "none", dataAttributes: { "e2e-spatial-query": snap.query.trim() || "none" } },
+				],
+			},
+			{ type: "scene3d", surfaceId: SPATIAL_PLAY_SCENE3D_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID },
+		],
+	};
+}
+
+/** @emoji 🧩 Declarative workbench side tab (entity browser). */
+export function buildSpatialWorkbenchDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+	if (!spatialControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing spatial controller" };
+	}
+	return { type: "panel", surfaceId: SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
+}
+
+/** @emoji 🧩 Declarative details side tab (selection inspector). */
+export function buildSpatialDetailsDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+	if (!spatialControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing spatial controller" };
+	}
+	return { type: "panel", surfaceId: SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
+}
 //#endregion 🔖Controller
-
-//#region 🔖Bootstrap
-let spatialPlayChromeRegistered = false;
-
-function registerSpatialPlayChrome(): void {
-	if (spatialPlayChromeRegistered) return;
-	spatialPlayChromeRegistered = true;
-	registerElementIcon(SPATIAL_PLAY_WORKBENCH_ICON_ID, React.createElement(ListFilter, { className: "size-4", "aria-hidden": true }));
-	registerElementIcon(SPATIAL_PLAY_DETAILS_ICON_ID, React.createElement(ScanSearch, { className: "size-4", "aria-hidden": true }));
-	registerWindowBody(SPATIAL_PLAY_BODY_KEY, SpatialPlayWindowBody);
-	registerWindowBody(SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY, SpatialWorkbenchPanelBody);
-	registerWindowBody(SPATIAL_PLAY_DETAILS_TAB_BODY_KEY, SpatialDetailsPanelBody);
-}
-
-/** @emoji 🚀 Builds the workbench around the reusable spatial React surface. */
-export async function bootstrapSpatialWorkbench(): Promise<Workbench> {
-	registerSpatialPlayChrome();
-	const workbench = new Workbench();
-	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());
-	workbench.addApp(buildSpatialWorkbenchApp(controller));
-	return workbench;
-}
-
-const rootElement = typeof document === "undefined" ? null : document.getElementById("root");
-if (rootElement) {
-	void bootstrapSpatialWorkbench().then((workbench) => {
-		mountReactApp(
-			React.createElement(
-				LevelProvider,
-				null,
-				React.createElement(WorkbenchView, {
-					workbench,
-					className: getLevelBgClass(0),
-					defaultAppId: SPATIAL_PLAY_APP_ID,
-					initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true },
-				}),
-			),
-		);
-	});
-}
-//#endregion 🔖Bootstrap
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -322,6 +342,29 @@ if (import.meta.vitest) {
 			const controller = new SpatialPlayShellController(bus, () => undefined, fixture);
 			bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setEntityTransform", { id: "face-front", transform: { position: [2, 3, 4] } });
 			expect(controller.getSnapshot().model?.get("face-front")?.transform?.position).toEqual([2, 3, 4]);
+		});
+
+		it("declarative window body ends with spatial scene3d surface binding", async () => {
+			const fixture = await loadTopologicFixtureV1(topologyJson as unknown);
+			const bus = new CommandBus();
+			const wb = new Workbench();
+			const ctrl = new SpatialPlayShellController(bus, () => wb.notify(), fixture);
+			wb.addApp(buildSpatialWorkbenchApp(ctrl));
+			const tree = buildSpatialPlayDeclarativeBody({
+				workbench: wb,
+				windowKindId: SPATIAL_PLAY_WINDOW_ID,
+				bodyKey: SPATIAL_PLAY_BODY_KEY,
+				activeModeId: "browse",
+				generation: wb.generation,
+			});
+			expect(tree.type).toBe("stack");
+			if (tree.type !== "stack") return;
+			const last = tree.children[tree.children.length - 1];
+			expect(last).toEqual({
+				type: "scene3d",
+				surfaceId: SPATIAL_PLAY_SCENE3D_SURFACE_ID,
+				controllerId: SPATIAL_PLAY_CONTROLLER_ID,
+			});
 		});
 	});
 }

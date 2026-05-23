@@ -123,6 +123,21 @@ export interface TopologicFixtureV1 {
 	readonly topologies: readonly TopologicEntity[];
 }
 
+export interface TopologicRenderPacketEntryV1 {
+	readonly id: string;
+	readonly kind: TopologicKind;
+	readonly position: Float32Array;
+	readonly rotation: Float32Array;
+	readonly scale: Float32Array;
+	readonly points?: Float32Array;
+	readonly triangles?: Uint32Array;
+}
+
+export interface TopologicRenderPacketV1 {
+	readonly entries: readonly TopologicRenderPacketEntryV1[];
+	readonly revisitedIds: readonly string[];
+}
+
 export interface SpatialRenderable {
 	readonly id: string;
 	readonly kind: TopologicKind;
@@ -188,10 +203,23 @@ export interface SpatialSurfaceSnapshot {
 	readonly workbenchPanel: SpatialWorkbenchPanelState;
 	readonly detailsPanel: SpatialDetailsPanelState;
 }
+
+export interface SpatialJsBindings {
+	readonly parseFixture: (raw: unknown) => TopologicFixtureV1 | null;
+	readonly deriveAnalyzeFixture: (fixture: TopologicFixtureV1) => TopologicFixtureV1 | null;
+	readonly buildRenderPacket: (fixture: TopologicFixtureV1) => TopologicRenderPacketV1 | null;
+	readonly vertexPoint: (fixture: TopologicFixtureV1, id: string) => Vec3 | null;
+	readonly edgeCurve: (fixture: TopologicFixtureV1, id: string) => readonly Vec3[];
+	readonly updateFixtureTransform: (fixture: TopologicFixtureV1, entityId: string, transform: TopologicTransform) => TopologicFixtureV1 | null;
+}
+
+export interface TopologicWasmBindings extends SpatialJsBindings {}
 //#endregion 🔖Kinds
 
 //#region 🔖Kernel
 let kernelPromise: Promise<void> | null = null;
+let spatialBindings: SpatialJsBindings | null = null;
+let spatialBindingsPromise: Promise<SpatialJsBindings> | null = null;
 
 function stripWindowsDriveSlash(pathname: string): string {
 	return /^\/[A-Za-z]:/.test(pathname) ? pathname.slice(1) : pathname;
@@ -232,6 +260,28 @@ export function ensureSpatialKernelLoaded(): Promise<void> {
 		}
 	})();
 	return kernelPromise;
+}
+
+export function getSpatialJsBindings(): SpatialJsBindings {
+	if (!spatialBindings) {
+		throw new Error("Spatial kernel is not loaded yet. Call ensureSpatialJsBindingsLoaded() before using synchronous geometry helpers.");
+	}
+	return spatialBindings;
+}
+
+export async function ensureSpatialJsBindingsLoaded(): Promise<SpatialJsBindings> {
+	spatialBindingsPromise ??= ensureSpatialKernelLoaded().then(() => {
+		spatialBindings ??= {
+			parseFixture: parseTopologicFixtureV1,
+			deriveAnalyzeFixture: deriveAnalyzeTopologicFixtureV1,
+			buildRenderPacket: buildTopologicRenderPacketV1,
+			vertexPoint: vertexPointTopologicFixtureV1,
+			edgeCurve: edgeCurveTopologicFixtureV1,
+			updateFixtureTransform: updateTopologicFixtureTransformKernelV1,
+		};
+		return spatialBindings;
+	});
+	return spatialBindingsPromise;
 }
 //#endregion 🔖Kernel
 
@@ -284,6 +334,24 @@ function isEntity(value: unknown): value is TopologicEntity {
 	return false;
 }
 
+function fixtureEntityChildIds(entity: TopologicEntity): readonly string[] {
+	if (entity.kind === "topology") return entity.members;
+	if (entity.kind === "wire") return entity.edges;
+	if (entity.kind === "face") return entity.wires;
+	if (entity.kind === "shell") return entity.faces;
+	if (entity.kind === "cell") return entity.shells;
+	if (entity.kind === "cellComplex") return entity.cells;
+	if (entity.kind === "cluster") return entity.topologies;
+	if (entity.kind === "edge") return entity.vertices;
+	return [];
+}
+
+function hasResolvableFixtureReferences(fixture: TopologicFixtureV1): boolean {
+	const ids = new Set(fixture.topologies.map((entity) => entity.id));
+	if (!fixture.roots.every((id) => ids.has(id))) return false;
+	return fixture.topologies.every((entity) => fixtureEntityChildIds(entity).every((id) => ids.has(id)));
+}
+
 /** @emoji 📦 Parses a Topologic-compatible fixture for the spatial adapter. */
 export function parseTopologicFixtureV1(raw: unknown): TopologicFixtureV1 | null {
 	if (!raw || typeof raw !== "object") return null;
@@ -291,13 +359,40 @@ export function parseTopologicFixtureV1(raw: unknown): TopologicFixtureV1 | null
 	if (candidate.schema !== "elements.geometry.topologic.fixture/v1") return null;
 	if (!Array.isArray(candidate.roots) || !candidate.roots.every((entry) => typeof entry === "string")) return null;
 	if (!Array.isArray(candidate.topologies) || !candidate.topologies.every(isEntity)) return null;
-	return candidate as TopologicFixtureV1;
+	const fixture = candidate as TopologicFixtureV1;
+	return hasResolvableFixtureReferences(fixture) ? fixture : null;
 }
 
 /** @emoji 📥 Loads the spatial fixture contract after the kernel is ready. */
 export async function loadTopologicFixtureV1(raw: unknown): Promise<TopologicFixtureV1 | null> {
 	await ensureSpatialKernelLoaded();
 	return parseTopologicFixtureV1(raw);
+}
+
+export function vertexPointTopologicFixtureV1(fixture: TopologicFixtureV1, id: string): Vec3 | null {
+	const entity = fixture.topologies.find((candidate) => candidate.id === id);
+	return entity?.kind === "vertex" ? entity.point : null;
+}
+
+export function edgeCurveTopologicFixtureV1(fixture: TopologicFixtureV1, id: string): readonly Vec3[] {
+	const entity = fixture.topologies.find((candidate) => candidate.id === id);
+	if (!entity || entity.kind !== "edge") return [];
+	if (entity.curve && entity.curve.length >= 2) return entity.curve;
+	const start = vertexPointTopologicFixtureV1(fixture, entity.vertices[0]);
+	const end = vertexPointTopologicFixtureV1(fixture, entity.vertices[1]);
+	return start && end ? [start, end] : [];
+}
+
+export function deriveAnalyzeTopologicFixtureV1(fixture: TopologicFixtureV1): TopologicFixtureV1 | null {
+	if (!hasResolvableFixtureReferences(fixture)) return null;
+	return {
+		...fixture,
+		topologies: fixture.topologies.map((entity) =>
+			entity.kind === "edge" && (!entity.curve || entity.curve.length < 2)
+				? { ...entity, curve: edgeCurveTopologicFixtureV1(fixture, entity.id) }
+				: entity,
+		),
+	};
 }
 
 /** @emoji 🔁 Returns an immutable fixture clone with one entity transform replaced. */
@@ -311,6 +406,14 @@ export function updateTopologicFixtureTransformV1(
 		...fixture,
 		topologies: fixture.topologies.map((entity) => (entity.id === entityId ? { ...entity, transform } : entity)),
 	};
+}
+
+export function updateTopologicFixtureTransformKernelV1(
+	fixture: TopologicFixtureV1,
+	entityId: string,
+	transform: TopologicTransform,
+): TopologicFixtureV1 | null {
+	return updateTopologicFixtureTransformV1(fixture, entityId, transform);
 }
 //#endregion 🔖Parsing
 
@@ -365,6 +468,19 @@ function faceSurfaceFill(face: TopologicFaceEntity): BufferGeometryData {
 	}
 
 type BrepShape = object;
+
+function topologicTransformPacket(transform: TopologicTransform | undefined): {
+	readonly position: Float32Array;
+	readonly rotation: Float32Array;
+	readonly scale: Float32Array;
+} {
+	const props = transformProps(transform);
+	return {
+		position: new Float32Array(props.position),
+		rotation: new Float32Array(props.quaternion),
+		scale: new Float32Array(props.scale),
+	};
+}
 //#endregion 🔖Helpers
 
 //#region 🔖TopologyClasses
@@ -634,6 +750,39 @@ export function listRenderablesByKind(model: SpatialModel, kind: TopologicKind):
 	return model.listByKind(kind).map((node) => node.toRenderable(model));
 }
 
+export function buildTopologicRenderPacketV1(fixture: TopologicFixtureV1): TopologicRenderPacketV1 | null {
+	if (!hasResolvableFixtureReferences(fixture)) return null;
+	const model = buildSpatialModel(deriveAnalyzeTopologicFixtureV1(fixture) ?? fixture);
+	return {
+		entries: model.nodes.map((node) => {
+			const transform = topologicTransformPacket(node.transform);
+			if (node instanceof Edge) {
+				return {
+					id: node.id,
+					kind: node.kind,
+					...transform,
+					points: new Float32Array(edgeCurveTopologicFixtureV1(model.fixture, node.id).flat()),
+				};
+			}
+			if (node instanceof Face) {
+				return {
+					id: node.id,
+					kind: node.kind,
+					...transform,
+					points: new Float32Array(node.entity.surface.vertices.flat()),
+					triangles: new Uint32Array(node.entity.surface.triangles),
+				};
+			}
+			return {
+				id: node.id,
+				kind: node.kind,
+				...transform,
+			};
+		}),
+		revisitedIds: [],
+	};
+}
+
 /** @emoji 🏷️ Formats one spatial kind for panel labels and tool text. */
 export function spatialKindLabel(kind: SpatialSurfaceKindFilter): string {
 	if (kind === "all") return "All";
@@ -754,11 +903,31 @@ export function transformProps(transform: TopologicTransform | undefined): {
 }
 //#endregion 🔖Model
 
+export {
+	ensureSpatialJsBindingsLoaded as ensureTopologicJsBindingsLoaded,
+	getSpatialJsBindings as getTopologicJsBindings,
+	type SpatialJsBindings as TopologicJsBindings,
+};
+
+export async function ensureTopologicWasmLoaded(): Promise<TopologicWasmBindings> {
+	return ensureSpatialJsBindingsLoaded();
+}
+
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	const topologyJson = (await import("../../play/fixtures/topology.json")).default;
 
 	describe("spatial imperative core", () => {
+		it("rejects unresolved references like the topologic facade", () => {
+			expect(
+				parseTopologicFixtureV1({
+					schema: "elements.geometry.topologic.fixture/v1",
+					roots: ["root"],
+					topologies: [{ id: "root", kind: "topology", members: ["missing"] }],
+				}),
+			).toBeNull();
+		});
+
 		it(
 			"parses the shared topologic fixture and builds brep-backed renderables",
 			async () => {
@@ -783,6 +952,16 @@ if (import.meta.vitest) {
 			const updated = next?.topologies.find((entity) => entity.id === "cell-room");
 			expect(updated?.transform?.position).toEqual([1, 2, 3]);
 			expect(fixture.topologies.find((entity) => entity.id === "cell-room")?.transform).toBeUndefined();
+		});
+
+		it("exports topologic-compatible bindings and render packets", async () => {
+			const fixture = await loadTopologicFixtureV1(topologyJson);
+			expect(fixture).not.toBeNull();
+			const bindings = await ensureTopologicWasmLoaded();
+			expect(bindings.parseFixture(topologyJson)?.schema).toBe("elements.geometry.topologic.fixture/v1");
+			expect(bindings.edgeCurve(fixture!, "edge-floor-front").length).toBeGreaterThanOrEqual(2);
+			const packet = buildTopologicRenderPacketV1(fixture!);
+			expect(packet?.entries.find((entry) => entry.id === "edge-floor-front")?.points).toBeInstanceOf(Float32Array);
 		});
 	});
 }

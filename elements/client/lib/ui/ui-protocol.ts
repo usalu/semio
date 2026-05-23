@@ -60,5 +60,41 @@ export interface UiScene3DHostSurfaceNode {
 	readonly controllerId: string;
 }
 
-export type UiNode = UiStackNode | UiTextNode | UiButtonNode | UiSeparatorNode | UiScene3DHostSurfaceNode;
+/** @emoji 📋 Host-bound 2D board canvas; `paneId` selects the play window slot. */
+export interface UiBoardHostSurfaceNode {
+	readonly type: "board";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId: string;
+}
+
+/** @emoji 📑 Host-bound side panel body; `surfaceId` maps to a registered panel host renderer. */
+export interface UiPanelHostSurfaceNode {
+	readonly type: "panel";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+}
+
+export type UiNode =
+	| UiStackNode
+	| UiTextNode
+	| UiButtonNode
+	| UiSeparatorNode
+	| UiScene3DHostSurfaceNode
+	| UiBoardHostSurfaceNode
+	| UiPanelHostSurfaceNode;
 //#endregion 🔖UiNode
+
+//#region 🔖ShellWindowMeasure
+/** @emoji 📐 Framework-free window measure; host maps `onChange` to {@link CommandBus.dispatch}. */
+export interface ShellWindowMeasureSelect {
+	readonly kind: "select";
+	readonly id: string;
+	readonly label?: string;
+	readonly value: string;
+	readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
+	readonly onChange: ShellCommandDescriptor;
+}
+
+export type ShellWindowMeasure = ShellWindowMeasureSelect;
+//#endregion 🔖ShellWindowMeasure

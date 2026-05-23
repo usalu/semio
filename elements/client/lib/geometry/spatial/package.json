@@ -3,5 +3,15 @@
 	"version": "0.1.0",
 	"type": "module",
 	"private": true,
-	"description": "elements · geometry · spatial brepjs play"
+	"description": "elements · geometry · spatial standalone brepjs core",
+	"main": "./js/index.ts",
+	"types": "./js/index.ts",
+	"exports": {
+		".": "./js/index.ts"
+	},
+	"dependencies": {
+		"brepjs": "^18.20.3",
+		"brepjs-opencascade": "^0.15.6"
+	},
+	"bundleKind": "library"
 }
