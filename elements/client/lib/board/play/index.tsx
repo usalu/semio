@@ -25,6 +25,8 @@ import {
   App,
   createWindowLayout,
   getLevelBgClass,
+  mountReactApp,
+  PureAppDefinition,
   useElementsSurfaceChrome,
   type ContextMenuItem,
   type ElementsSurfaceDevice,
@@ -38,7 +40,6 @@ import {
 import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -322,6 +323,32 @@ interface BoardPlayShellValue {
   applyBoardRedrawHandlesOnce: () => void;
   boardRedrawHandlesAfterNodes: boolean;
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
+}
+
+class BoardPlayDefinition extends PureAppDefinition {
+  constructor(
+    private readonly boardPlayLayout: UIWindowLayout,
+    private readonly boardWindowKinds: UIWindowKindDefinition[],
+    private readonly onBoardPlayActiveWindowChange: (windowKindId: string) => void,
+  ) {
+    super();
+  }
+
+  resolveConfig(): AppConfig {
+    return {
+      defaultLayout: this.boardPlayLayout,
+      id: BOARD_PLAY_APP_ID,
+      label: "Board",
+      leftPanelTabs: [{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 }],
+      onActiveWindowChange: this.onBoardPlayActiveWindowChange,
+      rightPanelTabs: [
+        { content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
+        { content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
+      ],
+      toolbarContent: <BoardPlayToolbar />,
+      windowKinds: this.boardWindowKinds,
+    };
+  }
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
@@ -2562,20 +2589,8 @@ function BoardPlayInner(): ReactElement {
     [boardLodModeByPane, boardEffectiveLodByPane, setBoardLodModeForPane],
   );
 
-  const boardPlayApp: AppConfig = useMemo(
-    () => ({
-      defaultLayout: boardPlayLayout,
-      id: BOARD_PLAY_APP_ID,
-      label: "Board",
-      leftPanelTabs: [{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 }],
-      onActiveWindowChange: onBoardPlayActiveWindowChange,
-      rightPanelTabs: [
-        { content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
-        { content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
-      ],
-      toolbarContent: <BoardPlayToolbar />,
-      windowKinds: boardWindowKinds,
-    }),
+  const boardPlayApp = useMemo(
+    () => new BoardPlayDefinition(boardPlayLayout, boardWindowKinds, onBoardPlayActiveWindowChange),
     [boardWindowKinds, onBoardPlayActiveWindowChange],
   );
 
@@ -2598,13 +2613,5 @@ function BoardPlayApp(): ReactElement {
   );
 }
 
-type BoardPlayDomRoot = HTMLElement & { __boardPlayReactRoot?: Root };
-
-const mount = document.getElementById("root") as BoardPlayDomRoot | null;
-if (!mount) {
-  throw new Error("Board play root #root missing.");
-}
-
-mount.__boardPlayReactRoot ??= createRoot(mount);
-mount.__boardPlayReactRoot.render(<BoardPlayApp />);
+mountReactApp(<BoardPlayApp />);
 // #endregion 🔖Entrypoint

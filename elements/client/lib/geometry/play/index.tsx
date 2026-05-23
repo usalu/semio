@@ -2,10 +2,9 @@
 // 💻 elements/client/lib/geometry/play/index.tsx — Geometry play harness: Topologic all-kinds selector, single-window UI shell, and transform gumball editing for every entity kind.
 // #endregion 🧲Header
 
-import { App, LevelProvider, createDefaultLayout, getLevelBgClass, useApp, type AppConfig, type UIToolbarItem } from "@elements/ui";
+import { App, LevelProvider, PureAppDefinition, createDefaultLayout, getLevelBgClass, mountReactApp, useApp, type AppConfig, type UIToolbarItem } from "@elements/ui";
 import { BoxSelect, Move3d, Rotate3d, Scaling } from "lucide-react";
 import { act, createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
-import { createRoot } from "react-dom/client";
 
 import topologyJson from "./fixtures/topology.json";
 import { TopologicViewport, type TopologicTransformMode } from "../react/index.tsx";
@@ -76,6 +75,103 @@ const GEOMETRY_PLAY_TRANSFORM_ICONS: Record<TopologicTransformMode, ReactElement
 	rotate: <Rotate3d className="size-4" aria-hidden />,
 	scale: <Scaling className="size-4" aria-hidden />,
 };
+
+class GeometryPlayDefinition extends PureAppDefinition {
+	constructor(
+		private readonly analyzeSelectableKinds: Record<AnalyzeKind, boolean>,
+		private readonly analyzeVisibleKinds: Record<AnalyzeKind, boolean>,
+		private readonly selectableKinds: Record<TopologicKind, boolean>,
+		private readonly transformMode: TopologicTransformMode,
+		private readonly visibleKinds: Record<TopologicKind, boolean>,
+		private readonly setAnalyzeSelectableKinds: React.Dispatch<React.SetStateAction<Record<AnalyzeKind, boolean>>>,
+		private readonly setAnalyzeVisibleKinds: React.Dispatch<React.SetStateAction<Record<AnalyzeKind, boolean>>>,
+		private readonly setSelectableKinds: React.Dispatch<React.SetStateAction<Record<TopologicKind, boolean>>>,
+		private readonly setSelectedId: React.Dispatch<React.SetStateAction<string | null>>,
+		private readonly setTransformMode: React.Dispatch<React.SetStateAction<TopologicTransformMode>>,
+		private readonly setVisibleKinds: React.Dispatch<React.SetStateAction<Record<TopologicKind, boolean>>>,
+	) {
+		super();
+	}
+
+	resolveConfig(): AppConfig {
+		const selectionKindOrderBase = TOPOLOGIC_KINDS.length;
+		return {
+			id: GEOMETRY_PLAY_APP_ID,
+			label: "Geometry play",
+			options: {
+				selectableKinds: this.selectableKinds,
+				visibleKinds: this.visibleKinds,
+				analyzeSelectableKinds: this.analyzeSelectableKinds,
+				analyzeVisibleKinds: this.analyzeVisibleKinds,
+				transformMode: this.transformMode,
+			},
+			windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
+			defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
+			defaultModeId: "edit",
+			modes: [
+				{
+					id: "edit",
+					label: "Edit",
+					tools: {
+						selection: [
+							...geometryKindToolbarToggles("selection", TOPOLOGIC_KINDS, geometryKindLabel, this.selectableKinds, (kind) =>
+								this.setSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
+							),
+							{ id: "geometry.selection.separator.clear", kind: "separator" as const, order: selectionKindOrderBase },
+							{
+								id: "geometry.selection.clear",
+								icon: <BoxSelect className="size-4" aria-hidden />,
+								label: "Clear",
+								onClick: () => this.setSelectedId(null),
+								order: selectionKindOrderBase + 1,
+							},
+						],
+						filter: geometryKindToolbarToggles("filter", TOPOLOGIC_KINDS, geometryKindLabel, this.visibleKinds, (kind) =>
+							this.setVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
+						),
+						actions: GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, order) => ({
+							id: `geometry.transform.${mode}`,
+							kind: "toggle" as const,
+							icon: GEOMETRY_PLAY_TRANSFORM_ICONS[mode],
+							label: mode.charAt(0).toUpperCase() + mode.slice(1),
+							onPressedChange: (pressed: boolean) => {
+								if (pressed) this.setTransformMode(mode);
+							},
+							order,
+							pressed: this.transformMode === mode,
+						})),
+					},
+				},
+				{
+					id: "analyze",
+					label: "Analyze",
+					tools: {
+						selection: [
+							...geometryAnalyzeToolbarToggles("selection", this.analyzeSelectableKinds, (kind) =>
+								this.setAnalyzeSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
+								(group, enabled) => this.setAnalyzeSelectableKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
+							),
+							{ id: "geometry.analyze.selection.separator.clear", kind: "separator" as const, order: ANALYZE_KINDS.length + 4 },
+							{
+								id: "geometry.analyze.selection.clear",
+								icon: <BoxSelect className="size-4" aria-hidden />,
+								label: "Clear",
+								onClick: () => this.setSelectedId(null),
+								order: ANALYZE_KINDS.length + 5,
+							},
+						],
+						filter: geometryAnalyzeToolbarToggles(
+							"filter",
+							this.analyzeVisibleKinds,
+							(kind) => this.setAnalyzeVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
+							(group, enabled) => this.setAnalyzeVisibleKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
+						),
+					},
+				},
+			],
+		};
+	}
+}
 //#endregion 🔖Ids
 
 //#region 🔖AnalyzeKinds
@@ -404,79 +500,8 @@ function GeometryPlayController(): ReactElement {
 		[analyzeFixture, analyzeSelectableKinds, analyzeSession, analyzeVisibleKinds, fixture, selectableKinds, selectedId, session, transformMode, visibleKinds],
 	);
 
-	const selectionKindOrderBase = TOPOLOGIC_KINDS.length;
-	const apps = useMemo<AppConfig[]>(
-		() => [
-			{
-				id: GEOMETRY_PLAY_APP_ID,
-				label: "Geometry play",
-				options: { selectableKinds, visibleKinds, analyzeSelectableKinds, analyzeVisibleKinds, transformMode },
-				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
-				defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
-				defaultModeId: "edit",
-				modes: [
-					{
-						id: "edit",
-						label: "Edit",
-						tools: {
-							selection: [
-								...geometryKindToolbarToggles("selection", TOPOLOGIC_KINDS, geometryKindLabel, selectableKinds, (kind) =>
-									setSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
-								),
-								{ id: "geometry.selection.separator.clear", kind: "separator" as const, order: selectionKindOrderBase },
-								{
-									id: "geometry.selection.clear",
-									icon: <BoxSelect className="size-4" aria-hidden />,
-									label: "Clear",
-									onClick: () => setSelectedId(null),
-									order: selectionKindOrderBase + 1,
-								},
-							],
-							filter: geometryKindToolbarToggles("filter", TOPOLOGIC_KINDS, geometryKindLabel, visibleKinds, (kind) =>
-								setVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
-							),
-							actions: GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, order) => ({
-								id: `geometry.transform.${mode}`,
-								kind: "toggle" as const,
-								icon: GEOMETRY_PLAY_TRANSFORM_ICONS[mode],
-								label: mode.charAt(0).toUpperCase() + mode.slice(1),
-								onPressedChange: (pressed: boolean) => {
-									if (pressed) setTransformMode(mode);
-								},
-								order,
-								pressed: transformMode === mode,
-							})),
-						},
-					},
-					{
-						id: "analyze",
-						label: "Analyze",
-						tools: {
-							selection: [
-									...geometryAnalyzeToolbarToggles("selection", analyzeSelectableKinds, (kind) =>
-									setAnalyzeSelectableKinds((current) => ({ ...current, [kind]: !current[kind] })),
-										(group, enabled) => setAnalyzeSelectableKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
-								),
-								{ id: "geometry.analyze.selection.separator.clear", kind: "separator" as const, order: ANALYZE_KINDS.length + 4 },
-								{
-									id: "geometry.analyze.selection.clear",
-									icon: <BoxSelect className="size-4" aria-hidden />,
-									label: "Clear",
-									onClick: () => setSelectedId(null),
-									order: ANALYZE_KINDS.length + 5,
-								},
-							],
-							filter: geometryAnalyzeToolbarToggles(
-								"filter",
-								analyzeVisibleKinds,
-								(kind) => setAnalyzeVisibleKinds((current) => ({ ...current, [kind]: !current[kind] })),
-								(group, enabled) => setAnalyzeVisibleKinds((current) => ({ ...current, ...setKindGroup(current, group, enabled) })),
-							),
-						},
-					},
-				],
-			},
-		],
+	const apps = useMemo(
+		() => [new GeometryPlayDefinition(analyzeSelectableKinds, analyzeVisibleKinds, selectableKinds, transformMode, visibleKinds, setAnalyzeSelectableKinds, setAnalyzeVisibleKinds, setSelectableKinds, setSelectedId, setTransformMode, setVisibleKinds)],
 		[analyzeSelectableKinds, analyzeVisibleKinds, selectableKinds, transformMode, visibleKinds],
 	);
 
@@ -500,10 +525,7 @@ function GeometryPlayApp(): ReactElement {
 	);
 }
 
-const rootElement = document.getElementById("root");
-if (rootElement) {
-	createRoot(rootElement).render(<GeometryPlayApp />);
-}
+mountReactApp(<GeometryPlayApp />);
 //#endregion 🔖Controller
 
 //#region 🧪Tests

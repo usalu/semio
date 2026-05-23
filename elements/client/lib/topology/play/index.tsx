@@ -4,18 +4,7 @@
 
 // #region 📥Imports
 import { useGLTF } from "@react-three/drei";
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	type ReactElement,
-	type ReactNode,
-} from "react";
-import { createRoot } from "react-dom/client";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 
 import {
 	App,
@@ -26,6 +15,8 @@ import {
 	ToolbarZone,
 	createDefaultLayout,
 	getLevelBgClass,
+	mountReactApp,
+	PureAppDefinition,
 	type AppConfig,
 	type UIWindowKindDefinition,
 } from "@elements/ui";
@@ -51,7 +42,7 @@ import {
 	TopologyScenePane,
 	topologyMirrorConnectHandlers,
 	topologyMirrorProximityHandlers,
-	TOPOLOGY_SCENE_CHROME_DEFAULTS,
+	topologySceneChromeDefaults,
 	topologySharedKindsFromPairedMetas,
 } from "../react/index.tsx";
 import {
@@ -186,6 +177,7 @@ interface TopologyPlayShellValue {
 	readonly bindings: ReturnType<typeof buildTopologyDualSurfaceBindings>;
 	readonly boardSelected: ReadonlySet<string>;
 	readonly boardCamera: CameraState;
+	readonly sceneCamera: CameraState;
 	readonly sceneSelected: string | null;
 	readonly relocateMode: SceneRelocateMode;
 	readonly sceneLodTag: SceneLodKind;
@@ -198,6 +190,57 @@ interface TopologyPlayShellValue {
 	readonly proximityBoard: number;
 	readonly proximityScene: number;
 	readonly setSceneRelocateMode: (mode: SceneRelocateMode) => void;
+}
+
+class TopologyPlayDefinition extends PureAppDefinition {
+	constructor(
+		private readonly boardLodMode: BoardLodModeKind,
+		private readonly boardLodTag: BoardDrawLodKind,
+		private readonly sceneLodMode: SceneLodModeKind,
+		private readonly sceneLodTag: SceneLodKind,
+		private readonly setBoardLodMode: (mode: BoardLodModeKind) => void,
+		private readonly setSceneLodMode: (mode: SceneLodModeKind) => void,
+	) {
+		super();
+	}
+
+	resolveConfig(): AppConfig {
+		return {
+			id: TOPOLOGY_PLAY_APP_ID,
+			label: "Topology play",
+			windowKinds: topologyWindowKindsWithLodMeasures(
+				this.boardLodMode,
+				this.boardLodTag,
+				this.sceneLodMode,
+				this.sceneLodTag,
+				this.setBoardLodMode,
+				this.setSceneLodMode,
+			),
+			defaultLayout: createDefaultLayout(
+				[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
+				"row",
+				[50, 50],
+				[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
+			),
+		};
+	}
+}
+
+class InvalidTopologyPlayDefinition extends PureAppDefinition {
+	resolveConfig(): AppConfig {
+		return {
+			id: TOPOLOGY_PLAY_APP_ID,
+			label: "Topology play",
+			windowKinds: [
+				{
+					id: "topology-error",
+					label: "Error",
+					component: () => <div className="p-4 text-destructive">Invalid board or scene fixture</div>,
+				},
+			],
+			defaultLayout: createDefaultLayout(["topology-error"], "row", [100], ["Error"]),
+		};
+	}
 }
 
 const TopologyPlayShellContext = createContext<TopologyPlayShellValue | null>(null);
@@ -245,10 +288,6 @@ function TopologyBoardWindow(): ReactElement {
 
 function TopologySceneWindow(): ReactElement {
 	const s = useTopologyPlayShell();
-	const sceneCanvasProps = useMemo(
-		() => ({ ...TOPOLOGY_SCENE_CHROME_DEFAULTS, ...s.sceneLodProps }),
-		[s.sceneLodProps],
-	);
 	return (
 		<div className="flex h-full w-full flex-col">
 			<TopologyPlayChromeStrip
@@ -301,7 +340,7 @@ function TopologySceneWindow(): ReactElement {
 					bindings={s.bindings}
 					relocateMode={s.relocateMode}
 					selectedObjectId={s.sceneSelected}
-					scene={sceneCanvasProps}
+					scene={{ ...topologySceneChromeDefaults(), ...s.sceneLodProps }}
 				/>
 			</div>
 		</div>
@@ -319,10 +358,9 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 	const [boardSelected, setBoardSelected] = useState<ReadonlySet<string>>(() => new Set());
 	const [sceneSelected, setSceneSelected] = useState<string | null>(null);
 	const [boardCamera, setBoardCamera] = useState<CameraState>(() => ({ ...boardFixture.camera }));
-	const sceneCameraRef = useRef<CameraState>({ ...sceneFixture.camera });
-	const onSceneCamera = useCallback((camera: CameraState) => {
-		sceneCameraRef.current = camera;
-	}, []);
+	const [sceneCamera, setSceneCamera] = useState<CameraState>(() => ({
+		...sceneFixture.camera,
+	}));
 	const [sceneLodTag, setSceneLodTag] = useState<SceneLodKind>("normal");
 	const [boardLodTag, setBoardLodTag] = useState<BoardDrawLodKind>("normal");
 	const onBoardLodChange = useCallback((lod: BoardDrawLodKind) => setBoardLodTag(lod), []);
@@ -377,12 +415,12 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 				onBoardSelect,
 				onSceneSelect,
 				onBoardCamera: setBoardCamera,
-				onSceneCamera,
+				onSceneCamera: setSceneCamera,
 				onSceneLodChange: setSceneLodTag,
 				...mirrorConnect,
 				...mirrorProximity,
 			}),
-		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect, onSceneCamera],
+		[sharedKinds, mirrorConnect, mirrorProximity, onBoardSelect, onSceneSelect],
 	);
 
 	useEffect(() => {
@@ -410,6 +448,7 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			bindings,
 			boardSelected,
 			boardCamera,
+			sceneCamera,
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,
@@ -430,6 +469,7 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 			bindings,
 			boardSelected,
 			boardCamera,
+			sceneCamera,
 			sceneSelected,
 			relocateMode,
 			sceneLodTag,
@@ -444,27 +484,8 @@ function useTopologyPairedPlayModel(boardFixture: BoardFixtureV1, sceneFixture: 
 		],
 	);
 
-	const apps = useMemo<AppConfig[]>(
-		() => [
-			{
-				id: TOPOLOGY_PLAY_APP_ID,
-				label: "Topology play",
-				windowKinds: topologyWindowKindsWithLodMeasures(
-					boardLodMode,
-					boardLodTag,
-					sceneLodMode,
-					sceneLodTag,
-					setBoardLodMode,
-					setSceneLodMode,
-				),
-				defaultLayout: createDefaultLayout(
-					[TOPOLOGY_PLAY_WINDOWS.board, TOPOLOGY_PLAY_WINDOWS.scene],
-					"row",
-					[50, 50],
-					[TOPOLOGY_PLAY_WINDOW_LABELS.board, TOPOLOGY_PLAY_WINDOW_LABELS.scene],
-				),
-			},
-		],
+	const apps = useMemo(
+		() => [new TopologyPlayDefinition(boardLodMode, boardLodTag, sceneLodMode, sceneLodTag, setBoardLodMode, setSceneLodMode)],
 		[boardLodMode, boardLodTag, sceneLodMode, sceneLodTag],
 	);
 
@@ -490,21 +511,8 @@ function TopologyPlayController({
 // #endregion 🎬Controller
 
 // #region 🚀Mount
-function invalidFixtureApps(): AppConfig[] {
-	return [
-		{
-			id: TOPOLOGY_PLAY_APP_ID,
-			label: "Topology play",
-			windowKinds: [
-				{
-					id: "topology-error",
-					label: "Error",
-					component: () => <div className="p-4 text-destructive">Invalid board or scene fixture</div>,
-				},
-			],
-			defaultLayout: createDefaultLayout(["topology-error"], "row", [100], ["Error"]),
-		},
-	];
+function invalidFixtureApps(): PureAppDefinition[] {
+	return [new InvalidTopologyPlayDefinition()];
 }
 
 function TopologyPlayApp(): ReactElement {
@@ -526,10 +534,7 @@ function TopologyPlayApp(): ReactElement {
 	);
 }
 
-const rootEl = document.getElementById("root");
-if (rootEl) {
-	createRoot(rootEl).render(<TopologyPlayApp />);
-}
+mountReactApp(<TopologyPlayApp />);
 // #endregion 🚀Mount
 
 if (import.meta.vitest) {

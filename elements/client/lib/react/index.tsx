@@ -112,6 +112,7 @@ import {
   GraduationCap as TutorialIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
+import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useHotkeys } from "react-hotkeys-hook";
 import { initReactI18next, useTranslation } from "react-i18next";
@@ -22736,8 +22737,25 @@ export interface AppConfig {
   modes?: AppModeConfig[];
 }
 
+export interface AppDefinition {
+  resolveConfig(): AppConfig;
+}
+
+export abstract class PureAppDefinition implements AppDefinition {
+  abstract resolveConfig(): AppConfig;
+}
+
+export type AppSource = AppConfig | AppDefinition;
+
 export interface ResolvedAppConfig extends Omit<AppConfig, "defaultModeId" | "modes"> {
   activeModeId: string | null;
+}
+
+function resolveAppSource(app: AppSource): AppConfig {
+  if (typeof (app as AppDefinition).resolveConfig === "function") {
+    return (app as AppDefinition).resolveConfig();
+  }
+  return app;
 }
 
 function mergeConfigEntries<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
@@ -22856,7 +22874,7 @@ export function useUIHistory(initialUri = "/"): {
  * Navbar is fixed: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
 export interface AppProps {
-  apps: AppConfig[];
+  apps: AppSource[];
   defaultAppId?: string;
   uri?: string;
   onNavigate?: (uri: string) => void;
@@ -22904,6 +22922,18 @@ interface AppContextValue {
   goForward: () => void;
   canGoUp: boolean;
   goUp: () => void;
+}
+
+type ElementsDomRoot = HTMLElement & { __elementsReactRoot?: Root };
+
+export function mountReactApp(element: React.ReactElement, rootId = "root"): void {
+  if (typeof document === "undefined") return;
+  const rootElement = document.getElementById(rootId) as ElementsDomRoot | null;
+  if (!rootElement) {
+    throw new Error(`React root #${rootId} missing.`);
+  }
+  rootElement.__elementsReactRoot ??= createRoot(rootElement);
+  rootElement.__elementsReactRoot.render(element);
 }
 
 const AppContext = React.createContext<AppContextValue | undefined>(undefined);
@@ -23086,7 +23116,8 @@ export const App: React.FC<AppProps> = ({
   className,
   initialPanelVisibility,
 }) => {
-  const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
+  const resolvedApps = React.useMemo(() => apps.map(resolveAppSource), [apps]);
+  const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? resolvedApps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
   const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>(() => ({
@@ -23127,7 +23158,7 @@ export const App: React.FC<AppProps> = ({
     setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
   }, []);
 
-  const activeAppBase = apps.find((app) => app.id === activeAppId) ?? apps[0];
+  const activeAppBase = resolvedApps.find((app) => app.id === activeAppId) ?? resolvedApps[0];
   const [activeModeByAppId, setActiveModeByAppId] = React.useState<Record<string, string>>({});
   if (!activeAppBase) return null;
   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;
@@ -23243,12 +23274,12 @@ export const App: React.FC<AppProps> = ({
   });
 
   // App navigation (only when multiple apps)
-  if (apps.length > 1) {
+  if (resolvedApps.length > 1) {
     navbarItems.push({
       key: "appNav",
       content: (
         <ButtonGroup id="ui.appNav">
-          {apps.map((app) => (
+          {resolvedApps.map((app) => (
             <ButtonGroupItem key={app.id} id={`ui.appNav.${app.id}`} className={cn(activeAppId === app.id && "bg-active-base")} onClick={() => setActiveAppId(app.id)}>
               {app.icon ?? <span className="text-xs">{app.label}</span>}
             </ButtonGroupItem>
@@ -23313,7 +23344,7 @@ export const App: React.FC<AppProps> = ({
         activeApp,
         activeModeId,
         setActiveModeId,
-        apps,
+        apps: resolvedApps,
         panelVisibility,
         togglePanel,
         uri: uriProp,

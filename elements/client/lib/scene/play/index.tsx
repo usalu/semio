@@ -8,6 +8,8 @@ import {
 	Button,
 	Expertise,
 	LevelProvider,
+	mountReactApp,
+	PureAppDefinition,
 	Select,
 	SelectContent,
 	SelectItem,
@@ -27,7 +29,6 @@ import {
 } from "@elements/ui";
 import { Move3d, Rotate3d, Scaling } from "lucide-react";
 import { Suspense, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
-import { createRoot } from "react-dom/client";
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import "./globals.css";
@@ -85,6 +86,21 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
 		});
 	}
 	return out;
+}
+
+class ScenePlayDefinition extends PureAppDefinition {
+	constructor(private readonly lodMode: LodModeKind, private readonly setLodMode: (mode: LodModeKind) => void) {
+		super();
+	}
+
+	resolveConfig(): AppConfig {
+		return {
+			id: PLAY_APP_ID,
+			label: "Scene play",
+			windowKinds: windowKindsWithLodMeasures(this.lodMode, this.setLodMode),
+			defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
+		};
+	}
 }
 
 function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatalogBundle | undefined {
@@ -465,17 +481,7 @@ function PlayInner(): ReactElement {
 	const lodProps = useMemo(() => lodCanvasProps(lodMode), [lodMode]);
 	const runtime = useMemo(() => ({ setEffectiveLod: setLodTag }), []);
 
-	const apps = useMemo<AppConfig[]>(
-		() => [
-			{
-				id: PLAY_APP_ID,
-				label: "Scene play",
-				windowKinds: windowKindsWithLodMeasures(lodMode, setLodMode),
-				defaultLayout: createStackLayout(["scene-main"], ["Scene"]),
-			},
-		],
-		[lodMode],
-	);
+	const apps = useMemo(() => [new ScenePlayDefinition(lodMode, setLodMode)], [lodMode]);
 
 	return (
 		<PlayLodDisplayContext.Provider value={lodTag}>
@@ -499,10 +505,7 @@ function PlayApp(): ReactElement {
 }
 //#endregion 🎬Play
 
-const rootEl = document.getElementById("root");
-if (rootEl) {
-	createRoot(rootEl).render(<PlayApp />);
-}
+mountReactApp(<PlayApp />);
 
 //#region 🧪Tests
 if (import.meta.vitest) {
