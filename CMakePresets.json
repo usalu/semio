@@ -21,7 +21,9 @@
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/elements/client/lib/geometry/topologic/triplets",
         "VCPKG_FEATURE_FLAGS": "manifests",
         "SEMIO_CPP_TOPOLOGIC": "ON",
-        "SEMIO_CPP_ENABLE_TESTS": "ON"
+        "SEMIO_CPP_ENABLE_TESTS": "ON",
+        "TOPOLOGIC_BUILD_PYTHON_BINDINGS": "OFF",
+        "TOPOLOGIC_BUILD_WASM_BRIDGE": "OFF"
       }
     },
     {

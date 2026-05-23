@@ -359,24 +359,22 @@ function PlayBody({
 				</div>
 			</div>
 			<div className="relative min-h-0 flex-1">
-				<Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-					<SceneObjectStateProvider fixture={fixture} onConnect={onConnect}>
-						<PlaySceneCanvas
-							fixture={fixture}
-							kindCatalogs={kindCatalogs}
-							kindCompatibility={kindCompatibility}
-							blockedVortexFullIds={blockedVortexFullIds}
-							lodProps={lodProps}
-							relocateMode={relocateMode}
-							runtime={runtime}
-							selectedId={selectedId}
-							setSelectedId={setSelectedId}
-							onSelect={onSelect}
-							onIndirectConnect={onIndirectConnect}
-							onProximityConnect={onProximityConnect}
-						/>
-					</SceneObjectStateProvider>
-				</Suspense>
+				<SceneObjectStateProvider fixture={fixture} onConnect={onConnect}>
+					<PlaySceneCanvas
+						fixture={fixture}
+						kindCatalogs={kindCatalogs}
+						kindCompatibility={kindCompatibility}
+						blockedVortexFullIds={blockedVortexFullIds}
+						lodProps={lodProps}
+						relocateMode={relocateMode}
+						runtime={runtime}
+						selectedId={selectedId}
+						setSelectedId={setSelectedId}
+						onSelect={onSelect}
+						onIndirectConnect={onIndirectConnect}
+						onProximityConnect={onProximityConnect}
+					/>
+				</SceneObjectStateProvider>
 			</div>
 		</div>
 	);
@@ -390,8 +388,10 @@ const PlaySceneCanvasContent = memo(function PlaySceneCanvasContent(props: {
 	return (
 		<>
 			<ScenePlayTestBridge setSelectedId={props.setSelectedId} />
-			<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
-			<SceneAttractions />
+			<Suspense fallback={null}>
+				<SceneObjects selectedObjectId={props.selectedId} relocate={props.relocateMode} />
+				<SceneAttractions />
+			</Suspense>
 		</>
 	);
 });

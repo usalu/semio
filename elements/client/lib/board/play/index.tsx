@@ -23,10 +23,14 @@ import {
   Tree,
   TreeStateProvider,
   App,
+  NativeDragAndDropController,
+  PointerDragController,
+  PureSidePanelTabDefinition,
   createWindowLayout,
   getLevelBgClass,
   mountReactApp,
   PureAppDefinition,
+  StaticTreePanelDefinition,
   useElementsSurfaceChrome,
   type ContextMenuItem,
   type ElementsSurfaceDevice,
@@ -39,7 +43,6 @@ import {
 } from "@elements/ui";
 import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -325,6 +328,45 @@ interface BoardPlayShellValue {
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
+class BoardFixtureLibraryPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-library",
+      icon: Library,
+      order: 0,
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: "board-play-library.section", content: <BoardFixtureLibraryPanel /> }],
+      }),
+    };
+  }
+}
+
+class BoardSelectionInspectorPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-inspector",
+      icon: ClipboardList,
+      order: 0,
+      tree: new StaticTreePanelDefinition({
+        sections: createBoardSelectionInspectorSections(),
+      }),
+    };
+  }
+}
+
+class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-settings",
+      icon: Settings,
+      order: 1,
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: "board-play-settings.section", content: <BoardPlaySettingsPanel /> }],
+      }),
+    };
+  }
+}
+
 class BoardPlayDefinition extends PureAppDefinition {
   constructor(
     private readonly boardPlayLayout: UIWindowLayout,
@@ -339,12 +381,9 @@ class BoardPlayDefinition extends PureAppDefinition {
       defaultLayout: this.boardPlayLayout,
       id: BOARD_PLAY_APP_ID,
       label: "Board",
-      leftPanelTabs: [{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 }],
+      leftPanelTabs: [new BoardFixtureLibraryPanelDefinition()],
       onActiveWindowChange: this.onBoardPlayActiveWindowChange,
-      rightPanelTabs: [
-        { content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
-        { content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
-      ],
+      rightPanelTabs: [new BoardSelectionInspectorPanelDefinition(), new BoardPlaySettingsPanelDefinition()],
       toolbarContent: <BoardPlayToolbar />,
       windowKinds: this.boardWindowKinds,
     };
@@ -996,38 +1035,22 @@ function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureN
 /** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
 function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
   const { fixture: dragFixture, label, preview } = props;
-  const ghostRef = useRef<HTMLDivElement>(null);
-  const onDragStart = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
-      e.dataTransfer.effectAllowed = "copy";
-      const ghost = ghostRef.current;
-      if (ghost) {
-        const { height, width } = ghost.getBoundingClientRect();
-        e.dataTransfer.setDragImage(ghost, width / 2, height / 2);
-      }
-    },
+  const dragController = useMemo(
+    () =>
+      new NativeDragAndDropController<HTMLDivElement>({
+        onDragStart: (event) => {
+          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
+          event.dataTransfer.effectAllowed = "copy";
+          const { clientHeight, clientWidth } = event.currentTarget;
+          event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
+        },
+      }),
     [dragFixture],
   );
   return (
-    <>
-      {typeof document !== "undefined"
-        ? createPortal(
-            <div
-              aria-hidden
-              className="border-element bg-muted/40 pointer-events-none fixed z-[2147483000] flex items-center justify-center rounded-lg border shadow-sm"
-              ref={ghostRef}
-              style={{ height: BOARD_PLAY_DEFAULT_NODE_SIZE_PX, left: -9999, top: 0, width: BOARD_PLAY_DEFAULT_NODE_SIZE_PX }}
-            >
-              {preview}
-            </div>,
-            document.body,
-          )
-        : null}
-      <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" draggable onDragStart={onDragStart} title={label}>
-        {preview}
-      </div>
-    </>
+    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragController.getProps()}>
+      {preview}
+    </div>
   );
 }
 // #endregion 🔖PaletteFixtureShelf
@@ -1036,11 +1059,14 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 function BoardFixtureLibraryPanel(): ReactElement {
   const { fixture } = useBoardPlayShell();
 
-  const onShelfDragStart = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
-      e.dataTransfer.effectAllowed = "copy";
-    },
+  const shelfDragController = useMemo(
+    () =>
+      new NativeDragAndDropController<HTMLDivElement>({
+        onDragStart: (event) => {
+          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
+          event.dataTransfer.effectAllowed = "copy";
+        },
+      }),
     [fixture],
   );
 
@@ -1056,7 +1082,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
           <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
-      <div className="border-element bg-muted/30 flex min-h-[120px] cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" draggable onDragStart={onShelfDragStart}>
+      <div className="border-element bg-muted/30 flex min-h-[120px] cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragController.getProps()}>
         <p className="font-medium">Active graph</p>
         <p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
       </div>
@@ -1145,7 +1171,6 @@ function normalizeAngleRad(t: number): number {
 /** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in board space). */
 function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
   const ref = useRef<HTMLDivElement | null>(null);
-  const dragging = useRef(false);
 
   const setFromClient = useCallback(
     (clientX: number, clientY: number) => {
@@ -1163,34 +1188,19 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
     [onChange],
   );
 
-  const onPointerDown = useCallback(
-    (e: PointerEvent) => {
-      e.preventDefault();
-      dragging.current = true;
-      ref.current?.setPointerCapture(e.pointerId);
-      setFromClient(e.clientX, e.clientY);
-    },
+  const pointerController = useMemo(
+    () =>
+      new PointerDragController<HTMLDivElement>({
+        onStart: (event) => {
+          event.preventDefault();
+          setFromClient(event.clientX, event.clientY);
+        },
+        onMove: (event) => {
+          setFromClient(event.clientX, event.clientY);
+        },
+      }),
     [setFromClient],
   );
-
-  const onPointerMove = useCallback(
-    (e: PointerEvent) => {
-      if (!dragging.current) {
-        return;
-      }
-      setFromClient(e.clientX, e.clientY);
-    },
-    [setFromClient],
-  );
-
-  const onPointerUp = useCallback((e: PointerEvent) => {
-    dragging.current = false;
-    try {
-      ref.current?.releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const size = 88;
   const stroke = 3;
@@ -1204,12 +1214,9 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
     <div className="flex flex-col items-center gap-1">
       <div
         className={`border-element bg-muted/20 touch-none select-none rounded-full border ${angleUniform ? "" : "pointer-events-none opacity-40"}`}
-        onPointerCancel={onPointerUp}
-        onPointerDown={angleUniform ? onPointerDown : undefined}
-        onPointerMove={angleUniform ? onPointerMove : undefined}
-        onPointerUp={angleUniform ? onPointerUp : undefined}
         ref={ref}
         style={{ height: size, width: size }}
+        {...(angleUniform ? pointerController.getProps() : {})}
       >
         <svg aria-label="Angle t" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
           <circle cx={cx} cy={cy} fill="none" r={r} stroke="currentColor" strokeOpacity={0.35} strokeWidth={stroke} />
@@ -1631,8 +1638,8 @@ function InspectorEdgeBatch({
   );
 }
 
-/** @emoji 🔎 Sketchpad-style tree inspector with batch edits for the active pane selection. */
-function BoardSelectionInspectorPanel(): ReactElement {
+/** @emoji 🔎 Sketchpad-style tree inspector sections for the active pane selection. */
+function createBoardSelectionInspectorSections(): TreeDataSection[] {
   const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionIds } = useBoardPlayShell();
   const ids = useMemo(() => [...selectionIds].sort((a, b) => a.localeCompare(b)), [selectionIds]);
 
@@ -1652,9 +1659,21 @@ function BoardSelectionInspectorPanel(): ReactElement {
     return { edgeIds, handleIds, nodeIds };
   }, [fixture, ids]);
 
-  const treeSections = useMemo<TreeDataSection[]>(() => {
+  return useMemo<TreeDataSection[]>(() => {
     if (ids.length === 0) {
       return [
+        {
+          content: (
+            <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element px-1 py-2">
+              <ClipboardList className="size-4 shrink-0" />
+              <div>
+                <div className="font-semibold uppercase tracking-wide">Detail</div>
+                <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
+              </div>
+            </div>
+          ),
+          id: "board-play-inspector-header.empty",
+        },
         {
           content: <p className="text-muted-foreground px-1 py-2 text-xs">No selection. Click the graph or pick another tab.</p>,
           id: "board-play-inspector-empty",
@@ -1663,6 +1682,18 @@ function BoardSelectionInspectorPanel(): ReactElement {
       ];
     }
     const sections: TreeDataSection[] = [];
+    sections.push({
+      content: (
+        <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element px-1 py-2">
+          <ClipboardList className="size-4 shrink-0" />
+          <div>
+            <div className="font-semibold uppercase tracking-wide">Detail</div>
+            <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
+          </div>
+        </div>
+      ),
+      id: "board-play-inspector-header",
+    });
     if (nodeIds.length > 0) {
       sections.push({
         content: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
@@ -1700,23 +1731,6 @@ function BoardSelectionInspectorPanel(): ReactElement {
     }
     return sections;
   }, [edgeIds, fixture, handleIds, ids, nodeIds, patchFixture, remapIdInSelections]);
-
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
-      <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
-        <ClipboardList className="size-4 shrink-0" />
-        <div>
-          <div className="font-semibold uppercase tracking-wide">Detail</div>
-          <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
-        </div>
-      </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <TreeStateProvider>
-          <Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={treeSections} />
-        </TreeStateProvider>
-      </div>
-    </div>
-  );
 }
 // #endregion 🔖SidePanels
 

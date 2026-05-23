@@ -3672,11 +3672,22 @@ function Inner(props: CanvasProps) {
 }
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
-	const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
-	const [shellLod, setShellLod] = useState<LodKind>("normal");
+	const {
+		children,
+		className,
+		style,
+		onLodChange,
+		domain = DEFAULT_DOMAIN,
+		automaticLod = true,
+		lod,
+		...rest
+	} = props;
+	const [orbitLod, setOrbitLod] = useState<LodKind>("normal");
+	const pinnedLod = !automaticLod && lod !== undefined && isLodKind(lod) ? lod : null;
+	const displayLod = pinnedLod ?? orbitLod;
 	const handleLod = useCallback(
 		(l: LodKind) => {
-			setShellLod((prev) => (prev === l ? prev : l));
+			setOrbitLod((prev) => (prev === l ? prev : l));
 			onLodChange?.(l);
 		},
 		[onLodChange],
@@ -3687,7 +3698,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 			style={{ width: "100%", height: "100%", ...style }}
 			data-scene-domain={domain}
 			data-scene-root
-			data-scene-lod={shellLod}
+			data-scene-lod={displayLod}
 		>
 			<Canvas frameloop="demand" gl={{ antialias: true }} dpr={[1, 2]}>
 				<Inner {...rest} domain={domain} onLodChange={handleLod}>
