@@ -165,16 +165,14 @@ function GeometryPlayController(): ReactElement {
 		[fixture, selectableKinds, selectedId, session, transformMode],
 	);
 
-	const selectionToolOrderBase = TOPOLOGIC_KINDS.length + 1;
-	const transformToolOrderBase = selectionToolOrderBase + 2;
 	const apps = useMemo<AppConfig[]>(
 		() => [
 			{
 				id: GEOMETRY_PLAY_APP_ID,
 				label: "Geometry play",
 				options: { selectableKinds, transformMode },
-				tools: [
-					...TOPOLOGIC_KINDS.map((kind, order) => ({
+				tools: {
+					filter: TOPOLOGIC_KINDS.map((kind, order) => ({
 						id: `geometry.kind.${kind}`,
 						kind: "toggle" as const,
 						text: geometryKindLabel(kind),
@@ -182,16 +180,16 @@ function GeometryPlayController(): ReactElement {
 						order,
 						pressed: selectableKinds[kind],
 					})),
-					{ id: "geometry.separator.selection", kind: "separator" as const, order: selectionToolOrderBase },
-					{
-						id: "geometry.selection.clear",
-						icon: <BoxSelect className="size-4" aria-hidden />,
-						label: "Clear",
-						onClick: () => setSelectedId(null),
-						order: selectionToolOrderBase + 1,
-					},
-					{ id: "geometry.separator.transform", kind: "separator" as const, order: transformToolOrderBase },
-					...GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, index) => ({
+					selection: [
+						{
+							id: "geometry.selection.clear",
+							icon: <BoxSelect className="size-4" aria-hidden />,
+							label: "Clear",
+							onClick: () => setSelectedId(null),
+							order: 0,
+						},
+					],
+					actions: GEOMETRY_PLAY_TRANSFORM_MODES.map((mode, order) => ({
 						id: `geometry.transform.${mode}`,
 						kind: "toggle" as const,
 						icon: GEOMETRY_PLAY_TRANSFORM_ICONS[mode],
@@ -199,10 +197,10 @@ function GeometryPlayController(): ReactElement {
 						onPressedChange: (pressed: boolean) => {
 							if (pressed) setTransformMode(mode);
 						},
-						order: transformToolOrderBase + 1 + index,
+						order,
 						pressed: transformMode === mode,
 					})),
-				],
+				},
 				windowKinds: [{ id: GEOMETRY_PLAY_WINDOW_ID, label: GEOMETRY_PLAY_WINDOW_LABEL, component: GeometryPlayWindow }],
 				defaultLayout: GEOMETRY_PLAY_DEFAULT_LAYOUT,
 			},

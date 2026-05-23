@@ -2,7 +2,7 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, verifies a user-created native Neo4j Desktop semio DBMS, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, verifies a user-created native Neo4j Desktop semio DBMS, and installs the local VS Code extension when editor CLIs are available.
 #
 # Summary: Windows-native bootstrap for the semio monorepo. Invoke `.\script.ps1 setup` (full) or `.\script.ps1 start` (IDE session).
 #

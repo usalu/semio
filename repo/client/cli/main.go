@@ -36096,7 +36096,7 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 // #endregion 🦀Hooks
 
 // #region 🔷Configure
-// Configure command auto-generates native hook configs for all supported clients.
+// Configure command intentionally leaves repo config files untouched.
 
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {

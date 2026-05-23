@@ -484,84 +484,6 @@ exit 0
 	})
 }
 
-func TestCodexEditorProviderConfigureMergesMcpServers(t *testing.T) {
-	repoRoot := t.TempDir()
-	homeDir := t.TempDir()
-	t.Setenv("HOME", homeDir)
-	t.Setenv("USERPROFILE", homeDir)
-
-	codexTemplateDir := filepath.Join(repoRoot, ".codex")
-	if err := os.MkdirAll(codexTemplateDir, 0755); err != nil {
-		t.Fatalf("failed to create repo codex dir: %v", err)
-	}
-	repoClientDir := filepath.Join(repoRoot, "repo", "client")
-	if err := os.MkdirAll(repoClientDir, 0755); err != nil {
-		t.Fatalf("failed to create repo client dir: %v", err)
-	}
-	semioEngineDir := filepath.Join(repoRoot, "semio", "engine")
-	if err := os.MkdirAll(semioEngineDir, 0755); err != nil {
-		t.Fatalf("failed to create semio engine dir: %v", err)
-	}
-
-	template := `# Codex MCP Server Configuration
-personality = "ignored-template-value"
-
-[mcp_servers.repo]
-command = "go"
-args = ["run", "./repo/client/mcp"]
-enabled = true
-
-[mcp_servers.semio]
-command = "uv"
-args = ["--directory", "semio/engine", "run", "main.py", "--mcp-stdio"]
-enabled = true
-`
-	if err := os.WriteFile(filepath.Join(codexTemplateDir, "config.toml"), []byte(template), 0644); err != nil {
-		t.Fatalf("failed to write repo codex template: %v", err)
-	}
-
-	userCodexDir := filepath.Join(homeDir, ".codex")
-	if err := os.MkdirAll(userCodexDir, 0755); err != nil {
-		t.Fatalf("failed to create user codex dir: %v", err)
-	}
-	existing := "personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\n\n[mcp_servers.semio-repo]\ncommand = \"C:\\\\legacy\\\\mcp.exe\"\n\n[mcp_servers.repo]\ncommand = \"broken\"\nargs = [\"old\"]\n"
-	if err := os.WriteFile(filepath.Join(userCodexDir, "config.toml"), []byte(existing), 0644); err != nil {
-		t.Fatalf("failed to seed user codex config: %v", err)
-	}
-
-	provider := &CodexEditorProvider{}
-	if err := provider.Configure(repoRoot); err != nil {
-		t.Fatalf("configure failed: %v", err)
-	}
-
-	data, err := os.ReadFile(filepath.Join(userCodexDir, "config.toml"))
-	if err != nil {
-		t.Fatalf("failed to read configured codex config: %v", err)
-	}
-	text := string(data)
-	if !strings.Contains(text, "personality = \"pragmatic\"") || !strings.Contains(text, "model = \"gpt-5.4\"") {
-		t.Fatalf("expected existing user settings to be preserved, got:\n%s", text)
-	}
-	if strings.Contains(text, "command = \"broken\"") {
-		t.Fatalf("expected repo server block to be replaced, got:\n%s", text)
-	}
-	if strings.Contains(text, "[mcp_servers.semio-repo]") || strings.Contains(text, `C:\\legacy\\mcp.exe`) {
-		t.Fatalf("expected legacy semio-repo server block to be removed, got:\n%s", text)
-	}
-	if !strings.Contains(text, `command = "go"`) {
-		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
-	}
-	if !strings.Contains(text, `args = ["run", "./repo/codex"]`) && !strings.Contains(text, `args = ["run", "./repo/client/mcp"]`) {
-		t.Fatalf("expected repo args to stay portable (./repo/codex or ./repo/client/mcp), got:\n%s", text)
-	}
-	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
-		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)
-	}
-	if !strings.Contains(text, fmt.Sprintf("%q", semioEngineDir)) {
-		t.Fatalf("expected relative --directory arguments to be normalized, got:\n%s", text)
-	}
-}
-
 func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 	repoRoot := findTestRepoRoot(".")
 
@@ -16289,43 +16211,26 @@ func TestHookCommandJSONOutput(t *testing.T) {
 	}
 }
 
-func TestGenerateCopilotConfig(t *testing.T) {
-	content, err := generateCopilotConfig("/tmp/test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
+	repoRoot := t.TempDir()
+	var out bytes.Buffer
+	cmd := configureCommand(nil, &Config{Repo: repoRoot})
+	cmd.SetOut(&out)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("configure should remain a no-op: %v", err)
 	}
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
+	if !strings.Contains(out.String(), "config generation is disabled") {
+		t.Fatalf("expected no-op message, got %q", out.String())
 	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected hooks key in copilot config")
-	}
-	for _, key := range []string{"SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "PreCompact", "SubagentStart", "SubagentStop", "Stop"} {
-		arr, ok := hooks[key].([]interface{})
-		if !ok || len(arr) == 0 {
-			t.Errorf("expected %s array in copilot hooks", key)
-			continue
-		}
-		entry, ok := arr[0].(map[string]interface{})
-		if !ok {
-			t.Errorf("expected object entry for %s", key)
-			continue
-		}
-		if entry["type"] != "command" {
-			t.Errorf("expected type=command for %s, got %v", key, entry["type"])
-		}
-		cmd, _ := entry["command"].(string)
-		if !strings.Contains(cmd, "copilot-chat") {
-			t.Errorf("expected copilot-chat in command for %s, got %s", key, cmd)
-		}
-		if !strings.Contains(cmd, "hook "+key) {
-			t.Errorf("expected native event %s in command, got %s", key, cmd)
-		}
-		timeout, ok := entry["timeout"].(float64)
-		if !ok || timeout != 30 {
-			t.Errorf("expected timeout=30 for %s, got %v", key, entry["timeout"])
+	for _, path := range []string{
+		filepath.Join(repoRoot, ".github", "hooks", "repo.json"),
+		filepath.Join(repoRoot, ".cursor", "hooks.json"),
+		filepath.Join(repoRoot, ".claude", "settings.json"),
+		filepath.Join(repoRoot, ".kiro", "agents", "repo.json"),
+		filepath.Join(repoRoot, ".git", "hooks", "post-commit"),
+	} {
+		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
+			t.Fatalf("configure unexpectedly created %s", path)
 		}
 	}
 }
@@ -16580,286 +16485,6 @@ func TestHookCommandCopilotChatVSCodeOutput(t *testing.T) {
 			t.Errorf("expected git stash, got %s", cmd)
 		}
 	})
-}
-
-func TestGenerateCursorConfig(t *testing.T) {
-	content, err := generateCursorConfig("/tmp/test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
-	}
-	version, ok := config["version"].(float64)
-	if !ok || version != 1 {
-		t.Errorf("expected version=1, got %v", config["version"])
-	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected hooks key in cursor config")
-	}
-	for _, key := range []string{"sessionStart", "sessionEnd", "subagentStart", "subagentStop", "stop", "beforeSubmitPrompt", "preCompact", "preToolUse", "postToolUse", "postToolUseFailure", "beforeMCPExecution", "afterMCPExecution", "beforeReadFile", "afterFileEdit", "beforeShellExecution", "afterShellExecution", "afterAgentResponse", "afterAgentThought", "beforeTabFileRead", "afterTabFileEdit"} {
-		arr, ok := hooks[key].([]interface{})
-		if !ok || len(arr) == 0 {
-			t.Errorf("expected %s array in cursor hooks", key)
-			continue
-		}
-		entry, ok := arr[0].(map[string]interface{})
-		if !ok {
-			t.Errorf("expected object entry for %s", key)
-			continue
-		}
-		cmd, _ := entry["command"].(string)
-		if !strings.Contains(cmd, "cursor-chat") {
-			t.Errorf("expected cursor-chat in command for %s, got %s", key, cmd)
-		}
-		if !strings.Contains(cmd, "hook "+key) {
-			t.Errorf("expected native event %s in command, got %s", key, cmd)
-		}
-	}
-}
-
-func TestGenerateWindsurfConfig(t *testing.T) {
-	content, err := generateWindsurfConfig("/tmp/test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
-	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected hooks key in windsurf config")
-	}
-	for _, key := range []string{"pre_user_prompt", "post_cascade_response", "post_setup_worktree", "pre_mcp_tool_use", "post_mcp_tool_use", "pre_read_code", "post_read_code", "pre_write_code", "post_write_code", "pre_run_command"} {
-		arr, ok := hooks[key].([]interface{})
-		if !ok || len(arr) == 0 {
-			t.Errorf("expected %s array in windsurf hooks", key)
-			continue
-		}
-		entry, ok := arr[0].(map[string]interface{})
-		if !ok {
-			t.Errorf("expected object entry for %s", key)
-			continue
-		}
-		cmd, _ := entry["command"].(string)
-		if !strings.Contains(cmd, "windsurf-chat") {
-			t.Errorf("expected windsurf-chat in command for %s, got %s", key, cmd)
-		}
-		if !strings.Contains(cmd, "hook "+key) {
-			t.Errorf("expected native event %s in command, got %s", key, cmd)
-		}
-	}
-}
-
-func TestGenerateClaudeCodeConfig(t *testing.T) {
-	t.Run("without cursor hooks", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		claudeDir := filepath.Join(tmpDir, ".claude")
-		if err := os.MkdirAll(claudeDir, 0755); err != nil {
-			t.Fatal(err)
-		}
-		existingSettings := `{"permissions":{"allow":["Bash(*)"],"deny":[]}}`
-		if err := os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(existingSettings), 0644); err != nil {
-			t.Fatal(err)
-		}
-		content, err := generateClaudeCodeConfig(tmpDir)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		var config map[string]interface{}
-		if err := json.Unmarshal([]byte(content), &config); err != nil {
-			t.Fatalf("expected valid JSON, got error: %v", err)
-		}
-		if _, ok := config["permissions"]; !ok {
-			t.Error("expected existing permissions to be preserved")
-		}
-		hooks, ok := config["hooks"].(map[string]interface{})
-		if !ok {
-			t.Fatal("expected hooks key in claude code config")
-		}
-		for _, key := range []string{"PreToolUse", "PostToolUse", "PostToolUseFailure", "UserPromptSubmit", "PreCompact", "SessionStart", "SessionEnd", "SubagentStart", "SubagentStop", "Stop", "TaskCompleted", "Notification", "PermissionRequest", "TeammateIdle"} {
-			arr, ok := hooks[key].([]interface{})
-			if !ok || len(arr) == 0 {
-				t.Errorf("expected %s array in claude code hooks", key)
-				continue
-			}
-			entry, ok := arr[0].(map[string]interface{})
-			if !ok {
-				t.Errorf("expected object entry for %s", key)
-				continue
-			}
-			matcher, ok := entry["matcher"]
-			if !ok {
-				t.Errorf("expected matcher in %s entry", key)
-			} else if matcher != "" {
-				t.Errorf("expected empty matcher in %s entry, got %v", key, matcher)
-			}
-			innerHooks, ok := entry["hooks"].([]interface{})
-			if !ok || len(innerHooks) == 0 {
-				t.Errorf("expected inner hooks array for %s", key)
-				continue
-			}
-			inner, ok := innerHooks[0].(map[string]interface{})
-			if !ok {
-				t.Errorf("expected inner hook object for %s", key)
-				continue
-			}
-			if inner["type"] != "command" {
-				t.Errorf("expected type=command for %s, got %v", key, inner["type"])
-			}
-			cmd, _ := inner["command"].(string)
-			if !strings.Contains(cmd, "claude-code") {
-				t.Errorf("expected claude-code in command for %s, got %s", key, cmd)
-			}
-			if !strings.Contains(cmd, "hook "+key) {
-				t.Errorf("expected hook %s in command for %s, got %s", key, key, cmd)
-			}
-		}
-	})
-	t.Run("with cursor hooks", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		claudeDir := filepath.Join(tmpDir, ".claude")
-		cursorDir := filepath.Join(tmpDir, ".cursor")
-		if err := os.MkdirAll(claudeDir, 0755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.MkdirAll(cursorDir, 0755); err != nil {
-			t.Fatal(err)
-		}
-		existingSettings := `{"permissions":{"allow":["Bash(*)"],"deny":[]},"hooks":{"SessionStart":[{"matcher":"","hooks":[{"type":"command","command":"test"}]}]}}`
-		if err := os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(existingSettings), 0644); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(filepath.Join(cursorDir, "hooks.json"), []byte(`{"version":1}`), 0644); err != nil {
-			t.Fatal(err)
-		}
-		content, err := generateClaudeCodeConfig(tmpDir)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		var config map[string]interface{}
-		if err := json.Unmarshal([]byte(content), &config); err != nil {
-			t.Fatalf("expected valid JSON, got error: %v", err)
-		}
-		if _, ok := config["permissions"]; !ok {
-			t.Error("expected existing permissions to be preserved")
-		}
-		hooks, ok := config["hooks"].(map[string]interface{})
-		if !ok {
-			t.Fatal("expected hooks key to be present with claude-code-exclusive events")
-		}
-
-		for _, sharedKey := range []string{"SessionStart", "SessionEnd", "SubagentStart", "SubagentStop", "Stop", "UserPromptSubmit", "PreCompact", "PreToolUse", "PostToolUse", "PostToolUseFailure"} {
-			if _, ok := hooks[sharedKey]; ok {
-				t.Errorf("expected shared event %s to be absent when cursor hooks exist", sharedKey)
-			}
-		}
-
-		for _, exclusiveKey := range []string{"PermissionRequest", "TaskCompleted", "Notification", "TeammateIdle"} {
-			arr, ok := hooks[exclusiveKey].([]interface{})
-			if !ok || len(arr) == 0 {
-				t.Errorf("expected claude-code-exclusive event %s to be present when cursor hooks exist", exclusiveKey)
-				continue
-			}
-			entry, ok := arr[0].(map[string]interface{})
-			if !ok {
-				t.Errorf("expected object entry for %s", exclusiveKey)
-				continue
-			}
-			innerHooks, ok := entry["hooks"].([]interface{})
-			if !ok || len(innerHooks) == 0 {
-				t.Errorf("expected inner hooks array for %s", exclusiveKey)
-				continue
-			}
-			inner, ok := innerHooks[0].(map[string]interface{})
-			if !ok {
-				t.Errorf("expected inner hook object for %s", exclusiveKey)
-				continue
-			}
-			cmd, _ := inner["command"].(string)
-			if !strings.Contains(cmd, "claude-code") {
-				t.Errorf("expected claude-code in command for %s, got %s", exclusiveKey, cmd)
-			}
-		}
-	})
-}
-
-func TestConfigureGitHooks(t *testing.T) {
-	runCase := func(t *testing.T, setHooksPath string) string {
-		t.Helper()
-		tmpDir := t.TempDir()
-		init := exec.Command("git", "-C", tmpDir, "init")
-		if output, err := init.CombinedOutput(); err != nil {
-			t.Fatalf("git init failed: %v (%s)", err, string(output))
-		}
-		if setHooksPath != "" {
-			setCmd := exec.Command("git", "-C", tmpDir, "config", "--local", "core.hooksPath", setHooksPath)
-			if output, err := setCmd.CombinedOutput(); err != nil {
-				t.Fatalf("set core.hooksPath failed: %v (%s)", err, string(output))
-			}
-		}
-		if err := configureGitHooks(tmpDir); err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		preCommitPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
-		if _, err := os.Stat(preCommitPath); err == nil || !os.IsNotExist(err) {
-			t.Fatal("pre-commit hook still exists")
-		}
-		postCheckpointData, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
-		if err != nil {
-			t.Fatal("post-checkpoint hook not created")
-		}
-		if !strings.Contains(string(postCheckpointData), "hook version.checkpoint.ended") {
-			t.Error("post-checkpoint hook does not call hook version.checkpoint.ended")
-		}
-		info, err := os.Stat(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if info.Mode()&0111 == 0 {
-			t.Error("post-checkpoint hook is not executable")
-		}
-		return tmpDir
-	}
-	t.Run("uses default hooks directory", func(t *testing.T) {
-		runCase(t, "")
-	})
-	t.Run("unsets local core hooksPath", func(t *testing.T) {
-		tmpDir := runCase(t, ".husky/_")
-		getCmd := exec.Command("git", "-C", tmpDir, "config", "--local", "--get", "core.hooksPath")
-		if output, err := getCmd.CombinedOutput(); err == nil {
-			t.Fatalf("expected core.hooksPath to be unset, got: %s", strings.TrimSpace(string(output)))
-		}
-	})
-}
-
-func TestGetClientHookMappings(t *testing.T) {
-	mappings := getClientHookMappings()
-	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "kiro-cli"}
-	if len(mappings) != len(expectedClients) {
-		t.Errorf("expected %d mappings, got %d", len(expectedClients), len(mappings))
-	}
-	for _, ec := range expectedClients {
-		found := false
-		for _, m := range mappings {
-			if m.Client == ec {
-				found = true
-				if m.ConfigPath == "" {
-					t.Errorf("empty config path for client %s", ec)
-				}
-				if m.Generator == nil {
-					t.Errorf("nil generator for client %s", ec)
-				}
-				break
-			}
-		}
-		if !found {
-			t.Errorf("missing mapping for client: %s", ec)
-		}
-	}
 }
 
 func TestBlockedToolPatterns(t *testing.T) {
@@ -18271,60 +17896,6 @@ func TestExtractCommandFromStdinBlocking(t *testing.T) {
 	}
 	if !strings.Contains(result.GetMessage(), "blocked") {
 		t.Errorf("expected blocked message, got: %s", result.GetMessage())
-	}
-}
-
-func TestGenerateDroidConfig(t *testing.T) {
-	content, err := generateDroidConfig("/tmp/test-repo")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	testNativeHookConfig(t, content, "droid")
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
-	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatal("expected hooks key in droid config")
-	}
-	for _, key := range []string{"PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop", "SubagentStop", "PreCompact", "SessionStart", "SessionEnd", "Notification"} {
-		cmd, ok := hooks[key].(string)
-		if !ok || cmd == "" {
-			t.Errorf("expected string command for %s in droid config", key)
-			continue
-		}
-		if !strings.Contains(cmd, "droid") {
-			t.Errorf("expected droid in command for %s, got %s", key, cmd)
-		}
-		if !strings.Contains(cmd, "hook "+key) {
-			t.Errorf("expected native event %s in command, got %s", key, cmd)
-		}
-	}
-}
-
-func testNativeHookConfig(t *testing.T, content string, clientName string) {
-	t.Helper()
-	var config map[string]interface{}
-	if err := json.Unmarshal([]byte(content), &config); err != nil {
-		t.Fatalf("expected valid JSON, got error: %v", err)
-	}
-	hooks, ok := config["hooks"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("expected hooks key in %s native config", clientName)
-	}
-	for _, event := range []string{"SessionStart", "SessionEnd", "Stop", "UserPromptSubmit", "PreCompact", "PreToolUse", "PostToolUse"} {
-		cmd, ok := hooks[event].(string)
-		if !ok || cmd == "" {
-			t.Errorf("expected string command for %s in %s native config", event, clientName)
-			continue
-		}
-		if !strings.Contains(cmd, clientName) {
-			t.Errorf("expected %s in command for %s, got %s", clientName, event, cmd)
-		}
-		if !strings.Contains(cmd, "hook "+event) {
-			t.Errorf("expected native event %s in command, got %s", event, cmd)
-		}
 	}
 }
 
@@ -21753,15 +21324,6 @@ func TestGetEditorProvider(t *testing.T) {
 	}
 	if p := GetEditorProvider("nonexistent"); p != nil {
 		t.Errorf("expected nil for unknown client, got %v", p)
-	}
-}
-
-func TestEditorProviderHookMapping(t *testing.T) {
-	for _, p := range AllEditorProviders() {
-		m := p.HookMapping()
-		if m.Client == "" {
-			t.Errorf("editor provider %s has empty HookMapping().Client", p.Kind())
-		}
 	}
 }
 

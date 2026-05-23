@@ -96,6 +96,14 @@ import {
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
   SearchIcon,
+  Hand as HandIcon,
+  Lasso as LassoIcon,
+  LayoutGrid as LayoutGridIcon,
+  MousePointer2 as MousePointerIcon,
+  MoreHorizontal as MoreHorizontalIcon,
+  FolderOpen as FolderOpenIcon,
+  Plus as PlusIcon,
+  Filter as FilterIcon,
   Settings2 as Settings2Icon,
   Shapes as BoardIconCatalogGlyphIcon,
   Sigma as BoardIconMathGlyphIcon,
@@ -19086,6 +19094,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
   const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
 
@@ -19136,29 +19145,31 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   return (
     <LevelProvider level="panel">
       <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
-        <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
-          {sortedTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === activeTab?.id;
-            return (
-              <Tooltip key={tab.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    data-slot="side-panel-tab-button"
-                    id={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                  >
-                    <Icon size={16} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <DescriptionTooltipContent id={tab.id} />
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
+        {showTabBar && (
+          <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+            {sortedTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = tab.id === activeTab?.id;
+              return (
+                <Tooltip key={tab.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      data-slot="side-panel-tab-button"
+                      id={tab.id}
+                      onClick={() => handleTabChange(tab.id)}
+                      className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                    >
+                      <Icon size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <DescriptionTooltipContent id={tab.id} />
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="side-panel-content" className="p-[10px]">
             {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
@@ -19199,6 +19210,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const showTabBar = sortedTabs.length > 1;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
   const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
 
@@ -19213,29 +19225,31 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   return (
     <LevelProvider level="panel">
       <div data-panel="mobilePanel" className={cn("w-full text-foreground border-b bg-panel flex flex-col", className)} style={{ height: `${height}px` }}>
-        <div data-slot="mobile-panel-tabs" className="flex items-center h-large border-b shrink-0 overflow-x-auto">
-          {sortedTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === activeTab?.id;
-            return (
-              <Tooltip key={tab.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    data-slot="mobile-panel-tab-button"
-                    id={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                  >
-                    <Icon size={20} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <DescriptionTooltipContent id={tab.id} />
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
+        {showTabBar && (
+          <div data-slot="mobile-panel-tabs" className="flex items-center h-large border-b shrink-0 overflow-x-auto">
+            {sortedTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = tab.id === activeTab?.id;
+              return (
+                <Tooltip key={tab.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      data-slot="mobile-panel-tab-button"
+                      id={tab.id}
+                      onClick={() => handleTabChange(tab.id)}
+                      className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                    >
+                      <Icon size={20} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <DescriptionTooltipContent id={tab.id} />
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
         <Scrollable className="flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="p-double">
             {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
@@ -22506,49 +22520,170 @@ export interface UIToolbarItem {
   order?: number;
 }
 
+/** @emoji 🧰 Toolbar category ids shared by every App registration surface. */
+export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
+
+/** @emoji 📋 Default toolbar category order (history and hand first when present). */
+export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
+
+/** @emoji 🗂️ Per-category toolbar tools registered by an app or global UI shell. */
+export type AppTools = Partial<Record<AppToolCategory, UIToolbarItem[]>>;
+
+function sortToolbarItems(items: readonly UIToolbarItem[]): UIToolbarItem[] {
+  return [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+}
+
+function hasAppToolCategoryItems(items: readonly UIToolbarItem[] | undefined): boolean {
+  return Boolean(items?.some((item) => item.kind !== "separator"));
+}
+
+/** @emoji 🔢 Counts registered toolbar items across all populated categories. */
+export function countAppTools(tools?: AppTools): number {
+  if (!tools) return 0;
+  return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
+}
+
+/** @emoji 🔀 Merges base and extension tool maps per category (extension appends within each category). */
+export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
+  if (!base && !extension) return undefined;
+  const merged: AppTools = {};
+  for (const category of APP_TOOL_CATEGORY_ORDER) {
+    const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
+    if (combined.length > 0) merged[category] = combined;
+  }
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+/** @emoji 📂 Lists categories that have at least one non-separator tool. */
+export function listPopulatedAppToolCategories(tools?: AppTools): AppToolCategory[] {
+  if (!tools) return [];
+  return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
+}
+
+function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode {
+  switch (category) {
+    case "hand":
+      return <HandIcon className="size-tiny" aria-hidden />;
+    case "selection":
+      return <MousePointerIcon className="size-tiny" aria-hidden />;
+    case "lasso":
+      return <LassoIcon className="size-tiny" aria-hidden />;
+    case "filter":
+      return <FilterIcon className="size-tiny" aria-hidden />;
+    case "open":
+      return <FolderOpenIcon className="size-tiny" aria-hidden />;
+    case "create":
+      return <PlusIcon className="size-tiny" aria-hidden />;
+    case "view":
+      return <LayoutGridIcon className="size-tiny" aria-hidden />;
+    case "actions":
+      return <MoreHorizontalIcon className="size-tiny" aria-hidden />;
+    case "settings":
+      return <Settings2Icon className="size-tiny" aria-hidden />;
+    default:
+      return <SearchIcon className="size-tiny" aria-hidden />;
+  }
+}
+
+const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
+  const sorted = React.useMemo(() => sortToolbarItems(items), [items]);
+  return (
+    <>
+      {sorted.map((item) => {
+        if (item.kind === "separator") {
+          return <ToolbarDivider key={item.id} />;
+        }
+        if (item.kind === "toggle") {
+          return (
+            <ToolbarItem key={item.id}>
+              <Toggle
+                kind={item.icon && !item.text && !item.label ? "icon" : "default"}
+                id={item.id}
+                pressed={item.pressed ?? false}
+                onPressedChange={(pressed) => item.onPressedChange?.(pressed)}
+                icon={item.icon}
+                text={item.text ?? item.label}
+              />
+            </ToolbarItem>
+          );
+        }
+        return (
+          <ToolbarItem key={item.id}>
+            <button onClick={item.onClick} className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer">
+              {item.icon}
+              {(item.text ?? item.label) && <span>{item.text ?? item.label}</span>}
+            </button>
+          </ToolbarItem>
+        );
+      })}
+    </>
+  );
+};
+
 /**
- * Renders a floating toolbar zone with structured items.
- * Each app can provide toolbar items; the UI merges them with global items.
+ * Renders a floating toolbar with category toggles; only categories with registered tools are shown.
  **/
 const UIToolbar: React.FC<{
-  items: UIToolbarItem[];
+  tools: AppTools;
   className?: string;
-}> = ({ items, className }) => {
-  const sorted = React.useMemo(() => [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [items]);
+}> = ({ tools, className }) => {
+  const { t } = useTranslation();
+  const populatedCategories = React.useMemo(() => listPopulatedAppToolCategories(tools), [tools]);
+  const [activeCategory, setActiveCategory] = React.useState<AppToolCategory | null>(null);
 
-  if (sorted.length === 0) return null;
+  React.useEffect(() => {
+    if (populatedCategories.length === 0) {
+      setActiveCategory(null);
+      return;
+    }
+    setActiveCategory((previousValue) => {
+      if (previousValue && populatedCategories.includes(previousValue)) return previousValue;
+      return populatedCategories.find((category) => category !== "history" && category !== "hand") ?? populatedCategories[0] ?? null;
+    });
+  }, [populatedCategories]);
+
+  if (populatedCategories.length === 0) return null;
+
+  const activeItems = activeCategory ? (tools[activeCategory] ?? []) : [];
+  const showCategoryNav = populatedCategories.length > 1;
 
   return (
     <div className={cn("flex items-center justify-center pointer-events-none", className)}>
-      <ToolbarZone className="pointer-events-auto max-w-full flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
-        {sorted.map((item) => {
-          if (item.kind === "separator") {
-            return <ToolbarDivider key={item.id} />;
-          }
-          if (item.kind === "toggle") {
-            return (
-              <ToolbarItem key={item.id}>
+      <div
+        role="toolbar"
+        id="ui.toolbar"
+        className={cn(
+          "pointer-events-auto flex max-w-full items-center gap-single",
+          showCategoryNav && "relative h-[var(--toolbar-item-height)] w-full max-w-[min(100%,48rem)] px-2",
+        )}
+      >
+        {showCategoryNav ? (
+          <>
+            <ToolbarZone id="ui.toolbar.zone.categories" className="shrink-0">
+              {populatedCategories.map((category) => (
                 <Toggle
-                  kind={item.icon && !item.text && !item.label ? "icon" : "default"}
-                  id={item.id}
-                  pressed={item.pressed ?? false}
-                  onPressedChange={(p) => item.onPressedChange?.(p)}
-                  icon={item.icon}
-                  text={item.text ?? item.label}
+                  key={category}
+                  kind="single"
+                  id={`ui.toolbar.group.${category}`}
+                  pressed={activeCategory === category}
+                  onPressedChange={() => setActiveCategory((previousValue) => (previousValue === category ? null : category))}
+                  icon={resolveAppToolCategoryIcon(category)}
+                  text={resolveTranslationLabel(t(`semio.sketchpad.toolbar.parent.${category}`))}
                 />
-              </ToolbarItem>
-            );
-          }
-          return (
-            <ToolbarItem key={item.id}>
-              <button onClick={item.onClick} className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer">
-                {item.icon}
-                {(item.text ?? item.label) && <span>{item.text ?? item.label}</span>}
-              </button>
-            </ToolbarItem>
-          );
-        })}
-      </ToolbarZone>
+              ))}
+            </ToolbarZone>
+            {activeCategory && hasAppToolCategoryItems(activeItems) ? (
+              <ToolbarZone id="ui.toolbar.zone.tools" className="min-w-0 flex-1 flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
+                <UIToolbarItems items={activeItems} />
+              </ToolbarZone>
+            ) : null}
+          </>
+        ) : (
+          <ToolbarZone className="max-w-full flex-wrap h-auto min-h-[var(--toolbar-item-height)] overflow-visible p-half">
+            <UIToolbarItems items={tools[populatedCategories[0]!] ?? []} />
+          </ToolbarZone>
+        )}
+      </div>
     </div>
   );
 };
@@ -22564,8 +22699,7 @@ export interface AppModeConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
-  tools?: UIToolbarItem[];
-  toolbarItems?: UIToolbarItem[];
+  tools?: AppTools;
   windowKinds?: UIWindowKindDefinition[];
   defaultLayout?: UIWindowLayout;
   leftPanelTabs?: SidePanelTabConfig[];
@@ -22584,8 +22718,7 @@ export interface AppConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
-  tools?: UIToolbarItem[];
-  toolbarItems?: UIToolbarItem[];
+  tools?: AppTools;
   windowKinds: UIWindowKindDefinition[];
   defaultLayout: UIWindowLayout;
   leftPanelTabs?: SidePanelTabConfig[];
@@ -22635,8 +22768,7 @@ export function resolveAppConfig(app: AppConfig, requestedModeId?: string | null
     activeModeId: mode?.id ?? null,
     icon: mode?.icon ?? app.icon,
     label: mode?.label ?? app.label,
-    tools: mergeConfigEntries(app.tools ?? app.toolbarItems, mode?.tools ?? mode?.toolbarItems),
-    toolbarItems: undefined,
+    tools: mergeAppTools(app.tools, mode?.tools),
     windowKinds: mergeConfigEntries(app.windowKinds, mode?.windowKinds) ?? app.windowKinds,
     defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
     leftPanelTabs: mergeConfigEntries(app.leftPanelTabs, mode?.leftPanelTabs),
@@ -22736,8 +22868,7 @@ export interface AppProps {
   onGoUp?: () => void;
   footerItems?: FooterItem[];
   searchItems?: UISearchItem[];
-  tools?: UIToolbarItem[];
-  toolbarItems?: UIToolbarItem[];
+  tools?: AppTools;
   mobile?: boolean;
   mobileQuery?: string;
   className?: string;
@@ -22790,6 +22921,7 @@ const APP_WORKBENCH_TAB_ID = "workbench";
 const APP_DETAILS_TAB_ID = "details";
 const APP_OPTIONS_TAB_ID = "options";
 const APP_CHAT_TAB_ID = "chat";
+type AppPanelKind = "workbench" | "details" | "options" | "chat";
 
 function hasAppPanelValue(value: unknown): boolean {
   if (value === null || value === undefined) return false;
@@ -22827,7 +22959,7 @@ const AppWorkbenchPanel: React.FC<{
       </div>
       <div className="grid gap-single text-muted-foreground">
         <div>{`Windows: ${app.windowKinds.length}`}</div>
-        <div>{`Tools: ${app.tools?.length ?? 0}`}</div>
+        <div>{`Tools: ${countAppTools(app.tools)}`}</div>
         <div>{`Left tabs: ${app.leftPanelTabs?.length ?? 0}`}</div>
         <div>{`Right tabs: ${app.rightPanelTabs?.length ?? 0}`}</div>
       </div>
@@ -22835,7 +22967,7 @@ const AppWorkbenchPanel: React.FC<{
   );
 };
 
-function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {
+function createDefaultAppWorkbenchTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): SidePanelTabConfig[] {
   return [
     {
       id: APP_WORKBENCH_TAB_ID,
@@ -22846,7 +22978,7 @@ function createDefaultAppLeftPanelTabs(app: ResolvedAppConfig, activeModeLabel?:
   ];
 }
 
-function createDefaultAppRightPanelTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+function createDefaultAppDetailsTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
   return [
     {
       id: APP_DETAILS_TAB_ID,
@@ -22860,27 +22992,41 @@ function createDefaultAppRightPanelTabs(app: ResolvedAppConfig): SidePanelTabCon
         />
       ),
     },
+  ];
+}
+
+function createDefaultAppOptionsTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+  return [
     {
       id: APP_OPTIONS_TAB_ID,
       icon: Settings2Icon,
-      order: 1,
+      order: 0,
       content: <AppPanelStatePreview emptyMessage="No options are available for this app." testId="app-panel.options" value={app.options ?? {}} />,
     },
+  ];
+}
+
+function createDefaultAppChatTabs(app: ResolvedAppConfig): SidePanelTabConfig[] {
+  return [
     {
       id: APP_CHAT_TAB_ID,
       icon: MessageSquareIcon,
-      order: 2,
+      order: 0,
       content: <BasicChatPanel id={`app.chat.${app.id}`} title={app.label} />,
     },
   ];
 }
 
-function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): { leftPanelTabs: SidePanelTabConfig[]; rightPanelTabs: SidePanelTabConfig[] } {
-  const defaultLeftPanelTabs = createDefaultAppLeftPanelTabs(app, activeModeLabel);
-  const defaultRightPanelTabs = createDefaultAppRightPanelTabs(app);
+function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: string | null): Record<AppPanelKind, SidePanelTabConfig[]> {
+  const defaultWorkbenchTabs = createDefaultAppWorkbenchTabs(app, activeModeLabel);
+  const defaultDetailsTabs = createDefaultAppDetailsTabs(app);
+  const defaultOptionsTabs = createDefaultAppOptionsTabs(app);
+  const defaultChatTabs = createDefaultAppChatTabs(app);
   return {
-    leftPanelTabs: mergeConfigEntries(defaultLeftPanelTabs, app.leftPanelTabs) ?? defaultLeftPanelTabs,
-    rightPanelTabs: mergeConfigEntries(defaultRightPanelTabs, app.rightPanelTabs) ?? defaultRightPanelTabs,
+    workbench: mergeConfigEntries(defaultWorkbenchTabs, app.leftPanelTabs) ?? defaultWorkbenchTabs,
+    details: mergeConfigEntries(defaultDetailsTabs, app.rightPanelTabs) ?? defaultDetailsTabs,
+    options: defaultOptionsTabs,
+    chat: defaultChatTabs,
   };
 }
 
@@ -22890,16 +23036,25 @@ function withDefaultAppPanelTabs(app: ResolvedAppConfig, activeModeLabel?: strin
  * Styled to match sketchpad: border border-element, h-medium.
  **/
 const UIPanelToggleGroup: React.FC<{
-  leftIcon?: React.ReactNode;
-  leftPressed: boolean;
-  onLeftPressedChange: (pressed: boolean) => void;
-  onRightPressedChange: (pressed: boolean) => void;
-  rightIcon?: React.ReactNode;
-  rightPressed: boolean;
-}> = ({ leftIcon, leftPressed, onLeftPressedChange, onRightPressedChange, rightIcon, rightPressed }) => (
+  items: Array<{
+    icon: React.ReactNode;
+    id: string;
+    onPressedChange: (pressed: boolean) => void;
+    pressed: boolean;
+  }>;
+}> = ({ items }) => (
   <div data-slot="app-panel-toggle-group" className="flex items-stretch border border-element overflow-hidden h-medium">
-    <Toggle kind="icon" id="ui.panelToggle.leftSidePanel" pressed={leftPressed} onPressedChange={onLeftPressedChange} className="border-0 rounded-none" icon={leftIcon ?? <ChevronLeftIcon className="size-small" />} />
-    <Toggle kind="icon" id="ui.panelToggle.rightSidePanel" pressed={rightPressed} onPressedChange={onRightPressedChange} className="border-0 border-l rounded-none" icon={rightIcon ?? <ChevronRightIcon className="size-small" />} />
+    {items.map((item, index) => (
+      <Toggle
+        key={item.id}
+        kind="icon"
+        id={item.id}
+        pressed={item.pressed}
+        onPressedChange={item.onPressedChange}
+        className={cn("border-0 rounded-none", index > 0 && "border-l")}
+        icon={item.icon}
+      />
+    ))}
   </div>
 );
 
@@ -22925,8 +23080,7 @@ export const App: React.FC<AppProps> = ({
   onGoUp,
   footerItems: globalFooterItems = [],
   searchItems = [],
-  tools: globalTools = [],
-  toolbarItems: globalToolbarItems = [],
+  tools: globalTools,
   mobile,
   mobileQuery = "(max-width: 767px)",
   className,
@@ -22940,6 +23094,8 @@ export const App: React.FC<AppProps> = ({
     rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
   }));
   const [mobilePanelVisible, setMobilePanelVisible] = React.useState(false);
+  const [activeDesktopRightPanelKind, setActiveDesktopRightPanelKind] = React.useState<Exclude<AppPanelKind, "workbench">>("details");
+  const [activeMobilePanelKind, setActiveMobilePanelKind] = React.useState<AppPanelKind>("workbench");
   const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = React.useState<string | undefined>(undefined);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
@@ -22977,43 +23133,56 @@ export const App: React.FC<AppProps> = ({
   const activeModeId = resolveAppMode(activeAppBase, activeModeByAppId[activeAppBase.id])?.id ?? null;
   const activeApp = resolveAppConfig(activeAppBase, activeModeId);
   const activeModeLabel = activeAppBase.modes?.find((mode) => mode.id === activeModeId)?.label ?? null;
-  const { leftPanelTabs, rightPanelTabs } = withDefaultAppPanelTabs(activeApp, activeModeLabel);
+  const panelTabs = withDefaultAppPanelTabs(activeApp, activeModeLabel);
+  const workbenchTabs = panelTabs.workbench;
+  const detailsTabs = panelTabs.details;
+  const optionsTabs = panelTabs.options;
+  const chatTabs = panelTabs.chat;
+  const activeDesktopRightPanelTabs = activeDesktopRightPanelKind === "details" ? detailsTabs : activeDesktopRightPanelKind === "options" ? optionsTabs : chatTabs;
+  const activeMobilePanelTabs = activeMobilePanelKind === "workbench" ? workbenchTabs : activeMobilePanelKind === "details" ? detailsTabs : activeMobilePanelKind === "options" ? optionsTabs : chatTabs;
 
   const hasModeNav = Boolean(activeAppBase.modes && activeAppBase.modes.length > 1);
   const setActiveModeId = (id: string) => {
     setActiveModeByAppId((previousValue) => ({ ...previousValue, [activeAppBase.id]: id }));
   };
 
-  // 🔖Merge toolbar items: global + app-specific
-  const mergedToolbarItems = [...globalTools, ...globalToolbarItems, ...(activeApp.tools ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const mergedTools = React.useMemo(() => mergeAppTools(globalTools, activeApp.tools), [activeApp.tools, globalTools]);
+  const hasToolbarTools = listPopulatedAppToolCategories(mergedTools).length > 0;
 
-  // 🔷Merge all panel tabs for mobile mode
-  const mobilePanelTabs: SidePanelTabConfig[] = resolvedMobile ? [...leftPanelTabs, ...rightPanelTabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
-  const hasMobilePanelTabs = mobilePanelTabs.length > 0;
-  const firstLeftPanelTabId = leftPanelTabs[0]?.id;
-  const firstRightPanelTabId = rightPanelTabs[0]?.id;
-  const leftPanelIcon = leftPanelTabs[0]?.icon ? React.createElement(leftPanelTabs[0].icon, { size: 16 }) : <FolderIcon size={16} />;
-  const rightPanelIcon = rightPanelTabs[0]?.icon ? React.createElement(rightPanelTabs[0].icon, { size: 16 }) : <InfoIcon size={16} />;
+  const openDesktopWorkbench = React.useCallback((pressed: boolean) => {
+    setPanelVisibility((prev) => ({ ...prev, leftSidePanel: pressed }));
+  }, []);
 
-  const handleMobilePanelToggle = React.useCallback(
-    (side: "left" | "right", pressed: boolean) => {
-      const nextTabId = side === "left" ? firstLeftPanelTabId : firstRightPanelTabId;
-      if (!nextTabId) return;
-      if (!pressed) {
-        const currentSideTabIds = side === "left" ? leftPanelTabs.map((tab) => tab.id) : rightPanelTabs.map((tab) => tab.id);
-        if (mobilePanelVisible && currentSideTabIds.includes(mobilePanelActiveTabId ?? "")) {
-          setMobilePanelVisible(false);
-        }
+  const openDesktopRightPanel = React.useCallback(
+    (kind: Exclude<AppPanelKind, "workbench">, pressed: boolean) => {
+      if (pressed) {
+        setActiveDesktopRightPanelKind(kind);
+        setPanelVisibility((prev) => ({ ...prev, rightSidePanel: true }));
         return;
       }
-      setMobilePanelActiveTabId(nextTabId);
-      setMobilePanelVisible(true);
+      setPanelVisibility((prev) => ({ ...prev, rightSidePanel: kind === activeDesktopRightPanelKind ? false : prev.rightSidePanel }));
     },
-    [firstLeftPanelTabId, firstRightPanelTabId, leftPanelTabs, mobilePanelActiveTabId, mobilePanelVisible, rightPanelTabs],
+    [activeDesktopRightPanelKind],
   );
 
-  const mobileShowsLeftPanel = mobilePanelVisible && leftPanelTabs.some((tab) => tab.id === mobilePanelActiveTabId);
-  const mobileShowsRightPanel = mobilePanelVisible && rightPanelTabs.some((tab) => tab.id === mobilePanelActiveTabId);
+  const openMobilePanel = React.useCallback(
+    (kind: AppPanelKind, pressed: boolean) => {
+      if (pressed) {
+        setActiveMobilePanelKind(kind);
+        setMobilePanelVisible(true);
+        return;
+      }
+      if (activeMobilePanelKind === kind) {
+        setMobilePanelVisible(false);
+      }
+    },
+    [activeMobilePanelKind],
+  );
+
+  const workbenchIcon = workbenchTabs[0]?.icon ? React.createElement(workbenchTabs[0].icon, { size: 16 }) : <FolderIcon size={16} />;
+  const detailsIcon = detailsTabs[0]?.icon ? React.createElement(detailsTabs[0].icon, { size: 16 }) : <InfoIcon size={16} />;
+  const optionsIcon = optionsTabs[0]?.icon ? React.createElement(optionsTabs[0].icon, { size: 16 }) : <Settings2Icon size={16} />;
+  const chatIcon = chatTabs[0]?.icon ? React.createElement(chatTabs[0].icon, { size: 16 }) : <MessageSquareIcon size={16} />;
 
   // 🔎Fixed navbar: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles]
   const navbarItems: NavbarItem[] = [];
@@ -23110,23 +23279,23 @@ export const App: React.FC<AppProps> = ({
 
   navbarItems.push({
     key: "panelToggles",
-    content: resolvedMobile ? (
+    content: (
       <UIPanelToggleGroup
-        leftIcon={leftPanelIcon}
-        leftPressed={mobileShowsLeftPanel}
-        onLeftPressedChange={(pressed) => handleMobilePanelToggle("left", pressed)}
-        onRightPressedChange={(pressed) => handleMobilePanelToggle("right", pressed)}
-        rightIcon={rightPanelIcon}
-        rightPressed={mobileShowsRightPanel}
-      />
-    ) : (
-      <UIPanelToggleGroup
-        leftIcon={leftPanelIcon}
-        leftPressed={panelVisibility.leftSidePanel}
-        onLeftPressedChange={() => togglePanel("leftSidePanel")}
-        onRightPressedChange={() => togglePanel("rightSidePanel")}
-        rightIcon={rightPanelIcon}
-        rightPressed={panelVisibility.rightSidePanel}
+        items={
+          resolvedMobile
+            ? [
+                { id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "workbench", onPressedChange: (pressed) => openMobilePanel("workbench", pressed) },
+                { id: "ui.panelToggle.details", icon: detailsIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "details", onPressedChange: (pressed) => openMobilePanel("details", pressed) },
+                { id: "ui.panelToggle.options", icon: optionsIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "options", onPressedChange: (pressed) => openMobilePanel("options", pressed) },
+                { id: "ui.panelToggle.chat", icon: chatIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "chat", onPressedChange: (pressed) => openMobilePanel("chat", pressed) },
+              ]
+            : [
+                { id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: panelVisibility.leftSidePanel, onPressedChange: openDesktopWorkbench },
+                { id: "ui.panelToggle.details", icon: detailsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "details", onPressedChange: (pressed) => openDesktopRightPanel("details", pressed) },
+                { id: "ui.panelToggle.options", icon: optionsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "options", onPressedChange: (pressed) => openDesktopRightPanel("options", pressed) },
+                { id: "ui.panelToggle.chat", icon: chatIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "chat", onPressedChange: (pressed) => openDesktopRightPanel("chat", pressed) },
+              ]
+        }
       />
     ),
   });
@@ -23134,7 +23303,7 @@ export const App: React.FC<AppProps> = ({
   const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // 🧱Determine toolbar: structured items take precedence, then toolbarContent fallback
-  const toolbarElement = mergedToolbarItems.length > 0 ? <UIToolbar items={mergedToolbarItems} /> : activeApp.toolbarContent;
+  const toolbarElement = hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : activeApp.toolbarContent;
 
   return (
     <AppContext.Provider
@@ -23166,12 +23335,12 @@ export const App: React.FC<AppProps> = ({
           footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
           toolbar={toolbarElement}
           mobilePanel={
-            resolvedMobile && hasMobilePanelTabs
+            resolvedMobile
               ? {
                   visible: mobilePanelVisible,
                   activeTabId: mobilePanelActiveTabId,
                   onActiveTabChange: setMobilePanelActiveTabId,
-                  tabs: mobilePanelTabs,
+                  tabs: activeMobilePanelTabs,
                 }
               : undefined
           }
@@ -23182,7 +23351,7 @@ export const App: React.FC<AppProps> = ({
                   visible: panelVisibility.leftSidePanel,
                   size: leftPanelSize,
                   onSizeChange: setLeftPanelSize,
-                  tabs: leftPanelTabs,
+                  tabs: workbenchTabs,
                 }
               : undefined
           }
@@ -23193,7 +23362,7 @@ export const App: React.FC<AppProps> = ({
                   visible: panelVisibility.rightSidePanel,
                   size: rightPanelSize,
                   onSizeChange: setRightPanelSize,
-                  tabs: rightPanelTabs,
+                  tabs: activeDesktopRightPanelTabs,
                 }
               : undefined
           }
@@ -24045,7 +24214,30 @@ if (treeVitest) {
       });
     });
 
-    it("synthesizes default workbench, details, options, and chat tabs for every app", () => {
+    it("merges categorized tools and omits empty categories", () => {
+      expect(mergeAppTools({ selection: [{ id: "a", onClick: () => undefined }] }, { filter: [{ id: "b", onClick: () => undefined }] })).toEqual({
+        selection: [{ id: "a", onClick: expect.any(Function) }],
+        filter: [{ id: "b", onClick: expect.any(Function) }],
+      });
+      expect(listPopulatedAppToolCategories({ selection: [], filter: [{ id: "b", onClick: () => undefined }] })).toEqual(["filter"]);
+      expect(listPopulatedAppToolCategories({ filter: [{ id: "sep", kind: "separator" }] })).toEqual([]);
+    });
+
+    it("renders only populated toolbar categories", () => {
+      const markup = renderToStaticMarkup(
+        <UIToolbar
+          tools={{
+            selection: [{ id: "select-tool", label: "Select", onClick: () => undefined }],
+            filter: [{ id: "filter-tool", label: "Filter", onClick: () => undefined }],
+          }}
+        />,
+      );
+      expect(markup).toContain('id="ui.toolbar.group.selection"');
+      expect(markup).toContain('id="ui.toolbar.group.filter"');
+      expect(markup).not.toContain('id="ui.toolbar.group.create"');
+    });
+
+    it("synthesizes default workbench, details, options, and chat navbar toggles for every app", () => {
       const markup = renderToStaticMarkup(
         <App
           apps={[
@@ -24062,12 +24254,13 @@ if (treeVitest) {
 
       expect(markup).toContain('data-panel="leftSidePanel"');
       expect(markup).toContain('data-panel="rightSidePanel"');
-      expect(markup).toContain('id="workbench"');
-      expect(markup).toContain('id="details"');
-      expect(markup).toContain('id="options"');
-      expect(markup).toContain('id="chat"');
+      expect(markup).toContain('id="ui.panelToggle.workbench"');
+      expect(markup).toContain('id="ui.panelToggle.details"');
+      expect(markup).toContain('id="ui.panelToggle.options"');
+      expect(markup).toContain('id="ui.panelToggle.chat"');
       expect(markup).toContain('data-testid="app-panel.workbench"');
       expect(markup).not.toContain('data-testid="basic-chat-panel"');
+      expect(markup).not.toContain('data-slot="side-panel-tabs"');
     });
 
     it("renders application side panels closed by default", () => {
@@ -24090,8 +24283,33 @@ if (treeVitest) {
       expect(markup).not.toContain('data-panel="leftSidePanel"');
       expect(markup).not.toContain('data-panel="rightSidePanel"');
       expect(markup).toContain('data-slot="app-panel-toggle-group"');
-      expect(markup).toContain('id="ui.panelToggle.leftSidePanel"');
-      expect(markup).toContain('id="ui.panelToggle.rightSidePanel"');
+      expect(markup).toContain('id="ui.panelToggle.workbench"');
+      expect(markup).toContain('id="ui.panelToggle.details"');
+      expect(markup).toContain('id="ui.panelToggle.options"');
+      expect(markup).toContain('id="ui.panelToggle.chat"');
+    });
+
+    it("shows a panel tab bar only when the selected panel has more than one tab", () => {
+      const TestIcon = () => <span data-testid="test-icon" />;
+      const markup = renderToStaticMarkup(
+        <App
+          apps={[
+            {
+              id: "test",
+              label: "Test",
+              windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
+              defaultLayout: createTabStackLayout(["main"], ["Main"]),
+              leftPanelTabs: [{ id: "left-extra", icon: TestIcon, content: <div>Left panel</div> }],
+              rightPanelTabs: [{ id: "right-extra", icon: TestIcon, content: <div>Right panel</div> }],
+            },
+          ]}
+          initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+        />,
+      );
+
+      expect(markup).toContain('data-slot="side-panel-tabs"');
+      expect(markup).toContain('id="left-extra"');
+      expect(markup).toContain('id="right-extra"');
     });
   });
 
@@ -24131,7 +24349,7 @@ if (treeVitest) {
         {
           id: "app",
           label: "App",
-          tools: [{ id: "base-tool", label: "Base", onClick: () => undefined }],
+          tools: { selection: [{ id: "base-tool", label: "Base", onClick: () => undefined }] },
           selection: { base: true },
           options: { snap: true },
           windowKinds: [{ id: "base", label: "Base", component: () => <div>base</div> }],
@@ -24140,7 +24358,7 @@ if (treeVitest) {
             {
               id: "inspect",
               label: "Inspect",
-              tools: [{ id: "mode-tool", label: "Mode", onClick: () => undefined }],
+              tools: { actions: [{ id: "mode-tool", label: "Mode", onClick: () => undefined }] },
               selection: { mode: true },
               options: { isolate: true },
               windowKinds: [{ id: "mode", label: "Mode", component: () => <div>mode</div> }],
@@ -24151,7 +24369,8 @@ if (treeVitest) {
       );
 
       expect(resolved.activeModeId).toBe("inspect");
-      expect(resolved.tools?.map((tool) => tool.id)).toEqual(["base-tool", "mode-tool"]);
+      expect(resolved.tools?.selection?.map((tool) => tool.id)).toEqual(["base-tool"]);
+      expect(resolved.tools?.actions?.map((tool) => tool.id)).toEqual(["mode-tool"]);
       expect(resolved.selection).toEqual({ base: true, mode: true });
       expect(resolved.options).toEqual({ snap: true, isolate: true });
       expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);

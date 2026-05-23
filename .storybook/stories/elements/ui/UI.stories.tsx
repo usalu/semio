@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { App, BreadcrumbItemData, Tree, type AppConfig, type UIFindItem, type UISearchItem, type UIToolbarItem, createDefaultLayout } from "@elements/ui";
+import { App, BreadcrumbItemData, Tree, type AppConfig, type AppTools, type UIFindItem, type UISearchItem, createDefaultLayout } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, BookOpen, ClipboardPaste, Copy, File, FileText, FolderOpen, Home, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
 import { expect, userEvent, within } from "storybook/test";
@@ -184,16 +184,16 @@ const editorFindItems: UIFindItem[] = [
 
 // #region 👓ToolbarItems
 
-const editorToolbarItems: UIToolbarItem[] = [
-  { id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
-  { id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
-  { id: "sep1", kind: "separator", order: 2 },
-  { id: "cut", icon: <Scissors size={14} />, onClick: () => {}, order: 3 },
-  { id: "copy", icon: <Copy size={14} />, onClick: () => {}, order: 4 },
-  { id: "paste", icon: <ClipboardPaste size={14} />, onClick: () => {}, order: 5 },
-  { id: "sep2", kind: "separator", order: 6 },
-  { id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 7 },
-];
+const editorToolbarTools: AppTools = {
+  actions: [
+    { id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
+    { id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
+    { id: "cut", icon: <Scissors size={14} />, onClick: () => {}, order: 2 },
+    { id: "copy", icon: <Copy size={14} />, onClick: () => {}, order: 3 },
+    { id: "paste", icon: <ClipboardPaste size={14} />, onClick: () => {}, order: 4 },
+    { id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 5 },
+  ],
+};
 
 // #endregion 👓ToolbarItems
 
@@ -213,7 +213,7 @@ const editorApp: AppConfig = {
     { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content.</div> },
   ],
   rightPanelTabs: [{ id: "properties", icon: Info, order: 0, content: <PropertiesTree /> }],
-  tools: editorToolbarItems,
+  tools: editorToolbarTools,
   footerItems: [
     { id: "status", content: "Ready", order: 0 },
     { id: "line", content: "Ln 42, Col 8", order: 1 },
@@ -315,7 +315,7 @@ export const WithToolbarItems: Story = {
     apps: [editorApp],
     breadcrumbItems,
     searchItems,
-    tools: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
+    tools: { actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }] },
   },
 };
 
@@ -404,7 +404,7 @@ export const FullFeatured: Story = {
     breadcrumbItems,
     searchItems,
     footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
-    tools: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
+    tools: { actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }] },
   },
   play: async ({ canvasElement }) => {
     const documentBody = canvasElement.ownerDocument.body;
