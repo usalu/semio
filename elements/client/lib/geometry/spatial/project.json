@@ -6,7 +6,7 @@
 			"executor": "nx:run-commands",
 			"options": {
 				"cwd": "elements/client/lib/geometry/spatial",
-				"command": "bun ../script.ts spatial dev --strictPort --port 6017",
+				"command": "bun ../script.ts spatial dev --port 6017",
 				"env": {
 					"CHOKIDAR_USEPOLLING": "1"
 				},
