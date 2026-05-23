@@ -1416,7 +1416,7 @@ export const SceneAttractionTreeRoots = memo(function SceneAttractionTreeRoots()
 /** @emoji 🧲 Renders all attraction endpoint lines in one frame loop (avoids N×useFrame churn). */
 export const SceneAttractions = memo(function SceneAttractions() {
 	const { snapshot } = useSceneObjectState();
-	return <SceneAttractionLineBatch attractions={snapshot.attractions} />;
+	return <SceneAttractionLineBatch attractions={snapshot.attractions} poseVersion={snapshot.version} />;
 });
 //#endregion 🕸️AttractionGraph
 
@@ -2619,8 +2619,14 @@ export const Magnet = memo(function Magnet(props: MagnetProps) {
 //#region 🧲SceneAttraction
 const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 	readonly attractions: readonly AttractionProps[];
+	readonly poseVersion: number;
 }) {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
+	const drag = useRegistryDrag();
+	const linesDirtyRef = useRef(true);
+	useEffect(() => {
+		linesDirtyRef.current = true;
+	}, [props.poseVersion, props.attractions]);
 	const mat = useMemo(() => {
 		const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
 		return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true });
@@ -2631,6 +2637,17 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 		geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
 	}, [geo, props.attractions.length]);
 	useFrame(() => {
+		if (!props.attractions.length) {
+			return;
+		}
+		const needsLive =
+			linesDirtyRef.current ||
+			drag.attractionDragActive ||
+			reg.activeRelocateObjectId !== null;
+		if (!needsLive) {
+			return;
+		}
+		linesDirtyRef.current = false;
 		const pos = geo.attributes.position as Float32BufferAttribute;
 		let write = 0;
 		for (const attraction of props.attractions) {
@@ -2661,7 +2678,7 @@ const SceneAttractionLineBatch = memo(function SceneAttractionLineBatch(props: {
 });
 
 export const SceneAttraction = memo(function SceneAttraction(props: AttractionProps) {
-	return <SceneAttractionLineBatch attractions={[props]} />;
+	return <SceneAttractionLineBatch attractions={[props]} poseVersion={0} />;
 });
 //#endregion 🧲SceneAttraction
 
@@ -2735,17 +2752,17 @@ function AttractionWindowBridge() {
 	useEffect(() => {
 		if (!attractionBusy) return;
 		const onMove = (e: PointerEvent) => {
-			if (reg.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
-			else if (reg.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
+			if (drag.attractionDragActive) reg.updateAttractionPointer(e.clientX, e.clientY);
+			else if (drag.attractionIndirectPickAwait) reg.updateIndirectPickPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onUp = (e: PointerEvent) => {
-			if (reg.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
+			if (drag.attractionDragActive) reg.commitAttractionPointer(e.clientX, e.clientY);
 			invalidate();
 		};
 		const onDown = (e: PointerEvent) => {
 			if (e.button !== 0) return;
-			if (reg.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
+			if (drag.attractionIndirectPickAwait) reg.commitIndirectPickPointerDown(e.clientX, e.clientY, e);
 			invalidate();
 		};
 		window.addEventListener("pointermove", onMove);
@@ -2756,7 +2773,7 @@ function AttractionWindowBridge() {
 			window.removeEventListener("pointerup", onUp, true);
 			window.removeEventListener("pointerdown", onDown, true);
 		};
-	}, [reg, attractionBusy, invalidate]);
+	}, [drag, reg, attractionBusy, invalidate]);
 	return null;
 }
 
@@ -2775,14 +2792,14 @@ function AttractionRubberBand() {
 	useFrame(() => {
 		const pos = geo.attributes.position as Float32BufferAttribute;
 		const attractionLine =
-			(reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
+			(drag.attractionDragActive || drag.attractionIndirectPickAwait !== null) && drag.attractionDragAttractingFullId ? true : false;
 		if (!attractionLine) {
 			pos.setXYZ(0, 0, 0, 0);
 			pos.setXYZ(1, 0, 0, 0);
 			pos.needsUpdate = true;
 			return;
 		}
-		const a = reg.getVortexWorld(reg.attractionDragAttractingFullId);
+		const a = reg.getVortexWorld(drag.attractionDragAttractingFullId);
 		const b = reg.attractionEndWorldRef.current;
 		if (a && b && vector3IsFinite(a) && vector3IsFinite(b)) {
 			pos.setXYZ(0, a.x, a.y, a.z);
@@ -2804,6 +2821,16 @@ function AttractionRubberBand() {
 	return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
+function quantizeCameraComponent(value: number): number {
+	return Math.round(value * 100) / 100;
+}
+
+function quantizeCameraState(position: readonly number[], target: readonly number[], zoom: number): string {
+	const p = position.map(quantizeCameraComponent);
+	const t = target.map(quantizeCameraComponent);
+	return JSON.stringify({ p, t, z: quantizeCameraComponent(zoom) });
+}
+
 function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: CameraState) => void }) {
 	const { camera } = useThree();
 	const controls = useThree((s) => s.controls as { target: Vector3 } | null);
@@ -2814,11 +2841,7 @@ function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: Camer
 			return;
 		}
 		const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
-		const snap = JSON.stringify({
-			p: camera.position.toArray(),
-			t: tgt.toArray(),
-			z: zoom,
-		});
+		const snap = quantizeCameraState(camera.position.toArray(), tgt.toArray(), zoom);
 		if (snap === last.current) {
 			return;
 		}
@@ -3454,7 +3477,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 
 /** @emoji 🧪 Registers `window.__scenePlay*` hooks for Playwright (play harness only). */
 export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string | null) => void }): null {
-	const reg = useRegistry();
+	const reg = useRegistryCore();
 	const setSelectedId = props.setSelectedId;
 	useEffect(() => {
 		const w = window as unknown as {

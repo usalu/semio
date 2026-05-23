@@ -561,7 +561,7 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 	const onRelocate = useSceneObjectRelocate();
 	const onConnect = useSceneObjectConnect();
 	const { scene: s } = props.bindings;
-	const { camera: _liveCamera, ...sceneRest } = props.scene ?? {};
+	const { camera: _liveCamera, onRelocate: _externalRelocate, ...sceneRest } = props.scene ?? {};
 	return (
 		<Scene
 			className="min-h-0 flex-1"
@@ -584,7 +584,11 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 	return (
 		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
 			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-				<SceneObjectStateProvider fixture={props.fixture} onConnect={props.bindings.scene.onConnect}>
+				<SceneObjectStateProvider
+					fixture={props.fixture}
+					onConnect={props.bindings.scene.onConnect}
+					onRelocate={props.scene?.onRelocate}
+				>
 					<TopologySceneCanvas {...props} blocked={blocked} />
 				</SceneObjectStateProvider>
 			</Suspense>

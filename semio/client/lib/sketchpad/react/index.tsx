@@ -34551,6 +34551,10 @@ const useDesignTopologyAdapter = () => {
     [updatePieces, pieceById, transaction],
   );
 
+  const onSceneCamera = useCallback((next: ElementsSceneCameraState) => {
+    setSceneCamera((prev) => (sketchpadTopologySceneCameraEquals(prev, next) ? prev : next));
+  }, []);
+
   const bindings = useMemo(
     () =>
       buildTopologyDualSurfaceBindings({
@@ -34560,11 +34564,19 @@ const useDesignTopologyAdapter = () => {
         onBoardConnect,
         onBoardHover,
         onBoardSelect,
-        onSceneCamera: setSceneCamera,
+        onSceneCamera,
         onSceneConnect,
         onSceneSelect,
       }),
-    [onBoardConnect, onBoardHover, onBoardSelect, onSceneConnect, onSceneSelect],
+    [onBoardConnect, onBoardHover, onBoardSelect, onSceneCamera, onSceneConnect, onSceneSelect],
+  );
+
+  const scenePaneProps = useMemo(
+    () => ({
+      onRelocate: onSceneRelocate,
+      ...topologySceneChromeDefaults(),
+    }),
+    [onSceneRelocate],
   );
 
   return {
@@ -34573,6 +34585,7 @@ const useDesignTopologyAdapter = () => {
     bindings,
     boardCamera,
     sceneCamera,
+    scenePaneProps,
     relocateMode,
     setRelocateMode,
     selectedPieceIds,
@@ -34718,7 +34731,7 @@ const DesignTopologySceneWindow = memo(() => {
         bindings={topology.bindings}
         relocateMode={topology.relocateMode}
         selectedObjectId={selectedObjectId}
-        scene={{ camera: topology.sceneCamera, onRelocate: topology.onSceneRelocate, ...topologySceneChromeDefaults() }}
+        scene={topology.scenePaneProps}
       />
     </div>
   );
