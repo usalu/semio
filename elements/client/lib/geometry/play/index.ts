@@ -11,6 +11,8 @@ import {
 	WorkbenchWindowKind,
 	createDefaultLayout,
 	type ShellToolItem,
+	type ShellWindowBodyViewContext,
+	type UiNode,
 } from "@elements/ui-shell";
 
 import topologyJson from "./fixtures/topology.json";
@@ -191,7 +193,7 @@ export function geometryPlayModeFromApp(activeModeId: string | null): GeometryPl
 //#endregion 🔖Controls
 
 //#region 🔖GeometryPlayWorkbench
-export const GEOMETRY_PLAY_BODY_KEY = "elements.geometry.play.window";
+export const GEOMETRY_PLAY_SCENE3D_SURFACE_ID = "elements.geometry.topologic/v1";
 export const GEOMETRY_PLAY_CONTROLLER_ID = "geometry-play";
 
 export const GEOMETRY_PLAY_ICON_BOX_SELECT = "elements.geometry.icon.box-select";
@@ -421,6 +423,24 @@ export class GeometryPlayShellController extends Controller {
 		const analyzeSession = new TopologicPlaySession(analyzeFixture);
 		if (!isSelectableEntity(session, this.selectableKinds, this.selectedId) && !isAnalyzeSelectableEntity(analyzeSession, this.analyzeSelectableKinds, this.selectedId)) {
 			this.selectedId = null;
+		}
+	}
+
+	reconcileSelectionForActiveMode(activeModeId: string | null): void {
+		if (!this.fixture) return;
+		const mode = geometryPlayModeFromApp(activeModeId);
+		const session = new TopologicPlaySession(this.fixture);
+		const analyzeFixture = deriveAnalyzeTopologicFixtureV1(this.fixture);
+		const analyzeSession = new TopologicPlaySession(analyzeFixture);
+		const activeSession = mode === "analyze" ? analyzeSession : session;
+		const selectedStillValid =
+			mode === "analyze"
+				? isAnalyzeSelectableEntity(activeSession, this.analyzeSelectableKinds, this.selectedId)
+				: isSelectableEntity(activeSession, this.selectableKinds, this.selectedId);
+		if (this.selectedId && !selectedStillValid) {
+			this.selectedId = null;
+			this.rebuildShellModes();
+			this.emit();
 		}
 	}
 

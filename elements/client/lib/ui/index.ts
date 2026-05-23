@@ -468,3 +468,46 @@ export interface ShellSearchItemSpec {
 	readonly args?: unknown;
 }
 //#endregion 🔖Workbench
+
+//#region 🔖DeclarativeWindowBody
+import type { UiNode } from "./ui-protocol.ts";
+
+/** @emoji 🪟 View context for declarative window bodies: workbench snapshot without DOM or React roots. */
+export interface ShellWindowBodyViewContext {
+	readonly workbench: Workbench;
+	readonly windowKindId: string;
+	readonly bodyKey: string;
+	readonly activeModeId: string | null;
+	readonly generation: number;
+}
+
+const declarativeWindowBodyByKey = new Map<string, (ctx: ShellWindowBodyViewContext) => UiNode>();
+
+/** @emoji 📝 Registers a framework-free window body tree for `bodyKey` (host renders DOM). */
+export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
+	declarativeWindowBodyByKey.set(bodyKey, build);
+}
+
+/** @emoji 🔍 Returns the declarative builder registered for `bodyKey`, if any. */
+export function getDeclarativeWindowBodyFactory(bodyKey: string): ((ctx: ShellWindowBodyViewContext) => UiNode) | undefined {
+	return declarativeWindowBodyByKey.get(bodyKey);
+}
+
+/** @emoji 🧹 Removes a declarative window registration (tests / hot reload). */
+export function unregisterDeclarativeWindowBody(bodyKey: string): void {
+	declarativeWindowBodyByKey.delete(bodyKey);
+}
+//#endregion 🔖DeclarativeWindowBody
+
+export type {
+	JsonPrimitive,
+	JsonValue,
+	ShellCommandDescriptor,
+	ShellStyleSpec,
+	UiButtonNode,
+	UiNode,
+	UiScene3DHostSurfaceNode,
+	UiSeparatorNode,
+	UiStackNode,
+	UiTextNode,
+} from "./ui-protocol.ts";

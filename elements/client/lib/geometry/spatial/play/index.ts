@@ -1,5 +1,6 @@
-import { LevelProvider, Workbench, WorkbenchView, getLevelBgClass, mountReactApp, registerWindowBody } from "@elements/ui";
+import { LevelProvider, Workbench, WorkbenchView, getLevelBgClass, mountReactApp, registerElementIcon, registerWindowBody } from "@elements/ui";
 import { CommandBus, Controller, WorkbenchApp, WorkbenchMode, WorkbenchWindowKind, createDefaultLayout, type ShellToolItem } from "@elements/ui-shell";
+import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
 import topologyJson from "../../play/fixtures/topology.json";
@@ -12,7 +13,7 @@ import {
 	type TopologicFixtureV1,
 	type TopologicKind,
 } from "../js/index.ts";
-import { SpatialPlayWindowBody, type SpatialStatus, type SpatialSurfaceKindFilter, type SpatialSurfaceSnapshot } from "../react/index.tsx";
+import { SpatialDetailsPanelBody, SpatialPlayWindowBody, SpatialWorkbenchPanelBody, type SpatialStatus, type SpatialSurfaceKindFilter, type SpatialSurfaceSnapshot } from "../react/index.tsx";
 
 import "./globals.css";
 
@@ -46,6 +47,10 @@ export const SPATIAL_PLAY_WINDOW_ID = "geometry-spatial-window";
 export const SPATIAL_PLAY_WINDOW_LABEL = "Spatial Surface";
 export const SPATIAL_PLAY_BODY_KEY = "elements.geometry.spatial.window";
 export const SPATIAL_PLAY_CONTROLLER_ID = "geometry-spatial-play";
+export const SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY = "elements.geometry.spatial.panel.workbench";
+export const SPATIAL_PLAY_DETAILS_TAB_BODY_KEY = "elements.geometry.spatial.panel.details";
+export const SPATIAL_PLAY_WORKBENCH_ICON_ID = "elements.geometry.spatial.icon.workbench";
+export const SPATIAL_PLAY_DETAILS_ICON_ID = "elements.geometry.spatial.icon.details";
 const SPATIAL_PLAY_DEFAULT_LAYOUT = createDefaultLayout([SPATIAL_PLAY_WINDOW_ID], "row", [100], [SPATIAL_PLAY_WINDOW_LABEL]);
 //#endregion 🔖Ids
 
@@ -187,6 +192,8 @@ export function buildSpatialWorkbenchApp(controller: SpatialPlayShellController)
 	);
 	app.defaultModeId = controller.browseMode.id;
 	app.addMode(controller.browseMode);
+	app.leftTabs = [{ id: "spatial-browser", iconId: SPATIAL_PLAY_WORKBENCH_ICON_ID, order: 0, bodyKey: SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY }];
+	app.rightTabs = [{ id: "spatial-details", iconId: SPATIAL_PLAY_DETAILS_ICON_ID, order: 0, bodyKey: SPATIAL_PLAY_DETAILS_TAB_BODY_KEY }];
 	controller.run("setQuery", { query: "" });
 	return app;
 }
@@ -198,7 +205,11 @@ let spatialPlayChromeRegistered = false;
 function registerSpatialPlayChrome(): void {
 	if (spatialPlayChromeRegistered) return;
 	spatialPlayChromeRegistered = true;
+	registerElementIcon(SPATIAL_PLAY_WORKBENCH_ICON_ID, React.createElement(ListFilter, { className: "size-4", "aria-hidden": true }));
+	registerElementIcon(SPATIAL_PLAY_DETAILS_ICON_ID, React.createElement(ScanSearch, { className: "size-4", "aria-hidden": true }));
 	registerWindowBody(SPATIAL_PLAY_BODY_KEY, SpatialPlayWindowBody);
+	registerWindowBody(SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY, SpatialWorkbenchPanelBody);
+	registerWindowBody(SPATIAL_PLAY_DETAILS_TAB_BODY_KEY, SpatialDetailsPanelBody);
 }
 
 /** @emoji 🚀 Builds the workbench around the reusable spatial React surface. */
@@ -217,7 +228,12 @@ if (rootElement) {
 			React.createElement(
 				LevelProvider,
 				null,
-				React.createElement(WorkbenchView, { workbench, className: getLevelBgClass(0) }),
+				React.createElement(WorkbenchView, {
+					workbench,
+					className: getLevelBgClass(0),
+					defaultAppId: SPATIAL_PLAY_APP_ID,
+					initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true },
+				}),
 			),
 		);
 	});

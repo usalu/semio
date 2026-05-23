@@ -294,11 +294,11 @@ function runSpatial(commandName: "dev" | "build" | "test", args: string[]): void
 	const root = spatialRoot();
 	if (commandName === "dev") {
 		const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-		run(["x", "vite", "--host", host, ...args], { cwd: root });
+		run(["x", "vite", "--config", "play/vite.config.ts", "--host", host, ...args], { cwd: root });
 		return;
 	}
 	if (commandName === "build") {
-		runSync(["bun", "x", "vite", "build", ...args], { cwd: root });
+		runSync(["bun", "x", "vite", "build", "--config", "play/vite.config.ts", ...args], { cwd: root });
 		return;
 	}
 	runSync(["bun", "x", "vitest", "run", "--config", "vitest.config.ts", ...args], { cwd: root });
