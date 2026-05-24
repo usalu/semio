@@ -730,7 +730,7 @@ export interface BoardObjectOptions {
 
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
-	handles?: Handle[];
+	handles?: BoardSceneHandle[];
 	/** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
 	iconKind?: string;
 	/** @emoji 🧩 Semantic node-kind id for catalog defaults and compatibility (`node` specificity). */
@@ -754,7 +754,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 
 /** @emoji 🟩 World-space axis-aligned rectangle node (center + full width and height). */
 export type RectangleNodeOptions = BoardObjectOptions & {
-	handles?: Handle[];
+	handles?: BoardSceneHandle[];
 	height: number;
 	/** @emoji 🏷️ Runtime icon string for WASM detail LOD vector paint (baked catalog id or inline SVG). */
 	iconKind?: string;
@@ -788,7 +788,7 @@ export interface HandleOptions extends BoardObjectOptions {
 	iconKind?: string;
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
 	handleKind: string;
-	node: Node;
+	node: BoardSceneNode;
 	radius?: number;
 }
 
@@ -844,15 +844,15 @@ export interface BoardWireProps {
 
 export interface EdgeOptions extends BoardObjectOptions {
 	edgeKind?: string;
-	source: Handle;
-	target: Handle;
+	source: BoardSceneHandle;
+	target: BoardSceneHandle;
 }
 
 export interface WireOptions extends BoardObjectOptions {
 	endX?: number | null;
 	endY?: number | null;
-	source: Handle;
-	target: Handle | null;
+	source: BoardSceneHandle;
+	target: BoardSceneHandle | null;
 	wireKind?: string;
 }
 
@@ -1735,7 +1735,7 @@ export function boardNodeTextPlacementAnchor(
 export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
-export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): CubicBezierCurve {
+export function computeEdgeBezier(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): CubicBezierCurve {
 	const sourcePoint = sourceHandle.position;
 	const targetPoint = targetHandle.position;
 	const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
@@ -1759,7 +1759,7 @@ export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): C
 }
 
 /** 🧵 Same radial cubic as {@link computeEdgeBezier} but the far end is a free world point (transient link / {@link Wire}). */
-export function computeWireBezier(sourceHandle: Handle, endWorld: Point): CubicBezierCurve {
+export function computeWireBezier(sourceHandle: BoardSceneHandle, endWorld: Point): CubicBezierCurve {
 	const sourcePoint = sourceHandle.position;
 	const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
 	const flat = boardComputeEdgeBezier(
@@ -1870,8 +1870,8 @@ export class BoardObject {
 }
 
 /** 🟠 Board node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
-export class Node extends BoardObject {
-	handles: Handle[] = [];
+class BoardSceneNode extends BoardObject {
+	handles: BoardSceneHandle[] = [];
 	height: number;
 	radius: number;
 	shape: "circle" | "rectangle";
@@ -1894,7 +1894,7 @@ export class Node extends BoardObject {
 	/** @emoji 🧩 Semantic node-kind id forwarded to WASM for catalog defaults and compatibility. */
 	nodeKind: string;
 
-	constructor(options: NodeOptions) {
+	constructor(options: BoardSceneNodeOptions) {
 		super(options.id, {
 			draggable: options.draggable ?? true,
 			selected: options.selected,
@@ -1977,7 +1977,7 @@ export class Node extends BoardObject {
 		return this;
 	}
 
-	attachHandle(handle: Handle): void {
+	attachHandle(handle: BoardSceneHandle): void {
 		if (this.handles.includes(handle)) {
 			return;
 		}
@@ -1985,22 +1985,22 @@ export class Node extends BoardObject {
 		this.handles.push(handle);
 	}
 
-	detachHandle(handle: Handle): void {
+	detachHandle(handle: BoardSceneHandle): void {
 		this.handles = this.handles.filter((candidate) => candidate !== handle);
 	}
 }
 
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
-export class Handle extends BoardObject {
+class BoardSceneHandle extends BoardObject {
 	angle: number;
 	/** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
 	color: string | null;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
-	node: Node;
+	node: BoardSceneNode;
 	radius: number;
 
-	constructor(options: HandleOptions) {
+	constructor(options: BoardSceneHandleOptions) {
 		super(options.id, options);
 		this.angle = options.angle;
 		const ck = String(options.handleKind ?? "").trim();
@@ -2032,13 +2032,13 @@ export class Handle extends BoardObject {
 }
 
 /** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
-export class Edge extends BoardObject {
+class BoardSceneEdge extends BoardObject {
 	/** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
 	edgeKind: string;
-	source: Handle;
-	target: Handle;
+	source: BoardSceneHandle;
+	target: BoardSceneHandle;
 
-	constructor(options: EdgeOptions) {
+	constructor(options: BoardSceneEdgeOptions) {
 		super(options.id, options);
 		this.source = options.source;
 		this.target = options.target;
@@ -2054,7 +2054,7 @@ export class Edge extends BoardObject {
 		return computeEdgeBezier(this.source, this.target);
 	}
 
-	setEndpoints(sourceHandle: Handle, targetHandle: Handle): this {
+	setEndpoints(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): this {
 		this.source = sourceHandle;
 		this.target = targetHandle;
 		return this;
@@ -2062,15 +2062,15 @@ export class Edge extends BoardObject {
 }
 
 /** 🧵 Transient cubic from one {@link Handle} to another handle or a free world point (in‑progress link drag). */
-export class Wire extends BoardObject {
+class BoardSceneWire extends BoardObject {
 	endX: number | null;
 	endY: number | null;
-	source: Handle;
-	target: Handle | null;
+	source: BoardSceneHandle;
+	target: BoardSceneHandle | null;
 	/** @emoji 🧩 Semantic wire-kind id forwarded to WASM. */
 	wireKind: string;
 
-	constructor(options: WireOptions) {
+	constructor(options: BoardSceneWireOptions) {
 		super(options.id, options);
 		this.source = options.source;
 		this.target = options.target;
@@ -2095,7 +2095,7 @@ export class Wire extends BoardObject {
 		return computeWireBezier(this.source, { x, y });
 	}
 
-	setAnchors(sourceHandle: Handle, targetHandle: Handle | null, endWorld?: Point | null): this {
+	setAnchors(sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle | null, endWorld?: Point | null): this {
 		this.source = sourceHandle;
 		this.target = targetHandle;
 		if (endWorld && Number.isFinite(endWorld.x) && Number.isFinite(endWorld.y)) {
@@ -2113,13 +2113,18 @@ export class Wire extends BoardObject {
 }
 //#endregion 🔖Objects
 
+type BoardNodeObject = BoardSceneNode;
+type BoardHandleObject = BoardSceneHandle;
+type BoardEdgeObject = BoardSceneEdge;
+type BoardWireObject = BoardSceneWire;
+
 //#region 🔖Scene
 /** 🧭 Retained scene catalog owning nodes, handles, edges, and wires by stable id. */
 export class BoardScene {
-	readonly edges = new Map<string, Edge>();
-	readonly handles = new Map<string, Handle>();
-	readonly nodes = new Map<string, Node>();
-	readonly wires = new Map<string, Wire>();
+	readonly edges = new Map<string, BoardSceneEdge>();
+	readonly handles = new Map<string, BoardSceneHandle>();
+	readonly nodes = new Map<string, BoardSceneNode>();
+	readonly wires = new Map<string, BoardSceneWire>();
 
 	constructor(private renderer: BoardRenderer | null = null) { }
 
@@ -2131,7 +2136,7 @@ export class BoardScene {
 	}
 
 	add(object: BoardObject): this {
-		if (object instanceof Node) {
+		if (object instanceof BoardSceneNode) {
 			const prior = this.nodes.get(object.id);
 			if (prior && prior !== object) {
 				this.remove(prior);
@@ -2146,7 +2151,7 @@ export class BoardScene {
 			return this;
 		}
 
-		if (object instanceof Handle) {
+		if (object instanceof BoardSceneHandle) {
 			if (!this.nodes.has(object.node.id)) {
 				this.add(object.node);
 			}
@@ -2158,7 +2163,7 @@ export class BoardScene {
 			return this;
 		}
 
-		if (object instanceof Wire) {
+		if (object instanceof BoardSceneWire) {
 			if (!this.nodes.has(object.source.node.id)) {
 				this.add(object.source.node);
 			}
@@ -2193,7 +2198,7 @@ export class BoardScene {
 	}
 
 	/** @emoji 🔗 Inserts a WASM‑drained edge without emitting {@link BoardEventMap.edgeCreate} (the renderer applies that once per drain row). */
-	ingestWasmEdge(edge: Edge): this {
+	ingestWasmEdge(edge: BoardSceneEdge): this {
 		this.edges.set(edge.id, edge);
 		edge.parent = this;
 		edge.attachRenderer(this.renderer);
@@ -2202,7 +2207,7 @@ export class BoardScene {
 	}
 
 	remove(object: BoardObject): this {
-		if (object instanceof Node) {
+		if (object instanceof BoardSceneNode) {
 			for (const edge of Array.from(this.edges.values())) {
 				if (edge.source.node === object || edge.target.node === object) {
 					this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2226,7 +2231,7 @@ export class BoardScene {
 			return this;
 		}
 
-		if (object instanceof Handle) {
+		if (object instanceof BoardSceneHandle) {
 			for (const edge of Array.from(this.edges.values())) {
 				if (edge.source === object || edge.target === object) {
 					this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2246,7 +2251,7 @@ export class BoardScene {
 			return this;
 		}
 
-		if (object instanceof Wire) {
+		if (object instanceof BoardSceneWire) {
 			this.renderer?.emit("wireDestroy", { id: object.id });
 			this.wires.delete(object.id);
 			object.parent = null;
@@ -2316,7 +2321,7 @@ function sortedStringArraysEqual(a: string[], b: string[]): boolean {
 	return true;
 }
 
-function boardGraphNodeSig(node: Node): string {
+function boardGraphNodeSig(node: BoardSceneNode): string {
 	return JSON.stringify({
 		draggable: node.draggable,
 		height: node.height,
@@ -2338,7 +2343,7 @@ function boardGraphNodeSig(node: Node): string {
 	});
 }
 
-function boardGraphEdgeSig(edge: Edge): string {
+function boardGraphEdgeSig(edge: BoardSceneEdge): string {
 	return JSON.stringify({
 		source: edge.source.id,
 		id: edge.id,
@@ -2349,7 +2354,7 @@ function boardGraphEdgeSig(edge: Edge): string {
 	});
 }
 
-function boardGraphWireSig(wire: Wire): string {
+function boardGraphWireSig(wire: BoardSceneWire): string {
 	return JSON.stringify({
 		endX: wire.endX,
 		endY: wire.endY,
@@ -2922,7 +2927,7 @@ export class BoardRenderer {
 	}
 
 	/** @emoji 📍 Applies declarative node x/y while keeping wasm-dragged coordinates when React props still show the pre-drag authoring values. */
-	applyNodePositionFromProps(nodeId: string, x: number, y: number, instance: Node): void {
+	applyNodePositionFromProps(nodeId: string, x: number, y: number, instance: BoardSceneNode): void {
 		const last = this.lastNodeAuthoringPositionById.get(nodeId);
 		const propsUnchangedSinceLastSync = last !== undefined && last.x === x && last.y === y;
 		const sceneMatchesDescriptor = instance.x === x && instance.y === y;
@@ -3604,12 +3609,12 @@ export class BoardRenderer {
 						}
 						const sourceObj = this.scene.getObjectById(sourceId);
 						const targetObj = this.scene.getObjectById(targetId);
-						if (!(sourceObj instanceof Handle) || !(targetObj instanceof Handle)) {
+						if (!(sourceObj instanceof BoardSceneHandle) || !(targetObj instanceof BoardSceneHandle)) {
 							break;
 						}
 						this.wasmHostAuthoredEdgeIds.add(id);
 						this.wasmHostAuthoredLinkByEdgeId.set(id, { source: sourceId, target: targetId });
-						this.scene.ingestWasmEdge(new Edge({ id, source: sourceObj, target: targetObj }));
+						this.scene.ingestWasmEdge(new BoardSceneEdge({ id, source: sourceObj, target: targetObj }));
 						graphMutatedForHostMerge = true;
 						this.emitter.emit("edgeCreate", { id, source: sourceId, target: targetId });
 						break;
@@ -4255,7 +4260,7 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const hovers: BoardHoverPayload[] = [];
 			renderer.on("hover", (h) => hovers.push(h));
-			const node = new Node({ id: "hover-node", radius: 24, x: 0, y: 0 });
+			const node = new BoardSceneNode({ id: "hover-node", radius: 24, x: 0, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
 			const p = renderer.worldToScreen({ x: 0, y: 0 });
@@ -4273,10 +4278,10 @@ if (boardVitest) {
 
 	describe("board geometry helpers", () => {
 		it("places cubic edge control arms along circle normals at the anchors", () => {
-			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
-			const targetNode = new Node({ id: "b", radius: 40, x: 300, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
+			const sourceNode = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "b", radius: 40, x: 300, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
 			const curve = computeEdgeBezier(sourceHandle, targetHandle);
 
 			expect(curve.p0.x).toBeCloseTo(40);
@@ -4296,8 +4301,8 @@ if (boardVitest) {
 		});
 
 		it("builds a radial cubic for a wire whose far end is a free world point", () => {
-			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+			const sourceNode = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
 			const curve = computeWireBezier(sourceHandle, { x: 200, y: 100 });
 			expect(curve.p0.x).toBeCloseTo(40);
 			expect(curve.p0.y).toBeCloseTo(0);
@@ -4306,7 +4311,7 @@ if (boardVitest) {
 		});
 
 		it("places rectangle handles on the perimeter by north-zero CCW angle", () => {
-			const rectNode = new Node({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
+			const rectNode = new BoardSceneNode({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
 			const p0 = computeHandlePosition(rectNode, 0);
 			expect(p0.x).toBeCloseTo(100);
 			expect(p0.y).toBeCloseTo(40);
@@ -4379,11 +4384,11 @@ if (boardVitest) {
 			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
-			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 80 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 80 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 
@@ -4401,9 +4406,9 @@ if (boardVitest) {
 			const destroyed: string[] = [];
 			renderer.on("wireCreate", (e) => created.push(e.id));
 			renderer.on("wireDestroy", (e) => destroyed.push(e.id));
-			const n = new Node({ id: "n", radius: 22, x: 0, y: 0 });
-			const h = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
-			const w = new Wire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
+			const n = new BoardSceneNode({ id: "n", radius: 22, x: 0, y: 0 });
+			const h = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
+			const w = new BoardSceneWire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
 			renderer.scene.add(n).add(w);
 			expect(renderer.scene.wires.get("w-1")).toBe(w);
 			expect(w.kind).toBe("wire");
@@ -4421,10 +4426,10 @@ if (boardVitest) {
 			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
-			const a = new Node({ id: "a", radius: 40, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 40, x: 280, y: 0 });
-			new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: a });
-			new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
+			const a = new BoardSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 40, x: 280, y: 0 });
+			new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: a });
+			new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 
@@ -4461,11 +4466,11 @@ if (boardVitest) {
 			renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
 			renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
 
-			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -4497,11 +4502,11 @@ if (boardVitest) {
 			const { canvas } = createMockCanvas();
 			document.body.appendChild(canvas);
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -4528,7 +4533,7 @@ if (boardVitest) {
 		it("moves a selected draggable node from pointer events without React involvement", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const movableNode = new Node({ draggable: true, id: "movable", radius: 30, x: 0, y: 0 });
+			const movableNode = new BoardSceneNode({ draggable: true, id: "movable", radius: 30, x: 0, y: 0 });
 			renderer.scene.add(movableNode);
 			renderer.render();
 
@@ -4549,8 +4554,8 @@ if (boardVitest) {
 		it("moves every selected draggable node when dragging one of them", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const a = new Node({ draggable: true, id: "a", radius: 20, x: 0, y: 0 });
-			const b = new Node({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
+			const a = new BoardSceneNode({ draggable: true, id: "a", radius: 20, x: 0, y: 0 });
+			const b = new BoardSceneNode({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 			renderer.setSelectionIds(["a", "b"]);
@@ -4569,7 +4574,7 @@ if (boardVitest) {
 		it("keeps imperative node coordinates when declarative props still show pre-drag authoring values", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const node = new Node({ id: "n", radius: 10, x: 10, y: 20 });
+			const node = new BoardSceneNode({ id: "n", radius: 10, x: 10, y: 20 });
 			renderer.scene.add(node);
 			renderer.applyNodePositionFromProps(node.id, 10, 20, node);
 			node.setPosition(100, 200);
@@ -4596,8 +4601,8 @@ if (boardVitest) {
 		it("applies imperative selection via setSelectionIds", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const sourceNode = new Node({ id: "source", radius: 20, x: 0, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 20, x: 100, y: 0 });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 20, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 20, x: 100, y: 0 });
 			renderer.scene.add(sourceNode).add(targetNode);
 			renderer.setSelectionIds(["target"]);
 			expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
@@ -4609,7 +4614,7 @@ if (boardVitest) {
 		it("syncs selection silently for controlled hosts without emitting select", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const node = new Node({ id: "solo", radius: 20, x: 0, y: 0 });
+			const node = new BoardSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
 			renderer.scene.add(node);
 			const selects: BoardSelectionSnapshot[] = [];
 			renderer.on("select", (snap) => selects.push(snap));
@@ -4622,7 +4627,7 @@ if (boardVitest) {
 		it("keeps committed selection empty during rectangle preselect from empty", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-			const node = new Node({ id: "solo", radius: 20, x: 200, y: 0 });
+			const node = new BoardSceneNode({ id: "solo", radius: 20, x: 200, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
 			const s0 = renderer.worldToScreen({ x: 120, y: -40 });
@@ -4641,8 +4646,8 @@ if (boardVitest) {
 		it("emits preselect while rectangle-selecting and clears on commit", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 20, x: 120, y: 0 });
+			const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 20, x: 120, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 			const preselects: BoardPreselectSnapshot[] = [];
@@ -4662,8 +4667,8 @@ if (boardVitest) {
 		it("syncPreselectionSilent applies selected chrome on scene objects", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.setSelectionIds(["a"]);
 			renderer.syncPreselectionSilent({ ids: ["b"], removedIds: [] });
@@ -4677,8 +4682,8 @@ if (boardVitest) {
 		it("splits preselect preview into selected and highlighted scene chrome", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.setSelectionIds(["a"]);
 			renderer.syncPreselectionSilent({ ids: ["b"], removedIds: ["a"] });
@@ -4693,8 +4698,8 @@ if (boardVitest) {
 		it("cancels area-select on Escape without changing committed selection", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const a = new Node({ id: "a", radius: 20, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 20, x: 200, y: 0 });
+			const a = new BoardSceneNode({ id: "a", radius: 20, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 20, x: 200, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.setSelectionIds(["a"]);
 			renderer.render();
@@ -4717,7 +4722,7 @@ if (boardVitest) {
 		it("opens rectangle selection from a left-button drag and applies directional partial versus enclosing rules", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
-			const node = new Node({ id: "node", radius: 20, x: 0, y: 0 });
+			const node = new BoardSceneNode({ id: "node", radius: 20, x: 0, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
 
@@ -4741,7 +4746,7 @@ if (boardVitest) {
 		it("clears selection when clicking the background without dragging", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const node = new Node({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+			const node = new BoardSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
 
@@ -4761,7 +4766,7 @@ if (boardVitest) {
 		});
 
 		it("boardInteractionChromeStyleKey follows selection ids not stale scene flags", () => {
-			const node = new Node({ id: "solo", radius: 20, x: 0, y: 0 });
+			const node = new BoardSceneNode({ id: "solo", radius: 20, x: 0, y: 0 });
 			node.selected = true;
 			node.highlighted = false;
 			const chrome = boardElementInteractionChrome([], BOARD_PRESELECT_EMPTY);
@@ -4773,7 +4778,7 @@ if (boardVitest) {
 		it("stale silent selection sync undoes background deselect until controlled prop updates", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const node = new Node({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+			const node = new BoardSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
 
@@ -4799,11 +4804,11 @@ if (boardVitest) {
 				renderMode: "headless-test",
 				selection: { method: "rectangle", mode: "invertive", targets: { ...BOARD_SELECTION_TARGETS_DEFAULT } },
 			});
-			const sourceNode = new Node({ id: "source", radius: 40, x: 0, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 40, x: 200, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 40, x: 0, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 40, x: 200, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -4822,11 +4827,11 @@ if (boardVitest) {
 		it("supports lasso targets and additive subtractive invertive selection modes", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", targets: { nodes: false, edges: true, handles: false } } });
-			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
-			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
-			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
-			const edge = new Edge({ source: sourceHandle, id: "edge", target: targetHandle });
+			const sourceNode = new BoardSceneNode({ id: "source", radius: 12, x: -80, y: 0 });
+			const targetNode = new BoardSceneNode({ id: "target", radius: 12, x: 80, y: 0 });
+			const sourceHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new BoardSceneEdge({ source: sourceHandle, id: "edge", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -4872,8 +4877,8 @@ if (boardVitest) {
 		it("maps default selection to replace and honors Ctrl and Shift modifiers", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "default", targets: { nodes: true, edges: false, handles: false } } });
-			const a = new Node({ id: "a", radius: 12, x: 0, y: 0 });
-			const b = new Node({ id: "b", radius: 12, x: 80, y: 0 });
+			const a = new BoardSceneNode({ id: "a", radius: 12, x: 0, y: 0 });
+			const b = new BoardSceneNode({ id: "b", radius: 12, x: 80, y: 0 });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 
@@ -5289,15 +5294,15 @@ if (boardVitest) {
 	describe("board directed graph observation", () => {
 		it("computes subtree from roots along directed edges", () => {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
-			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-			const mid = new Node({ id: "mid", radius: 10, x: 50, y: 0 });
-			const leaf = new Node({ id: "leaf", radius: 10, x: 100, y: 0 });
-			const hRoot = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-			const hMidTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
-			const hMidSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
-			const hLeafTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
-			const e1 = new Edge({ source: hRoot, id: "e1", target: hMidTarget });
-			const e2 = new Edge({ source: hMidSource, id: "e2", target: hLeafTarget });
+			const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const mid = new BoardSceneNode({ id: "mid", radius: 10, x: 50, y: 0 });
+			const leaf = new BoardSceneNode({ id: "leaf", radius: 10, x: 100, y: 0 });
+			const hRoot = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hMidTarget = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
+			const hMidSource = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
+			const hLeafTarget = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
+			const e1 = new BoardSceneEdge({ source: hRoot, id: "e1", target: hMidTarget });
+			const e2 = new BoardSceneEdge({ source: hMidSource, id: "e2", target: hLeafTarget });
 			renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
 			const snap = computeBoardGraphObservationSnapshot(renderer.scene);
 			expect(snap.rootIds).toEqual(["root"]);
@@ -5320,11 +5325,11 @@ if (boardVitest) {
 				renderer.on("childNodeChange", (p) => events.push(`childNodeChange:${p.id}`)),
 				renderer.on("childEdgeChange", (p) => events.push(`childEdgeChange:${p.id}`)),
 			];
-			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
-			const hRootSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-			const hChildTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
-			const edge = new Edge({ source: hRootSource, id: "link", target: hChildTarget });
+			const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const child = new BoardSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
+			const hRootSource = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hChildTarget = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+			const edge = new BoardSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
 			renderer.scene.add(root).add(child).add(edge);
 			await Promise.resolve();
 			expect(events.some((e) => e.startsWith("parentNodeChange:root"))).toBe(true);
@@ -5341,10 +5346,10 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const created: string[] = [];
 			const off = renderer.on("nodeCreate", (p) => created.push(p.id));
-			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			renderer.scene.add(root);
 			await Promise.resolve();
-			const child = new Node({ id: "child", radius: 10, x: 50, y: 0 });
+			const child = new BoardSceneNode({ id: "child", radius: 10, x: 50, y: 0 });
 			renderer.scene.add(child);
 			await Promise.resolve();
 			expect(created).toEqual(["root", "child"]);
@@ -5356,11 +5361,11 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const changes: string[] = [];
 			const off = renderer.on("edgeChange", (p) => changes.push(p.id));
-			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
-			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
-			const hRootSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-			const hChildTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
-			const edge = new Edge({ source: hRootSource, id: "link", target: hChildTarget });
+			const root = new BoardSceneNode({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const child = new BoardSceneNode({ id: "child", radius: 10, x: 40, y: 0 });
+			const hRootSource = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hChildTarget = new BoardSceneHandle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+			const edge = new BoardSceneEdge({ source: hRootSource, id: "link", target: hChildTarget });
 			renderer.scene.add(root).add(child).add(edge);
 			await Promise.resolve();
 			edge.visible = false;
@@ -5529,28 +5534,28 @@ export type BoardHostType = typeof BOARD_HOST_NODE | typeof BOARD_HOST_HANDLE | 
 
 interface BoardHostNode {
 	kind: "node";
-	impl: Node;
+	impl: BoardSceneNode;
 	renderer: BoardRenderer;
 	readonly handleChildren: Set<BoardHostHandle>;
 }
 
 interface BoardHostHandle {
 	kind: "handle";
-	impl: Handle | null;
+	impl: BoardSceneHandle | null;
 	props: BoardHandleProps;
 	renderer: BoardRenderer;
 }
 
 interface BoardHostEdge {
 	kind: "edge";
-	impl: Edge | null;
+	impl: BoardSceneEdge | null;
 	props: BoardEdgeProps;
 	renderer: BoardRenderer;
 }
 
 interface BoardHostWire {
 	kind: "wire";
-	impl: Wire | null;
+	impl: BoardSceneWire | null;
 	props: BoardWireProps;
 	renderer: BoardRenderer;
 }
@@ -5559,9 +5564,9 @@ export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge 
 //#endregion 🔖HostKinds
 
 //#region 🔖PropApply
-function newBoardNodeFromProps(props: NodeOptions): Node {
+function newBoardNodeFromProps(props: BoardSceneNodeOptions): BoardSceneNode {
 	if (props.shape === "rectangle") {
-		return new Node({
+		return new BoardSceneNode({
 			draggable: props.draggable ?? true,
 			height: props.height,
 			iconKind: props.iconKind,
@@ -5581,7 +5586,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			y: props.y,
 		});
 	}
-	return new Node({
+	return new BoardSceneNode({
 		draggable: props.draggable ?? true,
 		iconKind: props.iconKind,
 		id: props.id,
@@ -5600,7 +5605,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 	});
 }
 
-function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOptions): void {
+function applyNodeProps(renderer: BoardRenderer, instance: BoardSceneNode, props: BoardSceneNodeOptions): void {
 	instance.draggable = props.draggable ?? true;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
@@ -5626,7 +5631,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	}
 }
 
-function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node): void {
+function applyHandleProps(instance: BoardSceneHandle, props: BoardHandleProps, node: BoardSceneNode): void {
 	if (instance.node !== node) {
 		instance.node.detachHandle(instance);
 		node.attachHandle(instance);
@@ -5645,7 +5650,7 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.setAngle(props.angle);
 }
 
-function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Handle, targetHandle: Handle): void {
+function applyEdgeProps(instance: BoardSceneEdge, props: BoardEdgeProps, sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle): void {
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
@@ -5653,7 +5658,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
-function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Handle, targetHandle: Handle | null): void {
+function applyWireProps(instance: BoardSceneWire, props: BoardWireProps, sourceHandle: BoardSceneHandle, targetHandle: BoardSceneHandle | null): void {
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
@@ -5672,11 +5677,11 @@ function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Han
 	}
 }
 
-function nodeShapeSyncKey(props: NodeOptions): "circle" | "rectangle" {
+function nodeShapeSyncKey(props: BoardSceneNodeOptions): "circle" | "rectangle" {
 	return props.shape === "rectangle" ? "rectangle" : "circle";
 }
 
-function instanceShapeSyncKey(node: Node): "circle" | "rectangle" {
+function instanceShapeSyncKey(node: BoardSceneNode): "circle" | "rectangle" {
 	return node.shape;
 }
 
@@ -5728,7 +5733,7 @@ function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
 	);
 }
 
-function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
+function propsEqualNode(a: BoardSceneNodeOptions, b: BoardSceneNodeOptions): boolean {
 	if (
 		a.id !== b.id ||
 		a.x !== b.x ||
@@ -5768,7 +5773,7 @@ function mountHandleUnderNode(renderer: BoardRenderer, nodeHost: BoardHostNode, 
 		return;
 	}
 	nodeHost.handleChildren.add(handleHost);
-	const impl = new Handle({ ...handleHost.props, node: nodeHost.impl });
+	const impl = new BoardSceneHandle({ ...handleHost.props, node: nodeHost.impl });
 	handleHost.impl = impl;
 	renderer.batch(() => {
 		renderer.scene.add(impl);
@@ -5792,12 +5797,12 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	}
 	const source = renderer.scene.getObjectById(edgeHost.props.source);
 	const target = renderer.scene.getObjectById(edgeHost.props.target);
-	if (!(source instanceof Handle) || !(target instanceof Handle)) {
+	if (!(source instanceof BoardSceneHandle) || !(target instanceof BoardSceneHandle)) {
 		return;
 	}
 	renderer.batch(() => {
 		if (!edgeHost.impl) {
-			edgeHost.impl = new Edge({ ...edgeHost.props, source, target });
+			edgeHost.impl = new BoardSceneEdge({ ...edgeHost.props, source, target });
 			renderer.scene.add(edgeHost.impl);
 		} else {
 			applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
@@ -5811,14 +5816,14 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
 		return;
 	}
 	const source = renderer.scene.getObjectById(wireHost.props.source);
-	if (!(source instanceof Handle)) {
+	if (!(source instanceof BoardSceneHandle)) {
 		return;
 	}
 	const tid = (wireHost.props.target ?? "").trim();
-	let target: Handle | null = null;
+	let target: BoardSceneHandle | null = null;
 	if (tid !== "") {
 		const t = renderer.scene.getObjectById(tid);
-		if (!(t instanceof Handle)) {
+		if (!(t instanceof BoardSceneHandle)) {
 			return;
 		}
 		target = t;
@@ -5827,7 +5832,7 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
 		if (!wireHost.impl) {
 			const ex = wireHost.props.endX;
 			const ey = wireHost.props.endY;
-			wireHost.impl = new Wire({
+			wireHost.impl = new BoardSceneWire({
 				id: wireHost.props.id,
 				source,
 				target,
@@ -5846,7 +5851,7 @@ function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
 	renderer.invalidate();
 }
 
-function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: NodeOptions): void {
+function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: BoardSceneNodeOptions): void {
 	if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
 		renderer.batch(() => {
 			for (const handleHost of host.handleChildren) {
@@ -6084,12 +6089,12 @@ const boardSceneHost = Reconciler({
 			e.props = nextProps as BoardEdgeProps;
 			const from = renderer.scene.getObjectById(e.props.source);
 			const to = renderer.scene.getObjectById(e.props.target);
-			if (!(from instanceof Handle) || !(to instanceof Handle)) {
+			if (!(from instanceof BoardSceneHandle) || !(to instanceof BoardSceneHandle)) {
 				return;
 			}
 			renderer.batch(() => {
 				if (!e.impl) {
-					e.impl = new Edge({ ...e.props, source: from, target: to });
+					e.impl = new BoardSceneEdge({ ...e.props, source: from, target: to });
 					renderer.scene.add(e.impl);
 				} else {
 					applyEdgeProps(e.impl, e.props, from, to);
@@ -6102,14 +6107,14 @@ const boardSceneHost = Reconciler({
 			const w = instance as BoardHostWire;
 			w.props = nextProps as BoardWireProps;
 			const from = renderer.scene.getObjectById(w.props.source);
-			if (!(from instanceof Handle)) {
+			if (!(from instanceof BoardSceneHandle)) {
 				return;
 			}
 			const tid = (w.props.target ?? "").trim();
-			let to: Handle | null = null;
+			let to: BoardSceneHandle | null = null;
 			if (tid !== "") {
 				const t = renderer.scene.getObjectById(tid);
-				if (!(t instanceof Handle)) {
+				if (!(t instanceof BoardSceneHandle)) {
 					return;
 				}
 				to = t;
@@ -6118,7 +6123,7 @@ const boardSceneHost = Reconciler({
 				if (!w.impl) {
 					const ex = w.props.endX;
 					const ey = w.props.endY;
-					w.impl = new Wire({
+					w.impl = new BoardSceneWire({
 						id: w.props.id,
 						source: from,
 						target: to,
@@ -6212,6 +6217,86 @@ import {
   type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
+
+import {
+  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+  BOARD_FIXTURE_DRAG_V1_MIME,
+  BOARD_HOST_EDGE,
+  BOARD_HOST_HANDLE,
+  BOARD_HOST_NODE,
+  BOARD_HOST_WIRE,
+  BOARD_LOD_DETAIL_MIN_ZOOM,
+  BOARD_NODE_TEXT_ALIGNMENT_DEFAULT,
+  BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
+  BOARD_NODE_TEXT_FONT_PX_DEFAULT,
+  Edge as BoardEdgeObject,
+  Handle as BoardHandleObject,
+  Node as BoardNodeObject,
+  BoardRenderer,
+  Wire as BoardWireObject,
+  DEFAULT_BOARD_GRID_FACTOR,
+  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  layoutBoardFixtureForceGraph,
+  computeHandlePosition,
+  createBoardHostMount,
+  decodeBoardFixtureFromDragV1,
+  ensureElementsBoardWasmLoaded,
+  unmountBoardHostMount,
+  updateBoardHostMount,
+  type BoardChildEdgesChangePayload,
+  type BoardChildNodesChangePayload,
+  type BoardEdgeLinkPayload,
+  type BoardEdgeProps,
+  type BoardEventMap,
+  type BoardFixtureDropDetail,
+  type BoardGraphEdgeIdPayload,
+  type BoardGraphNodeIdPayload,
+  type BoardGraphWireIdPayload,
+  type BoardHandleProps,
+  type BoardHostMount,
+  type BoardHoverPayload,
+  type BoardDrawLodKind,
+  type BoardKindCatalogBundle,
+  type BoardKindCompatEntry,
+  type BoardLodZoomThresholds,
+  type BoardNodeTextAlignment,
+  boardPreselectSnapshotsEqual,
+  boardSelectionSnapshotsEqual,
+  normalizeBoardPreselectProp,
+  normalizeBoardSelectionProp,
+  type BoardPreselectSnapshot,
+  type BoardSelectionMethod,
+  type BoardSelectionMode,
+  type BoardSelectionSnapshot,
+  type BoardSelectionTargets,
+  type BoardStructureCreatePayload,
+  type BoardStructureDeletePayload,
+  type BoardWireProps,
+  type BoardWireSnapshotPayload,
+  type CameraState,
+  type FrameState,
+  type RenderMode,
+  type WorldRasterTilingKind,
+} from "./index";
+
+export {
+  BOARD_DEFAULT_KIND_CATALOG_BUNDLE,
+  DEFAULT_BOARD_GRID_FACTOR,
+  DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+  layoutBoardFixtureForceGraph,
+  normalizeBoardPreselectProp,
+  normalizeBoardSelectionProp,
+} from "./index";
+export type {
+  BoardDrawLodKind,
+  BoardEdgeLinkPayload,
+  BoardFixtureV1,
+  BoardForceGraphLayoutOptions,
+  BoardHoverPayload,
+  BoardLodZoomThresholds,
+  BoardPreselectSnapshot,
+  BoardSelectionSnapshot,
+} from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -8428,38 +8513,44 @@ interface BoardPlayShellValue {
   setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
-const boardFixtureLibraryPanelDefinition: SidePanelTabDefinition = {
-  resolveTab: () => ({
-    id: "board-play-library",
-    icon: Library,
-    order: 0,
-    tree: staticTreePanelDefinition({
-      sections: [{ id: "board-play-library.section", content: <BoardFixtureLibraryPanel /> }],
-    }),
-  }),
-};
+class BoardFixtureLibraryPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-library",
+      icon: Library,
+      order: 0,
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: "board-play-library.section", content: <BoardFixtureLibraryPanel /> }],
+      }),
+    };
+  }
+}
 
-const boardSelectionInspectorPanelDefinition: SidePanelTabDefinition = {
-  resolveTab: () => ({
-    id: "board-play-inspector",
-    icon: ClipboardList,
-    order: 0,
-    tree: staticTreePanelDefinition({
-      sections: createBoardSelectionInspectorSections(),
-    }),
-  }),
-};
+class BoardSelectionInspectorPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-inspector",
+      icon: ClipboardList,
+      order: 0,
+      tree: new StaticTreePanelDefinition({
+        sections: createBoardSelectionInspectorSections(),
+      }),
+    };
+  }
+}
 
-const boardPlaySettingsPanelDefinition: SidePanelTabDefinition = {
-  resolveTab: () => ({
-    id: "board-play-settings",
-    icon: Settings,
-    order: 1,
-    tree: staticTreePanelDefinition({
-      sections: [{ id: "board-play-settings.section", content: <BoardPlaySettingsPanel /> }],
-    }),
-  }),
-};
+class BoardPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
+  resolveTab() {
+    return {
+      id: "board-play-settings",
+      icon: Settings,
+      order: 1,
+      tree: new StaticTreePanelDefinition({
+        sections: [{ id: "board-play-settings.section", content: <BoardPlaySettingsPanel /> }],
+      }),
+    };
+  }
+}
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
 
@@ -9047,6 +9138,9 @@ function registerBoardPlayChrome(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(BOARD_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
+  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
 }
 // #endregion 🔖Panes
 
@@ -9110,16 +9204,20 @@ function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureN
 /** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
 function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
   const { fixture: dragFixture, label, preview } = props;
-  const dragProps = useNativeDragAndDrop<HTMLDivElement>({
-    onDragStart: (event) => {
-      event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
-      event.dataTransfer.effectAllowed = "copy";
-      const { clientHeight, clientWidth } = event.currentTarget;
-      event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
-    },
-  });
+  const dragController = useMemo(
+    () =>
+      new NativeDragAndDropController<HTMLDivElement>({
+        onDragStart: (event) => {
+          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
+          event.dataTransfer.effectAllowed = "copy";
+          const { clientHeight, clientWidth } = event.currentTarget;
+          event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
+        },
+      }),
+    [dragFixture],
+  );
   return (
-    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragProps}>
+    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragController.getProps()}>
       {preview}
     </div>
   );
@@ -9130,12 +9228,16 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 function BoardFixtureLibraryPanel(): ReactElement {
   const { fixture } = useBoardPlayShell();
 
-  const shelfDragProps = useNativeDragAndDrop<HTMLDivElement>({
-    onDragStart: (event) => {
-      event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
-      event.dataTransfer.effectAllowed = "copy";
-    },
-  });
+  const shelfDragController = useMemo(
+    () =>
+      new NativeDragAndDropController<HTMLDivElement>({
+        onDragStart: (event) => {
+          event.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
+          event.dataTransfer.effectAllowed = "copy";
+        },
+      }),
+    [fixture],
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
@@ -9149,7 +9251,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
           <BoardFixturePaletteDraggable fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the board" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
         </div>
       </div>
-      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
+      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragController.getProps()}>
         <p className="font-medium">Active graph</p>
         <p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
       </div>
@@ -9255,15 +9357,19 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
     [onChange],
   );
 
-  const pointerProps = usePointerDrag<HTMLDivElement>({
-    onStart: (event) => {
-      event.preventDefault();
-      setFromClient(event.clientX, event.clientY);
-    },
-    onMove: (event) => {
-      setFromClient(event.clientX, event.clientY);
-    },
-  });
+  const pointerController = useMemo(
+    () =>
+      new PointerDragController<HTMLDivElement>({
+        onStart: (event) => {
+          event.preventDefault();
+          setFromClient(event.clientX, event.clientY);
+        },
+        onMove: (event) => {
+          setFromClient(event.clientX, event.clientY);
+        },
+      }),
+    [setFromClient],
+  );
 
   const size = 88;
   const stroke = 3;
@@ -9279,7 +9385,7 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
         className={`border-element bg-muted/20 touch-none select-none rounded-full border ${angleUniform ? "" : "pointer-events-none opacity-40"}`}
         ref={ref}
         style={{ height: size, width: size }}
-        {...(angleUniform ? pointerProps : {})}
+        {...(angleUniform ? pointerController.getProps() : {})}
       >
         <svg aria-label="Angle t" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
           <circle cx={cx} cy={cy} fill="none" r={r} stroke="currentColor" strokeOpacity={0.35} strokeWidth={stroke} />
@@ -9797,6 +9903,30 @@ function createBoardSelectionInspectorSections(): TreeDataSection[] {
 }
 // #endregion 🔖SidePanels
 
+// #region 🔖Layout
+const boardPlayLayout: UIWindowLayout = {
+  root: {
+    kind: "row",
+    children: [
+      {
+        kind: "stack",
+        size: 50,
+        children: [createWindowLayout("board-overview", "Overview")],
+      },
+      {
+        kind: "column",
+        size: 50,
+        children: [
+          { kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
+          { kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
+        ],
+      },
+	],
+  },
+};
+
+// #endregion 🔖Layout
+
 // #region 🔖Surface
 function BoardPlaySurfaceFooter(props: {
   theme: ElementsSurfaceTheme;
@@ -9890,16 +10020,19 @@ function BoardPlayInner(): ReactElement {
   const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("default");
   const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
-  const boardPlayRuntimeRef = useRef<ReturnType<typeof buildBoardPlayRuntime> | null>(null);
-  if (!boardPlayRuntimeRef.current) {
+  const boardWorkbenchRef = useRef<Workbench | null>(null);
+  if (!boardWorkbenchRef.current) {
     registerBoardPlayChrome();
-    boardPlayRuntimeRef.current = buildBoardPlayRuntime();
+    const wb = new Workbench();
+    const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
+    wb.addApp(attachBoardPlayWindowKinds(ctrl, boardPlayLayout));
+    boardWorkbenchRef.current = wb;
   }
-  const boardPlayRuntime = boardPlayRuntimeRef.current;
-  const boardShellController = boardPlayRuntime.getActiveApp()?.controller;
+  const boardWorkbench = boardWorkbenchRef.current;
+  const boardShellController = boardWorkbench.getActiveApp()?.controller as BoardPlayShellController | undefined;
   const shellGeneration = useSyncExternalStore(
-    (onStoreChange) => boardPlayRuntime.subscribe(onStoreChange),
-    () => boardPlayRuntime.generation,
+    (onStoreChange) => boardWorkbench.subscribe(onStoreChange),
+    () => boardWorkbench.generation,
     () => 0,
   );
   void shellGeneration;
@@ -9910,15 +10043,15 @@ function BoardPlayInner(): ReactElement {
   };
   const setBoardLodModeForPane = useCallback(
     (pane: BoardPlayPaneId, mode: BoardLodModeKind) => {
-      boardPlayRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
+      boardWorkbench.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
     },
-    [boardPlayRuntime.commandBus],
+    [boardWorkbench.commandBus],
   );
   const setBoardEffectiveLodForPane = useCallback(
     (pane: BoardPlayPaneId, lod: BoardDrawLodKind) => {
-      boardPlayRuntime.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
+      boardWorkbench.commandBus.dispatch(BOARD_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
-    [boardPlayRuntime.commandBus],
+    [boardWorkbench.commandBus],
   );
   const onBoardPlayActiveWindowChange = useCallback((windowKindId: string) => {
     if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
@@ -10604,22 +10737,22 @@ function BoardPlayInner(): ReactElement {
 
   const augmentPanelTabs = useMemo(
     () => ({
-      workbench: [boardFixtureLibraryPanelDefinition.resolveTab()],
-      details: [boardSelectionInspectorPanelDefinition.resolveTab(), boardPlaySettingsPanelDefinition.resolveTab()],
+      workbench: [new BoardFixtureLibraryPanelDefinition().resolveTab()],
+      details: [new BoardSelectionInspectorPanelDefinition().resolveTab(), new BoardPlaySettingsPanelDefinition().resolveTab()],
     }),
     [],
   );
 
   useEffect(() => {
-    const app = boardPlayRuntime.apps[0];
+    const app = boardWorkbench.apps[0];
     if (app) app.onActiveWindowChange = onBoardPlayActiveWindowChange;
-  }, [boardPlayRuntime, onBoardPlayActiveWindowChange]);
+  }, [boardWorkbench, onBoardPlayActiveWindowChange]);
 
   return (
     <BoardPlayShellContext.Provider value={shellValue}>
       <BoardPlayLodRuntimeContext.Provider value={setBoardEffectiveLodForPane}>
-        <ProductView
-          runtime={boardPlayRuntime}
+        <WorkbenchView
+          workbench={boardWorkbench}
           defaultAppId={BOARD_PLAY_APP_ID}
           augmentPanelTabs={augmentPanelTabs}
           extraFooterItems={surfaceFooterItems}

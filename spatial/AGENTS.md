@@ -1,6 +1,8 @@
-A [topologic](https://github.com/wassimj/Topologic) rewrite with [brepjs](https://www.npmjs.com/package/brepjs).
+# Classes
 
-Editable classes:
+Topology: A Topology is an abstract superclass.
+
+## Editable
 
 Vertex: A Vertex is a zero-dimensional entity equivalent to a geometry point.
 Edge: An Edge is a one-dimensional entity defined by two vertices. It is important to note that while a topologic edge is made of two vertices, its geometry can be a curve with multiple control vertices.
@@ -11,7 +13,7 @@ Cell: A Cell is a three-dimensional region defined by a collection of closed She
 CellComplex: A CellComplex is a contiguous collection of Cells where adjacent Cells are connected by shared Faces. It is non- manifold.
 Cluster: A Cluster is a collection of any topologic entities. It may be contiguous or not and may be manifold or non- manifold. Clusters can be nested within other Clusters.
 
-Non-editable classes:
+## Non-editable
 
 Surfaces are derived faces that are a combination of Exposure (External or Internal) and Stance (Horizontal or Vertical).
 e.g. two coplanar faces are merged into a single surface

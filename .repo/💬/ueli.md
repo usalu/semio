@@ -36,6 +36,19 @@ There are several plugins such as: Energy (contributes to DesignEditDiagram, Des
 
 ---
 
+### 🗿spatial
+
+---
+
+I want to create a pure typescript library for generating shapes called factories.
+I have a custom brep kernel (it internally uses brepjs)
+Every factory is a state machine (I want to use stately but behind an interface).
+Optionally a factory can be passed to a renderer for interactive usage (such as r3f https://www.brepjs.dev/integration/r3f) with undo/redo support, dynamic display on every state, etc
+The factories are pure typescript functions they must work headless and interactive.
+How would you architect this?
+
+---
+
 ## 🏘️semio
 
 ###
