@@ -68,17 +68,25 @@ function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	if (!p) return null;
 	const a = readVec3(p.cornerA);
 	const b = readVec3(p.cornerB);
-	const h = readNumber(p.height);
-	if (!a || !b || h === null) return null;
+	const hRaw = readNumber(p.height);
+	if (!a || !b) return null;
+	const h = hRaw === null || hRaw <= 0 ? 0.06 : hRaw;
 	const { position, scale } = computeBoxPreviewLayout(a, b, h);
 	return (
 		<group position={position} scale={scale}>
 			<mesh raycast={raycastNone}>
 				<boxGeometry args={[1, 1, 1]} />
-				<meshStandardMaterial color="#6a8cff" transparent opacity={0.32} depthWrite={false} />
+				<meshStandardMaterial
+					color="#7ab0ff"
+					emissive="#102a66"
+					emissiveIntensity={0.35}
+					transparent
+					opacity={0.52}
+					depthWrite={false}
+				/>
 			</mesh>
 			<lineSegments raycast={raycastNone} geometry={edgeGeo}>
-				<lineBasicMaterial color="#dde6ff" transparent opacity={0.55} />
+				<lineBasicMaterial color="#ffffff" transparent opacity={0.85} />
 			</lineSegments>
 		</group>
 	);
@@ -108,7 +116,7 @@ function LinearHandleItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const ux = ax / len;
 	const uy = ay / len;
 	const uz = az / len;
-	const span = 2;
+	const span = 4;
 	const x1 = origin[0] + ux * span;
 	const y1 = origin[1] + uy * span;
 	const z1 = origin[2] + uz * span;
@@ -176,19 +184,82 @@ export interface GroundPickPlaneProps {
 	readonly planeZ?: number;
 	readonly enabled?: boolean;
 	readonly onPick?: (point: Vec3) => void;
+	readonly onPointerMove?: (point: Vec3) => void;
+	readonly pointerMoveEnabled?: boolean;
 }
 
-export function GroundPickPlane({ planeZ = 0, enabled = true, onPick }: GroundPickPlaneProps): ReactNode {
+export function GroundPickPlane({
+	planeZ = 0,
+	enabled = true,
+	onPick,
+	onPointerMove,
+	pointerMoveEnabled,
+}: GroundPickPlaneProps): ReactNode {
+	const moveOn = pointerMoveEnabled ?? Boolean(onPointerMove);
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
 		if (!enabled || !onPick) return;
 		e.stopPropagation();
 		const p = e.point;
 		onPick([p.x, p.y, planeZ] as unknown as Vec3);
 	};
+	const onPointerMoveH = (e: ThreeEvent<PointerEvent>) => {
+		if (!moveOn || !onPointerMove) return;
+		e.stopPropagation();
+		const p = e.point;
+		onPointerMove([p.x, p.y, planeZ] as unknown as Vec3);
+	};
 	return (
-		<mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, planeZ]} onPointerDown={onPointerDown}>
+		<mesh
+			rotation={[-Math.PI / 2, 0, 0]}
+			position={[0, 0, planeZ]}
+			onPointerDown={onPointerDown}
+			onPointerMove={onPointerMoveH}
+		>
 			<planeGeometry args={[120, 120]} />
-			<meshBasicMaterial transparent opacity={0.12} color="#6688ff" side={THREE.DoubleSide} />
+			<meshBasicMaterial transparent opacity={0.18} color="#7a9dff" side={THREE.DoubleSide} />
+		</mesh>
+	);
+}
+
+function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec3 | null {
+	return readVec3(ctx[key]);
+}
+
+/** @emoji 🖱️ Vertical slab at the footprint so `pointer.move` can vary Z for `pickingHeight` (factory uses |Δz|). */
+function HeightDragSurface({
+	origin,
+	corner,
+	enabled,
+	onPointerMove,
+}: {
+	readonly origin: Vec3;
+	readonly corner: Vec3;
+	readonly enabled: boolean;
+	readonly onPointerMove?: (point: Vec3) => void;
+}): ReactNode {
+	const z0 = origin[2];
+	const zSpan = 12;
+	const zMid = z0 + zSpan / 2;
+	const onMove = (e: ThreeEvent<PointerEvent>) => {
+		if (!enabled || !onPointerMove) return;
+		e.stopPropagation();
+		const p = e.point;
+		onPointerMove([p.x, p.y, p.z] as unknown as Vec3);
+	};
+	return (
+		<mesh
+			position={[corner[0], corner[1] + 0.04, zMid]}
+			rotation={[Math.PI / 2, 0, 0]}
+			onPointerMove={onMove}
+		>
+			<planeGeometry args={[28, zSpan]} />
+			<meshBasicMaterial
+				transparent
+				opacity={0.14}
+				color="#55eeaa"
+				side={THREE.DoubleSide}
+				depthWrite={false}
+			/>
 		</mesh>
 	);
 }
@@ -272,6 +343,8 @@ export function FactoryCanvas({ children }: FactoryCanvasProps): ReactNode {
 export interface FactorySpatialViewProps {
 	readonly snapshot: FactorySnapshot;
 	readonly onGroundPick?: (point: Vec3) => void;
+	/** @emoji 🖱️ `pointer.move` with world hit (ground forces Z≈`planeZ`; height slab uses full Z). */
+	readonly onScenePointerMove?: (point: Vec3) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshPreview | null;
 }
@@ -280,6 +353,7 @@ export interface FactorySpatialViewProps {
 export function FactorySpatialView({
 	snapshot,
 	onGroundPick,
+	onScenePointerMove,
 	pickEnabled = true,
 	committedMesh,
 }: FactorySpatialViewProps): ReactNode {
@@ -288,13 +362,31 @@ export function FactorySpatialView({
 		g.position.set(0, 0.002, 0);
 		return g;
 	}, []);
+	const ctx = snapshot.context;
+	const origin = vec3FromSnapshotContext(ctx, "origin");
+	const corner = vec3FromSnapshotContext(ctx, "corner");
+	const groundMoveOn = snapshot.state === "pickingSecondCorner" && Boolean(onScenePointerMove);
+	const heightMoveOn = snapshot.state === "pickingHeight" && Boolean(onScenePointerMove) && origin && corner;
 	return (
 		<>
 			<ambientLight intensity={0.45} />
 			<directionalLight position={[12, 18, 10]} intensity={1.1} />
 			<OrbitControls makeDefault />
 			<primitive object={gridHelper} />
-			<GroundPickPlane enabled={pickEnabled} onPick={onGroundPick} />
+			<GroundPickPlane
+				enabled={pickEnabled}
+				onPick={onGroundPick}
+				onPointerMove={onScenePointerMove}
+				pointerMoveEnabled={groundMoveOn}
+			/>
+			{heightMoveOn && origin && corner ? (
+				<HeightDragSurface
+					origin={origin}
+					corner={corner}
+					enabled={heightMoveOn}
+					onPointerMove={onScenePointerMove}
+				/>
+			) : null}
 			<FactoryDisplay model={snapshot.display} />
 			{committedMesh ? <TessellatedCommitMesh mesh={committedMesh} /> : null}
 		</>

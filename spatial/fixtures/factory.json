@@ -67,7 +67,10 @@
           },
           "pointer.down": {
             "target": "pickingHeight",
-            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+            "actions": [
+              { "op": "assign", "path": "corner", "value": { "$event": "point" } },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
           },
           "cancel": { "target": "cancelled" }
         }
@@ -113,6 +116,17 @@
   },
   "display": {
     "states": {
+      "pickingFirstCorner": [
+        {
+          "kind": "label",
+          "id": "hint-first",
+          "role": "prompt",
+          "params": {
+            "text": "Pick first corner on the grid (Z≈0)",
+            "position": { "const": [0, 0.25, 1.4] }
+          }
+        }
+      ],
       "pickingSecondCorner": [
         {
           "kind": "point",
@@ -132,6 +146,15 @@
         }
       ],
       "pickingHeight": [
+        {
+          "kind": "label",
+          "id": "hint-height",
+          "role": "prompt",
+          "params": {
+            "text": "Drag green slab for Z-height, Apply height, then click grid to accept",
+            "position": { "const": [0, 0.25, 1.55] }
+          }
+        },
         {
           "kind": "box-preview",
           "id": "preview",

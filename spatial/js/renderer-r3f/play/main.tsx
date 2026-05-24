@@ -34,8 +34,20 @@ function PlayApp() {
 	}, [snapshot]);
 
 	const onGroundPick = useCallback(
+		(_p: Vec3) => {
+			const st = rt.getSnapshot().state;
+			if (st === "pickingHeight") {
+				void rt.send({ kind: "confirm" });
+				return;
+			}
+			void rt.send({ kind: "pointer.down", point: _p, modifiers: {} });
+		},
+		[rt],
+	);
+
+	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
-			void rt.send({ kind: "pointer.down", point: p, modifiers: {} });
+			void rt.send({ kind: "pointer.move", point: p, modifiers: {} });
 		},
 		[rt],
 	);
@@ -60,8 +72,13 @@ function PlayApp() {
 		}
 	}, [rt, kernel]);
 
-	const picking = snapshot.state === "pickingFirstCorner" || snapshot.state === "pickingSecondCorner";
+	const picking =
+		snapshot.state === "pickingFirstCorner" ||
+		snapshot.state === "pickingSecondCorner" ||
+		snapshot.state === "pickingHeight";
 	const pickEnabled = picking;
+	const pointerMoveActive =
+		snapshot.state === "pickingSecondCorner" || snapshot.state === "pickingHeight";
 
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
@@ -70,6 +87,7 @@ function PlayApp() {
 					<FactorySpatialView
 						snapshot={snapshot}
 						onGroundPick={onGroundPick}
+						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickEnabled}
 						committedMesh={committedMesh}
 					/>
@@ -95,7 +113,8 @@ function PlayApp() {
 					Start
 				</button>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					After Start, click the faint ground plane for corners (Z≈0). Then set height and Commit.
+					Start → first click origin; move to rubber-band second corner; second click fixes corner. Adjust height
+					(green slab or Apply height), then click the grid once to accept. In Ready, Commit creates the solid.
 				</div>
 				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 					Height
