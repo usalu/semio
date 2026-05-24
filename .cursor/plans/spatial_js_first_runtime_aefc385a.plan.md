@@ -2,39 +2,42 @@
 name: Spatial JS First Runtime
 overview: "Implement `@spatial/js` as the first spatial runtime: a single monolith TypeScript package covering the full architecture from `.repo/✍️/spatial.md` — static factory spec, statechart runtime, Topologic-inspired topology kernel, derived Surface/Part views, document/history, renderer-neutral display IR, and an R3F adapter — using only monorepo runtimes (bun, nx, vitest, react, three, r3f, vite, tailwind)."
 todos:
-  - id: ticket
-    content: Open repo MCP ticket 'Spatial JS First Runtime' under best-fit goal (read repo://goals first)
-    status: pending
-  - id: scaffold
-    content: Scaffold spatial/js package files (package.json, project.json, script.ts, vitest.config.ts, tsconfig) mirroring elements/lib/react/topology
-    status: pending
-  - id: core
-    content: "Implement index.tsx core regions: Vec, Refs, Expr, Spec parser"
-    status: pending
-  - id: topology
-    content: Implement Topology + InMemoryKernel + DerivedViews regions with Topologic-inspired storage
-    status: pending
-  - id: runtime
-    content: Implement Statechart interpreter + Factory runtime + Document/History + Display IR regions
-    status: pending
-  - id: factories
-    content: Implement boxFactorySpec, extrudeFactorySpec, offsetSurfaceFactorySpec as static-spec builders
-    status: pending
-  - id: r3f
-    content: "Implement r3f.tsx: interaction adapter, display adapter, hooks, FactoryCanvas/FactoryDisplay components"
-    status: pending
-  - id: play
-    content: Build play/ Vite app demoing box factory through R3F adapter, loading static box.factory.json
-    status: pending
-  - id: tests
-    content: Write inline import.meta.vitest tests for every region; run `bun nx run @spatial/js:test` and fix until green
-    status: pending
-  - id: smoke
-    content: Run `bun nx run @spatial/js:build` and `:dev` smoke; capture runtime [DEBUG] logs proving snapshot+commit
-    status: pending
-  - id: close
-    content: Close ticket with summary + file list
-    status: pending
+ - id: ticket
+   content: Open repo MCP ticket 'Spatial JS First Runtime' under best-fit goal (read repo://goals first)
+   status: completed
+ - id: schema
+   content: Author spatial/schema/json/{factory,topology,expression,display}.json canonical schemas
+   status: completed
+ - id: fixtures
+   content: Author spatial/fixtures/{factory.json,cell-complex.json,...} language-agnostic test data (box + extrude + offset-surface factories, nakagin cell-complex sample)
+   status: in_progress
+ - id: core-scaffold
+   content: Scaffold spatial/js/core (package.json, project.json, script.ts, vitest.config.ts, tsconfig.json)
+   status: pending
+ - id: core-impl
+   content: Implement spatial/js/core/index.ts monolith with all regions (Vec, Refs, Expr, Spec, Topology, Kernel iface, DerivedViews, Statechart, Factory, Document, Display, Factories)
+   status: pending
+ - id: brepjs-scaffold
+   content: Scaffold spatial/js/kernel-brepjs (package.json with brepjs dep, project.json, script.ts, vitest.config.ts)
+   status: pending
+ - id: brepjs-impl
+   content: Implement spatial/js/kernel-brepjs/index.ts adapting brepjs Solid/Face/Edge/Vertex into @spatial/js/core KernelAdapter
+   status: pending
+ - id: r3f-scaffold
+   content: Scaffold spatial/js/renderer-r3f (package.json with react/three/r3f, project.json, script.ts, vitest.config.ts, play/)
+   status: pending
+ - id: r3f-impl
+   content: Implement spatial/js/renderer-r3f/index.tsx (interaction adapter, display adapter, hooks, FactoryCanvas/FactoryDisplay) + play/ demo running the box factory through brepjs kernel
+   status: pending
+ - id: tests
+   content: Write inline import.meta.vitest tests per package; run `bun nx run @spatial/js-core:test`, `:kernel-brepjs:test`, `:renderer-r3f:test` and fix until green
+   status: cancelled
+ - id: smoke
+   content: Run `bun nx run @spatial/js-renderer-r3f:dev` and capture [DEBUG] runtime logs proving full pipeline (spec load → factory → brepjs → r3f mesh)
+   status: cancelled
+ - id: close
+   content: Close ticket with summary + file list
+   status: cancelled
 isProject: false
 ---
 

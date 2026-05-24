@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/factory",
+  "title": "SpatialFactorySpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "machine", "commit"],
+  "properties": {
+    "schema": { "const": "spatial.factory/v1" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kernel": {
+          "type": "object",
+          "properties": {
+            "operations": { "type": "array", "items": { "type": "string" } },
+            "editableEntities": { "type": "array", "items": { "type": "string" } },
+            "derivedEntities": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": { "$ref": "expression.json" }
+    },
+    "machine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "states"],
+      "properties": {
+        "initial": { "type": "string" },
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "final": { "type": "boolean" },
+              "on": {
+                "type": "object",
+                "additionalProperties": { "$ref": "#/$defs/transition" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "object" }
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "excludeEvents": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "commit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation"],
+      "properties": {
+        "when": { "type": "string" },
+        "operation": {
+          "type": "object",
+          "required": ["kind", "params"],
+          "properties": {
+            "kind": { "type": "string" },
+            "params": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": { "type": "string" },
+        "guard": { "type": "string" },
+        "transient": { "type": "boolean" },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/action" }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "assign",
+            "clear",
+            "append",
+            "emit",
+            "raise",
+            "openTransaction",
+            "commitTransaction",
+            "rollbackTransaction",
+            "requestPreview",
+            "kernel.query",
+            "resolveEditable",
+            "setDiagnostic",
+            "clearDiagnostic"
+          ]
+        },
+        "path": { "type": "string" },
+        "value": {},
+        "query": { "type": "string" },
+        "assignTo": { "type": "string" },
+        "severity": { "type": "string" },
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

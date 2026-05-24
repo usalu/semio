@@ -1,0 +1,80 @@
+{
+  "schema": "spatial.factory/v1",
+  "id": "feature.offsetSurface",
+  "version": "1.0.0",
+  "label": "Offset Surface",
+  "requires": {
+    "kernel": {
+      "operations": ["surface.resolveFaces", "face.offset", "entity.tessellate"],
+      "editableEntities": ["face", "shell", "cell"],
+      "derivedEntities": ["surface"]
+    }
+  },
+  "guards": {
+    "hasSurfaceAndDistance": {
+      "all": [
+        { "exists": { "path": "surfaceId" } },
+        { "exists": { "path": "distance" } },
+        { "!=": [{ "path": "distance" }, { "const": 0 }] }
+      ]
+    }
+  },
+  "history": {
+    "excludeEvents": ["pointer.move"]
+  },
+  "machine": {
+    "initial": "selectSurface",
+    "states": {
+      "selectSurface": {
+        "on": {
+          "selection.changed": {
+            "target": "setDistance",
+            "actions": [
+              { "op": "assign", "path": "surfaceId", "value": { "$event": "surfaceId" } },
+              {
+                "op": "kernel.query",
+                "query": "surface.resolveFaces",
+                "assignTo": "resolvedFaceIds",
+                "params": { "surfaceId": { "$event": "surfaceId" } }
+              }
+            ]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "setDistance": {
+        "on": {
+          "set.distance": {
+            "actions": [{ "op": "assign", "path": "distance", "value": { "$event": "value" } }]
+          },
+          "confirm": { "target": "committed", "guard": "hasSurfaceAndDistance" },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "committed": { "final": true },
+      "cancelled": { "final": true }
+    }
+  },
+  "display": {
+    "states": {
+      "setDistance": [
+        {
+          "kind": "entity-highlight",
+          "id": "surface",
+          "role": "semantic-selection",
+          "params": { "targetId": { "path": "surfaceId" }, "kind": "surface" }
+        }
+      ]
+    }
+  },
+  "commit": {
+    "when": "hasSurfaceAndDistance",
+    "operation": {
+      "kind": "face.offset",
+      "params": {
+        "faceIds": { "path": "resolvedFaceIds" },
+        "distance": { "path": "distance" }
+      }
+    }
+  }
+}

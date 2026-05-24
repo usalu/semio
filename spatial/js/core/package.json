@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@spatial/js-core",
+  "version": "0.1.0",
+  "description": "🧭 Spatial factory runtime, topology graph, and kernel contracts (headless).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @spatial/js-core:test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "spatial/js/core"
+  },
+  "bundleKind": "library"
+}

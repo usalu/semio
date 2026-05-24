@@ -1,0 +1,7 @@
+{
+  "title": "Spatial Js First Runtime",
+  "description": "Implement @spatial/js-core, @spatial/js-kernel-brepjs, @spatial/js-renderer-r3f with schemas, fixtures, factory runtime, brepjs kernel, R3F play demo. MCP repo server unavailable in agent environment; ticket opened manually.",
+  "status": "open",
+  "goal": "",
+  "path": "26/05/24/SPATIAL-JS-FIRST-RUNTIME"
+}

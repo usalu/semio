@@ -1,0 +1,29 @@
+{
+  "schema": "spatial.topology/v1",
+  "revision": 1,
+  "vertices": {
+    "v0": { "id": "v0", "position": [0, 0, 0] },
+    "v1": { "id": "v1", "position": [2.4, 0, 0] },
+    "v2": { "id": "v2", "position": [2.4, 8.0, 0] },
+    "v3": { "id": "v3", "position": [0, 8.0, 0] },
+    "v4": { "id": "v4", "position": [0, 0, 3.3] },
+    "v5": { "id": "v5", "position": [2.4, 0, 3.3] },
+    "v6": { "id": "v6", "position": [2.4, 8.0, 3.3] },
+    "v7": { "id": "v7", "position": [0, 8.0, 3.3] }
+  },
+  "edges": {},
+  "wires": {},
+  "faces": {},
+  "shells": {},
+  "cells": {
+    "capsule-0": { "id": "capsule-0", "shellIds": ["shell-0"] }
+  },
+  "cellComplexes": {
+    "nakagin-slice": {
+      "id": "nakagin-slice",
+      "cellIds": ["capsule-0"],
+      "sharedFaceIds": []
+    }
+  },
+  "clusters": {}
+}

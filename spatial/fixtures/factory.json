@@ -1,0 +1,180 @@
+{
+  "schema": "spatial.factory/v1",
+  "id": "primitive.box",
+  "version": "1.0.0",
+  "label": "Box",
+  "requires": {
+    "kernel": {
+      "operations": ["cell.createBox", "entity.tessellate"],
+      "editableEntities": ["vertex", "edge", "wire", "face", "shell", "cell"]
+    }
+  },
+  "guards": {
+    "hasValidBox": {
+      "all": [
+        { "exists": { "path": "origin" } },
+        { "exists": { "path": "corner" } },
+        { "exists": { "path": "height" } },
+        { ">": [{ "path": "height" }, 0] },
+        {
+          ">": [
+            {
+              "abs": {
+                "-": [{ "path": "corner.0" }, { "path": "origin.0" }]
+              }
+            },
+            1e-9
+          ]
+        },
+        {
+          ">": [
+            {
+              "abs": {
+                "-": [{ "path": "corner.1" }, { "path": "origin.1" }]
+              }
+            },
+            1e-9
+          ]
+        }
+      ]
+    }
+  },
+  "history": {
+    "excludeEvents": ["pointer.move"]
+  },
+  "machine": {
+    "initial": "idle",
+    "states": {
+      "idle": {
+        "on": {
+          "start": { "target": "pickingFirstCorner" }
+        }
+      },
+      "pickingFirstCorner": {
+        "on": {
+          "pointer.down": {
+            "target": "pickingSecondCorner",
+            "actions": [{ "op": "assign", "path": "origin", "value": { "$event": "point" } }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "pickingSecondCorner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "pickingHeight",
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "pickingHeight": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [
+              {
+                "op": "assign",
+                "path": "height",
+                "value": {
+                  "let": {
+                    "z0": { "path": "origin.2" },
+                    "z1": { "$event": "point.2" }
+                  },
+                  "in": { "abs": { "-": [{ "var": "z1" }, { "var": "z0" }] } }
+                }
+              }
+            ]
+          },
+          "set.height": {
+            "target": "ready",
+            "actions": [{ "op": "assign", "path": "height", "value": { "$event": "value" } }]
+          },
+          "confirm": {
+            "target": "ready",
+            "guard": "hasValidBox"
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "ready": {
+        "on": {
+          "confirm": { "target": "committed", "guard": "hasValidBox" },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "committed": { "final": true },
+      "cancelled": { "final": true }
+    }
+  },
+  "display": {
+    "states": {
+      "pickingSecondCorner": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "pickingHeight": [
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "path": "height" }
+          }
+        },
+        {
+          "kind": "linear-handle",
+          "id": "height-handle",
+          "role": "handle",
+          "params": {
+            "axis": [0, 0, 1],
+            "origin": { "path": "corner" }
+          }
+        }
+      ],
+      "ready": [
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "path": "height" }
+          }
+        }
+      ]
+    }
+  },
+  "commit": {
+    "when": "hasValidBox",
+    "operation": {
+      "kind": "cell.createBox",
+      "params": {
+        "cornerA": { "path": "origin" },
+        "cornerB": { "path": "corner" },
+        "height": { "path": "height" }
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/expression",
+  "title": "SpatialDeclarativeExpr",
+  "oneOf": [
+    { "$ref": "#/$defs/path" },
+    { "$ref": "#/$defs/const" },
+    { "$ref": "#/$defs/event" },
+    { "$ref": "#/$defs/varRef" },
+    { "$ref": "#/$defs/let" },
+    { "$ref": "#/$defs/exists" },
+    { "$ref": "#/$defs/notEmpty" },
+    { "$ref": "#/$defs/all" },
+    { "$ref": "#/$defs/any" },
+    { "$ref": "#/$defs/not" },
+    { "$ref": "#/$defs/binop" },
+    { "$ref": "#/$defs/unary" },
+    { "$ref": "#/$defs/abs" },
+    { "$ref": "#/$defs/distance" }
+  ],
+  "$defs": {
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": { "path": { "type": "string" } }
+    },
+    "const": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["const"],
+      "properties": { "const": {} }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$event"],
+      "properties": { "$event": { "type": "string" } }
+    },
+    "varRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["var"],
+      "properties": { "var": { "type": "string" } }
+    },
+    "let": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["let", "in"],
+      "properties": {
+        "let": { "type": "object", "additionalProperties": { "$ref": "#" } },
+        "in": { "$ref": "#" }
+      }
+    },
+    "exists": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exists"],
+      "properties": { "exists": { "$ref": "#/$defs/path" } }
+    },
+    "notEmpty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notEmpty"],
+      "properties": { "notEmpty": { "$ref": "#/$defs/path" } }
+    },
+    "all": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["all"],
+      "properties": { "all": { "type": "array", "items": { "$ref": "#" } } }
+    },
+    "any": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["any"],
+      "properties": { "any": { "type": "array", "items": { "$ref": "#" } } }
+    },
+    "not": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["not"],
+      "properties": { "not": { "$ref": "#" } }
+    },
+    "binop": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "$ref": "#" }
+      }
+    },
+    "unary": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": { "$ref": "#" }
+    },
+    "abs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["abs"],
+      "properties": { "abs": { "$ref": "#" } }
+    },
+    "distance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distance"],
+      "properties": {
+        "distance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["a", "b"],
+          "properties": { "a": { "$ref": "#" }, "b": { "$ref": "#" } }
+        }
+      }
+    }
+  }
+}
