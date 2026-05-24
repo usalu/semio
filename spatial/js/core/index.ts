@@ -151,18 +151,198 @@ export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): 
 
 /** @emoji 🧭 Active `selection` block for `state`, or `null` when unrestricted. */
 export function getActiveSelectionSpec(
-	spec: { readonly machine: { readonly states: Record<string, { readonly selection?: SelectionSpec }> } },
+	spec: {
+		readonly machine: {
+			readonly states: readonly { readonly name: string; readonly selection?: SelectionSpec }[];
+		};
+	},
 	state: string,
 ): SelectionSpec | null {
-	const st = spec.machine.states[state];
+	const st = spec.machine.states.find((s) => s.name === state);
 	const s = st?.selection;
 	return s ?? null;
 }
 // #endregion 🪪Selection
 
+// #region 🗺️Paths
+/** @emoji 🧭 Root object for segmented path reads (`context` vs `event`). */
+export type PathRoot = "context" | "event";
+
+/** @emoji 🧭 One navigation step: object field or array index (no dynamic JSON keys). */
+export type PathSegment =
+	| { readonly kind: "field"; readonly name: string }
+	| { readonly kind: "index"; readonly index: number };
+
+/** @emoji 🧭 Absolute path into `context` or `event` payloads. */
+export interface PathTarget {
+	readonly root: PathRoot;
+	readonly segments: readonly PathSegment[];
+}
+
+/** @emoji 🧭 Reads `segments` from `root` (object/array chain). */
+export function readPathSegments(root: unknown, segments: readonly PathSegment[]): unknown {
+	let cur: unknown = root;
+	for (const seg of segments) {
+		if (cur === null || cur === undefined) return undefined;
+		if (seg.kind === "field") {
+			if (typeof cur !== "object" || Array.isArray(cur)) return undefined;
+			cur = (cur as Record<string, unknown>)[seg.name];
+		} else {
+			if (!Array.isArray(cur)) return undefined;
+			cur = cur[seg.index];
+		}
+	}
+	return cur;
+}
+
+/** @emoji 🧭 Resolves a `PathTarget` against `ExprEnv`. */
+export function readPathTarget(t: PathTarget, env: ExprEnv): unknown {
+	const root = t.root === "context" ? env.context : env.event;
+	return readPathSegments(root, t.segments);
+}
+
+/** @emoji 🧭 Writes `value` at `segments` under `root` (creates object/array shells). */
+export function writePathSegments(root: Record<string, unknown>, segments: readonly PathSegment[], value: unknown): void {
+	if (segments.length === 0) return;
+	let cur: Record<string, unknown> | unknown[] = root;
+	for (let i = 0; i < segments.length - 1; i++) {
+		const seg = segments[i]!;
+		const next = segments[i + 1]!;
+		const nextIsIndex = next.kind === "index";
+		if (seg.kind === "field") {
+			const o = cur as Record<string, unknown>;
+			let child = o[seg.name];
+			if (child === undefined || child === null || typeof child !== "object") {
+				o[seg.name] = nextIsIndex ? ([] as unknown[]) : {};
+				child = o[seg.name];
+			}
+			cur = child as Record<string, unknown> | unknown[];
+		} else {
+			const arr = cur as unknown[];
+			let child = arr[seg.index];
+			if (child === undefined || child === null || typeof child !== "object") {
+				arr[seg.index] = nextIsIndex ? ([] as unknown[]) : {};
+				child = arr[seg.index];
+			}
+			cur = child as Record<string, unknown> | unknown[];
+		}
+	}
+	const last = segments[segments.length - 1]!;
+	if (last.kind === "field") {
+		(cur as Record<string, unknown>)[last.name] = value;
+	} else {
+		(cur as unknown[])[last.index] = value;
+	}
+}
+
+/** @emoji 🧭 Writes into `env.context` using a context-rooted path. */
+export function writePathTarget(t: PathTarget, env: ExprEnv, value: unknown): void {
+	if (t.root !== "context") return;
+	writePathSegments(env.context, t.segments, value);
+}
+
+/** @emoji 🧭 Clears the value at `segments` (deletes final field or sets array slot to `undefined`). */
+export function clearPathSegments(root: Record<string, unknown>, segments: readonly PathSegment[]): void {
+	if (segments.length === 0) return;
+	if (segments.length === 1 && segments[0]!.kind === "field") {
+		delete root[segments[0]!.name];
+		return;
+	}
+	let cur: unknown = root;
+	for (let i = 0; i < segments.length - 1; i++) {
+		const seg = segments[i]!;
+		if (cur === null || cur === undefined) return;
+		if (seg.kind === "field") cur = (cur as Record<string, unknown>)[seg.name];
+		else cur = (cur as unknown[])[seg.index];
+	}
+	const last = segments[segments.length - 1]!;
+	const parent = cur as Record<string, unknown> | unknown[];
+	if (last.kind === "field") delete (parent as Record<string, unknown>)[last.name];
+	else (parent as unknown[])[last.index] = undefined;
+}
+
+/** @emoji 🧭 Clears `target` on `env.context`. */
+export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
+	if (t.root !== "context") return;
+	clearPathSegments(env.context, t.segments);
+}
+// #endregion 🗺️Paths
+
 // #region 🗺️Expr
-/** @emoji 🗺️ JSON-serializable expression AST evaluated by `evalExpr`. */
-export type Expr = Record<string, unknown>;
+/** @emoji 🗺️ Tagged declarative expression evaluated by `evalExpr` (`spatial/schema/json/expression.json`). */
+export type Expr =
+	| ExprPath
+	| ExprConst
+	| ExprVar
+	| ExprLet
+	| ExprExists
+	| ExprNotEmpty
+	| ExprAll
+	| ExprAny
+	| ExprNot
+	| ExprAbs
+	| ExprDistance
+	| ExprBinop
+	| ExprFold;
+
+export interface ExprPath {
+	readonly kind: "path";
+	readonly root: PathRoot;
+	readonly segments: readonly PathSegment[];
+}
+export interface ExprConst {
+	readonly kind: "const";
+	readonly value: unknown;
+}
+export interface ExprVar {
+	readonly kind: "var";
+	readonly name: string;
+}
+export interface ExprLet {
+	readonly kind: "let";
+	readonly bindings: readonly { readonly name: string; readonly value: Expr }[];
+	readonly in: Expr;
+}
+export interface ExprExists {
+	readonly kind: "exists";
+	readonly target: PathTarget;
+}
+export interface ExprNotEmpty {
+	readonly kind: "notEmpty";
+	readonly target: PathTarget;
+}
+export interface ExprAll {
+	readonly kind: "all";
+	readonly args: readonly Expr[];
+}
+export interface ExprAny {
+	readonly kind: "any";
+	readonly args: readonly Expr[];
+}
+export interface ExprNot {
+	readonly kind: "not";
+	readonly arg: Expr;
+}
+export interface ExprAbs {
+	readonly kind: "abs";
+	readonly arg: Expr;
+}
+export interface ExprDistance {
+	readonly kind: "distance";
+	readonly a: Expr;
+	readonly b: Expr;
+}
+export interface ExprBinop {
+	readonly kind: "binop";
+	readonly op: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/";
+	readonly left: Expr;
+	readonly right: Expr;
+}
+export interface ExprFold {
+	readonly kind: "fold";
+	readonly op: "min" | "max";
+	readonly args: readonly [Expr, Expr];
+}
 
 export interface ExprEnv {
 	readonly context: Record<string, unknown>;
@@ -174,136 +354,61 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
 	return { context: base.context, event: base.event, vars: { ...base.vars, ...vars } };
 }
 
-/** @emoji 🧭 Reads `path` like `a.b.0` from a nested plain object / array value `root`. */
-export function getPath(root: unknown, path: string): unknown {
-	const segs = path.split(".").filter(Boolean);
-	let cur: unknown = root;
-	for (const s of segs) {
-		if (cur === null || cur === undefined) return undefined;
-		if (Array.isArray(cur)) {
-			const i = Number(s);
-			if (!Number.isInteger(i)) return undefined;
-			cur = cur[i];
-			continue;
-		}
-		if (typeof cur === "object") {
-			cur = (cur as Record<string, unknown>)[s];
-			continue;
-		}
-		return undefined;
-	}
-	return cur;
+function isVec3(v: unknown): v is Vec3 {
+	return Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === "number");
 }
 
-/** @emoji 🧭 Writes `value` at `path` (creates object shells as needed). */
-export function setPath(root: Record<string, unknown>, path: string, value: unknown): void {
-	const segs = path.split(".").filter(Boolean);
-	if (segs.length === 0) return;
-	let cur: Record<string, unknown> | unknown[] = root;
-	for (let i = 0; i < segs.length - 1; i++) {
-		const s = segs[i]!;
-		const next = segs[i + 1]!;
-		const isNextIndex = Array.isArray(cur) ? Number.isInteger(Number(next)) : /^\d+$/.test(next);
-		if (Array.isArray(cur)) {
-			const idx = Number(s);
-			const child = cur[idx];
-			if (child === undefined || child === null) {
-				const slot: Record<string, unknown> = {};
-				cur[idx] = isNextIndex ? ([] as unknown[]) : slot;
-			}
-			cur = cur[idx] as Record<string, unknown> | unknown[];
-			continue;
-		}
-		const o = cur as Record<string, unknown>;
-		let child = o[s];
-		if (child === undefined || child === null || typeof child !== "object") {
-			o[s] = isNextIndex ? ([] as unknown[]) : {};
-			child = o[s];
-		}
-		cur = child as Record<string, unknown> | unknown[];
-	}
-	const last = segs[segs.length - 1]!;
-	if (Array.isArray(cur)) {
-		cur[Number(last)] = value;
-		return;
-	}
-	(cur as Record<string, unknown>)[last] = value;
-}
-
-/** @emoji 🧮 Evaluates a declarative `Expr` against `ExprEnv` (guards + action values). */
+/** @emoji 🧮 Evaluates a tagged `Expr` against `ExprEnv` (guards + action values). */
 export function evalExpr(expr: Expr, env: ExprEnv): unknown {
-	if (expr === null || typeof expr !== "object") return expr as unknown;
-	if ("const" in expr) return (expr as { const: unknown }).const;
-	if ("path" in expr) {
-		const p = (expr as { path: string }).path;
-		return getPath(env.context, p);
-	}
-	if ("$event" in expr) {
-		const k = (expr as { $event: string }).$event;
-		return env.event ? getPath(env.event, k) : undefined;
-	}
-	if ("var" in expr) {
-		const k = (expr as { var: string }).var;
-		return env.vars ? env.vars[k] : undefined;
-	}
-	if ("let" in expr && "in" in expr) {
-		const { let: bindings, in: inner } = expr as { let: Record<string, Expr>; in: Expr };
-		const next: Record<string, unknown> = {};
-		for (const [k, v] of Object.entries(bindings)) {
-			next[k] = evalExpr(v, env);
+	switch (expr.kind) {
+		case "const":
+			return expr.value;
+		case "path":
+			return readPathTarget({ root: expr.root, segments: expr.segments }, env);
+		case "var":
+			return env.vars ? env.vars[expr.name] : undefined;
+		case "let": {
+			const next: Record<string, unknown> = {};
+			for (const b of expr.bindings) {
+				next[b.name] = evalExpr(b.value, env);
+			}
+			return evalExpr(expr.in, envWithVars(env, next));
 		}
-		return evalExpr(inner, envWithVars(env, next));
-	}
-	if ("exists" in expr) {
-		const inner = (expr as { exists: { path: string } }).exists;
-		const v = getPath(env.context, inner.path);
-		return v !== undefined && v !== null;
-	}
-	if ("notEmpty" in expr) {
-		const inner = (expr as { notEmpty: { path: string } }).notEmpty;
-		const v = getPath(env.context, inner.path);
-		if (v === undefined || v === null) return false;
-		if (Array.isArray(v)) return v.length > 0;
-		if (typeof v === "string") return v.length > 0;
-		return true;
-	}
-	if ("all" in expr) {
-		const xs = (expr as { all: Expr[] }).all;
-		return xs.every((x) => Boolean(evalExpr(x, env)));
-	}
-	if ("any" in expr) {
-		const xs = (expr as { any: Expr[] }).any;
-		return xs.some((x) => Boolean(evalExpr(x, env)));
-	}
-	if ("not" in expr) {
-		return !Boolean(evalExpr((expr as { not: Expr }).not, env));
-	}
-	if ("abs" in expr) {
-		const v = evalExpr((expr as { abs: Expr }).abs, env);
-		return typeof v === "number" ? Math.abs(v) : undefined;
-	}
-	if ("distance" in expr) {
-		const { a, b } = (expr as { distance: { a: Expr; b: Expr } }).distance;
-		const va = evalExpr(a, env);
-		const vb = evalExpr(b, env);
-		if (!isVec3(va) || !isVec3(vb)) return undefined;
-		return vec3Distance(va, vb);
-	}
-	if ("min" in expr) {
-		const pair = (expr as { min: [Expr, Expr] }).min;
-		return Math.min(Number(evalExpr(pair[0], env)), Number(evalExpr(pair[1], env)));
-	}
-	if ("max" in expr) {
-		const pair = (expr as { max: [Expr, Expr] }).max;
-		return Math.max(Number(evalExpr(pair[0], env)), Number(evalExpr(pair[1], env)));
-	}
-	const binKeys = ["==", "!=", ">", "<", ">=", "<=", "+", "-", "*", "/"] as const;
-	for (const k of binKeys) {
-		if (k in expr) {
-			const pair = (expr as Record<string, [Expr, Expr]>)[k];
-			const left = evalExpr(pair[0], env);
-			const right = evalExpr(pair[1], env);
-			switch (k) {
+		case "exists": {
+			const v = readPathTarget(expr.target, env);
+			return v !== undefined && v !== null;
+		}
+		case "notEmpty": {
+			const v = readPathTarget(expr.target, env);
+			if (v === undefined || v === null) return false;
+			if (Array.isArray(v)) return v.length > 0;
+			if (typeof v === "string") return v.length > 0;
+			return true;
+		}
+		case "all":
+			return expr.args.every((x) => Boolean(evalExpr(x, env)));
+		case "any":
+			return expr.args.some((x) => Boolean(evalExpr(x, env)));
+		case "not":
+			return !Boolean(evalExpr(expr.arg, env));
+		case "abs": {
+			const v = evalExpr(expr.arg, env);
+			return typeof v === "number" ? Math.abs(v) : undefined;
+		}
+		case "distance": {
+			const va = evalExpr(expr.a, env);
+			const vb = evalExpr(expr.b, env);
+			if (!isVec3(va) || !isVec3(vb)) return undefined;
+			return vec3Distance(va, vb);
+		}
+		case "fold":
+			return expr.op === "min"
+				? Math.min(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)))
+				: Math.max(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)));
+		case "binop": {
+			const left = evalExpr(expr.left, env);
+			const right = evalExpr(expr.right, env);
+			switch (expr.op) {
 				case "==":
 					return left === right;
 				case "!=":
@@ -328,12 +433,9 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 					return undefined;
 			}
 		}
+		default:
+			return undefined;
 	}
-	return undefined;
-}
-
-function isVec3(v: unknown): v is Vec3 {
-	return Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === "number");
 }
 
 /** @emoji 🧭 Coerces `evalExpr` output to strict boolean guard result. */
@@ -343,35 +445,117 @@ export function evalGuard(expr: Expr, env: ExprEnv): boolean {
 // #endregion 🗺️Expr
 
 // #region 📜Spec
+/** @emoji 📜 Declared command-local context slots (`spatial.command/v1` `context`). */
+export interface ContextFieldDecl {
+	readonly name: string;
+	readonly kind: "string" | "number" | "boolean" | "vec3" | "stringArray" | "unknown";
+	readonly enumValues?: readonly string[];
+}
+
+/** @emoji 📜 Named guard binding (`guards[]`). */
+export interface NamedGuard {
+	readonly name: string;
+	readonly expr: Expr;
+}
+
+export interface TransitionSpec {
+	readonly target?: string;
+	readonly guard?: string;
+	readonly transient?: boolean;
+	readonly actions?: readonly ActionSpec[];
+	readonly key?: string;
+	readonly label?: string;
+}
+
+export type KernelQueryParams = {
+	readonly kind: "surface.resolveFaces";
+	readonly surfaceId: Expr;
+};
+
+export type ActionSpec =
+	| { readonly op: "assign"; readonly target: PathTarget; readonly value: Expr }
+	| { readonly op: "clear"; readonly target: PathTarget }
+	| { readonly op: "append"; readonly target: PathTarget; readonly value: Expr }
+	| { readonly op: "emit"; readonly event: { readonly kind: string } }
+	| { readonly op: "raise"; readonly event: string }
+	| { readonly op: "openTransaction" }
+	| { readonly op: "commitTransaction" }
+	| { readonly op: "rollbackTransaction" }
+	| { readonly op: "requestPreview" }
+	| { readonly op: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params: KernelQueryParams }
+	| { readonly op: "resolveEditable" }
+	| { readonly op: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
+	| { readonly op: "clearDiagnostic"; readonly code: string }
+	| {
+			readonly op: "box.transform";
+			readonly transform:
+				| "aabbFromDiagonalCorners"
+				| "tripletRubber"
+				| "tripletCommit"
+				| "snapSquareFootprint"
+				| "setCubeHeightFromFootprint"
+				| "rubberCornerFromCenter"
+				| "rubberSquareFromCenter"
+				| "verticalFinalizeFootprint"
+				| "initPeakAboveOrigin"
+				| "peakFromOriginZ"
+				| "verticalRubberCorner"
+				| "cornerFromLengthWidth";
+	  };
+
+export interface EventHandlerSpec {
+	readonly event: string;
+	readonly transitions: readonly TransitionSpec[];
+}
+
+export interface StateDefSpec {
+	readonly name: string;
+	readonly final?: boolean;
+	readonly selection?: SelectionSpec;
+	readonly on?: readonly EventHandlerSpec[];
+}
+
+export type DisplayItemSpec =
+	| { readonly kind: "point"; readonly id: string; readonly role?: string; readonly position: Expr }
+	| { readonly kind: "label"; readonly id: string; readonly role?: string; readonly text: string; readonly position: Expr }
+	| { readonly kind: "segment"; readonly id: string; readonly role?: string; readonly from: Expr; readonly to: Expr }
+	| { readonly kind: "linear-handle"; readonly id: string; readonly role?: string; readonly axis: Vec3; readonly origin: Expr }
+	| { readonly kind: "box-preview"; readonly id: string; readonly role?: string; readonly cornerA: Expr; readonly cornerB: Expr; readonly height: Expr }
+	| { readonly kind: "entity-highlight"; readonly id: string; readonly role?: string; readonly entity: { readonly kind: TopologyEntityKind; readonly id: string } }
+	| { readonly kind: "curve"; readonly id: string; readonly role?: string }
+	| { readonly kind: "mesh"; readonly id: string; readonly role?: string };
+
+export type CommitOperationSpec =
+	| { readonly kind: "cell.createBox"; readonly cornerA: Expr; readonly cornerB: Expr; readonly height: Expr }
+	| { readonly kind: "wire.extrudeToCell"; readonly wireId: Expr; readonly distance: Expr; readonly direction: Expr }
+	| { readonly kind: "face.offset"; readonly faceIds: Expr; readonly distance: Expr }
+	| { readonly kind: "measure.distance"; readonly a: Expr; readonly b: Expr }
+	| { readonly kind: "measure.area"; readonly faceId: Expr }
+	| { readonly kind: "measure.volume"; readonly cellId: Expr };
+
 /** @emoji 📜 Parsed static command document (`spatial.command/v1`). */
 export interface CommandSpec {
 	readonly schema: "spatial.command/v1";
 	readonly id: string;
 	readonly version: string;
 	readonly label?: string;
+	readonly context?: { readonly fields: readonly ContextFieldDecl[] };
 	readonly requires?: Record<string, unknown>;
-	readonly guards?: Record<string, Expr>;
+	readonly guards?: readonly NamedGuard[];
 	readonly history?: { excludeEvents?: readonly string[] };
 	readonly machine: {
 		readonly initial: string;
-		readonly states: Record<
-			string,
-			{
-				readonly final?: boolean;
-				readonly selection?: SelectionSpec;
-				readonly on?: Record<string, TransitionSpec | readonly TransitionSpec[]>;
-			}
-		>;
+		readonly states: readonly StateDefSpec[];
 	};
 	readonly display?: {
-		readonly states?: Record<string, readonly DisplayItemSpec[]>;
+		readonly states?: readonly { readonly state: string; readonly items: readonly DisplayItemSpec[] }[];
 	};
 	readonly interaction?: CommandSpatialInteractionConfig;
 	readonly commit: {
 		readonly when?: string;
 		readonly fromStates?: readonly string[];
-		readonly outputDataPath?: string;
-		readonly operation: { readonly kind: string; readonly params: Record<string, unknown> };
+		readonly outputDataPath?: PathTarget;
+		readonly operation: CommitOperationSpec;
 	};
 }
 
@@ -385,32 +569,12 @@ export interface CommandSpatialInteractionConfig {
 	readonly heightConfirmState?: string | null;
 }
 
-export interface TransitionSpec {
-	readonly target?: string;
-	readonly guard?: string;
-	readonly transient?: boolean;
-	readonly actions?: readonly ActionSpec[];
-	readonly key?: string;
-	readonly label?: string;
+function guardNames(spec: CommandSpec): Set<string> {
+	return new Set((spec.guards ?? []).map((g) => g.name));
 }
 
-export interface ActionSpec {
-	readonly op: string;
-	readonly path?: string;
-	readonly value?: unknown;
-	readonly query?: string;
-	readonly assignTo?: string;
-	readonly params?: Record<string, unknown>;
-	readonly severity?: string;
-	readonly code?: string;
-	readonly message?: string;
-}
-
-export interface DisplayItemSpec {
-	readonly kind: string;
-	readonly id: string;
-	readonly role?: string;
-	readonly params?: Record<string, unknown>;
+function findState(spec: CommandSpec, name: string): StateDefSpec | undefined {
+	return spec.machine.states.find((s) => s.name === name);
 }
 
 /** @emoji 🧾 Validates and returns a `CommandSpec` or `null` when malformed. */
@@ -422,27 +586,53 @@ export function parseCommandSpec(raw: unknown): CommandSpec | null {
 	const machine = r.machine;
 	if (!machine || typeof machine !== "object") return null;
 	const m = machine as Record<string, unknown>;
-	if (typeof m.initial !== "string" || !m.states || typeof m.states !== "object") return null;
-	const states = m.states as Record<string, unknown>;
-	for (const st of Object.values(states)) {
+	if (typeof m.initial !== "string" || !Array.isArray(m.states)) return null;
+	const states = m.states as unknown[];
+	const names = new Set<string>();
+	for (const st of states) {
 		if (!st || typeof st !== "object") return null;
-		const sel = (st as Record<string, unknown>).selection;
-		if (!sel) continue;
-		if (typeof sel !== "object") return null;
-		const acc = (sel as Record<string, unknown>).accept;
-		if (!Array.isArray(acc) || acc.length === 0) return null;
-		for (const k of acc) {
-			if (typeof k !== "string" || !TOPOLOGY_ENTITY_KINDS.has(k)) return null;
+		const s = st as Record<string, unknown>;
+		if (typeof s.name !== "string" || s.name.length === 0) return null;
+		if (names.has(s.name)) return null;
+		names.add(s.name);
+		const sel = s.selection;
+		if (sel) {
+			if (typeof sel !== "object") return null;
+			const acc = (sel as Record<string, unknown>).accept;
+			if (!Array.isArray(acc) || acc.length === 0) return null;
+			for (const k of acc) {
+				if (typeof k !== "string" || !TOPOLOGY_ENTITY_KINDS.has(k)) return null;
+			}
+		}
+		const on = s.on;
+		if (on !== undefined) {
+			if (!Array.isArray(on)) return null;
+			for (const h of on) {
+				if (!h || typeof h !== "object") return null;
+				const he = h as Record<string, unknown>;
+				if (typeof he.event !== "string" || !Array.isArray(he.transitions)) return null;
+			}
 		}
 	}
+	if (!names.has(m.initial as string)) return null;
 	const commit = r.commit;
 	if (!commit || typeof commit !== "object") return null;
 	const c = commit as Record<string, unknown>;
 	const op = c.operation;
 	if (!op || typeof op !== "object") return null;
 	const o = op as Record<string, unknown>;
-	if (typeof o.kind !== "string" || !o.params || typeof o.params !== "object") return null;
-	return r as unknown as CommandSpec;
+	if (typeof o.kind !== "string") return null;
+	const spec = r as unknown as CommandSpec;
+	const gn = guardNames(spec);
+	if (c.when !== undefined && typeof c.when === "string" && !gn.has(c.when)) return null;
+	for (const st of spec.machine.states) {
+		for (const h of st.on ?? []) {
+			for (const tr of h.transitions) {
+				if (tr.guard !== undefined && typeof tr.guard === "string" && !gn.has(tr.guard)) return null;
+			}
+		}
+	}
+	return spec;
 }
 
 /** @emoji 🧭 Normalizes a parsed command (currently identity). */

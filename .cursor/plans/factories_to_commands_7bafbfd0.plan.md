@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: kernel-diff
     content: Extend `KernelAdapter` with `*Diff` writes + `vertexDistance`/`edgeLength`/`faceArea`/`cellVolume`; implement in `BrepjsKernel`
-    status: in_progress
+    status: completed
   - id: commit-rewrite
     content: Rewrite `CommandRuntime.commit` to produce `CommandResponse`, apply diff to topology, record `DocumentCommand` with inverse diff; gate `selection.changed` by `selection.accept`
     status: completed
@@ -25,13 +25,13 @@ todos:
     status: completed
   - id: play-app
     content: Update `play/main.tsx` to consume `CommandResponse` (display `data` for Distance/Area, apply `diff` for write commands), rename symbols
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing test regions in core/stately/kernel-brepjs to cover diff round-trip, selection filter, distance/area, parity
-    status: pending
+    status: completed
   - id: verify
     content: "`bun nx run-many -t test -p @spatial/js-core @spatial/js-machine-stately @spatial/js-kernel-brepjs` + manual play-app smoke with `[DEBUG]` logs"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -8,14 +8,14 @@
   "properties": {
     "schema": { "const": "spatial.topology/v1" },
     "revision": { "type": "integer", "minimum": 0 },
-    "vertices": { "type": "object", "additionalProperties": { "$ref": "#/$defs/vertex" } },
-    "edges": { "type": "object", "additionalProperties": { "$ref": "#/$defs/edge" } },
-    "wires": { "type": "object", "additionalProperties": { "$ref": "#/$defs/wire" } },
-    "faces": { "type": "object", "additionalProperties": { "$ref": "#/$defs/face" } },
-    "shells": { "type": "object", "additionalProperties": { "$ref": "#/$defs/shell" } },
-    "cells": { "type": "object", "additionalProperties": { "$ref": "#/$defs/cell" } },
-    "cellComplexes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/cellComplex" } },
-    "clusters": { "type": "object", "additionalProperties": { "$ref": "#/$defs/cluster" } }
+    "vertices": { "type": "array", "items": { "$ref": "#/$defs/vertex" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
+    "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
+    "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
+    "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } },
+    "cellComplexes": { "type": "array", "items": { "$ref": "#/$defs/cellComplex" } },
+    "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } }
   },
   "$defs": {
     "vec3": {

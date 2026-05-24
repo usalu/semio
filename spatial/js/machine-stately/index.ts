@@ -13,6 +13,8 @@ import {
 	createCommandRuntime,
 	expandMachineTransitions,
 	isEmptyTopologyDiff,
+	listSpatialCommandPresets,
+	loadSpatialCommandPreset,
 	pureTsStateEngineProvider,
 	type CommandEvent,
 	type CommandRuntime,
@@ -73,6 +75,148 @@ function buildStatelyMachine(spec: CommandSpec, initial: string) {
 		initial,
 		states,
 	});
+}
+
+/** @emoji 📊 One transition row for `machine.json` / Mermaid (matches `__advance` branch order). */
+export interface SpatialStatelyMachineTransitionView {
+	readonly from: string;
+	readonly to: string;
+	readonly on: string;
+	readonly branch: number;
+	readonly guard: string | null;
+	readonly transient: boolean;
+	readonly key?: string;
+	readonly label?: string;
+}
+
+/** @emoji 📊 Serializable state node summary. */
+export interface SpatialStatelyMachineStateView {
+	readonly id: string;
+	readonly final: boolean;
+	readonly selectionAccept?: readonly string[];
+}
+
+/** @emoji 📊 Single spatial command as a viewable state machine (edges + Mermaid). */
+export interface SpatialStatelyMachineView {
+	readonly commandId: string;
+	readonly commandVersion: string;
+	readonly label: string;
+	readonly hostKey: string;
+	readonly initial: string;
+	readonly states: readonly SpatialStatelyMachineStateView[];
+	readonly edges: readonly SpatialStatelyMachineTransitionView[];
+	readonly mermaid: string;
+	readonly statelyRoutingNote: string;
+}
+
+/** @emoji 📊 Catalog of built-in commands for Stately/Mermaid viewers (`machine.json`). */
+export interface SpatialStatelyMachineCatalogView {
+	readonly kind: "spatial.stately-machine-view/v1";
+	readonly schemaVersion: "1.0";
+	readonly generatedAt: string;
+	readonly machines: readonly SpatialStatelyMachineView[];
+	readonly mermaidCombined: string;
+}
+
+/** @emoji 📊 Collects flat transition rows from `CommandSpec.machine` (same order as `StatelyStateEngine`). */
+export function collectSpatialStatelyMachineTransitions(spec: CommandSpec): readonly SpatialStatelyMachineTransitionView[] {
+	const out: SpatialStatelyMachineTransitionView[] = [];
+	for (const [from, st] of Object.entries(spec.machine.states)) {
+		if (!st.on) continue;
+		for (const [eventKind, raw] of Object.entries(st.on)) {
+			const choices = expandMachineTransitions(raw);
+			for (let i = 0; i < choices.length; i++) {
+				const tr = choices[i]!;
+				const to = (tr.target ?? from) as string;
+				out.push({
+					from,
+					to,
+					on: eventKind,
+					branch: i,
+					guard: tr.guard ?? null,
+					transient: Boolean(tr.transient),
+					...(typeof tr.key === "string" && tr.key.length > 0 ? { key: tr.key } : {}),
+					...(typeof tr.label === "string" && tr.label.length > 0 ? { label: tr.label } : {}),
+				});
+			}
+		}
+	}
+	return out;
+}
+
+function buildSpatialStatelyStateViews(spec: CommandSpec): SpatialStatelyMachineStateView[] {
+	return Object.keys(spec.machine.states).map((id) => {
+		const st = spec.machine.states[id]!;
+		const acc = st.selection?.accept;
+		return {
+			id,
+			final: Boolean(st.final),
+			...(acc && acc.length ? { selectionAccept: [...acc] } : {}),
+		};
+	});
+}
+
+function mermaidForSpatialCommand(spec: CommandSpec, title: string): string {
+	const slug = spec.id.replace(/[^\w]+/g, "_");
+	const sid = (s: string) => `${slug}__${s.replace(/[^\w]+/g, "_")}`;
+	const esc = (s: string) => s.replace(/"/g, "'");
+	const lines = ["flowchart TB", `  subgraph sub_${slug} ["${esc(title)}"]`];
+	for (const st of buildSpatialStatelyStateViews(spec)) {
+		const tag = st.final ? " (final)" : "";
+		lines.push(`    ${sid(st.id)}["${esc(st.id)}${esc(tag)}"]`);
+	}
+	for (const e of collectSpatialStatelyMachineTransitions(spec)) {
+		let el = e.on;
+		if (e.guard) el += ` [${e.guard}]`;
+		if (e.key) el += ` key:${e.key}`;
+		if (e.transient) el += " ·transient";
+		lines.push(`    ${sid(e.from)} -->|"${esc(el)}"| ${sid(e.to)}`);
+	}
+	lines.push("  end");
+	return lines.join("\n");
+}
+
+/** @emoji 📊 Builds one view document for a loaded `CommandSpec` (preset metadata for labels/keys). */
+export function buildSpatialStatelyMachineViewForSpec(
+	spec: CommandSpec,
+	meta: { readonly hostKey: string; readonly presetLabel: string },
+): SpatialStatelyMachineView {
+	const edges = collectSpatialStatelyMachineTransitions(spec);
+	return {
+		commandId: spec.id,
+		commandVersion: spec.version,
+		label: spec.label ?? meta.presetLabel,
+		hostKey: meta.hostKey,
+		initial: spec.machine.initial,
+		states: buildSpatialStatelyStateViews(spec),
+		edges,
+		mermaid: mermaidForSpatialCommand(spec, `${meta.presetLabel} (${spec.id})`),
+		statelyRoutingNote:
+			"Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`).",
+	};
+}
+
+/** @emoji 📊 Full catalog from `listSpatialCommandPresets` / optional `presetIds` filter. */
+export function buildSpatialStatelyMachineCatalogView(opts?: {
+	readonly presetIds?: readonly string[];
+	readonly generatedAt?: string;
+}): SpatialStatelyMachineCatalogView {
+	const want = opts?.presetIds?.length ? new Set(opts.presetIds) : null;
+	const machines: SpatialStatelyMachineView[] = [];
+	for (const p of listSpatialCommandPresets()) {
+		if (want && !want.has(p.id)) continue;
+		const spec = loadSpatialCommandPreset(p.id);
+		if (!spec) continue;
+		machines.push(buildSpatialStatelyMachineViewForSpec(spec, { hostKey: p.key, presetLabel: p.label }));
+	}
+	const generatedAt = opts?.generatedAt ?? new Date().toISOString();
+	return {
+		kind: "spatial.stately-machine-view/v1",
+		schemaVersion: "1.0",
+		generatedAt,
+		machines,
+		mermaidCombined: machines.map((m) => m.mermaid).join("\n\n"),
+	};
 }
 // #endregion 🎭MachineBuild
 
@@ -207,6 +351,16 @@ if (import.meta.vitest) {
 	}
 
 	describe("@spatial/js-machine-stately", () => {
+		it("buildSpatialStatelyMachineCatalogView lists all presets with edges and mermaid", () => {
+			const doc = buildSpatialStatelyMachineCatalogView();
+			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
+			expect(doc.machines.length).toBeGreaterThanOrEqual(5);
+			const box = doc.machines.find((m) => m.commandId === "primitive.box");
+			expect(box?.edges.length).toBeGreaterThan(0);
+			expect(box?.mermaid).toContain("primitive_box");
+			expect(doc.mermaidCombined.length).toBeGreaterThan(100);
+		});
+
 		it("matches pure-ts command snapshots through box workflow + commit", async () => {
 			const spec = buildBoxCommandSpec();
 			const k1 = new StubKernel();
@@ -297,8 +451,6 @@ if (import.meta.vitest) {
 			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
 			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
 			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
-			await rtPd.send({ kind: "confirm", modifiers: {} });
-			await rtSd.send({ kind: "confirm", modifiers: {} });
 			const rd = await rtPd.commit();
 			const sd = await rtSd.commit();
 			expect(rd.data).toBe(5);
@@ -321,8 +473,6 @@ if (import.meta.vitest) {
 			});
 			await rtPa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
 			await rtSa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
-			await rtPa.send({ kind: "confirm", modifiers: {} });
-			await rtSa.send({ kind: "confirm", modifiers: {} });
 			const ra = await rtPa.commit();
 			const sa = await rtSa.commit();
 			expect(ra.data).toBe(42);

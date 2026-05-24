@@ -701,7 +701,7 @@ export function CommandSpatialView({
 			<CommandInteractionGeometryLayer
 				geometry={geometry}
 				onCommandEvent={onCommandEvent}
-				onPick={onGroundPick}
+				onPick={undefined}
 				onPointerMove={onScenePointerMove}
 				pointerMoveEnabled={groundMoveOn || heightMoveOn || zRodMoveOn}
 			/>
@@ -740,7 +740,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-renderer-r3f interaction adapter", () => {
-		it("maps pointer event data into factory events", () => {
+		it("maps pointer event data into command events", () => {
 			const adapter = createR3FInteractionAdapter();
 			const event = {
 				point: { x: 1, y: 2, z: 3 },
@@ -783,7 +783,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-renderer-r3f runtime", () => {
-		it("exposes an initial snapshot for the box factory with a stub kernel", () => {
+		it("exposes an initial snapshot for the box command with a stub kernel", () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;

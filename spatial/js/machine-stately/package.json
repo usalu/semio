@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @spatial/js-machine-stately:test"
+    "test": "bun nx run @spatial/js-machine-stately:test",
+    "generate": "bun nx run @spatial/js-machine-stately:generate"
   },
   "dependencies": {
     "@spatial/js-core": "workspace:*",

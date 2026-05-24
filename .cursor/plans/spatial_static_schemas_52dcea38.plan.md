@@ -4,7 +4,7 @@ overview: Eliminate every dynamic property key in spatial schemas, fixtures, and
 todos:
   - id: expr
     content: Rewrite expression.json + Expr TS union + evalExpr switch; convert all guards in fixtures
-    status: pending
+    status: in_progress
   - id: topology
     content: Convert topology.json + TopologyGraph (arrays + internal Map index) + TopologyDiff arrays + migration script for fixtures
     status: pending
@@ -22,7 +22,6 @@ todos:
     status: pending
 isProject: false
 ---
-
 
 # Eliminate Dynamic Keys From Spatial Schemas
 

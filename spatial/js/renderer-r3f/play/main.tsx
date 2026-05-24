@@ -220,7 +220,7 @@ function PlaySession({
 		[spec, kernel, documentModel],
 	);
 	const snapshot = useCommandSnapshot(rt);
-	const [lastCell, setLastCell] = useState<string | null>(null);
+	const [lastCommitLine, setLastCommitLine] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
 	const [suggestOpen, setSuggestOpen] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -243,13 +243,49 @@ function PlaySession({
 		console.log("[DEBUG] snapshot", snapshot.state, snapshot.revision, snapshot.capabilities);
 	}, [snapshot]);
 
+	const onSpatialCommandEvent = useCallback(
+		(ev: CommandEvent) => {
+			if (ev.kind === "pointer.down") {
+				const st = rt.getSnapshot().state;
+				const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
+				const snap = (ev as { snap?: { kind: string; id: string } }).snap;
+				if (hi && st === hi && !snap) {
+					void rt.send({ kind: "confirm", modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
+					return;
+				}
+				const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
+				if (snap && accept.length > 0 && accept.includes(snap.kind as TopologyEntityKind)) {
+					void rt.send({
+						kind: "selection.changed",
+						targets: [{ kind: snap.kind as TopologyEntityKind, id: snap.id, editable: true }],
+						modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {},
+					});
+					return;
+				}
+			}
+			if (ev.kind === "pointer.down" || ev.kind === "pointer.move") {
+				void rt.send(ev);
+			}
+		},
+		[rt],
+	);
+
 	const onCommit = useCallback(async () => {
-		const cell = await rt.commit();
-		setLastCell(cell);
-		if (cell) {
-			console.log("[DEBUG] committed cell", cell, "topology revision", documentModel.topology.revision);
+		const res = await rt.commit();
+		if (res.ok && res.data != null) {
+			setLastCommitLine(`data: ${JSON.stringify(res.data)}`);
+			console.log("[DEBUG] commit response data", res.data);
+		} else if (!isEmptyTopologyDiff(res.diff)) {
+			const fc = Object.keys(res.diff.faces?.added ?? {}).length;
+			setLastCommitLine(`diff (e.g. faces.added count=${fc})`);
+			console.log("[DEBUG] commit topology diff", res.diff);
+		} else if (!res.ok) {
+			setLastCommitLine(res.errors.map((e) => e.message).join("; ") || "commit failed");
+		} else {
+			setLastCommitLine("ok (empty diff, no data)");
+			console.log("[DEBUG] commit ok empty", res);
 		}
-	}, [rt, documentModel.topology]);
+	}, [rt]);
 
 	const dispatchTransition = useCallback(
 		(row: CommandKeybindRow) => {
@@ -265,7 +301,7 @@ function PlaySession({
 		const out: PlaySuggestion[] = [];
 		for (const p of presets) {
 			out.push({
-				kind: "factory",
+				kind: "preset",
 				key: p.key,
 				label: p.label,
 				detail: p.id,
@@ -425,19 +461,6 @@ function PlaySession({
 		return () => window.removeEventListener("keydown", onWinCapture, true);
 	}, [rt, onCommit, presets, onCommandId]);
 
-	const onGroundPick = useCallback(
-		(_p: Vec3, _ev: CommandEvent) => {
-			const st = rt.getSnapshot().state;
-			const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
-			if (hi && st === hi) {
-				void rt.send({ kind: "confirm", modifiers: {} });
-				return;
-			}
-			void rt.send({ kind: "pointer.down", point: _p, modifiers: {} });
-		},
-		[rt],
-	);
-
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
 			void rt.send({ kind: "pointer.move", point: p, modifiers: {} });
@@ -459,7 +482,7 @@ function PlaySession({
 		? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state)
 		: false;
 
-	const kindLabel = (k: PlaySuggestKind) => (k === "factory" ? "Factory" : k === "transition" ? "Transition" : "Host");
+	const kindLabel = (k: PlaySuggestKind) => (k === "preset" ? "Preset" : k === "transition" ? "Transition" : "Host");
 
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
@@ -467,7 +490,7 @@ function PlaySession({
 				<CommandCanvas>
 					<CommandSpatialView
 						snapshot={snapshot}
-						onGroundPick={onGroundPick}
+						onCommandEvent={onSpatialCommandEvent}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={documentModel.topology}
@@ -504,12 +527,12 @@ function PlaySession({
 					</select>
 				</label>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Factory <code>{commandId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+					Command <code>{commandId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
 				</div>
 				<div style={{ fontSize: 12 }}>Can commit {String(snapshot.capabilities.canCommit)} · undo {String(snapshot.capabilities.canUndo)}</div>
 				<div style={{ position: "relative" }}>
 					<label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-						<span>Command (factories first in palette; Tab/Enter run highlighted)</span>
+						<span>Command (presets first in palette; Tab/Enter run highlighted)</span>
 						<input
 							ref={cmdRef}
 							type="text"
@@ -586,10 +609,10 @@ function PlaySession({
 					) : null}
 				</div>
 				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
-					Keys <u>q</u>/<u>j</u>/<u>k</u> switch factory from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, except while typing in other text fields. Choosing the same factory again restarts its session; presets that begin in <code>idle</code> with a <code>start</code> transition auto-enter picking. Value-style commands:{" "}
+					Keys <u>q</u>/<u>j</u>/<u>k</u>/<u>d</u>/<u>a</u> switch command preset from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, except while typing in other text fields. Choosing the same preset again restarts its session; presets that begin in <code>idle</code> with a <code>start</code> transition auto-enter picking. Value-style commands:{" "}
 					<code>h 2.5</code>, <code>n 0.4</code>, <code>w 2 1.5</code>. Geometry asset uses the dropdown above.
 				</div>
-				{lastCell ? <div style={{ fontSize: 12 }}>Last cell: {lastCell}</div> : null}
+				{lastCommitLine ? <div style={{ fontSize: 12 }}>Last commit: {lastCommitLine}</div> : null}
 			</aside>
 		</div>
 	);
@@ -630,12 +653,12 @@ function PlayApp() {
 	}, [commandId, presets]);
 
 	if (!presets.length) {
-		return <div style={{ padding: 16, color: "#f88" }}>No spatial factory presets registered.</div>;
+		return <div style={{ padding: 16, color: "#f88" }}>No spatial command presets registered.</div>;
 	}
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
-				Unknown factory <code>{commandId}</code>.
+				Unknown command <code>{commandId}</code>.
 				<button type="button" onClick={() => setCommandId(presets[0]!.id)}>
 					Reset
 				</button>
