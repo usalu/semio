@@ -4,6 +4,12 @@
 
 **Status:** closed
 
+## Update (WorkbenchView moved)
+
+- `workbench-view.tsx` — full `WorkbenchView` + default panel tabs
+- `workbench-mount.tsx` — `ReactUI`, `mountReactApp`, `mountAsyncReactApp`
+- `@elements/ui` re-exports; exports `UICanvas`, `UISearch`, `UIFind`, `UIToolbar` for framework-react
+
 ## Plan
 
 - Export `resolveElementIcon`; shell-bridge uses plain `SidePanelTabConfig` + `import type` only from `@elements/ui`.

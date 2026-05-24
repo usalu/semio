@@ -15,7 +15,7 @@ export default defineConfig({
 	},
 	test: {
 		environment: "jsdom",
-		include: ["ui-declarative-renderer.tsx"],
+		include: ["ui-declarative-renderer.tsx", "workbench-view.tsx", "workbench-history.tsx"],
 		passWithNoTests: false,
 	},
 });
