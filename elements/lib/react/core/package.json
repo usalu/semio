@@ -7,8 +7,6 @@
   "type": "module",
   "exports": {
     ".": "./index.tsx",
-    "./chrome": "./chrome.ts",
-    "./primitives": "./primitives.ts",
     "./components.json": "./components.json",
     "./elements": "./index.tsx",
     "./globals.css": "./globals.css",

@@ -16,6 +16,8 @@ export default defineConfig({
 			{ find: "@elements/framework-react/shell-bridge", replacement: resolve(root, "../../framework/renderer/react/shell-bridge.tsx") },
 			{ find: "@elements/framework-react", replacement: resolve(root, "../../framework/renderer/react/index.tsx") },
 			{ find: "@elements/framework", replacement: resolve(root, "../../framework/core/index.ts") },
+			{ find: "@elements/ui/chrome", replacement: resolve(root, "../core/chrome.ts") },
+			{ find: "@elements/ui/level-context", replacement: resolve(root, "../core/level-context.tsx") },
 			{ find: "@elements/ui", replacement: resolve(root, "../core/index.tsx") },
 		],
 	},

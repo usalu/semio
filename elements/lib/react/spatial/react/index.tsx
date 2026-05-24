@@ -1,4 +1,4 @@
-import { Button, Input } from "@elements/ui/primitives";
+import { Button, Input } from "@elements/ui";
 import { getLevelBgClass, useApp } from "@elements/framework-react";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
