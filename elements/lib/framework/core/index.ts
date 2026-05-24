@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** 🧱 `@elements/framework` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
+/** 🧱 `@elements/framework` — Framework-free  graph, declarative {@link UiNode} bodies, {@link ExtensionHost} (VS Code–style `contributes` + `activate`), and {@link } → {@link App} → {@link Mode}. */
 // #endregion 🧲Header
 
 //#region 🔖JsonValue
@@ -9,7 +9,7 @@ export type JsonValue = JsonPrimitive | readonly JsonValue[] | { readonly [key: 
 
 //#region 🔖Commands
 /** @emoji 🎯 Semantic command routed through the host to {@link CommandBus.dispatch}. */
-export interface ShellCommandDescriptor {
+export interface CommandDescriptor {
 	readonly controllerId: string;
 	readonly command: string;
 	readonly args?: JsonValue;
@@ -18,7 +18,7 @@ export interface ShellCommandDescriptor {
 
 //#region 🔖Style
 /** @emoji 🎨 Tokenized chrome hints mapped by the renderer. */
-export interface ShellStyleSpec {
+export interface StyleSpec {
 	readonly variant?: "default" | "subtle" | "danger" | "success";
 	readonly size?: "small" | "medium" | "large";
 	readonly density?: "compact" | "normal" | "comfortable";
@@ -45,8 +45,8 @@ export interface UiButtonNode {
 	readonly type: "button";
 	readonly id?: string;
 	readonly label: string;
-	readonly command: ShellCommandDescriptor;
-	readonly style?: ShellStyleSpec;
+	readonly command: CommandDescriptor;
+	readonly style?: StyleSpec;
 }
 
 export interface UiSeparatorNode {
@@ -113,24 +113,24 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 	throw new Error(
-		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use WorkbenchMode.tools, side tabs, or window measures for chrome.`,
+		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use Mode.tools, side tabs, or window measures for chrome.`,
 	);
 }
 //#endregion 🔖UiNode
 
-//#region 🔖ShellWindowMeasure
+//#region 🔖WindowMeasure
 /** @emoji 📐 Framework-free window measure; host maps `onChange` to {@link CommandBus.dispatch}. */
-export interface ShellWindowMeasureSelect {
+export interface WindowMeasureSelect {
 	readonly kind: "select";
 	readonly id: string;
 	readonly label?: string;
 	readonly value: string;
 	readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-	readonly onChange: ShellCommandDescriptor;
+	readonly onChange: CommandDescriptor;
 }
 
-export type ShellWindowMeasure = ShellWindowMeasureSelect;
-//#endregion 🔖ShellWindowMeasure
+export type WindowMeasure = WindowMeasureSelect;
+//#endregion 🔖WindowMeasure
 
 //#region 🔖Layout
 /** @emoji 🪟 Single window slot in the abstract layout tree. */
@@ -213,7 +213,7 @@ export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filt
 export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
 
 /** @emoji 🎛 Declarative toolbar item; interactions route through {@link CommandBus}. */
-export interface ShellToolItem {
+export interface ToolItem {
 	readonly id: string;
 	readonly kind: "button" | "toggle" | "separator";
 	readonly iconId?: string;
@@ -228,39 +228,39 @@ export interface ShellToolItem {
 }
 
 /** @emoji 🗂️ Per-category toolbar maps. */
-export type ShellAppTools = Partial<Record<AppToolCategory, readonly ShellToolItem[]>>;
+export type AppTools = Partial<Record<AppToolCategory, readonly ToolItem[]>>;
 
 /** @emoji 🔀 Merges toolbar tool maps per category (extension appends within each category). */
-export function mergeShellAppTools(base?: ShellAppTools, extension?: ShellAppTools): ShellAppTools | undefined {
+export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
 	if (!base && !extension) return undefined;
-	const merged: ShellAppTools = {};
+	const merged: AppTools = {};
 	for (const category of APP_TOOL_CATEGORY_ORDER) {
 		const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
-		if (combined.length > 0) (merged as Record<string, readonly ShellToolItem[]>)[category] = combined;
+		if (combined.length > 0) (merged as Record<string, readonly ToolItem[]>)[category] = combined;
 	}
 	return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
 /** @emoji 🧮 Counts toolbar items across populated categories. */
-export function countShellAppTools(tools?: ShellAppTools): number {
+export function countAppTools(tools?: AppTools): number {
 	if (!tools) return 0;
 	return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
 }
 
-function hasShellAppToolCategoryItems(items: readonly ShellToolItem[] | undefined): boolean {
+function hasAppToolCategoryItems(items: readonly ToolItem[] | undefined): boolean {
 	return Boolean(items?.some((item) => item.kind !== "separator"));
 }
 
 /** @emoji 📂 Lists categories that have at least one non-separator tool. */
-export function listPopulatedShellToolCategories(tools?: ShellAppTools): AppToolCategory[] {
+export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[] {
 	if (!tools) return [];
-	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasShellAppToolCategoryItems(tools[category]));
+	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
 }
 //#endregion 🔖Toolbar
 
 //#region 🔖SideTab
 /** @emoji 📑 Side panel tab addressing a React-registered `bodyKey` tree host. */
-export interface ShellSideTabSpec {
+export interface SideTabSpec {
 	readonly id: string;
 	readonly iconId: string;
 	readonly order?: number;
@@ -270,7 +270,7 @@ export interface ShellSideTabSpec {
 
 //#region 🔖Find
 /** @emoji 🔎 Find palette row (label-only; renderer supplies icons). */
-export interface ShellFindItem {
+export interface FindItem {
 	readonly id: string;
 	readonly label: string;
 	readonly description?: string;
@@ -280,7 +280,7 @@ export interface ShellFindItem {
 
 //#region 🔖Footer
 /** @emoji 👣 Footer strip item with optional command dispatch. */
-export interface ShellFooterItem {
+export interface FooterItem {
 	readonly id: string;
 	readonly text?: string;
 	readonly order?: number;
@@ -295,12 +295,12 @@ export interface ShellFooterItem {
 
 //#region 🔖Observable
 /** @emoji 📡 Minimal listener set for host invalidation without external reactive libs. */
-export type ShellSubscriber = () => void;
+export type Subscriber = () => void;
 
 /** @emoji 📦 Holds a value and notifies subscribers on `set`. */
 export class ObservableCell<T> {
 	private value: T;
-	private readonly listeners = new Set<ShellSubscriber>();
+	private readonly listeners = new Set<Subscriber>();
 
 	constructor(initial: T) {
 		this.value = initial;
@@ -320,7 +320,7 @@ export class ObservableCell<T> {
 		this.set(updater(this.value));
 	}
 
-	subscribe(listener: ShellSubscriber): () => void {
+	subscribe(listener: Subscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
@@ -370,29 +370,29 @@ export abstract class Controller {
 }
 //#endregion 🔖CommandBus
 
-//#region 🔖WorkbenchWindowKind
+//#region 🔖WindowKind
 /** @emoji 🪟 Declarative window kind; React renderer maps `bodyKey` to a component. */
-export class WorkbenchWindowKind {
+export class WindowKind {
 	constructor(
 		readonly id: string,
 		readonly label: string,
 		readonly bodyKey: string,
 		readonly iconId?: string,
-		readonly measures: readonly ShellWindowMeasure[] = [],
+		readonly measures: readonly WindowMeasure[] = [],
 	) {}
 }
-//#endregion 🔖WorkbenchWindowKind
+//#endregion 🔖WindowKind
 
-//#region 🔖WorkbenchMode
+//#region 🔖Mode
 /** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
-export class WorkbenchMode {
-	tools: ShellAppTools = {};
-	windowKinds: WorkbenchWindowKind[] = [];
+export class Mode {
+	tools: AppTools = {};
+	windowKinds: WindowKind[] = [];
 	defaultLayout?: WindowLayout;
-	leftTabs: ShellSideTabSpec[] = [];
-	rightTabs: ShellSideTabSpec[] = [];
-	footerItems: ShellFooterItem[] = [];
-	findItems: ShellFindItem[] = [];
+	leftTabs: SideTabSpec[] = [];
+	rightTabs: SideTabSpec[] = [];
+	footerItems: FooterItem[] = [];
+	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
 	onActiveWindowChange?: (windowKindId: string) => void;
 	selection: Record<string, unknown> = {};
@@ -405,7 +405,7 @@ export class WorkbenchMode {
 		readonly iconId: string | undefined,
 	) {}
 }
-//#endregion 🔖WorkbenchMode
+//#endregion 🔖Mode
 
 //#region 🔖Merge
 function mergeById<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
@@ -416,7 +416,7 @@ function mergeById<T extends { id: string }>(base: readonly T[] | undefined, ext
 	return [...merged.values()];
 }
 
-function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefined): WorkbenchMode | null {
+function resolveMode(app: App, requestedModeId: string | null | undefined): Mode | null {
 	if (!app.modes.length) return null;
 	if (requestedModeId) {
 		const matching = app.modes.find((mode) => mode.id === requestedModeId);
@@ -431,19 +431,19 @@ function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefin
 //#endregion 🔖Merge
 
 //#region 🔖ResolvedState
-/** @emoji 📸 Merged view of app + active mode used by the React workbench bridge. */
-export interface ResolvedWorkbenchAppState {
+/** @emoji 📸 Merged view of app + active mode used by the React  bridge. */
+export interface ResolvedAppState {
 	readonly id: string;
 	readonly activeModeId: string | null;
 	readonly label: string;
 	readonly iconId: string | undefined;
-	readonly tools: ShellAppTools | undefined;
-	readonly windowKinds: readonly WorkbenchWindowKind[];
+	readonly tools: AppTools | undefined;
+	readonly windowKinds: readonly WindowKind[];
 	readonly defaultLayout: WindowLayout;
-	readonly leftTabs: ShellSideTabSpec[];
-	readonly rightTabs: ShellSideTabSpec[];
-	readonly footerItems: ShellFooterItem[];
-	readonly findItems: ShellFindItem[];
+	readonly leftTabs: SideTabSpec[];
+	readonly rightTabs: SideTabSpec[];
+	readonly footerItems: FooterItem[];
+	readonly findItems: FindItem[];
 	readonly onFindSelect?: (itemId: string) => void;
 	readonly onActiveWindowChange?: (windowKindId: string) => void;
 	readonly selection: Record<string, unknown>;
@@ -452,7 +452,7 @@ export interface ResolvedWorkbenchAppState {
 }
 
 /** @emoji 🧮 Resolves active mode overlays exactly like the retired `resolveAppConfig` merge. */
-export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: string | null): ResolvedWorkbenchAppState {
+export function resolveAppState(app: App, requestedModeId?: string | null): ResolvedAppState {
 	const mode = resolveMode(app, requestedModeId);
 	const mergedWindowKinds = mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds;
 	const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
@@ -462,7 +462,7 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 		activeModeId: mode?.id ?? null,
 		label: mode?.label ?? app.label,
 		iconId: mode?.iconId ?? app.iconId,
-		tools: mergeShellAppTools(app.tools, mode?.tools),
+		tools: mergeAppTools(app.tools, mode?.tools),
 		windowKinds: mergedWindowKinds,
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		leftTabs: mergedLeft,
@@ -478,19 +478,19 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 }
 //#endregion 🔖ResolvedState
 
-//#region 🔖WorkbenchApp
+//#region 🔖App
 /** @emoji 🧩 One registered app with modes, layout, and a primary {@link Controller}. */
-export class WorkbenchApp {
-	readonly modes: WorkbenchMode[] = [];
+export class App {
+	readonly modes: Mode[] = [];
 	defaultModeId?: string;
 	private activeModeIdOverride: string | null = null;
-	windowKinds: WorkbenchWindowKind[] = [];
+	windowKinds: WindowKind[] = [];
 	defaultLayout!: WindowLayout;
-	tools: ShellAppTools = {};
-	leftTabs: ShellSideTabSpec[] = [];
-	rightTabs: ShellSideTabSpec[] = [];
-	footerItems: ShellFooterItem[] = [];
-	findItems: ShellFindItem[] = [];
+	tools: AppTools = {};
+	leftTabs: SideTabSpec[] = [];
+	rightTabs: SideTabSpec[] = [];
+	footerItems: FooterItem[] = [];
+	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
 	onActiveWindowChange?: (windowKindId: string) => void;
 	selection: Record<string, unknown> = {};
@@ -504,14 +504,14 @@ export class WorkbenchApp {
 		readonly iconId: string | undefined,
 		controller: Controller,
 		layout: WindowLayout,
-		windowKinds: readonly WorkbenchWindowKind[],
+		windowKinds: readonly WindowKind[],
 	) {
 		this.controller = controller;
 		this.defaultLayout = layout;
 		this.windowKinds = [...windowKinds];
 	}
 
-	addMode(mode: WorkbenchMode): void {
+	addMode(mode: Mode): void {
 		this.modes.push(mode);
 	}
 
@@ -524,19 +524,19 @@ export class WorkbenchApp {
 		this.activeModeIdOverride = modeId;
 	}
 
-	resolve(requestedModeId?: string | null): ResolvedWorkbenchAppState {
+	resolve(requestedModeId?: string | null): ResolvedAppState {
 		const modeId = requestedModeId ?? this.getActiveModeId();
-		return resolveWorkbenchAppState(this, modeId);
+		return resolveAppState(this, modeId);
 	}
 }
-//#endregion 🔖WorkbenchApp
+//#endregion 🔖App
 
-//#region 🔖Workbench
-/** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
-export class Workbench {
+//#region 🔖
+/** @emoji 🖥️ Root : apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
+export class  {
 	readonly commandBus = new CommandBus();
-	private readonly listeners = new Set<ShellSubscriber>();
-	readonly apps: WorkbenchApp[] = [];
+	private readonly listeners = new Set<Subscriber>();
+	readonly apps: App[] = [];
 	activeAppId = "";
 	generation = 0;
 	uri = "/";
@@ -547,9 +547,9 @@ export class Workbench {
 	onGoBack?: () => void;
 	onGoForward?: () => void;
 	onGoUp?: () => void;
-	globalTools: ShellAppTools | undefined;
-	globalFooterItems: ShellFooterItem[] = [];
-	searchItems: readonly ShellSearchItemSpec[] = [];
+	globalTools: AppTools | undefined;
+	globalFooterItems: FooterItem[] = [];
+	searchItems: readonly SearchItemSpec[] = [];
 	mobile: boolean | undefined;
 	mobileQuery = "(max-width: 767px)";
 	className = "";
@@ -561,18 +561,18 @@ export class Workbench {
 		for (const listener of this.listeners) listener();
 	}
 
-	subscribe(listener: ShellSubscriber): () => void {
+	subscribe(listener: Subscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
 
-	addApp(app: WorkbenchApp): void {
+	addApp(app: App): void {
 		this.apps.push(app);
 		if (!this.activeAppId) this.activeAppId = app.id;
 		this.notify();
 	}
 
-	getActiveApp(): WorkbenchApp | undefined {
+	getActiveApp(): App | undefined {
 		return this.apps.find((app) => app.id === this.activeAppId) ?? this.apps[0];
 	}
 
@@ -588,7 +588,7 @@ export class Workbench {
 }
 
 /** @emoji 🔎 Command palette row spec resolved in React (icons + `onSelect`). */
-export interface ShellSearchItemSpec {
+export interface SearchItemSpec {
 	readonly id: string;
 	readonly label: string;
 	readonly description?: string;
@@ -598,22 +598,22 @@ export interface ShellSearchItemSpec {
 	readonly command: string;
 	readonly args?: unknown;
 }
-//#endregion 🔖Workbench
+//#endregion 🔖
 
 //#region 🔖DeclarativeWindowBody
-/** @emoji 🪟 View context for declarative window bodies: workbench snapshot without DOM or React roots. */
-export interface ShellWindowBodyViewContext {
-	readonly workbench: Workbench;
+/** @emoji 🪟 View context for declarative window bodies:  snapshot without DOM or React roots. */
+export interface WindowBodyViewContext {
+	readonly : ;
 	readonly windowKindId: string;
 	readonly bodyKey: string;
 	readonly activeModeId: string | null;
 	readonly generation: number;
 }
 
-const declarativeWindowBodyByKey = new Map<string, (ctx: ShellWindowBodyViewContext) => UiNode>();
+const declarativeWindowBodyByKey = new Map<string, (ctx: WindowBodyViewContext) => UiNode>();
 
 /** @emoji 📝 Registers a framework-free window body tree for `bodyKey` (host renders DOM). */
-export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
+export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: WindowBodyViewContext) => UiNode): void {
 	declarativeWindowBodyByKey.set(bodyKey, (ctx) => {
 		const node = build(ctx);
 		assertCanvasOnlyWindowBody(bodyKey, node);
@@ -622,7 +622,7 @@ export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: Shel
 }
 
 /** @emoji 🔍 Returns the declarative builder registered for `bodyKey`, if any. */
-export function getDeclarativeWindowBodyFactory(bodyKey: string): ((ctx: ShellWindowBodyViewContext) => UiNode) | undefined {
+export function getDeclarativeWindowBodyFactory(bodyKey: string): ((ctx: WindowBodyViewContext) => UiNode) | undefined {
 	return declarativeWindowBodyByKey.get(bodyKey);
 }
 
@@ -634,17 +634,17 @@ export function unregisterDeclarativeWindowBody(bodyKey: string): void {
 
 //#region 🔖DeclarativeSidePanelBody
 /** @emoji 📑 View context for declarative side-panel tab bodies (same snapshot fields as window bodies). */
-export type ShellSidePanelBodyViewContext = ShellWindowBodyViewContext;
+export type SidePanelBodyViewContext = WindowBodyViewContext;
 
-const declarativeSidePanelBodyByKey = new Map<string, (ctx: ShellSidePanelBodyViewContext) => UiNode>();
+const declarativeSidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
 
 /** @emoji 📝 Registers a framework-free side-panel tree for `bodyKey`. */
-export function registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
+export function registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
 	declarativeSidePanelBodyByKey.set(bodyKey, build);
 }
 
 /** @emoji 🔍 Returns the declarative side-panel builder for `bodyKey`, if any. */
-export function getDeclarativeSidePanelBodyFactory(bodyKey: string): ((ctx: ShellSidePanelBodyViewContext) => UiNode) | undefined {
+export function getDeclarativeSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiNode) | undefined {
 	return declarativeSidePanelBodyByKey.get(bodyKey);
 }
 
@@ -655,8 +655,8 @@ export function unregisterDeclarativeSidePanelBody(bodyKey: string): void {
 //#endregion 🔖DeclarativeSidePanelBody
 
 //#region 🔖ExtensionContributes
-/** @emoji 🧩 Static app contribution merged by {@link ShellExtensionHost} before {@link WorkbenchApp} construction. */
-export interface ShellExtensionAppContribute {
+/** @emoji 🧩 Static app contribution merged by {@link ExtensionHost} before {@link App} construction. */
+export interface ExtensionAppContribute {
 	readonly id: string;
 	readonly label: string;
 	readonly iconId?: string;
@@ -666,7 +666,7 @@ export interface ShellExtensionAppContribute {
 		readonly label: string;
 		readonly bodyKey: string;
 		readonly iconId?: string;
-		readonly measures?: readonly ShellWindowMeasure[];
+		readonly measures?: readonly WindowMeasure[];
 	}[];
 	readonly defaultLayout: WindowLayout;
 	readonly defaultModeId?: string;
@@ -674,20 +674,20 @@ export interface ShellExtensionAppContribute {
 		readonly id: string;
 		readonly label: string;
 		readonly iconId?: string;
-		readonly tools?: ShellAppTools;
-		readonly windowKinds?: readonly WorkbenchWindowKind[];
+		readonly tools?: AppTools;
+		readonly windowKinds?: readonly WindowKind[];
 		readonly defaultLayout?: WindowLayout;
 	}[];
-	readonly tools?: ShellAppTools;
-	readonly leftTabs?: readonly ShellSideTabSpec[];
-	readonly rightTabs?: readonly ShellSideTabSpec[];
-	readonly footerItems?: readonly ShellFooterItem[];
-	readonly findItems?: readonly ShellFindItem[];
+	readonly tools?: AppTools;
+	readonly leftTabs?: readonly SideTabSpec[];
+	readonly rightTabs?: readonly SideTabSpec[];
+	readonly footerItems?: readonly FooterItem[];
+	readonly findItems?: readonly FindItem[];
 }
 
-/** @emoji 📦 VS Code–style `contributes` block (serializable); runtime bodies register in {@link ShellExtension.activate}. */
-export interface ShellExtensionContributes {
-	readonly apps?: readonly ShellExtensionAppContribute[];
+/** @emoji 📦 VS Code–style `contributes` block (serializable); runtime bodies register in {@link Extension.activate}. */
+export interface ExtensionContributes {
+	readonly apps?: readonly ExtensionAppContribute[];
 	readonly commands?: readonly {
 		readonly id: string;
 		readonly controllerId: string;
@@ -696,30 +696,30 @@ export interface ShellExtensionContributes {
 	}[];
 }
 
-/** @emoji 🧾 Extension package descriptor (id + contributes); optional {@link ShellExtension} module. */
-export interface ShellExtensionManifest {
+/** @emoji 🧾 Extension package descriptor (id + contributes); optional {@link Extension} module. */
+export interface ExtensionManifest {
 	readonly id: string;
 	readonly label?: string;
 	readonly version?: string;
-	readonly contributes: ShellExtensionContributes;
+	readonly contributes: ExtensionContributes;
 }
 
-/** @emoji 🔌 Disposable returned from {@link ShellExtensionContext.subscribe}. */
-export interface ShellExtensionSubscription {
+/** @emoji 🔌 Disposable returned from {@link ExtensionContext.subscribe}. */
+export interface ExtensionSubscription {
 	dispose(): void;
 }
 
-/** @emoji 🧰 Activation context: workbench, manifest, and registration helpers (VS Code `ExtensionContext` analogue). */
-export class ShellExtensionContext {
-	private readonly disposables: ShellExtensionSubscription[] = [];
+/** @emoji 🧰 Activation context: , manifest, and registration helpers (VS Code `ExtensionContext` analogue). */
+export class ExtensionContext {
+	private readonly disposables: ExtensionSubscription[] = [];
 
 	constructor(
-		readonly workbench: Workbench,
-		readonly manifest: ShellExtensionManifest,
+		readonly : ,
+		readonly manifest: ExtensionManifest,
 	) {}
 
 	/** @emoji 📝 Registers a declarative window body scoped to this extension activation. */
-	registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
+	registerDeclarativeWindowBody(bodyKey: string, build: (ctx: WindowBodyViewContext) => UiNode): void {
 		registerDeclarativeWindowBody(bodyKey, build);
 		this.disposables.push({
 			dispose: () => unregisterDeclarativeWindowBody(bodyKey),
@@ -727,20 +727,20 @@ export class ShellExtensionContext {
 	}
 
 	/** @emoji 📝 Registers a declarative side-panel body scoped to this extension activation. */
-	registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
+	registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
 		registerDeclarativeSidePanelBody(bodyKey, build);
 		this.disposables.push({
 			dispose: () => unregisterDeclarativeSidePanelBody(bodyKey),
 		});
 	}
 
-	/** @emoji ➕ Adds a {@link WorkbenchApp} built from static {@link ShellExtensionAppContribute} rows. */
+	/** @emoji ➕ Adds a {@link App} built from static {@link ExtensionAppContribute} rows. */
 	addContributedApps(getController: (controllerId: string) => Controller | undefined): void {
 		for (const spec of this.manifest.contributes.apps ?? []) {
 			const controller = getController(spec.controllerId);
 			if (!controller) continue;
-			const windowKinds = spec.windowKinds.map((wk) => new WorkbenchWindowKind(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
-			const app = new WorkbenchApp(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
+			const windowKinds = spec.windowKinds.map((wk) => new WindowKind(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+			const app = new App(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
 			if (spec.defaultModeId) app.defaultModeId = spec.defaultModeId;
 			if (spec.tools) app.tools = spec.tools;
 			if (spec.leftTabs?.length) app.leftTabs = [...spec.leftTabs];
@@ -748,25 +748,25 @@ export class ShellExtensionContext {
 			if (spec.footerItems?.length) app.footerItems = [...spec.footerItems];
 			if (spec.findItems?.length) app.findItems = [...spec.findItems];
 			for (const modeSpec of spec.modes ?? []) {
-				const mode = new WorkbenchMode(modeSpec.id, modeSpec.label, modeSpec.iconId);
+				const mode = new Mode(modeSpec.id, modeSpec.label, modeSpec.iconId);
 				if (modeSpec.tools) mode.tools = modeSpec.tools;
 				if (modeSpec.windowKinds?.length) mode.windowKinds = [...modeSpec.windowKinds];
 				if (modeSpec.defaultLayout) mode.defaultLayout = modeSpec.defaultLayout;
 				app.addMode(mode);
 			}
-			this.workbench.addApp(app);
+			this..addApp(app);
 			this.disposables.push({
 				dispose: () => {
-					const index = this.workbench.apps.findIndex((entry) => entry.id === spec.id);
-					if (index >= 0) this.workbench.apps.splice(index, 1);
+					const index = this..apps.findIndex((entry) => entry.id === spec.id);
+					if (index >= 0) this..apps.splice(index, 1);
 				},
 			});
 		}
 	}
 
-	subscribe(listener: ShellSubscriber): ShellExtensionSubscription {
-		const unsubscribe = this.workbench.subscribe(listener);
-		const sub: ShellExtensionSubscription = {
+	subscribe(listener: Subscriber): ExtensionSubscription {
+		const unsubscribe = this..subscribe(listener);
+		const sub: ExtensionSubscription = {
 			dispose: () => unsubscribe(),
 		};
 		this.disposables.push(sub);
@@ -779,21 +779,21 @@ export class ShellExtensionContext {
 }
 
 /** @emoji 🧩 Runtime extension module (`activate` / `deactivate`). */
-export interface ShellExtension {
+export interface Extension {
 	readonly id: string;
-	activate(context: ShellExtensionContext): void | Promise<void>;
+	activate(context: ExtensionContext): void | Promise<void>;
 	deactivate?(): void | Promise<void>;
 }
 
-/** @emoji 🏗️ Loads extension manifests, activates modules, and owns contributed {@link WorkbenchApp} rows. */
-export class ShellExtensionHost {
-	private readonly extensions = new Map<string, { manifest: ShellExtensionManifest; module?: ShellExtension }>();
-	private readonly contexts = new Map<string, ShellExtensionContext>();
+/** @emoji 🏗️ Loads extension manifests, activates modules, and owns contributed {@link App} rows. */
+export class ExtensionHost {
+	private readonly extensions = new Map<string, { manifest: ExtensionManifest; module?: Extension }>();
+	private readonly contexts = new Map<string, ExtensionContext>();
 	private activated = false;
 
-	constructor(readonly workbench: Workbench) {}
+	constructor(readonly : ) {}
 
-	register(manifest: ShellExtensionManifest, module?: ShellExtension): void {
+	register(manifest: ExtensionManifest, module?: Extension): void {
 		if (module && module.id !== manifest.id) {
 			throw new Error(`Extension module id "${module.id}" does not match manifest id "${manifest.id}".`);
 		}
@@ -801,7 +801,7 @@ export class ShellExtensionHost {
 	}
 
 	getControllerById(controllerId: string): Controller | undefined {
-		for (const app of this.workbench.apps) {
+		for (const app of this..apps) {
 			if (app.controller.id === controllerId) return app.controller;
 		}
 		return undefined;
@@ -811,7 +811,7 @@ export class ShellExtensionHost {
 		if (this.activated) return;
 		this.activated = true;
 		for (const { manifest, module } of this.extensions.values()) {
-			const context = new ShellExtensionContext(this.workbench, manifest);
+			const context = new ExtensionContext(this., manifest);
 			this.contexts.set(manifest.id, context);
 			context.addContributedApps(getController);
 			if (module) await module.activate(context);
@@ -855,19 +855,19 @@ if (import.meta.vitest) {
 						buildScene3dWindowBody("s", "c"),
 					],
 				}),
-			).toThrow(/scene3d or board/);
+			).toThrow(/table, scene3d, or board/);
 		});
 	});
 
-	describe("ShellExtensionHost", () => {
+	describe("ExtensionHost", () => {
 		it("merges contributed apps and declarative window bodies", async () => {
 			class TCtrl extends Controller {
 				override run(): void {}
 			}
 			const bus = new CommandBus();
-			const wb = new Workbench();
+			const wb = new ();
 			const ctrl = new TCtrl("ext-ctrl", bus, () => wb.notify());
-			const host = new ShellExtensionHost(wb);
+			const host = new ExtensionHost(wb);
 			host.register(
 				{
 					id: "demo.ext",
@@ -896,7 +896,7 @@ if (import.meta.vitest) {
 			await host.activateAll((id) => (id === "ext-ctrl" ? ctrl : undefined));
 			expect(wb.apps.some((app) => app.id === "demo-app")).toBe(true);
 			const factory = getDeclarativeWindowBodyFactory("demo.ext.main");
-			expect(factory?.({ workbench: wb, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
+			expect(factory?.({ : wb, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
 		});
 	});
 }

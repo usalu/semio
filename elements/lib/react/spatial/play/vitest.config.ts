@@ -9,8 +9,9 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/framework": resolve(root, "../../framework/core/index.ts"),
-			"@elements/playground": resolve(root, "../../playground/index.ts"),
+			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
+			"@elements/playground": resolve(root, "../../../playground/index.ts"),
+			"@elements/geometry-spatial-js": resolve(root, "../js/index.ts"),
 		},
 	},
 	test: {

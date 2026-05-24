@@ -15,10 +15,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@elements/framework": path.resolve(__dirname, "../../framework/core/index.ts"),
-			"@elements/framework-react": path.resolve(__dirname, "../../framework/renderer/react/index.tsx"),
-			"@elements/framework-react/workbench": path.resolve(__dirname, "../../framework/renderer/react/workbench-bridge.tsx"),
-			"@elements/playground": path.resolve(__dirname, "../../playground/index.ts"),
+			"@elements/framework": path.resolve(__dirname, "../../../framework/core/index.ts"),
+			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
+			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/workbench-bridge.tsx"),
+			"@elements/playground": path.resolve(__dirname, "../../../playground/index.ts"),
 		},
 	},
 	server: {
