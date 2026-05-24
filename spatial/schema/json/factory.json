@@ -515,23 +515,16 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "entity"],
+          "required": ["kind", "id", "topologyEntityKind", "entityId"],
           "properties": {
             "kind": { "const": "entity-highlight" },
             "id": { "type": "string" },
             "role": { "type": "string" },
-            "entity": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["kind", "id"],
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": ["vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster", "surface", "part"]
-                },
-                "id": { "type": "string" }
-              }
-            }
+            "topologyEntityKind": {
+              "type": "string",
+              "enum": ["vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster", "surface", "part"]
+            },
+            "entityId": { "$ref": "expression.json" }
           }
         },
         {

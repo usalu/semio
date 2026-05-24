@@ -521,7 +521,13 @@ export type DisplayItemSpec =
 	| { readonly kind: "segment"; readonly id: string; readonly role?: string; readonly from: Expr; readonly to: Expr }
 	| { readonly kind: "linear-handle"; readonly id: string; readonly role?: string; readonly axis: Vec3; readonly origin: Expr }
 	| { readonly kind: "box-preview"; readonly id: string; readonly role?: string; readonly cornerA: Expr; readonly cornerB: Expr; readonly height: Expr }
-	| { readonly kind: "entity-highlight"; readonly id: string; readonly role?: string; readonly entity: { readonly kind: TopologyEntityKind; readonly id: string } }
+	| {
+			readonly kind: "entity-highlight";
+			readonly id: string;
+			readonly role?: string;
+			readonly topologyEntityKind: TopologyEntityKind;
+			readonly entityId: Expr;
+	  }
 	| { readonly kind: "curve"; readonly id: string; readonly role?: string }
 	| { readonly kind: "mesh"; readonly id: string; readonly role?: string };
 
@@ -577,11 +583,107 @@ function findState(spec: CommandSpec, name: string): StateDefSpec | undefined {
 	return spec.machine.states.find((s) => s.name === name);
 }
 
+/** @emoji 🧾 Rewrites legacy `spatial.command/v1` JSON (`states` map, `guards` map, `on` map) into `StateDefSpec[]` + `NamedGuard[]` + `EventHandlerSpec[]`. */
+function legacyPathToTarget(path: string): PathTarget {
+	const segs = path
+		.split(".")
+		.filter(Boolean)
+		.map((name) => ({ kind: "field" as const, name }));
+	return { root: "context", segments: segs };
+}
+
+function migrateLegacyActionObject(act: unknown): unknown {
+	if (!act || typeof act !== "object") return act;
+	const a = act as Record<string, unknown>;
+	const op = a.op;
+	if (typeof op === "string" && op.startsWith("box.") && op !== "box.transform") {
+		return { op: "box.transform", transform: op.slice(4) };
+	}
+	if (op === "assign" && typeof a.path === "string" && a.target === undefined) {
+		const out = { ...a };
+		delete out.path;
+		out.target = legacyPathToTarget(a.path as string);
+		return out;
+	}
+	if (op === "clear" && typeof a.path === "string" && a.target === undefined) {
+		return { op: "clear", target: legacyPathToTarget(a.path as string) };
+	}
+	return act;
+}
+
+function migrateLegacyMachineTransitionActions(m: Record<string, unknown>): void {
+	const statesVal = m.states;
+	if (!Array.isArray(statesVal)) return;
+	for (const st of statesVal as Record<string, unknown>[]) {
+		const on = st.on as unknown[] | undefined;
+		if (!Array.isArray(on)) continue;
+		for (const h of on) {
+			if (!h || typeof h !== "object") continue;
+			const trs = (h as Record<string, unknown>).transitions as unknown[] | undefined;
+			if (!Array.isArray(trs)) continue;
+			for (const tr of trs) {
+				if (!tr || typeof tr !== "object") continue;
+				const acts = (tr as Record<string, unknown>).actions as unknown[] | undefined;
+				if (!Array.isArray(acts)) continue;
+				(tr as Record<string, unknown>).actions = acts.map((x) => migrateLegacyActionObject(x));
+			}
+		}
+	}
+}
+
+function normalizeLegacyDisplay(r: Record<string, unknown>): void {
+	const disp = r.display;
+	if (!disp || typeof disp !== "object") return;
+	const d = disp as Record<string, unknown>;
+	const st = d.states;
+	if (!st || typeof st !== "object" || Array.isArray(st)) return;
+	d.states = Object.entries(st as Record<string, unknown>).map(([state, items]) => ({
+		state,
+		items: Array.isArray(items) ? items : [],
+	}));
+}
+
+function normalizeLegacyCommandDocument(r: Record<string, unknown>): void {
+	const machine = r.machine;
+	if (!machine || typeof machine !== "object") return;
+	const m = machine as Record<string, unknown>;
+	const statesVal = m.states;
+	if (!statesVal || typeof statesVal !== "object") return;
+	if (Array.isArray(statesVal)) return;
+	const out: unknown[] = [];
+	for (const [stateName, stateBody] of Object.entries(statesVal as Record<string, unknown>)) {
+		if (!stateBody || typeof stateBody !== "object") continue;
+		const sb = { ...(stateBody as Record<string, unknown>) };
+		const legacyOn = sb.on;
+		if (legacyOn !== undefined && legacyOn !== null && typeof legacyOn === "object" && !Array.isArray(legacyOn)) {
+			const handlers: unknown[] = [];
+			for (const [event, rawTr] of Object.entries(legacyOn as Record<string, unknown>)) {
+				const transitions = (Array.isArray(rawTr) ? rawTr : [rawTr]).filter((x) => x !== null && typeof x === "object");
+				if (transitions.length > 0) {
+					handlers.push({ event, transitions });
+				}
+			}
+			sb.on = handlers;
+		}
+		out.push({ name: stateName, ...sb });
+	}
+	m.states = out;
+
+	const g = r.guards;
+	if (g !== undefined && g !== null && typeof g === "object" && !Array.isArray(g)) {
+		r.guards = Object.entries(g as Record<string, unknown>).map(([name, expr]) => ({ name, expr }));
+	}
+
+	normalizeLegacyDisplay(r);
+	migrateLegacyMachineTransitionActions(m);
+}
+
 /** @emoji 🧾 Validates and returns a `CommandSpec` or `null` when malformed. */
 export function parseCommandSpec(raw: unknown): CommandSpec | null {
 	if (!raw || typeof raw !== "object") return null;
-	const r = raw as Record<string, unknown>;
+	const r = structuredClone(raw) as Record<string, unknown>;
 	if (r.schema !== "spatial.command/v1") return null;
+	normalizeLegacyCommandDocument(r);
 	if (typeof r.id !== "string" || typeof r.version !== "string") return null;
 	const machine = r.machine;
 	if (!machine || typeof machine !== "object") return null;
@@ -1433,14 +1535,16 @@ export function resolveDisplay(spec: CommandSpec, state: string, context: Record
 					},
 				});
 				break;
-			case "entity-highlight":
+			case "entity-highlight": {
+				const idVal = evalExpr(it.entityId, env);
 				items.push({
 					kind: "entity-highlight",
 					id: it.id,
 					...(it.role ? { role: it.role } : {}),
-					params: { entity: it.entity },
+					params: { entity: { kind: it.topologyEntityKind, id: String(idVal ?? "") } },
 				});
 				break;
+			}
 			case "curve":
 				items.push({ kind: "curve", id: it.id, ...(it.role ? { role: it.role } : {}) });
 				break;

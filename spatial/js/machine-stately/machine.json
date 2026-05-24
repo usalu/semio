@@ -1,7 +1,866 @@
 {
   "kind": "spatial.stately-machine-view/v1",
   "schemaVersion": "1.0",
-  "generatedAt": "2026-05-24T18:57:30.823Z",
-  "machines": [],
-  "mermaidCombined": ""
+  "generatedAt": "2026-05-24T19:00:07.255Z",
+  "machines": [
+    {
+      "commandId": "primitive.box",
+      "commandVersion": "1.0.0",
+      "label": "Box",
+      "hostKey": "q",
+      "initial": "idle",
+      "states": [
+        {
+          "id": "idle",
+          "final": false
+        },
+        {
+          "id": "first_corner",
+          "final": false
+        },
+        {
+          "id": "first_corner_other_or_length",
+          "final": false
+        },
+        {
+          "id": "first_corner_length_prompt",
+          "final": false
+        },
+        {
+          "id": "diagonal_rubber",
+          "final": false
+        },
+        {
+          "id": "cube_diagonal_rubber",
+          "final": false
+        },
+        {
+          "id": "three_point_edge",
+          "final": false
+        },
+        {
+          "id": "three_point_width",
+          "final": false
+        },
+        {
+          "id": "vertical_end",
+          "final": false
+        },
+        {
+          "id": "vertical_width",
+          "final": false
+        },
+        {
+          "id": "center_corner",
+          "final": false
+        },
+        {
+          "id": "cube_center_corner",
+          "final": false
+        },
+        {
+          "id": "cube_other_corner",
+          "final": false
+        },
+        {
+          "id": "first_corner_height",
+          "final": false
+        },
+        {
+          "id": "ready",
+          "final": false
+        },
+        {
+          "id": "committed",
+          "final": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "idle",
+          "to": "first_corner",
+          "on": "start",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "s",
+          "label": "Start"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "mode.point",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "t",
+          "label": "Point"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "mode.diagonal",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "d",
+          "label": "Diagonal"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "mode.threePoint",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "p",
+          "label": "3Point"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "mode.vertical",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "v",
+          "label": "Vertical"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner",
+          "on": "mode.center",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "e",
+          "label": "Center"
+        },
+        {
+          "from": "first_corner",
+          "to": "first_corner_other_or_length",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": "boxModePoint",
+          "transient": false
+        },
+        {
+          "from": "first_corner",
+          "to": "diagonal_rubber",
+          "on": "pointer.down",
+          "branch": 1,
+          "guard": "boxModeDiagonal",
+          "transient": false
+        },
+        {
+          "from": "first_corner",
+          "to": "three_point_edge",
+          "on": "pointer.down",
+          "branch": 2,
+          "guard": "boxModeThreePoint",
+          "transient": false
+        },
+        {
+          "from": "first_corner",
+          "to": "vertical_end",
+          "on": "pointer.down",
+          "branch": 3,
+          "guard": "boxModeVertical",
+          "transient": false
+        },
+        {
+          "from": "first_corner",
+          "to": "center_corner",
+          "on": "pointer.down",
+          "branch": 4,
+          "guard": "boxModeCenter",
+          "transient": false
+        },
+        {
+          "from": "first_corner",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "first_corner_other_or_length",
+          "to": "first_corner_other_or_length",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "first_corner_other_or_length",
+          "to": "first_corner_height",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "first_corner_other_or_length",
+          "to": "cube_other_corner",
+          "on": "mode.cube",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "u",
+          "label": "Cube"
+        },
+        {
+          "from": "first_corner_other_or_length",
+          "to": "first_corner_length_prompt",
+          "on": "mode.length",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "l",
+          "label": "Length"
+        },
+        {
+          "from": "first_corner_other_or_length",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "first_corner_length_prompt",
+          "to": "first_corner_height",
+          "on": "set.footprint",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "w",
+          "label": "Apply L×W"
+        },
+        {
+          "from": "first_corner_length_prompt",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "diagonal_rubber",
+          "to": "diagonal_rubber",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "diagonal_rubber",
+          "to": "first_corner_height",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "diagonal_rubber",
+          "to": "cube_diagonal_rubber",
+          "on": "mode.cube",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "u",
+          "label": "Cube"
+        },
+        {
+          "from": "diagonal_rubber",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "cube_diagonal_rubber",
+          "to": "cube_diagonal_rubber",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "cube_diagonal_rubber",
+          "to": "ready",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "cube_diagonal_rubber",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "three_point_edge",
+          "to": "three_point_edge",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "three_point_edge",
+          "to": "three_point_width",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "three_point_edge",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "three_point_width",
+          "to": "three_point_width",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "three_point_width",
+          "to": "first_corner_height",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "three_point_width",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "vertical_end",
+          "to": "vertical_end",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "vertical_end",
+          "to": "vertical_width",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "vertical_end",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "vertical_width",
+          "to": "vertical_width",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "vertical_width",
+          "to": "first_corner_height",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "vertical_width",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "center_corner",
+          "to": "center_corner",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "center_corner",
+          "to": "first_corner_height",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "center_corner",
+          "to": "cube_center_corner",
+          "on": "mode.cube",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "u",
+          "label": "Cube"
+        },
+        {
+          "from": "center_corner",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "cube_center_corner",
+          "to": "cube_center_corner",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "cube_center_corner",
+          "to": "ready",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "cube_center_corner",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "cube_other_corner",
+          "to": "cube_other_corner",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "cube_other_corner",
+          "to": "ready",
+          "on": "pointer.down",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "cube_other_corner",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "first_corner_height",
+          "to": "first_corner_height",
+          "on": "pointer.move",
+          "branch": 0,
+          "guard": null,
+          "transient": true
+        },
+        {
+          "from": "first_corner_height",
+          "to": "ready",
+          "on": "set.height",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "h",
+          "label": "Apply typed height"
+        },
+        {
+          "from": "first_corner_height",
+          "to": "ready",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasValidBox",
+          "transient": false,
+          "key": "Enter",
+          "label": "Accept height"
+        },
+        {
+          "from": "first_corner_height",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "ready",
+          "to": "committed",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasValidBox",
+          "transient": false,
+          "key": "f",
+          "label": "Finalize"
+        },
+        {
+          "from": "ready",
+          "to": "idle",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        }
+      ],
+      "mermaid": "flowchart TB\n  subgraph sub_primitive_box [\"Box (primitive.box)\"]\n    primitive_box__idle[\"idle\"]\n    primitive_box__first_corner[\"first_corner\"]\n    primitive_box__first_corner_other_or_length[\"first_corner_other_or_length\"]\n    primitive_box__first_corner_length_prompt[\"first_corner_length_prompt\"]\n    primitive_box__diagonal_rubber[\"diagonal_rubber\"]\n    primitive_box__cube_diagonal_rubber[\"cube_diagonal_rubber\"]\n    primitive_box__three_point_edge[\"three_point_edge\"]\n    primitive_box__three_point_width[\"three_point_width\"]\n    primitive_box__vertical_end[\"vertical_end\"]\n    primitive_box__vertical_width[\"vertical_width\"]\n    primitive_box__center_corner[\"center_corner\"]\n    primitive_box__cube_center_corner[\"cube_center_corner\"]\n    primitive_box__cube_other_corner[\"cube_other_corner\"]\n    primitive_box__first_corner_height[\"first_corner_height\"]\n    primitive_box__ready[\"ready\"]\n    primitive_box__committed[\"committed (final)\"]\n    primitive_box__idle -->|\"start key:s\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"pointer.move ·transient\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.point key:t\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.diagonal key:d\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.threePoint key:p\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.vertical key:v\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.center key:e\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"pointer.down [boxModePoint]\"| primitive_box__first_corner_other_or_length\n    primitive_box__first_corner -->|\"pointer.down [boxModeDiagonal]\"| primitive_box__diagonal_rubber\n    primitive_box__first_corner -->|\"pointer.down [boxModeThreePoint]\"| primitive_box__three_point_edge\n    primitive_box__first_corner -->|\"pointer.down [boxModeVertical]\"| primitive_box__vertical_end\n    primitive_box__first_corner -->|\"pointer.down [boxModeCenter]\"| primitive_box__center_corner\n    primitive_box__first_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_other_or_length -->|\"pointer.move ·transient\"| primitive_box__first_corner_other_or_length\n    primitive_box__first_corner_other_or_length -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__first_corner_other_or_length -->|\"mode.cube key:u\"| primitive_box__cube_other_corner\n    primitive_box__first_corner_other_or_length -->|\"mode.length key:l\"| primitive_box__first_corner_length_prompt\n    primitive_box__first_corner_other_or_length -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_length_prompt -->|\"set.footprint key:w\"| primitive_box__first_corner_height\n    primitive_box__first_corner_length_prompt -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__diagonal_rubber -->|\"pointer.move ·transient\"| primitive_box__diagonal_rubber\n    primitive_box__diagonal_rubber -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__diagonal_rubber -->|\"mode.cube key:u\"| primitive_box__cube_diagonal_rubber\n    primitive_box__diagonal_rubber -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_diagonal_rubber -->|\"pointer.move ·transient\"| primitive_box__cube_diagonal_rubber\n    primitive_box__cube_diagonal_rubber -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_diagonal_rubber -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__three_point_edge -->|\"pointer.move ·transient\"| primitive_box__three_point_edge\n    primitive_box__three_point_edge -->|\"pointer.down\"| primitive_box__three_point_width\n    primitive_box__three_point_edge -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__three_point_width -->|\"pointer.move ·transient\"| primitive_box__three_point_width\n    primitive_box__three_point_width -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__three_point_width -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__vertical_end -->|\"pointer.move ·transient\"| primitive_box__vertical_end\n    primitive_box__vertical_end -->|\"pointer.down\"| primitive_box__vertical_width\n    primitive_box__vertical_end -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__vertical_width -->|\"pointer.move ·transient\"| primitive_box__vertical_width\n    primitive_box__vertical_width -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__vertical_width -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__center_corner -->|\"pointer.move ·transient\"| primitive_box__center_corner\n    primitive_box__center_corner -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__center_corner -->|\"mode.cube key:u\"| primitive_box__cube_center_corner\n    primitive_box__center_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_center_corner -->|\"pointer.move ·transient\"| primitive_box__cube_center_corner\n    primitive_box__cube_center_corner -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_center_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_other_corner -->|\"pointer.move ·transient\"| primitive_box__cube_other_corner\n    primitive_box__cube_other_corner -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_other_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_height -->|\"pointer.move ·transient\"| primitive_box__first_corner_height\n    primitive_box__first_corner_height -->|\"set.height key:h\"| primitive_box__ready\n    primitive_box__first_corner_height -->|\"confirm [hasValidBox] key:Enter\"| primitive_box__ready\n    primitive_box__first_corner_height -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__ready -->|\"confirm [hasValidBox] key:f\"| primitive_box__committed\n    primitive_box__ready -->|\"cancel key:x\"| primitive_box__idle\n  end",
+      "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
+    },
+    {
+      "commandId": "feature.extrudeWire",
+      "commandVersion": "1.0.0",
+      "label": "Extrude Wire",
+      "hostKey": "j",
+      "initial": "selectWire",
+      "states": [
+        {
+          "id": "selectWire",
+          "final": false,
+          "selectionAccept": [
+            "wire"
+          ]
+        },
+        {
+          "id": "setDistance",
+          "final": false
+        },
+        {
+          "id": "committed",
+          "final": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "selectWire",
+          "to": "setDistance",
+          "on": "selection.changed",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "i",
+          "label": "Pick wire"
+        },
+        {
+          "from": "selectWire",
+          "to": "selectWire",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "setDistance",
+          "to": "setDistance",
+          "on": "set.distance",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "n",
+          "label": "Apply distance"
+        },
+        {
+          "from": "setDistance",
+          "to": "committed",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasWireAndDistance",
+          "transient": false,
+          "key": "Enter",
+          "label": "Commit extrude"
+        },
+        {
+          "from": "setDistance",
+          "to": "selectWire",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        }
+      ],
+      "mermaid": "flowchart TB\n  subgraph sub_feature_extrudeWire [\"Extrude wire (feature.extrudeWire)\"]\n    feature_extrudeWire__selectWire[\"selectWire\"]\n    feature_extrudeWire__setDistance[\"setDistance\"]\n    feature_extrudeWire__committed[\"committed (final)\"]\n    feature_extrudeWire__selectWire -->|\"selection.changed key:i\"| feature_extrudeWire__setDistance\n    feature_extrudeWire__selectWire -->|\"cancel key:x\"| feature_extrudeWire__selectWire\n    feature_extrudeWire__setDistance -->|\"set.distance key:n\"| feature_extrudeWire__setDistance\n    feature_extrudeWire__setDistance -->|\"confirm [hasWireAndDistance] key:Enter\"| feature_extrudeWire__committed\n    feature_extrudeWire__setDistance -->|\"cancel key:x\"| feature_extrudeWire__selectWire\n  end",
+      "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
+    },
+    {
+      "commandId": "feature.offsetSurface",
+      "commandVersion": "1.0.0",
+      "label": "Offset Surface",
+      "hostKey": "k",
+      "initial": "selectSurface",
+      "states": [
+        {
+          "id": "selectSurface",
+          "final": false,
+          "selectionAccept": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "id": "setDistance",
+          "final": false
+        },
+        {
+          "id": "committed",
+          "final": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "selectSurface",
+          "to": "setDistance",
+          "on": "selection.changed",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "i",
+          "label": "Pick surface"
+        },
+        {
+          "from": "selectSurface",
+          "to": "selectSurface",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        },
+        {
+          "from": "setDistance",
+          "to": "setDistance",
+          "on": "set.distance",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "n",
+          "label": "Apply offset"
+        },
+        {
+          "from": "setDistance",
+          "to": "committed",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasSurfaceAndDistance",
+          "transient": false,
+          "key": "Enter",
+          "label": "Commit offset"
+        },
+        {
+          "from": "setDistance",
+          "to": "selectSurface",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false,
+          "key": "x",
+          "label": "Cancel"
+        }
+      ],
+      "mermaid": "flowchart TB\n  subgraph sub_feature_offsetSurface [\"Offset surface (feature.offsetSurface)\"]\n    feature_offsetSurface__selectSurface[\"selectSurface\"]\n    feature_offsetSurface__setDistance[\"setDistance\"]\n    feature_offsetSurface__committed[\"committed (final)\"]\n    feature_offsetSurface__selectSurface -->|\"selection.changed key:i\"| feature_offsetSurface__setDistance\n    feature_offsetSurface__selectSurface -->|\"cancel key:x\"| feature_offsetSurface__selectSurface\n    feature_offsetSurface__setDistance -->|\"set.distance key:n\"| feature_offsetSurface__setDistance\n    feature_offsetSurface__setDistance -->|\"confirm [hasSurfaceAndDistance] key:Enter\"| feature_offsetSurface__committed\n    feature_offsetSurface__setDistance -->|\"cancel key:x\"| feature_offsetSurface__selectSurface\n  end",
+      "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
+    },
+    {
+      "commandId": "measure.distance",
+      "commandVersion": "1.0.0",
+      "label": "Distance",
+      "hostKey": "d",
+      "initial": "selectA",
+      "states": [
+        {
+          "id": "selectA",
+          "final": false,
+          "selectionAccept": [
+            "vertex"
+          ]
+        },
+        {
+          "id": "selectB",
+          "final": false,
+          "selectionAccept": [
+            "vertex"
+          ]
+        },
+        {
+          "id": "ready",
+          "final": false
+        },
+        {
+          "id": "committed",
+          "final": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "selectA",
+          "to": "selectB",
+          "on": "selection.changed",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "selectA",
+          "to": "selectA",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "selectB",
+          "to": "ready",
+          "on": "selection.changed",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "selectB",
+          "to": "selectA",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "ready",
+          "to": "committed",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasBothVertices",
+          "transient": false
+        }
+      ],
+      "mermaid": "flowchart TB\n  subgraph sub_measure_distance [\"Distance (measure.distance)\"]\n    measure_distance__selectA[\"selectA\"]\n    measure_distance__selectB[\"selectB\"]\n    measure_distance__ready[\"ready\"]\n    measure_distance__committed[\"committed (final)\"]\n    measure_distance__selectA -->|\"selection.changed\"| measure_distance__selectB\n    measure_distance__selectA -->|\"cancel\"| measure_distance__selectA\n    measure_distance__selectB -->|\"selection.changed\"| measure_distance__ready\n    measure_distance__selectB -->|\"cancel\"| measure_distance__selectA\n    measure_distance__ready -->|\"confirm [hasBothVertices]\"| measure_distance__committed\n  end",
+      "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
+    },
+    {
+      "commandId": "measure.area",
+      "commandVersion": "1.0.0",
+      "label": "Area",
+      "hostKey": "a",
+      "initial": "selectFace",
+      "states": [
+        {
+          "id": "selectFace",
+          "final": false,
+          "selectionAccept": [
+            "face",
+            "surface"
+          ]
+        },
+        {
+          "id": "ready",
+          "final": false
+        },
+        {
+          "id": "committed",
+          "final": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "selectFace",
+          "to": "ready",
+          "on": "selection.changed",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "selectFace",
+          "to": "selectFace",
+          "on": "cancel",
+          "branch": 0,
+          "guard": null,
+          "transient": false
+        },
+        {
+          "from": "ready",
+          "to": "committed",
+          "on": "confirm",
+          "branch": 0,
+          "guard": "hasFaceArea",
+          "transient": false
+        }
+      ],
+      "mermaid": "flowchart TB\n  subgraph sub_measure_area [\"Area (measure.area)\"]\n    measure_area__selectFace[\"selectFace\"]\n    measure_area__ready[\"ready\"]\n    measure_area__committed[\"committed (final)\"]\n    measure_area__selectFace -->|\"selection.changed\"| measure_area__ready\n    measure_area__selectFace -->|\"cancel\"| measure_area__selectFace\n    measure_area__ready -->|\"confirm [hasFaceArea]\"| measure_area__committed\n  end",
+      "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
+    }
+  ],
+  "mermaidCombined": "flowchart TB\n  subgraph sub_primitive_box [\"Box (primitive.box)\"]\n    primitive_box__idle[\"idle\"]\n    primitive_box__first_corner[\"first_corner\"]\n    primitive_box__first_corner_other_or_length[\"first_corner_other_or_length\"]\n    primitive_box__first_corner_length_prompt[\"first_corner_length_prompt\"]\n    primitive_box__diagonal_rubber[\"diagonal_rubber\"]\n    primitive_box__cube_diagonal_rubber[\"cube_diagonal_rubber\"]\n    primitive_box__three_point_edge[\"three_point_edge\"]\n    primitive_box__three_point_width[\"three_point_width\"]\n    primitive_box__vertical_end[\"vertical_end\"]\n    primitive_box__vertical_width[\"vertical_width\"]\n    primitive_box__center_corner[\"center_corner\"]\n    primitive_box__cube_center_corner[\"cube_center_corner\"]\n    primitive_box__cube_other_corner[\"cube_other_corner\"]\n    primitive_box__first_corner_height[\"first_corner_height\"]\n    primitive_box__ready[\"ready\"]\n    primitive_box__committed[\"committed (final)\"]\n    primitive_box__idle -->|\"start key:s\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"pointer.move ·transient\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.point key:t\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.diagonal key:d\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.threePoint key:p\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.vertical key:v\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"mode.center key:e\"| primitive_box__first_corner\n    primitive_box__first_corner -->|\"pointer.down [boxModePoint]\"| primitive_box__first_corner_other_or_length\n    primitive_box__first_corner -->|\"pointer.down [boxModeDiagonal]\"| primitive_box__diagonal_rubber\n    primitive_box__first_corner -->|\"pointer.down [boxModeThreePoint]\"| primitive_box__three_point_edge\n    primitive_box__first_corner -->|\"pointer.down [boxModeVertical]\"| primitive_box__vertical_end\n    primitive_box__first_corner -->|\"pointer.down [boxModeCenter]\"| primitive_box__center_corner\n    primitive_box__first_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_other_or_length -->|\"pointer.move ·transient\"| primitive_box__first_corner_other_or_length\n    primitive_box__first_corner_other_or_length -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__first_corner_other_or_length -->|\"mode.cube key:u\"| primitive_box__cube_other_corner\n    primitive_box__first_corner_other_or_length -->|\"mode.length key:l\"| primitive_box__first_corner_length_prompt\n    primitive_box__first_corner_other_or_length -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_length_prompt -->|\"set.footprint key:w\"| primitive_box__first_corner_height\n    primitive_box__first_corner_length_prompt -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__diagonal_rubber -->|\"pointer.move ·transient\"| primitive_box__diagonal_rubber\n    primitive_box__diagonal_rubber -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__diagonal_rubber -->|\"mode.cube key:u\"| primitive_box__cube_diagonal_rubber\n    primitive_box__diagonal_rubber -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_diagonal_rubber -->|\"pointer.move ·transient\"| primitive_box__cube_diagonal_rubber\n    primitive_box__cube_diagonal_rubber -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_diagonal_rubber -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__three_point_edge -->|\"pointer.move ·transient\"| primitive_box__three_point_edge\n    primitive_box__three_point_edge -->|\"pointer.down\"| primitive_box__three_point_width\n    primitive_box__three_point_edge -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__three_point_width -->|\"pointer.move ·transient\"| primitive_box__three_point_width\n    primitive_box__three_point_width -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__three_point_width -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__vertical_end -->|\"pointer.move ·transient\"| primitive_box__vertical_end\n    primitive_box__vertical_end -->|\"pointer.down\"| primitive_box__vertical_width\n    primitive_box__vertical_end -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__vertical_width -->|\"pointer.move ·transient\"| primitive_box__vertical_width\n    primitive_box__vertical_width -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__vertical_width -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__center_corner -->|\"pointer.move ·transient\"| primitive_box__center_corner\n    primitive_box__center_corner -->|\"pointer.down\"| primitive_box__first_corner_height\n    primitive_box__center_corner -->|\"mode.cube key:u\"| primitive_box__cube_center_corner\n    primitive_box__center_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_center_corner -->|\"pointer.move ·transient\"| primitive_box__cube_center_corner\n    primitive_box__cube_center_corner -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_center_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__cube_other_corner -->|\"pointer.move ·transient\"| primitive_box__cube_other_corner\n    primitive_box__cube_other_corner -->|\"pointer.down\"| primitive_box__ready\n    primitive_box__cube_other_corner -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__first_corner_height -->|\"pointer.move ·transient\"| primitive_box__first_corner_height\n    primitive_box__first_corner_height -->|\"set.height key:h\"| primitive_box__ready\n    primitive_box__first_corner_height -->|\"confirm [hasValidBox] key:Enter\"| primitive_box__ready\n    primitive_box__first_corner_height -->|\"cancel key:x\"| primitive_box__idle\n    primitive_box__ready -->|\"confirm [hasValidBox] key:f\"| primitive_box__committed\n    primitive_box__ready -->|\"cancel key:x\"| primitive_box__idle\n  end\n\nflowchart TB\n  subgraph sub_feature_extrudeWire [\"Extrude wire (feature.extrudeWire)\"]\n    feature_extrudeWire__selectWire[\"selectWire\"]\n    feature_extrudeWire__setDistance[\"setDistance\"]\n    feature_extrudeWire__committed[\"committed (final)\"]\n    feature_extrudeWire__selectWire -->|\"selection.changed key:i\"| feature_extrudeWire__setDistance\n    feature_extrudeWire__selectWire -->|\"cancel key:x\"| feature_extrudeWire__selectWire\n    feature_extrudeWire__setDistance -->|\"set.distance key:n\"| feature_extrudeWire__setDistance\n    feature_extrudeWire__setDistance -->|\"confirm [hasWireAndDistance] key:Enter\"| feature_extrudeWire__committed\n    feature_extrudeWire__setDistance -->|\"cancel key:x\"| feature_extrudeWire__selectWire\n  end\n\nflowchart TB\n  subgraph sub_feature_offsetSurface [\"Offset surface (feature.offsetSurface)\"]\n    feature_offsetSurface__selectSurface[\"selectSurface\"]\n    feature_offsetSurface__setDistance[\"setDistance\"]\n    feature_offsetSurface__committed[\"committed (final)\"]\n    feature_offsetSurface__selectSurface -->|\"selection.changed key:i\"| feature_offsetSurface__setDistance\n    feature_offsetSurface__selectSurface -->|\"cancel key:x\"| feature_offsetSurface__selectSurface\n    feature_offsetSurface__setDistance -->|\"set.distance key:n\"| feature_offsetSurface__setDistance\n    feature_offsetSurface__setDistance -->|\"confirm [hasSurfaceAndDistance] key:Enter\"| feature_offsetSurface__committed\n    feature_offsetSurface__setDistance -->|\"cancel key:x\"| feature_offsetSurface__selectSurface\n  end\n\nflowchart TB\n  subgraph sub_measure_distance [\"Distance (measure.distance)\"]\n    measure_distance__selectA[\"selectA\"]\n    measure_distance__selectB[\"selectB\"]\n    measure_distance__ready[\"ready\"]\n    measure_distance__committed[\"committed (final)\"]\n    measure_distance__selectA -->|\"selection.changed\"| measure_distance__selectB\n    measure_distance__selectA -->|\"cancel\"| measure_distance__selectA\n    measure_distance__selectB -->|\"selection.changed\"| measure_distance__ready\n    measure_distance__selectB -->|\"cancel\"| measure_distance__selectA\n    measure_distance__ready -->|\"confirm [hasBothVertices]\"| measure_distance__committed\n  end\n\nflowchart TB\n  subgraph sub_measure_area [\"Area (measure.area)\"]\n    measure_area__selectFace[\"selectFace\"]\n    measure_area__ready[\"ready\"]\n    measure_area__committed[\"committed (final)\"]\n    measure_area__selectFace -->|\"selection.changed\"| measure_area__ready\n    measure_area__selectFace -->|\"cancel\"| measure_area__selectFace\n    measure_area__ready -->|\"confirm [hasFaceArea]\"| measure_area__committed\n  end"
 }

@@ -17,78 +17,115 @@
       "editableEntities": ["vertex", "edge", "wire", "face", "shell", "cell"]
     }
   },
-  "guards": {
-    "hasWireAndDistance": {
-      "all": [
-        { "exists": { "path": "wireId" } },
-        { "exists": { "path": "distance" } },
-        { ">": [{ "path": "distance" }, 0] }
-      ]
+  "guards": [
+    {
+      "name": "hasWireAndDistance",
+      "expr": {
+        "kind": "all",
+        "args": [
+          { "kind": "exists", "target": { "root": "context", "segments": [{ "kind": "field", "name": "wireId" }] } },
+          { "kind": "exists", "target": { "root": "context", "segments": [{ "kind": "field", "name": "distance" }] } },
+          {
+            "kind": "binop",
+            "op": ">",
+            "left": { "kind": "path", "root": "context", "segments": [{ "kind": "field", "name": "distance" }] },
+            "right": { "kind": "const", "value": 0 }
+          }
+        ]
+      }
     }
-  },
-  "history": {
-    "excludeEvents": ["pointer.move", "confirm"]
-  },
+  ],
+  "history": { "excludeEvents": ["pointer.move", "confirm"] },
   "machine": {
     "initial": "selectWire",
-    "states": {
-      "selectWire": {
-        "selection": {
-          "accept": ["wire"],
-          "multiple": false,
-          "prompt": "Pick wire"
-        },
-        "on": {
-          "selection.changed": {
-            "target": "setDistance",
-            "key": "i",
-            "label": "Pick wire",
-            "actions": [{ "op": "assign", "path": "wireId", "value": { "$event": "targets.0.id" } }]
+    "states": [
+      {
+        "name": "selectWire",
+        "selection": { "accept": ["wire"], "multiple": false, "prompt": "Pick wire" },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "setDistance",
+                "key": "i",
+                "label": "Pick wire",
+                "actions": [
+                  {
+                    "op": "assign",
+                    "target": { "root": "context", "segments": [{ "kind": "field", "name": "wireId" }] },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        { "kind": "field", "name": "targets" },
+                        { "kind": "index", "index": 0 },
+                        { "kind": "field", "name": "id" }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
           },
-          "cancel": { "target": "selectWire", "key": "x", "label": "Cancel" }
-        }
+          { "event": "cancel", "transitions": [{ "target": "selectWire", "key": "x", "label": "Cancel" }] }
+        ]
       },
-      "setDistance": {
-        "on": {
-          "set.distance": {
-            "key": "n",
-            "label": "Apply distance",
-            "actions": [{ "op": "assign", "path": "distance", "value": { "$event": "value" } }]
+      {
+        "name": "setDistance",
+        "on": [
+          {
+            "event": "set.distance",
+            "transitions": [
+              {
+                "key": "n",
+                "label": "Apply distance",
+                "actions": [
+                  {
+                    "op": "assign",
+                    "target": { "root": "context", "segments": [{ "kind": "field", "name": "distance" }] },
+                    "value": { "kind": "path", "root": "event", "segments": [{ "kind": "field", "name": "value" }] }
+                  }
+                ]
+              }
+            ]
           },
-          "confirm": {
-            "target": "committed",
-            "guard": "hasWireAndDistance",
-            "key": "Enter",
-            "label": "Commit extrude"
+          {
+            "event": "confirm",
+            "transitions": [
+              { "target": "committed", "guard": "hasWireAndDistance", "key": "Enter", "label": "Commit extrude" }
+            ]
           },
-          "cancel": { "target": "selectWire", "key": "x", "label": "Cancel" }
-        }
+          { "event": "cancel", "transitions": [{ "target": "selectWire", "key": "x", "label": "Cancel" }] }
+        ]
       },
-      "committed": { "final": true }
-    }
+      { "name": "committed", "final": true }
+    ]
   },
   "display": {
-    "states": {
-      "setDistance": [
-        {
-          "kind": "label",
-          "id": "hint",
-          "role": "prompt",
-          "params": { "text": "Set extrude distance", "position": { "const": [0, 2, 0] } }
-        }
-      ]
-    }
+    "states": [
+      {
+        "state": "setDistance",
+        "items": [
+          {
+            "kind": "label",
+            "id": "hint",
+            "role": "prompt",
+            "text": "Set extrude distance",
+            "position": { "kind": "const", "value": [0, 2, 0] }
+          }
+        ]
+      }
+    ]
   },
   "commit": {
     "when": "hasWireAndDistance",
     "fromStates": ["setDistance"],
     "operation": {
       "kind": "wire.extrudeToCell",
-      "params": {
-        "wireId": { "path": "wireId" },
-        "distance": { "path": "distance" },
-        "direction": { "const": [0, 0, 1] }
-      }
+      "wireId": { "kind": "path", "root": "context", "segments": [{ "kind": "field", "name": "wireId" }] },
+      "distance": { "kind": "path", "root": "context", "segments": [{ "kind": "field", "name": "distance" }] },
+      "direction": { "kind": "const", "value": [0, 0, 1] }
     }
   }
 }
