@@ -10,6 +10,8 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{ find: "@elements/framework", replacement: resolve(root, "../../core/index.ts") },
+			{ find: "@elements/framework-react/level-context", replacement: resolve(root, "level-context.tsx") },
+			{ find: "@elements/framework-react", replacement: resolve(root, "index.tsx") },
 			{ find: "@elements/ui/chrome", replacement: resolve(root, "../../../react/core/chrome.ts") },
 			{ find: "@elements/ui", replacement: resolve(root, "../../../react/core/index.tsx") },
 		],

@@ -5,18 +5,16 @@
 import { useGLTF } from "@react-three/drei";
 import * as React from "react";
 
+import { LevelProvider, getLevelBgClass } from "@elements/ui";
+import type { UiBoardHostSurfaceNode, UiScene3DHostSurfaceNode } from "@elements/framework";
+import { registerDeclarativeWindowBody } from "@elements/framework";
 import {
-	LevelProvider,
 	WorkbenchView,
-	getLevelBgClass,
 	mountReactApp,
-	registerDeclarativeWindowBody,
 	registerUiBoardSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
-	type UiBoardHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
-} from "@elements/ui";
+} from "@elements/framework-react";
 
 import {
 	buildTopologyDualSurfaceBindings,

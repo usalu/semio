@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@elements/framework": "workspace:*",
+    "@elements/framework-react": "workspace:*",
     "@elements/board": "workspace:*",
     "@elements/scene": "workspace:*",
     "@elements/ui": "workspace:*",

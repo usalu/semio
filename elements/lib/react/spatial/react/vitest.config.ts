@@ -12,6 +12,7 @@ export default defineConfig({
 			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
 			"@elements/framework-react": resolve(root, "../../../framework/renderer/react/index.tsx"),
 			"@elements/ui": resolve(root, "../../core/index.tsx"),
+			"@elements/ui/primitives": resolve(root, "../../core/primitives.ts"),
 			"@elements/geometry-spatial-js": resolve(root, "../js/index.ts"),
 		},
 	},

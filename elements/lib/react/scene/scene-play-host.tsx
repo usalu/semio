@@ -17,7 +17,8 @@ import {
 	type ElementsSurfaceTheme,
 	type FooterItem,
 } from "@elements/ui";
-import { Expertise, Workbench, registerDeclarativeWindowBody } from "@elements/framework";
+import { Workbench, registerDeclarativeWindowBody } from "@elements/framework";
+import { Expertise } from "@elements/ui";
 import { WorkbenchView, mountReactApp, registerUiScene3DSurfaceHost, useApp } from "@elements/framework-react";
 import * as React from "react";
 

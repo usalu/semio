@@ -54,3 +54,15 @@ export {
 
 export { WorkbenchView, App, mountReactApp, mountAsyncReactApp, ReactUI, getLevelBgClass, LevelProvider } from "./workbench-bridge.tsx";
 export { useUIHistory, type UIHistory, type UIHistoryEntry } from "./workbench-history.tsx";
+
+export type { Level } from "./level-context.tsx";
+export {
+	LevelProvider,
+	useLevel,
+	getLevelBgClass,
+	getLevelHoverClass,
+	getLevelActiveHoverClass,
+	getLevelZClass,
+	getLevelBorderElementClass,
+	getLevelDivideElementClass,
+} from "./level-context.tsx";

@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/renderer/react/windows/topology",
+        "cwd": "elements/lib/react/topology",
         "command": "bun ./script.ts dev",
         "env": {
           "TOPOLOGY_PLAY_PORT": "6014",
@@ -22,7 +22,7 @@
       "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/renderer/react/windows/topology",
+        "cwd": "elements/lib/react/topology",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
@@ -31,7 +31,7 @@
       "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/renderer/react/windows/topology",
+        "cwd": "elements/lib/react/topology",
         "command": "bun ./script.ts test",
         "env": {
           "TOPOLOGY_PLAY_PORT": "6035"
