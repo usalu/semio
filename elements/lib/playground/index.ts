@@ -5,18 +5,18 @@
 import {
 	CommandBus,
 	Controller,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchMode,
-	WorkbenchWindowKind,
+	ProductRuntime,
+	AppRuntime,
+	ModeRuntime,
+	WindowKindRuntime,
 	buildScene3dWindowBody,
 	createDefaultLayout,
-	getDeclarativeWindowBodyFactory,
-	registerDeclarativeSidePanelBody,
-	registerDeclarativeWindowBody,
-	type ShellSidePanelBodyViewContext,
-	type ShellToolItem,
-	type ShellWindowBodyViewContext,
+	getWindowBodyFactory,
+	registerSidePanelBody,
+	registerWindowBody,
+	type SidePanelBodyViewContext,
+	type ToolItem,
+	type WindowBodyViewContext,
 	type UiNode,
 	type WindowLayout,
 } from "@elements/framework";
@@ -58,7 +58,7 @@ function playgroundKindToggles<K extends string>(
 	values: Readonly<Record<K, boolean>>,
 	controllerId: string,
 	command: string,
-): ShellToolItem[] {
+): ToolItem[] {
 	return kinds.map((kind, order) => ({
 		id: `playground.${prefix}.${kind}`,
 		kind: "toggle" as const,
@@ -75,7 +75,7 @@ function playgroundKindToggles<K extends string>(
 //#region 🔖Controller
 /** @emoji 🎛 Base playground controller: selection/filter kind toggles, query, selected id, focused kind. */
 export abstract class PlaygroundController<K extends string> extends Controller {
-	readonly browseMode = new WorkbenchMode("browse", "Browse", undefined);
+	readonly browseMode = new ModeRuntime("browse", "Browse", undefined);
 	protected readonly kinds: readonly K[];
 	protected readonly kindLabel: (kind: K) => string;
 	readonly selectableKinds: Record<K, boolean>;
@@ -177,17 +177,17 @@ export function buildPlaygroundWorkbenchApp(
 	ids: PlaygroundIds,
 	controller: PlaygroundController<string>,
 	options?: BuildPlaygroundWorkbenchAppOptions,
-): WorkbenchApp {
+): AppRuntime {
 	const layout =
 		options?.layout ??
 		createDefaultLayout([ids.windowId], "row", [100], [ids.windowLabel]);
-	const app = new WorkbenchApp(
+	const app = new AppRuntime(
 		ids.appId,
 		ids.windowLabel,
 		undefined,
 		controller,
 		layout,
-		[new WorkbenchWindowKind(ids.windowId, ids.windowLabel, ids.mainBodyKey)],
+		[new WindowKindRuntime(ids.windowId, ids.windowLabel, ids.mainBodyKey)],
 	);
 	app.defaultModeId = controller.browseMode.id;
 	app.addMode(controller.browseMode);
@@ -198,13 +198,13 @@ export function buildPlaygroundWorkbenchApp(
 }
 
 export function playgroundControllerFromContext(
-	ctx: ShellWindowBodyViewContext | ShellSidePanelBodyViewContext,
+	ctx: WindowBodyViewContext | SidePanelBodyViewContext,
 ): PlaygroundController<string> | undefined {
 	return ctx.workbench.getActiveApp()?.controller as PlaygroundController<string> | undefined;
 }
 
 /** @emoji 🪟 Declarative main window: lone scene3d surface. */
-export function buildPlaygroundMainWindowBody(ids: PlaygroundIds, ctx: ShellWindowBodyViewContext): UiNode {
+export function buildPlaygroundMainWindowBody(ids: PlaygroundIds, ctx: WindowBodyViewContext): UiNode {
 	if (!playgroundControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing playground controller" };
 	}
@@ -212,7 +212,7 @@ export function buildPlaygroundMainWindowBody(ids: PlaygroundIds, ctx: ShellWind
 }
 
 /** @emoji 📋 Declarative workbench side tab: host-bound table surface. */
-export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: ShellSidePanelBodyViewContext): UiNode {
+export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiNode {
 	if (!playgroundControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing playground controller" };
 	}
@@ -220,7 +220,7 @@ export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: Shell
 }
 
 /** @emoji 🔎 Declarative details side tab: host-bound table surface. */
-export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: ShellSidePanelBodyViewContext): UiNode {
+export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiNode {
 	if (!playgroundControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing playground controller" };
 	}
@@ -228,14 +228,14 @@ export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: ShellSi
 }
 
 export interface RegisterPlaygroundDeclarativeBodiesOptions {
-	readonly buildMainWindow?: (ctx: ShellWindowBodyViewContext) => UiNode;
-	readonly buildWorkbenchPanel?: (ctx: ShellSidePanelBodyViewContext) => UiNode;
-	readonly buildDetailsPanel?: (ctx: ShellSidePanelBodyViewContext) => UiNode;
+	readonly buildMainWindow?: (ctx: WindowBodyViewContext) => UiNode;
+	readonly buildWorkbenchPanel?: (ctx: SidePanelBodyViewContext) => UiNode;
+	readonly buildDetailsPanel?: (ctx: SidePanelBodyViewContext) => UiNode;
 }
 
 export interface PlaygroundSidePanelBodyRegistration {
 	readonly bodyKey: string;
-	readonly build: (ctx: ShellSidePanelBodyViewContext) => UiNode;
+	readonly build: (ctx: SidePanelBodyViewContext) => UiNode;
 }
 
 /** @emoji 📝 Registers multiple side-panel declarative trees. */
@@ -247,12 +247,12 @@ export function registerPlaygroundSidePanelBodies(tabs: readonly PlaygroundSideP
 
 /** @emoji 📝 Registers playground window + side-panel declarative trees on the framework host. */
 export function registerPlaygroundDeclarativeBodies(ids: PlaygroundIds, options?: RegisterPlaygroundDeclarativeBodiesOptions): void {
-	registerDeclarativeWindowBody(ids.mainBodyKey, options?.buildMainWindow ?? ((ctx) => buildPlaygroundMainWindowBody(ids, ctx)));
-	registerDeclarativeSidePanelBody(
+	registerWindowBody(ids.mainBodyKey, options?.buildMainWindow ?? ((ctx) => buildPlaygroundMainWindowBody(ids, ctx)));
+	registerSidePanelBody(
 		ids.workbenchTabBodyKey,
 		options?.buildWorkbenchPanel ?? ((ctx) => buildPlaygroundWorkbenchPanelBody(ids, ctx)),
 	);
-	registerDeclarativeSidePanelBody(
+	registerSidePanelBody(
 		ids.detailsTabBodyKey,
 		options?.buildDetailsPanel ?? ((ctx) => buildPlaygroundDetailsPanelBody(ids, ctx)),
 	);

@@ -1,0 +1,13 @@
+{
+  "title": "Elements Playground Architecture",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement the new Elements architecture: keep @elements/lib/react/core as pure React components with no classes, keep @elements/lib/framework/core as pure TypeScript classes with no React, make @elements/lib/framework/renderer/react the first renderer for framework core, finish @elements/lib/playground, and update @elements/lib/react/spatial/play to use the new playground. Fix the current Nx duplicate project configuration blocking @elements/geometry-spatial-play:dev.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1470"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a942f3c911eb41cba1cd50c1252f6217"
+  ]
+}

@@ -2,7 +2,7 @@
 /** @emoji ⚛️ `@elements/framework-react` — React renderer for {@link @elements/framework}: declarative {@link UiNode} host (monolith). */
 // #endregion 🧲Header
 
-export { ProductRuntime, type WindowLayout } from "@elements/framework";
+export { ProductRuntime, APP_TOOL_CATEGORY_ORDER, type WindowLayout, type AppToolCategory } from "@elements/framework";
 
 export type { Level } from "@elements/ui";
 export {
@@ -17,8 +17,7 @@ export {
 } from "@elements/ui";
 
 import {
-	APP_TOOL_CATEGORY_ORDER,
-	AppToolCategory,
+	countAppTools,
 	CommandBus,
 	Controller,
 	ProductRuntime,
@@ -31,7 +30,7 @@ import {
 	getWindowBodyFactory,
 	type ResolvedAppState,
 	type AppTools as FrameworkAppTools,
-	type FooterItem,
+	type FooterItem as DeclarativeFooterItem,
 	type SidePanelBodyViewContext,
 	type SideTabSpec,
 	type ToolItem,
@@ -119,8 +118,8 @@ import {
 
 //#region 📦shell-chrome-types.tsx
 
-/** @emoji 👣 Footer row rendered by the workbench shell. */
-export interface FooterItem {
+/** @emoji 👣 Footer row rendered by the product shell. */
+export interface ChromeFooterRow {
 	readonly id: string;
 	readonly icon?: React.ReactNode;
 	readonly text?: string;
@@ -136,7 +135,7 @@ export interface ShellChromeTreePanelConfig {
 	readonly sections: readonly { readonly id: string; readonly content: React.ReactNode }[];
 }
 
-/** @emoji 📑 Side panel tab registration consumed by {@link WorkbenchView}. */
+/** @emoji 📑 Side panel tab registration consumed by {@link ProductView}. */
 export interface SidePanelTabConfig {
 	readonly id: string;
 	readonly icon: React.ComponentType<{ readonly size?: number }>;
@@ -1124,14 +1123,8 @@ export interface UIToolbarItem {
   order?: number;
 }
 
-/** @emoji 🧰 Toolbar category ids shared by every App registration surface. */
-export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
-
-/** @emoji 📋 Default toolbar category order (history and hand first when present). */
-export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
-
-/** @emoji 🗂️ Per-category toolbar tools registered by an app or global UI shell. */
-export type AppTools = Partial<Record<AppToolCategory, UIToolbarItem[]>>;
+/** @emoji 🗂️ Per-category toolbar tools registered by an app or global UI shell (React view layer). */
+export type ToolbarViewTools = Partial<Record<AppToolCategory, UIToolbarItem[]>>;
 
 function sortToolbarItems(items: readonly UIToolbarItem[]): UIToolbarItem[] {
   return [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
@@ -1142,15 +1135,15 @@ function hasAppToolCategoryItems(items: readonly UIToolbarItem[] | undefined): b
 }
 
 /** @emoji 🔢 Counts registered toolbar items across all populated categories. */
-export function countAppTools(tools?: AppTools): number {
+export function countToolbarViewTools(tools?: ToolbarViewTools): number {
   if (!tools) return 0;
   return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
 }
 
 /** @emoji 🔀 Merges base and extension tool maps per category (extension appends within each category). */
-export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
+export function mergeToolbarViewTools(base?: ToolbarViewTools, extension?: ToolbarViewTools): ToolbarViewTools | undefined {
   if (!base && !extension) return undefined;
-  const merged: AppTools = {};
+  const merged: ToolbarViewTools = {};
   for (const category of APP_TOOL_CATEGORY_ORDER) {
     const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
     if (combined.length > 0) merged[category] = combined;
@@ -1159,7 +1152,7 @@ export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools |
 }
 
 /** @emoji 📂 Lists categories that have at least one non-separator tool. */
-export function listPopulatedAppToolCategories(tools?: AppTools): AppToolCategory[] {
+export function listPopulatedToolbarViewCategories(tools?: ToolbarViewTools): AppToolCategory[] {
   if (!tools) return [];
   return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
 }
@@ -1228,11 +1221,11 @@ const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }
  * Renders a floating toolbar with category toggles; only categories with registered tools are shown.
  **/
 const UIToolbar: React.FC<{
-  tools: AppTools;
+  tools: ToolbarViewTools;
   className?: string;
 }> = ({ tools, className }) => {
   const { t } = useTranslation();
-  const populatedCategories = React.useMemo(() => listPopulatedAppToolCategories(tools), [tools]);
+  const populatedCategories = React.useMemo(() => listPopulatedToolbarViewCategories(tools), [tools]);
   const [activeCategory, setActiveCategory] = React.useState<AppToolCategory | null>(null);
 
   React.useEffect(() => {
@@ -1330,12 +1323,12 @@ if (import.meta.vitest) {
 		});
 
 		it("merges categorized tools and omits empty categories", () => {
-			expect(mergeAppTools({ selection: [{ id: "a", onClick: () => undefined }] }, { filter: [{ id: "b", onClick: () => undefined }] })).toEqual({
+			expect(mergeToolbarViewTools({ selection: [{ id: "a", onClick: () => undefined }] }, { filter: [{ id: "b", onClick: () => undefined }] })).toEqual({
 				selection: [{ id: "a", onClick: expect.any(Function) }],
 				filter: [{ id: "b", onClick: expect.any(Function) }],
 			});
-			expect(listPopulatedAppToolCategories({ selection: [], filter: [{ id: "b", onClick: () => undefined }] })).toEqual(["filter"]);
-			expect(listPopulatedAppToolCategories({ filter: [{ id: "sep", kind: "separator" }] })).toEqual([]);
+			expect(listPopulatedToolbarViewCategories({ selection: [], filter: [{ id: "b", onClick: () => undefined }] })).toEqual(["filter"]);
+			expect(listPopulatedToolbarViewCategories({ filter: [{ id: "sep", kind: "separator" }] })).toEqual([]);
 		});
 	});
 }
@@ -1361,7 +1354,7 @@ export interface ProductViewProps {
 	className?: string;
 	resolvedWindowKindsOverride?: UIWindowKindDefinition[];
 	slotToolbar?: React.ReactNode;
-	extraFooterItems?: FooterItem[];
+	extraFooterItems?: ChromeFooterRow[];
 	augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
 	initialPanelVisibility?: UIPanelVisibility;
 }
@@ -1375,13 +1368,13 @@ export interface UIPanelVisibility {
 }
 
 export interface AppContextValue {
-	workbench: Workbench;
+	runtime: ProductRuntime;
 	activeAppId: string;
 	setActiveAppId: (id: string) => void;
-	activeApp: ResolvedWorkbenchAppState;
+	activeApp: ResolvedAppState;
 	activeModeId: string | null;
 	setActiveModeId: (id: string) => void;
-	apps: WorkbenchApp[];
+	apps: AppRuntime[];
 	panelVisibility: UIPanelVisibility;
 	togglePanel: (panel: keyof UIPanelVisibility) => void;
 	uri: string;
@@ -1396,10 +1389,10 @@ export interface AppContextValue {
 
 export const AppContext = React.createContext<AppContextValue | undefined>(undefined);
 
-/** @emoji ­ƒ¬Ø Returns the active {@link Workbench} shell context from the nearest {@link AppContext}. */
+/** @emoji 🪝 Returns the active {@link ProductRuntime} shell context from the nearest {@link AppContext}. */
 export function useApp(): AppContextValue {
 	const ctx = React.useContext(AppContext);
-	if (!ctx) throw new Error("useApp must be used within a WorkbenchView");
+	if (!ctx) throw new Error("useApp must be used within a ProductView");
 	return ctx;
 }
 
@@ -1809,7 +1802,7 @@ export function registerShellTabIcon(iconId: string, Icon: LucideIcon): void {
 
 const windowBodyByKey = new Map<string, React.ComponentType<unknown>>();
 
-/** @emoji ­ƒ¬ƒ Binds a `bodyKey` from {@link WorkbenchWindowKind} to a React window body component. */
+/** @emoji ­ƒ¬ƒ Binds a `bodyKey` from {@link WindowKindRuntime} to a React window body component. */
 export function registerWindowBody(bodyKey: string, Component: React.ComponentType<unknown>): void {
 	windowBodyByKey.set(bodyKey, Component);
 }
@@ -1828,22 +1821,22 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 	let component = declarativeWindowBodyComponents.get(cacheKey);
 	if (!component) {
 		component = function ShellDeclarativeWindowBody() {
-			const { workbench, activeModeId } = useApp();
+			const { runtime, activeModeId } = useApp();
 			const generation = React.useSyncExternalStore(
-				(listener) => workbench.subscribe(listener),
-				() => workbench.generation,
+				(listener) => runtime.subscribe(listener),
+				() => runtime.generation,
 				() => 0,
 			);
-			const ctx: ShellWindowBodyViewContext = {
-				workbench,
+			const ctx: WindowBodyViewContext = {
+				runtime,
 				windowKindId,
 				bodyKey,
 				activeModeId: activeModeId ?? null,
 				generation,
 			};
-			const factory = getDeclarativeWindowBodyFactory(bodyKey);
+			const factory = getWindowBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
+			return <UiRenderer node={node} commandBus={runtime.commandBus} />;
 		};
 		declarativeWindowBodyComponents.set(cacheKey, component);
 	}
@@ -1857,29 +1850,29 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	let component = declarativeSidePanelBodyComponents.get(cacheKey);
 	if (!component) {
 		component = function ShellDeclarativeSidePanelBody() {
-			const { workbench, activeModeId } = useApp();
+			const { runtime, activeModeId } = useApp();
 			const generation = React.useSyncExternalStore(
-				(listener) => workbench.subscribe(listener),
-				() => workbench.generation,
+				(listener) => runtime.subscribe(listener),
+				() => runtime.generation,
 				() => 0,
 			);
-			const ctx: ShellSidePanelBodyViewContext = {
-				workbench,
+			const ctx: SidePanelBodyViewContext = {
+				runtime,
 				windowKindId: tabId,
 				bodyKey,
 				activeModeId: activeModeId ?? null,
 				generation,
 			};
-			const factory = getDeclarativeSidePanelBodyFactory(bodyKey);
+			const factory = getSidePanelBodyFactory(bodyKey);
 			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
+			return <UiRenderer node={node} commandBus={runtime.commandBus} />;
 		};
 		declarativeSidePanelBodyComponents.set(cacheKey, component);
 	}
 	return component;
 }
 
-function shellMeasuresToGolden(measures: readonly ShellWindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
+function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
 	if (!measures.length) return undefined;
 	return measures.map((measure) => {
 		if (measure.kind === "select") {
@@ -1897,10 +1890,10 @@ function shellMeasuresToGolden(measures: readonly ShellWindowMeasure[], bus: Com
 }
 
 /** @emoji ­ƒ¬ƒ Converts framework window kinds into golden-layout window definitions. */
-export function shellWindowKindsToGolden(windowKinds: readonly WorkbenchWindowKind[], bus: CommandBus): UIWindowKindDefinition[] {
-	const goldenMeasures = (wk: WorkbenchWindowKind) => shellMeasuresToGolden(wk.measures, bus);
+export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
+	const goldenMeasures = (wk: WindowKindRuntime) => windowMeasuresToGolden(wk.measures, bus);
 	return windowKinds.map((wk) => {
-		const declarativeFactory = getDeclarativeWindowBodyFactory(wk.bodyKey);
+		const declarativeFactory = getWindowBodyFactory(wk.bodyKey);
 		if (declarativeFactory) {
 			return { id: wk.id, label: wk.label, component: getDeclarativeWindowBodyComponent(wk.id, wk.bodyKey), measures: goldenMeasures(wk) };
 		}
@@ -1931,10 +1924,10 @@ function shellTabIconComponent(iconId: string): React.ComponentType<{ size?: num
 }
 
 /** @emoji ­ƒôæ Converts framework side tabs into panel tab configs. */
-export function shellSideTabsToPanelTabs(tabs: readonly ShellSideTabSpec[], bus: CommandBus): SidePanelTabConfig[] {
+export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], bus: CommandBus): SidePanelTabConfig[] {
 	void bus;
 	return tabs.map((tab, orderIndex) => {
-		const declarativeFactory = getDeclarativeSidePanelBodyFactory(tab.bodyKey);
+		const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
 		const Body = declarativeFactory
 			? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey)
 			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
@@ -1948,7 +1941,7 @@ export function shellSideTabsToPanelTabs(tabs: readonly ShellSideTabSpec[], bus:
 }
 
 /** @emoji ­ƒæú Converts framework footer items into React footer rows. */
-export function shellFooterToFooterItems(items: readonly ShellFooterItem[], bus: CommandBus): FooterItem[] {
+export function declarativeFooterToChromeRows(items: readonly DeclarativeFooterItem[], bus: CommandBus): ChromeFooterRow[] {
 	return items.map((item) => ({
 		id: item.id,
 		text: item.text,
@@ -1960,7 +1953,7 @@ export function shellFooterToFooterItems(items: readonly ShellFooterItem[], bus:
 	}));
 }
 
-function shellToolToToolbarItem(item: ShellToolItem, bus: CommandBus): UIToolbarItem {
+function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem {
 	if (item.kind === "separator") {
 		return { id: item.id, kind: "separator", order: item.order };
 	}
@@ -1989,10 +1982,10 @@ function shellToolToToolbarItem(item: ShellToolItem, bus: CommandBus): UIToolbar
 	};
 }
 
-/** @emoji ­ƒº░ Converts framework toolbar maps into React toolbar items. */
-export function shellToolsToAppTools(tools: ShellAppTools | undefined, bus: CommandBus): AppTools | undefined {
+/** @emoji 🎛 Converts declarative {@link FrameworkAppTools} into mounted toolbar items. */
+export function declareToolsToViewTools(tools: FrameworkAppTools | undefined, bus: CommandBus): ToolbarViewTools | undefined {
 	if (!tools) return undefined;
-	const merged: AppTools = {};
+	const merged: ToolbarViewTools = {};
 	for (const category of APP_TOOL_CATEGORY_ORDER) {
 		const list = tools[category];
 		if (!list?.length) continue;
@@ -2013,7 +2006,7 @@ export function mergeConfigEntries<T extends { id: string }>(base: readonly T[] 
 //#endregion ­ƒôªshell-bridge.tsx
 
 //#region ­ƒôªworkbench-view.tsx
-const WorkbenchFindItemsSync: React.FC<{
+const ProductFindItemsSync: React.FC<{
 	findItems?: UIFindItem[];
 	onFindSelect?: (itemId: string) => void;
 }> = ({ findItems, onFindSelect }) => {
@@ -2055,9 +2048,9 @@ const AppPanelStatePreview: React.FC<{
   );
 };
 
-const AppWorkbenchPanel: React.FC<{
+const AppSummaryPanel: React.FC<{
   activeModeLabel?: string | null;
-  app: ResolvedWorkbenchAppState;
+  app: ResolvedAppState;
 }> = ({ activeModeLabel, app }) => {
   return (
     <div data-testid="app-panel.workbench" className="flex min-h-0 flex-col gap-small text-sm">
@@ -2075,20 +2068,20 @@ const AppWorkbenchPanel: React.FC<{
   );
 };
 
-function createDefaultAppWorkbenchTabs(app: ResolvedWorkbenchAppState, activeModeLabel?: string | null): SidePanelTabConfig[] {
+function createDefaultAppHostTabs(app: ResolvedAppState, activeModeLabel?: string | null): SidePanelTabConfig[] {
   return [
     staticSidePanelTabDefinition({
       id: APP_WORKBENCH_TAB_ID,
       icon: Folder,
       order: 0,
       tree: staticTreePanelDefinition({
-        sections: [{ id: `${APP_WORKBENCH_TAB_ID}.summary`, content: <AppWorkbenchPanel activeModeLabel={activeModeLabel} app={app} /> }],
+        sections: [{ id: `${APP_WORKBENCH_TAB_ID}.summary`, content: <AppSummaryPanel activeModeLabel={activeModeLabel} app={app} /> }],
       }),
     }).resolveTab(),
   ];
 }
 
-function createDefaultAppDetailsTabs(app: ResolvedWorkbenchAppState): SidePanelTabConfig[] {
+function createDefaultAppDetailsTabs(app: ResolvedAppState): SidePanelTabConfig[] {
   return [
     staticSidePanelTabDefinition({
       id: APP_DETAILS_TAB_ID,
@@ -2106,7 +2099,7 @@ function createDefaultAppDetailsTabs(app: ResolvedWorkbenchAppState): SidePanelT
   ];
 }
 
-function createDefaultAppOptionsTabs(app: ResolvedWorkbenchAppState): SidePanelTabConfig[] {
+function createDefaultAppOptionsTabs(app: ResolvedAppState): SidePanelTabConfig[] {
   return [
     staticSidePanelTabDefinition({
       id: APP_OPTIONS_TAB_ID,
@@ -2119,7 +2112,7 @@ function createDefaultAppOptionsTabs(app: ResolvedWorkbenchAppState): SidePanelT
   ];
 }
 
-function createDefaultAppChatTabs(app: ResolvedWorkbenchAppState): SidePanelTabConfig[] {
+function createDefaultAppChatTabs(app: ResolvedAppState): SidePanelTabConfig[] {
   return [
     staticSidePanelTabDefinition({
       id: APP_CHAT_TAB_ID,
@@ -2132,15 +2125,15 @@ function createDefaultAppChatTabs(app: ResolvedWorkbenchAppState): SidePanelTabC
   ];
 }
 
-function withDefaultAppPanelTabs(app: ResolvedWorkbenchAppState, bus: CommandBus, activeModeLabel?: string | null): Record<AppPanelKind, SidePanelTabConfig[]> {
-	const defaultWorkbenchTabs = createDefaultAppWorkbenchTabs(app, activeModeLabel);
+function withDefaultAppPanelTabs(app: ResolvedAppState, bus: CommandBus, activeModeLabel?: string | null): Record<AppPanelKind, SidePanelTabConfig[]> {
+	const defaultHostTabs = createDefaultAppHostTabs(app, activeModeLabel);
 	const defaultDetailsTabs = createDefaultAppDetailsTabs(app);
 	const defaultOptionsTabs = createDefaultAppOptionsTabs(app);
 	const defaultChatTabs = createDefaultAppChatTabs(app);
-	const shellLeft = shellSideTabsToPanelTabs(app.leftTabs, bus);
-	const shellRight = shellSideTabsToPanelTabs(app.rightTabs, bus);
+	const shellLeft = sideTabsToPanelTabs(app.leftTabs, bus);
+	const shellRight = sideTabsToPanelTabs(app.rightTabs, bus);
 	return {
-		workbench: mergeConfigEntries(defaultWorkbenchTabs, shellLeft.length ? shellLeft : undefined) ?? defaultWorkbenchTabs,
+		workbench: mergeConfigEntries(defaultHostTabs, shellLeft.length ? shellLeft : undefined) ?? defaultHostTabs,
 		details: mergeConfigEntries(defaultDetailsTabs, shellRight.length ? shellRight : undefined) ?? defaultDetailsTabs,
 		options: defaultOptionsTabs,
 		chat: defaultChatTabs,
@@ -2184,8 +2177,8 @@ const UIPanelToggleGroup: React.FC<{
  * Every panel has: tree.
  * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
  **/
-export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
-	workbench,
+export const ProductView: React.FC<ProductViewProps> = ({
+	runtime,
 	defaultAppId,
 	uri: uriProp = "/",
 	onNavigate,
@@ -2205,32 +2198,32 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	augmentPanelTabs,
 }) => {
 	const shellGen = React.useSyncExternalStore(
-		(onStoreChange) => workbench.subscribe(onStoreChange),
-		() => workbench.generation,
+		(onStoreChange) => runtime.subscribe(onStoreChange),
+		() => runtime.generation,
 		() => 0,
 	);
 	void shellGen;
 
 	React.useEffect(() => {
 		if (defaultAppId) {
-			workbench.setActiveAppId(defaultAppId);
+			runtime.setActiveAppId(defaultAppId);
 		}
-	}, [defaultAppId, workbench]);
+	}, [defaultAppId, runtime]);
 
 	React.useEffect(() => {
-		workbench.uri = uriProp;
-		workbench.onNavigate = onNavigate;
-		workbench.onGoBack = onGoBack;
-		workbench.onGoForward = onGoForward;
-		workbench.onGoUp = onGoUp;
-		workbench.canGoBack = canGoBackProp;
-		workbench.canGoForward = canGoForwardProp;
-		workbench.canGoUp = canGoUpProp;
-		workbench.mobile = mobile;
-		workbench.mobileQuery = mobileQuery;
-		workbench.className = className ?? "";
-		workbench.notify();
-	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, workbench]);
+		runtime.uri = uriProp;
+		runtime.onNavigate = onNavigate;
+		runtime.onGoBack = onGoBack;
+		runtime.onGoForward = onGoForward;
+		runtime.onGoUp = onGoUp;
+		runtime.canGoBack = canGoBackProp;
+		runtime.canGoForward = canGoForwardProp;
+		runtime.canGoUp = canGoUpProp;
+		runtime.mobile = mobile;
+		runtime.mobileQuery = mobileQuery;
+		runtime.className = className ?? "";
+		runtime.notify();
+	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, runtime]);
 
 	const [leftPanelSize, setLeftPanelSize] = React.useState(280);
 	const [rightPanelSize, setRightPanelSize] = React.useState(300);
@@ -2245,7 +2238,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	const [searchOpen, setSearchOpen] = React.useState(false);
 	const [findOpen, setFindOpen] = React.useState(false);
 	const detectedMobile = useMediaQuery(mobileQuery);
-	const resolvedMobile = mobile ?? detectedMobile ?? workbench.mobile;
+	const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
 
 	useCommandHotkey(
 		"ctrl+p,meta+p",
@@ -2272,22 +2265,22 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
 	}, []);
 
-	const resolvedApps = workbench.apps;
-	const activeAppId = workbench.activeAppId;
+	const resolvedApps = runtime.apps;
+	const activeAppId = runtime.activeAppId;
 	const setActiveAppId = React.useCallback(
 		(id: string) => {
-			workbench.setActiveAppId(id);
+			runtime.setActiveAppId(id);
 		},
-		[workbench],
+		[runtime],
 	);
 
-	const activeAppBase = workbench.getActiveApp();
+	const activeAppBase = runtime.getActiveApp();
 	if (!activeAppBase) return null;
 
 	const activeModeId = activeAppBase.getActiveModeId();
 	const activeApp = activeAppBase.resolve(activeModeId);
 	const activeModeLabel = activeAppBase.modes.find((mode) => mode.id === activeModeId)?.label ?? null;
-	const panelTabsBase = withDefaultAppPanelTabs(activeApp, workbench.commandBus, activeModeLabel);
+	const panelTabsBase = withDefaultAppPanelTabs(activeApp, runtime.commandBus, activeModeLabel);
 	const panelTabs = {
 		...panelTabsBase,
 		workbench: mergeConfigEntries(panelTabsBase.workbench, augmentPanelTabs?.workbench) ?? panelTabsBase.workbench,
@@ -2303,16 +2296,16 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	const hasModeNav = activeAppBase.modes.length > 1;
 	const setActiveModeId = (id: string) => {
 		activeAppBase.setActiveModeId(id);
-		workbench.notify();
+		runtime.notify();
 	};
 
 	const mergedTools = React.useMemo(
-		() => mergeAppTools(shellToolsToAppTools(workbench.globalTools, workbench.commandBus), shellToolsToAppTools(activeApp.tools, workbench.commandBus)),
-		[activeApp.tools, workbench, shellGen],
+		() => mergeToolbarViewTools(declareToolsToViewTools(runtime.globalTools, runtime.commandBus), declareToolsToViewTools(activeApp.tools, runtime.commandBus)),
+		[activeApp.tools, runtime, shellGen],
 	);
-	const hasToolbarTools = listPopulatedAppToolCategories(mergedTools).length > 0;
+	const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
-	const openDesktopWorkbench = React.useCallback((pressed: boolean) => {
+	const openDesktopLeftPanel = React.useCallback((pressed: boolean) => {
 		setPanelVisibility((prev) => ({ ...prev, leftSidePanel: pressed }));
 	}, []);
 
@@ -2447,7 +2440,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 								{ id: "ui.panelToggle.chat", icon: chatIcon, pressed: mobilePanelVisible && activeMobilePanelKind === "chat", onPressedChange: (pressed) => openMobilePanel("chat", pressed) },
 						  ]
 						: [
-								{ id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: panelVisibility.leftSidePanel, onPressedChange: openDesktopWorkbench },
+								{ id: "ui.panelToggle.workbench", icon: workbenchIcon, pressed: panelVisibility.leftSidePanel, onPressedChange: openDesktopLeftPanel },
 								{ id: "ui.panelToggle.details", icon: detailsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "details", onPressedChange: (pressed) => openDesktopRightPanel("details", pressed) },
 								{ id: "ui.panelToggle.options", icon: optionsIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "options", onPressedChange: (pressed) => openDesktopRightPanel("options", pressed) },
 								{ id: "ui.panelToggle.chat", icon: chatIcon, pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === "chat", onPressedChange: (pressed) => openDesktopRightPanel("chat", pressed) },
@@ -2458,27 +2451,27 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	});
 
 	const mergedFooterItems = [
-		...shellFooterToFooterItems(workbench.globalFooterItems, workbench.commandBus),
-		...shellFooterToFooterItems(activeApp.footerItems, workbench.commandBus),
+		...declarativeFooterToChromeRows(runtime.globalFooterItems, runtime.commandBus),
+		...declarativeFooterToChromeRows(activeApp.footerItems, runtime.commandBus),
 		...(extraFooterItems ?? []),
 	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
 	const searchItemsResolved = React.useMemo(
 		() =>
-			workbench.searchItems.map((row) => ({
+			runtime.searchItems.map((row) => ({
 				id: row.id,
 				label: row.label,
 				description: row.description,
 				category: row.category,
 				icon: row.iconId ? resolveElementIcon(row.iconId) : undefined,
-				onSelect: () => workbench.commandBus.dispatch(row.controllerId, row.command, row.args),
+				onSelect: () => runtime.commandBus.dispatch(row.controllerId, row.command, row.args),
 			})),
-		[workbench, shellGen],
+		[runtime, shellGen],
 	);
 
 	const goldenWindowKinds = React.useMemo(
-		() => resolvedWindowKindsOverride ?? shellWindowKindsToGolden(activeApp.windowKinds, workbench.commandBus),
-		[activeApp.windowKinds, resolvedWindowKindsOverride, workbench.commandBus],
+		() => resolvedWindowKindsOverride ?? windowKindsToGolden(activeApp.windowKinds, runtime.commandBus),
+		[activeApp.windowKinds, resolvedWindowKindsOverride, runtime.commandBus],
 	);
 
 	const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
@@ -2486,7 +2479,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	return (
 		<AppContext.Provider
 			value={{
-				workbench,
+				runtime,
 				activeAppId,
 				setActiveAppId,
 				activeApp,
@@ -2506,7 +2499,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 			}}
 		>
 			<UIFindProvider>
-				<WorkbenchFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
+				<ProductFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
 				<Layout
 					className={className}
 					mobile={resolvedMobile}
@@ -2567,28 +2560,25 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 	);
 };
 
-/** @emoji ­ƒº¡ @deprecated Alias for {@link WorkbenchView}. */
-export const App = WorkbenchView;
-
 //#region ­ƒº¬Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
-	describe("WorkbenchView", () => {
+	describe("ProductView", () => {
 		it("synthesizes default panel toggles for a single-app workbench", () => {
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
 				}
 				run(): void {}
 			}
-			const app = new WorkbenchApp("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
-				new WorkbenchWindowKind("main", "Main", "test.workbench-view.main"),
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.main"),
 			]);
 			registerWindowBody("test.workbench-view.main", () => <div>Main</div>);
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<WorkbenchView workbench={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
+			const markup = renderToStaticMarkup(<ProductView runtime={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
 			expect(markup).toContain('data-panel="leftSidePanel"');
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
@@ -2596,24 +2586,24 @@ if (import.meta.vitest) {
 		});
 
 		it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
 				}
 				run(): void {}
 			}
-			const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [
-				new WorkbenchWindowKind("base", "Base", "test.workbench-view.base"),
+			const app = new AppRuntime("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [
+				new WindowKindRuntime("base", "Base", "test.workbench-view.base"),
 			]);
 			app.tools = { selection: [{ id: "base-tool", kind: "button", label: "Base", controllerId: "tctrl", command: "x" }] };
 			app.selection = { base: true };
 			app.options = { snap: true };
-			const inspect = new WorkbenchMode("inspect", "Inspect", undefined);
+			const inspect = new ModeRuntime("inspect", "Inspect", undefined);
 			inspect.tools = { actions: [{ id: "mode-tool", kind: "button", label: "Mode", controllerId: "tctrl", command: "y" }] };
 			inspect.selection = { mode: true };
 			inspect.options = { isolate: true };
-			inspect.windowKinds = [new WorkbenchWindowKind("mode", "Mode", "test.workbench-view.mode")];
+			inspect.windowKinds = [new WindowKindRuntime("mode", "Mode", "test.workbench-view.mode")];
 			app.addMode(inspect);
 			app.defaultModeId = "inspect";
 			const resolved = app.resolve("inspect");
@@ -2627,21 +2617,21 @@ if (import.meta.vitest) {
 		});
 
 		it("renders a leading mode dropdown when an app has multiple modes", () => {
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			class TCtrl extends Controller {
 				constructor() {
 					super("tctrl", wb.commandBus, () => wb.notify());
 				}
 				run(): void {}
 			}
-			const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
-				new WorkbenchWindowKind("main", "Main", "test.workbench-view.mm.main"),
+			const app = new AppRuntime("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.mm.main"),
 			]);
 			registerWindowBody("test.workbench-view.mm.main", () => <div>Main</div>);
-			app.addMode(new WorkbenchMode("inspect", "Inspect", undefined));
-			app.addMode(new WorkbenchMode("edit", "Edit", undefined));
+			app.addMode(new ModeRuntime("inspect", "Inspect", undefined));
+			app.addMode(new ModeRuntime("edit", "Edit", undefined));
 			wb.addApp(app);
-			const markup = renderToStaticMarkup(<WorkbenchView workbench={wb} />);
+			const markup = renderToStaticMarkup(<ProductView runtime={wb} />);
 
 			expect(markup).toContain('id="ui.mode.select.app.trigger"');
 			expect(markup).not.toContain("ui.modeNav.app");
@@ -2663,8 +2653,8 @@ function getElementById<T extends HTMLElement = HTMLElement>(id: string): T | nu
 export class ReactUI {
 	private static mountedRoot: Root | null = null;
 
-	/** @emoji ­ƒûÑ´©Å Mounts a {@link Workbench} shell into `#root` (or `rootId`) with {@link WorkbenchView}. */
-	static mount(workbench: Workbench, rootId = "root"): void {
+	/** @emoji 🖥️ Mounts a {@link ProductRuntime} shell into `#root` (or `rootId`) with {@link ProductView}. */
+	static mount(runtime: ProductRuntime, rootId = "root"): void {
 		if (typeof document === "undefined") return;
 		const rootElement = getElementById<ElementsDomRoot>(rootId);
 		if (!rootElement) {
@@ -2672,7 +2662,7 @@ export class ReactUI {
 		}
 		rootElement.__elementsReactRoot ??= createRoot(rootElement);
 		ReactUI.mountedRoot = rootElement.__elementsReactRoot;
-		rootElement.__elementsReactRoot.render(<WorkbenchView workbench={workbench} />);
+		rootElement.__elementsReactRoot.render(<ProductView runtime={runtime} />);
 	}
 
 	static unmount(rootId = "root"): void {
@@ -2696,9 +2686,9 @@ export function mountReactApp(element: React.ReactElement, rootId = "root"): voi
 	rootElement.__elementsReactRoot.render(element);
 }
 
-/** @emoji ­ƒûÑ´©Å Loads a {@link Workbench} asynchronously then mounts {@link WorkbenchView}. */
-export async function mountAsyncReactApp(loadWorkbench: () => Promise<Workbench>, rootId = "root"): Promise<void> {
-	ReactUI.mount(await loadWorkbench(), rootId);
+/** @emoji 🖥️ Loads a {@link ProductRuntime} asynchronously then mounts {@link ProductView}. */
+export async function mountAsyncReactApp(loadRuntime: () => Promise<ProductRuntime>, rootId = "root"): Promise<void> {
+	ReactUI.mount(await loadRuntime(), rootId);
 }
 
 //#endregion ­ƒôªworkbench-mount.tsx
