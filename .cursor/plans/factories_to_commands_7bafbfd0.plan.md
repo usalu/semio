@@ -4,25 +4,25 @@ overview: Generalize `FactorySpec` to a `CommandSpec` with declarative selection
 todos:
   - id: rename
     content: Rename `factory` → `command` across core/stately/r3f/play + fixtures + schema string + preset keys
-    status: in_progress
+    status: completed
   - id: diff
     content: "Add `🧮Diff` region: `EntityDiff`, `*RecordDiff`, `TopologyDiff`, `applyTopologyDiff`, `invertTopologyDiff`, `isEmptyTopologyDiff`"
-    status: pending
+    status: completed
   - id: response
     content: "Add `📨Response` region: `CommandMessage`, `CommandResponse`, `EMPTY_COMMAND_RESPONSE`"
-    status: pending
+    status: completed
   - id: selection-spec
     content: "Add `🪪Selection` region + per-state `selection: SelectionSpec` in `CommandSpec.machine.states[*]`; expose `listActiveSelectionAccept`"
-    status: pending
+    status: completed
   - id: kernel-diff
     content: Extend `KernelAdapter` with `*Diff` writes + `vertexDistance`/`edgeLength`/`faceArea`/`cellVolume`; implement in `BrepjsKernel`
-    status: pending
+    status: in_progress
   - id: commit-rewrite
     content: Rewrite `CommandRuntime.commit` to produce `CommandResponse`, apply diff to topology, record `DocumentCommand` with inverse diff; gate `selection.changed` by `selection.accept`
-    status: pending
+    status: completed
   - id: fixtures
     content: Rename 3 fixtures to `*.command.json`, add `distance.command.json` + `area.command.json`, update `listSpatialCommandPresets` keys q/j/k/d/a
-    status: pending
+    status: completed
   - id: play-app
     content: Update `play/main.tsx` to consume `CommandResponse` (display `data` for Distance/Area, apply `diff` for write commands), rename symbols
     status: pending

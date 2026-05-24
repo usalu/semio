@@ -1552,50 +1552,66 @@ export function createCommandRuntime(spec: CommandSpec, opts: CommandRuntimeOpti
 }
 // #endregion 📜Command
 
-// #region 📦Factories
-/** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/factory.json`). */
+// #region 📦Commands
+/** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/box.command.json`). */
 export function buildBoxCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(boxFactoryJson);
-	if (!s) throw new Error("spatial/fixtures/factory.json invalid");
+	const s = parseCommandSpec(boxCommandJson);
+	if (!s) throw new Error("spatial/fixtures/box.command.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude.factory.json`). */
+/** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude-wire.command.json`). */
 export function buildExtrudeCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(extrudeFactoryJson);
-	if (!s) throw new Error("spatial/fixtures/extrude.factory.json invalid");
+	const s = parseCommandSpec(extrudeWireCommandJson);
+	if (!s) throw new Error("spatial/fixtures/extrude-wire.command.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.factory.json`). */
+/** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.command.json`). */
 export function buildOffsetSurfaceCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(offsetSurfaceFactoryJson);
-	if (!s) throw new Error("spatial/fixtures/offset-surface.factory.json invalid");
+	const s = parseCommandSpec(offsetSurfaceCommandJson);
+	if (!s) throw new Error("spatial/fixtures/offset-surface.command.json invalid");
 	return s;
 }
 
-/** @emoji 📚 Host-facing factory preset row (`spatial/fixtures/*.factory.json`). */
-export interface SpatialFactoryPreset {
+/** @emoji 📦 Parses distance fixture (`spatial/fixtures/distance.command.json`). */
+export function buildDistanceCommandSpec(): CommandSpec {
+	const s = parseCommandSpec(distanceCommandJson);
+	if (!s) throw new Error("spatial/fixtures/distance.command.json invalid");
+	return s;
+}
+
+/** @emoji 📦 Parses area fixture (`spatial/fixtures/area.command.json`). */
+export function buildAreaCommandSpec(): CommandSpec {
+	const s = parseCommandSpec(areaCommandJson);
+	if (!s) throw new Error("spatial/fixtures/area.command.json invalid");
+	return s;
+}
+
+/** @emoji 📚 Host-facing command preset row (`spatial/fixtures/*.command.json`). */
+export interface SpatialCommandPreset {
 	readonly id: string;
 	readonly label: string;
-	/** @emoji ⌨️ Single-stroke host command key; must stay unique among presets (see `resolveSpatialFactoryPresetKey`). */
+	/** @emoji ⌨️ Single-stroke host command key; must stay unique among presets (see `resolveSpatialCommandPresetKey`). */
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in factory preset ids for host command surfaces (`spatial/fixtures/*.factory.json`). */
-export function listSpatialFactoryPresets(): readonly SpatialFactoryPreset[] {
+/** @emoji 📚 Built-in command preset ids for host command surfaces (`spatial/fixtures/*.command.json`). */
+export function listSpatialCommandPresets(): readonly SpatialCommandPreset[] {
 	return [
 		{ id: "primitive.box", label: "Box", key: "q" },
 		{ id: "feature.extrudeWire", label: "Extrude wire", key: "j" },
 		{ id: "feature.offsetSurface", label: "Offset surface", key: "k" },
+		{ id: "measure.distance", label: "Distance", key: "d" },
+		{ id: "measure.area", label: "Area", key: "a" },
 	];
 }
 
 /** @emoji 🧭 Resolves a typed token to a preset (`key`, `id`, or compact `label`). */
-export function resolveSpatialFactoryPresetKey(token: string): SpatialFactoryPreset | null {
+export function resolveSpatialCommandPresetKey(token: string): SpatialCommandPreset | null {
 	const t = token.trim().toLowerCase();
 	if (!t) return null;
-	for (const p of listSpatialFactoryPresets()) {
+	for (const p of listSpatialCommandPresets()) {
 		if (p.key.toLowerCase() === t) return p;
 		if (p.id.toLowerCase() === t) return p;
 		const slug = p.label.toLowerCase().replace(/\s+/g, "");
@@ -1604,20 +1620,24 @@ export function resolveSpatialFactoryPresetKey(token: string): SpatialFactoryPre
 	return null;
 }
 
-/** @emoji 📚 Loads a built-in factory preset by stable `id` (see `listSpatialFactoryPresets`). */
-export function loadSpatialFactoryPreset(presetId: string): CommandSpec | null {
+/** @emoji 📚 Loads a built-in command preset by stable `id` (see `listSpatialCommandPresets`). */
+export function loadSpatialCommandPreset(presetId: string): CommandSpec | null {
 	const raw =
 		presetId === "primitive.box"
-			? boxFactoryJson
+			? boxCommandJson
 			: presetId === "feature.extrudeWire"
-				? extrudeFactoryJson
+				? extrudeWireCommandJson
 				: presetId === "feature.offsetSurface"
-					? offsetSurfaceFactoryJson
-					: null;
+					? offsetSurfaceCommandJson
+					: presetId === "measure.distance"
+						? distanceCommandJson
+						: presetId === "measure.area"
+							? areaCommandJson
+							: null;
 	if (!raw) return null;
 	return parseCommandSpec(raw as unknown);
 }
-// #endregion 📦Factories
+// #endregion 📦Commands
 
 // #region 🧪Tests
 if (import.meta.vitest) {
@@ -1658,19 +1678,49 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core factory presets", () => {
-		it("lists stable keys for each built-in factory preset", () => {
-			const ps = listSpatialFactoryPresets();
-			expect(ps.map((p) => p.key).join("")).toBe("qjk");
+	describe("@spatial/js-core command presets", () => {
+		it("lists stable keys for each built-in command preset", () => {
+			const ps = listSpatialCommandPresets();
+			expect(ps.map((p) => p.key).join("")).toBe("qjkda");
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
 		});
-		it("resolves factory preset tokens by key, id, and label slug", () => {
-			expect(resolveSpatialFactoryPresetKey("q")?.id).toBe("primitive.box");
-			expect(resolveSpatialFactoryPresetKey("primitive.box")?.key).toBe("q");
-			expect(resolveSpatialFactoryPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
+		it("resolves command preset tokens by key, id, and label slug", () => {
+			expect(resolveSpatialCommandPresetKey("q")?.id).toBe("primitive.box");
+			expect(resolveSpatialCommandPresetKey("primitive.box")?.key).toBe("q");
+			expect(resolveSpatialCommandPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
+			expect(resolveSpatialCommandPresetKey("d")?.id).toBe("measure.distance");
 		});
 	});
-	describe("@spatial/js-core factory box", () => {
+	describe("@spatial/js-core topology diff", () => {
+		it("applyTopologyDiff then inverse restores counts", () => {
+			const g = new TopologyGraph();
+			const mesh = {
+				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				indices: new Uint32Array([0, 1, 2]),
+			};
+			const d = meshFaceTopologyDiff(mesh, "x");
+			const inv = applyTopologyDiff(g, d);
+			expect(Object.keys(g.faces).length).toBe(1);
+			applyTopologyDiff(g, inv);
+			expect(Object.keys(g.faces).length).toBe(0);
+		});
+	});
+	describe("@spatial/js-core selection filter", () => {
+		it("selectionEventMatches rejects kinds outside accept", () => {
+			const spec: SelectionSpec = { accept: ["face"], multiple: false };
+			const ok: SelectionEvent = {
+				kind: "selection.changed",
+				targets: [{ kind: "face", id: "f1", editable: true }],
+			};
+			const bad: SelectionEvent = {
+				kind: "selection.changed",
+				targets: [{ kind: "surface", id: "s1", editable: false }],
+			};
+			expect(selectionEventMatches(spec, ok)).toBe(true);
+			expect(selectionEventMatches(spec, bad)).toBe(false);
+		});
+	});
+	describe("@spatial/js-core command box", () => {
 		it("tracks first-corner cursor on the grid after start", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";
@@ -1731,9 +1781,10 @@ if (import.meta.vitest) {
 			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
-			await rt.send({ kind: "set.height", value: 4 });
-			const cell = await rt.commit();
-			expect(cell).toBe("stub-cell");
+			await rt.send({ kind: "set.height", value: 4, modifiers: {} });
+			const res = await rt.commit();
+			expect(res.ok).toBe(true);
+			expect(res.data).toBeNull();
 			expect(Object.keys(topo.faces).length).toBeGreaterThan(0);
 			expect(kernel.lastBox).toEqual({
 				cornerA: [0, 0, 0],
@@ -1744,7 +1795,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core stateEngine option", () => {
-		it("explicit pure-ts provider matches default factory snapshots", async () => {
+		it("explicit pure-ts provider matches default command snapshots", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub-opt";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
@@ -1769,6 +1820,81 @@ if (import.meta.vitest) {
 			await rt1.send({ kind: "start" });
 			expect(rt1.getSnapshot().state).toBe(rt0.getSnapshot().state);
 			expect(rt1.getSnapshot().context).toEqual(rt0.getSnapshot().context);
+			expect(rt1.getSnapshot().capabilities).toEqual(rt0.getSnapshot().capabilities);
+		});
+	});
+
+	describe("@spatial/js-core measure distance", () => {
+		it("commit returns vertex distance in data", async () => {
+			class MeasKernel implements KernelAdapter {
+				readonly id = "meas";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async query(name: string, params: Record<string, unknown>) {
+					if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
+					return undefined;
+				}
+				async vertexDistance(a: VertexRef, b: VertexRef, t: TopologyGraph) {
+					const pa = t.vertices[String(a)]?.position;
+					const pb = t.vertices[String(b)]?.position;
+					if (!pa || !pb) return 0;
+					return vec3Distance(pa, pb);
+				}
+			}
+			const topo = new TopologyGraph();
+			const va = "v0" as VertexRef;
+			const vb = "v1" as VertexRef;
+			topo.vertices[va] = { id: va, position: [0, 0, 0] };
+			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
+			const spec = buildDistanceCommandSpec();
+			const rt = createCommandRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
+			const res = await rt.commit();
+			expect(res.ok).toBe(true);
+			expect(res.data).toBe(5);
+			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
+		});
+	});
+
+	describe("@spatial/js-core measure area", () => {
+		it("commit returns face area in data", async () => {
+			class AreaKernel implements KernelAdapter {
+				readonly id = "area";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async query(name: string) {
+					if (name === "surface.resolveFaces") return ["f0"];
+					return undefined;
+				}
+				async faceArea(_f: FaceRef, _t: TopologyGraph) {
+					return 2.5;
+				}
+			}
+			const topo = new TopologyGraph();
+			const spec = buildAreaCommandSpec();
+			const rt = createCommandRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }] });
+			const res = await rt.commit();
+			expect(res.ok).toBe(true);
+			expect(res.data).toBe(2.5);
+			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
 		});
 	});
 }

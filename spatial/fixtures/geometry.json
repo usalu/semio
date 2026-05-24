@@ -21,8 +21,7 @@
   "cellComplexes": {
     "nakagin-slice": {
       "id": "nakagin-slice",
-      "cellIds": ["capsule-0"],
-      "sharedFaceIds": []
+      "cellIds": ["capsule-0"]
     }
   },
   "clusters": {}
