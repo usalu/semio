@@ -6,7 +6,7 @@
 import boxInteractionJson from "../../assets/interactions/box.interaction.json" with { type: "json" };
 import extrudeWireInteractionJson from "../../assets/interactions/extrude-wire.interaction.json" with { type: "json" };
 import offsetSurfaceInteractionJson from "../../assets/interactions/offset-surface.interaction.json" with { type: "json" };
-import distanceInteractionJson from "../../assets/interactions/distance.interaction.json" with { type: "json" };
+import distanceInteractionJson from "../../assets/interactions/measure-length.interaction.json" with { type: "json" };
 import areaInteractionJson from "../../assets/interactions/area.interaction.json" with { type: "json" };
 import curveArcInteractionJson from "../../assets/interactions/curve-arc.interaction.json" with { type: "json" };
 import curveCircleInteractionJson from "../../assets/interactions/curve-circle.interaction.json" with { type: "json" };
@@ -2235,6 +2235,35 @@ export class InteractionRuntime {
 		return true;
 	}
 
+	private selectionEventFromStart(event: InteractionEvent, spec: SelectionSpec): SelectionEvent | null {
+		const rawTargets = Array.isArray(event.targets) ? (event.targets as readonly SelectionTarget[]) : [];
+		const selected = filterSelectionTargets(spec, rawTargets);
+		if (selected.length === 0) return null;
+		return { kind: "selection.changed", targets: spec.multiple ? selected : selected.slice(0, 1) };
+	}
+
+	private stateHasEvent(state: string, eventKind: string): boolean {
+		return Boolean(findState(this.spec, state)?.on?.some((handler) => handler.event === eventKind));
+	}
+
+	private async consumeStartSelection(event: InteractionEvent): Promise<void> {
+		const stateBeforeSelection = this.sm.getState();
+		const sel = getActiveSelectionSpec(this.spec, stateBeforeSelection);
+		if (!sel) return;
+		const selectionEvent = this.selectionEventFromStart(event, sel);
+		if (!selectionEvent || !selectionEventMatches(sel, selectionEvent)) return;
+		const beforeCtx = this.cloneCtx(this.sm.getContext());
+		const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.topology, this.actions);
+		if (!r.ok) return;
+		if (!r.transient) this.snapUndoStack.push({ state: stateBeforeSelection, context: JSON.stringify(beforeCtx) });
+		const stateAfterSelection = this.sm.getState();
+		if (stateAfterSelection === stateBeforeSelection && this.stateHasEvent(stateAfterSelection, "confirm")) {
+			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
+			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions);
+			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: stateAfterSelection, context: JSON.stringify(beforeConfirmCtx) });
+		}
+	}
+
 	/** @emoji 🧭 Accepted topology kinds for the active machine state (`[]` when none). */
 	listActiveSelectionAccept(): readonly TopologyEntityKind[] {
 		return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
@@ -2316,6 +2345,7 @@ export class InteractionRuntime {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
 		}
+		if (event.kind === "start") await this.consumeStartSelection(event);
 		if (this.canCommit()) {
 			await this.runCommit(true);
 			return;
@@ -2532,14 +2562,7 @@ export class InteractionRegistry {
 
 	static withBuiltins(): InteractionRegistry {
 		const r = new InteractionRegistry();
-		const xs = [
-			parseInteractionSpec(boxInteractionJson),
-			parseInteractionSpec(extrudeWireInteractionJson),
-			parseInteractionSpec(offsetSurfaceInteractionJson),
-			parseInteractionSpec(distanceInteractionJson),
-			parseInteractionSpec(areaInteractionJson),
-			...scriptedCommandInteractionJsons.map((raw) => parseInteractionSpec(raw)),
-		];
+		const xs = builtinInteractionJsons.map((raw) => parseInteractionSpec(raw));
 		for (const s of xs) {
 			if (s) r.register(s);
 		}
@@ -2547,42 +2570,42 @@ export class InteractionRegistry {
 	}
 }
 
-/** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/box.interaction.json`). */
+/** @emoji 📦 Parses canonical box asset (`spatial/assets/interactions/box.interaction.json`). */
 export function buildBoxInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(boxInteractionJson);
-	if (!s) throw new Error("spatial/fixtures/box.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interactions/box.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude-wire.interaction.json`). */
+/** @emoji 📦 Parses extrude-wire asset (`spatial/assets/interactions/extrude-wire.interaction.json`). */
 export function buildExtrudeInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(extrudeWireInteractionJson);
-	if (!s) throw new Error("spatial/fixtures/extrude-wire.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interactions/extrude-wire.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.interaction.json`). */
+/** @emoji 📦 Parses offset-surface asset (`spatial/assets/interactions/offset-surface.interaction.json`). */
 export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(offsetSurfaceInteractionJson);
-	if (!s) throw new Error("spatial/fixtures/offset-surface.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interactions/offset-surface.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses distance fixture (`spatial/fixtures/distance.interaction.json`). */
+/** @emoji 📦 Parses distance asset (`spatial/assets/interactions/measure-length.interaction.json`). */
 export function buildDistanceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(distanceInteractionJson);
-	if (!s) throw new Error("spatial/fixtures/distance.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interactions/measure-length.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses area fixture (`spatial/fixtures/area.interaction.json`). */
+/** @emoji 📦 Parses area asset (`spatial/assets/interactions/area.interaction.json`). */
 export function buildAreaInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(areaInteractionJson);
-	if (!s) throw new Error("spatial/fixtures/area.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interactions/area.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📚 Host-facing built-in interaction row (`spatial/fixtures/*.interaction.json`). */
+/** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/interactions/*.interaction.json`). */
 export interface SpatialInteraction {
 	readonly id: string;
 	readonly label: string;
@@ -2590,16 +2613,9 @@ export interface SpatialInteraction {
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/fixtures/*.interaction.json`). */
+/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/assets/interactions/*.interaction.json`). */
 export function listSpatialInteractions(): readonly SpatialInteraction[] {
-	return [
-		{ id: "primitive.box", label: "Box", key: "b" },
-		{ id: "feature.extrudeWire", label: "Extrude wire", key: "e" },
-		{ id: "feature.offsetSurface", label: "Offset surface", key: "o" },
-		{ id: "measure.distance", label: "Distance", key: "d" },
-		{ id: "measure.area", label: "Area", key: "a" },
-		...scriptedCommandInteractionJsons.map(interactionFixtureRow),
-	];
+	return builtinInteractionJsons.map(interactionFixtureRow);
 }
 
 /** @emoji 🧭 Resolves a typed token to an interaction (`key`, `id`, or compact `label`). */
@@ -2617,23 +2633,8 @@ export function resolveSpatialInteractionKey(token: string): SpatialInteraction 
 
 /** @emoji 📚 Loads a built-in interaction by stable `id` (see `listSpatialInteractions`). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
-	const raw =
-		interactionId === "primitive.box"
-			? boxInteractionJson
-			: interactionId === "feature.extrudeWire"
-				? extrudeWireInteractionJson
-				: interactionId === "feature.offsetSurface"
-					? offsetSurfaceInteractionJson
-					: interactionId === "measure.distance"
-						? distanceInteractionJson
-						: interactionId === "measure.area"
-							? areaInteractionJson
-							: null;
-	if (!raw) {
-		const scripted = scriptedCommandInteractionJsons.find((spec) => spec.id === interactionId);
-		return scripted ? parseInteractionSpec(scripted) : null;
-	}
-	return parseInteractionSpec(raw as unknown);
+	const raw = builtinInteractionJsons.find((spec) => spec.id === interactionId);
+	return raw ? parseInteractionSpec(raw) : null;
 }
 // #endregion 📦Interactions
 
@@ -2750,6 +2751,31 @@ if (import.meta.vitest) {
 			expect(snap.capabilities.canCommit).toBe(false);
 			expect(snap.lastResponse?.ok).toBe(true);
 			expect(snap.lastResponse?.data).toMatchObject({ commandId: "curve.line", resultKind: "line" });
+		});
+		it("uses start selection to skip selection-first command states", async () => {
+			class CommandKernel implements KernelAdapter {
+				readonly id = "command-selection";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = loadSpatialInteraction("transform.move")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			await rt.send({
+				kind: "start",
+				targets: [{ kind: "cell", id: "c0", editable: true }],
+				modifiers: {},
+			});
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("point_to_move_from");
+			expect((snap.context.targets as SelectionTarget[]).map((target) => target.id)).toEqual(["c0"]);
 		});
 	});
 

@@ -1,41 +1,12 @@
 {
   "schema": "spatial.interaction/v1",
-  "id": "feature.extrudeWire",
+  "id": "measure.distance",
   "version": "1.0.0",
-  "label": "Extrude Wire",
-  "key": "e",
-  "interaction": {
-    "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "selectWire",
-      "setDistance",
-      "committed"
-    ],
-    "groundPointerMoveStates": [],
-    "heightDragStates": [],
-    "verticalRodStates": [],
-    "heightConfirmState": null
-  },
-  "requires": {
-    "kernel": {
-      "operations": [
-        "wire.extrudeToCell",
-        "entity.tessellate"
-      ],
-      "editableEntities": [
-        "vertex",
-        "edge",
-        "wire",
-        "face",
-        "shell",
-        "cell"
-      ]
-    }
-  },
+  "label": "Distance",
+  "key": "d",
   "guards": [
     {
-      "name": "hasWireAndDistance",
+      "name": "hasBothVertices",
       "expr": {
         "kind": "all",
         "args": [
@@ -46,7 +17,7 @@
               "segments": [
                 {
                   "kind": "field",
-                  "name": "wireId"
+                  "name": "vertexA"
                 }
               ]
             }
@@ -58,27 +29,9 @@
               "segments": [
                 {
                   "kind": "field",
-                  "name": "distance"
+                  "name": "vertexB"
                 }
               ]
-            }
-          },
-          {
-            "kind": "binop",
-            "op": ">",
-            "left": {
-              "kind": "path",
-              "root": "context",
-              "segments": [
-                {
-                  "kind": "field",
-                  "name": "distance"
-                }
-              ]
-            },
-            "right": {
-              "kind": "const",
-              "value": 0
             }
           }
         ]
@@ -86,25 +39,23 @@
     }
   ],
   "machine": {
-    "initial": "selectWire",
+    "initial": "selectA",
     "states": [
       {
-        "name": "selectWire",
+        "name": "selectA",
         "selection": {
           "accept": [
-            "wire"
+            "vertex"
           ],
           "multiple": false,
-          "prompt": "Pick wire"
+          "prompt": "Pick first vertex"
         },
         "on": [
           {
             "event": "selection.changed",
             "transitions": [
               {
-                "target": "setDistance",
-                "key": "i",
-                "label": "Pick wire",
+                "target": "selectB",
                 "effects": [
                   {
                     "op": "assign",
@@ -113,7 +64,7 @@
                       "segments": [
                         {
                           "kind": "field",
-                          "name": "wireId"
+                          "name": "vertexA"
                         }
                       ]
                     },
@@ -144,23 +95,27 @@
             "event": "cancel",
             "transitions": [
               {
-                "target": "selectWire",
-                "key": "x",
-                "label": "Cancel"
+                "target": "selectA"
               }
             ]
           }
         ]
       },
       {
-        "name": "setDistance",
+        "name": "selectB",
+        "selection": {
+          "accept": [
+            "vertex"
+          ],
+          "multiple": false,
+          "prompt": "Pick second vertex"
+        },
         "on": [
           {
-            "event": "set.distance",
+            "event": "selection.changed",
             "transitions": [
               {
-                "key": "n",
-                "label": "Apply distance",
+                "target": "ready",
                 "effects": [
                   {
                     "op": "assign",
@@ -169,7 +124,7 @@
                       "segments": [
                         {
                           "kind": "field",
-                          "name": "distance"
+                          "name": "vertexB"
                         }
                       ]
                     },
@@ -179,7 +134,15 @@
                       "segments": [
                         {
                           "kind": "field",
-                          "name": "value"
+                          "name": "targets"
+                        },
+                        {
+                          "kind": "index",
+                          "index": 0
+                        },
+                        {
+                          "kind": "field",
+                          "name": "id"
                         }
                       ]
                     }
@@ -189,23 +152,24 @@
             ]
           },
           {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "selectA"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ready",
+        "on": [
+          {
             "event": "confirm",
             "transitions": [
               {
                 "target": "committed",
-                "guard": "hasWireAndDistance",
-                "key": "Enter",
-                "label": "Commit extrude"
-              }
-            ]
-          },
-          {
-            "event": "cancel",
-            "transitions": [
-              {
-                "target": "selectWire",
-                "key": "x",
-                "label": "Cancel"
+                "guard": "hasBothVertices"
               }
             ]
           }
@@ -217,67 +181,45 @@
       }
     ]
   },
-  "display": {
-    "states": [
-      {
-        "state": "setDistance",
-        "items": [
-          {
-            "kind": "label",
-            "id": "hint",
-            "role": "prompt",
-            "text": "Set extrude distance",
-            "position": {
-              "kind": "const",
-              "value": [
-                0,
-                2,
-                0
-              ]
-            }
-          }
-        ]
-      }
-    ]
-  },
   "commit": {
-    "when": "hasWireAndDistance",
+    "when": "hasBothVertices",
     "fromStates": [
-      "setDistance"
+      "ready"
     ],
     "operation": {
       "kind": "action",
-      "action": "feature.extrudeWireToCell",
+      "action": "measure.vertexDistance",
       "params": {
-        "wireId": {
+        "a": {
           "kind": "path",
           "root": "context",
           "segments": [
             {
               "kind": "field",
-              "name": "wireId"
+              "name": "vertexA"
             }
           ]
         },
-        "distance": {
+        "b": {
           "kind": "path",
           "root": "context",
           "segments": [
             {
               "kind": "field",
-              "name": "distance"
+              "name": "vertexB"
             }
-          ]
-        },
-        "direction": {
-          "kind": "const",
-          "value": [
-            0,
-            0,
-            1
           ]
         }
       }
+    },
+    "outputDataPath": {
+      "root": "context",
+      "segments": [
+        {
+          "kind": "field",
+          "name": "distance"
+        }
+      ]
     }
   }
 }

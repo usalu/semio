@@ -3,6 +3,7 @@
   "id": "measure.area",
   "version": "1.0.0",
   "label": "Area",
+  "key": "a",
   "guards": [
     {
       "name": "hasFaceArea",

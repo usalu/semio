@@ -3,6 +3,7 @@
   "id": "primitive.box",
   "version": "1.0.0",
   "label": "Box",
+  "key": "b",
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [

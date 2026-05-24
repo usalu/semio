@@ -3,6 +3,7 @@
   "id": "feature.offsetSurface",
   "version": "1.0.0",
   "label": "Offset Surface",
+  "key": "o",
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": [

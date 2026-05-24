@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `InteractionDisplay`, ground picking, interaction adapter, `InteractionCanvas`, and snapshot hooks. See `spatial/fixtures/box.interaction.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `InteractionDisplay`, ground picking, interaction adapter, `InteractionCanvas`, and snapshot hooks. See `spatial/assets/interactions/box.interaction.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
