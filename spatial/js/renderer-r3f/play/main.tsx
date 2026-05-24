@@ -19,7 +19,6 @@ import geometryLargeBuilding from "../../../fixtures/large-building.topology.jso
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
-	ArchivedBoxLayout,
 	DocumentHistory,
 	InteractionRepl,
 	useDocumentHistory,
@@ -47,8 +46,6 @@ interface PlaySessionProps {
 	readonly history: DocumentHistory;
 	readonly kernel: BrepjsKernel;
 	readonly asideExtra: ReactNode;
-	readonly archivedBoxLayouts: readonly ArchivedBoxLayout[];
-	readonly onArchiveCommittedBox: (layout: ArchivedBoxLayout) => void;
 	readonly sessionRestartNonce: number;
 }
 
@@ -62,8 +59,6 @@ function PlaySession({
 	history,
 	kernel,
 	asideExtra,
-	archivedBoxLayouts,
-	onArchiveCommittedBox,
 	sessionRestartNonce,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
@@ -87,8 +82,6 @@ function PlaySession({
 			document={documentModel}
 			geometry={documentModel.topology}
 			asideExtra={asideExtra}
-			archivedBoxLayouts={archivedBoxLayouts}
-			onArchiveCommittedBox={onArchiveCommittedBox}
 			sessionRestartNonce={sessionRestartNonce}
 		/>
 	);
@@ -126,14 +119,10 @@ function PlayApp() {
 
 	const history = useDocumentHistory();
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const [archivedBoxLayouts, setArchivedBoxLayouts] = useState<ArchivedBoxLayout[]>([]);
-	const appendArchivedBox = useCallback((layout: ArchivedBoxLayout) => {
-		setArchivedBoxLayouts((xs) => [...xs, layout]);
-	}, []);
 
 	useEffect(() => {
-		setArchivedBoxLayouts([]);
-	}, [geometryAssetId, interactionId]);
+		history.clear();
+	}, [history, geometryAssetId]);
 
 	const asideExtra: ReactNode = (
 		<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
@@ -177,8 +166,6 @@ function PlayApp() {
 			history={history}
 			kernel={kernel}
 			asideExtra={asideExtra}
-			archivedBoxLayouts={archivedBoxLayouts}
-			onArchiveCommittedBox={appendArchivedBox}
 			sessionRestartNonce={interactionBootId}
 		/>
 	);

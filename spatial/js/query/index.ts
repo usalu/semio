@@ -7,11 +7,12 @@ import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstNode, IToken } from "chevrotain";
 import {
 	ActionRegistry,
+	TopologyGraph,
+	DerivedViewService,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
 	type ConstructRunner,
-	type DerivedViewService,
 	type Expr,
 	type ExprBinop,
 	type ExprField,
@@ -23,8 +24,6 @@ import {
 	type TopologyDiff,
 	type TopologyEntityKind,
 	type TopologyEntityRef,
-	type TopologyGraph,
-	DerivedViewService,
 	evalExpr,
 	type ExprEnv,
 } from "@spatial/js-core";
@@ -217,28 +216,30 @@ class ConstructParser extends CstParser {
 
 	readonly relPattern = this.RULE("relPattern", () => {
 		this.OR([
-			{
-				ALT: () => {
-					this.CONSUME(Minus);
-					this.SUBRULE(this.relBracket);
-					this.CONSUME(Gt);
-				},
-			},
-			{
-				ALT: () => {
-					this.CONSUME(Lt);
-					this.CONSUME1(Minus);
-					this.SUBRULE(this.relBracket);
-				},
-			},
-			{
-				ALT: () => {
-					this.CONSUME2(Minus);
-					this.SUBRULE(this.relBracket);
-					this.CONSUME2(Minus);
-				},
-			},
+			{ ALT: () => this.SUBRULE(this.relPatternIn) },
+			{ ALT: () => this.SUBRULE(this.relPatternOutOrUndirected) },
 		]);
+	});
+
+	readonly relPatternIn = this.RULE("relPatternIn", () => {
+		this.CONSUME(Lt);
+		this.CONSUME(Minus);
+		this.SUBRULE(this.relBracket);
+	});
+
+	readonly relPatternOutOrUndirected = this.RULE("relPatternOutOrUndirected", () => {
+		this.CONSUME(Minus);
+		this.SUBRULE(this.relBracket);
+		const t1 = this.LA(1);
+		const t2 = this.LA(2);
+		if (t1.tokenType === Minus && t2.tokenType === Gt) {
+			this.CONSUME(Minus);
+			this.CONSUME(Gt);
+		} else if (t1.tokenType === Minus) {
+			this.CONSUME(Minus);
+		} else {
+			this.CONSUME(Gt);
+		}
 	});
 
 	readonly relBracket = this.RULE("relBracket", () => {
@@ -292,9 +293,6 @@ class ConstructParser extends CstParser {
 
 	readonly projectItem = this.RULE("projectItem", () => {
 		this.SUBRULE(this.expr);
-		this.OPTION(() => {
-			this.CONSUME(Identifier);
-		});
 	});
 
 	readonly orderExpr = this.RULE("orderExpr", () => {
@@ -493,6 +491,10 @@ function parseLiteralToken(t: IToken): unknown {
 
 function cstToExpr(n: CstNode | undefined): Expr {
 	if (!n?.name) return { kind: "const", value: undefined };
+	if (n.name === "expr") {
+		const ch = n.children.orExpr?.[0] as CstNode | undefined;
+		return cstToExpr(ch);
+	}
 	if (n.name === "orExpr") {
 		const ch = n.children.andExpr;
 		const xs = (Array.isArray(ch) ? ch : ch ? [ch] : []) as CstNode[];
@@ -624,13 +626,15 @@ function cstToNodePattern(n: CstNode): NodePatternAst {
 }
 
 function cstToRelPattern(n: CstNode): RelPatternAst {
-	const types = ((n.children.Identifier as IToken[]) ?? []).map((t) => tokenText(t));
-	const hasLt = Boolean(n.children.Lt?.[0]);
-	const hasGt = Boolean(n.children.Gt?.[0]);
-	let direction: RelPatternAst["direction"] = "--";
-	if (hasLt && !hasGt) direction = "<-";
-	else if (hasGt && !hasLt) direction = "->";
-	return { kind: "rel", types, direction };
+	const inn = n.children.relPatternIn?.[0] as CstNode | undefined;
+	const outu = n.children.relPatternOutOrUndirected?.[0] as CstNode | undefined;
+	const body = inn ?? outu;
+	if (!body) return { kind: "rel", types: [], direction: "->" };
+	const rb = body.children.relBracket?.[0] as CstNode | undefined;
+	const types = ((rb?.children.Identifier as IToken[]) ?? []).map((t) => tokenText(t));
+	if (inn) return { kind: "rel", types, direction: "<-" };
+	const hasGt = Boolean(outu?.children.Gt?.[0]);
+	return { kind: "rel", types, direction: hasGt ? "->" : "--" };
 }
 
 function cstToPattern(n: CstNode): PatternAst {
@@ -1080,13 +1084,18 @@ export function planConstruct(ast: ConstructAst): ExecutionPlan {
 // #region Executor
 type Row = Record<string, TopologyEntityRef | unknown>;
 
-function rowVarsToEnv(row: Row, topo: TopologyGraph, meta: import("@spatial/js-core").EntityMetadataStore): ExprEnv {
+function rowVarsToEnv(
+	row: Row,
+	topo: TopologyGraph,
+	meta: import("@spatial/js-core").EntityMetadataStore,
+	derived?: import("@spatial/js-core").DerivedViewService,
+): ExprEnv {
 	const vars: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(row)) {
 		if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
 		else vars[k] = v;
 	}
-	return { context: {}, vars, topology: topo, metadata: meta };
+	return { context: {}, vars, topology: topo, metadata: meta, derived };
 }
 
 function* expandPattern(
@@ -1157,7 +1166,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				for (const row of expandPattern(ctx.topology, ctx.derived, ctx.kernel, index, st.pattern)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata, ctx.derived));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1167,14 +1176,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "with") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata);
+				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.derived);
 				const out: Row = { ...r };
 				for (const p of st.projections) {
 					const v = evalExpr(p.expr, env);
 					if (p.alias) out[p.alias] = v;
 				}
 				if (st.where) {
-					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.topology, ctx.topology.metadata));
+					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.topology, ctx.topology.metadata, ctx.derived));
 					if (!ok) continue;
 				}
 				next.push(out);
@@ -1206,7 +1215,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 	let out = rows;
 	if (ret.limit !== undefined) out = out.slice(0, ret.limit);
 	for (const r of out) {
-		const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata);
+		const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.derived);
 		const o: ConstructQueryRow = {};
 		for (let i = 0; i < ret.projections.length; i++) {
 			const p = ret.projections[i]!;

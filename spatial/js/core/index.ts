@@ -390,6 +390,7 @@ export interface ExprEnv {
 	readonly vars?: Record<string, unknown>;
 	readonly topology?: TopologyGraph;
 	readonly metadata?: EntityMetadataStore;
+	readonly derived?: DerivedViewService;
 }
 
 function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
@@ -399,6 +400,7 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
 		vars: { ...base.vars, ...vars },
 		topology: base.topology,
 		metadata: base.metadata,
+		derived: base.derived,
 	};
 }
 
@@ -425,7 +427,7 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 			const o = evalExpr(expr.object, env);
 			const topo = env.topology;
 			if (!topo || !isTopologyEntityRef(o)) return undefined;
-			return readTopologyEntityProperty(topo, env.metadata, o.kind, o.id, expr.name);
+			return readTopologyEntityProperty(topo, env.metadata, o.kind, o.id, expr.name, { derived: env.derived });
 		}
 		case "let": {
 			const next: Record<string, unknown> = {};
@@ -625,6 +627,14 @@ function findState(spec: InteractionSpec, name: string): StateDefSpec | undefine
 	return spec.machine.states.find((s) => s.name === name);
 }
 
+function isFinalInteractionState(spec: InteractionSpec, state: string): boolean {
+	return Boolean(findState(spec, state)?.final);
+}
+
+function listFinalInteractionStates(spec: InteractionSpec): string[] {
+	return spec.machine.states.filter((s) => s.final).map((s) => s.name);
+}
+
 /** @emoji 🧾 Validates and returns an `InteractionSpec` or `null` when malformed. */
 export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
 	if (!raw || typeof raw !== "object") return null;
@@ -819,13 +829,14 @@ export class TopologyGraph {
 	}
 }
 
-/** @emoji 🧭 Reads `name` from metadata, then from editable topology records (no derived tables). */
+/** @emoji 🧭 Reads `name` from metadata, then topology records, then optional `DerivedViewService` for `surface` / `part`. */
 export function readTopologyEntityProperty(
 	topo: TopologyGraph,
 	meta: EntityMetadataStore | undefined,
 	kind: TopologyEntityKind,
 	id: string,
 	name: string,
+	opts?: { readonly derived?: DerivedViewService },
 ): unknown {
 	const bag = meta?.get(id);
 	if (bag && name in bag) return (bag as Record<string, unknown>)[name];
@@ -846,6 +857,22 @@ export function readTopologyEntityProperty(
 			return (topo.cellComplexes[id] as unknown as Record<string, unknown> | undefined)?.[name];
 		case "cluster":
 			return (topo.clusters[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "surface": {
+			if (name === "id") return id;
+			const d = opts?.derived;
+			if (!d) return undefined;
+			const hit = d.computeSurfaces(topo.revision, topo.faces).find((s) => String(s.id) === id);
+			if (!hit) return undefined;
+			return (hit as unknown as Record<string, unknown>)[name];
+		}
+		case "part": {
+			if (name === "id") return id;
+			const d = opts?.derived;
+			if (!d) return undefined;
+			const hit = d.computeParts(topo.revision, topo.cells).find((p) => String(p.id) === id);
+			if (!hit) return undefined;
+			return (hit as unknown as Record<string, unknown>)[name];
+		}
 		default:
 			return undefined;
 	}
@@ -1665,7 +1692,7 @@ export interface InteractionSpatialResolved {
 /** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `InteractionSpatialView`. */
 export function mergeInteractionSpatial(spec: InteractionSpec): InteractionSpatialResolved {
 	const i = spec.interaction;
-	const basePickDisabled = ["idle", "ready", "committed"] as const;
+	const basePickDisabled = [...new Set([spec.machine.initial, "ready", ...listFinalInteractionStates(spec)])];
 	return {
 		spatialGroundPick: Boolean(i?.spatialGroundPick),
 		pickDisabledStates: i?.pickDisabledStates ?? [...basePickDisabled],
@@ -1922,6 +1949,17 @@ export class DocumentHistory {
 		return n ? this.redoStack[n - 1]! : null;
 	}
 
+	/** @emoji 📚 Committed undo stack in document order for renderer views. */
+	entries(): readonly Modification[] {
+		return [...this.undoStack];
+	}
+
+	/** @emoji 🧹 Drops undo and redo stacks when the host swaps the base document. */
+	clear(): void {
+		this.undoStack = [];
+		this.redoStack = [];
+	}
+
 	undo(doc: ModelDocument): Modification | null {
 		const mod = this.undoStack.pop();
 		if (!mod) return null;
@@ -1971,9 +2009,9 @@ export interface InteractionRuntimeOptions {
 	readonly derived?: DerivedViewService;
 }
 
-/** @emoji 🧭 True while the statechart is between `machine.initial` and a terminal `committed` state. */
+/** @emoji 🧭 True while the statechart is between `machine.initial` and a declared final state. */
 export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
-	return state !== spec.machine.initial && state !== "committed";
+	return state !== spec.machine.initial && !isFinalInteractionState(spec, state);
 }
 
 /** @emoji 📜 Headless + interactive interaction controller (`send`, `commit`, `undo`). */
@@ -2005,7 +2043,10 @@ export class InteractionRuntime {
 	}
 
 	private canCommit(): boolean {
-		const st = this.sm.getState();
+		return this.canCommitFromState(this.sm.getState());
+	}
+
+	private canCommitFromState(st: string): boolean {
 		const allowed = this.spec.commit.fromStates ?? ["ready"];
 		if (!allowed.includes(st)) return false;
 		const w = this.spec.commit.when;
@@ -2055,7 +2096,7 @@ export class InteractionRuntime {
 			spatialInteraction,
 			capabilities: {
 				canCommit: this.canCommit(),
-				canCancel: st !== "committed",
+				canCancel: this.inActiveInteraction(),
 				canUndo,
 				canRedo,
 			},
@@ -2092,11 +2133,16 @@ export class InteractionRuntime {
 		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
+		const beforeCanCommit = this.canCommitFromState(beforeState);
 		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions);
 		if (!r.ok) return;
 		if (!r.transient) {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
+		}
+		if (beforeCanCommit && isFinalInteractionState(this.spec, this.sm.getState())) {
+			await this.runCommit(false);
+			return;
 		}
 		this.emit();
 	}
@@ -2164,8 +2210,7 @@ export class InteractionRuntime {
 		this.emit();
 	}
 
-	/** @emoji 📜 Executes `commit.operation` against `kernel`, applies `diff` to `document.topology`, records history. */
-	async commit(): Promise<InteractionResponse> {
+	private async runCommit(advanceToFinalState: boolean): Promise<InteractionResponse> {
 		const fail = (code: string, message: string): InteractionResponse => {
 			const res: InteractionResponse = {
 				ok: false,
@@ -2181,8 +2226,10 @@ export class InteractionRuntime {
 			return res;
 		};
 		const st = this.sm.getState();
-		if (st === "committed") return fail("interaction.alreadyCommitted", "Interaction already committed.");
-		if (!this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
+		if (advanceToFinalState && isFinalInteractionState(this.spec, st)) {
+			return fail("interaction.alreadyCommitted", "Interaction already finalized.");
+		}
+		if (advanceToFinalState && !this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
 		const env: ExprEnv = { context: ctx };
@@ -2212,7 +2259,7 @@ export class InteractionRuntime {
 		}
 		const inverse = applyTopologyDiff(topo, diff);
 		const archiveContext = this.cloneCtx(this.sm.getContext());
-		await this.sm.send({ kind: "confirm" }, k, topo, this.actions);
+		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, topo, this.actions);
 		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
 		this.lastResponse = res;
 		this.snapUndoStack.length = 0;
@@ -2229,6 +2276,11 @@ export class InteractionRuntime {
 		}
 		this.emit();
 		return res;
+	}
+
+	/** @emoji 📜 Executes `commit.operation` against `kernel`, applies `diff` to `document.topology`, records history. */
+	async commit(): Promise<InteractionResponse> {
+		return this.runCommit(true);
 	}
 }
 
@@ -2691,6 +2743,43 @@ if (import.meta.vitest) {
 			expect(res.data).toBe(5);
 			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
 		});
+
+		it("auto-commits when confirm reaches the final state", async () => {
+			class MeasKernel implements KernelAdapter {
+				readonly id = "meas-auto";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async vertexDistance(a: VertexRef, b: VertexRef, t: TopologyGraph) {
+					const pa = t.vertices[String(a)]?.position;
+					const pb = t.vertices[String(b)]?.position;
+					if (!pa || !pb) return 0;
+					return vec3Distance(pa, pb);
+				}
+			}
+			const topo = new TopologyGraph();
+			const va = "v0" as VertexRef;
+			const vb = "v1" as VertexRef;
+			topo.vertices[va] = { id: va, position: [0, 0, 0] };
+			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
+			const rt = createInteractionRuntime(buildDistanceInteractionSpec(), { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
+			await rt.send({ kind: "confirm" });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.capabilities.canCommit).toBe(false);
+			expect(snap.capabilities.canCancel).toBe(false);
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(snap.lastResponse?.data).toBe(5);
+		});
 	});
 
 	describe("@spatial/js-core measure area", () => {
@@ -2740,15 +2829,20 @@ if (import.meta.vitest) {
 			const res2: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null, archiveContext: null };
 			h.record({ id: "m2", interactionId: "c", label: "B", result: res2, backwardsDiff: inv2 });
 			expect(Object.keys(g.faces).length).toBe(2);
+			expect(h.entries().map((m) => m.id)).toEqual(["m1", "m2"]);
 			const doc = { topology: g, nodes: [] as ShapeNode[] };
 			h.undo(doc);
 			expect(Object.keys(g.faces).length).toBe(1);
+			expect(h.entries().map((m) => m.id)).toEqual(["m1"]);
 			h.undo(doc);
 			expect(Object.keys(g.faces).length).toBe(0);
 			h.redo(doc);
 			expect(Object.keys(g.faces).length).toBe(1);
 			h.redo(doc);
 			expect(Object.keys(g.faces).length).toBe(2);
+			h.clear();
+			expect(h.entries()).toEqual([]);
+			expect(h.peekUndo()).toBe(null);
 		});
 	});
 

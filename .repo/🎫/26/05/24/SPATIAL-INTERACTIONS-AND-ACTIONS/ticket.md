@@ -21,3 +21,9 @@
 - `bun nx run @spatial/js-machine-stately:test` — **8** tests passed.
 - `bun nx run @spatial/js-renderer-r3f:test` — **12** tests passed.
 - Lint targets for these projects are not defined in Nx (`:lint` missing).
+
+## Reopened: Renderer Selection And Hover
+
+**Repo MCP:** still unavailable in this session (`repo://goals` server not registered), so this ticket note tracks the follow-up.
+
+**Work:** extend `spatial/js/renderer-r3f/index.tsx` with topology-kind pick toggles, hover/selection highlighting, wire/shell/cell-specific target bounds, and click disambiguation for overlapping selectable 3D targets.

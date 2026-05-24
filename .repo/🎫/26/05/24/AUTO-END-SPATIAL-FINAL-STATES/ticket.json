@@ -1,8 +1,9 @@
 {
   "title": "Auto End Spatial Final States",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Make sure that all final states in the spatial interactions automatically end the interaction and no finalize is necessary.",
+  "summary": "Made spatial interaction runtime treat any declared final state as terminal, auto-run commit when an event transitions from a committable state into a final state, and added coverage for confirm-to-final auto-commit behavior. Verified with core tests, Stately adapter tests, and a direct debug runtime probe.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪c45d449f2e9a40219b28e0da25f56446"

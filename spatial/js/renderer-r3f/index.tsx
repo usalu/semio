@@ -79,6 +79,18 @@ function mergeDisplayWithArchivedBoxes(base: DisplayModel, archived: readonly Ar
 	}));
 	return { ...base, items: [...extra, ...base.items] };
 }
+
+function archivedBoxesFromHistory(history: DocumentHistory): readonly ArchivedBoxLayout[] {
+	return history
+		.entries()
+		.map((mod) => (mod.result.archiveContext ? tryArchivedBoxFromContext(mod.result.archiveContext) : null))
+		.filter((box): box is ArchivedBoxLayout => box !== null);
+}
+
+function replBaseDisplayForHistory(snapshot: InteractionSnapshot): DisplayModel {
+	if (snapshot.state !== "committed") return snapshot.display;
+	return { ...snapshot.display, items: snapshot.display.items.filter((item) => item.role !== "preview") };
+}
 // #endregion 🪩ArchivedFootprints
 
 // #region 📐Layout
@@ -122,7 +134,7 @@ export type SpatialPickKind = "pointer.down" | "pointer.move";
 
 export type SpatialPickTargetKind = Extract<
 	TopologyEntityKind,
-	"vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster"
+	"vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster" | "surface" | "part"
 >;
 
 export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
@@ -134,6 +146,8 @@ export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"cell",
 	"cellComplex",
 	"cluster",
+	"surface",
+	"part",
 ];
 
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
@@ -317,6 +331,14 @@ function topologyEntityPoints(
 			buckets.cellComplexes[id]!,
 		);
 	}
+	if (kind === "surface") {
+		const faceId = id.replace(/^surface-/, "");
+		if (buckets.faces[faceId]) return topologyFacePoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces[faceId]!);
+	}
+	if (kind === "part") {
+		const cellId = id.replace(/^part-/, "");
+		if (buckets.cells[cellId]) return topologyCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, buckets.cells[cellId]!);
+	}
 	return [];
 }
 
@@ -342,6 +364,7 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
 		const points = topologyFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
 		const point = topologyPointCentroid(points);
 		if (point) targets.push({ kind: "face", id: face.id, point, points });
+		if (point) targets.push({ kind: "surface", id: `surface-${face.id}`, point, points });
 	}
 	for (const shell of topologyRecords(buckets.shells)) {
 		const points = topologyShellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, shell);
@@ -354,6 +377,7 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
 		const points = topologyCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 		const point = topologyPointCentroid(points) ?? allCenter;
 		if (point) targets.push({ kind: "cell", id: cell.id, point, points: points.length ? points : all });
+		if (point) targets.push({ kind: "part", id: `part-${cell.id}`, point, points: points.length ? points : all });
 	}
 	for (const complex of topologyRecords(buckets.cellComplexes)) {
 		const points = topologyCellComplexPoints(
@@ -762,12 +786,100 @@ function spatialPickTargetsFromIntersections(
 	return out.length ? out : [fallback];
 }
 
+const spatialPickPriority: Record<SpatialPickTargetKind, number> = {
+	vertex: 0,
+	edge: 1,
+	wire: 2,
+	face: 3,
+	surface: 4,
+	shell: 5,
+	cell: 6,
+	part: 7,
+	cellComplex: 8,
+	cluster: 9,
+};
+
+function targetRayScore(ray: THREE.Ray, target: SpatialPickTarget): number | null {
+	const points = target.points?.length ? target.points : [target.point];
+	const box = new THREE.Box3();
+	for (const point of points) box.expandByPoint(new THREE.Vector3(point[0], point[1], point[2]));
+	box.expandByScalar(target.kind === "vertex" ? 0.12 : 0.08);
+	const hit = ray.intersectBox(box, new THREE.Vector3());
+	if (!hit) return null;
+	return ray.origin.distanceTo(hit) + spatialPickPriority[target.kind] * 1e-4;
+}
+
+function spatialPickTargetsFromRay(
+	ray: THREE.Ray,
+	targets: readonly SpatialPickTarget[],
+	selectionAccept: readonly TopologyEntityKind[],
+	kindToggles: SpatialPickKindToggles,
+): SpatialPickTarget[] {
+	return filterSpatialPickTargets(targets, selectionAccept, kindToggles)
+		.map((target) => ({ target, score: targetRayScore(ray, target) }))
+		.filter((hit): hit is { readonly target: SpatialPickTarget; readonly score: number } => hit.score !== null)
+		.sort((a, b) => a.score - b.score)
+		.map((hit) => hit.target);
+}
+
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
 	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
 	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
 	if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
 	if (target.kind === "edge" || target.kind === "wire") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
 	return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
+}
+
+function spatialSelectionTarget(target: SpatialPickTarget) {
+	if (target.kind === "surface") {
+		return {
+			kind: target.kind,
+			id: target.id,
+			editable: false,
+			derivedFrom: [{ kind: "face" as const, id: target.id.replace(/^surface-/, "") }],
+		};
+	}
+	if (target.kind === "part") {
+		return {
+			kind: target.kind,
+			id: target.id,
+			editable: false,
+			derivedFrom: [{ kind: "cell" as const, id: target.id.replace(/^part-/, "") }],
+		};
+	}
+	return { kind: target.kind, id: target.id, editable: true };
+}
+
+function SpatialSelectionRayCatcher({
+	targets,
+	selectionAccept,
+	kindToggles,
+	onSelectionRequest,
+}: {
+	readonly targets: readonly SpatialPickTarget[];
+	readonly selectionAccept: readonly TopologyEntityKind[];
+	readonly kindToggles: SpatialPickKindToggles;
+	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
+}): ReactNode {
+	if (selectionAccept.length === 0 || !onSelectionRequest) return null;
+	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, kindToggles);
+		if (candidates.length === 0) return;
+		e.stopPropagation();
+		const native = e.nativeEvent;
+		onSelectionRequest({
+			targets: candidates,
+			point: [e.point.x, e.point.y, e.point.z],
+			client: { x: native.clientX, y: native.clientY },
+			modifiers: pointerModifiers(e),
+		});
+	};
+	return (
+		<mesh onPointerDown={onPointerDown} renderOrder={-10}>
+			<sphereGeometry args={[80, 16, 16]} />
+			<meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.BackSide} />
+		</mesh>
+	);
 }
 
 function SpatialPickTargetNode({
@@ -923,6 +1035,12 @@ export function SpatialPickGeometryLayer({
 	const targetsByKey = useMemo(() => spatialPickTargetsByKey(enabledTargets), [enabledTargets]);
 	return (
 		<group>
+			<SpatialSelectionRayCatcher
+				targets={enabledTargets}
+				selectionAccept={selectionAccept}
+				kindToggles={kindToggles}
+				onSelectionRequest={onSelectionRequest}
+			/>
 			{enabledTargets.map((target) => (
 				<SpatialPickTargetNode
 					key={`${target.kind}:${target.id}`}
@@ -1057,8 +1175,9 @@ export function InteractionSpatialView({
 		si.verticalRodStates.includes(snapshot.state) &&
 		Boolean(onScenePointerMove) &&
 		origin !== null;
+	const selectionPickOn = selectionAccept.length > 0;
 	const pickPlaneEnabled =
-		hostPickGate && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
+		hostPickGate && si.spatialGroundPick && !selectionPickOn && !si.pickDisabledStates.includes(snapshot.state);
 	const onGroundPickEvent = (point: Vec3) => {
 		const event = createSpatialPickEvent("pointer.down", point, null);
 		onInteractionEvent?.(event);
@@ -1293,7 +1412,6 @@ export interface InteractionReplProps {
 	readonly geometry: SpatialPickGeometry | null;
 	readonly asideExtra?: ReactNode;
 	readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
-	readonly onArchiveCommittedBox?: (layout: ArchivedBoxLayout) => void;
 	/** @emoji 🔁 When host bumps this positive counter for the same preset, `cancel()` then `start` without remounting GL. */
 	readonly sessionRestartNonce?: number;
 }
@@ -1310,14 +1428,19 @@ export function InteractionRepl({
 	geometry,
 	asideExtra,
 	archivedBoxLayouts = [],
-	onArchiveCommittedBox,
 	sessionRestartNonce = 0,
 }: InteractionReplProps): ReactNode {
 	const snapshot = useInteractionSnapshot(rt);
 	const histUi = useReplHistoryState(rt, spec, history);
+	const documentArchivedBoxLayouts = useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
+	const allArchivedBoxLayouts = useMemo(
+		() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts],
+		[documentArchivedBoxLayouts, archivedBoxLayouts],
+	);
+	const baseDisplay = useMemo(() => replBaseDisplayForHistory(snapshot), [snapshot]);
 	const mergedDisplay = useMemo(
-		() => mergeDisplayWithArchivedBoxes(snapshot.display, archivedBoxLayouts),
-		[snapshot.display, archivedBoxLayouts],
+		() => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts),
+		[baseDisplay, allArchivedBoxLayouts],
 	);
 	const [lastCommitLine, setLastCommitLine] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
@@ -1368,7 +1491,7 @@ export function InteractionRepl({
 			setSelectedPickKey(spatialPickTargetKey(target));
 			void rt.send({
 				kind: "selection.changed",
-				targets: [{ kind: target.kind as TopologyEntityKind, id: target.id, editable: true }],
+				targets: [spatialSelectionTarget(target)],
 				modifiers,
 			});
 		},
@@ -1418,11 +1541,6 @@ export function InteractionRepl({
 
 	const onCommit = useCallback(async () => {
 		const res = await rt.commit();
-		if (res.ok && !isEmptyTopologyDiff(res.diff) && onArchiveCommittedBox) {
-			const raw = res.archiveContext;
-			const box = raw ? tryArchivedBoxFromContext(raw) : null;
-			if (box) onArchiveCommittedBox(box);
-		}
 		if (res.ok && res.data != null) {
 			setLastCommitLine(`data: ${JSON.stringify(res.data)}`);
 			console.log("[DEBUG] commit response data", res.data);
@@ -1436,7 +1554,7 @@ export function InteractionRepl({
 			setLastCommitLine("ok (empty diff, no data)");
 			console.log("[DEBUG] commit ok empty", res);
 		}
-	}, [rt, onArchiveCommittedBox]);
+	}, [rt]);
 
 	const dispatchTransition = useCallback(
 		(row: InteractionKeybindRow) => {
@@ -1956,6 +2074,67 @@ if (import.meta.vitest) {
 				selection: { kind: "vertex", id: "v0" },
 			});
 		});
+
+		it("creates selectable targets for every editable topology kind", () => {
+			const targets = createSpatialPickTargets({
+				schema: "spatial.topology/v1",
+				revision: 1,
+				vertices: [
+					{ id: "v0", position: [0, 0, 0] },
+					{ id: "v1", position: [1, 0, 0] },
+					{ id: "v2", position: [1, 1, 0] },
+				],
+				edges: [
+					{ id: "e0", vertexIds: ["v0", "v1"] },
+					{ id: "e1", vertexIds: ["v1", "v2"] },
+				],
+				wires: [{ id: "w0", edgeIds: ["e0", "e1"] }],
+				faces: [{ id: "f0", wireIds: ["w0"] }],
+				shells: [{ id: "sh0", faceIds: ["f0"] }],
+				cells: [{ id: "c0", shellIds: ["sh0"] }],
+				cellComplexes: [{ id: "cc0", cellIds: ["c0"] }],
+				clusters: [{ id: "cl0", memberIds: ["c0"] }],
+			});
+			expect(targets.map((target) => target.kind)).toEqual([
+				"vertex",
+				"vertex",
+				"vertex",
+				"edge",
+				"edge",
+				"wire",
+				"face",
+				"surface",
+				"shell",
+				"cell",
+				"part",
+				"cellComplex",
+				"cluster",
+			]);
+			expect(targets.find((target) => target.kind === "cell")?.point).toEqual([2 / 3, 1 / 3, 0]);
+		});
+
+		it("filters selectable targets by active accept list and kind toggles", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "edge", id: "e0", point: [0.5, 0, 0] },
+				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+			];
+			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { edge: false }).map(spatialPickTargetKey)).toEqual([
+				"vertex:v0",
+			]);
+		});
+
+		it("ray-picks overlapping face and surface candidates", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+			];
+			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
+			expect(spatialPickTargetsFromRay(ray, targets, ["face", "surface"], {}).map(spatialPickTargetKey)).toEqual([
+				"face:f0",
+				"surface:surface-f0",
+			]);
+		});
 	});
 
 	describe("@spatial/js-renderer-r3f runtime", () => {
@@ -2028,6 +2207,32 @@ if (import.meta.vitest) {
 		it("exports InteractionRepl and useInteractionRuntime for hosts", () => {
 			expect(typeof InteractionRepl).toBe("function");
 			expect(typeof useInteractionRuntime).toBe("function");
+		});
+
+		it("derives persistent box footprints from document history", () => {
+			const g = new TopologyGraph();
+			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
+			const d0 = meshFaceTopologyDiff(mesh, "hist-box");
+			const inv = applyTopologyDiff(g, d0);
+			const hist = new DocumentHistory();
+			hist.record({
+				id: "box-1",
+				interactionId: "primitive.box",
+				label: "Box",
+				result: {
+					ok: true,
+					errors: [],
+					warnings: [],
+					infos: [],
+					diff: d0,
+					data: null,
+					archiveContext: { origin: [0, 0, 0], corner: [2, 3, 0], height: 4 },
+				},
+				backwardsDiff: inv,
+			});
+			expect(archivedBoxesFromHistory(hist)).toEqual([{ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }]);
+			hist.undo({ topology: g, nodes: [] });
+			expect(archivedBoxesFromHistory(hist)).toEqual([]);
 		});
 	});
 }

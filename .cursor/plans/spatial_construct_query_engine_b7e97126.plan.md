@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: lexer-parser
     content: Implement Chevrotain lexer + parser + AST for the construct language in query/index.ts
-    status: pending
+    status: completed
   - id: index-traversers
     content: Implement KernelIndex + TopologyTraverser generators (BOUNDED_BY, CONTAINS, SHARES, DERIVES, ADJACENT_TO, HAS_VERTEX)
-    status: pending
+    status: completed
   - id: planner-executor
     content: Implement QueryPlanner + ConstructExecutor + CALL action bridge
-    status: pending
+    status: completed
   - id: core-metadata
     content: Extend core with EntityMetadataStore on TopologyGraph and ConstructRunner provider hook on InteractionRuntime
-    status: in_progress
+    status: completed
   - id: kernel-adjacency
     content: Add adjacentCells / sharedFacesBetween to BrepjsKernel
-    status: pending
+    status: completed
   - id: tests
     content: Add in-file vitest cases (parser, executor read paths, adjacency, derived, CALL writes) in query, core, kernel-brepjs
-    status: pending
+    status: completed
   - id: ticket
     content: Open repo ticket at start, close ticket at end with file list
-    status: pending
+    status: completed
 isProject: false
 ---
 
