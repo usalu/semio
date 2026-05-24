@@ -2,7 +2,7 @@
 // 💻 elements/spatial/play/index.ts — Framework-free spatial play on {@link @elements/playground} (no React).
 // #endregion 🧲Header
 
-import { CommandBus, Workbench, buildScene3dWindowBody, getDeclarativeWindowBodyFactory } from "@elements/framework";
+import { CommandBus, ProductRuntime, buildScene3dWindowBody, getWindowBodyFactory } from "@elements/framework";
 import {
 	PlaygroundController,
 	bootstrapPlaygroundWorkbench,
@@ -10,7 +10,6 @@ import {
 	type PlaygroundIds,
 } from "@elements/playground";
 
-import topologyJson from "../fixtures/topology.json";
 import {
 	Cell,
 	TOPOLOGIC_KINDS,
@@ -31,13 +30,14 @@ import {
 	type TopologicFixtureV1,
 	type TopologicKind,
 	type TopologicTransform,
-} from "@elements/geometry-spatial-js";
+} from "@elements/spatial-js";
+import topologyJson from "../fixtures/topology.json";
 
 //#region 🔖Ids
 export const SPATIAL_PLAY_IDS: PlaygroundIds = {
-	appId: "elements-geometry-spatial",
-	controllerId: "geometry-spatial-play",
-	windowId: "geometry-spatial-window",
+	appId: "elements-spatial",
+	controllerId: "spatial-play",
+	windowId: "spatial-window",
 	windowLabel: "Spatial Surface",
 	mainBodyKey: "elements.geometry.spatial.window",
 	workbenchTabBodyKey: "elements.geometry.spatial.panel.workbench",
@@ -188,17 +188,17 @@ export function buildSpatialWorkbenchApp(controller: SpatialPlayShellController)
 }
 
 /** @emoji 🚀 Framework-free spatial playground: {@link bootstrapPlaygroundWorkbench} + spatial controller. */
-export function bootstrapSpatialPlayWorkbench(): Workbench {
-	const workbench = new Workbench();
-	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());
-	return bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, controller, { workbench });
+export function bootstrapSpatialPlayWorkbench(): ProductRuntime {
+	const runtime = new ProductRuntime();
+	const controller = new SpatialPlayShellController(runtime.commandBus, () => runtime.notify());
+	return bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, controller, { runtime });
 }
 
 /** @emoji 🚀 Creates spatial play workbench without registering declarative bodies (tests). */
-export function createSpatialPlayWorkbench(controller: SpatialPlayShellController): Workbench {
-	const workbench = new Workbench();
-	workbench.addApp(buildSpatialWorkbenchApp(controller));
-	return workbench;
+export function createSpatialPlayWorkbench(controller: SpatialPlayShellController): ProductRuntime {
+	const runtime = new ProductRuntime();
+	runtime.addApp(buildSpatialWorkbenchApp(controller));
+	return runtime;
 }
 //#endregion 🔖Controller
 
@@ -284,23 +284,23 @@ if (import.meta.vitest) {
 			const fixture = await loadTopologicFixtureV1(topologyJson as unknown);
 			expect(fixture).not.toBeNull();
 			const bus = new CommandBus();
-			const wb = new Workbench();
-			const ctrl = new SpatialPlayShellController(bus, () => wb.notify(), fixture);
-			bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, ctrl, { workbench: wb });
-			const tree = getDeclarativeWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)?.({
-				workbench: wb,
+			const runtime = new ProductRuntime();
+			const ctrl = new SpatialPlayShellController(bus, () => runtime.notify(), fixture);
+			bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, ctrl, { runtime });
+			const tree = getWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)?.({
+				runtime,
 				windowKindId: SPATIAL_PLAY_WINDOW_ID,
 				bodyKey: SPATIAL_PLAY_BODY_KEY,
 				activeModeId: "browse",
-				generation: wb.generation,
+				generation: runtime.generation,
 			});
 			expect(tree).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
 		});
 
 		it("bootstrapSpatialPlayWorkbench registers playground declarative bodies", () => {
-			const wb = bootstrapSpatialPlayWorkbench();
-			expect(wb.apps.length).toBeGreaterThan(0);
-			expect(getDeclarativeWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)).toBeTypeOf("function");
+			const runtime = bootstrapSpatialPlayWorkbench();
+			expect(runtime.apps.length).toBeGreaterThan(0);
+			expect(getWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)).toBeTypeOf("function");
 		});
 	});
 }

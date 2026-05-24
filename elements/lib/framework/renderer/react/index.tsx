@@ -17,6 +17,7 @@ export {
 } from "@elements/ui";
 
 import {
+	APP_TOOL_CATEGORY_ORDER,
 	countAppTools,
 	CommandBus,
 	Controller,
@@ -131,7 +132,7 @@ export interface ChromeFooterRow {
 }
 
 /** @emoji 🌲 Minimal tree panel payload for declarative side tabs. */
-export interface ShellChromeTreePanelConfig {
+export interface ChromeTreePanelConfig {
 	readonly sections: readonly { readonly id: string; readonly content: React.ReactNode }[];
 }
 
@@ -140,7 +141,7 @@ export interface SidePanelTabConfig {
 	readonly id: string;
 	readonly icon: React.ComponentType<{ readonly size?: number }>;
 	readonly order?: number;
-	readonly tree: ShellChromeTreePanelConfig;
+	readonly tree: ChromeTreePanelConfig;
 }
 
 //#endregion 📦shell-chrome-types.tsx
@@ -1796,7 +1797,7 @@ export function resolveElementIcon(iconId: string): React.ReactNode | undefined 
 const shellTabIcons = new Map<string, LucideIcon>();
 
 /** @emoji ­ƒû╝ Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
-export function registerShellTabIcon(iconId: string, Icon: LucideIcon): void {
+export function registerTabIcon(iconId: string, Icon: LucideIcon): void {
 	shellTabIcons.set(iconId, Icon);
 }
 
@@ -1809,7 +1810,7 @@ export function registerWindowBody(bodyKey: string, Component: React.ComponentTy
 
 const sidePanelBodyByKey = new Map<string, React.ComponentType<unknown>>();
 
-/** @emoji ­ƒôæ Binds a `bodyKey` from {@link ShellSideTabSpec} to a React panel body component. */
+/** @emoji 📑 Binds a `bodyKey` from {@link SideTabSpec} to a React panel body component. */
 export function registerSidePanelBody(bodyKey: string, Component: React.ComponentType<unknown>): void {
 	sidePanelBodyByKey.set(bodyKey, Component);
 }

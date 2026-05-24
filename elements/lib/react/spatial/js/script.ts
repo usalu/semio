@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@elements/geometry-spatial-js` task router — `bun ./script.ts test [vitest args…]`. */
+/** @emoji 🧭 `@elements/spatial-js` task router — `bun ./script.ts test [vitest args…]`. */
 import { execFileSync } from "node:child_process";
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
 if (command === "test") {
-	execFileSync("bunx", ["vitest", "run", "--config", "vitest.config.ts", ...args], {
+	execFileSync("bun", ["x", "vitest", "run", "--config", "vitest.config.ts", ...args], {
 		cwd: import.meta.dir,
 		stdio: "inherit",
 		env: process.env,

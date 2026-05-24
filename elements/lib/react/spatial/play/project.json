@@ -1,5 +1,5 @@
 {
-	"name": "@elements/geometry-spatial-play",
+	"name": "@elements/spatial-play",
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"dev": {

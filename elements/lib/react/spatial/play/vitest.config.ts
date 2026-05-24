@@ -4,14 +4,14 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/geometry-spatial-play` (framework-free shell wiring). */
+/** @emoji 🧪 Vitest for `@elements/spatial-play` (framework-free shell wiring). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
 			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
 			"@elements/playground": resolve(root, "../../../playground/index.ts"),
-			"@elements/geometry-spatial-js": resolve(root, "../js/index.ts"),
+			"@elements/spatial-js": resolve(root, "../js/index.ts"),
 		},
 	},
 	test: {

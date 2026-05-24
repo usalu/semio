@@ -1,5 +1,5 @@
 {
-  "name": "@elements/styling-core",
+  "name": "@elements/styling",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "generate": {

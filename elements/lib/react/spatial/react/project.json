@@ -1,5 +1,5 @@
 {
-	"name": "@elements/geometry-spatial-react",
+	"name": "@elements/spatial-react",
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {

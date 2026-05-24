@@ -436,23 +436,23 @@ import { Euler, Matrix4, Vector3 } from "three";
 import {
 	CommandBus,
 	Controller,
-	ShellExtensionHost,
-	Workbench,
+	PluginHost,
+	ProductRuntime,
 	createDefaultLayout,
 	createTabStackLayout,
-	type ShellExtension,
-	type ShellExtensionManifest,
-	type ShellWindowBodyViewContext,
+	registerSidePanelBody,
+	registerWindowBody,
+	type PluginManifest,
+	type PluginModule,
+	type WindowBodyViewContext,
 	type UiBoardHostSurfaceNode,
 	type UiNode,
 	type UiPanelHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
 } from "@elements/framework";
 import {
-	WorkbenchView,
+	ProductView,
 	getLevelBgClass,
-	registerDeclarativeSidePanelBody,
-	registerDeclarativeWindowBody,
 	registerUiBoardSurfaceHost,
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
@@ -22146,9 +22146,9 @@ export class SketchpadShellController extends Controller {
 	}
 }
 
-let sketchpadWorkbenchSingleton: Workbench | null = null;
-let sketchpadExtensionHostSingleton: ShellExtensionHost | null = null;
-let sketchpadShellReady: Promise<Workbench> | null = null;
+let sketchpadProductRuntimeSingleton: ProductRuntime | null = null;
+let sketchpadPluginHostSingleton: PluginHost | null = null;
+let sketchpadShellReady: Promise<ProductRuntime> | null = null;
 let sketchpadChromeRegistered = false;
 let renderDesignSceneSurface: () => React.ReactNode = () => (
 	<div className="flex h-full items-center justify-center p-2 text-xs text-muted-foreground">Design scene loading…</div>
@@ -22181,7 +22181,7 @@ function sketchpadAppIdFromPath(path: string): string {
 	return SKETCHPAD_HOME_APP_ID;
 }
 
-function buildSketchpadExtensionManifest(): ShellExtensionManifest {
+function buildSketchpadExtensionManifest(): PluginManifest {
 	return {
 		id: SKETCHPAD_EXTENSION_ID,
 		label: "Semio Sketchpad",
@@ -22248,56 +22248,56 @@ function buildSketchpadExtensionManifest(): ShellExtensionManifest {
 	};
 }
 
-function declarativePanelMain(_ctx: ShellWindowBodyViewContext): UiNode {
+function declarativePanelMain(_ctx: WindowBodyViewContext): UiNode {
 	return { type: "panel", surfaceId: SKETCHPAD_SURFACE_PANEL_MAIN, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID };
 }
 
-function declarativeHomeTableBody(_ctx: ShellWindowBodyViewContext): UiNode {
+function declarativeHomeTableBody(_ctx: WindowBodyViewContext): UiNode {
 	return { type: "panel", surfaceId: SKETCHPAD_SURFACE_HOME_TABLE, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID };
 }
 
 function registerSketchpadDeclarativeBodies(): void {
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_HOME, declarativeHomeTableBody);
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_KIT_TABLE, () => ({
+	registerWindowBody(SKETCHPAD_BODY_HOME, declarativeHomeTableBody);
+	registerWindowBody(SKETCHPAD_BODY_KIT_TABLE, () => ({
 		type: "board",
 		surfaceId: SKETCHPAD_SURFACE_KIT_TABLE,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 		paneId: "table",
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () => ({
+	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () => ({
 		type: "board",
 		surfaceId: SKETCHPAD_SURFACE_KIT_DIAGRAM,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 		paneId: "diagram",
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () => ({
+	registerWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () => ({
 		type: "scene3d",
 		surfaceId: SKETCHPAD_SURFACE_DESIGN_SCENE,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () => ({
+	registerWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () => ({
 		type: "board",
 		surfaceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 		paneId: "diagram",
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_TYPE, () => ({
+	registerWindowBody(SKETCHPAD_BODY_TYPE, () => ({
 		type: "scene3d",
 		surfaceId: SKETCHPAD_SURFACE_TYPE_SCENE,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DOCS, () => ({
+	registerWindowBody(SKETCHPAD_BODY_DOCS, () => ({
 		type: "panel",
 		surfaceId: SKETCHPAD_SURFACE_DOCS_PAGE,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_FEEDBACK, () => ({
+	registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => ({
 		type: "panel",
 		surfaceId: SKETCHPAD_SURFACE_FEEDBACK_FORM,
 		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 	}));
-	registerDeclarativeSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, declarativePanelMain);
-	registerDeclarativeSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, declarativePanelMain);
+	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, declarativePanelMain);
+	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, declarativePanelMain);
 }
 
 function registerSketchpadSurfaceHosts(): void {
@@ -22307,35 +22307,35 @@ function registerSketchpadSurfaceHosts(): void {
 	registerSketchpadUiSurfaceHosts();
 }
 
-/** @emoji ðŸš€ Builds the declarative sketchpad {@link Workbench} (apps, modes, window kinds). */
-export async function ensureSketchpadDeclarativeShell(): Promise<Workbench> {
-	if (sketchpadWorkbenchSingleton) return sketchpadWorkbenchSingleton;
+/** @emoji 🚀 Builds the declarative sketchpad {@link ProductRuntime} (apps, modes, window kinds). */
+export async function ensureSketchpadDeclarativeShell(): Promise<ProductRuntime> {
+	if (sketchpadProductRuntimeSingleton) return sketchpadProductRuntimeSingleton;
 	if (!sketchpadShellReady) {
 		sketchpadShellReady = (async () => {
 			registerSketchpadSurfaceHosts();
-			const workbench = new Workbench();
-			const controller = new SketchpadShellController(workbench.commandBus, () => workbench.notify());
-			const host = new ShellExtensionHost(workbench);
+			const runtime = new ProductRuntime();
+			const controller = new SketchpadShellController(runtime.commandBus, () => runtime.notify());
+			const host = new PluginHost(runtime);
 			host.register(buildSketchpadExtensionManifest(), {
 				id: SKETCHPAD_EXTENSION_ID,
 				activate() {},
-			} satisfies ShellExtension);
+			} satisfies PluginModule);
 			await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
-			workbench.activeAppId = SKETCHPAD_HOME_APP_ID;
-			workbench.notify();
-			sketchpadWorkbenchSingleton = workbench;
-			sketchpadExtensionHostSingleton = host;
-			return workbench;
+			runtime.activeAppId = SKETCHPAD_HOME_APP_ID;
+			runtime.notify();
+			sketchpadProductRuntimeSingleton = runtime;
+			sketchpadPluginHostSingleton = host;
+			return runtime;
 		})();
 	}
 	return sketchpadShellReady;
 }
 
-export function getSketchpadWorkbench(): Workbench | null {
-	return sketchpadWorkbenchSingleton;
+export function getSketchpadProductRuntime(): ProductRuntime | null {
+	return sketchpadProductRuntimeSingleton;
 }
 
-type SketchpadDeclarativeWorkbenchHostProps = {
+type SketchpadDeclarativeProductHostProps = {
 	readonly toolbarSlot: React.ReactNode;
 	readonly initialPanelVisibility: { leftSidePanel: boolean; rightSidePanel: boolean };
 	readonly navigationUri: string;
@@ -22349,7 +22349,7 @@ type SketchpadDeclarativeWorkbenchHostProps = {
 	readonly augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
 };
 
-const SketchpadDeclarativeWorkbenchHost: FC<SketchpadDeclarativeWorkbenchHostProps> = ({
+const SketchpadDeclarativeProductHost: FC<SketchpadDeclarativeProductHostProps> = ({
 	toolbarSlot,
 	initialPanelVisibility,
 	navigationUri,
@@ -22362,11 +22362,11 @@ const SketchpadDeclarativeWorkbenchHost: FC<SketchpadDeclarativeWorkbenchHostPro
 	onGoUp,
 	augmentPanelTabs,
 }) => {
-	const [workbench, setWorkbench] = useState<Workbench | null>(sketchpadWorkbenchSingleton);
+	const [productRuntime, setProductRuntime] = useState<ProductRuntime | null>(sketchpadProductRuntimeSingleton);
 	useEffect(() => {
 		let cancelled = false;
 		void ensureSketchpadDeclarativeShell().then((wb) => {
-			if (!cancelled) setWorkbench(wb);
+			if (!cancelled) setProductRuntime(wb);
 		});
 		return () => {
 			cancelled = true;
@@ -22374,25 +22374,25 @@ const SketchpadDeclarativeWorkbenchHost: FC<SketchpadDeclarativeWorkbenchHostPro
 	}, []);
 	const appType = useAppType();
 	useEffect(() => {
-		if (!workbench) return;
+		if (!productRuntime) return;
 		const nextAppId = sketchpadAppIdFromPath(navigationUri.split("?")[0] ?? "/");
-		if (workbench.activeAppId !== nextAppId) workbench.setActiveAppId(nextAppId);
-		workbench.uri = navigationUri;
-		workbench.canGoBack = canGoBack;
-		workbench.canGoForward = canGoForward;
-		workbench.canGoUp = canGoUp;
-		workbench.onNavigate = onNavigate;
-		workbench.onGoBack = onGoBack;
-		workbench.onGoForward = onGoForward;
-		workbench.onGoUp = onGoUp;
-		workbench.notify();
-	}, [workbench, navigationUri, canGoBack, canGoForward, canGoUp, onNavigate, onGoBack, onGoForward, onGoUp, appType]);
-	if (!workbench) {
+		if (productRuntime.activeAppId !== nextAppId) productRuntime.setActiveAppId(nextAppId);
+		productRuntime.uri = navigationUri;
+		productRuntime.canGoBack = canGoBack;
+		productRuntime.canGoForward = canGoForward;
+		productRuntime.canGoUp = canGoUp;
+		productRuntime.onNavigate = onNavigate;
+		productRuntime.onGoBack = onGoBack;
+		productRuntime.onGoForward = onGoForward;
+		productRuntime.onGoUp = onGoUp;
+		productRuntime.notify();
+	}, [productRuntime, navigationUri, canGoBack, canGoForward, canGoUp, onNavigate, onGoBack, onGoForward, onGoUp, appType]);
+	if (!productRuntime) {
 		return <SketchpadStartupFallback />;
 	}
 	return (
-		<WorkbenchView
-			workbench={workbench}
+		<ProductView
+			runtime={productRuntime}
 			defaultAppId={appType}
 			uri={navigationUri}
 			onNavigate={onNavigate}
@@ -23186,7 +23186,7 @@ const LayoutWrapper: FC = () => {
         <LevelProvider level="base">
           <ToolbarContextHost>
             <SketchpadDeclarativeAppChrome />
-            <SketchpadDeclarativeWorkbenchHost
+            <SketchpadDeclarativeProductHost
               toolbarSlot={
                 panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "docs" ? (
                   toolbarSections.length > 0 ? (

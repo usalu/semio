@@ -1,7 +1,7 @@
 {
 	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"projectType": "library",
-	"name": "@elements/geometry-spatial-react",
+	"name": "@elements/spatial-react",
 	"version": "0.1.0",
 	"type": "module",
 	"private": true,
@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@elements/framework-react": "workspace:*",
-		"@elements/geometry-spatial-js": "workspace:*",
+		"@elements/spatial-js": "workspace:*",
 		"@elements/ui": "workspace:*",
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.4.2",

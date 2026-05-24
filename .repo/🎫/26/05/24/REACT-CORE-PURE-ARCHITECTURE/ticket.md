@@ -13,9 +13,9 @@
 ## Tests
 
 - `@elements/ui`: 36 passed
-- `@elements/framework` core: (run after playground sync)
-- `@elements/framework-react`: (run after fixes)
-- `@elements/playground`: (pending API sync)
+- `@elements/framework` core: 7 passed
+- `@elements/framework-react`: 7 passed
+- `@elements/playground`: 3 passed
 
 ## Files
 

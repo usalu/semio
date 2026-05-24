@@ -166,7 +166,7 @@ export abstract class PlaygroundController<K extends string> extends Controller 
 }
 //#endregion 🔖Controller
 
-//#region 🔖Workbench
+//#region 🔖Runtime
 export interface BuildPlaygroundWorkbenchAppOptions {
 	readonly layout?: WindowLayout;
 	readonly initialQuery?: string;
@@ -200,7 +200,7 @@ export function buildPlaygroundWorkbenchApp(
 export function playgroundControllerFromContext(
 	ctx: WindowBodyViewContext | SidePanelBodyViewContext,
 ): PlaygroundController<string> | undefined {
-	return ctx.workbench.getActiveApp()?.controller as PlaygroundController<string> | undefined;
+	return ctx.runtime.getActiveApp()?.controller as PlaygroundController<string> | undefined;
 }
 
 /** @emoji 🪟 Declarative main window: lone scene3d surface. */
@@ -241,7 +241,7 @@ export interface PlaygroundSidePanelBodyRegistration {
 /** @emoji 📝 Registers multiple side-panel declarative trees. */
 export function registerPlaygroundSidePanelBodies(tabs: readonly PlaygroundSidePanelBodyRegistration[]): void {
 	for (const tab of tabs) {
-		registerDeclarativeSidePanelBody(tab.bodyKey, tab.build);
+		registerSidePanelBody(tab.bodyKey, tab.build);
 	}
 }
 
@@ -258,23 +258,23 @@ export function registerPlaygroundDeclarativeBodies(ids: PlaygroundIds, options?
 	);
 }
 
-/** @emoji 🚀 Creates a {@link Workbench} with one playground app. */
+/** @emoji 🚀 Creates a {@link ProductRuntime} with one playground app. */
 export function createPlaygroundWorkbench(
 	ids: PlaygroundIds,
 	controller: PlaygroundController<string>,
 	options?: BuildPlaygroundWorkbenchAppOptions,
-): Workbench {
-	const workbench = new Workbench();
-	workbench.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
-	return workbench;
+): ProductRuntime {
+	const runtime = new ProductRuntime();
+	runtime.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
+	return runtime;
 }
 
 export interface BootstrapPlaygroundWorkbenchOptions extends BuildPlaygroundWorkbenchAppOptions {
 	/** @emoji 📝 When true (default), registers standard playground declarative bodies before returning. */
 	readonly registerDeclarativeBodies?: boolean;
 	readonly declarativeBodies?: RegisterPlaygroundDeclarativeBodiesOptions;
-	/** @emoji 🧱 Reuse an existing workbench shell (controller must use its {@link CommandBus}). */
-	readonly workbench?: Workbench;
+	/** @emoji 🧱 Reuse an existing product runtime shell (controller must use its {@link CommandBus}). */
+	readonly runtime?: ProductRuntime;
 }
 
 /** @emoji 🚀 One-shot playground setup: optional declarative registration + one playground app. */
@@ -282,15 +282,15 @@ export function bootstrapPlaygroundWorkbench(
 	ids: PlaygroundIds,
 	controller: PlaygroundController<string>,
 	options?: BootstrapPlaygroundWorkbenchOptions,
-): Workbench {
+): ProductRuntime {
 	if (options?.registerDeclarativeBodies !== false) {
 		registerPlaygroundDeclarativeBodies(ids, options?.declarativeBodies);
 	}
-	const workbench = options?.workbench ?? new Workbench();
-	workbench.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
-	return workbench;
+	const runtime = options?.runtime ?? new ProductRuntime();
+	runtime.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
+	return runtime;
 }
-//#endregion 🔖Workbench
+//#endregion 🔖Runtime
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -333,7 +333,7 @@ if (import.meta.vitest) {
 	describe("PlaygroundController", () => {
 		it("tracks query and clears selection when kind is hidden", () => {
 			const bus = new CommandBus();
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			const ctrl = new DemoPlaygroundController(bus, () => wb.notify());
 			wb.addApp(buildPlaygroundWorkbenchApp(TEST_IDS, ctrl));
 			bus.dispatch(TEST_IDS.controllerId, "setSelectedId", { id: "entity-a" });
@@ -351,25 +351,25 @@ if (import.meta.vitest) {
 			const ctrl = new DemoPlaygroundController(bus, () => undefined);
 			const wb = bootstrapPlaygroundWorkbench(TEST_IDS, ctrl);
 			expect(wb.apps.length).toBeGreaterThan(0);
-			expect(getDeclarativeWindowBodyFactory(TEST_IDS.mainBodyKey)).toBeTypeOf("function");
+			expect(getWindowBodyFactory(TEST_IDS.mainBodyKey)).toBeTypeOf("function");
 		});
 	});
 
 	describe("registerPlaygroundDeclarativeBodies", () => {
 		it("registers scene3d main window and table side panels", () => {
 			const bus = new CommandBus();
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			const ctrl = new DemoPlaygroundController(bus, () => wb.notify());
 			wb.addApp(buildPlaygroundWorkbenchApp(TEST_IDS, ctrl));
 			registerPlaygroundDeclarativeBodies(TEST_IDS);
-			const ctx: ShellWindowBodyViewContext = {
-				workbench: wb,
+			const ctx: WindowBodyViewContext = {
+				runtime: wb,
 				windowKindId: TEST_IDS.windowId,
 				bodyKey: TEST_IDS.mainBodyKey,
 				activeModeId: "browse",
 				generation: wb.generation,
 			};
-			const main = getDeclarativeWindowBodyFactory(TEST_IDS.mainBodyKey)?.(ctx);
+			const main = getWindowBodyFactory(TEST_IDS.mainBodyKey)?.(ctx);
 			expect(main?.type).toBe("scene3d");
 		});
 	});

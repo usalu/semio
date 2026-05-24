@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/geometry-spatial-react` (R3F spatial surfaces and panels). */
+/** @emoji 🧪 Vitest for `@elements/spatial-react` (R3F spatial surfaces and panels). */
 export default defineConfig({
 	root,
 	resolve: {
@@ -12,7 +12,7 @@ export default defineConfig({
 			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
 			"@elements/framework-react": resolve(root, "../../../framework/renderer/react/index.tsx"),
 			"@elements/ui": resolve(root, "../../core/index.tsx"),
-			"@elements/geometry-spatial-js": resolve(root, "../js/index.ts"),
+			"@elements/spatial-js": resolve(root, "../js/index.ts"),
 		},
 	},
 	test: {

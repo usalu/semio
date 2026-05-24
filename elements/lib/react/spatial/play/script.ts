@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@elements/geometry-spatial-play` task router — `bun ./script.ts <dev|build|test> [args…]`. */
+/** @emoji 🧭 `@elements/spatial-play` task router — `bun ./script.ts <dev|build|test> [args…]`. */
 import { execFileSync, spawn } from "node:child_process";
 
 const cwd = import.meta.dir;

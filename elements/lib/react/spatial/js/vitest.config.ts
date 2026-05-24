@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/geometry-spatial-js` (imperative brep kernel and topologic fixture). */
+/** @emoji 🧪 Vitest for `@elements/spatial-js` (imperative brep kernel and topologic fixture). */
 export default defineConfig({
 	root,
 	test: {
