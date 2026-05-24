@@ -31,7 +31,7 @@ function PlayApp() {
 
 	useEffect(() => {
 		console.log("[DEBUG] snapshot", snapshot.state, snapshot.revision, snapshot.capabilities);
-	}, [snapshot.state, snapshot.revision, snapshot.capabilities]);
+	}, [snapshot]);
 
 	const onGroundPick = useCallback(
 		(p: Vec3) => {

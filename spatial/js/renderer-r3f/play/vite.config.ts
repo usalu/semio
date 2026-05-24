@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const dir = dirname(fileURLToPath(import.meta.url));
+const coreEntry = resolve(dir, "../../core/index.ts");
+const kernelEntry = resolve(dir, "../../kernel-brepjs/index.ts");
 
 export default defineConfig({
 	root: dir,
@@ -11,8 +13,8 @@ export default defineConfig({
 	plugins: [react()],
 	resolve: {
 		alias: {
-			"@spatial/js-core": resolve(dir, "../core/index.ts"),
-			"@spatial/js-kernel-brepjs": resolve(dir, "../kernel-brepjs/index.ts"),
+			"@spatial/js-core": coreEntry,
+			"@spatial/js-kernel-brepjs": kernelEntry,
 		},
 	},
 });

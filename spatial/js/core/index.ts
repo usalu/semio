@@ -774,6 +774,7 @@ export class FactoryRuntime {
 	private readonly listeners = new Set<() => void>();
 	private readonly snapStack: { state: string; context: string }[] = [];
 	private committedCell: CellRef | null = null;
+	private snapshotCache: FactorySnapshot | null = null;
 
 	constructor(
 		private readonly spec: FactorySpec,
@@ -804,10 +805,11 @@ export class FactoryRuntime {
 	}
 
 	getSnapshot(): FactorySnapshot {
+		if (this.snapshotCache) return this.snapshotCache;
 		const ctx = this.sm.getContext();
 		const st = this.sm.getState();
 		const display = resolveDisplay(this.spec, st, ctx);
-		return {
+		this.snapshotCache = {
 			factoryId: this.spec.id,
 			state: st,
 			revision: this.revision,
@@ -821,6 +823,7 @@ export class FactoryRuntime {
 			},
 			diagnostics: [],
 		};
+		return this.snapshotCache;
 	}
 
 	subscribe(fn: () => void): () => void {
@@ -830,6 +833,7 @@ export class FactoryRuntime {
 
 	private emit(): void {
 		this.revision += 1;
+		this.snapshotCache = null;
 		for (const l of this.listeners) l();
 	}
 
