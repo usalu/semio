@@ -551,7 +551,11 @@ export function FactoryInteractionGeometryLayer({
 	readonly onPointerMove?: (point: Vec3, event: FactoryEvent) => void;
 	readonly pointerMoveEnabled?: boolean;
 }): ReactNode {
-	const targets = useMemo(() => createFactoryInteractionTargets(geometry), [geometry]);
+	const topoRevision =
+		geometry && typeof geometry === "object" && "revision" in geometry
+			? Number((geometry as { revision?: unknown }).revision)
+			: 0;
+	const targets = useMemo(() => createFactoryInteractionTargets(geometry), [geometry, topoRevision]);
 	return (
 		<group>
 			{targets.map((target) => (

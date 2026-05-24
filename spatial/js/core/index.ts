@@ -506,6 +506,51 @@ export interface MeshPreview {
 	readonly normals?: Float32Array;
 }
 
+/** @emoji 🧱 Appends a tessellated commit as one mesh `face` on `TopologyGraph` (in-memory scene growth). */
+export function appendCommittedMeshFaceToTopology(topo: TopologyGraph, mesh: MeshPreview, idTag: string): void {
+	const pos = mesh.positions;
+	const ind = mesh.indices;
+	if (ind.length < 3 || pos.length < 9) return;
+	const verts: Vec3[] = [];
+	for (let k = 0; k < pos.length; k += 3) {
+		verts.push([pos[k]!, pos[k + 1]!, pos[k + 2]!]);
+	}
+	const tris: [number, number, number][] = [];
+	for (let k = 0; k < ind.length; k += 3) {
+		tris.push([ind[k]!, ind[k + 1]!, ind[k + 2]!]);
+	}
+	const i0 = ind[0]!;
+	const i1 = ind[1]!;
+	const i2 = ind[2]!;
+	const a = [pos[i0 * 3]!, pos[i0 * 3 + 1]!, pos[i0 * 3 + 2]!] as Vec3;
+	const b = [pos[i1 * 3]!, pos[i1 * 3 + 1]!, pos[i1 * 3 + 2]!] as Vec3;
+	const c = [pos[i2 * 3]!, pos[i2 * 3 + 1]!, pos[i2 * 3 + 2]!] as Vec3;
+	const ctr: Vec3 = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3];
+	const eps = 0.04;
+	const pfx = `cm-${idTag}`;
+	const v0 = `${pfx}-w0` as VertexRef;
+	const v1 = `${pfx}-w1` as VertexRef;
+	const v2 = `${pfx}-w2` as VertexRef;
+	topo.vertices[v0] = { id: v0, position: [ctr[0] + eps, ctr[1], ctr[2]] };
+	topo.vertices[v1] = { id: v1, position: [ctr[0], ctr[1] + eps, ctr[2]] };
+	topo.vertices[v2] = { id: v2, position: [ctr[0], ctr[1], ctr[2] + eps] };
+	const e0 = `${pfx}-e0` as EdgeRef;
+	const e1 = `${pfx}-e1` as EdgeRef;
+	const e2 = `${pfx}-e2` as EdgeRef;
+	topo.edges[e0] = { id: e0, vertexA: v0, vertexB: v1, curve: { kind: "line", controls: [] } };
+	topo.edges[e1] = { id: e1, vertexA: v1, vertexB: v2, curve: { kind: "line", controls: [] } };
+	topo.edges[e2] = { id: e2, vertexA: v2, vertexB: v0, curve: { kind: "line", controls: [] } };
+	const wireId = `${pfx}-wire` as WireRef;
+	topo.wires[wireId] = { id: wireId, edgeIds: [e0, e1, e2], closed: true };
+	const faceId = `${pfx}-face` as FaceRef;
+	topo.faces[faceId] = {
+		id: faceId,
+		outerWireId: wireId,
+		surface: { kind: "mesh", vertices: verts, triangles: tris },
+	};
+	topo.bump();
+}
+
 /** @emoji 🔌 Kernel capability surface executed by factory commits. */
 export interface KernelAdapter {
 	readonly id: string;
@@ -632,7 +677,7 @@ export interface FactorySpatialInteractionResolved {
 /** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `FactorySpatialView`. */
 export function mergeSpatialInteraction(spec: FactorySpec): FactorySpatialInteractionResolved {
 	const i = spec.interaction;
-	const basePickDisabled = ["idle", "ready", "committed", "cancelled"] as const;
+	const basePickDisabled = ["idle", "ready", "committed"] as const;
 	return {
 		spatialGroundPick: Boolean(i?.spatialGroundPick),
 		pickDisabledStates: i?.pickDisabledStates ?? [...basePickDisabled],
@@ -848,7 +893,12 @@ export class StatechartRuntime {
 			for (const a of tr.actions ?? []) {
 				await applyActionAsync(a, this.context, event, kernel);
 			}
-			if (tr.target) this.state = tr.target;
+			if (tr.target) {
+				this.state = tr.target;
+				if (tr.target === this.spec.machine.initial) {
+					for (const k of Object.keys(this.context)) delete this.context[k];
+				}
+			}
 			return { ok: true, transient: Boolean(tr.transient) };
 		}
 		return { ok: false };
@@ -1024,7 +1074,7 @@ export class FactoryRuntime {
 			spatialInteraction,
 			capabilities: {
 				canCommit: this.canCommit(),
-				canCancel: st !== "committed" && st !== "cancelled",
+				canCancel: st !== "committed",
 				canUndo: this.snapStack.length > 0,
 				canRedo: false,
 			},
@@ -1072,7 +1122,7 @@ export class FactoryRuntime {
 	/** @emoji 🏭 Executes `commit.operation` against `kernel` and records a `DocumentCommand`. */
 	async commit(): Promise<CellRef | null> {
 		const st = this.sm.getState();
-		if (st === "committed" || st === "cancelled") return null;
+		if (st === "committed") return null;
 		if (!this.canCommit()) return null;
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
@@ -1096,6 +1146,12 @@ export class FactoryRuntime {
 			});
 		}
 		this.committedCell = cell;
+		if (cell) {
+			const preview = await this.opts.kernel.tessellate(cell, 1e-3);
+			if (preview.indices.length >= 3) {
+				appendCommittedMeshFaceToTopology(this.opts.document.topology, preview, `f${this.spec.id}-${this.revision}`);
+			}
+		}
 		const hist = this.opts.history;
 		if (hist && cell) {
 			const id = `cmd-${this.revision}`;
@@ -1215,6 +1271,19 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("@spatial/js-core topology commit mesh", () => {
+		it("appendCommittedMeshFaceToTopology adds one mesh face from a triangle mesh", () => {
+			const g = new TopologyGraph();
+			const mesh = {
+				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				indices: new Uint32Array([0, 1, 2]),
+			};
+			appendCommittedMeshFaceToTopology(g, mesh, "t0");
+			expect(Object.keys(g.faces).length).toBe(1);
+			expect(g.revision).toBeGreaterThan(0);
+		});
+	});
+
 	describe("@spatial/js-core factory presets", () => {
 		it("lists stable keys for each built-in factory preset", () => {
 			const ps = listSpatialFactoryPresets();
@@ -1227,6 +1296,7 @@ if (import.meta.vitest) {
 			expect(resolveSpatialFactoryPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
 		});
 	});
+	describe("@spatial/js-core factory box", () => {
 		it("tracks first-corner cursor on the grid after start", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";

@@ -9,7 +9,6 @@
       "idle",
       "ready",
       "committed",
-      "cancelled",
       "first_corner_length_prompt"
     ],
     "groundPointerMoveStates": [
@@ -70,7 +69,7 @@
     "boxModeCenter": { "==": [{ "path": "boxMode" }, "center"] }
   },
   "history": {
-    "excludeEvents": ["pointer.move"]
+    "excludeEvents": ["pointer.move", "confirm"]
   },
   "machine": {
     "initial": "idle",
@@ -162,7 +161,7 @@
               ]
             }
           ],
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_other_or_length": {
@@ -180,7 +179,7 @@
           },
           "mode.cube": { "target": "cube_other_corner", "key": "u", "label": "Cube" },
           "mode.length": { "target": "first_corner_length_prompt", "key": "l", "label": "Length" },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_length_prompt": {
@@ -194,7 +193,7 @@
               { "op": "assign", "path": "height", "value": 0.25 }
             ]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "diagonal_rubber": {
@@ -216,7 +215,7 @@
             "label": "Cube",
             "actions": [{ "op": "clear", "path": "corner" }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "cube_diagonal_rubber": {
@@ -229,7 +228,7 @@
             "target": "ready",
             "actions": [{ "op": "box.aabbFromDiagonalCorners" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "three_point_edge": {
@@ -245,7 +244,7 @@
               { "op": "clear", "path": "cursor" }
             ]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "three_point_width": {
@@ -258,7 +257,7 @@
             "target": "first_corner_height",
             "actions": [{ "op": "box.tripletCommit" }, { "op": "assign", "path": "height", "value": 0.25 }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "vertical_end": {
@@ -268,7 +267,7 @@
             "actions": [{ "op": "box.peakFromOriginZ" }]
           },
           "pointer.down": { "target": "vertical_width" },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "vertical_width": {
@@ -281,7 +280,7 @@
             "target": "first_corner_height",
             "actions": [{ "op": "box.verticalFinalizeFootprint" }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "center_corner": {
@@ -295,7 +294,7 @@
             "actions": [{ "op": "box.rubberCornerFromCenter" }, { "op": "assign", "path": "height", "value": 0.25 }]
           },
           "mode.cube": { "target": "cube_center_corner", "key": "u", "label": "Cube" },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "cube_center_corner": {
@@ -308,7 +307,7 @@
             "target": "ready",
             "actions": [{ "op": "box.rubberSquareFromCenter" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "cube_other_corner": {
@@ -321,7 +320,7 @@
             "target": "ready",
             "actions": [{ "op": "box.snapSquareFootprint" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_height": {
@@ -359,7 +358,7 @@
             "key": "Enter",
             "label": "Accept height"
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
       "ready": {
@@ -370,11 +369,10 @@
             "key": "f",
             "label": "Finalize"
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
         }
       },
-      "committed": { "final": true },
-      "cancelled": { "final": true }
+      "committed": { "final": true }
     }
   },
   "display": {

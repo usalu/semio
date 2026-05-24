@@ -12,6 +12,7 @@ import {
 	type FactoryKeybindRow,
 	type FactoryRuntime,
 	type FactorySpec,
+	type ModelDocument,
 	TopologyGraph,
 	type Vec3,
 } from "@spatial/js-core";
@@ -19,7 +20,7 @@ import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json
 import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
 import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
-import { FactoryCanvas, FactorySpatialView, useFactorySnapshot, type MeshPreview } from "../index.tsx";
+import { FactoryCanvas, FactorySpatialView, useFactorySnapshot } from "../index.tsx";
 
 //#region 🔖GeometryCatalog
 const GEOMETRY_ASSETS = [
@@ -134,7 +135,7 @@ interface PlaySessionProps {
 	readonly factoryId: string;
 	readonly spec: FactorySpec;
 	readonly onFactoryId: (id: string) => void;
-	readonly interactionTopo: TopologyGraph;
+	readonly documentModel: ModelDocument;
 	readonly geometryAssetId: string;
 	readonly onGeometryAssetId: (id: string) => void;
 }
@@ -144,18 +145,16 @@ function PlaySession({
 	factoryId,
 	spec,
 	onFactoryId,
-	interactionTopo,
+	documentModel,
 	geometryAssetId,
 	onGeometryAssetId,
 }: PlaySessionProps) {
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const documentModel = useMemo(() => ({ topology: new TopologyGraph(), nodes: [] }), []);
 	const rt = useMemo<FactoryRuntime>(
 		() => createFactoryRuntime(spec, { kernel, document: documentModel }),
 		[spec, kernel, documentModel],
 	);
 	const snapshot = useFactorySnapshot(rt);
-	const [committedMesh, setCommittedMesh] = useState<MeshPreview | null>(null);
 	const [lastCell, setLastCell] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
 	const [suggestOpen, setSuggestOpen] = useState(true);
@@ -170,18 +169,16 @@ function PlaySession({
 		const cell = await rt.commit();
 		setLastCell(cell);
 		if (cell) {
-			const m = await kernel.tessellate(cell, 1e-3);
-			setCommittedMesh(m);
-			console.log("[DEBUG] committed cell", cell, "triangles", m.indices.length / 3);
+			console.log("[DEBUG] committed cell", cell, "topology revision", documentModel.topology.revision);
 		}
-	}, [rt, kernel]);
+	}, [rt, documentModel.topology]);
 
 	const dispatchTransition = useCallback(
 		(row: FactoryKeybindRow) => {
-			const ev = buildDispatchEvent(row, { factoryId: spec.id, topo: interactionTopo });
+			const ev = buildDispatchEvent(row, { factoryId: spec.id, topo: documentModel.topology });
 			if (ev) void rt.send(ev);
 		},
-		[rt, spec.id, interactionTopo],
+		[rt, spec.id, documentModel.topology],
 	);
 
 	const allSuggestions = useMemo((): PlaySuggestion[] => {
@@ -255,7 +252,7 @@ function PlaySession({
 			if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") {
 				continue;
 			}
-			if (row.key.toLowerCase() === raw.toLowerCase() || row.eventKind.toLowerCase() === raw.toLowerCase()) {
+			if (row.key === raw || row.key.toLowerCase() === raw.toLowerCase() || row.eventKind.toLowerCase() === raw.toLowerCase()) {
 				dispatchTransition(row);
 				setCmdLine("");
 				return true;
@@ -313,7 +310,7 @@ function PlaySession({
 				return;
 			}
 		},
-		[filtered, activeIndex, suggestOpen, runSuggestion, trySubmitLine],
+		[filtered, activeIndex, runSuggestion, trySubmitLine],
 	);
 
 	useEffect(() => {
@@ -379,8 +376,7 @@ function PlaySession({
 						onGroundPick={onGroundPick}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
-						committedMesh={committedMesh}
-						geometry={interactionTopo}
+						geometry={documentModel.topology}
 					/>
 				</FactoryCanvas>
 			</div>
@@ -519,6 +515,11 @@ function PlayApp() {
 		return parseTopologyGraphJson(asset.json) ?? new TopologyGraph();
 	}, [geometryAssetId]);
 
+	const documentModel = useMemo((): ModelDocument => {
+		const topo = TopologyGraph.fromJSON(interactionTopo.toJSON());
+		return { topology: topo, nodes: [] };
+	}, [interactionTopo]);
+
 	useEffect(() => {
 		if (!factoryId && presets[0]) setFactoryId(presets[0].id);
 	}, [factoryId, presets]);
@@ -544,7 +545,7 @@ function PlayApp() {
 			factoryId={factoryId}
 			spec={spec}
 			onFactoryId={setFactoryId}
-			interactionTopo={interactionTopo}
+			documentModel={documentModel}
 			geometryAssetId={geometryAssetId}
 			onGeometryAssetId={setGeometryAssetId}
 		/>

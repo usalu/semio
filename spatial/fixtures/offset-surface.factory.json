@@ -5,7 +5,7 @@
   "label": "Offset Surface",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": ["idle", "selectSurface", "setDistance", "committed", "cancelled"],
+    "pickDisabledStates": ["idle", "selectSurface", "setDistance", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -28,7 +28,7 @@
     }
   },
   "history": {
-    "excludeEvents": ["pointer.move"]
+    "excludeEvents": ["pointer.move", "confirm"]
   },
   "machine": {
     "initial": "selectSurface",
@@ -49,7 +49,7 @@
               }
             ]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "selectSurface", "key": "x", "label": "Cancel" }
         }
       },
       "setDistance": {
@@ -65,11 +65,10 @@
             "key": "Enter",
             "label": "Commit offset"
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "selectSurface", "key": "x", "label": "Cancel" }
         }
       },
-      "committed": { "final": true },
-      "cancelled": { "final": true }
+      "committed": { "final": true }
     }
   },
   "display": {

@@ -5,7 +5,7 @@
   "label": "Extrude Wire",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": ["idle", "selectWire", "setDistance", "committed", "cancelled"],
+    "pickDisabledStates": ["idle", "selectWire", "setDistance", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -27,7 +27,7 @@
     }
   },
   "history": {
-    "excludeEvents": ["pointer.move"]
+    "excludeEvents": ["pointer.move", "confirm"]
   },
   "machine": {
     "initial": "selectWire",
@@ -40,7 +40,7 @@
             "label": "Pick wire",
             "actions": [{ "op": "assign", "path": "wireId", "value": { "$event": "wireId" } }]
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "selectWire", "key": "x", "label": "Cancel" }
         }
       },
       "setDistance": {
@@ -56,11 +56,10 @@
             "key": "Enter",
             "label": "Commit extrude"
           },
-          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
+          "cancel": { "target": "selectWire", "key": "x", "label": "Cancel" }
         }
       },
-      "committed": { "final": true },
-      "cancelled": { "final": true }
+      "committed": { "final": true }
     }
   },
   "display": {
