@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/vite.config.ts — Vite dev/build for the board multi-pane play harness.
+// 💻 elements/lib/react/board/play/vite.config.ts — Vite dev/build for the board multi-pane play harness.
 // #endregion 🧲Header
 
 import tailwindcss from "@tailwindcss/vite";
@@ -9,25 +9,28 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "../../../../../..");
+const repoRoot = path.resolve(__dirname, "../../../../../");
 
 export default defineConfig({
-  root: __dirname,
-  plugins: [tailwindcss(), react()],
-  build: {
-    target: "esnext",
-  },
-  resolve: {
-    alias: {
-      "@elements/ui": path.resolve(__dirname, "../../../index.tsx"),
-    },
-  },
-  server: {
-    fs: {
-      allow: [repoRoot],
-    },
-    watch: {
-      ignored: ["../rs/**"],
-    },
-  },
+	root: __dirname,
+	plugins: [tailwindcss(), react()],
+	build: {
+		target: "esnext",
+	},
+	resolve: {
+		alias: {
+			"@elements/ui": path.resolve(__dirname, "../../core/index.tsx"),
+			"@elements/framework": path.resolve(__dirname, "../../../framework/core/index.ts"),
+			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
+			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/workbench-bridge.tsx"),
+		},
+	},
+	server: {
+		fs: {
+			allow: [repoRoot],
+		},
+		watch: {
+			ignored: ["../rs/**"],
+		},
+	},
 });

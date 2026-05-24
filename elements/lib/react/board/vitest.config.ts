@@ -7,6 +7,14 @@ const root = dirname(fileURLToPath(import.meta.url));
 /** @emoji 🧪 Vitest entry for `@elements/board` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
+	resolve: {
+		alias: {
+			"@elements/framework": `${root}/../../../framework/core/index.ts`,
+			"@elements/framework-react": `${root}/../../../framework/renderer/react/index.tsx`,
+			"@elements/framework-react/workbench": `${root}/../../../framework/renderer/react/workbench-bridge.tsx`,
+			"@elements/ui": `${root}/../core/index.tsx`,
+		},
+	},
 	test: {
 		mode: "test",
 		environment: "jsdom",

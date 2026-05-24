@@ -5,9 +5,10 @@
 import {
 	CommandBus,
 	Controller,
+	registerDeclarativeSidePanelBody,
+	registerDeclarativeWindowBody,
 	ShellExtension,
-	ShellExtensionContext,
-	ShellExtensionHost,
+	type ShellExtensionContext,
 	type ShellExtensionManifest,
 	Workbench,
 	WorkbenchApp,
@@ -233,6 +234,16 @@ export function buildBoardPlayWorkbenchApp(controller: BoardPlayShellController)
 	return app;
 }
 
+/** @emoji 📝 Registers board play declarative window + side-panel bodies on the framework host. */
+export function registerBoardPlayDeclarativeBodies(): void {
+	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+	registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
+	registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
+	registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
+}
+
 //#region 🔖Extension
 export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
 	id: "elements.board-play",
@@ -266,23 +277,16 @@ export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
 export const boardPlayExtension: ShellExtension = {
 	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
 	activate(context: ShellExtensionContext): void {
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
+		registerBoardPlayDeclarativeBodies();
 	},
 };
 
-/** @emoji 🚀 Creates a {@link Workbench} with the board play extension activated. */
+/** @emoji 🚀 Creates a {@link Workbench} with board play app + declarative bodies registered. */
 export function bootstrapBoardPlayWorkbench(): Workbench {
+	registerBoardPlayDeclarativeBodies();
 	const wb = new Workbench();
 	const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
 	wb.addApp(buildBoardPlayWorkbenchApp(ctrl));
-	const host = new ShellExtensionHost(wb);
-	host.register(BOARD_PLAY_EXTENSION_MANIFEST, boardPlayExtension);
-	void host.activateAll((controllerId) => (controllerId === BOARD_PLAY_CONTROLLER_ID ? ctrl : undefined));
 	return wb;
 }
 //#endregion 🔖Extension

@@ -233,6 +233,18 @@ export interface RegisterPlaygroundDeclarativeBodiesOptions {
 	readonly buildDetailsPanel?: (ctx: ShellSidePanelBodyViewContext) => UiNode;
 }
 
+export interface PlaygroundSidePanelBodyRegistration {
+	readonly bodyKey: string;
+	readonly build: (ctx: ShellSidePanelBodyViewContext) => UiNode;
+}
+
+/** @emoji 📝 Registers multiple side-panel declarative trees. */
+export function registerPlaygroundSidePanelBodies(tabs: readonly PlaygroundSidePanelBodyRegistration[]): void {
+	for (const tab of tabs) {
+		registerDeclarativeSidePanelBody(tab.bodyKey, tab.build);
+	}
+}
+
 /** @emoji 📝 Registers playground window + side-panel declarative trees on the framework host. */
 export function registerPlaygroundDeclarativeBodies(ids: PlaygroundIds, options?: RegisterPlaygroundDeclarativeBodiesOptions): void {
 	registerDeclarativeWindowBody(ids.mainBodyKey, options?.buildMainWindow ?? ((ctx) => buildPlaygroundMainWindowBody(ids, ctx)));

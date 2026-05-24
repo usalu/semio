@@ -22,17 +22,9 @@ import {
   ToolbarZone,
   Tree,
   TreeStateProvider,
-  Controller,
   NativeDragAndDropController,
   PointerDragController,
   PureSidePanelTabDefinition,
-  Workbench,
-  WorkbenchView,
-  createWindowLayout,
-  getLevelBgClass,
-  mountReactApp,
-  registerDeclarativeWindowBody,
-  registerUiBoardSurfaceHost,
   StaticTreePanelDefinition,
   useElementsSurfaceChrome,
   type ContextMenuItem,
@@ -40,9 +32,15 @@ import {
   type ElementsSurfaceTheme,
   type FooterItem,
   type TreeDataSection,
-  type UIWindowLayout,
 } from "@elements/ui";
-import type { UiBoardHostSurfaceNode } from "@elements/framework";
+import { Expertise, type UiBoardHostSurfaceNode } from "@elements/framework";
+import { registerUiBoardSurfaceHost } from "@elements/framework-react";
+import {
+  getLevelBgClass,
+  LevelProvider,
+  mountReactApp,
+  WorkbenchView,
+} from "@elements/framework-react/workbench";
 import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
   createContext,
@@ -111,11 +109,7 @@ import {
   BOARD_PLAY_BODY_KEY_SELECTION,
   BOARD_PLAY_BOARD_SURFACE_ID,
   BOARD_PLAY_CONTROLLER_ID,
-  BoardPlayShellController,
-  attachBoardPlayWindowKinds,
-  buildBoardPlayDetailDeclarativeBody,
-  buildBoardPlayOverviewDeclarativeBody,
-  buildBoardPlaySelectionDeclarativeBody,
+  bootstrapBoardPlayWorkbench,
   type BoardPlayPaneId,
 } from "./play/index.ts";
 import "./play/globals.css";
@@ -981,9 +975,6 @@ function registerBoardPlayChrome(): void {
   if (boardPlayChromeRegistered) return;
   boardPlayChromeRegistered = true;
   registerUiBoardSurfaceHost(BOARD_PLAY_BOARD_SURFACE_ID, BoardPlayBoardSurfaceHost);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-  registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
 }
 // #endregion 🔖Panes
 
@@ -1746,30 +1737,6 @@ function createBoardSelectionInspectorSections(): TreeDataSection[] {
 }
 // #endregion 🔖SidePanels
 
-// #region 🔖Layout
-const boardPlayLayout: UIWindowLayout = {
-  root: {
-    kind: "row",
-    children: [
-      {
-        kind: "stack",
-        size: 50,
-        children: [createWindowLayout("board-overview", "Overview")],
-      },
-      {
-        kind: "column",
-        size: 50,
-        children: [
-          { kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
-          { kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
-        ],
-      },
-	],
-  },
-};
-
-// #endregion 🔖Layout
-
 // #region 🔖Surface
 function BoardPlaySurfaceFooter(props: {
   theme: ElementsSurfaceTheme;
@@ -1863,16 +1830,13 @@ function BoardPlayInner(): ReactElement {
   const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("default");
   const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
   const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
-  const boardWorkbenchRef = useRef<Workbench | null>(null);
+  const boardWorkbenchRef = useRef<ReturnType<typeof bootstrapBoardPlayWorkbench> | null>(null);
   if (!boardWorkbenchRef.current) {
     registerBoardPlayChrome();
-    const wb = new Workbench();
-    const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
-    wb.addApp(attachBoardPlayWindowKinds(ctrl, boardPlayLayout));
-    boardWorkbenchRef.current = wb;
+    boardWorkbenchRef.current = bootstrapBoardPlayWorkbench();
   }
   const boardWorkbench = boardWorkbenchRef.current;
-  const boardShellController = boardWorkbench.getActiveApp()?.controller as BoardPlayShellController | undefined;
+  const boardShellController = boardWorkbench.getActiveApp()?.controller;
   const shellGeneration = useSyncExternalStore(
     (onStoreChange) => boardWorkbench.subscribe(onStoreChange),
     () => boardWorkbench.generation,
