@@ -1,8 +1,8 @@
 {
   "title": "Elements UI Class Abstraction",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + semio algorithm shell; remove AppConfig/PureAppDefinition.",
-  "summary": "Renamed shell class WindowKind → WorkbenchWindowKind (enum conflict). Extended WorkbenchView with resolvedWindowKindsOverride, slotToolbar, extraFooterItems, augmentPanelTabs. Migrated geometry (GeometryPlayShellController + bootstrap), board/scene/topology to Workbench + mountReactApp entrypoints. Storybook UI.stories rewritten for Workbench. Vitest @elements/ui: 46 passed. Out of scope this pass: semio sketchpad + rendering AlgorithmApp still on legacy UIAppConfig path; rename sketchpad-local AppConfig if desired.",
+  "summary": "Consolidated the detached UI protocol into elements/core/index.ts so @elements/ui-shell has a single library entry, removed the split ui-protocol module, fixed current elements workspace metadata and Nx script routing for the core/react packages, refreshed Bun workspace links, and added a React renderer test for detached declarative UI nodes. Verified with bun nx run @elements/ui-shell:test and bun nx run @elements/ui:test.",
   "goal": "🎯elements🎯uibundle"
 }
