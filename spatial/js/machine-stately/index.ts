@@ -11,7 +11,6 @@ import {
 	buildDistanceCommandSpec,
 	cellRef,
 	createCommandRuntime,
-	expandMachineTransitions,
 	isEmptyTopologyDiff,
 	listSpatialCommandPresets,
 	loadSpatialCommandPreset,
@@ -50,17 +49,17 @@ function buildStatelyMachine(spec: CommandSpec, initial: string) {
 			};
 		}
 	> = {};
-	for (const sId of Object.keys(spec.machine.states)) {
-		const st = spec.machine.states[sId]!;
+	for (const st of spec.machine.states) {
+		const sId = st.name;
 		const rows: { guard: (args: { event: StatelyAdvance }) => boolean; target: string }[] = [];
 		if (st.on) {
-			for (const [eventKind, raw] of Object.entries(st.on)) {
-				const choices = expandMachineTransitions(raw);
+			for (const h of st.on) {
+				const choices = h.transitions;
 				for (let i = 0; i < choices.length; i++) {
 					const tr = choices[i]!;
 					const tgt = (tr.target ?? sId) as string;
 					rows.push({
-						guard: ({ event }) => event.commandKind === eventKind && event.branch === i,
+						guard: ({ event }) => event.commandKind === h.event && event.branch === i,
 						target: tgt,
 					});
 				}
@@ -121,17 +120,17 @@ export interface SpatialStatelyMachineCatalogView {
 /** @emoji 📊 Collects flat transition rows from `CommandSpec.machine` (same order as `StatelyStateEngine`). */
 export function collectSpatialStatelyMachineTransitions(spec: CommandSpec): readonly SpatialStatelyMachineTransitionView[] {
 	const out: SpatialStatelyMachineTransitionView[] = [];
-	for (const [from, st] of Object.entries(spec.machine.states)) {
+	for (const st of spec.machine.states) {
+		const from = st.name;
 		if (!st.on) continue;
-		for (const [eventKind, raw] of Object.entries(st.on)) {
-			const choices = expandMachineTransitions(raw);
-			for (let i = 0; i < choices.length; i++) {
-				const tr = choices[i]!;
+		for (const h of st.on) {
+			for (let i = 0; i < h.transitions.length; i++) {
+				const tr = h.transitions[i]!;
 				const to = (tr.target ?? from) as string;
 				out.push({
 					from,
 					to,
-					on: eventKind,
+					on: h.event,
 					branch: i,
 					guard: tr.guard ?? null,
 					transient: Boolean(tr.transient),
@@ -145,11 +144,10 @@ export function collectSpatialStatelyMachineTransitions(spec: CommandSpec): read
 }
 
 function buildSpatialStatelyStateViews(spec: CommandSpec): SpatialStatelyMachineStateView[] {
-	return Object.keys(spec.machine.states).map((id) => {
-		const st = spec.machine.states[id]!;
+	return spec.machine.states.map((st) => {
 		const acc = st.selection?.accept;
 		return {
-			id,
+			id: st.name,
 			final: Boolean(st.final),
 			...(acc && acc.length ? { selectionAccept: [...acc] } : {}),
 		};

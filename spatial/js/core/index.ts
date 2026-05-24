@@ -694,14 +694,26 @@ export interface ClusterRecord {
 export interface TopologyGraphJson {
 	readonly schema: "spatial.topology/v1";
 	readonly revision: number;
-	readonly vertices: Record<string, VertexRecord>;
-	readonly edges: Record<string, EdgeRecord>;
-	readonly wires: Record<string, WireRecord>;
-	readonly faces: Record<string, FaceRecord>;
-	readonly shells: Record<string, ShellRecord>;
-	readonly cells: Record<string, CellRecord>;
-	readonly cellComplexes: Record<string, CellComplexRecord>;
-	readonly clusters: Record<string, ClusterRecord>;
+	readonly vertices: readonly VertexRecord[];
+	readonly edges: readonly EdgeRecord[];
+	readonly wires: readonly WireRecord[];
+	readonly faces: readonly FaceRecord[];
+	readonly shells: readonly ShellRecord[];
+	readonly cells: readonly CellRecord[];
+	readonly cellComplexes: readonly CellComplexRecord[];
+	readonly clusters: readonly ClusterRecord[];
+}
+
+function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
+	const o: Record<string, T> = {};
+	for (const x of xs) o[x.id] = x;
+	return o;
+}
+
+function sortedRecordValues<T extends { id: string }>(bucket: Record<string, T>): T[] {
+	return Object.keys(bucket)
+		.sort()
+		.map((k) => bucket[k]!);
 }
 
 /** @emoji 🧱 Mutable in-memory topology graph with revision counter. */
@@ -716,19 +728,19 @@ export class TopologyGraph {
 	cellComplexes: Record<string, CellComplexRecord> = {};
 	clusters: Record<string, ClusterRecord> = {};
 
-	/** @emoji 🧭 Serializes to `TopologyGraphJson`. */
+	/** @emoji 🧭 Serializes to `TopologyGraphJson` (stable id-sorted arrays). */
 	toJSON(): TopologyGraphJson {
 		return {
 			schema: "spatial.topology/v1",
 			revision: this.revision,
-			vertices: { ...this.vertices },
-			edges: { ...this.edges },
-			wires: { ...this.wires },
-			faces: { ...this.faces },
-			shells: { ...this.shells },
-			cells: { ...this.cells },
-			cellComplexes: { ...this.cellComplexes },
-			clusters: { ...this.clusters },
+			vertices: sortedRecordValues(this.vertices),
+			edges: sortedRecordValues(this.edges),
+			wires: sortedRecordValues(this.wires),
+			faces: sortedRecordValues(this.faces),
+			shells: sortedRecordValues(this.shells),
+			cells: sortedRecordValues(this.cells),
+			cellComplexes: sortedRecordValues(this.cellComplexes),
+			clusters: sortedRecordValues(this.clusters),
 		};
 	}
 
@@ -736,14 +748,14 @@ export class TopologyGraph {
 	static fromJSON(j: TopologyGraphJson): TopologyGraph {
 		const g = new TopologyGraph();
 		g.revision = j.revision;
-		g.vertices = { ...j.vertices };
-		g.edges = { ...j.edges };
-		g.wires = { ...j.wires };
-		g.faces = { ...j.faces };
-		g.shells = { ...j.shells };
-		g.cells = { ...j.cells };
-		g.cellComplexes = { ...j.cellComplexes };
-		g.clusters = { ...j.clusters };
+		g.vertices = recordsById(j.vertices);
+		g.edges = recordsById(j.edges);
+		g.wires = recordsById(j.wires);
+		g.faces = recordsById(j.faces);
+		g.shells = recordsById(j.shells);
+		g.cells = recordsById(j.cells);
+		g.cellComplexes = recordsById(j.cellComplexes);
+		g.clusters = recordsById(j.clusters);
 		return g;
 	}
 
@@ -757,6 +769,10 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
 	if (r.schema !== "spatial.topology/v1") return null;
+	const need = ["vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"] as const;
+	for (const k of need) {
+		if (!Array.isArray(r[k])) return null;
+	}
 	return TopologyGraph.fromJSON(raw as TopologyGraphJson);
 }
 // #endregion 🧱Topology
@@ -771,10 +787,10 @@ export type CellRecordDiff = { readonly id: CellRef } & Partial<Pick<CellRecord,
 export type CellComplexRecordDiff = { readonly id: CellComplexRef } & Partial<Pick<CellComplexRecord, "cellIds">>;
 export type ClusterRecordDiff = { readonly id: ClusterRef } & Partial<Pick<ClusterRecord, "memberIds">>;
 
-/** @emoji 🧮 Forward patch bucket for one topology table (`added` / `modified` / `removed`). */
+/** @emoji 🧮 Forward patch bucket for one topology table (`added` / `modified` / `removed` arrays). */
 export interface EntityDiff<TRec, TDiff, TId extends string> {
-	readonly added?: Readonly<Record<TId, TRec>>;
-	readonly modified?: Readonly<Record<TId, TDiff>>;
+	readonly added?: readonly TRec[];
+	readonly modified?: readonly TDiff[];
 	readonly removed?: readonly TId[];
 }
 
@@ -794,9 +810,9 @@ export const EMPTY_TOPOLOGY_DIFF: TopologyDiff = {};
 
 function isEntityDiffEmpty<TRec, TDiff, TId extends string>(e: EntityDiff<TRec, TDiff, TId> | undefined): boolean {
 	if (!e) return true;
-	const a = e.added ? Object.keys(e.added).length : 0;
-	const m = e.modified ? Object.keys(e.modified).length : 0;
-	const r = e.removed ? e.removed.length : 0;
+	const a = e.added?.length ?? 0;
+	const m = e.modified?.length ?? 0;
+	const r = e.removed?.length ?? 0;
 	return a === 0 && m === 0 && r === 0;
 }
 
@@ -829,20 +845,22 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
 		for (const id of section.removed) {
 			const cur = bucket[id];
 			if (!cur) continue;
-			if (!inverse.added) inverse.added = {} as Record<string, T>;
-			(inverse.added as Record<string, T>)[id] = cloneRec(cur);
+			if (!inverse.added) inverse.added = [];
+			(inverse.added as T[]).push(cloneRec(cur));
 			delete bucket[id];
 		}
 	}
 	if (section.added) {
-		for (const [id, rec] of Object.entries(section.added)) {
+		for (const rec of section.added) {
+			const id = rec.id;
 			bucket[id] = cloneRec(rec as T);
 			if (!inverse.removed) inverse.removed = [];
-			inverse.removed.push(id);
+			(inverse.removed as string[]).push(id);
 		}
 	}
 	if (section.modified) {
-		for (const [id, md] of Object.entries(section.modified)) {
+		for (const md of section.modified) {
+			const id = md.id;
 			const cur = bucket[id];
 			if (!cur) continue;
 			const back: Record<string, unknown> = { id };
@@ -853,8 +871,8 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
 				back[fk] = curO[fk];
 				curO[fk] = mdO[fk];
 			}
-			if (!inverse.modified) inverse.modified = {} as Record<string, TDiff>;
-			(inverse.modified as Record<string, TDiff>)[id] = back as TDiff;
+			if (!inverse.modified) inverse.modified = [];
+			(inverse.modified as TDiff[]).push(back as TDiff);
 		}
 	}
 }
@@ -895,14 +913,6 @@ export function meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): Topology
 	const pos = mesh.positions;
 	const ind = mesh.indices;
 	if (ind.length < 3 || pos.length < 9) return {};
-	const verts: Vec3[] = [];
-	for (let k = 0; k < pos.length; k += 3) {
-		verts.push([pos[k]!, pos[k + 1]!, pos[k + 2]!]);
-	}
-	const tris: [number, number, number][] = [];
-	for (let k = 0; k < ind.length; k += 3) {
-		tris.push([ind[k]!, ind[k + 1]!, ind[k + 2]!]);
-	}
 	const i0 = ind[0]!;
 	const i1 = ind[1]!;
 	const i2 = ind[2]!;
@@ -922,27 +932,22 @@ export function meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): Topology
 	const faceId = `${pfx}-face` as FaceRef;
 	return {
 		vertices: {
-			added: {
-				[v0]: { id: v0, position: [ctr[0] + eps, ctr[1], ctr[2]] },
-				[v1]: { id: v1, position: [ctr[0], ctr[1] + eps, ctr[2]] },
-				[v2]: { id: v2, position: [ctr[0], ctr[1], ctr[2] + eps] },
-			},
+			added: [
+				{ id: v0, position: [ctr[0] + eps, ctr[1], ctr[2]] },
+				{ id: v1, position: [ctr[0], ctr[1] + eps, ctr[2]] },
+				{ id: v2, position: [ctr[0], ctr[1], ctr[2] + eps] },
+			],
 		},
 		edges: {
-			added: {
-				[e0]: { id: e0, vertexIds: [v0, v1] },
-				[e1]: { id: e1, vertexIds: [v1, v2] },
-				[e2]: { id: e2, vertexIds: [v2, v0] },
-			},
+			added: [
+				{ id: e0, vertexIds: [v0, v1] },
+				{ id: e1, vertexIds: [v1, v2] },
+				{ id: e2, vertexIds: [v2, v0] },
+			],
 		},
-		wires: { added: { [wireId]: { id: wireId, edgeIds: [e0, e1, e2] } } },
+		wires: { added: [{ id: wireId, edgeIds: [e0, e1, e2] }] },
 		faces: {
-			added: {
-				[faceId]: {
-					id: faceId,
-					wireIds: [wireId],
-				},
-			},
+			added: [{ id: faceId, wireIds: [wireId] }],
 		},
 	};
 }
@@ -1073,35 +1078,196 @@ export interface StateEngineProvider {
 	create(spec: CommandSpec): StateEngine;
 }
 
-function resolveTemplate(value: unknown, env: ExprEnv): unknown {
-	if (!value || typeof value !== "object") return value;
-	const o = value as Record<string, unknown>;
-	if ("path" in o && typeof o.path === "string") return getPath(env.context, o.path);
-	if ("const" in o) return o.const;
-	if ("$event" in o && typeof o.$event === "string") return env.event ? getPath(env.event, o.$event) : undefined;
-	if ("let" in o && "in" in o) return evalExpr(o as Expr, env);
-	const binKeys = ["==", "!=", ">", "<", ">=", "<=", "+", "-", "*", "/", "all", "any", "not", "exists", "notEmpty", "abs", "distance"] as const;
-	for (const k of binKeys) {
-		if (k in o) return evalExpr(o as Expr, env);
-	}
-	if (Array.isArray(value)) {
-		return value.map((x) => resolveTemplate(x, env));
-	}
-	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(o)) {
-		out[k] = resolveTemplate(v, env);
-	}
-	return out;
+function lookupGuard(spec: CommandSpec, name: string): Expr | undefined {
+	return spec.guards?.find((g) => g.name === name)?.expr;
 }
 
-export function expandMachineTransitions(
-	raw: TransitionSpec | readonly TransitionSpec[] | undefined,
-): readonly TransitionSpec[] {
-	if (raw === undefined) return [];
-	return (Array.isArray(raw) ? raw : [raw]) as readonly TransitionSpec[];
+/** @emoji 🧮 Serializes `KernelQueryParams` into the loose record shape expected by `KernelAdapter.query`. */
+function kernelQueryParamsToRecord(p: KernelQueryParams, env: ExprEnv): Record<string, unknown> {
+	if (p.kind === "surface.resolveFaces") {
+		return { surfaceId: evalExpr(p.surfaceId, env) };
+	}
+	return {};
 }
 
-const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
+function applyBoxGeometryTransform(ctx: Record<string, unknown>, event: CommandEvent, transform: ActionSpec & { op: "box.transform" }): void {
+	const pt = (event as { point?: unknown }).point;
+	const P = isVec3(pt) ? pt : null;
+	const val = (event as { value?: unknown }).value;
+	const op = transform.transform;
+	if (op === "aabbFromDiagonalCorners") {
+		const a = ctx.diagA;
+		if (!isVec3(a) || !P) return;
+		const z = a[2];
+		ctx.origin = [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as unknown as Vec3;
+		ctx.corner = [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as unknown as Vec3;
+		delete ctx.diagA;
+		return;
+	}
+	if (op === "tripletRubber") {
+		const p0 = ctx.p0;
+		const p1 = ctx.p1;
+		if (!isVec3(p0) || !isVec3(p1) || !P) return;
+		const z = p0[2];
+		ctx.previewA = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		ctx.previewB = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		return;
+	}
+	if (op === "tripletCommit") {
+		const p0 = ctx.p0;
+		const p1 = ctx.p1;
+		if (!isVec3(p0) || !isVec3(p1) || !P) return;
+		const z = p0[2];
+		ctx.origin = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		ctx.corner = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		delete ctx.p0;
+		delete ctx.p1;
+		delete ctx.previewA;
+		delete ctx.previewB;
+		return;
+	}
+	if (op === "snapSquareFootprint") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		const dx = P[0] - o[0];
+		const dy = P[1] - o[1];
+		const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
+		const sx = dx >= 0 ? 1 : -1;
+		const sy = dy >= 0 ? 1 : -1;
+		ctx.corner = [o[0] + sx * s, o[1] + sy * s, o[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "setCubeHeightFromFootprint") {
+		const o = ctx.origin;
+		const c = ctx.corner;
+		if (!isVec3(o) || !isVec3(c)) return;
+		const dx = Math.abs(c[0] - o[0]);
+		const dy = Math.abs(c[1] - o[1]);
+		ctx.height = Math.max(dx, dy, 0.01);
+		return;
+	}
+	if (op === "rubberCornerFromCenter") {
+		const c = ctx.rectCenter;
+		if (!isVec3(c) || !P) return;
+		ctx.origin = [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
+		ctx.corner = [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "rubberSquareFromCenter") {
+		const c = ctx.rectCenter;
+		if (!isVec3(c) || !P) return;
+		const ox = Math.min(2 * c[0] - P[0], P[0]);
+		const oy = Math.min(2 * c[1] - P[1], P[1]);
+		const cx = Math.max(2 * c[0] - P[0], P[0]);
+		const cy = Math.max(2 * c[1] - P[1], P[1]);
+		const w = cx - ox;
+		const d = cy - oy;
+		const s = Math.max(w, d, 1e-9);
+		ctx.origin = [c[0] - s / 2, c[1] - s / 2, c[2]] as unknown as Vec3;
+		ctx.corner = [c[0] + s / 2, c[1] + s / 2, c[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "verticalFinalizeFootprint") {
+		const o = ctx.origin;
+		const pk = ctx.peak;
+		if (!isVec3(o) || !isVec3(pk) || !P) return;
+		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
+		ctx.height = Math.max(0.01, Math.abs(pk[2] - o[2]));
+		delete ctx.peak;
+		return;
+	}
+	if (op === "initPeakAboveOrigin") {
+		const o = ctx.origin;
+		if (!isVec3(o)) return;
+		ctx.peak = [o[0], o[1], o[2] + 0.25] as unknown as Vec3;
+		return;
+	}
+	if (op === "peakFromOriginZ") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		ctx.peak = [o[0], o[1], P[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "verticalRubberCorner") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "cornerFromLengthWidth") {
+		const o = ctx.origin;
+		if (!isVec3(o) || val === null || typeof val !== "object") return;
+		const rec = val as Record<string, unknown>;
+		const L = Number(rec.length);
+		const W = Number(rec.width);
+		if (!Number.isFinite(L) || !Number.isFinite(W)) return;
+		ctx.corner = [o[0] + L, o[1] + W, o[2]] as unknown as Vec3;
+		return;
+	}
+}
+
+/** @emoji 🎬 Applies one declarative action (async kernel queries + `box.transform`). */
+export async function applyActionAsync(
+	a: ActionSpec,
+	ctx: Record<string, unknown>,
+	event: CommandEvent,
+	kernel?: KernelAdapter,
+): Promise<void> {
+	const env: ExprEnv = { context: ctx, event };
+	if (a.op === "assign") {
+		const v = evalExpr(a.value, env);
+		writePathTarget(a.target, env, v);
+	} else if (a.op === "clear") {
+		clearPathTarget(a.target, env);
+	} else if (a.op === "append") {
+		const cur = readPathTarget(a.target, env);
+		const v = evalExpr(a.value, env);
+		if (Array.isArray(cur)) {
+			const next = [...cur, v];
+			writePathTarget(a.target, env, next);
+		}
+	} else if (a.op === "kernel.query" && kernel?.query) {
+		const params = kernelQueryParamsToRecord(a.params, env);
+		const res = await kernel.query(a.query, params);
+		writePathTarget(a.assignTo, env, res);
+	} else if (a.op === "box.transform") {
+		applyBoxGeometryTransform(ctx, event, a);
+	}
+}
+
+/** @emoji 🎬 First matching transition for `event` from `state`; mutates `context` in place. */
+export async function applyTransition(
+	spec: CommandSpec,
+	state: string,
+	context: Record<string, unknown>,
+	event: CommandEvent,
+	kernel?: KernelAdapter,
+): Promise<ApplyTransitionResult> {
+	const st = findState(spec, state);
+	const handler = st?.on?.find((h) => h.event === event.kind);
+	if (!handler) return { ok: false, nextState: state, branchIndex: -1 };
+	const choices = handler.transitions;
+	if (choices.length === 0) return { ok: false, nextState: state, branchIndex: -1 };
+	for (let i = 0; i < choices.length; i++) {
+		const tr = choices[i]!;
+		if (tr.guard) {
+			const g = lookupGuard(spec, tr.guard);
+			if (!g || !evalGuard(g, { context, event })) continue;
+		}
+		for (const act of tr.actions ?? []) {
+			await applyActionAsync(act, context, event, kernel);
+		}
+		let nextState = state;
+		if (tr.target) {
+			nextState = tr.target;
+			if (tr.target === spec.machine.initial) {
+				for (const k of Object.keys(context)) delete context[k];
+			}
+		}
+		return { ok: true, transient: Boolean(tr.transient), nextState, branchIndex: i };
+	}
+	return { ok: false, nextState: state, branchIndex: -1 };
+}
 
 /** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
 export interface CommandSpatialInteractionResolved {
@@ -1128,6 +1294,8 @@ export function mergeCommandSpatialInteraction(spec: CommandSpec): CommandSpatia
 }
 
 /** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
+const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
+
 export interface CommandKeybindRow {
 	readonly eventKind: string;
 	readonly key: string;
@@ -1136,192 +1304,21 @@ export interface CommandKeybindRow {
 
 /** @emoji ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
 export function listKeyedCommandTransitions(spec: CommandSpec, state: string): readonly CommandKeybindRow[] {
-	const st = spec.machine.states[state];
+	const st = findState(spec, state);
 	if (!st?.on) return [];
 	const out: CommandKeybindRow[] = [];
-	for (const [eventKind, raw] of Object.entries(st.on)) {
-		if (HOST_KEYBIND_EXCLUDED_KINDS.has(eventKind)) continue;
-		for (const tr of expandMachineTransitions(raw)) {
+	for (const h of st.on) {
+		if (HOST_KEYBIND_EXCLUDED_KINDS.has(h.event)) continue;
+		for (const tr of h.transitions) {
 			if (tr.transient) continue;
 			const key = tr.key;
 			const label = tr.label;
 			if (typeof key !== "string" || key.length === 0) continue;
 			if (typeof label !== "string" || label.length === 0) continue;
-			out.push({ eventKind, key, label });
+			out.push({ eventKind: h.event, key, label });
 		}
 	}
 	return out;
-}
-
-/** @emoji 📦 Applies imperative `box.*` footprint helpers used by `spatial/fixtures/box.command.json`. */
-function applyBoxGeometryOp(ctx: Record<string, unknown>, event: CommandEvent, op: string): void {
-	const pt = (event as { point?: unknown }).point;
-	const P = isVec3(pt) ? pt : null;
-	const val = (event as { value?: unknown }).value;
-	if (op === "box.aabbFromDiagonalCorners") {
-		const a = ctx.diagA;
-		if (!isVec3(a) || !P) return;
-		const z = a[2];
-		ctx.origin = [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as unknown as Vec3;
-		ctx.corner = [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as unknown as Vec3;
-		delete ctx.diagA;
-		return;
-	}
-	if (op === "box.tripletRubber") {
-		const p0 = ctx.p0;
-		const p1 = ctx.p1;
-		if (!isVec3(p0) || !isVec3(p1) || !P) return;
-		const z = p0[2];
-		ctx.previewA = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		ctx.previewB = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.tripletCommit") {
-		const p0 = ctx.p0;
-		const p1 = ctx.p1;
-		if (!isVec3(p0) || !isVec3(p1) || !P) return;
-		const z = p0[2];
-		ctx.origin = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		ctx.corner = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		delete ctx.p0;
-		delete ctx.p1;
-		delete ctx.previewA;
-		delete ctx.previewB;
-		return;
-	}
-	if (op === "box.snapSquareFootprint") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		const dx = P[0] - o[0];
-		const dy = P[1] - o[1];
-		const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
-		const sx = dx >= 0 ? 1 : -1;
-		const sy = dy >= 0 ? 1 : -1;
-		ctx.corner = [o[0] + sx * s, o[1] + sy * s, o[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.setCubeHeightFromFootprint") {
-		const o = ctx.origin;
-		const c = ctx.corner;
-		if (!isVec3(o) || !isVec3(c)) return;
-		const dx = Math.abs(c[0] - o[0]);
-		const dy = Math.abs(c[1] - o[1]);
-		ctx.height = Math.max(dx, dy, 0.01);
-		return;
-	}
-	if (op === "box.rubberCornerFromCenter") {
-		const c = ctx.rectCenter;
-		if (!isVec3(c) || !P) return;
-		ctx.origin = [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
-		ctx.corner = [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.rubberSquareFromCenter") {
-		const c = ctx.rectCenter;
-		if (!isVec3(c) || !P) return;
-		const ox = Math.min(2 * c[0] - P[0], P[0]);
-		const oy = Math.min(2 * c[1] - P[1], P[1]);
-		const cx = Math.max(2 * c[0] - P[0], P[0]);
-		const cy = Math.max(2 * c[1] - P[1], P[1]);
-		const w = cx - ox;
-		const d = cy - oy;
-		const s = Math.max(w, d, 1e-9);
-		ctx.origin = [c[0] - s / 2, c[1] - s / 2, c[2]] as unknown as Vec3;
-		ctx.corner = [c[0] + s / 2, c[1] + s / 2, c[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.verticalFinalizeFootprint") {
-		const o = ctx.origin;
-		const pk = ctx.peak;
-		if (!isVec3(o) || !isVec3(pk) || !P) return;
-		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
-		ctx.height = Math.max(0.01, Math.abs(pk[2] - o[2]));
-		delete ctx.peak;
-		return;
-	}
-	if (op === "box.initPeakAboveOrigin") {
-		const o = ctx.origin;
-		if (!isVec3(o)) return;
-		ctx.peak = [o[0], o[1], o[2] + 0.25] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.peakFromOriginZ") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		ctx.peak = [o[0], o[1], P[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.verticalRubberCorner") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "box.cornerFromLengthWidth") {
-		const o = ctx.origin;
-		if (!isVec3(o) || val === null || typeof val !== "object") return;
-		const rec = val as Record<string, unknown>;
-		const L = Number(rec.length);
-		const W = Number(rec.width);
-		if (!Number.isFinite(L) || !Number.isFinite(W)) return;
-		ctx.corner = [o[0] + L, o[1] + W, o[2]] as unknown as Vec3;
-		return;
-	}
-}
-
-/** @emoji 🎬 Applies one declarative or `box.*` action (async kernel queries). */
-export async function applyActionAsync(
-	a: ActionSpec,
-	ctx: Record<string, unknown>,
-	event: CommandEvent,
-	kernel?: KernelAdapter,
-): Promise<void> {
-	if (a.op === "assign" && a.path) {
-		const v = resolveTemplate(a.value, { context: ctx, event });
-		setPath(ctx, a.path, v);
-	} else if (a.op === "clear" && a.path) {
-		delete ctx[a.path];
-	} else if (a.op === "kernel.query" && a.query && a.assignTo && kernel?.query) {
-		const params = resolveTemplate(a.params ?? {}, { context: ctx, event }) as Record<string, unknown>;
-		const res = await kernel.query(a.query, params);
-		setPath(ctx, a.assignTo, res);
-	} else if (typeof a.op === "string" && a.op.startsWith("box.")) {
-		applyBoxGeometryOp(ctx, event, a.op);
-	}
-}
-
-/** @emoji 🎬 First matching transition for `event` from `state`; mutates `context` in place. */
-export async function applyTransition(
-	spec: CommandSpec,
-	state: string,
-	context: Record<string, unknown>,
-	event: CommandEvent,
-	kernel?: KernelAdapter,
-): Promise<ApplyTransitionResult> {
-	const st = spec.machine.states[state];
-	if (!st?.on) return { ok: false, nextState: state, branchIndex: -1 };
-	const raw = st.on[event.kind];
-	const choices = expandMachineTransitions(raw);
-	if (choices.length === 0) return { ok: false, nextState: state, branchIndex: -1 };
-	for (let i = 0; i < choices.length; i++) {
-		const tr = choices[i]!;
-		if (tr.guard) {
-			const g = spec.guards?.[tr.guard];
-			if (!g || !evalGuard(g, { context, event })) continue;
-		}
-		for (const a of tr.actions ?? []) {
-			await applyActionAsync(a, context, event, kernel);
-		}
-		let nextState = state;
-		if (tr.target) {
-			nextState = tr.target;
-			if (tr.target === spec.machine.initial) {
-				for (const k of Object.keys(context)) delete context[k];
-			}
-		}
-		return { ok: true, transient: Boolean(tr.transient), nextState, branchIndex: i };
-	}
-	return { ok: false, nextState: state, branchIndex: -1 };
 }
 
 /** @emoji 🎬 Minimal async statechart runner for `CommandSpec.machine`. */
@@ -1386,15 +1383,73 @@ export interface DisplayModel {
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
 export function resolveDisplay(spec: CommandSpec, state: string, context: Record<string, unknown>): DisplayModel {
-	const raw = spec.display?.states?.[state] ?? [];
+	const env: ExprEnv = { context };
+	const section = spec.display?.states?.find((s) => s.state === state);
+	const raw = section?.items ?? [];
 	const items: DisplayItem[] = [];
 	for (const it of raw) {
-		items.push({
-			kind: it.kind,
-			id: it.id,
-			...(it.role ? { role: it.role } : {}),
-			...(it.params ? { params: resolveTemplate(it.params, { context }) as Record<string, unknown> } : {}),
-		});
+		switch (it.kind) {
+			case "point":
+				items.push({
+					kind: "point",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { position: evalExpr(it.position, env) },
+				});
+				break;
+			case "label":
+				items.push({
+					kind: "label",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { text: it.text, position: evalExpr(it.position, env) },
+				});
+				break;
+			case "segment":
+				items.push({
+					kind: "segment",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { from: evalExpr(it.from, env), to: evalExpr(it.to, env) },
+				});
+				break;
+			case "linear-handle":
+				items.push({
+					kind: "linear-handle",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { axis: [...it.axis], origin: evalExpr(it.origin, env) },
+				});
+				break;
+			case "box-preview":
+				items.push({
+					kind: "box-preview",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: {
+						cornerA: evalExpr(it.cornerA, env),
+						cornerB: evalExpr(it.cornerB, env),
+						height: evalExpr(it.height, env),
+					},
+				});
+				break;
+			case "entity-highlight":
+				items.push({
+					kind: "entity-highlight",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { entity: it.entity },
+				});
+				break;
+			case "curve":
+				items.push({ kind: "curve", id: it.id, ...(it.role ? { role: it.role } : {}) });
+				break;
+			case "mesh":
+				items.push({ kind: "mesh", id: it.id, ...(it.role ? { role: it.role } : {}) });
+				break;
+			default:
+				break;
+		}
 	}
 	return { items };
 }
@@ -1547,7 +1602,7 @@ export class CommandRuntime {
 		if (!allowed.includes(st)) return false;
 		const w = this.spec.commit.when;
 		if (w) {
-			const g = this.spec.guards?.[w];
+			const g = lookupGuard(this.spec, w);
 			if (!g) return false;
 			return evalGuard(g, { context: this.sm.getContext() });
 		}
@@ -1654,16 +1709,16 @@ export class CommandRuntime {
 		if (!this.canCommit()) return fail("command.cannotCommit", "Commit guard or fromStates rejected this commit.");
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
-		const params = resolveTemplate(op.params, { context: ctx }) as Record<string, unknown>;
+		const env: ExprEnv = { context: ctx };
 		const k = this.opts.kernel;
 		const topo = this.opts.document.topology;
 		let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
 		let data: unknown = null;
 		try {
 			if (op.kind === "cell.createBox") {
-				const cornerA = params.cornerA as Vec3;
-				const cornerB = params.cornerB as Vec3;
-				const height = Number(params.height);
+				const cornerA = evalExpr(op.cornerA, env) as Vec3;
+				const cornerB = evalExpr(op.cornerB, env) as Vec3;
+				const height = Number(evalExpr(op.height, env));
 				if (k.createBoxFromCornersDiff) {
 					const r = await k.createBoxFromCornersDiff({ cornerA, cornerB, height });
 					diff = r.diff;
@@ -1674,9 +1729,9 @@ export class CommandRuntime {
 				}
 			} else if (op.kind === "wire.extrudeToCell") {
 				const input = {
-					wireId: String(params.wireId),
-					distance: Number(params.distance),
-					direction: params.direction as Vec3,
+					wireId: String(evalExpr(op.wireId, env)),
+					distance: Number(evalExpr(op.distance, env)),
+					direction: evalExpr(op.direction, env) as Vec3,
 				};
 				if (k.extrudeWireDiff) {
 					diff = (await k.extrudeWireDiff(input)).diff;
@@ -1688,18 +1743,21 @@ export class CommandRuntime {
 					}
 				}
 			} else if (op.kind === "face.offset") {
-				diff = (await k.offsetFacesDiff?.({ faceIds: params.faceIds as string[], distance: Number(params.distance) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
+				const faceIdsRaw = evalExpr(op.faceIds, env);
+				const faceIds = Array.isArray(faceIdsRaw) ? (faceIdsRaw as unknown[]).map(String) : [];
+				diff =
+					(await k.offsetFacesDiff?.({ faceIds, distance: Number(evalExpr(op.distance, env)) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
 			} else if (op.kind === "measure.distance") {
-				const a = params.a as VertexRef;
-				const b = params.b as VertexRef;
+				const a = evalExpr(op.a, env) as VertexRef;
+				const b = evalExpr(op.b, env) as VertexRef;
 				if (!k.vertexDistance) throw new Error("kernel.vertexDistance required");
 				data = await k.vertexDistance(a, b, topo);
 			} else if (op.kind === "measure.area") {
-				const fid = params.faceId as FaceRef;
+				const fid = evalExpr(op.faceId, env) as FaceRef;
 				if (!k.faceArea) throw new Error("kernel.faceArea required");
 				data = await k.faceArea(fid, topo);
 			} else if (op.kind === "measure.volume") {
-				const cid = params.cellId as CellRef;
+				const cid = evalExpr(op.cellId, env) as CellRef;
 				data = await (k.cellVolume?.(cid) ?? k.volume(cid));
 			}
 		} catch (e) {
@@ -1709,8 +1767,8 @@ export class CommandRuntime {
 		const outPath = this.spec.commit.outputDataPath;
 		if (outPath) {
 			const ctx2 = this.sm.getContext();
-			setPath(ctx2 as Record<string, unknown>, outPath, data);
-			data = getPath(ctx2, outPath) ?? data;
+			writePathTarget(outPath, { context: ctx2, event: undefined }, data);
+			data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
 		}
 		const inverse = applyTopologyDiff(topo, diff);
 		const hist = this.opts.history;

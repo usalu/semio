@@ -3,48 +3,83 @@
   "id": "measure.area",
   "version": "1.0.0",
   "label": "Area",
-  "guards": {
-    "hasFaceArea": {
-      "all": [{ "notEmpty": { "path": "resolvedFaceIds" } }]
+  "guards": [
+    {
+      "name": "hasFaceArea",
+      "expr": {
+        "kind": "notEmpty",
+        "target": { "root": "context", "segments": [{ "kind": "field", "name": "resolvedFaceIds" }] }
+      }
     }
-  },
+  ],
   "history": { "excludeEvents": ["pointer.move", "confirm"] },
   "machine": {
     "initial": "selectFace",
-    "states": {
-      "selectFace": {
+    "states": [
+      {
+        "name": "selectFace",
         "selection": { "accept": ["face", "surface"], "multiple": false, "prompt": "Pick face or surface" },
-        "on": {
-          "selection.changed": {
-            "target": "ready",
-            "actions": [
-              { "op": "assign", "path": "pickedId", "value": { "$event": "targets.0.id" } },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
               {
-                "op": "kernel.query",
-                "query": "surface.resolveFaces",
-                "assignTo": "resolvedFaceIds",
-                "params": { "surfaceId": { "path": "pickedId" } }
+                "target": "ready",
+                "actions": [
+                  {
+                    "op": "assign",
+                    "target": { "root": "context", "segments": [{ "kind": "field", "name": "pickedId" }] },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        { "kind": "field", "name": "targets" },
+                        { "kind": "index", "index": 0 },
+                        { "kind": "field", "name": "id" }
+                      ]
+                    }
+                  },
+                  {
+                    "op": "kernel.query",
+                    "query": "surface.resolveFaces",
+                    "assignTo": { "root": "context", "segments": [{ "kind": "field", "name": "resolvedFaceIds" }] },
+                    "params": {
+                      "kind": "surface.resolveFaces",
+                      "surfaceId": {
+                        "kind": "path",
+                        "root": "context",
+                        "segments": [{ "kind": "field", "name": "pickedId" }]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           },
-          "cancel": { "target": "selectFace" }
-        }
+          { "event": "cancel", "transitions": [{ "target": "selectFace" }] }
+        ]
       },
-      "ready": {
-        "on": {
-          "confirm": { "target": "committed", "guard": "hasFaceArea" }
-        }
+      {
+        "name": "ready",
+        "on": [{ "event": "confirm", "transitions": [{ "target": "committed", "guard": "hasFaceArea" }] }]
       },
-      "committed": { "final": true }
-    }
+      { "name": "committed", "final": true }
+    ]
   },
   "commit": {
     "when": "hasFaceArea",
     "fromStates": ["ready"],
     "operation": {
       "kind": "measure.area",
-      "params": { "faceId": { "path": "resolvedFaceIds.0" } }
+      "faceId": {
+        "kind": "path",
+        "root": "context",
+        "segments": [
+          { "kind": "field", "name": "resolvedFaceIds" },
+          { "kind": "index", "index": 0 }
+        ]
+      }
     },
-    "outputDataPath": "area"
+    "outputDataPath": { "root": "context", "segments": [{ "kind": "field", "name": "area" }] }
   }
 }
