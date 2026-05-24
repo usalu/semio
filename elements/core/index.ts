@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** 🧱 `@elements/ui-shell` — Framework-free workbench graph plus declarative {@link UiNode} window bodies, {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}; toolbars dispatch via {@link CommandBus}; window bodies use `bodyKey` for React host or {@link registerDeclarativeWindowBody}. */
+/** 🧱 `@elements/ui-shell` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
 // #endregion 🧲Header
 
 //#region 🔖JsonValue

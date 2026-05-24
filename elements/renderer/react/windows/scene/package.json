@@ -5,6 +5,11 @@
 	"description": "elements · scene",
 	"type": "module",
 	"private": true,
+	"scripts": {
+		"dev": "bun nx run @elements/scene:dev",
+		"build": "bun nx run @elements/scene:build",
+		"test": "bun nx run @elements/scene:test"
+	},
 	"dependencies": {
 		"@elements/ui": "workspace:*",
 		"@elements/ui-shell": "workspace:*",

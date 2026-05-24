@@ -5,6 +5,11 @@
   "description": "elements · board",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun nx run @elements/board:dev",
+    "build": "bun nx run @elements/board:build",
+    "test": "bun nx run @elements/board:test"
+  },
   "dependencies": {
     "@elements/ui": "workspace:*",
     "its-fine": "^2.0.0",

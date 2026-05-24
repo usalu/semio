@@ -5,8 +5,8 @@
 		"dev": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": ".",
-				"command": "bun nx run @elements/geometry-play:dev",
+				"cwd": "elements/renderer/react/windows/geometry",
+				"command": "bun ./script.ts dev",
 				"env": {
 					"NODE_OPTIONS": "",
 					"NX_NATIVE_COMMAND_RUNNER": "false",
@@ -21,7 +21,7 @@
 			"dependsOn": [],
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/geometry",
+				"cwd": "elements/renderer/react/windows/geometry",
 				"command": "bun ./script.ts build",
 				"forwardAllArgs": true
 			}
@@ -30,7 +30,7 @@
 			"dependsOn": [],
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/geometry",
+				"cwd": "elements/renderer/react/windows/geometry",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

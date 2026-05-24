@@ -1,13 +1,333 @@
 // #region 🧲Header
-// 💻 elements/client/lib/topology/play/index.ts — Framework-free topology play fixture tests (mount: main.tsx).
+// 💻 elements/renderer/react/windows/topology/play/index.ts — Framework-free topology play: fixture state, declarative bodies, LOD measures, and workbench wiring.
 // #endregion 🧲Header
 
+import {
+	CommandBus,
+	Controller,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchWindowKind,
+	createDefaultLayout,
+	type ShellWindowBodyViewContext,
+	type ShellWindowMeasure,
+	type UiNode,
+} from "@elements/ui-shell";
+
 import nakaginBoardJson from "../../board/play/fixtures/nakagin-capsule-tower.board.json";
-import { parseBoardFixtureV1 } from "../../board/index.ts";
+import {
+	BOARD_LOD_MODE_AUTOMATIC,
+	boardLodAutomaticSelectLabel,
+	boardLodCanvasProps,
+	isBoardDrawLodKind,
+	parseBoardFixtureV1,
+	type BoardDrawLodKind,
+	type BoardFixtureV1,
+	type BoardLodModeKind,
+	type CameraState,
+} from "../../board/index.ts";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
-import { parseFixtureV1 } from "../../scene/index.tsx";
+import {
+	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
+	isLodKind,
+	lodAutomaticSelectLabel as sceneLodAutomaticSelectLabel,
+	lodCanvasProps as sceneLodCanvasProps,
+	parseFixtureV1,
+	type FixtureV1 as SceneFixtureV1,
+	type LodKind as SceneLodKind,
+	type LodModeKind as SceneLodModeKind,
+	type RelocateMode as SceneRelocateMode,
+} from "../../scene/index.tsx";
 import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../react/index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
+
+//#region 🔖Ids
+export const TOPOLOGY_PLAY_APP_ID = "elements-topology-play";
+export const TOPOLOGY_PLAY_CONTROLLER_ID = "topology-play";
+export const TOPOLOGY_PLAY_BOARD_WINDOW_ID = "topology-board";
+export const TOPOLOGY_PLAY_SCENE_WINDOW_ID = "topology-scene";
+export const TOPOLOGY_PLAY_BOARD_WINDOW_LABEL = "Sketch board";
+export const TOPOLOGY_PLAY_SCENE_WINDOW_LABEL = "Spatial scene";
+export const TOPOLOGY_PLAY_BOARD_BODY_KEY = "elements.topology.play.board";
+export const TOPOLOGY_PLAY_SCENE_BODY_KEY = "elements.topology.play.scene";
+export const TOPOLOGY_PLAY_BOARD_SURFACE_ID = "elements.topology.play.board/v1";
+export const TOPOLOGY_PLAY_SCENE_SURFACE_ID = "elements.topology.play.scene/v1";
+
+const TOPOLOGY_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+const TOPOLOGY_PLAY_LOD_TIERS_SCENE: readonly SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+//#endregion 🔖Ids
+
+//#region 🔖Helpers
+function topologyPlayLodTierMenuLabel(tier: string): string {
+	return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
+function topologyControllerFromContext(ctx: ShellWindowBodyViewContext): TopologyPlayShellController | undefined {
+	return ctx.workbench.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+}
+
+function sameCamera(a: CameraState | null, b: CameraState): boolean {
+	return Boolean(a && a.x === b.x && a.y === b.y && a.zoom === b.zoom);
+}
+//#endregion 🔖Helpers
+
+//#region 🔖Controller
+export interface TopologyPlaySnapshot {
+	readonly manifestLabel: string | undefined;
+	readonly boardFixture: BoardFixtureV1 | null;
+	readonly sceneFixture: SceneFixtureV1 | null;
+	readonly boardSelected: ReadonlySet<string>;
+	readonly boardCamera: CameraState | null;
+	readonly sceneCamera: CameraState | null;
+	readonly sceneSelected: string | null;
+	readonly relocateMode: SceneRelocateMode;
+	readonly sceneLodTag: SceneLodKind;
+	readonly boardLodTag: BoardDrawLodKind;
+	readonly boardLodProps: ReturnType<typeof boardLodCanvasProps>;
+	readonly sceneLodProps: ReturnType<typeof sceneLodCanvasProps>;
+	readonly sharedKinds: ReturnType<typeof topologySharedKindsFromPairedMetas>;
+	readonly connectBoard: number;
+	readonly connectScene: number;
+	readonly proximityBoard: number;
+	readonly proximityScene: number;
+}
+
+/** @emoji 🎛 Framework-free topology play controller shared by declarative board and scene windows. */
+export class TopologyPlayShellController extends Controller {
+	readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
+	readonly boardFixture = parseBoardFixtureV1(nakaginBoardJson as unknown);
+	readonly sceneFixture = parseFixtureV1(nakaginSceneJson as unknown);
+	private relocateMode: SceneRelocateMode = "translate";
+	private boardSelected: ReadonlySet<string> = new Set();
+	private sceneSelected: string | null = null;
+	private boardCamera: CameraState | null = this.boardFixture ? { ...this.boardFixture.camera } : null;
+	private sceneCamera: CameraState | null = this.sceneFixture ? { ...this.sceneFixture.camera } : null;
+	private sceneLodTag: SceneLodKind = "normal";
+	private boardLodTag: BoardDrawLodKind = "normal";
+	private boardLodMode: BoardLodModeKind = BOARD_LOD_MODE_AUTOMATIC;
+	private sceneLodMode: SceneLodModeKind = SCENE_LOD_MODE_AUTOMATIC;
+	private connectBoard = 0;
+	private connectScene = 0;
+	private proximityBoard = 0;
+	private proximityScene = 0;
+
+	constructor(commandBus: CommandBus, hostNotify: () => void) {
+		super(TOPOLOGY_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+	}
+
+	private boardLodMeasure(): ShellWindowMeasure {
+		return {
+			kind: "select",
+			id: `${TOPOLOGY_PLAY_BOARD_WINDOW_ID}-lod`,
+			label: "LOD",
+			value: this.boardLodMode,
+			items: [
+				{ id: "automatic", label: boardLodAutomaticSelectLabel(this.boardLodTag), value: BOARD_LOD_MODE_AUTOMATIC },
+				...TOPOLOGY_PLAY_LOD_TIERS_BOARD.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
+			],
+			onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setBoardLodMode" },
+		};
+	}
+
+	private sceneLodMeasure(): ShellWindowMeasure {
+		return {
+			kind: "select",
+			id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-lod`,
+			label: "LOD",
+			value: this.sceneLodMode,
+			items: [
+				{ id: "automatic", label: sceneLodAutomaticSelectLabel(this.sceneLodTag), value: SCENE_LOD_MODE_AUTOMATIC },
+				...TOPOLOGY_PLAY_LOD_TIERS_SCENE.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
+			],
+			onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneLodMode" },
+		};
+	}
+
+	getWindowKinds(): readonly WorkbenchWindowKind[] {
+		return [
+			new WorkbenchWindowKind(TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
+			new WorkbenchWindowKind(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [this.sceneLodMeasure()]),
+		];
+	}
+
+	override run(command: string, args?: unknown): void {
+		let changed = true;
+		switch (command) {
+			case "setBoardLodMode": {
+				const value = (args as { value?: string }).value;
+				if ((value === BOARD_LOD_MODE_AUTOMATIC || (typeof value === "string" && isBoardDrawLodKind(value))) && this.boardLodMode !== value) this.boardLodMode = value as BoardLodModeKind;
+				else changed = false;
+				break;
+			}
+			case "setSceneLodMode": {
+				const value = (args as { value?: string }).value;
+				if ((value === SCENE_LOD_MODE_AUTOMATIC || (typeof value === "string" && isLodKind(value))) && this.sceneLodMode !== value) this.sceneLodMode = value as SceneLodModeKind;
+				else changed = false;
+				break;
+			}
+			case "setBoardLodTag": {
+				const lod = (args as { lod: BoardDrawLodKind }).lod;
+				if (this.boardLodTag !== lod) this.boardLodTag = lod;
+				else changed = false;
+				break;
+			}
+			case "setSceneLodTag": {
+				const lod = (args as { lod: SceneLodKind }).lod;
+				if (this.sceneLodTag !== lod) this.sceneLodTag = lod;
+				else changed = false;
+				break;
+			}
+			case "setBoardSelection": {
+				const ids = (args as { ids: readonly string[] }).ids;
+				if (ids.length !== this.boardSelected.size || ids.some((id) => !this.boardSelected.has(id))) this.boardSelected = new Set(ids);
+				else changed = false;
+				break;
+			}
+			case "setSceneSelection": {
+				const selected = (args as { objectIds: readonly string[] }).objectIds[0] ?? null;
+				if (this.sceneSelected !== selected) this.sceneSelected = selected;
+				else changed = false;
+				break;
+			}
+			case "setBoardCamera": {
+				const camera = (args as { camera: CameraState }).camera;
+				if (!sameCamera(this.boardCamera, camera)) this.boardCamera = { ...camera };
+				else changed = false;
+				break;
+			}
+			case "setSceneCamera": {
+				const camera = (args as { camera: CameraState }).camera;
+				if (!sameCamera(this.sceneCamera, camera)) this.sceneCamera = { ...camera };
+				else changed = false;
+				break;
+			}
+			case "setRelocateMode": {
+				const mode = (args as { mode: SceneRelocateMode }).mode;
+				if (this.relocateMode !== mode) this.relocateMode = mode;
+				else changed = false;
+				break;
+			}
+			case "noteBoardConnect":
+				this.connectBoard += 1;
+				break;
+			case "noteSceneConnect":
+				this.connectScene += 1;
+				break;
+			case "noteBoardProximity":
+				this.proximityBoard += 1;
+				break;
+			case "noteSceneProximity":
+				this.proximityScene += 1;
+				break;
+			default:
+				changed = false;
+				break;
+		}
+		if (changed) this.emit();
+	}
+
+	getSnapshot(): TopologyPlaySnapshot {
+		return {
+			manifestLabel: this.manifest?.label,
+			boardFixture: this.boardFixture,
+			sceneFixture: this.sceneFixture,
+			boardSelected: this.boardSelected,
+			boardCamera: this.boardCamera,
+			sceneCamera: this.sceneCamera,
+			sceneSelected: this.sceneSelected,
+			relocateMode: this.relocateMode,
+			sceneLodTag: this.sceneLodTag,
+			boardLodTag: this.boardLodTag,
+			boardLodProps: boardLodCanvasProps(this.boardLodMode),
+			sceneLodProps: sceneLodCanvasProps(this.sceneLodMode),
+			sharedKinds: topologySharedKindsFromPairedMetas({ boardMeta: this.boardFixture?.meta, sceneMeta: this.sceneFixture?.meta }),
+			connectBoard: this.connectBoard,
+			connectScene: this.connectScene,
+			proximityBoard: this.proximityBoard,
+			proximityScene: this.proximityScene,
+		};
+	}
+}
+//#endregion 🔖Controller
+
+//#region 🔖Workbench
+export function buildTopologyPlayWorkbenchApp(controller: TopologyPlayShellController): WorkbenchApp {
+	return new WorkbenchApp(
+		TOPOLOGY_PLAY_APP_ID,
+		"Topology play",
+		undefined,
+		controller,
+		createDefaultLayout([TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_ID], "row", [50, 50], [TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL]) as never,
+		controller.getWindowKinds(),
+	);
+}
+
+export function buildTopologyPlayWorkbench(): Workbench {
+	const workbench = new Workbench();
+	const controller = new TopologyPlayShellController(workbench.commandBus, () => workbench.notify());
+	workbench.addApp(buildTopologyPlayWorkbenchApp(controller));
+	return workbench;
+}
+//#endregion 🔖Workbench
+
+//#region 🔖DeclarativeBodies
+export function buildTopologyBoardDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+	const ctrl = topologyControllerFromContext(ctx);
+	const snap = ctrl?.getSnapshot();
+	if (!snap?.boardFixture) return { type: "text", value: "Invalid board fixture" };
+	return {
+		type: "stack",
+		direction: "vertical",
+		padding: "none",
+		children: [
+			{
+				type: "stack",
+				direction: "horizontal",
+				gap: "tight",
+				padding: "standard",
+				children: [
+					{ type: "text", value: snap.manifestLabel ?? "topology", dataAttributes: { "e2e-topology-manifest": snap.manifestLabel ?? "topology" } },
+					{ type: "text", value: [...snap.boardSelected].join(", ") || "-", dataAttributes: { "e2e-topology-board-selected": [...snap.boardSelected].join(", ") || "-" } },
+					{ type: "text", value: String(snap.connectBoard), dataAttributes: { "e2e-topology-connect-board": String(snap.connectBoard) } },
+					{ type: "text", value: String(snap.proximityBoard), dataAttributes: { "e2e-topology-proximity-board": String(snap.proximityBoard) } },
+				],
+			},
+			{ type: "board", surfaceId: TOPOLOGY_PLAY_BOARD_SURFACE_ID, controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, paneId: TOPOLOGY_PLAY_BOARD_WINDOW_ID },
+		],
+	};
+}
+
+export function buildTopologySceneDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+	const ctrl = topologyControllerFromContext(ctx);
+	const snap = ctrl?.getSnapshot();
+	if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
+	const cmd = (mode: SceneRelocateMode) => ({ controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setRelocateMode", args: { mode } });
+	return {
+		type: "stack",
+		direction: "vertical",
+		padding: "none",
+		children: [
+			{
+				type: "stack",
+				direction: "horizontal",
+				gap: "tight",
+				padding: "standard",
+				children: [
+					{ type: "button", label: "Translate", command: cmd("translate"), style: snap.relocateMode === "translate" ? { variant: "success" } : { variant: "subtle" } },
+					{ type: "button", label: "Rotate", command: cmd("rotate"), style: snap.relocateMode === "rotate" ? { variant: "success" } : { variant: "subtle" } },
+					{ type: "button", label: "Scale", command: cmd("scale"), style: snap.relocateMode === "scale" ? { variant: "success" } : { variant: "subtle" } },
+					{ type: "separator" },
+					{ type: "text", value: snap.sceneLodTag, dataAttributes: { "e2e-topology-scene-lod": snap.sceneLodTag } },
+					{ type: "text", value: snap.sceneSelected ?? "-", dataAttributes: { "e2e-topology-scene-selected": snap.sceneSelected ?? "-" } },
+					{ type: "text", value: String(snap.connectScene), dataAttributes: { "e2e-topology-connect-scene": String(snap.connectScene) } },
+					{ type: "text", value: String(snap.proximityScene), dataAttributes: { "e2e-topology-proximity-scene": String(snap.proximityScene) } },
+				],
+			},
+			{ type: "scene3d", surfaceId: TOPOLOGY_PLAY_SCENE_SURFACE_ID, controllerId: TOPOLOGY_PLAY_CONTROLLER_ID },
+		],
+	};
+}
+//#endregion 🔖DeclarativeBodies
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -29,6 +349,25 @@ if (import.meta.vitest) {
 				sceneMeta: { kindCompatibility: [{ source: "u", target: "v" }] },
 			});
 			expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
+		});
+		it("builds declarative board and scene surface bodies", () => {
+			const wb = buildTopologyPlayWorkbench();
+			const board = buildTopologyBoardDeclarativeBody({
+				workbench: wb,
+				windowKindId: TOPOLOGY_PLAY_BOARD_WINDOW_ID,
+				bodyKey: TOPOLOGY_PLAY_BOARD_BODY_KEY,
+				activeModeId: null,
+				generation: 0,
+			});
+			const scene = buildTopologySceneDeclarativeBody({
+				workbench: wb,
+				windowKindId: TOPOLOGY_PLAY_SCENE_WINDOW_ID,
+				bodyKey: TOPOLOGY_PLAY_SCENE_BODY_KEY,
+				activeModeId: null,
+				generation: 0,
+			});
+			expect(board.type).toBe("stack");
+			expect(scene.type).toBe("stack");
 		});
 	});
 }

@@ -12,17 +12,12 @@
 // Play application entrypoint registering sketchpad apps and rendering the root.
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
-import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, typeConfig } from "@semio/sketchpad";
+import { Sketchpad, ensureSketchpadDeclarativeShell } from "@semio/sketchpad";
 import { InMemoryKitStore, SemioStoreKitLineHost, type SketchpadKitStoreFactory } from "@semio/react";
 import { createRoot, type Root } from "react-dom/client";
 import "./globals.css";
 
-appRegistry.register(designConfig);
-appRegistry.register(docsConfig);
-appRegistry.register(feedbackConfig);
-appRegistry.register(homeConfig);
-appRegistry.register(kitConfig);
-appRegistry.register(typeConfig);
+void ensureSketchpadDeclarativeShell();
 
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 

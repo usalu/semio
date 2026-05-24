@@ -5,7 +5,7 @@
 		"dev": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/geometry/play",
+				"cwd": "elements/renderer/react/windows/geometry/play",
 				"command": "bun ./script.ts dev --strictPort --port 6016",
 				"env": {
 					"CHOKIDAR_USEPOLLING": "1"
@@ -16,7 +16,7 @@
 		"build": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/geometry/play",
+				"cwd": "elements/renderer/react/windows/geometry/play",
 				"command": "bun ./script.ts build",
 				"forwardAllArgs": true
 			}

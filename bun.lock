@@ -550,6 +550,8 @@
         "@elements/board": "workspace:*",
         "@elements/scene": "workspace:*",
         "@elements/topology": "workspace:*",
+        "@elements/ui": "workspace:*",
+        "@elements/ui-shell": "workspace:*",
         "@semio/js": "*",
         "@semio/react": "*",
         "@semio/ui": "*",

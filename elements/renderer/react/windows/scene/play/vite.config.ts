@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const sceneRoot = path.resolve(__dirname, "..");
-const repoRoot = path.resolve(__dirname, "../../../../../");
+const repoRoot = path.resolve(__dirname, "../../../../../..");
 const meshRoot = path.resolve(repoRoot, "semio/assets/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/fixtures/placeholder.glb");
 
@@ -54,7 +54,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../react/index.tsx") },
+			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../../index.tsx") },
 			{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },
 		],
 		dedupe: ["three"],

@@ -6,6 +6,11 @@
 	"type": "module",
 	"private": true,
 	"description": "elements · geometry · spatial playground",
+	"scripts": {
+		"dev": "bun nx run @elements/geometry-spatial-play:dev",
+		"build": "bun nx run @elements/geometry-spatial-play:build",
+		"test": "bun nx run @elements/geometry-spatial-play:test"
+	},
 	"exports": {
 		".": "./index.ts"
 	},

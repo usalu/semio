@@ -5,7 +5,13 @@
   "description": "elements · topology (board + scene)",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun nx run @elements/topology:dev",
+    "build": "bun nx run @elements/topology:build",
+    "test": "bun nx run @elements/topology:test"
+  },
   "dependencies": {
+    "@elements/ui-shell": "workspace:*",
     "@elements/board": "workspace:*",
     "@elements/scene": "workspace:*",
     "@elements/ui": "workspace:*",
