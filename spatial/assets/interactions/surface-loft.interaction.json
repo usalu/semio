@@ -1,0 +1,471 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "surface.loft",
+  "version": "1.0.0",
+  "label": "Loft",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_curves_to_loft",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_curves_to_loft",
+        "selection": {
+          "accept": [
+            "wire",
+            "edge"
+          ],
+          "multiple": true,
+          "prompt": "Select curves to loft"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_curves_to_loft",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "curves"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "adjust_curve_seams",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "adjust_curve_seams",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "adjust_curve_seams",
+        "on": [
+          {
+            "event": "adjust",
+            "transitions": [
+              {
+                "target": "adjust_curve_seams",
+                "key": "a",
+                "label": "Adjust",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "adjusted"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "loft_options_dialog",
+                "key": "Enter",
+                "label": "Accept Adjustments"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "loft_options_dialog",
+                "key": "RightClick",
+                "label": "Accept Adjustments"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "loft_options_dialog",
+        "on": [
+          {
+            "event": "dialog.ok",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "o",
+                "label": "OK",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "dialogAccepted"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_curves_to_loft",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_curves_to_loft-prompt",
+            "role": "prompt",
+            "text": "Select curves to loft",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_curves_to_loft-preview",
+            "role": "preview",
+            "previewKind": "highlight-curves",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "curves"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "adjust_curve_seams",
+        "items": [
+          {
+            "kind": "label",
+            "id": "adjust_curve_seams-prompt",
+            "role": "prompt",
+            "text": "Adjust curve seams",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "adjust_curve_seams-preview",
+            "role": "preview",
+            "previewKind": "seam-arrows",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "loft_options_dialog",
+        "items": [
+          {
+            "kind": "label",
+            "id": "loft_options_dialog-prompt",
+            "role": "prompt",
+            "text": "Loft options",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "loft_options_dialog-preview",
+            "role": "preview",
+            "previewKind": "dialog",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "surface.loft"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "loftedSurface"
+        }
+      }
+    }
+  },
+  "key": "f"
+}

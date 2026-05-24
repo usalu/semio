@@ -1,0 +1,829 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "transform.rotate",
+  "version": "1.0.0",
+  "label": "Rotate",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [
+      "center_of_rotation",
+      "angle_or_first_reference_point",
+      "second_reference_point"
+    ],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_objects_to_rotate",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_objects_to_rotate",
+        "selection": {
+          "accept": [
+            "vertex",
+            "edge",
+            "wire",
+            "face",
+            "shell",
+            "cell",
+            "surface",
+            "part"
+          ],
+          "multiple": true,
+          "prompt": "Select objects to rotate"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_objects_to_rotate",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "targets"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "target": "center_of_rotation",
+                "key": "Enter",
+                "label": "Finish"
+              }
+            ]
+          },
+          {
+            "event": "contextmenu",
+            "transitions": [
+              {
+                "target": "center_of_rotation",
+                "key": "RightClick",
+                "label": "Finish"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "center_of_rotation",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "angle_or_first_reference_point",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "center"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "angle_or_first_reference_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "second_reference_point",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "referenceA"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "set.angle",
+            "transitions": [
+              {
+                "target": "second_reference_point",
+                "key": "n",
+                "label": "Apply Number",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "angle"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "value"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "second_reference_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "committed",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "referenceB"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_objects_to_rotate",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_objects_to_rotate-prompt",
+            "role": "prompt",
+            "text": "Select objects to rotate",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_objects_to_rotate-preview",
+            "role": "preview",
+            "previewKind": "selected-objects",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "center_of_rotation",
+        "items": [
+          {
+            "kind": "label",
+            "id": "center_of_rotation-prompt",
+            "role": "prompt",
+            "text": "Center of rotation",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "center_of_rotation-preview",
+            "role": "preview",
+            "previewKind": "point",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "kind": "point",
+            "id": "center_of_rotation-cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "center_of_rotation-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "prevPoint"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "angle_or_first_reference_point",
+        "items": [
+          {
+            "kind": "label",
+            "id": "angle_or_first_reference_point-prompt",
+            "role": "prompt",
+            "text": "Angle or first reference point",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "angle_or_first_reference_point-preview",
+            "role": "preview",
+            "previewKind": "angle-reference",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "kind": "point",
+            "id": "angle_or_first_reference_point-cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "angle_or_first_reference_point-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "prevPoint"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "state": "second_reference_point",
+        "items": [
+          {
+            "kind": "label",
+            "id": "second_reference_point-prompt",
+            "role": "prompt",
+            "text": "Second reference point",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "second_reference_point-preview",
+            "role": "preview",
+            "previewKind": "rotate-preview",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "kind": "point",
+            "id": "second_reference_point-cursor",
+            "role": "cursor",
+            "position": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "segment",
+            "id": "second_reference_point-rubber",
+            "role": "preview",
+            "from": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "prevPoint"
+                }
+              ]
+            },
+            "to": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "cursor"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "transform.rotate"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "rotate"
+        }
+      }
+    }
+  },
+  "key": "z"
+}

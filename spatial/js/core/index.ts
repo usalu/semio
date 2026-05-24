@@ -2,14 +2,42 @@
 /** @emoji 🧭 `@spatial/js-core` — portable interaction spec runtime, `ActionRegistry`, `StateEngine` + `KernelAdapter`, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
-// #region 📥Fixtures
-import areaInteractionJson from "../../fixtures/area.interaction.json" with { type: "json" };
-import boxInteractionJson from "../../fixtures/box.interaction.json" with { type: "json" };
-import distanceInteractionJson from "../../fixtures/distance.interaction.json" with { type: "json" };
-import extrudeWireInteractionJson from "../../fixtures/extrude-wire.interaction.json" with { type: "json" };
-import offsetSurfaceInteractionJson from "../../fixtures/offset-surface.interaction.json" with { type: "json" };
-import scriptedCommandsInteractionJson from "../../fixtures/scripted-commands.interaction.json" with { type: "json" };
-// #endregion 📥Fixtures
+// #region 📥InteractionAssets
+import boxInteractionJson from "../../assets/interactions/box.interaction.json" with { type: "json" };
+import extrudeWireInteractionJson from "../../assets/interactions/extrude-wire.interaction.json" with { type: "json" };
+import offsetSurfaceInteractionJson from "../../assets/interactions/offset-surface.interaction.json" with { type: "json" };
+import distanceInteractionJson from "../../assets/interactions/distance.interaction.json" with { type: "json" };
+import areaInteractionJson from "../../assets/interactions/area.interaction.json" with { type: "json" };
+import curveArcInteractionJson from "../../assets/interactions/curve-arc.interaction.json" with { type: "json" };
+import curveCircleInteractionJson from "../../assets/interactions/curve-circle.interaction.json" with { type: "json" };
+import curveControlPointCurveInteractionJson from "../../assets/interactions/curve-control-point-curve.interaction.json" with { type: "json" };
+import curveInterpolateCurveInteractionJson from "../../assets/interactions/curve-interpolate-curve.interaction.json" with { type: "json" };
+import curveLineInteractionJson from "../../assets/interactions/curve-line.interaction.json" with { type: "json" };
+import curvePolylineInteractionJson from "../../assets/interactions/curve-polyline.interaction.json" with { type: "json" };
+import editChamferInteractionJson from "../../assets/interactions/edit-chamfer.interaction.json" with { type: "json" };
+import editExplodeInteractionJson from "../../assets/interactions/edit-explode.interaction.json" with { type: "json" };
+import editFilletInteractionJson from "../../assets/interactions/edit-fillet.interaction.json" with { type: "json" };
+import editJoinInteractionJson from "../../assets/interactions/edit-join.interaction.json" with { type: "json" };
+import editSplitInteractionJson from "../../assets/interactions/edit-split.interaction.json" with { type: "json" };
+import editTrimInteractionJson from "../../assets/interactions/edit-trim.interaction.json" with { type: "json" };
+import solidBooleanDifferenceInteractionJson from "../../assets/interactions/solid-boolean-difference.interaction.json" with { type: "json" };
+import solidBooleanIntersectionInteractionJson from "../../assets/interactions/solid-boolean-intersection.interaction.json" with { type: "json" };
+import solidBooleanUnionInteractionJson from "../../assets/interactions/solid-boolean-union.interaction.json" with { type: "json" };
+import solidCylinderInteractionJson from "../../assets/interactions/solid-cylinder.interaction.json" with { type: "json" };
+import solidSphereInteractionJson from "../../assets/interactions/solid-sphere.interaction.json" with { type: "json" };
+import surfaceExtrudeCrvInteractionJson from "../../assets/interactions/surface-extrude-crv.interaction.json" with { type: "json" };
+import surfaceLoftInteractionJson from "../../assets/interactions/surface-loft.interaction.json" with { type: "json" };
+import surfaceNetworkSrfInteractionJson from "../../assets/interactions/surface-network-srf.interaction.json" with { type: "json" };
+import surfacePlaneInteractionJson from "../../assets/interactions/surface-plane.interaction.json" with { type: "json" };
+import surfaceSweep1InteractionJson from "../../assets/interactions/surface-sweep1.interaction.json" with { type: "json" };
+import surfaceSweep2InteractionJson from "../../assets/interactions/surface-sweep2.interaction.json" with { type: "json" };
+import transformCopyInteractionJson from "../../assets/interactions/transform-copy.interaction.json" with { type: "json" };
+import transformMirrorInteractionJson from "../../assets/interactions/transform-mirror.interaction.json" with { type: "json" };
+import transformMoveInteractionJson from "../../assets/interactions/transform-move.interaction.json" with { type: "json" };
+import transformRotateInteractionJson from "../../assets/interactions/transform-rotate.interaction.json" with { type: "json" };
+import transformScale1dInteractionJson from "../../assets/interactions/transform-scale1d.interaction.json" with { type: "json" };
+import transformScale3dInteractionJson from "../../assets/interactions/transform-scale3d.interaction.json" with { type: "json" };
+// #endregion 📥InteractionAssets
 
 // #region 🧮Vec
 /** @emoji 📐 Column vector `[x,y,z]` used by spatial factories. */
@@ -2445,7 +2473,42 @@ export function createInteractionRuntime(spec: InteractionSpec, opts: Interactio
 // #region 📦Interactions
 type BuiltinInteractionFixture = InteractionSpec & { readonly key?: string };
 
-const scriptedCommandInteractionJsons = scriptedCommandsInteractionJson as readonly BuiltinInteractionFixture[];
+const builtinInteractionJsons = [
+	boxInteractionJson,
+	extrudeWireInteractionJson,
+	offsetSurfaceInteractionJson,
+	distanceInteractionJson,
+	areaInteractionJson,
+	curveArcInteractionJson,
+	curveCircleInteractionJson,
+	curveControlPointCurveInteractionJson,
+	curveInterpolateCurveInteractionJson,
+	curveLineInteractionJson,
+	curvePolylineInteractionJson,
+	editChamferInteractionJson,
+	editExplodeInteractionJson,
+	editFilletInteractionJson,
+	editJoinInteractionJson,
+	editSplitInteractionJson,
+	editTrimInteractionJson,
+	solidBooleanDifferenceInteractionJson,
+	solidBooleanIntersectionInteractionJson,
+	solidBooleanUnionInteractionJson,
+	solidCylinderInteractionJson,
+	solidSphereInteractionJson,
+	surfaceExtrudeCrvInteractionJson,
+	surfaceLoftInteractionJson,
+	surfaceNetworkSrfInteractionJson,
+	surfacePlaneInteractionJson,
+	surfaceSweep1InteractionJson,
+	surfaceSweep2InteractionJson,
+	transformCopyInteractionJson,
+	transformMirrorInteractionJson,
+	transformMoveInteractionJson,
+	transformRotateInteractionJson,
+	transformScale1dInteractionJson,
+	transformScale3dInteractionJson,
+] as readonly BuiltinInteractionFixture[];
 
 function interactionFixtureRow(spec: BuiltinInteractionFixture): SpatialInteraction {
 	return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : spec.id[0] ?? "?" };

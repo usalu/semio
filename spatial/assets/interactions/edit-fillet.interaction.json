@@ -1,0 +1,351 @@
+{
+  "schema": "spatial.interaction/v1",
+  "id": "edit.fillet",
+  "version": "1.0.0",
+  "label": "Fillet",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "select_first_curve_to_fillet",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "targets"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_first_curve_to_fillet",
+        "selection": {
+          "accept": [
+            "edge",
+            "wire"
+          ],
+          "multiple": true,
+          "prompt": "Select first curve to fillet"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "select_second_curve_to_fillet",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "targets"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "firstCurve"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "select_second_curve_to_fillet",
+        "selection": {
+          "accept": [
+            "edge",
+            "wire"
+          ],
+          "multiple": true,
+          "prompt": "Select second curve to fillet"
+        },
+        "on": [
+          {
+            "event": "selection.changed",
+            "transitions": [
+              {
+                "target": "committed",
+                "key": "s",
+                "label": "Select",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.addSelection",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "targets"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "secondCurve"
+                      },
+                      "targets": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "targets"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "display": {
+    "states": [
+      {
+        "state": "select_first_curve_to_fillet",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_first_curve_to_fillet-prompt",
+            "role": "prompt",
+            "text": "Select first curve to fillet",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_first_curve_to_fillet-preview",
+            "role": "preview",
+            "previewKind": "first-curve",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "state": "select_second_curve_to_fillet",
+        "items": [
+          {
+            "kind": "label",
+            "id": "select_second_curve_to_fillet-prompt",
+            "role": "prompt",
+            "text": "Select second curve to fillet",
+            "position": {
+              "kind": "const",
+              "value": [
+                0,
+                0.25,
+                1.55
+              ]
+            }
+          },
+          {
+            "kind": "preview",
+            "id": "select_second_curve_to_fillet-preview",
+            "role": "preview",
+            "previewKind": "fillet-preview",
+            "params": {
+              "cursor": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cursor"
+                  }
+                ]
+              },
+              "prevPoint": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "prevPoint"
+                  }
+                ]
+              },
+              "points": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "points"
+                  }
+                ]
+              },
+              "targets": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "targets"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "ready"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "command.finish",
+      "params": {
+        "commandId": {
+          "kind": "const",
+          "value": "edit.fillet"
+        },
+        "resultKind": {
+          "kind": "const",
+          "value": "fillet"
+        }
+      }
+    }
+  },
+  "key": "8"
+}
