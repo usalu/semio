@@ -1,0 +1,33 @@
+{
+	"name": "@elements/geometry-spatial-play",
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"dev": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "elements/spatial/play",
+				"command": "bun ../script.ts play dev --port 6017",
+				"env": {
+					"CHOKIDAR_USEPOLLING": "1"
+				},
+				"forwardAllArgs": true
+			}
+		},
+		"build": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "elements/spatial/play",
+				"command": "bun ../script.ts play build",
+				"forwardAllArgs": true
+			}
+		},
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "elements/spatial/play",
+				"command": "bun ../script.ts play test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

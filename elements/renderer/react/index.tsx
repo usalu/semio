@@ -24717,6 +24717,39 @@ if (treeVitest) {
       expect(markup).not.toContain('id="ui.toolbar.group.create"');
     });
 
+    it("renders detached declarative UI nodes through the React renderer", () => {
+      const wb = new Workbench();
+      class TCtrl extends Controller {
+        constructor() {
+          super("tctrl", wb.commandBus, () => wb.notify());
+        }
+        run(): void {}
+      }
+      registerDeclarativeWindowBody("test.detached.main", () => ({
+        type: "stack",
+        direction: "vertical",
+        gap: "tight",
+        padding: "standard",
+        children: [
+          { type: "text", value: "Detached body", emphasize: true, dataAttributes: { testid: "detached-text" } },
+          { type: "button", id: "detached-command", label: "Run", command: { controllerId: "tctrl", command: "run" } },
+        ],
+      }));
+      try {
+        new TCtrl();
+        const factory = getDeclarativeWindowBodyFactory("test.detached.main");
+        const node = factory?.({ workbench: wb, windowKindId: "main", bodyKey: "test.detached.main", activeModeId: null, generation: wb.generation });
+        expect(node).toBeDefined();
+        const markup = renderToStaticMarkup(<UiRenderer node={node!} commandBus={wb.commandBus} />);
+
+        expect(markup).toContain("Detached body");
+        expect(markup).toContain('data-testid="detached-text"');
+        expect(markup).toContain('id="detached-command"');
+      } finally {
+        unregisterDeclarativeWindowBody("test.detached.main");
+      }
+    });
+
     it("synthesizes default workbench, details, options, and chat navbar toggles for every app", () => {
       const wb = new Workbench();
       class TCtrl extends Controller {

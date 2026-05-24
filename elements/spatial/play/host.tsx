@@ -1,8 +1,8 @@
-// #region 🧲Header
-// 💻 elements/client/lib/geometry/spatial/geometry-spatial-play-host.tsx — Host outside play bundle: spatial play mount and React surfaces.
-// #endregion 🧲Header
-
-import type { UiPanelHostSurfaceNode, UiScene3DHostSurfaceNode } from "../../ui/index.ts";
+import {
+	Workbench,
+	type UiPanelHostSurfaceNode,
+	type UiScene3DHostSurfaceNode,
+	} from "../../core/index.ts";
 import {
 	LevelProvider,
 	WorkbenchView,
@@ -14,7 +14,7 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
-} from "../../system/renderer/react/index.tsx";
+} from "../../renderer/react/index.tsx";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
@@ -34,10 +34,9 @@ import {
 	buildSpatialPlayDeclarativeBody,
 	buildSpatialWorkbenchApp,
 	buildSpatialWorkbenchDeclarativePanel,
-} from "./play/index.ts";
-import { Workbench } from "../../ui/index.ts";
+} from "./index.ts";
 
-import "./play/globals.css";
+import "./globals.css";
 
 const EMPTY_KINDS = Object.fromEntries(
 	["topology", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster"].map((kind) => [kind, true]),

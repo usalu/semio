@@ -1,0 +1,30 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"projectType": "application",
+	"name": "@elements/geometry-spatial-play",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"description": "elements · geometry · spatial playground",
+	"exports": {
+		".": "./index.ts"
+	},
+	"dependencies": {
+		"@elements/geometry-spatial-js": "workspace:*",
+		"@elements/geometry-spatial-react": "workspace:*",
+		"@elements/ui": "workspace:*",
+		"@elements/ui-shell": "workspace:*",
+		"lucide-react": "^0.536.0",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^5.1.2",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^3.2.4"
+	}
+}

@@ -4,7 +4,12 @@
   "type": "module",
   "description": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
+    "elements/core",
     "elements/core/*",
+    "elements/renderer/*",
+    "elements/renderer/react/windows/*",
+    "elements/spatial/*",
+    "elements/styling",
     "elements/client/lib/*",
     "coda/client/ui/*",
     "coda/client/lib/*/*",

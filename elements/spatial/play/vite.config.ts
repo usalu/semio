@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "../../../../../../");
+const repoRoot = path.resolve(__dirname, "../../../");
 
 export default defineConfig({
 	root: __dirname,
@@ -15,7 +15,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@elements/ui": path.resolve(__dirname, "../../../react/index.tsx"),
+			"@elements/ui-shell": path.resolve(__dirname, "../../core/index.ts"),
 		},
 	},
 	server: {

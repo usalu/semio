@@ -5,7 +5,7 @@
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/client/lib/ui",
+				"cwd": "elements/core",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

@@ -1,5 +1,5 @@
-@import "../../../system/renderer/react/globals.css";
-@source "../../../system/renderer/react";
+@import "../../renderer/react/globals.css";
+@source "../../renderer/react";
 @source "..";
 @source "../..";
 @source ".";

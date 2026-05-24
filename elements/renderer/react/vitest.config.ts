@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 
 // Use process.cwd() so this shared config works from any bundle root
-// (`elements/client/lib/react`, `semio/client/lib/react/rendering`, …) without hardcoding the directory.
+// (`elements/renderer/react`, `semio/client/lib/react/rendering`, …) without hardcoding the directory.
 export default defineConfig({
   root: process.cwd(),
   test: {

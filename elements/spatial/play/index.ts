@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/geometry/spatial/play/index.ts — Framework-free spatial play: controller, declarative UI trees, workbench wiring (no React).
+// 💻 elements/spatial/play/index.ts — Framework-free spatial play: controller, declarative UI trees, workbench wiring (no React).
 // #endregion 🧲Header
 
 import {
@@ -14,9 +14,9 @@ import {
 	type ShellWindowBodyViewContext,
 	type ShellToolItem,
 	type UiNode,
-} from "../../../ui/index.ts";
+} from "../../core/index.ts";
 
-import topologyJson from "../../play/fixtures/topology.json";
+import topologyJson from "../fixtures/topology.json";
 import {
 	TOPOLOGIC_KINDS,
 	buildSpatialDetailsPanelState,

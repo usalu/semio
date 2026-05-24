@@ -1,0 +1,14 @@
+{
+	"name": "@elements/geometry-spatial-js",
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"targets": {
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "elements/spatial/js",
+				"command": "bun ../script.ts js test",
+				"forwardAllArgs": true
+			}
+		}
+	}
+}

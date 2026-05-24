@@ -1,0 +1,23 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"projectType": "library",
+	"name": "@elements/geometry-spatial-js",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"description": "elements · geometry · spatial imperative kernel and fixture utilities",
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"exports": {
+		".": "./index.ts"
+	},
+	"dependencies": {
+		"brepjs": "^18.20.3",
+		"brepjs-opencascade": "^0.15.6"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.4"
+	},
+	"bundleKind": "library"
+}
