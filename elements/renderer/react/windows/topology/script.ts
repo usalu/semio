@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 Topology package task router: `bun ./script.ts <dev|build|test> [args…]` — `test` runs Vitest then Playwright. */
+/** ­ƒº¡ Topology package task router: `bun ./script.ts <dev|build|test> [argsÔÇª]` ÔÇö `test` runs Vitest then Playwright. */
 import { spawn, spawnSync } from "node:child_process";
 
 const cwd = import.meta.dir;
@@ -56,6 +56,6 @@ if (command === "dev") {
 	runSync(["bunx", "vitest", "run", "--config", "vitest.config.ts", ...extra]);
 	runSync(["bunx", "playwright", "test", "--config", "play/playwright.config.ts", ...extra], { cwd });
 } else {
-	console.error("usage: bun ./script.ts <dev|build|test> [args…]");
+	console.error("usage: bun ./script.ts <dev|build|test> [argsÔÇª]");
 	process.exit(1);
 }

@@ -62,7 +62,7 @@ import {
 	type LodKind,
 	type SceneObjectStateContextValue,
 	type RelocateMode,
-} from "../index.tsx";
+} from "./index.tsx";
 
 function useScenePlaySnapshot(): ScenePlaySnapshot {
 	const { workbench } = useApp();
@@ -101,7 +101,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 	const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
 	const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
 	return (
-		<div className="relative min-h-0 min-w-0 flex-1">
+		<div className="absolute inset-0 min-h-0 min-w-0">
 			<SceneObjectStateProvider fixture={snap.fixture} onConnect={() => bus.dispatch(SCENE_PLAY_CONTROLLER_ID, "noteConnect")}>
 				<PlaySceneCanvas
 					fixture={snap.fixture}

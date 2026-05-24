@@ -140,7 +140,11 @@ const BOARD_PAINT_ROWS: &[BoardPaintRow<'_>] = &[
 ];
 
 pub fn emit_board_vello_styles(manifest_dir: &Path, out_dir: &Path) {
-	let tokens_path = manifest_dir.join("../../../../core/styling/tokens.json");
+	let tokens_path = manifest_dir
+		.ancestors()
+		.map(|dir| dir.join("elements/styling/tokens.json"))
+		.find(|path| path.is_file())
+		.unwrap_or_else(|| manifest_dir.join("../../../../core/styling/tokens.json"));
 	println!("cargo:rerun-if-changed={}", tokens_path.display());
 	let raw = fs::read_to_string(&tokens_path).unwrap_or_else(|e| panic!("read {}: {e}", tokens_path.display()));
 	let root: Value = serde_json::from_str(&raw).expect("parse tokens.json");

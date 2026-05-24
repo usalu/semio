@@ -1,9 +1,9 @@
 {
   "title": "Elements UI Class Abstraction",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + semio algorithm shell; remove AppConfig/PureAppDefinition.",
-  "summary": "Consolidated the detached UI protocol into elements/core/index.ts so @elements/ui-shell has a single library entry, removed the split ui-protocol module, fixed current elements workspace metadata and Nx script routing for the core/react packages, refreshed Bun workspace links, and added a React renderer test for detached declarative UI nodes. Verified with bun nx run @elements/ui-shell:test and bun nx run @elements/ui:test.",
+  "summary": "Generalized elements play infrastructure around the declarative UI shell and fixed current-layout build wiring. Topology play validates through its declarative shell target; board and scene play builds resolve current paths; package/project scripts route through nx/script.ts; Rust board build paths and styling codegen now resolve from the moved elements tree. Verified @elements/topology:test, @elements/scene:build, and @elements/board:build. Geometry build was stopped after confirming the corrected repo cache root because OpenCascade WASM compilation was still long-running.",
   "goal": "🎯elements🎯uibundle",
   "sessions": [
     "⚪4b6044d3f76f486dbe1e025429511551"

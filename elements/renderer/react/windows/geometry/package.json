@@ -41,7 +41,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/usalu/semio.git",
-		"directory": "elements/client/lib/geometry"
+		"directory": "elements/renderer/react/windows/geometry"
 	},
 	"bundleKind": "library"
 }

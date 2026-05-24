@@ -1,4 +1,4 @@
-@import "../../react/globals.css";
-@source "../../react";
+@import "../../../globals.css";
+@source "../../..";
 @source "../..";
 @source ".";

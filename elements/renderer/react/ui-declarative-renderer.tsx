@@ -7,7 +7,7 @@ import type {
 	UiBoardHostSurfaceNode,
 	UiButtonNode,
 	UiNode,
-	UiPanelHostSurfaceNode,
+	UiTableHostSurfaceNode,
 	UiScene3DHostSurfaceNode,
 	UiSeparatorNode,
 	UiStackNode,
@@ -53,21 +53,21 @@ export function unregisterUiBoardSurfaceHost(surfaceId: string): void {
 }
 //#endregion 🔖BoardRegistry
 
-//#region 🔖PanelRegistry
-type PanelSurfaceHost = React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>;
+//#region 🔖TableRegistry
+type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
 
-const panelSurfaceHosts = new Map<string, PanelSurfaceHost>();
+const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-/** @emoji 📑 Binds `surfaceId` from {@link UiPanelHostSurfaceNode} to a host panel body. */
-export function registerUiPanelSurfaceHost(surfaceId: string, Component: PanelSurfaceHost): void {
-	panelSurfaceHosts.set(surfaceId, Component);
+/** @emoji 📑 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
+export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
+	tableSurfaceHosts.set(surfaceId, Component);
 }
 
-/** @emoji 🧹 Drops a panel surface binding (tests). */
-export function unregisterUiPanelSurfaceHost(surfaceId: string): void {
-	panelSurfaceHosts.delete(surfaceId);
+/** @emoji 🧹 Drops a table surface binding (tests). */
+export function unregisterUiTableSurfaceHost(surfaceId: string): void {
+	tableSurfaceHosts.delete(surfaceId);
 }
-//#endregion 🔖PanelRegistry
+//#endregion 🔖TableRegistry
 
 //#region 🔖StackLayout
 function stackClass(spec: UiStackNode): string {
@@ -151,7 +151,7 @@ function renderScene3d(node: UiScene3DHostSurfaceNode): React.ReactElement {
 		);
 	}
 	return (
-		<div className="relative min-h-0 min-w-0 flex-1">
+		<div className="absolute inset-0 min-h-0 min-w-0">
 			<Host node={node} />
 		</div>
 	);
@@ -167,18 +167,18 @@ function renderBoard(node: UiBoardHostSurfaceNode): React.ReactElement {
 		);
 	}
 	return (
-		<div className="relative min-h-0 min-w-0 flex-1">
+		<div className="absolute inset-0 min-h-0 min-w-0">
 			<Host node={node} />
 		</div>
 	);
 }
 
-function renderPanel(node: UiPanelHostSurfaceNode): React.ReactElement {
-	const Host = panelSurfaceHosts.get(node.surfaceId);
+function renderTable(node: UiTableHostSurfaceNode): React.ReactElement {
+	const Host = tableSurfaceHosts.get(node.surfaceId);
 	if (!Host) {
 		return (
 			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
-				Unsupported panel surface &quot;{node.surfaceId}&quot;
+				Unsupported table surface &quot;{node.surfaceId}&quot;
 			</div>
 		);
 	}
@@ -193,7 +193,7 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 	switch (node.type) {
 		case "stack":
 			return (
-				<div className={stackClass(node)}>
+				<div className={cn(stackClass(node), node.direction === "vertical" && node.children.some((c) => c.type === "scene3d" || c.type === "board") && "relative min-h-0 flex-1")}>
 					{node.children.map((child, index) => (
 						<React.Fragment key={index}>{renderNode(child, commandBus, node.direction === "horizontal")}</React.Fragment>
 					))}
@@ -209,8 +209,8 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderScene3d(node);
 		case "board":
 			return renderBoard(node);
-		case "panel":
-			return renderPanel(node);
+		case "table":
+			return renderTable(node);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">

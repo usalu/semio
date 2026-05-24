@@ -20,7 +20,7 @@ import {
   Kit,
   KitFullDtoSchema,
 } from "@semio/react";
-import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
+import { Sketchpad, ensureSketchpadDeclarativeShell } from "@semio/sketchpad";
 import { createRoot } from "react-dom/client";
 
 declare global {
@@ -31,13 +31,7 @@ declare global {
   }
 }
 
-appRegistry.register(designConfig);
-appRegistry.register(docsConfig);
-appRegistry.register(feedbackConfig);
-appRegistry.register(homeConfig);
-appRegistry.register(kitConfig);
-appRegistry.register(qualityConfig);
-appRegistry.register(typeConfig);
+void ensureSketchpadDeclarativeShell();
 
 async function boot() {
   const vscodeApi = window.__SEMIO_VSCODE_API__;

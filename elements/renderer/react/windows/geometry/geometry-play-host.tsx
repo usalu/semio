@@ -33,7 +33,7 @@ import {
 	isAnalyzeEntitySelectable,
 	isAnalyzeEntityVisible,
 } from "./play/index.ts";
-import { TopologicViewport } from "../react/index.tsx";
+import { TopologicViewport } from "./react/index.tsx";
 import { ensureTopologicWasmLoaded, loadTopologicFixtureV1, type TopologicFixtureV1 } from "../wasm/index.ts";
 
 let geometryPlayChromeRegistered = false;
@@ -63,17 +63,19 @@ function GeometryTopologicScene3DSurfaceHost({ node }: { readonly node: UiScene3
 	const mode = geometryPlayModeFromApp(activeModeId ?? null);
 	const activeFixture = mode === "analyze" ? play.analyzeFixture : play.fixture;
 	return (
-		<TopologicViewport
-			fixture={activeFixture}
-			selectedId={play.selectedId}
-			selectableKinds={mode === "edit" ? play.selectableKinds : undefined}
-			visibleKinds={mode === "edit" ? play.visibleKinds : undefined}
-			isEntitySelectable={mode === "analyze" ? (entity) => isAnalyzeEntitySelectable(entity, play.analyzeSelectableKinds) : undefined}
-			isEntityVisible={mode === "analyze" ? (entity) => isAnalyzeEntityVisible(entity, play.analyzeVisibleKinds) : undefined}
-			onSelect={play.setSelectedId}
-			onTransformCommit={mode === "edit" ? play.onTransformCommit : undefined}
-			transformMode={play.transformMode}
-		/>
+		<div className="absolute inset-0 min-h-0 min-w-0">
+			<TopologicViewport
+				fixture={activeFixture}
+				selectedId={play.selectedId}
+				selectableKinds={mode === "edit" ? play.selectableKinds : undefined}
+				visibleKinds={mode === "edit" ? play.visibleKinds : undefined}
+				isEntitySelectable={mode === "analyze" ? (entity) => isAnalyzeEntitySelectable(entity, play.analyzeSelectableKinds) : undefined}
+				isEntityVisible={mode === "analyze" ? (entity) => isAnalyzeEntityVisible(entity, play.analyzeVisibleKinds) : undefined}
+				onSelect={play.setSelectedId}
+				onTransformCommit={mode === "edit" ? play.onTransformCommit : undefined}
+				transformMode={play.transformMode}
+			/>
+		</div>
 	);
 }
 

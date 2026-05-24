@@ -1,27 +1,23 @@
 # Play Declarative UI
 
-**Goal:** Detach elements play bundles from DOM/React; plugins contribute `UiNode` trees and commands; host renders.
-
-**Bundles:** geometry/play (prior), geometry/spatial/play, scene/play, board/play.
+**Status:** closed (2026-05-24)
 
 ## Summary
 
-- Extended `@elements/ui-shell` `UiNode` with `board`, `panel`, and `ShellWindowMeasure`; added `registerDeclarativeSidePanelBody`.
-- Host renderer (`ui-declarative-renderer.tsx`) registers surface hosts for scene3d, board, and panel.
-- `WorkbenchView` resolves declarative window bodies and side panels; LOD measures dispatch via `CommandBus`.
-- Migrated spatial, scene, and board play bundles: framework-free `index.ts` + thin `react.tsx` host adapters.
+Enforced canvas-only declarative window bodies in `@elements/ui-shell`: scene windows are a single fullscreen `scene3d`, board windows a single `board`. Chrome (toolbars, side panels, window measures) uses VS Code–style `WorkbenchMode.tools` and shell APIs only.
+
+Fixed spatial/geometry/scene/topology play hosts that stacked status strips and in-window buttons on top of the 3D viewport. Removed duplicate status chrome inside `SpatialSurface`. Stabilized declarative window React components so workbench `generation` updates no longer remount the golden-layout window (fixes scene reload on every toolbar click). Toolbar plain buttons use `type="button"`.
 
 ## Files
 
-- `elements/client/lib/ui/ui-protocol.ts`
-- `elements/client/lib/ui/index.ts`
-- `elements/client/lib/react/ui-declarative-renderer.tsx`
-- `elements/client/lib/react/index.tsx`
-- `elements/client/lib/geometry/spatial/play/index.ts`
-- `elements/client/lib/geometry/spatial/play/react.tsx`
-- `elements/client/lib/geometry/spatial/play/index.html`
-- `elements/client/lib/system/renderer/react/scene/play/index.ts`
-- `elements/client/lib/system/renderer/react/scene/play/react.tsx`
-- `elements/client/lib/system/renderer/react/windows/board/play/index.ts`
-- `elements/client/lib/system/renderer/react/windows/board/play/react.tsx`
-- `elements/client/lib/system/renderer/react/windows/board/vitest.config.ts`
+- `elements/core/index.ts`
+- `elements/renderer/react/index.tsx`
+- `elements/renderer/react/ui-declarative-renderer.tsx`
+- `elements/spatial/play/index.ts`
+- `elements/spatial/react/index.tsx`
+- `elements/renderer/react/windows/geometry/play/index.ts`
+- `elements/renderer/react/windows/geometry/geometry-play-host.tsx`
+- `elements/renderer/react/windows/scene/play/index.ts`
+- `elements/renderer/react/windows/scene/scene-play-host.tsx`
+- `elements/renderer/react/windows/topology/play/index.ts`
+- `elements/renderer/react/windows/board/play/index.ts`

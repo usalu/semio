@@ -1,7 +1,7 @@
 import type { ContextMenuItem } from "@elements/ui";
 import { Suspense, memo, useMemo, type ReactElement } from "react";
 
-/** 🔭 Topology pairs board WASM with scene R3F under one dual-surface contract; `@elements/board` and `@elements/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
+/** ­ƒö¡ Topology pairs board WASM with scene R3F under one dual-surface contract; `@elements/board` and `@elements/scene` stay independently testable via their own play apps or hand-built `TopologyDualSurfaceBindings`. */
 
 import {
 	boardFixtureMetaKindCatalogBundle,
@@ -33,15 +33,15 @@ import {
 	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
 
-//#region 🔖TopologyFixture
-/** @emoji 📄 Parsed `elements.topology.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */
+//#region ­ƒöûTopologyFixture
+/** @emoji ­ƒôä Parsed `elements.topology.fixture/v1` manifest (paired board+scene payloads are loaded separately in hosts). */
 export interface TopologyFixtureV1 {
 	readonly schema: "elements.topology.fixture/v1";
 	readonly label?: string;
 	readonly meta?: Record<string, unknown>;
 }
 
-/** @emoji 🧾 Validates topology fixture JSON. */
+/** @emoji ­ƒº¥ Validates topology fixture JSON. */
 export function parseTopologyFixtureV1(raw: unknown): TopologyFixtureV1 | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
@@ -52,13 +52,13 @@ export function parseTopologyFixtureV1(raw: unknown): TopologyFixtureV1 | null {
 		...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
 	};
 }
-//#endregion 🔖TopologyFixture
+//#endregion ­ƒöûTopologyFixture
 
-//#region 🔗SharedBindings
-/** @emoji 🧷 LOD + grid fields shared by board WASM and scene orbit pseudo-zoom. */
+//#region ­ƒöùSharedBindings
+/** @emoji ­ƒºÀ LOD + grid fields shared by board WASM and scene orbit pseudo-zoom. */
 export type TopologyLodGridShared = Pick<BoardCanvasProps, "lodZoomThresholds" | "gridFactor" | "gridSnapEnabled">;
 
-/** @emoji 🧷 Parallel link/selection/camera hooks for board vs scene (payload kinds differ per surface). */
+/** @emoji ­ƒºÀ Parallel link/selection/camera hooks for board vs scene (payload kinds differ per surface). */
 export interface TopologyDualSurfaceBindingInput extends TopologyLodGridShared {
 	readonly kindCatalogs?: BoardKindCatalogBundle;
 	readonly kindCompatibility?: readonly BoardKindCompatEntry[];
@@ -115,7 +115,7 @@ export interface TopologyDualSurfaceBindings {
 	>;
 }
 
-/** @emoji 🧷 Splits shared LOD/grid + catalog rows into board and scene canvas prop slices (scene catalogs are structurally aligned JSON). */
+/** @emoji ­ƒºÀ Splits shared LOD/grid + catalog rows into board and scene canvas prop slices (scene catalogs are structurally aligned JSON). */
 export function buildTopologyDualSurfaceBindings(input: TopologyDualSurfaceBindingInput): TopologyDualSurfaceBindings {
 	const sceneLod = input.lodZoomThresholds as SceneLodZoomThresholds | undefined;
 	const sceneCatalogs = input.kindCatalogs as SceneKindCatalogBundle | undefined;
@@ -154,7 +154,7 @@ export function buildTopologyDualSurfaceBindings(input: TopologyDualSurfaceBindi
 	};
 }
 
-/** @emoji 🔗 Mirrors one logical link callback onto both surfaces with a discriminant. */
+/** @emoji ­ƒöù Mirrors one logical link callback onto both surfaces with a discriminant. */
 export function topologyMirrorConnectHandlers(onBoth: (p: {
 	readonly source: string;
 	readonly target: string;
@@ -167,7 +167,7 @@ export function topologyMirrorConnectHandlers(onBoth: (p: {
 	};
 }
 
-/** @emoji 🔗 Mirrors proximity-connect telemetry across both surfaces (board WASM vs scene vortex pick). */
+/** @emoji ­ƒöù Mirrors proximity-connect telemetry across both surfaces (board WASM vs scene vortex pick). */
 export function topologyMirrorProximityHandlers(onBoth: (p: { readonly surface: "board" | "scene" }) => void): Pick<
 	TopologyDualSurfaceBindingInput,
 	"onBoardProximityConnect" | "onSceneProximityConnect"
@@ -177,18 +177,18 @@ export function topologyMirrorProximityHandlers(onBoth: (p: { readonly surface: 
 		onSceneProximityConnect: () => onBoth({ surface: "scene" }),
 	};
 }
-//#endregion 🔗SharedBindings
+//#endregion ­ƒöùSharedBindings
 
-//#region 🕸️BoardLayout
-/** @emoji 🔗 Default separator for board handle ids (`piece::connector`). */
+//#region ­ƒò©´©ÅBoardLayout
+/** @emoji ­ƒöù Default separator for board handle ids (`piece::connector`). */
 export const TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR = "::";
 
-/** @emoji 🔗 Builds a compound board handle id from two parts. */
+/** @emoji ­ƒöù Builds a compound board handle id from two parts. */
 export function topologyBoardCompoundId(left: string, right: string, separator: string = TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR): string {
 	return `${left}${separator}${right}`;
 }
 
-/** @emoji 🔍 Parses a compound board handle id into left/right parts. */
+/** @emoji ­ƒöì Parses a compound board handle id into left/right parts. */
 export function topologyParseBoardCompoundId(
 	value: string,
 	separator: string = TOPOLOGY_BOARD_HANDLE_ID_SEPARATOR,
@@ -201,14 +201,14 @@ export function topologyParseBoardCompoundId(
 	};
 }
 
-/** @emoji 📐 Evenly distributes connector angles around a node rim (starts at top). */
+/** @emoji ­ƒôÉ Evenly distributes connector angles around a node rim (starts at top). */
 export function topologyBoardConnectorAngle(index: number, total: number): number {
 	return -Math.PI / 2 + (index * Math.PI * 2) / Math.max(total, 1);
 }
 
 export type TopologyKitBoardSide = "top" | "right" | "bottom" | "left";
 
-/** @emoji 📐 Kit diagram snap side to board handle angle (rectangle vs circle rim). */
+/** @emoji ­ƒôÉ Kit diagram snap side to board handle angle (rectangle vs circle rim). */
 export function topologyKitBoardHandleAngle(side: TopologyKitBoardSide, shape: "circle" | "rectangle"): number {
 	if (shape === "rectangle") {
 		if (side === "top") return 0;
@@ -222,7 +222,7 @@ export function topologyKitBoardHandleAngle(side: TopologyKitBoardSide, shape: "
 	return -Math.PI / 2;
 }
 
-/** @emoji 📍 Node center from top-left layout position and frame size. */
+/** @emoji ­ƒôì Node center from top-left layout position and frame size. */
 export function topologyBoardCenterFromTopLeft(
 	position: { readonly x: number; readonly y: number },
 	frame: { readonly width: number; readonly height: number },
@@ -230,14 +230,14 @@ export function topologyBoardCenterFromTopLeft(
 	return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
 }
 
-/** @emoji 🕸️ Diagram force-slider weights shared by sketchpad kit/design hosts. */
+/** @emoji ­ƒò©´©Å Diagram force-slider weights shared by sketchpad kit/design hosts. */
 export interface TopologyDiagramForceWeights {
 	readonly centerStrength: number;
 	readonly linkDistance: number;
 	readonly chargeStrength: number;
 }
 
-/** @emoji 🕸️ Maps diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
+/** @emoji ­ƒò©´©Å Maps diagram force sliders to {@link layoutBoardFixtureForceGraph} options. */
 export function topologyDiagramForceGraphOptions(weights: TopologyDiagramForceWeights): BoardForceGraphLayoutOptions {
 	return {
 		centerX: 0,
@@ -250,7 +250,7 @@ export function topologyDiagramForceGraphOptions(weights: TopologyDiagramForceWe
 	};
 }
 
-/** @emoji 📷 Centers the board camera on the average of node centers. */
+/** @emoji ­ƒôÀ Centers the board camera on the average of node centers. */
 export function topologyBoardCameraFromCenters(centers: readonly { x: number; y: number }[]): BoardCameraState {
 	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
 	const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
@@ -258,7 +258,7 @@ export function topologyBoardCameraFromCenters(centers: readonly { x: number; y:
 	return { x: -avgX, y: -avgY, zoom: 1 };
 }
 
-/** @emoji 📍 Writes WASM layout node centers back into top-left layout positions. */
+/** @emoji ­ƒôì Writes WASM layout node centers back into top-left layout positions. */
 export function topologyApplyBoardFixtureCentersToTopLeft<T extends { readonly id: string; readonly position: { x: number; y: number } }>(
 	items: readonly T[],
 	fixture: BoardFixtureV1,
@@ -275,14 +275,14 @@ export function topologyApplyBoardFixtureCentersToTopLeft<T extends { readonly i
 		};
 	});
 }
-//#endregion 🕸️BoardLayout
+//#endregion ­ƒò©´©ÅBoardLayout
 
-//#region 🧾PairedMeta
+//#region ­ƒº¥PairedMeta
 function isTopologyMetaRecord(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-/** @emoji 🧾 Reads `kindCompatibility` rows from one fixture meta blob (shared row shape across board + scene JSON). */
+/** @emoji ­ƒº¥ Reads `kindCompatibility` rows from one fixture meta blob (shared row shape across board + scene JSON). */
 export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unknown> | undefined): BoardKindCompatEntry[] {
 	if (!isTopologyMetaRecord(meta)) return [];
 	const arr = meta.kindCompatibility;
@@ -314,7 +314,7 @@ export function topologyKindCompatibilityRowsFromMeta(meta: Record<string, unkno
 	return out;
 }
 
-/** @emoji 🧾 Reads `kindCatalogs` object from one fixture meta (scene JSON shape; cast at dual-surface boundary). */
+/** @emoji ­ƒº¥ Reads `kindCatalogs` object from one fixture meta (scene JSON shape; cast at dual-surface boundary). */
 export function topologyKindCatalogBundleFromSceneMeta(meta: Record<string, unknown> | undefined): SceneKindCatalogBundle | undefined {
 	if (!isTopologyMetaRecord(meta)) return undefined;
 	const kc = meta.kindCatalogs;
@@ -322,7 +322,7 @@ export function topologyKindCatalogBundleFromSceneMeta(meta: Record<string, unkn
 	return kc as SceneKindCatalogBundle;
 }
 
-/** @emoji 🧾 Picks a single catalog bundle for dual surfaces: board fixture meta wins, else scene meta. */
+/** @emoji ­ƒº¥ Picks a single catalog bundle for dual surfaces: board fixture meta wins, else scene meta. */
 export function topologyPairedKindCatalogBundle(inp: {
 	readonly boardMeta: Record<string, unknown> | undefined;
 	readonly sceneMeta: Record<string, unknown> | undefined;
@@ -332,7 +332,7 @@ export function topologyPairedKindCatalogBundle(inp: {
 	return topologyKindCatalogBundleFromSceneMeta(inp.sceneMeta) as BoardKindCatalogBundle | undefined;
 }
 
-/** @emoji 🧾 Picks compatibility rows for dual surfaces: board meta wins when non-empty, else scene meta. */
+/** @emoji ­ƒº¥ Picks compatibility rows for dual surfaces: board meta wins when non-empty, else scene meta. */
 export function topologyPairedKindCompatibility(inp: {
 	readonly boardMeta: Record<string, unknown> | undefined;
 	readonly sceneMeta: Record<string, unknown> | undefined;
@@ -341,31 +341,31 @@ export function topologyPairedKindCompatibility(inp: {
 	if (fromBoard.length > 0) return fromBoard;
 	return topologyKindCompatibilityRowsFromMeta(inp.sceneMeta);
 }
-//#endregion 🧾PairedMeta
+//#endregion ­ƒº¥PairedMeta
 
-//#region 🎚️PairDefaults
-/** @emoji 🎚️ Root layout class shared by `TopologyBoardPane` / `TopologyScenePane` shells (pair-aligned chrome). */
+//#region ­ƒÄÜ´©ÅPairDefaults
+/** @emoji ­ƒÄÜ´©Å Root layout class shared by `TopologyBoardPane` / `TopologyScenePane` shells (pair-aligned chrome). */
 export const TOPOLOGY_PANE_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
-/** @emoji 🎚️ LOD + grid defaults shared by paired board/scene canvases (same knobs as standalone plays). */
+/** @emoji ­ƒÄÜ´©Å LOD + grid defaults shared by paired board/scene canvases (same knobs as standalone plays). */
 export const TOPOLOGY_LOD_GRID_DEFAULTS: TopologyLodGridShared = {
 	lodZoomThresholds: DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 	gridFactor: DEFAULT_BOARD_GRID_FACTOR,
 	gridSnapEnabled: true,
 };
 
-/** @emoji 🎚️ Scene-only chrome defaults aligned with the scene play harness (stable reference for memoized panes). */
+/** @emoji ­ƒÄÜ´©Å Scene-only chrome defaults aligned with the scene play harness (stable reference for memoized panes). */
 export const TOPOLOGY_SCENE_CHROME_DEFAULTS: Pick<
 	SceneCanvasProps,
 	"showLodGrid" | "proximityRadius" | "gridSnapEnabled"
 > = { showLodGrid: true, proximityRadius: 24, gridSnapEnabled: true };
 
-/** @deprecated Use {@link TOPOLOGY_SCENE_CHROME_DEFAULTS} — kept for callers that still invoke a factory. */
+/** @deprecated Use {@link TOPOLOGY_SCENE_CHROME_DEFAULTS} ÔÇö kept for callers that still invoke a factory. */
 export function topologySceneChromeDefaults(): Pick<SceneCanvasProps, "showLodGrid" | "proximityRadius" | "gridSnapEnabled"> {
 	return TOPOLOGY_SCENE_CHROME_DEFAULTS;
 }
 
-/** @emoji 🎚️ Merges paired fixture metas into the shared LOD/grid + catalog fields consumed by `buildTopologyDualSurfaceBindings`. */
+/** @emoji ­ƒÄÜ´©Å Merges paired fixture metas into the shared LOD/grid + catalog fields consumed by `buildTopologyDualSurfaceBindings`. */
 export function topologySharedKindsFromPairedMetas(inp: {
 	readonly boardMeta: Record<string, unknown> | undefined;
 	readonly sceneMeta: Record<string, unknown> | undefined;
@@ -379,9 +379,9 @@ export function topologySharedKindsFromPairedMetas(inp: {
 		kindCompatibility: topologyPairedKindCompatibility(inp),
 	};
 }
-//#endregion 🎚️PairDefaults
+//#endregion ­ƒÄÜ´©ÅPairDefaults
 
-//#region 🗼BoardMarkers
+//#region ­ƒù╝BoardMarkers
 export interface TopologyBoardWireRecord {
 	readonly id: string;
 	readonly source: string;
@@ -392,7 +392,7 @@ export interface TopologyBoardWireRecord {
 	readonly hidden?: boolean;
 }
 
-/** @emoji 🗼 Builds a Fragment of board host markers from a board fixture (same static shape walk as board play). */
+/** @emoji ­ƒù╝ Builds a Fragment of board host markers from a board fixture (same static shape walk as board play). */
 export function topologyBoardMarkersFromFixture(props: {
 	readonly fixture: BoardFixtureV1;
 	readonly lockedIds: ReadonlySet<string>;
@@ -505,10 +505,10 @@ export function topologyBoardMarkersFromFixture(props: {
 		</>
 	);
 }
-//#endregion 🗼BoardMarkers
+//#endregion ­ƒù╝BoardMarkers
 
-//#region 🪟Panes
-//#region 🪟PanesBoard
+//#region ­ƒ¬ƒPanes
+//#region ­ƒ¬ƒPanesBoard
 export interface TopologyBoardPaneProps {
 	readonly fixture: BoardFixtureV1;
 	readonly bindings: TopologyDualSurfaceBindings;
@@ -549,9 +549,9 @@ export const TopologyBoardPane = memo(function TopologyBoardPane(props: Topology
 		</div>
 	);
 });
-//#endregion 🪟PanesBoard
+//#endregion ­ƒ¬ƒPanesBoard
 
-//#region 🪟PanesScene
+//#region ­ƒ¬ƒPanesScene
 export interface TopologyScenePaneProps {
 	readonly fixture: SceneFixtureV1;
 	readonly bindings: TopologyDualSurfaceBindings;
@@ -589,7 +589,7 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 	const blocked = props.blockedVortexFullIds ?? blockedVortexFullIdsFromAttractions(props.fixture.attractions);
 	return (
 		<div className={TOPOLOGY_PANE_ROOT_CLASS} data-topology-scene-root data-topology-surface="scene">
-			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
+			<Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshesÔÇª</div>}>
 				<SceneObjectStateProvider
 					fixture={props.fixture}
 					onConnect={props.bindings.scene.onConnect}
@@ -601,8 +601,8 @@ export const TopologyScenePane = memo(function TopologyScenePane(props: Topology
 		</div>
 	);
 });
-//#endregion 🪟PanesScene
-//#endregion 🪟Panes
+//#endregion ­ƒ¬ƒPanesScene
+//#endregion ­ƒ¬ƒPanes
 
 export { parseBoardFixtureV1, parseFixtureV1, blockedVortexFullIdsFromAttractions };
 export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR };

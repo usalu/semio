@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../core/styling/rs/board_vello_build.inc.rs"));
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../styling/rs/board_vello_build.inc.rs"));
 
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
@@ -11,7 +11,7 @@ fn main() {
     println!("cargo:rerun-if-changed={}", emoji_font.display());
     emit_board_vello_styles(&manifest_dir, &out_dir);
 
-    let icons_src = manifest_dir.join("../../../../..").join("semio/client/examples/metabolism/icons");
+    let icons_src = manifest_dir.join("../../../../../..").join("semio/client/examples/metabolism/icons");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
     let mut arms = String::new();

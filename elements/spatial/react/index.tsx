@@ -1,4 +1,4 @@
-import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "@elements/ui";
+import { Button, Input, getLevelBgClass, useApp } from "@elements/ui";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
@@ -16,7 +16,6 @@ import {
 	spatialKindLabel,
 	transformProps,
 	type SpatialRenderable,
-	type SpatialStatus,
 	type SpatialSurfaceKindFilter,
 	type SpatialSurfaceSnapshot,
 	type TopologicTransform,
@@ -31,12 +30,6 @@ function nextSpatialTransformPosition(transform: TopologicTransform | undefined,
 function selectedColor(color: string | undefined, selected: boolean, fallback: string): string {
 	if (selected) return "#fb7185";
 	return color ?? fallback;
-}
-
-function statusToneClass(status: SpatialStatus): string {
-	if (status === "error") return "border-rose-500/30 bg-rose-500/10 text-rose-200";
-	if (status === "ready") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
-	return "border-border bg-muted text-muted-foreground";
 }
 
 interface SpatialDragStartArgs {
@@ -250,36 +243,14 @@ export function SpatialSurface(props: {
 	readonly disableViewport?: boolean;
 }): React.ReactElement {
 	return (
-		<div className={`relative flex h-full w-full min-w-0 flex-col ${getLevelBgClass("window")}`}>
-			<main className="relative flex min-w-0 flex-1 flex-col bg-background">
-				<div className="flex shrink-0 gap-2 border-b border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-					<ToolbarZone>
-						<ToolbarGroup>
-							<ToolbarItem>
-								<span className="font-medium text-foreground">Status:</span>
-								<span className={`rounded-full border px-2 py-0.5 ${statusToneClass(props.snapshot.status)}`}>{props.snapshot.status}</span>
-							</ToolbarItem>
-							<ToolbarItem>
-								<span className="font-medium text-foreground">Focus:</span>
-								<span>{spatialKindLabel(props.snapshot.focusedKind)}</span>
-							</ToolbarItem>
-							<ToolbarItem>
-								<span className="font-medium text-foreground">Query:</span>
-								<span>{props.snapshot.query.trim() || "none"}</span>
-							</ToolbarItem>
-						</ToolbarGroup>
-					</ToolbarZone>
+		<div className={`absolute inset-0 min-h-0 min-w-0 overflow-hidden ${getLevelBgClass("window")} bg-[radial-gradient(circle_at_top,rgba(148,163,184,0.12),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.98),rgba(2,6,23,1))]`}>
+			{props.snapshot.model && props.snapshot.status === "ready" && !props.disableViewport ? (
+				<SpatialViewport snapshot={props.snapshot} onSelect={props.snapshot.setSelectedId} />
+			) : (
+				<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+					{props.snapshot.status === "ready" ? "Viewport disabled for this surface." : "Preparing scene…"}
 				</div>
-				<div className="relative min-h-0 flex-1 overflow-hidden bg-[radial-gradient(circle_at_top,rgba(148,163,184,0.12),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.98),rgba(2,6,23,1))]">
-					{props.snapshot.model && props.snapshot.status === "ready" && !props.disableViewport ? (
-						<SpatialViewport snapshot={props.snapshot} onSelect={props.snapshot.setSelectedId} />
-					) : (
-						<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-							{props.snapshot.status === "ready" ? "Viewport disabled for this surface." : "Preparing scene…"}
-						</div>
-					)}
-				</div>
-			</main>
+			)}
 		</div>
 	);
 }

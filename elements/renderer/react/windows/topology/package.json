@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@elements/topology",
   "version": "0.1.0",
-  "description": "elements · topology (board + scene)",
+  "description": "elements ┬À topology (board + scene)",
   "type": "module",
   "private": true,
   "scripts": {

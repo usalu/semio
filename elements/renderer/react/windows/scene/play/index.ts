@@ -9,9 +9,12 @@ import {
 	WorkbenchApp,
 	WorkbenchMode,
 	WorkbenchWindowKind,
+	buildScene3dWindowBody,
 	createStackLayout,
 	type ShellWindowBodyViewContext,
 	Expertise,
+	type ShellAppTools,
+	type ShellToolItem,
 	type ShellWindowMeasure,
 	type UiNode,
 } from "@elements/ui-shell";
@@ -149,6 +152,18 @@ export class ScenePlayShellController extends Controller {
 		this.mainMode.windowKinds = [
 			new WorkbenchWindowKind(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, [lodMeasure]),
 		];
+		const relocateTools: ShellToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
+			id: `scene.relocate.${mode}`,
+			kind: "toggle" as const,
+			text: mode.charAt(0).toUpperCase() + mode.slice(1),
+			order,
+			pressed: this.relocateMode === mode,
+			controllerId: SCENE_PLAY_CONTROLLER_ID,
+			command: "setRelocateMode",
+			args: { mode },
+		}));
+		const tools: ShellAppTools = { actions: relocateTools };
+		this.mainMode.tools = tools;
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -238,46 +253,17 @@ function sceneControllerFromContext(ctx: ShellWindowBodyViewContext): ScenePlayS
 	return ctx.workbench.getActiveApp()?.controller as ScenePlayShellController | undefined;
 }
 
-/** @emoji 🧩 Declarative scene window: relocate tools, status strip, scene3d host surface. */
+/** @emoji 🧩 Declarative scene window: fullscreen scene3d only (relocate tools live on {@link WorkbenchMode.tools}). */
 export function buildScenePlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
 	const ctrl = sceneControllerFromContext(ctx);
 	if (!ctrl) {
-		return { type: "stack", direction: "vertical", padding: "none", children: [{ type: "text", value: "Missing scene controller" }] };
+		return { type: "text", value: "Missing scene controller" };
 	}
 	const snap = ctrl.getSnapshot();
 	if (!snap.fixture) {
 		return { type: "text", value: "Invalid scene fixture" };
 	}
-	const cmd = (command: string, args?: Record<string, string>) => ({
-		controllerId: SCENE_PLAY_CONTROLLER_ID,
-		command,
-		...(args ? { args } : {}),
-	});
-	return {
-		type: "stack",
-		direction: "vertical",
-		padding: "none",
-		children: [
-			{
-				type: "stack",
-				direction: "horizontal",
-				gap: "tight",
-				padding: "standard",
-				children: [
-					{ type: "button", label: "Translate", command: cmd("setRelocateMode", { mode: "translate" }), style: snap.relocateMode === "translate" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "button", label: "Rotate", command: cmd("setRelocateMode", { mode: "rotate" }), style: snap.relocateMode === "rotate" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "button", label: "Scale", command: cmd("setRelocateMode", { mode: "scale" }), style: snap.relocateMode === "scale" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "separator" },
-					{ type: "text", value: snap.selectedId ?? "—", dataAttributes: { "e2e-selected": snap.selectedId ?? "none" } },
-					{ type: "text", value: snap.lodTag, dataAttributes: { "e2e-scene-lod": snap.lodTag } },
-					{ type: "text", value: String(snap.proximityCount), dataAttributes: { "e2e-proximity-count": String(snap.proximityCount) } },
-					{ type: "text", value: String(snap.connectCount), dataAttributes: { "e2e-connect-count": String(snap.connectCount) } },
-					{ type: "text", value: String(snap.indirectCount), dataAttributes: { "e2e-indirect-count": String(snap.indirectCount) } },
-				],
-			},
-			{ type: "scene3d", surfaceId: SCENE_PLAY_SCENE_SURFACE_ID, controllerId: SCENE_PLAY_CONTROLLER_ID },
-		],
-	};
+	return buildScene3dWindowBody(SCENE_PLAY_SCENE_SURFACE_ID, SCENE_PLAY_CONTROLLER_ID);
 }
 //#endregion 🔖ScenePlayController
 
@@ -293,7 +279,7 @@ if (import.meta.vitest) {
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
 
-		it("declarative window body ends with scene3d surface binding", () => {
+		it("declarative window body is a lone scene3d surface", () => {
 			const bus = new CommandBus();
 			const wb = new Workbench();
 			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
@@ -305,14 +291,7 @@ if (import.meta.vitest) {
 				activeModeId: "main",
 				generation: wb.generation,
 			});
-			expect(tree.type).toBe("stack");
-			if (tree.type !== "stack") return;
-			const last = tree.children[tree.children.length - 1];
-			expect(last).toEqual({
-				type: "scene3d",
-				surfaceId: SCENE_PLAY_SCENE_SURFACE_ID,
-				controllerId: SCENE_PLAY_CONTROLLER_ID,
-			});
+			expect(tree).toEqual(buildScene3dWindowBody(SCENE_PLAY_SCENE_SURFACE_ID, SCENE_PLAY_CONTROLLER_ID));
 		});
 	});
 }

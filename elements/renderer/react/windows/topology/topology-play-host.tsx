@@ -1,6 +1,6 @@
-// #region 🧲Header
-// 💻 elements/renderer/react/windows/topology/topology-play-host.tsx — React host surfaces for the declarative topology play bundle.
-// #endregion 🧲Header
+// #region ­ƒº▓Header
+// ­ƒÆ╗ elements/renderer/react/windows/topology/topology-play-host.tsx ÔÇö React host surfaces for the declarative topology play bundle.
+// #endregion ­ƒº▓Header
 
 import { useGLTF } from "@react-three/drei";
 import * as React from "react";
@@ -42,7 +42,7 @@ import {
 } from "./play/index.ts";
 import "./play/globals.css";
 
-//#region 🔖Snapshot
+//#region ­ƒöûSnapshot
 function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellController | undefined; readonly snapshot: TopologyPlaySnapshot | null } {
 	const { workbench } = useApp();
 	React.useSyncExternalStore(
@@ -53,9 +53,9 @@ function useTopologyPlaySnapshot(): { readonly controller: TopologyPlayShellCont
 	const controller = workbench.getActiveApp()?.controller as TopologyPlayShellController | undefined;
 	return { controller, snapshot: controller?.getSnapshot() ?? null };
 }
-//#endregion 🔖Snapshot
+//#endregion ­ƒöûSnapshot
 
-//#region 🔖Surfaces
+//#region ­ƒöûSurfaces
 function TopologyBoardSurfaceHost({ node }: { readonly node: UiBoardHostSurfaceNode }): React.ReactElement {
 	const { controller, snapshot } = useTopologyPlaySnapshot();
 	if (node.controllerId !== TOPOLOGY_PLAY_CONTROLLER_ID || node.surfaceId !== TOPOLOGY_PLAY_BOARD_SURFACE_ID || node.paneId !== TOPOLOGY_PLAY_BOARD_WINDOW_ID || !controller || !snapshot?.boardFixture || !snapshot.boardCamera) {
@@ -114,9 +114,9 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 		/>
 	);
 }
-//#endregion 🔖Surfaces
+//#endregion ­ƒöûSurfaces
 
-//#region 🔖Mount
+//#region ­ƒöûMount
 let topologyPlayChromeRegistered = false;
 
 function registerTopologyPlayChrome(): void {
@@ -137,8 +137,8 @@ export function createTopologyPlayElement(): React.ReactElement {
 	);
 }
 
-/** @emoji 🚀 Vite host entry: mounts topology play into `#root`. */
+/** @emoji ­ƒÜÇ Vite host entry: mounts topology play into `#root`. */
 export function mountTopologyPlay(): void {
 	mountReactApp(createTopologyPlayElement());
 }
-//#endregion 🔖Mount
+//#endregion ­ƒöûMount

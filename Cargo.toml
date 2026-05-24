@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "elements/client/lib/board/rs",
+    "elements/renderer/react/windows/board/rs",
     "semio/client/lib/rs",
     "semio/client/bin/store",
     "semio/server/hub",

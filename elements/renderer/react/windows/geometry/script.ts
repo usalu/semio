@@ -6,7 +6,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 const cwd = import.meta.dir;
-const workspaceRoot = join(cwd, "../../../../");
+const workspaceRoot = join(cwd, "../../../../..");
 const segs = process.argv.slice(2);
 const command = segs[0];
 const extra = segs.slice(1);
@@ -236,7 +236,7 @@ function wasmOutputPath(): string {
 }
 
 function spatialRoot(): string {
-	return join(cwd, "spatial");
+	return join(workspaceRoot, "elements", "spatial");
 }
 
 function wasmSourcePath(): string {

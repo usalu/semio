@@ -7,8 +7,12 @@ import {
 	Controller,
 	Workbench,
 	WorkbenchApp,
+	WorkbenchMode,
 	WorkbenchWindowKind,
+	buildBoardWindowBody,
+	buildScene3dWindowBody,
 	createDefaultLayout,
+	type ShellToolItem,
 	type ShellWindowBodyViewContext,
 	type ShellWindowMeasure,
 	type UiNode,
@@ -94,6 +98,7 @@ export interface TopologyPlaySnapshot {
 
 /** @emoji 🎛 Framework-free topology play controller shared by declarative board and scene windows. */
 export class TopologyPlayShellController extends Controller {
+	readonly mainMode = new WorkbenchMode("main", "Topology", undefined);
 	readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
 	readonly boardFixture = parseBoardFixtureV1(nakaginBoardJson as unknown);
 	readonly sceneFixture = parseFixtureV1(nakaginSceneJson as unknown);
@@ -113,6 +118,22 @@ export class TopologyPlayShellController extends Controller {
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(TOPOLOGY_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.rebuildShellMode();
+	}
+
+	private rebuildShellMode(): void {
+		const relocateTools: ShellToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
+			id: `topology.relocate.${mode}`,
+			kind: "toggle" as const,
+			text: mode.charAt(0).toUpperCase() + mode.slice(1),
+			order,
+			pressed: this.relocateMode === mode,
+			controllerId: TOPOLOGY_PLAY_CONTROLLER_ID,
+			command: "setRelocateMode",
+			args: { mode },
+		}));
+		this.mainMode.tools = { actions: relocateTools };
+		this.mainMode.windowKinds = this.getWindowKinds();
 	}
 
 	private boardLodMeasure(): ShellWindowMeasure {
@@ -223,7 +244,10 @@ export class TopologyPlayShellController extends Controller {
 				changed = false;
 				break;
 		}
-		if (changed) this.emit();
+		if (changed) {
+			this.rebuildShellMode();
+			this.emit();
+		}
 	}
 
 	getSnapshot(): TopologyPlaySnapshot {
@@ -252,7 +276,7 @@ export class TopologyPlayShellController extends Controller {
 
 //#region 🔖Workbench
 export function buildTopologyPlayWorkbenchApp(controller: TopologyPlayShellController): WorkbenchApp {
-	return new WorkbenchApp(
+	const app = new WorkbenchApp(
 		TOPOLOGY_PLAY_APP_ID,
 		"Topology play",
 		undefined,
@@ -260,6 +284,9 @@ export function buildTopologyPlayWorkbenchApp(controller: TopologyPlayShellContr
 		createDefaultLayout([TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_ID], "row", [50, 50], [TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL]) as never,
 		controller.getWindowKinds(),
 	);
+	app.defaultModeId = controller.mainMode.id;
+	app.addMode(controller.mainMode);
+	return app;
 }
 
 export function buildTopologyPlayWorkbench(): Workbench {
@@ -275,57 +302,14 @@ export function buildTopologyBoardDeclarativeBody(ctx: ShellWindowBodyViewContex
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.boardFixture) return { type: "text", value: "Invalid board fixture" };
-	return {
-		type: "stack",
-		direction: "vertical",
-		padding: "none",
-		children: [
-			{
-				type: "stack",
-				direction: "horizontal",
-				gap: "tight",
-				padding: "standard",
-				children: [
-					{ type: "text", value: snap.manifestLabel ?? "topology", dataAttributes: { "e2e-topology-manifest": snap.manifestLabel ?? "topology" } },
-					{ type: "text", value: [...snap.boardSelected].join(", ") || "-", dataAttributes: { "e2e-topology-board-selected": [...snap.boardSelected].join(", ") || "-" } },
-					{ type: "text", value: String(snap.connectBoard), dataAttributes: { "e2e-topology-connect-board": String(snap.connectBoard) } },
-					{ type: "text", value: String(snap.proximityBoard), dataAttributes: { "e2e-topology-proximity-board": String(snap.proximityBoard) } },
-				],
-			},
-			{ type: "board", surfaceId: TOPOLOGY_PLAY_BOARD_SURFACE_ID, controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, paneId: TOPOLOGY_PLAY_BOARD_WINDOW_ID },
-		],
-	};
+	return buildBoardWindowBody(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID, TOPOLOGY_PLAY_BOARD_WINDOW_ID);
 }
 
 export function buildTopologySceneDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
-	const cmd = (mode: SceneRelocateMode) => ({ controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setRelocateMode", args: { mode } });
-	return {
-		type: "stack",
-		direction: "vertical",
-		padding: "none",
-		children: [
-			{
-				type: "stack",
-				direction: "horizontal",
-				gap: "tight",
-				padding: "standard",
-				children: [
-					{ type: "button", label: "Translate", command: cmd("translate"), style: snap.relocateMode === "translate" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "button", label: "Rotate", command: cmd("rotate"), style: snap.relocateMode === "rotate" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "button", label: "Scale", command: cmd("scale"), style: snap.relocateMode === "scale" ? { variant: "success" } : { variant: "subtle" } },
-					{ type: "separator" },
-					{ type: "text", value: snap.sceneLodTag, dataAttributes: { "e2e-topology-scene-lod": snap.sceneLodTag } },
-					{ type: "text", value: snap.sceneSelected ?? "-", dataAttributes: { "e2e-topology-scene-selected": snap.sceneSelected ?? "-" } },
-					{ type: "text", value: String(snap.connectScene), dataAttributes: { "e2e-topology-connect-scene": String(snap.connectScene) } },
-					{ type: "text", value: String(snap.proximityScene), dataAttributes: { "e2e-topology-proximity-scene": String(snap.proximityScene) } },
-				],
-			},
-			{ type: "scene3d", surfaceId: TOPOLOGY_PLAY_SCENE_SURFACE_ID, controllerId: TOPOLOGY_PLAY_CONTROLLER_ID },
-		],
-	};
+	return buildScene3dWindowBody(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID);
 }
 //#endregion 🔖DeclarativeBodies
 
@@ -350,24 +334,24 @@ if (import.meta.vitest) {
 			});
 			expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
 		});
-		it("builds declarative board and scene surface bodies", () => {
+		it("builds declarative board and scene canvas-only bodies", () => {
 			const wb = buildTopologyPlayWorkbench();
 			const board = buildTopologyBoardDeclarativeBody({
 				workbench: wb,
 				windowKindId: TOPOLOGY_PLAY_BOARD_WINDOW_ID,
 				bodyKey: TOPOLOGY_PLAY_BOARD_BODY_KEY,
-				activeModeId: null,
+				activeModeId: "main",
 				generation: 0,
 			});
 			const scene = buildTopologySceneDeclarativeBody({
 				workbench: wb,
 				windowKindId: TOPOLOGY_PLAY_SCENE_WINDOW_ID,
 				bodyKey: TOPOLOGY_PLAY_SCENE_BODY_KEY,
-				activeModeId: null,
+				activeModeId: "main",
 				generation: 0,
 			});
-			expect(board.type).toBe("stack");
-			expect(scene.type).toBe("stack");
+			expect(board).toEqual(buildBoardWindowBody(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID, TOPOLOGY_PLAY_BOARD_WINDOW_ID));
+			expect(scene).toEqual(buildScene3dWindowBody(TOPOLOGY_PLAY_SCENE_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID));
 		});
 	});
 }

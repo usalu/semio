@@ -9,6 +9,7 @@ import {
 	WorkbenchApp,
 	WorkbenchMode,
 	WorkbenchWindowKind,
+	buildScene3dWindowBody,
 	createDefaultLayout,
 	type ShellSidePanelBodyViewContext,
 	type ShellWindowBodyViewContext,
@@ -263,32 +264,12 @@ function spatialControllerFromContext(ctx: ShellWindowBodyViewContext): SpatialP
 	return ctx.workbench.getActiveApp()?.controller as SpatialPlayShellController | undefined;
 }
 
-/** @emoji 🧩 Declarative main window: status strip + scene3d host surface. */
+/** @emoji 🧩 Declarative main window: fullscreen scene3d canvas only (chrome via shell toolbar and side panels). */
 export function buildSpatialPlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
-	const ctrl = spatialControllerFromContext(ctx);
-	if (!ctrl) {
-		return { type: "stack", direction: "vertical", padding: "none", children: [{ type: "text", value: "Missing spatial controller" }] };
+	if (!spatialControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing spatial controller" };
 	}
-	const snap = ctrl.getSnapshot();
-	return {
-		type: "stack",
-		direction: "vertical",
-		padding: "none",
-		children: [
-			{
-				type: "stack",
-				direction: "horizontal",
-				gap: "tight",
-				padding: "standard",
-				children: [
-					{ type: "text", value: snap.status, emphasize: true, dataAttributes: { "e2e-spatial-status": snap.status } },
-					{ type: "text", value: spatialKindLabel(snap.focusedKind), dataAttributes: { "e2e-spatial-focus": spatialKindLabel(snap.focusedKind) } },
-					{ type: "text", value: snap.query.trim() || "none", dataAttributes: { "e2e-spatial-query": snap.query.trim() || "none" } },
-				],
-			},
-			{ type: "scene3d", surfaceId: SPATIAL_PLAY_SCENE3D_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID },
-		],
-	};
+	return buildScene3dWindowBody(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID);
 }
 
 /** @emoji 🧩 Declarative workbench side tab (entity browser). */
@@ -296,7 +277,7 @@ export function buildSpatialWorkbenchDeclarativePanel(ctx: ShellSidePanelBodyVie
 	if (!spatialControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing spatial controller" };
 	}
-	return { type: "panel", surfaceId: SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
+	return { type: "table", surfaceId: SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
 }
 
 /** @emoji 🧩 Declarative details side tab (selection inspector). */
@@ -304,7 +285,7 @@ export function buildSpatialDetailsDeclarativePanel(ctx: ShellSidePanelBodyViewC
 	if (!spatialControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing spatial controller" };
 	}
-	return { type: "panel", surfaceId: SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
+	return { type: "table", surfaceId: SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
 }
 //#endregion 🔖Controller
 
@@ -386,7 +367,7 @@ if (import.meta.vitest) {
 			expect(controller.getSnapshot().model?.get("face-front")?.transform?.position).toEqual([2, 3, 4]);
 		});
 
-		it("declarative window body ends with spatial scene3d surface binding", async () => {
+		it("declarative window body is a lone scene3d surface", async () => {
 			const fixture = await loadTopologicFixtureV1(topologyJson as unknown);
 			const bus = new CommandBus();
 			const wb = new Workbench();
@@ -399,14 +380,7 @@ if (import.meta.vitest) {
 				activeModeId: "browse",
 				generation: wb.generation,
 			});
-			expect(tree.type).toBe("stack");
-			if (tree.type !== "stack") return;
-			const last = tree.children[tree.children.length - 1];
-			expect(last).toEqual({
-				type: "scene3d",
-				surfaceId: SPATIAL_PLAY_SCENE3D_SURFACE_ID,
-				controllerId: SPATIAL_PLAY_CONTROLLER_ID,
-			});
+			expect(tree).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
 		});
 	});
 }

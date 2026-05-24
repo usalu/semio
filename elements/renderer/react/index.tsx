@@ -115,7 +115,7 @@ export type {
 	UiBoardHostSurfaceNode,
 	UiButtonNode,
 	UiNode,
-	UiPanelHostSurfaceNode,
+	UiTableHostSurfaceNode,
 	UiScene3DHostSurfaceNode,
 	UiSeparatorNode,
 	UiStackNode,
@@ -125,20 +125,20 @@ export type {
 import {
 	UiRenderer,
 	registerUiBoardSurfaceHost,
-	registerUiPanelSurfaceHost,
+	registerUiTableSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	unregisterUiBoardSurfaceHost,
-	unregisterUiPanelSurfaceHost,
+	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
 } from "./ui-declarative-renderer.tsx";
 
 export {
 	UiRenderer,
 	registerUiBoardSurfaceHost,
-	registerUiPanelSurfaceHost,
+	registerUiTableSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	unregisterUiBoardSurfaceHost,
-	unregisterUiPanelSurfaceHost,
+	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
 };
 
@@ -22984,31 +22984,70 @@ export function registerSidePanelBody(bodyKey: string, Component: React.Componen
 	sidePanelBodyByKey.set(bodyKey, Component);
 }
 
+const declarativeWindowBodyComponents = new Map<string, React.FC>();
+
+function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string): React.FC {
+	const cacheKey = `${bodyKey}\0${windowKindId}`;
+	let component = declarativeWindowBodyComponents.get(cacheKey);
+	if (!component) {
+		component = function ShellDeclarativeWindowBody() {
+			const { workbench, activeModeId } = useApp();
+			const generation = React.useSyncExternalStore(
+				(listener) => workbench.subscribe(listener),
+				() => workbench.generation,
+				() => 0,
+			);
+			const ctx: ShellWindowBodyViewContext = {
+				workbench,
+				windowKindId,
+				bodyKey,
+				activeModeId: activeModeId ?? null,
+				generation,
+			};
+			const factory = getDeclarativeWindowBodyFactory(bodyKey);
+			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
+			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
+		};
+		declarativeWindowBodyComponents.set(cacheKey, component);
+	}
+	return component;
+}
+
+const declarativeSidePanelBodyComponents = new Map<string, React.FC>();
+
+function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): React.FC {
+	const cacheKey = `${bodyKey}\0${tabId}`;
+	let component = declarativeSidePanelBodyComponents.get(cacheKey);
+	if (!component) {
+		component = function ShellDeclarativeSidePanelBody() {
+			const { workbench, activeModeId } = useApp();
+			const generation = React.useSyncExternalStore(
+				(listener) => workbench.subscribe(listener),
+				() => workbench.generation,
+				() => 0,
+			);
+			const ctx: ShellSidePanelBodyViewContext = {
+				workbench,
+				windowKindId: tabId,
+				bodyKey,
+				activeModeId: activeModeId ?? null,
+				generation,
+			};
+			const factory = getDeclarativeSidePanelBodyFactory(bodyKey);
+			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
+			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
+		};
+		declarativeSidePanelBodyComponents.set(cacheKey, component);
+	}
+	return component;
+}
+
 function shellWindowKindsToGolden(windowKinds: readonly WorkbenchWindowKind[], bus: CommandBus): UIWindowKindDefinition[] {
 	const goldenMeasures = (wk: WorkbenchWindowKind) => shellMeasuresToGolden(wk.measures, bus);
 	return windowKinds.map((wk) => {
 		const declarativeFactory = getDeclarativeWindowBodyFactory(wk.bodyKey);
 		if (declarativeFactory) {
-			const windowKindId = wk.id;
-			const bodyKey = wk.bodyKey;
-			const ShellDeclarativeWindowBody: React.FC = () => {
-				const { workbench, activeModeId } = useApp();
-				const generation = React.useSyncExternalStore(
-					(listener) => workbench.subscribe(listener),
-					() => workbench.generation,
-					() => 0,
-				);
-				const ctx: ShellWindowBodyViewContext = {
-					workbench,
-					windowKindId,
-					bodyKey,
-					activeModeId: activeModeId ?? null,
-					generation,
-				};
-				const node = declarativeFactory(ctx);
-				return <UiRenderer node={node} commandBus={workbench.commandBus} />;
-			};
-			return { id: wk.id, label: wk.label, component: ShellDeclarativeWindowBody, measures: goldenMeasures(wk) };
+			return { id: wk.id, label: wk.label, component: getDeclarativeWindowBodyComponent(wk.id, wk.bodyKey), measures: goldenMeasures(wk) };
 		}
 		const Body =
 			windowBodyByKey.get(wk.bodyKey) ??
@@ -23057,23 +23096,7 @@ function shellSideTabsToPanelTabs(tabs: readonly ShellSideTabSpec[], bus: Comman
 	return tabs.map((tab, orderIndex) => {
 		const declarativeFactory = getDeclarativeSidePanelBodyFactory(tab.bodyKey);
 		const Body = declarativeFactory
-			? function ShellDeclarativeSidePanelBody() {
-					const { workbench, activeModeId } = useApp();
-					const generation = React.useSyncExternalStore(
-						(listener) => workbench.subscribe(listener),
-						() => workbench.generation,
-						() => 0,
-					);
-					const ctx: ShellSidePanelBodyViewContext = {
-						workbench,
-						windowKindId: tab.id,
-						bodyKey: tab.bodyKey,
-						activeModeId: activeModeId ?? null,
-						generation,
-					};
-					const node = declarativeFactory(ctx);
-					return <UiRenderer node={node} commandBus={workbench.commandBus} />;
-				}
+			? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey)
 			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
 		return new StaticSidePanelTabDefinition({
 			id: tab.id,
@@ -23778,7 +23801,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 
 	const goldenWindowKinds = React.useMemo(
 		() => resolvedWindowKindsOverride ?? shellWindowKindsToGolden(activeApp.windowKinds, workbench.commandBus),
-		[activeApp.windowKinds, resolvedWindowKindsOverride, shellGen, workbench.commandBus],
+		[activeApp.windowKinds, resolvedWindowKindsOverride, workbench.commandBus],
 	);
 
 	const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);

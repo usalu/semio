@@ -1,6 +1,6 @@
 import {
 	Workbench,
-	type UiPanelHostSurfaceNode,
+	type UiTableHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
 } from "@elements/ui-shell";
 import {
@@ -11,7 +11,7 @@ import {
 	registerDeclarativeSidePanelBody,
 	registerDeclarativeWindowBody,
 	registerElementIcon,
-	registerUiPanelSurfaceHost,
+	registerUiTableSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
 } from "@elements/ui";
@@ -95,7 +95,7 @@ function SpatialScene3DSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 	return <SpatialSurface snapshot={snapshot} />;
 }
 
-function SpatialWorkbenchPanelHost({ node }: { readonly node: UiPanelHostSurfaceNode }): React.ReactElement {
+function SpatialWorkbenchPanelHost({ node }: { readonly node: UiTableHostSurfaceNode }): React.ReactElement {
 	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial workbench panel binding</div>;
 	}
@@ -112,7 +112,7 @@ function SpatialWorkbenchPanelHost({ node }: { readonly node: UiPanelHostSurface
 	return <SpatialWorkbenchPanel snapshot={{ ...snapshot, workbenchPanel: panelSnapshot }} />;
 }
 
-function SpatialDetailsPanelHost({ node }: { readonly node: UiPanelHostSurfaceNode }): React.ReactElement {
+function SpatialDetailsPanelHost({ node }: { readonly node: UiTableHostSurfaceNode }): React.ReactElement {
 	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial details panel binding</div>;
 	}
@@ -128,8 +128,8 @@ function registerSpatialPlayChrome(): void {
 	registerElementIcon(SPATIAL_PLAY_WORKBENCH_ICON_ID, <ListFilter className="size-4" aria-hidden />);
 	registerElementIcon(SPATIAL_PLAY_DETAILS_ICON_ID, <ScanSearch className="size-4" aria-hidden />);
 	registerUiScene3DSurfaceHost(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SpatialScene3DSurfaceHost);
-	registerUiPanelSurfaceHost(SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, SpatialWorkbenchPanelHost);
-	registerUiPanelSurfaceHost(SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, SpatialDetailsPanelHost);
+	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, SpatialWorkbenchPanelHost);
+	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, SpatialDetailsPanelHost);
 	registerDeclarativeWindowBody(SPATIAL_PLAY_BODY_KEY, buildSpatialPlayDeclarativeBody);
 	registerDeclarativeSidePanelBody(SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY, buildSpatialWorkbenchDeclarativePanel);
 	registerDeclarativeSidePanelBody(SPATIAL_PLAY_DETAILS_TAB_BODY_KEY, buildSpatialDetailsDeclarativePanel);

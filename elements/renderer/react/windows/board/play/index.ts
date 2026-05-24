@@ -5,20 +5,30 @@
 import {
 	CommandBus,
 	Controller,
+	ShellExtension,
+	ShellExtensionContext,
+	ShellExtensionHost,
+	type ShellExtensionManifest,
 	Workbench,
 	WorkbenchApp,
 	WorkbenchMode,
 	WorkbenchWindowKind,
+	createWindowLayout,
+	type ShellSidePanelBodyViewContext,
 	type ShellWindowBodyViewContext,
 	type ShellWindowMeasure,
 	type UiNode,
+	type WindowLayout,
 } from "@elements/ui-shell";
 
+import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_LOD_MODE_AUTOMATIC,
 	boardLodAutomaticSelectLabel,
 	isBoardDrawLodKind,
+	parseBoardFixtureV1,
 	type BoardDrawLodKind,
+	type BoardFixtureV1,
 	type BoardLodModeKind,
 } from "../index";
 
@@ -33,6 +43,18 @@ export const BOARD_PLAY_BODY_KEY_OVERVIEW = "elements.board.play.overview";
 export const BOARD_PLAY_BODY_KEY_DETAIL = "elements.board.play.detail";
 export const BOARD_PLAY_BODY_KEY_SELECTION = "elements.board.play.selection";
 
+export const BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID = "elements.board.play.table.library/v1";
+export const BOARD_PLAY_TABLE_INSPECTOR_SURFACE_ID = "elements.board.play.table.inspector/v1";
+export const BOARD_PLAY_TABLE_SETTINGS_SURFACE_ID = "elements.board.play.table.settings/v1";
+
+export const BOARD_PLAY_LIBRARY_TAB_BODY_KEY = "elements.board.play.tab.library";
+export const BOARD_PLAY_INSPECTOR_TAB_BODY_KEY = "elements.board.play.tab.inspector";
+export const BOARD_PLAY_SETTINGS_TAB_BODY_KEY = "elements.board.play.tab.settings";
+
+export const BOARD_PLAY_ICON_LIBRARY = "elements.board-play.icon.library";
+export const BOARD_PLAY_ICON_INSPECTOR = "elements.board-play.icon.inspector";
+export const BOARD_PLAY_ICON_SETTINGS = "elements.board-play.icon.settings";
+
 export const BOARD_PLAY_LOD_TIERS: BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
 export function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
@@ -40,6 +62,30 @@ export function boardPlayLodTierMenuLabel(tier: BoardDrawLodKind): string {
 }
 
 export const BOARD_PLAY_PACKAGE_ROOT = import.meta.url;
+
+export const BOARD_PLAY_DEFAULT_FIXTURE: BoardFixtureV1 =
+	parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
+
+export const BOARD_PLAY_LAYOUT: WindowLayout = {
+	root: {
+		kind: "row",
+		children: [
+			{
+				kind: "stack",
+				size: 50,
+				children: [createWindowLayout("board-overview", "Overview")],
+			},
+			{
+				kind: "column",
+				size: 50,
+				children: [
+					{ kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
+					{ kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
+				],
+			},
+		],
+	},
+};
 //#endregion 🔖Ids
 
 //#region 🔖Controller
@@ -121,21 +167,54 @@ export class BoardPlayShellController extends Controller {
 //#endregion 🔖Controller
 
 //#region 🔖DeclarativeBodies
+function boardPlayControllerFromContext(ctx: ShellWindowBodyViewContext | ShellSidePanelBodyViewContext): BoardPlayShellController | undefined {
+	return ctx.workbench.getActiveApp()?.controller as BoardPlayShellController | undefined;
+}
+
 function buildBoardPlayDeclarativeBody(paneId: BoardPlayPaneId): (ctx: ShellWindowBodyViewContext) => UiNode {
-	return () => ({
-		type: "stack",
-		direction: "vertical",
-		padding: "none",
-		children: [{ type: "board", surfaceId: BOARD_PLAY_BOARD_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID, paneId }],
-	});
+	return (ctx) => {
+		if (!boardPlayControllerFromContext(ctx)) {
+			return { type: "text", value: "Missing board play controller" };
+		}
+		return {
+			type: "stack",
+			direction: "vertical",
+			padding: "none",
+			children: [{ type: "board", surfaceId: BOARD_PLAY_BOARD_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID, paneId }],
+		};
+	};
 }
 
 export const buildBoardPlayOverviewDeclarativeBody = buildBoardPlayDeclarativeBody("board-overview");
 export const buildBoardPlayDetailDeclarativeBody = buildBoardPlayDeclarativeBody("board-detail");
 export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeBody("board-selection");
+
+/** @emoji 📑 Declarative library side tab: table host surface only. */
+export function buildBoardPlayLibraryDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+	if (!boardPlayControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing board play controller" };
+	}
+	return { type: "table", surfaceId: BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
+}
+
+/** @emoji 📑 Declarative selection inspector side tab: table host surface only. */
+export function buildBoardPlayInspectorDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+	if (!boardPlayControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing board play controller" };
+	}
+	return { type: "table", surfaceId: BOARD_PLAY_TABLE_INSPECTOR_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
+}
+
+/** @emoji 📑 Declarative settings side tab: table host surface only. */
+export function buildBoardPlaySettingsDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+	if (!boardPlayControllerFromContext(ctx)) {
+		return { type: "text", value: "Missing board play controller" };
+	}
+	return { type: "table", surfaceId: BOARD_PLAY_TABLE_SETTINGS_SURFACE_ID, controllerId: BOARD_PLAY_CONTROLLER_ID };
+}
 //#endregion 🔖DeclarativeBodies
 
-/** @emoji 🧩 Registers board play window kinds on the supplied controller mode (layout supplied by host). */
+/** @emoji 🧩 Registers board play window kinds on the supplied controller (layout supplied by host). */
 export function attachBoardPlayWindowKinds(controller: BoardPlayShellController, layout: unknown): WorkbenchApp {
 	const app = new WorkbenchApp(BOARD_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
 	app.defaultModeId = controller.mainMode.id;
@@ -143,16 +222,78 @@ export function attachBoardPlayWindowKinds(controller: BoardPlayShellController,
 	return app;
 }
 
+/** @emoji 🧩 Builds the board play {@link WorkbenchApp} with declarative side tabs. */
+export function buildBoardPlayWorkbenchApp(controller: BoardPlayShellController): WorkbenchApp {
+	const app = attachBoardPlayWindowKinds(controller, BOARD_PLAY_LAYOUT);
+	app.leftTabs = [{ id: "board-play-library", iconId: BOARD_PLAY_ICON_LIBRARY, order: 0, bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY }];
+	app.rightTabs = [
+		{ id: "board-play-inspector", iconId: BOARD_PLAY_ICON_INSPECTOR, order: 0, bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY },
+		{ id: "board-play-settings", iconId: BOARD_PLAY_ICON_SETTINGS, order: 1, bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY },
+	];
+	return app;
+}
+
+//#region 🔖Extension
+export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
+	id: "elements.board-play",
+	label: "Board Play",
+	version: "0.1.0",
+	contributes: {
+		apps: [
+			{
+				id: BOARD_PLAY_APP_ID,
+				label: "Board",
+				controllerId: BOARD_PLAY_CONTROLLER_ID,
+				defaultLayout: BOARD_PLAY_LAYOUT,
+				defaultModeId: "main",
+				windowKinds: [
+					{ id: "board-overview", label: "Overview", bodyKey: BOARD_PLAY_BODY_KEY_OVERVIEW },
+					{ id: "board-detail", label: "Zoom", bodyKey: BOARD_PLAY_BODY_KEY_DETAIL },
+					{ id: "board-selection", label: "Selection", bodyKey: BOARD_PLAY_BODY_KEY_SELECTION },
+				],
+				modes: [{ id: "main", label: "Board" }],
+				leftTabs: [{ id: "board-play-library", iconId: BOARD_PLAY_ICON_LIBRARY, order: 0, bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY }],
+				rightTabs: [
+					{ id: "board-play-inspector", iconId: BOARD_PLAY_ICON_INSPECTOR, order: 0, bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY },
+					{ id: "board-play-settings", iconId: BOARD_PLAY_ICON_SETTINGS, order: 1, bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY },
+				],
+			},
+		],
+	},
+};
+
+/** @emoji 🔌 VS Code–style board play extension: registers declarative bodies on activate. */
+export const boardPlayExtension: ShellExtension = {
+	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
+	activate(context: ShellExtensionContext): void {
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
+	},
+};
+
+/** @emoji 🚀 Creates a {@link Workbench} with the board play extension activated. */
+export function bootstrapBoardPlayWorkbench(): Workbench {
+	const wb = new Workbench();
+	const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
+	wb.addApp(buildBoardPlayWorkbenchApp(ctrl));
+	const host = new ShellExtensionHost(wb);
+	host.register(BOARD_PLAY_EXTENSION_MANIFEST, boardPlayExtension);
+	void host.activateAll((controllerId) => (controllerId === BOARD_PLAY_CONTROLLER_ID ? ctrl : undefined));
+	return wb;
+}
+//#endregion 🔖Extension
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("board play declarative shell", () => {
 		it("declarative overview body references board host surface", () => {
-			const bus = new CommandBus();
-			const wb = new Workbench();
-			const ctrl = new BoardPlayShellController(bus, () => wb.notify());
-			attachBoardPlayWindowKinds(ctrl, { root: { kind: "row", children: [] } });
+			const wb = bootstrapBoardPlayWorkbench();
 			const tree = buildBoardPlayOverviewDeclarativeBody({
 				workbench: wb,
 				windowKindId: "board-overview",
@@ -167,6 +308,22 @@ if (import.meta.vitest) {
 				surfaceId: BOARD_PLAY_BOARD_SURFACE_ID,
 				controllerId: BOARD_PLAY_CONTROLLER_ID,
 				paneId: "board-overview",
+			});
+		});
+
+		it("declarative library panel references table host surface", () => {
+			const wb = bootstrapBoardPlayWorkbench();
+			const tree = buildBoardPlayLibraryDeclarativePanel({
+				workbench: wb,
+				windowKindId: "board-play-library",
+				bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY,
+				activeModeId: "main",
+				generation: 0,
+			});
+			expect(tree).toEqual({
+				type: "table",
+				surfaceId: BOARD_PLAY_TABLE_LIBRARY_SURFACE_ID,
+				controllerId: BOARD_PLAY_CONTROLLER_ID,
 			});
 		});
 	});

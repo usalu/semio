@@ -68,11 +68,12 @@ export interface UiBoardHostSurfaceNode {
 	readonly paneId: string;
 }
 
-/** @emoji 📑 Host-bound side panel body; `surfaceId` maps to a registered panel renderer. */
-export interface UiPanelHostSurfaceNode {
-	readonly type: "panel";
+/** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
+export interface UiTableHostSurfaceNode {
+	readonly type: "table";
 	readonly surfaceId: string;
 	readonly controllerId: string;
+	readonly paneId?: string;
 }
 
 export type UiNode =
@@ -82,7 +83,39 @@ export type UiNode =
 	| UiSeparatorNode
 	| UiScene3DHostSurfaceNode
 	| UiBoardHostSurfaceNode
-	| UiPanelHostSurfaceNode;
+	| UiTableHostSurfaceNode;
+
+/** @emoji 🧊 Canonical fullscreen 3D window body: only the infinite scene canvas. */
+export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
+	return { type: "scene3d", surfaceId, controllerId };
+}
+
+/** @emoji 📋 Canonical fullscreen 2D window body: only the infinite board canvas. */
+export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
+	return { type: "board", surfaceId, controllerId, paneId };
+}
+
+/** @emoji 📊 Canonical table window body: only the host-bound table surface. */
+export function buildTableWindowBody(surfaceId: string, controllerId: string, paneId?: string): UiTableHostSurfaceNode {
+	return paneId ? { type: "table", surfaceId, controllerId, paneId } : { type: "table", surfaceId, controllerId };
+}
+
+/** @emoji ✅ True when a window body is a lone surface (`table` / `scene3d` / `board`) or a short error `text` node. */
+export function isCanvasOnlyWindowBody(node: UiNode): boolean {
+	if (node.type === "text" || node.type === "scene3d" || node.type === "board" || node.type === "table") return true;
+	if (node.type === "stack" && node.padding === "none" && node.children.length === 1) {
+		const child = node.children[0];
+		return child.type === "scene3d" || child.type === "board" || child.type === "table";
+	}
+	return false;
+}
+
+function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
+	if (isCanvasOnlyWindowBody(node)) return;
+	throw new Error(
+		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use WorkbenchMode.tools, side tabs, or window measures for chrome.`,
+	);
+}
 //#endregion 🔖UiNode
 
 //#region 🔖ShellWindowMeasure
@@ -581,7 +614,11 @@ const declarativeWindowBodyByKey = new Map<string, (ctx: ShellWindowBodyViewCont
 
 /** @emoji 📝 Registers a framework-free window body tree for `bodyKey` (host renders DOM). */
 export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
-	declarativeWindowBodyByKey.set(bodyKey, build);
+	declarativeWindowBodyByKey.set(bodyKey, (ctx) => {
+		const node = build(ctx);
+		assertCanvasOnlyWindowBody(bodyKey, node);
+		return node;
+	});
 }
 
 /** @emoji 🔍 Returns the declarative builder registered for `bodyKey`, if any. */
@@ -795,6 +832,32 @@ export class ShellExtensionHost {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("canvas-only declarative window bodies", () => {
+		it("accepts lone scene3d and board nodes", () => {
+			expect(isCanvasOnlyWindowBody(buildScene3dWindowBody("s", "c"))).toBe(true);
+			expect(isCanvasOnlyWindowBody(buildBoardWindowBody("b", "c", "pane"))).toBe(true);
+			expect(isCanvasOnlyWindowBody({ type: "text", value: "loading" })).toBe(true);
+		});
+
+		it("rejects window bodies with toolbar buttons", () => {
+			expect(() =>
+				assertCanvasOnlyWindowBody("bad", {
+					type: "stack",
+					direction: "vertical",
+					padding: "none",
+					children: [
+						{
+							type: "button",
+							label: "Nope",
+							command: { controllerId: "c", command: "x" },
+						},
+						buildScene3dWindowBody("s", "c"),
+					],
+				}),
+			).toThrow(/scene3d or board/);
+		});
+	});
 
 	describe("ShellExtensionHost", () => {
 		it("merges contributed apps and declarative window bodies", async () => {

@@ -102,8 +102,8 @@ import {
   type BoardSelectionSnapshot,
   type BoardSelectionTargets,
   type CameraState,
-} from "../index";
-import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
+} from "./index";
+import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "./index.tsx";
 import {
   BOARD_PLAY_APP_ID,
   BOARD_PLAY_BODY_KEY_DETAIL,
