@@ -20,7 +20,23 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
-## 🧩semio
+## 🧩elements
+
+###
+
+---
+
+We are building a framework that allows users to create ui such as vscode. The framework has pure typescript classes and different renderers. We want the uis to be able to define extension possiblities. The uis (including the extensions) have no dom access. e.g. sketchpad should be a ui with a extension marketplace. How would architect our framework, so that ui can have extensions. The extensions should not be general to our framework but specific to the ui. How can we generalize this? The ui extensions should have vscode-like api. --- UI, App, Mode, WindowKind (table, diagram, scene), Window, Panel (Workbenchs, Details, Settings, Chat) Toolbar, ToolCategory, Tool, Command, Extension
+
+It is more complicated.
+sketchpad is a ui that has several apps.
+Every app has several modes.
+e.g. sketchpad has home app (one mode, one window kind: HomeTable), kit app (one mode, several window kinds: KitAppDiagram, KitAppTable), design app (two modes: edit and analyze. Edit has two window kinds: DesignEditDiagram, DesignEditScene. Analyze has one window kind: DesignAnalyzeScene), etc
+There are several plugins such as: Energy (contributes to DesignEditDiagram, DesignEditScene, DesignAnalyzeScene, etc), Structure, etc
+
+---
+
+## 🏘️semio
 
 ###
 
@@ -163,7 +179,7 @@ Setup everything with docker compose for the server.
 Migrate all existing history to the database. When data is in different format, try to convert it to the new format otherwise drop it.
 Make sure to test everything before I deploy it on a Linux VM.
 
-## 🧰repo⌨️cli
+### ⌨️cli
 
 Whenever invoking this command, regardless of the port, the container is being killed aswell stopping all running work. Make sure that the agent hooks deny this and give a meaningful reason.
 kill $(lsof -t -i:9876)

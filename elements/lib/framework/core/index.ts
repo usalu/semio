@@ -1,31 +1,38 @@
-// #region ­ƒº▓Header
-/** 🧱 `@elements/framework` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
-// #endregion ­ƒº▓Header
+// #region 🧱Header
+/** 🧱 `@elements/framework` — Renderer-agnostic product shell: {@link ProductRuntime} → {@link AppRuntime} → {@link ModeRuntime}, declarative {@link UiNode} bodies, {@link PluginHost}, {@link SurfaceRouter}, and {@link ProductDefinition} + {@link SurfaceDefinition} for contribution routing. */
+// #endregion 🧱Header
 
-//#region ­ƒöûJsonValue
+//#region 🔖JsonValue
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | readonly JsonValue[] | { readonly [key: string]: JsonValue };
-//#endregion ­ƒöûJsonValue
+//#endregion 🔖JsonValue
 
-//#region ­ƒöûCommands
-/** @emoji ­ƒÄ» Semantic command routed through the host to {@link CommandBus.dispatch}. */
-export interface ShellCommandDescriptor {
+//#region 🔖Disposable
+/** @emoji 🧹 Reversible teardown handle for surfaces and plugin activation. */
+export interface Disposable {
+	dispose(): void;
+}
+//#endregion 🔖Disposable
+
+//#region 🔖Commands
+/** @emoji 🎯 Semantic command routed through the host to {@link CommandBus.dispatch}. */
+export interface CommandDescriptor {
 	readonly controllerId: string;
 	readonly command: string;
 	readonly args?: JsonValue;
 }
-//#endregion ­ƒöûCommands
+//#endregion 🔖Commands
 
-//#region ­ƒöûStyle
-/** @emoji ­ƒÄ¿ Tokenized chrome hints mapped by the renderer. */
-export interface ShellStyleSpec {
+//#region 🔖Style
+/** @emoji 🎨 Tokenized chrome hints mapped by the renderer. */
+export interface StyleSpec {
 	readonly variant?: "default" | "subtle" | "danger" | "success";
 	readonly size?: "small" | "medium" | "large";
 	readonly density?: "compact" | "normal" | "comfortable";
 }
-//#endregion ­ƒöûStyle
+//#endregion 🔖Style
 
-//#region ­ƒöûUiNode
+//#region 🔖UiNode
 export interface UiStackNode {
 	readonly type: "stack";
 	readonly direction: "horizontal" | "vertical";
@@ -45,22 +52,22 @@ export interface UiButtonNode {
 	readonly type: "button";
 	readonly id?: string;
 	readonly label: string;
-	readonly command: ShellCommandDescriptor;
-	readonly style?: ShellStyleSpec;
+	readonly command: CommandDescriptor;
+	readonly style?: StyleSpec;
 }
 
 export interface UiSeparatorNode {
 	readonly type: "separator";
 }
 
-/** @emoji ­ƒºè Host-bound 3D surface; renderer maps `surfaceId` to the canvas implementation. */
+/** @emoji 🧊 Host-bound 3D surface; renderer maps `surfaceId` to the canvas implementation. */
 export interface UiScene3DHostSurfaceNode {
 	readonly type: "scene3d";
 	readonly surfaceId: string;
 	readonly controllerId: string;
 }
 
-/** @emoji ­ƒôï Host-bound 2D board canvas; `paneId` selects the window slot. */
+/** @emoji 📋 Host-bound 2D board canvas; `paneId` selects the window slot. */
 export interface UiBoardHostSurfaceNode {
 	readonly type: "board";
 	readonly surfaceId: string;
@@ -68,7 +75,7 @@ export interface UiBoardHostSurfaceNode {
 	readonly paneId: string;
 }
 
-/** @emoji ­ƒôè Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
+/** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
 export interface UiTableHostSurfaceNode {
 	readonly type: "table";
 	readonly surfaceId: string;
@@ -93,22 +100,22 @@ export type UiNode =
 	| UiTableHostSurfaceNode
 	| UiPanelHostSurfaceNode;
 
-/** @emoji ­ƒºè Canonical fullscreen 3D window body: only the infinite scene canvas. */
+/** @emoji 🧊 Canonical fullscreen 3D window body: only the infinite scene canvas. */
 export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {
 	return { type: "scene3d", surfaceId, controllerId };
 }
 
-/** @emoji ­ƒôï Canonical fullscreen 2D window body: only the infinite board canvas. */
+/** @emoji 📋 Canonical fullscreen 2D window body: only the infinite board canvas. */
 export function buildBoardWindowBody(surfaceId: string, controllerId: string, paneId: string): UiBoardHostSurfaceNode {
 	return { type: "board", surfaceId, controllerId, paneId };
 }
 
-/** @emoji ­ƒôè Canonical table window body: only the host-bound table surface. */
+/** @emoji 📊 Canonical table window body: only the host-bound table surface. */
 export function buildTableWindowBody(surfaceId: string, controllerId: string, paneId?: string): UiTableHostSurfaceNode {
 	return paneId ? { type: "table", surfaceId, controllerId, paneId } : { type: "table", surfaceId, controllerId };
 }
 
-/** @emoji Ô£à True when a window body is a lone surface (`table` / `scene3d` / `board`) or a short error `text` node. */
+/** @emoji ✅ True when a window body is a lone surface (`table` / `scene3d` / `board`) or a short error `text` node. */
 export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 	if (node.type === "text" || node.type === "scene3d" || node.type === "board" || node.type === "table") return true;
 	if (node.type === "stack" && node.padding === "none" && node.children.length === 1) {
@@ -121,60 +128,60 @@ export function isCanvasOnlyWindowBody(node: UiNode): boolean {
 function assertCanvasOnlyWindowBody(bodyKey: string, node: UiNode): void {
 	if (isCanvasOnlyWindowBody(node)) return;
 	throw new Error(
-		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use WorkbenchMode.tools, side tabs, or window measures for chrome.`,
+		`Declarative window body "${bodyKey}" must be a single table, scene3d, or board surface (optional none padding stack wrapper). Found "${node.type}". Use ModeRuntime.tools, side tabs, or window measures for chrome.`,
 	);
 }
-//#endregion ­ƒöûUiNode
+//#endregion 🔖UiNode
 
-//#region ­ƒöûShellWindowMeasure
-/** @emoji ­ƒôÉ Framework-free window measure; host maps `onChange` to {@link CommandBus.dispatch}. */
-export interface ShellWindowMeasureSelect {
+//#region 🔖WindowMeasure
+/** @emoji 📐 Framework-free window measure; host maps `onChange` to {@link CommandBus.dispatch}. */
+export interface WindowMeasureSelect {
 	readonly kind: "select";
 	readonly id: string;
 	readonly label?: string;
 	readonly value: string;
 	readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-	readonly onChange: ShellCommandDescriptor;
+	readonly onChange: CommandDescriptor;
 }
 
-export type ShellWindowMeasure = ShellWindowMeasureSelect;
-//#endregion ­ƒöûShellWindowMeasure
+export type WindowMeasure = WindowMeasureSelect;
+//#endregion 🔖WindowMeasure
 
-//#region ­ƒöûLayout
-/** @emoji ­ƒ¬ƒ Single window slot in the abstract layout tree. */
+//#region 🔖Layout
+/** @emoji 🪟 Single window slot in the abstract layout tree. */
 export interface WindowLayoutWindowNode {
 	readonly kind: "window";
 	readonly windowKindId: string;
 	readonly title?: string;
 }
 
-/** @emoji ­ƒôÜ Tab stack node grouping window slots. */
+/** @emoji 📚 Tab stack node grouping window slots. */
 export interface WindowLayoutStackNode {
 	readonly kind: "stack";
 	readonly size?: number;
 	readonly children: readonly WindowLayoutWindowNode[];
 }
 
-/** @emoji Ôåö´©Å Row/column branch in the abstract layout tree. */
+/** @emoji ↔️ Row/column branch in the abstract layout tree. */
 export interface WindowLayoutAxisNode {
 	readonly kind: "row" | "column";
 	readonly size?: number;
 	readonly children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
 }
 
-/** @emoji ­ƒº¡ Root layout wrapper owned by an app. */
+/** @emoji 🧭 Root layout wrapper owned by an app. */
 export interface WindowLayout {
 	readonly root: WindowLayoutAxisNode | WindowLayoutStackNode;
 }
-//#endregion ­ƒöûLayout
+//#endregion 🔖Layout
 
-//#region ­ƒöûLayoutFactories
-/** @emoji ­ƒ¬ƒ Single window slot helper for {@link WindowLayout} trees. */
+//#region 🔖LayoutFactories
+/** @emoji 🪟 Single window slot helper for {@link WindowLayout} trees. */
 export function createWindowLayout(windowKindId: string, title?: string): WindowLayoutWindowNode {
 	return { kind: "window", windowKindId, ...(title ? { title } : {}) };
 }
 
-/** @emoji ­ƒôÜ Stack layout from ordered window kind ids. */
+/** @emoji 📚 Stack layout from ordered window kind ids. */
 export function createStackLayout(windowKindIds: string[], titles?: string[]): WindowLayout {
 	return {
 		root: {
@@ -184,7 +191,7 @@ export function createStackLayout(windowKindIds: string[], titles?: string[]): W
 	};
 }
 
-/** @emoji ­ƒº▒ Default row/column of one stack per window kind (Golden-style ownership). */
+/** @emoji 🧱 Default row/column of one stack per window kind (Golden-style ownership). */
 export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): WindowLayout {
 	return {
 		root: {
@@ -198,30 +205,30 @@ export function createDefaultLayout(windowIds: string[], direction: "row" | "col
 	};
 }
 
-/** @emoji ­ƒôæ Single stack with every window as a tab group. */
+/** @emoji 📑 Single stack with every window as a tab group. */
 export function createTabStackLayout(windowIds: string[], titles?: string[]): WindowLayout {
 	return createStackLayout(windowIds, titles);
 }
-//#endregion ­ƒöûLayoutFactories
+//#endregion 🔖LayoutFactories
 
-//#region ­ƒöûExpertise
-/** @emoji ­ƒÄÜ Surface expertise tier for chrome + label resolution. */
+//#region 🔖Expertise
+/** @emoji 🎚 Surface expertise tier for chrome + label resolution. */
 export enum Expertise {
 	BEGINNER = "beginner",
 	NORMAL = "normal",
 	EXPERT = "expert",
 }
-//#endregion ­ƒöûExpertise
+//#endregion 🔖Expertise
 
-//#region ­ƒöûToolbar
-/** @emoji ­ƒº░ Toolbar category ids shared by every app registration surface. */
+//#region 🔖Toolbar
+/** @emoji 🧰 Toolbar category ids shared by every app registration surface. */
 export type AppToolCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "create" | "view" | "actions" | "settings";
 
-/** @emoji ­ƒôï Default toolbar category order. */
+/** @emoji 📋 Default toolbar category order. */
 export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "create", "view", "actions", "settings"];
 
-/** @emoji ­ƒÄø Declarative toolbar item; interactions route through {@link CommandBus}. */
-export interface ShellToolItem {
+/** @emoji 🎛 Declarative toolbar item; interactions route through {@link CommandBus}. */
+export interface ToolItem {
 	readonly id: string;
 	readonly kind: "button" | "toggle" | "separator";
 	readonly iconId?: string;
@@ -235,60 +242,60 @@ export interface ShellToolItem {
 	readonly args?: unknown;
 }
 
-/** @emoji ­ƒùé´©Å Per-category toolbar maps. */
-export type ShellAppTools = Partial<Record<AppToolCategory, readonly ShellToolItem[]>>;
+/** @emoji 🗂️ Per-category toolbar maps. */
+export type AppTools = Partial<Record<AppToolCategory, readonly ToolItem[]>>;
 
-/** @emoji ­ƒöÇ Merges toolbar tool maps per category (extension appends within each category). */
-export function mergeShellAppTools(base?: ShellAppTools, extension?: ShellAppTools): ShellAppTools | undefined {
+/** @emoji 🔀 Merges toolbar tool maps per category (extension appends within each category). */
+export function mergeAppTools(base?: AppTools, extension?: AppTools): AppTools | undefined {
 	if (!base && !extension) return undefined;
-	const merged: ShellAppTools = {};
+	const merged: AppTools = {};
 	for (const category of APP_TOOL_CATEGORY_ORDER) {
 		const combined = [...(base?.[category] ?? []), ...(extension?.[category] ?? [])];
-		if (combined.length > 0) (merged as Record<string, readonly ShellToolItem[]>)[category] = combined;
+		if (combined.length > 0) (merged as Record<string, readonly ToolItem[]>)[category] = combined;
 	}
 	return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
-/** @emoji ­ƒº« Counts toolbar items across populated categories. */
-export function countShellAppTools(tools?: ShellAppTools): number {
+/** @emoji 🧮 Counts toolbar items across populated categories. */
+export function countAppTools(tools?: AppTools): number {
 	if (!tools) return 0;
 	return APP_TOOL_CATEGORY_ORDER.reduce((sum, category) => sum + (tools[category]?.length ?? 0), 0);
 }
 
-function hasShellAppToolCategoryItems(items: readonly ShellToolItem[] | undefined): boolean {
+function hasAppToolCategoryItems(items: readonly ToolItem[] | undefined): boolean {
 	return Boolean(items?.some((item) => item.kind !== "separator"));
 }
 
-/** @emoji ­ƒôé Lists categories that have at least one non-separator tool. */
-export function listPopulatedShellToolCategories(tools?: ShellAppTools): AppToolCategory[] {
+/** @emoji 📂 Lists categories that have at least one non-separator tool. */
+export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[] {
 	if (!tools) return [];
-	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasShellAppToolCategoryItems(tools[category]));
+	return APP_TOOL_CATEGORY_ORDER.filter((category) => hasAppToolCategoryItems(tools[category]));
 }
-//#endregion ­ƒöûToolbar
+//#endregion 🔖Toolbar
 
-//#region ­ƒöûSideTab
-/** @emoji ­ƒôæ Side panel tab addressing a React-registered `bodyKey` tree host. */
-export interface ShellSideTabSpec {
+//#region 🔖SideTab
+/** @emoji 📑 Side panel tab addressing a React-registered `bodyKey` tree host. */
+export interface SideTabSpec {
 	readonly id: string;
 	readonly iconId: string;
 	readonly order?: number;
 	readonly bodyKey: string;
 }
-//#endregion ­ƒöûSideTab
+//#endregion 🔖SideTab
 
-//#region ­ƒöûFind
-/** @emoji ­ƒöÄ Find palette row (label-only; renderer supplies icons). */
-export interface ShellFindItem {
+//#region 🔖Find
+/** @emoji 🔎 Find palette row (label-only; renderer supplies icons). */
+export interface FindItem {
 	readonly id: string;
 	readonly label: string;
 	readonly description?: string;
 	readonly category?: string;
 }
-//#endregion ­ƒöûFind
+//#endregion 🔖Find
 
-//#region ­ƒöûFooter
-/** @emoji ­ƒæú Footer strip item with optional command dispatch. */
-export interface ShellFooterItem {
+//#region 🔖Footer
+/** @emoji 👣 Footer strip item with optional command dispatch. */
+export interface FooterItem {
 	readonly id: string;
 	readonly text?: string;
 	readonly order?: number;
@@ -299,16 +306,16 @@ export interface ShellFooterItem {
 	readonly command?: string;
 	readonly args?: unknown;
 }
-//#endregion ­ƒöûFooter
+//#endregion 🔖Footer
 
-//#region ­ƒöûObservable
-/** @emoji ­ƒôí Minimal listener set for host invalidation without external reactive libs. */
-export type ShellSubscriber = () => void;
+//#region 🔖Observable
+/** @emoji 📡 Minimal listener set for host invalidation without external reactive libs. */
+export type ProductSubscriber = () => void;
 
-/** @emoji ­ƒôª Holds a value and notifies subscribers on `set`. */
+/** @emoji 📦 Holds a value and notifies subscribers on `set`. */
 export class ObservableCell<T> {
 	private value: T;
-	private readonly listeners = new Set<ShellSubscriber>();
+	private readonly listeners = new Set<ProductSubscriber>();
 
 	constructor(initial: T) {
 		this.value = initial;
@@ -328,15 +335,15 @@ export class ObservableCell<T> {
 		this.set(updater(this.value));
 	}
 
-	subscribe(listener: ShellSubscriber): () => void {
+	subscribe(listener: ProductSubscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
 }
-//#endregion ­ƒöûObservable
+//#endregion 🔖Observable
 
-//#region ­ƒöûCommandBus
-/** @emoji ­ƒÜî Routes toolbar/footer commands to {@link Controller} instances by id. */
+//#region 🔖CommandBus
+/** @emoji 🚦 Routes toolbar/footer commands to {@link Controller} instances by id. */
 export class CommandBus {
 	private readonly controllers = new Map<string, Controller>();
 
@@ -353,7 +360,7 @@ export class CommandBus {
 	}
 }
 
-/** @emoji ­ƒÄ« Base class for imperative app controllers participating in {@link CommandBus}. */
+/** @emoji 🎮 Base class for imperative app controllers participating in {@link CommandBus}. */
 export abstract class Controller {
 	readonly id: string;
 	readonly commandBus: CommandBus;
@@ -376,31 +383,79 @@ export abstract class Controller {
 
 	abstract run(command: string, args?: unknown): void;
 }
-//#endregion ­ƒöûCommandBus
+//#endregion 🔖CommandBus
 
-//#region ­ƒöûWorkbenchWindowKind
-/** @emoji ­ƒ¬ƒ Declarative window kind; React renderer maps `bodyKey` to a component. */
-export class WorkbenchWindowKind {
+//#region 🔖ContextKeys
+/** @emoji 🔑 Opaque context bag for `SurfaceSelector.when` resolution (products inject evaluators). */
+export type ContextKey = string;
+
+export type ContextKeyResolver = (when: string | undefined) => boolean;
+
+export const matchAllContext: ContextKeyResolver = (when) => when === undefined || when === "" || when === "*";
+//#endregion 🔖ContextKeys
+
+//#region 🔖Capability
+/** @emoji 🏷 Semantic affordance string attached to surfaces and matched by plugin selectors. */
+export type Capability = string;
+
+/** @emoji ✅ True when `required` ⊆ `available` as a set. */
+export function capabilitiesSatisfy(available: readonly Capability[], required: readonly Capability[]): boolean {
+	for (const c of required) {
+		if (!available.includes(c)) return false;
+	}
+	return true;
+}
+//#endregion 🔖Capability
+
+//#region 🔖SurfaceDefinition
+/** @emoji 🪟 Extension-capable area: typed API factory + contribution application. */
+export interface SurfaceDefinition<TApi = unknown, TContribution = unknown> {
+	readonly id: string;
+	readonly appId: string;
+	readonly modeId: string;
+	readonly windowKindId: string;
+	readonly kind: "window" | "toolbar" | "panel" | "overlay" | "tool" | "menu" | "inspector" | "analysis" | string;
+	readonly capabilities: readonly Capability[];
+	createApi(ctx: SurfaceContext): TApi;
+	applyContribution(contribution: TContribution, ctx: SurfaceContext, api: TApi): Disposable;
+}
+
+/** @emoji 🔗 Typed pair used in {@link ProductDefinition} surface maps. */
+export interface SurfaceBinding<TApi, TContribution> {
+	readonly api: TApi;
+	readonly contributions: TContribution;
+}
+//#endregion 🔖SurfaceDefinition
+
+//#region 🔖WindowKindRuntime
+/** @emoji 🪟 Declarative window kind; React renderer maps `bodyKey` to a component. */
+export class WindowKindRuntime {
+	readonly capabilities: Capability[] = [];
+	readonly surfaces: SurfaceDefinition[] = [];
+
 	constructor(
 		readonly id: string,
 		readonly label: string,
 		readonly bodyKey: string,
 		readonly iconId?: string,
-		readonly measures: readonly ShellWindowMeasure[] = [],
-	) {}
+		readonly measures: readonly WindowMeasure[] = [],
+		capabilities?: readonly Capability[],
+	) {
+		if (capabilities?.length) this.capabilities.push(...capabilities);
+	}
 }
-//#endregion ­ƒöûWorkbenchWindowKind
+//#endregion 🔖WindowKindRuntime
 
-//#region ­ƒöûWorkbenchMode
-/** @emoji ­ƒÄÜ Single app mode: toolbars, window kinds, and side tab specs. */
-export class WorkbenchMode {
-	tools: ShellAppTools = {};
-	windowKinds: WorkbenchWindowKind[] = [];
+//#region 🔖ModeRuntime
+/** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
+export class ModeRuntime {
+	tools: AppTools = {};
+	windowKinds: WindowKindRuntime[] = [];
 	defaultLayout?: WindowLayout;
-	leftTabs: ShellSideTabSpec[] = [];
-	rightTabs: ShellSideTabSpec[] = [];
-	footerItems: ShellFooterItem[] = [];
-	findItems: ShellFindItem[] = [];
+	leftTabs: SideTabSpec[] = [];
+	rightTabs: SideTabSpec[] = [];
+	footerItems: FooterItem[] = [];
+	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
 	onActiveWindowChange?: (windowKindId: string) => void;
 	selection: Record<string, unknown> = {};
@@ -413,9 +468,9 @@ export class WorkbenchMode {
 		readonly iconId: string | undefined,
 	) {}
 }
-//#endregion ­ƒöûWorkbenchMode
+//#endregion 🔖ModeRuntime
 
-//#region ­ƒöûMerge
+//#region 🔖Merge
 function mergeById<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
 	if (!base?.length && !extension?.length) return undefined;
 	const merged = new Map<string, T>();
@@ -424,7 +479,7 @@ function mergeById<T extends { id: string }>(base: readonly T[] | undefined, ext
 	return [...merged.values()];
 }
 
-function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefined): WorkbenchMode | null {
+function resolveMode(app: AppRuntime, requestedModeId: string | null | undefined): ModeRuntime | null {
 	if (!app.modes.length) return null;
 	if (requestedModeId) {
 		const matching = app.modes.find((mode) => mode.id === requestedModeId);
@@ -436,22 +491,22 @@ function resolveMode(app: WorkbenchApp, requestedModeId: string | null | undefin
 	}
 	return app.modes[0] ?? null;
 }
-//#endregion ­ƒöûMerge
+//#endregion 🔖Merge
 
-//#region ­ƒöûResolvedState
-/** @emoji ­ƒô© Merged view of app + active mode used by the React workbench bridge. */
-export interface ResolvedWorkbenchAppState {
+//#region 🔖ResolvedState
+/** @emoji 📸 Merged view of app + active mode used by the React product bridge. */
+export interface ResolvedAppState {
 	readonly id: string;
 	readonly activeModeId: string | null;
 	readonly label: string;
 	readonly iconId: string | undefined;
-	readonly tools: ShellAppTools | undefined;
-	readonly windowKinds: readonly WorkbenchWindowKind[];
+	readonly tools: AppTools | undefined;
+	readonly windowKinds: readonly WindowKindRuntime[];
 	readonly defaultLayout: WindowLayout;
-	readonly leftTabs: ShellSideTabSpec[];
-	readonly rightTabs: ShellSideTabSpec[];
-	readonly footerItems: ShellFooterItem[];
-	readonly findItems: ShellFindItem[];
+	readonly leftTabs: SideTabSpec[];
+	readonly rightTabs: SideTabSpec[];
+	readonly footerItems: FooterItem[];
+	readonly findItems: FindItem[];
 	readonly onFindSelect?: (itemId: string) => void;
 	readonly onActiveWindowChange?: (windowKindId: string) => void;
 	readonly selection: Record<string, unknown>;
@@ -459,8 +514,8 @@ export interface ResolvedWorkbenchAppState {
 	readonly options: Record<string, unknown>;
 }
 
-/** @emoji ­ƒº« Resolves active mode overlays exactly like the retired `resolveAppConfig` merge. */
-export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: string | null): ResolvedWorkbenchAppState {
+/** @emoji 🧮 Resolves active mode overlays exactly like the prior `resolveWorkbenchAppState` merge. */
+export function resolveAppState(app: AppRuntime, requestedModeId?: string | null): ResolvedAppState {
 	const mode = resolveMode(app, requestedModeId);
 	const mergedWindowKinds = mergeById(app.windowKinds, mode?.windowKinds) ?? app.windowKinds;
 	const mergedLeft = mergeById(app.leftTabs, mode?.leftTabs) ?? app.leftTabs;
@@ -470,7 +525,7 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 		activeModeId: mode?.id ?? null,
 		label: mode?.label ?? app.label,
 		iconId: mode?.iconId ?? app.iconId,
-		tools: mergeShellAppTools(app.tools, mode?.tools),
+		tools: mergeAppTools(app.tools, mode?.tools),
 		windowKinds: mergedWindowKinds,
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		leftTabs: mergedLeft,
@@ -484,21 +539,21 @@ export function resolveWorkbenchAppState(app: WorkbenchApp, requestedModeId?: st
 		options: { ...app.options, ...(mode?.options ?? {}) },
 	};
 }
-//#endregion ­ƒöûResolvedState
+//#endregion 🔖ResolvedState
 
-//#region ­ƒöûWorkbenchApp
-/** @emoji ­ƒº® One registered app with modes, layout, and a primary {@link Controller}. */
-export class WorkbenchApp {
-	readonly modes: WorkbenchMode[] = [];
+//#region 🔖AppRuntime
+/** @emoji 🧩 One registered app with modes, layout, and a primary {@link Controller}. */
+export class AppRuntime {
+	readonly modes: ModeRuntime[] = [];
 	defaultModeId?: string;
 	private activeModeIdOverride: string | null = null;
-	windowKinds: WorkbenchWindowKind[] = [];
+	windowKinds: WindowKindRuntime[] = [];
 	defaultLayout!: WindowLayout;
-	tools: ShellAppTools = {};
-	leftTabs: ShellSideTabSpec[] = [];
-	rightTabs: ShellSideTabSpec[] = [];
-	footerItems: ShellFooterItem[] = [];
-	findItems: ShellFindItem[] = [];
+	tools: AppTools = {};
+	leftTabs: SideTabSpec[] = [];
+	rightTabs: SideTabSpec[] = [];
+	footerItems: FooterItem[] = [];
+	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
 	onActiveWindowChange?: (windowKindId: string) => void;
 	selection: Record<string, unknown> = {};
@@ -512,14 +567,14 @@ export class WorkbenchApp {
 		readonly iconId: string | undefined,
 		controller: Controller,
 		layout: WindowLayout,
-		windowKinds: readonly WorkbenchWindowKind[],
+		windowKinds: readonly WindowKindRuntime[],
 	) {
 		this.controller = controller;
 		this.defaultLayout = layout;
 		this.windowKinds = [...windowKinds];
 	}
 
-	addMode(mode: WorkbenchMode): void {
+	addMode(mode: ModeRuntime): void {
 		this.modes.push(mode);
 	}
 
@@ -532,19 +587,19 @@ export class WorkbenchApp {
 		this.activeModeIdOverride = modeId;
 	}
 
-	resolve(requestedModeId?: string | null): ResolvedWorkbenchAppState {
+	resolve(requestedModeId?: string | null): ResolvedAppState {
 		const modeId = requestedModeId ?? this.getActiveModeId();
-		return resolveWorkbenchAppState(this, modeId);
+		return resolveAppState(this, modeId);
 	}
 }
-//#endregion ­ƒöûWorkbenchApp
+//#endregion 🔖AppRuntime
 
-//#region ­ƒöûWorkbench
-/** @emoji ­ƒûÑ´©Å Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
-export class Workbench {
+//#region 🔖ProductRuntime
+/** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
+export class ProductRuntime {
 	readonly commandBus = new CommandBus();
-	private readonly listeners = new Set<ShellSubscriber>();
-	readonly apps: WorkbenchApp[] = [];
+	private readonly listeners = new Set<ProductSubscriber>();
+	readonly apps: AppRuntime[] = [];
 	activeAppId = "";
 	generation = 0;
 	uri = "/";
@@ -555,9 +610,9 @@ export class Workbench {
 	onGoBack?: () => void;
 	onGoForward?: () => void;
 	onGoUp?: () => void;
-	globalTools: ShellAppTools | undefined;
-	globalFooterItems: ShellFooterItem[] = [];
-	searchItems: readonly ShellSearchItemSpec[] = [];
+	globalTools: AppTools | undefined;
+	globalFooterItems: FooterItem[] = [];
+	searchItems: readonly SearchItemSpec[] = [];
 	mobile: boolean | undefined;
 	mobileQuery = "(max-width: 767px)";
 	className = "";
@@ -569,18 +624,18 @@ export class Workbench {
 		for (const listener of this.listeners) listener();
 	}
 
-	subscribe(listener: ShellSubscriber): () => void {
+	subscribe(listener: ProductSubscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
 
-	addApp(app: WorkbenchApp): void {
+	addApp(app: AppRuntime): void {
 		this.apps.push(app);
 		if (!this.activeAppId) this.activeAppId = app.id;
 		this.notify();
 	}
 
-	getActiveApp(): WorkbenchApp | undefined {
+	getActiveApp(): AppRuntime | undefined {
 		return this.apps.find((app) => app.id === this.activeAppId) ?? this.apps[0];
 	}
 
@@ -595,8 +650,8 @@ export class Workbench {
 	}
 }
 
-/** @emoji ­ƒöÄ Command palette row spec resolved in React (icons + `onSelect`). */
-export interface ShellSearchItemSpec {
+/** @emoji 🔎 Command palette row spec resolved in React (icons + `onSelect`). */
+export interface SearchItemSpec {
 	readonly id: string;
 	readonly label: string;
 	readonly description?: string;
@@ -606,149 +661,321 @@ export interface ShellSearchItemSpec {
 	readonly command: string;
 	readonly args?: unknown;
 }
-//#endregion ­ƒöûWorkbench
+//#endregion 🔖ProductRuntime
 
-//#region ­ƒöûDeclarativeWindowBody
-/** @emoji ­ƒ¬ƒ View context for declarative window bodies: workbench snapshot without DOM or React roots. */
-export interface ShellWindowBodyViewContext {
-	readonly workbench: Workbench;
+//#region 🔖WindowBodyViewContext
+/** @emoji 🪟 View context for declarative window bodies: product snapshot without DOM or React roots. */
+export interface WindowBodyViewContext {
+	readonly runtime: ProductRuntime;
 	readonly windowKindId: string;
 	readonly bodyKey: string;
 	readonly activeModeId: string | null;
 	readonly generation: number;
 }
 
-const declarativeWindowBodyByKey = new Map<string, (ctx: ShellWindowBodyViewContext) => UiNode>();
+const windowBodyByKey = new Map<string, (ctx: WindowBodyViewContext) => UiNode>();
 
-/** @emoji ­ƒôØ Registers a framework-free window body tree for `bodyKey` (host renders DOM). */
-export function registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
-	declarativeWindowBodyByKey.set(bodyKey, (ctx) => {
+/** @emoji 📝 Registers a framework-free window body tree for `bodyKey` (host renders DOM). */
+export function registerWindowBody(bodyKey: string, build: (ctx: WindowBodyViewContext) => UiNode): void {
+	windowBodyByKey.set(bodyKey, (ctx) => {
 		const node = build(ctx);
 		assertCanvasOnlyWindowBody(bodyKey, node);
 		return node;
 	});
 }
 
-/** @emoji ­ƒöì Returns the declarative builder registered for `bodyKey`, if any. */
-export function getDeclarativeWindowBodyFactory(bodyKey: string): ((ctx: ShellWindowBodyViewContext) => UiNode) | undefined {
-	return declarativeWindowBodyByKey.get(bodyKey);
+/** @emoji 🔍 Returns the declarative builder registered for `bodyKey`, if any. */
+export function getWindowBodyFactory(bodyKey: string): ((ctx: WindowBodyViewContext) => UiNode) | undefined {
+	return windowBodyByKey.get(bodyKey);
 }
 
-/** @emoji ­ƒº╣ Removes a declarative window registration (tests / hot reload). */
-export function unregisterDeclarativeWindowBody(bodyKey: string): void {
-	declarativeWindowBodyByKey.delete(bodyKey);
+/** @emoji 🧹 Removes a declarative window registration (tests / hot reload). */
+export function unregisterWindowBody(bodyKey: string): void {
+	windowBodyByKey.delete(bodyKey);
 }
-//#endregion ­ƒöûDeclarativeWindowBody
+//#endregion 🔖WindowBodyViewContext
 
-//#region ­ƒöûDeclarativeSidePanelBody
-/** @emoji ­ƒôæ View context for declarative side-panel tab bodies (same snapshot fields as window bodies). */
-export type ShellSidePanelBodyViewContext = ShellWindowBodyViewContext;
+//#region 🔖SidePanelBodyViewContext
+/** @emoji 📑 View context for declarative side-panel tab bodies (same snapshot fields as window bodies). */
+export type SidePanelBodyViewContext = WindowBodyViewContext;
 
-const declarativeSidePanelBodyByKey = new Map<string, (ctx: ShellSidePanelBodyViewContext) => UiNode>();
+const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
 
-/** @emoji ­ƒôØ Registers a framework-free side-panel tree for `bodyKey`. */
-export function registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
-	declarativeSidePanelBodyByKey.set(bodyKey, build);
-}
-
-/** @emoji ­ƒöì Returns the declarative side-panel builder for `bodyKey`, if any. */
-export function getDeclarativeSidePanelBodyFactory(bodyKey: string): ((ctx: ShellSidePanelBodyViewContext) => UiNode) | undefined {
-	return declarativeSidePanelBodyByKey.get(bodyKey);
+/** @emoji 📝 Registers a framework-free side-panel tree for `bodyKey`. */
+export function registerSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
+	sidePanelBodyByKey.set(bodyKey, build);
 }
 
-/** @emoji ­ƒº╣ Removes a declarative side-panel registration (tests). */
-export function unregisterDeclarativeSidePanelBody(bodyKey: string): void {
-	declarativeSidePanelBodyByKey.delete(bodyKey);
+/** @emoji 🔍 Returns the declarative side-panel builder for `bodyKey`, if any. */
+export function getSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiNode) | undefined {
+	return sidePanelBodyByKey.get(bodyKey);
 }
-//#endregion ­ƒöûDeclarativeSidePanelBody
 
-//#region ­ƒöûExtensionContributes
-/** @emoji ­ƒº® Static app contribution merged by {@link ShellExtensionHost} before {@link WorkbenchApp} construction. */
-export interface ShellExtensionAppContribute {
+/** @emoji 🧹 Removes a declarative side-panel registration (tests). */
+export function unregisterSidePanelBody(bodyKey: string): void {
+	sidePanelBodyByKey.delete(bodyKey);
+}
+//#endregion 🔖SidePanelBodyViewContext
+
+//#region 🔖ProductDefinition
+/** @emoji 🧭 Static product graph: apps, modes, window kinds, and surfaces (serializable + typed). */
+export interface WindowKindDefinition {
+	readonly id: string;
+	readonly appId: string;
+	readonly modeId: string;
+	readonly kind: "table" | "diagram" | "scene" | string;
+	readonly label: string;
+	readonly capabilities: readonly Capability[];
+	readonly bodyKey?: string;
+	readonly iconId?: string;
+	readonly measures?: readonly WindowMeasure[];
+	readonly surfaces: readonly SurfaceDefinition[];
+}
+
+export interface ModeDefinition {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly windowKinds: readonly WindowKindDefinition[];
+	readonly defaultLayout?: WindowLayout;
+	readonly tools?: AppTools;
+	readonly leftTabs?: readonly SideTabSpec[];
+	readonly rightTabs?: readonly SideTabSpec[];
+}
+
+export interface AppDefinition {
 	readonly id: string;
 	readonly label: string;
 	readonly iconId?: string;
 	readonly controllerId: string;
-	readonly windowKinds: readonly {
-		readonly id: string;
-		readonly label: string;
-		readonly bodyKey: string;
-		readonly iconId?: string;
-		readonly measures?: readonly ShellWindowMeasure[];
-	}[];
-	readonly defaultLayout: WindowLayout;
+	readonly modes: readonly ModeDefinition[];
 	readonly defaultModeId?: string;
-	readonly modes?: readonly {
-		readonly id: string;
-		readonly label: string;
-		readonly iconId?: string;
-		readonly tools?: ShellAppTools;
-		readonly windowKinds?: readonly WorkbenchWindowKind[];
-		readonly defaultLayout?: WindowLayout;
-	}[];
-	readonly tools?: ShellAppTools;
-	readonly leftTabs?: readonly ShellSideTabSpec[];
-	readonly rightTabs?: readonly ShellSideTabSpec[];
-	readonly footerItems?: readonly ShellFooterItem[];
-	readonly findItems?: readonly ShellFindItem[];
 }
 
-/** @emoji ­ƒôª VS CodeÔÇôstyle `contributes` block (serializable); runtime bodies register in {@link ShellExtension.activate}. */
-export interface ShellExtensionContributes {
-	readonly apps?: readonly ShellExtensionAppContribute[];
-	readonly commands?: readonly {
-		readonly id: string;
-		readonly controllerId: string;
-		readonly command: string;
-		readonly title?: string;
-	}[];
-}
-
-/** @emoji ­ƒº¥ Extension package descriptor (id + contributes); optional {@link ShellExtension} module. */
-export interface ShellExtensionManifest {
+export interface ProductDefinition<TProductApi = unknown> {
 	readonly id: string;
-	readonly label?: string;
-	readonly version?: string;
-	readonly contributes: ShellExtensionContributes;
+	readonly name: string;
+	readonly apiVersion: string;
+	readonly apps: readonly AppDefinition[];
+	createProductApi(ctx: PluginContext): TProductApi;
+}
+//#endregion 🔖ProductDefinition
+
+//#region 🔖SurfaceContext
+/** @emoji 🧩 Activation context for a single {@link SurfaceDefinition} instance. */
+export interface SurfaceContext<TSurfaceId extends string = string> {
+	readonly surfaceId: TSurfaceId;
+	readonly productId: string;
+	readonly appId: string;
+	readonly modeId: string;
+	readonly windowKindId: string;
+	readonly runtime: ProductRuntime;
+	readonly activeModeId: string | null;
+	readonly generation: number;
+}
+//#endregion 🔖SurfaceContext
+
+//#region 🔖SurfaceSelector
+/** @emoji 🧭 Declarative filter for routing contributions to surfaces. */
+export interface SurfaceSelector {
+	readonly product?: string;
+	readonly app?: string;
+	readonly mode?: string;
+	readonly windowKind?: string;
+	readonly surface?: string;
+	readonly kind?: string;
+	readonly capabilities?: readonly Capability[];
+	readonly when?: string;
 }
 
-/** @emoji ­ƒöî Disposable returned from {@link ShellExtensionContext.subscribe}. */
-export interface ShellExtensionSubscription {
+/** @emoji ✅ True when `selector` matches the routing row derived from a surface definition. */
+export function matchesSurface(selector: SurfaceSelector, row: SurfaceRoutingRow, resolveWhen: ContextKeyResolver = matchAllContext): boolean {
+	if (selector.product && selector.product !== row.productId) return false;
+	if (selector.app && selector.app !== row.appId) return false;
+	if (selector.mode && selector.mode !== row.modeId) return false;
+	if (selector.windowKind && selector.windowKind !== row.windowKindId) return false;
+	if (selector.surface && selector.surface !== row.surfaceId) return false;
+	if (selector.kind && selector.kind !== row.surfaceKind) return false;
+	if (selector.capabilities?.length && !capabilitiesSatisfy(row.capabilities, selector.capabilities)) return false;
+	if (!resolveWhen(selector.when)) return false;
+	return true;
+}
+
+/** @emoji 📇 Flattened surface identity used by {@link SurfaceRouter}. */
+export interface SurfaceRoutingRow {
+	readonly productId: string;
+	readonly appId: string;
+	readonly modeId: string;
+	readonly windowKindId: string;
+	readonly surfaceId: string;
+	readonly surfaceKind: string;
+	readonly capabilities: readonly Capability[];
+	readonly surface: SurfaceDefinition;
+}
+//#endregion 🔖SurfaceSelector
+
+//#region 🔖ContributionRoute
+/** @emoji 🛤 One plugin-authored routing rule: selector + opaque contribution payload. */
+export interface ContributionRoute {
+	readonly pluginId: string;
+	readonly where: SurfaceSelector;
+	readonly contribution: unknown;
+}
+//#endregion 🔖ContributionRoute
+
+//#region 🔖ContributionRegistry
+/** @emoji 📚 Collects {@link ContributionRoute} rows before {@link SurfaceRouter} applies them. */
+export class ContributionRegistry {
+	private readonly routes: ContributionRoute[] = [];
+
+	add(route: ContributionRoute): void {
+		this.routes.push(route);
+	}
+
+	list(): readonly ContributionRoute[] {
+		return this.routes;
+	}
+
+	clear(): void {
+		this.routes.length = 0;
+	}
+}
+//#endregion 🔖ContributionRegistry
+
+//#region 🔖SurfaceRouter
+/** @emoji 🧭 Walks product graph + runtime apps and applies contributions to matching surfaces. */
+export class SurfaceRouter {
+	static flattenFromProductDefinition(product: ProductDefinition, resolveWhen: ContextKeyResolver = matchAllContext): SurfaceRoutingRow[] {
+		const rows: SurfaceRoutingRow[] = [];
+		for (const app of product.apps) {
+			for (const mode of app.modes) {
+				for (const wk of mode.windowKinds) {
+					for (const surface of wk.surfaces) {
+						const caps = [...new Set([...wk.capabilities, ...surface.capabilities])];
+						rows.push({
+							productId: product.id,
+							appId: app.id,
+							modeId: mode.id,
+							windowKindId: wk.id,
+							surfaceId: surface.id,
+							surfaceKind: surface.kind,
+							capabilities: caps,
+							surface,
+						});
+					}
+				}
+			}
+		}
+		void resolveWhen;
+		return rows;
+	}
+
+	static flattenFromRuntimeApps(productId: string, apps: readonly AppRuntime[], resolveWhen: ContextKeyResolver = matchAllContext): SurfaceRoutingRow[] {
+		const rows: SurfaceRoutingRow[] = [];
+		for (const app of apps) {
+			const modeId = app.getActiveModeId();
+			const resolved = app.resolve(modeId);
+			for (const wk of resolved.windowKinds) {
+				const implicitWindowSurfaceId = `framework.window:${app.id}:${resolved.activeModeId ?? "default"}:${wk.id}`;
+				const implicit: SurfaceDefinition = {
+					id: implicitWindowSurfaceId,
+					appId: app.id,
+					modeId: resolved.activeModeId ?? "default",
+					windowKindId: wk.id,
+					kind: "window",
+					capabilities: [...wk.capabilities],
+					createApi: () => ({}),
+					applyContribution: () => ({ dispose: () => undefined }),
+				};
+				rows.push({
+					productId,
+					appId: app.id,
+					modeId: resolved.activeModeId ?? "default",
+					windowKindId: wk.id,
+					surfaceId: implicit.id,
+					surfaceKind: implicit.kind,
+					capabilities: [...wk.capabilities],
+					surface: implicit,
+				});
+				for (const surface of wk.surfaces) {
+					const caps = [...new Set([...wk.capabilities, ...surface.capabilities])];
+					rows.push({
+						productId,
+						appId: app.id,
+						modeId: resolved.activeModeId ?? "default",
+						windowKindId: wk.id,
+						surfaceId: surface.id,
+						surfaceKind: surface.kind,
+						capabilities: caps,
+						surface,
+					});
+				}
+			}
+		}
+		void resolveWhen;
+		return rows;
+	}
+
+	static applyRoutes(
+		routes: readonly ContributionRoute[],
+		rows: readonly SurfaceRoutingRow[],
+		buildContext: (row: SurfaceRoutingRow) => SurfaceContext,
+		resolveWhen: ContextKeyResolver = matchAllContext,
+	): Disposable {
+		const disposables: Disposable[] = [];
+		for (const route of routes) {
+			for (const row of rows) {
+				const selector: SurfaceSelector = { ...route.where, product: route.where.product ?? row.productId };
+				if (!matchesSurface(selector, row, resolveWhen)) continue;
+				const ctx = buildContext(row);
+				const api = row.surface.createApi(ctx);
+				disposables.push(row.surface.applyContribution(route.contribution, ctx, api));
+			}
+		}
+		return {
+			dispose: () => {
+				for (const d of disposables.splice(0)) d.dispose();
+			},
+		};
+	}
+}
+//#endregion 🔖SurfaceRouter
+
+//#region 🔖PluginContext
+/** @emoji 🔌 Disposable returned from {@link PluginContext.subscribe}. */
+export interface PluginSubscription {
 	dispose(): void;
 }
 
-/** @emoji ­ƒº░ Activation context: workbench, manifest, and registration helpers (VS Code `ExtensionContext` analogue). */
-export class ShellExtensionContext {
-	private readonly disposables: ShellExtensionSubscription[] = [];
+/** @emoji 🧰 Activation context: product runtime, manifest, and registration helpers (VS Code `ExtensionContext` analogue). */
+export class PluginContext {
+	private readonly disposables: PluginSubscription[] = [];
 
 	constructor(
-		readonly workbench: Workbench,
-		readonly manifest: ShellExtensionManifest,
+		readonly runtime: ProductRuntime,
+		readonly manifest: PluginManifest,
 	) {}
 
-	/** @emoji ­ƒôØ Registers a declarative window body scoped to this extension activation. */
-	registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
-		registerDeclarativeWindowBody(bodyKey, build);
+	registerWindowBody(bodyKey: string, build: (ctx: WindowBodyViewContext) => UiNode): void {
+		registerWindowBody(bodyKey, build);
 		this.disposables.push({
-			dispose: () => unregisterDeclarativeWindowBody(bodyKey),
+			dispose: () => unregisterWindowBody(bodyKey),
 		});
 	}
 
-	/** @emoji ­ƒôØ Registers a declarative side-panel body scoped to this extension activation. */
-	registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
-		registerDeclarativeSidePanelBody(bodyKey, build);
+	registerSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
+		registerSidePanelBody(bodyKey, build);
 		this.disposables.push({
-			dispose: () => unregisterDeclarativeSidePanelBody(bodyKey),
+			dispose: () => unregisterSidePanelBody(bodyKey),
 		});
 	}
 
-	/** @emoji Ô×ò Adds a {@link WorkbenchApp} built from static {@link ShellExtensionAppContribute} rows. */
 	addContributedApps(getController: (controllerId: string) => Controller | undefined): void {
 		for (const spec of this.manifest.contributes.apps ?? []) {
 			const controller = getController(spec.controllerId);
 			if (!controller) continue;
-			const windowKinds = spec.windowKinds.map((wk) => new WorkbenchWindowKind(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
-			const app = new WorkbenchApp(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
+			const windowKinds = spec.windowKinds.map((wk) => new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+			const app = new AppRuntime(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
 			if (spec.defaultModeId) app.defaultModeId = spec.defaultModeId;
 			if (spec.tools) app.tools = spec.tools;
 			if (spec.leftTabs?.length) app.leftTabs = [...spec.leftTabs];
@@ -756,25 +983,27 @@ export class ShellExtensionContext {
 			if (spec.footerItems?.length) app.footerItems = [...spec.footerItems];
 			if (spec.findItems?.length) app.findItems = [...spec.findItems];
 			for (const modeSpec of spec.modes ?? []) {
-				const mode = new WorkbenchMode(modeSpec.id, modeSpec.label, modeSpec.iconId);
+				const mode = new ModeRuntime(modeSpec.id, modeSpec.label, modeSpec.iconId);
 				if (modeSpec.tools) mode.tools = modeSpec.tools;
-				if (modeSpec.windowKinds?.length) mode.windowKinds = [...modeSpec.windowKinds];
+				if (modeSpec.windowKinds?.length) {
+					mode.windowKinds = modeSpec.windowKinds.map((wk) => new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+				}
 				if (modeSpec.defaultLayout) mode.defaultLayout = modeSpec.defaultLayout;
 				app.addMode(mode);
 			}
-			this.workbench.addApp(app);
+			this.runtime.addApp(app);
 			this.disposables.push({
 				dispose: () => {
-					const index = this.workbench.apps.findIndex((entry) => entry.id === spec.id);
-					if (index >= 0) this.workbench.apps.splice(index, 1);
+					const index = this.runtime.apps.findIndex((entry) => entry.id === spec.id);
+					if (index >= 0) this.runtime.apps.splice(index, 1);
 				},
 			});
 		}
 	}
 
-	subscribe(listener: ShellSubscriber): ShellExtensionSubscription {
-		const unsubscribe = this.workbench.subscribe(listener);
-		const sub: ShellExtensionSubscription = {
+	subscribe(listener: ProductSubscriber): PluginSubscription {
+		const unsubscribe = this.runtime.subscribe(listener);
+		const sub: PluginSubscription = {
 			dispose: () => unsubscribe(),
 		};
 		this.disposables.push(sub);
@@ -785,31 +1014,83 @@ export class ShellExtensionContext {
 		for (const disposable of this.disposables.splice(0)) disposable.dispose();
 	}
 }
+//#endregion 🔖PluginContext
 
-/** @emoji ­ƒº® Runtime extension module (`activate` / `deactivate`). */
-export interface ShellExtension {
+//#region 🔖PluginManifest
+/** @emoji 🧩 Static app contribution merged by {@link PluginHost} before {@link AppRuntime} construction. */
+export interface PluginManifestAppContribute {
 	readonly id: string;
-	activate(context: ShellExtensionContext): void | Promise<void>;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly controllerId: string;
+	readonly windowKinds: readonly {
+		readonly id: string;
+		readonly label: string;
+		readonly bodyKey: string;
+		readonly iconId?: string;
+		readonly measures?: readonly WindowMeasure[];
+	}[];
+	readonly defaultLayout: WindowLayout;
+	readonly defaultModeId?: string;
+	readonly modes?: readonly {
+		readonly id: string;
+		readonly label: string;
+		readonly iconId?: string;
+		readonly tools?: AppTools;
+		readonly windowKinds?: readonly { readonly id: string; readonly label: string; readonly bodyKey: string; readonly iconId?: string; readonly measures?: readonly WindowMeasure[] }[];
+		readonly defaultLayout?: WindowLayout;
+	}[];
+	readonly tools?: AppTools;
+	readonly leftTabs?: readonly SideTabSpec[];
+	readonly rightTabs?: readonly SideTabSpec[];
+	readonly footerItems?: readonly FooterItem[];
+	readonly findItems?: readonly FindItem[];
+}
+
+/** @emoji 📦 VS Code–style `contributes` block (serializable); runtime bodies register in {@link PluginModule.activate}. */
+export interface PluginManifestContributes {
+	readonly apps?: readonly PluginManifestAppContribute[];
+	readonly commands?: readonly {
+		readonly id: string;
+		readonly controllerId: string;
+		readonly command: string;
+		readonly title?: string;
+	}[];
+}
+
+/** @emoji 🧾 Extension package descriptor (id + contributes); optional {@link PluginModule}. */
+export interface PluginManifest {
+	readonly id: string;
+	readonly label?: string;
+	readonly version?: string;
+	readonly target?: { readonly product: string; readonly api: string };
+	readonly contributes: PluginManifestContributes;
+}
+
+/** @emoji 🧩 Runtime plugin module (`activate` / `deactivate`). */
+export interface PluginModule {
+	readonly id: string;
+	activate(context: PluginContext): void | Promise<void>;
 	deactivate?(): void | Promise<void>;
 }
 
-/** @emoji ­ƒÅù´©Å Loads extension manifests, activates modules, and owns contributed {@link WorkbenchApp} rows. */
-export class ShellExtensionHost {
-	private readonly extensions = new Map<string, { manifest: ShellExtensionManifest; module?: ShellExtension }>();
-	private readonly contexts = new Map<string, ShellExtensionContext>();
+/** @emoji 🏗 Loads plugin manifests, activates modules, and owns contributed {@link AppRuntime} rows. */
+export class PluginHost {
+	private readonly plugins = new Map<string, { manifest: PluginManifest; module?: PluginModule }>();
+	private readonly contexts = new Map<string, PluginContext>();
 	private activated = false;
 
-	constructor(readonly workbench: Workbench) {}
+	constructor(readonly runtime: ProductRuntime) {}
 
-	register(manifest: ShellExtensionManifest, module?: ShellExtension): void {
+	register(manifest: PluginManifest, module?: PluginModule): void {
 		if (module && module.id !== manifest.id) {
-			throw new Error(`Extension module id "${module.id}" does not match manifest id "${manifest.id}".`);
+			throw new Error(`Plugin module id "${module.id}" does not match manifest id "${manifest.id}".`);
 		}
-		this.extensions.set(manifest.id, { manifest, module });
+		this.plugins.set(manifest.id, { manifest, module });
 	}
 
 	getControllerById(controllerId: string): Controller | undefined {
-		for (const app of this.workbench.apps) {
+		for (const app of this.runtime.apps) {
 			if (app.controller.id === controllerId) return app.controller;
 		}
 		return undefined;
@@ -818,8 +1099,8 @@ export class ShellExtensionHost {
 	async activateAll(getController: (controllerId: string) => Controller | undefined): Promise<void> {
 		if (this.activated) return;
 		this.activated = true;
-		for (const { manifest, module } of this.extensions.values()) {
-			const context = new ShellExtensionContext(this.workbench, manifest);
+		for (const { manifest, module } of this.plugins.values()) {
+			const context = new PluginContext(this.runtime, manifest);
 			this.contexts.set(manifest.id, context);
 			context.addContributedApps(getController);
 			if (module) await module.activate(context);
@@ -827,7 +1108,7 @@ export class ShellExtensionHost {
 	}
 
 	async deactivateAll(): Promise<void> {
-		for (const [id, { module }] of [...this.extensions.entries()].reverse()) {
+		for (const [id, { module }] of [...this.plugins.entries()].reverse()) {
 			await module?.deactivate?.();
 			this.contexts.get(id)?.disposeAll();
 			this.contexts.delete(id);
@@ -835,9 +1116,94 @@ export class ShellExtensionHost {
 		this.activated = false;
 	}
 }
-//#endregion ­ƒöûExtensionContributes
+//#endregion 🔖PluginManifest
 
-//#region ­ƒº¬Tests
+//#region 🔖ProductPlugin
+/** @emoji 🧩 Typed product plugin: manifest target, optional per-surface activation, and selector-based contributions. */
+export interface ProductPlugin<TProductApi = unknown, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>> = Record<string, SurfaceBinding<unknown, unknown>>> {
+	readonly id: string;
+	readonly target: { readonly product: string; readonly api: string };
+	readonly manifest?: PluginManifest;
+	activate?(ctx: PluginContext, product: TProductApi): void | Promise<void>;
+	deactivate?(): void | Promise<void>;
+	surfaces?: { [K in keyof TSurfaceMap]?: (ctx: SurfaceContext<K & string>, surface: TSurfaceMap[K]["api"]) => Disposable | Promise<Disposable> };
+	contributes?: { readonly selectors?: readonly ContributionRoute[] };
+}
+
+/** @emoji ✅ Identity helper for authoring {@link ProductPlugin} definitions. */
+export function defineProductPlugin<TProductApi, TSurfaceMap extends Record<string, SurfaceBinding<unknown, unknown>>>(
+	plugin: ProductPlugin<TProductApi, TSurfaceMap>,
+): ProductPlugin<TProductApi, TSurfaceMap> {
+	return plugin;
+}
+//#endregion 🔖ProductPlugin
+
+//#region 🔖PluginActivationHost
+/** @emoji 🎛 Activates {@link ProductPlugin} instances: product lifecycle + surface handlers + routed contributions. */
+export class PluginActivationHost<TProductApi = unknown> {
+	private readonly disposables: Disposable[] = [];
+	private productApi: TProductApi | undefined;
+
+	constructor(
+		readonly runtime: ProductRuntime,
+		readonly productId: string,
+		readonly createApi: (ctx: PluginContext) => TProductApi,
+	) {}
+
+	async activateAll(plugins: readonly ProductPlugin<TProductApi>[], getController: (controllerId: string) => Controller | undefined): Promise<void> {
+		void getController;
+		const bootstrapCtx = new PluginContext(this.runtime, { id: "__product", contributes: {} });
+		this.productApi ??= this.createApi(bootstrapCtx);
+		const rows = () => SurfaceRouter.flattenFromRuntimeApps(this.productId, this.runtime.apps);
+		for (const plugin of plugins) {
+			const manifest: PluginManifest = plugin.manifest ?? { id: plugin.id, contributes: {} };
+			const ctx = new PluginContext(this.runtime, manifest);
+			await plugin.activate?.(ctx, this.productApi!);
+			const flat = rows();
+			for (const row of flat) {
+				const handler = plugin.surfaces?.[row.surfaceId as keyof typeof plugin.surfaces];
+				if (!handler) continue;
+				const sctx: SurfaceContext = {
+					surfaceId: row.surfaceId,
+					productId: this.productId,
+					appId: row.appId,
+					modeId: row.modeId,
+					windowKindId: row.windowKindId,
+					runtime: this.runtime,
+					activeModeId: this.runtime.getActiveApp()?.getActiveModeId() ?? null,
+					generation: this.runtime.generation,
+				};
+				const result = await handler(sctx as SurfaceContext<string>, {} as never);
+				if (result && typeof (result as Disposable).dispose === "function") {
+					this.disposables.push(result as Disposable);
+				}
+			}
+			const registry = new ContributionRegistry();
+			for (const route of plugin.contributes?.selectors ?? []) {
+				registry.add({ ...route, pluginId: plugin.id });
+			}
+			this.disposables.push(
+				SurfaceRouter.applyRoutes(registry.list(), flat, (row) => ({
+					surfaceId: row.surfaceId,
+					productId: this.productId,
+					appId: row.appId,
+					modeId: row.modeId,
+					windowKindId: row.windowKindId,
+					runtime: this.runtime,
+					activeModeId: this.runtime.getActiveApp()?.getActiveModeId() ?? null,
+					generation: this.runtime.generation,
+				})),
+			);
+		}
+	}
+
+	disposeAll(): void {
+		for (const d of this.disposables.splice(0)) d.dispose();
+	}
+}
+//#endregion 🔖PluginActivationHost
+
+//#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -867,15 +1233,15 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("ShellExtensionHost", () => {
+	describe("PluginHost", () => {
 		it("merges contributed apps and declarative window bodies", async () => {
 			class TCtrl extends Controller {
 				override run(): void {}
 			}
 			const bus = new CommandBus();
-			const wb = new Workbench();
-			const ctrl = new TCtrl("ext-ctrl", bus, () => wb.notify());
-			const host = new ShellExtensionHost(wb);
+			const rt = new ProductRuntime();
+			const ctrl = new TCtrl("ext-ctrl", bus, () => rt.notify());
+			const host = new PluginHost(rt);
 			host.register(
 				{
 					id: "demo.ext",
@@ -894,7 +1260,7 @@ if (import.meta.vitest) {
 				{
 					id: "demo.ext",
 					activate(ctx) {
-						ctx.registerDeclarativeWindowBody("demo.ext.main", () => ({
+						ctx.registerWindowBody("demo.ext.main", () => ({
 							type: "text",
 							value: "hello",
 						}));
@@ -902,10 +1268,105 @@ if (import.meta.vitest) {
 				},
 			);
 			await host.activateAll((id) => (id === "ext-ctrl" ? ctrl : undefined));
-			expect(wb.apps.some((app) => app.id === "demo-app")).toBe(true);
-			const factory = getDeclarativeWindowBodyFactory("demo.ext.main");
-			expect(factory?.({ workbench: wb, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
+			expect(rt.apps.some((app) => app.id === "demo-app")).toBe(true);
+			const factory = getWindowBodyFactory("demo.ext.main");
+			expect(factory?.({ runtime: rt, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
+		});
+	});
+
+	describe("matchesSurface", () => {
+		const row: SurfaceRoutingRow = {
+			productId: "p",
+			appId: "a",
+			modeId: "m",
+			windowKindId: "wk",
+			surfaceId: "s1",
+			surfaceKind: "diagram",
+			capabilities: ["design.model.read", "energy.overlay"],
+			surface: {
+				id: "s1",
+				appId: "a",
+				modeId: "m",
+				windowKindId: "wk",
+				kind: "diagram",
+				capabilities: ["energy.overlay"],
+				createApi: () => ({}),
+				applyContribution: () => ({ dispose: () => undefined }),
+			},
+		};
+
+		it("matches by app/mode/windowKind/surface/kind", () => {
+			expect(matchesSurface({ app: "a", mode: "m", windowKind: "wk", surface: "s1", kind: "diagram" }, row)).toBe(true);
+			expect(matchesSurface({ app: "other" }, row)).toBe(false);
+			expect(matchesSurface({ kind: "scene" }, row)).toBe(false);
+		});
+
+		it("matches capabilities as subset", () => {
+			expect(matchesSurface({ capabilities: ["energy.overlay"] }, row)).toBe(true);
+			expect(matchesSurface({ capabilities: ["energy.overlay", "missing"] }, row)).toBe(false);
+		});
+	});
+
+	describe("capability-only routing across implicit window surfaces", () => {
+		it("routes contributions to every compatible implicit window surface", () => {
+			class TCtrl extends Controller {
+				override run(): void {}
+			}
+			const bus = new CommandBus();
+			const rt = new ProductRuntime();
+			const ctrl = new TCtrl("c", bus, () => rt.notify());
+			const wk = new WindowKindRuntime("main", "Main", "demo.body", undefined, [], ["foo.overlay"]);
+			rt.addApp(new AppRuntime("app", "App", undefined, ctrl, createTabStackLayout(["main"]), [wk]));
+			const flat = SurfaceRouter.flattenFromRuntimeApps("prod", rt.apps);
+			let applied = 0;
+			const disposable = SurfaceRouter.applyRoutes(
+				[{ pluginId: "p1", where: { capabilities: ["foo.overlay"] }, contribution: {} }],
+				flat,
+				(row) =>
+					({
+						surfaceId: row.surfaceId,
+						productId: "prod",
+						appId: row.appId,
+						modeId: row.modeId,
+						windowKindId: row.windowKindId,
+						runtime: rt,
+						activeModeId: null,
+						generation: 0,
+					}) as SurfaceContext,
+			);
+			for (const r of flat) {
+				if (matchesSurface({ capabilities: ["foo.overlay"] }, r)) applied++;
+			}
+			expect(applied).toBe(1);
+			disposable.dispose();
+		});
+	});
+
+	describe("defineProductPlugin lifecycle", () => {
+		it("runs activate once and disposes surface contributions", async () => {
+			class TCtrl extends Controller {
+				override run(): void {}
+			}
+			const bus = new CommandBus();
+			const rt = new ProductRuntime();
+			const ctrl = new TCtrl("c", bus, () => rt.notify());
+			rt.addApp(new AppRuntime("app", "App", undefined, ctrl, createTabStackLayout(["w"]), [new WindowKindRuntime("w", "W", "k", undefined, [], ["x"])]));
+			let surfaceActivations = 0;
+			const plugin = defineProductPlugin({
+				id: "pl",
+				target: { product: "p", api: "^1" },
+				surfaces: {
+					[`framework.window:app:default:w`]: async () => {
+						surfaceActivations++;
+						return { dispose: () => undefined };
+					},
+				},
+			});
+			const host = new PluginActivationHost(rt, "p", () => ({}) as Record<string, never>);
+			await host.activateAll([plugin], () => ctrl);
+			expect(surfaceActivations).toBe(1);
+			host.disposeAll();
 		});
 	});
 }
-//#endregion ­ƒº¬Tests
+//#endregion 🧪Tests

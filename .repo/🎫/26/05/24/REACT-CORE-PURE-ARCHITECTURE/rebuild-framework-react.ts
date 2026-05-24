@@ -5,12 +5,11 @@ import { join } from "node:path";
 const dir = import.meta.dir;
 const root = join(dir, "../../../../../..");
 const frPath = join(root, "elements/lib/framework/renderer/react/index.tsx");
-const broken = readFileSync(frPath, "utf8");
-const head = readFileSync(join(dir, "framework-react-head.tsx"), "utf8");
+const headLines = readFileSync(join(dir, "framework-react-head.tsx"), "utf8").split(/\r?\n/);
 
-const tailStart = broken.indexOf("//#region 📦workbench-app-context.tsx");
-if (tailStart < 0) throw new Error("workbench-app-context not found in broken file");
-const tail = broken.slice(tailStart);
+const midStart = headLines.findIndex((l) => l.includes("workbench-app-context"));
+if (midStart < 0) throw new Error("workbench-app-context not in head");
+const mid = headLines.slice(midStart).join("\n");
 
 let shell = readFileSync(join(dir, "shell-extract.tsx"), "utf8");
 shell = shell
@@ -40,113 +39,27 @@ function createDOMEventBinding() {
 
 `;
 
-const header = head.slice(0, head.indexOf("//#region"));
+const header = `// #region 🧲Header
+/** @emoji ⚛️ \`@elements/framework-react\` — React renderer for {@link @elements/framework}: declarative {@link UiNode} host (monolith). */
+// #endregion 🧲Header
 
-const imports = `import {
-	CommandBus,
-	Controller,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchMode,
-	WorkbenchWindowKind,
-	createTabStackLayout,
-	createWindowLayout,
-	getDeclarativeSidePanelBodyFactory,
-	getDeclarativeWindowBodyFactory,
-	type ResolvedWorkbenchAppState,
-	type ShellAppTools,
-	type ShellFooterItem,
-	type ShellSidePanelBodyViewContext,
-	type ShellSideTabSpec,
-	type ShellToolItem,
-	type ShellWindowBodyViewContext,
-	type ShellWindowMeasure,
-	type UiBoardHostSurfaceNode,
-	type UiButtonNode,
-	type UiNode,
-	type UiPanelHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
-	type UiSeparatorNode,
-	type UiStackNode,
-	type UiTableHostSurfaceNode,
-	type UiTextNode,
-	type WindowLayout,
-	type WindowLayoutAxisNode,
-	type WindowLayoutNode,
-	type WindowLayoutStackNode,
-	type WindowLayoutWindowNode,
-} from "@elements/framework";
-import {
-	ArrowLeft,
-	ArrowRight,
-	ArrowUp,
-	Check as CheckIcon,
-	Filter as FilterIcon,
-	Folder,
-	FolderOpen as FolderOpenIcon,
-	Hand as HandIcon,
-	Info,
-	Lasso as LassoIcon,
-	LayoutGrid as LayoutGridIcon,
-	MessageSquare,
-	MoreHorizontal as MoreHorizontalIcon,
-	MousePointer2 as MousePointerIcon,
-	Plus as PlusIcon,
-	Search as SearchIcon,
-	Settings2 as Settings2Icon,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import * as React from "react";
-import { createRoot, type Root } from "react-dom/client";
-import { renderToStaticMarkup } from "react-dom/server";
-import Fuse, { type FuseResult } from "fuse.js";
-import { useTranslation } from "react-i18next";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import {
-	BasicChatPanel,
-	Button,
-	ButtonCycle,
-	ButtonGroup,
-	ButtonGroupItem,
-	CommandDialog,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-	Combobox,
-	Footer,
-	Input,
-	Layout,
-	Navbar,
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	Slider,
-	staticSidePanelTabDefinition,
-	staticTreePanelDefinition,
-	Stepper,
-	Textarea,
-	Toggle,
-	ActionGroup,
-	ActionGroupItem,
-	ToolbarDivider,
-	ToolbarItem,
-	ToolbarZone,
-	cn,
-	resolveTranslationLabel,
-	useCommandHotkey,
-	useMediaQuery,
-	type ContextMenuItem,
-	type NavbarItem,
-	type SidePanelTabConfig as UiSidePanelTabConfig,
-	type TreePanelConfig,
+export type { Workbench } from "@elements/framework";
+
+export type { Level } from "@elements/ui";
+export {
+	LevelProvider,
+	useLevel,
+	getLevelBgClass,
+	getLevelHoverClass,
+	getLevelActiveHoverClass,
+	getLevelZClass,
+	getLevelBorderElementClass,
+	getLevelDivideElementClass,
 } from "@elements/ui";
 
 `;
+
+const imports = readFileSync(join(dir, "imports-block.txt"), "utf8");
 
 const shellChrome = `//#region 📦shell-chrome-types.tsx
 
@@ -185,6 +98,6 @@ ${shell}
 
 `;
 
-const out = header + imports + shellChrome + tail;
+const out = header + imports + shellChrome + mid;
 writeFileSync(frPath, out, "utf8");
 console.log("rebuilt", out.split(/\r?\n/).length, "lines");

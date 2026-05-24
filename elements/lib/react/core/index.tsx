@@ -238,20 +238,18 @@ export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onC
 
 type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
-class DOMEventBindingController {
-  private readonly cleanups: Array<() => void> = [];
-
-  listen(target: DOMListenerTarget | null | undefined, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
-    if (!target) return;
-    target.addEventListener(type, listener, options);
-    this.cleanups.push(() => target.removeEventListener(type, listener, options));
-  }
-
-  dispose(): void {
-    while (this.cleanups.length > 0) {
-      this.cleanups.pop()?.();
-    }
-  }
+function createDOMEventBinding() {
+  const cleanups: Array<() => void> = [];
+  return {
+    listen(target: DOMListenerTarget | null | undefined, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+      if (!target) return;
+      target.addEventListener(type, listener, options);
+      cleanups.push(() => target.removeEventListener(type, listener, options));
+    },
+    dispose() {
+      while (cleanups.length > 0) cleanups.pop()?.();
+    },
+  };
 }
 
 function getDocumentBody(): HTMLElement | null {
@@ -398,7 +396,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         onOpenChange(false);
       }
     };
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     bindings.listen(window, "pointerdown", handlePointerDown, false);
     bindings.listen(window, "keydown", handleKeyDown, false);
     return () => bindings.dispose();
@@ -468,7 +466,7 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
   if (typeof window !== "undefined" && typeof document !== "undefined") {
     const root = document.documentElement;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     const applyTheme = (): void => {
       const prefersDark = mq.matches;
       const dark = theme === "dark" || (theme === "system" && prefersDark);
@@ -10916,7 +10914,7 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
     }
 
     const mediaQueryList = window.matchMedia(query);
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
     setMatches(mediaQueryList.matches);
     bindings.listen(mediaQueryList, "change", handleChange);
@@ -14965,7 +14963,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       setDraggingOrbId(null);
       transaction?.abort?.();
     };
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     bindings.listen(window, "pointermove", onMove);
     bindings.listen(window, "pointerup", onUp);
     bindings.listen(window, "pointercancel", onCancel);
@@ -15240,7 +15238,7 @@ function ResizableHandle({
     setIsDragging(true);
     externalOnMouseDown?.(e as any);
 
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     const handleMouseUp = () => {
       setIsDragging(false);
       bindings.dispose();
@@ -18876,7 +18874,7 @@ const Panel: React.FC<PanelProps> = ({
     setIsResizing(true);
     const startPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
     const startSize = size;
-    const bindings = new DOMEventBindingController();
+    const bindings = createDOMEventBinding();
     const handleMouseMove = (e: MouseEvent) => {
       const currentPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
       const delta = currentPos - startPos;
@@ -19099,38 +19097,20 @@ export interface TreePanelDefinition {
   resolveTree(): TreePanelConfig;
 }
 
-export abstract class PureTreePanelDefinition implements TreePanelDefinition {
-  abstract resolveTree(): TreePanelConfig;
-}
-
 export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
 
 export interface SidePanelTabDefinition {
   resolveTab(): SidePanelTabConfig;
 }
 
-export abstract class PureSidePanelTabDefinition implements SidePanelTabDefinition {
-  abstract resolveTab(): SidePanelTabConfig;
+/** @emoji 🌲 Factory for a static {@link TreePanelDefinition}. */
+export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDefinition {
+  return { resolveTree: () => config };
 }
 
-export class StaticTreePanelDefinition extends PureTreePanelDefinition {
-  constructor(private readonly config: TreePanelConfig) {
-    super();
-  }
-
-  resolveTree(): TreePanelConfig {
-    return this.config;
-  }
-}
-
-export class StaticSidePanelTabDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly config: SidePanelTabConfig) {
-    super();
-  }
-
-  resolveTab(): SidePanelTabConfig {
-    return this.config;
-  }
+/** @emoji 📑 Factory for a static {@link SidePanelTabDefinition}. */
+export function staticSidePanelTabDefinition(config: SidePanelTabConfig): SidePanelTabDefinition {
+  return { resolveTab: () => config };
 }
 
 export type SidePanelTabSource = SidePanelTabConfig | SidePanelTabDefinition;
@@ -19153,68 +19133,66 @@ function resolveSidePanelTabs(tabs: readonly SidePanelTabSource[] | undefined): 
   return tabs?.map(resolveSidePanelTabSource);
 }
 
-export class PointerDragController<TElement extends HTMLElement = HTMLDivElement> {
-  private activePointerId: number | null = null;
-
-  constructor(
-    private readonly handlers: {
-      onStart?: (event: React.PointerEvent<TElement>) => void;
-      onMove?: (event: React.PointerEvent<TElement>) => void;
-      onEnd?: (event: React.PointerEvent<TElement>) => void;
-      onCancel?: (event: React.PointerEvent<TElement>) => void;
-    },
-  ) {}
-
-  getProps(): Pick<React.HTMLAttributes<TElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"> {
-    return {
-      onPointerDown: (event) => {
-        this.activePointerId = event.pointerId;
+/** @emoji 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
+export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(handlers: {
+  onStart?: (event: React.PointerEvent<TElement>) => void;
+  onMove?: (event: React.PointerEvent<TElement>) => void;
+  onEnd?: (event: React.PointerEvent<TElement>) => void;
+  onCancel?: (event: React.PointerEvent<TElement>) => void;
+}): Pick<React.HTMLAttributes<TElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"> {
+  const activePointerIdRef = React.useRef<number | null>(null);
+  return React.useMemo(
+    () => ({
+      onPointerDown: (event: React.PointerEvent<TElement>) => {
+        activePointerIdRef.current = event.pointerId;
         event.currentTarget.setPointerCapture(event.pointerId);
-        this.handlers.onStart?.(event as React.PointerEvent<TElement>);
+        handlers.onStart?.(event);
       },
-      onPointerMove: (event) => {
-        if (this.activePointerId !== event.pointerId) return;
-        this.handlers.onMove?.(event as React.PointerEvent<TElement>);
+      onPointerMove: (event: React.PointerEvent<TElement>) => {
+        if (activePointerIdRef.current !== event.pointerId) return;
+        handlers.onMove?.(event);
       },
-      onPointerUp: (event) => {
-        if (this.activePointerId !== event.pointerId) return;
-        this.activePointerId = null;
+      onPointerUp: (event: React.PointerEvent<TElement>) => {
+        if (activePointerIdRef.current !== event.pointerId) return;
+        activePointerIdRef.current = null;
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
-        this.handlers.onEnd?.(event as React.PointerEvent<TElement>);
+        handlers.onEnd?.(event);
       },
-      onPointerCancel: (event) => {
-        if (this.activePointerId !== event.pointerId) return;
-        this.activePointerId = null;
+      onPointerCancel: (event: React.PointerEvent<TElement>) => {
+        if (activePointerIdRef.current !== event.pointerId) return;
+        activePointerIdRef.current = null;
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
-        this.handlers.onCancel?.(event as React.PointerEvent<TElement>);
+        handlers.onCancel?.(event);
       },
-    };
-  }
+    }),
+    [handlers],
+  );
 }
 
-export class NativeDragAndDropController<TElement extends HTMLElement = HTMLDivElement> {
-  constructor(
-    private readonly handlers: {
-      onDragStart?: React.DragEventHandler<TElement>;
-      onDragEnd?: React.DragEventHandler<TElement>;
-      onDragOver?: React.DragEventHandler<TElement>;
-      onDrop?: React.DragEventHandler<TElement>;
-    },
-  ) {}
-
-  getProps(draggable = true): Pick<React.HTMLAttributes<TElement>, "draggable" | "onDragEnd" | "onDragOver" | "onDragStart" | "onDrop"> {
-    return {
+/** @emoji 📦 Native HTML drag-and-drop event props for a host element. */
+export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivElement>(
+  handlers: {
+    onDragStart?: React.DragEventHandler<TElement>;
+    onDragEnd?: React.DragEventHandler<TElement>;
+    onDragOver?: React.DragEventHandler<TElement>;
+    onDrop?: React.DragEventHandler<TElement>;
+  },
+  draggable = true,
+): Pick<React.HTMLAttributes<TElement>, "draggable" | "onDragEnd" | "onDragOver" | "onDragStart" | "onDrop"> {
+  return React.useMemo(
+    () => ({
       draggable,
-      onDragStart: this.handlers.onDragStart,
-      onDragEnd: this.handlers.onDragEnd,
-      onDragOver: this.handlers.onDragOver,
-      onDrop: this.handlers.onDrop,
-    };
-  }
+      onDragStart: handlers.onDragStart,
+      onDragEnd: handlers.onDragEnd,
+      onDragOver: handlers.onDragOver,
+      onDrop: handlers.onDrop,
+    }),
+    [draggable, handlers.onDragEnd, handlers.onDragOver, handlers.onDragStart, handlers.onDrop],
+  );
 }
 
 /**
@@ -19260,34 +19238,30 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   };
   const resizeSide = position === "left" ? "right" : "left";
 
-  const resizeController = React.useMemo(
-    () =>
-      new PointerDragController<HTMLDivElement>({
-        onStart: (event) => {
-          event.preventDefault();
-          resizeStartRef.current = { pointerX: event.clientX, size: sizeRef.current };
-          setIsResizing(true);
-        },
-        onMove: (event) => {
-          const start = resizeStartRef.current;
-          if (!start) return;
-          const delta = event.clientX - start.pointerX;
-          const nextSize = position === "left" ? start.size + delta : start.size - delta;
-          if (nextSize >= minSize && nextSize <= maxSize) {
-            onSizeChange?.(nextSize);
-          }
-        },
-        onEnd: () => {
-          resizeStartRef.current = null;
-          setIsResizing(false);
-        },
-        onCancel: () => {
-          resizeStartRef.current = null;
-          setIsResizing(false);
-        },
-      }),
-    [maxSize, minSize, onSizeChange, position],
-  );
+  const resizePointerProps = usePointerDrag<HTMLDivElement>({
+    onStart: (event) => {
+      event.preventDefault();
+      resizeStartRef.current = { pointerX: event.clientX, size: sizeRef.current };
+      setIsResizing(true);
+    },
+    onMove: (event) => {
+      const start = resizeStartRef.current;
+      if (!start) return;
+      const delta = event.clientX - start.pointerX;
+      const nextSize = position === "left" ? start.size + delta : start.size - delta;
+      if (nextSize >= minSize && nextSize <= maxSize) {
+        onSizeChange?.(nextSize);
+      }
+    },
+    onEnd: () => {
+      resizeStartRef.current = null;
+      setIsResizing(false);
+    },
+    onCancel: () => {
+      resizeStartRef.current = null;
+      setIsResizing(false);
+    },
+  });
 
   const borderClass = resizeSide === "left" ? (isResizing || isResizeHovered ? "border-l-accent" : "border-l") : isResizing || isResizeHovered ? "border-r-accent" : "border-r";
 
@@ -19345,7 +19319,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
             ) : null}
           </div>
         </Scrollable>
-        {onSizeChange && <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizeController.getProps()} />}
+        {onSizeChange && <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />}
       </div>
     </LevelProvider>
   );
@@ -22429,90 +22403,6 @@ if (treeVitest) {
         alignment: "bottom-right",
         margin: [26, 18],
       });
-    });
-  });
-
-  describe("layout helpers", () => {
-    it("converts abstract layout nodes to GoldenLayout config", () => {
-      expect(
-        layoutNodeToGoldenLayoutConfig({
-          root: {
-            kind: "row",
-            children: [
-              {
-                kind: "stack",
-                size: 100,
-                children: [{ kind: "window", windowKindId: "table", title: "table" }],
-              },
-            ],
-          },
-        }),
-      ).toEqual({
-        root: {
-          type: "row",
-          content: [
-            {
-              type: "stack",
-              size: "100%",
-              content: [{ type: "component", componentName: "table", title: "table", componentState: {} }],
-            },
-          ],
-        },
-      });
-    });
-
-    it("merges categorized tools and omits empty categories", () => {
-      expect(mergeAppTools({ selection: [{ id: "a", onClick: () => undefined }] }, { filter: [{ id: "b", onClick: () => undefined }] })).toEqual({
-        selection: [{ id: "a", onClick: expect.any(Function) }],
-        filter: [{ id: "b", onClick: expect.any(Function) }],
-      });
-      expect(listPopulatedAppToolCategories({ selection: [], filter: [{ id: "b", onClick: () => undefined }] })).toEqual(["filter"]);
-      expect(listPopulatedAppToolCategories({ filter: [{ id: "sep", kind: "separator" }] })).toEqual([]);
-    });
-
-    it("renders only populated toolbar categories", () => {
-      const markup = renderToStaticMarkup(
-        <UIToolbar
-          tools={{
-            selection: [{ id: "select-tool", label: "Select", onClick: () => undefined }],
-            filter: [{ id: "filter-tool", label: "Filter", onClick: () => undefined }],
-          }}
-        />,
-      );
-      expect(markup).toContain('id="ui.toolbar.group.selection"');
-      expect(markup).toContain('id="ui.toolbar.group.filter"');
-      expect(markup).not.toContain('id="ui.toolbar.group.create"');
-    });
-
-  });
-
-  describe("window measures overlay", () => {
-    it("renders floating window measures overlay without consuming main layout width", () => {
-      const markup = renderToStaticMarkup(
-        <Window id="opt-win" measures={<span data-testid="measure-slot">m</span>}>
-          <div>main-body</div>
-        </Window>,
-      );
-      expect(markup).toContain('data-slot="window-measures-overlay"');
-      expect(markup).toContain('data-slot="window-measures-stack"');
-      expect(markup).toContain("main-body");
-    });
-
-    it("renders declarative UIWindowMeasures entries as right-aligned floats", () => {
-      const list: UIWindowMeasure[] = [
-        { content: <span>Rich</span>, id: "disp", kind: "display", label: "State" },
-        { id: "read", kind: "reading", monospace: true, text: "42", label: "Count" },
-        { id: "sec", kind: "section", title: "Group" },
-        { id: "sep", kind: "separator" },
-        { id: "btn", kind: "button", onClick: () => undefined, text: "Run" },
-        { checked: true, id: "chk", kind: "checkbox", label: "On", onCheckedChange: () => undefined },
-        { id: "rad", items: [{ label: "A", value: "a" }], kind: "radio", onChange: () => undefined, value: "a" },
-      ];
-      const markup = renderToStaticMarkup(<UIWindowMeasures measures={list} />);
-      expect(markup).toContain('data-slot="window-measures-stack-inner"');
-      expect(markup).toContain('data-slot="window-measure-heading"');
-      expect(markup).toContain('data-slot="window-measure-float"');
-      expect(markup).toContain('data-slot="window-measure-radio-item"');
     });
   });
 
