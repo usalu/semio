@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** 🧱 `@elements/ui-shell` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
+/** 🧱 `@elements/framework` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
 // #endregion 🧲Header
 
 //#region 🔖JsonValue

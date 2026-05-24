@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🔁 Re-exports declarative renderer from `@elements/framework-react` (implementation lives in the framework renderer). */
+/** @emoji ⚛️ `@elements/framework-react` — React renderer for {@link @elements/framework}: declarative {@link UiNode} host. */
 // #endregion 🧲Header
 
 export {
@@ -11,4 +11,6 @@ export {
 	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
 	type UiRendererProps,
-} from "@elements/framework-react";
+} from "./ui-declarative-renderer.tsx";
+
+export type { Workbench } from "@elements/framework";

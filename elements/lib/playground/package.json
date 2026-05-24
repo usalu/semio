@@ -1,0 +1,19 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@elements/playground",
+	"version": "0.1.0",
+	"description": "elements · playground framework (one app, fixture, selection, filter, details)",
+	"type": "module",
+	"private": true,
+	"exports": {
+		".": "./index.ts"
+	},
+	"dependencies": {
+		"@elements/framework": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	},
+	"license": "LGPL-3.0-or-later",
+	"bundleKind": "library"
+}

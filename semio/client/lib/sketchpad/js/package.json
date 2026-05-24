@@ -13,7 +13,7 @@
     "@elements/scene": "workspace:*",
     "@elements/topology": "workspace:*",
     "@elements/ui": "workspace:*",
-    "@elements/ui-shell": "workspace:*",
+    "@elements/framework": "workspace:*",
     "fflate": "^0.8.2",
     "@semio/js": "*",
     "@semio/react": "*",

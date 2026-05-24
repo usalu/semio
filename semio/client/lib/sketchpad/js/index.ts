@@ -447,7 +447,7 @@ import {
 	type UiNode,
 	type UiPanelHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-} from "@elements/ui-shell";
+} from "@elements/framework";
 import {
 	WorkbenchView,
 	getLevelBgClass,

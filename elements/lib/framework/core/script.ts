@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@elements/ui-shell` task router — `bun ./script.ts test` runs inlined vitest blocks. */
+/** 🧭 `@elements/framework` task router — `bun ./script.ts test` runs inlined vitest blocks. */
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

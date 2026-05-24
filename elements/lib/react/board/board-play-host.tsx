@@ -42,7 +42,7 @@ import {
   type TreeDataSection,
   type UIWindowLayout,
 } from "@elements/ui";
-import type { UiBoardHostSurfaceNode } from "@elements/ui-shell";
+import type { UiBoardHostSurfaceNode } from "@elements/framework";
 import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
   createContext,

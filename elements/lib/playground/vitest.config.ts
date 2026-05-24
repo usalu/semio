@@ -4,19 +4,16 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪 Vitest for `@elements/geometry-spatial-play` (framework-free shell wiring). */
+/** @emoji 🧪 Vitest for `@elements/playground`. */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/framework": resolve(root, "../../framework/core/index.ts"),
-			"@elements/playground": resolve(root, "../../playground/index.ts"),
+			"@elements/framework": resolve(root, "../framework/core/index.ts"),
 		},
 	},
 	test: {
-		environment: "jsdom",
-		fileParallelism: false,
-		maxConcurrency: 1,
+		environment: "node",
 		include: ["index.ts"],
 		passWithNoTests: false,
 	},

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "../../../");
+const repoRoot = path.resolve(__dirname, "../../../../");
 
 export default defineConfig({
 	root: __dirname,
@@ -15,7 +15,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@elements/ui-shell": path.resolve(__dirname, "../../core/index.ts"),
+			"@elements/framework": path.resolve(__dirname, "../../framework/core/index.ts"),
+			"@elements/framework-react": path.resolve(__dirname, "../../framework/renderer/react/index.tsx"),
+			"@elements/framework-react/workbench": path.resolve(__dirname, "../../framework/renderer/react/workbench-bridge.tsx"),
+			"@elements/playground": path.resolve(__dirname, "../../playground/index.ts"),
 		},
 	},
 	server: {

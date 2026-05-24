@@ -69,7 +69,7 @@ import {
 	type ShellWindowMeasure,
 	unregisterDeclarativeSidePanelBody,
 	unregisterDeclarativeWindowBody,
-} from "@elements/ui-shell";
+} from "@elements/framework";
 
 export {
 	CommandBus,
@@ -103,7 +103,7 @@ export {
 	type ShellWindowMeasure,
 	unregisterDeclarativeSidePanelBody,
 	unregisterDeclarativeWindowBody,
-} from "@elements/ui-shell";
+} from "@elements/framework";
 
 export type {
 	JsonPrimitive,
@@ -120,7 +120,7 @@ export type {
 	UiSeparatorNode,
 	UiStackNode,
 	UiTextNode,
-} from "@elements/ui-shell";
+} from "@elements/framework";
 
 import {
 	UiRenderer,

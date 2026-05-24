@@ -19,7 +19,7 @@ import {
 	type ShellWindowMeasure,
 	type UiNode,
 	type WindowLayout,
-} from "@elements/ui-shell";
+} from "@elements/framework";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {

@@ -1,39 +1,27 @@
-import {
-	Workbench,
-	type UiTableHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
-} from "@elements/ui-shell";
+import { Workbench, type UiScene3DHostSurfaceNode, type UiTableHostSurfaceNode } from "@elements/framework";
+import { registerUiScene3DSurfaceHost, registerUiTableSurfaceHost } from "@elements/framework-react";
 import {
 	LevelProvider,
 	WorkbenchView,
 	getLevelBgClass,
 	mountReactApp,
-	registerDeclarativeSidePanelBody,
-	registerDeclarativeWindowBody,
 	registerElementIcon,
-	registerUiTableSurfaceHost,
-	registerUiScene3DSurfaceHost,
 	useApp,
-} from "@elements/ui";
+} from "@elements/framework-react/workbench";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
 import { SpatialDetailsPanel, SpatialSurface, SpatialWorkbenchPanel, type SpatialSurfaceSnapshot } from "@elements/geometry-spatial-react";
 import {
-	SPATIAL_PLAY_BODY_KEY,
 	SPATIAL_PLAY_CONTROLLER_ID,
 	SPATIAL_PLAY_DETAILS_ICON_ID,
-	SPATIAL_PLAY_DETAILS_TAB_BODY_KEY,
 	SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID,
 	SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID,
 	SPATIAL_PLAY_SCENE3D_SURFACE_ID,
 	SPATIAL_PLAY_WORKBENCH_ICON_ID,
-	SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY,
 	SpatialPlayShellController,
-	buildSpatialDetailsDeclarativePanel,
-	buildSpatialPlayDeclarativeBody,
 	buildSpatialWorkbenchApp,
-	buildSpatialWorkbenchDeclarativePanel,
+	registerSpatialPlayDeclarativeBodies,
 } from "./index.ts";
 
 import "./globals.css";
@@ -105,7 +93,8 @@ function SpatialWorkbenchPanelHost({ node }: { readonly node: UiTableHostSurface
 	const panel = snapshot.workbenchPanel;
 	const panelSnapshot = {
 		...panel,
-		setFocusedKind: (kind: typeof panel.focusOptions[number]["kind"]) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setFocusedKind", { kind }),
+		setFocusedKind: (kind: (typeof panel.focusOptions)[number]["kind"]) =>
+			bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setFocusedKind", { kind }),
 		setSelectedId: (id: string | null) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setSelectedId", { id }),
 		setQuery: (query: string) => bus.dispatch(SPATIAL_PLAY_CONTROLLER_ID, "setQuery", { query }),
 	};
@@ -130,13 +119,11 @@ function registerSpatialPlayChrome(): void {
 	registerUiScene3DSurfaceHost(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SpatialScene3DSurfaceHost);
 	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, SpatialWorkbenchPanelHost);
 	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, SpatialDetailsPanelHost);
-	registerDeclarativeWindowBody(SPATIAL_PLAY_BODY_KEY, buildSpatialPlayDeclarativeBody);
-	registerDeclarativeSidePanelBody(SPATIAL_PLAY_WORKBENCH_TAB_BODY_KEY, buildSpatialWorkbenchDeclarativePanel);
-	registerDeclarativeSidePanelBody(SPATIAL_PLAY_DETAILS_TAB_BODY_KEY, buildSpatialDetailsDeclarativePanel);
+	registerSpatialPlayDeclarativeBodies();
 }
 
 /** @emoji 🚀 Builds the workbench around the declarative spatial play surface. */
-export async function bootstrapSpatialWorkbench(): Promise<Workbench> {
+export async function bootstrapSpatialWorkbench() {
 	registerSpatialPlayChrome();
 	const workbench = new Workbench();
 	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());

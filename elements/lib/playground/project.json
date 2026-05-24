@@ -1,11 +1,11 @@
 {
-	"name": "@elements/ui-shell",
-	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@elements/playground",
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
 	"targets": {
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/core",
+				"cwd": "elements/lib/playground",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

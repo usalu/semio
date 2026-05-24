@@ -370,6 +370,18 @@ This MUST NOT happen.
 
 ## 🧩elements
 
+---
+
+We are starting a new a new architecture.
+@elements/lib/react/core MUST be pure react components, no classes.
+@elements/lib/framework/core MUST be pure typescript, no react, just classes.
+@elements/lib/framework/renderer/react is the first renderer to @elements/lib/framework/core.
+@elements/lib/playground is the first framework, just for building playgrounds (one app, one fixture, selection, filter, details, etc)
+Every downstream project MUST NOT import from @elements/lib/react and MUST only import from @elements/lib/framework .
+First goal: Finish implementing @elements/lib/playground and setup @elements/lib/react/spatial/play to use the new playground.
+
+---
+
 Add a checkbox element which is an action that can be checked and unchecked.
 
 ### ⚛️react
