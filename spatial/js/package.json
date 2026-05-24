@@ -1,0 +1,5 @@
+{
+  "name": "@spatial/js-workspace",
+  "private": true,
+  "workspaces": ["core", "kernel-brepjs", "renderer-r3f"]
+}

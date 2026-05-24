@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@spatial/js-kernel-brepjs",
+  "version": "0.1.0",
+  "description": "🧭 brepjs implementation of `@spatial/js-core` `KernelAdapter`.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @spatial/js-kernel-brepjs:test"
+  },
+  "dependencies": {
+    "@spatial/js-core": "workspace:*",
+    "brepjs": "^18.20.3",
+    "brepjs-opencascade": "^0.15.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "spatial/js/kernel-brepjs"
+  },
+  "bundleKind": "library"
+}

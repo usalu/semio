@@ -18,8 +18,8 @@ import {
 	type BoardKindCatalogBundle,
 	type BoardKindCompatEntry,
 	type CameraState as BoardCameraState,
-} from "../board/index.tsx";
-import { BoardCanvas, Edge, Handle, Node, Wire } from "../board/index.tsx";
+} from "@elements/board";
+import { BoardCanvas, Edge, Handle, Node, Wire } from "@elements/board";
 import {
 	Canvas3D as Scene,
 	SceneAttractions,

@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@spatial/js-renderer-r3f",
+  "version": "0.1.0",
+  "description": "🧭 R3F adapter for spatial factory snapshots + interaction.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun nx run @spatial/js-renderer-r3f:dev",
+    "build": "bun nx run @spatial/js-renderer-r3f:build",
+    "test": "bun nx run @spatial/js-renderer-r3f:test"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "@spatial/js-core": "workspace:*",
+    "@spatial/js-kernel-brepjs": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.180.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "spatial/js/renderer-r3f"
+  },
+  "bundleKind": "library"
+}

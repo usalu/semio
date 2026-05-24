@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@spatial/js-core": ["../core/index.ts"]
+    }
+  },
+  "include": ["index.ts"]
+}

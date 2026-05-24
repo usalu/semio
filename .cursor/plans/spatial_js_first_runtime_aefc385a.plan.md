@@ -10,13 +10,13 @@ todos:
    status: completed
  - id: fixtures
    content: Author spatial/fixtures/{factory.json,cell-complex.json,...} language-agnostic test data (box + extrude + offset-surface factories, nakagin cell-complex sample)
-   status: in_progress
+   status: completed
  - id: core-scaffold
    content: Scaffold spatial/js/core (package.json, project.json, script.ts, vitest.config.ts, tsconfig.json)
-   status: pending
+   status: completed
  - id: core-impl
    content: Implement spatial/js/core/index.ts monolith with all regions (Vec, Refs, Expr, Spec, Topology, Kernel iface, DerivedViews, Statechart, Factory, Document, Display, Factories)
-   status: pending
+   status: completed
  - id: brepjs-scaffold
    content: Scaffold spatial/js/kernel-brepjs (package.json with brepjs dep, project.json, script.ts, vitest.config.ts)
    status: pending
