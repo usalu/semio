@@ -609,7 +609,7 @@ export interface InteractionSpec {
 	};
 }
 
-/** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction preset). */
+/** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction). */
 export interface InteractionSpatialConfig {
 	readonly spatialGroundPick?: boolean;
 	readonly pickDisabledStates?: readonly string[];
@@ -2358,30 +2358,30 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 	return s;
 }
 
-/** @emoji 📚 Host-facing interaction preset row (`spatial/fixtures/*.interaction.json`). */
-export interface SpatialInteractionPreset {
+/** @emoji 📚 Host-facing built-in interaction row (`spatial/fixtures/*.interaction.json`). */
+export interface SpatialInteraction {
 	readonly id: string;
 	readonly label: string;
-	/** @emoji ⌨️ Single-stroke host interaction key; must stay unique among presets (see `resolveSpatialInteractionPresetKey`). */
+	/** @emoji ⌨️ Single-stroke host interaction key; must stay unique and appear in `label` (see `resolveSpatialInteractionKey`). */
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in interaction preset ids for host interaction surfaces (`spatial/fixtures/*.interaction.json`). */
-export function listSpatialInteractionPresets(): readonly SpatialInteractionPreset[] {
+/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/fixtures/*.interaction.json`). */
+export function listSpatialInteractions(): readonly SpatialInteraction[] {
 	return [
-		{ id: "primitive.box", label: "Box", key: "q" },
-		{ id: "feature.extrudeWire", label: "Extrude wire", key: "j" },
-		{ id: "feature.offsetSurface", label: "Offset surface", key: "k" },
+		{ id: "primitive.box", label: "Box", key: "b" },
+		{ id: "feature.extrudeWire", label: "Extrude wire", key: "e" },
+		{ id: "feature.offsetSurface", label: "Offset surface", key: "o" },
 		{ id: "measure.distance", label: "Distance", key: "d" },
 		{ id: "measure.area", label: "Area", key: "a" },
 	];
 }
 
-/** @emoji 🧭 Resolves a typed token to a preset (`key`, `id`, or compact `label`). */
-export function resolveSpatialInteractionPresetKey(token: string): SpatialInteractionPreset | null {
+/** @emoji 🧭 Resolves a typed token to an interaction (`key`, `id`, or compact `label`). */
+export function resolveSpatialInteractionKey(token: string): SpatialInteraction | null {
 	const t = token.trim().toLowerCase();
 	if (!t) return null;
-	for (const p of listSpatialInteractionPresets()) {
+	for (const p of listSpatialInteractions()) {
 		if (p.key.toLowerCase() === t) return p;
 		if (p.id.toLowerCase() === t) return p;
 		const slug = p.label.toLowerCase().replace(/\s+/g, "");
@@ -2390,18 +2390,18 @@ export function resolveSpatialInteractionPresetKey(token: string): SpatialIntera
 	return null;
 }
 
-/** @emoji 📚 Loads a built-in interaction preset by stable `id` (see `listSpatialInteractionPresets`). */
-export function loadSpatialInteractionPreset(presetId: string): InteractionSpec | null {
+/** @emoji 📚 Loads a built-in interaction by stable `id` (see `listSpatialInteractions`). */
+export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
 	const raw =
-		presetId === "primitive.box"
+		interactionId === "primitive.box"
 			? boxInteractionJson
-			: presetId === "feature.extrudeWire"
+			: interactionId === "feature.extrudeWire"
 				? extrudeWireInteractionJson
-				: presetId === "feature.offsetSurface"
+				: interactionId === "feature.offsetSurface"
 					? offsetSurfaceInteractionJson
-					: presetId === "measure.distance"
+					: interactionId === "measure.distance"
 						? distanceInteractionJson
-						: presetId === "measure.area"
+						: interactionId === "measure.area"
 							? areaInteractionJson
 							: null;
 	if (!raw) return null;
@@ -2471,17 +2471,18 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core interaction presets", () => {
-		it("lists stable keys for each built-in interaction preset", () => {
-			const ps = listSpatialInteractionPresets();
-			expect(ps.map((p) => p.key).join("")).toBe("qjkda");
+	describe("@spatial/js-core interactions", () => {
+		it("lists stable mnemonic keys for each built-in interaction", () => {
+			const ps = listSpatialInteractions();
+			expect(ps.map((p) => p.key).join("")).toBe("beoda");
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
+			expect(ps.every((p) => p.label.toLowerCase().includes(p.key))).toBe(true);
 		});
-		it("resolves interaction preset tokens by key, id, and label slug", () => {
-			expect(resolveSpatialInteractionPresetKey("q")?.id).toBe("primitive.box");
-			expect(resolveSpatialInteractionPresetKey("primitive.box")?.key).toBe("q");
-			expect(resolveSpatialInteractionPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
-			expect(resolveSpatialInteractionPresetKey("d")?.id).toBe("measure.distance");
+		it("resolves interaction tokens by key, id, and label slug", () => {
+			expect(resolveSpatialInteractionKey("b")?.id).toBe("primitive.box");
+			expect(resolveSpatialInteractionKey("primitive.box")?.key).toBe("b");
+			expect(resolveSpatialInteractionKey("extrudewire")?.id).toBe("feature.extrudeWire");
+			expect(resolveSpatialInteractionKey("d")?.id).toBe("measure.distance");
 		});
 	});
 

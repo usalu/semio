@@ -27,3 +27,15 @@
 **Repo MCP:** still unavailable in this session (`repo://goals` server not registered), so this ticket note tracks the follow-up.
 
 **Work:** extend `spatial/js/renderer-r3f/index.tsx` with topology-kind pick toggles, hover/selection highlighting, wire/shell/cell-specific target bounds, and click disambiguation for overlapping selectable 3D targets.
+
+## Summary (renderer selection and hover completion)
+
+- Split renderer topology controls into independent selectable-kind and hoverable-kind toggles for vertex, edge, wire, face, shell, cell, cellComplex, cluster, surface, and part.
+- Kept targets rendered when either selection or hover is enabled, while selection requests and hover highlights honor their own toggle set.
+- Preserved multi-candidate click disambiguation; hovering a chooser row drives the corresponding 3D target highlight when that kind is hover-enabled.
+
+## Verification (renderer selection and hover completion)
+
+- `bun nx run @spatial/js-renderer-r3f:test` — passed; renderer suite reports 22 tests across the doubled Vitest source/include run.
+- `bun nx run @spatial/js-renderer-r3f:build` — passed.
+- Browser runtime at `http://127.0.0.1:6021/` — loaded Spatial R3F Play and logged `[DEBUG] spatial renderer selection-hover controls` with both `Selectable kinds` and `Hoverable kinds` present and 20 kind checkboxes.

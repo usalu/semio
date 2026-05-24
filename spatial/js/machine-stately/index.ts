@@ -12,8 +12,8 @@ import {
 	cellRef,
 	createInteractionRuntime,
 	isEmptyTopologyDiff,
-	listSpatialInteractionPresets,
-	loadSpatialInteractionPreset,
+	listSpatialInteractions,
+	loadSpatialInteraction,
 	pureTsStateEngineProvider,
 	type InteractionEvent,
 	type InteractionRuntime,
@@ -175,38 +175,38 @@ function mermaidForSpatialInteraction(spec: InteractionSpec, title: string): str
 	return lines.join("\n");
 }
 
-/** @emoji 📊 Builds one view document for a loaded `InteractionSpec` (preset metadata for labels/keys). */
+/** @emoji 📊 Builds one view document for a loaded `InteractionSpec` (interaction metadata for labels/keys). */
 export function buildSpatialStatelyMachineViewForSpec(
 	spec: InteractionSpec,
-	meta: { readonly hostKey: string; readonly presetLabel: string },
+	meta: { readonly hostKey: string; readonly interactionLabel: string },
 ): SpatialStatelyMachineView {
 	const edges = collectSpatialStatelyMachineTransitions(spec);
 	return {
 		interactionId: spec.id,
 		interactionVersion: spec.version,
-		label: spec.label ?? meta.presetLabel,
+		label: spec.label ?? meta.interactionLabel,
 		hostKey: meta.hostKey,
 		initial: spec.machine.initial,
 		states: buildSpatialStatelyStateViews(spec),
 		edges,
-		mermaid: mermaidForSpatialInteraction(spec, `${meta.presetLabel} (${spec.id})`),
+		mermaid: mermaidForSpatialInteraction(spec, `${meta.interactionLabel} (${spec.id})`),
 		statelyRoutingNote:
 			"Runtime applies `applyTransition` (guards/effects) in core; `StatelyStateEngine` then sends `{ type: '__advance', interactionKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`).",
 	};
 }
 
-/** @emoji 📊 Full catalog from `listSpatialInteractionPresets` / optional `presetIds` filter. */
+/** @emoji 📊 Full catalog from `listSpatialInteractions` / optional `interactionIds` filter. */
 export function buildSpatialStatelyMachineCatalogView(opts?: {
-	readonly presetIds?: readonly string[];
+	readonly interactionIds?: readonly string[];
 	readonly generatedAt?: string;
 }): SpatialStatelyMachineCatalogView {
-	const want = opts?.presetIds?.length ? new Set(opts.presetIds) : null;
+	const want = opts?.interactionIds?.length ? new Set(opts.interactionIds) : null;
 	const machines: SpatialStatelyMachineView[] = [];
-	for (const p of listSpatialInteractionPresets()) {
+	for (const p of listSpatialInteractions()) {
 		if (want && !want.has(p.id)) continue;
-		const spec = loadSpatialInteractionPreset(p.id);
+		const spec = loadSpatialInteraction(p.id);
 		if (!spec) continue;
-		machines.push(buildSpatialStatelyMachineViewForSpec(spec, { hostKey: p.key, presetLabel: p.label }));
+		machines.push(buildSpatialStatelyMachineViewForSpec(spec, { hostKey: p.key, interactionLabel: p.label }));
 	}
 	const generatedAt = opts?.generatedAt ?? new Date().toISOString();
 	return {
@@ -355,7 +355,7 @@ if (import.meta.vitest) {
 	}
 
 	describe("@spatial/js-machine-stately", () => {
-		it("buildSpatialStatelyMachineCatalogView lists all presets with edges and mermaid", () => {
+		it("buildSpatialStatelyMachineCatalogView lists all interactions with edges and mermaid", () => {
 			const doc = buildSpatialStatelyMachineCatalogView();
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
 			expect(doc.machines.length).toBeGreaterThanOrEqual(5);

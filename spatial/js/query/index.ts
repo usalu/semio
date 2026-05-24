@@ -180,11 +180,15 @@ class ConstructParser extends CstParser {
 			this.CONSUME(OrderKw);
 			this.CONSUME(ByKw);
 			this.SUBRULE(this.orderExpr);
-			this.OPTION1(() => {
-				this.CONSUME(LimitKw);
-				this.CONSUME1(IntegerLit);
-			});
 		});
+		this.OPTION1(() => {
+			this.CONSUME(LimitKw);
+			this.SUBRULE(this.returnLimitLit);
+		});
+	});
+
+	readonly returnLimitLit = this.RULE("returnLimitLit", () => {
+		this.CONSUME(IntegerLit);
 	});
 
 	readonly patternList = this.RULE("patternList", () => {
@@ -729,7 +733,8 @@ function cstToAst(cst: CstNode): ConstructAst {
 	if (ret) {
 		const pl = ret.children.projectList?.[0] as CstNode | undefined;
 		const order = ret.children.orderExpr?.[0] as CstNode | undefined;
-		const lim = ret.children.IntegerLit?.[0];
+		const limN = ret.children.returnLimitLit?.[0] as CstNode | undefined;
+		const lim = limN?.children.IntegerLit?.[0];
 		returnClause = {
 			kind: "return",
 			projections: cstToProjectList(pl),
@@ -1308,6 +1313,10 @@ if (import.meta.vitest) {
 			const a = parseConstruct("MATCH (f:Face {id: 'f0'}) RETURN f.id");
 			expect(a.clauses[0]?.kind).toBe("match");
 			expect(a.returnClause?.projections.length).toBe(1);
+		});
+		it("parses RETURN LIMIT without ORDER BY", () => {
+			const a = parseConstruct("MATCH (v:Vertex) RETURN v.id LIMIT 3");
+			expect(a.returnClause?.limit).toBe(3);
 		});
 		it("parses CALL with object literal and YIELD", () => {
 			const a = parseConstruct(

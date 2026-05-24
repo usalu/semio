@@ -3,8 +3,9 @@
 // #endregion 🧲Header
 
 // #region 📥Imports
-import { box, init, measureVolume, mesh, unwrap } from "brepjs";
+import { box, initFromOC, measureVolume, mesh, unwrap } from "brepjs";
 import type { ValidSolid } from "brepjs";
+import initOpenCascade from "brepjs-opencascade";
 import {
 	cellRef,
 	meshFaceTopologyDiff,
@@ -21,6 +22,12 @@ import {
 	vec3Distance,
 } from "@spatial/js-core";
 // #endregion 📥Imports
+
+// #region 🧩OpenCascade
+const openCascadeWasmUrl = new URL("../node_modules/brepjs-opencascade/src/brepjs_single.wasm", import.meta.url).href;
+
+type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
+// #endregion 🧩OpenCascade
 
 // #region 🔌BrepjsKernel
 /** @emoji 🔌 Holds exact solids keyed by `CellRef` returned from kernel construction ops. */
@@ -42,7 +49,13 @@ export class BrepjsKernel implements KernelAdapter {
 	private readonly solids = new Map<CellRef, ValidSolid>();
 
 	private async ensureInit(): Promise<void> {
-		if (!this.initPromise) this.initPromise = init().then(() => undefined);
+		if (!this.initPromise) {
+			this.initPromise = (initOpenCascade as OpenCascadeModuleInit)({
+				locateFile: (path) => (path === "brepjs_single.wasm" ? openCascadeWasmUrl : path),
+			}).then((oc) => {
+				initFromOC(oc);
+			});
+		}
 		await this.initPromise;
 	}
 

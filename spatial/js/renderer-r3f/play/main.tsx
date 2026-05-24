@@ -1,15 +1,18 @@
-/** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl`. */
+/** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
 import { StrictMode, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	listSpatialInteractionPresets,
-	loadSpatialInteractionPreset,
+	DerivedViewService,
+	listSpatialInteractions,
+	loadSpatialInteraction,
 	parseTopologyGraphJson,
+	type InteractionRuntime,
 	type InteractionSpec,
 	type InteractionRuntimeOptions,
 	type ModelDocument,
 	TopologyGraph,
 } from "@spatial/js-core";
+import { defaultConstructRunner } from "@spatial/js-query";
 import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json" };
 import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
 import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
@@ -25,6 +28,74 @@ import {
 	useInteractionRuntime,
 } from "../index.tsx";
 
+//#region 🔖ConstructQueryPanel
+/** @emoji 🔍 Play-only `construct` runner bound to the live `InteractionRuntime`. */
+function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime }) {
+	const [text, setText] = useState("MATCH (v:Vertex) RETURN v.id LIMIT 8");
+	const [out, setOut] = useState("");
+	const [busy, setBusy] = useState(false);
+	const run = useCallback(async () => {
+		const q = text.trim();
+		if (!q) return;
+		setBusy(true);
+		try {
+			const r = await runtime.query(q);
+			setOut(JSON.stringify({ rows: r.rows, ...(r.data !== undefined ? { data: r.data } : {}), ...(r.diff ? { diff: r.diff } : {}) }, null, 2));
+		} catch (e) {
+			setOut(String(e));
+		} finally {
+			setBusy(false);
+		}
+	}, [runtime, text]);
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, marginTop: 8 }}>
+			<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Construct query</span>
+			<textarea
+				value={text}
+				onChange={(e) => setText(e.target.value)}
+				rows={4}
+				spellCheck={false}
+				style={{
+					padding: 8,
+					borderRadius: 6,
+					background: "#12121c",
+					color: "#e8e8f0",
+					border: "1px solid #2a2a3c",
+					fontFamily: "ui-monospace, monospace",
+					fontSize: 11,
+				}}
+			/>
+			<button
+				type="button"
+				disabled={busy}
+				onClick={() => void run()}
+				style={{ padding: "6px 10px", borderRadius: 6, alignSelf: "flex-start", cursor: busy ? "wait" : "pointer" }}
+			>
+				{busy ? "Running…" : "Run"}
+			</button>
+			{out ? (
+				<pre
+					style={{
+						margin: 0,
+						maxHeight: 200,
+						overflow: "auto",
+						padding: 8,
+						borderRadius: 6,
+						background: "#0e0e16",
+						color: "#a8d8a8",
+						fontSize: 11,
+						whiteSpace: "pre-wrap",
+						wordBreak: "break-word",
+					}}
+				>
+					{out}
+				</pre>
+			) : null}
+		</div>
+	);
+}
+//#endregion
+
 //#region 🔖GeometryCatalog
 const GEOMETRY_ASSETS = [
 	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule (8 verts)", json: geometryNakagin as Record<string, unknown> },
@@ -38,7 +109,7 @@ const GEOMETRY_ASSETS = [
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
-	readonly presets: ReturnType<typeof listSpatialInteractionPresets>;
+	readonly interactions: ReturnType<typeof listSpatialInteractions>;
 	readonly interactionId: string;
 	readonly spec: InteractionSpec;
 	readonly onInteractionId: (id: string) => void;
@@ -49,9 +120,9 @@ interface PlaySessionProps {
 	readonly sessionRestartNonce: number;
 }
 
-/** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-preset restarts use `sessionRestartNonce` without remounting GL. */
+/** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
 function PlaySession({
-	presets,
+	interactions,
 	interactionId,
 	spec,
 	onInteractionId,
@@ -61,19 +132,31 @@ function PlaySession({
 	asideExtra,
 	sessionRestartNonce,
 }: PlaySessionProps) {
+	const derived = useMemo(() => new DerivedViewService(), []);
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
 			document: documentModel,
 			history,
 			stateEngine: statelyStateEngineProvider,
+			query: defaultConstructRunner,
+			derived,
 		}),
-		[kernel, documentModel, history],
+		[kernel, documentModel, history, derived],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
+	const asideWithQuery = useMemo(
+		() => (
+			<>
+				{asideExtra}
+				<ConstructQueryPanel runtime={rt} />
+			</>
+		),
+		[asideExtra, rt],
+	);
 	return (
 		<InteractionRepl
-			presets={presets}
+			interactions={interactions}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={onInteractionId}
@@ -81,7 +164,7 @@ function PlaySession({
 			history={history}
 			document={documentModel}
 			geometry={documentModel.topology}
-			asideExtra={asideExtra}
+			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
 		/>
 	);
@@ -90,11 +173,11 @@ function PlaySession({
 
 //#region 🔖PlayApp
 function PlayApp() {
-	const presets = useMemo(() => listSpatialInteractionPresets(), []);
-	const [interactionId, setInteractionId] = useState(() => presets[0]?.id ?? "");
+	const interactions = useMemo(() => listSpatialInteractions(), []);
+	const [interactionId, setInteractionId] = useState(() => interactions[0]?.id ?? "");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
-	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteractionPreset(interactionId) : null), [interactionId]);
+	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : null), [interactionId]);
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -141,14 +224,14 @@ function PlayApp() {
 		</label>
 	);
 
-	if (!presets.length) {
-		return <div style={{ padding: 16, color: "#f88" }}>No spatial interaction presets registered.</div>;
+	if (!interactions.length) {
+		return <div style={{ padding: 16, color: "#f88" }}>No spatial interactions registered.</div>;
 	}
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
 				Unknown interaction <code>{interactionId}</code>.
-				<button type="button" onClick={() => setInteractionId(presets[0]!.id)}>
+				<button type="button" onClick={() => setInteractionId(interactions[0]!.id)}>
 					Reset
 				</button>
 			</div>
@@ -158,7 +241,7 @@ function PlayApp() {
 	return (
 		<PlaySession
 			key={interactionId}
-			presets={presets}
+			interactions={interactions}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={handleInteractionPick}

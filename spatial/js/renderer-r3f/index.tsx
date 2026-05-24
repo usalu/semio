@@ -18,7 +18,7 @@ import {
 	isEmptyTopologyDiff,
 	listKeyedInteractionTransitions,
 	meshFaceTopologyDiff,
-	resolveSpatialInteractionPresetKey,
+	resolveSpatialInteractionKey,
 	TopologyGraph,
 	type InteractionEvent,
 	type InteractionKeybindRow,
@@ -37,7 +37,7 @@ import {
 	type ModelDocument,
 	type ShellRecord,
 	type MeshPreview,
-	type SpatialInteractionPreset,
+	type SpatialInteraction,
 	type TopologyEntityKind,
 	type TopologyGraphJson,
 	type Vec3,
@@ -415,6 +415,13 @@ export function filterSpatialPickTargets(
 ): SpatialPickTarget[] {
 	const acceptSet = accept.length ? new Set<TopologyEntityKind>(accept) : null;
 	return targets.filter((target) => toggles[target.kind] !== false && (!acceptSet || acceptSet.has(target.kind)));
+}
+
+function filterSpatialPickTargetsForAnyToggle(
+	targets: readonly SpatialPickTarget[],
+	...toggleSets: readonly SpatialPickKindToggles[]
+): SpatialPickTarget[] {
+	return targets.filter((target) => toggleSets.some((toggles) => toggles[target.kind] !== false));
 }
 
 /** @emoji 🧲 Creates a statechart event carrying snapped point plus selected topology metadata. */
@@ -853,17 +860,17 @@ function spatialSelectionTarget(target: SpatialPickTarget) {
 function SpatialSelectionRayCatcher({
 	targets,
 	selectionAccept,
-	kindToggles,
+	selectionKindToggles,
 	onSelectionRequest,
 }: {
 	readonly targets: readonly SpatialPickTarget[];
 	readonly selectionAccept: readonly TopologyEntityKind[];
-	readonly kindToggles: SpatialPickKindToggles;
+	readonly selectionKindToggles: SpatialPickKindToggles;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 }): ReactNode {
 	if (selectionAccept.length === 0 || !onSelectionRequest) return null;
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, kindToggles);
+		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles);
 		if (candidates.length === 0) return;
 		e.stopPropagation();
 		const native = e.nativeEvent;
@@ -892,7 +899,8 @@ function SpatialPickTargetNode({
 	onHoverTarget,
 	pointerMoveEnabled,
 	selectionAccept,
-	kindToggles,
+	selectionKindToggles,
+	hoverKindToggles,
 	hoveredTargetKey,
 	selectedTargetKey,
 }: {
@@ -905,7 +913,8 @@ function SpatialPickTargetNode({
 	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
 	readonly pointerMoveEnabled: boolean;
 	readonly selectionAccept: readonly TopologyEntityKind[];
-	readonly kindToggles: SpatialPickKindToggles;
+	readonly selectionKindToggles: SpatialPickKindToggles;
+	readonly hoverKindToggles: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 }): ReactNode {
@@ -925,7 +934,7 @@ function SpatialPickTargetNode({
 		const candidates = filterSpatialPickTargets(
 			spatialPickTargetsFromIntersections(e.intersections, targetsByKey, target),
 			selectionAccept,
-			kindToggles,
+			selectionKindToggles,
 		);
 		if (selectionAccept.length > 0 && candidates.length > 0 && onSelectionRequest) {
 			const native = e.nativeEvent;
@@ -940,7 +949,7 @@ function SpatialPickTargetNode({
 		emit("pointer.down", e);
 	};
 	const onPointerMoveH = (e: ThreeEvent<PointerEvent>) => {
-		onHoverTarget?.(target);
+		onHoverTarget?.(hoverKindToggles[target.kind] !== false ? target : null);
 		if (!pointerMoveEnabled) return;
 		emit("pointer.move", e);
 	};
@@ -1010,7 +1019,8 @@ export function SpatialPickGeometryLayer({
 	onHoverTarget,
 	pointerMoveEnabled = false,
 	selectionAccept = [],
-	kindToggles = {},
+	selectionKindToggles = {},
+	hoverKindToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 }: {
@@ -1022,7 +1032,8 @@ export function SpatialPickGeometryLayer({
 	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
 	readonly pointerMoveEnabled?: boolean;
 	readonly selectionAccept?: readonly TopologyEntityKind[];
-	readonly kindToggles?: SpatialPickKindToggles;
+	readonly selectionKindToggles?: SpatialPickKindToggles;
+	readonly hoverKindToggles?: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 }): ReactNode {
@@ -1031,14 +1042,17 @@ export function SpatialPickGeometryLayer({
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
 	const targets = useMemo(() => createSpatialPickTargets(geometry), [geometry, topoRevision]);
-	const enabledTargets = useMemo(() => filterSpatialPickTargets(targets, [], kindToggles), [targets, kindToggles]);
+	const enabledTargets = useMemo(
+		() => filterSpatialPickTargetsForAnyToggle(targets, selectionKindToggles, hoverKindToggles),
+		[targets, selectionKindToggles, hoverKindToggles],
+	);
 	const targetsByKey = useMemo(() => spatialPickTargetsByKey(enabledTargets), [enabledTargets]);
 	return (
 		<group>
 			<SpatialSelectionRayCatcher
 				targets={enabledTargets}
 				selectionAccept={selectionAccept}
-				kindToggles={kindToggles}
+				selectionKindToggles={selectionKindToggles}
 				onSelectionRequest={onSelectionRequest}
 			/>
 			{enabledTargets.map((target) => (
@@ -1053,7 +1067,8 @@ export function SpatialPickGeometryLayer({
 					onHoverTarget={onHoverTarget}
 					pointerMoveEnabled={pointerMoveEnabled}
 					selectionAccept={selectionAccept}
-					kindToggles={kindToggles}
+					selectionKindToggles={selectionKindToggles}
+					hoverKindToggles={hoverKindToggles}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
 				/>
@@ -1105,7 +1120,7 @@ export interface InteractionCanvasProps {
 	readonly children: ReactNode;
 }
 
-/** @emoji 🪩 Root `<Canvas>` preset for factory viewports. */
+/** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
 export function InteractionCanvas({ children }: InteractionCanvasProps): ReactNode {
 	return (
 		<Canvas style={{ height: "100%", width: "100%" }} camera={{ position: [10, 10, 8], fov: 45 }}>
@@ -1127,7 +1142,8 @@ export interface InteractionSpatialViewProps {
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
 	readonly selectionAccept?: readonly TopologyEntityKind[];
-	readonly pickKindToggles?: SpatialPickKindToggles;
+	readonly selectionKindToggles?: SpatialPickKindToggles;
+	readonly hoverKindToggles?: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
@@ -1145,7 +1161,8 @@ export function InteractionSpatialView({
 	geometry,
 	displayModel,
 	selectionAccept = [],
-	pickKindToggles = {},
+	selectionKindToggles = {},
+	hoverKindToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 	onSelectionRequest,
@@ -1216,7 +1233,8 @@ export function InteractionSpatialView({
 				onHoverTarget={onHoverTarget}
 				pointerMoveEnabled={groundMoveOn || heightMoveOn || zRodMoveOn}
 				selectionAccept={selectionAccept}
-				kindToggles={pickKindToggles}
+				selectionKindToggles={selectionKindToggles}
+				hoverKindToggles={hoverKindToggles}
 				hoveredTargetKey={hoveredTargetKey}
 				selectedTargetKey={selectedTargetKey}
 			/>
@@ -1239,7 +1257,7 @@ export function InteractionSpatialView({
 // #endregion 🪩Canvas
 
 // #region 🪩Repl
-type ReplSuggestKind = "preset" | "transition" | "host";
+type ReplSuggestKind = "interaction" | "transition" | "host";
 
 interface ReplSuggestion {
 	readonly kind: ReplSuggestKind;
@@ -1325,15 +1343,15 @@ function replFilterSuggestions(query: string, all: readonly ReplSuggestion[]): R
 	return all.filter((s) => replSuggestionHaystack(s).includes(q));
 }
 
-function replPresetSuggestionsFrom(all: readonly ReplSuggestion[]): ReplSuggestion[] {
-	return all.filter((s) => s.kind === "preset");
+function replInteractionSuggestionsFrom(all: readonly ReplSuggestion[]): ReplSuggestion[] {
+	return all.filter((s) => s.kind === "interaction");
 }
 
 function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
-	const fac = replPresetSuggestionsFrom(all);
+	const fac = replInteractionSuggestionsFrom(all);
 	const hit = replFilterSuggestions(cmdLine, all);
 	if (!cmdLine.trim()) return hit;
-	const rest = hit.filter((s) => s.kind !== "preset");
+	const rest = hit.filter((s) => s.kind !== "interaction");
 	const seen = new Set<string>();
 	const out: ReplSuggestion[] = [];
 	for (const s of [...fac, ...rest]) {
@@ -1356,18 +1374,21 @@ function replIsTextTypingTarget(t: EventTarget | null): boolean {
 }
 
 function replPresentationWithUnderlinedKey(key: string, label: string): ReactNode {
+	const ix = label.toLowerCase().indexOf(key.toLowerCase());
+	if (ix < 0) return label;
 	return (
 		<>
-			<span style={{ textDecoration: "underline", fontWeight: 700 }}>{key}</span>
-			{label}
+			{label.slice(0, ix)}
+			<span style={{ textDecoration: "underline", fontWeight: 700 }}>{label.slice(ix, ix + key.length)}</span>
+			{label.slice(ix + key.length)}
 		</>
 	);
 }
 
-function replPresetFromShortcutKey(evKey: string, presets: readonly SpatialInteractionPreset[]): SpatialInteractionPreset | null {
+function replInteractionFromShortcutKey(evKey: string, interactions: readonly SpatialInteraction[]): SpatialInteraction | null {
 	if (evKey.length !== 1) return null;
 	const k = evKey.toLowerCase();
-	for (const p of presets) {
+	for (const p of interactions) {
 		if (p.key.toLowerCase() === k) return p;
 	}
 	return null;
@@ -1402,7 +1423,7 @@ export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpe
 }
 
 export interface InteractionReplProps {
-	readonly presets: readonly SpatialInteractionPreset[];
+	readonly interactions: readonly SpatialInteraction[];
 	readonly interactionId: string;
 	readonly spec: InteractionSpec;
 	readonly onInteractionId: (id: string) => void;
@@ -1412,13 +1433,13 @@ export interface InteractionReplProps {
 	readonly geometry: SpatialPickGeometry | null;
 	readonly asideExtra?: ReactNode;
 	readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
-	/** @emoji 🔁 When host bumps this positive counter for the same preset, `cancel()` then `start` without remounting GL. */
+	/** @emoji 🔁 When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
 	readonly sessionRestartNonce?: number;
 }
 
 /** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl({
-	presets,
+	interactions,
 	interactionId,
 	spec,
 	onInteractionId,
@@ -1446,7 +1467,10 @@ export function InteractionRepl({
 	const [cmdLine, setCmdLine] = useState("");
 	const [suggestOpen, setSuggestOpen] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
-	const [pickKindToggles, setPickKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
+	const [selectionKindToggles, setSelectionKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
+		defaultSpatialPickKindToggles(),
+	);
+	const [hoverKindToggles, setHoverKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
 		defaultSpatialPickKindToggles(),
 	);
 	const [selectionMenu, setSelectionMenu] = useState<SpatialSelectionRequest | null>(null);
@@ -1568,9 +1592,9 @@ export function InteractionRepl({
 		const st = snapshot.state;
 		const rows = listKeyedInteractionTransitions(spec, st);
 		const out: ReplSuggestion[] = [];
-		for (const p of presets) {
+		for (const p of interactions) {
 			out.push({
-				kind: "preset",
+				kind: "interaction",
 				key: p.key,
 				label: p.label,
 				detail: p.id,
@@ -1592,7 +1616,7 @@ export function InteractionRepl({
 		out.push({ kind: "host", key: "r", label: "Undo", detail: "host", onRun: () => rt.undo() });
 		out.push({ kind: "host", key: "y", label: "Redo", detail: "host", onRun: () => rt.redo() });
 		return out;
-	}, [presets, spec, snapshot.state, onInteractionId, dispatchTransition, onCommit, rt]);
+	}, [interactions, spec, snapshot.state, onInteractionId, dispatchTransition, onCommit, rt]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 
@@ -1616,9 +1640,9 @@ export function InteractionRepl({
 			setCmdLine("");
 			return true;
 		}
-		const presetHit = resolveSpatialInteractionPresetKey(raw);
-		if (presetHit) {
-			onInteractionId(presetHit.id);
+		const interactionHit = resolveSpatialInteractionKey(raw);
+		if (interactionHit) {
+			onInteractionId(interactionHit.id);
 			setCmdLine("");
 			return true;
 		}
@@ -1699,7 +1723,7 @@ export function InteractionRepl({
 				return;
 			}
 			if (one) {
-				const fac = replPresetFromShortcutKey(one, presets);
+				const fac = replInteractionFromShortcutKey(one, interactions);
 				if (fac) {
 					if (replIsTextTypingTarget(t) && t !== cmdRef.current) return;
 					e.preventDefault();
@@ -1730,7 +1754,7 @@ export function InteractionRepl({
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, onCommit, presets, onInteractionId]);
+	}, [rt, onCommit, interactions, onInteractionId]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -1753,7 +1777,7 @@ export function InteractionRepl({
 		? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state)
 		: false;
 
-	const kindLabel = (k: ReplSuggestKind) => (k === "preset" ? "Preset" : k === "transition" ? "Transition" : "Host");
+	const kindLabel = (k: ReplSuggestKind) => (k === "interaction" ? "Interaction" : k === "transition" ? "Transition" : "Host");
 
 	const lr = snapshot.lastResponse;
 
@@ -1777,7 +1801,8 @@ export function InteractionRepl({
 						geometry={geometry}
 						displayModel={mergedDisplay}
 						selectionAccept={activeSelectionAccept}
-						pickKindToggles={pickKindToggles}
+						selectionKindToggles={selectionKindToggles}
+						hoverKindToggles={hoverKindToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
 						onSelectionRequest={onSelectionRequest}
@@ -1810,7 +1835,7 @@ export function InteractionRepl({
 								<button
 									key={key}
 									type="button"
-									onPointerEnter={() => setHoveredPickKey(key)}
+									onPointerEnter={() => setHoveredPickKey(hoverKindToggles[target.kind] ? key : null)}
 									onPointerLeave={() => setHoveredPickKey(null)}
 									onPointerDown={(e) => {
 										e.preventDefault();
@@ -1870,23 +1895,54 @@ export function InteractionRepl({
 										border: "1px solid #2a2a3a",
 										borderRadius: 999,
 										opacity: accepted ? 1 : 0.45,
-										background: pickKindToggles[kind] ? "#1a2638" : "#12121c",
+										background: selectionKindToggles[kind] ? "#1a2638" : "#12121c",
 									}}
 								>
 									<input
 										type="checkbox"
-										checked={pickKindToggles[kind]}
+										checked={selectionKindToggles[kind]}
 										onChange={(e) => {
 											const checked = e.target.checked;
-											setPickKindToggles((prev) => ({ ...prev, [kind]: checked }));
+											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
 											setSelectionMenu(null);
 											setHoveredPickKey(null);
+											if (!checked) setSelectedPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
 										}}
 									/>
 									{kind}
 								</label>
 							);
 						})}
+					</div>
+				</div>
+				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+					<span>Hoverable kinds</span>
+					<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+						{SPATIAL_PICK_TARGET_KINDS.map((kind) => (
+							<label
+								key={kind}
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: 4,
+									padding: "3px 6px",
+									border: "1px solid #2a2a3a",
+									borderRadius: 999,
+									background: hoverKindToggles[kind] ? "#1a2638" : "#12121c",
+								}}
+							>
+								<input
+									type="checkbox"
+									checked={hoverKindToggles[kind]}
+									onChange={(e) => {
+										const checked = e.target.checked;
+										setHoverKindToggles((prev) => ({ ...prev, [kind]: checked }));
+										if (!checked) setHoveredPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
+									}}
+								/>
+								{kind}
+							</label>
+						))}
 					</div>
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
@@ -1916,7 +1972,7 @@ export function InteractionRepl({
 				</div>
 				<div style={{ position: "relative" }}>
 					<label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-						<span>Interaction (presets first in palette; Tab/Enter run highlighted)</span>
+						<span>Interaction (interactions first in palette; Tab/Enter run highlighted)</span>
 						<input
 							ref={cmdRef}
 							type="text"
@@ -1993,7 +2049,7 @@ export function InteractionRepl({
 					) : null}
 				</div>
 				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
-					Keys <u>q</u>/<u>j</u>/<u>k</u>/<u>d</u>/<u>a</u> switch interaction preset from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, <u>y</u> redoes,{" "}
+					Keys <u>b</u>/<u>e</u>/<u>o</u>/<u>d</u>/<u>a</u> switch interaction from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, <u>y</u> redoes,{" "}
 					<code>Ctrl+Z</code>/<code>Ctrl+Shift+Z</code> (except while typing in other text fields). Value-style interactions: <code>h 2.5</code>, <code>n 0.4</code>,{" "}
 					<code>w 2 1.5</code>.
 				</div>
@@ -2122,6 +2178,20 @@ if (import.meta.vitest) {
 			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { edge: false }).map(spatialPickTargetKey)).toEqual([
 				"vertex:v0",
 			]);
+		});
+
+		it("keeps targets rendered when selection or hover toggles enable their kind", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "edge", id: "e0", point: [0.5, 0, 0] },
+				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+			];
+			const visible = filterSpatialPickTargetsForAnyToggle(
+				targets,
+				{ vertex: true, edge: false, face: false },
+				{ vertex: false, edge: true, face: false },
+			);
+			expect(visible.map(spatialPickTargetKey)).toEqual(["vertex:v0", "edge:e0"]);
 		});
 
 		it("ray-picks overlapping face and surface candidates", () => {
