@@ -1,8 +1,11 @@
 {
   "title": "Elements UI Class Abstraction",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + semio algorithm shell; remove AppConfig/PureAppDefinition.",
   "summary": "Consolidated the detached UI protocol into elements/core/index.ts so @elements/ui-shell has a single library entry, removed the split ui-protocol module, fixed current elements workspace metadata and Nx script routing for the core/react packages, refreshed Bun workspace links, and added a React renderer test for detached declarative UI nodes. Verified with bun nx run @elements/ui-shell:test and bun nx run @elements/ui:test.",
-  "goal": "🎯elements🎯uibundle"
+  "goal": "🎯elements🎯uibundle",
+  "sessions": [
+    "⚪4b6044d3f76f486dbe1e025429511551"
+  ]
 }

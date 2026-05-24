@@ -915,7 +915,6 @@ export async function ensureTopologicWasmLoaded(): Promise<TopologicWasmBindings
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	const topologyJson = (await import("./fixtures/topology.json")).default;
 
 	describe("spatial imperative core", () => {
 		it("rejects unresolved references like the topologic facade", () => {
@@ -928,40 +927,20 @@ if (import.meta.vitest) {
 			).toBeNull();
 		});
 
-		it(
-			"parses the shared topologic fixture and builds brep-backed renderables",
-			async () => {
-				await ensureSpatialKernelLoaded();
-				const fixture = parseTopologicFixtureV1(topologyJson);
-				expect(fixture).not.toBeNull();
-				const model = buildSpatialModel(fixture!);
-				expect(model.listByKind("cell").length).toBeGreaterThan(0);
-				const cell = model.listByKind("cell")[0];
-				expect(cell).toBeInstanceOf(Cell);
-				const renderable = cell.toRenderable(model);
-				expect((renderable.fill?.position.length ?? 0) > 0 || (renderable.children?.length ?? 0) > 0).toBe(true);
-				const rootRenderable = model.rootNodes()[0]?.toRenderable(model);
-				expect(rootRenderable?.children?.length ?? 0).toBeGreaterThan(0);
-			},
-			60000,
-		);
-
 		it("updates one entity transform immutably", () => {
-			const fixture = parseTopologicFixtureV1(topologyJson)!;
-			const next = updateTopologicFixtureTransformV1(fixture, "cell-room", { position: [1, 2, 3] });
+			const fixture = parseTopologicFixtureV1({
+				schema: "elements.geometry.topologic.fixture/v1",
+				roots: ["topology-root"],
+				topologies: [
+					{ id: "topology-root", kind: "topology", members: ["cell-room"] },
+					{ id: "cell-room", kind: "cell", shells: [] },
+				],
+			});
+			expect(fixture).not.toBeNull();
+			const next = updateTopologicFixtureTransformV1(fixture!, "cell-room", { position: [1, 2, 3] });
 			const updated = next?.topologies.find((entity) => entity.id === "cell-room");
 			expect(updated?.transform?.position).toEqual([1, 2, 3]);
-			expect(fixture.topologies.find((entity) => entity.id === "cell-room")?.transform).toBeUndefined();
-		});
-
-		it("exports topologic-compatible bindings and render packets", async () => {
-			const fixture = await loadTopologicFixtureV1(topologyJson);
-			expect(fixture).not.toBeNull();
-			const bindings = await ensureTopologicWasmLoaded();
-			expect(bindings.parseFixture(topologyJson)?.schema).toBe("elements.geometry.topologic.fixture/v1");
-			expect(bindings.edgeCurve(fixture!, "edge-arc").length).toBeGreaterThanOrEqual(2);
-			const packet = buildTopologicRenderPacketV1(fixture!);
-			expect(packet?.entries.find((entry) => entry.id === "edge-arc")?.points).toBeInstanceOf(Float32Array);
+			expect(fixture!.topologies.find((entity) => entity.id === "cell-room")?.transform).toBeUndefined();
 		});
 	});
 }

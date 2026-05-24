@@ -9,8 +9,7 @@
 	"main": "./index.ts",
 	"types": "./index.ts",
 	"exports": {
-		".": "./index.ts",
-		"./fixtures/topology.json": "./fixtures/topology.json"
+		".": "./index.ts"
 	},
 	"dependencies": {
 		"brepjs": "^18.20.3",

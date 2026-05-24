@@ -1,19 +1,19 @@
-// #region 🧲Header
+// #region ­ƒº▓Header
 
 // 2024-2026 Ueli Saluz <ueli@semio-tech.com>
 // 2026 Kinan Sarakbi <kinan.sarak@gmail.com>
-// 2025 Adrian Schäfer <adrian.schaefer87@gmail.com>
+// 2025 Adrian Sch├ñfer <adrian.schaefer87@gmail.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Main sketchpad container managing app tabs, panels and window layout.
 
-// #endregion 🧲Header
-// #region 🎨Sketchpad
-// #region ⛩️Imports
+// #endregion ­ƒº▓Header
+// #region ­ƒÄ¿Sketchpad
+// #region Ôø®´©ÅImports
 // External and internal module imports.
 
-// #region ⛩️Imports
+// #region Ôø®´©ÅImports
 
 import type { Author, Concept, Connection, Connector, Design, Folder, Piece, Port, Quality, Representation, File as SemioFile, Tag, Type } from "@semio/js";
 import { Camera, Kit, Session } from "@semio/js";
@@ -165,7 +165,7 @@ import {
 } from "@elements/topology";
 import { gunzipSync } from "fflate";
 
-/** @emoji 👟 Registry kit-store factory until sketchpad runs purely on {@link SessionContextProvider}. */
+/** @emoji ­ƒæƒ Registry kit-store factory until sketchpad runs purely on {@link SessionContextProvider}. */
 export type SketchpadKitStoreFactory = (kit?: Kit) => Promise<KitHostStore>;
 
 export type SketchpadKitKindAvailability = Readonly<{
@@ -175,7 +175,7 @@ export type SketchpadKitKindAvailability = Readonly<{
   remote: boolean;
 }>;
 
-/** @emoji 🗄 Mutable kit snapshot host used by the registry bridge (being replaced by graph-tier providers). */
+/** @emoji ­ƒùä Mutable kit snapshot host used by the registry bridge (being replaced by graph-tier providers). */
 export type KitHostStore = {
   getSnapshot: () => { kit: Kit };
   subscribe?: (listener: () => void) => () => void;
@@ -433,42 +433,15 @@ export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows
 
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
 import { Euler, Matrix4, Vector3 } from "three";
-import {
-	CommandBus,
-	Controller,
-	ShellExtensionHost,
-	Workbench,
-	WorkbenchWindowKind,
-	createDefaultLayout,
-	createTabStackLayout,
-	type ShellExtension,
-	type ShellExtensionManifest,
-	type ShellWindowBodyViewContext,
-	type UiBoardHostSurfaceNode,
-	type UiNode,
-	type UiPanelHostSurfaceNode,
-	type UiScene3DHostSurfaceNode,
-} from "@elements/ui-shell";
-import {
-	LevelProvider,
-	WorkbenchView,
-	getLevelBgClass,
-	registerDeclarativeSidePanelBody,
-	registerDeclarativeWindowBody,
-	registerUiBoardSurfaceHost,
-	registerUiPanelSurfaceHost,
-	useApp,
-	type SidePanelTabConfig,
-} from "@elements/ui";
 
-// #region 🔖SketchpadKitUiHelpers
+// #region ­ƒöûSketchpadKitUiHelpers
 /**
- * @emoji 🎨 {@link Sketchpad} read helpers and scene math only; authoritative kit graph is `semio/rs` via {@link executeSemioKitCommand} (no DTO diffs, no local merge/apply in sketchpad).
+ * @emoji ­ƒÄ¿ {@link Sketchpad} read helpers and scene math only; authoritative kit graph is `semio/rs` via {@link executeSemioKitCommand} (no DTO diffs, no local merge/apply in sketchpad).
  */
 
 type SemioBundleJson = Record<string, unknown>;
 
-/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL `installProjection` payloads. */
+/** @emoji ­ƒº¥ Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL `installProjection` payloads. */
 function semioDenormalizeBundleValue(v: unknown): unknown {
   if (v == null || typeof v !== "object") return v;
   if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
@@ -488,7 +461,7 @@ function semioDenormalizeBundleValue(v: unknown): unknown {
   return flat;
 }
 
-/** @emoji 🧾 Lifts `*.kit.semio.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists for inline JSON bootstrap. */
+/** @emoji ­ƒº¥ Lifts `*.kit.semio.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists for inline JSON bootstrap. */
 export function decodeKitSemioEnvelopeToFullFromValue(v: unknown): unknown {
   let inner: unknown = v;
   if (inner && typeof inner === "object" && !Array.isArray(inner)) {
@@ -608,7 +581,7 @@ export function getIncludedDesigns(allDesigns: readonly Design[], design: Design
   return out.filter((d) => d.id !== design.id);
 }
 
-/** @emoji 📐 Active design row from {@link useKitDesigns} for the active {@link DesignContext}. */
+/** @emoji ­ƒôÉ Active design row from {@link useKitDesigns} for the active {@link DesignContext}. */
 export function useActiveDesignRow(): Design | null {
   const designId = useDesignContext();
   const kitDesigns = useKitDesigns();
@@ -618,7 +591,7 @@ export function useActiveDesignRow(): Design | null {
   }, [designId, kitDesigns]);
 }
 
-/** @emoji 📚 Included designs for the active {@link DesignContext} (sketchpad helper). */
+/** @emoji ­ƒôÜ Included designs for the active {@link DesignContext} (sketchpad helper). */
 export function useIncludedDesigns(): Design[] {
   const designId = useDesignContext();
   if (designId == null || designId === "") return [];
@@ -628,12 +601,12 @@ export function useIncludedDesigns(): Design[] {
   return getIncludedDesigns(designs, design);
 }
 
-/** @emoji 📐 Piece layout map for the active design (sketchpad scene; WIP: empty without kit-store rows). */
+/** @emoji ­ƒôÉ Piece layout map for the active design (sketchpad scene; WIP: empty without kit-store rows). */
 export function useDesignPieceLayoutMap(): ReadonlyMap<string, unknown> {
   return useMemo(() => new Map(), []);
 }
 
-/** @emoji 🧩 Resolve piece DTO rows by id from the active design scope. */
+/** @emoji ­ƒº® Resolve piece DTO rows by id from the active design scope. */
 export function usePiecesFromIds(pieceIds: readonly string[]): readonly Piece[] {
   const pieces = useDesignPieces() as Piece[];
   const byId = useMemo(() => new Map(pieces.map((p) => [p.id, p])), [pieces]);
@@ -723,7 +696,7 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
 }
 
 /**
- * @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} handle via GraphQL {@link Store.installProjection}.
+ * @emoji ­ƒôª Decode gzip-or-JSON kit bytes into a live {@link Kit} handle via GraphQL {@link Store.installProjection}.
  */
 export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit; session: Session }> {
   let bytes: Uint8Array;
@@ -751,9 +724,9 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
   return { kit, session };
 }
 
-// #endregion 🔖SketchpadKitUiHelpers
+// #endregion ­ƒöûSketchpadKitUiHelpers
 
-// #region 🪬SyncInterfaces
+// #region ­ƒ¬¼SyncInterfaces
 // Synchronized state interfaces for backend-agnostic state management.
 
 /**
@@ -837,9 +810,9 @@ export function isSyncArray(value: any): value is SyncArray {
  **/
 export type SyncDocFactory = () => SyncDoc;
 
-// #endregion 🪬SyncInterfaces
+// #endregion ­ƒ¬¼SyncInterfaces
 
-// #region 📰MemorySyncBackend
+// #region ­ƒô░MemorySyncBackend
 // In-memory SyncDoc / SyncMap / SyncArray (Yjs removed; sketchpad UI state is local + KitStore in wasm).
 
 class MemoryMap<V> implements SyncMap<V> {
@@ -848,7 +821,7 @@ class MemoryMap<V> implements SyncMap<V> {
   private readonly _deep = new Set<() => void>();
   /** When this map is nested in another, parent registers here so their observeDeep runs. */
   readonly _bubblers = new Set<() => void>();
-  /** Stable child→parent bubble per key; removed when key is overwritten or deleted. */
+  /** Stable childÔåÆparent bubble per key; removed when key is overwritten or deleted. */
   private readonly _nestedBubbles = new Map<string, () => void>();
 
   constructor(readonly _doc: MemoryDoc) {}
@@ -1003,15 +976,15 @@ class MemoryDoc implements SyncDoc {
 }
 
 /**
- * In-memory only; kit authority is `semio/rs` via `@semio/react` → `@semio/js` `KitStore` (Worker).
+ * In-memory only; kit authority is `semio/rs` via `@semio/react` ÔåÆ `@semio/js` `KitStore` (Worker).
  */
 export function createSyncDocFactory(): SyncDocFactory {
   return () => new MemoryDoc();
 }
 
-// #endregion 📰MemorySyncBackend
+// #endregion ­ƒô░MemorySyncBackend
 
-// #region 🏂PersistenceProviders
+// #region ­ƒÅéPersistenceProviders
 // Sketchpad UI state is in-memory; providers mark synced immediately (no Yjs binary round-trip).
 
 /**
@@ -1028,20 +1001,20 @@ export interface PersistenceProvider {
  **/
 export type PersistenceFactory = (syncDoc: SyncDoc, key: string) => PersistenceProvider;
 
-// #endregion 🏂PersistenceProviders
+// #endregion ­ƒÅéPersistenceProviders
 
-// #endregion ⛩️Imports
+// #endregion Ôø®´©ÅImports
 
-// #region 📍Shared
+// #region ­ƒôìShared
 
-/** @emoji 🪪 Fresh UUID string for sketchpad-scoped entities (browser {@link crypto.randomUUID}). */
+/** @emoji ­ƒ¬¬ Fresh UUID string for sketchpad-scoped entities (browser {@link crypto.randomUUID}). */
 function id(): string {
   return crypto.randomUUID();
 }
 
-// #region ⚙️Types
+// #region ÔÜÖ´©ÅTypes
 
-// #region ⭐SyncPath Types
+// #region Ô¡ÉSyncPath Types
 // MUST define path segment and path types for navigating sync document structures.
 
 /**
@@ -1054,9 +1027,9 @@ export type SyncPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIn
  **/
 export type SyncPath = SyncPathSegment[];
 
-// #endregion ⭐SyncPath Types
+// #endregion Ô¡ÉSyncPath Types
 
-// #region 🎙️Granular Hook Types
+// #region ­ƒÄÖ´©ÅGranular Hook Types
 // MUST define hook result tuples and field abstractions for granular reactive state access.
 
 /**
@@ -1190,9 +1163,9 @@ export function hookResultToField<T>(result: HookResult<T>): Field<T> {
   };
 }
 
-// #endregion 🎙️Granular Hook Types
+// #endregion ­ƒÄÖ´©ÅGranular Hook Types
 
-// #region ⏲️Standard Empty Constants
+// #region ÔÅ▓´©ÅStandard Empty Constants
 // MUST provide frozen singleton constants for empty collections and default panel visibility.
 
 /**
@@ -1224,9 +1197,9 @@ export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   settings: false,
 });
 
-// #endregion ⏲️Standard Empty Constants
+// #endregion ÔÅ▓´©ÅStandard Empty Constants
 
-// #region 🎋Generic Diff Types
+// #region ­ƒÄïGeneric Diff Types
 // MUST define generic array and selection diff types with apply and inverse operations.
 
 /**
@@ -1295,7 +1268,7 @@ export function applySelectionDiff<TSelection extends Record<string, any[]>>(cur
   return result;
 }
 
-// #endregion 🎋Generic Diff Types
+// #endregion ­ƒÄïGeneric Diff Types
 
 /**
  * A string alias representing a URL.
@@ -1407,9 +1380,9 @@ export type SyncLeafMapNumber = SyncMap<number>;
  **/
 export type SyncAttributes = SyncArray<SyncMap<string>>;
 
-// #endregion ⚙️Types
+// #endregion ÔÜÖ´©ÅTypes
 
-// #region 📩Enums
+// #region ­ƒô®Enums
 // MUST enumerate theme, expertise, mode, store status, tool, window, and panel kinds.
 
 /**
@@ -1539,11 +1512,11 @@ export enum PanelKind {
   CONSOLE = "console",
 }
 
-// #endregion 📩Enums
+// #endregion ­ƒô®Enums
 
-// #region 📊Ports
+// #region ­ƒôèPorts
 
-// #region 🖲️File Provider
+// #region ­ƒû▓´©ÅFile Provider
 // MUST define file storage provider interfaces for upload, download, and delete operations.
 
 /**
@@ -1577,9 +1550,9 @@ export interface CompositeFileProviderConfig {
   remote?: RemoteFileProviderConfig;
 }
 
-// #region 🔮Persistence
-// Persistence types are defined inline above in 🏂PersistenceProviders.
-// #endregion 🔮Persistence
+// #region ­ƒö«Persistence
+// Persistence types are defined inline above in ­ƒÅéPersistenceProviders.
+// #endregion ­ƒö«Persistence
 
 /**
  * Interface for remote sync document and file provider factories.
@@ -1600,9 +1573,9 @@ export interface FileOperation {
   blob?: Blob;
 }
 
-// #endregion 🖲️File Provider
+// #endregion ­ƒû▓´©ÅFile Provider
 
-// #region 🪄App IDs
+// #region ­ƒ¬äApp IDs
 // MUST define identifier interfaces for design, kit, type, and quality app scopes.
 
 /**
@@ -1636,9 +1609,9 @@ export interface QualityAppId {
   quality: Id;
 }
 
-// #endregion 🪄App IDs
+// #endregion ­ƒ¬äApp IDs
 
-// #region 🦉Panel
+// #region ­ƒªëPanel
 // MUST define panel kind configurations, visibility, sizing, sections, and definition interfaces.
 
 /**
@@ -1888,9 +1861,9 @@ export interface AppPanels {
   panels: PanelConfig[];
 }
 
-// #endregion 🦉Panel
+// #endregion ­ƒªëPanel
 
-// #region 🪵App Registry
+// #region ­ƒ¬ÁApp Registry
 // MUST define route segment and app configuration interfaces for app registration.
 
 /**
@@ -1920,9 +1893,9 @@ export interface AppConfig {
  **/
 export interface AppRegistration extends AppConfig {}
 
-// #endregion 🪵App Registry
+// #endregion ­ƒ¬ÁApp Registry
 
-// #region 📹Sketchpad State
+// #region ­ƒô╣Sketchpad State
 // MUST define mutable and immutable sketchpad state interfaces with diff types.
 
 /**
@@ -1996,7 +1969,7 @@ export interface SketchpadDiff {
  **/
 export interface InitialStateKit {
   kit: Kit;
-  /** @emoji 🔌 Owns WASM transport for this inline-imported kit; dispose when tab closes. */
+  /** @emoji ­ƒöî Owns WASM transport for this inline-imported kit; dispose when tab closes. */
   session?: Session;
   kind?: KitKind;
   source?: {
@@ -2046,10 +2019,10 @@ export type Desktop = {
  **/
 export type SketchpadInstance = { id: string; remote?: RemoteProviders; desktop?: Desktop };
 
-// #endregion 📹Sketchpad State
+// #endregion ­ƒô╣Sketchpad State
 
-// #region 💧Commands
-// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOperation`, `executeSemioKitCommand` → `@semio/js` / rs).
+// #region ­ƒÆºCommands
+// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOperation`, `executeSemioKitCommand` ÔåÆ `@semio/js` / rs).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -2067,9 +2040,9 @@ export interface SketchpadCommandResult {
   origin?: string;
 }
 
-// #endregion 💧Commands
+// #endregion ­ƒÆºCommands
 
-// #region 🎈Store
+// #region ­ƒÄêStore
 // MUST define store state, app step, edit, diff, and command result interfaces.
 
 /**
@@ -2125,7 +2098,7 @@ export interface AppCommandResult<TDiff = any> {
 }
 
 /**
- * An app step; kit graph side-effects go through `semio/rs` undo history (`semio.kit.undo` / `semio.kit.redo`) — no host-side kit diffs.
+ * An app step; kit graph side-effects go through `semio/rs` undo history (`semio.kit.undo` / `semio.kit.redo`) ÔÇö no host-side kit diffs.
  **/
 export interface KitDiffAppStep<TSelectionDiff = any> extends AppStep<TSelectionDiff> {
   applyKitUndoOnUndo?: boolean;
@@ -2141,16 +2114,16 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * @emoji 🧾 Command result: optional typed {@link KitHostGraphOperation} runs through {@link applyKitHostGraphOperation} (`@semio/react` → `@semio/js` → `semio/rs`).
+ * @emoji ­ƒº¥ Command result: optional typed {@link KitHostGraphOperation} runs through {@link applyKitHostGraphOperation} (`@semio/react` ÔåÆ `@semio/js` ÔåÆ `semio/rs`).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
   kitGraph?: KitHostGraphOperation;
   kitCommandApplied?: boolean;
 }
 
-// #endregion 🎈Store
+// #endregion ­ƒÄêStore
 
-// #region 🌐Complete State
+// #region ­ƒîÉComplete State
 // MUST define the complete aggregated state interface for the entire sketchpad.
 
 /**
@@ -2172,9 +2145,9 @@ export interface CompleteState {
   tutorials: any;
 }
 
-// #endregion 🌐Complete State
+// #endregion ­ƒîÉComplete State
 
-// #region 🌊Window
+// #region ­ƒîèWindow
 // MUST define window configuration, control, layout parsing, and default layout creation.
 
 /**
@@ -2213,9 +2186,9 @@ export interface AppWindowProps {
 
 // createDefaultLayout is re-exported from elements.tsx above.
 
-// #endregion 🌊Window
+// #endregion ­ƒîèWindow
 
-// #region 🎁Tool
+// #region ­ƒÄüTool
 // MUST define tool interfaces for selection, lasso, connector, and hand interactions.
 
 /**
@@ -2262,16 +2235,16 @@ export interface ToolGroupProps {
   onToolChange: (tool: ToolKind | string) => void;
 }
 
-// #endregion 🎁Tool
+// #endregion ­ƒÄüTool
 
-// #region ⚡Focus
+// #region ÔÜíFocus
 // MUST define the focus item interface for search and navigation targets.
 
 // FocusItem is re-exported from elements.tsx as UIFindItem.
 export type { UIFindItem as FocusItem } from "@semio/ui";
-// #endregion ⚡Focus
+// #endregion ÔÜíFocus
 
-// #region 🎮Footer
+// #region ­ƒÄ«Footer
 // MUST define the footer item interface for status bar entries.
 
 /**
@@ -2288,9 +2261,9 @@ export interface FooterItem {
   disabled?: boolean;
 }
 
-// #endregion 🎮Footer
+// #endregion ­ƒÄ«Footer
 
-// #region 🏷️Panel Props
+// #region ­ƒÅÀ´©ÅPanel Props
 // MUST define resizable panel props interface for panel width management.
 
 /**
@@ -2302,13 +2275,13 @@ export interface ResizablePanelProps {
   width: number;
 }
 
-// #endregion 🏷️Panel Props
+// #endregion ­ƒÅÀ´©ÅPanel Props
 
-// #endregion 📊Ports
+// #endregion ­ƒôèPorts
 
-// #region 🥈XState Integration
+// #region ­ƒÑêXState Integration
 
-// #region ❄️XState Types
+// #region ÔØä´©ÅXState Types
 // MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
 /**
@@ -2443,9 +2416,9 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
   kitId: Id;
 }
 
-// #endregion ❄️XState Types
+// #endregion ÔØä´©ÅXState Types
 
-// #region 🏬Sync-XState Bridge
+// #region ­ƒÅ¼Sync-XState Bridge
 // MUST bridge sync document observation to XState machine events.
 
 /**
@@ -2522,9 +2495,9 @@ export function createSyncSelector<TContext extends StoreSyncContext, TSnapshot>
   };
 }
 
-// #endregion 🏬Sync-XState Bridge
+// #endregion ­ƒÅ¼Sync-XState Bridge
 
-// #region ⛑️Machine Factories
+// #region Ôøæ´©ÅMachine Factories
 // MUST define machine input and transaction configuration interfaces for state machine creation.
 
 /**
@@ -2543,7 +2516,7 @@ export interface KitDiffAppMachineInput extends AppMachineInput {
 }
 
 /**
- * @emoji 🧾 Configuration for local batched kit UI edits (maps to VCS “change” lifecycle naming).
+ * @emoji ­ƒº¥ Configuration for local batched kit UI edits (maps to VCS ÔÇ£changeÔÇØ lifecycle naming).
  **/
 export interface ChangeMachineConfig<TEdit = any> {
   applySelectionDiff: (selectionDiff: any) => void;
@@ -2551,11 +2524,11 @@ export interface ChangeMachineConfig<TEdit = any> {
   inverseSelectionDiff: (selection: any, diff: any) => any;
 }
 
-// #endregion ⛑️Machine Factories
+// #endregion Ôøæ´©ÅMachine Factories
 
-// #endregion 🥈XState Integration
+// #endregion ­ƒÑêXState Integration
 
-// #region 👓SyncPath Helpers
+// #region ­ƒæôSyncPath Helpers
 // MUST provide path segment constructors, value retrieval, and observation functions for Y.js paths.
 
 /**
@@ -2688,9 +2661,9 @@ export function createPathObserver(root: SyncMap<any>, path: SyncPath, subscribe
   return () => disposables.forEach((d) => d());
 }
 
-// #endregion 👓SyncPath Helpers
+// #endregion ­ƒæôSyncPath Helpers
 
-// #region 🎙️Store Factory Registry
+// #region ­ƒÄÖ´©ÅStore Factory Registry
 // MUST manage registration and retrieval of app-specific store factory functions.
 
 /**
@@ -2795,9 +2768,9 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
   return qualityAppStoreFactory;
 }
 
-// #endregion 🎙️Store Factory Registry
+// #endregion ­ƒÄÖ´©ÅStore Factory Registry
 
-// #region 📰App Plugin Registry
+// #region ­ƒô░App Plugin Registry
 // MUST manage plugin registration, retrieval, and contribution composition for app extensions.
 
 /**
@@ -2939,9 +2912,9 @@ export function getPluginDefaultStates(): Record<string, any> {
   return defaults;
 }
 
-// #endregion 📰App Plugin Registry
+// #endregion ­ƒô░App Plugin Registry
 
-// #region 📸Dynamic Event Dispatch Registry
+// #region ­ƒô©Dynamic Event Dispatch Registry
 // MUST manage dynamic event handler and guard registration with namespace-based dispatch.
 
 /**
@@ -3084,9 +3057,9 @@ export function getRegisteredEventTypes(): string[] {
   return Array.from(eventHandlerRegistry.keys());
 }
 
-// #endregion 📸Dynamic Event Dispatch Registry
+// #endregion ­ƒô©Dynamic Event Dispatch Registry
 
-// #region 🏆App Event Handler Factories
+// #region ­ƒÅåApp Event Handler Factories
 // MUST provide factory functions for creating standard app event handlers for panels, hover, selection, and windows.
 
 /**
@@ -3703,9 +3676,9 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
   createSingleKeySetFullscreenWindowHandler(config);
 }
 
-// #endregion 🏆App Event Handler Factories
+// #endregion ­ƒÅåApp Event Handler Factories
 
-// #region 🌪️Change Handler Factory
+// #region ­ƒî¬´©ÅChange Handler Factory
 // MUST register undo/redo batch handlers keyed by app scope (local UI batching; distinct from persisted Yjs sync keys).
 
 /**
@@ -3719,7 +3692,7 @@ export interface KeyedChangeHandlerConfig {
 }
 
 /**
- * @emoji 🧾 Local UI batch state mirrored into XState (field names align with legacy sync doc keys).
+ * @emoji ­ƒº¥ Local UI batch state mirrored into XState (field names align with legacy sync doc keys).
  **/
 export interface AppChangeState<TEdit = any> {
   isTransactionActive: boolean;
@@ -3921,9 +3894,9 @@ export function createSingleKeyChangeHandlers(config: SingleKeyChangeHandlerConf
   });
 }
 
-// #endregion 🌪️Change Handler Factory
+// #endregion ­ƒî¬´©ÅChange Handler Factory
 
-// #region 🧿Selector Factory Pattern
+// #region ­ƒº┐Selector Factory Pattern
 // MUST provide factory functions for creating property selectors with app key scoping.
 
 /**
@@ -3969,9 +3942,9 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
   return apps[key] || defaultFactory();
 }
 
-// #endregion 🧿Selector Factory Pattern
+// #endregion ­ƒº┐Selector Factory Pattern
 
-// #region ⭐App Hooks Registry
+// #region Ô¡ÉApp Hooks Registry
 // MUST manage registration and retrieval of design and kit app hook implementations.
 
 /**
@@ -4058,9 +4031,9 @@ export function getKitAppHooks(): KitAppHooks {
   return registeredKitAppHooks ?? defaultKitAppHooks;
 }
 
-// #endregion ⭐App Hooks Registry
+// #endregion Ô¡ÉApp Hooks Registry
 
-// #region 🎸App Registry Exports
+// #region ­ƒÄ©App Registry Exports
 // MUST provide docs registry port interface and registration for documentation section access.
 
 /**
@@ -4093,11 +4066,11 @@ export function getDocsRegistry(): DocsRegistryPort | null {
   return registeredDocsRegistry;
 }
 
-// #endregion 🎸App Registry Exports
+// #endregion ­ƒÄ©App Registry Exports
 
-// #endregion ⛩️Shared
+// #endregion Ôø®´©ÅShared
 
-// #region 🗺️PortColor
+// #region ­ƒù║´©ÅPortColor
 
 /**
  * Compatibility state of a port relative to the selected port.
@@ -4312,17 +4285,17 @@ export const getPortCompatibilityState = (candidatePortId: string | undefined, s
   return arePortsCompatible(candidatePort, selectedPort, ports) ? "compatible" : "incompatible";
 };
 
-// #endregion 🗺️Port Color
+// #endregion ­ƒù║´©ÅPort Color
 
-//#endregion 🗺️PortColor
+//#endregion ­ƒù║´©ÅPortColor
 
-// #region 🏷️Tutorials
+// #region ­ƒÅÀ´©ÅTutorials
 
-// #endregion 🏷️Imports
+// #endregion ­ƒÅÀ´©ÅImports
 
-// #region 🎖️Components
+// #region ­ƒÄû´©ÅComponents
 
-// #region 🦀Tutorial Controls
+// #region ­ƒªÇTutorial Controls
 // Tutorial playback controls MUST render in the footer during active tutorials.
 
 /**
@@ -4404,9 +4377,9 @@ const TutorialControlsContent: FC = () => {
   );
 };
 
-// #endregion 🦀Tutorial Controls
+// #endregion ­ƒªÇTutorial Controls
 
-// #region 🎙️Recording Controls
+// #region ­ƒÄÖ´©ÅRecording Controls
 // Recording controls MUST render in the footer during active recording in dev mode.
 
 /**
@@ -4484,9 +4457,9 @@ const RecordingControlsContent: FC = () => {
   );
 };
 
-// #endregion 🎙️Recording Controls
+// #endregion ­ƒÄÖ´©ÅRecording Controls
 
-// #region 🕌Record Button
+// #region ­ƒòîRecord Button
 // Record button MUST toggle recording in the footer when in dev mode.
 
 /**
@@ -4530,9 +4503,9 @@ export const RecordButton: FC = () => {
   return null;
 };
 
-// #endregion 🕌Record Button
+// #endregion ­ƒòîRecord Button
 
-// #region 🔭Tutorial Overlay
+// #region ­ƒö¡Tutorial Overlay
 // Tutorial overlay MUST render focus highlights and cursor animations during playback.
 
 /**
@@ -4686,10 +4659,10 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   );
 };
 
-// #endregion 🔭Tutorial Overlay
+// #endregion ­ƒö¡Tutorial Overlay
 
-// #endregion 🎖️Components
-// #region 📭Built-in Tutorials
+// #endregion ­ƒÄû´©ÅComponents
+// #region ­ƒô¡Built-in Tutorials
 // Built-in tutorials MUST define default tutorial content shipped with the app.
 
 /**
@@ -4828,9 +4801,9 @@ export const sketchpadTour: Tutorial = {
   ],
 };
 
-// #endregion 📭Built-in Tutorials
+// #endregion ­ƒô¡Built-in Tutorials
 
-// #region 💧Commands
+// #region ­ƒÆºCommands
 // Tutorial and recording command definitions MUST map command names to store actions.
 
 /**
@@ -4916,9 +4889,9 @@ export const devCommands = {
   },
 };
 
-// #endregion 💧Commands
+// #endregion ­ƒÆºCommands
 
-// #region 💾Command Interceptor
+// #region ­ƒÆ¥Command Interceptor
 // Command interceptor MUST record events and check milestone completion during playback.
 
 /**
@@ -4942,9 +4915,9 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
   );
 };
 
-// #endregion 💾Command Interceptor
+// #endregion ­ƒÆ¥Command Interceptor
 
-// #region 🦀Hooks
+// #region ­ƒªÇHooks
 // Tutorial hooks MUST provide reactive access to tutorial and recording state.
 
 /**
@@ -5009,9 +4982,9 @@ export const useTutorialProgress = () => {
   return { current, total, percentage };
 };
 
-// #endregion 🦀Hooks
+// #endregion ­ƒªÇHooks
 
-// #region 🏬Context
+// #region ­ƒÅ¼Context
 // Tutorial context MUST provide the store and state to descendant components.
 
 /**
@@ -5058,11 +5031,11 @@ const useTutorialContext = () => {
   return context;
 };
 
-// #endregion 🏬Context
+// #endregion ­ƒÅ¼Context
 
-// #region ⚙️Types
+// #region ÔÜÖ´©ÅTypes
 
-// #region ⛅Tutorial Entities
+// #region ÔøàTutorial Entities
 // Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
 /**
@@ -5181,11 +5154,11 @@ export interface TutorialDiff {
   activeRecording?: TutorialRecording | null;
 }
 
-// #endregion ⛅Tutorial Entities
+// #endregion ÔøàTutorial Entities
 
-// #endregion ⚙️Types
+// #endregion ÔÜÖ´©ÅTypes
 
-// #region 🎈Store
+// #region ­ƒÄêStore
 // Tutorial store MUST manage playback, recording, and milestone navigation state.
 
 /**
@@ -5453,19 +5426,19 @@ export class TutorialStore {
   }
 }
 
-// #endregion 🎈Store
+// #endregion ­ƒÄêStore
 
-//#endregion 🏷️Tutorials
+//#endregion ­ƒÅÀ´©ÅTutorials
 
-// #region 🎊kitSelectionHelper
+// #region ­ƒÄèkitSelectionHelper
 // Consolidated from kitSelectionHelper.ts
 
-// #region ⛩️Imports
+// #region Ôø®´©ÅImports
 // Imports MUST include icon width constant and kit selection types.
 
-// #endregion ⛩️Imports
+// #endregion Ôø®´©ÅImports
 
-// #region ⚙️Types
+// #region ÔÜÖ´©ÅTypes
 // Types MUST define selection value extraction for KitAppSelection dimensions.
 
 /**
@@ -5473,9 +5446,9 @@ export class TutorialStore {
  **/
 export type SelectionValue<K extends keyof KitAppSelection> = NonNullable<KitAppSelection[K]> extends (infer T)[] ? T : never;
 
-// #endregion ⚙️Types
+// #endregion ÔÜÖ´©ÅTypes
 
-// #region 🎭Generic Utilities
+// #region ­ƒÄ¡Generic Utilities
 // Generic Utilities MUST provide immutable selection manipulation functions.
 
 /**
@@ -5578,9 +5551,9 @@ export function isSelected<K extends keyof KitAppSelection>(selection: KitAppSel
   return currentArray.includes(value);
 }
 
-// #endregion 🎭Generic Utilities
+// #endregion ­ƒÄ¡Generic Utilities
 
-// #region 🛒Kit Diagram Geometry
+// #region ­ƒøÆKit Diagram Geometry
 // Kit Diagram Geometry MUST provide geometry primitives, shape strategies, and anchor resolution.
 
 /**
@@ -5677,7 +5650,7 @@ export interface KitDiagramProximityAnchor {
 }
 
 /**
- * @emoji 📐 Kit diagram grid pitch in CSS pixels (view-only layout constant).
+ * @emoji ­ƒôÉ Kit diagram grid pitch in CSS pixels (view-only layout constant).
  **/
 export const ICON_WIDTH = 50;
 
@@ -6035,17 +6008,17 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
   };
 };
 
-// #endregion 🛒Kit Diagram Geometry
-// #endregion 🎊kitSelectionHelper
+// #endregion ­ƒøÆKit Diagram Geometry
+// #endregion ­ƒÄèkitSelectionHelper
 
-// #region 🛎️SketchpadCore
+// #region ­ƒøÄ´©ÅSketchpadCore
 
-// #endregion 🛎️Imports
+// #endregion ­ƒøÄ´©ÅImports
 
-// #region 🎼Utilities
+// #region ­ƒÄ╝Utilities
 // Utilities MUST provide the utilities functionality.
 
-// #region 🎍SharedLayoutTransition
+// #region ­ƒÄìSharedLayoutTransition
 // FLIP-based shared layout transition hook for smooth toolbar resizing.
 
 type SharedLayoutRect = { left: number; top: number; width: number; height: number };
@@ -6114,7 +6087,7 @@ function useSharedLayoutTransition(ref: React.RefObject<HTMLElement | null>, tra
   }, []);
 }
 
-// #endregion 🎍SharedLayoutTransition
+// #endregion ­ƒÄìSharedLayoutTransition
 
 /**
  * getToolbarGroupIcon holds the data fields for a getToolbarGroupIcon record.
@@ -6130,7 +6103,7 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
   return null;
 }
 
-// #region 🎈Store
+// #region ­ƒÄêStore
 // Reactive stores for collaborative state management.
 
 /**
@@ -6332,7 +6305,7 @@ export abstract class Store<TState> {
     return getValueAtPath(this.syncMap, path);
   }
 
-  // #endregion 🎈Store
+  // #endregion ­ƒÄêStore
 }
 
 /**
@@ -6719,7 +6692,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 }
 
-// #region 🎏Plain App Store (Plain)
+// #region ­ƒÄÅPlain App Store (Plain)
 // Plain application stores using plain in-memory state with transaction support.
 
 /**
@@ -7013,11 +6986,11 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   }
 }
 
-// #endregion 🎏Plain App Store (Plain)
+// #endregion ­ƒÄÅPlain App Store (Plain)
 
-// #region 🖲️File Provider
+// #region ­ƒû▓´©ÅFile Provider
 
-// #region 🧱Memory File Provider
+// #region ­ƒº▒Memory File Provider
 // In-memory file storage provider for temporary or test scenarios.
 
 /**
@@ -7062,9 +7035,9 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
   };
 }
 
-// #endregion 🧱Memory File Provider
+// #endregion ­ƒº▒Memory File Provider
 
-// #region 🧲Remote File Provider
+// #region ­ƒº▓Remote File Provider
 // Remote file storage provider backed by a REST API.
 
 /**
@@ -7130,9 +7103,9 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
   };
 }
 
-// #endregion 🧲Remote File Provider
+// #endregion ­ƒº▓Remote File Provider
 
-// #region 🗻Composite File Provider
+// #region ­ƒù╗Composite File Provider
 // Composite file storage provider that delegates to multiple underlying providers.
 
 /**
@@ -7191,9 +7164,9 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
   };
 }
 
-// #endregion 🗻Composite File Provider
+// #endregion ­ƒù╗Composite File Provider
 
-// #endregion 🖲️File Provider
+// #endregion ­ƒû▓´©ÅFile Provider
 
 // Kit file/url access: use @semio/react `useKitFileUrl`, `useKitFileBlobUrl`, `useEmbedKitFile`, `useKitBinary`.
 
@@ -7213,7 +7186,7 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
     delete rootHost.__semioReactRoot__;
   }
 };
-// #region ⏱️Kit
+// #region ÔÅ▒´©ÅKit
 // Shell kit id context lives in `@semio/react` ({@link ActiveKitTabContextProvider}, {@link ActiveKitTabContext}).
 
 /**
@@ -7262,11 +7235,11 @@ export const KitTabContextProvider = (props: { id: string; children: React.React
   return React.createElement(ActiveKitTabContextProvider, { kitTabId: props.id }, React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }));
 };
 
-// #endregion ⏱️Kit
+// #endregion ÔÅ▒´©ÅKit
 
-// #region 📮Machine
+// #region ­ƒô«Machine
 
-// #region ⚙️Types
+// #region ÔÜÖ´©ÅTypes
 // Type definitions for app state, machine input, and context structures.
 
 /**
@@ -7279,7 +7252,7 @@ export const defaultPanelVisibility: PanelVisibility = {
   details: false,
 };
 
-// #region 🔬App State Types
+// #region ­ƒö¼App State Types
 // State shape interfaces for all application views: home, kit, design, type, quality.
 
 /**
@@ -7413,7 +7386,7 @@ export interface SketchpadTutorialContext {
   recordedEvents: any[];
 }
 
-// #endregion 🔬App State Types
+// #endregion ­ƒö¼App State Types
 
 /**
  * Input configuration for the sketchpad XState machine.
@@ -7439,7 +7412,7 @@ export interface SketchpadUiState {
 }
 
 /**
- * @emoji 🖱️ UI-only ids for focus/selection; kit authority stays in rs (strict layering plan §5).
+ * @emoji ­ƒû▒´©Å UI-only ids for focus/selection; kit authority stays in rs (strict layering plan ┬º5).
  **/
 export type SketchpadLocalSelectionState = { activeKitId: string | undefined; selectedEntityIds: readonly string[] };
 
@@ -7614,7 +7587,7 @@ export type SketchpadEvent =
   | { type: "FEEDBACK.SET_ERROR"; error: string | undefined }
   // Docs app shell (single global docs route)
   | { type: "DOCS.TOGGLE_PANEL"; panel: keyof PanelVisibility }
-  // UI shell (sketchpad machine only — not persisted)
+  // UI shell (sketchpad machine only ÔÇö not persisted)
   | { type: "UI.ORIGIN.SET"; origin: string }
   | { type: "UI.FOCUS.SET_ITEMS"; items: FocusItem[] }
   | { type: "UI.FOCUS.SET_HANDLER"; handler: ((itemId: string) => void) | undefined }
@@ -7637,9 +7610,9 @@ export type SketchpadEvent =
   | { type: "UI.LOCAL_SELECTION.SET_ACTIVE_KIT"; kitId: string | undefined }
   | { type: "UI.LOCAL_SELECTION.SET_ENTITY_IDS"; entityIds: readonly string[] };
 
-// #endregion ⚙️Types
+// #endregion ÔÜÖ´©ÅTypes
 
-// #region 🎼Helpers
+// #region ­ƒÄ╝Helpers
 // Helper functions for path migration, default state creation, and store initialization.
 
 /** migratePath holds the data fields for a migratePath record.
@@ -8261,9 +8234,9 @@ export function resolveOriginFromEventTarget(target: EventTarget | null): string
   return resolved;
 }
 
-// #endregion 🎼Helpers
+// #endregion ­ƒÄ╝Helpers
 
-// #region 🖋️Sketchpad Machine
+// #region ­ƒûï´©ÅSketchpad Machine
 // XState state machine definition for the sketchpad application lifecycle.
 
 /**
@@ -8769,7 +8742,7 @@ export const sketchpadMachine = setup({
   },
 });
 
-// #region ✈️Sketchpad Selectors
+// #region Ô£ê´©ÅSketchpad Selectors
 // Selector functions for extracting state from the sketchpad machine context.
 
 /**
@@ -9290,9 +9263,9 @@ export const createChangeCanRedoSelector = (appKey: string) => (state: { context
   return !tx.isTransactionActive && tx.redoStack.length > 0;
 };
 
-// #endregion ✈️Sketchpad Selectors
+// #endregion Ô£ê´©ÅSketchpad Selectors
 
-// #endregion 🖋️Sketchpad Machine
+// #endregion ­ƒûï´©ÅSketchpad Machine
 
 /**
  * Union of entity kind identifiers for UI selection and hover.
@@ -9341,7 +9314,7 @@ export const selectUiIsInHome = selectIsInHome;
 /**
  * Selector alias for checking kit navigation.
  **/
-// 💿selectUiIsInKit holds the data fields for a selectUiIsInKit record.
+// ­ƒÆ┐selectUiIsInKit holds the data fields for a selectUiIsInKit record.
 export const selectUiIsInKit = selectIsInKit;
 /** selectUiIsInDesign holds the data fields for a selectUiIsInDesign record.
  **/
@@ -9358,7 +9331,7 @@ export const selectUiIsInQuality = selectIsInQuality;
  **/
 export const selectUiIsInDocs = selectIsInDocs;
 
-// #region 📦Factory
+// #region ­ƒôªFactory
 
 // Factory function to instantiate the sketchpad actor.
 
@@ -9378,9 +9351,9 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
   });
 }
 
-// #endregion 📦Factory
+// #endregion ­ƒôªFactory
 
-// #region 📍Sketchpad type exports
+// #region ­ƒôìSketchpad type exports
 // Kit machine types, Yjs-backed kit events, and sketchpad/kit selectors (stable public surface).
 
 /**
@@ -9543,9 +9516,9 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   return buildKitSnapshot(context.syncKit);
 }
 
-// #endregion 📍Sketchpad type exports
+// #endregion ­ƒôìSketchpad type exports
 
-// #region ❄️Actor Types
+// #region ÔØä´©ÅActor Types
 // Type aliases for the sketchpad XState actor references and snapshots.
 
 /**
@@ -9568,13 +9541,13 @@ export type SketchpadState$ = { context: SketchpadContext };
  **/
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
-// #endregion ❄️Actor Types
+// #endregion ÔØä´©ÅActor Types
 
-// #region 🎈SketchpadRuntime
-// @emoji 🎯 Single runtime surface: imperative dispatch + local selection hooks (machine-backed).
+// #region ­ƒÄêSketchpadRuntime
+// @emoji ­ƒÄ» Single runtime surface: imperative dispatch + local selection hooks (machine-backed).
 
 /**
- * @emoji 🎯 Resolve the primary sketchpad actor for imperative calls outside React (e.g. bridge code).
+ * @emoji ­ƒÄ» Resolve the primary sketchpad actor for imperative calls outside React (e.g. bridge code).
  **/
 function primarySketchpadActorOrUndefined(): SketchpadActorRef | undefined {
   const preferred = actors.get("semio.sketchpad");
@@ -9594,7 +9567,7 @@ export function setSketchpadLocalSelectedEntityIds(ids: readonly string[]): void
 }
 
 /**
- * @emoji 🖱️ Subscribe to local selection only (contrast: {@link useKitStore} for rs-backed kit).
+ * @emoji ­ƒû▒´©Å Subscribe to local selection only (contrast: {@link useKitStore} for rs-backed kit).
  **/
 export function useSketchpadLocalSelection(): SketchpadLocalSelectionState {
   const actor = useContext(SketchpadActorContext);
@@ -9605,7 +9578,7 @@ export function useSketchpadLocalSelection(): SketchpadLocalSelectionState {
 }
 
 /**
- * @emoji 🧭 Minimal probe events for {@link Snapshot#can}; keys match {@link SketchpadEvent} discriminators where possible.
+ * @emoji ­ƒº¡ Minimal probe events for {@link Snapshot#can}; keys match {@link SketchpadEvent} discriminators where possible.
  **/
 const SKETCHPAD_CAPABILITY_PROBES = {
   SET_THEME: { type: "SET_THEME" as const, theme: Theme.SYSTEM },
@@ -9617,7 +9590,7 @@ const SKETCHPAD_CAPABILITY_PROBES = {
 } as const satisfies Record<string, SketchpadEvent>;
 
 /**
- * @emoji 🧭 Whether the machine accepts a probe event (same transition table as real sends).
+ * @emoji ­ƒº¡ Whether the machine accepts a probe event (same transition table as real sends).
  **/
 function useSketchpadMachineCan(probe: SketchpadEvent): boolean {
   const actor = useContext(SketchpadActorContext);
@@ -9625,16 +9598,16 @@ function useSketchpadMachineCan(probe: SketchpadEvent): boolean {
   return useSelector(actor, (s) => s.can(probe as Parameters<typeof s.can>[0]));
 }
 
-// #endregion 🎈SketchpadRuntime
+// #endregion ­ƒÄêSketchpadRuntime
 
-// #endregion 📮Machine
+// #endregion ­ƒô«Machine
 
-// #region 🦉Apps
+// #region ­ƒªëApps
 // App-specific hooks for design, type, kit, and sketchpad views.
 
-// #endregion 🦉Qualities Selection Hooks
+// #endregion ­ƒªëQualities Selection Hooks
 
-// #region ⏲️Ports Selection Hooks
+// #region ÔÅ▓´©ÅPorts Selection Hooks
 // Ports selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for port selection.
 
 /**
@@ -9738,9 +9711,9 @@ export function useKitAppClearPorts(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion ⏲️Ports Selection Hooks
+// #endregion ÔÅ▓´©ÅPorts Selection Hooks
 
-// #region 👝Tags Selection Hooks
+// #region ­ƒæØTags Selection Hooks
 // Tags selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for tag selection.
 
 /**
@@ -9844,9 +9817,9 @@ export function useKitAppClearTags(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 👝Tags Selection Hooks
+// #endregion ­ƒæØTags Selection Hooks
 
-// #region 📷Concepts Selection Hooks
+// #region ­ƒôÀConcepts Selection Hooks
 // Concepts selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for concept selection.
 
 /**
@@ -9950,9 +9923,9 @@ export function useKitAppClearConcepts(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 📷Concepts Selection Hooks
+// #endregion ­ƒôÀConcepts Selection Hooks
 
-// #region 🗃️Files Selection Hooks
+// #region ­ƒùâ´©ÅFiles Selection Hooks
 // Files selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for file selection.
 
 /**
@@ -10056,9 +10029,9 @@ export function useKitAppClearFiles(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 🗃️Files Selection Hooks
+// #endregion ­ƒùâ´©ÅFiles Selection Hooks
 
-// #region 🪅Folders Selection Hooks
+// #region ­ƒ¬àFolders Selection Hooks
 // Folders selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for folder selection.
 
 /**
@@ -10162,9 +10135,9 @@ export function useKitAppClearFolders(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 🪅Folders Selection Hooks
+// #endregion ­ƒ¬àFolders Selection Hooks
 
-// #region 🔐Authors Selection Hooks
+// #region ­ƒöÉAuthors Selection Hooks
 // Authors selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for author selection.
 
 /**
@@ -10268,9 +10241,9 @@ export function useKitAppClearAuthors(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 🔐Authors Selection Hooks
+// #endregion ­ƒöÉAuthors Selection Hooks
 
-// #region 🎎Global Selection Hooks
+// #region ­ƒÄÄGlobal Selection Hooks
 // Global selection hooks MUST provide select-all across all artifact kinds.
 
 /**
@@ -10313,9 +10286,9 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 🎎Global Selection Hooks
+// #endregion ­ƒÄÄGlobal Selection Hooks
 
-// #endregion 🎼Selection Helper Hooks
+// #endregion ­ƒÄ╝Selection Helper Hooks
 
 /**
  * Returns an action to set the Kit app filter search query.
@@ -10461,7 +10434,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 
 // #endregion Internal State Management
 
-// #region 🔗Types
+// #region ­ƒöùTypes
 // Types MUST provide hover status and color hooks for type visual indication in the Kit app.
 
 /**
@@ -10540,9 +10513,9 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
   return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
-// #endregion 🔗Types
+// #endregion ­ƒöùTypes
 
-// #region 🏪Designs
+// #region ­ƒÅ¬Designs
 // Designs MUST provide hover status and color hooks for design visual indication in the Kit app.
 
 /**
@@ -10621,9 +10594,9 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
   return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
-// #endregion 🏪Designs
+// #endregion ­ƒÅ¬Designs
 
-// #region 🌊Commands
+// #region ­ƒîèCommands
 // Commands MUST define all executable Kit app actions for artifact CRUD, import, and export.
 
 /**
@@ -11352,13 +11325,13 @@ export const kitAppCommands = {
   },
 };
 
-// #endregion 🌊Commands
+// #endregion ­ƒîèCommands
 
-// #region 📋Canvas
+// #region ­ƒôïCanvas
 
-// #region 🧿Windows
+// #region ­ƒº┐Windows
 
-// #region 🛎️Table
+// #region ­ƒøÄ´©ÅTable
 // Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
 /**
@@ -13485,7 +13458,7 @@ const AppContent: FC = () => {
                 <p className="text-warning-foreground/90">If this zip file contains a kit, please navigate to the home screen to import it properly. Zip files dropped here are added as regular files.</p>
               </div>
               <button onClick={() => setShowZipWarning(false)} className="text-warning-foreground/70 hover:text-warning-foreground transition-colors">
-                ×
+                ├ù
               </button>
             </div>
           </div>
@@ -13671,7 +13644,7 @@ const AppContent: FC = () => {
 
 /**
  * ErrorBoundary holds the data fields for a ErrorBoundary record.
- * @emoji 🛡️ Catches subtree render errors; resets only when {@link ErrorBoundaryProps#errorRecoverKey} changes (not `children` identity).
+ * @emoji ­ƒøí´©Å Catches subtree render errors; resets only when {@link ErrorBoundaryProps#errorRecoverKey} changes (not `children` identity).
  **/
 type ErrorBoundaryProps = {
   children: React.ReactNode;
@@ -13735,14 +13708,14 @@ function useKitAppYjsToXStateSync() {
   const hasKit = useHasKit(kitId);
   const initializedKeyRef = useRef<string | null>(null);
   const syncedKeyRef = useRef<string | null>(null);
-  /** @emoji 🧾 Re-render after {@link SketchpadStore#createKitApp} so {@link MultiWindowApp} can mount layout before children read kit app store. */
+  /** @emoji ­ƒº¥ Re-render after {@link SketchpadStore#createKitApp} so {@link MultiWindowApp} can mount layout before children read kit app store. */
   const [, kitAppCreateBump] = useReducer((n: number) => n + 1, 0);
 
   useLayoutEffect(() => {
     if (!kitId || !hasKit) return;
 
     if (!sketchpadStore.hasKitApp({ kit: kitId })) {
-      /** @emoji 🧾 Must call {@link SketchpadStore#createKitApp} directly: `execute("semio.sketchpad.createKitApp")` is async and would leave {@link MultiWindowApp} stuck on the preparing shell. */
+      /** @emoji ­ƒº¥ Must call {@link SketchpadStore#createKitApp} directly: `execute("semio.sketchpad.createKitApp")` is async and would leave {@link MultiWindowApp} stuck on the preparing shell. */
       sketchpadStore.createKitApp(kitId);
       kitAppCreateBump();
     }
@@ -13851,9 +13824,9 @@ const KitTableApp: FC = () => {
   );
 };
 
-// #endregion 🛎️Table
+// #endregion ­ƒøÄ´©ÅTable
 
-// #region 🧫Diagram
+// #region ­ƒº½Diagram
 // Diagram MUST render the kit topology on @elements/board (WASM force layout) with type and design nodes.
 
 /**
@@ -13877,7 +13850,7 @@ interface KitDiagramEdge {
   relationship: "part-of" | "reference";
 }
 
-/** @emoji 📍 Kit diagram layout node (board fixture source; not React Flow). */
+/** @emoji ­ƒôì Kit diagram layout node (board fixture source; not React Flow). */
 interface KitDiagramLayoutNode {
   id: string;
   position: { x: number; y: number };
@@ -13887,7 +13860,7 @@ interface KitDiagramLayoutNode {
   selected: boolean;
 }
 
-/** @emoji 🗺️ Builds kit diagram layout nodes/edges from kit entities (input for board fixture + WASM layout). */
+/** @emoji ­ƒù║´©Å Builds kit diagram layout nodes/edges from kit entities (input for board fixture + WASM layout). */
 const buildKitDiagramData = (kit: Kit): { nodes: KitDiagramLayoutNode[]; edges: KitDiagramEdge[] } => {
   const nodes: KitDiagramLayoutNode[] = [];
   const edges: KitDiagramEdge[] = [];
@@ -14135,7 +14108,7 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
 
 const SKETCHPAD_KIT_BOARD_HANDLE_SIDES: readonly KitDiagramSnapSide[] = ["top", "right", "bottom", "left"];
 
-/** @emoji 🗺️ Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
+/** @emoji ­ƒù║´©Å Maps kit diagram layout nodes/edges into an `elements.board.fixture/v1` payload for {@link TopologyBoardPane}. */
 const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], edges: readonly KitDiagramEdge[]): BoardFixtureV1 => {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const boardNodes = nodes.map((node) => {
@@ -14811,7 +14784,7 @@ const MultiWindowApp: FC = () => {
 
   const hasKit = useHasKit(kitId || "");
 
-  /** @emoji 🧾 Must not memoize only on `kitId`: {@link SketchpadStore#createKitApp} can appear between renders without store ref changing. */
+  /** @emoji ­ƒº¥ Must not memoize only on `kitId`: {@link SketchpadStore#createKitApp} can appear between renders without store ref changing. */
   const store = kitId && sketchpadStore?.hasKitApp?.({ kit: kitId }) ? sketchpadStore.kitApp(kitId) : null;
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
@@ -14912,7 +14885,7 @@ const MultiWindowApp: FC = () => {
     layoutDefaultSeedAttemptedRef.current = false;
   }, [kitId]);
 
-  /** @emoji 🧾 When the kit app store has no persisted layout yet, seed the default once per kit mount so Golden Layout and XState stay aligned. */
+  /** @emoji ­ƒº¥ When the kit app store has no persisted layout yet, seed the default once per kit mount so Golden Layout and XState stay aligned. */
   useEffect(() => {
     if (!store || !kitId) return;
     if (storedWindowLayout !== undefined && storedWindowLayout !== null) return;
@@ -15005,7 +14978,7 @@ const MultiWindowApp: FC = () => {
   if (kitId && !sketchpadStore.hasKitApp({ kit: kitId })) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Preparing kit app…</p>
+        <p className="text-sm text-muted-foreground">Preparing kit appÔÇª</p>
       </div>
     );
   }
@@ -15031,9 +15004,9 @@ const MultiWindowApp: FC = () => {
   );
 };
 
-// #endregion 🧫Diagram
+// #endregion ­ƒº½Diagram
 
-// #region 🩻Tools
+// #region ­ƒ®╗Tools
 // Tools MUST define Kit app toolbar filter and selection tool components.
 
 /**
@@ -15196,19 +15169,19 @@ export const KitToolbarReset: FC = () => {
   );
 };
 
-// #endregion 🩻Tools
+// #endregion ­ƒ®╗Tools
 
-// #endregion 🧿Diagram
+// #endregion ­ƒº┐Diagram
 
-// #region 🗑️Panels
+// #region ­ƒùæ´©ÅPanels
 
-// #region 🧭Right
+// #region ­ƒº¡Right
 
-// #region 💧Details
+// #region ­ƒÆºDetails
 // Details MUST render the Kit app detail panels for kit, type, port, tag, design, file, folder, and multi-artifact sections.
 
 /**
- * @emoji 🧾 Stringify optional type parent reference for read-only display rows.
+ * @emoji ­ƒº¥ Stringify optional type parent reference for read-only display rows.
  */
 function formatTypeParentRefForInput(value: unknown): string {
   if (value == null) return "";
@@ -15220,10 +15193,10 @@ function formatTypeParentRefForInput(value: unknown): string {
   return "";
 }
 
-// #region 🔖SegregatedFieldRows
+// #region ­ƒöûSegregatedFieldRows
 
 /**
- * @emoji 📥📝 Read+write segregated text row: explicit `value` (read lane) and `commit`+`status` (write lane).
+ * @emoji ­ƒôÑ­ƒôØ Read+write segregated text row: explicit `value` (read lane) and `commit`+`status` (write lane).
  * Eliminates the legacy `[value, setter, status]` triadic prop shape.
  */
 function SketchpadInputRow(props: {
@@ -15255,7 +15228,7 @@ function SketchpadInputRow(props: {
   );
 }
 
-/** @emoji 📥📝 Multiline counterpart to {@link SketchpadInputRow} (same segregated value+command shape). */
+/** @emoji ­ƒôÑ­ƒôØ Multiline counterpart to {@link SketchpadInputRow} (same segregated value+command shape). */
 function SketchpadTextareaRow(props: {
   value: string | null | undefined;
   commit: (next: unknown) => Promise<unknown>;
@@ -15285,7 +15258,7 @@ function SketchpadTextareaRow(props: {
   );
 }
 
-// #endregion 🔖SegregatedFieldRows
+// #endregion ­ƒöûSegregatedFieldRows
 
 /**
  * Detail section component for the currently open kit.
@@ -15307,7 +15280,7 @@ const KitSectionForm: FC = () => {
   const { run: kitRun, status: renameKitStatus } = useKitCommand();
   const changeKitDescriptionStatus = renameKitStatus;
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
-  // 📥 Read lane — value-only hooks follow the active kit read scope.
+  // ­ƒôÑ Read lane ÔÇö value-only hooks follow the active kit read scope.
   const kitNameValue = useKitName();
   const description = useKitDescription();
   const icon = useKitIcon();
@@ -15967,9 +15940,9 @@ export const MultipleArtifactsSection: FC = () => {
   );
 };
 
-// #endregion 💧Details
+// #endregion ­ƒÆºDetails
 
-// #region 🎡Settings
+// #region ­ƒÄíSettings
 // Settings MUST render the Kit app settings panel with theme, language, device, expertise, mode, and diagram force controls.
 /**
  * KitEditorSettingsContent holds the data fields for a KitEditorSettingsContent record.
@@ -16107,20 +16080,20 @@ const SketchpadSettingsContent: FC = () => {
   );
 };
 
-// #endregion 🎡Settings
+// #endregion ­ƒÄíSettings
 
-// #endregion 🧭Right
+// #endregion ­ƒº¡Right
 
-// #endregion 🗑️Panels
+// #endregion ­ƒùæ´©ÅPanels
 
-// #endregion 📋Canvas
+// #endregion ­ƒôïCanvas
 
-// #region 🌱AlternativeSelector
-/** @emoji 🌱 Sentinel option value for the main kit line (Radix Select rejects empty string). */
+// #region ­ƒî▒AlternativeSelector
+/** @emoji ­ƒî▒ Sentinel option value for the main kit line (Radix Select rejects empty string). */
 const SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE = "__semio_sketchpad_the_kit__";
 
 /**
- * @emoji 🌱 Footer dropdown: the kit vs WIP alternatives; unsaved count via {@link Alternative#unsavedChangeCount}.
+ * @emoji ­ƒî▒ Footer dropdown: the kit vs WIP alternatives; unsaved count via {@link Alternative#unsavedChangeCount}.
  **/
 const KitAlternativeFooterSelector: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -16260,9 +16233,9 @@ const KitAlternativeFooterSelector: FC = () => {
 
   return null;
 };
-// #endregion 🌱AlternativeSelector
+// #endregion ­ƒî▒AlternativeSelector
 
-// #region 🎮Footer
+// #region ­ƒÄ«Footer
 // Footer MUST render the Kit app footer with selection count status.
 
 /**
@@ -16291,9 +16264,9 @@ export const KitAppFooter: FC = () => {
   );
 };
 
-// #endregion 🎮Footer
+// #endregion ­ƒÄ«Footer
 
-// #region ⏱️Config
+// #region ÔÅ▒´©ÅConfig
 // Config MUST export the Kit app configuration with route segments, panel definitions, and path matching.
 
 /**
@@ -16317,11 +16290,11 @@ export const kitConfig: AppConfig = {
   order: 10,
 };
 
-// #endregion ⏱️Config
+// #endregion ÔÅ▒´©ÅConfig
 
-//#endregion ⏱️Kit
+//#endregion ÔÅ▒´©ÅKit
 
-// #region 📌Design
+// #region ­ƒôîDesign
 // Design app hooks for piece and connection selection, hover, and diff state.
 
 /**
@@ -16378,7 +16351,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   return selector ? selector(originalPiece) : originalPiece;
 }
 
-// #region 🎨Sketchpad 🛠️Properties
+// #region ­ƒÄ¿Sketchpad ­ƒøá´©ÅProperties
 /**
 
 
@@ -16397,11 +16370,11 @@ export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionContext();
   return useDesignAppIsConnectionHovered(undefined, connectionScope ?? undefined ?? "");
 }
-// #endregion 🎨Sketchpad 🛠️Properties
+// #endregion ­ƒÄ¿Sketchpad ­ƒøá´©ÅProperties
 
-// #endregion 📌Design
+// #endregion ­ƒôîDesign
 
-// #region 🎏Sketchpad
+// #region ­ƒÄÅSketchpad
 // Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
 /**
@@ -17016,7 +16989,7 @@ export class SketchpadStore {
 
       if (initialState.kits) {
         const kitsToOpen = initialState.kits.slice();
-        /** Defer so `createKit` → `openKitInRegistry` never runs during React render (registry `bump` would setState on `KitRegistryProvider` while a child is rendering). */
+        /** Defer so `createKit` ÔåÆ `openKitInRegistry` never runs during React render (registry `bump` would setState on `KitRegistryProvider` while a child is rendering). */
         queueMicrotask(() => {
           kitsToOpen.forEach(({ kit, kind, source, session }) => {
             void this.createKit(kit, kind, source, false, session);
@@ -17178,7 +17151,7 @@ export class SketchpadStore {
     return createMemoryFileProvider();
   };
 
-  /** @emoji 🔗 Wire autosave + file providers after {@link getKitRegistryBridge} has opened the kit. */
+  /** @emoji ­ƒöù Wire autosave + file providers after {@link getKitRegistryBridge} has opened the kit. */
   private wireRegistryKitStore = (kitStore: KitHostStore, kind: KitKind, source?: InitialStateKit["source"]): void => {
     (kitStore as any).__semioKitPersistenceKind = kind;
     if (source) {
@@ -17215,7 +17188,7 @@ export class SketchpadStore {
     }
   };
 
-  /** @emoji 🔗 Open via {@link KitRegistryValue}; prefer `backbone` / built-in `openJsonFile` over passing a pre-built host store. */
+  /** @emoji ­ƒöù Open via {@link KitRegistryValue}; prefer `backbone` / built-in `openJsonFile` over passing a pre-built host store. */
   private registryOpenInit = async (kitStore: KitHostStore, wasmSession?: Session): Promise<Parameters<KitRegistryValue["open"]>[1]> => {
     if (wasmSession == null) return { store: kitStore };
     const stores = await wasmSession.stores();
@@ -17279,7 +17252,7 @@ export class SketchpadStore {
     };
   };
 
-  /** 🧾 Open-toolbar: in-app memory kits only; file/folder/remote open use native pickers elsewhere. */
+  /** ­ƒº¥ Open-toolbar: in-app memory kits only; file/folder/remote open use native pickers elsewhere. */
   availableKitKinds = (): SketchpadKitKindAvailability => ({
     temporary: true,
     file: false,
@@ -17925,7 +17898,7 @@ export class SketchpadStore {
   }
 
   hasKitApp(kitApp: KitAppId): boolean {
-    /** 🧾 {@link Store.id} is a random sync-store id string; kit-app rows are keyed by kit uuid in {@link kitApps}. */
+    /** ­ƒº¥ {@link Store.id} is a random sync-store id string; kit-app rows are keyed by kit uuid in {@link kitApps}. */
     return this.kitApps.has(kitApp.kit);
   }
 
@@ -18082,7 +18055,7 @@ export class SketchpadStore {
         this.persistence!.once("synced", () => resolve());
       });
     }
-    // Kit list: `KitRegistryProvider` + `initialState.kits` / browser persistence — not Yjs `syncKits` (plan: hooks-only).
+    // Kit list: `KitRegistryProvider` + `initialState.kits` / browser persistence ÔÇö not Yjs `syncKits` (plan: hooks-only).
   }
 }
 
@@ -18112,7 +18085,7 @@ if (import.meta.hot?.data.actors) {
   }
 }
 
-/** @emoji 🏠 React context for the mounted sketchpad instance (id, remote, desktop). */
+/** @emoji ­ƒÅá React context for the mounted sketchpad instance (id, remote, desktop). */
 export const SketchpadInstanceContext = createContext<SketchpadInstance | null>(null);
 
 /**
@@ -18130,7 +18103,7 @@ const SketchpadStartupFallback: FC = () => {
   );
 };
 
-// #region 🌧️Sketchpad Instance Id
+// #region ­ƒîº´©ÅSketchpad Instance Id
 // Stable fallback instance ids for standalone sketchpad roots.
 
 /**
@@ -18146,7 +18119,7 @@ const DEFAULT_SKETCHPAD_INSTANCE_ID = "semio.sketchpad";
 function getDefaultSketchpadInstanceId(): string {
   return DEFAULT_SKETCHPAD_INSTANCE_ID;
 }
-// #endregion 🌧️Sketchpad Instance Id
+// #endregion ­ƒîº´©ÅSketchpad Instance Id
 
 type SketchpadInstanceProviderProps = {
   id?: string;
@@ -18519,7 +18492,7 @@ export function useNavigationHistory(): {
   );
 }
 
-// #region 🛒XState Hooks
+// #region ­ƒøÆXState Hooks
 // React hooks for accessing XState sketchpad actor state and sending events.
 
 /**
@@ -18685,7 +18658,7 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
   return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
 }
 
-// #endregion 🛒XState Hooks
+// #endregion ­ƒøÆXState Hooks
 
 /**
  * Hook returning the design app state for a given kit and design.
@@ -19184,9 +19157,9 @@ export function useSketchpadCommands() {
   );
 }
 
-// #endregion 🎏Sketchpad
+// #endregion ­ƒÄÅSketchpad
 
-// #region 🌙Commands
+// #region ­ƒîÖCommands
 // Exported sketchpad command map for theme, language, mode, device, and navigation.
 
 /**
@@ -19385,15 +19358,15 @@ export const sketchpadDevCommands = {
   },
 };
 
-// #endregion 🌙Commands
+// #endregion ­ƒîÖCommands
 
-// #region 🎁Apps Registry
+// #region ­ƒÄüApps Registry
 // Dynamic app panel loader for registering app-specific panels.
 
-// #region 📋AppPanelGlob
-/** 🗂️ Vite-static glob map so esbuild can resolve optional `./apps/<id>/panels.ts` modules (no dynamic template imports). */
+// #region ­ƒôïAppPanelGlob
+/** ­ƒùé´©Å Vite-static glob map so esbuild can resolve optional `./apps/<id>/panels.ts` modules (no dynamic template imports). */
 const appPanelLoaders = import.meta.glob<{ panels?: PanelConfig[] }>("./apps/*/panels.ts");
-// #endregion 📋AppPanelGlob
+// #endregion ­ƒôïAppPanelGlob
 
 /**
  * Loads panel configurations for a given app from the glob map (same optional modules as before).
@@ -19518,7 +19491,7 @@ let appConfigsLoadPromise: Promise<void> | null = null;
 async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
   appConfigsLoadPromise = (async () => {
-    // ⚙️All modules are now consolidated in this file, register configs directly.
+    // ÔÜÖ´©ÅAll modules are now consolidated in this file, register configs directly.
     const configs = [homeConfig, kitConfig, typeConfig, designConfig, docsConfig, feedbackConfig];
     for (const config of configs) {
       if (!config) continue;
@@ -19531,9 +19504,9 @@ async function loadAppConfigs() {
 
 export { appRegistry, loadAppConfigs };
 
-// #endregion 🎁Apps Registry
+// #endregion ­ƒÄüApps Registry
 
-// #region 🩺Navbar
+// #region ­ƒ®║Navbar
 // Focus / panel / footer / origin hooks backed by `sketchpadMachine` (`context.ui`).
 
 const _emptyUiPanelSections: PanelSection[] = [];
@@ -19550,7 +19523,7 @@ export interface FocusApi {
 }
 
 /**
- * 🧭 Listens to pointer/keydown/focusin and updates `ui.origin` on the sketchpad actor. `pointerdown` is registered in the bubble phase so embedded canvases receive gestures before this handler runs.
+ * ­ƒº¡ Listens to pointer/keydown/focusin and updates `ui.origin` on the sketchpad actor. `pointerdown` is registered in the bubble phase so embedded canvases receive gestures before this handler runs.
  * Mount once under the sketchpad actor; renders nothing.
  */
 export const OriginDocumentListener: FC = () => {
@@ -19671,9 +19644,9 @@ export const useRemovePanelSection = () => {
   );
 };
 
-// #endregion 🩺Navbar
+// #endregion ­ƒ®║Navbar
 
-// #region 🗡️SidePanel Tabs
+// #region ­ƒùí´©ÅSidePanel Tabs
 
 /**
  * Hook returning side panel tabs for a given position.
@@ -19742,9 +19715,9 @@ export const useActiveRightTabId = (): [string | undefined, (tabId: string) => v
   return [activeRightTabId, setActiveRightTabId];
 };
 
-// #endregion 🗡️SidePanel Tabs
+// #endregion ­ƒùí´©ÅSidePanel Tabs
 
-// #region 🏰Origin
+// #region ­ƒÅ░Origin
 
 /**
  * Hook returning a callback that resolves the current origin string.
@@ -19774,9 +19747,9 @@ export function useOriginValue(): string {
   return origin;
 }
 
-// #endregion 🏰Origin
+// #endregion ­ƒÅ░Origin
 
-// #region 🔬Footer Items
+// #region ­ƒö¼Footer Items
 /**
  * Hook returning the registered footer items.
  **/
@@ -19811,9 +19784,9 @@ export const useRemoveFooterItem = () => {
   );
 };
 
-// #endregion 🔬Footer Items
+// #endregion ­ƒö¼Footer Items
 
-// #region 🏂Global Footer Items
+// #region ­ƒÅéGlobal Footer Items
 // Global footer items component that registers persistent footer entries.
 /**
  **/
@@ -19836,9 +19809,9 @@ const GlobalFooterItems: FC = () => {
   return null;
 };
 
-// #endregion 🏂Global Footer Items
+// #endregion ­ƒÅéGlobal Footer Items
 
-// #region 🎋ConceptFilter
+// #region ­ƒÄïConceptFilter
 // Filter component for narrowing results by architectural concepts.
 
 /**
@@ -19889,9 +19862,9 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   );
 };
 
-// #endregion 🎋ConceptFilter
+// #endregion ­ƒÄïConceptFilter
 
-// #region 🌍ToolGroup
+// #region ­ƒîìToolGroup
 // Toolbar group component for switching between tool modes.
 
 /**
@@ -19961,9 +19934,9 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
   );
 };
 
-// #endregion 🌍ToolGroup
+// #endregion ­ƒîìToolGroup
 
-// #region 🌥️DragDrop
+// #region ­ƒîÑ´©ÅDragDrop
 /** Current drag-and-drop affordances for type/design placement (XState `ui.dragDrop`). */
 export interface DragDropApi {
   activeDraggedType: Type | null;
@@ -19996,9 +19969,9 @@ export const useDragDrop = (): DragDropApi => {
   return useMemo(() => ({ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }), [activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign]);
 };
 
-// #endregion 🌥️DragDrop
+// #endregion ­ƒîÑ´©ÅDragDrop
 
-// #region ⭐Hotkeys
+// #region Ô¡ÉHotkeys
 // Keyboard shortcut hook with configurable hotkey overrides.
 
 /**
@@ -20014,7 +19987,7 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
   });
 }
 
-// #endregion ⭐Hotkeys
+// #endregion Ô¡ÉHotkeys
 
 /**
  * Hook returning the enriched panel configurations for all panel definitions.
@@ -21302,7 +21275,7 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-// #region 📡Canvas
+// #region ­ƒôíCanvas
 // Canvas layout components for window management and multi-pane rendering.
 
 // AppWindowConfig, WindowControl, WindowKindDefinition are defined in the Shared section above.
@@ -21990,9 +21963,9 @@ export const LayoutCanvas: FC<{
   );
 };
 
-// #endregion 📡Canvas
+// #endregion ­ƒôíCanvas
 
-// #region 🕰️App Router
+// #region ­ƒò░´©ÅApp Router
 // React Router integration with scope providers and route-based app switching.
 /**
  * RouteParamContextShell binds a route param id to a context-bracketing component (e.g. kit tab mount).
@@ -22061,7 +22034,7 @@ const AppRouter: FC = () => {
   };
 
   if (!appsInitialized) {
-    return <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-neutral-200">Loading apps…</div>;
+    return <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-neutral-200">Loading appsÔÇª</div>;
   }
 
   return (
@@ -22077,286 +22050,9 @@ const AppRouter: FC = () => {
   );
 };
 
-// #endregion 🕰️App Router
+// #endregion ­ƒò░´©ÅApp Router
 
-//#region 🔖SketchpadDeclarativeShell
-export const SKETCHPAD_SHELL_CONTROLLER_ID = "semio.sketchpad.shell";
-const SKETCHPAD_EXTENSION_ID = "semio.sketchpad.builtin";
-export const SKETCHPAD_HOME_APP_ID = "home";
-export const SKETCHPAD_KIT_APP_ID = "kit";
-export const SKETCHPAD_DESIGN_APP_ID = "design";
-export const SKETCHPAD_TYPE_APP_ID = "type";
-export const SKETCHPAD_DOCS_APP_ID = "docs";
-export const SKETCHPAD_FEEDBACK_APP_ID = "feedback";
-const SKETCHPAD_BODY_HOME = "semio.sketchpad.window.home";
-const SKETCHPAD_BODY_KIT_TABLE = "semio.sketchpad.window.kit.table";
-const SKETCHPAD_BODY_KIT_DIAGRAM = "semio.sketchpad.window.kit.diagram";
-const SKETCHPAD_BODY_DESIGN_SCENE = "semio.sketchpad.window.design.scene";
-const SKETCHPAD_BODY_DESIGN_DIAGRAM = "semio.sketchpad.window.design.diagram";
-const SKETCHPAD_BODY_TYPE = "semio.sketchpad.window.type";
-const SKETCHPAD_BODY_DOCS = "semio.sketchpad.window.docs";
-const SKETCHPAD_BODY_FEEDBACK = "semio.sketchpad.window.feedback";
-const SKETCHPAD_SURFACE_KIT_TABLE = "semio.sketchpad.surface.kit.table/v1";
-const SKETCHPAD_SURFACE_KIT_DIAGRAM = "semio.sketchpad.surface.kit.diagram/v1";
-const SKETCHPAD_SURFACE_DESIGN_SCENE = "semio.sketchpad.surface.design.scene/v1";
-const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "semio.sketchpad.surface.design.diagram/v1";
-const SKETCHPAD_SURFACE_PANEL_MAIN = "semio.sketchpad.surface.panel.main/v1";
-const SKETCHPAD_PANEL_WORKBENCH_BODY = "semio.sketchpad.panel.workbench";
-const SKETCHPAD_PANEL_DETAILS_BODY = "semio.sketchpad.panel.details";
-
-/** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link CommandBus}. */
-export class SketchpadShellController extends Controller {
-	navigationPath = "/";
-	panelVisibility = { leftSidePanel: false, rightSidePanel: false };
-
-	constructor(commandBus: CommandBus, hostNotify: () => void) {
-		super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
-	}
-
-	override run(command: string, args?: unknown): void {
-		switch (command) {
-			case "setNavigation": {
-				this.navigationPath = (args as { path: string }).path;
-				break;
-			}
-			case "togglePanel": {
-				const panel = (args as { panel: "leftSidePanel" | "rightSidePanel" }).panel;
-				this.panelVisibility = { ...this.panelVisibility, [panel]: !this.panelVisibility[panel] };
-				break;
-			}
-			default:
-				break;
-		}
-		this.emit();
-	}
-}
-
-let sketchpadWorkbenchSingleton: Workbench | null = null;
-let sketchpadExtensionHostSingleton: ShellExtensionHost | null = null;
-let sketchpadShellReady: Promise<Workbench> | null = null;
-let sketchpadChromeRegistered = false;
-
-function sketchpadAppIdFromPath(path: string): string {
-	const pathParts = path.split("/").filter((part) => part.length > 0);
-	const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-	if (pathParts[0] === "docs") return SKETCHPAD_DOCS_APP_ID;
-	if (pathParts[0] === "feedback") return SKETCHPAD_FEEDBACK_APP_ID;
-	if (pathParts[0] !== "kits") return SKETCHPAD_HOME_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "designs" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_DESIGN_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "types" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_TYPE_APP_ID;
-	if (pathParts.length >= 2 && isUuidPattern(pathParts[1] ?? "")) return SKETCHPAD_KIT_APP_ID;
-	return SKETCHPAD_HOME_APP_ID;
-}
-
-function buildSketchpadExtensionManifest(): ShellExtensionManifest {
-	return {
-		id: SKETCHPAD_EXTENSION_ID,
-		label: "Semio Sketchpad",
-		contributes: {
-			apps: [
-				{
-					id: SKETCHPAD_HOME_APP_ID,
-					label: "Home",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [{ id: "home-main", label: "Home", bodyKey: SKETCHPAD_BODY_HOME }],
-					defaultLayout: createTabStackLayout(["home-main"], ["Home"]),
-				},
-				{
-					id: SKETCHPAD_KIT_APP_ID,
-					label: "Kit",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [
-						{ id: "table", label: "Table", bodyKey: SKETCHPAD_BODY_KIT_TABLE },
-						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_KIT_DIAGRAM },
-					],
-					defaultLayout: createDefaultLayout(["table", "diagram"], "row", [50, 50], ["Table", "Diagram"]),
-					leftTabs: [{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY }],
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
-				},
-				{
-					id: SKETCHPAD_DESIGN_APP_ID,
-					label: "Design",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [
-						{ id: "scene", label: "Scene", bodyKey: SKETCHPAD_BODY_DESIGN_SCENE },
-						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_DESIGN_DIAGRAM },
-					],
-					defaultLayout: createDefaultLayout(["scene", "diagram"], "row", [60, 40], ["Scene", "Diagram"]),
-					rightTabs: [{ id: "details", iconId: "semio.sketchpad.icon.details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY }],
-				},
-				{
-					id: SKETCHPAD_TYPE_APP_ID,
-					label: "Type",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [{ id: "type-main", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE }],
-					defaultLayout: createTabStackLayout(["type-main"], ["Type"]),
-				},
-				{
-					id: SKETCHPAD_DOCS_APP_ID,
-					label: "Docs",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [{ id: "docs-main", label: "Docs", bodyKey: SKETCHPAD_BODY_DOCS }],
-					defaultLayout: createTabStackLayout(["docs-main"], ["Docs"]),
-				},
-				{
-					id: SKETCHPAD_FEEDBACK_APP_ID,
-					label: "Feedback",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					windowKinds: [{ id: "feedback-main", label: "Feedback", bodyKey: SKETCHPAD_BODY_FEEDBACK }],
-					defaultLayout: createTabStackLayout(["feedback-main"], ["Feedback"]),
-				},
-			],
-		},
-	};
-}
-
-function declarativePanelMain(_ctx: ShellWindowBodyViewContext): UiNode {
-	return { type: "panel", surfaceId: SKETCHPAD_SURFACE_PANEL_MAIN, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID };
-}
-
-function registerSketchpadDeclarativeBodies(): void {
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_HOME, declarativePanelMain);
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_KIT_TABLE, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_KIT_TABLE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "table",
-	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_KIT_DIAGRAM,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "diagram",
-	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () => ({
-		type: "scene3d",
-		surfaceId: SKETCHPAD_SURFACE_DESIGN_SCENE,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DESIGN_DIAGRAM, () => ({
-		type: "board",
-		surfaceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM,
-		controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-		paneId: "diagram",
-	}));
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_TYPE, declarativePanelMain);
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_DOCS, declarativePanelMain);
-	registerDeclarativeWindowBody(SKETCHPAD_BODY_FEEDBACK, declarativePanelMain);
-	registerDeclarativeSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, declarativePanelMain);
-	registerDeclarativeSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, declarativePanelMain);
-}
-
-function registerSketchpadSurfaceHosts(): void {
-	if (sketchpadChromeRegistered) return;
-	sketchpadChromeRegistered = true;
-	registerSketchpadDeclarativeBodies();
-}
-
-/** @emoji 🚀 Builds the declarative sketchpad {@link Workbench} (apps, modes, window kinds). */
-export async function ensureSketchpadDeclarativeShell(): Promise<Workbench> {
-	if (sketchpadWorkbenchSingleton) return sketchpadWorkbenchSingleton;
-	if (!sketchpadShellReady) {
-		sketchpadShellReady = (async () => {
-			registerSketchpadSurfaceHosts();
-			const workbench = new Workbench();
-			const controller = new SketchpadShellController(workbench.commandBus, () => workbench.notify());
-			const host = new ShellExtensionHost(workbench);
-			host.register(buildSketchpadExtensionManifest(), {
-				id: SKETCHPAD_EXTENSION_ID,
-				activate() {},
-			} satisfies ShellExtension);
-			await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
-			workbench.activeAppId = SKETCHPAD_HOME_APP_ID;
-			workbench.notify();
-			sketchpadWorkbenchSingleton = workbench;
-			sketchpadExtensionHostSingleton = host;
-			return workbench;
-		})();
-	}
-	return sketchpadShellReady;
-}
-
-export function getSketchpadWorkbench(): Workbench | null {
-	return sketchpadWorkbenchSingleton;
-}
-
-type SketchpadDeclarativeWorkbenchHostProps = {
-	readonly toolbarSlot: React.ReactNode;
-	readonly initialPanelVisibility: { leftSidePanel: boolean; rightSidePanel: boolean };
-	readonly navigationUri: string;
-	readonly canGoBack: boolean;
-	readonly canGoForward: boolean;
-	readonly canGoUp: boolean;
-	readonly onNavigate: (uri: string) => void;
-	readonly onGoBack: () => void;
-	readonly onGoForward: () => void;
-	readonly onGoUp: () => void;
-	readonly augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
-};
-
-const SketchpadDeclarativeWorkbenchHost: FC<SketchpadDeclarativeWorkbenchHostProps> = ({
-	toolbarSlot,
-	initialPanelVisibility,
-	navigationUri,
-	canGoBack,
-	canGoForward,
-	canGoUp,
-	onNavigate,
-	onGoBack,
-	onGoForward,
-	onGoUp,
-	augmentPanelTabs,
-}) => {
-	const [workbench, setWorkbench] = useState<Workbench | null>(sketchpadWorkbenchSingleton);
-	useEffect(() => {
-		let cancelled = false;
-		void ensureSketchpadDeclarativeShell().then((wb) => {
-			if (!cancelled) setWorkbench(wb);
-		});
-		return () => {
-			cancelled = true;
-		};
-	}, []);
-	const appType = useAppType();
-	useEffect(() => {
-		if (!workbench) return;
-		const nextAppId = sketchpadAppIdFromPath(navigationUri.split("?")[0] ?? "/");
-		if (workbench.activeAppId !== nextAppId) workbench.setActiveAppId(nextAppId);
-		workbench.uri = navigationUri;
-		workbench.canGoBack = canGoBack;
-		workbench.canGoForward = canGoForward;
-		workbench.canGoUp = canGoUp;
-		workbench.onNavigate = onNavigate;
-		workbench.onGoBack = onGoBack;
-		workbench.onGoForward = onGoForward;
-		workbench.onGoUp = onGoUp;
-		workbench.notify();
-	}, [workbench, navigationUri, canGoBack, canGoForward, canGoUp, onNavigate, onGoBack, onGoForward, onGoUp, appType]);
-	if (!workbench) {
-		return <SketchpadStartupFallback />;
-	}
-	return (
-		<WorkbenchView
-			workbench={workbench}
-			defaultAppId={appType}
-			uri={navigationUri}
-			onNavigate={onNavigate}
-			canGoBack={canGoBack}
-			onGoBack={onGoBack}
-			canGoForward={canGoForward}
-			onGoForward={onGoForward}
-			canGoUp={canGoUp}
-			onGoUp={onGoUp}
-			className={getLevelBgClass(0)}
-			slotToolbar={toolbarSlot}
-			initialPanelVisibility={initialPanelVisibility}
-			augmentPanelTabs={augmentPanelTabs}
-		/>
-	);
-};
-//#endregion 🔖SketchpadDeclarativeShell
-
-// #region 📝Sketchpad Components
+// #region ­ƒôØSketchpad Components
 // Top-level sketchpad React components for rendering the complete application.
 /**
  * ToolbarContextHost holds the data fields for a ToolbarContextHost record.
@@ -23334,7 +23030,7 @@ const SketchpadContent: FC = () => {
  * Sketchpad holds the data fields for a Sketchpad record.
  **/
 /**
- * Host shell: persistence is opened via {@link useAttachBackbone} from `@semio/react` inside kit UI (WIP until JS stores land); factories here only bridge pickers → registry.
+ * Host shell: persistence is opened via {@link useAttachBackbone} from `@semio/react` inside kit UI (WIP until JS stores land); factories here only bridge pickers ÔåÆ registry.
  */
 const Sketchpad = ({
   id,
@@ -23407,26 +23103,26 @@ const Sketchpad = ({
   return <BrowserRouter unstable_useTransitions={false}>{routerContent}</BrowserRouter>;
 };
 
-// #endregion 📝Sketchpad Components
+// #endregion ­ƒôØSketchpad Components
 
 export { Sketchpad };
 
 // #endregion Apps
 
-//#endregion 🛎️SketchpadCore
+//#endregion ­ƒøÄ´©ÅSketchpadCore
 
-// #region 🔩ConsolidatedApps
+// #region ­ƒö®ConsolidatedApps
 // All app modules consolidated from individual files.
 
-// #region ⏱️Kit
+// #region ÔÅ▒´©ÅKit
 // Consolidated from Kit.tsx
 
-// #region ⛩️Imports
+// #region Ôø®´©ÅImports
 // Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
-// #endregion ⛩️Imports
+// #endregion Ôø®´©ÅImports
 
-// #region 🏗️Design Family Helpers
+// #region ­ƒÅù´©ÅDesign Family Helpers
 // Design family helper functions MUST traverse the design hierarchy to collect related design IDs.
 
 /** getDesignFamilyIds holds the data fields for a getDesignFamilyIds record.
@@ -23455,9 +23151,9 @@ const getDesignFamilyIds = (kit: Kit, designId: string): Set<string> => {
   return ids;
 };
 
-// #endregion 🏗️Design Family Helpers
+// #endregion ­ƒÅù´©ÅDesign Family Helpers
 
-// #region 🎞️Constants
+// #region ­ƒÄ×´©ÅConstants
 // Constants MUST define artifact kinds for the Kit app.
 
 /**
@@ -23465,9 +23161,9 @@ const getDesignFamilyIds = (kit: Kit, designId: string): Set<string> => {
  **/
 const artifactKinds = ["designs", "types", "qualities", "ports", "files", "folders", "authors"];
 
-// #endregion 🎞️Constants
+// #endregion ­ƒÄ×´©ÅConstants
 
-// #region 📨Internal State Management
+// #region ­ƒô¿Internal State Management
 // Internal state management MUST define all Kit app types, interfaces, store, and sync state management.
 
 /**
@@ -23613,14 +23309,14 @@ export type KitAppSortDirection = "asc" | "desc";
  * Tuned for the Kit app's relational artifact graph (types, designs, ports, etc.)
  * with KIT_DIAGRAM_NODE_SCALE=0.6 (base ~30px nodes).
  *
- * chargeStrength:  -120  — Scaled down for smaller nodes. Provides enough repulsion
+ * chargeStrength:  -120  ÔÇö Scaled down for smaller nodes. Provides enough repulsion
  *                          to separate 30px nodes without excessive spread.
  *                          Within slider range [-500, 0].
- * linkDistance:       50  — Short link rest length matching smaller node footprint.
+ * linkDistance:       50  ÔÇö Short link rest length matching smaller node footprint.
  *                          Keeps connected nodes close for a compact graph.
- * collideRadius:     ~18  — KIT_DIAGRAM_COLLIDE_RADIUS * 1.2, just above half the
+ * collideRadius:     ~18  ÔÇö KIT_DIAGRAM_COLLIDE_RADIUS * 1.2, just above half the
  *                          largest frame dimension (~30px). Prevents overlap with minimal gap.
- * centerStrength:    0.12 — Slightly stronger centering to keep the smaller, lighter
+ * centerStrength:    0.12 ÔÇö Slightly stronger centering to keep the smaller, lighter
  *                          graph anchored near viewport center.
  *
  **/
@@ -24337,7 +24033,7 @@ if (typeof window !== "undefined") {
   registerKitAppStoreFactory((parent, syncMap, transact, id, state) => new KitAppStoreImpl(parent, syncMap, transact, id, state as any));
 }
 
-// #region 🧨Kit KitAppView Plugin Registration
+// #region ­ƒº¿Kit KitAppView Plugin Registration
 // Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.
 
 /**
@@ -24466,7 +24162,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🧨Kit KitAppView Plugin Registration
+// #endregion ­ƒº¿Kit KitAppView Plugin Registration
 
 /**
  * Overload: returns the KitStore instance when no selector is provided.
@@ -24887,7 +24583,7 @@ export function useKitAppCommands(id?: KitAppId) {
   };
 }
 
-//#region 🥁Action Hooks
+//#region ­ƒÑüAction Hooks
 // Action hooks MUST provide composable React hooks for Kit app selection, hover, sort, filter, and transaction actions.
 
 /**
@@ -24996,7 +24692,7 @@ export function useKitAppClearSelection(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #region 🗼Selection Helper Hooks
+// #region ­ƒù╝Selection Helper Hooks
 // Selection helper hooks MUST provide entity-specific add, remove, toggle, select-single, select-all, and clear operations.
 
 /**
@@ -25084,7 +24780,7 @@ function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensio
   return { useAdd, useRemove, useToggle, useSelectSingle, useSelect, useClear };
 }
 
-// #region 📸Types Selection Hooks
+// #region ­ƒô©Types Selection Hooks
 // Types selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for type selection.
 
 /**
@@ -25188,9 +24884,9 @@ export function useKitAppClearTypes(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 📸Types Selection Hooks
+// #endregion ­ƒô©Types Selection Hooks
 
-// #region 📦Designs Selection Hooks
+// #region ­ƒôªDesigns Selection Hooks
 // Designs selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for design selection.
 
 /**
@@ -25294,9 +24990,9 @@ export function useKitAppClearDesigns(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
-// #endregion 📦Designs Selection Hooks
+// #endregion ­ƒôªDesigns Selection Hooks
 
-// #region 🪅Qualities Selection Hooks
+// #region ­ƒ¬àQualities Selection Hooks
 // Qualities selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for quality selection.
 
 /**
@@ -25316,7 +25012,7 @@ export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: st
   return [action, canAct];
 }
 
-// 📑#region 📌Design
+// ­ƒôæ#region ­ƒôîDesign
 const KitSectionLazy = KitSection;
 
 /**
@@ -25518,9 +25214,9 @@ export interface DesignAppCommandResult extends KitDiffAppCommandResult<DesignAp
   diff?: DesignAppDiff;
 }
 
-// #endregion 📌Types
+// #endregion ­ƒôîTypes
 
-// #region 💧Commands
+// #region ­ƒÆºCommands
 // Commands MUST define all executable Design app actions dispatched by keyboard shortcuts and UI interactions.
 
 /**
@@ -26013,9 +25709,9 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
   },
 };
 
-// #endregion 💧Commands
+// #endregion ­ƒÆºCommands
 
-// #region 🎈Store
+// #region ­ƒÄêStore
 // Store MUST implement DesignStore extending PlainKitDiffAppStore with undo/redo, selection diff inversion, and state persistence.
 
 /**
@@ -26304,7 +26000,7 @@ function initializeDesignStore() {
   registerDesignAppStoreFactory((parent: any, id: any, state: any) => new DesignStore(parent, id, state));
 }
 
-// #region 🗝️Design App Plugin Registration
+// #region ­ƒùØ´©ÅDesign App Plugin Registration
 // Design app plugin registration MUST register the Design app plugin with machine actions, guards, and default state.
 
 /**
@@ -26471,7 +26167,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🗝️Design App Plugin Registration
+// #endregion ­ƒùØ´©ÅDesign App Plugin Registration
 
 /**
  * DesignAppShell holds the data fields for a DesignAppShell record.
@@ -26494,7 +26190,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   return <>{children}</>;
 };
 
-// #region 🦀Hooks
+// #region ­ƒªÇHooks
 // Hooks MUST provide the Design app initialization lifecycle within the React component tree.
 
 /** useDesignAppInitialize holds the data fields for a useDesignAppInitialize record.
@@ -26536,9 +26232,9 @@ function useDesignAppInitialize() {
   }, [actor, kitId, designId]);
 }
 
-// #endregion 🦀Store
+// #endregion ­ƒªÇStore
 
-// #region 🎖️Components
+// #region ­ƒÄû´©ÅComponents
 // Components MUST provide Design app scope, actor context, and synchronization wrapper components.
 
 /**
@@ -27307,7 +27003,7 @@ export function useDesignAppRemoveRepresentationTagFromAllTypes(): ActionHookRes
 }
 
 /**
- * @emoji 🧾 Local change-batch callbacks for the Design app shell (delegates to {@link semio.designApp.startNewChange} commands).
+ * @emoji ­ƒº¥ Local change-batch callbacks for the Design app shell (delegates to {@link semio.designApp.startNewChange} commands).
  **/
 export interface ChangeActions {
   start: () => void;
@@ -27591,7 +27287,7 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designId: Id]> {
   return [action, !!store];
 }
 
-// #endregion 🎖️Action Hooks
+// #endregion ­ƒÄû´©ÅAction Hooks
 
 /**
  * Synchronizes Y.js document changes to XState Design app state.
@@ -27930,7 +27626,7 @@ class HoverPiecesStore {
  * HoverPiecesStoreContext holds a stable store reference for granular hover subscriptions.
  **/
 const HoverPiecesStoreContext = createContext<HoverPiecesStore | null>(null);
-// [🏘️semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
+// [­ƒÅÿ´©Åsemio­ƒôÜjs­ƒùâ´©Åsketchpad­ƒÆ╗design­ƒöûstore­ƒøá´©Åcomputehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
 /**
  * computeHoverData holds the data fields for a computeHoverData record.
  **/
@@ -28365,7 +28061,7 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Id): Plane | 
   return plane ?? undefined;
 }
 
-// #region 🎮Footer
+// #region ­ƒÄ«Footer
 // Footer MUST render dynamic Design app footer items showing selection and transaction state.
 
 /**
@@ -28498,9 +28194,9 @@ export const DesignAppFooter: FC = () => {
   );
 };
 
-// #endregion 🎮Footer
+// #endregion ­ƒÄ«Footer
 
-// #region ⛅Filters
+// #region ÔøàFilters
 // Design filter context MUST provide visibility state for pieces, connections, and ports via URL search params.
 
 type DesignFilterKind = "pieces" | "connections" | "ports";
@@ -28550,9 +28246,9 @@ const DesignFilterProvider: FC<{ children: React.ReactNode }> = ({ children }) =
 
 const useDesignFilters = () => useContext(DesignFilterContext);
 
-// #endregion ⛅Filters
+// #endregion ÔøàFilters
 
-// #region 🩻Tools
+// #region ­ƒ®╗Tools
 // Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
 
 /**
@@ -28742,9 +28438,9 @@ export const DesignLassoSettings: FC = () => {
   );
 };
 
-// #endregion 🩻Tools
+// #endregion ­ƒ®╗Tools
 
-// #region 🌙Toolbar
+// #region ­ƒîÖToolbar
 // Toolbar components MUST provide filter functionality for the Design app.
 
 /**
@@ -28805,13 +28501,13 @@ const DesignToolbarFilters: FC = () => {
   );
 };
 
-// #endregion 🌙Toolbar
+// #endregion ­ƒîÖToolbar
 
-// #endregion 🎈Tools
+// #endregion ­ƒÄêTools
 
-// #region 🗑️Panels
+// #region ­ƒùæ´©ÅPanels
 
-// #region 🎈WindowLibrary
+// #region ­ƒÄêWindowLibrary
 // WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
 /**

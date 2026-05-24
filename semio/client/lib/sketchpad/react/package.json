@@ -12,6 +12,8 @@
     "@elements/board": "workspace:*",
     "@elements/scene": "workspace:*",
     "@elements/topology": "workspace:*",
+    "@elements/ui": "workspace:*",
+    "@elements/ui-shell": "workspace:*",
     "fflate": "^0.8.2",
     "@semio/js": "*",
     "@semio/react": "*",

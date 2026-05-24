@@ -616,3 +616,225 @@ export function unregisterDeclarativeSidePanelBody(bodyKey: string): void {
 	declarativeSidePanelBodyByKey.delete(bodyKey);
 }
 //#endregion 🔖DeclarativeSidePanelBody
+
+//#region 🔖ExtensionContributes
+/** @emoji 🧩 Static app contribution merged by {@link ShellExtensionHost} before {@link WorkbenchApp} construction. */
+export interface ShellExtensionAppContribute {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly controllerId: string;
+	readonly windowKinds: readonly {
+		readonly id: string;
+		readonly label: string;
+		readonly bodyKey: string;
+		readonly iconId?: string;
+		readonly measures?: readonly ShellWindowMeasure[];
+	}[];
+	readonly defaultLayout: WindowLayout;
+	readonly defaultModeId?: string;
+	readonly modes?: readonly {
+		readonly id: string;
+		readonly label: string;
+		readonly iconId?: string;
+		readonly tools?: ShellAppTools;
+		readonly windowKinds?: readonly WorkbenchWindowKind[];
+		readonly defaultLayout?: WindowLayout;
+	}[];
+	readonly tools?: ShellAppTools;
+	readonly leftTabs?: readonly ShellSideTabSpec[];
+	readonly rightTabs?: readonly ShellSideTabSpec[];
+	readonly footerItems?: readonly ShellFooterItem[];
+	readonly findItems?: readonly ShellFindItem[];
+}
+
+/** @emoji 📦 VS Code–style `contributes` block (serializable); runtime bodies register in {@link ShellExtension.activate}. */
+export interface ShellExtensionContributes {
+	readonly apps?: readonly ShellExtensionAppContribute[];
+	readonly commands?: readonly {
+		readonly id: string;
+		readonly controllerId: string;
+		readonly command: string;
+		readonly title?: string;
+	}[];
+}
+
+/** @emoji 🧾 Extension package descriptor (id + contributes); optional {@link ShellExtension} module. */
+export interface ShellExtensionManifest {
+	readonly id: string;
+	readonly label?: string;
+	readonly version?: string;
+	readonly contributes: ShellExtensionContributes;
+}
+
+/** @emoji 🔌 Disposable returned from {@link ShellExtensionContext.subscribe}. */
+export interface ShellExtensionSubscription {
+	dispose(): void;
+}
+
+/** @emoji 🧰 Activation context: workbench, manifest, and registration helpers (VS Code `ExtensionContext` analogue). */
+export class ShellExtensionContext {
+	private readonly disposables: ShellExtensionSubscription[] = [];
+
+	constructor(
+		readonly workbench: Workbench,
+		readonly manifest: ShellExtensionManifest,
+	) {}
+
+	/** @emoji 📝 Registers a declarative window body scoped to this extension activation. */
+	registerDeclarativeWindowBody(bodyKey: string, build: (ctx: ShellWindowBodyViewContext) => UiNode): void {
+		registerDeclarativeWindowBody(bodyKey, build);
+		this.disposables.push({
+			dispose: () => unregisterDeclarativeWindowBody(bodyKey),
+		});
+	}
+
+	/** @emoji 📝 Registers a declarative side-panel body scoped to this extension activation. */
+	registerDeclarativeSidePanelBody(bodyKey: string, build: (ctx: ShellSidePanelBodyViewContext) => UiNode): void {
+		registerDeclarativeSidePanelBody(bodyKey, build);
+		this.disposables.push({
+			dispose: () => unregisterDeclarativeSidePanelBody(bodyKey),
+		});
+	}
+
+	/** @emoji ➕ Adds a {@link WorkbenchApp} built from static {@link ShellExtensionAppContribute} rows. */
+	addContributedApps(getController: (controllerId: string) => Controller | undefined): void {
+		for (const spec of this.manifest.contributes.apps ?? []) {
+			const controller = getController(spec.controllerId);
+			if (!controller) continue;
+			const windowKinds = spec.windowKinds.map((wk) => new WorkbenchWindowKind(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+			const app = new WorkbenchApp(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
+			if (spec.defaultModeId) app.defaultModeId = spec.defaultModeId;
+			if (spec.tools) app.tools = spec.tools;
+			if (spec.leftTabs?.length) app.leftTabs = [...spec.leftTabs];
+			if (spec.rightTabs?.length) app.rightTabs = [...spec.rightTabs];
+			if (spec.footerItems?.length) app.footerItems = [...spec.footerItems];
+			if (spec.findItems?.length) app.findItems = [...spec.findItems];
+			for (const modeSpec of spec.modes ?? []) {
+				const mode = new WorkbenchMode(modeSpec.id, modeSpec.label, modeSpec.iconId);
+				if (modeSpec.tools) mode.tools = modeSpec.tools;
+				if (modeSpec.windowKinds?.length) mode.windowKinds = [...modeSpec.windowKinds];
+				if (modeSpec.defaultLayout) mode.defaultLayout = modeSpec.defaultLayout;
+				app.addMode(mode);
+			}
+			this.workbench.addApp(app);
+			this.disposables.push({
+				dispose: () => {
+					const index = this.workbench.apps.findIndex((entry) => entry.id === spec.id);
+					if (index >= 0) this.workbench.apps.splice(index, 1);
+				},
+			});
+		}
+	}
+
+	subscribe(listener: ShellSubscriber): ShellExtensionSubscription {
+		const unsubscribe = this.workbench.subscribe(listener);
+		const sub: ShellExtensionSubscription = {
+			dispose: () => unsubscribe(),
+		};
+		this.disposables.push(sub);
+		return sub;
+	}
+
+	disposeAll(): void {
+		for (const disposable of this.disposables.splice(0)) disposable.dispose();
+	}
+}
+
+/** @emoji 🧩 Runtime extension module (`activate` / `deactivate`). */
+export interface ShellExtension {
+	readonly id: string;
+	activate(context: ShellExtensionContext): void | Promise<void>;
+	deactivate?(): void | Promise<void>;
+}
+
+/** @emoji 🏗️ Loads extension manifests, activates modules, and owns contributed {@link WorkbenchApp} rows. */
+export class ShellExtensionHost {
+	private readonly extensions = new Map<string, { manifest: ShellExtensionManifest; module?: ShellExtension }>();
+	private readonly contexts = new Map<string, ShellExtensionContext>();
+	private activated = false;
+
+	constructor(readonly workbench: Workbench) {}
+
+	register(manifest: ShellExtensionManifest, module?: ShellExtension): void {
+		if (module && module.id !== manifest.id) {
+			throw new Error(`Extension module id "${module.id}" does not match manifest id "${manifest.id}".`);
+		}
+		this.extensions.set(manifest.id, { manifest, module });
+	}
+
+	getControllerById(controllerId: string): Controller | undefined {
+		for (const app of this.workbench.apps) {
+			if (app.controller.id === controllerId) return app.controller;
+		}
+		return undefined;
+	}
+
+	async activateAll(getController: (controllerId: string) => Controller | undefined): Promise<void> {
+		if (this.activated) return;
+		this.activated = true;
+		for (const { manifest, module } of this.extensions.values()) {
+			const context = new ShellExtensionContext(this.workbench, manifest);
+			this.contexts.set(manifest.id, context);
+			context.addContributedApps(getController);
+			if (module) await module.activate(context);
+		}
+	}
+
+	async deactivateAll(): Promise<void> {
+		for (const [id, { module }] of [...this.extensions.entries()].reverse()) {
+			await module?.deactivate?.();
+			this.contexts.get(id)?.disposeAll();
+			this.contexts.delete(id);
+		}
+		this.activated = false;
+	}
+}
+//#endregion 🔖ExtensionContributes
+
+//#region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("ShellExtensionHost", () => {
+		it("merges contributed apps and declarative window bodies", async () => {
+			class TCtrl extends Controller {
+				override run(): void {}
+			}
+			const bus = new CommandBus();
+			const wb = new Workbench();
+			const ctrl = new TCtrl("ext-ctrl", bus, () => wb.notify());
+			const host = new ShellExtensionHost(wb);
+			host.register(
+				{
+					id: "demo.ext",
+					contributes: {
+						apps: [
+							{
+								id: "demo-app",
+								label: "Demo",
+								controllerId: "ext-ctrl",
+								windowKinds: [{ id: "main", label: "Main", bodyKey: "demo.ext.main" }],
+								defaultLayout: createTabStackLayout(["main"], ["Main"]),
+							},
+						],
+					},
+				},
+				{
+					id: "demo.ext",
+					activate(ctx) {
+						ctx.registerDeclarativeWindowBody("demo.ext.main", () => ({
+							type: "text",
+							value: "hello",
+						}));
+					},
+				},
+			);
+			await host.activateAll((id) => (id === "ext-ctrl" ? ctrl : undefined));
+			expect(wb.apps.some((app) => app.id === "demo-app")).toBe(true);
+			const factory = getDeclarativeWindowBodyFactory("demo.ext.main");
+			expect(factory?.({ workbench: wb, windowKindId: "main", bodyKey: "demo.ext.main", activeModeId: null, generation: 0 }).type).toBe("text");
+		});
+	});
+}
+//#endregion 🧪Tests

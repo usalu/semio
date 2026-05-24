@@ -435,11 +435,20 @@ export const SpatialDetailsPanelBody: React.FC = () => {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	const topologyJson = (await import("@elements/geometry-spatial-js/fixtures/topology.json")).default;
+	const reactTestFixture = parseTopologicFixtureV1({
+		schema: "elements.geometry.topologic.fixture/v1",
+		label: "React panel harness",
+		roots: ["topology-root"],
+		topologies: [
+			{ id: "topology-root", kind: "topology", members: ["cell-a", "cell-b"] },
+			{ id: "cell-a", kind: "cell", shells: [] },
+			{ id: "cell-b", kind: "cell", shells: [] },
+		],
+	});
 
 	describe("spatial react surface", () => {
 		it("uses dedicated workbench and details panels for filtering and selection", async () => {
-			const fixture = parseTopologicFixtureV1(topologyJson);
+			const fixture = reactTestFixture;
 			expect(fixture).not.toBeNull();
 			const model = buildSpatialModel(fixture!);
 			const selectedCellId = model.listByKind("cell")[0]?.id ?? null;

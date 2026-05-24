@@ -1,0 +1,8 @@
+{
+  "title": "Sketchpad Declarative Ui Shell",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Migrate sketchpad to declarative Workbench apps (Apps, WindowKinds, Modes) via @elements/ui-shell; add VSCode-like extension API to elements/core; drop React app components.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": []
+}
