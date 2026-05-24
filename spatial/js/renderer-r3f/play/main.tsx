@@ -6,6 +6,7 @@ import {
 	loadSpatialInteractionPreset,
 	parseTopologyGraphJson,
 	type InteractionSpec,
+	type InteractionRuntimeOptions,
 	type ModelDocument,
 	TopologyGraph,
 } from "@spatial/js-core";
@@ -17,7 +18,12 @@ import geometryTallBuilding from "../../../fixtures/tall-building.topology.json"
 import geometryLargeBuilding from "../../../fixtures/large-building.topology.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
-import { InteractionRepl, useInteractionRuntime, useDocumentHistory } from "../index.tsx";
+import {
+	DocumentHistory,
+	InteractionRepl,
+	useDocumentHistory,
+	useInteractionRuntime,
+} from "../index.tsx";
 
 //#region 🔖GeometryCatalog
 const GEOMETRY_ASSETS = [
@@ -28,6 +34,55 @@ const GEOMETRY_ASSETS = [
 	{ id: "tall-building", key: "t", label: "Tall building (680 verts)", json: geometryTallBuilding as Record<string, unknown> },
 	{ id: "large-building", key: "b", label: "Large building (12,370 verts)", json: geometryLargeBuilding as Record<string, unknown> },
 ] as const;
+//#endregion
+
+//#region 🔖PlaySession
+interface PlaySessionProps {
+	readonly presets: ReturnType<typeof listSpatialInteractionPresets>;
+	readonly interactionId: string;
+	readonly spec: InteractionSpec;
+	readonly onInteractionId: (id: string) => void;
+	readonly documentModel: ModelDocument;
+	readonly history: DocumentHistory;
+	readonly kernel: BrepjsKernel;
+	readonly asideExtra: ReactNode;
+}
+
+/** @emoji 🎮 One keyed mount owns `useInteractionRuntime` so the same preset can restart after `committed`. */
+function PlaySession({
+	presets,
+	interactionId,
+	spec,
+	onInteractionId,
+	documentModel,
+	history,
+	kernel,
+	asideExtra,
+}: PlaySessionProps) {
+	const rtOpts = useMemo(
+		(): InteractionRuntimeOptions => ({
+			kernel,
+			document: documentModel,
+			history,
+			stateEngine: statelyStateEngineProvider,
+		}),
+		[kernel, documentModel, history],
+	);
+	const rt = useInteractionRuntime(spec, rtOpts);
+	return (
+		<InteractionRepl
+			presets={presets}
+			interactionId={interactionId}
+			spec={spec}
+			onInteractionId={onInteractionId}
+			runtime={rt}
+			history={history}
+			document={documentModel}
+			geometry={documentModel.topology}
+			asideExtra={asideExtra}
+		/>
+	);
+}
 //#endregion
 
 //#region 🔖PlayApp
@@ -64,18 +119,6 @@ function PlayApp() {
 	const fallbackSpec = useMemo(() => loadSpatialInteractionPreset(presets[0]!.id)!, [presets]);
 	const activeSpec = spec ?? fallbackSpec;
 
-	const rtOpts = useMemo(
-		() => ({
-			kernel,
-			document: documentModel,
-			history,
-			stateEngine: statelyStateEngineProvider,
-		}),
-		[kernel, documentModel, history],
-	);
-
-	const rt = useInteractionRuntime(activeSpec, rtOpts);
-
 	const asideExtra: ReactNode = (
 		<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
 			Geometry asset
@@ -108,16 +151,15 @@ function PlayApp() {
 	}
 
 	return (
-		<InteractionRepl
+		<PlaySession
 			key={`${interactionId}:${interactionBootId}`}
 			presets={presets}
 			interactionId={interactionId}
 			spec={spec}
 			onInteractionId={handleInteractionPick}
-			runtime={rt}
+			documentModel={documentModel}
 			history={history}
-			document={documentModel}
-			geometry={documentModel.topology}
+			kernel={kernel}
 			asideExtra={asideExtra}
 		/>
 	);

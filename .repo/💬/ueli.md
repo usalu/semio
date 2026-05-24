@@ -2557,6 +2557,13 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+Introduce a new cypher inspired query language called "construct". It must be cypher inspired.
+Implement the efficient engine in c:\git\semio\spatial\js\query\index.ts . Use chevrotain for ast.
+Extend the core, the kernel, etc to be able to resolve them.
+Follow the architecture from.repo/✍️/construct.md
+
+---
+
 Generalize the current command mechanism.
 Introduce actions.
 Rename command to interaction.
