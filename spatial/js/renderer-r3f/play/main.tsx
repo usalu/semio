@@ -1,10 +1,11 @@
 /** @emoji 🎮 Vite entry: single command line + geometry catalog + `BrepjsKernel` + `@spatial/js-renderer-r3f`. */
-import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
 	createFactoryRuntime,
 	listKeyedFactoryTransitions,
 	listSpatialFactoryPresets,
+	type SpatialFactoryPreset,
 	loadSpatialFactoryPreset,
 	parseTopologyGraphJson,
 	resolveSpatialFactoryPresetKey,
@@ -127,6 +128,56 @@ function filterSuggestions(query: string, all: readonly PlaySuggestion[]): PlayS
 	if (!q) return [...all];
 	return all.filter((s) => suggestionHaystack(s).includes(q));
 }
+
+function factorySuggestionsFrom(all: readonly PlaySuggestion[]): PlaySuggestion[] {
+	return all.filter((s) => s.kind === "factory");
+}
+
+/** @emoji 🧭 Palette rows: factories stay visible; filter narrows the rest without hiding presets. */
+function paletteRows(cmdLine: string, all: readonly PlaySuggestion[]): PlaySuggestion[] {
+	const fac = factorySuggestionsFrom(all);
+	const hit = filterSuggestions(cmdLine, all);
+	if (!cmdLine.trim()) return hit;
+	const rest = hit.filter((s) => s.kind !== "factory");
+	const seen = new Set<string>();
+	const out: PlaySuggestion[] = [];
+	for (const s of [...fac, ...rest]) {
+		const k = `${s.kind}:${s.key}:${s.detail}`;
+		if (seen.has(k)) continue;
+		seen.add(k);
+		out.push(s);
+	}
+	return out;
+}
+
+function isTextTypingTarget(t: EventTarget | null): boolean {
+	if (!t || !(t instanceof HTMLElement)) return false;
+	if (t.isContentEditable) return true;
+	const tag = t.tagName;
+	if (tag === "TEXTAREA" || tag === "SELECT") return true;
+	if (tag !== "INPUT") return false;
+	const ty = (t as HTMLInputElement).type;
+	return !["button", "checkbox", "radio", "range", "reset", "submit"].includes(ty);
+}
+
+/** @emoji 🔤 One underlined activation key glued to the human label (palette row). */
+function presentationWithUnderlinedKey(key: string, label: string): ReactNode {
+	return (
+		<>
+			<span style={{ textDecoration: "underline", fontWeight: 700 }}>{key}</span>
+			{label}
+		</>
+	);
+}
+
+function factoryPresetFromShortcutKey(evKey: string, presets: readonly SpatialFactoryPreset[]): SpatialFactoryPreset | null {
+	if (evKey.length !== 1) return null;
+	const k = evKey.toLowerCase();
+	for (const p of presets) {
+		if (p.key.toLowerCase() === k) return p;
+	}
+	return null;
+}
 //#endregion
 
 //#region 🔖PlaySession
@@ -160,6 +211,19 @@ function PlaySession({
 	const [suggestOpen, setSuggestOpen] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
 	const cmdRef = useRef<HTMLInputElement>(null);
+	const setCmdLineRef = useRef(setCmdLine);
+	useEffect(() => {
+		setCmdLineRef.current = setCmdLine;
+	}, [setCmdLine]);
+
+	useEffect(() => {
+		const snap = rt.getSnapshot();
+		const initial = spec.machine.initial;
+		if (snap.state !== initial) return;
+		const onMap = spec.machine.states[snap.state]?.on;
+		if (!onMap || !Object.prototype.hasOwnProperty.call(onMap, "start")) return;
+		void rt.send({ kind: "start", modifiers: {} });
+	}, [rt, spec]);
 
 	useEffect(() => {
 		console.log("[DEBUG] snapshot", snapshot.state, snapshot.revision, snapshot.capabilities);
@@ -222,7 +286,7 @@ function PlaySession({
 		return out;
 	}, [presets, spec, snapshot.state, onFactoryId, dispatchTransition, onCommit, rt]);
 
-	const filtered = useMemo(() => filterSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+	const filtered = useMemo(() => paletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 
 	useEffect(() => {
 		setActiveIndex((i) => (filtered.length ? Math.min(i, filtered.length - 1) : 0));
@@ -247,6 +311,12 @@ function PlaySession({
 			setCmdLine("");
 			return true;
 		}
+		const presetHit = resolveSpatialFactoryPresetKey(raw);
+		if (presetHit) {
+			onFactoryId(presetHit.id);
+			setCmdLine("");
+			return true;
+		}
 		const rows = listKeyedFactoryTransitions(spec, rt.getSnapshot().state);
 		for (const row of rows) {
 			if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") {
@@ -257,12 +327,6 @@ function PlaySession({
 				setCmdLine("");
 				return true;
 			}
-		}
-		const presetHit = resolveSpatialFactoryPresetKey(raw);
-		if (presetHit) {
-			onFactoryId(presetHit.id);
-			setCmdLine("");
-			return true;
 		}
 		if (raw.toLowerCase() === "m") {
 			void onCommit();
@@ -314,22 +378,38 @@ function PlaySession({
 	);
 
 	useEffect(() => {
-		const onWin = (e: KeyboardEvent) => {
-			const t = e.target as HTMLElement | null;
-			if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA") && t !== cmdRef.current) return;
+		const onWinCapture = (e: KeyboardEvent) => {
+			if (e.defaultPrevented || e.isComposing) return;
+			if (e.ctrlKey || e.metaKey || e.altKey) return;
+			const t = e.target;
+			const one = e.key.length === 1 ? e.key : "";
+			if (one) {
+				const fac = factoryPresetFromShortcutKey(one, presets);
+				if (fac) {
+					if (isTextTypingTarget(t) && t !== cmdRef.current) return;
+					e.preventDefault();
+					e.stopPropagation();
+					onFactoryId(fac.id);
+					setCmdLineRef.current("");
+					return;
+				}
+			}
+			if (isTextTypingTarget(t) && t !== cmdRef.current) return;
 			if (e.key === "m" || e.key === "M") {
 				e.preventDefault();
+				e.stopPropagation();
 				void onCommit();
 				return;
 			}
 			if (e.key === "r" || e.key === "R") {
 				e.preventDefault();
+				e.stopPropagation();
 				rt.undo();
 			}
 		};
-		window.addEventListener("keydown", onWin);
-		return () => window.removeEventListener("keydown", onWin);
-	}, [rt, onCommit]);
+		window.addEventListener("keydown", onWinCapture, true);
+		return () => window.removeEventListener("keydown", onWinCapture, true);
+	}, [rt, onCommit, presets, onFactoryId]);
 
 	const onGroundPick = useCallback(
 		(_p: Vec3, _ev: FactoryEvent) => {
@@ -390,6 +470,8 @@ function PlaySession({
 					flexDirection: "column",
 					gap: 10,
 					overflow: "auto",
+					position: "relative",
+					zIndex: 2,
 				}}
 			>
 				<strong>Spatial play</strong>
@@ -442,6 +524,7 @@ function PlaySession({
 					</label>
 					{suggestOpen && filtered.length ? (
 						<div
+							onPointerDown={(e) => e.stopPropagation()}
 							style={{
 								position: "absolute",
 								left: 0,
@@ -453,7 +536,7 @@ function PlaySession({
 								background: "#0c0c14",
 								border: "1px solid #3a3a55",
 								borderRadius: 6,
-								zIndex: 20,
+								zIndex: 10050,
 								boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
 							}}
 						>
@@ -461,8 +544,11 @@ function PlaySession({
 								<button
 									key={`${s.kind}-${s.key}-${s.detail}-${idx}`}
 									type="button"
-									onMouseDown={(e) => e.preventDefault()}
-									onClick={() => runSuggestion(s)}
+									onPointerDown={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										runSuggestion(s);
+									}}
 									style={{
 										display: "block",
 										width: "100%",
@@ -478,8 +564,7 @@ function PlaySession({
 									onMouseEnter={() => setActiveIndex(idx)}
 								>
 									<span style={{ opacity: 0.65 }}>{kindLabel(s.kind)}</span>{" "}
-									<span style={{ textDecoration: "underline", fontWeight: 700 }}>{s.key}</span>{" "}
-									{s.label}
+									{presentationWithUnderlinedKey(s.key, s.label)}
 									<span style={{ opacity: 0.55, marginLeft: 6 }}>{s.detail}</span>
 								</button>
 							))}
@@ -487,14 +572,8 @@ function PlaySession({
 					) : null}
 				</div>
 				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
-					Factories use keys <u>q</u> <u>j</u> <u>k</u> (listed first). Value-style transitions:{" "}
-					<code>h 2.5</code>, <code>n 0.4</code>, <code>w 2 1.5</code>. Geometry assets use keys{" "}
-					{GEOMETRY_ASSETS.map((g) => (
-						<code key={g.id}>
-							{g.key}
-						</code>
-					))}{" "}
-					in the dropdown only. Global <u>m</u> commit / <u>r</u> undo when focus is outside inputs.
+					Keys <u>q</u>/<u>j</u>/<u>k</u> switch factory from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, except while typing in other text fields. Choosing the same factory again restarts its session; presets that begin in <code>idle</code> with a <code>start</code> transition auto-enter picking. Value-style commands:{" "}
+					<code>h 2.5</code>, <code>n 0.4</code>, <code>w 2 1.5</code>. Geometry asset uses the dropdown above.
 				</div>
 				{lastCell ? <div style={{ fontSize: 12 }}>Last cell: {lastCell}</div> : null}
 			</aside>
@@ -507,8 +586,20 @@ function PlaySession({
 function PlayApp() {
 	const presets = useMemo(() => listSpatialFactoryPresets(), []);
 	const [factoryId, setFactoryId] = useState(() => presets[0]?.id ?? "");
+	const [factoryBootId, setFactoryBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
 	const spec = useMemo<FactorySpec | null>(() => (factoryId ? loadSpatialFactoryPreset(factoryId) : null), [factoryId]);
+
+	const handleFactoryPick = useCallback(
+		(id: string) => {
+			if (id === factoryId) setFactoryBootId((b) => b + 1);
+			else {
+				setFactoryId(id);
+				setFactoryBootId(0);
+			}
+		},
+		[factoryId],
+	);
 
 	const interactionTopo = useMemo(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId) ?? GEOMETRY_ASSETS[0]!;
@@ -540,11 +631,11 @@ function PlayApp() {
 
 	return (
 		<PlaySession
-			key={factoryId}
+			key={`${factoryId}:${factoryBootId}`}
 			presets={presets}
 			factoryId={factoryId}
 			spec={spec}
-			onFactoryId={setFactoryId}
+			onFactoryId={handleFactoryPick}
 			documentModel={documentModel}
 			geometryAssetId={geometryAssetId}
 			onGeometryAssetId={setGeometryAssetId}

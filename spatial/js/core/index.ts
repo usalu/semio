@@ -1344,7 +1344,10 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate(): Promise<MeshPreview> {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return {
+						positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+						indices: new Uint32Array([0, 1, 2]),
+					};
 				}
 			}
 			const spec = buildBoxFactorySpec();
@@ -1357,6 +1360,7 @@ if (import.meta.vitest) {
 			await rt.send({ kind: "set.height", value: 4 });
 			const cell = await rt.commit();
 			expect(cell).toBe("stub-cell");
+			expect(Object.keys(topo.faces).length).toBeGreaterThan(0);
 			expect(kernel.lastBox).toEqual({
 				cornerA: [0, 0, 0],
 				cornerB: [2, 3, 0],
