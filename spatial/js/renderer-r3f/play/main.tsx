@@ -1,4 +1,4 @@
-/** @emoji 🎮 Vite entry: multi-factory play + `BrepjsKernel` + `@spatial/js-renderer-r3f` viewport. */
+/** @emoji 🎮 Vite entry: single command line + geometry catalog + `BrepjsKernel` + `@spatial/js-renderer-r3f`. */
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -7,6 +7,7 @@ import {
 	listSpatialFactoryPresets,
 	loadSpatialFactoryPreset,
 	parseTopologyGraphJson,
+	resolveSpatialFactoryPresetKey,
 	type FactoryEvent,
 	type FactoryKeybindRow,
 	type FactoryRuntime,
@@ -14,153 +15,156 @@ import {
 	TopologyGraph,
 	type Vec3,
 } from "@spatial/js-core";
-import geometryJson from "../../../fixtures/geometry.json" with { type: "json" };
+import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json" };
+import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
+import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
-import {
-	FactoryCanvas,
-	FactorySpatialView,
-	useFactorySnapshot,
-	type MeshPreview,
-} from "../index.tsx";
+import { FactoryCanvas, FactorySpatialView, useFactorySnapshot, type MeshPreview } from "../index.tsx";
 
-function keyMatchesHotkey(keySpec: string, e: React.KeyboardEvent<HTMLInputElement>): boolean {
-	if (keySpec === "Enter") return e.key === "Enter";
-	if (keySpec.length === 1) return e.key.length === 1 && e.key.toLowerCase() === keySpec.toLowerCase();
-	return e.key === keySpec;
+//#region 🔖GeometryCatalog
+const GEOMETRY_ASSETS = [
+	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule (8 verts)", json: geometryNakagin as Record<string, unknown> },
+	{ id: "geometry-loom", key: "l", label: "Loom deck + pent loop + rail", json: geometryLoom as Record<string, unknown> },
+	{ id: "geometry-routes", key: "r", label: "Multi-route lattice (24 verts)", json: geometryRoutes as Record<string, unknown> },
+] as const;
+//#endregion
+
+//#region 🔖CommandParsing
+type PlaySuggestKind = "factory" | "transition" | "host";
+
+interface PlaySuggestion {
+	readonly kind: PlaySuggestKind;
+	readonly key: string;
+	readonly label: string;
+	readonly detail: string;
+	readonly transition?: FactoryKeybindRow;
+	readonly factoryId?: string;
+	readonly onRun: () => void;
+}
+
+function firstWireId(topo: TopologyGraph): string | null {
+	const ks = Object.keys(topo.wires);
+	return ks.length ? topo.wires[ks[0]!]!.id : null;
+}
+
+function firstFaceId(topo: TopologyGraph): string | null {
+	const ks = Object.keys(topo.faces);
+	return ks.length ? topo.faces[ks[0]!]!.id : null;
 }
 
 function buildDispatchEvent(
 	row: FactoryKeybindRow,
 	opts: {
 		readonly factoryId: string;
-		readonly heightStr: string;
-		readonly lwLen: string;
-		readonly lwWid: string;
-		readonly dimStr: string;
+		readonly topo: TopologyGraph;
 	},
 ): FactoryEvent | null {
-	const { factoryId, heightStr, lwLen, lwWid, dimStr } = opts;
+	const { factoryId, topo } = opts;
 	if (row.eventKind === "set.height") {
-		const v = Number(heightStr);
-		if (!Number.isFinite(v) || v <= 0) return null;
-		return { kind: "set.height", value: v, modifiers: {} };
+		return null;
 	}
 	if (row.eventKind === "set.distance") {
-		const v = Number(dimStr);
-		if (!Number.isFinite(v)) return null;
-		return { kind: "set.distance", value: v, modifiers: {} };
+		return null;
 	}
 	if (row.eventKind === "set.footprint") {
-		const L = Number(lwLen);
-		const W = Number(lwWid);
-		if (!Number.isFinite(L) || !Number.isFinite(W)) return null;
-		return { kind: "set.footprint", value: { length: L, width: W }, modifiers: {} };
+		return null;
 	}
 	if (row.eventKind === "selection.changed") {
 		if (factoryId === "feature.extrudeWire") {
-			return { kind: "selection.changed", wireId: "stub-wire", modifiers: {} };
+			const wid = firstWireId(topo);
+			if (!wid) return null;
+			return { kind: "selection.changed", wireId: wid, modifiers: {} };
 		}
 		if (factoryId === "feature.offsetSurface") {
-			return { kind: "selection.changed", surfaceId: "stub-surface", modifiers: {} };
+			const fid = firstFaceId(topo);
+			if (!fid) return null;
+			return { kind: "selection.changed", surfaceId: fid, modifiers: {} };
 		}
 		return { kind: "selection.changed", modifiers: {} };
 	}
 	return { kind: row.eventKind, modifiers: {} };
 }
 
-function KeybindChip({
-	row,
-	onActivate,
-}: {
-	readonly row: FactoryKeybindRow;
-	readonly onActivate: () => void;
-}): React.ReactNode {
-	return (
-		<button
-			type="button"
-			onClick={() => onActivate()}
-			style={{
-				fontSize: 12,
-				padding: "4px 8px",
-				borderRadius: 6,
-				border: "1px solid #3a3a55",
-				background: "#1a1a28",
-				color: "#e8e8f0",
-				cursor: "pointer",
-			}}
-		>
-			<span style={{ textDecoration: "underline", fontWeight: 700 }}>{row.key}</span>
-			<span style={{ marginLeft: 4 }}>{row.label}</span>
-		</button>
-	);
+function tryParseValueCommand(line: string, spec: FactorySpec, state: string): FactoryEvent | null {
+	const t = line.trim();
+	const m = t.match(/^(\S+)\s+(.+)$/);
+	if (!m) return null;
+	const head = m[1]!.toLowerCase();
+	const tail = m[2]!.trim();
+	const rows = listKeyedFactoryTransitions(spec, state);
+	for (const row of rows) {
+		if (row.eventKind === "set.height") {
+			if (head !== row.key.toLowerCase() && head !== "height") continue;
+			const v = Number(tail);
+			if (!Number.isFinite(v) || v <= 0) return null;
+			return { kind: "set.height", value: v, modifiers: {} };
+		}
+		if (row.eventKind === "set.distance") {
+			if (head !== row.key.toLowerCase() && head !== "dist" && head !== "distance") continue;
+			const v = Number(tail);
+			if (!Number.isFinite(v)) return null;
+			return { kind: "set.distance", value: v, modifiers: {} };
+		}
+		if (row.eventKind === "set.footprint") {
+			if (head !== row.key.toLowerCase() && head !== "footprint" && head !== "lw") continue;
+			const parts = tail.split(/\s+/);
+			const L = Number(parts[0]);
+			const W = Number(parts[1]);
+			if (!Number.isFinite(L) || !Number.isFinite(W)) return null;
+			return { kind: "set.footprint", value: { length: L, width: W }, modifiers: {} };
+		}
+	}
+	return null;
 }
 
+function suggestionHaystack(s: PlaySuggestion): string {
+	return `${s.key} ${s.label} ${s.detail}`.toLowerCase();
+}
+
+function filterSuggestions(query: string, all: readonly PlaySuggestion[]): PlaySuggestion[] {
+	const q = query.trim().toLowerCase();
+	if (!q) return [...all];
+	return all.filter((s) => suggestionHaystack(s).includes(q));
+}
+//#endregion
+
+//#region 🔖PlaySession
 interface PlaySessionProps {
-	readonly presets: ReadonlyArray<{ readonly id: string; readonly label: string }>;
+	readonly presets: ReturnType<typeof listSpatialFactoryPresets>;
 	readonly factoryId: string;
 	readonly spec: FactorySpec;
 	readonly onFactoryId: (id: string) => void;
+	readonly interactionTopo: TopologyGraph;
+	readonly geometryAssetId: string;
+	readonly onGeometryAssetId: (id: string) => void;
 }
 
-function PlaySession({ presets, factoryId, spec, onFactoryId }: PlaySessionProps) {
+function PlaySession({
+	presets,
+	factoryId,
+	spec,
+	onFactoryId,
+	interactionTopo,
+	geometryAssetId,
+	onGeometryAssetId,
+}: PlaySessionProps) {
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const geometry = useMemo(() => parseTopologyGraphJson(geometryJson), []);
 	const documentModel = useMemo(() => ({ topology: new TopologyGraph(), nodes: [] }), []);
 	const rt = useMemo<FactoryRuntime>(
 		() => createFactoryRuntime(spec, { kernel, document: documentModel }),
 		[spec, kernel, documentModel],
 	);
 	const snapshot = useFactorySnapshot(rt);
-	const [heightInput, setHeightInput] = useState("1.5");
-	const [lwLen, setLwLen] = useState("2");
-	const [lwWid, setLwWid] = useState("1.5");
-	const [dimInput, setDimInput] = useState("1");
 	const [committedMesh, setCommittedMesh] = useState<MeshPreview | null>(null);
 	const [lastCell, setLastCell] = useState<string | null>(null);
+	const [cmdLine, setCmdLine] = useState("");
+	const [suggestOpen, setSuggestOpen] = useState(true);
+	const [activeIndex, setActiveIndex] = useState(0);
 	const cmdRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		console.log("[DEBUG] snapshot", snapshot.state, snapshot.revision, snapshot.capabilities);
 	}, [snapshot]);
-
-	const keybinds = useMemo(
-		() => [...listKeyedFactoryTransitions(spec, snapshot.state)],
-		[spec, snapshot.state],
-	);
-
-	const dispatchRow = useCallback(
-		(row: FactoryKeybindRow) => {
-			const ev = buildDispatchEvent(row, {
-				factoryId: spec.id,
-				heightStr: heightInput,
-				lwLen,
-				lwWid,
-				dimStr: dimInput,
-			});
-			if (ev) void rt.send(ev);
-		},
-		[rt, spec, heightInput, lwLen, lwWid, dimInput],
-	);
-
-	const onGroundPick = useCallback(
-		(_p: Vec3) => {
-			const st = rt.getSnapshot().state;
-			const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
-			if (hi && st === hi) {
-				void rt.send({ kind: "confirm", modifiers: {} });
-				return;
-			}
-			void rt.send({ kind: "pointer.down", point: _p, modifiers: {} });
-		},
-		[rt],
-	);
-
-	const onScenePointerMove = useCallback(
-		(p: Vec3) => {
-			void rt.send({ kind: "pointer.move", point: p, modifiers: {} });
-		},
-		[rt],
-	);
 
 	const onCommit = useCallback(async () => {
 		const cell = await rt.commit();
@@ -172,23 +176,144 @@ function PlaySession({ presets, factoryId, spec, onFactoryId }: PlaySessionProps
 		}
 	}, [rt, kernel]);
 
-	const onCommandKeyDown = useCallback(
+	const dispatchTransition = useCallback(
+		(row: FactoryKeybindRow) => {
+			const ev = buildDispatchEvent(row, { factoryId: spec.id, topo: interactionTopo });
+			if (ev) void rt.send(ev);
+		},
+		[rt, spec.id, interactionTopo],
+	);
+
+	const allSuggestions = useMemo((): PlaySuggestion[] => {
+		const st = snapshot.state;
+		const rows = listKeyedFactoryTransitions(spec, st);
+		const out: PlaySuggestion[] = [];
+		for (const p of presets) {
+			out.push({
+				kind: "factory",
+				key: p.key,
+				label: p.label,
+				detail: p.id,
+				factoryId: p.id,
+				onRun: () => onFactoryId(p.id),
+			});
+		}
+		for (const row of rows) {
+			out.push({
+				kind: "transition",
+				key: row.key,
+				label: row.label,
+				detail: row.eventKind,
+				transition: row,
+				onRun: () => dispatchTransition(row),
+			});
+		}
+		out.push({
+			kind: "host",
+			key: "m",
+			label: "Commit solid",
+			detail: "host",
+			onRun: () => void onCommit(),
+		});
+		out.push({
+			kind: "host",
+			key: "r",
+			label: "Undo",
+			detail: "host",
+			onRun: () => rt.undo(),
+		});
+		return out;
+	}, [presets, spec, snapshot.state, onFactoryId, dispatchTransition, onCommit, rt]);
+
+	const filtered = useMemo(() => filterSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+
+	useEffect(() => {
+		setActiveIndex((i) => (filtered.length ? Math.min(i, filtered.length - 1) : 0));
+	}, [filtered.length, cmdLine]);
+
+	const runSuggestion = useCallback(
+		(s: PlaySuggestion) => {
+			s.onRun();
+			setCmdLine("");
+			setSuggestOpen(true);
+			setActiveIndex(0);
+		},
+		[],
+	);
+
+	const trySubmitLine = useCallback((): boolean => {
+		const raw = cmdLine.trim();
+		if (!raw) return false;
+		const valEv = tryParseValueCommand(raw, spec, rt.getSnapshot().state);
+		if (valEv) {
+			void rt.send(valEv);
+			setCmdLine("");
+			return true;
+		}
+		const rows = listKeyedFactoryTransitions(spec, rt.getSnapshot().state);
+		for (const row of rows) {
+			if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") {
+				continue;
+			}
+			if (row.key.toLowerCase() === raw.toLowerCase() || row.eventKind.toLowerCase() === raw.toLowerCase()) {
+				dispatchTransition(row);
+				setCmdLine("");
+				return true;
+			}
+		}
+		const presetHit = resolveSpatialFactoryPresetKey(raw);
+		if (presetHit) {
+			onFactoryId(presetHit.id);
+			setCmdLine("");
+			return true;
+		}
+		if (raw.toLowerCase() === "m") {
+			void onCommit();
+			setCmdLine("");
+			return true;
+		}
+		if (raw.toLowerCase() === "r") {
+			rt.undo();
+			setCmdLine("");
+			return true;
+		}
+		return false;
+	}, [cmdLine, spec, rt, dispatchTransition, onFactoryId, onCommit]);
+
+	const onInputKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
-			const k = e.key;
-			if (k === "Escape") {
+			if (e.key === "Escape") {
 				e.preventDefault();
-				e.currentTarget.value = "";
+				setCmdLine("");
+				setSuggestOpen(true);
 				return;
 			}
-			for (const row of listKeyedFactoryTransitions(spec, rt.getSnapshot().state)) {
-				if (!keyMatchesHotkey(row.key, e)) continue;
+			if (e.key === "ArrowDown" && filtered.length) {
 				e.preventDefault();
-				dispatchRow(row);
-				e.currentTarget.value = "";
+				setSuggestOpen(true);
+				setActiveIndex((i) => (i + 1) % filtered.length);
+				return;
+			}
+			if (e.key === "ArrowUp" && filtered.length) {
+				e.preventDefault();
+				setSuggestOpen(true);
+				setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length);
+				return;
+			}
+			if (e.key === "Tab" && filtered.length) {
+				e.preventDefault();
+				setSuggestOpen(true);
+				runSuggestion(filtered[activeIndex]!);
+				return;
+			}
+			if (e.key === "Enter") {
+				e.preventDefault();
+				if (trySubmitLine()) return;
+				if (filtered.length) runSuggestion(filtered[activeIndex]!);
 				return;
 			}
 		},
-		[rt, spec, dispatchRow],
+		[filtered, activeIndex, suggestOpen, runSuggestion, trySubmitLine],
 	);
 
 	useEffect(() => {
@@ -209,6 +334,26 @@ function PlaySession({ presets, factoryId, spec, onFactoryId }: PlaySessionProps
 		return () => window.removeEventListener("keydown", onWin);
 	}, [rt, onCommit]);
 
+	const onGroundPick = useCallback(
+		(_p: Vec3, _ev: FactoryEvent) => {
+			const st = rt.getSnapshot().state;
+			const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
+			if (hi && st === hi) {
+				void rt.send({ kind: "confirm", modifiers: {} });
+				return;
+			}
+			void rt.send({ kind: "pointer.down", point: _p, modifiers: {} });
+		},
+		[rt],
+	);
+
+	const onScenePointerMove = useCallback(
+		(p: Vec3) => {
+			void rt.send({ kind: "pointer.move", point: p, modifiers: {} });
+		},
+		[rt],
+	);
+
 	const pointerMoveActive = useMemo(() => {
 		const si = snapshot.spatialInteraction;
 		return (
@@ -223,6 +368,8 @@ function PlaySession({ presets, factoryId, spec, onFactoryId }: PlaySessionProps
 		? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state)
 		: false;
 
+	const kindLabel = (k: PlaySuggestKind) => (k === "factory" ? "Factory" : k === "transition" ? "Transition" : "Host");
+
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
 			<div style={{ flex: 1, minWidth: 0 }} key={factoryId}>
@@ -233,107 +380,144 @@ function PlaySession({ presets, factoryId, spec, onFactoryId }: PlaySessionProps
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						committedMesh={committedMesh}
-						geometry={geometry}
+						geometry={interactionTopo}
 					/>
 				</FactoryCanvas>
 			</div>
 			<aside
 				style={{
-					width: 340,
+					width: 360,
 					padding: 12,
 					background: "#12121c",
 					borderLeft: "1px solid #2a2a3a",
 					display: "flex",
 					flexDirection: "column",
 					gap: 10,
+					overflow: "auto",
 				}}
 			>
-				<strong>Spatial / factory play</strong>
+				<strong>Spatial play</strong>
 				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-					Factory
+					Geometry asset
 					<select
-						value={factoryId}
-						onChange={(e) => {
-							onFactoryId(e.target.value);
-							setCommittedMesh(null);
-							setLastCell(null);
-						}}
+						value={geometryAssetId}
+						onChange={(e) => onGeometryAssetId(e.target.value)}
 						style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
 					>
-						{presets.map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.label}
+						{GEOMETRY_ASSETS.map((g) => (
+							<option key={g.id} value={g.id}>
+								[{g.key}] {g.label}
 							</option>
 						))}
 					</select>
 				</label>
-				<div>State: {snapshot.state}</div>
-				<div>Revision: {snapshot.revision}</div>
-				<div>Can commit: {String(snapshot.capabilities.canCommit)}</div>
-				<div>Can undo: {String(snapshot.capabilities.canUndo)}</div>
-				<div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-					{keybinds.map((row) => (
-						<KeybindChip key={`${row.eventKind}-${row.key}-${row.label}`} row={row} onActivate={() => dispatchRow(row)} />
-					))}
+				<div style={{ fontSize: 12, opacity: 0.85 }}>
+					Factory <code>{factoryId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
 				</div>
-				<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-					Command (type shortcut; Enter = literal Enter)
-					<input
-						ref={cmdRef}
-						type="text"
-						autoComplete="off"
-						placeholder="Keys…"
-						onKeyDown={onCommandKeyDown}
-						style={{ padding: 6, borderRadius: 6, background: "#0e0e16", color: "#e8e8f0", border: "1px solid #2a2a3a" }}
-					/>
-				</label>
-				<div style={{ fontSize: 11, opacity: 0.75 }}>
-					Host: <u>m</u> Commit solid · <u>r</u> Undo (global). Spatial picking follows each factory&apos;s{" "}
-					<code>interaction</code> block.
-				</div>
-				{spec.id === "primitive.box" ? (
-					<>
-						<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							Height (set.height / <u>h</u>)
-							<input value={heightInput} onChange={(e) => setHeightInput(e.target.value)} />
-						</label>
-						{snapshot.state === "first_corner_length_prompt" ? (
-							<div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-								<label>
-									Length
-									<input value={lwLen} onChange={(e) => setLwLen(e.target.value)} />
-								</label>
-								<label>
-									Width
-									<input value={lwWid} onChange={(e) => setLwWid(e.target.value)} />
-								</label>
-							</div>
-						) : null}
-					</>
-				) : null}
-				{(spec.id === "feature.extrudeWire" || spec.id === "feature.offsetSurface") &&
-				(snapshot.state === "setDistance" || snapshot.state === "selectWire" || snapshot.state === "selectSurface") ? (
-					<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-						Distance / offset (<u>n</u> apply)
-						<input value={dimInput} onChange={(e) => setDimInput(e.target.value)} />
+				<div style={{ fontSize: 12 }}>Can commit {String(snapshot.capabilities.canCommit)} · undo {String(snapshot.capabilities.canUndo)}</div>
+				<div style={{ position: "relative" }}>
+					<label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+						<span>Command (factories first in palette; Tab/Enter run highlighted)</span>
+						<input
+							ref={cmdRef}
+							type="text"
+							autoComplete="off"
+							value={cmdLine}
+							onChange={(e) => {
+								setCmdLine(e.target.value);
+								setSuggestOpen(true);
+							}}
+							onFocus={() => setSuggestOpen(true)}
+							onBlur={() => {
+								window.setTimeout(() => setSuggestOpen(false), 120);
+							}}
+							onKeyDown={onInputKeyDown}
+							placeholder="Filter or type a command…"
+							style={{
+								width: "100%",
+								boxSizing: "border-box",
+								padding: 8,
+								borderRadius: 6,
+								background: "#0e0e16",
+								color: "#e8e8f0",
+								border: "1px solid #2a2a3a",
+							}}
+						/>
 					</label>
-				) : null}
-				<button type="button" disabled={!snapshot.capabilities.canCommit} onClick={() => void onCommit()}>
-					Commit (<u>m</u>)
-				</button>
-				<button type="button" disabled={!snapshot.capabilities.canUndo} onClick={() => rt.undo()}>
-					Undo (<u>r</u>)
-				</button>
-				{lastCell ? <div>Last cell: {lastCell}</div> : null}
+					{suggestOpen && filtered.length ? (
+						<div
+							style={{
+								position: "absolute",
+								left: 0,
+								right: 0,
+								top: "100%",
+								marginTop: 4,
+								maxHeight: 280,
+								overflowY: "auto",
+								background: "#0c0c14",
+								border: "1px solid #3a3a55",
+								borderRadius: 6,
+								zIndex: 20,
+								boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+							}}
+						>
+							{filtered.map((s, idx) => (
+								<button
+									key={`${s.kind}-${s.key}-${s.detail}-${idx}`}
+									type="button"
+									onMouseDown={(e) => e.preventDefault()}
+									onClick={() => runSuggestion(s)}
+									style={{
+										display: "block",
+										width: "100%",
+										textAlign: "left",
+										padding: "6px 8px",
+										border: "none",
+										borderBottom: "1px solid #1e1e2e",
+										background: idx === activeIndex ? "#1f2f4a" : "transparent",
+										color: "#e8e8f0",
+										cursor: "pointer",
+										fontSize: 12,
+									}}
+									onMouseEnter={() => setActiveIndex(idx)}
+								>
+									<span style={{ opacity: 0.65 }}>{kindLabel(s.kind)}</span>{" "}
+									<span style={{ textDecoration: "underline", fontWeight: 700 }}>{s.key}</span>{" "}
+									{s.label}
+									<span style={{ opacity: 0.55, marginLeft: 6 }}>{s.detail}</span>
+								</button>
+							))}
+						</div>
+					) : null}
+				</div>
+				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
+					Factories use keys <u>q</u> <u>j</u> <u>k</u> (listed first). Value-style transitions:{" "}
+					<code>h 2.5</code>, <code>n 0.4</code>, <code>w 2 1.5</code>. Geometry assets use keys{" "}
+					{GEOMETRY_ASSETS.map((g) => (
+						<code key={g.id}>
+							{g.key}
+						</code>
+					))}{" "}
+					in the dropdown only. Global <u>m</u> commit / <u>r</u> undo when focus is outside inputs.
+				</div>
+				{lastCell ? <div style={{ fontSize: 12 }}>Last cell: {lastCell}</div> : null}
 			</aside>
 		</div>
 	);
 }
+//#endregion
 
+//#region 🔖PlayApp
 function PlayApp() {
 	const presets = useMemo(() => listSpatialFactoryPresets(), []);
 	const [factoryId, setFactoryId] = useState(() => presets[0]?.id ?? "");
+	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
 	const spec = useMemo<FactorySpec | null>(() => (factoryId ? loadSpatialFactoryPreset(factoryId) : null), [factoryId]);
+
+	const interactionTopo = useMemo(() => {
+		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId) ?? GEOMETRY_ASSETS[0]!;
+		return parseTopologyGraphJson(asset.json) ?? new TopologyGraph();
+	}, [geometryAssetId]);
 
 	useEffect(() => {
 		if (!factoryId && presets[0]) setFactoryId(presets[0].id);
@@ -353,8 +537,20 @@ function PlayApp() {
 		);
 	}
 
-	return <PlaySession key={factoryId} presets={presets} factoryId={factoryId} spec={spec} onFactoryId={setFactoryId} />;
+	return (
+		<PlaySession
+			key={factoryId}
+			presets={presets}
+			factoryId={factoryId}
+			spec={spec}
+			onFactoryId={setFactoryId}
+			interactionTopo={interactionTopo}
+			geometryAssetId={geometryAssetId}
+			onGeometryAssetId={setGeometryAssetId}
+		/>
+	);
 }
+//#endregion
 
 const el = document.getElementById("root");
 if (el) {

@@ -1144,13 +1144,34 @@ export function buildOffsetSurfaceFactorySpec(): FactorySpec {
 	return s;
 }
 
-/** @emoji 📚 Built-in factory preset ids for host dropdowns (`spatial/fixtures/*.factory.json`). */
-export function listSpatialFactoryPresets(): readonly { readonly id: string; readonly label: string }[] {
+/** @emoji 📚 Host-facing factory preset row (`spatial/fixtures/*.factory.json`). */
+export interface SpatialFactoryPreset {
+	readonly id: string;
+	readonly label: string;
+	/** @emoji ⌨️ Single-stroke host command key; must stay unique among presets (see `resolveSpatialFactoryPresetKey`). */
+	readonly key: string;
+}
+
+/** @emoji 📚 Built-in factory preset ids for host command surfaces (`spatial/fixtures/*.factory.json`). */
+export function listSpatialFactoryPresets(): readonly SpatialFactoryPreset[] {
 	return [
-		{ id: "primitive.box", label: "Box" },
-		{ id: "feature.extrudeWire", label: "Extrude wire" },
-		{ id: "feature.offsetSurface", label: "Offset surface" },
+		{ id: "primitive.box", label: "Box", key: "q" },
+		{ id: "feature.extrudeWire", label: "Extrude wire", key: "j" },
+		{ id: "feature.offsetSurface", label: "Offset surface", key: "k" },
 	];
+}
+
+/** @emoji 🧭 Resolves a typed token to a preset (`key`, `id`, or compact `label`). */
+export function resolveSpatialFactoryPresetKey(token: string): SpatialFactoryPreset | null {
+	const t = token.trim().toLowerCase();
+	if (!t) return null;
+	for (const p of listSpatialFactoryPresets()) {
+		if (p.key.toLowerCase() === t) return p;
+		if (p.id.toLowerCase() === t) return p;
+		const slug = p.label.toLowerCase().replace(/\s+/g, "");
+		if (slug === t) return p;
+	}
+	return null;
 }
 
 /** @emoji 📚 Loads a built-in factory preset by stable `id` (see `listSpatialFactoryPresets`). */
@@ -1194,7 +1215,18 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core factory box", () => {
+	describe("@spatial/js-core factory presets", () => {
+		it("lists stable keys for each built-in factory preset", () => {
+			const ps = listSpatialFactoryPresets();
+			expect(ps.map((p) => p.key).join("")).toBe("qjk");
+			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
+		});
+		it("resolves factory preset tokens by key, id, and label slug", () => {
+			expect(resolveSpatialFactoryPresetKey("q")?.id).toBe("primitive.box");
+			expect(resolveSpatialFactoryPresetKey("primitive.box")?.key).toBe("q");
+			expect(resolveSpatialFactoryPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
+		});
+	});
 		it("tracks first-corner cursor on the grid after start", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";
