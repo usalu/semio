@@ -1,4 +1,8 @@
-# Classes
+# Factory
+
+A factory is
+
+# Geometry
 
 Topology: A Topology is an abstract superclass.
 
@@ -10,8 +14,8 @@ Wire: A Wire is a contiguous collection of Edges where adjacent Edges are connec
 Face: A Face is a two-dimensional region defined by a collection of closed Wires. The geometry of a face can be flat or undulating.
 Shell: A Shell is a contiguous collection of Faces, where adjacent Faces are connected by shared Edges. It may be open or closed and may be manifold or non-manifold.
 Cell: A Cell is a three-dimensional region defined by a collection of closed Shells. It may be manifold or non- manifold.
-CellComplex: A CellComplex is a contiguous collection of Cells where adjacent Cells are connected by shared Faces. It is non- manifold.
-Cluster: A Cluster is a collection of any topologic entities. It may be contiguous or not and may be manifold or non- manifold. Clusters can be nested within other Clusters.
+CellComplex: A CellComplex is a contiguous collection of Cells where adjacent Cells are connected by shared Faces. It is non-manifold.
+Cluster: A Cluster is a collection of any topologic entities. It may be contiguous or not and may be manifold or non-manifold. Clusters can be nested within other Clusters.
 
 ## Non-editable
 
