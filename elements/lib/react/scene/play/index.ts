@@ -114,7 +114,7 @@ export { parseKindCatalogs, parseKindCompatibility };
 //#region ­ƒöûScenePlayController
 /** @emoji ­ƒÄ¼ Framework-free scene play controller: fixture, LOD, selection, and interaction counters. */
 export class ScenePlayShellController extends Controller {
-	readonly mainMode = new WorkbenchMode("main", "Scene", undefined);
+	readonly mainMode = new ModeRuntime("main", "Scene", undefined);
 	readonly fixture: FixtureV1 | null;
 	private lodMode: LodModeKind;
 	private lodTag: LodKind;
@@ -138,7 +138,7 @@ export class ScenePlayShellController extends Controller {
 	}
 
 	private rebuildShellMode(): void {
-		const lodMeasure: ShellWindowMeasure = {
+		const lodMeasure: WindowMeasure = {
 			kind: "select",
 			id: `${SCENE_PLAY_WINDOW_ID}-lod`,
 			label: "LOD",
@@ -150,9 +150,9 @@ export class ScenePlayShellController extends Controller {
 			onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setLodMode" },
 		};
 		this.mainMode.windowKinds = [
-			new WorkbenchWindowKind(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, [lodMeasure]),
+			new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, [lodMeasure]),
 		];
-		const relocateTools: ShellToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
+		const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
 			id: `scene.relocate.${mode}`,
 			kind: "toggle" as const,
 			text: mode.charAt(0).toUpperCase() + mode.slice(1),
@@ -162,7 +162,7 @@ export class ScenePlayShellController extends Controller {
 			command: "setRelocateMode",
 			args: { mode },
 		}));
-		const tools: ShellAppTools = { actions: relocateTools };
+		const tools: AppTools = { actions: relocateTools };
 		this.mainMode.tools = tools;
 	}
 
@@ -235,26 +235,26 @@ export interface ScenePlaySnapshot {
 	readonly indirectCount: number;
 }
 
-export function buildScenePlayWorkbenchApp(controller: ScenePlayShellController): WorkbenchApp {
-	const app = new WorkbenchApp(
+export function buildScenePlayAppRuntime(controller: ScenePlayShellController): AppRuntime {
+	const app = new AppRuntime(
 		PLAY_APP_ID,
 		"Scene play",
 		undefined,
 		controller,
 		createStackLayout([SCENE_PLAY_WINDOW_ID], [SCENE_PLAY_WINDOW_LABEL]) as never,
-		[new WorkbenchWindowKind(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY)],
+		[new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY)],
 	);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
 	return app;
 }
 
-function sceneControllerFromContext(ctx: ShellWindowBodyViewContext): ScenePlayShellController | undefined {
-	return ctx.workbench.getActiveApp()?.controller as ScenePlayShellController | undefined;
+function sceneControllerFromContext(ctx: WindowBodyViewContext): ScenePlayShellController | undefined {
+	return ctx.runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
 }
 
-/** @emoji ­ƒº® Declarative scene window: fullscreen scene3d only (relocate tools live on {@link WorkbenchMode.tools}). */
-export function buildScenePlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+/** @emoji ­ƒº® Declarative scene window: fullscreen scene3d only (relocate tools live on {@link ModeRuntime.tools}). */
+export function buildScenePlayDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = sceneControllerFromContext(ctx);
 	if (!ctrl) {
 		return { type: "text", value: "Missing scene controller" };
@@ -281,9 +281,9 @@ if (import.meta.vitest) {
 
 		it("declarative window body is a lone scene3d surface", () => {
 			const bus = new CommandBus();
-			const wb = new Workbench();
+			const wb = new ProductRuntime();
 			const ctrl = new ScenePlayShellController(bus, () => wb.notify());
-			wb.addApp(buildScenePlayWorkbenchApp(ctrl));
+			wb.addApp(buildScenePlayAppRuntime(ctrl));
 			const tree = buildScenePlayDeclarativeBody({
 				workbench: wb,
 				windowKindId: SCENE_PLAY_WINDOW_ID,

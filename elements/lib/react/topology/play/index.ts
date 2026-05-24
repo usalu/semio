@@ -5,16 +5,16 @@
 import {
 	CommandBus,
 	Controller,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchMode,
-	WorkbenchWindowKind,
+	ProductRuntime,
+	AppRuntime,
+	ModeRuntime,
+	WindowKindRuntime,
 	buildBoardWindowBody,
 	buildScene3dWindowBody,
 	createDefaultLayout,
-	type ShellToolItem,
-	type ShellWindowBodyViewContext,
-	type ShellWindowMeasure,
+	type ToolItem,
+	type WindowBodyViewContext,
+	type WindowMeasure,
 	type UiNode,
 } from "@elements/framework";
 
@@ -29,7 +29,7 @@ import {
 	type BoardFixtureV1,
 	type BoardLodModeKind,
 	type CameraState,
-} from "../../board/index.ts";
+} from "../../board/index.tsx";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
 	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
@@ -42,7 +42,7 @@ import {
 	type LodModeKind as SceneLodModeKind,
 	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
-import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../react/index.tsx";
+import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../index.tsx";
 import topologyManifestJson from "./fixtures/nakagin-capsule-tower.topology.json";
 
 //#region ­ƒöûIds
@@ -66,8 +66,8 @@ function topologyPlayLodTierMenuLabel(tier: string): string {
 	return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-function topologyControllerFromContext(ctx: ShellWindowBodyViewContext): TopologyPlayShellController | undefined {
-	return ctx.workbench.getActiveApp()?.controller as TopologyPlayShellController | undefined;
+function topologyControllerFromContext(ctx: WindowBodyViewContext): TopologyPlayShellController | undefined {
+	return ctx.runtime.getActiveApp()?.controller as TopologyPlayShellController | undefined;
 }
 
 function sameCamera(a: CameraState | null, b: CameraState): boolean {
@@ -98,7 +98,7 @@ export interface TopologyPlaySnapshot {
 
 /** @emoji ­ƒÄø Framework-free topology play controller shared by declarative board and scene windows. */
 export class TopologyPlayShellController extends Controller {
-	readonly mainMode = new WorkbenchMode("main", "Topology", undefined);
+	readonly mainMode = new ModeRuntime("main", "Topology", undefined);
 	readonly manifest = parseTopologyFixtureV1(topologyManifestJson as unknown);
 	readonly boardFixture = parseBoardFixtureV1(nakaginBoardJson as unknown);
 	readonly sceneFixture = parseFixtureV1(nakaginSceneJson as unknown);
@@ -122,7 +122,7 @@ export class TopologyPlayShellController extends Controller {
 	}
 
 	private rebuildShellMode(): void {
-		const relocateTools: ShellToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
+		const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
 			id: `topology.relocate.${mode}`,
 			kind: "toggle" as const,
 			text: mode.charAt(0).toUpperCase() + mode.slice(1),
@@ -136,7 +136,7 @@ export class TopologyPlayShellController extends Controller {
 		this.mainMode.windowKinds = this.getWindowKinds();
 	}
 
-	private boardLodMeasure(): ShellWindowMeasure {
+	private boardLodMeasure(): WindowMeasure {
 		return {
 			kind: "select",
 			id: `${TOPOLOGY_PLAY_BOARD_WINDOW_ID}-lod`,
@@ -150,7 +150,7 @@ export class TopologyPlayShellController extends Controller {
 		};
 	}
 
-	private sceneLodMeasure(): ShellWindowMeasure {
+	private sceneLodMeasure(): WindowMeasure {
 		return {
 			kind: "select",
 			id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-lod`,
@@ -164,10 +164,10 @@ export class TopologyPlayShellController extends Controller {
 		};
 	}
 
-	getWindowKinds(): readonly WorkbenchWindowKind[] {
+	getWindowKinds(): readonly WindowKindRuntime[] {
 		return [
-			new WorkbenchWindowKind(TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
-			new WorkbenchWindowKind(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [this.sceneLodMeasure()]),
+			new WindowKindRuntime(TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
+			new WindowKindRuntime(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [this.sceneLodMeasure()]),
 		];
 	}
 
@@ -274,9 +274,9 @@ export class TopologyPlayShellController extends Controller {
 }
 //#endregion ­ƒöûController
 
-//#region ­ƒöûWorkbench
-export function buildTopologyPlayWorkbenchApp(controller: TopologyPlayShellController): WorkbenchApp {
-	const app = new WorkbenchApp(
+//#region 🔖TopologyPlayRuntime
+export function buildTopologyPlayAppRuntime(controller: TopologyPlayShellController): AppRuntime {
+	const app = new AppRuntime(
 		TOPOLOGY_PLAY_APP_ID,
 		"Topology play",
 		undefined,
@@ -289,23 +289,23 @@ export function buildTopologyPlayWorkbenchApp(controller: TopologyPlayShellContr
 	return app;
 }
 
-export function buildTopologyPlayWorkbench(): Workbench {
-	const workbench = new Workbench();
-	const controller = new TopologyPlayShellController(workbench.commandBus, () => workbench.notify());
-	workbench.addApp(buildTopologyPlayWorkbenchApp(controller));
-	return workbench;
+export function buildTopologyPlayRuntime(): ProductRuntime {
+	const runtime = new ProductRuntime();
+	const controller = new TopologyPlayShellController(runtime.commandBus, () => runtime.notify());
+	runtime.addApp(buildTopologyPlayAppRuntime(controller));
+	return runtime;
 }
-//#endregion ­ƒöûWorkbench
+//#endregion 🔖TopologyPlayRuntime
 
 //#region ­ƒöûDeclarativeBodies
-export function buildTopologyBoardDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+export function buildTopologyBoardDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.boardFixture) return { type: "text", value: "Invalid board fixture" };
 	return buildBoardWindowBody(TOPOLOGY_PLAY_BOARD_SURFACE_ID, TOPOLOGY_PLAY_CONTROLLER_ID, TOPOLOGY_PLAY_BOARD_WINDOW_ID);
 }
 
-export function buildTopologySceneDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
+export function buildTopologySceneDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = topologyControllerFromContext(ctx);
 	const snap = ctrl?.getSnapshot();
 	if (!snap?.sceneFixture) return { type: "text", value: "Invalid scene fixture" };
@@ -335,16 +335,16 @@ if (import.meta.vitest) {
 			expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
 		});
 		it("builds declarative board and scene canvas-only bodies", () => {
-			const wb = buildTopologyPlayWorkbench();
+			const wb = buildTopologyPlayRuntime();
 			const board = buildTopologyBoardDeclarativeBody({
-				workbench: wb,
+				runtime: wb,
 				windowKindId: TOPOLOGY_PLAY_BOARD_WINDOW_ID,
 				bodyKey: TOPOLOGY_PLAY_BOARD_BODY_KEY,
 				activeModeId: "main",
 				generation: 0,
 			});
 			const scene = buildTopologySceneDeclarativeBody({
-				workbench: wb,
+				runtime: wb,
 				windowKindId: TOPOLOGY_PLAY_SCENE_WINDOW_ID,
 				bodyKey: TOPOLOGY_PLAY_SCENE_BODY_KEY,
 				activeModeId: "main",

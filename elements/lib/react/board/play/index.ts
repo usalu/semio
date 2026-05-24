@@ -1,22 +1,23 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/index.ts — Framework-free board play: declarative window bodies, LOD measures, workbench wiring (no React).
+// 💻 elements/client/lib/board/play/index.ts — Framework-free board play: declarative window bodies, LOD measures, product runtime wiring (no React).
 // #endregion 🧲Header
 
 import {
 	CommandBus,
 	Controller,
-	registerDeclarativeWindowBody,
-	ShellExtension,
-	type ShellExtensionContext,
-	type ShellExtensionManifest,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchMode,
-	WorkbenchWindowKind,
+	registerWindowBody,
+	registerSidePanelBody,
+	type PluginManifest,
+	type PluginModule,
+	type PluginContext,
+	ProductRuntime,
+	AppRuntime,
+	ModeRuntime,
+	WindowKindRuntime,
 	createWindowLayout,
-	type ShellSidePanelBodyViewContext,
-	type ShellWindowBodyViewContext,
-	type ShellWindowMeasure,
+	type SidePanelBodyViewContext,
+	type WindowBodyViewContext,
+	type WindowMeasure,
 	type UiNode,
 	type WindowLayout,
 } from "@elements/framework";
@@ -93,7 +94,7 @@ export const BOARD_PLAY_LAYOUT: WindowLayout = {
 //#region 🔖Controller
 /** @emoji 🎛 Board play shell controller: per-pane LOD modes for declarative window measures. */
 export class BoardPlayShellController extends Controller {
-	readonly mainMode = new WorkbenchMode("main", "Board", undefined);
+	readonly mainMode = new ModeRuntime("main", "Board", undefined);
 	private lodModeByPane: Record<BoardPlayPaneId, BoardLodModeKind>;
 	private effectiveLodByPane: Record<BoardPlayPaneId, BoardDrawLodKind>;
 
@@ -112,7 +113,7 @@ export class BoardPlayShellController extends Controller {
 		this.rebuildShellMode();
 	}
 
-	private lodMeasureForPane(paneId: BoardPlayPaneId): ShellWindowMeasure {
+	private lodMeasureForPane(paneId: BoardPlayPaneId): WindowMeasure {
 		return {
 			kind: "select",
 			id: `${paneId}-lod`,
@@ -128,9 +129,9 @@ export class BoardPlayShellController extends Controller {
 
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = [
-			new WorkbenchWindowKind("board-overview", "Overview", BOARD_PLAY_BODY_KEY_OVERVIEW, undefined, [this.lodMeasureForPane("board-overview")]),
-			new WorkbenchWindowKind("board-detail", "Zoom", BOARD_PLAY_BODY_KEY_DETAIL, undefined, [this.lodMeasureForPane("board-detail")]),
-			new WorkbenchWindowKind("board-selection", "Selection", BOARD_PLAY_BODY_KEY_SELECTION, undefined, [this.lodMeasureForPane("board-selection")]),
+			new WindowKindRuntime("board-overview", "Overview", BOARD_PLAY_BODY_KEY_OVERVIEW, undefined, [this.lodMeasureForPane("board-overview")]),
+			new WindowKindRuntime("board-detail", "Zoom", BOARD_PLAY_BODY_KEY_DETAIL, undefined, [this.lodMeasureForPane("board-detail")]),
+			new WindowKindRuntime("board-selection", "Selection", BOARD_PLAY_BODY_KEY_SELECTION, undefined, [this.lodMeasureForPane("board-selection")]),
 		];
 	}
 
@@ -169,11 +170,11 @@ export class BoardPlayShellController extends Controller {
 //#endregion 🔖Controller
 
 //#region 🔖DeclarativeBodies
-function boardPlayControllerFromContext(ctx: ShellWindowBodyViewContext | ShellSidePanelBodyViewContext): BoardPlayShellController | undefined {
-	return ctx.workbench.getActiveApp()?.controller as BoardPlayShellController | undefined;
+function boardPlayControllerFromContext(ctx: WindowBodyViewContext | SidePanelBodyViewContext): BoardPlayShellController | undefined {
+	return ctx.runtime.getActiveApp()?.controller as BoardPlayShellController | undefined;
 }
 
-function buildBoardPlayDeclarativeBody(paneId: BoardPlayPaneId): (ctx: ShellWindowBodyViewContext) => UiNode {
+function buildBoardPlayDeclarativeBody(paneId: BoardPlayPaneId): (ctx: WindowBodyViewContext) => UiNode {
 	return (ctx) => {
 		if (!boardPlayControllerFromContext(ctx)) {
 			return { type: "text", value: "Missing board play controller" };
@@ -192,7 +193,7 @@ export const buildBoardPlayDetailDeclarativeBody = buildBoardPlayDeclarativeBody
 export const buildBoardPlaySelectionDeclarativeBody = buildBoardPlayDeclarativeBody("board-selection");
 
 /** @emoji 📑 Declarative library side tab: table host surface only. */
-export function buildBoardPlayLibraryDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+export function buildBoardPlayLibraryDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
 	if (!boardPlayControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing board play controller" };
 	}
@@ -200,7 +201,7 @@ export function buildBoardPlayLibraryDeclarativePanel(ctx: ShellSidePanelBodyVie
 }
 
 /** @emoji 📑 Declarative selection inspector side tab: table host surface only. */
-export function buildBoardPlayInspectorDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+export function buildBoardPlayInspectorDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
 	if (!boardPlayControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing board play controller" };
 	}
@@ -208,7 +209,7 @@ export function buildBoardPlayInspectorDeclarativePanel(ctx: ShellSidePanelBodyV
 }
 
 /** @emoji 📑 Declarative settings side tab: table host surface only. */
-export function buildBoardPlaySettingsDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
+export function buildBoardPlaySettingsDeclarativePanel(ctx: SidePanelBodyViewContext): UiNode {
 	if (!boardPlayControllerFromContext(ctx)) {
 		return { type: "text", value: "Missing board play controller" };
 	}
@@ -217,15 +218,15 @@ export function buildBoardPlaySettingsDeclarativePanel(ctx: ShellSidePanelBodyVi
 //#endregion 🔖DeclarativeBodies
 
 /** @emoji 🧩 Registers board play window kinds on the supplied controller (layout supplied by host). */
-export function attachBoardPlayWindowKinds(controller: BoardPlayShellController, layout: unknown): WorkbenchApp {
-	const app = new WorkbenchApp(BOARD_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
+export function attachBoardPlayWindowKinds(controller: BoardPlayShellController, layout: unknown): AppRuntime {
+	const app = new AppRuntime(BOARD_PLAY_APP_ID, "Board", undefined, controller, layout as never, []);
 	app.defaultModeId = controller.mainMode.id;
 	app.addMode(controller.mainMode);
 	return app;
 }
 
-/** @emoji 🧩 Builds the board play {@link WorkbenchApp} with declarative side tabs. */
-export function buildBoardPlayWorkbenchApp(controller: BoardPlayShellController): WorkbenchApp {
+/** @emoji 🧩 Builds the board play {@link AppRuntime} with declarative side tabs. */
+export function buildBoardPlayAppRuntime(controller: BoardPlayShellController): AppRuntime {
 	const app = attachBoardPlayWindowKinds(controller, BOARD_PLAY_LAYOUT);
 	app.leftTabs = [{ id: "board-play-library", iconId: BOARD_PLAY_ICON_LIBRARY, order: 0, bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY }];
 	app.rightTabs = [
@@ -237,9 +238,9 @@ export function buildBoardPlayWorkbenchApp(controller: BoardPlayShellController)
 
 /** @emoji 📝 Registers board play declarative window + side-panel bodies on the framework host. */
 export function registerBoardPlayDeclarativeBodies(): void {
-	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+	registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+	registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+	registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
 	registerPlaygroundSidePanelBodies([
 		{ bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY, build: buildBoardPlayLibraryDeclarativePanel },
 		{ bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, build: buildBoardPlayInspectorDeclarativePanel },
@@ -248,7 +249,7 @@ export function registerBoardPlayDeclarativeBodies(): void {
 }
 
 //#region 🔖Extension
-export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
+export const BOARD_PLAY_EXTENSION_MANIFEST: PluginManifest = {
 	id: "elements.board-play",
 	label: "Board Play",
 	version: "0.1.0",
@@ -276,26 +277,26 @@ export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
 	},
 };
 
-/** @emoji 🔌 VS Code–style board play extension: registers declarative bodies on activate. */
-export const boardPlayExtension: ShellExtension = {
+/** @emoji 🔌 VS Code–style board play plugin: registers declarative bodies on activate. */
+export const boardPlayPlugin: PluginModule = {
 	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
-	activate(context: ShellExtensionContext): void {
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
-		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
-		context.registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
+	activate(context: PluginContext): void {
+		context.registerWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+		context.registerWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+		context.registerWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+		context.registerSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
+		context.registerSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
+		context.registerSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
 	},
 };
 
-/** @emoji 🚀 Creates a {@link Workbench} with board play app + declarative bodies registered. */
-export function bootstrapBoardPlayWorkbench(): Workbench {
+/** @emoji 🚀 Creates a {@link ProductRuntime} with board play app + declarative bodies registered. */
+export function buildBoardPlayRuntime(): ProductRuntime {
 	registerBoardPlayDeclarativeBodies();
-	const wb = new Workbench();
-	const ctrl = new BoardPlayShellController(wb.commandBus, () => wb.notify());
-	wb.addApp(buildBoardPlayWorkbenchApp(ctrl));
-	return wb;
+	const runtime = new ProductRuntime();
+	const ctrl = new BoardPlayShellController(runtime.commandBus, () => runtime.notify());
+	runtime.addApp(buildBoardPlayAppRuntime(ctrl));
+	return runtime;
 }
 //#endregion 🔖Extension
 
@@ -305,9 +306,9 @@ if (import.meta.vitest) {
 
 	describe("board play declarative shell", () => {
 		it("declarative overview body references board host surface", () => {
-			const wb = bootstrapBoardPlayWorkbench();
+			const runtime = buildBoardPlayRuntime();
 			const tree = buildBoardPlayOverviewDeclarativeBody({
-				workbench: wb,
+				runtime,
 				windowKindId: "board-overview",
 				bodyKey: BOARD_PLAY_BODY_KEY_OVERVIEW,
 				activeModeId: "main",
@@ -324,9 +325,9 @@ if (import.meta.vitest) {
 		});
 
 		it("declarative library panel references table host surface", () => {
-			const wb = bootstrapBoardPlayWorkbench();
+			const runtime = buildBoardPlayRuntime();
 			const tree = buildBoardPlayLibraryDeclarativePanel({
-				workbench: wb,
+				runtime,
 				windowKindId: "board-play-library",
 				bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY,
 				activeModeId: "main",

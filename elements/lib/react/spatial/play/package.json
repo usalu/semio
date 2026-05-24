@@ -13,7 +13,7 @@
 	},
 	"exports": {
 		".": "./index.ts",
-		"./host": "../spatial-play-host.tsx"
+		"./host": "../index.tsx"
 	},
 	"dependencies": {
 		"@elements/framework": "workspace:*",

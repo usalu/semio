@@ -4,22 +4,22 @@ overview: Rebuild `elements/lib/framework` around `Product / App / Mode / Window
 todos:
   - id: core-rewrite
     content: Rewrite elements/lib/framework/core/index.ts with new abstractions (ProductDefinition, AppDefinition, ModeDefinition, WindowKindDefinition, SurfaceDefinition, Capability, SurfaceSelector, ContributionRoute, SurfaceRouter, ProductPlugin, PluginHost, PluginContext, SurfaceContext, ProductRuntime) and remove all Workbench*/Shell* names
-    status: in_progress
+    status: completed
   - id: renderer-rewire
     content: Rewire elements/lib/framework/renderer/react/index.tsx onto ProductRuntime + SurfaceRouter; collapse declarative window/side-panel registrations into built-in framework.window/framework.panel surfaces
-    status: pending
+    status: completed
   - id: play-host-renames
     content: Minimal symbol renames in elements/lib/react/*-play-host.tsx so playground builds against the new framework API
-    status: pending
+    status: completed
   - id: tests
     content: "Extend the #region 🧪Tests block in core/index.ts to cover plugin lifecycle, surface routing (selector + capabilities), and the built-in window/panel surfaces"
-    status: pending
+    status: completed
   - id: agents-md
     content: Update elements/lib/framework/AGENTS.md vocabulary line to Product/App/Mode/WindowKind/Surface/Capability/Plugin/Contribution
-    status: pending
+    status: completed
   - id: ticket
     content: Open/reopen the framework ticket via repo MCP, run the work, close with summary on completion
-    status: pending
+    status: completed
 isProject: false
 ---
 

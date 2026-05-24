@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const frameworkCore = resolve(root, "../../framework/core/index.ts");
-const frameworkReact = resolve(root, "../../framework/renderer/react/index.tsx");
+const frameworkReact = resolve(root, "../../framework/renderer/index.tsx");
 const frameworkReactWorkbench = frameworkReact;
 const uiCore = resolve(root, "../core/index.tsx");
 
@@ -25,8 +25,8 @@ export default defineConfig({
 		environment: "jsdom",
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.ts", "index.tsx", "play/index.ts", "board-play-host.tsx"],
-		includeSource: ["index.ts", "index.tsx", "play/index.ts", "board-play-host.tsx"],
+		include: ["index.tsx", "play/index.ts"],
+		includeSource: ["index.tsx", "play/index.ts"],
 		passWithNoTests: true,
 	},
 });

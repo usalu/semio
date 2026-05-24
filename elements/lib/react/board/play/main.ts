@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 //#region 🔖Mount
-void import("../board-play-host").then((m) => {
+void import("../index.tsx").then((m) => {
 	m.mountBoardPlay();
 });
 //#endregion 🔖Mount

@@ -1,8 +1,9 @@
 {
   "title": "Elements Playground Architecture",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Implement the new Elements architecture: keep @elements/lib/react/core as pure React components with no classes, keep @elements/lib/framework/core as pure TypeScript classes with no React, make @elements/lib/framework/renderer/react the first renderer for framework core, finish @elements/lib/playground, and update @elements/lib/react/spatial/play to use the new playground. Fix the current Nx duplicate project configuration blocking @elements/geometry-spatial-play:dev.",
+  "summary": "Aligned the Elements playground and spatial play path with the ProductRuntime/framework architecture, verified the styling project-name collision is resolved, fixed the spatial-js task routing to use the real project cwd and bun x, and verified the current @elements/spatial-play target through Nx tests, direct Vite build, and dev server startup at http://127.0.0.1:6017/. Full Nx build remains blocked by the unrelated @elements/ui Storybook preview import of ../elements/client/lib/react/globals.css.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1470"
   },

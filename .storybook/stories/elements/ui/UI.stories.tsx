@@ -1,26 +1,20 @@
 // #region 🧲Header
-// 💻 .storybook/stories/elements/ui/UI.stories.tsx — Storybook harness for {@link WorkbenchView} + {@link Workbench}.
+// 💻 .storybook/stories/elements/ui/UI.stories.tsx — Storybook harness for {@link ProductView} + {@link ProductRuntime}.
 // #endregion 🧲Header
 
 import {
 	Controller,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchWindowKind,
+	ProductRuntime,
+	AppRuntime,
+	WindowKindRuntime,
 	createDefaultLayout,
 	type CommandBus,
-	type ShellFindItem,
-	type ShellSearchItemSpec,
-	type ShellSideTabSpec,
-	type ShellToolItem,
-} from "@elements/framework";
-import {
-	WorkbenchView,
-	registerElementIcon,
-	registerSidePanelBody,
-	registerWindowBody,
+	type FindItem,
+	type SearchItemSpec,
+	type SideTabSpec,
 	type AppTools,
-} from "@elements/framework-react";
+} from "@elements/framework";
+import { ProductView, registerElementIcon, registerSidePanelBody, registerWindowBody } from "@elements/framework-react";
 import { Tree } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, File, FileText, FolderOpen, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
@@ -117,98 +111,76 @@ function ensureStoryWorkbenchChrome(): void {
 	registerSidePanelBody("story.panel.settings", () => <div className="p-2">Settings content.</div>);
 }
 
-const editorFindItems: ShellFindItem[] = [
+const editorFindItems: FindItem[] = [
 	{ id: "f1", label: "function handleClick", description: "Line 42", category: "Functions" },
 	{ id: "f2", label: "function renderEditor", description: "Line 87", category: "Functions" },
 ];
 
-const storySearchRows: ShellSearchItemSpec[] = [
+const storySearchRows: SearchItemSpec[] = [
 	{ id: "s1", label: "index.ts", description: "Entry", category: "Files", iconId: "story.icon.file-text", controllerId: STORY_CTRL, command: "noop" },
 	{ id: "s2", label: "Button.tsx", description: "Component", category: "Components", iconId: "story.icon.file-text", controllerId: STORY_CTRL, command: "noop" },
 ];
 
-function shellToolsFromAppTools(tools: AppTools | undefined): Record<string, readonly ShellToolItem[]> | undefined {
-	if (!tools) return undefined;
-	const out: Record<string, readonly ShellToolItem[]> = {};
-	for (const [category, list] of Object.entries(tools)) {
-		out[category] = (list as { id: string; kind?: "separator"; icon?: React.ReactNode; label?: string; onClick?: () => void; order?: number }[]).map((item) => {
-			if (item.kind === "separator") return { id: item.id, kind: "separator" as const, order: item.order };
-			const iconKey = `story.tool.icon.${item.id}`;
-			if (item.icon) registerElementIcon(iconKey, item.icon as React.ReactElement);
-			return {
-				id: item.id,
-				kind: "button" as const,
-				iconId: iconKey,
-				label: item.label,
-				order: item.order,
-				controllerId: STORY_CTRL,
-				command: "noop",
-			};
-		});
-	}
-	return out;
-}
-
-function buildTwoAppWorkbench(): Workbench {
+function buildTwoAppRuntime(): ProductRuntime {
 	ensureStoryWorkbenchChrome();
-	const wb = new Workbench();
-	const ctrl = new StoryUiController(wb.commandBus, () => wb.notify());
-	const editorTabsLeft: ShellSideTabSpec[] = [
+	const runtime = new ProductRuntime();
+	const ctrl = new StoryUiController(runtime.commandBus, () => runtime.notify());
+	const editorTabsLeft: SideTabSpec[] = [
 		{ id: "explorer", iconId: "story.icon.layers", order: 0, bodyKey: "story.panel.explorer" },
 		{ id: "settings", iconId: "story.icon.settings", order: 1, bodyKey: "story.panel.settings" },
 	];
-	const editorTabsRight: ShellSideTabSpec[] = [{ id: "properties", iconId: "story.icon.info", order: 0, bodyKey: "story.panel.properties" }];
-	const editorTools = shellToolsFromAppTools({
+	const editorTabsRight: SideTabSpec[] = [{ id: "properties", iconId: "story.icon.info", order: 0, bodyKey: "story.panel.properties" }];
+	const editorTools: AppTools = {
 		actions: [
-			{ id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
-			{ id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
-			{ id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 5 },
+			{ id: "undo", kind: "button", iconId: "story.icon.undo", label: "Undo", order: 0, controllerId: STORY_CTRL, command: "noop" },
+			{ id: "redo", kind: "button", iconId: "story.icon.redo", label: "Redo", order: 1, controllerId: STORY_CTRL, command: "noop" },
+			{ id: "save", kind: "button", iconId: "story.icon.save", label: "Save", order: 5, controllerId: STORY_CTRL, command: "noop" },
 		],
-	} as AppTools);
-	const editorApp = new WorkbenchApp(
+	};
+	const editorApp = new AppRuntime(
 		"editor",
 		"Editor",
 		"story.icon.file-text",
 		ctrl,
 		createDefaultLayout(["editor", "preview"], "row", [60, 40]) as never,
 		[
-			new WorkbenchWindowKind("editor", "Editor", "story.body.editor"),
-			new WorkbenchWindowKind("preview", "Preview", "story.body.preview"),
+			new WindowKindRuntime("editor", "Editor", "story.body.editor"),
+			new WindowKindRuntime("preview", "Preview", "story.body.preview"),
 		],
 	);
 	editorApp.leftTabs = editorTabsLeft;
 	editorApp.rightTabs = editorTabsRight;
-	editorApp.tools = editorTools ?? {};
+	editorApp.tools = editorTools;
 	editorApp.findItems = editorFindItems;
 	editorApp.onFindSelect = (itemId) => console.log("Find selected:", itemId);
 	editorApp.footerItems = [
 		{ id: "status", text: "Ready", order: 0 },
 		{ id: "line", text: "Ln 42, Col 8", order: 1 },
 	];
-	const dashboardApp = new WorkbenchApp(
+	const dashboardApp = new AppRuntime(
 		"dashboard",
 		"Dashboard",
 		"story.icon.bar-chart",
 		ctrl,
 		createDefaultLayout(["stats"]) as never,
-		[new WorkbenchWindowKind("stats", "Statistics", "story.body.stats")],
+		[new WindowKindRuntime("stats", "Statistics", "story.body.stats")],
 	);
 	dashboardApp.leftTabs = [{ id: "metrics", iconId: "story.icon.bar-chart", order: 0, bodyKey: "story.panel.metrics" }];
 	dashboardApp.footerItems = [{ id: "last-updated", text: "Updated 2m ago", order: 0 }];
-	wb.addApp(editorApp);
-	wb.addApp(dashboardApp);
-	wb.searchItems = storySearchRows;
-	wb.globalFooterItems = [{ id: "version", text: "v1.0.0", order: 100 }];
-	return wb;
+	runtime.addApp(editorApp);
+	runtime.addApp(dashboardApp);
+	runtime.searchItems = storySearchRows;
+	runtime.globalFooterItems = [{ id: "version", text: "v1.0.0", order: 100 }];
+	return runtime;
 }
 
 const meta = {
 	title: "elements/react/UI",
-	component: WorkbenchView,
+	component: ProductView,
 	parameters: { layout: "fullscreen" },
 	tags: ["autodocs"],
-	render: () => <WorkbenchView workbench={buildTwoAppWorkbench()} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
-} satisfies Meta<typeof WorkbenchView>;
+	render: () => <ProductView runtime={buildTwoAppRuntime()} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+} satisfies Meta<typeof ProductView>;
 
 export default meta;
 
@@ -217,7 +189,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Mobile: Story = {
-	render: () => <WorkbenchView workbench={buildTwoAppWorkbench()} mobile initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+	render: () => <ProductView runtime={buildTwoAppRuntime()} mobile initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
 	parameters: {
 		viewport: { defaultViewport: "mobile1" },
 		layout: "fullscreen",
@@ -241,11 +213,11 @@ export const Mobile: Story = {
 
 export const FullFeatured: Story = {
 	render: () => {
-		const wb = buildTwoAppWorkbench();
-		wb.globalTools = shellToolsFromAppTools({
-			actions: [{ id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 }],
-		} as AppTools);
-		return <WorkbenchView workbench={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
+		const runtime = buildTwoAppRuntime();
+		runtime.globalTools = {
+			actions: [{ id: "global-save", kind: "button", iconId: "story.icon.save", label: "Save All", order: 100, controllerId: STORY_CTRL, command: "noop" }],
+		};
+		return <ProductView runtime={runtime} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
 	},
 	play: async ({ canvasElement }) => {
 		const documentBody = canvasElement.ownerDocument.body;

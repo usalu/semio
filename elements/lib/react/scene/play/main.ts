@@ -3,7 +3,7 @@
 // #endregion ­ƒº▓Header
 
 //#region ­ƒöûMount
-void import("../scene-play-host").then((m) => {
+void import("../index.tsx").then((m) => {
 	m.mountScenePlay();
 });
 //#endregion ­ƒöûMount

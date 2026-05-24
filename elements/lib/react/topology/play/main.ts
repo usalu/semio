@@ -3,7 +3,7 @@
 // #endregion ┬¡ãÆ┬║ÔûôHeader
 
 //#region ┬¡ãÆ├Â├╗Mount
-void import("../topology-play-host").then((m) => {
+void import("../index.tsx").then((m) => {
 	m.mountTopologyPlay();
 });
 //#endregion ┬¡ãÆ├Â├╗Mount

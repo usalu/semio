@@ -16,11 +16,11 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@elements/framework": path.resolve(__dirname, "../../../framework/core/index.ts"),
-			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
-			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
+			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/index.tsx"),
+			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/index.tsx"),
 			"@elements/playground": path.resolve(__dirname, "../../../playground/index.ts"),
 			"@elements/spatial-js": path.resolve(__dirname, "../js/index.ts"),
-			"@elements/spatial-react": path.resolve(__dirname, "../react/index.tsx"),
+			"@elements/spatial-react": path.resolve(__dirname, "../index.tsx"),
 			"@elements/ui": path.resolve(__dirname, "../../core/index.tsx"),
 			"@elements/styling/elements.css": path.resolve(__dirname, "../../../styling/js/elements.css"),
 		},
