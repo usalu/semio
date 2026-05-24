@@ -2,4170 +2,1716 @@
   "schema": "spatial.topology/v1",
   "revision": 1,
   "vertices": {
-    "small-building-v0": {
-      "id": "small-building-v0",
+    "small-building-vertex-1027259450": {
+      "id": "small-building-vertex-1027259450",
       "position": [
-        264.77594,
-        538.827942,
+        264.775941,
+        538.827956,
+        34.44
+      ]
+    },
+    "small-building-vertex-1052483923": {
+      "id": "small-building-vertex-1052483923",
+      "position": [
+        310.69594,
+        440.427957,
+        34.44
+      ]
+    },
+    "small-building-vertex-1078954806": {
+      "id": "small-building-vertex-1078954806",
+      "position": [
+        264.775941,
+        440.427957,
+        34.44
+      ]
+    },
+    "small-building-vertex-1198540561": {
+      "id": "small-building-vertex-1198540561",
+      "position": [
+        264.775941,
+        440.427957,
         0
       ]
     },
-    "small-building-v1": {
-      "id": "small-building-v1",
+    "small-building-vertex-1393258689": {
+      "id": "small-building-vertex-1393258689",
       "position": [
-        264.77594,
-        501.107971,
+        310.69594,
+        538.827956,
+        69.699999
+      ]
+    },
+    "small-building-vertex-1412665337": {
+      "id": "small-building-vertex-1412665337",
+      "position": [
+        310.69594,
+        538.827956,
         0
       ]
     },
-    "small-building-v2": {
-      "id": "small-building-v2",
+    "small-building-vertex-1417750768": {
+      "id": "small-building-vertex-1417750768",
       "position": [
-        264.77594,
-        501.107971,
-        34.439999
+        310.69594,
+        501.107956,
+        97.989999
       ]
     },
-    "small-building-v3": {
-      "id": "small-building-v3",
+    "small-building-vertex-1487235108": {
+      "id": "small-building-vertex-1487235108",
       "position": [
-        264.77594,
-        538.827942,
-        34.439999
+        264.775941,
+        440.427957,
+        69.699999
       ]
     },
-    "small-building-v4": {
-      "id": "small-building-v4",
+    "small-building-vertex-1539396315": {
+      "id": "small-building-vertex-1539396315",
       "position": [
-        264.77594,
-        501.107971,
+        395.97594,
+        538.827956,
+        34.44
+      ]
+    },
+    "small-building-vertex-1653716766": {
+      "id": "small-building-vertex-1653716766",
+      "position": [
+        264.775941,
+        501.107956,
+        97.989999
+      ]
+    },
+    "small-building-vertex-1690047670": {
+      "id": "small-building-vertex-1690047670",
+      "position": [
+        310.69594,
+        440.427957,
         0
       ]
     },
-    "small-building-v5": {
-      "id": "small-building-v5",
+    "small-building-vertex-190344958": {
+      "id": "small-building-vertex-190344958",
       "position": [
-        310.695953,
-        501.107971,
+        395.97594,
+        489.627957,
+        106.599999
+      ]
+    },
+    "small-building-vertex-1928378833": {
+      "id": "small-building-vertex-1928378833",
+      "position": [
+        264.775941,
+        489.627957,
+        106.599999
+      ]
+    },
+    "small-building-vertex-198843528": {
+      "id": "small-building-vertex-198843528",
+      "position": [
+        356.61594,
+        501.107956,
         0
       ]
     },
-    "small-building-v6": {
-      "id": "small-building-v6",
+    "small-building-vertex-200778251": {
+      "id": "small-building-vertex-200778251",
       "position": [
-        264.77594,
-        538.827942,
+        310.69594,
+        501.107956,
+        34.44
+      ]
+    },
+    "small-building-vertex-2126675359": {
+      "id": "small-building-vertex-2126675359",
+      "position": [
+        264.775941,
+        538.827956,
+        69.699999
+      ]
+    },
+    "small-building-vertex-354458280": {
+      "id": "small-building-vertex-354458280",
+      "position": [
+        310.69594,
+        501.107956,
         0
       ]
     },
-    "small-building-v7": {
-      "id": "small-building-v7",
+    "small-building-vertex-385090140": {
+      "id": "small-building-vertex-385090140",
       "position": [
-        310.695953,
-        538.827942,
+        395.97594,
+        440.427957,
+        34.44
+      ]
+    },
+    "small-building-vertex-428254027": {
+      "id": "small-building-vertex-428254027",
+      "position": [
+        395.97594,
+        440.427957,
+        69.699999
+      ]
+    },
+    "small-building-vertex-468571430": {
+      "id": "small-building-vertex-468571430",
+      "position": [
+        356.61594,
+        538.827956,
+        69.699999
+      ]
+    },
+    "small-building-vertex-551332595": {
+      "id": "small-building-vertex-551332595",
+      "position": [
+        310.69594,
+        489.627957,
+        106.599999
+      ]
+    },
+    "small-building-vertex-55304137": {
+      "id": "small-building-vertex-55304137",
+      "position": [
+        356.61594,
+        538.827956,
+        34.44
+      ]
+    },
+    "small-building-vertex-560960189": {
+      "id": "small-building-vertex-560960189",
+      "position": [
+        264.775941,
+        501.107956,
+        34.44
+      ]
+    },
+    "small-building-vertex-566043311": {
+      "id": "small-building-vertex-566043311",
+      "position": [
+        264.775941,
+        538.827956,
         0
       ]
     },
-    "small-building-v8": {
-      "id": "small-building-v8",
+    "small-building-vertex-568544779": {
+      "id": "small-building-vertex-568544779",
       "position": [
-        264.77594,
-        501.107971,
+        395.97594,
+        538.827956,
+        69.699999
+      ]
+    },
+    "small-building-vertex-584100920": {
+      "id": "small-building-vertex-584100920",
+      "position": [
+        264.775941,
+        501.107956,
         0
       ]
     },
-    "small-building-v9": {
-      "id": "small-building-v9",
+    "small-building-vertex-595232246": {
+      "id": "small-building-vertex-595232246",
       "position": [
-        264.77594,
-        501.107971,
-        34.439999
+        395.97594,
+        501.107956,
+        97.989999
       ]
     },
-    "small-building-v10": {
-      "id": "small-building-v10",
+    "small-building-vertex-696914248": {
+      "id": "small-building-vertex-696914248",
       "position": [
-        310.695953,
-        501.107971,
+        356.61594,
+        501.107956,
+        97.989999
+      ]
+    },
+    "small-building-vertex-700015011": {
+      "id": "small-building-vertex-700015011",
+      "position": [
+        356.61594,
+        538.827956,
         0
       ]
     },
-    "small-building-v11": {
-      "id": "small-building-v11",
+    "small-building-vertex-834828749": {
+      "id": "small-building-vertex-834828749",
       "position": [
-        310.695953,
-        501.107971,
-        34.439999
+        310.69594,
+        538.827956,
+        34.44
       ]
     },
-    "small-building-v12": {
-      "id": "small-building-v12",
+    "small-building-vertex-861462044": {
+      "id": "small-building-vertex-861462044",
       "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v13": {
-      "id": "small-building-v13",
-      "position": [
-        264.77594,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v14": {
-      "id": "small-building-v14",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v15": {
-      "id": "small-building-v15",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v16": {
-      "id": "small-building-v16",
-      "position": [
-        264.77594,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v17": {
-      "id": "small-building-v17",
-      "position": [
-        264.77594,
-        538.827942,
+        395.97594,
+        538.827956,
         0
       ]
     },
-    "small-building-v18": {
-      "id": "small-building-v18",
+    "small-building-vertex-924737164": {
+      "id": "small-building-vertex-924737164",
       "position": [
-        310.695953,
-        538.827942,
-        34.439999
+        395.97594,
+        501.107956,
+        34.44
       ]
     },
-    "small-building-v19": {
-      "id": "small-building-v19",
+    "small-building-vertex-935545497": {
+      "id": "small-building-vertex-935545497",
       "position": [
-        310.695953,
-        538.827942,
+        395.97594,
+        440.427957,
         0
       ]
     },
-    "small-building-v20": {
-      "id": "small-building-v20",
+    "small-building-vertex-943996510": {
+      "id": "small-building-vertex-943996510",
       "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v21": {
-      "id": "small-building-v21",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v22": {
-      "id": "small-building-v22",
-      "position": [
-        310.695953,
-        501.107971,
+        395.97594,
+        501.107956,
         0
       ]
     },
-    "small-building-v23": {
-      "id": "small-building-v23",
+    "small-building-vertex-945778871": {
+      "id": "small-building-vertex-945778871",
       "position": [
-        310.695953,
-        538.827942,
-        0
+        310.69594,
+        440.427957,
+        69.699999
       ]
     },
-    "small-building-v24": {
-      "id": "small-building-v24",
+    "small-building-vertex-990488970": {
+      "id": "small-building-vertex-990488970",
       "position": [
-        264.77594,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v25": {
-      "id": "small-building-v25",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v26": {
-      "id": "small-building-v26",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v27": {
-      "id": "small-building-v27",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v28": {
-      "id": "small-building-v28",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v29": {
-      "id": "small-building-v29",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v30": {
-      "id": "small-building-v30",
-      "position": [
-        264.77594,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v31": {
-      "id": "small-building-v31",
-      "position": [
-        264.77594,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v32": {
-      "id": "small-building-v32",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v33": {
-      "id": "small-building-v33",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v34": {
-      "id": "small-building-v34",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v35": {
-      "id": "small-building-v35",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v36": {
-      "id": "small-building-v36",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v37": {
-      "id": "small-building-v37",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v38": {
-      "id": "small-building-v38",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v39": {
-      "id": "small-building-v39",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v40": {
-      "id": "small-building-v40",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v41": {
-      "id": "small-building-v41",
-      "position": [
-        264.77594,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v42": {
-      "id": "small-building-v42",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v43": {
-      "id": "small-building-v43",
-      "position": [
-        264.77594,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v44": {
-      "id": "small-building-v44",
-      "position": [
-        264.77594,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v45": {
-      "id": "small-building-v45",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v46": {
-      "id": "small-building-v46",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v47": {
-      "id": "small-building-v47",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v48": {
-      "id": "small-building-v48",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v49": {
-      "id": "small-building-v49",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v50": {
-      "id": "small-building-v50",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v51": {
-      "id": "small-building-v51",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v52": {
-      "id": "small-building-v52",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v53": {
-      "id": "small-building-v53",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v54": {
-      "id": "small-building-v54",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v55": {
-      "id": "small-building-v55",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v56": {
-      "id": "small-building-v56",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v57": {
-      "id": "small-building-v57",
-      "position": [
-        264.77594,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v58": {
-      "id": "small-building-v58",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v59": {
-      "id": "small-building-v59",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v60": {
-      "id": "small-building-v60",
-      "position": [
-        264.77594,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v61": {
-      "id": "small-building-v61",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v62": {
-      "id": "small-building-v62",
-      "position": [
-        264.77594,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v63": {
-      "id": "small-building-v63",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v64": {
-      "id": "small-building-v64",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v65": {
-      "id": "small-building-v65",
-      "position": [
-        264.77594,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v66": {
-      "id": "small-building-v66",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v67": {
-      "id": "small-building-v67",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v68": {
-      "id": "small-building-v68",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v69": {
-      "id": "small-building-v69",
-      "position": [
-        264.77594,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v70": {
-      "id": "small-building-v70",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v71": {
-      "id": "small-building-v71",
-      "position": [
-        264.77594,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v72": {
-      "id": "small-building-v72",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v73": {
-      "id": "small-building-v73",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v74": {
-      "id": "small-building-v74",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v75": {
-      "id": "small-building-v75",
-      "position": [
-        310.695953,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v76": {
-      "id": "small-building-v76",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v77": {
-      "id": "small-building-v77",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v78": {
-      "id": "small-building-v78",
-      "position": [
-        310.695953,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v79": {
-      "id": "small-building-v79",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v80": {
-      "id": "small-building-v80",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v81": {
-      "id": "small-building-v81",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v82": {
-      "id": "small-building-v82",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v83": {
-      "id": "small-building-v83",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v84": {
-      "id": "small-building-v84",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v85": {
-      "id": "small-building-v85",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v86": {
-      "id": "small-building-v86",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v87": {
-      "id": "small-building-v87",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v88": {
-      "id": "small-building-v88",
-      "position": [
-        310.695953,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v89": {
-      "id": "small-building-v89",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v90": {
-      "id": "small-building-v90",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v91": {
-      "id": "small-building-v91",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v92": {
-      "id": "small-building-v92",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v93": {
-      "id": "small-building-v93",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v94": {
-      "id": "small-building-v94",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v95": {
-      "id": "small-building-v95",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v96": {
-      "id": "small-building-v96",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v97": {
-      "id": "small-building-v97",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v98": {
-      "id": "small-building-v98",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v99": {
-      "id": "small-building-v99",
-      "position": [
-        395.975952,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v100": {
-      "id": "small-building-v100",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v101": {
-      "id": "small-building-v101",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v102": {
-      "id": "small-building-v102",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v103": {
-      "id": "small-building-v103",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v104": {
-      "id": "small-building-v104",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v105": {
-      "id": "small-building-v105",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v106": {
-      "id": "small-building-v106",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v107": {
-      "id": "small-building-v107",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v108": {
-      "id": "small-building-v108",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v109": {
-      "id": "small-building-v109",
-      "position": [
-        310.695953,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v110": {
-      "id": "small-building-v110",
-      "position": [
-        395.975952,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v111": {
-      "id": "small-building-v111",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v112": {
-      "id": "small-building-v112",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v113": {
-      "id": "small-building-v113",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v114": {
-      "id": "small-building-v114",
-      "position": [
-        395.975952,
-        440.427948,
-        0
-      ]
-    },
-    "small-building-v115": {
-      "id": "small-building-v115",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v116": {
-      "id": "small-building-v116",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v117": {
-      "id": "small-building-v117",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v118": {
-      "id": "small-building-v118",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v119": {
-      "id": "small-building-v119",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v120": {
-      "id": "small-building-v120",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v121": {
-      "id": "small-building-v121",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v122": {
-      "id": "small-building-v122",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v123": {
-      "id": "small-building-v123",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v124": {
-      "id": "small-building-v124",
-      "position": [
-        310.695953,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v125": {
-      "id": "small-building-v125",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v126": {
-      "id": "small-building-v126",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v127": {
-      "id": "small-building-v127",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v128": {
-      "id": "small-building-v128",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v129": {
-      "id": "small-building-v129",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v130": {
-      "id": "small-building-v130",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v131": {
-      "id": "small-building-v131",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v132": {
-      "id": "small-building-v132",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v133": {
-      "id": "small-building-v133",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v134": {
-      "id": "small-building-v134",
-      "position": [
-        264.77594,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v135": {
-      "id": "small-building-v135",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v136": {
-      "id": "small-building-v136",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v137": {
-      "id": "small-building-v137",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v138": {
-      "id": "small-building-v138",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v139": {
-      "id": "small-building-v139",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v140": {
-      "id": "small-building-v140",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v141": {
-      "id": "small-building-v141",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v142": {
-      "id": "small-building-v142",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v143": {
-      "id": "small-building-v143",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v144": {
-      "id": "small-building-v144",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v145": {
-      "id": "small-building-v145",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v146": {
-      "id": "small-building-v146",
-      "position": [
-        264.77594,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v147": {
-      "id": "small-building-v147",
-      "position": [
-        264.77594,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v148": {
-      "id": "small-building-v148",
-      "position": [
-        264.77594,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v149": {
-      "id": "small-building-v149",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v150": {
-      "id": "small-building-v150",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v151": {
-      "id": "small-building-v151",
-      "position": [
-        264.77594,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v152": {
-      "id": "small-building-v152",
-      "position": [
-        264.77594,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v153": {
-      "id": "small-building-v153",
-      "position": [
-        264.77594,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v154": {
-      "id": "small-building-v154",
-      "position": [
-        264.77594,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v155": {
-      "id": "small-building-v155",
-      "position": [
-        264.77594,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v156": {
-      "id": "small-building-v156",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v157": {
-      "id": "small-building-v157",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v158": {
-      "id": "small-building-v158",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v159": {
-      "id": "small-building-v159",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v160": {
-      "id": "small-building-v160",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v161": {
-      "id": "small-building-v161",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v162": {
-      "id": "small-building-v162",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v163": {
-      "id": "small-building-v163",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v164": {
-      "id": "small-building-v164",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v165": {
-      "id": "small-building-v165",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v166": {
-      "id": "small-building-v166",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v167": {
-      "id": "small-building-v167",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v168": {
-      "id": "small-building-v168",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v169": {
-      "id": "small-building-v169",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v170": {
-      "id": "small-building-v170",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v171": {
-      "id": "small-building-v171",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v172": {
-      "id": "small-building-v172",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v173": {
-      "id": "small-building-v173",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v174": {
-      "id": "small-building-v174",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v175": {
-      "id": "small-building-v175",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v176": {
-      "id": "small-building-v176",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v177": {
-      "id": "small-building-v177",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v178": {
-      "id": "small-building-v178",
-      "position": [
-        310.695953,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v179": {
-      "id": "small-building-v179",
-      "position": [
-        310.695953,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v180": {
-      "id": "small-building-v180",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v181": {
-      "id": "small-building-v181",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v182": {
-      "id": "small-building-v182",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v183": {
-      "id": "small-building-v183",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v184": {
-      "id": "small-building-v184",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v185": {
-      "id": "small-building-v185",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v186": {
-      "id": "small-building-v186",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v187": {
-      "id": "small-building-v187",
-      "position": [
-        395.975952,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v188": {
-      "id": "small-building-v188",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v189": {
-      "id": "small-building-v189",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v190": {
-      "id": "small-building-v190",
-      "position": [
-        356.615936,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v191": {
-      "id": "small-building-v191",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v192": {
-      "id": "small-building-v192",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v193": {
-      "id": "small-building-v193",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v194": {
-      "id": "small-building-v194",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v195": {
-      "id": "small-building-v195",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v196": {
-      "id": "small-building-v196",
-      "position": [
-        356.615936,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v197": {
-      "id": "small-building-v197",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v198": {
-      "id": "small-building-v198",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v199": {
-      "id": "small-building-v199",
-      "position": [
-        395.975952,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v200": {
-      "id": "small-building-v200",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v201": {
-      "id": "small-building-v201",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v202": {
-      "id": "small-building-v202",
-      "position": [
-        395.975952,
-        501.107971,
-        0
-      ]
-    },
-    "small-building-v203": {
-      "id": "small-building-v203",
-      "position": [
-        395.975952,
-        538.827942,
-        0
-      ]
-    },
-    "small-building-v204": {
-      "id": "small-building-v204",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v205": {
-      "id": "small-building-v205",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v206": {
-      "id": "small-building-v206",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v207": {
-      "id": "small-building-v207",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v208": {
-      "id": "small-building-v208",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v209": {
-      "id": "small-building-v209",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v210": {
-      "id": "small-building-v210",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v211": {
-      "id": "small-building-v211",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v212": {
-      "id": "small-building-v212",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v213": {
-      "id": "small-building-v213",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v214": {
-      "id": "small-building-v214",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v215": {
-      "id": "small-building-v215",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v216": {
-      "id": "small-building-v216",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v217": {
-      "id": "small-building-v217",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v218": {
-      "id": "small-building-v218",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v219": {
-      "id": "small-building-v219",
-      "position": [
-        310.695953,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v220": {
-      "id": "small-building-v220",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v221": {
-      "id": "small-building-v221",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v222": {
-      "id": "small-building-v222",
-      "position": [
-        310.695953,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v223": {
-      "id": "small-building-v223",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v224": {
-      "id": "small-building-v224",
-      "position": [
-        395.975952,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v225": {
-      "id": "small-building-v225",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v226": {
-      "id": "small-building-v226",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v227": {
-      "id": "small-building-v227",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v228": {
-      "id": "small-building-v228",
-      "position": [
-        395.975952,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v229": {
-      "id": "small-building-v229",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v230": {
-      "id": "small-building-v230",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v231": {
-      "id": "small-building-v231",
-      "position": [
-        395.975952,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v232": {
-      "id": "small-building-v232",
-      "position": [
-        395.975952,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v233": {
-      "id": "small-building-v233",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v234": {
-      "id": "small-building-v234",
-      "position": [
-        310.695953,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v235": {
-      "id": "small-building-v235",
-      "position": [
-        395.975952,
-        440.427948,
-        34.439999
-      ]
-    },
-    "small-building-v236": {
-      "id": "small-building-v236",
-      "position": [
-        310.695953,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v237": {
-      "id": "small-building-v237",
-      "position": [
-        310.695953,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v238": {
-      "id": "small-building-v238",
-      "position": [
-        395.975952,
-        440.427948,
-        69.699997
-      ]
-    },
-    "small-building-v239": {
-      "id": "small-building-v239",
-      "position": [
-        395.975952,
-        489.62796,
-        106.599998
-      ]
-    },
-    "small-building-v240": {
-      "id": "small-building-v240",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v241": {
-      "id": "small-building-v241",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v242": {
-      "id": "small-building-v242",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v243": {
-      "id": "small-building-v243",
-      "position": [
-        395.975952,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v244": {
-      "id": "small-building-v244",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v245": {
-      "id": "small-building-v245",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v246": {
-      "id": "small-building-v246",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v247": {
-      "id": "small-building-v247",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v248": {
-      "id": "small-building-v248",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v249": {
-      "id": "small-building-v249",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v250": {
-      "id": "small-building-v250",
-      "position": [
-        395.975952,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v251": {
-      "id": "small-building-v251",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v252": {
-      "id": "small-building-v252",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v253": {
-      "id": "small-building-v253",
-      "position": [
-        395.975952,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v254": {
-      "id": "small-building-v254",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v255": {
-      "id": "small-building-v255",
-      "position": [
-        395.975952,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v256": {
-      "id": "small-building-v256",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v257": {
-      "id": "small-building-v257",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v258": {
-      "id": "small-building-v258",
-      "position": [
-        395.975952,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v259": {
-      "id": "small-building-v259",
-      "position": [
-        395.975952,
-        538.827942,
-        69.699997
-      ]
-    },
-    "small-building-v260": {
-      "id": "small-building-v260",
-      "position": [
-        356.615936,
-        501.107971,
-        97.989998
-      ]
-    },
-    "small-building-v261": {
-      "id": "small-building-v261",
-      "position": [
-        356.615936,
-        501.107971,
-        34.439999
-      ]
-    },
-    "small-building-v262": {
-      "id": "small-building-v262",
-      "position": [
-        356.615936,
-        538.827942,
-        34.439999
-      ]
-    },
-    "small-building-v263": {
-      "id": "small-building-v263",
-      "position": [
-        356.615936,
-        538.827942,
-        69.699997
+        356.61594,
+        501.107956,
+        34.44
       ]
     }
   },
-  "edges": {},
+  "edges": {
+    "small-building-edge-1070453701": {
+      "id": "small-building-edge-1070453701",
+      "vertexIds": [
+        "small-building-vertex-945778871",
+        "small-building-vertex-1052483923"
+      ]
+    },
+    "small-building-edge-1087294237": {
+      "id": "small-building-edge-1087294237",
+      "vertexIds": [
+        "small-building-vertex-696914248",
+        "small-building-vertex-990488970"
+      ]
+    },
+    "small-building-edge-1108121009": {
+      "id": "small-building-edge-1108121009",
+      "vertexIds": [
+        "small-building-vertex-945778871",
+        "small-building-vertex-1487235108"
+      ]
+    },
+    "small-building-edge-1114968992": {
+      "id": "small-building-edge-1114968992",
+      "vertexIds": [
+        "small-building-vertex-584100920",
+        "small-building-vertex-1198540561"
+      ]
+    },
+    "small-building-edge-1129968473": {
+      "id": "small-building-edge-1129968473",
+      "vertexIds": [
+        "small-building-vertex-55304137",
+        "small-building-vertex-468571430"
+      ]
+    },
+    "small-building-edge-1135198732": {
+      "id": "small-building-edge-1135198732",
+      "vertexIds": [
+        "small-building-vertex-198843528",
+        "small-building-vertex-700015011"
+      ]
+    },
+    "small-building-edge-1176603989": {
+      "id": "small-building-edge-1176603989",
+      "vertexIds": [
+        "small-building-vertex-834828749",
+        "small-building-vertex-1393258689"
+      ]
+    },
+    "small-building-edge-1181976793": {
+      "id": "small-building-edge-1181976793",
+      "vertexIds": [
+        "small-building-vertex-1539396315",
+        "small-building-vertex-568544779"
+      ]
+    },
+    "small-building-edge-1221590728": {
+      "id": "small-building-edge-1221590728",
+      "vertexIds": [
+        "small-building-vertex-2126675359",
+        "small-building-vertex-1027259450"
+      ]
+    },
+    "small-building-edge-1246638018": {
+      "id": "small-building-edge-1246638018",
+      "vertexIds": [
+        "small-building-vertex-935545497",
+        "small-building-vertex-385090140"
+      ]
+    },
+    "small-building-edge-1254229480": {
+      "id": "small-building-edge-1254229480",
+      "vertexIds": [
+        "small-building-vertex-990488970",
+        "small-building-vertex-198843528"
+      ]
+    },
+    "small-building-edge-1261178177": {
+      "id": "small-building-edge-1261178177",
+      "vertexIds": [
+        "small-building-vertex-560960189",
+        "small-building-vertex-1653716766"
+      ]
+    },
+    "small-building-edge-1293562955": {
+      "id": "small-building-edge-1293562955",
+      "vertexIds": [
+        "small-building-vertex-1393258689",
+        "small-building-vertex-1417750768"
+      ]
+    },
+    "small-building-edge-1336202142": {
+      "id": "small-building-edge-1336202142",
+      "vertexIds": [
+        "small-building-vertex-385090140",
+        "small-building-vertex-924737164"
+      ]
+    },
+    "small-building-edge-1400646396": {
+      "id": "small-building-edge-1400646396",
+      "vertexIds": [
+        "small-building-vertex-943996510",
+        "small-building-vertex-935545497"
+      ]
+    },
+    "small-building-edge-1422159112": {
+      "id": "small-building-edge-1422159112",
+      "vertexIds": [
+        "small-building-vertex-1078954806",
+        "small-building-vertex-1487235108"
+      ]
+    },
+    "small-building-edge-1434101711": {
+      "id": "small-building-edge-1434101711",
+      "vertexIds": [
+        "small-building-vertex-943996510",
+        "small-building-vertex-861462044"
+      ]
+    },
+    "small-building-edge-1526088265": {
+      "id": "small-building-edge-1526088265",
+      "vertexIds": [
+        "small-building-vertex-468571430",
+        "small-building-vertex-696914248"
+      ]
+    },
+    "small-building-edge-1546619411": {
+      "id": "small-building-edge-1546619411",
+      "vertexIds": [
+        "small-building-vertex-696914248",
+        "small-building-vertex-595232246"
+      ]
+    },
+    "small-building-edge-1565678408": {
+      "id": "small-building-edge-1565678408",
+      "vertexIds": [
+        "small-building-vertex-1690047670",
+        "small-building-vertex-354458280"
+      ]
+    },
+    "small-building-edge-1567786765": {
+      "id": "small-building-edge-1567786765",
+      "vertexIds": [
+        "small-building-vertex-551332595",
+        "small-building-vertex-945778871"
+      ]
+    },
+    "small-building-edge-1660152326": {
+      "id": "small-building-edge-1660152326",
+      "vertexIds": [
+        "small-building-vertex-354458280",
+        "small-building-vertex-1412665337"
+      ]
+    },
+    "small-building-edge-1705326756": {
+      "id": "small-building-edge-1705326756",
+      "vertexIds": [
+        "small-building-vertex-1928378833",
+        "small-building-vertex-551332595"
+      ]
+    },
+    "small-building-edge-172877525": {
+      "id": "small-building-edge-172877525",
+      "vertexIds": [
+        "small-building-vertex-1690047670",
+        "small-building-vertex-1052483923"
+      ]
+    },
+    "small-building-edge-1803358123": {
+      "id": "small-building-edge-1803358123",
+      "vertexIds": [
+        "small-building-vertex-190344958",
+        "small-building-vertex-428254027"
+      ]
+    },
+    "small-building-edge-1875256078": {
+      "id": "small-building-edge-1875256078",
+      "vertexIds": [
+        "small-building-vertex-385090140",
+        "small-building-vertex-1052483923"
+      ]
+    },
+    "small-building-edge-1884754140": {
+      "id": "small-building-edge-1884754140",
+      "vertexIds": [
+        "small-building-vertex-595232246",
+        "small-building-vertex-190344958"
+      ]
+    },
+    "small-building-edge-1905736256": {
+      "id": "small-building-edge-1905736256",
+      "vertexIds": [
+        "small-building-vertex-428254027",
+        "small-building-vertex-945778871"
+      ]
+    },
+    "small-building-edge-1914903829": {
+      "id": "small-building-edge-1914903829",
+      "vertexIds": [
+        "small-building-vertex-200778251",
+        "small-building-vertex-990488970"
+      ]
+    },
+    "small-building-edge-1943812986": {
+      "id": "small-building-edge-1943812986",
+      "vertexIds": [
+        "small-building-vertex-566043311",
+        "small-building-vertex-584100920"
+      ]
+    },
+    "small-building-edge-2004107109": {
+      "id": "small-building-edge-2004107109",
+      "vertexIds": [
+        "small-building-vertex-200778251",
+        "small-building-vertex-560960189"
+      ]
+    },
+    "small-building-edge-2062007036": {
+      "id": "small-building-edge-2062007036",
+      "vertexIds": [
+        "small-building-vertex-990488970",
+        "small-building-vertex-924737164"
+      ]
+    },
+    "small-building-edge-2075229525": {
+      "id": "small-building-edge-2075229525",
+      "vertexIds": [
+        "small-building-vertex-1027259450",
+        "small-building-vertex-566043311"
+      ]
+    },
+    "small-building-edge-2101307748": {
+      "id": "small-building-edge-2101307748",
+      "vertexIds": [
+        "small-building-vertex-943996510",
+        "small-building-vertex-198843528"
+      ]
+    },
+    "small-building-edge-2102926252": {
+      "id": "small-building-edge-2102926252",
+      "vertexIds": [
+        "small-building-vertex-1928378833",
+        "small-building-vertex-1653716766"
+      ]
+    },
+    "small-building-edge-2106132793": {
+      "id": "small-building-edge-2106132793",
+      "vertexIds": [
+        "small-building-vertex-1198540561",
+        "small-building-vertex-1690047670"
+      ]
+    },
+    "small-building-edge-216560696": {
+      "id": "small-building-edge-216560696",
+      "vertexIds": [
+        "small-building-vertex-595232246",
+        "small-building-vertex-924737164"
+      ]
+    },
+    "small-building-edge-219287551": {
+      "id": "small-building-edge-219287551",
+      "vertexIds": [
+        "small-building-vertex-551332595",
+        "small-building-vertex-190344958"
+      ]
+    },
+    "small-building-edge-224238197": {
+      "id": "small-building-edge-224238197",
+      "vertexIds": [
+        "small-building-vertex-584100920",
+        "small-building-vertex-560960189"
+      ]
+    },
+    "small-building-edge-225319834": {
+      "id": "small-building-edge-225319834",
+      "vertexIds": [
+        "small-building-vertex-861462044",
+        "small-building-vertex-1539396315"
+      ]
+    },
+    "small-building-edge-229106015": {
+      "id": "small-building-edge-229106015",
+      "vertexIds": [
+        "small-building-vertex-1027259450",
+        "small-building-vertex-834828749"
+      ]
+    },
+    "small-building-edge-258854128": {
+      "id": "small-building-edge-258854128",
+      "vertexIds": [
+        "small-building-vertex-568544779",
+        "small-building-vertex-595232246"
+      ]
+    },
+    "small-building-edge-278123677": {
+      "id": "small-building-edge-278123677",
+      "vertexIds": [
+        "small-building-vertex-584100920",
+        "small-building-vertex-354458280"
+      ]
+    },
+    "small-building-edge-278867947": {
+      "id": "small-building-edge-278867947",
+      "vertexIds": [
+        "small-building-vertex-834828749",
+        "small-building-vertex-200778251"
+      ]
+    },
+    "small-building-edge-295162881": {
+      "id": "small-building-edge-295162881",
+      "vertexIds": [
+        "small-building-vertex-700015011",
+        "small-building-vertex-1412665337"
+      ]
+    },
+    "small-building-edge-305839019": {
+      "id": "small-building-edge-305839019",
+      "vertexIds": [
+        "small-building-vertex-861462044",
+        "small-building-vertex-700015011"
+      ]
+    },
+    "small-building-edge-332998341": {
+      "id": "small-building-edge-332998341",
+      "vertexIds": [
+        "small-building-vertex-200778251",
+        "small-building-vertex-354458280"
+      ]
+    },
+    "small-building-edge-349583852": {
+      "id": "small-building-edge-349583852",
+      "vertexIds": [
+        "small-building-vertex-1052483923",
+        "small-building-vertex-1078954806"
+      ]
+    },
+    "small-building-edge-354613623": {
+      "id": "small-building-edge-354613623",
+      "vertexIds": [
+        "small-building-vertex-1487235108",
+        "small-building-vertex-1928378833"
+      ]
+    },
+    "small-building-edge-432705901": {
+      "id": "small-building-edge-432705901",
+      "vertexIds": [
+        "small-building-vertex-200778251",
+        "small-building-vertex-1052483923"
+      ]
+    },
+    "small-building-edge-432807106": {
+      "id": "small-building-edge-432807106",
+      "vertexIds": [
+        "small-building-vertex-1417750768",
+        "small-building-vertex-200778251"
+      ]
+    },
+    "small-building-edge-467629952": {
+      "id": "small-building-edge-467629952",
+      "vertexIds": [
+        "small-building-vertex-1078954806",
+        "small-building-vertex-560960189"
+      ]
+    },
+    "small-building-edge-492289368": {
+      "id": "small-building-edge-492289368",
+      "vertexIds": [
+        "small-building-vertex-468571430",
+        "small-building-vertex-568544779"
+      ]
+    },
+    "small-building-edge-49481349": {
+      "id": "small-building-edge-49481349",
+      "vertexIds": [
+        "small-building-vertex-1417750768",
+        "small-building-vertex-551332595"
+      ]
+    },
+    "small-building-edge-508083477": {
+      "id": "small-building-edge-508083477",
+      "vertexIds": [
+        "small-building-vertex-1417750768",
+        "small-building-vertex-1653716766"
+      ]
+    },
+    "small-building-edge-51009478": {
+      "id": "small-building-edge-51009478",
+      "vertexIds": [
+        "small-building-vertex-924737164",
+        "small-building-vertex-943996510"
+      ]
+    },
+    "small-building-edge-53081364": {
+      "id": "small-building-edge-53081364",
+      "vertexIds": [
+        "small-building-vertex-55304137",
+        "small-building-vertex-1539396315"
+      ]
+    },
+    "small-building-edge-589906933": {
+      "id": "small-building-edge-589906933",
+      "vertexIds": [
+        "small-building-vertex-1393258689",
+        "small-building-vertex-468571430"
+      ]
+    },
+    "small-building-edge-598826215": {
+      "id": "small-building-edge-598826215",
+      "vertexIds": [
+        "small-building-vertex-1690047670",
+        "small-building-vertex-935545497"
+      ]
+    },
+    "small-building-edge-601106960": {
+      "id": "small-building-edge-601106960",
+      "vertexIds": [
+        "small-building-vertex-1417750768",
+        "small-building-vertex-696914248"
+      ]
+    },
+    "small-building-edge-608733341": {
+      "id": "small-building-edge-608733341",
+      "vertexIds": [
+        "small-building-vertex-700015011",
+        "small-building-vertex-55304137"
+      ]
+    },
+    "small-building-edge-657827535": {
+      "id": "small-building-edge-657827535",
+      "vertexIds": [
+        "small-building-vertex-198843528",
+        "small-building-vertex-354458280"
+      ]
+    },
+    "small-building-edge-666672115": {
+      "id": "small-building-edge-666672115",
+      "vertexIds": [
+        "small-building-vertex-1078954806",
+        "small-building-vertex-1198540561"
+      ]
+    },
+    "small-building-edge-757634469": {
+      "id": "small-building-edge-757634469",
+      "vertexIds": [
+        "small-building-vertex-1412665337",
+        "small-building-vertex-834828749"
+      ]
+    },
+    "small-building-edge-779379499": {
+      "id": "small-building-edge-779379499",
+      "vertexIds": [
+        "small-building-vertex-1412665337",
+        "small-building-vertex-566043311"
+      ]
+    },
+    "small-building-edge-814507104": {
+      "id": "small-building-edge-814507104",
+      "vertexIds": [
+        "small-building-vertex-55304137",
+        "small-building-vertex-990488970"
+      ]
+    },
+    "small-building-edge-829530808": {
+      "id": "small-building-edge-829530808",
+      "vertexIds": [
+        "small-building-vertex-2126675359",
+        "small-building-vertex-1393258689"
+      ]
+    },
+    "small-building-edge-858566927": {
+      "id": "small-building-edge-858566927",
+      "vertexIds": [
+        "small-building-vertex-385090140",
+        "small-building-vertex-428254027"
+      ]
+    },
+    "small-building-edge-894079751": {
+      "id": "small-building-edge-894079751",
+      "vertexIds": [
+        "small-building-vertex-1539396315",
+        "small-building-vertex-924737164"
+      ]
+    },
+    "small-building-edge-905942567": {
+      "id": "small-building-edge-905942567",
+      "vertexIds": [
+        "small-building-vertex-1653716766",
+        "small-building-vertex-2126675359"
+      ]
+    },
+    "small-building-edge-936303582": {
+      "id": "small-building-edge-936303582",
+      "vertexIds": [
+        "small-building-vertex-834828749",
+        "small-building-vertex-55304137"
+      ]
+    },
+    "small-building-edge-951546977": {
+      "id": "small-building-edge-951546977",
+      "vertexIds": [
+        "small-building-vertex-560960189",
+        "small-building-vertex-1027259450"
+      ]
+    }
+  },
   "wires": {
-    "small-building-mesh-wire": {
-      "id": "small-building-mesh-wire",
-      "edgeIds": [],
-      "closed": true
+    "small-building-wire-1095357825": {
+      "id": "small-building-wire-1095357825",
+      "edgeIds": [
+        "small-building-edge-467629952",
+        "small-building-edge-1422159112",
+        "small-building-edge-354613623",
+        "small-building-edge-2102926252",
+        "small-building-edge-1261178177"
+      ]
+    },
+    "small-building-wire-1096443527": {
+      "id": "small-building-wire-1096443527",
+      "edgeIds": [
+        "small-building-edge-936303582",
+        "small-building-edge-1176603989",
+        "small-building-edge-589906933",
+        "small-building-edge-1129968473"
+      ]
+    },
+    "small-building-wire-1098242493": {
+      "id": "small-building-wire-1098242493",
+      "edgeIds": [
+        "small-building-edge-1254229480",
+        "small-building-edge-1914903829",
+        "small-building-edge-332998341",
+        "small-building-edge-657827535"
+      ]
+    },
+    "small-building-wire-1114708436": {
+      "id": "small-building-wire-1114708436",
+      "edgeIds": [
+        "small-building-edge-905942567",
+        "small-building-edge-508083477",
+        "small-building-edge-1293562955",
+        "small-building-edge-829530808"
+      ]
+    },
+    "small-building-wire-1172378877": {
+      "id": "small-building-wire-1172378877",
+      "edgeIds": [
+        "small-building-edge-49481349",
+        "small-building-edge-219287551",
+        "small-building-edge-1884754140",
+        "small-building-edge-601106960",
+        "small-building-edge-1546619411"
+      ]
+    },
+    "small-building-wire-1184681038": {
+      "id": "small-building-wire-1184681038",
+      "edgeIds": [
+        "small-building-edge-814507104",
+        "small-building-edge-2062007036",
+        "small-building-edge-894079751",
+        "small-building-edge-53081364"
+      ]
+    },
+    "small-building-wire-1300391340": {
+      "id": "small-building-wire-1300391340",
+      "edgeIds": [
+        "small-building-edge-53081364",
+        "small-building-edge-1129968473",
+        "small-building-edge-492289368",
+        "small-building-edge-1181976793"
+      ]
+    },
+    "small-building-wire-1316372424": {
+      "id": "small-building-wire-1316372424",
+      "edgeIds": [
+        "small-building-edge-1875256078",
+        "small-building-edge-172877525",
+        "small-building-edge-598826215",
+        "small-building-edge-1246638018"
+      ]
+    },
+    "small-building-wire-1366152152": {
+      "id": "small-building-wire-1366152152",
+      "edgeIds": [
+        "small-building-edge-278123677",
+        "small-building-edge-1943812986",
+        "small-building-edge-779379499",
+        "small-building-edge-1660152326"
+      ]
+    },
+    "small-building-wire-1368161050": {
+      "id": "small-building-wire-1368161050",
+      "edgeIds": [
+        "small-building-edge-2101307748",
+        "small-building-edge-1135198732",
+        "small-building-edge-305839019",
+        "small-building-edge-1434101711"
+      ]
+    },
+    "small-building-wire-1390110645": {
+      "id": "small-building-wire-1390110645",
+      "edgeIds": [
+        "small-building-edge-278867947",
+        "small-building-edge-1914903829",
+        "small-building-edge-814507104",
+        "small-building-edge-936303582"
+      ]
+    },
+    "small-building-wire-1398946955": {
+      "id": "small-building-wire-1398946955",
+      "edgeIds": [
+        "small-building-edge-1567786765",
+        "small-building-edge-1905736256",
+        "small-building-edge-1803358123",
+        "small-building-edge-219287551"
+      ]
+    },
+    "small-building-wire-1399618711": {
+      "id": "small-building-wire-1399618711",
+      "edgeIds": [
+        "small-building-edge-349583852",
+        "small-building-edge-432705901",
+        "small-building-edge-2004107109",
+        "small-building-edge-467629952"
+      ]
+    },
+    "small-building-wire-1404785392": {
+      "id": "small-building-wire-1404785392",
+      "edgeIds": [
+        "small-building-edge-608733341",
+        "small-building-edge-53081364",
+        "small-building-edge-225319834",
+        "small-building-edge-305839019"
+      ]
+    },
+    "small-building-wire-1502734446": {
+      "id": "small-building-wire-1502734446",
+      "edgeIds": [
+        "small-building-edge-1293562955",
+        "small-building-edge-601106960",
+        "small-building-edge-1526088265",
+        "small-building-edge-589906933"
+      ]
+    },
+    "small-building-wire-1553478650": {
+      "id": "small-building-wire-1553478650",
+      "edgeIds": [
+        "small-building-edge-2062007036",
+        "small-building-edge-216560696",
+        "small-building-edge-1546619411",
+        "small-building-edge-1087294237"
+      ]
+    },
+    "small-building-wire-1559546061": {
+      "id": "small-building-wire-1559546061",
+      "edgeIds": [
+        "small-building-edge-2075229525",
+        "small-building-edge-229106015",
+        "small-building-edge-757634469",
+        "small-building-edge-779379499"
+      ]
+    },
+    "small-building-wire-1590398748": {
+      "id": "small-building-wire-1590398748",
+      "edgeIds": [
+        "small-building-edge-172877525",
+        "small-building-edge-1565678408",
+        "small-building-edge-332998341",
+        "small-building-edge-432705901"
+      ]
+    },
+    "small-building-wire-1592230924": {
+      "id": "small-building-wire-1592230924",
+      "edgeIds": [
+        "small-building-edge-757634469",
+        "small-building-edge-936303582",
+        "small-building-edge-608733341",
+        "small-building-edge-295162881"
+      ]
+    },
+    "small-building-wire-1597372722": {
+      "id": "small-building-wire-1597372722",
+      "edgeIds": [
+        "small-building-edge-858566927",
+        "small-building-edge-1336202142",
+        "small-building-edge-216560696",
+        "small-building-edge-1884754140",
+        "small-building-edge-1803358123"
+      ]
+    },
+    "small-building-wire-1632492423": {
+      "id": "small-building-wire-1632492423",
+      "edgeIds": [
+        "small-building-edge-657827535",
+        "small-building-edge-1660152326",
+        "small-building-edge-295162881",
+        "small-building-edge-1135198732"
+      ]
+    },
+    "small-building-wire-164476126": {
+      "id": "small-building-wire-164476126",
+      "edgeIds": [
+        "small-building-edge-229106015",
+        "small-building-edge-1221590728",
+        "small-building-edge-829530808",
+        "small-building-edge-1176603989"
+      ]
+    },
+    "small-building-wire-1664100031": {
+      "id": "small-building-wire-1664100031",
+      "edgeIds": [
+        "small-building-edge-432807106",
+        "small-building-edge-278867947",
+        "small-building-edge-1176603989",
+        "small-building-edge-1293562955"
+      ]
+    },
+    "small-building-wire-1673128573": {
+      "id": "small-building-wire-1673128573",
+      "edgeIds": [
+        "small-building-edge-1875256078",
+        "small-building-edge-1336202142",
+        "small-building-edge-1914903829",
+        "small-building-edge-2062007036",
+        "small-building-edge-432705901"
+      ]
+    },
+    "small-building-wire-1676387167": {
+      "id": "small-building-wire-1676387167",
+      "edgeIds": [
+        "small-building-edge-1070453701",
+        "small-building-edge-432705901",
+        "small-building-edge-432807106",
+        "small-building-edge-49481349",
+        "small-building-edge-1567786765"
+      ]
+    },
+    "small-building-wire-1714825002": {
+      "id": "small-building-wire-1714825002",
+      "edgeIds": [
+        "small-building-edge-666672115",
+        "small-building-edge-467629952",
+        "small-building-edge-224238197",
+        "small-building-edge-1114968992"
+      ]
+    },
+    "small-building-wire-1737456781": {
+      "id": "small-building-wire-1737456781",
+      "edgeIds": [
+        "small-building-edge-216560696",
+        "small-building-edge-894079751",
+        "small-building-edge-1181976793",
+        "small-building-edge-258854128"
+      ]
+    },
+    "small-building-wire-1742634236": {
+      "id": "small-building-wire-1742634236",
+      "edgeIds": [
+        "small-building-edge-278867947",
+        "small-building-edge-332998341",
+        "small-building-edge-1660152326",
+        "small-building-edge-757634469"
+      ]
+    },
+    "small-building-wire-1745669744": {
+      "id": "small-building-wire-1745669744",
+      "edgeIds": [
+        "small-building-edge-1087294237",
+        "small-building-edge-601106960",
+        "small-building-edge-432807106",
+        "small-building-edge-1914903829"
+      ]
+    },
+    "small-building-wire-1748227933": {
+      "id": "small-building-wire-1748227933",
+      "edgeIds": [
+        "small-building-edge-951546977",
+        "small-building-edge-1261178177",
+        "small-building-edge-905942567",
+        "small-building-edge-1221590728"
+      ]
+    },
+    "small-building-wire-1755121565": {
+      "id": "small-building-wire-1755121565",
+      "edgeIds": [
+        "small-building-edge-2004107109",
+        "small-building-edge-432807106",
+        "small-building-edge-508083477",
+        "small-building-edge-1261178177"
+      ]
+    },
+    "small-building-wire-1817346002": {
+      "id": "small-building-wire-1817346002",
+      "edgeIds": [
+        "small-building-edge-1526088265",
+        "small-building-edge-1546619411",
+        "small-building-edge-258854128",
+        "small-building-edge-492289368"
+      ]
+    },
+    "small-building-wire-1847165922": {
+      "id": "small-building-wire-1847165922",
+      "edgeIds": [
+        "small-building-edge-51009478",
+        "small-building-edge-2062007036",
+        "small-building-edge-1254229480",
+        "small-building-edge-2101307748"
+      ]
+    },
+    "small-building-wire-2038755520": {
+      "id": "small-building-wire-2038755520",
+      "edgeIds": [
+        "small-building-edge-1087294237",
+        "small-building-edge-814507104",
+        "small-building-edge-1129968473",
+        "small-building-edge-1526088265"
+      ]
+    },
+    "small-building-wire-256701055": {
+      "id": "small-building-wire-256701055",
+      "edgeIds": [
+        "small-building-edge-1246638018",
+        "small-building-edge-1400646396",
+        "small-building-edge-51009478",
+        "small-building-edge-1336202142"
+      ]
+    },
+    "small-building-wire-285005499": {
+      "id": "small-building-wire-285005499",
+      "edgeIds": [
+        "small-building-edge-349583852",
+        "small-building-edge-1070453701",
+        "small-building-edge-1108121009",
+        "small-building-edge-1422159112"
+      ]
+    },
+    "small-building-wire-311748032": {
+      "id": "small-building-wire-311748032",
+      "edgeIds": [
+        "small-building-edge-354613623",
+        "small-building-edge-1108121009",
+        "small-building-edge-1567786765",
+        "small-building-edge-1705326756"
+      ]
+    },
+    "small-building-wire-36314266": {
+      "id": "small-building-wire-36314266",
+      "edgeIds": [
+        "small-building-edge-814507104",
+        "small-building-edge-1254229480",
+        "small-building-edge-1135198732",
+        "small-building-edge-608733341"
+      ]
+    },
+    "small-building-wire-403059999": {
+      "id": "small-building-wire-403059999",
+      "edgeIds": [
+        "small-building-edge-1565678408",
+        "small-building-edge-2106132793",
+        "small-building-edge-1114968992",
+        "small-building-edge-278123677"
+      ]
+    },
+    "small-building-wire-456551683": {
+      "id": "small-building-wire-456551683",
+      "edgeIds": [
+        "small-building-edge-1943812986",
+        "small-building-edge-224238197",
+        "small-building-edge-951546977",
+        "small-building-edge-2075229525"
+      ]
+    },
+    "small-building-wire-510979431": {
+      "id": "small-building-wire-510979431",
+      "edgeIds": [
+        "small-building-edge-1905736256",
+        "small-building-edge-1070453701",
+        "small-building-edge-1875256078",
+        "small-building-edge-858566927"
+      ]
+    },
+    "small-building-wire-515231130": {
+      "id": "small-building-wire-515231130",
+      "edgeIds": [
+        "small-building-edge-224238197",
+        "small-building-edge-278123677",
+        "small-building-edge-332998341",
+        "small-building-edge-2004107109"
+      ]
+    },
+    "small-building-wire-516983686": {
+      "id": "small-building-wire-516983686",
+      "edgeIds": [
+        "small-building-edge-894079751",
+        "small-building-edge-51009478",
+        "small-building-edge-1434101711",
+        "small-building-edge-225319834"
+      ]
+    },
+    "small-building-wire-646169955": {
+      "id": "small-building-wire-646169955",
+      "edgeIds": [
+        "small-building-edge-598826215",
+        "small-building-edge-1565678408",
+        "small-building-edge-2101307748",
+        "small-building-edge-657827535",
+        "small-building-edge-1400646396"
+      ]
+    },
+    "small-building-wire-715609103": {
+      "id": "small-building-wire-715609103",
+      "edgeIds": [
+        "small-building-edge-2106132793",
+        "small-building-edge-172877525",
+        "small-building-edge-349583852",
+        "small-building-edge-666672115"
+      ]
+    },
+    "small-building-wire-924227310": {
+      "id": "small-building-wire-924227310",
+      "edgeIds": [
+        "small-building-edge-49481349",
+        "small-building-edge-508083477",
+        "small-building-edge-2102926252",
+        "small-building-edge-1705326756"
+      ]
+    },
+    "small-building-wire-978200956": {
+      "id": "small-building-wire-978200956",
+      "edgeIds": [
+        "small-building-edge-951546977",
+        "small-building-edge-2004107109",
+        "small-building-edge-278867947",
+        "small-building-edge-229106015"
+      ]
     }
   },
   "faces": {
-    "small-building-mesh-face": {
-      "id": "small-building-mesh-face",
-      "outerWireId": "small-building-mesh-wire",
-      "surface": {
-        "kind": "mesh",
-        "vertices": [
-          [
-            264.77594,
-            538.827942,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            538.827942,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            264.77594,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            440.427948,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            0
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            538.827942,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            0
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            0
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            0
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            264.77594,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            264.77594,
-            489.62796,
-            106.599998
-          ],
-          [
-            264.77594,
-            440.427948,
-            69.699997
-          ],
-          [
-            264.77594,
-            489.62796,
-            106.599998
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            264.77594,
-            440.427948,
-            34.439999
-          ],
-          [
-            264.77594,
-            501.107971,
-            34.439999
-          ],
-          [
-            264.77594,
-            440.427948,
-            69.699997
-          ],
-          [
-            264.77594,
-            489.62796,
-            106.599998
-          ],
-          [
-            264.77594,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            34.439999
-          ],
-          [
-            310.695953,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            395.975952,
-            538.827942,
-            0
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            0
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            0
-          ],
-          [
-            395.975952,
-            538.827942,
-            0
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            34.439999
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            310.695953,
-            501.107971,
-            97.989998
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            395.975952,
-            489.62796,
-            106.599998
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            395.975952,
-            440.427948,
-            69.699997
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            489.62796,
-            106.599998
-          ],
-          [
-            395.975952,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            310.695953,
-            440.427948,
-            34.439999
-          ],
-          [
-            395.975952,
-            440.427948,
-            34.439999
-          ],
-          [
-            310.695953,
-            489.62796,
-            106.599998
-          ],
-          [
-            310.695953,
-            440.427948,
-            69.699997
-          ],
-          [
-            395.975952,
-            440.427948,
-            69.699997
-          ],
-          [
-            395.975952,
-            489.62796,
-            106.599998
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            501.107971,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            395.975952,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ],
-          [
-            395.975952,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            501.107971,
-            97.989998
-          ],
-          [
-            395.975952,
-            538.827942,
-            69.699997
-          ],
-          [
-            356.615936,
-            501.107971,
-            97.989998
-          ],
-          [
-            356.615936,
-            501.107971,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            34.439999
-          ],
-          [
-            356.615936,
-            538.827942,
-            69.699997
-          ]
-        ],
-        "triangles": [
-          [
-            2,
-            3,
-            0
-          ],
-          [
-            1,
-            2,
-            0
-          ],
-          [
-            6,
-            5,
-            4
-          ],
-          [
-            6,
-            7,
-            5
-          ],
-          [
-            10,
-            9,
-            8
-          ],
-          [
-            10,
-            11,
-            9
-          ],
-          [
-            15,
-            13,
-            12
-          ],
-          [
-            15,
-            12,
-            14
-          ],
-          [
-            18,
-            17,
-            16
-          ],
-          [
-            18,
-            19,
-            17
-          ],
-          [
-            22,
-            23,
-            20
-          ],
-          [
-            21,
-            22,
-            20
-          ],
-          [
-            25,
-            26,
-            27
-          ],
-          [
-            25,
-            27,
-            24
-          ],
-          [
-            31,
-            29,
-            28
-          ],
-          [
-            31,
-            28,
-            30
-          ],
-          [
-            33,
-            32,
-            34
-          ],
-          [
-            33,
-            34,
-            35
-          ],
-          [
-            38,
-            37,
-            36
-          ],
-          [
-            38,
-            39,
-            37
-          ],
-          [
-            41,
-            40,
-            42
-          ],
-          [
-            41,
-            42,
-            43
-          ],
-          [
-            45,
-            46,
-            44
-          ],
-          [
-            47,
-            46,
-            45
-          ],
-          [
-            49,
-            50,
-            51
-          ],
-          [
-            48,
-            49,
-            51
-          ],
-          [
-            52,
-            54,
-            55
-          ],
-          [
-            52,
-            55,
-            53
-          ],
-          [
-            57,
-            59,
-            56
-          ],
-          [
-            56,
-            59,
-            58
-          ],
-          [
-            61,
-            60,
-            62
-          ],
-          [
-            63,
-            61,
-            62
-          ],
-          [
-            65,
-            64,
-            66
-          ],
-          [
-            65,
-            66,
-            67
-          ],
-          [
-            68,
-            70,
-            71
-          ],
-          [
-            68,
-            71,
-            69
-          ],
-          [
-            75,
-            74,
-            72
-          ],
-          [
-            74,
-            73,
-            72
-          ],
-          [
-            78,
-            76,
-            77
-          ],
-          [
-            78,
-            79,
-            76
-          ],
-          [
-            81,
-            80,
-            82
-          ],
-          [
-            82,
-            80,
-            83
-          ],
-          [
-            87,
-            84,
-            85
-          ],
-          [
-            87,
-            85,
-            86
-          ],
-          [
-            90,
-            88,
-            89
-          ],
-          [
-            90,
-            91,
-            88
-          ],
-          [
-            94,
-            95,
-            92
-          ],
-          [
-            93,
-            94,
-            92
-          ],
-          [
-            99,
-            96,
-            97
-          ],
-          [
-            99,
-            97,
-            98
-          ],
-          [
-            103,
-            101,
-            100
-          ],
-          [
-            103,
-            104,
-            101
-          ],
-          [
-            102,
-            103,
-            100
-          ],
-          [
-            105,
-            106,
-            107
-          ],
-          [
-            107,
-            106,
-            108
-          ],
-          [
-            112,
-            110,
-            109
-          ],
-          [
-            112,
-            113,
-            110
-          ],
-          [
-            111,
-            112,
-            109
-          ],
-          [
-            115,
-            114,
-            116
-          ],
-          [
-            115,
-            116,
-            117
-          ],
-          [
-            118,
-            119,
-            120
-          ],
-          [
-            118,
-            120,
-            121
-          ],
-          [
-            122,
-            123,
-            124
-          ],
-          [
-            122,
-            124,
-            125
-          ],
-          [
-            126,
-            127,
-            128
-          ],
-          [
-            126,
-            128,
-            129
-          ],
-          [
-            126,
-            129,
-            130
-          ],
-          [
-            133,
-            134,
-            132
-          ],
-          [
-            131,
-            133,
-            132
-          ],
-          [
-            136,
-            137,
-            135
-          ],
-          [
-            138,
-            137,
-            136
-          ],
-          [
-            141,
-            139,
-            142
-          ],
-          [
-            142,
-            139,
-            140
-          ],
-          [
-            145,
-            144,
-            143
-          ],
-          [
-            145,
-            146,
-            144
-          ],
-          [
-            148,
-            147,
-            149
-          ],
-          [
-            148,
-            149,
-            150
-          ],
-          [
-            153,
-            154,
-            155
-          ],
-          [
-            153,
-            155,
-            152
-          ],
-          [
-            151,
-            153,
-            152
-          ],
-          [
-            157,
-            158,
-            159
-          ],
-          [
-            156,
-            157,
-            159
-          ],
-          [
-            161,
-            160,
-            162
-          ],
-          [
-            162,
-            160,
-            163
-          ],
-          [
-            164,
-            167,
-            165
-          ],
-          [
-            165,
-            167,
-            166
-          ],
-          [
-            169,
-            168,
-            170
-          ],
-          [
-            171,
-            169,
-            170
-          ],
-          [
-            172,
-            173,
-            174
-          ],
-          [
-            172,
-            174,
-            175
-          ],
-          [
-            178,
-            177,
-            179
-          ],
-          [
-            177,
-            176,
-            179
-          ],
-          [
-            183,
-            182,
-            180
-          ],
-          [
-            182,
-            181,
-            180
-          ],
-          [
-            186,
-            184,
-            185
-          ],
-          [
-            186,
-            187,
-            184
-          ],
-          [
-            189,
-            188,
-            190
-          ],
-          [
-            190,
-            188,
-            191
-          ],
-          [
-            194,
-            192,
-            193
-          ],
-          [
-            195,
-            192,
-            194
-          ],
-          [
-            198,
-            196,
-            197
-          ],
-          [
-            198,
-            199,
-            196
-          ],
-          [
-            202,
-            203,
-            200
-          ],
-          [
-            201,
-            202,
-            200
-          ],
-          [
-            204,
-            205,
-            206
-          ],
-          [
-            204,
-            206,
-            207
-          ],
-          [
-            211,
-            209,
-            208
-          ],
-          [
-            211,
-            208,
-            210
-          ],
-          [
-            213,
-            215,
-            212
-          ],
-          [
-            216,
-            215,
-            213
-          ],
-          [
-            215,
-            214,
-            212
-          ],
-          [
-            218,
-            217,
-            219
-          ],
-          [
-            219,
-            217,
-            220
-          ],
-          [
-            220,
-            217,
-            221
-          ],
-          [
-            226,
-            224,
-            225
-          ],
-          [
-            223,
-            224,
-            226
-          ],
-          [
-            222,
-            223,
-            226
-          ],
-          [
-            228,
-            227,
-            229
-          ],
-          [
-            228,
-            229,
-            230
-          ],
-          [
-            228,
-            230,
-            231
-          ],
-          [
-            232,
-            233,
-            234
-          ],
-          [
-            235,
-            232,
-            234
-          ],
-          [
-            236,
-            237,
-            238
-          ],
-          [
-            236,
-            238,
-            239
-          ],
-          [
-            241,
-            242,
-            243
-          ],
-          [
-            240,
-            241,
-            243
-          ],
-          [
-            245,
-            247,
-            244
-          ],
-          [
-            244,
-            247,
-            246
-          ],
-          [
-            248,
-            250,
-            249
-          ],
-          [
-            248,
-            251,
-            250
-          ],
-          [
-            255,
-            253,
-            252
-          ],
-          [
-            255,
-            252,
-            254
-          ],
-          [
-            256,
-            257,
-            258
-          ],
-          [
-            256,
-            258,
-            259
-          ],
-          [
-            262,
-            261,
-            263
-          ],
-          [
-            261,
-            260,
-            263
-          ]
-        ]
-      }
+    "small-building-face-1049102882": {
+      "id": "small-building-face-1049102882",
+      "wireIds": [
+        "small-building-wire-1592230924"
+      ]
+    },
+    "small-building-face-1071813579": {
+      "id": "small-building-face-1071813579",
+      "wireIds": [
+        "small-building-wire-1559546061"
+      ]
+    },
+    "small-building-face-1144073303": {
+      "id": "small-building-face-1144073303",
+      "wireIds": [
+        "small-building-wire-1755121565"
+      ]
+    },
+    "small-building-face-1198070201": {
+      "id": "small-building-face-1198070201",
+      "wireIds": [
+        "small-building-wire-456551683"
+      ]
+    },
+    "small-building-face-123273386": {
+      "id": "small-building-face-123273386",
+      "wireIds": [
+        "small-building-wire-1745669744"
+      ]
+    },
+    "small-building-face-1321487947": {
+      "id": "small-building-face-1321487947",
+      "wireIds": [
+        "small-building-wire-1742634236"
+      ]
+    },
+    "small-building-face-1333043829": {
+      "id": "small-building-face-1333043829",
+      "wireIds": [
+        "small-building-wire-516983686"
+      ]
+    },
+    "small-building-face-1336622373": {
+      "id": "small-building-face-1336622373",
+      "wireIds": [
+        "small-building-wire-36314266"
+      ]
+    },
+    "small-building-face-1366698037": {
+      "id": "small-building-face-1366698037",
+      "wireIds": [
+        "small-building-wire-1590398748"
+      ]
+    },
+    "small-building-face-1375822498": {
+      "id": "small-building-face-1375822498",
+      "wireIds": [
+        "small-building-wire-715609103"
+      ]
+    },
+    "small-building-face-1382216532": {
+      "id": "small-building-face-1382216532",
+      "wireIds": [
+        "small-building-wire-164476126"
+      ]
+    },
+    "small-building-face-1382526041": {
+      "id": "small-building-face-1382526041",
+      "wireIds": [
+        "small-building-wire-1095357825"
+      ]
+    },
+    "small-building-face-145599241": {
+      "id": "small-building-face-145599241",
+      "wireIds": [
+        "small-building-wire-1748227933"
+      ]
+    },
+    "small-building-face-1457506915": {
+      "id": "small-building-face-1457506915",
+      "wireIds": [
+        "small-building-wire-1172378877"
+      ]
+    },
+    "small-building-face-1457969424": {
+      "id": "small-building-face-1457969424",
+      "wireIds": [
+        "small-building-wire-1817346002"
+      ]
+    },
+    "small-building-face-1542409550": {
+      "id": "small-building-face-1542409550",
+      "wireIds": [
+        "small-building-wire-1096443527"
+      ]
+    },
+    "small-building-face-1570704954": {
+      "id": "small-building-face-1570704954",
+      "wireIds": [
+        "small-building-wire-2038755520"
+      ]
+    },
+    "small-building-face-1577063820": {
+      "id": "small-building-face-1577063820",
+      "wireIds": [
+        "small-building-wire-1632492423"
+      ]
+    },
+    "small-building-face-1631560793": {
+      "id": "small-building-face-1631560793",
+      "wireIds": [
+        "small-building-wire-256701055"
+      ]
+    },
+    "small-building-face-1652633605": {
+      "id": "small-building-face-1652633605",
+      "wireIds": [
+        "small-building-wire-1847165922"
+      ]
+    },
+    "small-building-face-1722928574": {
+      "id": "small-building-face-1722928574",
+      "wireIds": [
+        "small-building-wire-510979431"
+      ]
+    },
+    "small-building-face-1833451572": {
+      "id": "small-building-face-1833451572",
+      "wireIds": [
+        "small-building-wire-1366152152"
+      ]
+    },
+    "small-building-face-1880838606": {
+      "id": "small-building-face-1880838606",
+      "wireIds": [
+        "small-building-wire-1300391340"
+      ]
+    },
+    "small-building-face-1891411219": {
+      "id": "small-building-face-1891411219",
+      "wireIds": [
+        "small-building-wire-1399618711"
+      ]
+    },
+    "small-building-face-1944355059": {
+      "id": "small-building-face-1944355059",
+      "wireIds": [
+        "small-building-wire-1714825002"
+      ]
+    },
+    "small-building-face-1973958103": {
+      "id": "small-building-face-1973958103",
+      "wireIds": [
+        "small-building-wire-646169955"
+      ]
+    },
+    "small-building-face-2019874201": {
+      "id": "small-building-face-2019874201",
+      "wireIds": [
+        "small-building-wire-311748032"
+      ]
+    },
+    "small-building-face-205984231": {
+      "id": "small-building-face-205984231",
+      "wireIds": [
+        "small-building-wire-403059999"
+      ]
+    },
+    "small-building-face-2078803802": {
+      "id": "small-building-face-2078803802",
+      "wireIds": [
+        "small-building-wire-1368161050"
+      ]
+    },
+    "small-building-face-2114497508": {
+      "id": "small-building-face-2114497508",
+      "wireIds": [
+        "small-building-wire-1390110645"
+      ]
+    },
+    "small-building-face-2129815768": {
+      "id": "small-building-face-2129815768",
+      "wireIds": [
+        "small-building-wire-924227310"
+      ]
+    },
+    "small-building-face-257952373": {
+      "id": "small-building-face-257952373",
+      "wireIds": [
+        "small-building-wire-1597372722"
+      ]
+    },
+    "small-building-face-383803774": {
+      "id": "small-building-face-383803774",
+      "wireIds": [
+        "small-building-wire-515231130"
+      ]
+    },
+    "small-building-face-512606747": {
+      "id": "small-building-face-512606747",
+      "wireIds": [
+        "small-building-wire-285005499"
+      ]
+    },
+    "small-building-face-566674442": {
+      "id": "small-building-face-566674442",
+      "wireIds": [
+        "small-building-wire-1502734446"
+      ]
+    },
+    "small-building-face-578295541": {
+      "id": "small-building-face-578295541",
+      "wireIds": [
+        "small-building-wire-1316372424"
+      ]
+    },
+    "small-building-face-611087225": {
+      "id": "small-building-face-611087225",
+      "wireIds": [
+        "small-building-wire-1673128573"
+      ]
+    },
+    "small-building-face-620157701": {
+      "id": "small-building-face-620157701",
+      "wireIds": [
+        "small-building-wire-1114708436"
+      ]
+    },
+    "small-building-face-624717229": {
+      "id": "small-building-face-624717229",
+      "wireIds": [
+        "small-building-wire-978200956"
+      ]
+    },
+    "small-building-face-646282419": {
+      "id": "small-building-face-646282419",
+      "wireIds": [
+        "small-building-wire-1184681038"
+      ]
+    },
+    "small-building-face-700285324": {
+      "id": "small-building-face-700285324",
+      "wireIds": [
+        "small-building-wire-1098242493"
+      ]
+    },
+    "small-building-face-807614999": {
+      "id": "small-building-face-807614999",
+      "wireIds": [
+        "small-building-wire-1737456781"
+      ]
+    },
+    "small-building-face-816291467": {
+      "id": "small-building-face-816291467",
+      "wireIds": [
+        "small-building-wire-1676387167"
+      ]
+    },
+    "small-building-face-820822656": {
+      "id": "small-building-face-820822656",
+      "wireIds": [
+        "small-building-wire-1664100031"
+      ]
+    },
+    "small-building-face-824333506": {
+      "id": "small-building-face-824333506",
+      "wireIds": [
+        "small-building-wire-1398946955"
+      ]
+    },
+    "small-building-face-930164148": {
+      "id": "small-building-face-930164148",
+      "wireIds": [
+        "small-building-wire-1404785392"
+      ]
+    },
+    "small-building-face-976303559": {
+      "id": "small-building-face-976303559",
+      "wireIds": [
+        "small-building-wire-1553478650"
+      ]
     }
   },
   "shells": {
-    "small-building-shell": {
-      "id": "small-building-shell",
+    "small-building-shell-1021196941": {
+      "id": "small-building-shell-1021196941",
       "faceIds": [
-        "small-building-mesh-face"
+        "small-building-face-1570704954",
+        "small-building-face-123273386",
+        "small-building-face-2114497508",
+        "small-building-face-1542409550",
+        "small-building-face-566674442",
+        "small-building-face-820822656"
+      ]
+    },
+    "small-building-shell-115098816": {
+      "id": "small-building-shell-115098816",
+      "faceIds": [
+        "small-building-face-816291467",
+        "small-building-face-512606747",
+        "small-building-face-1891411219",
+        "small-building-face-1144073303",
+        "small-building-face-2129815768",
+        "small-building-face-2019874201",
+        "small-building-face-1382526041"
+      ]
+    },
+    "small-building-shell-1482876550": {
+      "id": "small-building-shell-1482876550",
+      "faceIds": [
+        "small-building-face-820822656",
+        "small-building-face-1144073303",
+        "small-building-face-624717229",
+        "small-building-face-1382216532",
+        "small-building-face-620157701",
+        "small-building-face-145599241"
+      ]
+    },
+    "small-building-shell-1731270073": {
+      "id": "small-building-shell-1731270073",
+      "faceIds": [
+        "small-building-face-578295541",
+        "small-building-face-611087225",
+        "small-building-face-1366698037",
+        "small-building-face-1973958103",
+        "small-building-face-1631560793",
+        "small-building-face-1652633605",
+        "small-building-face-700285324"
+      ]
+    },
+    "small-building-shell-319815043": {
+      "id": "small-building-shell-319815043",
+      "faceIds": [
+        "small-building-face-1198070201",
+        "small-building-face-1833451572",
+        "small-building-face-383803774",
+        "small-building-face-624717229",
+        "small-building-face-1071813579",
+        "small-building-face-1321487947"
+      ]
+    },
+    "small-building-shell-431204894": {
+      "id": "small-building-shell-431204894",
+      "faceIds": [
+        "small-building-face-807614999",
+        "small-building-face-976303559",
+        "small-building-face-646282419",
+        "small-building-face-1880838606",
+        "small-building-face-1457969424",
+        "small-building-face-1570704954"
+      ]
+    },
+    "small-building-shell-564953133": {
+      "id": "small-building-shell-564953133",
+      "faceIds": [
+        "small-building-face-123273386",
+        "small-building-face-976303559",
+        "small-building-face-611087225",
+        "small-building-face-816291467",
+        "small-building-face-1457506915",
+        "small-building-face-257952373",
+        "small-building-face-1722928574",
+        "small-building-face-824333506"
+      ]
+    },
+    "small-building-shell-582028949": {
+      "id": "small-building-shell-582028949",
+      "faceIds": [
+        "small-building-face-1375822498",
+        "small-building-face-205984231",
+        "small-building-face-1366698037",
+        "small-building-face-1891411219",
+        "small-building-face-1944355059",
+        "small-building-face-383803774"
+      ]
+    },
+    "small-building-shell-729436001": {
+      "id": "small-building-shell-729436001",
+      "faceIds": [
+        "small-building-face-1336622373",
+        "small-building-face-2078803802",
+        "small-building-face-1652633605",
+        "small-building-face-646282419",
+        "small-building-face-930164148",
+        "small-building-face-1333043829"
+      ]
+    },
+    "small-building-shell-851607366": {
+      "id": "small-building-shell-851607366",
+      "faceIds": [
+        "small-building-face-1321487947",
+        "small-building-face-1577063820",
+        "small-building-face-700285324",
+        "small-building-face-2114497508",
+        "small-building-face-1049102882",
+        "small-building-face-1336622373"
       ]
     }
   },
   "cells": {
-    "small-building-cell": {
-      "id": "small-building-cell",
+    "small-building-cell-123052045": {
+      "id": "small-building-cell-123052045",
       "shellIds": [
-        "small-building-shell"
+        "small-building-shell-319815043"
+      ]
+    },
+    "small-building-cell-1278694563": {
+      "id": "small-building-cell-1278694563",
+      "shellIds": [
+        "small-building-shell-115098816"
+      ]
+    },
+    "small-building-cell-1726958126": {
+      "id": "small-building-cell-1726958126",
+      "shellIds": [
+        "small-building-shell-1731270073"
+      ]
+    },
+    "small-building-cell-177644683": {
+      "id": "small-building-cell-177644683",
+      "shellIds": [
+        "small-building-shell-431204894"
+      ]
+    },
+    "small-building-cell-346474455": {
+      "id": "small-building-cell-346474455",
+      "shellIds": [
+        "small-building-shell-1482876550"
+      ]
+    },
+    "small-building-cell-509251538": {
+      "id": "small-building-cell-509251538",
+      "shellIds": [
+        "small-building-shell-851607366"
+      ]
+    },
+    "small-building-cell-531581172": {
+      "id": "small-building-cell-531581172",
+      "shellIds": [
+        "small-building-shell-729436001"
+      ]
+    },
+    "small-building-cell-548248443": {
+      "id": "small-building-cell-548248443",
+      "shellIds": [
+        "small-building-shell-564953133"
+      ]
+    },
+    "small-building-cell-916435296": {
+      "id": "small-building-cell-916435296",
+      "shellIds": [
+        "small-building-shell-582028949"
+      ]
+    },
+    "small-building-cell-920901709": {
+      "id": "small-building-cell-920901709",
+      "shellIds": [
+        "small-building-shell-1021196941"
       ]
     }
   },
   "cellComplexes": {
-    "small-building-complex": {
-      "id": "small-building-complex",
+    "small-building-cell-complex": {
+      "id": "small-building-cell-complex",
       "cellIds": [
-        "small-building-cell"
-      ],
-      "sharedFaceIds": []
+        "small-building-cell-123052045",
+        "small-building-cell-916435296",
+        "small-building-cell-346474455",
+        "small-building-cell-509251538",
+        "small-building-cell-1726958126",
+        "small-building-cell-1278694563",
+        "small-building-cell-920901709",
+        "small-building-cell-531581172",
+        "small-building-cell-548248443",
+        "small-building-cell-177644683"
+      ]
     }
   },
   "clusters": {
     "small-building-asset": {
       "id": "small-building-asset",
       "memberIds": [
-        "small-building-complex"
+        "small-building-cell-complex"
       ]
     }
   }

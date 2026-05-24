@@ -36,50 +36,28 @@
     "edge": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "vertexA", "vertexB", "curve"],
+      "required": ["id", "vertexIds"],
       "properties": {
         "id": { "type": "string" },
-        "vertexA": { "type": "string" },
-        "vertexB": { "type": "string" },
-        "curve": {
-          "type": "object",
-          "required": ["kind"],
-          "properties": {
-            "kind": { "type": "string", "enum": ["line", "polyline", "bezier"] },
-            "controls": { "type": "array", "items": { "$ref": "#/$defs/vec3" } }
-          }
-        }
+        "vertexIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 }
       }
     },
     "wire": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "edgeIds", "closed"],
+      "required": ["id", "edgeIds"],
       "properties": {
         "id": { "type": "string" },
-        "edgeIds": { "type": "array", "items": { "type": "string" } },
-        "closed": { "type": "boolean" }
+        "edgeIds": { "type": "array", "items": { "type": "string" } }
       }
     },
     "face": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "outerWireId", "surface"],
+      "required": ["id", "wireIds"],
       "properties": {
         "id": { "type": "string" },
-        "outerWireId": { "type": "string" },
-        "holeWireIds": { "type": "array", "items": { "type": "string" } },
-        "surface": {
-          "type": "object",
-          "required": ["kind"],
-          "properties": {
-            "kind": { "type": "string", "enum": ["planar", "mesh"] },
-            "normal": { "$ref": "#/$defs/vec3" },
-            "origin": { "$ref": "#/$defs/vec3" },
-            "vertices": { "type": "array", "items": { "$ref": "#/$defs/vec3" } },
-            "triangles": { "type": "array", "items": { "type": "array", "items": { "type": "integer" }, "minItems": 3, "maxItems": 3 } }
-          }
-        }
+        "wireIds": { "type": "array", "items": { "type": "string" } }
       }
     },
     "shell": {
@@ -103,11 +81,10 @@
     "cellComplex": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "cellIds", "sharedFaceIds"],
+      "required": ["id", "cellIds"],
       "properties": {
         "id": { "type": "string" },
-        "cellIds": { "type": "array", "items": { "type": "string" } },
-        "sharedFaceIds": { "type": "array", "items": { "type": "string" } }
+        "cellIds": { "type": "array", "items": { "type": "string" } }
       }
     },
     "cluster": {

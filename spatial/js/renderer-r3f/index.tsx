@@ -97,9 +97,7 @@ function topologyVertexPoint(vertices: Record<string, VertexRecord>, id: string)
 }
 
 function topologyEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRecord): readonly Vec3[] {
-	const a = topologyVertexPoint(vertices, edge.vertexA);
-	const b = topologyVertexPoint(vertices, edge.vertexB);
-	return a && b ? [a, b] : [];
+	return edge.vertexIds.map((id) => topologyVertexPoint(vertices, id)).filter((p): p is Vec3 => Boolean(p));
 }
 
 function topologyFacePoints(
@@ -108,8 +106,7 @@ function topologyFacePoints(
 	wires: Record<string, WireRecord>,
 	face: FaceRecord,
 ): readonly Vec3[] {
-	if (face.surface.kind === "mesh") return face.surface.vertices;
-	const ids = wires[face.outerWireId]?.edgeIds ?? [];
+	const ids = face.wireIds.flatMap((wireId) => wires[wireId]?.edgeIds ?? []);
 	const points = ids.flatMap((id) => {
 		const edge = edges[id];
 		return edge ? topologyEdgePoints(vertices, edge) : [];

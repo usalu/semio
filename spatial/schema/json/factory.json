@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "spatial://schema/json/factory",
-  "title": "SpatialFactorySpec",
+  "$id": "spatial://schema/json/command",
+  "title": "SpatialCommandSpec",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "version", "machine", "commit"],
   "properties": {
-    "schema": { "const": "spatial.factory/v1" },
+    "schema": { "const": "spatial.command/v1" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },
@@ -41,6 +41,16 @@
             "additionalProperties": false,
             "properties": {
               "final": { "type": "boolean" },
+              "selection": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["accept"],
+                "properties": {
+                  "accept": { "type": "array", "items": { "type": "string" } },
+                  "multiple": { "type": "boolean" },
+                  "prompt": { "type": "string" }
+                }
+              },
               "on": {
                 "type": "object",
                 "additionalProperties": { "$ref": "#/$defs/transition" }
@@ -76,6 +86,8 @@
       "required": ["operation"],
       "properties": {
         "when": { "type": "string" },
+        "fromStates": { "type": "array", "items": { "type": "string" } },
+        "outputDataPath": { "type": "string" },
         "operation": {
           "type": "object",
           "required": ["kind", "params"],

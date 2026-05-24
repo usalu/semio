@@ -1,0 +1,50 @@
+{
+  "schema": "spatial.command/v1",
+  "id": "measure.area",
+  "version": "1.0.0",
+  "label": "Area",
+  "guards": {
+    "hasFaceArea": {
+      "all": [{ "notEmpty": { "path": "resolvedFaceIds" } }]
+    }
+  },
+  "history": { "excludeEvents": ["pointer.move", "confirm"] },
+  "machine": {
+    "initial": "selectFace",
+    "states": {
+      "selectFace": {
+        "selection": { "accept": ["face", "surface"], "multiple": false, "prompt": "Pick face or surface" },
+        "on": {
+          "selection.changed": {
+            "target": "ready",
+            "actions": [
+              { "op": "assign", "path": "pickedId", "value": { "$event": "targets.0.id" } },
+              {
+                "op": "kernel.query",
+                "query": "surface.resolveFaces",
+                "assignTo": "resolvedFaceIds",
+                "params": { "surfaceId": { "path": "pickedId" } }
+              }
+            ]
+          },
+          "cancel": { "target": "selectFace" }
+        }
+      },
+      "ready": {
+        "on": {
+          "confirm": { "target": "committed", "guard": "hasFaceArea" }
+        }
+      },
+      "committed": { "final": true }
+    }
+  },
+  "commit": {
+    "when": "hasFaceArea",
+    "fromStates": ["ready"],
+    "operation": {
+      "kind": "measure.area",
+      "params": { "faceId": { "path": "resolvedFaceIds.0" } }
+    },
+    "outputDataPath": "area"
+  }
+}

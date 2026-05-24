@@ -1,0 +1,642 @@
+{
+  "schema": "spatial.command/v1",
+  "id": "primitive.box",
+  "version": "1.0.0",
+  "label": "Box",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "ready",
+      "committed",
+      "first_corner_length_prompt"
+    ],
+    "groundPointerMoveStates": [
+      "first_corner",
+      "first_corner_other_or_length",
+      "diagonal_rubber",
+      "cube_diagonal_rubber",
+      "cube_other_corner",
+      "three_point_edge",
+      "three_point_width",
+      "vertical_width",
+      "center_corner",
+      "cube_center_corner"
+    ],
+    "heightDragStates": ["first_corner_height"],
+    "verticalRodStates": ["vertical_end"],
+    "heightConfirmState": "first_corner_height"
+  },
+  "requires": {
+    "kernel": {
+      "operations": ["cell.createBox", "entity.tessellate"],
+      "editableEntities": ["vertex", "edge", "wire", "face", "shell", "cell"]
+    }
+  },
+  "guards": {
+    "hasValidBox": {
+      "all": [
+        { "exists": { "path": "origin" } },
+        { "exists": { "path": "corner" } },
+        { "exists": { "path": "height" } },
+        { ">": [{ "path": "height" }, 0] },
+        {
+          ">": [
+            {
+              "abs": {
+                "-": [{ "path": "corner.0" }, { "path": "origin.0" }]
+              }
+            },
+            1e-9
+          ]
+        },
+        {
+          ">": [
+            {
+              "abs": {
+                "-": [{ "path": "corner.1" }, { "path": "origin.1" }]
+              }
+            },
+            1e-9
+          ]
+        }
+      ]
+    },
+    "boxModePoint": { "==": [{ "path": "boxMode" }, "point"] },
+    "boxModeDiagonal": { "==": [{ "path": "boxMode" }, "diagonal"] },
+    "boxModeThreePoint": { "==": [{ "path": "boxMode" }, "threePoint"] },
+    "boxModeVertical": { "==": [{ "path": "boxMode" }, "vertical"] },
+    "boxModeCenter": { "==": [{ "path": "boxMode" }, "center"] }
+  },
+  "history": {
+    "excludeEvents": ["pointer.move", "confirm"]
+  },
+  "machine": {
+    "initial": "idle",
+    "states": {
+      "idle": {
+        "on": {
+          "start": {
+            "target": "first_corner",
+            "key": "s",
+            "label": "Start",
+            "actions": [
+              { "op": "assign", "path": "cursor", "value": { "const": [0, 0, 0] } },
+              { "op": "assign", "path": "boxMode", "value": "point" }
+            ]
+          }
+        }
+      },
+      "first_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
+          },
+          "mode.point": {
+            "key": "t",
+            "label": "Point",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "point" }]
+          },
+          "mode.diagonal": {
+            "key": "d",
+            "label": "Diagonal",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "diagonal" }]
+          },
+          "mode.threePoint": {
+            "key": "p",
+            "label": "3Point",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "threePoint" }]
+          },
+          "mode.vertical": {
+            "key": "v",
+            "label": "Vertical",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "vertical" }]
+          },
+          "mode.center": {
+            "key": "e",
+            "label": "Center",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "center" }]
+          },
+          "pointer.down": [
+            {
+              "guard": "boxModePoint",
+              "target": "first_corner_other_or_length",
+              "actions": [
+                { "op": "assign", "path": "origin", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeDiagonal",
+              "target": "diagonal_rubber",
+              "actions": [
+                { "op": "assign", "path": "diagA", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeThreePoint",
+              "target": "three_point_edge",
+              "actions": [
+                { "op": "assign", "path": "p0", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeVertical",
+              "target": "vertical_end",
+              "actions": [
+                { "op": "assign", "path": "origin", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" },
+                { "op": "box.initPeakAboveOrigin" }
+              ]
+            },
+            {
+              "guard": "boxModeCenter",
+              "target": "center_corner",
+              "actions": [
+                { "op": "assign", "path": "rectCenter", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            }
+          ],
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "first_corner_other_or_length": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [
+              { "op": "assign", "path": "corner", "value": { "$event": "point" } },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
+          },
+          "mode.cube": { "target": "cube_other_corner", "key": "u", "label": "Cube" },
+          "mode.length": { "target": "first_corner_length_prompt", "key": "l", "label": "Length" },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "first_corner_length_prompt": {
+        "on": {
+          "set.footprint": {
+            "target": "first_corner_height",
+            "key": "w",
+            "label": "Apply L×W",
+            "actions": [
+              { "op": "box.cornerFromLengthWidth" },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "diagonal_rubber": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [
+              { "op": "box.aabbFromDiagonalCorners" },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
+          },
+          "mode.cube": {
+            "target": "cube_diagonal_rubber",
+            "key": "u",
+            "label": "Cube",
+            "actions": [{ "op": "clear", "path": "corner" }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "cube_diagonal_rubber": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.aabbFromDiagonalCorners" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "three_point_edge": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "three_point_width",
+            "actions": [
+              { "op": "assign", "path": "p1", "value": { "$event": "point" } },
+              { "op": "clear", "path": "cursor" }
+            ]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "three_point_width": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.tripletRubber" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.tripletCommit" }, { "op": "assign", "path": "height", "value": 0.25 }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "vertical_end": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.peakFromOriginZ" }]
+          },
+          "pointer.down": { "target": "vertical_width" },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "vertical_width": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.verticalRubberCorner" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.verticalFinalizeFootprint" }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "center_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.rubberCornerFromCenter" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.rubberCornerFromCenter" }, { "op": "assign", "path": "height", "value": 0.25 }]
+          },
+          "mode.cube": { "target": "cube_center_corner", "key": "u", "label": "Cube" },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "cube_center_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.rubberSquareFromCenter" }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.rubberSquareFromCenter" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "cube_other_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.snapSquareFootprint" }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.snapSquareFootprint" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "first_corner_height": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [
+              {
+                "op": "assign",
+                "path": "height",
+                "value": {
+                  "let": {
+                    "z0": { "path": "origin.2" },
+                    "z1": { "$event": "point.2" }
+                  },
+                  "in": {
+                    "+": [
+                      { "abs": { "-": [{ "var": "z1" }, { "var": "z0" }] } },
+                      0.01
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "set.height": {
+            "target": "ready",
+            "key": "h",
+            "label": "Apply typed height",
+            "actions": [{ "op": "assign", "path": "height", "value": { "$event": "value" } }]
+          },
+          "confirm": {
+            "target": "ready",
+            "guard": "hasValidBox",
+            "key": "Enter",
+            "label": "Accept height"
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "ready": {
+        "on": {
+          "confirm": {
+            "target": "committed",
+            "guard": "hasValidBox",
+            "key": "f",
+            "label": "Finalize"
+          },
+          "cancel": { "target": "idle", "key": "x", "label": "Cancel" }
+        }
+      },
+      "committed": { "final": true }
+    }
+  },
+  "display": {
+    "states": {
+      "first_corner": [
+        {
+          "kind": "point",
+          "id": "first-cursor",
+          "role": "cursor",
+          "params": { "position": { "path": "cursor" } }
+        },
+        {
+          "kind": "label",
+          "id": "hint-first",
+          "role": "prompt",
+          "params": {
+            "text": "Choose mode (panel), then click construction plane (XY @ Z=0)",
+            "position": { "const": [0, 0.25, 1.45] }
+          }
+        }
+      ],
+      "first_corner_other_or_length": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "first_corner_length_prompt": [
+        {
+          "kind": "label",
+          "id": "hint-lw",
+          "role": "prompt",
+          "params": {
+            "text": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)",
+            "position": { "const": [0, 0.25, 1.55] }
+          }
+        },
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        }
+      ],
+      "diagonal_rubber": [
+        {
+          "kind": "point",
+          "id": "diag-a",
+          "role": "anchor",
+          "params": { "position": { "path": "diagA" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "diagA" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_diagonal_rubber": [
+        {
+          "kind": "point",
+          "id": "diag-a",
+          "role": "anchor",
+          "params": { "position": { "path": "diagA" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "diagA" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "three_point_edge": [
+        {
+          "kind": "point",
+          "id": "p0-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "p0" } }
+        },
+        {
+          "kind": "segment",
+          "id": "edge-rubber",
+          "role": "preview",
+          "params": {
+            "from": { "path": "p0" },
+            "to": { "path": "cursor" }
+          }
+        }
+      ],
+      "three_point_width": [
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "previewA" },
+            "cornerB": { "path": "previewB" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "vertical_end": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "segment",
+          "id": "z-peek",
+          "role": "handle",
+          "params": {
+            "from": { "path": "origin" },
+            "to": { "path": "peak" }
+          }
+        }
+      ],
+      "vertical_width": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "center_corner": [
+        {
+          "kind": "point",
+          "id": "center-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "rectCenter" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_center_corner": [
+        {
+          "kind": "point",
+          "id": "center-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "rectCenter" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_other_corner": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "first_corner_height": [
+        {
+          "kind": "label",
+          "id": "hint-height",
+          "role": "prompt",
+          "params": {
+            "text": "Height (Z): drag teal wall, Apply height, click plane, or Accept",
+            "position": { "const": [0, 0.25, 1.55] }
+          }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "path": "height" }
+          }
+        },
+        {
+          "kind": "linear-handle",
+          "id": "height-handle",
+          "role": "handle",
+          "params": {
+            "axis": [0, 0, 1],
+            "origin": { "path": "corner" }
+          }
+        }
+      ],
+      "ready": [
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "path": "height" }
+          }
+        }
+      ]
+    }
+  },
+  "commit": {
+    "when": "hasValidBox",
+    "fromStates": ["ready"],
+    "operation": {
+      "kind": "cell.createBox",
+      "params": {
+        "cornerA": { "path": "origin" },
+        "cornerB": { "path": "corner" },
+        "height": { "path": "height" }
+      }
+    }
+  }
+}

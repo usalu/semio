@@ -1,11 +1,13 @@
 // #region 🧲Header
-/** @emoji 🧭 `@spatial/js-core` — portable factory spec runtime, `StateEngine` + `KernelAdapter` contracts, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
+/** @emoji 🧭 `@spatial/js-core` — portable command spec runtime, `StateEngine` + `KernelAdapter` contracts, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 📥Fixtures
-import boxFactoryJson from "../../fixtures/factory.json" with { type: "json" };
-import extrudeFactoryJson from "../../fixtures/extrude.factory.json" with { type: "json" };
-import offsetSurfaceFactoryJson from "../../fixtures/offset-surface.factory.json" with { type: "json" };
+import areaCommandJson from "../../fixtures/area.command.json" with { type: "json" };
+import boxCommandJson from "../../fixtures/box.command.json" with { type: "json" };
+import distanceCommandJson from "../../fixtures/distance.command.json" with { type: "json" };
+import extrudeWireCommandJson from "../../fixtures/extrude-wire.command.json" with { type: "json" };
+import offsetSurfaceCommandJson from "../../fixtures/offset-surface.command.json" with { type: "json" };
 // #endregion 📥Fixtures
 
 // #region 🧮Vec
@@ -92,6 +94,71 @@ export function cellRef(id: string): CellRef {
 	return id as CellRef;
 }
 // #endregion 🪪Refs
+
+// #region 🎮CommandEvent
+/** @emoji 🧭 Command input envelope; `kind` selects `machine.states[*].on` keys. */
+export type CommandEvent = { readonly kind: string; readonly [k: string]: unknown };
+// #endregion 🎮CommandEvent
+
+// #region 🪪Selection
+const TOPOLOGY_ENTITY_KINDS = new Set<string>([
+	"vertex",
+	"edge",
+	"wire",
+	"face",
+	"shell",
+	"cell",
+	"cellComplex",
+	"cluster",
+	"surface",
+	"part",
+]);
+
+/** @emoji 🪪 One picked topology or derived view target for `selection.changed`. */
+export interface SelectionTarget {
+	readonly kind: TopologyEntityKind;
+	readonly id: string;
+	readonly editable: boolean;
+	readonly derivedFrom?: readonly { kind: EditableEntityKind; id: string }[];
+}
+
+/** @emoji 🪪 Host selection payload; `targets` filtered by `SelectionSpec.accept`. */
+export interface SelectionEvent extends CommandEvent {
+	readonly kind: "selection.changed";
+	readonly targets: readonly SelectionTarget[];
+}
+
+/** @emoji 🪪 Per-state declarative filter for raw vs analytic picking. */
+export interface SelectionSpec {
+	readonly accept: readonly TopologyEntityKind[];
+	readonly multiple?: boolean;
+	readonly prompt?: string;
+}
+
+/** @emoji 🧭 Returns `targets` whose `kind` is listed in `spec.accept`. */
+export function filterSelectionTargets(spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
+	return targets.filter((t) => spec.accept.includes(t.kind));
+}
+
+/** @emoji 🧭 True when every target is accepted (and at least one target exists). */
+export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): boolean {
+	if (!ev.targets || ev.targets.length === 0) return false;
+	const xs = filterSelectionTargets(spec, ev.targets);
+	if (xs.length !== ev.targets.length) return false;
+	if (!spec.multiple && xs.length > 1) return false;
+	return true;
+}
+
+/** @emoji 🧭 Active `selection` block for `state`, or `null` when unrestricted. */
+export function getActiveSelectionSpec(
+	spec: { readonly machine: { readonly states: Record<string, { readonly selection?: SelectionSpec }> } },
+	state: string,
+): SelectionSpec | null {
+	const st = spec.machine.states[state];
+	const s = st?.selection;
+	return s ?? null;
+}
+// #endregion 🪪Selection
 
 // #region 🗺️Expr
 /** @emoji 🗺️ JSON-serializable expression AST evaluated by `evalExpr`. */
@@ -276,9 +343,9 @@ export function evalGuard(expr: Expr, env: ExprEnv): boolean {
 // #endregion 🗺️Expr
 
 // #region 📜Spec
-/** @emoji 📜 Parsed static factory document (`spatial.factory/v1`). */
-export interface FactorySpec {
-	readonly schema: "spatial.factory/v1";
+/** @emoji 📜 Parsed static command document (`spatial.command/v1`). */
+export interface CommandSpec {
+	readonly schema: "spatial.command/v1";
 	readonly id: string;
 	readonly version: string;
 	readonly label?: string;
@@ -291,6 +358,7 @@ export interface FactorySpec {
 			string,
 			{
 				readonly final?: boolean;
+				readonly selection?: SelectionSpec;
 				readonly on?: Record<string, TransitionSpec | readonly TransitionSpec[]>;
 			}
 		>;
@@ -298,16 +366,17 @@ export interface FactorySpec {
 	readonly display?: {
 		readonly states?: Record<string, readonly DisplayItemSpec[]>;
 	};
-	readonly interaction?: FactorySpatialInteractionConfig;
+	readonly interaction?: CommandSpatialInteractionConfig;
 	readonly commit: {
 		readonly when?: string;
 		readonly fromStates?: readonly string[];
+		readonly outputDataPath?: string;
 		readonly operation: { readonly kind: string; readonly params: Record<string, unknown> };
 	};
 }
 
-/** @emoji 🎮 Host + viewport hints for spatial picking (declared per factory preset). */
-export interface FactorySpatialInteractionConfig {
+/** @emoji 🎮 Host + viewport hints for spatial picking (declared per command preset). */
+export interface CommandSpatialInteractionConfig {
 	readonly spatialGroundPick?: boolean;
 	readonly pickDisabledStates?: readonly string[];
 	readonly groundPointerMoveStates?: readonly string[];
@@ -344,16 +413,28 @@ export interface DisplayItemSpec {
 	readonly params?: Record<string, unknown>;
 }
 
-/** @emoji 🧾 Validates and returns a `FactorySpec` or `null` when malformed. */
-export function parseFactorySpec(raw: unknown): FactorySpec | null {
+/** @emoji 🧾 Validates and returns a `CommandSpec` or `null` when malformed. */
+export function parseCommandSpec(raw: unknown): CommandSpec | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
-	if (r.schema !== "spatial.factory/v1") return null;
+	if (r.schema !== "spatial.command/v1") return null;
 	if (typeof r.id !== "string" || typeof r.version !== "string") return null;
 	const machine = r.machine;
 	if (!machine || typeof machine !== "object") return null;
 	const m = machine as Record<string, unknown>;
 	if (typeof m.initial !== "string" || !m.states || typeof m.states !== "object") return null;
+	const states = m.states as Record<string, unknown>;
+	for (const st of Object.values(states)) {
+		if (!st || typeof st !== "object") return null;
+		const sel = (st as Record<string, unknown>).selection;
+		if (!sel) continue;
+		if (typeof sel !== "object") return null;
+		const acc = (sel as Record<string, unknown>).accept;
+		if (!Array.isArray(acc) || acc.length === 0) return null;
+		for (const k of acc) {
+			if (typeof k !== "string" || !TOPOLOGY_ENTITY_KINDS.has(k)) return null;
+		}
+	}
 	const commit = r.commit;
 	if (!commit || typeof commit !== "object") return null;
 	const c = commit as Record<string, unknown>;
@@ -361,11 +442,11 @@ export function parseFactorySpec(raw: unknown): FactorySpec | null {
 	if (!op || typeof op !== "object") return null;
 	const o = op as Record<string, unknown>;
 	if (typeof o.kind !== "string" || !o.params || typeof o.params !== "object") return null;
-	return r as unknown as FactorySpec;
+	return r as unknown as CommandSpec;
 }
 
-/** @emoji 🧭 Normalizes a parsed factory (currently identity). */
-export function compileFactory(spec: FactorySpec): FactorySpec {
+/** @emoji 🧭 Normalizes a parsed command (currently identity). */
+export function compileCommand(spec: CommandSpec): CommandSpec {
 	return spec;
 }
 // #endregion 📜Spec
@@ -377,29 +458,22 @@ export interface VertexRecord {
 	readonly position: Vec3;
 }
 
-/** @emoji 🧱 Edge payload: two vertices plus curve geometry (Topologic-style). */
+/** @emoji 🧱 Edge payload: references one or two boundary vertices. */
 export interface EdgeRecord {
 	readonly id: EdgeRef;
-	readonly vertexA: VertexRef;
-	readonly vertexB: VertexRef;
-	readonly curve: { readonly kind: "line" | "polyline" | "bezier"; readonly controls: readonly Vec3[] };
+	readonly vertexIds: readonly VertexRef[];
 }
 
-/** @emoji 🧱 Wire payload: ordered edges and closure flag. */
+/** @emoji 🧱 Wire payload: ordered boundary edges. */
 export interface WireRecord {
 	readonly id: WireRef;
 	readonly edgeIds: readonly EdgeRef[];
-	readonly closed: boolean;
 }
 
-/** @emoji 🧱 Face payload: outer wire, optional holes, planar or mesh surface geometry. */
+/** @emoji 🧱 Face payload: boundary wires. */
 export interface FaceRecord {
 	readonly id: FaceRef;
-	readonly outerWireId: WireRef;
-	readonly holeWireIds?: readonly WireRef[];
-	readonly surface:
-		| { readonly kind: "planar"; readonly normal: Vec3; readonly origin: Vec3 }
-		| { readonly kind: "mesh"; readonly vertices: readonly Vec3[]; readonly triangles: readonly [number, number, number][] };
+	readonly wireIds: readonly WireRef[];
 }
 
 /** @emoji 🧱 Shell payload: connected faces. */
@@ -414,11 +488,10 @@ export interface CellRecord {
 	readonly shellIds: readonly ShellRef[];
 }
 
-/** @emoji 🧱 Cell complex payload: cells plus shared-face bookkeeping. */
+/** @emoji 🧱 Cell complex payload: member cells. */
 export interface CellComplexRecord {
 	readonly id: CellComplexRef;
 	readonly cellIds: readonly CellRef[];
-	readonly sharedFaceIds: readonly FaceRef[];
 }
 
 /** @emoji 🧱 Cluster payload: arbitrary nested membership. */
@@ -498,19 +571,140 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 }
 // #endregion 🧱Topology
 
-// #region 🔌Kernel
-/** @emoji 🖼️ Renderer-neutral mesh preview (positions + triangle indices). */
-export interface MeshPreview {
-	readonly positions: Float32Array;
-	readonly indices: Uint32Array;
-	readonly normals?: Float32Array;
+// #region 🧮Diff
+export type VertexRecordDiff = { readonly id: VertexRef } & Partial<Pick<VertexRecord, "position">>;
+export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord, "vertexIds">>;
+export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord, "edgeIds">>;
+export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds">>;
+export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
+export type CellRecordDiff = { readonly id: CellRef } & Partial<Pick<CellRecord, "shellIds">>;
+export type CellComplexRecordDiff = { readonly id: CellComplexRef } & Partial<Pick<CellComplexRecord, "cellIds">>;
+export type ClusterRecordDiff = { readonly id: ClusterRef } & Partial<Pick<ClusterRecord, "memberIds">>;
+
+/** @emoji 🧮 Forward patch bucket for one topology table (`added` / `modified` / `removed`). */
+export interface EntityDiff<TRec, TDiff, TId extends string> {
+	readonly added?: Readonly<Record<TId, TRec>>;
+	readonly modified?: Readonly<Record<TId, TDiff>>;
+	readonly removed?: readonly TId[];
 }
 
-/** @emoji 🧱 Appends a tessellated commit as one mesh `face` on `TopologyGraph` (in-memory scene growth). */
-export function appendCommittedMeshFaceToTopology(topo: TopologyGraph, mesh: MeshPreview, idTag: string): void {
+/** @emoji 🧮 Serializable topology delta applied by `applyTopologyDiff`. */
+export interface TopologyDiff {
+	readonly vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
+	readonly edges?: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef>;
+	readonly wires?: EntityDiff<WireRecord, WireRecordDiff, WireRef>;
+	readonly faces?: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef>;
+	readonly shells?: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef>;
+	readonly cells?: EntityDiff<CellRecord, CellRecordDiff, CellRef>;
+	readonly cellComplexes?: EntityDiff<CellComplexRecord, CellComplexRecordDiff, CellComplexRef>;
+	readonly clusters?: EntityDiff<ClusterRecord, ClusterRecordDiff, ClusterRef>;
+}
+
+export const EMPTY_TOPOLOGY_DIFF: TopologyDiff = {};
+
+function isEntityDiffEmpty<TRec, TDiff, TId extends string>(e: EntityDiff<TRec, TDiff, TId> | undefined): boolean {
+	if (!e) return true;
+	const a = e.added ? Object.keys(e.added).length : 0;
+	const m = e.modified ? Object.keys(e.modified).length : 0;
+	const r = e.removed ? e.removed.length : 0;
+	return a === 0 && m === 0 && r === 0;
+}
+
+/** @emoji 🧮 True when `diff` has no topology mutations. */
+export function isEmptyTopologyDiff(d: TopologyDiff | undefined): boolean {
+	if (!d) return true;
+	return (
+		isEntityDiffEmpty(d.vertices) &&
+		isEntityDiffEmpty(d.edges) &&
+		isEntityDiffEmpty(d.wires) &&
+		isEntityDiffEmpty(d.faces) &&
+		isEntityDiffEmpty(d.shells) &&
+		isEntityDiffEmpty(d.cells) &&
+		isEntityDiffEmpty(d.cellComplexes) &&
+		isEntityDiffEmpty(d.clusters)
+	);
+}
+
+function cloneRec<T>(r: T): T {
+	return JSON.parse(JSON.stringify(r)) as T;
+}
+
+function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>(
+	bucket: Record<string, T>,
+	section: EntityDiff<T, TDiff, string> | undefined,
+	inverse: EntityDiff<T, TDiff, string>,
+): void {
+	if (!section) return;
+	if (section.removed) {
+		for (const id of section.removed) {
+			const cur = bucket[id];
+			if (!cur) continue;
+			if (!inverse.added) inverse.added = {} as Record<string, T>;
+			(inverse.added as Record<string, T>)[id] = cloneRec(cur);
+			delete bucket[id];
+		}
+	}
+	if (section.added) {
+		for (const [id, rec] of Object.entries(section.added)) {
+			bucket[id] = cloneRec(rec as T);
+			if (!inverse.removed) inverse.removed = [];
+			inverse.removed.push(id);
+		}
+	}
+	if (section.modified) {
+		for (const [id, md] of Object.entries(section.modified)) {
+			const cur = bucket[id];
+			if (!cur) continue;
+			const back: Record<string, unknown> = { id };
+			const curO = cur as Record<string, unknown>;
+			const mdO = md as Record<string, unknown>;
+			for (const fk of Object.keys(mdO)) {
+				if (fk === "id") continue;
+				back[fk] = curO[fk];
+				curO[fk] = mdO[fk];
+			}
+			if (!inverse.modified) inverse.modified = {} as Record<string, TDiff>;
+			(inverse.modified as Record<string, TDiff>)[id] = back as TDiff;
+		}
+	}
+}
+
+/** @emoji 🧮 Applies `diff` to `topo` in place; returns an inverse `TopologyDiff` for `applyTopologyDiff` again. */
+export function applyTopologyDiff(topo: TopologyGraph, diff: TopologyDiff): TopologyDiff {
+	const inv: TopologyDiff = {};
+	const vInv: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef> = {};
+	const eInv: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
+	const wInv: EntityDiff<WireRecord, WireRecordDiff, WireRef> = {};
+	const fInv: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef> = {};
+	const sInv: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef> = {};
+	const cInv: EntityDiff<CellRecord, CellRecordDiff, CellRef> = {};
+	const ccInv: EntityDiff<CellComplexRecord, CellComplexRecordDiff, CellComplexRef> = {};
+	const clInv: EntityDiff<ClusterRecord, ClusterRecordDiff, ClusterRef> = {};
+	applyEntityDiff(topo.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
+	applyEntityDiff(topo.edges as Record<string, EdgeRecord>, diff.edges, eInv);
+	applyEntityDiff(topo.wires as Record<string, WireRecord>, diff.wires, wInv);
+	applyEntityDiff(topo.faces as Record<string, FaceRecord>, diff.faces, fInv);
+	applyEntityDiff(topo.shells as Record<string, ShellRecord>, diff.shells, sInv);
+	applyEntityDiff(topo.cells as Record<string, CellRecord>, diff.cells, cInv);
+	applyEntityDiff(topo.cellComplexes as Record<string, CellComplexRecord>, diff.cellComplexes, ccInv);
+	applyEntityDiff(topo.clusters as Record<string, ClusterRecord>, diff.clusters, clInv);
+	if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
+	if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
+	if (!isEntityDiffEmpty(wInv)) inv.wires = wInv;
+	if (!isEntityDiffEmpty(fInv)) inv.faces = fInv;
+	if (!isEntityDiffEmpty(sInv)) inv.shells = sInv;
+	if (!isEntityDiffEmpty(cInv)) inv.cells = cInv;
+	if (!isEntityDiffEmpty(ccInv)) inv.cellComplexes = ccInv;
+	if (!isEntityDiffEmpty(clInv)) inv.clusters = clInv;
+	if (!isEmptyTopologyDiff(diff)) topo.bump();
+	return inv;
+}
+
+/** @emoji 🧮 One tessellated triangle mesh as a single `FaceRecord` plus boundary topology. */
+export function meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): TopologyDiff {
 	const pos = mesh.positions;
 	const ind = mesh.indices;
-	if (ind.length < 3 || pos.length < 9) return;
+	if (ind.length < 3 || pos.length < 9) return {};
 	const verts: Vec3[] = [];
 	for (let k = 0; k < pos.length; k += 3) {
 		verts.push([pos[k]!, pos[k + 1]!, pos[k + 2]!]);
@@ -531,27 +725,54 @@ export function appendCommittedMeshFaceToTopology(topo: TopologyGraph, mesh: Mes
 	const v0 = `${pfx}-w0` as VertexRef;
 	const v1 = `${pfx}-w1` as VertexRef;
 	const v2 = `${pfx}-w2` as VertexRef;
-	topo.vertices[v0] = { id: v0, position: [ctr[0] + eps, ctr[1], ctr[2]] };
-	topo.vertices[v1] = { id: v1, position: [ctr[0], ctr[1] + eps, ctr[2]] };
-	topo.vertices[v2] = { id: v2, position: [ctr[0], ctr[1], ctr[2] + eps] };
 	const e0 = `${pfx}-e0` as EdgeRef;
 	const e1 = `${pfx}-e1` as EdgeRef;
 	const e2 = `${pfx}-e2` as EdgeRef;
-	topo.edges[e0] = { id: e0, vertexA: v0, vertexB: v1, curve: { kind: "line", controls: [] } };
-	topo.edges[e1] = { id: e1, vertexA: v1, vertexB: v2, curve: { kind: "line", controls: [] } };
-	topo.edges[e2] = { id: e2, vertexA: v2, vertexB: v0, curve: { kind: "line", controls: [] } };
 	const wireId = `${pfx}-wire` as WireRef;
-	topo.wires[wireId] = { id: wireId, edgeIds: [e0, e1, e2], closed: true };
 	const faceId = `${pfx}-face` as FaceRef;
-	topo.faces[faceId] = {
-		id: faceId,
-		outerWireId: wireId,
-		surface: { kind: "mesh", vertices: verts, triangles: tris },
+	return {
+		vertices: {
+			added: {
+				[v0]: { id: v0, position: [ctr[0] + eps, ctr[1], ctr[2]] },
+				[v1]: { id: v1, position: [ctr[0], ctr[1] + eps, ctr[2]] },
+				[v2]: { id: v2, position: [ctr[0], ctr[1], ctr[2] + eps] },
+			},
+		},
+		edges: {
+			added: {
+				[e0]: { id: e0, vertexIds: [v0, v1] },
+				[e1]: { id: e1, vertexIds: [v1, v2] },
+				[e2]: { id: e2, vertexIds: [v2, v0] },
+			},
+		},
+		wires: { added: { [wireId]: { id: wireId, edgeIds: [e0, e1, e2] } } },
+		faces: {
+			added: {
+				[faceId]: {
+					id: faceId,
+					wireIds: [wireId],
+				},
+			},
+		},
 	};
-	topo.bump();
 }
 
-/** @emoji 🔌 Kernel capability surface executed by factory commits. */
+// #endregion 🧮Diff
+
+// #region 🔌Kernel
+/** @emoji 🖼️ Renderer-neutral mesh preview (positions + triangle indices). */
+export interface MeshPreview {
+	readonly positions: Float32Array;
+	readonly indices: Uint32Array;
+	readonly normals?: Float32Array;
+}
+
+/** @emoji 🧱 Appends a tessellated commit as one mesh `face` on `TopologyGraph` (in-memory scene growth). */
+export function appendCommittedMeshFaceToTopology(topo: TopologyGraph, mesh: MeshPreview, idTag: string): void {
+	applyTopologyDiff(topo, meshFaceTopologyDiff(mesh, idTag));
+}
+
+/** @emoji 🔌 Kernel capability surface executed by command commits. */
 export interface KernelAdapter {
 	readonly id: string;
 	readonly operations: readonly string[];
@@ -561,6 +782,13 @@ export interface KernelAdapter {
 	query?(name: string, params: Record<string, unknown>): Promise<unknown>;
 	extrudeWire?(input: { wireId: string; distance: number; direction: Vec3 }): Promise<CellRef>;
 	offsetFaces?(input: { faceIds: readonly string[]; distance: number }): Promise<void>;
+	createBoxFromCornersDiff?(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }>;
+	extrudeWireDiff?(input: { wireId: string; distance: number; direction: Vec3 }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }>;
+	offsetFacesDiff?(input: { faceIds: readonly string[]; distance: number }): Promise<{ readonly diff: TopologyDiff }>;
+	vertexDistance?(a: VertexRef, b: VertexRef, topo: TopologyGraph): Promise<number>;
+	edgeLength?(e: EdgeRef, topo: TopologyGraph): Promise<number>;
+	faceArea?(f: FaceRef, topo: TopologyGraph): Promise<number>;
+	cellVolume?(c: CellRef): Promise<number>;
 }
 // #endregion 🔌Kernel
 
@@ -594,15 +822,12 @@ export class DerivedViewService {
 		if (this.surfaceRevision === topologyRevision) return this.surfaces;
 		const out: SurfaceView[] = [];
 		for (const f of Object.values(faces)) {
-			const n = f.surface.kind === "planar" ? f.surface.normal : [0, 0, 1];
-			const stance = Math.abs(n[2]) > 0.707 ? ("horizontal" as const) : ("vertical" as const);
-			const area = f.surface.kind === "planar" ? 1 : (f.surface.vertices.length > 0 ? 1 : 0);
 			out.push({
 				id: `surface-${f.id}` as SurfaceRef,
 				sourceFaceIds: [f.id],
 				exposure: "external",
-				stance,
-				area,
+				stance: "vertical",
+				area: 0,
 			});
 		}
 		this.surfaces = out;
@@ -631,10 +856,7 @@ export class DerivedViewService {
 // #endregion 🪞DerivedViews
 
 // #region 🎬Statechart
-/** @emoji 🧭 Factory input envelope; `kind` selects `machine.states[*].on` keys. */
-export type FactoryEvent = { readonly kind: string; readonly [k: string]: unknown };
-
-/** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips factory-local undo). */
+/** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips command-local undo). */
 export interface StateEngineSendResult {
 	readonly ok: boolean;
 	readonly transient?: boolean;
@@ -646,19 +868,19 @@ export interface ApplyTransitionResult extends StateEngineSendResult {
 	readonly branchIndex: number;
 }
 
-/** @emoji 🎭 Pluggable state backend for `FactoryRuntime` (pure TS, XState, …). */
+/** @emoji 🎭 Pluggable state backend for `CommandRuntime` (pure TS, XState, …). */
 export interface StateEngine {
 	getState(): string;
 	getContext(): Record<string, unknown>;
 	reset(): void;
 	restore(state: string, context: Record<string, unknown>): void;
-	send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>;
+	send(event: CommandEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>;
 }
 
-/** @emoji 🎭 Instantiates a `StateEngine` for a compiled `FactorySpec`. */
+/** @emoji 🎭 Instantiates a `StateEngine` for a compiled `CommandSpec`. */
 export interface StateEngineProvider {
 	readonly id: string;
-	create(spec: FactorySpec): StateEngine;
+	create(spec: CommandSpec): StateEngine;
 }
 
 function resolveTemplate(value: unknown, env: ExprEnv): unknown {
@@ -689,10 +911,10 @@ export function expandMachineTransitions(
 	return (Array.isArray(raw) ? raw : [raw]) as readonly TransitionSpec[];
 }
 
-const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down"]);
+const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
 
 /** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
-export interface FactorySpatialInteractionResolved {
+export interface CommandSpatialInteractionResolved {
 	readonly spatialGroundPick: boolean;
 	readonly pickDisabledStates: readonly string[];
 	readonly groundPointerMoveStates: readonly string[];
@@ -701,8 +923,8 @@ export interface FactorySpatialInteractionResolved {
 	readonly heightConfirmState: string | null;
 }
 
-/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `FactorySpatialView`. */
-export function mergeSpatialInteraction(spec: FactorySpec): FactorySpatialInteractionResolved {
+/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `CommandSpatialView`. */
+export function mergeCommandSpatialInteraction(spec: CommandSpec): CommandSpatialInteractionResolved {
 	const i = spec.interaction;
 	const basePickDisabled = ["idle", "ready", "committed"] as const;
 	return {
@@ -716,17 +938,17 @@ export function mergeSpatialInteraction(spec: FactorySpec): FactorySpatialIntera
 }
 
 /** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
-export interface FactoryKeybindRow {
+export interface CommandKeybindRow {
 	readonly eventKind: string;
 	readonly key: string;
 	readonly label: string;
 }
 
 /** @emoji ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
-export function listKeyedFactoryTransitions(spec: FactorySpec, state: string): readonly FactoryKeybindRow[] {
+export function listKeyedCommandTransitions(spec: CommandSpec, state: string): readonly CommandKeybindRow[] {
 	const st = spec.machine.states[state];
 	if (!st?.on) return [];
-	const out: FactoryKeybindRow[] = [];
+	const out: CommandKeybindRow[] = [];
 	for (const [eventKind, raw] of Object.entries(st.on)) {
 		if (HOST_KEYBIND_EXCLUDED_KINDS.has(eventKind)) continue;
 		for (const tr of expandMachineTransitions(raw)) {
@@ -741,8 +963,8 @@ export function listKeyedFactoryTransitions(spec: FactorySpec, state: string): r
 	return out;
 }
 
-/** @emoji 📦 Applies imperative `box.*` footprint helpers used by `spatial/fixtures/factory.json`. */
-function applyBoxGeometryOp(ctx: Record<string, unknown>, event: FactoryEvent, op: string): void {
+/** @emoji 📦 Applies imperative `box.*` footprint helpers used by `spatial/fixtures/box.command.json`. */
+function applyBoxGeometryOp(ctx: Record<string, unknown>, event: CommandEvent, op: string): void {
 	const pt = (event as { point?: unknown }).point;
 	const P = isVec3(pt) ? pt : null;
 	const val = (event as { value?: unknown }).value;
@@ -861,7 +1083,7 @@ function applyBoxGeometryOp(ctx: Record<string, unknown>, event: FactoryEvent, o
 export async function applyActionAsync(
 	a: ActionSpec,
 	ctx: Record<string, unknown>,
-	event: FactoryEvent,
+	event: CommandEvent,
 	kernel?: KernelAdapter,
 ): Promise<void> {
 	if (a.op === "assign" && a.path) {
@@ -880,10 +1102,10 @@ export async function applyActionAsync(
 
 /** @emoji 🎬 First matching transition for `event` from `state`; mutates `context` in place. */
 export async function applyTransition(
-	spec: FactorySpec,
+	spec: CommandSpec,
 	state: string,
 	context: Record<string, unknown>,
-	event: FactoryEvent,
+	event: CommandEvent,
 	kernel?: KernelAdapter,
 ): Promise<ApplyTransitionResult> {
 	const st = spec.machine.states[state];
@@ -912,12 +1134,12 @@ export async function applyTransition(
 	return { ok: false, nextState: state, branchIndex: -1 };
 }
 
-/** @emoji 🎬 Minimal async statechart runner for `FactorySpec.machine`. */
+/** @emoji 🎬 Minimal async statechart runner for `CommandSpec.machine`. */
 export class StatechartRuntime implements StateEngine {
 	private state: string;
 	private context: Record<string, unknown> = {};
 
-	constructor(private readonly spec: FactorySpec) {
+	constructor(private readonly spec: CommandSpec) {
 		this.state = spec.machine.initial;
 	}
 
@@ -941,7 +1163,7 @@ export class StatechartRuntime implements StateEngine {
 	}
 
 	/** @emoji 🎬 Applies one external event; returns whether a transition fired. */
-	async send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
+	async send(event: CommandEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
 		const r = await applyTransition(this.spec, this.state, this.context, event, kernel);
 		if (r.ok) this.state = r.nextState;
 		return { ok: r.ok, transient: r.transient };
@@ -951,7 +1173,7 @@ export class StatechartRuntime implements StateEngine {
 /** @emoji 🎭 Default in-process engine (no XState); same semantics as `applyTransition`. */
 export const pureTsStateEngineProvider: StateEngineProvider = {
 	id: "pure-ts",
-	create(spec: FactorySpec): StateEngine {
+	create(spec: CommandSpec): StateEngine {
 		return new StatechartRuntime(spec);
 	},
 };
@@ -973,7 +1195,7 @@ export interface DisplayModel {
 }
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
-export function resolveDisplay(spec: FactorySpec, state: string, context: Record<string, unknown>): DisplayModel {
+export function resolveDisplay(spec: CommandSpec, state: string, context: Record<string, unknown>): DisplayModel {
 	const raw = spec.display?.states?.[state] ?? [];
 	const items: DisplayItem[] = [];
 	for (const it of raw) {
@@ -1046,7 +1268,36 @@ export class DocumentHistory {
 }
 // #endregion 📄Document
 
-// #region 🏭Factory
+// #region 📨Response
+/** @emoji 📨 Portable command outcome envelope (`diff` + `data` + messages). */
+export interface CommandMessage {
+	readonly code: string;
+	readonly message: string;
+	readonly path?: string;
+}
+
+/** @emoji 📨 Result returned by `CommandRuntime.commit` (read/write topology + scalar `data`). */
+export interface CommandResponse<TData = unknown> {
+	readonly ok: boolean;
+	readonly errors: readonly CommandMessage[];
+	readonly warnings: readonly CommandMessage[];
+	readonly infos: readonly CommandMessage[];
+	readonly diff: TopologyDiff;
+	readonly data: TData | null;
+}
+
+/** @emoji 📨 Default empty success payload for guards and early returns. */
+export const EMPTY_COMMAND_RESPONSE: CommandResponse<null> = {
+	ok: true,
+	errors: [],
+	warnings: [],
+	infos: [],
+	diff: EMPTY_TOPOLOGY_DIFF,
+	data: null,
+};
+// #endregion 📨Response
+
+// #region 📜Command
 /** @emoji 🩺 Non-fatal runtime diagnostic surfaced in snapshots. */
 export interface Diagnostic {
 	readonly severity: "info" | "warning" | "error";
@@ -1054,37 +1305,39 @@ export interface Diagnostic {
 	readonly message: string;
 }
 
-/** @emoji 🏭 Serializable factory snapshot for hosts and renderers. */
-export interface FactorySnapshot {
-	readonly factoryId: string;
+/** @emoji 📜 Serializable command snapshot for hosts and renderers. */
+export interface CommandSnapshot {
+	readonly commandId: string;
 	readonly state: string;
 	readonly revision: number;
 	readonly context: Record<string, unknown>;
 	readonly display: DisplayModel;
-	readonly spatialInteraction: FactorySpatialInteractionResolved;
+	readonly spatialInteraction: CommandSpatialInteractionResolved;
 	readonly capabilities: { readonly canCommit: boolean; readonly canCancel: boolean; readonly canUndo: boolean; readonly canRedo: boolean };
 	readonly diagnostics: readonly Diagnostic[];
+	readonly lastResponse: CommandResponse | null;
 }
 
-export interface FactoryRuntimeOptions {
+export interface CommandRuntimeOptions {
 	readonly kernel: KernelAdapter;
 	readonly document: ModelDocument;
 	readonly history?: DocumentHistory;
 	readonly stateEngine?: StateEngineProvider;
 }
 
-/** @emoji 🏭 Headless + interactive factory controller (`send`, `commit`, `undo`). */
-export class FactoryRuntime {
+/** @emoji 📜 Headless + interactive command controller (`send`, `commit`, `undo`). */
+export class CommandRuntime {
 	private readonly sm: StateEngine;
 	private revision = 0;
 	private readonly listeners = new Set<() => void>();
 	private readonly snapStack: { state: string; context: string }[] = [];
-	private committedCell: CellRef | null = null;
-	private snapshotCache: FactorySnapshot | null = null;
+	private snapshotCache: CommandSnapshot | null = null;
+	private lastResponse: CommandResponse | null = null;
+	private readonly pendingSnapshotInfos: CommandMessage[] = [];
 
 	constructor(
-		private readonly spec: FactorySpec,
-		private readonly opts: FactoryRuntimeOptions,
+		private readonly spec: CommandSpec,
+		private readonly opts: CommandRuntimeOptions,
 	) {
 		this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec);
 	}
@@ -1111,14 +1364,21 @@ export class FactoryRuntime {
 		return true;
 	}
 
-	getSnapshot(): FactorySnapshot {
+	/** @emoji 🧭 Accepted topology kinds for the active machine state (`[]` when none). */
+	listActiveSelectionAccept(): readonly TopologyEntityKind[] {
+		return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
+	}
+
+	getSnapshot(): CommandSnapshot {
 		if (this.snapshotCache) return this.snapshotCache;
 		const ctx = this.sm.getContext();
 		const st = this.sm.getState();
 		const display = resolveDisplay(this.spec, st, ctx);
-		const spatialInteraction = mergeSpatialInteraction(this.spec);
+		const spatialInteraction = mergeCommandSpatialInteraction(this.spec);
+		const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
+		const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
 		this.snapshotCache = {
-			factoryId: this.spec.id,
+			commandId: this.spec.id,
 			state: st,
 			revision: this.revision,
 			context: this.cloneCtx(ctx),
@@ -1130,7 +1390,8 @@ export class FactoryRuntime {
 				canUndo: this.snapStack.length > 0,
 				canRedo: false,
 			},
-			diagnostics: [],
+			diagnostics: infoDiags,
+			lastResponse: this.lastResponse,
 		};
 		return this.snapshotCache;
 	}
@@ -1146,8 +1407,20 @@ export class FactoryRuntime {
 		for (const l of this.listeners) l();
 	}
 
-	/** @emoji 🏭 Dispatches a typed factory event through the statechart + optional kernel queries. */
-	async send(event: FactoryEvent): Promise<void> {
+	/** @emoji 📜 Dispatches a typed command event through the statechart + optional kernel queries. */
+	async send(event: CommandEvent): Promise<void> {
+		if (event.kind === "selection.changed") {
+			const sel = getActiveSelectionSpec(this.spec, this.sm.getState());
+			const sev = event as SelectionEvent;
+			if (sel && !selectionEventMatches(sel, sev)) {
+				this.pendingSnapshotInfos.push({
+					code: "selection.filtered",
+					message: "Selection did not match this state's accept list.",
+				});
+				this.emit();
+				return;
+			}
+		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
 		const r = await this.sm.send(event, this.opts.kernel);
@@ -1171,83 +1444,132 @@ export class FactoryRuntime {
 		this.emit();
 	}
 
-	/** @emoji 🏭 Executes `commit.operation` against `kernel` and records a `DocumentCommand`. */
-	async commit(): Promise<CellRef | null> {
+	/** @emoji 📜 Executes `commit.operation` against `kernel`, applies `diff` to `document.topology`, records history. */
+	async commit(): Promise<CommandResponse> {
+		const fail = (code: string, message: string): CommandResponse => {
+			const res: CommandResponse = {
+				ok: false,
+				errors: [{ code, message }],
+				warnings: [],
+				infos: [],
+				diff: EMPTY_TOPOLOGY_DIFF,
+				data: null,
+			};
+			this.lastResponse = res;
+			this.emit();
+			return res;
+		};
 		const st = this.sm.getState();
-		if (st === "committed") return null;
-		if (!this.canCommit()) return null;
+		if (st === "committed") return fail("command.alreadyCommitted", "Command already committed.");
+		if (!this.canCommit()) return fail("command.cannotCommit", "Commit guard or fromStates rejected this commit.");
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
 		const params = resolveTemplate(op.params, { context: ctx }) as Record<string, unknown>;
-		let cell: CellRef | null = null;
-		if (op.kind === "cell.createBox") {
-			const cornerA = params.cornerA as Vec3;
-			const cornerB = params.cornerB as Vec3;
-			const height = Number(params.height);
-			cell = await this.opts.kernel.createBoxFromCorners({ cornerA, cornerB, height });
-		} else if (op.kind === "wire.extrudeToCell") {
-			cell = (await this.opts.kernel.extrudeWire?.({
-				wireId: String(params.wireId),
-				distance: Number(params.distance),
-				direction: params.direction as Vec3,
-			})) ?? null;
-		} else if (op.kind === "face.offset") {
-			await this.opts.kernel.offsetFaces?.({
-				faceIds: params.faceIds as string[],
-				distance: Number(params.distance),
-			});
-		}
-		this.committedCell = cell;
-		if (cell) {
-			const preview = await this.opts.kernel.tessellate(cell, 1e-3);
-			if (preview.indices.length >= 3) {
-				appendCommittedMeshFaceToTopology(this.opts.document.topology, preview, `f${this.spec.id}-${this.revision}`);
+		const k = this.opts.kernel;
+		const topo = this.opts.document.topology;
+		let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
+		let data: unknown = null;
+		try {
+			if (op.kind === "cell.createBox") {
+				const cornerA = params.cornerA as Vec3;
+				const cornerB = params.cornerB as Vec3;
+				const height = Number(params.height);
+				if (k.createBoxFromCornersDiff) {
+					const r = await k.createBoxFromCornersDiff({ cornerA, cornerB, height });
+					diff = r.diff;
+				} else {
+					const cell = await k.createBoxFromCorners({ cornerA, cornerB, height });
+					const preview = await k.tessellate(cell, 1e-3);
+					diff = meshFaceTopologyDiff(preview, `f${this.spec.id}-${this.revision}`);
+				}
+			} else if (op.kind === "wire.extrudeToCell") {
+				const input = {
+					wireId: String(params.wireId),
+					distance: Number(params.distance),
+					direction: params.direction as Vec3,
+				};
+				if (k.extrudeWireDiff) {
+					diff = (await k.extrudeWireDiff(input)).diff;
+				} else {
+					const cell = (await k.extrudeWire?.(input)) ?? null;
+					if (cell) {
+						const preview = await k.tessellate(cell, 1e-3);
+						diff = meshFaceTopologyDiff(preview, `f${this.spec.id}-${this.revision}`);
+					}
+				}
+			} else if (op.kind === "face.offset") {
+				diff = (await k.offsetFacesDiff?.({ faceIds: params.faceIds as string[], distance: Number(params.distance) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
+			} else if (op.kind === "measure.distance") {
+				const a = params.a as VertexRef;
+				const b = params.b as VertexRef;
+				if (!k.vertexDistance) throw new Error("kernel.vertexDistance required");
+				data = await k.vertexDistance(a, b, topo);
+			} else if (op.kind === "measure.area") {
+				const fid = params.faceId as FaceRef;
+				if (!k.faceArea) throw new Error("kernel.faceArea required");
+				data = await k.faceArea(fid, topo);
+			} else if (op.kind === "measure.volume") {
+				const cid = params.cellId as CellRef;
+				data = await (k.cellVolume?.(cid) ?? k.volume(cid));
 			}
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : String(e);
+			return fail("command.commitFailed", msg);
 		}
+		const outPath = this.spec.commit.outputDataPath;
+		if (outPath) {
+			const ctx2 = this.sm.getContext();
+			setPath(ctx2 as Record<string, unknown>, outPath, data);
+			data = getPath(ctx2, outPath) ?? data;
+		}
+		const inverse = applyTopologyDiff(topo, diff);
 		const hist = this.opts.history;
-		if (hist && cell) {
-			const id = `cmd-${this.revision}`;
+		if (hist && !isEmptyTopologyDiff(diff)) {
+			const id = `cmd-${this.spec.id}-${this.revision}`;
+			const forward = diff;
 			hist.recordCommand({
 				id,
 				label: this.spec.label ?? this.spec.id,
-				do: async (doc, _kernel) => {
-					doc.nodes.push({ id, operationKind: op.kind, cellRef: cell! });
+				do: async (doc) => {
+					applyTopologyDiff(doc.topology, forward);
 				},
-				undo: async (doc, _kernel) => {
-					doc.nodes = doc.nodes.filter((n) => n.id !== id);
+				undo: async (doc) => {
+					applyTopologyDiff(doc.topology, inverse);
 				},
 			});
 		}
-		await this.sm.send({ kind: "confirm" }, this.opts.kernel);
+		await this.sm.send({ kind: "confirm" }, k);
+		const res: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data };
+		this.lastResponse = res;
 		this.emit();
-		return cell;
+		return res;
 	}
 }
 
-/** @emoji 🏭 Constructs a `FactoryRuntime` from a compiled `FactorySpec`. */
-export function createFactoryRuntime(spec: FactorySpec, opts: FactoryRuntimeOptions): FactoryRuntime {
-	return new FactoryRuntime(compileFactory(spec), opts);
+/** @emoji 📜 Constructs a `CommandRuntime` from a compiled `CommandSpec`. */
+export function createCommandRuntime(spec: CommandSpec, opts: CommandRuntimeOptions): CommandRuntime {
+	return new CommandRuntime(compileCommand(spec), opts);
 }
-// #endregion 🏭Factory
+// #endregion 📜Command
 
 // #region 📦Factories
 /** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/factory.json`). */
-export function buildBoxFactorySpec(): FactorySpec {
-	const s = parseFactorySpec(boxFactoryJson);
+export function buildBoxCommandSpec(): CommandSpec {
+	const s = parseCommandSpec(boxFactoryJson);
 	if (!s) throw new Error("spatial/fixtures/factory.json invalid");
 	return s;
 }
 
 /** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude.factory.json`). */
-export function buildExtrudeFactorySpec(): FactorySpec {
-	const s = parseFactorySpec(extrudeFactoryJson);
+export function buildExtrudeCommandSpec(): CommandSpec {
+	const s = parseCommandSpec(extrudeFactoryJson);
 	if (!s) throw new Error("spatial/fixtures/extrude.factory.json invalid");
 	return s;
 }
 
 /** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.factory.json`). */
-export function buildOffsetSurfaceFactorySpec(): FactorySpec {
-	const s = parseFactorySpec(offsetSurfaceFactoryJson);
+export function buildOffsetSurfaceCommandSpec(): CommandSpec {
+	const s = parseCommandSpec(offsetSurfaceFactoryJson);
 	if (!s) throw new Error("spatial/fixtures/offset-surface.factory.json invalid");
 	return s;
 }
@@ -1283,7 +1605,7 @@ export function resolveSpatialFactoryPresetKey(token: string): SpatialFactoryPre
 }
 
 /** @emoji 📚 Loads a built-in factory preset by stable `id` (see `listSpatialFactoryPresets`). */
-export function loadSpatialFactoryPreset(presetId: string): FactorySpec | null {
+export function loadSpatialFactoryPreset(presetId: string): CommandSpec | null {
 	const raw =
 		presetId === "primitive.box"
 			? boxFactoryJson
@@ -1293,7 +1615,7 @@ export function loadSpatialFactoryPreset(presetId: string): FactorySpec | null {
 					? offsetSurfaceFactoryJson
 					: null;
 	if (!raw) return null;
-	return parseFactorySpec(raw as unknown);
+	return parseCommandSpec(raw as unknown);
 }
 // #endregion 📦Factories
 
@@ -1363,8 +1685,8 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxFactorySpec();
-			const rt = createFactoryRuntime(spec, {
+			const spec = buildBoxCommandSpec();
+			const rt = createCommandRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
@@ -1402,10 +1724,10 @@ if (import.meta.vitest) {
 					};
 				}
 			}
-			const spec = buildBoxFactorySpec();
+			const spec = buildBoxCommandSpec();
 			const topo = new TopologyGraph();
 			const kernel = new RecordingStubKernel();
-			const rt = createFactoryRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
+			const rt = createCommandRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
@@ -1436,9 +1758,9 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxFactorySpec();
-			const rt0 = createFactoryRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
-			const rt1 = createFactoryRuntime(spec, {
+			const spec = buildBoxCommandSpec();
+			const rt0 = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt1 = createCommandRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
