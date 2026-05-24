@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧭 `@spatial/js-core` — portable factory spec runtime, topology graph, `KernelAdapter` contract, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
+/** @emoji 🧭 `@spatial/js-core` — portable factory spec runtime, `StateEngine` + `KernelAdapter` contracts, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 📥Fixtures
@@ -634,6 +634,33 @@ export class DerivedViewService {
 /** @emoji 🧭 Factory input envelope; `kind` selects `machine.states[*].on` keys. */
 export type FactoryEvent = { readonly kind: string; readonly [k: string]: unknown };
 
+/** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips factory-local undo). */
+export interface StateEngineSendResult {
+	readonly ok: boolean;
+	readonly transient?: boolean;
+}
+
+/** @emoji 🎭 `applyTransition` output: next factory state + disambiguation index for XState routing. */
+export interface ApplyTransitionResult extends StateEngineSendResult {
+	readonly nextState: string;
+	readonly branchIndex: number;
+}
+
+/** @emoji 🎭 Pluggable state backend for `FactoryRuntime` (pure TS, XState, …). */
+export interface StateEngine {
+	getState(): string;
+	getContext(): Record<string, unknown>;
+	reset(): void;
+	restore(state: string, context: Record<string, unknown>): void;
+	send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>;
+}
+
+/** @emoji 🎭 Instantiates a `StateEngine` for a compiled `FactorySpec`. */
+export interface StateEngineProvider {
+	readonly id: string;
+	create(spec: FactorySpec): StateEngine;
+}
+
 function resolveTemplate(value: unknown, env: ExprEnv): unknown {
 	if (!value || typeof value !== "object") return value;
 	const o = value as Record<string, unknown>;
@@ -830,7 +857,8 @@ function applyBoxGeometryOp(ctx: Record<string, unknown>, event: FactoryEvent, o
 	}
 }
 
-async function applyActionAsync(
+/** @emoji 🎬 Applies one declarative or `box.*` action (async kernel queries). */
+export async function applyActionAsync(
 	a: ActionSpec,
 	ctx: Record<string, unknown>,
 	event: FactoryEvent,
@@ -850,8 +878,42 @@ async function applyActionAsync(
 	}
 }
 
+/** @emoji 🎬 First matching transition for `event` from `state`; mutates `context` in place. */
+export async function applyTransition(
+	spec: FactorySpec,
+	state: string,
+	context: Record<string, unknown>,
+	event: FactoryEvent,
+	kernel?: KernelAdapter,
+): Promise<ApplyTransitionResult> {
+	const st = spec.machine.states[state];
+	if (!st?.on) return { ok: false, nextState: state, branchIndex: -1 };
+	const raw = st.on[event.kind];
+	const choices = expandMachineTransitions(raw);
+	if (choices.length === 0) return { ok: false, nextState: state, branchIndex: -1 };
+	for (let i = 0; i < choices.length; i++) {
+		const tr = choices[i]!;
+		if (tr.guard) {
+			const g = spec.guards?.[tr.guard];
+			if (!g || !evalGuard(g, { context, event })) continue;
+		}
+		for (const a of tr.actions ?? []) {
+			await applyActionAsync(a, context, event, kernel);
+		}
+		let nextState = state;
+		if (tr.target) {
+			nextState = tr.target;
+			if (tr.target === spec.machine.initial) {
+				for (const k of Object.keys(context)) delete context[k];
+			}
+		}
+		return { ok: true, transient: Boolean(tr.transient), nextState, branchIndex: i };
+	}
+	return { ok: false, nextState: state, branchIndex: -1 };
+}
+
 /** @emoji 🎬 Minimal async statechart runner for `FactorySpec.machine`. */
-export class StatechartRuntime {
+export class StatechartRuntime implements StateEngine {
 	private state: string;
 	private context: Record<string, unknown> = {};
 
@@ -879,31 +941,20 @@ export class StatechartRuntime {
 	}
 
 	/** @emoji 🎬 Applies one external event; returns whether a transition fired. */
-	async send(event: FactoryEvent, kernel?: KernelAdapter): Promise<{ ok: boolean; transient?: boolean }> {
-		const st = this.spec.machine.states[this.state];
-		if (!st?.on) return { ok: false };
-		const raw = st.on[event.kind];
-		const choices = expandMachineTransitions(raw);
-		if (choices.length === 0) return { ok: false };
-		for (const tr of choices) {
-			if (tr.guard) {
-				const g = this.spec.guards?.[tr.guard];
-				if (!g || !evalGuard(g, { context: this.context, event })) continue;
-			}
-			for (const a of tr.actions ?? []) {
-				await applyActionAsync(a, this.context, event, kernel);
-			}
-			if (tr.target) {
-				this.state = tr.target;
-				if (tr.target === this.spec.machine.initial) {
-					for (const k of Object.keys(this.context)) delete this.context[k];
-				}
-			}
-			return { ok: true, transient: Boolean(tr.transient) };
-		}
-		return { ok: false };
+	async send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
+		const r = await applyTransition(this.spec, this.state, this.context, event, kernel);
+		if (r.ok) this.state = r.nextState;
+		return { ok: r.ok, transient: r.transient };
 	}
 }
+
+/** @emoji 🎭 Default in-process engine (no XState); same semantics as `applyTransition`. */
+export const pureTsStateEngineProvider: StateEngineProvider = {
+	id: "pure-ts",
+	create(spec: FactorySpec): StateEngine {
+		return new StatechartRuntime(spec);
+	},
+};
 // #endregion 🎬Statechart
 
 // #region 🖼️Display
@@ -1019,11 +1070,12 @@ export interface FactoryRuntimeOptions {
 	readonly kernel: KernelAdapter;
 	readonly document: ModelDocument;
 	readonly history?: DocumentHistory;
+	readonly stateEngine?: StateEngineProvider;
 }
 
 /** @emoji 🏭 Headless + interactive factory controller (`send`, `commit`, `undo`). */
 export class FactoryRuntime {
-	private readonly sm: StatechartRuntime;
+	private readonly sm: StateEngine;
 	private revision = 0;
 	private readonly listeners = new Set<() => void>();
 	private readonly snapStack: { state: string; context: string }[] = [];
@@ -1034,7 +1086,7 @@ export class FactoryRuntime {
 		private readonly spec: FactorySpec,
 		private readonly opts: FactoryRuntimeOptions,
 	) {
-		this.sm = new StatechartRuntime(spec);
+		this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec);
 	}
 
 	private cloneCtx(c: Record<string, unknown>): Record<string, unknown> {
@@ -1366,6 +1418,35 @@ if (import.meta.vitest) {
 				cornerB: [2, 3, 0],
 				height: 4,
 			});
+		});
+	});
+
+	describe("@spatial/js-core stateEngine option", () => {
+		it("explicit pure-ts provider matches default factory snapshots", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub-opt";
+				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = buildBoxFactorySpec();
+			const rt0 = createFactoryRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt1 = createFactoryRuntime(spec, {
+				kernel: new StubKernel(),
+				document: { topology: new TopologyGraph(), nodes: [] },
+				stateEngine: pureTsStateEngineProvider,
+			});
+			await rt0.send({ kind: "start" });
+			await rt1.send({ kind: "start" });
+			expect(rt1.getSnapshot().state).toBe(rt0.getSnapshot().state);
+			expect(rt1.getSnapshot().context).toEqual(rt0.getSnapshot().context);
 		});
 	});
 }

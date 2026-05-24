@@ -617,6 +617,9 @@
     },
     "spatial/js": {
       "name": "@spatial/js-workspace",
+      "dependencies": {
+        "xstate": "^5",
+      },
     },
   },
   "overrides": {

@@ -6,6 +6,7 @@ import { defineConfig } from "vite";
 const dir = dirname(fileURLToPath(import.meta.url));
 const coreEntry = resolve(dir, "../../core/index.ts");
 const kernelEntry = resolve(dir, "../../kernel-brepjs/index.ts");
+const machineStatelyEntry = resolve(dir, "../../machine-stately/index.ts");
 
 export default defineConfig({
 	root: dir,
@@ -15,6 +16,7 @@ export default defineConfig({
 		alias: {
 			"@spatial/js-core": coreEntry,
 			"@spatial/js-kernel-brepjs": kernelEntry,
+			"@spatial/js-machine-stately": machineStatelyEntry,
 		},
 	},
 });

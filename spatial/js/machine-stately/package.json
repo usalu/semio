@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@spatial/js-machine-stately",
+  "version": "0.1.0",
+  "description": "🎭 XState-backed `StateEngineProvider` for `@spatial/js-core` factory specs.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @spatial/js-machine-stately:test"
+  },
+  "dependencies": {
+    "@spatial/js-core": "workspace:*",
+    "xstate": "^5.31.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "spatial/js/machine-stately"
+  },
+  "bundleKind": "library"
+}

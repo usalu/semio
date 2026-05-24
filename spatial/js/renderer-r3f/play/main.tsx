@@ -21,6 +21,7 @@ import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json
 import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
 import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
+import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import { FactoryCanvas, FactorySpatialView, useFactorySnapshot } from "../index.tsx";
 
 //#region 🔖GeometryCatalog
@@ -202,7 +203,12 @@ function PlaySession({
 }: PlaySessionProps) {
 	const kernel = useMemo(() => new BrepjsKernel(), []);
 	const rt = useMemo<FactoryRuntime>(
-		() => createFactoryRuntime(spec, { kernel, document: documentModel }),
+		() =>
+			createFactoryRuntime(spec, {
+				kernel,
+				document: documentModel,
+				stateEngine: statelyStateEngineProvider,
+			}),
 		[spec, kernel, documentModel],
 	);
 	const snapshot = useFactorySnapshot(rt);

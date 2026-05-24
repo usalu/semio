@@ -10,6 +10,7 @@ export default defineConfig({
 		alias: [
 			{ find: "@spatial/js-core", replacement: resolve(root, "../core/index.ts") },
 			{ find: "@spatial/js-kernel-brepjs", replacement: resolve(root, "../kernel-brepjs/index.ts") },
+			{ find: "@spatial/js-machine-stately", replacement: resolve(root, "../machine-stately/index.ts") },
 		],
 	},
 		test: {
