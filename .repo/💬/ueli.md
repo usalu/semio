@@ -2557,6 +2557,27 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+Generalize the current command mechanism.
+Introduce actions.
+Rename command to interaction.
+Actions are pure non-interactive functions (createBoxFrom3Points(p1:Point, p2:Point, p3:Point))
+Interactions are interactive state machines.
+Interactions must work headless and inside a renderer.
+Interactions can use actions.
+Every interaction keeps track of the history of all state transitions and supports undo/redo for all states.
+Both actions and interactions are extendable at runtime.
+
+---
+
+---
+
+Extend renderer into a full REPL.
+Keep history (two stacks) of all modifications.
+A modification is the command result and additionally the backwards diff (computed from current geometry and result diff).
+Readonly commands are not added to the command stack.
+During active command undo/redo works on the command states.
+Outside active command it undo/redo applies the backwards diff or the result diff.
+
 Generalize factories to commands.
 Until now factories were used to generate geometry.
 From now on they follow the pattern:

@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.factory/v1",
+  "schema": "spatial.interaction/v1",
   "id": "feature.offsetSurface",
   "version": "1.0.0",
   "label": "Offset Surface",
@@ -85,12 +85,6 @@
       }
     }
   ],
-  "history": {
-    "excludeEvents": [
-      "pointer.move",
-      "confirm"
-    ]
-  },
   "machine": {
     "initial": "selectSurface",
     "states": [
@@ -112,7 +106,7 @@
                 "target": "setDistance",
                 "key": "i",
                 "label": "Pick surface",
-                "actions": [
+                "effects": [
                   {
                     "op": "assign",
                     "target": {
@@ -202,7 +196,7 @@
               {
                 "key": "n",
                 "label": "Apply offset",
-                "actions": [
+                "effects": [
                   {
                     "op": "assign",
                     "target": {
@@ -289,26 +283,29 @@
       "setDistance"
     ],
     "operation": {
-      "kind": "face.offset",
-      "faceIds": {
-        "kind": "path",
-        "root": "context",
-        "segments": [
-          {
-            "kind": "field",
-            "name": "resolvedFaceIds"
-          }
-        ]
-      },
-      "distance": {
-        "kind": "path",
-        "root": "context",
-        "segments": [
-          {
-            "kind": "field",
-            "name": "distance"
-          }
-        ]
+      "kind": "action",
+      "action": "feature.offsetFaces",
+      "params": {
+        "faceIds": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "resolvedFaceIds"
+            }
+          ]
+        },
+        "distance": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "distance"
+            }
+          ]
+        }
       }
     }
   }

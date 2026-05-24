@@ -1567,54 +1567,12 @@ export interface ShapeNode {
 	readonly cellRef?: CellRef;
 }
 
-/** @emoji 📄 Undoable document command applied after a factory commits. */
-export interface DocumentCommand {
-	readonly id: string;
-	readonly label: string;
-	readonly do: (doc: ModelDocument, kernel: KernelAdapter) => Promise<void>;
-	readonly undo: (doc: ModelDocument, kernel: KernelAdapter) => Promise<void>;
-}
-
 /** @emoji 📄 Working document: topology + committed shape nodes + command stack. */
 export interface ModelDocument {
 	readonly topology: TopologyGraph;
 	nodes: ShapeNode[];
 }
 
-/** @emoji 📄 Two-tier history: factory-local snapshots + document commands. */
-export class DocumentHistory {
-	private docStack: ModelDocument[] = [];
-	private cmdStack: DocumentCommand[] = [];
-	private redoStack: DocumentCommand[] = [];
-
-	pushSnapshot(doc: ModelDocument): void {
-		this.docStack.push({
-			topology: TopologyGraph.fromJSON(doc.topology.toJSON()),
-			nodes: [...doc.nodes],
-		});
-	}
-
-	async undoDocument(kernel: KernelAdapter, current: ModelDocument): Promise<boolean> {
-		const cmd = this.cmdStack.pop();
-		if (!cmd) return false;
-		await cmd.undo(current, kernel);
-		this.redoStack.push(cmd);
-		return true;
-	}
-
-	async redoDocument(kernel: KernelAdapter, current: ModelDocument): Promise<boolean> {
-		const cmd = this.redoStack.pop();
-		if (!cmd) return false;
-		await cmd.do(current, kernel);
-		this.cmdStack.push(cmd);
-		return true;
-	}
-
-	recordCommand(cmd: DocumentCommand): void {
-		this.cmdStack.push(cmd);
-		this.redoStack = [];
-	}
-}
 // #endregion 📄Document
 
 // #region 📨Response
@@ -1644,6 +1602,53 @@ export const EMPTY_COMMAND_RESPONSE: CommandResponse<null> = {
 	diff: EMPTY_TOPOLOGY_DIFF,
 	data: null,
 };
+
+/** @emoji 📄 One committed topology change plus inverse diff for document-level undo/redo. */
+export interface Modification {
+	readonly id: string;
+	readonly commandId: string;
+	readonly label: string;
+	readonly result: CommandResponse;
+	readonly backwardsDiff: TopologyDiff;
+}
+
+/** @emoji 📄 Two-stack modification history (undo / redo) keyed by topology diffs. */
+export class DocumentHistory {
+	private undoStack: Modification[] = [];
+	private redoStack: Modification[] = [];
+
+	record(mod: Modification): void {
+		if (isEmptyTopologyDiff(mod.result.diff)) return;
+		this.undoStack.push(mod);
+		this.redoStack = [];
+	}
+
+	peekUndo(): Modification | null {
+		const n = this.undoStack.length;
+		return n ? this.undoStack[n - 1]! : null;
+	}
+
+	peekRedo(): Modification | null {
+		const n = this.redoStack.length;
+		return n ? this.redoStack[n - 1]! : null;
+	}
+
+	undo(doc: ModelDocument): Modification | null {
+		const mod = this.undoStack.pop();
+		if (!mod) return null;
+		applyTopologyDiff(doc.topology, mod.backwardsDiff);
+		this.redoStack.push(mod);
+		return mod;
+	}
+
+	redo(doc: ModelDocument): Modification | null {
+		const mod = this.redoStack.pop();
+		if (!mod) return null;
+		applyTopologyDiff(doc.topology, mod.result.diff);
+		this.undoStack.push(mod);
+		return mod;
+	}
+}
 // #endregion 📨Response
 
 // #region 📜Command
@@ -1674,12 +1679,18 @@ export interface CommandRuntimeOptions {
 	readonly stateEngine?: StateEngineProvider;
 }
 
+/** @emoji 🧭 True while the statechart is between `machine.initial` and a terminal `committed` state. */
+export function isCommandSessionActive(spec: CommandSpec, state: string): boolean {
+	return state !== spec.machine.initial && state !== "committed";
+}
+
 /** @emoji 📜 Headless + interactive command controller (`send`, `commit`, `undo`). */
 export class CommandRuntime {
 	private readonly sm: StateEngine;
 	private revision = 0;
 	private readonly listeners = new Set<() => void>();
-	private readonly snapStack: { state: string; context: string }[] = [];
+	private readonly snapUndoStack: { state: string; context: string }[] = [];
+	private readonly snapRedoStack: { state: string; context: string }[] = [];
 	private snapshotCache: CommandSnapshot | null = null;
 	private lastResponse: CommandResponse | null = null;
 	private readonly pendingSnapshotInfos: CommandMessage[] = [];
@@ -1698,6 +1709,10 @@ export class CommandRuntime {
 	private excludeFromHistory(kind: string): boolean {
 		const xs = this.spec.history?.excludeEvents ?? [];
 		return xs.includes(kind);
+	}
+
+	private inActiveCommand(): boolean {
+		return isCommandSessionActive(this.spec, this.sm.getState());
 	}
 
 	private canCommit(): boolean {
@@ -1726,6 +1741,10 @@ export class CommandRuntime {
 		const spatialInteraction = mergeCommandSpatialInteraction(this.spec);
 		const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
 		const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
+		const hist = this.opts.history;
+		const active = this.inActiveCommand();
+		const canUndo = this.snapUndoStack.length > 0 || (!active && Boolean(hist?.peekUndo()));
+		const canRedo = this.snapRedoStack.length > 0 || (!active && Boolean(hist?.peekRedo()));
 		this.snapshotCache = {
 			commandId: this.spec.id,
 			state: st,
@@ -1736,8 +1755,8 @@ export class CommandRuntime {
 			capabilities: {
 				canCommit: this.canCommit(),
 				canCancel: st !== "committed",
-				canUndo: this.snapStack.length > 0,
-				canRedo: false,
+				canUndo,
+				canRedo,
 			},
 			diagnostics: infoDiags,
 			lastResponse: this.lastResponse,
@@ -1775,20 +1794,71 @@ export class CommandRuntime {
 		const r = await this.sm.send(event, this.opts.kernel);
 		if (!r.ok) return;
 		if (!r.transient && !this.excludeFromHistory(event.kind)) {
-			this.snapStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+			this.snapRedoStack.length = 0;
 		}
 		this.emit();
 	}
 
 	undo(): void {
-		const snap = this.snapStack.pop();
-		if (!snap) return;
-		const o = JSON.parse(snap.context) as Record<string, unknown>;
-		this.sm.restore(snap.state, o);
+		if (this.inActiveCommand()) {
+			const snap = this.snapUndoStack.pop();
+			if (!snap) return;
+			const curState = this.sm.getState();
+			const curCtx = JSON.stringify(this.cloneCtx(this.sm.getContext()));
+			this.snapRedoStack.push({ state: curState, context: curCtx });
+			const o = JSON.parse(snap.context) as Record<string, unknown>;
+			this.sm.restore(snap.state, o);
+			this.emit();
+			return;
+		}
+		if (this.snapUndoStack.length > 0) {
+			const snap = this.snapUndoStack.pop();
+			if (!snap) return;
+			const curState = this.sm.getState();
+			const curCtx = JSON.stringify(this.cloneCtx(this.sm.getContext()));
+			this.snapRedoStack.push({ state: curState, context: curCtx });
+			const o = JSON.parse(snap.context) as Record<string, unknown>;
+			this.sm.restore(snap.state, o);
+			this.emit();
+			return;
+		}
+		const h = this.opts.history;
+		if (h) h.undo(this.opts.document);
+		this.emit();
+	}
+
+	redo(): void {
+		if (this.inActiveCommand()) {
+			const snap = this.snapRedoStack.pop();
+			if (!snap) return;
+			const curState = this.sm.getState();
+			const curCtx = JSON.stringify(this.cloneCtx(this.sm.getContext()));
+			this.snapUndoStack.push({ state: curState, context: curCtx });
+			const o = JSON.parse(snap.context) as Record<string, unknown>;
+			this.sm.restore(snap.state, o);
+			this.emit();
+			return;
+		}
+		if (this.snapRedoStack.length > 0) {
+			const snap = this.snapRedoStack.pop();
+			if (!snap) return;
+			const curState = this.sm.getState();
+			const curCtx = JSON.stringify(this.cloneCtx(this.sm.getContext()));
+			this.snapUndoStack.push({ state: curState, context: curCtx });
+			const o = JSON.parse(snap.context) as Record<string, unknown>;
+			this.sm.restore(snap.state, o);
+			this.emit();
+			return;
+		}
+		const h = this.opts.history;
+		if (h) h.redo(this.opts.document);
 		this.emit();
 	}
 
 	cancel(): void {
+		this.snapUndoStack.length = 0;
+		this.snapRedoStack.length = 0;
 		this.sm.reset();
 		this.emit();
 	}
@@ -1875,24 +1945,21 @@ export class CommandRuntime {
 			data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
 		}
 		const inverse = applyTopologyDiff(topo, diff);
-		const hist = this.opts.history;
-		if (hist && !isEmptyTopologyDiff(diff)) {
-			const id = `cmd-${this.spec.id}-${this.revision}`;
-			const forward = diff;
-			hist.recordCommand({
-				id,
-				label: this.spec.label ?? this.spec.id,
-				do: async (doc) => {
-					applyTopologyDiff(doc.topology, forward);
-				},
-				undo: async (doc) => {
-					applyTopologyDiff(doc.topology, inverse);
-				},
-			});
-		}
 		await this.sm.send({ kind: "confirm" }, k);
 		const res: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data };
 		this.lastResponse = res;
+		this.snapUndoStack.length = 0;
+		this.snapRedoStack.length = 0;
+		const hist = this.opts.history;
+		if (hist && !isEmptyTopologyDiff(diff)) {
+			hist.record({
+				id: `cmd-${this.spec.id}-${this.revision}`,
+				commandId: this.spec.id,
+				label: this.spec.label ?? this.spec.id,
+				result: res,
+				backwardsDiff: inverse,
+			});
+		}
 		this.emit();
 		return res;
 	}
@@ -2260,6 +2327,139 @@ if (import.meta.vitest) {
 			expect(res.ok).toBe(true);
 			expect(res.data).toBe(2.5);
 			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
+		});
+	});
+
+	describe("@spatial/js-core document history", () => {
+		it("records modifications and undo/redo applies forward and backwards diffs", () => {
+			const g = new TopologyGraph();
+			const h = new DocumentHistory();
+			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
+			const d1 = meshFaceTopologyDiff(mesh, "a");
+			const inv1 = applyTopologyDiff(g, d1);
+			const res1: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null };
+			h.record({ id: "m1", commandId: "c", label: "A", result: res1, backwardsDiff: inv1 });
+			const d2 = meshFaceTopologyDiff(mesh, "b");
+			const inv2 = applyTopologyDiff(g, d2);
+			const res2: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null };
+			h.record({ id: "m2", commandId: "c", label: "B", result: res2, backwardsDiff: inv2 });
+			expect(Object.keys(g.faces).length).toBe(2);
+			const doc = { topology: g, nodes: [] as ShapeNode[] };
+			h.undo(doc);
+			expect(Object.keys(g.faces).length).toBe(1);
+			h.undo(doc);
+			expect(Object.keys(g.faces).length).toBe(0);
+			h.redo(doc);
+			expect(Object.keys(g.faces).length).toBe(1);
+			h.redo(doc);
+			expect(Object.keys(g.faces).length).toBe(2);
+		});
+	});
+
+	describe("@spatial/js-core measure distance history", () => {
+		it("does not push readonly measure commits onto document history", async () => {
+			class MeasKernel implements KernelAdapter {
+				readonly id = "meas-h";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async query(name: string, params: Record<string, unknown>) {
+					if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
+					return undefined;
+				}
+				async vertexDistance(a: VertexRef, b: VertexRef, t: TopologyGraph) {
+					const pa = t.vertices[String(a)]?.position;
+					const pb = t.vertices[String(b)]?.position;
+					if (!pa || !pb) return 0;
+					return vec3Distance(pa, pb);
+				}
+			}
+			const hist = new DocumentHistory();
+			const topo = new TopologyGraph();
+			const va = "v0" as VertexRef;
+			const vb = "v1" as VertexRef;
+			topo.vertices[va] = { id: va, position: [0, 0, 0] };
+			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
+			const spec = buildDistanceCommandSpec();
+			const rt = createCommandRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] }, history: hist });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
+			await rt.commit();
+			expect(hist.peekUndo()).toBe(null);
+		});
+	});
+
+	describe("@spatial/js-core command session undo redo", () => {
+		it("supports redo after undo during an active command and clears redo on new branch", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub-s";
+				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = buildBoxCommandSpec();
+			const rt = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			await rt.send({ kind: "start" });
+			expect(rt.getSnapshot().state).toBe("first_corner");
+			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
+			rt.undo();
+			expect(rt.getSnapshot().state).toBe("idle");
+			expect(rt.getSnapshot().capabilities.canRedo).toBe(true);
+			await rt.send({ kind: "start" });
+			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
+		});
+	});
+
+	describe("@spatial/js-core undo routing", () => {
+		it("uses snapshot undo while active and document history when idle", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub-r";
+				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const g = new TopologyGraph();
+			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
+			const d0 = meshFaceTopologyDiff(mesh, "seed");
+			const inv0 = applyTopologyDiff(g, d0);
+			const hist = new DocumentHistory();
+			hist.record({
+				id: "seed",
+				commandId: "x",
+				label: "seed",
+				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null },
+				backwardsDiff: inv0,
+			});
+			expect(Object.keys(g.faces).length).toBe(1);
+			const spec = buildBoxCommandSpec();
+			const rt = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
+			await rt.send({ kind: "start" });
+			rt.undo();
+			expect(rt.getSnapshot().state).toBe("idle");
+			expect(Object.keys(g.faces).length).toBe(1);
+			rt.undo();
+			expect(Object.keys(g.faces).length).toBe(0);
 		});
 	});
 }

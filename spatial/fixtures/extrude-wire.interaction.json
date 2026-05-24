@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.factory/v1",
+  "schema": "spatial.interaction/v1",
   "id": "feature.extrudeWire",
   "version": "1.0.0",
   "label": "Extrude Wire",
@@ -84,12 +84,6 @@
       }
     }
   ],
-  "history": {
-    "excludeEvents": [
-      "pointer.move",
-      "confirm"
-    ]
-  },
   "machine": {
     "initial": "selectWire",
     "states": [
@@ -110,7 +104,7 @@
                 "target": "setDistance",
                 "key": "i",
                 "label": "Pick wire",
-                "actions": [
+                "effects": [
                   {
                     "op": "assign",
                     "target": {
@@ -166,7 +160,7 @@
               {
                 "key": "n",
                 "label": "Apply distance",
-                "actions": [
+                "effects": [
                   {
                     "op": "assign",
                     "target": {
@@ -251,34 +245,37 @@
       "setDistance"
     ],
     "operation": {
-      "kind": "wire.extrudeToCell",
-      "wireId": {
-        "kind": "path",
-        "root": "context",
-        "segments": [
-          {
-            "kind": "field",
-            "name": "wireId"
-          }
-        ]
-      },
-      "distance": {
-        "kind": "path",
-        "root": "context",
-        "segments": [
-          {
-            "kind": "field",
-            "name": "distance"
-          }
-        ]
-      },
-      "direction": {
-        "kind": "const",
-        "value": [
-          0,
-          0,
-          1
-        ]
+      "kind": "action",
+      "action": "feature.extrudeWireToCell",
+      "params": {
+        "wireId": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "wireId"
+            }
+          ]
+        },
+        "distance": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "distance"
+            }
+          ]
+        },
+        "direction": {
+          "kind": "const",
+          "value": [
+            0,
+            0,
+            1
+          ]
+        }
       }
     }
   }
