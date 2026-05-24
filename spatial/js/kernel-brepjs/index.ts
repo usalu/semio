@@ -165,6 +165,46 @@ export class BrepjsKernel implements KernelAdapter {
 		return this.volume(c);
 	}
 
+	async adjacentCells(cell: CellRef, topo: TopologyGraph): Promise<readonly CellRef[]> {
+		const out = new Set<string>();
+		const c = topo.cells[String(cell)];
+		if (!c) return [];
+		const faces = new Set<string>();
+		for (const sid of c.shellIds) {
+			const sh = topo.shells[sid];
+			if (sh) for (const f of sh.faceIds) faces.add(f);
+		}
+		for (const f of faces) {
+			for (const [cid, cellRec] of Object.entries(topo.cells)) {
+				if (cid === String(cell)) continue;
+				for (const sid of cellRec.shellIds) {
+					const sh = topo.shells[sid];
+					if (sh?.faceIds.includes(f as FaceRef)) out.add(cid);
+				}
+			}
+		}
+		return [...out].map((id) => id as CellRef);
+	}
+
+	async sharedFacesBetween(a: CellRef, b: CellRef, topo: TopologyGraph): Promise<readonly FaceRef[]> {
+		const ca = topo.cells[String(a)];
+		const cb = topo.cells[String(b)];
+		if (!ca || !cb) return [];
+		const fa = new Set<string>();
+		const fb = new Set<string>();
+		for (const sid of ca.shellIds) {
+			const sh = topo.shells[sid];
+			if (sh) for (const fid of sh.faceIds) fa.add(fid);
+		}
+		for (const sid of cb.shellIds) {
+			const sh = topo.shells[sid];
+			if (sh) for (const fid of sh.faceIds) fb.add(fid);
+		}
+		const xs: FaceRef[] = [];
+		for (const x of fa) if (fb.has(x)) xs.push(x as FaceRef);
+		return xs;
+	}
+
 	async extrudeWire(input: { wireId: string; distance: number; direction: Vec3 }): Promise<CellRef> {
 		await this.ensureInit();
 		const h = Math.abs(input.direction[2] * input.distance) || Math.abs(input.distance) || 1e-6;
@@ -259,6 +299,34 @@ if (import.meta.vitest) {
 				height: 1,
 			});
 			expect(await kernel.cellVolume(cell)).toBeCloseTo(await kernel.volume(cell), 6);
+		});
+
+		it("adjacentCells lists other cells sharing any face", async () => {
+			const g = new TopologyGraph();
+			const f = "fs" as FaceRef;
+			g.faces[f] = { id: f, wireIds: [] };
+			const s0 = "s0" as ShellRef;
+			const s1 = "s1" as ShellRef;
+			g.shells[s0] = { id: s0, faceIds: [f] };
+			g.shells[s1] = { id: s1, faceIds: [f] };
+			g.cells["c0" as CellRef] = { id: "c0" as CellRef, shellIds: [s0] };
+			g.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [s1] };
+			const adj = await kernel.adjacentCells("c0" as CellRef, g);
+			expect(adj.map(String).sort()).toEqual(["c1"]);
+		});
+
+		it("sharedFacesBetween returns shared face ids", async () => {
+			const g = new TopologyGraph();
+			const f = "fx" as FaceRef;
+			g.faces[f] = { id: f, wireIds: [] };
+			const sa = "sa" as ShellRef;
+			const sb = "sb" as ShellRef;
+			g.shells[sa] = { id: sa, faceIds: [f] };
+			g.shells[sb] = { id: sb, faceIds: [f] };
+			g.cells["ca" as CellRef] = { id: "ca" as CellRef, shellIds: [sa] };
+			g.cells["cb" as CellRef] = { id: "cb" as CellRef, shellIds: [sb] };
+			const xs = await kernel.sharedFacesBetween("ca" as CellRef, "cb" as CellRef, g);
+			expect(xs).toEqual([f]);
 		});
 	});
 }

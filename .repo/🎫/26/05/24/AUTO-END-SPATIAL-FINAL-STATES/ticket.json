@@ -1,0 +1,10 @@
+{
+  "title": "Auto End Spatial Final States",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Make sure that all final states in the spatial interactions automatically end the interaction and no finalize is necessary.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪c45d449f2e9a40219b28e0da25f56446"
+  ]
+}

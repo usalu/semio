@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@spatial/js-query",
+  "version": "0.1.0",
+  "description": "🔍 Cypher-inspired construct query language for spatial topology (Chevrotain AST + kernel index).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @spatial/js-query:test"
+  },
+  "dependencies": {
+    "@spatial/js-core": "workspace:*",
+    "chevrotain": "^11.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "spatial/js/query"
+  },
+  "bundleKind": "library"
+}

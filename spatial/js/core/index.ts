@@ -268,12 +268,47 @@ export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
 }
 // #endregion 🗺️Paths
 
+// #region 🏷️Metadata
+/** @emoji 🏷️ Sidecar semantic fields keyed by topology or derived entity id; each write bumps hosting `TopologyGraph.revision`. */
+export class EntityMetadataStore {
+	private readonly byId = new Map<string, Record<string, unknown>>();
+
+	constructor(private readonly bumpRevision: () => void) {}
+
+	get(id: string): Readonly<Record<string, unknown>> | undefined {
+		const r = this.byId.get(id);
+		return r ? r : undefined;
+	}
+
+	setField(id: string, key: string, value: unknown): void {
+		let r = this.byId.get(id);
+		if (!r) {
+			r = {};
+			this.byId.set(id, r);
+		}
+		r[key] = value;
+		this.bumpRevision();
+	}
+
+	deleteEntity(id: string): void {
+		if (this.byId.delete(id)) this.bumpRevision();
+	}
+}
+
+/** @emoji 🪪 `evalExpr` `field` target: a bound topology row entity (`kind` + `id`). */
+export interface TopologyEntityRef {
+	readonly kind: TopologyEntityKind;
+	readonly id: string;
+}
+// #endregion 🏷️Metadata
+
 // #region 🗺️Expr
 /** @emoji 🗺️ Tagged declarative expression evaluated by `evalExpr` (`spatial/schema/json/expression.json`). */
 export type Expr =
 	| ExprPath
 	| ExprConst
 	| ExprVar
+	| ExprField
 	| ExprLet
 	| ExprExists
 	| ExprNotEmpty
@@ -296,6 +331,11 @@ export interface ExprConst {
 }
 export interface ExprVar {
 	readonly kind: "var";
+	readonly name: string;
+}
+export interface ExprField {
+	readonly kind: "field";
+	readonly object: Expr;
 	readonly name: string;
 }
 export interface ExprLet {
@@ -348,14 +388,28 @@ export interface ExprEnv {
 	readonly context: Record<string, unknown>;
 	readonly event?: Record<string, unknown>;
 	readonly vars?: Record<string, unknown>;
+	readonly topology?: TopologyGraph;
+	readonly metadata?: EntityMetadataStore;
 }
 
 function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
-	return { context: base.context, event: base.event, vars: { ...base.vars, ...vars } };
+	return {
+		context: base.context,
+		event: base.event,
+		vars: { ...base.vars, ...vars },
+		topology: base.topology,
+		metadata: base.metadata,
+	};
 }
 
 function isVec3(v: unknown): v is Vec3 {
 	return Array.isArray(v) && v.length === 3 && v.every((n) => typeof n === "number");
+}
+
+function isTopologyEntityRef(v: unknown): v is TopologyEntityRef {
+	if (!v || typeof v !== "object") return false;
+	const o = v as Record<string, unknown>;
+	return typeof o.kind === "string" && typeof o.id === "string";
 }
 
 /** @emoji 🧮 Evaluates a tagged `Expr` against `ExprEnv` (guards + action values). */
@@ -367,6 +421,12 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 			return readPathTarget({ root: expr.root, segments: expr.segments }, env);
 		case "var":
 			return env.vars ? env.vars[expr.name] : undefined;
+		case "field": {
+			const o = evalExpr(expr.object, env);
+			const topo = env.topology;
+			if (!topo || !isTopologyEntityRef(o)) return undefined;
+			return readTopologyEntityProperty(topo, env.metadata, o.kind, o.id, expr.name);
+		}
 		case "let": {
 			const next: Record<string, unknown> = {};
 			for (const b of expr.bindings) {
@@ -721,6 +781,7 @@ export class TopologyGraph {
 	cells: Record<string, CellRecord> = {};
 	cellComplexes: Record<string, CellComplexRecord> = {};
 	clusters: Record<string, ClusterRecord> = {};
+	readonly metadata: EntityMetadataStore = new EntityMetadataStore(() => this.bump());
 
 	/** @emoji 🧭 Serializes to `TopologyGraphJson` (stable id-sorted arrays). */
 	toJSON(): TopologyGraphJson {
@@ -755,6 +816,38 @@ export class TopologyGraph {
 
 	bump(): void {
 		this.revision += 1;
+	}
+}
+
+/** @emoji 🧭 Reads `name` from metadata, then from editable topology records (no derived tables). */
+export function readTopologyEntityProperty(
+	topo: TopologyGraph,
+	meta: EntityMetadataStore | undefined,
+	kind: TopologyEntityKind,
+	id: string,
+	name: string,
+): unknown {
+	const bag = meta?.get(id);
+	if (bag && name in bag) return (bag as Record<string, unknown>)[name];
+	switch (kind) {
+		case "vertex":
+			return (topo.vertices[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "edge":
+			return (topo.edges[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "wire":
+			return (topo.wires[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "face":
+			return (topo.faces[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "shell":
+			return (topo.shells[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "cell":
+			return (topo.cells[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "cellComplex":
+			return (topo.cellComplexes[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		case "cluster":
+			return (topo.clusters[id] as unknown as Record<string, unknown> | undefined)?.[name];
+		default:
+			return undefined;
 	}
 }
 
@@ -978,6 +1071,8 @@ export interface KernelAdapter {
 	edgeLength?(e: EdgeRef, topo: TopologyGraph): Promise<number>;
 	faceArea?(f: FaceRef, topo: TopologyGraph): Promise<number>;
 	cellVolume?(c: CellRef): Promise<number>;
+	adjacentCells?(cell: CellRef, topo: TopologyGraph): Promise<readonly CellRef[]>;
+	sharedFacesBetween?(a: CellRef, b: CellRef, topo: TopologyGraph): Promise<readonly FaceRef[]>;
 }
 // #endregion 🔌Kernel
 
@@ -1412,6 +1507,29 @@ export class DerivedViewService {
 }
 // #endregion 🪞DerivedViews
 
+// #region 🔍ConstructQuery
+/** @emoji 🔍 One named column in a `construct` result row. */
+export type ConstructQueryRow = Readonly<Record<string, unknown>>;
+
+/** @emoji 🔍 `construct` runner output (`rows` always materialized; optional `data`/`diff` from CALL). */
+export interface ConstructQueryResult {
+	readonly rows: readonly ConstructQueryRow[];
+	readonly data?: unknown;
+	readonly diff?: TopologyDiff;
+}
+
+/** @emoji 🔍 Host wiring for `InteractionRuntime.query` (`@spatial/js-query` supplies the default runner). */
+export interface ConstructQueryContext {
+	readonly topology: TopologyGraph;
+	readonly kernel: KernelAdapter;
+	readonly actions: ActionRegistry;
+	readonly derived?: DerivedViewService;
+}
+
+/** @emoji 🔍 Async bridge so core never imports `@spatial/js-query`. */
+export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Promise<ConstructQueryResult>;
+// #endregion 🔍ConstructQuery
+
 // #region 🎬Statechart
 /** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
 export interface StateEngineSendResult {
@@ -1759,6 +1877,8 @@ export interface InteractionResponse<TData = unknown> {
 	readonly infos: readonly InteractionMessage[];
 	readonly diff: TopologyDiff;
 	readonly data: TData | null;
+	/** @emoji 📦 Context clone immediately before the post-commit `confirm` transition; null when commit aborted before confirm. */
+	readonly archiveContext: Record<string, unknown> | null;
 }
 
 /** @emoji 📨 Default empty success payload for guards and early returns. */
@@ -1769,6 +1889,7 @@ export const EMPTY_INTERACTION_RESPONSE: InteractionResponse<null> = {
 	infos: [],
 	diff: EMPTY_TOPOLOGY_DIFF,
 	data: null,
+	archiveContext: null,
 };
 
 /** @emoji 📄 One committed topology change plus inverse diff for document-level undo/redo. */
@@ -1846,6 +1967,8 @@ export interface InteractionRuntimeOptions {
 	readonly history?: DocumentHistory;
 	readonly stateEngine?: StateEngineProvider;
 	readonly actions?: ActionRegistry;
+	readonly query?: ConstructRunner;
+	readonly derived?: DerivedViewService;
 }
 
 /** @emoji 🧭 True while the statechart is between `machine.initial` and a terminal `committed` state. */
@@ -1897,6 +2020,18 @@ export class InteractionRuntime {
 	/** @emoji 🧭 Accepted topology kinds for the active machine state (`[]` when none). */
 	listActiveSelectionAccept(): readonly TopologyEntityKind[] {
 		return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
+	}
+
+	/** @emoji 🔍 Executes a `construct` script via `opts.query` (host registers `@spatial/js-query`). */
+	async query(text: string): Promise<ConstructQueryResult> {
+		const runner = this.opts.query;
+		if (!runner) throw new Error("InteractionRuntime.query requires InteractionRuntimeOptions.query");
+		return runner(text, {
+			topology: this.opts.document.topology,
+			kernel: this.opts.kernel,
+			actions: this.actions,
+			derived: this.opts.derived,
+		});
 	}
 
 	getSnapshot(): InteractionSnapshot {
@@ -2039,6 +2174,7 @@ export class InteractionRuntime {
 				infos: [],
 				diff: EMPTY_TOPOLOGY_DIFF,
 				data: null,
+				archiveContext: null,
 			};
 			this.lastResponse = res;
 			this.emit();
@@ -2075,8 +2211,9 @@ export class InteractionRuntime {
 			data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
 		}
 		const inverse = applyTopologyDiff(topo, diff);
+		const archiveContext = this.cloneCtx(this.sm.getContext());
 		await this.sm.send({ kind: "confirm" }, k, topo, this.actions);
-		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data };
+		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
 		this.lastResponse = res;
 		this.snapUndoStack.length = 0;
 		this.snapRedoStack.length = 0;
@@ -2272,6 +2409,16 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("@spatial/js-core metadata", () => {
+		it("EntityMetadataStore setField bumps topology revision", () => {
+			const g = new TopologyGraph();
+			const r0 = g.revision;
+			g.metadata.setField("e1", "exposure", "external");
+			expect(g.revision).toBeGreaterThan(r0);
+			expect(g.metadata.get("e1")?.exposure).toBe("external");
+		});
+	});
+
 	describe("@spatial/js-core interaction presets", () => {
 		it("lists stable keys for each built-in interaction preset", () => {
 			const ps = listSpatialInteractionPresets();
@@ -2462,6 +2609,10 @@ if (import.meta.vitest) {
 			const res = await rt.commit();
 			expect(res.ok).toBe(true);
 			expect(res.data).toBeNull();
+			expect(res.archiveContext).not.toBeNull();
+			expect(res.archiveContext!.origin).toEqual([0, 0, 0]);
+			expect(res.archiveContext!.corner).toEqual([2, 3, 0]);
+			expect(res.archiveContext!.height).toBe(4);
 			expect(Object.keys(topo.faces).length).toBeGreaterThan(0);
 			expect(kernel.lastBox).toEqual({
 				cornerA: [0, 0, 0],
@@ -2582,11 +2733,11 @@ if (import.meta.vitest) {
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
 			const d1 = meshFaceTopologyDiff(mesh, "a");
 			const inv1 = applyTopologyDiff(g, d1);
-			const res1: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null };
+			const res1: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null, archiveContext: null };
 			h.record({ id: "m1", interactionId: "c", label: "A", result: res1, backwardsDiff: inv1 });
 			const d2 = meshFaceTopologyDiff(mesh, "b");
 			const inv2 = applyTopologyDiff(g, d2);
-			const res2: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null };
+			const res2: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null, archiveContext: null };
 			h.record({ id: "m2", interactionId: "c", label: "B", result: res2, backwardsDiff: inv2 });
 			expect(Object.keys(g.faces).length).toBe(2);
 			const doc = { topology: g, nodes: [] as ShapeNode[] };
@@ -2693,7 +2844,7 @@ if (import.meta.vitest) {
 				id: "seed",
 				interactionId: "x",
 				label: "seed",
-				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null },
+				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null, archiveContext: null },
 				backwardsDiff: inv0,
 			});
 			expect(Object.keys(g.faces).length).toBe(1);

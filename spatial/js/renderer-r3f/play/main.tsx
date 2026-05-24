@@ -1,5 +1,5 @@
 /** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl`. */
-import { StrictMode, useCallback, useMemo, useState, type ReactNode } from "react";
+import { StrictMode, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
 	listSpatialInteractionPresets,
@@ -19,6 +19,7 @@ import geometryLargeBuilding from "../../../fixtures/large-building.topology.jso
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
+	ArchivedBoxLayout,
 	DocumentHistory,
 	InteractionRepl,
 	useDocumentHistory,
@@ -46,9 +47,12 @@ interface PlaySessionProps {
 	readonly history: DocumentHistory;
 	readonly kernel: BrepjsKernel;
 	readonly asideExtra: ReactNode;
+	readonly archivedBoxLayouts: readonly ArchivedBoxLayout[];
+	readonly onArchiveCommittedBox: (layout: ArchivedBoxLayout) => void;
+	readonly sessionRestartNonce: number;
 }
 
-/** @emoji 🎮 One keyed mount owns `useInteractionRuntime` so the same preset can restart after `committed`. */
+/** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-preset restarts use `sessionRestartNonce` without remounting GL. */
 function PlaySession({
 	presets,
 	interactionId,
@@ -58,6 +62,9 @@ function PlaySession({
 	history,
 	kernel,
 	asideExtra,
+	archivedBoxLayouts,
+	onArchiveCommittedBox,
+	sessionRestartNonce,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
@@ -80,6 +87,9 @@ function PlaySession({
 			document={documentModel}
 			geometry={documentModel.topology}
 			asideExtra={asideExtra}
+			archivedBoxLayouts={archivedBoxLayouts}
+			onArchiveCommittedBox={onArchiveCommittedBox}
+			sessionRestartNonce={sessionRestartNonce}
 		/>
 	);
 }
@@ -116,8 +126,14 @@ function PlayApp() {
 
 	const history = useDocumentHistory();
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const fallbackSpec = useMemo(() => loadSpatialInteractionPreset(presets[0]!.id)!, [presets]);
-	const activeSpec = spec ?? fallbackSpec;
+	const [archivedBoxLayouts, setArchivedBoxLayouts] = useState<ArchivedBoxLayout[]>([]);
+	const appendArchivedBox = useCallback((layout: ArchivedBoxLayout) => {
+		setArchivedBoxLayouts((xs) => [...xs, layout]);
+	}, []);
+
+	useEffect(() => {
+		setArchivedBoxLayouts([]);
+	}, [geometryAssetId, interactionId]);
 
 	const asideExtra: ReactNode = (
 		<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
@@ -152,7 +168,7 @@ function PlayApp() {
 
 	return (
 		<PlaySession
-			key={`${interactionId}:${interactionBootId}`}
+			key={interactionId}
 			presets={presets}
 			interactionId={interactionId}
 			spec={spec}
@@ -161,6 +177,9 @@ function PlayApp() {
 			history={history}
 			kernel={kernel}
 			asideExtra={asideExtra}
+			archivedBoxLayouts={archivedBoxLayouts}
+			onArchiveCommittedBox={appendArchivedBox}
+			sessionRestartNonce={interactionBootId}
 		/>
 	);
 }

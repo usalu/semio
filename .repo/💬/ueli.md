@@ -2576,8 +2576,6 @@ Both actions and interactions are extendable at runtime.
 
 ---
 
----
-
 Extend renderer into a full REPL.
 Keep history (two stacks) of all modifications.
 A modification is the command result and additionally the backwards diff (computed from current geometry and result diff).
@@ -2592,6 +2590,11 @@ geomtery in and geometry out
 They might be readonly (e.g. Distance, Area, etc)
 Make sure that selections are possible in the state machine.
 Make sure that state machines can switch between raw (Vertex, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster) and analytic (Surface, Part), and filter kinds.
+
+---
+
+Extend renderer with selection and hover (add toggles for each kind).
+Make sure that when something is clicked where multiple elements can be selected to show a small list with all selectable elements. When hovering over the list item, hover the corresponding 3d elements.
 
 ---
 
