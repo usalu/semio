@@ -9,8 +9,8 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
+			"@elements/framework": resolve(root, "../../../framework/core/index.ts"),
 			"@elements/framework-react": resolve(root, "../../../framework/renderer/react/index.tsx"),
-			"@elements/framework-react/workbench": resolve(root, "../../../framework/renderer/react/workbench-bridge.tsx"),
 			"@elements/ui": resolve(root, "../../core/index.tsx"),
 			"@elements/geometry-spatial-js": resolve(root, "../js/index.ts"),
 		},

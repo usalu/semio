@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎨 `@elements/styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for elements consumers. */
+/** @emoji 🔁 Re-export Tailwind preset from `elements/lib/styling/tailwind`. */
 // #endregion 🧲Header
 
 export { tailwindConfig, tailwindConfig as default } from "../tailwind/tailwind.config.ts";

@@ -5,7 +5,7 @@
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/core/styling",
+        "cwd": "elements/lib/styling/js",
         "command": "bun ./script.ts generate",
         "forwardAllArgs": true
       }

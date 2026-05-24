@@ -5,11 +5,9 @@
 // #region 📥Imports
 import {
   Button,
-  Expertise,
   IconSelector,
   Input,
   Label,
-  LevelProvider,
   Select,
   SelectContent,
   SelectItem,
@@ -34,13 +32,13 @@ import {
   type TreeDataSection,
 } from "@elements/ui";
 import { Expertise, type UiBoardHostSurfaceNode } from "@elements/framework";
-import { registerUiBoardSurfaceHost } from "@elements/framework-react";
 import {
   getLevelBgClass,
   LevelProvider,
   mountReactApp,
+  registerUiBoardSurfaceHost,
   WorkbenchView,
-} from "@elements/framework-react/workbench";
+} from "@elements/framework-react";
 import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, MousePointer2, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
   createContext,

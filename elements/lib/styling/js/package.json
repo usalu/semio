@@ -3,7 +3,7 @@
   "projectType": "library",
   "name": "@elements/styling",
   "version": "0.1.0",
-  "description": "elements · Tailwind/CSS surface; canonical tokens + codegen live in elements/core/styling (@elements/styling-core)",
+  "description": "elements · Tailwind/CSS surface; canonical tokens + codegen live in elements/lib/styling (@elements/styling-core)",
   "type": "module",
   "exports": {
     ".": "./index.ts",
@@ -28,7 +28,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "elements/client/lib/styling"
+    "directory": "elements/lib/styling/js"
   },
   "bundleKind": "library"
 }

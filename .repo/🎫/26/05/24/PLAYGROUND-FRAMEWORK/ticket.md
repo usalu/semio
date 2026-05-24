@@ -2,7 +2,15 @@
 
 **Goal:** elements architecture — framework core (TS classes), framework react renderer, playground framework, spatial play consumes playground via framework only.
 
-**Status:** in progress
+**Status:** closed
+
+## Summary (continued)
+
+- `@elements/framework-react` now exports workbench shell API from main entry (re-exports `@elements/ui` until physical move).
+- `@elements/geometry-spatial-react` uses `useApp` / `getLevelBgClass` from `@elements/framework-react` (not `@elements/ui`).
+- Board play uses `registerPlaygroundSidePanelBodies`; board host imports shell from `@elements/framework-react`.
+- Added framework-react vitest (UiRenderer command dispatch).
+- Fixed spatial react vitest aliases and project cwd paths.
 
 ## Summary
 
