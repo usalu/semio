@@ -39,3 +39,9 @@
 - `bun nx run @spatial/js-renderer-r3f:test` — passed; renderer suite reports 22 tests across the doubled Vitest source/include run.
 - `bun nx run @spatial/js-renderer-r3f:build` — passed.
 - Browser runtime at `http://127.0.0.1:6021/` — loaded Spatial R3F Play and logged `[DEBUG] spatial renderer selection-hover controls` with both `Selectable kinds` and `Hoverable kinds` present and 20 kind checkboxes.
+
+## Follow-Up: Committed Box Selectability
+
+**Work:** replaced representative mesh-face topology for box commits with full axis-aligned box topology: 8 vertices, 12 edges, 6 wires, 6 faces, 1 shell, and the kernel cell. `BrepjsKernel.createBoxFromCornersDiff` now returns this full topology while still creating the exact brepjs solid. Renderer regression coverage confirms committed boxes produce selectable targets for vertices, edges, wires, faces, surfaces, shell, cell, and part.
+
+**Verification:** `bun nx run @spatial/js-renderer-r3f:test` passed; `bun nx run @spatial/js-renderer-r3f:build` passed.

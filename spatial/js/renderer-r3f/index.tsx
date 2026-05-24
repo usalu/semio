@@ -10,12 +10,12 @@ import { MOUSE } from "three";
 import * as THREE from "three";
 import {
 	applyTopologyDiff,
+	boxTopologyDiff,
 	buildBoxInteractionSpec,
 	cellRef,
 	createInteractionRuntime,
 	DocumentHistory,
 	isInteractionSessionActive,
-	isEmptyTopologyDiff,
 	listKeyedInteractionTransitions,
 	meshFaceTopologyDiff,
 	resolveSpatialInteractionKey,
@@ -35,6 +35,7 @@ import {
 	type FaceRecord,
 	type KernelAdapter,
 	type ModelDocument,
+	type SelectionTarget,
 	type ShellRecord,
 	type MeshPreview,
 	type SpatialInteraction,
@@ -142,7 +143,9 @@ export type SpatialPickTargetKind = Extract<
 	"vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster" | "surface" | "part"
 >;
 
-export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
+export type SpatialPickViewKind = "raw" | "analytic";
+
+export const SPATIAL_RAW_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"vertex",
 	"edge",
 	"wire",
@@ -151,8 +154,16 @@ export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"cell",
 	"cellComplex",
 	"cluster",
+];
+
+export const SPATIAL_ANALYTIC_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"surface",
 	"part",
+];
+
+export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
+	...SPATIAL_RAW_PICK_TARGET_KINDS,
+	...SPATIAL_ANALYTIC_PICK_TARGET_KINDS,
 ];
 
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
@@ -177,8 +188,28 @@ export function spatialPickTargetKey(target: SpatialPickTarget): string {
 	return `${target.kind}:${target.id}`;
 }
 
+function spatialSelectionTargetKey(target: SelectionTarget): string {
+	return `${target.kind}:${target.id}`;
+}
+
 function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, boolean> {
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
+}
+
+function spatialPickViewKinds(viewKind: SpatialPickViewKind): readonly SpatialPickTargetKind[] {
+	return viewKind === "raw" ? SPATIAL_RAW_PICK_TARGET_KINDS : SPATIAL_ANALYTIC_PICK_TARGET_KINDS;
+}
+
+function spatialPickViewKindSet(viewKind: SpatialPickViewKind): ReadonlySet<SpatialPickTargetKind> {
+	return new Set(spatialPickViewKinds(viewKind));
+}
+
+export function filterSpatialPickTargetsByView(
+	targets: readonly SpatialPickTarget[],
+	viewKind: SpatialPickViewKind,
+): SpatialPickTarget[] {
+	const viewKinds = spatialPickViewKindSet(viewKind);
+	return targets.filter((target) => viewKinds.has(target.kind));
 }
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
@@ -633,6 +664,7 @@ export interface GroundPickPlaneProps {
 	readonly planeZ?: number;
 	readonly enabled?: boolean;
 	readonly onPick?: (point: Vec3) => void;
+	readonly onContextPick?: (point: Vec3) => void;
 	readonly onPointerMove?: (point: Vec3) => void;
 	readonly pointerMoveEnabled?: boolean;
 }
@@ -641,6 +673,7 @@ export function GroundPickPlane({
 	planeZ = 0,
 	enabled = true,
 	onPick,
+	onContextPick,
 	onPointerMove,
 	pointerMoveEnabled,
 }: GroundPickPlaneProps): ReactNode {
@@ -651,6 +684,12 @@ export function GroundPickPlane({
 		const p = e.point;
 		onPick([p.x, p.y, planeZ] as unknown as Vec3);
 	};
+	const onContextMenu = (e: ThreeEvent<MouseEvent>) => {
+		if (!enabled || !onContextPick) return;
+		e.stopPropagation();
+		const p = e.point;
+		onContextPick([p.x, p.y, planeZ] as unknown as Vec3);
+	};
 	const onPointerMoveH = (e: ThreeEvent<PointerEvent>) => {
 		if (!moveOn || !onPointerMove) return;
 		e.stopPropagation();
@@ -658,7 +697,7 @@ export function GroundPickPlane({
 		onPointerMove([p.x, p.y, planeZ] as unknown as Vec3);
 	};
 	return (
-		<mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onPointerMove={onPointerMoveH}>
+		<mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onContextMenu={onContextMenu} onPointerMove={onPointerMoveH}>
 			<planeGeometry args={[120, 120]} />
 			<meshBasicMaterial transparent opacity={0.18} color="#7a9dff" side={THREE.DoubleSide} />
 		</mesh>
@@ -790,38 +829,6 @@ function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonl
 	};
 }
 
-function spatialPickTargetsByKey(targets: readonly SpatialPickTarget[]): ReadonlyMap<string, SpatialPickTarget> {
-	return new Map(targets.map((target) => [spatialPickTargetKey(target), target]));
-}
-
-function spatialPickKeyFromObject(object: THREE.Object3D): string | null {
-	let cur: THREE.Object3D | null = object;
-	while (cur) {
-		const key = cur.userData.spatialPickKey;
-		if (typeof key === "string") return key;
-		cur = cur.parent;
-	}
-	return null;
-}
-
-function spatialPickTargetsFromIntersections(
-	intersections: readonly { readonly object: THREE.Object3D }[],
-	targetsByKey: ReadonlyMap<string, SpatialPickTarget>,
-	fallback: SpatialPickTarget,
-): SpatialPickTarget[] {
-	const seen = new Set<string>();
-	const out: SpatialPickTarget[] = [];
-	for (const intersection of intersections) {
-		const key = spatialPickKeyFromObject(intersection.object);
-		if (!key || seen.has(key)) continue;
-		const target = targetsByKey.get(key);
-		if (!target) continue;
-		seen.add(key);
-		out.push(target);
-	}
-	return out.length ? out : [fallback];
-}
-
 const spatialPickPriority: Record<SpatialPickTargetKind, number> = {
 	vertex: 0,
 	edge: 1,
@@ -920,7 +927,7 @@ function SpatialSelectionRayCatcher({
 
 function SpatialPickTargetNode({
 	target,
-	targetsByKey,
+	targets,
 	onInteractionEvent,
 	onPick,
 	onPointerMove,
@@ -934,7 +941,7 @@ function SpatialPickTargetNode({
 	selectedTargetKey,
 }: {
 	readonly target: SpatialPickTarget;
-	readonly targetsByKey: ReadonlyMap<string, SpatialPickTarget>;
+	readonly targets: readonly SpatialPickTarget[];
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
 	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
@@ -960,11 +967,7 @@ function SpatialPickTargetNode({
 	};
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
-		const candidates = filterSpatialPickTargets(
-			spatialPickTargetsFromIntersections(e.intersections, targetsByKey, target),
-			selectionAccept,
-			selectionKindToggles,
-		);
+		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles);
 		if (selectionAccept.length > 0 && candidates.length > 0 && onSelectionRequest) {
 			const native = e.nativeEvent;
 			onSelectionRequest({
@@ -1041,6 +1044,7 @@ function SpatialPickTargetNode({
 /** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
 export function SpatialPickGeometryLayer({
 	geometry,
+	viewKind = "raw",
 	onInteractionEvent,
 	onPick,
 	onPointerMove,
@@ -1054,6 +1058,7 @@ export function SpatialPickGeometryLayer({
 	selectedTargetKey,
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
+	readonly viewKind?: SpatialPickViewKind;
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
 	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
@@ -1071,11 +1076,11 @@ export function SpatialPickGeometryLayer({
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
 	const targets = useMemo(() => createSpatialPickTargets(geometry), [geometry, topoRevision]);
+	const viewTargets = useMemo(() => filterSpatialPickTargetsByView(targets, viewKind), [targets, viewKind]);
 	const enabledTargets = useMemo(
-		() => filterSpatialPickTargetsForAnyToggle(targets, selectionKindToggles, hoverKindToggles),
-		[targets, selectionKindToggles, hoverKindToggles],
+		() => filterSpatialPickTargetsForAnyToggle(viewTargets, selectionKindToggles, hoverKindToggles),
+		[viewTargets, selectionKindToggles, hoverKindToggles],
 	);
-	const targetsByKey = useMemo(() => spatialPickTargetsByKey(enabledTargets), [enabledTargets]);
 	return (
 		<group>
 			<SpatialSelectionRayCatcher
@@ -1088,7 +1093,7 @@ export function SpatialPickGeometryLayer({
 				<SpatialPickTargetNode
 					key={`${target.kind}:${target.id}`}
 					target={target}
-					targetsByKey={targetsByKey}
+					targets={enabledTargets}
 					onInteractionEvent={onInteractionEvent}
 					onPick={onPick}
 					onPointerMove={onPointerMove}
@@ -1168,6 +1173,7 @@ export interface InteractionSpatialViewProps {
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshPreview | null;
 	readonly geometry?: SpatialPickGeometry | null;
+	readonly pickViewKind?: SpatialPickViewKind;
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
 	readonly selectionAccept?: readonly TopologyEntityKind[];
@@ -1188,6 +1194,7 @@ export function InteractionSpatialView({
 	pickEnabled = true,
 	committedMesh,
 	geometry,
+	pickViewKind = "raw",
 	displayModel,
 	selectionAccept = [],
 	selectionKindToggles = {},
@@ -1229,6 +1236,9 @@ export function InteractionSpatialView({
 		onInteractionEvent?.(event);
 		onGroundPick?.(point, event);
 	};
+	const onGroundContextEvent = (point: Vec3) => {
+		onInteractionEvent?.({ kind: "contextmenu", point, modifiers: {} });
+	};
 	const onScenePointerMoveEvent = (point: Vec3) => {
 		const event = createSpatialPickEvent("pointer.move", point, null);
 		onInteractionEvent?.(event);
@@ -1250,11 +1260,13 @@ export function InteractionSpatialView({
 			<GroundPickPlane
 				enabled={pickPlaneEnabled}
 				onPick={onGroundPickEvent}
+				onContextPick={onGroundContextEvent}
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
 			/>
 			<SpatialPickGeometryLayer
 				geometry={geometry}
+				viewKind={pickViewKind}
 				onInteractionEvent={onInteractionEvent}
 				onPick={undefined}
 				onPointerMove={onScenePointerMove}
@@ -1286,7 +1298,7 @@ export function InteractionSpatialView({
 // #endregion 🪩Canvas
 
 // #region 🪩Repl
-type ReplSuggestKind = "interaction" | "transition" | "host";
+type ReplSuggestKind = "interaction" | "transition";
 
 interface ReplSuggestion {
 	readonly kind: ReplSuggestKind;
@@ -1399,14 +1411,8 @@ function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[]): ReplS
 	return out;
 }
 
-function replIsTextTypingTarget(t: EventTarget | null): boolean {
-	if (!t || !(t instanceof HTMLElement)) return false;
-	if (t.isContentEditable) return true;
-	const tag = t.tagName;
-	if (tag === "TEXTAREA" || tag === "SELECT") return true;
-	if (tag !== "INPUT") return false;
-	const ty = (t as HTMLInputElement).type;
-	return !["button", "checkbox", "radio", "range", "reset", "submit"].includes(ty);
+function replIsQueryTypingTarget(t: EventTarget | null): boolean {
+	return t instanceof HTMLTextAreaElement;
 }
 
 function replPresentationWithUnderlinedKey(key: string, label: string): ReactNode {
@@ -1421,13 +1427,16 @@ function replPresentationWithUnderlinedKey(key: string, label: string): ReactNod
 	);
 }
 
-function replInteractionFromShortcutKey(evKey: string, interactions: readonly SpatialInteraction[]): SpatialInteraction | null {
-	if (evKey.length !== 1) return null;
-	const k = evKey.toLowerCase();
-	for (const p of interactions) {
-		if (p.key.toLowerCase() === k) return p;
-	}
-	return null;
+function replStartEvent(selection: SelectionTarget | null): InteractionEvent {
+	return selection ? { kind: "start", targets: [selection], selection, modifiers: {} } : { kind: "start", modifiers: {} };
+}
+
+function replSelectionEvent(selection: SelectionTarget): InteractionEvent {
+	return { kind: "selection.changed", targets: [selection], modifiers: {} };
+}
+
+function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: SelectionTarget | null): selection is SelectionTarget {
+	return Boolean(selection && accept.includes(selection.kind));
 }
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
@@ -1488,7 +1497,6 @@ export function InteractionRepl({
 	sessionRestartNonce = 0,
 }: InteractionReplProps): ReactNode {
 	const snapshot = useInteractionSnapshot(rt);
-	const histUi = useReplHistoryState(rt, spec, history);
 	const documentArchivedBoxLayouts = useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
 	const allArchivedBoxLayouts = useMemo(
 		() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts],
@@ -1499,39 +1507,47 @@ export function InteractionRepl({
 		() => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts),
 		[baseDisplay, allArchivedBoxLayouts],
 	);
-	const [lastCommitLine, setLastCommitLine] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
 	const [suggestOpen, setSuggestOpen] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [selectionKindToggles, setSelectionKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
 		defaultSpatialPickKindToggles(),
 	);
-	const [hoverKindToggles, setHoverKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
-		defaultSpatialPickKindToggles(),
-	);
+	const [pickViewKind, setPickViewKind] = useState<SpatialPickViewKind>("raw");
 	const [selectionMenu, setSelectionMenu] = useState<SpatialSelectionRequest | null>(null);
 	const [hoveredPickKey, setHoveredPickKey] = useState<string | null>(null);
 	const [selectedPickKey, setSelectedPickKey] = useState<string | null>(null);
+	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
 
+	const startRuntime = useCallback(async () => {
+		await rt.send(replStartEvent(selectedSelectionTarget));
+		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
+		if (replSelectionAccepted(accept, selectedSelectionTarget)) await rt.send(replSelectionEvent(selectedSelectionTarget));
+	}, [rt, selectedSelectionTarget]);
+
 	useEffect(() => {
 		const snap = rt.getSnapshot();
 		const initial = spec.machine.initial;
 		if (snap.state !== initial) return;
 		const stDef = spec.machine.states.find((s) => s.name === snap.state);
-		if (!stDef?.on?.some((h) => h.event === "start")) return;
-		void rt.send({ kind: "start", modifiers: {} });
-	}, [rt, spec]);
+		if (stDef?.on?.some((h) => h.event === "start")) {
+			void startRuntime();
+			return;
+		}
+		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
+		if (replSelectionAccepted(accept, selectedSelectionTarget)) void rt.send(replSelectionEvent(selectedSelectionTarget));
+	}, [rt, spec, startRuntime, selectedSelectionTarget]);
 
 	useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
 		rt.cancel();
-		void rt.send({ kind: "start", modifiers: {} });
-	}, [sessionRestartNonce, rt]);
+		void startRuntime();
+	}, [sessionRestartNonce, rt, startRuntime]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -1540,20 +1556,37 @@ export function InteractionRepl({
 
 	useEffect(() => {
 		setSelectedPickKey(null);
-	}, [geometry, interactionId]);
+		setSelectedSelectionTarget(null);
+	}, [geometry]);
 
-	const activeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
+	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
+	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
+	const activeSelectionAccept = useMemo(
+		() => (runtimeSelectionAccept.length > 0 ? runtimeSelectionAccept : interactionActive ? [] : SPATIAL_PICK_TARGET_KINDS),
+		[runtimeSelectionAccept, interactionActive],
+	);
+	const activePickViewKinds = useMemo(() => spatialPickViewKinds(pickViewKind), [pickViewKind]);
+
+	useEffect(() => {
+		if (activeSelectionAccept.length === 0 || activePickViewKinds.some((kind) => activeSelectionAccept.includes(kind))) return;
+		const nextViewKind: SpatialPickViewKind = SPATIAL_ANALYTIC_PICK_TARGET_KINDS.some((kind) => activeSelectionAccept.includes(kind))
+			? "analytic"
+			: "raw";
+		if (nextViewKind !== pickViewKind) {
+			setPickViewKind(nextViewKind);
+			setSelectionMenu(null);
+			setHoveredPickKey(null);
+		}
+	}, [activeSelectionAccept, activePickViewKinds, pickViewKind]);
 
 	const dispatchSelectionTarget = useCallback(
 		(target: SpatialPickTarget, modifiers: InteractionEvent["modifiers"] = {}) => {
+			const selection = spatialSelectionTarget(target);
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
-			setSelectedPickKey(spatialPickTargetKey(target));
-			void rt.send({
-				kind: "selection.changed",
-				targets: [spatialSelectionTarget(target)],
-				modifiers,
-			});
+			setSelectedPickKey(spatialSelectionTargetKey(selection));
+			setSelectedSelectionTarget(selection);
+			void rt.send({ ...replSelectionEvent(selection), modifiers });
 		},
 		[rt],
 	);
@@ -1584,37 +1617,18 @@ export function InteractionRepl({
 					void rt.send({ kind: "confirm", modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
 					return;
 				}
-				const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
-				if (snapEv && accept.length > 0 && accept.includes(snapEv.kind as TopologyEntityKind)) {
-					void rt.send({
-						kind: "selection.changed",
-						targets: [{ kind: snapEv.kind as TopologyEntityKind, id: snapEv.id, editable: true }],
-						modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {},
-					});
+				if (snapEv && activeSelectionAccept.length > 0 && activeSelectionAccept.includes(snapEv.kind as TopologyEntityKind)) {
+					const selection: SelectionTarget = { kind: snapEv.kind as TopologyEntityKind, id: snapEv.id, editable: true };
+					setSelectedPickKey(spatialSelectionTargetKey(selection));
+					setSelectedSelectionTarget(selection);
+					void rt.send({ ...replSelectionEvent(selection), modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
 					return;
 				}
 			}
-			if (ev.kind === "pointer.down" || ev.kind === "pointer.move") void rt.send(ev);
+			if (ev.kind === "pointer.down" || ev.kind === "pointer.move" || ev.kind === "contextmenu") void rt.send(ev);
 		},
-		[rt],
+		[rt, activeSelectionAccept],
 	);
-
-	const onCommit = useCallback(async () => {
-		const res = await rt.commit();
-		if (res.ok && res.data != null) {
-			setLastCommitLine(`data: ${JSON.stringify(res.data)}`);
-			console.log("[DEBUG] commit response data", res.data);
-		} else if (!isEmptyTopologyDiff(res.diff)) {
-			const fc = res.diff.faces?.added?.length ?? 0;
-			setLastCommitLine(`diff (e.g. faces.added count=${fc})`);
-			console.log("[DEBUG] commit topology diff", res.diff);
-		} else if (!res.ok) {
-			setLastCommitLine(res.errors.map((e) => e.message).join("; ") || "commit failed");
-		} else {
-			setLastCommitLine("ok (empty diff, no data)");
-			console.log("[DEBUG] commit ok empty", res);
-		}
-	}, [rt]);
 
 	const dispatchTransition = useCallback(
 		(row: InteractionKeybindRow) => {
@@ -1624,9 +1638,9 @@ export function InteractionRepl({
 		[rt, spec.id, documentModel.topology],
 	);
 
+	const transitionRows = useMemo(() => listKeyedInteractionTransitions(spec, snapshot.state), [spec, snapshot.state]);
+
 	const allSuggestions = useMemo((): ReplSuggestion[] => {
-		const st = snapshot.state;
-		const rows = listKeyedInteractionTransitions(spec, st);
 		const out: ReplSuggestion[] = [];
 		for (const p of interactions) {
 			out.push({
@@ -1638,7 +1652,7 @@ export function InteractionRepl({
 				onRun: () => onInteractionId(p.id),
 			});
 		}
-		for (const row of rows) {
+		for (const row of transitionRows) {
 			out.push({
 				kind: "transition",
 				key: row.key,
@@ -1648,11 +1662,8 @@ export function InteractionRepl({
 				onRun: () => dispatchTransition(row),
 			});
 		}
-		out.push({ kind: "host", key: "m", label: "Commit solid", detail: "host", onRun: () => void onCommit() });
-		out.push({ kind: "host", key: "r", label: "Undo", detail: "host", onRun: () => rt.undo() });
-		out.push({ kind: "host", key: "y", label: "Redo", detail: "host", onRun: () => rt.redo() });
 		return out;
-	}, [interactions, spec, snapshot.state, onInteractionId, dispatchTransition, onCommit, rt]);
+	}, [interactions, transitionRows, onInteractionId, dispatchTransition]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 
@@ -1691,23 +1702,21 @@ export function InteractionRepl({
 				return true;
 			}
 		}
-		if (raw.toLowerCase() === "m") {
-			void onCommit();
-			setCmdLine("");
-			return true;
-		}
-		if (raw.toLowerCase() === "r") {
-			rt.undo();
-			setCmdLine("");
-			return true;
-		}
-		if (raw.toLowerCase() === "y") {
-			rt.redo();
-			setCmdLine("");
-			return true;
-		}
 		return false;
-	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommit]);
+	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId]);
+
+	const runTransitionRow = useCallback(
+		(row: InteractionKeybindRow) => {
+			if (row.eventKind.startsWith("set.")) {
+				setCmdLine(`${row.key} `);
+				setSuggestOpen(true);
+				window.setTimeout(() => cmdRef.current?.focus(), 0);
+				return;
+			}
+			dispatchTransition(row);
+		},
+		[dispatchTransition],
+	);
 
 	const onInputKeyDown = useCallback(
 		(e: KeyboardEvent<HTMLInputElement>) => {
@@ -1750,47 +1759,54 @@ export function InteractionRepl({
 			if (e.defaultPrevented || e.isComposing) return;
 			const t = e.target;
 			const one = e.key.length === 1 ? e.key : "";
+			if (replIsQueryTypingTarget(t)) return;
 			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-				if (replIsTextTypingTarget(t) && t !== cmdRef.current) return;
 				e.preventDefault();
 				e.stopPropagation();
 				if (e.shiftKey) rt.redo();
 				else rt.undo();
 				return;
 			}
-			if (one) {
-				const fac = replInteractionFromShortcutKey(one, interactions);
-				if (fac) {
-					if (replIsTextTypingTarget(t) && t !== cmdRef.current) return;
-					e.preventDefault();
-					e.stopPropagation();
-					onInteractionId(fac.id);
-					setCmdLineRef.current("");
-					return;
-				}
-			}
-			if (replIsTextTypingTarget(t) && t !== cmdRef.current) return;
-			if (e.key === "m" || e.key === "M") {
-				e.preventDefault();
-				e.stopPropagation();
-				void onCommit();
-				return;
-			}
-			if (e.key === "r" || e.key === "R") {
-				e.preventDefault();
-				e.stopPropagation();
-				rt.undo();
-				return;
-			}
-			if (e.key === "y" || e.key === "Y") {
+			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
 				e.preventDefault();
 				e.stopPropagation();
 				rt.redo();
+				return;
 			}
+			if (t !== cmdRef.current && e.key === "Backspace") {
+				e.preventDefault();
+				e.stopPropagation();
+				cmdRef.current?.focus();
+				setCmdLineRef.current((prev) => prev.slice(0, -1));
+				setSuggestOpen(true);
+				return;
+			}
+			if (t !== cmdRef.current && e.key === "Escape") {
+				e.preventDefault();
+				e.stopPropagation();
+				cmdRef.current?.focus();
+				setCmdLineRef.current("");
+				setSuggestOpen(true);
+				return;
+			}
+			if (t !== cmdRef.current && e.key === "Enter") {
+				e.preventDefault();
+				e.stopPropagation();
+				cmdRef.current?.focus();
+				if (cmdLine.trim()) void trySubmitLine();
+				return;
+			}
+			if (!one || e.ctrlKey || e.metaKey || e.altKey) return;
+			if (t === cmdRef.current) return;
+			e.preventDefault();
+			e.stopPropagation();
+			cmdRef.current?.focus();
+			setSuggestOpen(true);
+			setCmdLineRef.current((prev) => `${prev}${one}`);
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, onCommit, interactions, onInteractionId]);
+	}, [rt, cmdLine, trySubmitLine]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -1813,7 +1829,7 @@ export function InteractionRepl({
 		? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state)
 		: false;
 
-	const kindLabel = (k: ReplSuggestKind) => (k === "interaction" ? "Interaction" : k === "transition" ? "Transition" : "Host");
+	const kindLabel = (k: ReplSuggestKind) => (k === "interaction" ? "Interaction" : "Transition");
 
 	const lr = snapshot.lastResponse;
 
@@ -1835,10 +1851,11 @@ export function InteractionRepl({
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
+						pickViewKind={pickViewKind}
 						displayModel={mergedDisplay}
 						selectionAccept={activeSelectionAccept}
 						selectionKindToggles={selectionKindToggles}
-						hoverKindToggles={hoverKindToggles}
+						hoverKindToggles={selectionKindToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
 						onSelectionRequest={onSelectionRequest}
@@ -1871,7 +1888,7 @@ export function InteractionRepl({
 								<button
 									key={key}
 									type="button"
-									onPointerEnter={() => setHoveredPickKey(hoverKindToggles[target.kind] ? key : null)}
+									onPointerEnter={() => setHoveredPickKey(selectionKindToggles[target.kind] ? key : null)}
 									onPointerLeave={() => setHoveredPickKey(null)}
 									onPointerDown={(e) => {
 										e.preventDefault();
@@ -1914,127 +1931,53 @@ export function InteractionRepl({
 				}}
 			>
 				<strong>Spatial play</strong>
-				{asideExtra}
-				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-					<span>Selectable kinds</span>
-					<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{SPATIAL_PICK_TARGET_KINDS.map((kind) => {
-							const accepted = activeSelectionAccept.length === 0 || activeSelectionAccept.includes(kind);
-							return (
-								<label
-									key={kind}
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: 4,
-										padding: "3px 6px",
-										border: "1px solid #2a2a3a",
-										borderRadius: 999,
-										opacity: accepted ? 1 : 0.45,
-										background: selectionKindToggles[kind] ? "#1a2638" : "#12121c",
-									}}
-								>
-									<input
-										type="checkbox"
-										checked={selectionKindToggles[kind]}
-										onChange={(e) => {
-											const checked = e.target.checked;
-											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
-											setSelectionMenu(null);
-											setHoveredPickKey(null);
-											if (!checked) setSelectedPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
-										}}
-									/>
-									{kind}
-								</label>
-							);
-						})}
-					</div>
-				</div>
-				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-					<span>Hoverable kinds</span>
-					<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{SPATIAL_PICK_TARGET_KINDS.map((kind) => (
-							<label
-								key={kind}
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: 4,
-									padding: "3px 6px",
-									border: "1px solid #2a2a3a",
-									borderRadius: 999,
-									background: hoverKindToggles[kind] ? "#1a2638" : "#12121c",
-								}}
-							>
-								<input
-									type="checkbox"
-									checked={hoverKindToggles[kind]}
-									onChange={(e) => {
-										const checked = e.target.checked;
-										setHoverKindToggles((prev) => ({ ...prev, [kind]: checked }));
-										if (!checked) setHoveredPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
-									}}
-								/>
-								{kind}
-							</label>
-						))}
-					</div>
-				</div>
-				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Interaction <code>{interactionId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
-				</div>
-				<div style={{ fontSize: 12 }}>
-					Can commit {String(snapshot.capabilities.canCommit)} · undo {String(snapshot.capabilities.canUndo)} · redo{" "}
-					{String(snapshot.capabilities.canRedo)}
-				</div>
-				<div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-					<button
-						type="button"
-						disabled={!histUi.canUndo}
-						onClick={() => rt.undo()}
-						style={{ padding: "6px 10px", borderRadius: 6, opacity: histUi.canUndo ? 1 : 0.45 }}
-					>
-						Undo {histUi.undoLabel ? `(${histUi.undoLabel})` : ""}
-					</button>
-					<button
-						type="button"
-						disabled={!histUi.canRedo}
-						onClick={() => rt.redo()}
-						style={{ padding: "6px 10px", borderRadius: 6, opacity: histUi.canRedo ? 1 : 0.45 }}
-					>
-						Redo {histUi.redoLabel ? `(${histUi.redoLabel})` : ""}
-					</button>
+				<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+					{transitionRows.map((row) => (
+						<button
+							key={`${row.key}-${row.eventKind}-${row.label}`}
+							type="button"
+							onClick={() => runTransitionRow(row)}
+							style={{
+								padding: "5px 7px",
+								borderRadius: 6,
+								border: "1px solid #2e3a52",
+								background: "#182238",
+								color: "#e8e8f0",
+								cursor: "pointer",
+								fontSize: 12,
+							}}
+						>
+							<span style={{ textDecoration: "underline", fontWeight: 700 }}>{row.key}</span> {row.label}
+						</button>
+					))}
 				</div>
 				<div style={{ position: "relative" }}>
-					<label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-						<span>Interaction (interactions first in palette; Tab/Enter run highlighted)</span>
-						<input
-							ref={cmdRef}
-							type="text"
-							autoComplete="off"
-							value={cmdLine}
-							onChange={(e) => {
-								setCmdLine(e.target.value);
-								setSuggestOpen(true);
-							}}
-							onFocus={() => setSuggestOpen(true)}
-							onBlur={() => {
-								window.setTimeout(() => setSuggestOpen(false), 120);
-							}}
-							onKeyDown={onInputKeyDown}
-							placeholder="Filter or type an interaction…"
-							style={{
-								width: "100%",
-								boxSizing: "border-box",
-								padding: 8,
-								borderRadius: 6,
-								background: "#0e0e16",
-								color: "#e8e8f0",
-								border: "1px solid #2a2a3a",
-							}}
-						/>
-					</label>
+					<input
+						ref={cmdRef}
+						type="text"
+						autoComplete="off"
+						value={cmdLine}
+						onChange={(e) => {
+							setCmdLine(e.target.value);
+							setSuggestOpen(true);
+						}}
+						onFocus={() => setSuggestOpen(true)}
+						onBlur={() => {
+							window.setTimeout(() => setSuggestOpen(false), 120);
+						}}
+						onKeyDown={onInputKeyDown}
+						placeholder="Type an interaction or transition"
+						style={{
+							width: "100%",
+							boxSizing: "border-box",
+							padding: "8px 9px",
+							borderRadius: 6,
+							background: "#0e0e16",
+							color: "#e8e8f0",
+							border: "1px solid #3a4762",
+							fontSize: 13,
+						}}
+					/>
 					{suggestOpen && filtered.length ? (
 						<div
 							onPointerDown={(e) => e.stopPropagation()}
@@ -2044,7 +1987,7 @@ export function InteractionRepl({
 								right: 0,
 								top: "100%",
 								marginTop: 4,
-								maxHeight: 280,
+								maxHeight: 260,
 								overflowY: "auto",
 								background: "#0c0c14",
 								border: "1px solid #3a3a55",
@@ -2084,12 +2027,76 @@ export function InteractionRepl({
 						</div>
 					) : null}
 				</div>
-				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
-					Keys <u>b</u>/<u>e</u>/<u>o</u>/<u>d</u>/<u>a</u> switch interaction from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, <u>y</u> redoes,{" "}
-					<code>Ctrl+Z</code>/<code>Ctrl+Shift+Z</code> (except while typing in other text fields). Value-style interactions: <code>h 2.5</code>, <code>n 0.4</code>,{" "}
-					<code>w 2 1.5</code>.
+				{asideExtra}
+				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+					<span>Pick view</span>
+					<div style={{ display: "flex", gap: 6 }}>
+						{(["raw", "analytic"] as const).map((viewKind) => {
+							const active = pickViewKind === viewKind;
+							return (
+								<button
+									key={viewKind}
+									type="button"
+									onClick={() => {
+										setPickViewKind(viewKind);
+										setSelectionMenu(null);
+										setHoveredPickKey(null);
+										setSelectedPickKey(null);
+									}}
+									style={{
+										padding: "5px 8px",
+										borderRadius: 999,
+										border: active ? "1px solid #77aaff" : "1px solid #2a2a3a",
+										background: active ? "#1f3656" : "#12121c",
+										color: "#e8e8f0",
+										cursor: "pointer",
+										fontSize: 12,
+										textTransform: "capitalize",
+									}}
+								>
+									{viewKind}
+								</button>
+							);
+						})}
+					</div>
+					<span>Selection kinds</span>
+					<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+						{activePickViewKinds.map((kind) => {
+							const accepted = activeSelectionAccept.length === 0 || activeSelectionAccept.includes(kind);
+							return (
+								<label
+									key={kind}
+									style={{
+										display: "flex",
+										alignItems: "center",
+										gap: 4,
+										padding: "3px 6px",
+										border: "1px solid #2a2a3a",
+										borderRadius: 999,
+										opacity: accepted ? 1 : 0.45,
+										background: selectionKindToggles[kind] ? "#1a2638" : "#12121c",
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={selectionKindToggles[kind]}
+										onChange={(e) => {
+											const checked = e.target.checked;
+											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
+											setSelectionMenu(null);
+											setHoveredPickKey(null);
+											if (!checked) setSelectedPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
+										}}
+									/>
+									{kind}
+								</label>
+							);
+						})}
+					</div>
 				</div>
-				{lastCommitLine ? <div style={{ fontSize: 12 }}>Last commit: {lastCommitLine}</div> : null}
+				<div style={{ fontSize: 12, opacity: 0.85 }}>
+					Interaction <code>{interactionId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+				</div>
 				<div style={{ fontSize: 12, borderTop: "1px solid #2a2a3a", paddingTop: 8 }}>
 					<strong>Last response</strong>
 					<pre style={{ fontSize: 10, overflow: "auto", maxHeight: 120, margin: "6px 0 0" }}>
@@ -2205,6 +2212,38 @@ if (import.meta.vitest) {
 			expect(targets.find((target) => target.kind === "cell")?.point).toEqual([2 / 3, 1 / 3, 0]);
 		});
 
+		it("partitions raw and analytic pick targets", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0] },
+				{ kind: "part", id: "part-c0", point: [0.5, 0.5, 0.5] },
+			];
+			expect(filterSpatialPickTargetsByView(targets, "raw").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0"]);
+			expect(filterSpatialPickTargetsByView(targets, "analytic").map(spatialPickTargetKey)).toEqual([
+				"surface:surface-f0",
+				"part:part-c0",
+			]);
+		});
+
+		it("creates selectable targets for every committed box topology kind", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			const targets = createSpatialPickTargets(topo);
+			const counts = targets.reduce<Record<string, number>>((acc, target) => {
+				acc[target.kind] = (acc[target.kind] ?? 0) + 1;
+				return acc;
+			}, {});
+			expect(counts.vertex).toBe(8);
+			expect(counts.edge).toBe(12);
+			expect(counts.wire).toBe(6);
+			expect(counts.face).toBe(6);
+			expect(counts.surface).toBe(6);
+			expect(counts.shell).toBe(1);
+			expect(counts.cell).toBe(1);
+			expect(counts.part).toBe(1);
+		});
+
 		it("filters selectable targets by active accept list and kind toggles", () => {
 			const targets: SpatialPickTarget[] = [
 				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
@@ -2240,6 +2279,14 @@ if (import.meta.vitest) {
 				"face:f0",
 				"surface:surface-f0",
 			]);
+		});
+
+		it("carries host selection into interaction start events", () => {
+			const selection: SelectionTarget = { kind: "wire", id: "w0", editable: true };
+			expect(replStartEvent(selection)).toEqual({ kind: "start", targets: [selection], selection, modifiers: {} });
+			expect(replSelectionAccepted(["wire"], selection)).toBe(true);
+			expect(replSelectionAccepted(["face"], selection)).toBe(false);
+			expect(replSelectionEvent(selection)).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
 		});
 	});
 

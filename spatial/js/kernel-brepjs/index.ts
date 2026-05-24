@@ -7,6 +7,7 @@ import { box, initFromOC, measureVolume, mesh, unwrap } from "brepjs";
 import type { ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
+	boxTopologyDiff,
 	cellRef,
 	meshFaceTopologyDiff,
 	type CellRef,
@@ -110,8 +111,7 @@ export class BrepjsKernel implements KernelAdapter {
 
 	async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
 		const cell = await this.createBoxFromCorners(input);
-		const preview = await this.tessellate(cell, 1e-3);
-		const diff = meshFaceTopologyDiff(preview, `brepjs-${cell}`);
+		const diff = boxTopologyDiff(input, cell);
 		return { diff, cell };
 	}
 

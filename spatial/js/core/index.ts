@@ -8,6 +8,7 @@ import boxInteractionJson from "../../fixtures/box.interaction.json" with { type
 import distanceInteractionJson from "../../fixtures/distance.interaction.json" with { type: "json" };
 import extrudeWireInteractionJson from "../../fixtures/extrude-wire.interaction.json" with { type: "json" };
 import offsetSurfaceInteractionJson from "../../fixtures/offset-surface.interaction.json" with { type: "json" };
+import scriptedCommandsInteractionJson from "../../fixtures/scripted-commands.interaction.json" with { type: "json" };
 // #endregion 📥Fixtures
 
 // #region 🧮Vec
@@ -1073,6 +1074,93 @@ export function meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): Topology
 	};
 }
 
+/** @emoji 📦 Full axis-aligned box topology: 8 vertices, 12 edges, 6 wires, 6 faces, one shell, one cell. */
+export function boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff {
+	const ax = Math.min(input.cornerA[0], input.cornerB[0]);
+	const ay = Math.min(input.cornerA[1], input.cornerB[1]);
+	const bx = Math.max(input.cornerA[0], input.cornerB[0]);
+	const by = Math.max(input.cornerA[1], input.cornerB[1]);
+	const z0 = Math.min(input.cornerA[2], input.cornerB[2]);
+	const z1 = z0 + Math.max(Math.abs(input.height), 1e-9);
+	const pfx = `box-${cell}`;
+	const v000 = `${pfx}-v000` as VertexRef;
+	const v100 = `${pfx}-v100` as VertexRef;
+	const v110 = `${pfx}-v110` as VertexRef;
+	const v010 = `${pfx}-v010` as VertexRef;
+	const v001 = `${pfx}-v001` as VertexRef;
+	const v101 = `${pfx}-v101` as VertexRef;
+	const v111 = `${pfx}-v111` as VertexRef;
+	const v011 = `${pfx}-v011` as VertexRef;
+	const eb0 = `${pfx}-eb0` as EdgeRef;
+	const eb1 = `${pfx}-eb1` as EdgeRef;
+	const eb2 = `${pfx}-eb2` as EdgeRef;
+	const eb3 = `${pfx}-eb3` as EdgeRef;
+	const et0 = `${pfx}-et0` as EdgeRef;
+	const et1 = `${pfx}-et1` as EdgeRef;
+	const et2 = `${pfx}-et2` as EdgeRef;
+	const et3 = `${pfx}-et3` as EdgeRef;
+	const ev0 = `${pfx}-ev0` as EdgeRef;
+	const ev1 = `${pfx}-ev1` as EdgeRef;
+	const ev2 = `${pfx}-ev2` as EdgeRef;
+	const ev3 = `${pfx}-ev3` as EdgeRef;
+	const wb = `${pfx}-wire-bottom` as WireRef;
+	const wt = `${pfx}-wire-top` as WireRef;
+	const wy0 = `${pfx}-wire-y0` as WireRef;
+	const wx1 = `${pfx}-wire-x1` as WireRef;
+	const wy1 = `${pfx}-wire-y1` as WireRef;
+	const wx0 = `${pfx}-wire-x0` as WireRef;
+	const fb = `${pfx}-face-bottom` as FaceRef;
+	const ft = `${pfx}-face-top` as FaceRef;
+	const fy0 = `${pfx}-face-y0` as FaceRef;
+	const fx1 = `${pfx}-face-x1` as FaceRef;
+	const fy1 = `${pfx}-face-y1` as FaceRef;
+	const fx0 = `${pfx}-face-x0` as FaceRef;
+	const shell = `${pfx}-shell` as ShellRef;
+	return {
+		vertices: {
+			added: [
+				{ id: v000, position: [ax, ay, z0] },
+				{ id: v100, position: [bx, ay, z0] },
+				{ id: v110, position: [bx, by, z0] },
+				{ id: v010, position: [ax, by, z0] },
+				{ id: v001, position: [ax, ay, z1] },
+				{ id: v101, position: [bx, ay, z1] },
+				{ id: v111, position: [bx, by, z1] },
+				{ id: v011, position: [ax, by, z1] },
+			],
+		},
+		edges: {
+			added: [
+				{ id: eb0, vertexIds: [v000, v100] },
+				{ id: eb1, vertexIds: [v100, v110] },
+				{ id: eb2, vertexIds: [v110, v010] },
+				{ id: eb3, vertexIds: [v010, v000] },
+				{ id: et0, vertexIds: [v001, v101] },
+				{ id: et1, vertexIds: [v101, v111] },
+				{ id: et2, vertexIds: [v111, v011] },
+				{ id: et3, vertexIds: [v011, v001] },
+				{ id: ev0, vertexIds: [v000, v001] },
+				{ id: ev1, vertexIds: [v100, v101] },
+				{ id: ev2, vertexIds: [v110, v111] },
+				{ id: ev3, vertexIds: [v010, v011] },
+			],
+		},
+		wires: {
+			added: [
+				{ id: wb, edgeIds: [eb0, eb1, eb2, eb3] },
+				{ id: wt, edgeIds: [et0, et1, et2, et3] },
+				{ id: wy0, edgeIds: [eb0, ev1, et0, ev0] },
+				{ id: wx1, edgeIds: [eb1, ev2, et1, ev1] },
+				{ id: wy1, edgeIds: [eb2, ev3, et2, ev2] },
+				{ id: wx0, edgeIds: [eb3, ev0, et3, ev3] },
+			],
+		},
+		faces: { added: [{ id: fb, wireIds: [wb] }, { id: ft, wireIds: [wt] }, { id: fy0, wireIds: [wy0] }, { id: fx1, wireIds: [wx1] }, { id: fy1, wireIds: [wy1] }, { id: fx0, wireIds: [wx0] }] },
+		shells: { added: [{ id: shell, faceIds: [fb, ft, fy0, fx1, fy1, fx0] }] },
+		cells: { added: [{ id: cell, shellIds: [shell] }] },
+	};
+}
+
 // #endregion 🧮Diff
 
 // #region 🔌Kernel
@@ -1369,16 +1457,14 @@ function builtinActionDefs(): ActionDef[] {
 			const cornerA = params.cornerA as Vec3;
 			const cornerB = params.cornerB as Vec3;
 			const height = Number(params.height);
-			let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
+			let cell: CellRef;
 			if (kernel.createBoxFromCornersDiff) {
 				const r = await kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
-				diff = r.diff;
+				cell = r.cell;
 			} else {
-				const cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
-				const preview = await kernel.tessellate(cell, 1e-3);
-				diff = meshFaceTopologyDiff(preview, `f-${kernel.id}`);
+				cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
 			}
-			return { diff };
+			return { diff: boxTopologyDiff({ cornerA, cornerB, height }, cell) };
 		},
 	};
 	const primitiveCreateBoxFrom3Points: ActionDef = {
@@ -2196,14 +2282,17 @@ export class InteractionRuntime {
 		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const beforeCanCommit = this.canCommitFromState(beforeState);
 		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions);
 		if (!r.ok) return;
 		if (!r.transient) {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
 		}
-		if (beforeCanCommit && isFinalInteractionState(this.spec, this.sm.getState())) {
+		if (this.canCommit()) {
+			await this.runCommit(true);
+			return;
+		}
+		if (isFinalInteractionState(this.spec, this.sm.getState())) {
 			await this.runCommit(false);
 			return;
 		}
@@ -2354,577 +2443,13 @@ export function createInteractionRuntime(spec: InteractionSpec, opts: Interactio
 // #endregion 📜Interaction
 
 // #region 📦Interactions
-type ScriptedInputKind = "point" | "number" | "numberOrPoint" | "select" | "adjust" | "ok";
+type BuiltinInteractionFixture = InteractionSpec & { readonly key?: string };
 
-interface ScriptedCommandStep {
-	readonly name: string;
-	readonly prompt: string;
-	readonly input: ScriptedInputKind;
-	readonly next?: string;
-	readonly loop?: boolean;
-	readonly pointKey?: string;
-	readonly pointField?: string;
-	readonly numberEvent?: string;
-	readonly numberField?: string;
-	readonly numberNext?: string;
-	readonly selectionAccept?: readonly TopologyEntityKind[];
-	readonly selectionField?: string;
-	readonly selectionKey?: string;
-	readonly finish?: boolean;
-	readonly close?: boolean;
-	readonly previewKind?: string;
+const scriptedCommandInteractionJsons = scriptedCommandsInteractionJson as readonly BuiltinInteractionFixture[];
+
+function interactionFixtureRow(spec: BuiltinInteractionFixture): SpatialInteraction {
+	return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : spec.id[0] ?? "?" };
 }
-
-interface ScriptedCommandDef {
-	readonly id: string;
-	readonly label: string;
-	readonly key: string;
-	readonly resultKind: string;
-	readonly steps: readonly ScriptedCommandStep[];
-}
-
-const exprConst = (value: unknown): Expr => ({ kind: "const", value });
-const pathExpr = (root: PathRoot, ...segments: PathSegment[]): Expr => ({ kind: "path", root, segments });
-const fieldSegment = (name: string): PathSegment => ({ kind: "field", name });
-const fieldTarget = (name: string): PathTarget => ({ root: "context", segments: [fieldSegment(name)] });
-const contextPath = (name: string): Expr => pathExpr("context", fieldSegment(name));
-const eventPath = (name: string): Expr => pathExpr("event", fieldSegment(name));
-const assignFieldEffect = (name: string, value: Expr): EffectSpec => ({ op: "assign", target: fieldTarget(name), value });
-const commandActionEffect = (action: string, params: Record<string, Expr>): EffectSpec => ({ op: "action", action, params });
-
-function scriptedCommandPreviewItems(step: ScriptedCommandStep): DisplayItemSpec[] {
-	const items: DisplayItemSpec[] = [
-		{
-			kind: "label",
-			id: `${step.name}-prompt`,
-			role: "prompt",
-			text: step.prompt,
-			position: exprConst([0, 0.25, 1.55]),
-		},
-		{
-			kind: "preview",
-			id: `${step.name}-preview`,
-			role: "preview",
-			previewKind: step.previewKind ?? step.input,
-			params: {
-				cursor: contextPath("cursor"),
-				prevPoint: contextPath("prevPoint"),
-				points: contextPath(step.pointField ?? "points"),
-				targets: contextPath(step.selectionField ?? "targets"),
-			},
-		},
-	];
-	if (step.input === "point" || step.input === "numberOrPoint") {
-		items.push({
-			kind: "point",
-			id: `${step.name}-cursor`,
-			role: "cursor",
-			position: contextPath("cursor"),
-		});
-		items.push({
-			kind: "segment",
-			id: `${step.name}-rubber`,
-			role: "preview",
-			from: contextPath("prevPoint"),
-			to: contextPath("cursor"),
-		});
-	}
-	return items;
-}
-
-function scriptedPointEffects(step: ScriptedCommandStep): EffectSpec[] {
-	return [
-		commandActionEffect("command.addPoint", {
-			field: exprConst(step.pointField ?? "points"),
-			...(step.pointKey ? { key: exprConst(step.pointKey) } : {}),
-			point: eventPath("point"),
-		}),
-	];
-}
-
-function scriptedSelectionEffects(step: ScriptedCommandStep): EffectSpec[] {
-	return [
-		commandActionEffect("command.addSelection", {
-			field: exprConst(step.selectionField ?? "targets"),
-			...(step.selectionKey ? { key: exprConst(step.selectionKey) } : {}),
-			targets: eventPath("targets"),
-		}),
-	];
-}
-
-function scriptedFinishTransitions(step: ScriptedCommandStep): EventHandlerSpec[] {
-	if (!step.finish) return [];
-	return [
-		{
-			event: "confirm",
-			transitions: [{ target: step.next ?? "ready", key: "Enter", label: "Finish" }],
-		},
-		{
-			event: "contextmenu",
-			transitions: [{ target: step.next ?? "ready", key: "RightClick", label: "Finish" }],
-		},
-	];
-}
-
-function scriptedStepState(step: ScriptedCommandStep): StateDefSpec {
-	const on: EventHandlerSpec[] = [];
-	if (step.input === "point" || step.input === "numberOrPoint") {
-		on.push({
-			event: "pointer.move",
-			transitions: [{ transient: true, effects: [assignFieldEffect("cursor", eventPath("point"))] }],
-		});
-		on.push({
-			event: "pointer.down",
-			transitions: [
-				{
-					target: step.loop ? step.name : (step.next ?? "ready"),
-					effects: scriptedPointEffects(step),
-				},
-			],
-		});
-	}
-	if (step.input === "number" || step.input === "numberOrPoint") {
-		on.push({
-			event: step.numberEvent ?? "set.number",
-			transitions: [
-				{
-					target: step.numberNext ?? (step.input === "numberOrPoint" ? "ready" : step.loop ? step.name : (step.next ?? "ready")),
-					key: "n",
-					label: "Apply Number",
-					effects: [assignFieldEffect(step.numberField ?? "number", eventPath("value"))],
-				},
-			],
-		});
-	}
-	if (step.input === "select") {
-		on.push({
-			event: "selection.changed",
-			transitions: [
-				{
-					target: step.loop ? step.name : (step.next ?? "ready"),
-					key: "s",
-					label: "Select",
-					effects: scriptedSelectionEffects(step),
-				},
-			],
-		});
-	}
-	if (step.input === "adjust") {
-		on.push({
-			event: "adjust",
-			transitions: [{ target: step.name, key: "a", label: "Adjust", effects: [assignFieldEffect("adjusted", exprConst(true))] }],
-		});
-		on.push({
-			event: "confirm",
-			transitions: [{ target: step.next ?? "ready", key: "Enter", label: "Accept Adjustments" }],
-		});
-		on.push({
-			event: "contextmenu",
-			transitions: [{ target: step.next ?? "ready", key: "RightClick", label: "Accept Adjustments" }],
-		});
-	}
-	if (step.input === "ok") {
-		on.push({
-			event: "dialog.ok",
-			transitions: [{ target: step.next ?? "ready", key: "o", label: "OK", effects: [assignFieldEffect("dialogAccepted", exprConst(true))] }],
-		});
-	}
-	if (step.close) {
-		on.push({
-			event: "close",
-			transitions: [{ target: "ready", key: "c", label: "Close", effects: [assignFieldEffect("closed", exprConst(true))] }],
-		});
-	}
-	on.push(...scriptedFinishTransitions(step));
-	on.push({ event: "cancel", transitions: [{ target: "idle", key: "x", label: "Cancel" }] });
-	const selection = step.input === "select" && step.selectionAccept ? { accept: step.selectionAccept, multiple: true, prompt: step.prompt } : undefined;
-	return {
-		name: step.name,
-		...(selection ? { selection } : {}),
-		on,
-	};
-}
-
-/** @emoji 🧰 Builds Rhino-style scripted command interactions from compact step declarations. */
-function buildScriptedCommandInteractionSpec(def: ScriptedCommandDef): InteractionSpec {
-	const first = def.steps[0]!;
-	return {
-		schema: "spatial.interaction/v1",
-		id: def.id,
-		version: "1.0.0",
-		label: def.label,
-		interaction: {
-			spatialGroundPick: def.steps.some((step) => step.input === "point" || step.input === "numberOrPoint"),
-			pickDisabledStates: ["idle", "ready", "committed"],
-			groundPointerMoveStates: def.steps
-				.filter((step) => step.input === "point" || step.input === "numberOrPoint")
-				.map((step) => step.name),
-			heightDragStates: [],
-			verticalRodStates: [],
-			heightConfirmState: null,
-		},
-		machine: {
-			initial: "idle",
-			states: [
-				{
-					name: "idle",
-					on: [
-						{
-							event: "start",
-							transitions: [
-								{
-									target: first.name,
-									key: "s",
-									label: "Start",
-									effects: [
-										assignFieldEffect("cursor", exprConst([0, 0, 0])),
-										assignFieldEffect("points", exprConst([])),
-										assignFieldEffect("targets", exprConst([])),
-									],
-								},
-							],
-						},
-					],
-				},
-				...def.steps.map(scriptedStepState),
-				{
-					name: "ready",
-					on: [
-						{
-							event: "confirm",
-							transitions: [{ target: "committed", key: "f", label: "Finalize" }],
-						},
-						{
-							event: "cancel",
-							transitions: [{ target: "idle", key: "x", label: "Cancel" }],
-						},
-					],
-				},
-				{ name: "committed", final: true },
-			],
-		},
-		display: {
-			states: def.steps.map((step) => ({ state: step.name, items: scriptedCommandPreviewItems(step) })),
-		},
-		commit: {
-			fromStates: ["ready"],
-			operation: {
-				kind: "action",
-				action: "command.finish",
-				params: {
-					commandId: exprConst(def.id),
-					resultKind: exprConst(def.resultKind),
-				},
-			},
-		},
-	};
-}
-
-function step(name: string, prompt: string, input: ScriptedInputKind, opts: Omit<ScriptedCommandStep, "name" | "prompt" | "input"> = {}): ScriptedCommandStep {
-	return { name, prompt, input, ...opts };
-}
-
-const SCRIPTED_COMMANDS: readonly ScriptedCommandDef[] = [
-	{
-		id: "curve.line",
-		label: "Line",
-		key: "l",
-		resultKind: "line",
-		steps: [
-			step("start_of_line", "Start of line", "point", { next: "end_of_line", pointKey: "start", previewKind: "point" }),
-			step("end_of_line", "End of line", "point", { pointKey: "end", previewKind: "line" }),
-		],
-	},
-	{
-		id: "curve.polyline",
-		label: "Polyline",
-		key: "p",
-		resultKind: "polyline",
-		steps: [
-			step("start_of_polyline", "Start of polyline", "point", { next: "next_point_of_polyline", previewKind: "point" }),
-			step("next_point_of_polyline", "Next point of polyline", "point", { loop: true, finish: true, close: true, previewKind: "polyline" }),
-		],
-	},
-	{
-		id: "curve.controlPointCurve",
-		label: "Control Point Curve",
-		key: "u",
-		resultKind: "curve",
-		steps: [
-			step("start_of_curve", "Start of curve", "point", { next: "next_control_point", previewKind: "point" }),
-			step("next_control_point", "Next control point", "point", { loop: true, finish: true, previewKind: "control-curve" }),
-		],
-	},
-	{
-		id: "curve.interpolateCurve",
-		label: "InterpCrv",
-		key: "i",
-		resultKind: "interpolateCurve",
-		steps: [
-			step("start_of_curve", "Start of curve", "point", { next: "next_point", previewKind: "point" }),
-			step("next_point", "Next point", "point", { loop: true, finish: true, previewKind: "interpolated-curve" }),
-		],
-	},
-	{
-		id: "curve.circle",
-		label: "Circle",
-		key: "c",
-		resultKind: "circle",
-		steps: [
-			step("center_of_circle", "Center of circle", "point", { next: "radius", pointKey: "center", previewKind: "point" }),
-			step("radius", "Radius", "numberOrPoint", { numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "circle" }),
-		],
-	},
-	{
-		id: "curve.arc",
-		label: "Arc",
-		key: "r",
-		resultKind: "arc",
-		steps: [
-			step("center_of_arc", "Center of arc", "point", { next: "start_of_arc", pointKey: "center", previewKind: "point" }),
-			step("start_of_arc", "Start of arc", "point", { next: "end_point_or_angle", pointKey: "start", previewKind: "circle-outline" }),
-			step("end_point_or_angle", "End point or angle", "numberOrPoint", { numberEvent: "set.angle", numberField: "angle", pointKey: "end", previewKind: "arc" }),
-		],
-	},
-	{
-		id: "surface.plane",
-		label: "Plane",
-		key: "n",
-		resultKind: "plane",
-		steps: [
-			step("first_corner_of_plane", "First corner of plane", "point", { next: "other_corner_or_length", pointKey: "cornerA", previewKind: "point" }),
-			step("other_corner_or_length", "Other corner or length", "point", { pointKey: "cornerB", previewKind: "plane" }),
-		],
-	},
-	{
-		id: "surface.extrudeCrv",
-		label: "ExtrudeCrv",
-		key: "0",
-		resultKind: "extrusion",
-		steps: [
-			step("select_curves_to_extrude", "Select curves to extrude", "select", { loop: true, finish: true, selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "highlight-curves" }),
-			step("extrusion_distance", "Extrusion distance", "numberOrPoint", { numberEvent: "set.distance", numberField: "distance", pointKey: "distancePoint", previewKind: "extrusion" }),
-		],
-	},
-	{
-		id: "surface.loft",
-		label: "Loft",
-		key: "f",
-		resultKind: "loftedSurface",
-		steps: [
-			step("select_curves_to_loft", "Select curves to loft", "select", { loop: true, finish: true, next: "adjust_curve_seams", selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "highlight-curves" }),
-			step("adjust_curve_seams", "Adjust curve seams", "adjust", { next: "loft_options_dialog", previewKind: "seam-arrows" }),
-			step("loft_options_dialog", "Loft options", "ok", { previewKind: "dialog" }),
-		],
-	},
-	{
-		id: "surface.sweep1",
-		label: "Sweep1",
-		key: "w",
-		resultKind: "sweptSurface",
-		steps: [
-			step("select_rail", "Select rail", "select", { next: "select_cross_section_curves", selectionAccept: ["wire", "edge"], selectionKey: "rail", previewKind: "rail" }),
-			step("select_cross_section_curves", "Select cross-section curves", "select", { loop: true, finish: true, next: "adjust_seams", selectionAccept: ["wire", "edge"], selectionField: "sections", previewKind: "cross-sections" }),
-			step("adjust_seams", "Adjust seams", "adjust", { next: "sweep1_options_dialog", previewKind: "seam-arrows" }),
-			step("sweep1_options_dialog", "Sweep1 options", "ok", { previewKind: "dialog" }),
-		],
-	},
-	{
-		id: "surface.sweep2",
-		label: "Sweep2",
-		key: "q",
-		resultKind: "sweptSurface",
-		steps: [
-			step("select_first_rail", "Select first rail", "select", { next: "select_second_rail", selectionAccept: ["wire", "edge"], selectionKey: "railA", previewKind: "rail" }),
-			step("select_second_rail", "Select second rail", "select", { next: "select_cross_section_curves", selectionAccept: ["wire", "edge"], selectionKey: "railB", previewKind: "rail" }),
-			step("select_cross_section_curves", "Select cross-section curves", "select", { loop: true, finish: true, next: "sweep2_options_dialog", selectionAccept: ["wire", "edge"], selectionField: "sections", previewKind: "cross-sections" }),
-			step("sweep2_options_dialog", "Sweep2 options", "ok", { previewKind: "dialog" }),
-		],
-	},
-	{
-		id: "surface.networkSrf",
-		label: "NetworkSrf",
-		key: "k",
-		resultKind: "networkSurface",
-		steps: [
-			step("select_curves_in_network", "Select curves in network", "select", { loop: true, finish: true, next: "networksrf_options_dialog", selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "network-curves" }),
-			step("networksrf_options_dialog", "NetworkSrf options", "ok", { previewKind: "dialog" }),
-		],
-	},
-	{
-		id: "solid.sphere",
-		label: "Sphere",
-		key: "h",
-		resultKind: "sphere",
-		steps: [
-			step("center_of_sphere", "Center of sphere", "point", { next: "radius", pointKey: "center", previewKind: "point" }),
-			step("radius", "Radius", "numberOrPoint", { numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "sphere" }),
-		],
-	},
-	{
-		id: "solid.cylinder",
-		label: "Cylinder",
-		key: "y",
-		resultKind: "cylinder",
-		steps: [
-			step("base_of_cylinder", "Base of cylinder", "point", { next: "radius", pointKey: "base", previewKind: "point" }),
-			step("radius", "Radius", "numberOrPoint", { next: "end_of_cylinder", numberNext: "end_of_cylinder", numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "circle" }),
-			step("end_of_cylinder", "End of cylinder", "numberOrPoint", { numberEvent: "set.height", numberField: "height", pointKey: "end", previewKind: "cylinder" }),
-		],
-	},
-	{
-		id: "solid.booleanUnion",
-		label: "BooleanUnion",
-		key: "v",
-		resultKind: "booleanUnion",
-		steps: [step("select_surfaces_or_polysurfaces_to_union", "Select surfaces or polysurfaces to union", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], previewKind: "boolean-union" })],
-	},
-	{
-		id: "solid.booleanDifference",
-		label: "BooleanDifference",
-		key: "g",
-		resultKind: "booleanDifference",
-		steps: [
-			step("select_surfaces_or_polysurfaces_to_subtract_from", "Select surfaces or polysurfaces to subtract from", "select", { loop: true, finish: true, next: "select_surfaces_or_polysurfaces_to_subtract_with", selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "baseObjects", previewKind: "boolean-base" }),
-			step("select_surfaces_or_polysurfaces_to_subtract_with", "Select surfaces or polysurfaces to subtract with", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "cutterObjects", previewKind: "boolean-cutters" }),
-		],
-	},
-	{
-		id: "solid.booleanIntersection",
-		label: "BooleanIntersection",
-		key: "j",
-		resultKind: "booleanIntersection",
-		steps: [
-			step("select_first_set_of_surfaces_or_polysurfaces", "Select first set of surfaces or polysurfaces", "select", { loop: true, finish: true, next: "select_second_set", selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "firstSet", previewKind: "boolean-first" }),
-			step("select_second_set", "Select second set", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "secondSet", previewKind: "boolean-second" }),
-		],
-	},
-	{
-		id: "transform.move",
-		label: "Move",
-		key: "m",
-		resultKind: "move",
-		steps: [
-			step("select_objects_to_move", "Select objects to move", "select", { loop: true, finish: true, next: "point_to_move_from", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("point_to_move_from", "Point to move from", "point", { next: "point_to_move_to", pointKey: "from", previewKind: "point" }),
-			step("point_to_move_to", "Point to move to", "point", { pointKey: "to", previewKind: "move-preview" }),
-		],
-	},
-	{
-		id: "transform.copy",
-		label: "Copy",
-		key: "x",
-		resultKind: "copy",
-		steps: [
-			step("select_objects_to_copy", "Select objects to copy", "select", { loop: true, finish: true, next: "point_to_copy_from", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("point_to_copy_from", "Point to copy from", "point", { next: "point_to_copy_to", pointKey: "from", previewKind: "point" }),
-			step("point_to_copy_to", "Point to copy to", "point", { loop: true, finish: true, pointField: "copyPoints", previewKind: "copy-preview" }),
-		],
-	},
-	{
-		id: "transform.rotate",
-		label: "Rotate",
-		key: "z",
-		resultKind: "rotate",
-		steps: [
-			step("select_objects_to_rotate", "Select objects to rotate", "select", { loop: true, finish: true, next: "center_of_rotation", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("center_of_rotation", "Center of rotation", "point", { next: "angle_or_first_reference_point", pointKey: "center", previewKind: "point" }),
-			step("angle_or_first_reference_point", "Angle or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.angle", numberField: "angle", pointKey: "referenceA", previewKind: "angle-reference" }),
-			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "rotate-preview" }),
-		],
-	},
-	{
-		id: "transform.scale3d",
-		label: "Scale 3D",
-		key: "3",
-		resultKind: "scale3d",
-		steps: [
-			step("select_objects_to_scale", "Select objects to scale", "select", { loop: true, finish: true, next: "origin_point", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("origin_point", "Origin point", "point", { next: "scale_factor_or_first_reference_point", pointKey: "origin", previewKind: "point" }),
-			step("scale_factor_or_first_reference_point", "Scale factor or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.factor", numberField: "factor", pointKey: "referenceA", previewKind: "scale-reference" }),
-			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "scale-preview" }),
-		],
-	},
-	{
-		id: "transform.scale1d",
-		label: "Scale1D",
-		key: "1",
-		resultKind: "scale1d",
-		steps: [
-			step("select_objects_to_scale", "Select objects to scale", "select", { loop: true, finish: true, next: "origin_point", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("origin_point", "Origin point", "point", { next: "scale_factor_or_first_reference_point", pointKey: "origin", previewKind: "point" }),
-			step("scale_factor_or_first_reference_point", "Scale factor or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.factor", numberField: "factor", pointKey: "axisPoint", previewKind: "scale-axis" }),
-			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "scale1d-preview" }),
-		],
-	},
-	{
-		id: "transform.mirror",
-		label: "Mirror",
-		key: "4",
-		resultKind: "mirror",
-		steps: [
-			step("select_objects_to_mirror", "Select objects to mirror", "select", { loop: true, finish: true, next: "start_of_mirror_plane", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
-			step("start_of_mirror_plane", "Start of mirror plane", "point", { next: "end_of_mirror_plane", pointKey: "mirrorStart", previewKind: "point" }),
-			step("end_of_mirror_plane", "End of mirror plane", "point", { pointKey: "mirrorEnd", previewKind: "mirror-preview" }),
-		],
-	},
-	{
-		id: "edit.trim",
-		label: "Trim",
-		key: "t",
-		resultKind: "trim",
-		steps: [
-			step("select_cutting_objects", "Select cutting objects", "select", { loop: true, finish: true, next: "select_object_to_trim", selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "cutters", previewKind: "cutters" }),
-			step("select_object_to_trim", "Select object to trim", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "trimmedObjects", previewKind: "trim-preview" }),
-		],
-	},
-	{
-		id: "edit.split",
-		label: "Split",
-		key: "5",
-		resultKind: "split",
-		steps: [
-			step("select_objects_to_split", "Select objects to split", "select", { loop: true, finish: true, next: "select_cutting_objects", selectionAccept: ["edge", "wire", "face", "surface", "cell", "part"], selectionField: "splitObjects", previewKind: "split-objects" }),
-			step("select_cutting_objects", "Select cutting objects", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "cutters", previewKind: "cutters" }),
-		],
-	},
-	{
-		id: "edit.join",
-		label: "Join",
-		key: "6",
-		resultKind: "join",
-		steps: [step("select_object_for_join", "Select object for join", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], previewKind: "join-selection" })],
-	},
-	{
-		id: "edit.explode",
-		label: "Explode",
-		key: "7",
-		resultKind: "explode",
-		steps: [step("select_objects_to_explode", "Select objects to explode", "select", { loop: true, finish: true, selectionAccept: ["wire", "shell", "cell", "cellComplex", "cluster"], previewKind: "explode-selection" })],
-	},
-	{
-		id: "edit.fillet",
-		label: "Fillet",
-		key: "8",
-		resultKind: "fillet",
-		steps: [
-			step("select_first_curve_to_fillet", "Select first curve to fillet", "select", { next: "select_second_curve_to_fillet", selectionAccept: ["edge", "wire"], selectionKey: "firstCurve", previewKind: "first-curve" }),
-			step("select_second_curve_to_fillet", "Select second curve to fillet", "select", { selectionAccept: ["edge", "wire"], selectionKey: "secondCurve", previewKind: "fillet-preview" }),
-		],
-	},
-	{
-		id: "edit.chamfer",
-		label: "Chamfer",
-		key: "9",
-		resultKind: "chamfer",
-		steps: [
-			step("select_first_curve_to_chamfer", "Select first curve to chamfer", "select", { next: "select_second_curve_to_chamfer", selectionAccept: ["edge", "wire"], selectionKey: "firstCurve", previewKind: "first-curve" }),
-			step("select_second_curve_to_chamfer", "Select second curve to chamfer", "select", { selectionAccept: ["edge", "wire"], selectionKey: "secondCurve", previewKind: "chamfer-preview" }),
-		],
-	},
-];
-
-const SCRIPTED_COMMAND_SPEC_BY_ID = new Map(SCRIPTED_COMMANDS.map((def) => [def.id, buildScriptedCommandInteractionSpec(def)]));
 
 /** @emoji 🧭 Built-in `InteractionSpec` registry (fixtures + host `register`). */
 export class InteractionRegistry {
@@ -2950,7 +2475,7 @@ export class InteractionRegistry {
 			parseInteractionSpec(offsetSurfaceInteractionJson),
 			parseInteractionSpec(distanceInteractionJson),
 			parseInteractionSpec(areaInteractionJson),
-			...SCRIPTED_COMMANDS.map((def) => SCRIPTED_COMMAND_SPEC_BY_ID.get(def.id) ?? null),
+			...scriptedCommandInteractionJsons.map((raw) => parseInteractionSpec(raw)),
 		];
 		for (const s of xs) {
 			if (s) r.register(s);
@@ -3010,7 +2535,7 @@ export function listSpatialInteractions(): readonly SpatialInteraction[] {
 		{ id: "feature.offsetSurface", label: "Offset surface", key: "o" },
 		{ id: "measure.distance", label: "Distance", key: "d" },
 		{ id: "measure.area", label: "Area", key: "a" },
-		...SCRIPTED_COMMANDS.map(({ id, label, key }) => ({ id, label, key })),
+		...scriptedCommandInteractionJsons.map(interactionFixtureRow),
 	];
 }
 
@@ -3041,7 +2566,10 @@ export function loadSpatialInteraction(interactionId: string): InteractionSpec |
 						: interactionId === "measure.area"
 							? areaInteractionJson
 							: null;
-	if (!raw) return SCRIPTED_COMMAND_SPEC_BY_ID.get(interactionId) ?? null;
+	if (!raw) {
+		const scripted = scriptedCommandInteractionJsons.find((spec) => spec.id === interactionId);
+		return scripted ? parseInteractionSpec(scripted) : null;
+	}
 	return parseInteractionSpec(raw as unknown);
 }
 // #endregion 📦Interactions
@@ -3111,15 +2639,54 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core interactions", () => {
 		it("lists stable mnemonic keys for each built-in interaction", () => {
 			const ps = listSpatialInteractions();
-			expect(ps.map((p) => p.key).join("")).toBe("beoda");
+			expect(ps.slice(0, 5).map((p) => p.key).join("")).toBe("beoda");
+			expect(ps.length).toBeGreaterThanOrEqual(34);
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
-			expect(ps.every((p) => p.label.toLowerCase().includes(p.key))).toBe(true);
+			expect(ps.slice(0, 5).every((p) => p.label.toLowerCase().includes(p.key))).toBe(true);
 		});
 		it("resolves interaction tokens by key, id, and label slug", () => {
 			expect(resolveSpatialInteractionKey("b")?.id).toBe("primitive.box");
 			expect(resolveSpatialInteractionKey("primitive.box")?.key).toBe("b");
 			expect(resolveSpatialInteractionKey("extrudewire")?.id).toBe("feature.extrudeWire");
 			expect(resolveSpatialInteractionKey("d")?.id).toBe("measure.distance");
+			expect(resolveSpatialInteractionKey("curve.line")?.id).toBe("curve.line");
+		});
+		it("loads every built-in interaction spec", () => {
+			for (const row of listSpatialInteractions()) {
+				const spec = loadSpatialInteraction(row.id);
+				expect(spec?.id).toBe(row.id);
+			}
+		});
+		it("does not expose finalize or cancel transitions for scripted commands", () => {
+			const spec = loadSpatialInteraction("curve.line")!;
+			const labels = spec.machine.states.flatMap((state) => state.on?.flatMap((handler) => handler.transitions.map((t) => t.label)) ?? []);
+			expect(labels).not.toContain("Finalize");
+			expect(labels).not.toContain("Cancel");
+		});
+		it("auto-finalizes scripted commands when the terminal input is done", async () => {
+			class CommandKernel implements KernelAdapter {
+				readonly id = "command";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = loadSpatialInteraction("curve.line")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			await rt.send({ kind: "start" });
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [1, 2, 0] as Vec3, modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.capabilities.canCommit).toBe(false);
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(snap.lastResponse?.data).toMatchObject({ commandId: "curve.line", resultKind: "line" });
 		});
 	});
 
@@ -3129,6 +2696,7 @@ if (import.meta.vitest) {
 			const ids = new Set(r.list().map((d) => d.id));
 			expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
 			expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
+			expect(ids.has("command.finish")).toBe(true);
 		});
 		it("register replaces a built-in action id", () => {
 			const r = ActionRegistry.withBuiltins();
@@ -3186,6 +2754,17 @@ if (import.meta.vitest) {
 			expect(Object.keys(g.faces).length).toBe(1);
 			applyTopologyDiff(g, inv);
 			expect(Object.keys(g.faces).length).toBe(0);
+		});
+
+		it("boxTopologyDiff creates selectable boundary and volume records", () => {
+			const g = new TopologyGraph();
+			applyTopologyDiff(g, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			expect(Object.keys(g.vertices).length).toBe(8);
+			expect(Object.keys(g.edges).length).toBe(12);
+			expect(Object.keys(g.wires).length).toBe(6);
+			expect(Object.keys(g.faces).length).toBe(6);
+			expect(Object.keys(g.shells).length).toBe(1);
+			expect(Object.keys(g.cells)).toEqual(["box-cell"]);
 		});
 	});
 	describe("@spatial/js-core selection filter", () => {
@@ -3296,14 +2875,21 @@ if (import.meta.vitest) {
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "set.height", value: 4, modifiers: {} });
-			const res = await rt.commit();
+			const snap = rt.getSnapshot();
+			const res = snap.lastResponse!;
+			expect(snap.state).toBe("committed");
 			expect(res.ok).toBe(true);
 			expect(res.data).toBeNull();
 			expect(res.archiveContext).not.toBeNull();
 			expect(res.archiveContext!.origin).toEqual([0, 0, 0]);
 			expect(res.archiveContext!.corner).toEqual([2, 3, 0]);
 			expect(res.archiveContext!.height).toBe(4);
-			expect(Object.keys(topo.faces).length).toBeGreaterThan(0);
+			expect(Object.keys(topo.vertices).length).toBe(8);
+			expect(Object.keys(topo.edges).length).toBe(12);
+			expect(Object.keys(topo.wires).length).toBe(6);
+			expect(Object.keys(topo.faces).length).toBe(6);
+			expect(Object.keys(topo.shells).length).toBe(1);
+			expect(Object.keys(topo.cells)).toEqual(["stub-cell"]);
 			expect(kernel.lastBox).toEqual({
 				cornerA: [0, 0, 0],
 				cornerB: [2, 3, 0],
@@ -3376,7 +2962,7 @@ if (import.meta.vitest) {
 			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
-			const res = await rt.commit();
+			const res = rt.getSnapshot().lastResponse!;
 			expect(res.ok).toBe(true);
 			expect(res.data).toBe(5);
 			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
@@ -3410,7 +2996,6 @@ if (import.meta.vitest) {
 			const rt = createInteractionRuntime(buildDistanceInteractionSpec(), { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
-			await rt.send({ kind: "confirm" });
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("committed");
 			expect(snap.capabilities.canCommit).toBe(false);
@@ -3446,7 +3031,7 @@ if (import.meta.vitest) {
 			const spec = buildAreaInteractionSpec();
 			const rt = createInteractionRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }] });
-			const res = await rt.commit();
+			const res = rt.getSnapshot().lastResponse!;
 			expect(res.ok).toBe(true);
 			expect(res.data).toBe(2.5);
 			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
@@ -3519,7 +3104,6 @@ if (import.meta.vitest) {
 			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] }, history: hist });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
-			await rt.commit();
 			expect(hist.peekUndo()).toBe(null);
 		});
 	});

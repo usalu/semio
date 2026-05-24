@@ -455,8 +455,8 @@ if (import.meta.vitest) {
 			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
 			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
 			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
-			const rd = await rtPd.commit();
-			const sd = await rtSd.commit();
+			const rd = rtPd.getSnapshot().lastResponse!;
+			const sd = rtSd.getSnapshot().lastResponse!;
 			expect(rd.data).toBe(5);
 			expect(sd.data).toBe(5);
 			expect(isEmptyTopologyDiff(rd.diff)).toBe(true);
@@ -477,8 +477,8 @@ if (import.meta.vitest) {
 			});
 			await rtPa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
 			await rtSa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
-			const ra = await rtPa.commit();
-			const sa = await rtSa.commit();
+			const ra = rtPa.getSnapshot().lastResponse!;
+			const sa = rtSa.getSnapshot().lastResponse!;
 			expect(ra.data).toBe(42);
 			expect(sa.data).toBe(42);
 			expect(isEmptyTopologyDiff(ra.diff)).toBe(true);
