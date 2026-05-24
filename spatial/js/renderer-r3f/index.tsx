@@ -186,7 +186,7 @@ export function FactoryDisplay({ model }: { readonly model: DisplayModel }): Rea
 // #endregion 🖼️DisplayPrimitives
 
 // #region 🖱️Interaction
-/** @emoji 🖱️ Ground plane hit-test for `pointer.down` factory events (Z≈0 workspace). */
+/** @emoji 🖱️ Ground hit-test on the **XY** working plane at fixed world **Z** (= spatial footprint plane; factory height is world Z). */
 export interface GroundPickPlaneProps {
 	readonly planeZ?: number;
 	readonly enabled?: boolean;
@@ -216,12 +216,7 @@ export function GroundPickPlane({
 		onPointerMove([p.x, p.y, planeZ] as unknown as Vec3);
 	};
 	return (
-		<mesh
-			rotation={[-Math.PI / 2, 0, 0]}
-			position={[0, 0, planeZ]}
-			onPointerDown={onPointerDown}
-			onPointerMove={onPointerMoveH}
-		>
+		<mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onPointerMove={onPointerMoveH}>
 			<planeGeometry args={[120, 120]} />
 			<meshBasicMaterial transparent opacity={0.18} color="#7a9dff" side={THREE.DoubleSide} />
 		</mesh>
@@ -357,7 +352,7 @@ export function FactoryCanvas({ children }: FactoryCanvasProps): ReactNode {
 export interface FactorySpatialViewProps {
 	readonly snapshot: FactorySnapshot;
 	readonly onGroundPick?: (point: Vec3) => void;
-	/** @emoji 🖱️ `pointer.move` with world hit (ground forces Z≈`planeZ`; height slab uses full Z). */
+	/** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
 	readonly onScenePointerMove?: (point: Vec3) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshPreview | null;
@@ -373,7 +368,8 @@ export function FactorySpatialView({
 }: FactorySpatialViewProps): ReactNode {
 	const gridHelper = useMemo(() => {
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
-		g.position.set(0, 0.002, 0);
+		g.rotation.x = Math.PI / 2;
+		g.position.set(0, 0, 0.002);
 		return g;
 	}, []);
 	const ctx = snapshot.context;
