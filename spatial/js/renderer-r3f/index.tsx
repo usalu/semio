@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `CommandDisplay`, ground picking, interaction adapter, `CommandCanvas`, and snapshot hooks. See `spatial/fixtures/box.command.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `InteractionDisplay`, ground picking, interaction adapter, `InteractionCanvas`, and snapshot hooks. See `spatial/fixtures/box.interaction.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -10,25 +10,25 @@ import { MOUSE } from "three";
 import * as THREE from "three";
 import {
 	applyTopologyDiff,
-	buildBoxCommandSpec,
+	buildBoxInteractionSpec,
 	cellRef,
-	createCommandRuntime,
+	createInteractionRuntime,
 	DocumentHistory,
-	isCommandSessionActive,
+	isInteractionSessionActive,
 	isEmptyTopologyDiff,
-	listKeyedCommandTransitions,
+	listKeyedInteractionTransitions,
 	meshFaceTopologyDiff,
-	resolveSpatialCommandPresetKey,
+	resolveSpatialInteractionPresetKey,
 	TopologyGraph,
-	type CommandEvent,
-	type CommandKeybindRow,
-	type CommandRuntime,
-	type CommandRuntimeOptions,
-	type CommandSnapshot,
+	type InteractionEvent,
+	type InteractionKeybindRow,
+	type InteractionRuntime,
+	type InteractionRuntimeOptions,
+	type InteractionSnapshot,
 	type CellComplexRecord,
 	type CellRecord,
 	type ClusterRecord,
-	type CommandSpec,
+	type InteractionSpec,
 	type DisplayItem,
 	type DisplayModel,
 	type EdgeRecord,
@@ -37,7 +37,7 @@ import {
 	type ModelDocument,
 	type ShellRecord,
 	type MeshPreview,
-	type SpatialCommandPreset,
+	type SpatialInteractionPreset,
 	type TopologyEntityKind,
 	type TopologyGraphJson,
 	type Vec3,
@@ -83,16 +83,16 @@ const raycastNone: THREE.Object3D["raycast"] = () => undefined;
 // #endregion 📐Layout
 
 // #region 🧲TopologyTargets
-export type CommandInteractionKind = "pointer.down" | "pointer.move";
+export type SpatialPickKind = "pointer.down" | "pointer.move";
 
-export interface CommandInteractionTarget {
+export interface SpatialPickTarget {
 	readonly kind: "vertex" | "edge" | "face" | "cell" | "cellComplex" | "cluster";
 	readonly id: string;
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
 }
 
-export type CommandInteractionGeometry = TopologyGraph | TopologyGraphJson;
+export type SpatialPickGeometry = TopologyGraph | TopologyGraphJson;
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
 	const o: Record<string, T> = {};
@@ -106,7 +106,7 @@ function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<strin
 }
 
 /** @emoji 🧲 Normalizes `TopologyGraphJson` array buckets to the record shape used by interaction math. */
-function topologyGeometryBuckets(g: CommandInteractionGeometry): {
+function topologyGeometryBuckets(g: SpatialPickGeometry): {
 	readonly vertices: Record<string, VertexRecord>;
 	readonly edges: Record<string, EdgeRecord>;
 	readonly wires: Record<string, WireRecord>;
@@ -181,10 +181,10 @@ function topologyAllVertexPoints(vertices: Record<string, VertexRecord>): readon
 }
 
 /** @emoji 🧲 Builds renderer-side snap/select targets from optional factory topology geometry. */
-export function createCommandInteractionTargets(geometry: CommandInteractionGeometry | null | undefined): readonly CommandInteractionTarget[] {
+export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | undefined): readonly SpatialPickTarget[] {
 	if (!geometry) return [];
 	const buckets = topologyGeometryBuckets(geometry);
-	const targets: CommandInteractionTarget[] = [];
+	const targets: SpatialPickTarget[] = [];
 	for (const vertex of topologyRecords(buckets.vertices)) {
 		targets.push({ kind: "vertex", id: vertex.id, point: vertex.position });
 	}
@@ -213,12 +213,12 @@ export function createCommandInteractionTargets(geometry: CommandInteractionGeom
 }
 
 /** @emoji 🧲 Creates a statechart event carrying snapped point plus selected topology metadata. */
-export function createCommandInteractionEvent(
-	kind: CommandInteractionKind,
+export function createSpatialPickEvent(
+	kind: SpatialPickKind,
 	point: Vec3,
-	target: CommandInteractionTarget | null,
-	modifiers: CommandEvent["modifiers"] = {},
-): CommandEvent {
+	target: SpatialPickTarget | null,
+	modifiers: InteractionEvent["modifiers"] = {},
+): InteractionEvent {
 	return target
 		? {
 				kind,
@@ -363,7 +363,7 @@ function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
 }
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
-export function CommandDisplay({ model }: { readonly model: DisplayModel }): ReactNode {
+export function InteractionDisplay({ model }: { readonly model: DisplayModel }): ReactNode {
 	return (
 		<group>
 			{model.items.map((item) => (
@@ -509,16 +509,16 @@ function VerticalZDragRod({
 	);
 }
 
-/** @emoji 🎮 Maps R3F pointer events to `CommandEvent` envelopes (point + modifiers). */
+/** @emoji 🎮 Maps R3F pointer events to `InteractionEvent` envelopes (point + modifiers). */
 export function createR3FInteractionAdapter() {
 	const toPoint = (event: ThreeEvent<PointerEvent>): Vec3 => [event.point.x, event.point.y, event.point.z];
 	return {
-		pointerMove: (event: ThreeEvent<PointerEvent>): CommandEvent => ({
+		pointerMove: (event: ThreeEvent<PointerEvent>): InteractionEvent => ({
 			kind: "pointer.move",
 			point: toPoint(event),
 			modifiers: pointerModifiers(event),
 		}),
-		pointerDown: (event: ThreeEvent<PointerEvent>): CommandEvent => ({
+		pointerDown: (event: ThreeEvent<PointerEvent>): InteractionEvent => ({
 			kind: "pointer.down",
 			point: toPoint(event),
 			modifiers: pointerModifiers(event),
@@ -548,23 +548,23 @@ function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonl
 	};
 }
 
-function CommandInteractionTargetNode({
+function SpatialPickTargetNode({
 	target,
-	onCommandEvent,
+	onInteractionEvent,
 	onPick,
 	onPointerMove,
 	pointerMoveEnabled,
 }: {
-	readonly target: CommandInteractionTarget;
-	readonly onCommandEvent?: (event: CommandEvent) => void;
-	readonly onPick?: (point: Vec3, event: CommandEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: CommandEvent) => void;
+	readonly target: SpatialPickTarget;
+	readonly onInteractionEvent?: (event: InteractionEvent) => void;
+	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
+	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
 	readonly pointerMoveEnabled: boolean;
 }): ReactNode {
-	const emit = (kind: CommandInteractionKind, e: ThreeEvent<PointerEvent>) => {
+	const emit = (kind: SpatialPickKind, e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
-		const event = createCommandInteractionEvent(kind, [e.point.x, e.point.y, e.point.z], target, pointerModifiers(e));
-		onCommandEvent?.(event);
+		const event = createSpatialPickEvent(kind, [e.point.x, e.point.y, e.point.z], target, pointerModifiers(e));
+		onInteractionEvent?.(event);
 		if (kind === "pointer.down") onPick?.(target.point, event);
 		if (kind === "pointer.move" && pointerMoveEnabled) onPointerMove?.(target.point, event);
 	};
@@ -597,31 +597,31 @@ function CommandInteractionTargetNode({
 }
 
 /** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
-export function CommandInteractionGeometryLayer({
+export function SpatialPickGeometryLayer({
 	geometry,
-	onCommandEvent,
+	onInteractionEvent,
 	onPick,
 	onPointerMove,
 	pointerMoveEnabled = false,
 }: {
-	readonly geometry?: CommandInteractionGeometry | null;
-	readonly onCommandEvent?: (event: CommandEvent) => void;
-	readonly onPick?: (point: Vec3, event: CommandEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: CommandEvent) => void;
+	readonly geometry?: SpatialPickGeometry | null;
+	readonly onInteractionEvent?: (event: InteractionEvent) => void;
+	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
+	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
 	readonly pointerMoveEnabled?: boolean;
 }): ReactNode {
 	const topoRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const targets = useMemo(() => createCommandInteractionTargets(geometry), [geometry, topoRevision]);
+	const targets = useMemo(() => createSpatialPickTargets(geometry), [geometry, topoRevision]);
 	return (
 		<group>
 			{targets.map((target) => (
-				<CommandInteractionTargetNode
+				<SpatialPickTargetNode
 					key={`${target.kind}:${target.id}`}
 					target={target}
-					onCommandEvent={onCommandEvent}
+					onInteractionEvent={onInteractionEvent}
 					onPick={onPick}
 					onPointerMove={onPointerMove}
 					pointerMoveEnabled={pointerMoveEnabled}
@@ -654,13 +654,13 @@ function TessellatedCommitMesh({ mesh: preview }: { readonly mesh: MeshPreview }
 // #endregion 🧊CommittedMesh
 
 // #region 🪝Hooks
-/** @emoji 🪝 Memoized `createCommandRuntime` for React hosts. */
-export function useCommandRuntime(spec: CommandSpec, opts: CommandRuntimeOptions): CommandRuntime {
-	return useMemo(() => createCommandRuntime(spec, opts), [spec, opts]);
+/** @emoji 🪝 Memoized `createInteractionRuntime` for React hosts. */
+export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
+	return useMemo(() => createInteractionRuntime(spec, opts), [spec, opts]);
 }
 
-/** @emoji 🪝 Subscribes to `CommandRuntime` revision updates for React hosts. */
-export function useCommandSnapshot(rt: CommandRuntime): CommandSnapshot {
+/** @emoji 🪝 Subscribes to `InteractionRuntime` revision updates for React hosts. */
+export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnapshot {
 	return useSyncExternalStore(
 		(cb) => rt.subscribe(cb),
 		() => rt.getSnapshot(),
@@ -670,12 +670,12 @@ export function useCommandSnapshot(rt: CommandRuntime): CommandSnapshot {
 // #endregion 🪝Hooks
 
 // #region 🪩Canvas
-export interface CommandCanvasProps {
+export interface InteractionCanvasProps {
 	readonly children: ReactNode;
 }
 
 /** @emoji 🪩 Root `<Canvas>` preset for factory viewports. */
-export function CommandCanvas({ children }: CommandCanvasProps): ReactNode {
+export function InteractionCanvas({ children }: InteractionCanvasProps): ReactNode {
 	return (
 		<Canvas style={{ height: "100%", width: "100%" }} camera={{ position: [10, 10, 8], fov: 45 }}>
 			<color attach="background" args={["#080810"]} />
@@ -684,27 +684,27 @@ export function CommandCanvas({ children }: CommandCanvasProps): ReactNode {
 	);
 }
 
-export interface CommandSpatialViewProps {
-	readonly snapshot: CommandSnapshot;
-	readonly onGroundPick?: (point: Vec3, event: CommandEvent) => void;
+export interface InteractionSpatialViewProps {
+	readonly snapshot: InteractionSnapshot;
+	readonly onGroundPick?: (point: Vec3, event: InteractionEvent) => void;
 	/** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
-	readonly onScenePointerMove?: (point: Vec3, event: CommandEvent) => void;
-	readonly onCommandEvent?: (event: CommandEvent) => void;
+	readonly onScenePointerMove?: (point: Vec3, event: InteractionEvent) => void;
+	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshPreview | null;
-	readonly geometry?: CommandInteractionGeometry | null;
+	readonly geometry?: SpatialPickGeometry | null;
 }
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
-export function CommandSpatialView({
+export function InteractionSpatialView({
 	snapshot,
 	onGroundPick,
 	onScenePointerMove,
-	onCommandEvent,
+	onInteractionEvent,
 	pickEnabled = true,
 	committedMesh,
 	geometry,
-}: CommandSpatialViewProps): ReactNode {
+}: InteractionSpatialViewProps): ReactNode {
 	const hostPickGate = pickEnabled !== false;
 	const gridHelper = useMemo(() => {
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
@@ -732,13 +732,13 @@ export function CommandSpatialView({
 	const pickPlaneEnabled =
 		hostPickGate && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
 	const onGroundPickEvent = (point: Vec3) => {
-		const event = createCommandInteractionEvent("pointer.down", point, null);
-		onCommandEvent?.(event);
+		const event = createSpatialPickEvent("pointer.down", point, null);
+		onInteractionEvent?.(event);
 		onGroundPick?.(point, event);
 	};
 	const onScenePointerMoveEvent = (point: Vec3) => {
-		const event = createCommandInteractionEvent("pointer.move", point, null);
-		onCommandEvent?.(event);
+		const event = createSpatialPickEvent("pointer.move", point, null);
+		onInteractionEvent?.(event);
 		onScenePointerMove?.(point, event);
 	};
 	return (
@@ -760,9 +760,9 @@ export function CommandSpatialView({
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
 			/>
-			<CommandInteractionGeometryLayer
+			<SpatialPickGeometryLayer
 				geometry={geometry}
-				onCommandEvent={onCommandEvent}
+				onInteractionEvent={onInteractionEvent}
 				onPick={undefined}
 				onPointerMove={onScenePointerMove}
 				pointerMoveEnabled={groundMoveOn || heightMoveOn || zRodMoveOn}
@@ -778,7 +778,7 @@ export function CommandSpatialView({
 			{zRodMoveOn && origin ? (
 				<VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} />
 			) : null}
-			<CommandDisplay model={snapshot.display} />
+			<InteractionDisplay model={snapshot.display} />
 			{committedMesh ? <TessellatedCommitMesh mesh={committedMesh} /> : null}
 		</>
 	);
@@ -793,8 +793,8 @@ interface ReplSuggestion {
 	readonly key: string;
 	readonly label: string;
 	readonly detail: string;
-	readonly transition?: CommandKeybindRow;
-	readonly commandId?: string;
+	readonly transition?: InteractionKeybindRow;
+	readonly interactionId?: string;
 	readonly onRun: () => void;
 }
 
@@ -809,18 +809,18 @@ function replFirstFaceId(topo: TopologyGraph): string | null {
 }
 
 function replBuildDispatchEvent(
-	row: CommandKeybindRow,
-	opts: { readonly commandId: string; readonly topo: TopologyGraph },
-): CommandEvent | null {
-	const { commandId, topo } = opts;
+	row: InteractionKeybindRow,
+	opts: { readonly interactionId: string; readonly topo: TopologyGraph },
+): InteractionEvent | null {
+	const { interactionId, topo } = opts;
 	if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") return null;
 	if (row.eventKind === "selection.changed") {
-		if (commandId === "feature.extrudeWire") {
+		if (interactionId === "feature.extrudeWire") {
 			const wid = replFirstWireId(topo);
 			if (!wid) return null;
 			return { kind: "selection.changed", targets: [{ kind: "wire", id: wid, editable: true }], modifiers: {} };
 		}
-		if (commandId === "feature.offsetSurface") {
+		if (interactionId === "feature.offsetSurface") {
 			const fid = replFirstFaceId(topo);
 			if (!fid) return null;
 			return { kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }], modifiers: {} };
@@ -830,13 +830,13 @@ function replBuildDispatchEvent(
 	return { kind: row.eventKind, modifiers: {} };
 }
 
-function replTryParseValueCommand(line: string, spec: CommandSpec, state: string): CommandEvent | null {
+function replTryParseValueInteraction(line: string, spec: InteractionSpec, state: string): InteractionEvent | null {
 	const t = line.trim();
 	const m = t.match(/^(\S+)\s+(.+)$/);
 	if (!m) return null;
 	const head = m[1]!.toLowerCase();
 	const tail = m[2]!.trim();
-	const rows = listKeyedCommandTransitions(spec, state);
+	const rows = listKeyedInteractionTransitions(spec, state);
 	for (const row of rows) {
 		if (row.eventKind === "set.height") {
 			if (head !== row.key.toLowerCase() && head !== "height") continue;
@@ -911,7 +911,7 @@ function replPresentationWithUnderlinedKey(key: string, label: string): ReactNod
 	);
 }
 
-function replPresetFromShortcutKey(evKey: string, presets: readonly SpatialCommandPreset[]): SpatialCommandPreset | null {
+function replPresetFromShortcutKey(evKey: string, presets: readonly SpatialInteractionPreset[]): SpatialInteractionPreset | null {
 	if (evKey.length !== 1) return null;
 	const k = evKey.toLowerCase();
 	for (const p of presets) {
@@ -925,54 +925,54 @@ export function useDocumentHistory(): DocumentHistory {
 	return useMemo(() => new DocumentHistory(), []);
 }
 
-/** @emoji 🪩 Labels + capability mirror for undo/redo chrome (uses `CommandSnapshot.capabilities`). */
+/** @emoji 🪩 Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
 export function getReplHistoryPresentation(
-	spec: CommandSpec,
-	snap: CommandSnapshot,
+	spec: InteractionSpec,
+	snap: InteractionSnapshot,
 	history: DocumentHistory,
 ): { readonly canUndo: boolean; readonly canRedo: boolean; readonly undoLabel: string; readonly redoLabel: string } {
-	const active = isCommandSessionActive(spec, snap.state);
+	const active = isInteractionSessionActive(spec, snap.state);
 	const u = history.peekUndo()?.label ?? "";
 	const r = history.peekRedo()?.label ?? "";
 	return {
 		canUndo: snap.capabilities.canUndo,
 		canRedo: snap.capabilities.canRedo,
-		undoLabel: active ? "Command input" : u,
-		redoLabel: active ? "Command input" : r,
+		undoLabel: active ? "Interaction input" : u,
+		redoLabel: active ? "Interaction input" : r,
 	};
 }
 
 /** @emoji 🪩 Subscribes to runtime revisions and derives REPL undo/redo labels. */
-export function useReplHistoryState(rt: CommandRuntime, spec: CommandSpec, history: DocumentHistory) {
-	const snap = useCommandSnapshot(rt);
+export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpec, history: DocumentHistory) {
+	const snap = useInteractionSnapshot(rt);
 	return useMemo(() => getReplHistoryPresentation(spec, snap, history), [spec, snap, history]);
 }
 
-export interface CommandReplProps {
-	readonly presets: readonly SpatialCommandPreset[];
-	readonly commandId: string;
-	readonly spec: CommandSpec;
-	readonly onCommandId: (id: string) => void;
-	readonly runtime: CommandRuntime;
+export interface InteractionReplProps {
+	readonly presets: readonly SpatialInteractionPreset[];
+	readonly interactionId: string;
+	readonly spec: InteractionSpec;
+	readonly onInteractionId: (id: string) => void;
+	readonly runtime: InteractionRuntime;
 	readonly history: DocumentHistory;
 	readonly document: ModelDocument;
-	readonly geometry: CommandInteractionGeometry | null;
+	readonly geometry: SpatialPickGeometry | null;
 	readonly asideExtra?: ReactNode;
 }
 
-/** @emoji 🪩 Full spatial REPL: canvas, command palette, history controls, last response. */
-export function CommandRepl({
+/** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
+export function InteractionRepl({
 	presets,
-	commandId,
+	interactionId,
 	spec,
-	onCommandId,
+	onInteractionId,
 	runtime: rt,
 	history,
 	document: documentModel,
 	geometry,
 	asideExtra,
-}: CommandReplProps): ReactNode {
-	const snapshot = useCommandSnapshot(rt);
+}: InteractionReplProps): ReactNode {
+	const snapshot = useInteractionSnapshot(rt);
 	const histUi = useReplHistoryState(rt, spec, history);
 	const [lastCommitLine, setLastCommitLine] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
@@ -993,8 +993,8 @@ export function CommandRepl({
 		void rt.send({ kind: "start", modifiers: {} });
 	}, [rt, spec]);
 
-	const onSpatialCommandEvent = useCallback(
-		(ev: CommandEvent) => {
+	const onSpatialInteractionEvent = useCallback(
+		(ev: InteractionEvent) => {
 			if (ev.kind === "pointer.down") {
 				const st = rt.getSnapshot().state;
 				const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
@@ -1036,8 +1036,8 @@ export function CommandRepl({
 	}, [rt]);
 
 	const dispatchTransition = useCallback(
-		(row: CommandKeybindRow) => {
-			const ev = replBuildDispatchEvent(row, { commandId: spec.id, topo: documentModel.topology });
+		(row: InteractionKeybindRow) => {
+			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, topo: documentModel.topology });
 			if (ev) void rt.send(ev);
 		},
 		[rt, spec.id, documentModel.topology],
@@ -1045,7 +1045,7 @@ export function CommandRepl({
 
 	const allSuggestions = useMemo((): ReplSuggestion[] => {
 		const st = snapshot.state;
-		const rows = listKeyedCommandTransitions(spec, st);
+		const rows = listKeyedInteractionTransitions(spec, st);
 		const out: ReplSuggestion[] = [];
 		for (const p of presets) {
 			out.push({
@@ -1053,8 +1053,8 @@ export function CommandRepl({
 				key: p.key,
 				label: p.label,
 				detail: p.id,
-				commandId: p.id,
-				onRun: () => onCommandId(p.id),
+				interactionId: p.id,
+				onRun: () => onInteractionId(p.id),
 			});
 		}
 		for (const row of rows) {
@@ -1071,7 +1071,7 @@ export function CommandRepl({
 		out.push({ kind: "host", key: "r", label: "Undo", detail: "host", onRun: () => rt.undo() });
 		out.push({ kind: "host", key: "y", label: "Redo", detail: "host", onRun: () => rt.redo() });
 		return out;
-	}, [presets, spec, snapshot.state, onCommandId, dispatchTransition, onCommit, rt]);
+	}, [presets, spec, snapshot.state, onInteractionId, dispatchTransition, onCommit, rt]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 
@@ -1089,19 +1089,19 @@ export function CommandRepl({
 	const trySubmitLine = useCallback((): boolean => {
 		const raw = cmdLine.trim();
 		if (!raw) return false;
-		const valEv = replTryParseValueCommand(raw, spec, rt.getSnapshot().state);
+		const valEv = replTryParseValueInteraction(raw, spec, rt.getSnapshot().state);
 		if (valEv) {
 			void rt.send(valEv);
 			setCmdLine("");
 			return true;
 		}
-		const presetHit = resolveSpatialCommandPresetKey(raw);
+		const presetHit = resolveSpatialInteractionPresetKey(raw);
 		if (presetHit) {
-			onCommandId(presetHit.id);
+			onInteractionId(presetHit.id);
 			setCmdLine("");
 			return true;
 		}
-		const rows = listKeyedCommandTransitions(spec, rt.getSnapshot().state);
+		const rows = listKeyedInteractionTransitions(spec, rt.getSnapshot().state);
 		for (const row of rows) {
 			if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") continue;
 			if (row.key === raw || row.key.toLowerCase() === raw.toLowerCase() || row.eventKind.toLowerCase() === raw.toLowerCase()) {
@@ -1126,7 +1126,7 @@ export function CommandRepl({
 			return true;
 		}
 		return false;
-	}, [cmdLine, spec, rt, dispatchTransition, onCommandId, onCommit]);
+	}, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommit]);
 
 	const onInputKeyDown = useCallback(
 		(e: KeyboardEvent<HTMLInputElement>) => {
@@ -1183,7 +1183,7 @@ export function CommandRepl({
 					if (replIsTextTypingTarget(t) && t !== cmdRef.current) return;
 					e.preventDefault();
 					e.stopPropagation();
-					onCommandId(fac.id);
+					onInteractionId(fac.id);
 					setCmdLineRef.current("");
 					return;
 				}
@@ -1209,7 +1209,7 @@ export function CommandRepl({
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, onCommit, presets, onCommandId]);
+	}, [rt, onCommit, presets, onInteractionId]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -1238,16 +1238,16 @@ export function CommandRepl({
 
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
-			<div style={{ flex: 1, minWidth: 0 }} key={commandId}>
-				<CommandCanvas>
-					<CommandSpatialView
+			<div style={{ flex: 1, minWidth: 0 }} key={interactionId}>
+				<InteractionCanvas>
+					<InteractionSpatialView
 						snapshot={snapshot}
-						onCommandEvent={onSpatialCommandEvent}
+						onInteractionEvent={onSpatialInteractionEvent}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
 					/>
-				</CommandCanvas>
+				</InteractionCanvas>
 			</div>
 			<aside
 				style={{
@@ -1266,7 +1266,7 @@ export function CommandRepl({
 				<strong>Spatial play</strong>
 				{asideExtra}
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Command <code>{commandId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+					Interaction <code>{interactionId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
 				</div>
 				<div style={{ fontSize: 12 }}>
 					Can commit {String(snapshot.capabilities.canCommit)} · undo {String(snapshot.capabilities.canUndo)} · redo{" "}
@@ -1292,7 +1292,7 @@ export function CommandRepl({
 				</div>
 				<div style={{ position: "relative" }}>
 					<label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-						<span>Command (presets first in palette; Tab/Enter run highlighted)</span>
+						<span>Interaction (presets first in palette; Tab/Enter run highlighted)</span>
 						<input
 							ref={cmdRef}
 							type="text"
@@ -1307,7 +1307,7 @@ export function CommandRepl({
 								window.setTimeout(() => setSuggestOpen(false), 120);
 							}}
 							onKeyDown={onInputKeyDown}
-							placeholder="Filter or type a command…"
+							placeholder="Filter or type an interaction…"
 							style={{
 								width: "100%",
 								boxSizing: "border-box",
@@ -1369,8 +1369,8 @@ export function CommandRepl({
 					) : null}
 				</div>
 				<div style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.45 }}>
-					Keys <u>q</u>/<u>j</u>/<u>k</u>/<u>d</u>/<u>a</u> switch command preset from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, <u>y</u> redoes,{" "}
-					<code>Ctrl+Z</code>/<code>Ctrl+Shift+Z</code> (except while typing in other text fields). Value-style commands: <code>h 2.5</code>, <code>n 0.4</code>,{" "}
+					Keys <u>q</u>/<u>j</u>/<u>k</u>/<u>d</u>/<u>a</u> switch interaction preset from anywhere (capture phase, clears the filter). <u>m</u> commits, <u>r</u> undoes, <u>y</u> redoes,{" "}
+					<code>Ctrl+Z</code>/<code>Ctrl+Shift+Z</code> (except while typing in other text fields). Value-style interactions: <code>h 2.5</code>, <code>n 0.4</code>,{" "}
 					<code>w 2 1.5</code>.
 				</div>
 				{lastCommitLine ? <div style={{ fontSize: 12 }}>Last commit: {lastCommitLine}</div> : null}
@@ -1412,7 +1412,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-renderer-r3f interaction adapter", () => {
-		it("maps pointer event data into command events", () => {
+		it("maps pointer event data into interaction events", () => {
 			const adapter = createR3FInteractionAdapter();
 			const event = {
 				point: { x: 1, y: 2, z: 3 },
@@ -1429,7 +1429,7 @@ if (import.meta.vitest) {
 		});
 
 		it("creates snap and selection metadata for topology targets", () => {
-			const targets = createCommandInteractionTargets({
+			const targets = createSpatialPickTargets({
 				schema: "spatial.topology/v1",
 				revision: 1,
 				vertices: [{ id: "v0", position: [1, 2, 3] }],
@@ -1442,7 +1442,7 @@ if (import.meta.vitest) {
 				clusters: [],
 			});
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
-			expect(createCommandInteractionEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
+			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
 				point: [1, 2, 3],
 				modifiers: { shift: true },
@@ -1453,7 +1453,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-renderer-r3f runtime", () => {
-		it("exposes an initial snapshot for the box command with a stub kernel", () => {
+		it("exposes an initial snapshot for the box interaction with a stub kernel", () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
@@ -1467,13 +1467,13 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxCommandSpec();
-			const runtime = createCommandRuntime(spec, {
+			const spec = buildBoxInteractionSpec();
+			const runtime = createInteractionRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			const snapshot = runtime.getSnapshot();
-			expect(snapshot.commandId).toBe(spec.id);
+			expect(snapshot.interactionId).toBe(spec.id);
 			expect(snapshot.state).toBe(spec.machine.initial);
 		});
 	});
@@ -1500,13 +1500,13 @@ if (import.meta.vitest) {
 			const hist = new DocumentHistory();
 			hist.record({
 				id: "m0",
-				commandId: "c",
+				interactionId: "c",
 				label: "L",
 				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null },
 				backwardsDiff: inv,
 			});
-			const spec = buildBoxCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
+			const spec = buildBoxInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
 			let snap = rt.getSnapshot();
 			let pres = getReplHistoryPresentation(spec, snap, hist);
 			expect(pres.canUndo).toBe(true);

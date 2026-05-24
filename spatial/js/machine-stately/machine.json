@@ -4,8 +4,8 @@
   "generatedAt": "2026-05-24T19:00:07.255Z",
   "machines": [
     {
-      "commandId": "primitive.box",
-      "commandVersion": "1.0.0",
+      "interactionId": "primitive.box",
+      "interactionVersion": "1.0.0",
       "label": "Box",
       "hostKey": "q",
       "initial": "idle",
@@ -577,8 +577,8 @@
       "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
     },
     {
-      "commandId": "feature.extrudeWire",
-      "commandVersion": "1.0.0",
+      "interactionId": "feature.extrudeWire",
+      "interactionVersion": "1.0.0",
       "label": "Extrude Wire",
       "hostKey": "j",
       "initial": "selectWire",
@@ -655,8 +655,8 @@
       "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
     },
     {
-      "commandId": "feature.offsetSurface",
-      "commandVersion": "1.0.0",
+      "interactionId": "feature.offsetSurface",
+      "interactionVersion": "1.0.0",
       "label": "Offset Surface",
       "hostKey": "k",
       "initial": "selectSurface",
@@ -734,8 +734,8 @@
       "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
     },
     {
-      "commandId": "measure.distance",
-      "commandVersion": "1.0.0",
+      "interactionId": "measure.distance",
+      "interactionVersion": "1.0.0",
       "label": "Distance",
       "hostKey": "d",
       "initial": "selectA",
@@ -809,8 +809,8 @@
       "statelyRoutingNote": "Runtime applies `applyTransition` (guards/actions) in core; `StatelyStateEngine` then sends `{ type: '__advance', commandKind, branch }` where `branch` is the transition index for that `from` state and `on` event (same order as `edges`)."
     },
     {
-      "commandId": "measure.area",
-      "commandVersion": "1.0.0",
+      "interactionId": "measure.area",
+      "interactionVersion": "1.0.0",
       "label": "Area",
       "hostKey": "a",
       "initial": "selectFace",

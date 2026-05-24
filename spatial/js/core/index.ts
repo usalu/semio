@@ -1,13 +1,13 @@
 // #region 🧲Header
-/** @emoji 🧭 `@spatial/js-core` — portable command spec runtime, `StateEngine` + `KernelAdapter` contracts, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
+/** @emoji 🧭 `@spatial/js-core` — portable interaction spec runtime, `ActionRegistry`, `StateEngine` + `KernelAdapter`, topology graph, derived views. See `spatial/schema/json` and `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 📥Fixtures
-import areaCommandJson from "../../fixtures/area.command.json" with { type: "json" };
-import boxCommandJson from "../../fixtures/box.command.json" with { type: "json" };
-import distanceCommandJson from "../../fixtures/distance.command.json" with { type: "json" };
-import extrudeWireCommandJson from "../../fixtures/extrude-wire.command.json" with { type: "json" };
-import offsetSurfaceCommandJson from "../../fixtures/offset-surface.command.json" with { type: "json" };
+import areaInteractionJson from "../../fixtures/area.interaction.json" with { type: "json" };
+import boxInteractionJson from "../../fixtures/box.interaction.json" with { type: "json" };
+import distanceInteractionJson from "../../fixtures/distance.interaction.json" with { type: "json" };
+import extrudeWireInteractionJson from "../../fixtures/extrude-wire.interaction.json" with { type: "json" };
+import offsetSurfaceInteractionJson from "../../fixtures/offset-surface.interaction.json" with { type: "json" };
 // #endregion 📥Fixtures
 
 // #region 🧮Vec
@@ -95,10 +95,10 @@ export function cellRef(id: string): CellRef {
 }
 // #endregion 🪪Refs
 
-// #region 🎮CommandEvent
-/** @emoji 🧭 Command input envelope; `kind` selects `machine.states[*].on` keys. */
-export type CommandEvent = { readonly kind: string; readonly [k: string]: unknown };
-// #endregion 🎮CommandEvent
+// #region 🎮InteractionEvent
+/** @emoji 🧭 Interaction input envelope; `kind` selects `machine.states[*].on` keys. */
+export type InteractionEvent = { readonly kind: string; readonly [k: string]: unknown };
+// #endregion 🎮InteractionEvent
 
 // #region 🪪Selection
 const TOPOLOGY_ENTITY_KINDS = new Set<string>([
@@ -123,7 +123,7 @@ export interface SelectionTarget {
 }
 
 /** @emoji 🪪 Host selection payload; `targets` filtered by `SelectionSpec.accept`. */
-export interface SelectionEvent extends CommandEvent {
+export interface SelectionEvent extends InteractionEvent {
 	readonly kind: "selection.changed";
 	readonly targets: readonly SelectionTarget[];
 }
@@ -445,7 +445,7 @@ export function evalGuard(expr: Expr, env: ExprEnv): boolean {
 // #endregion 🗺️Expr
 
 // #region 📜Spec
-/** @emoji 📜 Declared command-local context slots (`spatial.command/v1` `context`). */
+/** @emoji 📜 Declared interaction-local context slots (`spatial.interaction/v1` `context`). */
 export interface ContextFieldDecl {
 	readonly name: string;
 	readonly kind: "string" | "number" | "boolean" | "vec3" | "stringArray" | "unknown";
@@ -462,7 +462,7 @@ export interface TransitionSpec {
 	readonly target?: string;
 	readonly guard?: string;
 	readonly transient?: boolean;
-	readonly actions?: readonly ActionSpec[];
+	readonly effects?: readonly EffectSpec[];
 	readonly key?: string;
 	readonly label?: string;
 }
@@ -472,7 +472,7 @@ export type KernelQueryParams = {
 	readonly surfaceId: Expr;
 };
 
-export type ActionSpec =
+export type EffectSpec =
 	| { readonly op: "assign"; readonly target: PathTarget; readonly value: Expr }
 	| { readonly op: "clear"; readonly target: PathTarget }
 	| { readonly op: "append"; readonly target: PathTarget; readonly value: Expr }
@@ -486,22 +486,7 @@ export type ActionSpec =
 	| { readonly op: "resolveEditable" }
 	| { readonly op: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
 	| { readonly op: "clearDiagnostic"; readonly code: string }
-	| {
-			readonly op: "box.transform";
-			readonly transform:
-				| "aabbFromDiagonalCorners"
-				| "tripletRubber"
-				| "tripletCommit"
-				| "snapSquareFootprint"
-				| "setCubeHeightFromFootprint"
-				| "rubberCornerFromCenter"
-				| "rubberSquareFromCenter"
-				| "verticalFinalizeFootprint"
-				| "initPeakAboveOrigin"
-				| "peakFromOriginZ"
-				| "verticalRubberCorner"
-				| "cornerFromLengthWidth";
-	  };
+	| { readonly op: "action"; readonly action: string; readonly params?: Record<string, Expr> };
 
 export interface EventHandlerSpec {
 	readonly event: string;
@@ -531,24 +516,21 @@ export type DisplayItemSpec =
 	| { readonly kind: "curve"; readonly id: string; readonly role?: string }
 	| { readonly kind: "mesh"; readonly id: string; readonly role?: string };
 
-export type CommitOperationSpec =
-	| { readonly kind: "cell.createBox"; readonly cornerA: Expr; readonly cornerB: Expr; readonly height: Expr }
-	| { readonly kind: "wire.extrudeToCell"; readonly wireId: Expr; readonly distance: Expr; readonly direction: Expr }
-	| { readonly kind: "face.offset"; readonly faceIds: Expr; readonly distance: Expr }
-	| { readonly kind: "measure.distance"; readonly a: Expr; readonly b: Expr }
-	| { readonly kind: "measure.area"; readonly faceId: Expr }
-	| { readonly kind: "measure.volume"; readonly cellId: Expr };
+export type CommitOperationSpec = {
+	readonly kind: "action";
+	readonly action: string;
+	readonly params?: Record<string, Expr>;
+};
 
-/** @emoji 📜 Parsed static command document (`spatial.command/v1`). */
-export interface CommandSpec {
-	readonly schema: "spatial.command/v1";
+/** @emoji 📜 Parsed static interaction document (`spatial.interaction/v1`). */
+export interface InteractionSpec {
+	readonly schema: "spatial.interaction/v1";
 	readonly id: string;
 	readonly version: string;
 	readonly label?: string;
 	readonly context?: { readonly fields: readonly ContextFieldDecl[] };
 	readonly requires?: Record<string, unknown>;
 	readonly guards?: readonly NamedGuard[];
-	readonly history?: { excludeEvents?: readonly string[] };
 	readonly machine: {
 		readonly initial: string;
 		readonly states: readonly StateDefSpec[];
@@ -556,7 +538,7 @@ export interface CommandSpec {
 	readonly display?: {
 		readonly states?: readonly { readonly state: string; readonly items: readonly DisplayItemSpec[] }[];
 	};
-	readonly interaction?: CommandSpatialInteractionConfig;
+	readonly interaction?: InteractionSpatialConfig;
 	readonly commit: {
 		readonly when?: string;
 		readonly fromStates?: readonly string[];
@@ -565,8 +547,8 @@ export interface CommandSpec {
 	};
 }
 
-/** @emoji 🎮 Host + viewport hints for spatial picking (declared per command preset). */
-export interface CommandSpatialInteractionConfig {
+/** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction preset). */
+export interface InteractionSpatialConfig {
 	readonly spatialGroundPick?: boolean;
 	readonly pickDisabledStates?: readonly string[];
 	readonly groundPointerMoveStates?: readonly string[];
@@ -575,115 +557,19 @@ export interface CommandSpatialInteractionConfig {
 	readonly heightConfirmState?: string | null;
 }
 
-function guardNames(spec: CommandSpec): Set<string> {
+function guardNames(spec: InteractionSpec): Set<string> {
 	return new Set((spec.guards ?? []).map((g) => g.name));
 }
 
-function findState(spec: CommandSpec, name: string): StateDefSpec | undefined {
+function findState(spec: InteractionSpec, name: string): StateDefSpec | undefined {
 	return spec.machine.states.find((s) => s.name === name);
 }
 
-/** @emoji 🧾 Rewrites legacy `spatial.command/v1` JSON (`states` map, `guards` map, `on` map) into `StateDefSpec[]` + `NamedGuard[]` + `EventHandlerSpec[]`. */
-function legacyPathToTarget(path: string): PathTarget {
-	const segs = path
-		.split(".")
-		.filter(Boolean)
-		.map((name) => ({ kind: "field" as const, name }));
-	return { root: "context", segments: segs };
-}
-
-function migrateLegacyActionObject(act: unknown): unknown {
-	if (!act || typeof act !== "object") return act;
-	const a = act as Record<string, unknown>;
-	const op = a.op;
-	if (typeof op === "string" && op.startsWith("box.") && op !== "box.transform") {
-		return { op: "box.transform", transform: op.slice(4) };
-	}
-	if (op === "assign" && typeof a.path === "string" && a.target === undefined) {
-		const out = { ...a };
-		delete out.path;
-		out.target = legacyPathToTarget(a.path as string);
-		return out;
-	}
-	if (op === "clear" && typeof a.path === "string" && a.target === undefined) {
-		return { op: "clear", target: legacyPathToTarget(a.path as string) };
-	}
-	return act;
-}
-
-function migrateLegacyMachineTransitionActions(m: Record<string, unknown>): void {
-	const statesVal = m.states;
-	if (!Array.isArray(statesVal)) return;
-	for (const st of statesVal as Record<string, unknown>[]) {
-		const on = st.on as unknown[] | undefined;
-		if (!Array.isArray(on)) continue;
-		for (const h of on) {
-			if (!h || typeof h !== "object") continue;
-			const trs = (h as Record<string, unknown>).transitions as unknown[] | undefined;
-			if (!Array.isArray(trs)) continue;
-			for (const tr of trs) {
-				if (!tr || typeof tr !== "object") continue;
-				const acts = (tr as Record<string, unknown>).actions as unknown[] | undefined;
-				if (!Array.isArray(acts)) continue;
-				(tr as Record<string, unknown>).actions = acts.map((x) => migrateLegacyActionObject(x));
-			}
-		}
-	}
-}
-
-function normalizeLegacyDisplay(r: Record<string, unknown>): void {
-	const disp = r.display;
-	if (!disp || typeof disp !== "object") return;
-	const d = disp as Record<string, unknown>;
-	const st = d.states;
-	if (!st || typeof st !== "object" || Array.isArray(st)) return;
-	d.states = Object.entries(st as Record<string, unknown>).map(([state, items]) => ({
-		state,
-		items: Array.isArray(items) ? items : [],
-	}));
-}
-
-function normalizeLegacyCommandDocument(r: Record<string, unknown>): void {
-	const machine = r.machine;
-	if (!machine || typeof machine !== "object") return;
-	const m = machine as Record<string, unknown>;
-	const statesVal = m.states;
-	if (!statesVal || typeof statesVal !== "object") return;
-	if (Array.isArray(statesVal)) return;
-	const out: unknown[] = [];
-	for (const [stateName, stateBody] of Object.entries(statesVal as Record<string, unknown>)) {
-		if (!stateBody || typeof stateBody !== "object") continue;
-		const sb = { ...(stateBody as Record<string, unknown>) };
-		const legacyOn = sb.on;
-		if (legacyOn !== undefined && legacyOn !== null && typeof legacyOn === "object" && !Array.isArray(legacyOn)) {
-			const handlers: unknown[] = [];
-			for (const [event, rawTr] of Object.entries(legacyOn as Record<string, unknown>)) {
-				const transitions = (Array.isArray(rawTr) ? rawTr : [rawTr]).filter((x) => x !== null && typeof x === "object");
-				if (transitions.length > 0) {
-					handlers.push({ event, transitions });
-				}
-			}
-			sb.on = handlers;
-		}
-		out.push({ name: stateName, ...sb });
-	}
-	m.states = out;
-
-	const g = r.guards;
-	if (g !== undefined && g !== null && typeof g === "object" && !Array.isArray(g)) {
-		r.guards = Object.entries(g as Record<string, unknown>).map(([name, expr]) => ({ name, expr }));
-	}
-
-	normalizeLegacyDisplay(r);
-	migrateLegacyMachineTransitionActions(m);
-}
-
-/** @emoji 🧾 Validates and returns a `CommandSpec` or `null` when malformed. */
-export function parseCommandSpec(raw: unknown): CommandSpec | null {
+/** @emoji 🧾 Validates and returns an `InteractionSpec` or `null` when malformed. */
+export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = structuredClone(raw) as Record<string, unknown>;
-	if (r.schema !== "spatial.command/v1") return null;
-	normalizeLegacyCommandDocument(r);
+	if (r.schema !== "spatial.interaction/v1") return null;
 	if (typeof r.id !== "string" || typeof r.version !== "string") return null;
 	const machine = r.machine;
 	if (!machine || typeof machine !== "object") return null;
@@ -713,6 +599,12 @@ export function parseCommandSpec(raw: unknown): CommandSpec | null {
 				if (!h || typeof h !== "object") return null;
 				const he = h as Record<string, unknown>;
 				if (typeof he.event !== "string" || !Array.isArray(he.transitions)) return null;
+				for (const tr of he.transitions as unknown[]) {
+					if (!tr || typeof tr !== "object") return null;
+					const t = tr as Record<string, unknown>;
+					if (t.effects !== undefined && !Array.isArray(t.effects)) return null;
+					if (t.actions !== undefined) return null;
+				}
 			}
 		}
 	}
@@ -723,8 +615,8 @@ export function parseCommandSpec(raw: unknown): CommandSpec | null {
 	const op = c.operation;
 	if (!op || typeof op !== "object") return null;
 	const o = op as Record<string, unknown>;
-	if (typeof o.kind !== "string") return null;
-	const spec = r as unknown as CommandSpec;
+	if (o.kind !== "action" || typeof o.action !== "string") return null;
+	const spec = r as unknown as InteractionSpec;
 	const gn = guardNames(spec);
 	if (c.when !== undefined && typeof c.when === "string" && !gn.has(c.when)) return null;
 	for (const st of spec.machine.states) {
@@ -737,8 +629,8 @@ export function parseCommandSpec(raw: unknown): CommandSpec | null {
 	return spec;
 }
 
-/** @emoji 🧭 Normalizes a parsed command (currently identity). */
-export function compileCommand(spec: CommandSpec): CommandSpec {
+/** @emoji 🧭 Normalizes a parsed interaction (currently identity). */
+export function compileInteraction(spec: InteractionSpec): InteractionSpec {
 	return spec;
 }
 // #endregion 📜Spec
@@ -1089,6 +981,374 @@ export interface KernelAdapter {
 }
 // #endregion 🔌Kernel
 
+// #region 🧮ActionRegistry
+/** @emoji 🧩 Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
+export interface ActionContextPatch {
+	readonly set?: Record<string, unknown>;
+	readonly del?: readonly string[];
+}
+
+/** @emoji 🧩 Pure action output: optional topology `diff`, scalar `data`, or context `patch` for interactive preview fields. */
+export interface ActionResult<TData = unknown> {
+	readonly diff?: TopologyDiff;
+	readonly data?: TData;
+	readonly patch?: ActionContextPatch;
+}
+
+export type ActionFn<TParams = Record<string, unknown>, TData = unknown> = (
+	params: TParams,
+	ctx: { readonly kernel: KernelAdapter; readonly topology: TopologyGraph },
+) => Promise<ActionResult<TData>> | ActionResult<TData>;
+
+/** @emoji 🧩 Registerable pure spatial action (`id` is stable registry key). */
+export interface ActionDef<TParams = Record<string, unknown>, TData = unknown> {
+	readonly id: string;
+	readonly label?: string;
+	readonly run: ActionFn<TParams, TData>;
+}
+
+function applyActionPatchToContext(ctx: Record<string, unknown>, patch: ActionContextPatch | undefined): void {
+	if (!patch) return;
+	if (patch.set) Object.assign(ctx, patch.set);
+	if (patch.del) for (const k of patch.del) delete ctx[k];
+}
+
+/** @emoji 🧭 Runtime registry for pure `ActionDef` entries (built-ins + host overrides). */
+export class ActionRegistry {
+	private readonly defs = new Map<string, ActionDef>();
+
+	register(def: ActionDef): void {
+		this.defs.set(def.id, def);
+	}
+
+	get(id: string): ActionDef | null {
+		return this.defs.get(id) ?? null;
+	}
+
+	list(): readonly ActionDef[] {
+		return [...this.defs.values()];
+	}
+
+	static withBuiltins(): ActionRegistry {
+		const r = new ActionRegistry();
+		for (const d of builtinActionDefs()) r.register(d);
+		return r;
+	}
+}
+
+function builtinActionDefs(): ActionDef[] {
+	const ctxOf = (p: Record<string, unknown>) => p.__context as Record<string, unknown>;
+	const boxAabbFromDiagonalCorners: ActionDef = {
+		id: "box.aabbFromDiagonalCorners",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const pt = (ev as { point?: unknown }).point;
+			const P = isVec3(pt) ? pt : null;
+			const a = ctx.diagA;
+			if (!isVec3(a) || !P) return {};
+			const z = a[2];
+			return {
+				patch: {
+					set: {
+						origin: [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as Vec3,
+						corner: [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as Vec3,
+					},
+					del: ["diagA"],
+				},
+			};
+		},
+	};
+	const boxTripletRubber: ActionDef = {
+		id: "box.tripletRubber",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const p0 = ctx.p0;
+			const p1 = ctx.p1;
+			if (!isVec3(p0) || !isVec3(p1) || !P) return {};
+			const z = p0[2];
+			return {
+				patch: {
+					set: {
+						previewA: [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as Vec3,
+						previewB: [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as Vec3,
+					},
+				},
+			};
+		},
+	};
+	const boxTripletCommit: ActionDef = {
+		id: "box.tripletCommit",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const p0 = ctx.p0;
+			const p1 = ctx.p1;
+			if (!isVec3(p0) || !isVec3(p1) || !P) return {};
+			const z = p0[2];
+			return {
+				patch: {
+					set: {
+						origin: [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as Vec3,
+						corner: [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as Vec3,
+					},
+					del: ["p0", "p1", "previewA", "previewB"],
+				},
+			};
+		},
+	};
+	const boxSnapSquareFootprint: ActionDef = {
+		id: "box.snapSquareFootprint",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const o = ctx.origin;
+			if (!isVec3(o) || !P) return {};
+			const dx = P[0] - o[0];
+			const dy = P[1] - o[1];
+			const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
+			const sx = dx >= 0 ? 1 : -1;
+			const sy = dy >= 0 ? 1 : -1;
+			return { patch: { set: { corner: [o[0] + sx * s, o[1] + sy * s, o[2]] as Vec3 } } };
+		},
+	};
+	const boxSetCubeHeightFromFootprint: ActionDef = {
+		id: "box.setCubeHeightFromFootprint",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const o = ctx.origin;
+			const c = ctx.corner;
+			if (!isVec3(o) || !isVec3(c)) return {};
+			const dx = Math.abs(c[0] - o[0]);
+			const dy = Math.abs(c[1] - o[1]);
+			return { patch: { set: { height: Math.max(dx, dy, 0.01) } } };
+		},
+	};
+	const boxRubberCornerFromCenter: ActionDef = {
+		id: "box.rubberCornerFromCenter",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const c = ctx.rectCenter;
+			if (!isVec3(c) || !P) return {};
+			return {
+				patch: {
+					set: {
+						origin: [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
+						corner: [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
+					},
+				},
+			};
+		},
+	};
+	const boxRubberSquareFromCenter: ActionDef = {
+		id: "box.rubberSquareFromCenter",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const c = ctx.rectCenter;
+			if (!isVec3(c) || !P) return {};
+			const ox = Math.min(2 * c[0] - P[0], P[0]);
+			const oy = Math.min(2 * c[1] - P[1], P[1]);
+			const cx = Math.max(2 * c[0] - P[0], P[0]);
+			const cy = Math.max(2 * c[1] - P[1], P[1]);
+			const w = cx - ox;
+			const d = cy - oy;
+			const s = Math.max(w, d, 1e-9);
+			return {
+				patch: {
+					set: {
+						origin: [c[0] - s / 2, c[1] - s / 2, c[2]] as Vec3,
+						corner: [c[0] + s / 2, c[1] + s / 2, c[2]] as Vec3,
+					},
+				},
+			};
+		},
+	};
+	const boxVerticalFinalizeFootprint: ActionDef = {
+		id: "box.verticalFinalizeFootprint",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const o = ctx.origin;
+			const pk = ctx.peak;
+			if (!isVec3(o) || !isVec3(pk) || !P) return {};
+			return {
+				patch: {
+					set: { corner: [P[0], P[1], o[2]] as Vec3, height: Math.max(0.01, Math.abs(pk[2] - o[2])) },
+					del: ["peak"],
+				},
+			};
+		},
+	};
+	const boxInitPeakAboveOrigin: ActionDef = {
+		id: "box.initPeakAboveOrigin",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const o = ctx.origin;
+			if (!isVec3(o)) return {};
+			return { patch: { set: { peak: [o[0], o[1], o[2] + 0.25] as Vec3 } } };
+		},
+	};
+	const boxPeakFromOriginZ: ActionDef = {
+		id: "box.peakFromOriginZ",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const o = ctx.origin;
+			if (!isVec3(o) || !P) return {};
+			return { patch: { set: { peak: [o[0], o[1], P[2]] as Vec3 } } };
+		},
+	};
+	const boxVerticalRubberCorner: ActionDef = {
+		id: "box.verticalRubberCorner",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
+			const o = ctx.origin;
+			if (!isVec3(o) || !P) return {};
+			return { patch: { set: { corner: [P[0], P[1], o[2]] as Vec3 } } };
+		},
+	};
+	const boxCornerFromLengthWidth: ActionDef = {
+		id: "box.cornerFromLengthWidth",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const ev = params.__event as InteractionEvent;
+			const val = (ev as { value?: unknown }).value;
+			const o = ctx.origin;
+			if (!isVec3(o) || val === null || typeof val !== "object") return {};
+			const rec = val as Record<string, unknown>;
+			const L = Number(rec.length);
+			const W = Number(rec.width);
+			if (!Number.isFinite(L) || !Number.isFinite(W)) return {};
+			return { patch: { set: { corner: [o[0] + L, o[1] + W, o[2]] as Vec3 } } };
+		},
+	};
+	const primitiveCreateBoxFromCorners: ActionDef = {
+		id: "primitive.createBoxFromCorners",
+		run: async (params, { kernel }) => {
+			const cornerA = params.cornerA as Vec3;
+			const cornerB = params.cornerB as Vec3;
+			const height = Number(params.height);
+			let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
+			if (kernel.createBoxFromCornersDiff) {
+				const r = await kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
+				diff = r.diff;
+			} else {
+				const cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
+				const preview = await kernel.tessellate(cell, 1e-3);
+				diff = meshFaceTopologyDiff(preview, `f-${kernel.id}`);
+			}
+			return { diff };
+		},
+	};
+	const primitiveCreateBoxFrom3Points: ActionDef = {
+		id: "primitive.createBoxFrom3Points",
+		run: async (params, ctx) => {
+			const p0 = params.p0 as Vec3;
+			const p1 = params.p1 as Vec3;
+			const p2 = params.p2 as Vec3;
+			if (!isVec3(p0) || !isVec3(p1) || !isVec3(p2)) return {};
+			const z = p0[2];
+			const cornerA: Vec3 = [Math.min(p0[0], p1[0], p2[0]), Math.min(p0[1], p1[1], p2[1]), z];
+			const cornerB: Vec3 = [Math.max(p0[0], p1[0], p2[0]), Math.max(p0[1], p1[1], p2[1]), z];
+			const dx = Math.abs(cornerB[0] - cornerA[0]);
+			const dy = Math.abs(cornerB[1] - cornerA[1]);
+			const height = Math.max(dx, dy, 0.01);
+			return await Promise.resolve(primitiveCreateBoxFromCorners.run({ cornerA, cornerB, height }, ctx));
+		},
+	};
+	const featureExtrudeWireToCell: ActionDef = {
+		id: "feature.extrudeWireToCell",
+		run: async (params, { kernel }) => {
+			const input = {
+				wireId: String(params.wireId),
+				distance: Number(params.distance),
+				direction: params.direction as Vec3,
+			};
+			let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
+			if (kernel.extrudeWireDiff) diff = (await kernel.extrudeWireDiff(input)).diff;
+			else {
+				const cell = (await kernel.extrudeWire?.(input)) ?? null;
+				if (cell) {
+					const preview = await kernel.tessellate(cell, 1e-3);
+					diff = meshFaceTopologyDiff(preview, `f${kernel.id}`);
+				}
+			}
+			return { diff };
+		},
+	};
+	const featureOffsetFaces: ActionDef = {
+		id: "feature.offsetFaces",
+		run: async (params, { kernel }) => {
+			const faceIdsRaw = params.faceIds;
+			const faceIds = Array.isArray(faceIdsRaw) ? (faceIdsRaw as unknown[]).map(String) : [];
+			const diff =
+				(await kernel.offsetFacesDiff?.({ faceIds, distance: Number(params.distance) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
+			return { diff };
+		},
+	};
+	const measureVertexDistance: ActionDef = {
+		id: "measure.vertexDistance",
+		run: async (params, { kernel, topology }) => {
+			const a = params.a as VertexRef;
+			const b = params.b as VertexRef;
+			if (!kernel.vertexDistance) throw new Error("kernel.vertexDistance required");
+			const data = await kernel.vertexDistance(a, b, topology);
+			return { data };
+		},
+	};
+	const measureFaceArea: ActionDef = {
+		id: "measure.faceArea",
+		run: async (params, { kernel, topology }) => {
+			const fid = params.faceId as FaceRef;
+			if (!kernel.faceArea) throw new Error("kernel.faceArea required");
+			const data = await kernel.faceArea(fid, topology);
+			return { data };
+		},
+	};
+	const measureCellVolume: ActionDef = {
+		id: "measure.cellVolume",
+		run: async (params, { kernel }) => {
+			const cid = params.cellId as CellRef;
+			const data = await (kernel.cellVolume?.(cid) ?? kernel.volume(cid));
+			return { data };
+		},
+	};
+	return [
+		boxAabbFromDiagonalCorners,
+		boxTripletRubber,
+		boxTripletCommit,
+		boxSnapSquareFootprint,
+		boxSetCubeHeightFromFootprint,
+		boxRubberCornerFromCenter,
+		boxRubberSquareFromCenter,
+		boxVerticalFinalizeFootprint,
+		boxInitPeakAboveOrigin,
+		boxPeakFromOriginZ,
+		boxVerticalRubberCorner,
+		boxCornerFromLengthWidth,
+		primitiveCreateBoxFromCorners,
+		primitiveCreateBoxFrom3Points,
+		featureExtrudeWireToCell,
+		featureOffsetFaces,
+		measureVertexDistance,
+		measureFaceArea,
+		measureCellVolume,
+	];
+}
+// #endregion 🧮ActionRegistry
+
 // #region 🪞DerivedViews
 /** @emoji 🪞 Semantic `Surface` view over one or more faces (exposure × stance). */
 export interface SurfaceView {
@@ -1153,7 +1413,7 @@ export class DerivedViewService {
 // #endregion 🪞DerivedViews
 
 // #region 🎬Statechart
-/** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips command-local undo). */
+/** @emoji 🎭 Result of `StateEngine.send` / `applyTransition` (`transient` skips interaction-local undo). */
 export interface StateEngineSendResult {
 	readonly ok: boolean;
 	readonly transient?: boolean;
@@ -1165,22 +1425,27 @@ export interface ApplyTransitionResult extends StateEngineSendResult {
 	readonly branchIndex: number;
 }
 
-/** @emoji 🎭 Pluggable state backend for `CommandRuntime` (pure TS, XState, …). */
+/** @emoji 🎭 Pluggable state backend for `InteractionRuntime` (pure TS, XState, …). */
 export interface StateEngine {
 	getState(): string;
 	getContext(): Record<string, unknown>;
 	reset(): void;
 	restore(state: string, context: Record<string, unknown>): void;
-	send(event: CommandEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>;
+	send(
+		event: InteractionEvent,
+		kernel?: KernelAdapter,
+		topology?: TopologyGraph,
+		actions?: ActionRegistry,
+	): Promise<StateEngineSendResult>;
 }
 
-/** @emoji 🎭 Instantiates a `StateEngine` for a compiled `CommandSpec`. */
+/** @emoji 🎭 Instantiates a `StateEngine` for a compiled `InteractionSpec`. */
 export interface StateEngineProvider {
 	readonly id: string;
-	create(spec: CommandSpec): StateEngine;
+	create(spec: InteractionSpec): StateEngine;
 }
 
-function lookupGuard(spec: CommandSpec, name: string): Expr | undefined {
+function lookupGuard(spec: InteractionSpec, name: string): Expr | undefined {
 	return spec.guards?.find((g) => g.name === name)?.expr;
 }
 
@@ -1192,130 +1457,17 @@ function kernelQueryParamsToRecord(p: KernelQueryParams, env: ExprEnv): Record<s
 	return {};
 }
 
-function applyBoxGeometryTransform(ctx: Record<string, unknown>, event: CommandEvent, transform: ActionSpec & { op: "box.transform" }): void {
-	const pt = (event as { point?: unknown }).point;
-	const P = isVec3(pt) ? pt : null;
-	const val = (event as { value?: unknown }).value;
-	const op = transform.transform;
-	if (op === "aabbFromDiagonalCorners") {
-		const a = ctx.diagA;
-		if (!isVec3(a) || !P) return;
-		const z = a[2];
-		ctx.origin = [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as unknown as Vec3;
-		ctx.corner = [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as unknown as Vec3;
-		delete ctx.diagA;
-		return;
-	}
-	if (op === "tripletRubber") {
-		const p0 = ctx.p0;
-		const p1 = ctx.p1;
-		if (!isVec3(p0) || !isVec3(p1) || !P) return;
-		const z = p0[2];
-		ctx.previewA = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		ctx.previewB = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		return;
-	}
-	if (op === "tripletCommit") {
-		const p0 = ctx.p0;
-		const p1 = ctx.p1;
-		if (!isVec3(p0) || !isVec3(p1) || !P) return;
-		const z = p0[2];
-		ctx.origin = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		ctx.corner = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
-		delete ctx.p0;
-		delete ctx.p1;
-		delete ctx.previewA;
-		delete ctx.previewB;
-		return;
-	}
-	if (op === "snapSquareFootprint") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		const dx = P[0] - o[0];
-		const dy = P[1] - o[1];
-		const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
-		const sx = dx >= 0 ? 1 : -1;
-		const sy = dy >= 0 ? 1 : -1;
-		ctx.corner = [o[0] + sx * s, o[1] + sy * s, o[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "setCubeHeightFromFootprint") {
-		const o = ctx.origin;
-		const c = ctx.corner;
-		if (!isVec3(o) || !isVec3(c)) return;
-		const dx = Math.abs(c[0] - o[0]);
-		const dy = Math.abs(c[1] - o[1]);
-		ctx.height = Math.max(dx, dy, 0.01);
-		return;
-	}
-	if (op === "rubberCornerFromCenter") {
-		const c = ctx.rectCenter;
-		if (!isVec3(c) || !P) return;
-		ctx.origin = [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
-		ctx.corner = [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "rubberSquareFromCenter") {
-		const c = ctx.rectCenter;
-		if (!isVec3(c) || !P) return;
-		const ox = Math.min(2 * c[0] - P[0], P[0]);
-		const oy = Math.min(2 * c[1] - P[1], P[1]);
-		const cx = Math.max(2 * c[0] - P[0], P[0]);
-		const cy = Math.max(2 * c[1] - P[1], P[1]);
-		const w = cx - ox;
-		const d = cy - oy;
-		const s = Math.max(w, d, 1e-9);
-		ctx.origin = [c[0] - s / 2, c[1] - s / 2, c[2]] as unknown as Vec3;
-		ctx.corner = [c[0] + s / 2, c[1] + s / 2, c[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "verticalFinalizeFootprint") {
-		const o = ctx.origin;
-		const pk = ctx.peak;
-		if (!isVec3(o) || !isVec3(pk) || !P) return;
-		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
-		ctx.height = Math.max(0.01, Math.abs(pk[2] - o[2]));
-		delete ctx.peak;
-		return;
-	}
-	if (op === "initPeakAboveOrigin") {
-		const o = ctx.origin;
-		if (!isVec3(o)) return;
-		ctx.peak = [o[0], o[1], o[2] + 0.25] as unknown as Vec3;
-		return;
-	}
-	if (op === "peakFromOriginZ") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		ctx.peak = [o[0], o[1], P[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "verticalRubberCorner") {
-		const o = ctx.origin;
-		if (!isVec3(o) || !P) return;
-		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
-		return;
-	}
-	if (op === "cornerFromLengthWidth") {
-		const o = ctx.origin;
-		if (!isVec3(o) || val === null || typeof val !== "object") return;
-		const rec = val as Record<string, unknown>;
-		const L = Number(rec.length);
-		const W = Number(rec.width);
-		if (!Number.isFinite(L) || !Number.isFinite(W)) return;
-		ctx.corner = [o[0] + L, o[1] + W, o[2]] as unknown as Vec3;
-		return;
-	}
-}
-
-/** @emoji 🎬 Applies one declarative action (async kernel queries + `box.transform`). */
-export async function applyActionAsync(
-	a: ActionSpec,
+/** @emoji 🎬 Applies one declarative transition `EffectSpec` (async kernel queries + registered `ActionRegistry` calls). */
+export async function applyEffectAsync(
+	a: EffectSpec,
 	ctx: Record<string, unknown>,
-	event: CommandEvent,
-	kernel?: KernelAdapter,
+	event: InteractionEvent,
+	kernel: KernelAdapter | undefined,
+	topology: TopologyGraph,
+	actions?: ActionRegistry,
 ): Promise<void> {
 	const env: ExprEnv = { context: ctx, event };
+	const reg = actions ?? ActionRegistry.withBuiltins();
 	if (a.op === "assign") {
 		const v = evalExpr(a.value, env);
 		writePathTarget(a.target, env, v);
@@ -1332,19 +1484,30 @@ export async function applyActionAsync(
 		const params = kernelQueryParamsToRecord(a.params, env);
 		const res = await kernel.query(a.query, params);
 		writePathTarget(a.assignTo, env, res);
-	} else if (a.op === "box.transform") {
-		applyBoxGeometryTransform(ctx, event, a);
+	} else if (a.op === "action") {
+		const def = reg.get(a.action);
+		if (!def) return;
+		const paramBag: Record<string, unknown> = { __context: ctx, __event: event };
+		for (const [k, ex] of Object.entries(a.params ?? {})) {
+			paramBag[k] = evalExpr(ex, env);
+		}
+		const k = kernel ?? (null as unknown as KernelAdapter);
+		const r = await Promise.resolve(def.run(paramBag, { kernel: k, topology }));
+		if (r.patch) applyActionPatchToContext(ctx, r.patch);
 	}
 }
 
 /** @emoji 🎬 First matching transition for `event` from `state`; mutates `context` in place. */
 export async function applyTransition(
-	spec: CommandSpec,
+	spec: InteractionSpec,
 	state: string,
 	context: Record<string, unknown>,
-	event: CommandEvent,
+	event: InteractionEvent,
 	kernel?: KernelAdapter,
+	actions?: ActionRegistry,
+	topology?: TopologyGraph,
 ): Promise<ApplyTransitionResult> {
+	const topo = topology ?? new TopologyGraph();
 	const st = findState(spec, state);
 	const handler = st?.on?.find((h) => h.event === event.kind);
 	if (!handler) return { ok: false, nextState: state, branchIndex: -1 };
@@ -1356,8 +1519,8 @@ export async function applyTransition(
 			const g = lookupGuard(spec, tr.guard);
 			if (!g || !evalGuard(g, { context, event })) continue;
 		}
-		for (const act of tr.actions ?? []) {
-			await applyActionAsync(act, context, event, kernel);
+		for (const eff of tr.effects ?? []) {
+			await applyEffectAsync(eff, context, event, kernel, topo, actions);
 		}
 		let nextState = state;
 		if (tr.target) {
@@ -1372,7 +1535,7 @@ export async function applyTransition(
 }
 
 /** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
-export interface CommandSpatialInteractionResolved {
+export interface InteractionSpatialResolved {
 	readonly spatialGroundPick: boolean;
 	readonly pickDisabledStates: readonly string[];
 	readonly groundPointerMoveStates: readonly string[];
@@ -1381,8 +1544,8 @@ export interface CommandSpatialInteractionResolved {
 	readonly heightConfirmState: string | null;
 }
 
-/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `CommandSpatialView`. */
-export function mergeCommandSpatialInteraction(spec: CommandSpec): CommandSpatialInteractionResolved {
+/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `InteractionSpatialView`. */
+export function mergeInteractionSpatial(spec: InteractionSpec): InteractionSpatialResolved {
 	const i = spec.interaction;
 	const basePickDisabled = ["idle", "ready", "committed"] as const;
 	return {
@@ -1398,17 +1561,17 @@ export function mergeCommandSpatialInteraction(spec: CommandSpec): CommandSpatia
 /** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
 const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
 
-export interface CommandKeybindRow {
+export interface InteractionKeybindRow {
 	readonly eventKind: string;
 	readonly key: string;
 	readonly label: string;
 }
 
 /** @emoji ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
-export function listKeyedCommandTransitions(spec: CommandSpec, state: string): readonly CommandKeybindRow[] {
+export function listKeyedInteractionTransitions(spec: InteractionSpec, state: string): readonly InteractionKeybindRow[] {
 	const st = findState(spec, state);
 	if (!st?.on) return [];
-	const out: CommandKeybindRow[] = [];
+	const out: InteractionKeybindRow[] = [];
 	for (const h of st.on) {
 		if (HOST_KEYBIND_EXCLUDED_KINDS.has(h.event)) continue;
 		for (const tr of h.transitions) {
@@ -1423,12 +1586,12 @@ export function listKeyedCommandTransitions(spec: CommandSpec, state: string): r
 	return out;
 }
 
-/** @emoji 🎬 Minimal async statechart runner for `CommandSpec.machine`. */
+/** @emoji 🎬 Minimal async statechart runner for `InteractionSpec.machine`. */
 export class StatechartRuntime implements StateEngine {
 	private state: string;
 	private context: Record<string, unknown> = {};
 
-	constructor(private readonly spec: CommandSpec) {
+	constructor(private readonly spec: InteractionSpec) {
 		this.state = spec.machine.initial;
 	}
 
@@ -1445,15 +1608,20 @@ export class StatechartRuntime implements StateEngine {
 		this.context = {};
 	}
 
-	/** @emoji 🎬 Restores a prior `state` + `context` snapshot (factory-local undo). */
+	/** @emoji 🎬 Restores a prior `state` + `context` snapshot (interaction-local undo). */
 	restore(state: string, context: Record<string, unknown>): void {
 		this.state = state;
 		this.context = context;
 	}
 
 	/** @emoji 🎬 Applies one external event; returns whether a transition fired. */
-	async send(event: CommandEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
-		const r = await applyTransition(this.spec, this.state, this.context, event, kernel);
+	async send(
+		event: InteractionEvent,
+		kernel?: KernelAdapter,
+		topology?: TopologyGraph,
+		actions?: ActionRegistry,
+	): Promise<StateEngineSendResult> {
+		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, topology);
 		if (r.ok) this.state = r.nextState;
 		return { ok: r.ok, transient: r.transient };
 	}
@@ -1462,7 +1630,7 @@ export class StatechartRuntime implements StateEngine {
 /** @emoji 🎭 Default in-process engine (no XState); same semantics as `applyTransition`. */
 export const pureTsStateEngineProvider: StateEngineProvider = {
 	id: "pure-ts",
-	create(spec: CommandSpec): StateEngine {
+	create(spec: InteractionSpec): StateEngine {
 		return new StatechartRuntime(spec);
 	},
 };
@@ -1484,7 +1652,7 @@ export interface DisplayModel {
 }
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
-export function resolveDisplay(spec: CommandSpec, state: string, context: Record<string, unknown>): DisplayModel {
+export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>): DisplayModel {
 	const env: ExprEnv = { context };
 	const section = spec.display?.states?.find((s) => s.state === state);
 	const raw = section?.items ?? [];
@@ -1577,24 +1745,24 @@ export interface ModelDocument {
 
 // #region 📨Response
 /** @emoji 📨 Portable command outcome envelope (`diff` + `data` + messages). */
-export interface CommandMessage {
+export interface InteractionMessage {
 	readonly code: string;
 	readonly message: string;
 	readonly path?: string;
 }
 
-/** @emoji 📨 Result returned by `CommandRuntime.commit` (read/write topology + scalar `data`). */
-export interface CommandResponse<TData = unknown> {
+/** @emoji 📨 Result returned by `InteractionRuntime.commit` (read/write topology + scalar `data`). */
+export interface InteractionResponse<TData = unknown> {
 	readonly ok: boolean;
-	readonly errors: readonly CommandMessage[];
-	readonly warnings: readonly CommandMessage[];
-	readonly infos: readonly CommandMessage[];
+	readonly errors: readonly InteractionMessage[];
+	readonly warnings: readonly InteractionMessage[];
+	readonly infos: readonly InteractionMessage[];
 	readonly diff: TopologyDiff;
 	readonly data: TData | null;
 }
 
 /** @emoji 📨 Default empty success payload for guards and early returns. */
-export const EMPTY_COMMAND_RESPONSE: CommandResponse<null> = {
+export const EMPTY_INTERACTION_RESPONSE: InteractionResponse<null> = {
 	ok: true,
 	errors: [],
 	warnings: [],
@@ -1606,9 +1774,9 @@ export const EMPTY_COMMAND_RESPONSE: CommandResponse<null> = {
 /** @emoji 📄 One committed topology change plus inverse diff for document-level undo/redo. */
 export interface Modification {
 	readonly id: string;
-	readonly commandId: string;
+	readonly interactionId: string;
 	readonly label: string;
-	readonly result: CommandResponse;
+	readonly result: InteractionResponse;
 	readonly backwardsDiff: TopologyDiff;
 }
 
@@ -1651,7 +1819,7 @@ export class DocumentHistory {
 }
 // #endregion 📨Response
 
-// #region 📜Command
+// #region 📜Interaction
 /** @emoji 🩺 Non-fatal runtime diagnostic surfaced in snapshots. */
 export interface Diagnostic {
 	readonly severity: "info" | "warning" | "error";
@@ -1659,60 +1827,58 @@ export interface Diagnostic {
 	readonly message: string;
 }
 
-/** @emoji 📜 Serializable command snapshot for hosts and renderers. */
-export interface CommandSnapshot {
-	readonly commandId: string;
+/** @emoji 📜 Serializable interaction snapshot for hosts and renderers. */
+export interface InteractionSnapshot {
+	readonly interactionId: string;
 	readonly state: string;
 	readonly revision: number;
 	readonly context: Record<string, unknown>;
 	readonly display: DisplayModel;
-	readonly spatialInteraction: CommandSpatialInteractionResolved;
+	readonly spatialInteraction: InteractionSpatialResolved;
 	readonly capabilities: { readonly canCommit: boolean; readonly canCancel: boolean; readonly canUndo: boolean; readonly canRedo: boolean };
 	readonly diagnostics: readonly Diagnostic[];
-	readonly lastResponse: CommandResponse | null;
+	readonly lastResponse: InteractionResponse | null;
 }
 
-export interface CommandRuntimeOptions {
+export interface InteractionRuntimeOptions {
 	readonly kernel: KernelAdapter;
 	readonly document: ModelDocument;
 	readonly history?: DocumentHistory;
 	readonly stateEngine?: StateEngineProvider;
+	readonly actions?: ActionRegistry;
 }
 
 /** @emoji 🧭 True while the statechart is between `machine.initial` and a terminal `committed` state. */
-export function isCommandSessionActive(spec: CommandSpec, state: string): boolean {
+export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
 	return state !== spec.machine.initial && state !== "committed";
 }
 
-/** @emoji 📜 Headless + interactive command controller (`send`, `commit`, `undo`). */
-export class CommandRuntime {
+/** @emoji 📜 Headless + interactive interaction controller (`send`, `commit`, `undo`). */
+export class InteractionRuntime {
 	private readonly sm: StateEngine;
+	private readonly actions: ActionRegistry;
 	private revision = 0;
 	private readonly listeners = new Set<() => void>();
 	private readonly snapUndoStack: { state: string; context: string }[] = [];
 	private readonly snapRedoStack: { state: string; context: string }[] = [];
-	private snapshotCache: CommandSnapshot | null = null;
-	private lastResponse: CommandResponse | null = null;
-	private readonly pendingSnapshotInfos: CommandMessage[] = [];
+	private snapshotCache: InteractionSnapshot | null = null;
+	private lastResponse: InteractionResponse | null = null;
+	private readonly pendingSnapshotInfos: InteractionMessage[] = [];
 
 	constructor(
-		private readonly spec: CommandSpec,
-		private readonly opts: CommandRuntimeOptions,
+		private readonly spec: InteractionSpec,
+		private readonly opts: InteractionRuntimeOptions,
 	) {
 		this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec);
+		this.actions = opts.actions ?? ActionRegistry.withBuiltins();
 	}
 
 	private cloneCtx(c: Record<string, unknown>): Record<string, unknown> {
 		return JSON.parse(JSON.stringify(c)) as Record<string, unknown>;
 	}
 
-	private excludeFromHistory(kind: string): boolean {
-		const xs = this.spec.history?.excludeEvents ?? [];
-		return xs.includes(kind);
-	}
-
-	private inActiveCommand(): boolean {
-		return isCommandSessionActive(this.spec, this.sm.getState());
+	private inActiveInteraction(): boolean {
+		return isInteractionSessionActive(this.spec, this.sm.getState());
 	}
 
 	private canCommit(): boolean {
@@ -1733,20 +1899,20 @@ export class CommandRuntime {
 		return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
 	}
 
-	getSnapshot(): CommandSnapshot {
+	getSnapshot(): InteractionSnapshot {
 		if (this.snapshotCache) return this.snapshotCache;
 		const ctx = this.sm.getContext();
 		const st = this.sm.getState();
 		const display = resolveDisplay(this.spec, st, ctx);
-		const spatialInteraction = mergeCommandSpatialInteraction(this.spec);
+		const spatialInteraction = mergeInteractionSpatial(this.spec);
 		const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
 		const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
 		const hist = this.opts.history;
-		const active = this.inActiveCommand();
+		const active = this.inActiveInteraction();
 		const canUndo = this.snapUndoStack.length > 0 || (!active && Boolean(hist?.peekUndo()));
 		const canRedo = this.snapRedoStack.length > 0 || (!active && Boolean(hist?.peekRedo()));
 		this.snapshotCache = {
-			commandId: this.spec.id,
+			interactionId: this.spec.id,
 			state: st,
 			revision: this.revision,
 			context: this.cloneCtx(ctx),
@@ -1776,7 +1942,7 @@ export class CommandRuntime {
 	}
 
 	/** @emoji 📜 Dispatches a typed command event through the statechart + optional kernel queries. */
-	async send(event: CommandEvent): Promise<void> {
+	async send(event: InteractionEvent): Promise<void> {
 		if (event.kind === "selection.changed") {
 			const sel = getActiveSelectionSpec(this.spec, this.sm.getState());
 			const sev = event as SelectionEvent;
@@ -1791,9 +1957,9 @@ export class CommandRuntime {
 		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const r = await this.sm.send(event, this.opts.kernel);
+		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions);
 		if (!r.ok) return;
-		if (!r.transient && !this.excludeFromHistory(event.kind)) {
+		if (!r.transient) {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
 		}
@@ -1801,7 +1967,7 @@ export class CommandRuntime {
 	}
 
 	undo(): void {
-		if (this.inActiveCommand()) {
+		if (this.inActiveInteraction()) {
 			const snap = this.snapUndoStack.pop();
 			if (!snap) return;
 			const curState = this.sm.getState();
@@ -1829,7 +1995,7 @@ export class CommandRuntime {
 	}
 
 	redo(): void {
-		if (this.inActiveCommand()) {
+		if (this.inActiveInteraction()) {
 			const snap = this.snapRedoStack.pop();
 			if (!snap) return;
 			const curState = this.sm.getState();
@@ -1864,9 +2030,9 @@ export class CommandRuntime {
 	}
 
 	/** @emoji 📜 Executes `commit.operation` against `kernel`, applies `diff` to `document.topology`, records history. */
-	async commit(): Promise<CommandResponse> {
-		const fail = (code: string, message: string): CommandResponse => {
-			const res: CommandResponse = {
+	async commit(): Promise<InteractionResponse> {
+		const fail = (code: string, message: string): InteractionResponse => {
+			const res: InteractionResponse = {
 				ok: false,
 				errors: [{ code, message }],
 				warnings: [],
@@ -1879,8 +2045,8 @@ export class CommandRuntime {
 			return res;
 		};
 		const st = this.sm.getState();
-		if (st === "committed") return fail("command.alreadyCommitted", "Command already committed.");
-		if (!this.canCommit()) return fail("command.cannotCommit", "Commit guard or fromStates rejected this commit.");
+		if (st === "committed") return fail("interaction.alreadyCommitted", "Interaction already committed.");
+		if (!this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
 		const env: ExprEnv = { context: ctx };
@@ -1889,54 +2055,18 @@ export class CommandRuntime {
 		let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
 		let data: unknown = null;
 		try {
-			if (op.kind === "cell.createBox") {
-				const cornerA = evalExpr(op.cornerA, env) as Vec3;
-				const cornerB = evalExpr(op.cornerB, env) as Vec3;
-				const height = Number(evalExpr(op.height, env));
-				if (k.createBoxFromCornersDiff) {
-					const r = await k.createBoxFromCornersDiff({ cornerA, cornerB, height });
-					diff = r.diff;
-				} else {
-					const cell = await k.createBoxFromCorners({ cornerA, cornerB, height });
-					const preview = await k.tessellate(cell, 1e-3);
-					diff = meshFaceTopologyDiff(preview, `f${this.spec.id}-${this.revision}`);
-				}
-			} else if (op.kind === "wire.extrudeToCell") {
-				const input = {
-					wireId: String(evalExpr(op.wireId, env)),
-					distance: Number(evalExpr(op.distance, env)),
-					direction: evalExpr(op.direction, env) as Vec3,
-				};
-				if (k.extrudeWireDiff) {
-					diff = (await k.extrudeWireDiff(input)).diff;
-				} else {
-					const cell = (await k.extrudeWire?.(input)) ?? null;
-					if (cell) {
-						const preview = await k.tessellate(cell, 1e-3);
-						diff = meshFaceTopologyDiff(preview, `f${this.spec.id}-${this.revision}`);
-					}
-				}
-			} else if (op.kind === "face.offset") {
-				const faceIdsRaw = evalExpr(op.faceIds, env);
-				const faceIds = Array.isArray(faceIdsRaw) ? (faceIdsRaw as unknown[]).map(String) : [];
-				diff =
-					(await k.offsetFacesDiff?.({ faceIds, distance: Number(evalExpr(op.distance, env)) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
-			} else if (op.kind === "measure.distance") {
-				const a = evalExpr(op.a, env) as VertexRef;
-				const b = evalExpr(op.b, env) as VertexRef;
-				if (!k.vertexDistance) throw new Error("kernel.vertexDistance required");
-				data = await k.vertexDistance(a, b, topo);
-			} else if (op.kind === "measure.area") {
-				const fid = evalExpr(op.faceId, env) as FaceRef;
-				if (!k.faceArea) throw new Error("kernel.faceArea required");
-				data = await k.faceArea(fid, topo);
-			} else if (op.kind === "measure.volume") {
-				const cid = evalExpr(op.cellId, env) as CellRef;
-				data = await (k.cellVolume?.(cid) ?? k.volume(cid));
+			const def = this.actions.get(op.action);
+			if (!def) throw new Error(`Unknown commit action: ${op.action}`);
+			const paramBag: Record<string, unknown> = { __context: ctx, __event: { kind: "commit" } };
+			for (const [key, ex] of Object.entries(op.params ?? {})) {
+				paramBag[key] = evalExpr(ex, env);
 			}
+			const ar = await Promise.resolve(def.run(paramBag, { kernel: k, topology: topo }));
+			diff = ar.diff ?? EMPTY_TOPOLOGY_DIFF;
+			data = ar.data ?? null;
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
-			return fail("command.commitFailed", msg);
+			return fail("interaction.commitFailed", msg);
 		}
 		const outPath = this.spec.commit.outputDataPath;
 		if (outPath) {
@@ -1945,8 +2075,8 @@ export class CommandRuntime {
 			data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
 		}
 		const inverse = applyTopologyDiff(topo, diff);
-		await this.sm.send({ kind: "confirm" }, k);
-		const res: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data };
+		await this.sm.send({ kind: "confirm" }, k, topo, this.actions);
+		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data };
 		this.lastResponse = res;
 		this.snapUndoStack.length = 0;
 		this.snapRedoStack.length = 0;
@@ -1954,7 +2084,7 @@ export class CommandRuntime {
 		if (hist && !isEmptyTopologyDiff(diff)) {
 			hist.record({
 				id: `cmd-${this.spec.id}-${this.revision}`,
-				commandId: this.spec.id,
+				interactionId: this.spec.id,
 				label: this.spec.label ?? this.spec.id,
 				result: res,
 				backwardsDiff: inverse,
@@ -1965,58 +2095,90 @@ export class CommandRuntime {
 	}
 }
 
-/** @emoji 📜 Constructs a `CommandRuntime` from a compiled `CommandSpec`. */
-export function createCommandRuntime(spec: CommandSpec, opts: CommandRuntimeOptions): CommandRuntime {
-	return new CommandRuntime(compileCommand(spec), opts);
+/** @emoji 📜 Constructs a `InteractionRuntime` from a compiled `InteractionSpec`. */
+export function createInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
+	return new InteractionRuntime(compileInteraction(spec), opts);
 }
-// #endregion 📜Command
+// #endregion 📜Interaction
 
-// #region 📦Commands
-/** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/box.command.json`). */
-export function buildBoxCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(boxCommandJson);
-	if (!s) throw new Error("spatial/fixtures/box.command.json invalid");
+// #region 📦Interactions
+/** @emoji 🧭 Built-in `InteractionSpec` registry (fixtures + host `register`). */
+export class InteractionRegistry {
+	private readonly specs = new Map<string, InteractionSpec>();
+
+	register(spec: InteractionSpec): void {
+		this.specs.set(spec.id, spec);
+	}
+
+	get(id: string): InteractionSpec | null {
+		return this.specs.get(id) ?? null;
+	}
+
+	list(): readonly InteractionSpec[] {
+		return [...this.specs.values()];
+	}
+
+	static withBuiltins(): InteractionRegistry {
+		const r = new InteractionRegistry();
+		const xs = [
+			parseInteractionSpec(boxInteractionJson),
+			parseInteractionSpec(extrudeWireInteractionJson),
+			parseInteractionSpec(offsetSurfaceInteractionJson),
+			parseInteractionSpec(distanceInteractionJson),
+			parseInteractionSpec(areaInteractionJson),
+		];
+		for (const s of xs) {
+			if (s) r.register(s);
+		}
+		return r;
+	}
+}
+
+/** @emoji 📦 Parses canonical box fixture (`spatial/fixtures/box.interaction.json`). */
+export function buildBoxInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(boxInteractionJson);
+	if (!s) throw new Error("spatial/fixtures/box.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude-wire.command.json`). */
-export function buildExtrudeCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(extrudeWireCommandJson);
-	if (!s) throw new Error("spatial/fixtures/extrude-wire.command.json invalid");
+/** @emoji 📦 Parses extrude-wire fixture (`spatial/fixtures/extrude-wire.interaction.json`). */
+export function buildExtrudeInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(extrudeWireInteractionJson);
+	if (!s) throw new Error("spatial/fixtures/extrude-wire.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.command.json`). */
-export function buildOffsetSurfaceCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(offsetSurfaceCommandJson);
-	if (!s) throw new Error("spatial/fixtures/offset-surface.command.json invalid");
+/** @emoji 📦 Parses offset-surface fixture (`spatial/fixtures/offset-surface.interaction.json`). */
+export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(offsetSurfaceInteractionJson);
+	if (!s) throw new Error("spatial/fixtures/offset-surface.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses distance fixture (`spatial/fixtures/distance.command.json`). */
-export function buildDistanceCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(distanceCommandJson);
-	if (!s) throw new Error("spatial/fixtures/distance.command.json invalid");
+/** @emoji 📦 Parses distance fixture (`spatial/fixtures/distance.interaction.json`). */
+export function buildDistanceInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(distanceInteractionJson);
+	if (!s) throw new Error("spatial/fixtures/distance.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📦 Parses area fixture (`spatial/fixtures/area.command.json`). */
-export function buildAreaCommandSpec(): CommandSpec {
-	const s = parseCommandSpec(areaCommandJson);
-	if (!s) throw new Error("spatial/fixtures/area.command.json invalid");
+/** @emoji 📦 Parses area fixture (`spatial/fixtures/area.interaction.json`). */
+export function buildAreaInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(areaInteractionJson);
+	if (!s) throw new Error("spatial/fixtures/area.interaction.json invalid");
 	return s;
 }
 
-/** @emoji 📚 Host-facing command preset row (`spatial/fixtures/*.command.json`). */
-export interface SpatialCommandPreset {
+/** @emoji 📚 Host-facing interaction preset row (`spatial/fixtures/*.interaction.json`). */
+export interface SpatialInteractionPreset {
 	readonly id: string;
 	readonly label: string;
-	/** @emoji ⌨️ Single-stroke host command key; must stay unique among presets (see `resolveSpatialCommandPresetKey`). */
+	/** @emoji ⌨️ Single-stroke host interaction key; must stay unique among presets (see `resolveSpatialInteractionPresetKey`). */
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in command preset ids for host command surfaces (`spatial/fixtures/*.command.json`). */
-export function listSpatialCommandPresets(): readonly SpatialCommandPreset[] {
+/** @emoji 📚 Built-in interaction preset ids for host interaction surfaces (`spatial/fixtures/*.interaction.json`). */
+export function listSpatialInteractionPresets(): readonly SpatialInteractionPreset[] {
 	return [
 		{ id: "primitive.box", label: "Box", key: "q" },
 		{ id: "feature.extrudeWire", label: "Extrude wire", key: "j" },
@@ -2027,10 +2189,10 @@ export function listSpatialCommandPresets(): readonly SpatialCommandPreset[] {
 }
 
 /** @emoji 🧭 Resolves a typed token to a preset (`key`, `id`, or compact `label`). */
-export function resolveSpatialCommandPresetKey(token: string): SpatialCommandPreset | null {
+export function resolveSpatialInteractionPresetKey(token: string): SpatialInteractionPreset | null {
 	const t = token.trim().toLowerCase();
 	if (!t) return null;
-	for (const p of listSpatialCommandPresets()) {
+	for (const p of listSpatialInteractionPresets()) {
 		if (p.key.toLowerCase() === t) return p;
 		if (p.id.toLowerCase() === t) return p;
 		const slug = p.label.toLowerCase().replace(/\s+/g, "");
@@ -2039,24 +2201,24 @@ export function resolveSpatialCommandPresetKey(token: string): SpatialCommandPre
 	return null;
 }
 
-/** @emoji 📚 Loads a built-in command preset by stable `id` (see `listSpatialCommandPresets`). */
-export function loadSpatialCommandPreset(presetId: string): CommandSpec | null {
+/** @emoji 📚 Loads a built-in interaction preset by stable `id` (see `listSpatialInteractionPresets`). */
+export function loadSpatialInteractionPreset(presetId: string): InteractionSpec | null {
 	const raw =
 		presetId === "primitive.box"
-			? boxCommandJson
+			? boxInteractionJson
 			: presetId === "feature.extrudeWire"
-				? extrudeWireCommandJson
+				? extrudeWireInteractionJson
 				: presetId === "feature.offsetSurface"
-					? offsetSurfaceCommandJson
+					? offsetSurfaceInteractionJson
 					: presetId === "measure.distance"
-						? distanceCommandJson
+						? distanceInteractionJson
 						: presetId === "measure.area"
-							? areaCommandJson
+							? areaInteractionJson
 							: null;
 	if (!raw) return null;
-	return parseCommandSpec(raw as unknown);
+	return parseInteractionSpec(raw as unknown);
 }
-// #endregion 📦Commands
+// #endregion 📦Interactions
 
 // #region 🧪Tests
 if (import.meta.vitest) {
@@ -2110,17 +2272,58 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core command presets", () => {
-		it("lists stable keys for each built-in command preset", () => {
-			const ps = listSpatialCommandPresets();
+	describe("@spatial/js-core interaction presets", () => {
+		it("lists stable keys for each built-in interaction preset", () => {
+			const ps = listSpatialInteractionPresets();
 			expect(ps.map((p) => p.key).join("")).toBe("qjkda");
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
 		});
-		it("resolves command preset tokens by key, id, and label slug", () => {
-			expect(resolveSpatialCommandPresetKey("q")?.id).toBe("primitive.box");
-			expect(resolveSpatialCommandPresetKey("primitive.box")?.key).toBe("q");
-			expect(resolveSpatialCommandPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
-			expect(resolveSpatialCommandPresetKey("d")?.id).toBe("measure.distance");
+		it("resolves interaction preset tokens by key, id, and label slug", () => {
+			expect(resolveSpatialInteractionPresetKey("q")?.id).toBe("primitive.box");
+			expect(resolveSpatialInteractionPresetKey("primitive.box")?.key).toBe("q");
+			expect(resolveSpatialInteractionPresetKey("extrudewire")?.id).toBe("feature.extrudeWire");
+			expect(resolveSpatialInteractionPresetKey("d")?.id).toBe("measure.distance");
+		});
+	});
+
+	describe("@spatial/js-core action and interaction registries", () => {
+		it("ActionRegistry.withBuiltins registers known geometry actions", () => {
+			const r = ActionRegistry.withBuiltins();
+			const ids = new Set(r.list().map((d) => d.id));
+			expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
+			expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
+		});
+		it("InteractionRegistry.withBuiltins contains box preset id", () => {
+			const reg = InteractionRegistry.withBuiltins();
+			expect(reg.get("primitive.box")?.id).toBe(buildBoxInteractionSpec().id);
+		});
+		it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub-3pt";
+				readonly operations = [] as const;
+				lastInput: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
+				async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
+					this.lastInput = input;
+					return { diff: EMPTY_TOPOLOGY_DIFF, cell: cellRef("c") };
+				}
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const k = new StubKernel();
+			const topo = new TopologyGraph();
+			const def = ActionRegistry.withBuiltins().get("primitive.createBoxFrom3Points")!;
+			const p0: Vec3 = [0, 0, 0];
+			const p1: Vec3 = [2, 3, 0];
+			const p2: Vec3 = [1, 1, 0];
+			await def.run({ p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k, topology: topo });
+			expect(k.lastInput).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 3 });
 		});
 	});
 	describe("@spatial/js-core topology diff", () => {
@@ -2167,8 +2370,8 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxCommandSpec();
-			const rt = createCommandRuntime(spec, {
+			const spec = buildBoxInteractionSpec();
+			const rt = createInteractionRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
@@ -2206,10 +2409,10 @@ if (import.meta.vitest) {
 					};
 				}
 			}
-			const spec = buildBoxCommandSpec();
+			const spec = buildBoxInteractionSpec();
 			const topo = new TopologyGraph();
 			const kernel = new RecordingStubKernel();
-			const rt = createCommandRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
@@ -2241,9 +2444,9 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxCommandSpec();
-			const rt0 = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
-			const rt1 = createCommandRuntime(spec, {
+			const spec = buildBoxInteractionSpec();
+			const rt0 = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt1 = createInteractionRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
@@ -2286,8 +2489,8 @@ if (import.meta.vitest) {
 			const vb = "v1" as VertexRef;
 			topo.vertices[va] = { id: va, position: [0, 0, 0] };
 			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
-			const spec = buildDistanceCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
+			const spec = buildDistanceInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
 			const res = await rt.commit();
@@ -2320,8 +2523,8 @@ if (import.meta.vitest) {
 				}
 			}
 			const topo = new TopologyGraph();
-			const spec = buildAreaCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
+			const spec = buildAreaInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }] });
 			const res = await rt.commit();
 			expect(res.ok).toBe(true);
@@ -2337,12 +2540,12 @@ if (import.meta.vitest) {
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
 			const d1 = meshFaceTopologyDiff(mesh, "a");
 			const inv1 = applyTopologyDiff(g, d1);
-			const res1: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null };
-			h.record({ id: "m1", commandId: "c", label: "A", result: res1, backwardsDiff: inv1 });
+			const res1: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null };
+			h.record({ id: "m1", interactionId: "c", label: "A", result: res1, backwardsDiff: inv1 });
 			const d2 = meshFaceTopologyDiff(mesh, "b");
 			const inv2 = applyTopologyDiff(g, d2);
-			const res2: CommandResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null };
-			h.record({ id: "m2", commandId: "c", label: "B", result: res2, backwardsDiff: inv2 });
+			const res2: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null };
+			h.record({ id: "m2", interactionId: "c", label: "B", result: res2, backwardsDiff: inv2 });
 			expect(Object.keys(g.faces).length).toBe(2);
 			const doc = { topology: g, nodes: [] as ShapeNode[] };
 			h.undo(doc);
@@ -2387,8 +2590,8 @@ if (import.meta.vitest) {
 			const vb = "v1" as VertexRef;
 			topo.vertices[va] = { id: va, position: [0, 0, 0] };
 			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
-			const spec = buildDistanceCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] }, history: hist });
+			const spec = buildDistanceInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] }, history: hist });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
 			await rt.commit();
@@ -2411,8 +2614,8 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const spec = buildBoxInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
 			await rt.send({ kind: "start" });
 			expect(rt.getSnapshot().state).toBe("first_corner");
 			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
@@ -2446,14 +2649,14 @@ if (import.meta.vitest) {
 			const hist = new DocumentHistory();
 			hist.record({
 				id: "seed",
-				commandId: "x",
+				interactionId: "x",
 				label: "seed",
 				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null },
 				backwardsDiff: inv0,
 			});
 			expect(Object.keys(g.faces).length).toBe(1);
-			const spec = buildBoxCommandSpec();
-			const rt = createCommandRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
+			const spec = buildBoxInteractionSpec();
+			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
 			await rt.send({ kind: "start" });
 			rt.undo();
 			expect(rt.getSnapshot().state).toBe("idle");

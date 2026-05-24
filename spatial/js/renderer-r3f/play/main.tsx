@@ -1,11 +1,11 @@
-/** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `CommandRepl`. */
+/** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl`. */
 import { StrictMode, useCallback, useMemo, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	listSpatialCommandPresets,
-	loadSpatialCommandPreset,
+	listSpatialInteractionPresets,
+	loadSpatialInteractionPreset,
 	parseTopologyGraphJson,
-	type CommandSpec,
+	type InteractionSpec,
 	type ModelDocument,
 	TopologyGraph,
 } from "@spatial/js-core";
@@ -17,7 +17,7 @@ import geometryTallBuilding from "../../../fixtures/tall-building.topology.json"
 import geometryLargeBuilding from "../../../fixtures/large-building.topology.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
-import { CommandRepl, useCommandRuntime, useDocumentHistory } from "../index.tsx";
+import { InteractionRepl, useInteractionRuntime, useDocumentHistory } from "../index.tsx";
 
 //#region 🔖GeometryCatalog
 const GEOMETRY_ASSETS = [
@@ -32,21 +32,21 @@ const GEOMETRY_ASSETS = [
 
 //#region 🔖PlayApp
 function PlayApp() {
-	const presets = useMemo(() => listSpatialCommandPresets(), []);
-	const [commandId, setCommandId] = useState(() => presets[0]?.id ?? "");
-	const [commandBootId, setCommandBootId] = useState(0);
+	const presets = useMemo(() => listSpatialInteractionPresets(), []);
+	const [interactionId, setInteractionId] = useState(() => presets[0]?.id ?? "");
+	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
-	const spec = useMemo<CommandSpec | null>(() => (commandId ? loadSpatialCommandPreset(commandId) : null), [commandId]);
+	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteractionPreset(interactionId) : null), [interactionId]);
 
-	const handleCommandPick = useCallback(
+	const handleInteractionPick = useCallback(
 		(id: string) => {
-			if (id === commandId) setCommandBootId((b) => b + 1);
+			if (id === interactionId) setInteractionBootId((b) => b + 1);
 			else {
-				setCommandId(id);
-				setCommandBootId(0);
+				setInteractionId(id);
+				setInteractionBootId(0);
 			}
 		},
-		[commandId],
+		[interactionId],
 	);
 
 	const interactionTopo = useMemo(() => {
@@ -61,7 +61,7 @@ function PlayApp() {
 
 	const history = useDocumentHistory();
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const fallbackSpec = useMemo(() => loadSpatialCommandPreset(presets[0]!.id)!, [presets]);
+	const fallbackSpec = useMemo(() => loadSpatialInteractionPreset(presets[0]!.id)!, [presets]);
 	const activeSpec = spec ?? fallbackSpec;
 
 	const rtOpts = useMemo(
@@ -74,7 +74,7 @@ function PlayApp() {
 		[kernel, documentModel, history],
 	);
 
-	const rt = useCommandRuntime(activeSpec, rtOpts);
+	const rt = useInteractionRuntime(activeSpec, rtOpts);
 
 	const asideExtra: ReactNode = (
 		<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
@@ -94,13 +94,13 @@ function PlayApp() {
 	);
 
 	if (!presets.length) {
-		return <div style={{ padding: 16, color: "#f88" }}>No spatial command presets registered.</div>;
+		return <div style={{ padding: 16, color: "#f88" }}>No spatial interaction presets registered.</div>;
 	}
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
-				Unknown command <code>{commandId}</code>.
-				<button type="button" onClick={() => setCommandId(presets[0]!.id)}>
+				Unknown interaction <code>{interactionId}</code>.
+				<button type="button" onClick={() => setInteractionId(presets[0]!.id)}>
 					Reset
 				</button>
 			</div>
@@ -108,12 +108,12 @@ function PlayApp() {
 	}
 
 	return (
-		<CommandRepl
-			key={`${commandId}:${commandBootId}`}
+		<InteractionRepl
+			key={`${interactionId}:${interactionBootId}`}
 			presets={presets}
-			commandId={commandId}
+			interactionId={interactionId}
 			spec={spec}
-			onCommandId={handleCommandPick}
+			onInteractionId={handleInteractionPick}
 			runtime={rt}
 			history={history}
 			document={documentModel}

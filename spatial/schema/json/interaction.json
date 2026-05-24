@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "spatial://schema/json/command",
-  "title": "SpatialCommandSpec",
+  "$id": "spatial://schema/json/interaction",
+  "title": "SpatialInteractionSpec",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "version", "machine", "commit"],
   "properties": {
-    "schema": { "const": "spatial.command/v1" },
+    "schema": { "const": "spatial.interaction/v1" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },
@@ -66,13 +66,6 @@
             }
           }
         }
-      }
-    },
-    "history": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "excludeEvents": { "type": "array", "items": { "type": "string" } }
       }
     },
     "interaction": { "$ref": "#/$defs/spatialInteraction" },
@@ -182,7 +175,7 @@
         "transient": { "type": "boolean" },
         "key": { "type": "string" },
         "label": { "type": "string" },
-        "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } }
+        "effects": { "type": "array", "items": { "$ref": "#/$defs/effect" } }
       }
     },
     "eventHandler": {
@@ -218,7 +211,7 @@
         }
       ]
     },
-    "action": {
+    "effect": {
       "oneOf": [
         {
           "type": "object",
@@ -346,26 +339,15 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "transform"],
+          "required": ["op", "action"],
           "properties": {
-            "op": { "const": "box.transform" },
-            "transform": {
-              "type": "string",
-              "enum": [
-                "aabbFromDiagonalCorners",
-                "tripletRubber",
-                "tripletCommit",
-                "snapSquareFootprint",
-                "setCubeHeightFromFootprint",
-                "rubberCornerFromCenter",
-                "rubberSquareFromCenter",
-                "verticalFinalizeFootprint",
-                "initPeakAboveOrigin",
-                "peakFromOriginZ",
-                "verticalRubberCorner",
-                "cornerFromLengthWidth"
-              ]
-            }
+            "op": { "const": "action" },
+            "action": { "type": "string", "minLength": 1 },
+            "params": {
+              "type": "object",
+              "additionalProperties": { "$ref": "expression.json" }
+            },
+            "assignTo": { "$ref": "#/$defs/pathTarget" }
           }
         }
       ]
@@ -382,68 +364,17 @@
       }
     },
     "commitOperation": {
-      "oneOf": [
-        {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "action"],
+      "properties": {
+        "kind": { "const": "action" },
+        "action": { "type": "string", "minLength": 1 },
+        "params": {
           "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "cornerA", "cornerB", "height"],
-          "properties": {
-            "kind": { "const": "cell.createBox" },
-            "cornerA": { "$ref": "expression.json" },
-            "cornerB": { "$ref": "expression.json" },
-            "height": { "$ref": "expression.json" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "wireId", "distance", "direction"],
-          "properties": {
-            "kind": { "const": "wire.extrudeToCell" },
-            "wireId": { "$ref": "expression.json" },
-            "distance": { "$ref": "expression.json" },
-            "direction": { "$ref": "expression.json" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "faceIds", "distance"],
-          "properties": {
-            "kind": { "const": "face.offset" },
-            "faceIds": { "$ref": "expression.json" },
-            "distance": { "$ref": "expression.json" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "a", "b"],
-          "properties": {
-            "kind": { "const": "measure.distance" },
-            "a": { "$ref": "expression.json" },
-            "b": { "$ref": "expression.json" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "faceId"],
-          "properties": {
-            "kind": { "const": "measure.area" },
-            "faceId": { "$ref": "expression.json" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "cellId"],
-          "properties": {
-            "kind": { "const": "measure.volume" },
-            "cellId": { "$ref": "expression.json" }
-          }
+          "additionalProperties": { "$ref": "expression.json" }
         }
-      ]
+      }
     },
     "displayItem": {
       "oneOf": [
