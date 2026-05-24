@@ -61,3 +61,16 @@ export function useUIHistory(initialUri = "/"): {
 
 	return { history, uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate };
 }
+
+//#region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("useUIHistory types", () => {
+		it("exports history entry shape", () => {
+			const entry: UIHistoryEntry = { uri: "/test" };
+			expect(entry.uri).toBe("/test");
+		});
+	});
+}
+//#endregion 🧪Tests

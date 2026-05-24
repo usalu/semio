@@ -4,22 +4,24 @@
 
 import {
 	Controller,
-	Tree,
 	Workbench,
 	WorkbenchApp,
-	WorkbenchView,
 	WorkbenchWindowKind,
 	createDefaultLayout,
-	registerElementIcon,
-	registerSidePanelBody,
-	registerWindowBody,
-	type AppTools,
 	type CommandBus,
 	type ShellFindItem,
 	type ShellSearchItemSpec,
 	type ShellSideTabSpec,
 	type ShellToolItem,
-} from "@elements/ui";
+} from "@elements/framework";
+import {
+	WorkbenchView,
+	registerElementIcon,
+	registerSidePanelBody,
+	registerWindowBody,
+	type AppTools,
+} from "@elements/framework-react";
+import { Tree } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, File, FileText, FolderOpen, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
 import * as React from "react";

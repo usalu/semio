@@ -2,11 +2,13 @@
 /** @emoji 🖥 Translates {@link UiNode} trees into React/DOM: semantic commands only; domain canvases via {@link registerUiScene3DSurfaceHost}. */
 // #endregion 🧲Header
 
-import type { CommandBus } from "@elements/framework";
+import { CommandBus, Controller } from "@elements/framework";
+import { renderToStaticMarkup } from "react-dom/server";
 import type {
 	UiBoardHostSurfaceNode,
 	UiButtonNode,
 	UiNode,
+	UiPanelHostSurfaceNode,
 	UiTableHostSurfaceNode,
 	UiScene3DHostSurfaceNode,
 	UiSeparatorNode,
@@ -68,6 +70,22 @@ export function unregisterUiTableSurfaceHost(surfaceId: string): void {
 	tableSurfaceHosts.delete(surfaceId);
 }
 //#endregion 🔖TableRegistry
+
+//#region 🔖PanelRegistry
+type PanelSurfaceHost = React.ComponentType<{ readonly node: UiPanelHostSurfaceNode }>;
+
+const panelSurfaceHosts = new Map<string, PanelSurfaceHost>();
+
+/** @emoji 🧩 Binds `surfaceId` from {@link UiPanelHostSurfaceNode} to a host side-panel body. */
+export function registerUiPanelSurfaceHost(surfaceId: string, Component: PanelSurfaceHost): void {
+	panelSurfaceHosts.set(surfaceId, Component);
+}
+
+/** @emoji 🧹 Drops a panel surface binding (tests). */
+export function unregisterUiPanelSurfaceHost(surfaceId: string): void {
+	panelSurfaceHosts.delete(surfaceId);
+}
+//#endregion 🔖PanelRegistry
 
 //#region 🔖StackLayout
 function stackClass(spec: UiStackNode): string {
@@ -189,6 +207,22 @@ function renderTable(node: UiTableHostSurfaceNode): React.ReactElement {
 	);
 }
 
+function renderPanel(node: UiPanelHostSurfaceNode): React.ReactElement {
+	const Host = panelSurfaceHosts.get(node.surfaceId);
+	if (!Host) {
+		return (
+			<div className="flex flex-1 items-center justify-center p-4 text-xs text-muted-foreground">
+				Unsupported panel surface &quot;{node.surfaceId}&quot;
+			</div>
+		);
+	}
+	return (
+		<div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+			<Host node={node} />
+		</div>
+	);
+}
+
 function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: boolean): React.ReactElement {
 	switch (node.type) {
 		case "stack":
@@ -211,6 +245,8 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderBoard(node);
 		case "table":
 			return renderTable(node);
+		case "panel":
+			return renderPanel(node);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">
@@ -227,10 +263,8 @@ export function UiRenderer({ node, commandBus }: UiRendererProps): React.ReactEl
 //#endregion 🔖Renderer
 
 //#region 🧪Tests
-	if (import.meta.vitest) {
+if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	const { renderToStaticMarkup } = await import("react-dom/server");
-	const { CommandBus, Controller } = await import("@elements/framework");
 
 	describe("UiRenderer", () => {
 		it("renders text and dispatches button commands", () => {

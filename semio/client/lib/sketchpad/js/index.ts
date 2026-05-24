@@ -457,7 +457,7 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	type SidePanelTabConfig,
-} from "@elements/ui";
+} from "@elements/framework-react";
 
 // #region ðŸ”–SketchpadKitUiHelpers
 /**

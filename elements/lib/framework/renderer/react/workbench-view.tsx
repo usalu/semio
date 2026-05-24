@@ -2,7 +2,16 @@
 /** @emoji 🧭 {@link WorkbenchView} — framework workbench shell (navbar, panels, golden-layout canvas). */
 // #endregion 🧲Header
 
-import { CommandBus, createTabStackLayout, type ResolvedWorkbenchAppState, type Workbench } from "@elements/framework";
+import {
+	CommandBus,
+	Controller,
+	Workbench,
+	WorkbenchApp,
+	WorkbenchMode,
+	WorkbenchWindowKind,
+	createTabStackLayout,
+	type ResolvedWorkbenchAppState,
+} from "@elements/framework";
 import {
 	ArrowLeft,
 	ArrowRight,
@@ -15,14 +24,6 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-
-import {
-	Controller,
-	Workbench,
-	WorkbenchApp,
-	WorkbenchWindowKind,
-	createTabStackLayout,
-} from "@elements/framework";
 
 import {
 	BasicChatPanel,
@@ -56,7 +57,7 @@ import {
 	type SidePanelTabConfig,
 	type UIFindItem,
 	type UIWindowLayout,
-} from "@elements/ui";
+} from "@elements/ui/chrome";
 
 import {
 	mergeConfigEntries,
@@ -649,6 +650,58 @@ if (import.meta.vitest) {
 			expect(markup).toContain('data-panel="leftSidePanel"');
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
 			expect(markup).toContain('id="ui.panelToggle.details"');
+		});
+
+		it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
+			const wb = new Workbench();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [
+				new WorkbenchWindowKind("base", "Base", "test.workbench-view.base"),
+			]);
+			app.tools = { selection: [{ id: "base-tool", kind: "button", label: "Base", controllerId: "tctrl", command: "x" }] };
+			app.selection = { base: true };
+			app.options = { snap: true };
+			const inspect = new WorkbenchMode("inspect", "Inspect", undefined);
+			inspect.tools = { actions: [{ id: "mode-tool", kind: "button", label: "Mode", controllerId: "tctrl", command: "y" }] };
+			inspect.selection = { mode: true };
+			inspect.options = { isolate: true };
+			inspect.windowKinds = [new WorkbenchWindowKind("mode", "Mode", "test.workbench-view.mode")];
+			app.addMode(inspect);
+			app.defaultModeId = "inspect";
+			const resolved = app.resolve("inspect");
+
+			expect(resolved.activeModeId).toBe("inspect");
+			expect(resolved.tools?.selection?.map((tool) => tool.id)).toEqual(["base-tool"]);
+			expect(resolved.tools?.actions?.map((tool) => tool.id)).toEqual(["mode-tool"]);
+			expect(resolved.selection).toEqual({ base: true, mode: true });
+			expect(resolved.options).toEqual({ snap: true, isolate: true });
+			expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
+		});
+
+		it("renders a leading mode dropdown when an app has multiple modes", () => {
+			const wb = new Workbench();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WorkbenchWindowKind("main", "Main", "test.workbench-view.mm.main"),
+			]);
+			registerWindowBody("test.workbench-view.mm.main", () => <div>Main</div>);
+			app.addMode(new WorkbenchMode("inspect", "Inspect", undefined));
+			app.addMode(new WorkbenchMode("edit", "Edit", undefined));
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<WorkbenchView workbench={wb} />);
+
+			expect(markup).toContain('id="ui.mode.select.app.trigger"');
+			expect(markup).not.toContain("ui.modeNav.app");
 		});
 	});
 }

@@ -7,6 +7,8 @@
   "type": "module",
   "exports": {
     ".": "./index.tsx",
+    "./chrome": "./chrome.ts",
+    "./primitives": "./primitives.ts",
     "./components.json": "./components.json",
     "./elements": "./index.tsx",
     "./globals.css": "./globals.css",
@@ -22,6 +24,7 @@
     }
   },
   "dependencies": {
+    "@elements/framework-react": "workspace:*",
     "@elements/styling": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

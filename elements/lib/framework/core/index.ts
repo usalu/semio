@@ -76,6 +76,13 @@ export interface UiTableHostSurfaceNode {
 	readonly paneId?: string;
 }
 
+/** @emoji 🧩 Host-bound side-panel surface; renderer maps `surfaceId` to panel body chrome. */
+export interface UiPanelHostSurfaceNode {
+	readonly type: "panel";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+}
+
 export type UiNode =
 	| UiStackNode
 	| UiTextNode
@@ -83,7 +90,8 @@ export type UiNode =
 	| UiSeparatorNode
 	| UiScene3DHostSurfaceNode
 	| UiBoardHostSurfaceNode
-	| UiTableHostSurfaceNode;
+	| UiTableHostSurfaceNode
+	| UiPanelHostSurfaceNode;
 
 /** @emoji ­ƒºè Canonical fullscreen 3D window body: only the infinite scene canvas. */
 export function buildScene3dWindowBody(surfaceId: string, controllerId: string): UiScene3DHostSurfaceNode {

@@ -5,9 +5,11 @@
 export {
 	UiRenderer,
 	registerUiBoardSurfaceHost,
+	registerUiPanelSurfaceHost,
 	registerUiTableSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	unregisterUiBoardSurfaceHost,
+	unregisterUiPanelSurfaceHost,
 	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
 	type UiRendererProps,
@@ -50,9 +52,5 @@ export {
 	type WorkbenchViewProps,
 } from "./workbench-app-context.tsx";
 
-export { WorkbenchView, App, mountReactApp, mountAsyncReactApp, ReactUI } from "./workbench-bridge.tsx";
-export { getLevelBgClass, LevelProvider } from "./workbench-bridge.tsx";
+export { WorkbenchView, App, mountReactApp, mountAsyncReactApp, ReactUI, getLevelBgClass, LevelProvider } from "./workbench-bridge.tsx";
 export { useUIHistory, type UIHistory, type UIHistoryEntry } from "./workbench-history.tsx";
-
-export type { UIHistory, UIHistoryEntry } from "./workbench-history.tsx";
-export { useUIHistory } from "./workbench-history.tsx";

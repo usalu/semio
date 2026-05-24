@@ -11034,34 +11034,29 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 // #endregion 🔤Interaction Context
 
 // #region 🎈Level Context
-// React context for UI depth level tracking.
-// Consumers MUST wrap components with LevelProvider.
+import {
+	LevelProvider,
+	getLevelActiveHoverClass,
+	getLevelBgClass,
+	getLevelBorderElementClass,
+	getLevelDivideElementClass,
+	getLevelHoverClass,
+	getLevelZClass,
+	useLevel,
+	type Level,
+} from "@elements/framework-react/level-context";
 
-/**
- * Union type for UI depth levels.
- **/
-export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
-
-/**
- * LevelContext holds the data fields for a LevelContext record.
- **/
-const LevelContext = React.createContext<Level>("base");
-
-/**
- * Context provider that sets the current UI level.
- **/
-export const LevelProvider: React.FC<{
-  level: Level;
-  children: React.ReactNode;
-}> = ({ level, children }) => {
-  return <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
+export type { Level };
+export {
+	LevelProvider,
+	useLevel,
+	getLevelBgClass,
+	getLevelHoverClass,
+	getLevelActiveHoverClass,
+	getLevelZClass,
+	getLevelBorderElementClass,
+	getLevelDivideElementClass,
 };
-
-/**
- * Hook returning the current UI depth level.
- **/
-export const useLevel = () => React.useContext(LevelContext);
-
 // #endregion 🎈Level Context
 
 // #region 🐹Element
@@ -11105,114 +11100,6 @@ export interface ElementBaseProps {
 }
 
 export interface ElementProps extends ElementBaseProps {}
-
-/**
- * Returns the Tailwind background class for a given level.
- **/
-export const getLevelBgClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "bg-window";
-    case "panel":
-      return "bg-panel";
-    case "overlay":
-      return "bg-overlay";
-    case "temporary":
-      return "bg-temporary";
-    default:
-      return "bg-base";
-  }
-};
-
-/**
- * Returns the Tailwind hover background class for a given level.
- **/
-export const getLevelHoverClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "hover:bg-hover-window";
-    case "panel":
-      return "hover:bg-hover-panel";
-    case "overlay":
-      return "hover:bg-hover-overlay";
-    case "temporary":
-      return "hover:bg-hover-temporary";
-    default:
-      return "hover:bg-hover-base";
-  }
-};
-
-/**
- * Returns the Tailwind active-state hover class for a given level.
- **/
-export const getLevelActiveHoverClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "data-[state=active]:bg-hover-window";
-    case "panel":
-      return "data-[state=active]:bg-hover-panel";
-    case "overlay":
-      return "data-[state=active]:bg-hover-overlay";
-    case "temporary":
-      return "data-[state=active]:bg-hover-temporary";
-    default:
-      return "data-[state=active]:bg-hover-base";
-  }
-};
-
-/**
- * Returns the Tailwind z-index class for a given level.
- **/
-export const getLevelZClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "z-window";
-    case "panel":
-      return "z-panel";
-    case "overlay":
-      return "z-overlay";
-    case "temporary":
-      return "z-temporary";
-    default:
-      return "z-base";
-  }
-};
-
-/**
- * Returns the Tailwind border class for a given level.
- **/
-export const getLevelBorderElementClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "border-hover-window";
-    case "panel":
-      return "border-hover-panel";
-    case "overlay":
-      return "border-hover-overlay";
-    case "temporary":
-      return "border-hover-temporary";
-    default:
-      return "border-hover-base";
-  }
-};
-
-/**
- * Returns the Tailwind divide class for a given level.
- **/
-export const getLevelDivideElementClass = (level: Level): string => {
-  switch (level) {
-    case "window":
-      return "divide-hover-window";
-    case "panel":
-      return "divide-hover-panel";
-    case "overlay":
-      return "divide-hover-overlay";
-    case "temporary":
-      return "divide-hover-temporary";
-    default:
-      return "divide-hover-base";
-  }
-};
 
 // #endregion 🐹Element
 
@@ -22858,13 +22745,31 @@ export { UICanvas, UISearch, UIFind, UIToolbar };
 
 // #endregion 📔UIToolbar
 
+// #region 🧱FrameworkRendererReexports
+export {
+	App,
+	AppContext,
+	ReactUI,
+	UiRenderer,
+	WorkbenchView,
+	mountAsyncReactApp,
+	mountReactApp,
+	registerElementIcon,
+	registerUiBoardSurfaceHost,
+	registerUiScene3DSurfaceHost,
+	registerUiTableSurfaceHost,
+	useApp,
+	useUIHistory,
+} from "@elements/framework-react";
+export type { AppContextValue, UIHistory, UIHistoryEntry, UIPanelVisibility, WorkbenchViewProps } from "@elements/framework-react";
+// #endregion 🧱FrameworkRendererReexports
+
 // #endregion 🎊UI
 
 // #region 🗿Framework Re-exports
 
-// Re-exports of framework libraries for downstream consumers.
-// Apps like sketchpad MUST import these through @elements/ui
-// instead of depending on the underlying framework libraries directly.
+// Re-exports of common libraries used alongside UI primitives.
+// Workbench shell types and chrome live in `@elements/framework` / `@elements/framework-react`.
 
 // #region 🌩️DnD Kit
 export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
@@ -23717,56 +23622,6 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="window-measure-heading"');
       expect(markup).toContain('data-slot="window-measure-float"');
       expect(markup).toContain('data-slot="window-measure-radio-item"');
-    });
-  });
-
-  describe("app modes", () => {
-    it("merges appwide tools, selection, options, and window kinds with the active mode", () => {
-      const wb = new Workbench();
-      class TCtrl extends Controller {
-        constructor() {
-          super("tctrl", wb.commandBus, () => wb.notify());
-        }
-        run(): void {}
-      }
-      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [new WorkbenchWindowKind("base", "Base", "test.base")]);
-      app.tools = { selection: [{ id: "base-tool", kind: "button", label: "Base", controllerId: "tctrl", command: "x" }] };
-      app.selection = { base: true };
-      app.options = { snap: true };
-      const inspect = new WorkbenchMode("inspect", "Inspect", undefined);
-      inspect.tools = { actions: [{ id: "mode-tool", kind: "button", label: "Mode", controllerId: "tctrl", command: "y" }] };
-      inspect.selection = { mode: true };
-      inspect.options = { isolate: true };
-      inspect.windowKinds = [new WorkbenchWindowKind("mode", "Mode", "test.mode")];
-      app.addMode(inspect);
-      app.defaultModeId = "inspect";
-      const resolved = app.resolve("inspect");
-
-      expect(resolved.activeModeId).toBe("inspect");
-      expect(resolved.tools?.selection?.map((tool) => tool.id)).toEqual(["base-tool"]);
-      expect(resolved.tools?.actions?.map((tool) => tool.id)).toEqual(["mode-tool"]);
-      expect(resolved.selection).toEqual({ base: true, mode: true });
-      expect(resolved.options).toEqual({ snap: true, isolate: true });
-      expect(resolved.windowKinds.map((windowKind) => windowKind.id)).toEqual(["base", "mode"]);
-    });
-
-    it("renders a leading mode dropdown when an app has multiple modes", () => {
-      const wb = new Workbench();
-      class TCtrl extends Controller {
-        constructor() {
-          super("tctrl", wb.commandBus, () => wb.notify());
-        }
-        run(): void {}
-      }
-      const app = new WorkbenchApp("app", "App", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [new WorkbenchWindowKind("main", "Main", "test.mm.main")]);
-      registerWindowBody("test.mm.main", () => <div>Main</div>);
-      app.addMode(new WorkbenchMode("inspect", "Inspect", undefined));
-      app.addMode(new WorkbenchMode("edit", "Edit", undefined));
-      wb.addApp(app);
-      const markup = renderToStaticMarkup(<WorkbenchView workbench={wb} />);
-
-      expect(markup).toContain('id="ui.mode.select.app.trigger"');
-      expect(markup).not.toContain('ui.modeNav.app');
     });
   });
 

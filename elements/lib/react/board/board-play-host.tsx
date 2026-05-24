@@ -31,7 +31,8 @@ import {
   type FooterItem,
   type TreeDataSection,
 } from "@elements/ui";
-import { Expertise, type UiBoardHostSurfaceNode } from "@elements/framework";
+import type { UiBoardHostSurfaceNode } from "@elements/framework";
+import { Expertise } from "@elements/ui";
 import {
   getLevelBgClass,
   LevelProvider,

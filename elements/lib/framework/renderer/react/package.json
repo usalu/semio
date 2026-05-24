@@ -15,9 +15,7 @@
 		"./workbench-app-context": "./workbench-app-context.tsx",
 		"./ui-declarative-renderer": "./ui-declarative-renderer.tsx",
 		"./shell-chrome-types": "./shell-chrome-types.tsx",
-		"./workbench-view": "./workbench-view.tsx",
-		"./workbench-mount": "./workbench-mount.tsx",
-		"./workbench-history": "./workbench-history.tsx"
+		"./level-context": "./level-context.tsx"
 	},
 	"dependencies": {
 		"@elements/framework": "workspace:*",
