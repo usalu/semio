@@ -15,11 +15,25 @@ export {
 
 export type { Workbench } from "@elements/framework";
 
+export type {
+	AppToolCategory,
+	AppTools,
+	FooterItem,
+	ShellChromeTreePanelConfig,
+	SidePanelTabConfig,
+	UIWindowKindDefinition,
+	UIWindowMeasure,
+	UIToolbarItem,
+} from "./shell-chrome-types.tsx";
+
+export { APP_TOOL_CATEGORY_ORDER } from "./shell-chrome-types.tsx";
+
 export {
 	registerElementIcon,
 	registerShellTabIcon,
 	registerWindowBody,
 	registerSidePanelBody,
+	resolveElementIcon,
 	shellWindowKindsToGolden,
 	shellSideTabsToPanelTabs,
 	shellFooterToFooterItems,
@@ -40,13 +54,7 @@ export {
 	WorkbenchView,
 	mountReactApp,
 	mountAsyncReactApp,
-	useApp,
-	registerElementIcon,
 	getLevelBgClass,
 	LevelProvider,
 	ReactUI,
-	type WorkbenchViewProps,
-	type AppProps,
-	type AppContextValue,
-	type UIPanelVisibility,
 } from "./workbench-bridge.tsx";

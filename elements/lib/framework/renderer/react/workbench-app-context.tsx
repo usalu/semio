@@ -5,7 +5,7 @@
 import type { ResolvedWorkbenchAppState, Workbench, WorkbenchApp } from "@elements/framework";
 import * as React from "react";
 
-import type { FooterItem, SidePanelTabConfig, UIWindowKindDefinition } from "@elements/ui";
+import type { FooterItem, SidePanelTabConfig, UIWindowKindDefinition } from "./shell-chrome-types.tsx";
 
 /** @emoji 🧭 Props for {@link WorkbenchView} (navbar, panels, golden-layout canvas). */
 export interface WorkbenchViewProps {

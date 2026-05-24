@@ -3,7 +3,6 @@
 // #endregion 🧲Header
 
 import {
-	APP_TOOL_CATEGORY_ORDER,
 	CommandBus,
 	getDeclarativeSidePanelBodyFactory,
 	getDeclarativeWindowBodyFactory,
@@ -20,15 +19,14 @@ import type { LucideIcon } from "lucide-react";
 import * as React from "react";
 
 import {
-	StaticSidePanelTabDefinition,
-	StaticTreePanelDefinition,
+	APP_TOOL_CATEGORY_ORDER,
 	type AppTools,
 	type FooterItem,
 	type SidePanelTabConfig,
 	type UIWindowKindDefinition,
 	type UIWindowMeasure,
 	type UIToolbarItem,
-} from "@elements/ui";
+} from "./shell-chrome-types.tsx";
 
 import { UiRenderer } from "./ui-declarative-renderer.tsx";
 import { useApp } from "./workbench-app-context.tsx";
@@ -38,6 +36,11 @@ const elementIconNodes = new Map<string, React.ReactNode>();
 /** @emoji 🖼 Registers a static icon node resolved by `iconId` for toolbars, footers, and tabs. */
 export function registerElementIcon(iconId: string, node: React.ReactNode): void {
 	elementIconNodes.set(iconId, node);
+}
+
+/** @emoji 🔍 Returns a registered element icon node for navbar/search rows. */
+export function resolveElementIcon(iconId: string): React.ReactNode | undefined {
+	return elementIconNodes.get(iconId);
 }
 
 const shellTabIcons = new Map<string, LucideIcon>();
@@ -178,14 +181,12 @@ export function shellSideTabsToPanelTabs(tabs: readonly ShellSideTabSpec[], bus:
 		const Body = declarativeFactory
 			? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey)
 			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
-		return new StaticSidePanelTabDefinition({
+		return {
 			id: tab.id,
 			icon: shellTabIconComponent(tab.iconId),
 			order: tab.order ?? orderIndex,
-			tree: new StaticTreePanelDefinition({
-				sections: [{ id: `${tab.id}.body`, content: <Body /> }],
-			}),
-		}).resolveTab();
+			tree: { sections: [{ id: `${tab.id}.body`, content: <Body /> }] },
+		};
 	});
 }
 

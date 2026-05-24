@@ -376,9 +376,11 @@ We are starting a new a new architecture.
 @elements/lib/react/core MUST be pure react components, no classes.
 @elements/lib/framework/core MUST be pure typescript, no react, just classes.
 @elements/lib/framework/renderer/react is the first renderer to @elements/lib/framework/core.
-@elements/lib/playground is the first framework, just for building playgrounds (one app, one fixture, selection, filter, details, etc)
+@elements/lib/playground is the first framework, just for building playgrounds (one app, one window kind, one fixture, selection, filter, workbench, details, options).
 Every downstream project MUST NOT import from @elements/lib/react and MUST only import from @elements/lib/framework .
-First goal: Finish implementing @elements/lib/playground and setup @elements/lib/react/spatial/play to use the new playground.
+First goal: Get @elements/lib/react/core free from the depency of @elements/lib/framework
+
+Finish implementing @elements/lib/playground and setup @elements/lib/react/spatial/play to use the new playground.
 
 ---
 

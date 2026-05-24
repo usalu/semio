@@ -19,6 +19,10 @@ export default defineConfig({
 			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
 			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/workbench-bridge.tsx"),
 			"@elements/playground": path.resolve(__dirname, "../../../playground/index.ts"),
+			"@elements/geometry-spatial-js": path.resolve(__dirname, "../js/index.ts"),
+			"@elements/geometry-spatial-react": path.resolve(__dirname, "../react/index.tsx"),
+			"@elements/ui": path.resolve(__dirname, "../../core/index.tsx"),
+			"@elements/styling/elements.css": path.resolve(__dirname, "../../../styling/js/elements.css"),
 		},
 	},
 	server: {

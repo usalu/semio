@@ -7,7 +7,11 @@
 	"private": true,
 	"exports": {
 		".": "./index.tsx",
-		"./workbench": "./workbench-bridge.tsx"
+		"./workbench": "./workbench-bridge.tsx",
+		"./shell-bridge": "./shell-bridge.tsx",
+		"./workbench-app-context": "./workbench-app-context.tsx",
+		"./ui-declarative-renderer": "./ui-declarative-renderer.tsx",
+		"./shell-chrome-types": "./shell-chrome-types.tsx"
 	},
 	"dependencies": {
 		"@elements/framework": "workspace:*",

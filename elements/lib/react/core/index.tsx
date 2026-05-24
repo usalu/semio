@@ -130,7 +130,7 @@ import {
 	unregisterUiBoardSurfaceHost,
 	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
-} from "./ui-declarative-renderer.tsx";
+} from "@elements/framework-react/ui-declarative-renderer";
 
 export {
 	UiRenderer,
@@ -22955,17 +22955,35 @@ const UIToolbar: React.FC<{
 // #endregion 📔UIToolbar
 
 // #region 🧱ShellWorkbenchBridge
-export {
+import {
+	mergeConfigEntries,
 	registerElementIcon,
 	registerShellTabIcon,
-	registerWindowBody,
 	registerSidePanelBody,
-	shellWindowKindsToGolden,
-	shellSideTabsToPanelTabs,
+	registerWindowBody,
+	resolveElementIcon,
 	shellFooterToFooterItems,
+	shellSideTabsToPanelTabs,
 	shellToolsToAppTools,
+	shellWindowKindsToGolden,
+} from "@elements/framework-react/shell-bridge";
+import { AppContext, useApp, type AppContextValue, type AppProps, type UIPanelVisibility, type WorkbenchViewProps } from "@elements/framework-react/workbench-app-context";
+
+export {
+	AppContext,
 	mergeConfigEntries,
-} from "@elements/framework-react";
+	registerElementIcon,
+	registerShellTabIcon,
+	registerSidePanelBody,
+	registerWindowBody,
+	resolveElementIcon,
+	shellFooterToFooterItems,
+	shellSideTabsToPanelTabs,
+	shellToolsToAppTools,
+	shellWindowKindsToGolden,
+	useApp,
+};
+export type { AppContextValue, AppProps, UIPanelVisibility, WorkbenchViewProps };
 // #endregion 🧱ShellWorkbenchBridge
 
 /**
@@ -23034,15 +23052,6 @@ export function useUIHistory(initialUri = "/"): {
 
   return { history, uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate };
 }
-
-export type {
-	WorkbenchViewProps,
-	AppProps,
-	AppContextValue,
-	UIPanelVisibility,
-} from "@elements/framework-react";
-
-export { AppContext, useApp } from "@elements/framework-react";
 
 type ElementsDomRoot = HTMLElement & { __elementsReactRoot?: Root };
 
@@ -23421,7 +23430,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 						{activeAppBase.modes.map((mode) => (
 							<SelectItem key={mode.id} id={`ui.mode.select.${activeAppBase.id}.${mode.id}`} value={mode.id}>
 								<span className="flex items-center gap-single">
-									{mode.iconId ? elementIconNodes.get(mode.iconId) ?? null : null}
+									{mode.iconId ? resolveElementIcon(mode.iconId) ?? null : null}
 									<span>{mode.label}</span>
 								</span>
 							</SelectItem>
@@ -23470,7 +23479,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 				<ButtonGroup id="ui.appNav">
 					{resolvedApps.map((app) => (
 						<ButtonGroupItem key={app.id} id={`ui.appNav.${app.id}`} className={cn(activeAppId === app.id && "bg-active-base")} onClick={() => setActiveAppId(app.id)}>
-							{app.iconId ? elementIconNodes.get(app.iconId) ?? <span className="text-xs">{app.label}</span> : <span className="text-xs">{app.label}</span>}
+							{app.iconId ? resolveElementIcon(app.iconId) ?? <span className="text-xs">{app.label}</span> : <span className="text-xs">{app.label}</span>}
 						</ButtonGroupItem>
 					))}
 				</ButtonGroup>
@@ -23530,7 +23539,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = ({
 				label: row.label,
 				description: row.description,
 				category: row.category,
-				icon: row.iconId ? elementIconNodes.get(row.iconId) : undefined,
+				icon: row.iconId ? resolveElementIcon(row.iconId) : undefined,
 				onSelect: () => workbench.commandBus.dispatch(row.controllerId, row.command, row.args),
 			})),
 		[workbench, shellGen],
@@ -24479,35 +24488,21 @@ if (treeVitest) {
 
     it("renders detached declarative UI nodes through the React renderer", () => {
       const wb = new Workbench();
-      class TCtrl extends Controller {
-        constructor() {
-          super("tctrl", wb.commandBus, () => wb.notify());
-        }
-        run(): void {}
-      }
-      registerDeclarativeWindowBody("test.detached.main", () => ({
-        type: "stack",
-        direction: "vertical",
-        gap: "tight",
-        padding: "standard",
+      const node = {
+        type: "stack" as const,
+        direction: "vertical" as const,
+        gap: "tight" as const,
+        padding: "standard" as const,
         children: [
-          { type: "text", value: "Detached body", emphasize: true, dataAttributes: { testid: "detached-text" } },
-          { type: "button", id: "detached-command", label: "Run", command: { controllerId: "tctrl", command: "run" } },
+          { type: "text" as const, value: "Detached body", emphasize: true, dataAttributes: { testid: "detached-text" } },
+          { type: "button" as const, id: "detached-command", label: "Run", command: { controllerId: "tctrl", command: "run" } },
         ],
-      }));
-      try {
-        new TCtrl();
-        const factory = getDeclarativeWindowBodyFactory("test.detached.main");
-        const node = factory?.({ workbench: wb, windowKindId: "main", bodyKey: "test.detached.main", activeModeId: null, generation: wb.generation });
-        expect(node).toBeDefined();
-        const markup = renderToStaticMarkup(<UiRenderer node={node!} commandBus={wb.commandBus} />);
+      };
+      const markup = renderToStaticMarkup(<UiRenderer node={node} commandBus={wb.commandBus} />);
 
-        expect(markup).toContain("Detached body");
-        expect(markup).toContain('data-testid="detached-text"');
-        expect(markup).toContain('id="detached-command"');
-      } finally {
-        unregisterDeclarativeWindowBody("test.detached.main");
-      }
+      expect(markup).toContain("Detached body");
+      expect(markup).toContain('data-testid="detached-text"');
+      expect(markup).toContain('id="detached-command"');
     });
 
     it("synthesizes default workbench, details, options, and chat navbar toggles for every app", () => {

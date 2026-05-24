@@ -11,4 +11,4 @@ export {
 	unregisterUiTableSurfaceHost,
 	unregisterUiScene3DSurfaceHost,
 	type UiRendererProps,
-} from "@elements/framework-react";
+} from "@elements/framework-react/ui-declarative-renderer";

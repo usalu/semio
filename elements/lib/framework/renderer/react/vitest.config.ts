@@ -8,10 +8,10 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	root,
 	resolve: {
-		alias: {
-			"@elements/framework": resolve(root, "../../core/index.ts"),
-			"@elements/ui": resolve(root, "../../../react/core/index.tsx"),
-		},
+		alias: [
+			{ find: "@elements/framework", replacement: resolve(root, "../../core/index.ts") },
+			{ find: "@elements/ui", replacement: resolve(root, "../../../react/core/index.tsx") },
+		],
 	},
 	test: {
 		environment: "jsdom",
