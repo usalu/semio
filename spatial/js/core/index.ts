@@ -961,6 +961,40 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core factory box", () => {
+		it("tracks first-corner cursor on the grid after start", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub";
+				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+				async createBoxFromCorners() {
+					return cellRef("stub");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = buildBoxFactorySpec();
+			const rt = createFactoryRuntime(spec, {
+				kernel: new StubKernel(),
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
+			await rt.send({ kind: "start" });
+			let snap = rt.getSnapshot();
+			expect(snap.state).toBe("pickingFirstCorner");
+			expect(snap.context.cursor).toEqual([0, 0, 0]);
+			expect(snap.display.items.find((i) => i.id === "first-cursor")?.params?.position).toEqual([0, 0, 0]);
+			await rt.send({ kind: "pointer.move", point: [-1, 2.5, 0] as Vec3, modifiers: {} });
+			snap = rt.getSnapshot();
+			expect(snap.context.cursor).toEqual([-1, 2.5, 0]);
+			expect(snap.display.items.find((i) => i.id === "first-cursor")?.params?.position).toEqual([-1, 2.5, 0]);
+			await rt.send({ kind: "pointer.down", point: [3, 1, 0] as Vec3, modifiers: {} });
+			snap = rt.getSnapshot();
+			expect(snap.state).toBe("pickingSecondCorner");
+			expect(snap.context.cursor).toBeUndefined();
+		});
+
 		it("runs box workflow with a recording kernel stub (no solid modeling in core)", async () => {
 			class RecordingStubKernel implements KernelAdapter {
 				readonly id = "recording-stub";

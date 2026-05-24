@@ -47,14 +47,26 @@
     "states": {
       "idle": {
         "on": {
-          "start": { "target": "pickingFirstCorner" }
+          "start": {
+            "target": "pickingFirstCorner",
+            "actions": [
+              { "op": "assign", "path": "cursor", "value": { "const": [0, 0, 0] } }
+            ]
+          }
         }
       },
       "pickingFirstCorner": {
         "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
+          },
           "pointer.down": {
             "target": "pickingSecondCorner",
-            "actions": [{ "op": "assign", "path": "origin", "value": { "$event": "point" } }]
+            "actions": [
+              { "op": "assign", "path": "origin", "value": { "$event": "point" } },
+              { "op": "clear", "path": "cursor" }
+            ]
           },
           "cancel": { "target": "cancelled" }
         }
@@ -88,7 +100,12 @@
                     "z0": { "path": "origin.2" },
                     "z1": { "$event": "point.2" }
                   },
-                  "in": { "abs": { "-": [{ "var": "z1" }, { "var": "z0" }] } }
+                  "in": {
+                    "+": [
+                      { "abs": { "-": [{ "var": "z1" }, { "var": "z0" }] } },
+                      0.01
+                    ]
+                  }
                 }
               }
             ]
@@ -118,11 +135,17 @@
     "states": {
       "pickingFirstCorner": [
         {
+          "kind": "point",
+          "id": "first-cursor",
+          "role": "cursor",
+          "params": { "position": { "path": "cursor" } }
+        },
+        {
           "kind": "label",
           "id": "hint-first",
           "role": "prompt",
           "params": {
-            "text": "Pick first corner on the grid (Z≈0)",
+            "text": "Move to preview origin; click grid to place first corner (Z≈0)",
             "position": { "const": [0, 0.25, 1.4] }
           }
         }
@@ -151,7 +174,7 @@
           "id": "hint-height",
           "role": "prompt",
           "params": {
-            "text": "Drag green slab for Z-height, Apply height, then click grid to accept",
+            "text": "Drag green slab for height (min 1cm). Apply height, then click grid or use Accept below.",
             "position": { "const": [0, 0.25, 1.55] }
           }
         },

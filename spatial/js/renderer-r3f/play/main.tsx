@@ -52,6 +52,10 @@ function PlayApp() {
 		[rt],
 	);
 
+	const onAcceptHeight = useCallback(() => {
+		void rt.send({ kind: "confirm" });
+	}, [rt]);
+
 	const onStart = useCallback(() => {
 		void rt.send({ kind: "start" });
 	}, [rt]);
@@ -78,7 +82,9 @@ function PlayApp() {
 		snapshot.state === "pickingHeight";
 	const pickEnabled = picking;
 	const pointerMoveActive =
-		snapshot.state === "pickingSecondCorner" || snapshot.state === "pickingHeight";
+		snapshot.state === "pickingFirstCorner" ||
+		snapshot.state === "pickingSecondCorner" ||
+		snapshot.state === "pickingHeight";
 
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
@@ -113,9 +119,14 @@ function PlayApp() {
 					Start
 				</button>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Start → first click origin; move to rubber-band second corner; second click fixes corner. Adjust height
-					(green slab or Apply height), then click the grid once to accept. In Ready, Commit creates the solid.
+					Start → cyan dot follows the cursor on the grid; click to place the first corner; move to rubber-band second corner;
+					second click fixes corner. Adjust height (teal wall at the second corner along Z, or Apply height), then click the grid
+					or <strong>Accept height</strong>. Use <strong>right mouse drag</strong> to orbit if a click starts orbiting instead of
+					hitting the grid. In Ready, Commit creates the solid.
 				</div>
+				<button type="button" disabled={snapshot.state !== "pickingHeight"} onClick={onAcceptHeight}>
+					Accept height → Ready
+				</button>
 				<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 					Height
 					<input value={heightInput} onChange={(e) => setHeightInput(e.target.value)} />

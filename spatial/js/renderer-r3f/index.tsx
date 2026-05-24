@@ -6,6 +6,7 @@
 import { Line, OrbitControls, Text } from "@react-three/drei";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { MOUSE } from "three";
 import * as THREE from "three";
 import {
 	buildBoxFactorySpec,
@@ -95,10 +96,16 @@ function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
 function PointItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const pos = readVec3(item.params?.position);
 	if (!pos) return null;
+	const cursor = item.role === "cursor";
+	const r = cursor ? 0.045 : 0.06;
 	return (
 		<mesh position={pos} raycast={raycastNone}>
-			<sphereGeometry args={[0.06, 16, 16]} />
-			<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+			<sphereGeometry args={[r, 16, 16]} />
+			<meshStandardMaterial
+				color={cursor ? "#66e8ff" : "#ffcc66"}
+				emissive={cursor ? "#003844" : "#553300"}
+				emissiveIntensity={cursor ? 0.45 : 0.35}
+			/>
 		</mesh>
 	);
 }
@@ -116,7 +123,7 @@ function LinearHandleItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const ux = ax / len;
 	const uy = ay / len;
 	const uz = az / len;
-	const span = 4;
+	const span = 5;
 	const x1 = origin[0] + ux * span;
 	const y1 = origin[1] + uy * span;
 	const z1 = origin[2] + uz * span;
@@ -225,7 +232,7 @@ function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec
 	return readVec3(ctx[key]);
 }
 
-/** @emoji 🖱️ Vertical slab at the footprint so `pointer.move` can vary Z for `pickingHeight` (factory uses |Δz|). */
+/** @emoji 🖱️ YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |Δz|). */
 function HeightDragSurface({
 	origin,
 	corner,
@@ -238,27 +245,34 @@ function HeightDragSurface({
 	readonly onPointerMove?: (point: Vec3) => void;
 }): ReactNode {
 	const z0 = origin[2];
-	const zSpan = 12;
+	const zSpan = 10;
 	const zMid = z0 + zSpan / 2;
+	const ySpan = 6;
 	const onMove = (e: ThreeEvent<PointerEvent>) => {
 		if (!enabled || !onPointerMove) return;
 		e.stopPropagation();
 		const p = e.point;
 		onPointerMove([p.x, p.y, p.z] as unknown as Vec3);
 	};
+	const xPlane = corner[0] + 0.06;
 	return (
 		<mesh
-			position={[corner[0], corner[1] + 0.04, zMid]}
-			rotation={[Math.PI / 2, 0, 0]}
+			position={[xPlane, corner[1], zMid]}
+			rotation={[0, Math.PI / 2, 0]}
 			onPointerMove={onMove}
+			renderOrder={2}
 		>
-			<planeGeometry args={[28, zSpan]} />
-			<meshBasicMaterial
+			<planeGeometry args={[zSpan, ySpan]} />
+			<meshStandardMaterial
 				transparent
-				opacity={0.14}
-				color="#55eeaa"
-				side={THREE.DoubleSide}
+				opacity={0.38}
+				color="#3ecf9f"
+				emissive="#0a3020"
+				emissiveIntensity={0.25}
+				roughness={0.88}
+				metalness={0.08}
 				depthWrite={false}
+				side={THREE.DoubleSide}
 			/>
 		</mesh>
 	);
@@ -365,13 +379,26 @@ export function FactorySpatialView({
 	const ctx = snapshot.context;
 	const origin = vec3FromSnapshotContext(ctx, "origin");
 	const corner = vec3FromSnapshotContext(ctx, "corner");
-	const groundMoveOn = snapshot.state === "pickingSecondCorner" && Boolean(onScenePointerMove);
-	const heightMoveOn = snapshot.state === "pickingHeight" && Boolean(onScenePointerMove) && origin && corner;
+	const groundMoveOn =
+		(snapshot.state === "pickingFirstCorner" || snapshot.state === "pickingSecondCorner") &&
+		Boolean(onScenePointerMove);
+	const heightMoveOn =
+		snapshot.state === "pickingHeight" &&
+		Boolean(onScenePointerMove) &&
+		origin !== null &&
+		corner !== null;
 	return (
 		<>
 			<ambientLight intensity={0.45} />
 			<directionalLight position={[12, 18, 10]} intensity={1.1} />
-			<OrbitControls makeDefault />
+			<OrbitControls
+				makeDefault
+				mouseButtons={{
+					LEFT: -1 as unknown as MOUSE,
+					MIDDLE: MOUSE.DOLLY,
+					RIGHT: MOUSE.ROTATE,
+				}}
+			/>
 			<primitive object={gridHelper} />
 			<GroundPickPlane
 				enabled={pickEnabled}
