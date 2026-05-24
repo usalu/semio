@@ -1,65 +1,415 @@
 {
   "schema": "spatial.topology/v1",
   "revision": 1,
-  "vertices": {
-    "r0": { "id": "r0", "position": [0, 0, 0] },
-    "r1": { "id": "r1", "position": [1.2, 0.4, 0] },
-    "r2": { "id": "r2", "position": [2.6, 0.1, 0] },
-    "r3": { "id": "r3", "position": [3.8, 0.9, 0] },
-    "r4": { "id": "r4", "position": [4.5, 2.1, 0] },
-    "r5": { "id": "r5", "position": [4.2, 3.5, 0] },
-    "r6": { "id": "r6", "position": [3.1, 4.2, 0] },
-    "r7": { "id": "r7", "position": [1.5, 4.5, 0] },
-    "r8": { "id": "r8", "position": [0.2, 3.8, 0] },
-    "r9": { "id": "r9", "position": [-0.4, 2.2, 0] },
-    "r10": { "id": "r10", "position": [6, 0, 0.8] },
-    "r11": { "id": "r11", "position": [7.4, 0.6, 0.8] },
-    "r12": { "id": "r12", "position": [8.8, 0.2, 0.8] },
-    "r13": { "id": "r13", "position": [9.9, 1.1, 0.8] },
-    "r14": { "id": "r14", "position": [10.2, 2.6, 0.8] },
-    "r15": { "id": "r15", "position": [9.4, 3.9, 0.8] },
-    "r16": { "id": "r16", "position": [7.8, 4.4, 0.8] },
-    "r17": { "id": "r17", "position": [6.2, 4.1, 0.8] },
-    "r18": { "id": "r18", "position": [2, 6, 1.6] },
-    "r19": { "id": "r19", "position": [3.5, 6.8, 1.6] },
-    "r20": { "id": "r20", "position": [5.2, 6.5, 1.6] },
-    "r21": { "id": "r21", "position": [6.8, 7.2, 1.6] },
-    "r22": { "id": "r22", "position": [7.5, 8.4, 1.6] },
-    "r23": { "id": "r23", "position": [6.1, 9.1, 1.6] }
-  },
-  "edges": {
-    "re0": { "id": "re0", "vertexIds": ["r0", "r1"] },
-    "re1": { "id": "re1", "vertexIds": ["r1", "r2"] },
-    "re2": { "id": "re2", "vertexIds": ["r2", "r3"] },
-    "re3": { "id": "re3", "vertexIds": ["r3", "r4"] },
-    "re4": { "id": "re4", "vertexIds": ["r4", "r5"] },
-    "re5": { "id": "re5", "vertexIds": ["r5", "r6"] },
-    "re6": { "id": "re6", "vertexIds": ["r6", "r7"] },
-    "re7": { "id": "re7", "vertexIds": ["r7", "r8"] },
-    "re8": { "id": "re8", "vertexIds": ["r8", "r9"] },
-    "re9": { "id": "re9", "vertexIds": ["r9", "r0"] },
-    "re10": { "id": "re10", "vertexIds": ["r10", "r11"] },
-    "re11": { "id": "re11", "vertexIds": ["r11", "r12"] },
-    "re12": { "id": "re12", "vertexIds": ["r12", "r13"] },
-    "re13": { "id": "re13", "vertexIds": ["r13", "r14"] },
-    "re14": { "id": "re14", "vertexIds": ["r14", "r15"] },
-    "re15": { "id": "re15", "vertexIds": ["r15", "r16"] },
-    "re16": { "id": "re16", "vertexIds": ["r16", "r17"] },
-    "re17": { "id": "re17", "vertexIds": ["r17", "r10"] },
-    "re18": { "id": "re18", "vertexIds": ["r18", "r19"] },
-    "re19": { "id": "re19", "vertexIds": ["r19", "r20"] },
-    "re20": { "id": "re20", "vertexIds": ["r20", "r21"] },
-    "re21": { "id": "re21", "vertexIds": ["r21", "r22"] },
-    "re22": { "id": "re22", "vertexIds": ["r22", "r23"] }
-  },
-  "wires": {
-    "stub-wire": { "id": "stub-wire", "edgeIds": ["re0", "re1", "re2", "re3", "re4", "re5", "re6", "re7", "re8", "re9"] },
-    "orbit-a": { "id": "orbit-a", "edgeIds": ["re10", "re11", "re12", "re13", "re14", "re15", "re16", "re17"] },
-    "spine-b": { "id": "spine-b", "edgeIds": ["re18", "re19", "re20", "re21", "re22"] }
-  },
-  "faces": {},
-  "shells": {},
-  "cells": {},
-  "cellComplexes": {},
-  "clusters": { "all-routes": { "id": "all-routes", "memberIds": ["stub-wire", "orbit-a", "spine-b"] } }
+  "vertices": [
+    {
+      "id": "r0",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "r1",
+      "position": [
+        1.2,
+        0.4,
+        0
+      ]
+    },
+    {
+      "id": "r10",
+      "position": [
+        6,
+        0,
+        0.8
+      ]
+    },
+    {
+      "id": "r11",
+      "position": [
+        7.4,
+        0.6,
+        0.8
+      ]
+    },
+    {
+      "id": "r12",
+      "position": [
+        8.8,
+        0.2,
+        0.8
+      ]
+    },
+    {
+      "id": "r13",
+      "position": [
+        9.9,
+        1.1,
+        0.8
+      ]
+    },
+    {
+      "id": "r14",
+      "position": [
+        10.2,
+        2.6,
+        0.8
+      ]
+    },
+    {
+      "id": "r15",
+      "position": [
+        9.4,
+        3.9,
+        0.8
+      ]
+    },
+    {
+      "id": "r16",
+      "position": [
+        7.8,
+        4.4,
+        0.8
+      ]
+    },
+    {
+      "id": "r17",
+      "position": [
+        6.2,
+        4.1,
+        0.8
+      ]
+    },
+    {
+      "id": "r18",
+      "position": [
+        2,
+        6,
+        1.6
+      ]
+    },
+    {
+      "id": "r19",
+      "position": [
+        3.5,
+        6.8,
+        1.6
+      ]
+    },
+    {
+      "id": "r2",
+      "position": [
+        2.6,
+        0.1,
+        0
+      ]
+    },
+    {
+      "id": "r20",
+      "position": [
+        5.2,
+        6.5,
+        1.6
+      ]
+    },
+    {
+      "id": "r21",
+      "position": [
+        6.8,
+        7.2,
+        1.6
+      ]
+    },
+    {
+      "id": "r22",
+      "position": [
+        7.5,
+        8.4,
+        1.6
+      ]
+    },
+    {
+      "id": "r23",
+      "position": [
+        6.1,
+        9.1,
+        1.6
+      ]
+    },
+    {
+      "id": "r3",
+      "position": [
+        3.8,
+        0.9,
+        0
+      ]
+    },
+    {
+      "id": "r4",
+      "position": [
+        4.5,
+        2.1,
+        0
+      ]
+    },
+    {
+      "id": "r5",
+      "position": [
+        4.2,
+        3.5,
+        0
+      ]
+    },
+    {
+      "id": "r6",
+      "position": [
+        3.1,
+        4.2,
+        0
+      ]
+    },
+    {
+      "id": "r7",
+      "position": [
+        1.5,
+        4.5,
+        0
+      ]
+    },
+    {
+      "id": "r8",
+      "position": [
+        0.2,
+        3.8,
+        0
+      ]
+    },
+    {
+      "id": "r9",
+      "position": [
+        -0.4,
+        2.2,
+        0
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "re0",
+      "vertexIds": [
+        "r0",
+        "r1"
+      ]
+    },
+    {
+      "id": "re1",
+      "vertexIds": [
+        "r1",
+        "r2"
+      ]
+    },
+    {
+      "id": "re10",
+      "vertexIds": [
+        "r10",
+        "r11"
+      ]
+    },
+    {
+      "id": "re11",
+      "vertexIds": [
+        "r11",
+        "r12"
+      ]
+    },
+    {
+      "id": "re12",
+      "vertexIds": [
+        "r12",
+        "r13"
+      ]
+    },
+    {
+      "id": "re13",
+      "vertexIds": [
+        "r13",
+        "r14"
+      ]
+    },
+    {
+      "id": "re14",
+      "vertexIds": [
+        "r14",
+        "r15"
+      ]
+    },
+    {
+      "id": "re15",
+      "vertexIds": [
+        "r15",
+        "r16"
+      ]
+    },
+    {
+      "id": "re16",
+      "vertexIds": [
+        "r16",
+        "r17"
+      ]
+    },
+    {
+      "id": "re17",
+      "vertexIds": [
+        "r17",
+        "r10"
+      ]
+    },
+    {
+      "id": "re18",
+      "vertexIds": [
+        "r18",
+        "r19"
+      ]
+    },
+    {
+      "id": "re19",
+      "vertexIds": [
+        "r19",
+        "r20"
+      ]
+    },
+    {
+      "id": "re2",
+      "vertexIds": [
+        "r2",
+        "r3"
+      ]
+    },
+    {
+      "id": "re20",
+      "vertexIds": [
+        "r20",
+        "r21"
+      ]
+    },
+    {
+      "id": "re21",
+      "vertexIds": [
+        "r21",
+        "r22"
+      ]
+    },
+    {
+      "id": "re22",
+      "vertexIds": [
+        "r22",
+        "r23"
+      ]
+    },
+    {
+      "id": "re3",
+      "vertexIds": [
+        "r3",
+        "r4"
+      ]
+    },
+    {
+      "id": "re4",
+      "vertexIds": [
+        "r4",
+        "r5"
+      ]
+    },
+    {
+      "id": "re5",
+      "vertexIds": [
+        "r5",
+        "r6"
+      ]
+    },
+    {
+      "id": "re6",
+      "vertexIds": [
+        "r6",
+        "r7"
+      ]
+    },
+    {
+      "id": "re7",
+      "vertexIds": [
+        "r7",
+        "r8"
+      ]
+    },
+    {
+      "id": "re8",
+      "vertexIds": [
+        "r8",
+        "r9"
+      ]
+    },
+    {
+      "id": "re9",
+      "vertexIds": [
+        "r9",
+        "r0"
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "id": "orbit-a",
+      "edgeIds": [
+        "re10",
+        "re11",
+        "re12",
+        "re13",
+        "re14",
+        "re15",
+        "re16",
+        "re17"
+      ]
+    },
+    {
+      "id": "spine-b",
+      "edgeIds": [
+        "re18",
+        "re19",
+        "re20",
+        "re21",
+        "re22"
+      ]
+    },
+    {
+      "id": "stub-wire",
+      "edgeIds": [
+        "re0",
+        "re1",
+        "re2",
+        "re3",
+        "re4",
+        "re5",
+        "re6",
+        "re7",
+        "re8",
+        "re9"
+      ]
+    }
+  ],
+  "faces": [],
+  "shells": [],
+  "cells": [],
+  "cellComplexes": [],
+  "clusters": [
+    {
+      "id": "all-routes",
+      "memberIds": [
+        "stub-wire",
+        "orbit-a",
+        "spine-b"
+      ]
+    }
+  ]
 }

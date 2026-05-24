@@ -1,6 +1,4 @@
-# Factory
-
-A factory is
+# Command
 
 # Geometry
 

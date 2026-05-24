@@ -2002,17 +2002,30 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core expr", () => {
-		it("evaluates numeric min expr", () => {
-			const e = { min: [{ const: 3 }, { const: 7 }] } as Expr;
+		it("evaluates numeric fold min expr", () => {
+			const e: Expr = {
+				kind: "fold",
+				op: "min",
+				args: [
+					{ kind: "const", value: 3 },
+					{ kind: "const", value: 7 },
+				],
+			};
 			expect(evalExpr(e, { context: {} })).toBe(3);
 		});
 		it("evaluates guards used by box factory", () => {
-			const g = {
-				all: [
-					{ exists: { path: "origin" } },
-					{ ">": [{ path: "height" }, 0] },
+			const g: Expr = {
+				kind: "all",
+				args: [
+					{ kind: "exists", target: { root: "context", segments: [{ kind: "field", name: "origin" }] } },
+					{
+						kind: "binop",
+						op: ">",
+						left: { kind: "path", root: "context", segments: [{ kind: "field", name: "height" }] },
+						right: { kind: "const", value: 0 },
+					},
 				],
-			} as Expr;
+			};
 			expect(evalGuard(g, { context: { origin: [0, 0, 0], height: 2 } })).toBe(true);
 		});
 	});

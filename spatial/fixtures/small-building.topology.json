@@ -1,8 +1,8 @@
 {
   "schema": "spatial.topology/v1",
   "revision": 1,
-  "vertices": {
-    "small-building-vertex-1027259450": {
+  "vertices": [
+    {
       "id": "small-building-vertex-1027259450",
       "position": [
         264.775941,
@@ -10,7 +10,7 @@
         34.44
       ]
     },
-    "small-building-vertex-1052483923": {
+    {
       "id": "small-building-vertex-1052483923",
       "position": [
         310.69594,
@@ -18,7 +18,7 @@
         34.44
       ]
     },
-    "small-building-vertex-1078954806": {
+    {
       "id": "small-building-vertex-1078954806",
       "position": [
         264.775941,
@@ -26,7 +26,7 @@
         34.44
       ]
     },
-    "small-building-vertex-1198540561": {
+    {
       "id": "small-building-vertex-1198540561",
       "position": [
         264.775941,
@@ -34,7 +34,7 @@
         0
       ]
     },
-    "small-building-vertex-1393258689": {
+    {
       "id": "small-building-vertex-1393258689",
       "position": [
         310.69594,
@@ -42,7 +42,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-1412665337": {
+    {
       "id": "small-building-vertex-1412665337",
       "position": [
         310.69594,
@@ -50,7 +50,7 @@
         0
       ]
     },
-    "small-building-vertex-1417750768": {
+    {
       "id": "small-building-vertex-1417750768",
       "position": [
         310.69594,
@@ -58,7 +58,7 @@
         97.989999
       ]
     },
-    "small-building-vertex-1487235108": {
+    {
       "id": "small-building-vertex-1487235108",
       "position": [
         264.775941,
@@ -66,7 +66,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-1539396315": {
+    {
       "id": "small-building-vertex-1539396315",
       "position": [
         395.97594,
@@ -74,7 +74,7 @@
         34.44
       ]
     },
-    "small-building-vertex-1653716766": {
+    {
       "id": "small-building-vertex-1653716766",
       "position": [
         264.775941,
@@ -82,7 +82,7 @@
         97.989999
       ]
     },
-    "small-building-vertex-1690047670": {
+    {
       "id": "small-building-vertex-1690047670",
       "position": [
         310.69594,
@@ -90,7 +90,7 @@
         0
       ]
     },
-    "small-building-vertex-190344958": {
+    {
       "id": "small-building-vertex-190344958",
       "position": [
         395.97594,
@@ -98,7 +98,7 @@
         106.599999
       ]
     },
-    "small-building-vertex-1928378833": {
+    {
       "id": "small-building-vertex-1928378833",
       "position": [
         264.775941,
@@ -106,7 +106,7 @@
         106.599999
       ]
     },
-    "small-building-vertex-198843528": {
+    {
       "id": "small-building-vertex-198843528",
       "position": [
         356.61594,
@@ -114,7 +114,7 @@
         0
       ]
     },
-    "small-building-vertex-200778251": {
+    {
       "id": "small-building-vertex-200778251",
       "position": [
         310.69594,
@@ -122,7 +122,7 @@
         34.44
       ]
     },
-    "small-building-vertex-2126675359": {
+    {
       "id": "small-building-vertex-2126675359",
       "position": [
         264.775941,
@@ -130,7 +130,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-354458280": {
+    {
       "id": "small-building-vertex-354458280",
       "position": [
         310.69594,
@@ -138,7 +138,7 @@
         0
       ]
     },
-    "small-building-vertex-385090140": {
+    {
       "id": "small-building-vertex-385090140",
       "position": [
         395.97594,
@@ -146,7 +146,7 @@
         34.44
       ]
     },
-    "small-building-vertex-428254027": {
+    {
       "id": "small-building-vertex-428254027",
       "position": [
         395.97594,
@@ -154,7 +154,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-468571430": {
+    {
       "id": "small-building-vertex-468571430",
       "position": [
         356.61594,
@@ -162,7 +162,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-551332595": {
+    {
       "id": "small-building-vertex-551332595",
       "position": [
         310.69594,
@@ -170,7 +170,7 @@
         106.599999
       ]
     },
-    "small-building-vertex-55304137": {
+    {
       "id": "small-building-vertex-55304137",
       "position": [
         356.61594,
@@ -178,7 +178,7 @@
         34.44
       ]
     },
-    "small-building-vertex-560960189": {
+    {
       "id": "small-building-vertex-560960189",
       "position": [
         264.775941,
@@ -186,7 +186,7 @@
         34.44
       ]
     },
-    "small-building-vertex-566043311": {
+    {
       "id": "small-building-vertex-566043311",
       "position": [
         264.775941,
@@ -194,7 +194,7 @@
         0
       ]
     },
-    "small-building-vertex-568544779": {
+    {
       "id": "small-building-vertex-568544779",
       "position": [
         395.97594,
@@ -202,7 +202,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-584100920": {
+    {
       "id": "small-building-vertex-584100920",
       "position": [
         264.775941,
@@ -210,7 +210,7 @@
         0
       ]
     },
-    "small-building-vertex-595232246": {
+    {
       "id": "small-building-vertex-595232246",
       "position": [
         395.97594,
@@ -218,7 +218,7 @@
         97.989999
       ]
     },
-    "small-building-vertex-696914248": {
+    {
       "id": "small-building-vertex-696914248",
       "position": [
         356.61594,
@@ -226,7 +226,7 @@
         97.989999
       ]
     },
-    "small-building-vertex-700015011": {
+    {
       "id": "small-building-vertex-700015011",
       "position": [
         356.61594,
@@ -234,7 +234,7 @@
         0
       ]
     },
-    "small-building-vertex-834828749": {
+    {
       "id": "small-building-vertex-834828749",
       "position": [
         310.69594,
@@ -242,7 +242,7 @@
         34.44
       ]
     },
-    "small-building-vertex-861462044": {
+    {
       "id": "small-building-vertex-861462044",
       "position": [
         395.97594,
@@ -250,7 +250,7 @@
         0
       ]
     },
-    "small-building-vertex-924737164": {
+    {
       "id": "small-building-vertex-924737164",
       "position": [
         395.97594,
@@ -258,7 +258,7 @@
         34.44
       ]
     },
-    "small-building-vertex-935545497": {
+    {
       "id": "small-building-vertex-935545497",
       "position": [
         395.97594,
@@ -266,7 +266,7 @@
         0
       ]
     },
-    "small-building-vertex-943996510": {
+    {
       "id": "small-building-vertex-943996510",
       "position": [
         395.97594,
@@ -274,7 +274,7 @@
         0
       ]
     },
-    "small-building-vertex-945778871": {
+    {
       "id": "small-building-vertex-945778871",
       "position": [
         310.69594,
@@ -282,7 +282,7 @@
         69.699999
       ]
     },
-    "small-building-vertex-990488970": {
+    {
       "id": "small-building-vertex-990488970",
       "position": [
         356.61594,
@@ -290,515 +290,515 @@
         34.44
       ]
     }
-  },
-  "edges": {
-    "small-building-edge-1070453701": {
+  ],
+  "edges": [
+    {
       "id": "small-building-edge-1070453701",
       "vertexIds": [
         "small-building-vertex-945778871",
         "small-building-vertex-1052483923"
       ]
     },
-    "small-building-edge-1087294237": {
+    {
       "id": "small-building-edge-1087294237",
       "vertexIds": [
         "small-building-vertex-696914248",
         "small-building-vertex-990488970"
       ]
     },
-    "small-building-edge-1108121009": {
+    {
       "id": "small-building-edge-1108121009",
       "vertexIds": [
         "small-building-vertex-945778871",
         "small-building-vertex-1487235108"
       ]
     },
-    "small-building-edge-1114968992": {
+    {
       "id": "small-building-edge-1114968992",
       "vertexIds": [
         "small-building-vertex-584100920",
         "small-building-vertex-1198540561"
       ]
     },
-    "small-building-edge-1129968473": {
+    {
       "id": "small-building-edge-1129968473",
       "vertexIds": [
         "small-building-vertex-55304137",
         "small-building-vertex-468571430"
       ]
     },
-    "small-building-edge-1135198732": {
+    {
       "id": "small-building-edge-1135198732",
       "vertexIds": [
         "small-building-vertex-198843528",
         "small-building-vertex-700015011"
       ]
     },
-    "small-building-edge-1176603989": {
+    {
       "id": "small-building-edge-1176603989",
       "vertexIds": [
         "small-building-vertex-834828749",
         "small-building-vertex-1393258689"
       ]
     },
-    "small-building-edge-1181976793": {
+    {
       "id": "small-building-edge-1181976793",
       "vertexIds": [
         "small-building-vertex-1539396315",
         "small-building-vertex-568544779"
       ]
     },
-    "small-building-edge-1221590728": {
+    {
       "id": "small-building-edge-1221590728",
       "vertexIds": [
         "small-building-vertex-2126675359",
         "small-building-vertex-1027259450"
       ]
     },
-    "small-building-edge-1246638018": {
+    {
       "id": "small-building-edge-1246638018",
       "vertexIds": [
         "small-building-vertex-935545497",
         "small-building-vertex-385090140"
       ]
     },
-    "small-building-edge-1254229480": {
+    {
       "id": "small-building-edge-1254229480",
       "vertexIds": [
         "small-building-vertex-990488970",
         "small-building-vertex-198843528"
       ]
     },
-    "small-building-edge-1261178177": {
+    {
       "id": "small-building-edge-1261178177",
       "vertexIds": [
         "small-building-vertex-560960189",
         "small-building-vertex-1653716766"
       ]
     },
-    "small-building-edge-1293562955": {
+    {
       "id": "small-building-edge-1293562955",
       "vertexIds": [
         "small-building-vertex-1393258689",
         "small-building-vertex-1417750768"
       ]
     },
-    "small-building-edge-1336202142": {
+    {
       "id": "small-building-edge-1336202142",
       "vertexIds": [
         "small-building-vertex-385090140",
         "small-building-vertex-924737164"
       ]
     },
-    "small-building-edge-1400646396": {
+    {
       "id": "small-building-edge-1400646396",
       "vertexIds": [
         "small-building-vertex-943996510",
         "small-building-vertex-935545497"
       ]
     },
-    "small-building-edge-1422159112": {
+    {
       "id": "small-building-edge-1422159112",
       "vertexIds": [
         "small-building-vertex-1078954806",
         "small-building-vertex-1487235108"
       ]
     },
-    "small-building-edge-1434101711": {
+    {
       "id": "small-building-edge-1434101711",
       "vertexIds": [
         "small-building-vertex-943996510",
         "small-building-vertex-861462044"
       ]
     },
-    "small-building-edge-1526088265": {
+    {
       "id": "small-building-edge-1526088265",
       "vertexIds": [
         "small-building-vertex-468571430",
         "small-building-vertex-696914248"
       ]
     },
-    "small-building-edge-1546619411": {
+    {
       "id": "small-building-edge-1546619411",
       "vertexIds": [
         "small-building-vertex-696914248",
         "small-building-vertex-595232246"
       ]
     },
-    "small-building-edge-1565678408": {
+    {
       "id": "small-building-edge-1565678408",
       "vertexIds": [
         "small-building-vertex-1690047670",
         "small-building-vertex-354458280"
       ]
     },
-    "small-building-edge-1567786765": {
+    {
       "id": "small-building-edge-1567786765",
       "vertexIds": [
         "small-building-vertex-551332595",
         "small-building-vertex-945778871"
       ]
     },
-    "small-building-edge-1660152326": {
+    {
       "id": "small-building-edge-1660152326",
       "vertexIds": [
         "small-building-vertex-354458280",
         "small-building-vertex-1412665337"
       ]
     },
-    "small-building-edge-1705326756": {
+    {
       "id": "small-building-edge-1705326756",
       "vertexIds": [
         "small-building-vertex-1928378833",
         "small-building-vertex-551332595"
       ]
     },
-    "small-building-edge-172877525": {
+    {
       "id": "small-building-edge-172877525",
       "vertexIds": [
         "small-building-vertex-1690047670",
         "small-building-vertex-1052483923"
       ]
     },
-    "small-building-edge-1803358123": {
+    {
       "id": "small-building-edge-1803358123",
       "vertexIds": [
         "small-building-vertex-190344958",
         "small-building-vertex-428254027"
       ]
     },
-    "small-building-edge-1875256078": {
+    {
       "id": "small-building-edge-1875256078",
       "vertexIds": [
         "small-building-vertex-385090140",
         "small-building-vertex-1052483923"
       ]
     },
-    "small-building-edge-1884754140": {
+    {
       "id": "small-building-edge-1884754140",
       "vertexIds": [
         "small-building-vertex-595232246",
         "small-building-vertex-190344958"
       ]
     },
-    "small-building-edge-1905736256": {
+    {
       "id": "small-building-edge-1905736256",
       "vertexIds": [
         "small-building-vertex-428254027",
         "small-building-vertex-945778871"
       ]
     },
-    "small-building-edge-1914903829": {
+    {
       "id": "small-building-edge-1914903829",
       "vertexIds": [
         "small-building-vertex-200778251",
         "small-building-vertex-990488970"
       ]
     },
-    "small-building-edge-1943812986": {
+    {
       "id": "small-building-edge-1943812986",
       "vertexIds": [
         "small-building-vertex-566043311",
         "small-building-vertex-584100920"
       ]
     },
-    "small-building-edge-2004107109": {
+    {
       "id": "small-building-edge-2004107109",
       "vertexIds": [
         "small-building-vertex-200778251",
         "small-building-vertex-560960189"
       ]
     },
-    "small-building-edge-2062007036": {
+    {
       "id": "small-building-edge-2062007036",
       "vertexIds": [
         "small-building-vertex-990488970",
         "small-building-vertex-924737164"
       ]
     },
-    "small-building-edge-2075229525": {
+    {
       "id": "small-building-edge-2075229525",
       "vertexIds": [
         "small-building-vertex-1027259450",
         "small-building-vertex-566043311"
       ]
     },
-    "small-building-edge-2101307748": {
+    {
       "id": "small-building-edge-2101307748",
       "vertexIds": [
         "small-building-vertex-943996510",
         "small-building-vertex-198843528"
       ]
     },
-    "small-building-edge-2102926252": {
+    {
       "id": "small-building-edge-2102926252",
       "vertexIds": [
         "small-building-vertex-1928378833",
         "small-building-vertex-1653716766"
       ]
     },
-    "small-building-edge-2106132793": {
+    {
       "id": "small-building-edge-2106132793",
       "vertexIds": [
         "small-building-vertex-1198540561",
         "small-building-vertex-1690047670"
       ]
     },
-    "small-building-edge-216560696": {
+    {
       "id": "small-building-edge-216560696",
       "vertexIds": [
         "small-building-vertex-595232246",
         "small-building-vertex-924737164"
       ]
     },
-    "small-building-edge-219287551": {
+    {
       "id": "small-building-edge-219287551",
       "vertexIds": [
         "small-building-vertex-551332595",
         "small-building-vertex-190344958"
       ]
     },
-    "small-building-edge-224238197": {
+    {
       "id": "small-building-edge-224238197",
       "vertexIds": [
         "small-building-vertex-584100920",
         "small-building-vertex-560960189"
       ]
     },
-    "small-building-edge-225319834": {
+    {
       "id": "small-building-edge-225319834",
       "vertexIds": [
         "small-building-vertex-861462044",
         "small-building-vertex-1539396315"
       ]
     },
-    "small-building-edge-229106015": {
+    {
       "id": "small-building-edge-229106015",
       "vertexIds": [
         "small-building-vertex-1027259450",
         "small-building-vertex-834828749"
       ]
     },
-    "small-building-edge-258854128": {
+    {
       "id": "small-building-edge-258854128",
       "vertexIds": [
         "small-building-vertex-568544779",
         "small-building-vertex-595232246"
       ]
     },
-    "small-building-edge-278123677": {
+    {
       "id": "small-building-edge-278123677",
       "vertexIds": [
         "small-building-vertex-584100920",
         "small-building-vertex-354458280"
       ]
     },
-    "small-building-edge-278867947": {
+    {
       "id": "small-building-edge-278867947",
       "vertexIds": [
         "small-building-vertex-834828749",
         "small-building-vertex-200778251"
       ]
     },
-    "small-building-edge-295162881": {
+    {
       "id": "small-building-edge-295162881",
       "vertexIds": [
         "small-building-vertex-700015011",
         "small-building-vertex-1412665337"
       ]
     },
-    "small-building-edge-305839019": {
+    {
       "id": "small-building-edge-305839019",
       "vertexIds": [
         "small-building-vertex-861462044",
         "small-building-vertex-700015011"
       ]
     },
-    "small-building-edge-332998341": {
+    {
       "id": "small-building-edge-332998341",
       "vertexIds": [
         "small-building-vertex-200778251",
         "small-building-vertex-354458280"
       ]
     },
-    "small-building-edge-349583852": {
+    {
       "id": "small-building-edge-349583852",
       "vertexIds": [
         "small-building-vertex-1052483923",
         "small-building-vertex-1078954806"
       ]
     },
-    "small-building-edge-354613623": {
+    {
       "id": "small-building-edge-354613623",
       "vertexIds": [
         "small-building-vertex-1487235108",
         "small-building-vertex-1928378833"
       ]
     },
-    "small-building-edge-432705901": {
+    {
       "id": "small-building-edge-432705901",
       "vertexIds": [
         "small-building-vertex-200778251",
         "small-building-vertex-1052483923"
       ]
     },
-    "small-building-edge-432807106": {
+    {
       "id": "small-building-edge-432807106",
       "vertexIds": [
         "small-building-vertex-1417750768",
         "small-building-vertex-200778251"
       ]
     },
-    "small-building-edge-467629952": {
+    {
       "id": "small-building-edge-467629952",
       "vertexIds": [
         "small-building-vertex-1078954806",
         "small-building-vertex-560960189"
       ]
     },
-    "small-building-edge-492289368": {
+    {
       "id": "small-building-edge-492289368",
       "vertexIds": [
         "small-building-vertex-468571430",
         "small-building-vertex-568544779"
       ]
     },
-    "small-building-edge-49481349": {
+    {
       "id": "small-building-edge-49481349",
       "vertexIds": [
         "small-building-vertex-1417750768",
         "small-building-vertex-551332595"
       ]
     },
-    "small-building-edge-508083477": {
+    {
       "id": "small-building-edge-508083477",
       "vertexIds": [
         "small-building-vertex-1417750768",
         "small-building-vertex-1653716766"
       ]
     },
-    "small-building-edge-51009478": {
+    {
       "id": "small-building-edge-51009478",
       "vertexIds": [
         "small-building-vertex-924737164",
         "small-building-vertex-943996510"
       ]
     },
-    "small-building-edge-53081364": {
+    {
       "id": "small-building-edge-53081364",
       "vertexIds": [
         "small-building-vertex-55304137",
         "small-building-vertex-1539396315"
       ]
     },
-    "small-building-edge-589906933": {
+    {
       "id": "small-building-edge-589906933",
       "vertexIds": [
         "small-building-vertex-1393258689",
         "small-building-vertex-468571430"
       ]
     },
-    "small-building-edge-598826215": {
+    {
       "id": "small-building-edge-598826215",
       "vertexIds": [
         "small-building-vertex-1690047670",
         "small-building-vertex-935545497"
       ]
     },
-    "small-building-edge-601106960": {
+    {
       "id": "small-building-edge-601106960",
       "vertexIds": [
         "small-building-vertex-1417750768",
         "small-building-vertex-696914248"
       ]
     },
-    "small-building-edge-608733341": {
+    {
       "id": "small-building-edge-608733341",
       "vertexIds": [
         "small-building-vertex-700015011",
         "small-building-vertex-55304137"
       ]
     },
-    "small-building-edge-657827535": {
+    {
       "id": "small-building-edge-657827535",
       "vertexIds": [
         "small-building-vertex-198843528",
         "small-building-vertex-354458280"
       ]
     },
-    "small-building-edge-666672115": {
+    {
       "id": "small-building-edge-666672115",
       "vertexIds": [
         "small-building-vertex-1078954806",
         "small-building-vertex-1198540561"
       ]
     },
-    "small-building-edge-757634469": {
+    {
       "id": "small-building-edge-757634469",
       "vertexIds": [
         "small-building-vertex-1412665337",
         "small-building-vertex-834828749"
       ]
     },
-    "small-building-edge-779379499": {
+    {
       "id": "small-building-edge-779379499",
       "vertexIds": [
         "small-building-vertex-1412665337",
         "small-building-vertex-566043311"
       ]
     },
-    "small-building-edge-814507104": {
+    {
       "id": "small-building-edge-814507104",
       "vertexIds": [
         "small-building-vertex-55304137",
         "small-building-vertex-990488970"
       ]
     },
-    "small-building-edge-829530808": {
+    {
       "id": "small-building-edge-829530808",
       "vertexIds": [
         "small-building-vertex-2126675359",
         "small-building-vertex-1393258689"
       ]
     },
-    "small-building-edge-858566927": {
+    {
       "id": "small-building-edge-858566927",
       "vertexIds": [
         "small-building-vertex-385090140",
         "small-building-vertex-428254027"
       ]
     },
-    "small-building-edge-894079751": {
+    {
       "id": "small-building-edge-894079751",
       "vertexIds": [
         "small-building-vertex-1539396315",
         "small-building-vertex-924737164"
       ]
     },
-    "small-building-edge-905942567": {
+    {
       "id": "small-building-edge-905942567",
       "vertexIds": [
         "small-building-vertex-1653716766",
         "small-building-vertex-2126675359"
       ]
     },
-    "small-building-edge-936303582": {
+    {
       "id": "small-building-edge-936303582",
       "vertexIds": [
         "small-building-vertex-834828749",
         "small-building-vertex-55304137"
       ]
     },
-    "small-building-edge-951546977": {
+    {
       "id": "small-building-edge-951546977",
       "vertexIds": [
         "small-building-vertex-560960189",
         "small-building-vertex-1027259450"
       ]
     }
-  },
-  "wires": {
-    "small-building-wire-1095357825": {
+  ],
+  "wires": [
+    {
       "id": "small-building-wire-1095357825",
       "edgeIds": [
         "small-building-edge-467629952",
@@ -808,7 +808,7 @@
         "small-building-edge-1261178177"
       ]
     },
-    "small-building-wire-1096443527": {
+    {
       "id": "small-building-wire-1096443527",
       "edgeIds": [
         "small-building-edge-936303582",
@@ -817,7 +817,7 @@
         "small-building-edge-1129968473"
       ]
     },
-    "small-building-wire-1098242493": {
+    {
       "id": "small-building-wire-1098242493",
       "edgeIds": [
         "small-building-edge-1254229480",
@@ -826,7 +826,7 @@
         "small-building-edge-657827535"
       ]
     },
-    "small-building-wire-1114708436": {
+    {
       "id": "small-building-wire-1114708436",
       "edgeIds": [
         "small-building-edge-905942567",
@@ -835,7 +835,7 @@
         "small-building-edge-829530808"
       ]
     },
-    "small-building-wire-1172378877": {
+    {
       "id": "small-building-wire-1172378877",
       "edgeIds": [
         "small-building-edge-49481349",
@@ -845,7 +845,7 @@
         "small-building-edge-1546619411"
       ]
     },
-    "small-building-wire-1184681038": {
+    {
       "id": "small-building-wire-1184681038",
       "edgeIds": [
         "small-building-edge-814507104",
@@ -854,7 +854,7 @@
         "small-building-edge-53081364"
       ]
     },
-    "small-building-wire-1300391340": {
+    {
       "id": "small-building-wire-1300391340",
       "edgeIds": [
         "small-building-edge-53081364",
@@ -863,7 +863,7 @@
         "small-building-edge-1181976793"
       ]
     },
-    "small-building-wire-1316372424": {
+    {
       "id": "small-building-wire-1316372424",
       "edgeIds": [
         "small-building-edge-1875256078",
@@ -872,7 +872,7 @@
         "small-building-edge-1246638018"
       ]
     },
-    "small-building-wire-1366152152": {
+    {
       "id": "small-building-wire-1366152152",
       "edgeIds": [
         "small-building-edge-278123677",
@@ -881,7 +881,7 @@
         "small-building-edge-1660152326"
       ]
     },
-    "small-building-wire-1368161050": {
+    {
       "id": "small-building-wire-1368161050",
       "edgeIds": [
         "small-building-edge-2101307748",
@@ -890,7 +890,7 @@
         "small-building-edge-1434101711"
       ]
     },
-    "small-building-wire-1390110645": {
+    {
       "id": "small-building-wire-1390110645",
       "edgeIds": [
         "small-building-edge-278867947",
@@ -899,7 +899,7 @@
         "small-building-edge-936303582"
       ]
     },
-    "small-building-wire-1398946955": {
+    {
       "id": "small-building-wire-1398946955",
       "edgeIds": [
         "small-building-edge-1567786765",
@@ -908,7 +908,7 @@
         "small-building-edge-219287551"
       ]
     },
-    "small-building-wire-1399618711": {
+    {
       "id": "small-building-wire-1399618711",
       "edgeIds": [
         "small-building-edge-349583852",
@@ -917,7 +917,7 @@
         "small-building-edge-467629952"
       ]
     },
-    "small-building-wire-1404785392": {
+    {
       "id": "small-building-wire-1404785392",
       "edgeIds": [
         "small-building-edge-608733341",
@@ -926,7 +926,7 @@
         "small-building-edge-305839019"
       ]
     },
-    "small-building-wire-1502734446": {
+    {
       "id": "small-building-wire-1502734446",
       "edgeIds": [
         "small-building-edge-1293562955",
@@ -935,7 +935,7 @@
         "small-building-edge-589906933"
       ]
     },
-    "small-building-wire-1553478650": {
+    {
       "id": "small-building-wire-1553478650",
       "edgeIds": [
         "small-building-edge-2062007036",
@@ -944,7 +944,7 @@
         "small-building-edge-1087294237"
       ]
     },
-    "small-building-wire-1559546061": {
+    {
       "id": "small-building-wire-1559546061",
       "edgeIds": [
         "small-building-edge-2075229525",
@@ -953,7 +953,7 @@
         "small-building-edge-779379499"
       ]
     },
-    "small-building-wire-1590398748": {
+    {
       "id": "small-building-wire-1590398748",
       "edgeIds": [
         "small-building-edge-172877525",
@@ -962,7 +962,7 @@
         "small-building-edge-432705901"
       ]
     },
-    "small-building-wire-1592230924": {
+    {
       "id": "small-building-wire-1592230924",
       "edgeIds": [
         "small-building-edge-757634469",
@@ -971,7 +971,7 @@
         "small-building-edge-295162881"
       ]
     },
-    "small-building-wire-1597372722": {
+    {
       "id": "small-building-wire-1597372722",
       "edgeIds": [
         "small-building-edge-858566927",
@@ -981,7 +981,7 @@
         "small-building-edge-1803358123"
       ]
     },
-    "small-building-wire-1632492423": {
+    {
       "id": "small-building-wire-1632492423",
       "edgeIds": [
         "small-building-edge-657827535",
@@ -990,7 +990,7 @@
         "small-building-edge-1135198732"
       ]
     },
-    "small-building-wire-164476126": {
+    {
       "id": "small-building-wire-164476126",
       "edgeIds": [
         "small-building-edge-229106015",
@@ -999,7 +999,7 @@
         "small-building-edge-1176603989"
       ]
     },
-    "small-building-wire-1664100031": {
+    {
       "id": "small-building-wire-1664100031",
       "edgeIds": [
         "small-building-edge-432807106",
@@ -1008,7 +1008,7 @@
         "small-building-edge-1293562955"
       ]
     },
-    "small-building-wire-1673128573": {
+    {
       "id": "small-building-wire-1673128573",
       "edgeIds": [
         "small-building-edge-1875256078",
@@ -1018,7 +1018,7 @@
         "small-building-edge-432705901"
       ]
     },
-    "small-building-wire-1676387167": {
+    {
       "id": "small-building-wire-1676387167",
       "edgeIds": [
         "small-building-edge-1070453701",
@@ -1028,7 +1028,7 @@
         "small-building-edge-1567786765"
       ]
     },
-    "small-building-wire-1714825002": {
+    {
       "id": "small-building-wire-1714825002",
       "edgeIds": [
         "small-building-edge-666672115",
@@ -1037,7 +1037,7 @@
         "small-building-edge-1114968992"
       ]
     },
-    "small-building-wire-1737456781": {
+    {
       "id": "small-building-wire-1737456781",
       "edgeIds": [
         "small-building-edge-216560696",
@@ -1046,7 +1046,7 @@
         "small-building-edge-258854128"
       ]
     },
-    "small-building-wire-1742634236": {
+    {
       "id": "small-building-wire-1742634236",
       "edgeIds": [
         "small-building-edge-278867947",
@@ -1055,7 +1055,7 @@
         "small-building-edge-757634469"
       ]
     },
-    "small-building-wire-1745669744": {
+    {
       "id": "small-building-wire-1745669744",
       "edgeIds": [
         "small-building-edge-1087294237",
@@ -1064,7 +1064,7 @@
         "small-building-edge-1914903829"
       ]
     },
-    "small-building-wire-1748227933": {
+    {
       "id": "small-building-wire-1748227933",
       "edgeIds": [
         "small-building-edge-951546977",
@@ -1073,7 +1073,7 @@
         "small-building-edge-1221590728"
       ]
     },
-    "small-building-wire-1755121565": {
+    {
       "id": "small-building-wire-1755121565",
       "edgeIds": [
         "small-building-edge-2004107109",
@@ -1082,7 +1082,7 @@
         "small-building-edge-1261178177"
       ]
     },
-    "small-building-wire-1817346002": {
+    {
       "id": "small-building-wire-1817346002",
       "edgeIds": [
         "small-building-edge-1526088265",
@@ -1091,7 +1091,7 @@
         "small-building-edge-492289368"
       ]
     },
-    "small-building-wire-1847165922": {
+    {
       "id": "small-building-wire-1847165922",
       "edgeIds": [
         "small-building-edge-51009478",
@@ -1100,7 +1100,7 @@
         "small-building-edge-2101307748"
       ]
     },
-    "small-building-wire-2038755520": {
+    {
       "id": "small-building-wire-2038755520",
       "edgeIds": [
         "small-building-edge-1087294237",
@@ -1109,7 +1109,7 @@
         "small-building-edge-1526088265"
       ]
     },
-    "small-building-wire-256701055": {
+    {
       "id": "small-building-wire-256701055",
       "edgeIds": [
         "small-building-edge-1246638018",
@@ -1118,7 +1118,7 @@
         "small-building-edge-1336202142"
       ]
     },
-    "small-building-wire-285005499": {
+    {
       "id": "small-building-wire-285005499",
       "edgeIds": [
         "small-building-edge-349583852",
@@ -1127,7 +1127,7 @@
         "small-building-edge-1422159112"
       ]
     },
-    "small-building-wire-311748032": {
+    {
       "id": "small-building-wire-311748032",
       "edgeIds": [
         "small-building-edge-354613623",
@@ -1136,7 +1136,7 @@
         "small-building-edge-1705326756"
       ]
     },
-    "small-building-wire-36314266": {
+    {
       "id": "small-building-wire-36314266",
       "edgeIds": [
         "small-building-edge-814507104",
@@ -1145,7 +1145,7 @@
         "small-building-edge-608733341"
       ]
     },
-    "small-building-wire-403059999": {
+    {
       "id": "small-building-wire-403059999",
       "edgeIds": [
         "small-building-edge-1565678408",
@@ -1154,7 +1154,7 @@
         "small-building-edge-278123677"
       ]
     },
-    "small-building-wire-456551683": {
+    {
       "id": "small-building-wire-456551683",
       "edgeIds": [
         "small-building-edge-1943812986",
@@ -1163,7 +1163,7 @@
         "small-building-edge-2075229525"
       ]
     },
-    "small-building-wire-510979431": {
+    {
       "id": "small-building-wire-510979431",
       "edgeIds": [
         "small-building-edge-1905736256",
@@ -1172,7 +1172,7 @@
         "small-building-edge-858566927"
       ]
     },
-    "small-building-wire-515231130": {
+    {
       "id": "small-building-wire-515231130",
       "edgeIds": [
         "small-building-edge-224238197",
@@ -1181,7 +1181,7 @@
         "small-building-edge-2004107109"
       ]
     },
-    "small-building-wire-516983686": {
+    {
       "id": "small-building-wire-516983686",
       "edgeIds": [
         "small-building-edge-894079751",
@@ -1190,7 +1190,7 @@
         "small-building-edge-225319834"
       ]
     },
-    "small-building-wire-646169955": {
+    {
       "id": "small-building-wire-646169955",
       "edgeIds": [
         "small-building-edge-598826215",
@@ -1200,7 +1200,7 @@
         "small-building-edge-1400646396"
       ]
     },
-    "small-building-wire-715609103": {
+    {
       "id": "small-building-wire-715609103",
       "edgeIds": [
         "small-building-edge-2106132793",
@@ -1209,7 +1209,7 @@
         "small-building-edge-666672115"
       ]
     },
-    "small-building-wire-924227310": {
+    {
       "id": "small-building-wire-924227310",
       "edgeIds": [
         "small-building-edge-49481349",
@@ -1218,7 +1218,7 @@
         "small-building-edge-1705326756"
       ]
     },
-    "small-building-wire-978200956": {
+    {
       "id": "small-building-wire-978200956",
       "edgeIds": [
         "small-building-edge-951546977",
@@ -1227,293 +1227,293 @@
         "small-building-edge-229106015"
       ]
     }
-  },
-  "faces": {
-    "small-building-face-1049102882": {
+  ],
+  "faces": [
+    {
       "id": "small-building-face-1049102882",
       "wireIds": [
         "small-building-wire-1592230924"
       ]
     },
-    "small-building-face-1071813579": {
+    {
       "id": "small-building-face-1071813579",
       "wireIds": [
         "small-building-wire-1559546061"
       ]
     },
-    "small-building-face-1144073303": {
+    {
       "id": "small-building-face-1144073303",
       "wireIds": [
         "small-building-wire-1755121565"
       ]
     },
-    "small-building-face-1198070201": {
+    {
       "id": "small-building-face-1198070201",
       "wireIds": [
         "small-building-wire-456551683"
       ]
     },
-    "small-building-face-123273386": {
+    {
       "id": "small-building-face-123273386",
       "wireIds": [
         "small-building-wire-1745669744"
       ]
     },
-    "small-building-face-1321487947": {
+    {
       "id": "small-building-face-1321487947",
       "wireIds": [
         "small-building-wire-1742634236"
       ]
     },
-    "small-building-face-1333043829": {
+    {
       "id": "small-building-face-1333043829",
       "wireIds": [
         "small-building-wire-516983686"
       ]
     },
-    "small-building-face-1336622373": {
+    {
       "id": "small-building-face-1336622373",
       "wireIds": [
         "small-building-wire-36314266"
       ]
     },
-    "small-building-face-1366698037": {
+    {
       "id": "small-building-face-1366698037",
       "wireIds": [
         "small-building-wire-1590398748"
       ]
     },
-    "small-building-face-1375822498": {
+    {
       "id": "small-building-face-1375822498",
       "wireIds": [
         "small-building-wire-715609103"
       ]
     },
-    "small-building-face-1382216532": {
+    {
       "id": "small-building-face-1382216532",
       "wireIds": [
         "small-building-wire-164476126"
       ]
     },
-    "small-building-face-1382526041": {
+    {
       "id": "small-building-face-1382526041",
       "wireIds": [
         "small-building-wire-1095357825"
       ]
     },
-    "small-building-face-145599241": {
+    {
       "id": "small-building-face-145599241",
       "wireIds": [
         "small-building-wire-1748227933"
       ]
     },
-    "small-building-face-1457506915": {
+    {
       "id": "small-building-face-1457506915",
       "wireIds": [
         "small-building-wire-1172378877"
       ]
     },
-    "small-building-face-1457969424": {
+    {
       "id": "small-building-face-1457969424",
       "wireIds": [
         "small-building-wire-1817346002"
       ]
     },
-    "small-building-face-1542409550": {
+    {
       "id": "small-building-face-1542409550",
       "wireIds": [
         "small-building-wire-1096443527"
       ]
     },
-    "small-building-face-1570704954": {
+    {
       "id": "small-building-face-1570704954",
       "wireIds": [
         "small-building-wire-2038755520"
       ]
     },
-    "small-building-face-1577063820": {
+    {
       "id": "small-building-face-1577063820",
       "wireIds": [
         "small-building-wire-1632492423"
       ]
     },
-    "small-building-face-1631560793": {
+    {
       "id": "small-building-face-1631560793",
       "wireIds": [
         "small-building-wire-256701055"
       ]
     },
-    "small-building-face-1652633605": {
+    {
       "id": "small-building-face-1652633605",
       "wireIds": [
         "small-building-wire-1847165922"
       ]
     },
-    "small-building-face-1722928574": {
+    {
       "id": "small-building-face-1722928574",
       "wireIds": [
         "small-building-wire-510979431"
       ]
     },
-    "small-building-face-1833451572": {
+    {
       "id": "small-building-face-1833451572",
       "wireIds": [
         "small-building-wire-1366152152"
       ]
     },
-    "small-building-face-1880838606": {
+    {
       "id": "small-building-face-1880838606",
       "wireIds": [
         "small-building-wire-1300391340"
       ]
     },
-    "small-building-face-1891411219": {
+    {
       "id": "small-building-face-1891411219",
       "wireIds": [
         "small-building-wire-1399618711"
       ]
     },
-    "small-building-face-1944355059": {
+    {
       "id": "small-building-face-1944355059",
       "wireIds": [
         "small-building-wire-1714825002"
       ]
     },
-    "small-building-face-1973958103": {
+    {
       "id": "small-building-face-1973958103",
       "wireIds": [
         "small-building-wire-646169955"
       ]
     },
-    "small-building-face-2019874201": {
+    {
       "id": "small-building-face-2019874201",
       "wireIds": [
         "small-building-wire-311748032"
       ]
     },
-    "small-building-face-205984231": {
+    {
       "id": "small-building-face-205984231",
       "wireIds": [
         "small-building-wire-403059999"
       ]
     },
-    "small-building-face-2078803802": {
+    {
       "id": "small-building-face-2078803802",
       "wireIds": [
         "small-building-wire-1368161050"
       ]
     },
-    "small-building-face-2114497508": {
+    {
       "id": "small-building-face-2114497508",
       "wireIds": [
         "small-building-wire-1390110645"
       ]
     },
-    "small-building-face-2129815768": {
+    {
       "id": "small-building-face-2129815768",
       "wireIds": [
         "small-building-wire-924227310"
       ]
     },
-    "small-building-face-257952373": {
+    {
       "id": "small-building-face-257952373",
       "wireIds": [
         "small-building-wire-1597372722"
       ]
     },
-    "small-building-face-383803774": {
+    {
       "id": "small-building-face-383803774",
       "wireIds": [
         "small-building-wire-515231130"
       ]
     },
-    "small-building-face-512606747": {
+    {
       "id": "small-building-face-512606747",
       "wireIds": [
         "small-building-wire-285005499"
       ]
     },
-    "small-building-face-566674442": {
+    {
       "id": "small-building-face-566674442",
       "wireIds": [
         "small-building-wire-1502734446"
       ]
     },
-    "small-building-face-578295541": {
+    {
       "id": "small-building-face-578295541",
       "wireIds": [
         "small-building-wire-1316372424"
       ]
     },
-    "small-building-face-611087225": {
+    {
       "id": "small-building-face-611087225",
       "wireIds": [
         "small-building-wire-1673128573"
       ]
     },
-    "small-building-face-620157701": {
+    {
       "id": "small-building-face-620157701",
       "wireIds": [
         "small-building-wire-1114708436"
       ]
     },
-    "small-building-face-624717229": {
+    {
       "id": "small-building-face-624717229",
       "wireIds": [
         "small-building-wire-978200956"
       ]
     },
-    "small-building-face-646282419": {
+    {
       "id": "small-building-face-646282419",
       "wireIds": [
         "small-building-wire-1184681038"
       ]
     },
-    "small-building-face-700285324": {
+    {
       "id": "small-building-face-700285324",
       "wireIds": [
         "small-building-wire-1098242493"
       ]
     },
-    "small-building-face-807614999": {
+    {
       "id": "small-building-face-807614999",
       "wireIds": [
         "small-building-wire-1737456781"
       ]
     },
-    "small-building-face-816291467": {
+    {
       "id": "small-building-face-816291467",
       "wireIds": [
         "small-building-wire-1676387167"
       ]
     },
-    "small-building-face-820822656": {
+    {
       "id": "small-building-face-820822656",
       "wireIds": [
         "small-building-wire-1664100031"
       ]
     },
-    "small-building-face-824333506": {
+    {
       "id": "small-building-face-824333506",
       "wireIds": [
         "small-building-wire-1398946955"
       ]
     },
-    "small-building-face-930164148": {
+    {
       "id": "small-building-face-930164148",
       "wireIds": [
         "small-building-wire-1404785392"
       ]
     },
-    "small-building-face-976303559": {
+    {
       "id": "small-building-face-976303559",
       "wireIds": [
         "small-building-wire-1553478650"
       ]
     }
-  },
-  "shells": {
-    "small-building-shell-1021196941": {
+  ],
+  "shells": [
+    {
       "id": "small-building-shell-1021196941",
       "faceIds": [
         "small-building-face-1570704954",
@@ -1524,7 +1524,7 @@
         "small-building-face-820822656"
       ]
     },
-    "small-building-shell-115098816": {
+    {
       "id": "small-building-shell-115098816",
       "faceIds": [
         "small-building-face-816291467",
@@ -1536,7 +1536,7 @@
         "small-building-face-1382526041"
       ]
     },
-    "small-building-shell-1482876550": {
+    {
       "id": "small-building-shell-1482876550",
       "faceIds": [
         "small-building-face-820822656",
@@ -1547,7 +1547,7 @@
         "small-building-face-145599241"
       ]
     },
-    "small-building-shell-1731270073": {
+    {
       "id": "small-building-shell-1731270073",
       "faceIds": [
         "small-building-face-578295541",
@@ -1559,7 +1559,7 @@
         "small-building-face-700285324"
       ]
     },
-    "small-building-shell-319815043": {
+    {
       "id": "small-building-shell-319815043",
       "faceIds": [
         "small-building-face-1198070201",
@@ -1570,7 +1570,7 @@
         "small-building-face-1321487947"
       ]
     },
-    "small-building-shell-431204894": {
+    {
       "id": "small-building-shell-431204894",
       "faceIds": [
         "small-building-face-807614999",
@@ -1581,7 +1581,7 @@
         "small-building-face-1570704954"
       ]
     },
-    "small-building-shell-564953133": {
+    {
       "id": "small-building-shell-564953133",
       "faceIds": [
         "small-building-face-123273386",
@@ -1594,7 +1594,7 @@
         "small-building-face-824333506"
       ]
     },
-    "small-building-shell-582028949": {
+    {
       "id": "small-building-shell-582028949",
       "faceIds": [
         "small-building-face-1375822498",
@@ -1605,7 +1605,7 @@
         "small-building-face-383803774"
       ]
     },
-    "small-building-shell-729436001": {
+    {
       "id": "small-building-shell-729436001",
       "faceIds": [
         "small-building-face-1336622373",
@@ -1616,7 +1616,7 @@
         "small-building-face-1333043829"
       ]
     },
-    "small-building-shell-851607366": {
+    {
       "id": "small-building-shell-851607366",
       "faceIds": [
         "small-building-face-1321487947",
@@ -1627,71 +1627,71 @@
         "small-building-face-1336622373"
       ]
     }
-  },
-  "cells": {
-    "small-building-cell-123052045": {
+  ],
+  "cells": [
+    {
       "id": "small-building-cell-123052045",
       "shellIds": [
         "small-building-shell-319815043"
       ]
     },
-    "small-building-cell-1278694563": {
+    {
       "id": "small-building-cell-1278694563",
       "shellIds": [
         "small-building-shell-115098816"
       ]
     },
-    "small-building-cell-1726958126": {
+    {
       "id": "small-building-cell-1726958126",
       "shellIds": [
         "small-building-shell-1731270073"
       ]
     },
-    "small-building-cell-177644683": {
+    {
       "id": "small-building-cell-177644683",
       "shellIds": [
         "small-building-shell-431204894"
       ]
     },
-    "small-building-cell-346474455": {
+    {
       "id": "small-building-cell-346474455",
       "shellIds": [
         "small-building-shell-1482876550"
       ]
     },
-    "small-building-cell-509251538": {
+    {
       "id": "small-building-cell-509251538",
       "shellIds": [
         "small-building-shell-851607366"
       ]
     },
-    "small-building-cell-531581172": {
+    {
       "id": "small-building-cell-531581172",
       "shellIds": [
         "small-building-shell-729436001"
       ]
     },
-    "small-building-cell-548248443": {
+    {
       "id": "small-building-cell-548248443",
       "shellIds": [
         "small-building-shell-564953133"
       ]
     },
-    "small-building-cell-916435296": {
+    {
       "id": "small-building-cell-916435296",
       "shellIds": [
         "small-building-shell-582028949"
       ]
     },
-    "small-building-cell-920901709": {
+    {
       "id": "small-building-cell-920901709",
       "shellIds": [
         "small-building-shell-1021196941"
       ]
     }
-  },
-  "cellComplexes": {
-    "small-building-cell-complex": {
+  ],
+  "cellComplexes": [
+    {
       "id": "small-building-cell-complex",
       "cellIds": [
         "small-building-cell-123052045",
@@ -1706,13 +1706,13 @@
         "small-building-cell-177644683"
       ]
     }
-  },
-  "clusters": {
-    "small-building-asset": {
+  ],
+  "clusters": [
+    {
       "id": "small-building-asset",
       "memberIds": [
         "small-building-cell-complex"
       ]
     }
-  }
+  ]
 }

@@ -4,22 +4,22 @@ overview: Eliminate every dynamic property key in spatial schemas, fixtures, and
 todos:
   - id: expr
     content: Rewrite expression.json + Expr TS union + evalExpr switch; convert all guards in fixtures
-    status: in_progress
+    status: completed
   - id: topology
     content: Convert topology.json + TopologyGraph (arrays + internal Map index) + TopologyDiff arrays + migration script for fixtures
-    status: pending
+    status: completed
   - id: machine
     content: Convert factory.json machine/guards/display/state.on to arrays; rewrite applyTransition, resolveDisplay, listKeyedCommandTransitions, getActiveSelectionSpec
-    status: pending
+    status: completed
   - id: tagged-payloads
     content: Tagged commit.operation, tagged display items, collapsed box.transform action; rewrite CommandRuntime.commit and renderer-r3f consumers
-    status: pending
+    status: completed
   - id: context
     content: Add typed context.fields + structured action paths; rewrite getPath/setPath usages and box helpers
-    status: pending
+    status: completed
   - id: downstream
     content: Update machine-stately adapter and kernel-brepjs; extend all vitest suites and run nx test until green
-    status: pending
+    status: completed
 isProject: false
 ---
 

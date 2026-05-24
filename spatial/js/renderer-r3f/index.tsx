@@ -17,12 +17,16 @@ import {
 	type CommandRuntime,
 	type CommandRuntimeOptions,
 	type CommandSnapshot,
+	type CellComplexRecord,
+	type CellRecord,
+	type ClusterRecord,
 	type CommandSpec,
 	type DisplayItem,
 	type DisplayModel,
 	type EdgeRecord,
 	type FaceRecord,
 	type KernelAdapter,
+	type ShellRecord,
 	type MeshPreview,
 	type TopologyGraphJson,
 	type Vec3,
@@ -79,6 +83,52 @@ export interface CommandInteractionTarget {
 
 export type CommandInteractionGeometry = TopologyGraph | TopologyGraphJson;
 
+function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
+	const o: Record<string, T> = {};
+	for (const x of xs) o[x.id] = x;
+	return o;
+}
+
+function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<string, T> | undefined): Record<string, T> {
+	if (!x) return {};
+	return Array.isArray(x) ? recordsById(x) : x;
+}
+
+/** @emoji 🧲 Normalizes `TopologyGraphJson` array buckets to the record shape used by interaction math. */
+function topologyGeometryBuckets(g: CommandInteractionGeometry): {
+	readonly vertices: Record<string, VertexRecord>;
+	readonly edges: Record<string, EdgeRecord>;
+	readonly wires: Record<string, WireRecord>;
+	readonly faces: Record<string, FaceRecord>;
+	readonly shells: Record<string, ShellRecord>;
+	readonly cells: Record<string, CellRecord>;
+	readonly cellComplexes: Record<string, CellComplexRecord>;
+	readonly clusters: Record<string, ClusterRecord>;
+} {
+	if (g instanceof TopologyGraph) {
+		return {
+			vertices: g.vertices,
+			edges: g.edges,
+			wires: g.wires,
+			faces: g.faces,
+			shells: g.shells,
+			cells: g.cells,
+			cellComplexes: g.cellComplexes,
+			clusters: g.clusters,
+		};
+	}
+	return {
+		vertices: asRecordBucket(g.vertices),
+		edges: asRecordBucket(g.edges),
+		wires: asRecordBucket(g.wires),
+		faces: asRecordBucket(g.faces),
+		shells: asRecordBucket(g.shells),
+		cells: asRecordBucket(g.cells),
+		cellComplexes: asRecordBucket(g.cellComplexes),
+		clusters: asRecordBucket(g.clusters),
+	};
+}
+
 function topologyRecords<T>(records: Record<string, T> | undefined): readonly T[] {
 	return records ? Object.values(records) : [];
 }
@@ -115,36 +165,37 @@ function topologyFacePoints(
 	return [...unique.values()];
 }
 
-function topologyAllVertexPoints(geometry: CommandInteractionGeometry): readonly Vec3[] {
-	return topologyRecords(geometry.vertices).map((vertex) => vertex.position);
+function topologyAllVertexPoints(vertices: Record<string, VertexRecord>): readonly Vec3[] {
+	return topologyRecords(vertices).map((vertex) => vertex.position);
 }
 
 /** @emoji 🧲 Builds renderer-side snap/select targets from optional factory topology geometry. */
 export function createCommandInteractionTargets(geometry: CommandInteractionGeometry | null | undefined): readonly CommandInteractionTarget[] {
 	if (!geometry) return [];
+	const buckets = topologyGeometryBuckets(geometry);
 	const targets: CommandInteractionTarget[] = [];
-	for (const vertex of topologyRecords(geometry.vertices)) {
+	for (const vertex of topologyRecords(buckets.vertices)) {
 		targets.push({ kind: "vertex", id: vertex.id, point: vertex.position });
 	}
-	for (const edge of topologyRecords(geometry.edges)) {
-		const points = topologyEdgePoints(geometry.vertices, edge);
+	for (const edge of topologyRecords(buckets.edges)) {
+		const points = topologyEdgePoints(buckets.vertices, edge);
 		const point = topologyPointCentroid(points);
 		if (point) targets.push({ kind: "edge", id: edge.id, point, points });
 	}
-	for (const face of topologyRecords(geometry.faces)) {
-		const points = topologyFacePoints(geometry.vertices, geometry.edges, geometry.wires, face);
+	for (const face of topologyRecords(buckets.faces)) {
+		const points = topologyFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
 		const point = topologyPointCentroid(points);
 		if (point) targets.push({ kind: "face", id: face.id, point, points });
 	}
-	const all = topologyAllVertexPoints(geometry);
+	const all = topologyAllVertexPoints(buckets.vertices);
 	const allCenter = topologyPointCentroid(all);
-	for (const cell of topologyRecords(geometry.cells)) {
+	for (const cell of topologyRecords(buckets.cells)) {
 		if (allCenter) targets.push({ kind: "cell", id: cell.id, point: allCenter, points: all });
 	}
-	for (const complex of topologyRecords(geometry.cellComplexes)) {
+	for (const complex of topologyRecords(buckets.cellComplexes)) {
 		if (allCenter) targets.push({ kind: "cellComplex", id: complex.id, point: allCenter, points: all });
 	}
-	for (const cluster of topologyRecords(geometry.clusters)) {
+	for (const cluster of topologyRecords(buckets.clusters)) {
 		if (allCenter) targets.push({ kind: "cluster", id: cluster.id, point: allCenter, points: all });
 	}
 	return targets;
@@ -760,16 +811,14 @@ if (import.meta.vitest) {
 			const targets = createCommandInteractionTargets({
 				schema: "spatial.topology/v1",
 				revision: 1,
-				vertices: {
-					v0: { id: "v0", position: [1, 2, 3] },
-				},
-				edges: {},
-				wires: {},
-				faces: {},
-				shells: {},
-				cells: {},
-				cellComplexes: {},
-				clusters: {},
+				vertices: [{ id: "v0", position: [1, 2, 3] }],
+				edges: [],
+				wires: [],
+				faces: [],
+				shells: [],
+				cells: [],
+				cellComplexes: [],
+				clusters: [],
 			});
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createCommandInteractionEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({

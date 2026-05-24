@@ -2553,6 +2553,31 @@ The passthrough components MUST show all available information. A lot of params 
 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
 
+## 🗿spatial
+
+---
+
+Generalize factories to commands.
+Until now factories were used to generate geometry.
+From now on they follow the pattern:
+geomtery in and geometry out
+They might be readonly (e.g. Distance, Area, etc)
+Make sure that selections are possible in the state machine.
+Make sure that state machines can switch between raw (Vertex, Edge, Wire, Face, Shell, Cell, CellComplex, Cluster) and analytic (Surface, Part), and filter kinds.
+
+---
+
+The current json schema is not statically typed. Make sure that keys never are dynamic.
+
+---
+
+Make sure that the original plan is achieved @.repo/✍️/spatial.md
+Especially make sure that the brep kernel and the state machine are properly abstracted.
+The two specific implemtations must be used:
+@spatial/js/kernel-brepjs/index.ts @spatial/js/machine-stately/index.ts
+
+---
+
 ## 🧰repo
 
 ###

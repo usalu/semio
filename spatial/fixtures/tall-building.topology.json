@@ -1,8 +1,8 @@
 {
   "schema": "spatial.topology/v1",
   "revision": 1,
-  "vertices": {
-    "tall-building-vertex-104287430": {
+  "vertices": [
+    {
       "id": "tall-building-vertex-104287430",
       "position": [
         10,
@@ -10,7 +10,7 @@
         60
       ]
     },
-    "tall-building-vertex-1094259255": {
+    {
       "id": "tall-building-vertex-1094259255",
       "position": [
         5,
@@ -18,7 +18,7 @@
         30
       ]
     },
-    "tall-building-vertex-1132761518": {
+    {
       "id": "tall-building-vertex-1132761518",
       "position": [
         10,
@@ -26,7 +26,7 @@
         0
       ]
     },
-    "tall-building-vertex-1165658674": {
+    {
       "id": "tall-building-vertex-1165658674",
       "position": [
         -5,
@@ -34,7 +34,7 @@
         64
       ]
     },
-    "tall-building-vertex-1169660411": {
+    {
       "id": "tall-building-vertex-1169660411",
       "position": [
         -10,
@@ -42,7 +42,7 @@
         60
       ]
     },
-    "tall-building-vertex-125121398": {
+    {
       "id": "tall-building-vertex-125121398",
       "position": [
         10,
@@ -50,7 +50,7 @@
         20
       ]
     },
-    "tall-building-vertex-1259072308": {
+    {
       "id": "tall-building-vertex-1259072308",
       "position": [
         -10,
@@ -58,7 +58,7 @@
         30
       ]
     },
-    "tall-building-vertex-1261146635": {
+    {
       "id": "tall-building-vertex-1261146635",
       "position": [
         5,
@@ -66,7 +66,7 @@
         30
       ]
     },
-    "tall-building-vertex-1266010935": {
+    {
       "id": "tall-building-vertex-1266010935",
       "position": [
         10,
@@ -74,7 +74,7 @@
         30
       ]
     },
-    "tall-building-vertex-1289496452": {
+    {
       "id": "tall-building-vertex-1289496452",
       "position": [
         10,
@@ -82,7 +82,7 @@
         50
       ]
     },
-    "tall-building-vertex-1324127167": {
+    {
       "id": "tall-building-vertex-1324127167",
       "position": [
         10,
@@ -90,7 +90,7 @@
         30
       ]
     },
-    "tall-building-vertex-1338236112": {
+    {
       "id": "tall-building-vertex-1338236112",
       "position": [
         5,
@@ -98,7 +98,7 @@
         20
       ]
     },
-    "tall-building-vertex-1373364467": {
+    {
       "id": "tall-building-vertex-1373364467",
       "position": [
         -5,
@@ -106,7 +106,7 @@
         0
       ]
     },
-    "tall-building-vertex-1386743482": {
+    {
       "id": "tall-building-vertex-1386743482",
       "position": [
         5,
@@ -114,7 +114,7 @@
         10
       ]
     },
-    "tall-building-vertex-1401937651": {
+    {
       "id": "tall-building-vertex-1401937651",
       "position": [
         10,
@@ -122,7 +122,7 @@
         0
       ]
     },
-    "tall-building-vertex-1410363036": {
+    {
       "id": "tall-building-vertex-1410363036",
       "position": [
         5,
@@ -130,7 +130,7 @@
         10
       ]
     },
-    "tall-building-vertex-1419635179": {
+    {
       "id": "tall-building-vertex-1419635179",
       "position": [
         5,
@@ -138,7 +138,7 @@
         20
       ]
     },
-    "tall-building-vertex-151356793": {
+    {
       "id": "tall-building-vertex-151356793",
       "position": [
         -10,
@@ -146,7 +146,7 @@
         30
       ]
     },
-    "tall-building-vertex-1545726667": {
+    {
       "id": "tall-building-vertex-1545726667",
       "position": [
         -5,
@@ -154,7 +154,7 @@
         20
       ]
     },
-    "tall-building-vertex-1633277293": {
+    {
       "id": "tall-building-vertex-1633277293",
       "position": [
         -10,
@@ -162,7 +162,7 @@
         50
       ]
     },
-    "tall-building-vertex-163978829": {
+    {
       "id": "tall-building-vertex-163978829",
       "position": [
         -5,
@@ -170,7 +170,7 @@
         0
       ]
     },
-    "tall-building-vertex-1689169832": {
+    {
       "id": "tall-building-vertex-1689169832",
       "position": [
         5,
@@ -178,7 +178,7 @@
         0
       ]
     },
-    "tall-building-vertex-1711374219": {
+    {
       "id": "tall-building-vertex-1711374219",
       "position": [
         10,
@@ -186,7 +186,7 @@
         40
       ]
     },
-    "tall-building-vertex-1731626832": {
+    {
       "id": "tall-building-vertex-1731626832",
       "position": [
         -10,
@@ -194,7 +194,7 @@
         60
       ]
     },
-    "tall-building-vertex-1739174052": {
+    {
       "id": "tall-building-vertex-1739174052",
       "position": [
         10,
@@ -202,7 +202,7 @@
         60
       ]
     },
-    "tall-building-vertex-1790675002": {
+    {
       "id": "tall-building-vertex-1790675002",
       "position": [
         5,
@@ -210,7 +210,7 @@
         64
       ]
     },
-    "tall-building-vertex-1795986317": {
+    {
       "id": "tall-building-vertex-1795986317",
       "position": [
         5,
@@ -218,7 +218,7 @@
         40
       ]
     },
-    "tall-building-vertex-1860741962": {
+    {
       "id": "tall-building-vertex-1860741962",
       "position": [
         -10,
@@ -226,7 +226,7 @@
         0
       ]
     },
-    "tall-building-vertex-1883592953": {
+    {
       "id": "tall-building-vertex-1883592953",
       "position": [
         -5,
@@ -234,7 +234,7 @@
         40
       ]
     },
-    "tall-building-vertex-188655261": {
+    {
       "id": "tall-building-vertex-188655261",
       "position": [
         -10,
@@ -242,7 +242,7 @@
         40
       ]
     },
-    "tall-building-vertex-1944336978": {
+    {
       "id": "tall-building-vertex-1944336978",
       "position": [
         -10,
@@ -250,7 +250,7 @@
         50
       ]
     },
-    "tall-building-vertex-2058022051": {
+    {
       "id": "tall-building-vertex-2058022051",
       "position": [
         5,
@@ -258,7 +258,7 @@
         0
       ]
     },
-    "tall-building-vertex-2135265355": {
+    {
       "id": "tall-building-vertex-2135265355",
       "position": [
         5,
@@ -266,7 +266,7 @@
         64
       ]
     },
-    "tall-building-vertex-234833553": {
+    {
       "id": "tall-building-vertex-234833553",
       "position": [
         -10,
@@ -274,7 +274,7 @@
         0
       ]
     },
-    "tall-building-vertex-248601827": {
+    {
       "id": "tall-building-vertex-248601827",
       "position": [
         -5,
@@ -282,7 +282,7 @@
         30
       ]
     },
-    "tall-building-vertex-264724351": {
+    {
       "id": "tall-building-vertex-264724351",
       "position": [
         10,
@@ -290,7 +290,7 @@
         40
       ]
     },
-    "tall-building-vertex-265471352": {
+    {
       "id": "tall-building-vertex-265471352",
       "position": [
         -5,
@@ -298,7 +298,7 @@
         64
       ]
     },
-    "tall-building-vertex-276369610": {
+    {
       "id": "tall-building-vertex-276369610",
       "position": [
         10,
@@ -306,7 +306,7 @@
         20
       ]
     },
-    "tall-building-vertex-306313840": {
+    {
       "id": "tall-building-vertex-306313840",
       "position": [
         -10,
@@ -314,7 +314,7 @@
         10
       ]
     },
-    "tall-building-vertex-348560996": {
+    {
       "id": "tall-building-vertex-348560996",
       "position": [
         -5,
@@ -322,7 +322,7 @@
         40
       ]
     },
-    "tall-building-vertex-372548136": {
+    {
       "id": "tall-building-vertex-372548136",
       "position": [
         -5,
@@ -330,7 +330,7 @@
         10
       ]
     },
-    "tall-building-vertex-411335615": {
+    {
       "id": "tall-building-vertex-411335615",
       "position": [
         -10,
@@ -338,7 +338,7 @@
         10
       ]
     },
-    "tall-building-vertex-501580074": {
+    {
       "id": "tall-building-vertex-501580074",
       "position": [
         -5,
@@ -346,7 +346,7 @@
         10
       ]
     },
-    "tall-building-vertex-510705817": {
+    {
       "id": "tall-building-vertex-510705817",
       "position": [
         10,
@@ -354,7 +354,7 @@
         50
       ]
     },
-    "tall-building-vertex-533474687": {
+    {
       "id": "tall-building-vertex-533474687",
       "position": [
         -5,
@@ -362,7 +362,7 @@
         50
       ]
     },
-    "tall-building-vertex-535070744": {
+    {
       "id": "tall-building-vertex-535070744",
       "position": [
         5,
@@ -370,7 +370,7 @@
         40
       ]
     },
-    "tall-building-vertex-573827955": {
+    {
       "id": "tall-building-vertex-573827955",
       "position": [
         -10,
@@ -378,7 +378,7 @@
         20
       ]
     },
-    "tall-building-vertex-672034363": {
+    {
       "id": "tall-building-vertex-672034363",
       "position": [
         -10,
@@ -386,7 +386,7 @@
         40
       ]
     },
-    "tall-building-vertex-721864216": {
+    {
       "id": "tall-building-vertex-721864216",
       "position": [
         10,
@@ -394,7 +394,7 @@
         10
       ]
     },
-    "tall-building-vertex-73421344": {
+    {
       "id": "tall-building-vertex-73421344",
       "position": [
         -5,
@@ -402,7 +402,7 @@
         50
       ]
     },
-    "tall-building-vertex-756047205": {
+    {
       "id": "tall-building-vertex-756047205",
       "position": [
         5,
@@ -410,7 +410,7 @@
         50
       ]
     },
-    "tall-building-vertex-756945552": {
+    {
       "id": "tall-building-vertex-756945552",
       "position": [
         -5,
@@ -418,7 +418,7 @@
         20
       ]
     },
-    "tall-building-vertex-810079272": {
+    {
       "id": "tall-building-vertex-810079272",
       "position": [
         5,
@@ -426,7 +426,7 @@
         50
       ]
     },
-    "tall-building-vertex-848024472": {
+    {
       "id": "tall-building-vertex-848024472",
       "position": [
         -10,
@@ -434,7 +434,7 @@
         20
       ]
     },
-    "tall-building-vertex-952016529": {
+    {
       "id": "tall-building-vertex-952016529",
       "position": [
         -5,
@@ -442,7 +442,7 @@
         30
       ]
     },
-    "tall-building-vertex-961654646": {
+    {
       "id": "tall-building-vertex-961654646",
       "position": [
         10,
@@ -450,935 +450,935 @@
         10
       ]
     }
-  },
-  "edges": {
-    "tall-building-edge-1012642479": {
+  ],
+  "edges": [
+    {
       "id": "tall-building-edge-1012642479",
       "vertexIds": [
         "tall-building-vertex-2058022051",
         "tall-building-vertex-1373364467"
       ]
     },
-    "tall-building-edge-1027737897": {
+    {
       "id": "tall-building-edge-1027737897",
       "vertexIds": [
         "tall-building-vertex-1883592953",
         "tall-building-vertex-188655261"
       ]
     },
-    "tall-building-edge-1046624822": {
+    {
       "id": "tall-building-edge-1046624822",
       "vertexIds": [
         "tall-building-vertex-1266010935",
         "tall-building-vertex-276369610"
       ]
     },
-    "tall-building-edge-1058347544": {
+    {
       "id": "tall-building-edge-1058347544",
       "vertexIds": [
         "tall-building-vertex-535070744",
         "tall-building-vertex-1261146635"
       ]
     },
-    "tall-building-edge-1087405765": {
+    {
       "id": "tall-building-edge-1087405765",
       "vertexIds": [
         "tall-building-vertex-1410363036",
         "tall-building-vertex-1386743482"
       ]
     },
-    "tall-building-edge-1094093114": {
+    {
       "id": "tall-building-edge-1094093114",
       "vertexIds": [
         "tall-building-vertex-1261146635",
         "tall-building-vertex-1419635179"
       ]
     },
-    "tall-building-edge-1094331605": {
+    {
       "id": "tall-building-edge-1094331605",
       "vertexIds": [
         "tall-building-vertex-2135265355",
         "tall-building-vertex-756047205"
       ]
     },
-    "tall-building-edge-1103522759": {
+    {
       "id": "tall-building-edge-1103522759",
       "vertexIds": [
         "tall-building-vertex-73421344",
         "tall-building-vertex-756047205"
       ]
     },
-    "tall-building-edge-1104343759": {
+    {
       "id": "tall-building-edge-1104343759",
       "vertexIds": [
         "tall-building-vertex-533474687",
         "tall-building-vertex-1883592953"
       ]
     },
-    "tall-building-edge-1113986882": {
+    {
       "id": "tall-building-edge-1113986882",
       "vertexIds": [
         "tall-building-vertex-1860741962",
         "tall-building-vertex-234833553"
       ]
     },
-    "tall-building-edge-1115438318": {
+    {
       "id": "tall-building-edge-1115438318",
       "vertexIds": [
         "tall-building-vertex-411335615",
         "tall-building-vertex-1860741962"
       ]
     },
-    "tall-building-edge-1131805220": {
+    {
       "id": "tall-building-edge-1131805220",
       "vertexIds": [
         "tall-building-vertex-1289496452",
         "tall-building-vertex-510705817"
       ]
     },
-    "tall-building-edge-1160725587": {
+    {
       "id": "tall-building-edge-1160725587",
       "vertexIds": [
         "tall-building-vertex-234833553",
         "tall-building-vertex-163978829"
       ]
     },
-    "tall-building-edge-1171895932": {
+    {
       "id": "tall-building-edge-1171895932",
       "vertexIds": [
         "tall-building-vertex-372548136",
         "tall-building-vertex-1545726667"
       ]
     },
-    "tall-building-edge-1182448194": {
+    {
       "id": "tall-building-edge-1182448194",
       "vertexIds": [
         "tall-building-vertex-411335615",
         "tall-building-vertex-961654646"
       ]
     },
-    "tall-building-edge-1188659324": {
+    {
       "id": "tall-building-edge-1188659324",
       "vertexIds": [
         "tall-building-vertex-1401937651",
         "tall-building-vertex-1132761518"
       ]
     },
-    "tall-building-edge-1212310562": {
+    {
       "id": "tall-building-edge-1212310562",
       "vertexIds": [
         "tall-building-vertex-961654646",
         "tall-building-vertex-1401937651"
       ]
     },
-    "tall-building-edge-1223009176": {
+    {
       "id": "tall-building-edge-1223009176",
       "vertexIds": [
         "tall-building-vertex-306313840",
         "tall-building-vertex-721864216"
       ]
     },
-    "tall-building-edge-1233779671": {
+    {
       "id": "tall-building-edge-1233779671",
       "vertexIds": [
         "tall-building-vertex-1545726667",
         "tall-building-vertex-1419635179"
       ]
     },
-    "tall-building-edge-1298801438": {
+    {
       "id": "tall-building-edge-1298801438",
       "vertexIds": [
         "tall-building-vertex-533474687",
         "tall-building-vertex-810079272"
       ]
     },
-    "tall-building-edge-1315468270": {
+    {
       "id": "tall-building-edge-1315468270",
       "vertexIds": [
         "tall-building-vertex-1860741962",
         "tall-building-vertex-1373364467"
       ]
     },
-    "tall-building-edge-1332412692": {
+    {
       "id": "tall-building-edge-1332412692",
       "vertexIds": [
         "tall-building-vertex-1261146635",
         "tall-building-vertex-1324127167"
       ]
     },
-    "tall-building-edge-1363046050": {
+    {
       "id": "tall-building-edge-1363046050",
       "vertexIds": [
         "tall-building-vertex-1094259255",
         "tall-building-vertex-1338236112"
       ]
     },
-    "tall-building-edge-138715027": {
+    {
       "id": "tall-building-edge-138715027",
       "vertexIds": [
         "tall-building-vertex-1790675002",
         "tall-building-vertex-104287430"
       ]
     },
-    "tall-building-edge-138878392": {
+    {
       "id": "tall-building-edge-138878392",
       "vertexIds": [
         "tall-building-vertex-248601827",
         "tall-building-vertex-1261146635"
       ]
     },
-    "tall-building-edge-1400879477": {
+    {
       "id": "tall-building-edge-1400879477",
       "vertexIds": [
         "tall-building-vertex-721864216",
         "tall-building-vertex-1132761518"
       ]
     },
-    "tall-building-edge-1421158877": {
+    {
       "id": "tall-building-edge-1421158877",
       "vertexIds": [
         "tall-building-vertex-501580074",
         "tall-building-vertex-1373364467"
       ]
     },
-    "tall-building-edge-1421633737": {
+    {
       "id": "tall-building-edge-1421633737",
       "vertexIds": [
         "tall-building-vertex-1545726667",
         "tall-building-vertex-248601827"
       ]
     },
-    "tall-building-edge-1426352005": {
+    {
       "id": "tall-building-edge-1426352005",
       "vertexIds": [
         "tall-building-vertex-151356793",
         "tall-building-vertex-1259072308"
       ]
     },
-    "tall-building-edge-1432946863": {
+    {
       "id": "tall-building-edge-1432946863",
       "vertexIds": [
         "tall-building-vertex-1132761518",
         "tall-building-vertex-234833553"
       ]
     },
-    "tall-building-edge-1463719485": {
+    {
       "id": "tall-building-edge-1463719485",
       "vertexIds": [
         "tall-building-vertex-1790675002",
         "tall-building-vertex-2135265355"
       ]
     },
-    "tall-building-edge-146409225": {
+    {
       "id": "tall-building-edge-146409225",
       "vertexIds": [
         "tall-building-vertex-104287430",
         "tall-building-vertex-510705817"
       ]
     },
-    "tall-building-edge-1464284263": {
+    {
       "id": "tall-building-edge-1464284263",
       "vertexIds": [
         "tall-building-vertex-1883592953",
         "tall-building-vertex-1795986317"
       ]
     },
-    "tall-building-edge-152904828": {
+    {
       "id": "tall-building-edge-152904828",
       "vertexIds": [
         "tall-building-vertex-1401937651",
         "tall-building-vertex-2058022051"
       ]
     },
-    "tall-building-edge-1541531391": {
+    {
       "id": "tall-building-edge-1541531391",
       "vertexIds": [
         "tall-building-vertex-756047205",
         "tall-building-vertex-1289496452"
       ]
     },
-    "tall-building-edge-159211633": {
+    {
       "id": "tall-building-edge-159211633",
       "vertexIds": [
         "tall-building-vertex-264724351",
         "tall-building-vertex-1266010935"
       ]
     },
-    "tall-building-edge-1598779554": {
+    {
       "id": "tall-building-edge-1598779554",
       "vertexIds": [
         "tall-building-vertex-1795986317",
         "tall-building-vertex-264724351"
       ]
     },
-    "tall-building-edge-1619939237": {
+    {
       "id": "tall-building-edge-1619939237",
       "vertexIds": [
         "tall-building-vertex-1419635179",
         "tall-building-vertex-1410363036"
       ]
     },
-    "tall-building-edge-1626279544": {
+    {
       "id": "tall-building-edge-1626279544",
       "vertexIds": [
         "tall-building-vertex-265471352",
         "tall-building-vertex-533474687"
       ]
     },
-    "tall-building-edge-1640958702": {
+    {
       "id": "tall-building-edge-1640958702",
       "vertexIds": [
         "tall-building-vertex-348560996",
         "tall-building-vertex-672034363"
       ]
     },
-    "tall-building-edge-1646947765": {
+    {
       "id": "tall-building-edge-1646947765",
       "vertexIds": [
         "tall-building-vertex-1633277293",
         "tall-building-vertex-1169660411"
       ]
     },
-    "tall-building-edge-1667539922": {
+    {
       "id": "tall-building-edge-1667539922",
       "vertexIds": [
         "tall-building-vertex-348560996",
         "tall-building-vertex-535070744"
       ]
     },
-    "tall-building-edge-1676643464": {
+    {
       "id": "tall-building-edge-1676643464",
       "vertexIds": [
         "tall-building-vertex-1259072308",
         "tall-building-vertex-573827955"
       ]
     },
-    "tall-building-edge-1685567599": {
+    {
       "id": "tall-building-edge-1685567599",
       "vertexIds": [
         "tall-building-vertex-1419635179",
         "tall-building-vertex-1338236112"
       ]
     },
-    "tall-building-edge-1686389557": {
+    {
       "id": "tall-building-edge-1686389557",
       "vertexIds": [
         "tall-building-vertex-1386743482",
         "tall-building-vertex-961654646"
       ]
     },
-    "tall-building-edge-1696122652": {
+    {
       "id": "tall-building-edge-1696122652",
       "vertexIds": [
         "tall-building-vertex-73421344",
         "tall-building-vertex-533474687"
       ]
     },
-    "tall-building-edge-1705909449": {
+    {
       "id": "tall-building-edge-1705909449",
       "vertexIds": [
         "tall-building-vertex-1689169832",
         "tall-building-vertex-163978829"
       ]
     },
-    "tall-building-edge-1732570736": {
+    {
       "id": "tall-building-edge-1732570736",
       "vertexIds": [
         "tall-building-vertex-1633277293",
         "tall-building-vertex-1289496452"
       ]
     },
-    "tall-building-edge-1736075674": {
+    {
       "id": "tall-building-edge-1736075674",
       "vertexIds": [
         "tall-building-vertex-1944336978",
         "tall-building-vertex-188655261"
       ]
     },
-    "tall-building-edge-1748918886": {
+    {
       "id": "tall-building-edge-1748918886",
       "vertexIds": [
         "tall-building-vertex-1324127167",
         "tall-building-vertex-125121398"
       ]
     },
-    "tall-building-edge-1757290381": {
+    {
       "id": "tall-building-edge-1757290381",
       "vertexIds": [
         "tall-building-vertex-151356793",
         "tall-building-vertex-672034363"
       ]
     },
-    "tall-building-edge-1765477009": {
+    {
       "id": "tall-building-edge-1765477009",
       "vertexIds": [
         "tall-building-vertex-372548136",
         "tall-building-vertex-1410363036"
       ]
     },
-    "tall-building-edge-1768509676": {
+    {
       "id": "tall-building-edge-1768509676",
       "vertexIds": [
         "tall-building-vertex-1261146635",
         "tall-building-vertex-1094259255"
       ]
     },
-    "tall-building-edge-1771130932": {
+    {
       "id": "tall-building-edge-1771130932",
       "vertexIds": [
         "tall-building-vertex-1289496452",
         "tall-building-vertex-1711374219"
       ]
     },
-    "tall-building-edge-1802844270": {
+    {
       "id": "tall-building-edge-1802844270",
       "vertexIds": [
         "tall-building-vertex-1165658674",
         "tall-building-vertex-1169660411"
       ]
     },
-    "tall-building-edge-1806183285": {
+    {
       "id": "tall-building-edge-1806183285",
       "vertexIds": [
         "tall-building-vertex-810079272",
         "tall-building-vertex-1795986317"
       ]
     },
-    "tall-building-edge-1806975849": {
+    {
       "id": "tall-building-edge-1806975849",
       "vertexIds": [
         "tall-building-vertex-756945552",
         "tall-building-vertex-501580074"
       ]
     },
-    "tall-building-edge-1833044140": {
+    {
       "id": "tall-building-edge-1833044140",
       "vertexIds": [
         "tall-building-vertex-1132761518",
         "tall-building-vertex-1689169832"
       ]
     },
-    "tall-building-edge-1857787919": {
+    {
       "id": "tall-building-edge-1857787919",
       "vertexIds": [
         "tall-building-vertex-535070744",
         "tall-building-vertex-1711374219"
       ]
     },
-    "tall-building-edge-1872677810": {
+    {
       "id": "tall-building-edge-1872677810",
       "vertexIds": [
         "tall-building-vertex-573827955",
         "tall-building-vertex-411335615"
       ]
     },
-    "tall-building-edge-1923719215": {
+    {
       "id": "tall-building-edge-1923719215",
       "vertexIds": [
         "tall-building-vertex-125121398",
         "tall-building-vertex-276369610"
       ]
     },
-    "tall-building-edge-1928778442": {
+    {
       "id": "tall-building-edge-1928778442",
       "vertexIds": [
         "tall-building-vertex-73421344",
         "tall-building-vertex-1633277293"
       ]
     },
-    "tall-building-edge-1941606793": {
+    {
       "id": "tall-building-edge-1941606793",
       "vertexIds": [
         "tall-building-vertex-573827955",
         "tall-building-vertex-276369610"
       ]
     },
-    "tall-building-edge-1954038446": {
+    {
       "id": "tall-building-edge-1954038446",
       "vertexIds": [
         "tall-building-vertex-501580074",
         "tall-building-vertex-1386743482"
       ]
     },
-    "tall-building-edge-1963649925": {
+    {
       "id": "tall-building-edge-1963649925",
       "vertexIds": [
         "tall-building-vertex-756047205",
         "tall-building-vertex-535070744"
       ]
     },
-    "tall-building-edge-1973727180": {
+    {
       "id": "tall-building-edge-1973727180",
       "vertexIds": [
         "tall-building-vertex-848024472",
         "tall-building-vertex-573827955"
       ]
     },
-    "tall-building-edge-1984263321": {
+    {
       "id": "tall-building-edge-1984263321",
       "vertexIds": [
         "tall-building-vertex-672034363",
         "tall-building-vertex-1711374219"
       ]
     },
-    "tall-building-edge-1995831367": {
+    {
       "id": "tall-building-edge-1995831367",
       "vertexIds": [
         "tall-building-vertex-188655261",
         "tall-building-vertex-1259072308"
       ]
     },
-    "tall-building-edge-2007846360": {
+    {
       "id": "tall-building-edge-2007846360",
       "vertexIds": [
         "tall-building-vertex-952016529",
         "tall-building-vertex-756945552"
       ]
     },
-    "tall-building-edge-2021963583": {
+    {
       "id": "tall-building-edge-2021963583",
       "vertexIds": [
         "tall-building-vertex-756945552",
         "tall-building-vertex-1338236112"
       ]
     },
-    "tall-building-edge-2042982696": {
+    {
       "id": "tall-building-edge-2042982696",
       "vertexIds": [
         "tall-building-vertex-952016529",
         "tall-building-vertex-1094259255"
       ]
     },
-    "tall-building-edge-2065633666": {
+    {
       "id": "tall-building-edge-2065633666",
       "vertexIds": [
         "tall-building-vertex-306313840",
         "tall-building-vertex-848024472"
       ]
     },
-    "tall-building-edge-207829444": {
+    {
       "id": "tall-building-edge-207829444",
       "vertexIds": [
         "tall-building-vertex-2058022051",
         "tall-building-vertex-1689169832"
       ]
     },
-    "tall-building-edge-2120309374": {
+    {
       "id": "tall-building-edge-2120309374",
       "vertexIds": [
         "tall-building-vertex-265471352",
         "tall-building-vertex-1790675002"
       ]
     },
-    "tall-building-edge-261013208": {
+    {
       "id": "tall-building-edge-261013208",
       "vertexIds": [
         "tall-building-vertex-1545726667",
         "tall-building-vertex-756945552"
       ]
     },
-    "tall-building-edge-271866169": {
+    {
       "id": "tall-building-edge-271866169",
       "vertexIds": [
         "tall-building-vertex-73421344",
         "tall-building-vertex-1165658674"
       ]
     },
-    "tall-building-edge-275660235": {
+    {
       "id": "tall-building-edge-275660235",
       "vertexIds": [
         "tall-building-vertex-1410363036",
         "tall-building-vertex-1689169832"
       ]
     },
-    "tall-building-edge-285571882": {
+    {
       "id": "tall-building-edge-285571882",
       "vertexIds": [
         "tall-building-vertex-756047205",
         "tall-building-vertex-810079272"
       ]
     },
-    "tall-building-edge-297058955": {
+    {
       "id": "tall-building-edge-297058955",
       "vertexIds": [
         "tall-building-vertex-756945552",
         "tall-building-vertex-573827955"
       ]
     },
-    "tall-building-edge-305699690": {
+    {
       "id": "tall-building-edge-305699690",
       "vertexIds": [
         "tall-building-vertex-348560996",
         "tall-building-vertex-1883592953"
       ]
     },
-    "tall-building-edge-310009987": {
+    {
       "id": "tall-building-edge-310009987",
       "vertexIds": [
         "tall-building-vertex-348560996",
         "tall-building-vertex-73421344"
       ]
     },
-    "tall-building-edge-321868171": {
+    {
       "id": "tall-building-edge-321868171",
       "vertexIds": [
         "tall-building-vertex-533474687",
         "tall-building-vertex-1944336978"
       ]
     },
-    "tall-building-edge-346661893": {
+    {
       "id": "tall-building-edge-346661893",
       "vertexIds": [
         "tall-building-vertex-151356793",
         "tall-building-vertex-1324127167"
       ]
     },
-    "tall-building-edge-361203568": {
+    {
       "id": "tall-building-edge-361203568",
       "vertexIds": [
         "tall-building-vertex-234833553",
         "tall-building-vertex-306313840"
       ]
     },
-    "tall-building-edge-372743502": {
+    {
       "id": "tall-building-edge-372743502",
       "vertexIds": [
         "tall-building-vertex-1338236112",
         "tall-building-vertex-276369610"
       ]
     },
-    "tall-building-edge-380996658": {
+    {
       "id": "tall-building-edge-380996658",
       "vertexIds": [
         "tall-building-vertex-188655261",
         "tall-building-vertex-264724351"
       ]
     },
-    "tall-building-edge-400319589": {
+    {
       "id": "tall-building-edge-400319589",
       "vertexIds": [
         "tall-building-vertex-810079272",
         "tall-building-vertex-510705817"
       ]
     },
-    "tall-building-edge-402212555": {
+    {
       "id": "tall-building-edge-402212555",
       "vertexIds": [
         "tall-building-vertex-1410363036",
         "tall-building-vertex-721864216"
       ]
     },
-    "tall-building-edge-417121705": {
+    {
       "id": "tall-building-edge-417121705",
       "vertexIds": [
         "tall-building-vertex-1169660411",
         "tall-building-vertex-1731626832"
       ]
     },
-    "tall-building-edge-424511337": {
+    {
       "id": "tall-building-edge-424511337",
       "vertexIds": [
         "tall-building-vertex-372548136",
         "tall-building-vertex-501580074"
       ]
     },
-    "tall-building-edge-430398344": {
+    {
       "id": "tall-building-edge-430398344",
       "vertexIds": [
         "tall-building-vertex-1419635179",
         "tall-building-vertex-125121398"
       ]
     },
-    "tall-building-edge-451823051": {
+    {
       "id": "tall-building-edge-451823051",
       "vertexIds": [
         "tall-building-vertex-1731626832",
         "tall-building-vertex-1944336978"
       ]
     },
-    "tall-building-edge-453975870": {
+    {
       "id": "tall-building-edge-453975870",
       "vertexIds": [
         "tall-building-vertex-1711374219",
         "tall-building-vertex-264724351"
       ]
     },
-    "tall-building-edge-458871235": {
+    {
       "id": "tall-building-edge-458871235",
       "vertexIds": [
         "tall-building-vertex-306313840",
         "tall-building-vertex-411335615"
       ]
     },
-    "tall-building-edge-465374063": {
+    {
       "id": "tall-building-edge-465374063",
       "vertexIds": [
         "tall-building-vertex-1944336978",
         "tall-building-vertex-510705817"
       ]
     },
-    "tall-building-edge-505225360": {
+    {
       "id": "tall-building-edge-505225360",
       "vertexIds": [
         "tall-building-vertex-1739174052",
         "tall-building-vertex-104287430"
       ]
     },
-    "tall-building-edge-524669541": {
+    {
       "id": "tall-building-edge-524669541",
       "vertexIds": [
         "tall-building-vertex-952016529",
         "tall-building-vertex-1259072308"
       ]
     },
-    "tall-building-edge-540240163": {
+    {
       "id": "tall-building-edge-540240163",
       "vertexIds": [
         "tall-building-vertex-1545726667",
         "tall-building-vertex-848024472"
       ]
     },
-    "tall-building-edge-546580609": {
+    {
       "id": "tall-building-edge-546580609",
       "vertexIds": [
         "tall-building-vertex-372548136",
         "tall-building-vertex-306313840"
       ]
     },
-    "tall-building-edge-58701286": {
+    {
       "id": "tall-building-edge-58701286",
       "vertexIds": [
         "tall-building-vertex-1711374219",
         "tall-building-vertex-1324127167"
       ]
     },
-    "tall-building-edge-594541651": {
+    {
       "id": "tall-building-edge-594541651",
       "vertexIds": [
         "tall-building-vertex-1386743482",
         "tall-building-vertex-2058022051"
       ]
     },
-    "tall-building-edge-642162720": {
+    {
       "id": "tall-building-edge-642162720",
       "vertexIds": [
         "tall-building-vertex-2135265355",
         "tall-building-vertex-1739174052"
       ]
     },
-    "tall-building-edge-647562314": {
+    {
       "id": "tall-building-edge-647562314",
       "vertexIds": [
         "tall-building-vertex-1259072308",
         "tall-building-vertex-1266010935"
       ]
     },
-    "tall-building-edge-658260200": {
+    {
       "id": "tall-building-edge-658260200",
       "vertexIds": [
         "tall-building-vertex-672034363",
         "tall-building-vertex-188655261"
       ]
     },
-    "tall-building-edge-659315516": {
+    {
       "id": "tall-building-edge-659315516",
       "vertexIds": [
         "tall-building-vertex-125121398",
         "tall-building-vertex-721864216"
       ]
     },
-    "tall-building-edge-667799328": {
+    {
       "id": "tall-building-edge-667799328",
       "vertexIds": [
         "tall-building-vertex-535070744",
         "tall-building-vertex-1795986317"
       ]
     },
-    "tall-building-edge-673413393": {
+    {
       "id": "tall-building-edge-673413393",
       "vertexIds": [
         "tall-building-vertex-1883592953",
         "tall-building-vertex-952016529"
       ]
     },
-    "tall-building-edge-677075598": {
+    {
       "id": "tall-building-edge-677075598",
       "vertexIds": [
         "tall-building-vertex-848024472",
         "tall-building-vertex-125121398"
       ]
     },
-    "tall-building-edge-705798454": {
+    {
       "id": "tall-building-edge-705798454",
       "vertexIds": [
         "tall-building-vertex-248601827",
         "tall-building-vertex-348560996"
       ]
     },
-    "tall-building-edge-714693257": {
+    {
       "id": "tall-building-edge-714693257",
       "vertexIds": [
         "tall-building-vertex-248601827",
         "tall-building-vertex-151356793"
       ]
     },
-    "tall-building-edge-728911266": {
+    {
       "id": "tall-building-edge-728911266",
       "vertexIds": [
         "tall-building-vertex-1790675002",
         "tall-building-vertex-810079272"
       ]
     },
-    "tall-building-edge-741564323": {
+    {
       "id": "tall-building-edge-741564323",
       "vertexIds": [
         "tall-building-vertex-163978829",
         "tall-building-vertex-372548136"
       ]
     },
-    "tall-building-edge-747703130": {
+    {
       "id": "tall-building-edge-747703130",
       "vertexIds": [
         "tall-building-vertex-276369610",
         "tall-building-vertex-961654646"
       ]
     },
-    "tall-building-edge-759315498": {
+    {
       "id": "tall-building-edge-759315498",
       "vertexIds": [
         "tall-building-vertex-848024472",
         "tall-building-vertex-151356793"
       ]
     },
-    "tall-building-edge-770060325": {
+    {
       "id": "tall-building-edge-770060325",
       "vertexIds": [
         "tall-building-vertex-501580074",
         "tall-building-vertex-411335615"
       ]
     },
-    "tall-building-edge-813247261": {
+    {
       "id": "tall-building-edge-813247261",
       "vertexIds": [
         "tall-building-vertex-265471352",
         "tall-building-vertex-1731626832"
       ]
     },
-    "tall-building-edge-826216029": {
+    {
       "id": "tall-building-edge-826216029",
       "vertexIds": [
         "tall-building-vertex-672034363",
         "tall-building-vertex-1633277293"
       ]
     },
-    "tall-building-edge-837398126": {
+    {
       "id": "tall-building-edge-837398126",
       "vertexIds": [
         "tall-building-vertex-2135265355",
         "tall-building-vertex-1165658674"
       ]
     },
-    "tall-building-edge-842916594": {
+    {
       "id": "tall-building-edge-842916594",
       "vertexIds": [
         "tall-building-vertex-248601827",
         "tall-building-vertex-952016529"
       ]
     },
-    "tall-building-edge-847317162": {
+    {
       "id": "tall-building-edge-847317162",
       "vertexIds": [
         "tall-building-vertex-1731626832",
         "tall-building-vertex-104287430"
       ]
     },
-    "tall-building-edge-874082010": {
+    {
       "id": "tall-building-edge-874082010",
       "vertexIds": [
         "tall-building-vertex-1373364467",
         "tall-building-vertex-163978829"
       ]
     },
-    "tall-building-edge-87791659": {
+    {
       "id": "tall-building-edge-87791659",
       "vertexIds": [
         "tall-building-vertex-1795986317",
         "tall-building-vertex-1094259255"
       ]
     },
-    "tall-building-edge-878810578": {
+    {
       "id": "tall-building-edge-878810578",
       "vertexIds": [
         "tall-building-vertex-1324127167",
         "tall-building-vertex-1266010935"
       ]
     },
-    "tall-building-edge-882736281": {
+    {
       "id": "tall-building-edge-882736281",
       "vertexIds": [
         "tall-building-vertex-721864216",
         "tall-building-vertex-961654646"
       ]
     },
-    "tall-building-edge-883627108": {
+    {
       "id": "tall-building-edge-883627108",
       "vertexIds": [
         "tall-building-vertex-1401937651",
         "tall-building-vertex-1860741962"
       ]
     },
-    "tall-building-edge-899396367": {
+    {
       "id": "tall-building-edge-899396367",
       "vertexIds": [
         "tall-building-vertex-1739174052",
         "tall-building-vertex-1289496452"
       ]
     },
-    "tall-building-edge-912047801": {
+    {
       "id": "tall-building-edge-912047801",
       "vertexIds": [
         "tall-building-vertex-1338236112",
         "tall-building-vertex-1386743482"
       ]
     },
-    "tall-building-edge-937553943": {
+    {
       "id": "tall-building-edge-937553943",
       "vertexIds": [
         "tall-building-vertex-510705817",
         "tall-building-vertex-264724351"
       ]
     },
-    "tall-building-edge-944400730": {
+    {
       "id": "tall-building-edge-944400730",
       "vertexIds": [
         "tall-building-vertex-1633277293",
         "tall-building-vertex-1944336978"
       ]
     },
-    "tall-building-edge-957569889": {
+    {
       "id": "tall-building-edge-957569889",
       "vertexIds": [
         "tall-building-vertex-1169660411",
         "tall-building-vertex-1739174052"
       ]
     },
-    "tall-building-edge-964883356": {
+    {
       "id": "tall-building-edge-964883356",
       "vertexIds": [
         "tall-building-vertex-1094259255",
         "tall-building-vertex-1266010935"
       ]
     },
-    "tall-building-edge-993478867": {
+    {
       "id": "tall-building-edge-993478867",
       "vertexIds": [
         "tall-building-vertex-1165658674",
         "tall-building-vertex-265471352"
       ]
     }
-  },
-  "wires": {
-    "tall-building-wire-1006069519": {
+  ],
+  "wires": [
+    {
       "id": "tall-building-wire-1006069519",
       "edgeIds": [
         "tall-building-edge-261013208",
@@ -1387,7 +1387,7 @@
         "tall-building-edge-2007846360"
       ]
     },
-    "tall-building-wire-101671441": {
+    {
       "id": "tall-building-wire-101671441",
       "edgeIds": [
         "tall-building-edge-1802844270",
@@ -1396,7 +1396,7 @@
         "tall-building-edge-957569889"
       ]
     },
-    "tall-building-wire-1020551771": {
+    {
       "id": "tall-building-wire-1020551771",
       "edgeIds": [
         "tall-building-edge-540240163",
@@ -1405,7 +1405,7 @@
         "tall-building-edge-261013208"
       ]
     },
-    "tall-building-wire-1030594648": {
+    {
       "id": "tall-building-wire-1030594648",
       "edgeIds": [
         "tall-building-edge-1315468270",
@@ -1414,7 +1414,7 @@
         "tall-building-edge-1115438318"
       ]
     },
-    "tall-building-wire-1076794059": {
+    {
       "id": "tall-building-wire-1076794059",
       "edgeIds": [
         "tall-building-edge-152904828",
@@ -1423,7 +1423,7 @@
         "tall-building-edge-1212310562"
       ]
     },
-    "tall-building-wire-1094256972": {
+    {
       "id": "tall-building-wire-1094256972",
       "edgeIds": [
         "tall-building-edge-1160725587",
@@ -1432,7 +1432,7 @@
         "tall-building-edge-1432946863"
       ]
     },
-    "tall-building-wire-1111569001": {
+    {
       "id": "tall-building-wire-1111569001",
       "edgeIds": [
         "tall-building-edge-1432946863",
@@ -1441,7 +1441,7 @@
         "tall-building-edge-1400879477"
       ]
     },
-    "tall-building-wire-1157406340": {
+    {
       "id": "tall-building-wire-1157406340",
       "edgeIds": [
         "tall-building-edge-714693257",
@@ -1450,7 +1450,7 @@
         "tall-building-edge-346661893"
       ]
     },
-    "tall-building-wire-115749086": {
+    {
       "id": "tall-building-wire-115749086",
       "edgeIds": [
         "tall-building-edge-1857787919",
@@ -1459,7 +1459,7 @@
         "tall-building-edge-453975870"
       ]
     },
-    "tall-building-wire-1166014203": {
+    {
       "id": "tall-building-wire-1166014203",
       "edgeIds": [
         "tall-building-edge-458871235",
@@ -1468,7 +1468,7 @@
         "tall-building-edge-1872677810"
       ]
     },
-    "tall-building-wire-1174320538": {
+    {
       "id": "tall-building-wire-1174320538",
       "edgeIds": [
         "tall-building-edge-297058955",
@@ -1477,7 +1477,7 @@
         "tall-building-edge-1676643464"
       ]
     },
-    "tall-building-wire-1176044982": {
+    {
       "id": "tall-building-wire-1176044982",
       "edgeIds": [
         "tall-building-edge-138715027",
@@ -1486,7 +1486,7 @@
         "tall-building-edge-1463719485"
       ]
     },
-    "tall-building-wire-1180922095": {
+    {
       "id": "tall-building-wire-1180922095",
       "edgeIds": [
         "tall-building-edge-1686389557",
@@ -1495,7 +1495,7 @@
         "tall-building-edge-747703130"
       ]
     },
-    "tall-building-wire-121517694": {
+    {
       "id": "tall-building-wire-121517694",
       "edgeIds": [
         "tall-building-edge-1131805220",
@@ -1504,7 +1504,7 @@
         "tall-building-edge-146409225"
       ]
     },
-    "tall-building-wire-1226899396": {
+    {
       "id": "tall-building-wire-1226899396",
       "edgeIds": [
         "tall-building-edge-540240163",
@@ -1513,7 +1513,7 @@
         "tall-building-edge-677075598"
       ]
     },
-    "tall-building-wire-1248924008": {
+    {
       "id": "tall-building-wire-1248924008",
       "edgeIds": [
         "tall-building-edge-658260200",
@@ -1522,7 +1522,7 @@
         "tall-building-edge-1736075674"
       ]
     },
-    "tall-building-wire-1270330659": {
+    {
       "id": "tall-building-wire-1270330659",
       "edgeIds": [
         "tall-building-edge-430398344",
@@ -1531,7 +1531,7 @@
         "tall-building-edge-1748918886"
       ]
     },
-    "tall-building-wire-1278337488": {
+    {
       "id": "tall-building-wire-1278337488",
       "edgeIds": [
         "tall-building-edge-1928778442",
@@ -1540,7 +1540,7 @@
         "tall-building-edge-1696122652"
       ]
     },
-    "tall-building-wire-1311521944": {
+    {
       "id": "tall-building-wire-1311521944",
       "edgeIds": [
         "tall-building-edge-1233779671",
@@ -1549,7 +1549,7 @@
         "tall-building-edge-1094093114"
       ]
     },
-    "tall-building-wire-1312526901": {
+    {
       "id": "tall-building-wire-1312526901",
       "edgeIds": [
         "tall-building-edge-453975870",
@@ -1558,7 +1558,7 @@
         "tall-building-edge-937553943"
       ]
     },
-    "tall-building-wire-1345591881": {
+    {
       "id": "tall-building-wire-1345591881",
       "edgeIds": [
         "tall-building-edge-1332412692",
@@ -1567,7 +1567,7 @@
         "tall-building-edge-58701286"
       ]
     },
-    "tall-building-wire-1350332269": {
+    {
       "id": "tall-building-wire-1350332269",
       "edgeIds": [
         "tall-building-edge-714693257",
@@ -1576,7 +1576,7 @@
         "tall-building-edge-1757290381"
       ]
     },
-    "tall-building-wire-1351127869": {
+    {
       "id": "tall-building-wire-1351127869",
       "edgeIds": [
         "tall-building-edge-402212555",
@@ -1585,7 +1585,7 @@
         "tall-building-edge-882736281"
       ]
     },
-    "tall-building-wire-1354543953": {
+    {
       "id": "tall-building-wire-1354543953",
       "edgeIds": [
         "tall-building-edge-883627108",
@@ -1594,7 +1594,7 @@
         "tall-building-edge-1212310562"
       ]
     },
-    "tall-building-wire-1356329952": {
+    {
       "id": "tall-building-wire-1356329952",
       "edgeIds": [
         "tall-building-edge-874082010",
@@ -1603,7 +1603,7 @@
         "tall-building-edge-1421158877"
       ]
     },
-    "tall-building-wire-1359005346": {
+    {
       "id": "tall-building-wire-1359005346",
       "edgeIds": [
         "tall-building-edge-1685567599",
@@ -1612,7 +1612,7 @@
         "tall-building-edge-1363046050"
       ]
     },
-    "tall-building-wire-1409362409": {
+    {
       "id": "tall-building-wire-1409362409",
       "edgeIds": [
         "tall-building-edge-465374063",
@@ -1621,7 +1621,7 @@
         "tall-building-edge-321868171"
       ]
     },
-    "tall-building-wire-1458206481": {
+    {
       "id": "tall-building-wire-1458206481",
       "edgeIds": [
         "tall-building-edge-1012642479",
@@ -1630,7 +1630,7 @@
         "tall-building-edge-874082010"
       ]
     },
-    "tall-building-wire-1471106097": {
+    {
       "id": "tall-building-wire-1471106097",
       "edgeIds": [
         "tall-building-edge-1223009176",
@@ -1639,7 +1639,7 @@
         "tall-building-edge-659315516"
       ]
     },
-    "tall-building-wire-1516756433": {
+    {
       "id": "tall-building-wire-1516756433",
       "edgeIds": [
         "tall-building-edge-1182448194",
@@ -1648,7 +1648,7 @@
         "tall-building-edge-770060325"
       ]
     },
-    "tall-building-wire-1543107201": {
+    {
       "id": "tall-building-wire-1543107201",
       "edgeIds": [
         "tall-building-edge-546580609",
@@ -1657,7 +1657,7 @@
         "tall-building-edge-2065633666"
       ]
     },
-    "tall-building-wire-1546681238": {
+    {
       "id": "tall-building-wire-1546681238",
       "edgeIds": [
         "tall-building-edge-1182448194",
@@ -1666,7 +1666,7 @@
         "tall-building-edge-747703130"
       ]
     },
-    "tall-building-wire-1567433026": {
+    {
       "id": "tall-building-wire-1567433026",
       "edgeIds": [
         "tall-building-edge-380996658",
@@ -1675,7 +1675,7 @@
         "tall-building-edge-937553943"
       ]
     },
-    "tall-building-wire-1580447832": {
+    {
       "id": "tall-building-wire-1580447832",
       "edgeIds": [
         "tall-building-edge-813247261",
@@ -1684,7 +1684,7 @@
         "tall-building-edge-417121705"
       ]
     },
-    "tall-building-wire-1581868345": {
+    {
       "id": "tall-building-wire-1581868345",
       "edgeIds": [
         "tall-building-edge-1188659324",
@@ -1693,7 +1693,7 @@
         "tall-building-edge-1212310562"
       ]
     },
-    "tall-building-wire-1613482793": {
+    {
       "id": "tall-building-wire-1613482793",
       "edgeIds": [
         "tall-building-edge-1160725587",
@@ -1702,7 +1702,7 @@
         "tall-building-edge-361203568"
       ]
     },
-    "tall-building-wire-1622645187": {
+    {
       "id": "tall-building-wire-1622645187",
       "edgeIds": [
         "tall-building-edge-1768509676",
@@ -1711,7 +1711,7 @@
         "tall-building-edge-87791659"
       ]
     },
-    "tall-building-wire-1679874613": {
+    {
       "id": "tall-building-wire-1679874613",
       "edgeIds": [
         "tall-building-edge-546580609",
@@ -1720,7 +1720,7 @@
         "tall-building-edge-1223009176"
       ]
     },
-    "tall-building-wire-1694759656": {
+    {
       "id": "tall-building-wire-1694759656",
       "edgeIds": [
         "tall-building-edge-2120309374",
@@ -1729,7 +1729,7 @@
         "tall-building-edge-993478867"
       ]
     },
-    "tall-building-wire-1698291412": {
+    {
       "id": "tall-building-wire-1698291412",
       "edgeIds": [
         "tall-building-edge-1705909449",
@@ -1738,7 +1738,7 @@
         "tall-building-edge-275660235"
       ]
     },
-    "tall-building-wire-1708720817": {
+    {
       "id": "tall-building-wire-1708720817",
       "edgeIds": [
         "tall-building-edge-882736281",
@@ -1747,7 +1747,7 @@
         "tall-building-edge-747703130"
       ]
     },
-    "tall-building-wire-1744750176": {
+    {
       "id": "tall-building-wire-1744750176",
       "edgeIds": [
         "tall-building-edge-1640958702",
@@ -1756,7 +1756,7 @@
         "tall-building-edge-826216029"
       ]
     },
-    "tall-building-wire-1760409450": {
+    {
       "id": "tall-building-wire-1760409450",
       "edgeIds": [
         "tall-building-edge-1426352005",
@@ -1765,7 +1765,7 @@
         "tall-building-edge-1995831367"
       ]
     },
-    "tall-building-wire-1760652619": {
+    {
       "id": "tall-building-wire-1760652619",
       "edgeIds": [
         "tall-building-edge-1087405765",
@@ -1774,7 +1774,7 @@
         "tall-building-edge-912047801"
       ]
     },
-    "tall-building-wire-1767149543": {
+    {
       "id": "tall-building-wire-1767149543",
       "edgeIds": [
         "tall-building-edge-1012642479",
@@ -1783,7 +1783,7 @@
         "tall-building-edge-594541651"
       ]
     },
-    "tall-building-wire-1775818238": {
+    {
       "id": "tall-building-wire-1775818238",
       "edgeIds": [
         "tall-building-edge-1732570736",
@@ -1792,7 +1792,7 @@
         "tall-building-edge-899396367"
       ]
     },
-    "tall-building-wire-1857126700": {
+    {
       "id": "tall-building-wire-1857126700",
       "edgeIds": [
         "tall-building-edge-1696122652",
@@ -1801,7 +1801,7 @@
         "tall-building-edge-1626279544"
       ]
     },
-    "tall-building-wire-1868449618": {
+    {
       "id": "tall-building-wire-1868449618",
       "edgeIds": [
         "tall-building-edge-1954038446",
@@ -1810,7 +1810,7 @@
         "tall-building-edge-912047801"
       ]
     },
-    "tall-building-wire-1887356260": {
+    {
       "id": "tall-building-wire-1887356260",
       "edgeIds": [
         "tall-building-edge-1332412692",
@@ -1819,7 +1819,7 @@
         "tall-building-edge-878810578"
       ]
     },
-    "tall-building-wire-1902268288": {
+    {
       "id": "tall-building-wire-1902268288",
       "edgeIds": [
         "tall-building-edge-2042982696",
@@ -1828,7 +1828,7 @@
         "tall-building-edge-87791659"
       ]
     },
-    "tall-building-wire-1927375771": {
+    {
       "id": "tall-building-wire-1927375771",
       "edgeIds": [
         "tall-building-edge-430398344",
@@ -1837,7 +1837,7 @@
         "tall-building-edge-1923719215"
       ]
     },
-    "tall-building-wire-1962887505": {
+    {
       "id": "tall-building-wire-1962887505",
       "edgeIds": [
         "tall-building-edge-1941606793",
@@ -1846,7 +1846,7 @@
         "tall-building-edge-1046624822"
       ]
     },
-    "tall-building-wire-1967591753": {
+    {
       "id": "tall-building-wire-1967591753",
       "edgeIds": [
         "tall-building-edge-380996658",
@@ -1855,7 +1855,7 @@
         "tall-building-edge-1027737897"
       ]
     },
-    "tall-building-wire-1992670492": {
+    {
       "id": "tall-building-wire-1992670492",
       "edgeIds": [
         "tall-building-edge-1541531391",
@@ -1864,7 +1864,7 @@
         "tall-building-edge-1131805220"
       ]
     },
-    "tall-building-wire-1994053001": {
+    {
       "id": "tall-building-wire-1994053001",
       "edgeIds": [
         "tall-building-edge-1315468270",
@@ -1873,7 +1873,7 @@
         "tall-building-edge-1113986882"
       ]
     },
-    "tall-building-wire-2021193356": {
+    {
       "id": "tall-building-wire-2021193356",
       "edgeIds": [
         "tall-building-edge-1928778442",
@@ -1882,7 +1882,7 @@
         "tall-building-edge-1646947765"
       ]
     },
-    "tall-building-wire-2038955179": {
+    {
       "id": "tall-building-wire-2038955179",
       "edgeIds": [
         "tall-building-edge-667799328",
@@ -1891,7 +1891,7 @@
         "tall-building-edge-1806183285"
       ]
     },
-    "tall-building-wire-2049704887": {
+    {
       "id": "tall-building-wire-2049704887",
       "edgeIds": [
         "tall-building-edge-878810578",
@@ -1900,7 +1900,7 @@
         "tall-building-edge-159211633"
       ]
     },
-    "tall-building-wire-2079608000": {
+    {
       "id": "tall-building-wire-2079608000",
       "edgeIds": [
         "tall-building-edge-1973727180",
@@ -1909,7 +1909,7 @@
         "tall-building-edge-1676643464"
       ]
     },
-    "tall-building-wire-2083922507": {
+    {
       "id": "tall-building-wire-2083922507",
       "edgeIds": [
         "tall-building-edge-1103522759",
@@ -1918,7 +1918,7 @@
         "tall-building-edge-1094331605"
       ]
     },
-    "tall-building-wire-2113288731": {
+    {
       "id": "tall-building-wire-2113288731",
       "edgeIds": [
         "tall-building-edge-677075598",
@@ -1927,7 +1927,7 @@
         "tall-building-edge-1748918886"
       ]
     },
-    "tall-building-wire-2146538646": {
+    {
       "id": "tall-building-wire-2146538646",
       "edgeIds": [
         "tall-building-edge-1541531391",
@@ -1936,7 +1936,7 @@
         "tall-building-edge-899396367"
       ]
     },
-    "tall-building-wire-219545580": {
+    {
       "id": "tall-building-wire-219545580",
       "edgeIds": [
         "tall-building-edge-465374063",
@@ -1945,7 +1945,7 @@
         "tall-building-edge-146409225"
       ]
     },
-    "tall-building-wire-222381220": {
+    {
       "id": "tall-building-wire-222381220",
       "edgeIds": [
         "tall-building-edge-207829444",
@@ -1954,7 +1954,7 @@
         "tall-building-edge-594541651"
       ]
     },
-    "tall-building-wire-273970647": {
+    {
       "id": "tall-building-wire-273970647",
       "edgeIds": [
         "tall-building-edge-400319589",
@@ -1963,7 +1963,7 @@
         "tall-building-edge-146409225"
       ]
     },
-    "tall-building-wire-275499859": {
+    {
       "id": "tall-building-wire-275499859",
       "edgeIds": [
         "tall-building-edge-1640958702",
@@ -1972,7 +1972,7 @@
         "tall-building-edge-305699690"
       ]
     },
-    "tall-building-wire-33613871": {
+    {
       "id": "tall-building-wire-33613871",
       "edgeIds": [
         "tall-building-edge-1928778442",
@@ -1981,7 +1981,7 @@
         "tall-building-edge-1732570736"
       ]
     },
-    "tall-building-wire-347836931": {
+    {
       "id": "tall-building-wire-347836931",
       "edgeIds": [
         "tall-building-edge-883627108",
@@ -1990,7 +1990,7 @@
         "tall-building-edge-1315468270"
       ]
     },
-    "tall-building-wire-364097118": {
+    {
       "id": "tall-building-wire-364097118",
       "edgeIds": [
         "tall-building-edge-1857787919",
@@ -1999,7 +1999,7 @@
         "tall-building-edge-1771130932"
       ]
     },
-    "tall-building-wire-380758920": {
+    {
       "id": "tall-building-wire-380758920",
       "edgeIds": [
         "tall-building-edge-813247261",
@@ -2008,7 +2008,7 @@
         "tall-building-edge-2120309374"
       ]
     },
-    "tall-building-wire-405270103": {
+    {
       "id": "tall-building-wire-405270103",
       "edgeIds": [
         "tall-building-edge-1923719215",
@@ -2017,7 +2017,7 @@
         "tall-building-edge-1046624822"
       ]
     },
-    "tall-building-wire-446984493": {
+    {
       "id": "tall-building-wire-446984493",
       "edgeIds": [
         "tall-building-edge-944400730",
@@ -2026,7 +2026,7 @@
         "tall-building-edge-451823051"
       ]
     },
-    "tall-building-wire-466639013": {
+    {
       "id": "tall-building-wire-466639013",
       "edgeIds": [
         "tall-building-edge-402212555",
@@ -2035,7 +2035,7 @@
         "tall-building-edge-659315516"
       ]
     },
-    "tall-building-wire-476481792": {
+    {
       "id": "tall-building-wire-476481792",
       "edgeIds": [
         "tall-building-edge-647562314",
@@ -2044,7 +2044,7 @@
         "tall-building-edge-524669541"
       ]
     },
-    "tall-building-wire-491057513": {
+    {
       "id": "tall-building-wire-491057513",
       "edgeIds": [
         "tall-building-edge-1667539922",
@@ -2053,7 +2053,7 @@
         "tall-building-edge-1963649925"
       ]
     },
-    "tall-building-wire-529944319": {
+    {
       "id": "tall-building-wire-529944319",
       "edgeIds": [
         "tall-building-edge-2021963583",
@@ -2062,7 +2062,7 @@
         "tall-building-edge-1363046050"
       ]
     },
-    "tall-building-wire-567873027": {
+    {
       "id": "tall-building-wire-567873027",
       "edgeIds": [
         "tall-building-edge-1598779554",
@@ -2071,7 +2071,7 @@
         "tall-building-edge-937553943"
       ]
     },
-    "tall-building-wire-590211470": {
+    {
       "id": "tall-building-wire-590211470",
       "edgeIds": [
         "tall-building-edge-842916594",
@@ -2080,7 +2080,7 @@
         "tall-building-edge-673413393"
       ]
     },
-    "tall-building-wire-603505312": {
+    {
       "id": "tall-building-wire-603505312",
       "edgeIds": [
         "tall-building-edge-1027737897",
@@ -2089,7 +2089,7 @@
         "tall-building-edge-1736075674"
       ]
     },
-    "tall-building-wire-610054554": {
+    {
       "id": "tall-building-wire-610054554",
       "edgeIds": [
         "tall-building-edge-1941606793",
@@ -2098,7 +2098,7 @@
         "tall-building-edge-297058955"
       ]
     },
-    "tall-building-wire-6100606": {
+    {
       "id": "tall-building-wire-6100606",
       "edgeIds": [
         "tall-building-edge-1640958702",
@@ -2107,7 +2107,7 @@
         "tall-building-edge-1984263321"
       ]
     },
-    "tall-building-wire-626090557": {
+    {
       "id": "tall-building-wire-626090557",
       "edgeIds": [
         "tall-building-edge-1765477009",
@@ -2116,7 +2116,7 @@
         "tall-building-edge-1619939237"
       ]
     },
-    "tall-building-wire-654883347": {
+    {
       "id": "tall-building-wire-654883347",
       "edgeIds": [
         "tall-building-edge-770060325",
@@ -2125,7 +2125,7 @@
         "tall-building-edge-1872677810"
       ]
     },
-    "tall-building-wire-662376138": {
+    {
       "id": "tall-building-wire-662376138",
       "edgeIds": [
         "tall-building-edge-305699690",
@@ -2134,7 +2134,7 @@
         "tall-building-edge-1104343759"
       ]
     },
-    "tall-building-wire-711028844": {
+    {
       "id": "tall-building-wire-711028844",
       "edgeIds": [
         "tall-building-edge-1464284263",
@@ -2143,7 +2143,7 @@
         "tall-building-edge-1806183285"
       ]
     },
-    "tall-building-wire-729057013": {
+    {
       "id": "tall-building-wire-729057013",
       "edgeIds": [
         "tall-building-edge-714693257",
@@ -2152,7 +2152,7 @@
         "tall-building-edge-842916594"
       ]
     },
-    "tall-building-wire-738452240": {
+    {
       "id": "tall-building-wire-738452240",
       "edgeIds": [
         "tall-building-edge-1984263321",
@@ -2161,7 +2161,7 @@
         "tall-building-edge-1771130932"
       ]
     },
-    "tall-building-wire-762120988": {
+    {
       "id": "tall-building-wire-762120988",
       "edgeIds": [
         "tall-building-edge-964883356",
@@ -2170,7 +2170,7 @@
         "tall-building-edge-159211633"
       ]
     },
-    "tall-building-wire-788954729": {
+    {
       "id": "tall-building-wire-788954729",
       "edgeIds": [
         "tall-building-edge-1833044140",
@@ -2179,7 +2179,7 @@
         "tall-building-edge-1400879477"
       ]
     },
-    "tall-building-wire-839306283": {
+    {
       "id": "tall-building-wire-839306283",
       "edgeIds": [
         "tall-building-edge-1298801438",
@@ -2188,7 +2188,7 @@
         "tall-building-edge-728911266"
       ]
     },
-    "tall-building-wire-849779289": {
+    {
       "id": "tall-building-wire-849779289",
       "edgeIds": [
         "tall-building-edge-647562314",
@@ -2197,7 +2197,7 @@
         "tall-building-edge-159211633"
       ]
     },
-    "tall-building-wire-86258895": {
+    {
       "id": "tall-building-wire-86258895",
       "edgeIds": [
         "tall-building-edge-1188659324",
@@ -2206,7 +2206,7 @@
         "tall-building-edge-152904828"
       ]
     },
-    "tall-building-wire-867630395": {
+    {
       "id": "tall-building-wire-867630395",
       "edgeIds": [
         "tall-building-edge-138878392",
@@ -2215,7 +2215,7 @@
         "tall-building-edge-1058347544"
       ]
     },
-    "tall-building-wire-868197991": {
+    {
       "id": "tall-building-wire-868197991",
       "edgeIds": [
         "tall-building-edge-372743502",
@@ -2224,7 +2224,7 @@
         "tall-building-edge-1046624822"
       ]
     },
-    "tall-building-wire-891764572": {
+    {
       "id": "tall-building-wire-891764572",
       "edgeIds": [
         "tall-building-edge-424511337",
@@ -2233,7 +2233,7 @@
         "tall-building-edge-1806975849"
       ]
     },
-    "tall-building-wire-905957892": {
+    {
       "id": "tall-building-wire-905957892",
       "edgeIds": [
         "tall-building-edge-540240163",
@@ -2242,7 +2242,7 @@
         "tall-building-edge-759315498"
       ]
     },
-    "tall-building-wire-922137296": {
+    {
       "id": "tall-building-wire-922137296",
       "edgeIds": [
         "tall-building-edge-321868171",
@@ -2251,7 +2251,7 @@
         "tall-building-edge-451823051"
       ]
     },
-    "tall-building-wire-932440314": {
+    {
       "id": "tall-building-wire-932440314",
       "edgeIds": [
         "tall-building-edge-346661893",
@@ -2260,7 +2260,7 @@
         "tall-building-edge-58701286"
       ]
     },
-    "tall-building-wire-958930452": {
+    {
       "id": "tall-building-wire-958930452",
       "edgeIds": [
         "tall-building-edge-285571882",
@@ -2269,7 +2269,7 @@
         "tall-building-edge-728911266"
       ]
     },
-    "tall-building-wire-980227698": {
+    {
       "id": "tall-building-wire-980227698",
       "edgeIds": [
         "tall-building-edge-524669541",
@@ -2278,7 +2278,7 @@
         "tall-building-edge-1995831367"
       ]
     },
-    "tall-building-wire-989493536": {
+    {
       "id": "tall-building-wire-989493536",
       "edgeIds": [
         "tall-building-edge-1113986882",
@@ -2287,7 +2287,7 @@
         "tall-building-edge-1115438318"
       ]
     },
-    "tall-building-wire-989728301": {
+    {
       "id": "tall-building-wire-989728301",
       "edgeIds": [
         "tall-building-edge-546580609",
@@ -2296,623 +2296,623 @@
         "tall-building-edge-424511337"
       ]
     }
-  },
-  "faces": {
-    "tall-building-face-1006266943": {
+  ],
+  "faces": [
+    {
       "id": "tall-building-face-1006266943",
       "wireIds": [
         "tall-building-wire-849779289"
       ]
     },
-    "tall-building-face-102518137": {
+    {
       "id": "tall-building-face-102518137",
       "wireIds": [
         "tall-building-wire-1760652619"
       ]
     },
-    "tall-building-face-102725139": {
+    {
       "id": "tall-building-face-102725139",
       "wireIds": [
         "tall-building-wire-275499859"
       ]
     },
-    "tall-building-face-1033221500": {
+    {
       "id": "tall-building-face-1033221500",
       "wireIds": [
         "tall-building-wire-662376138"
       ]
     },
-    "tall-building-face-1058395020": {
+    {
       "id": "tall-building-face-1058395020",
       "wireIds": [
         "tall-building-wire-1679874613"
       ]
     },
-    "tall-building-face-10653033": {
+    {
       "id": "tall-building-face-10653033",
       "wireIds": [
         "tall-building-wire-1471106097"
       ]
     },
-    "tall-building-face-1085014160": {
+    {
       "id": "tall-building-face-1085014160",
       "wireIds": [
         "tall-building-wire-1180922095"
       ]
     },
-    "tall-building-face-1111157487": {
+    {
       "id": "tall-building-face-1111157487",
       "wireIds": [
         "tall-building-wire-905957892"
       ]
     },
-    "tall-building-face-1119640917": {
+    {
       "id": "tall-building-face-1119640917",
       "wireIds": [
         "tall-building-wire-1409362409"
       ]
     },
-    "tall-building-face-1162828173": {
+    {
       "id": "tall-building-face-1162828173",
       "wireIds": [
         "tall-building-wire-2083922507"
       ]
     },
-    "tall-building-face-1170649626": {
+    {
       "id": "tall-building-face-1170649626",
       "wireIds": [
         "tall-building-wire-1226899396"
       ]
     },
-    "tall-building-face-1180655481": {
+    {
       "id": "tall-building-face-1180655481",
       "wireIds": [
         "tall-building-wire-529944319"
       ]
     },
-    "tall-building-face-118446947": {
+    {
       "id": "tall-building-face-118446947",
       "wireIds": [
         "tall-building-wire-980227698"
       ]
     },
-    "tall-building-face-1189739789": {
+    {
       "id": "tall-building-face-1189739789",
       "wireIds": [
         "tall-building-wire-101671441"
       ]
     },
-    "tall-building-face-1205625720": {
+    {
       "id": "tall-building-face-1205625720",
       "wireIds": [
         "tall-building-wire-1962887505"
       ]
     },
-    "tall-building-face-120591853": {
+    {
       "id": "tall-building-face-120591853",
       "wireIds": [
         "tall-building-wire-932440314"
       ]
     },
-    "tall-building-face-1212602398": {
+    {
       "id": "tall-building-face-1212602398",
       "wireIds": [
         "tall-building-wire-405270103"
       ]
     },
-    "tall-building-face-1218966062": {
+    {
       "id": "tall-building-face-1218966062",
       "wireIds": [
         "tall-building-wire-2113288731"
       ]
     },
-    "tall-building-face-1226104468": {
+    {
       "id": "tall-building-face-1226104468",
       "wireIds": [
         "tall-building-wire-6100606"
       ]
     },
-    "tall-building-face-1243392230": {
+    {
       "id": "tall-building-face-1243392230",
       "wireIds": [
         "tall-building-wire-1458206481"
       ]
     },
-    "tall-building-face-1245274648": {
+    {
       "id": "tall-building-face-1245274648",
       "wireIds": [
         "tall-building-wire-121517694"
       ]
     },
-    "tall-building-face-1280578556": {
+    {
       "id": "tall-building-face-1280578556",
       "wireIds": [
         "tall-building-wire-1359005346"
       ]
     },
-    "tall-building-face-1286773876": {
+    {
       "id": "tall-building-face-1286773876",
       "wireIds": [
         "tall-building-wire-1278337488"
       ]
     },
-    "tall-building-face-1309189693": {
+    {
       "id": "tall-building-face-1309189693",
       "wireIds": [
         "tall-building-wire-1775818238"
       ]
     },
-    "tall-building-face-1447358525": {
+    {
       "id": "tall-building-face-1447358525",
       "wireIds": [
         "tall-building-wire-1767149543"
       ]
     },
-    "tall-building-face-1480579346": {
+    {
       "id": "tall-building-face-1480579346",
       "wireIds": [
         "tall-building-wire-1694759656"
       ]
     },
-    "tall-building-face-1500700760": {
+    {
       "id": "tall-building-face-1500700760",
       "wireIds": [
         "tall-building-wire-1351127869"
       ]
     },
-    "tall-building-face-1523671437": {
+    {
       "id": "tall-building-face-1523671437",
       "wireIds": [
         "tall-building-wire-1157406340"
       ]
     },
-    "tall-building-face-1524387605": {
+    {
       "id": "tall-building-face-1524387605",
       "wireIds": [
         "tall-building-wire-1270330659"
       ]
     },
-    "tall-building-face-1531618841": {
+    {
       "id": "tall-building-face-1531618841",
       "wireIds": [
         "tall-building-wire-1698291412"
       ]
     },
-    "tall-building-face-1540528635": {
+    {
       "id": "tall-building-face-1540528635",
       "wireIds": [
         "tall-building-wire-590211470"
       ]
     },
-    "tall-building-face-1573764469": {
+    {
       "id": "tall-building-face-1573764469",
       "wireIds": [
         "tall-building-wire-1174320538"
       ]
     },
-    "tall-building-face-1639613883": {
+    {
       "id": "tall-building-face-1639613883",
       "wireIds": [
         "tall-building-wire-788954729"
       ]
     },
-    "tall-building-face-1645250110": {
+    {
       "id": "tall-building-face-1645250110",
       "wireIds": [
         "tall-building-wire-1111569001"
       ]
     },
-    "tall-building-face-1645889631": {
+    {
       "id": "tall-building-face-1645889631",
       "wireIds": [
         "tall-building-wire-1546681238"
       ]
     },
-    "tall-building-face-1645988786": {
+    {
       "id": "tall-building-face-1645988786",
       "wireIds": [
         "tall-building-wire-1030594648"
       ]
     },
-    "tall-building-face-1673695481": {
+    {
       "id": "tall-building-face-1673695481",
       "wireIds": [
         "tall-building-wire-380758920"
       ]
     },
-    "tall-building-face-1679966150": {
+    {
       "id": "tall-building-face-1679966150",
       "wireIds": [
         "tall-building-wire-1581868345"
       ]
     },
-    "tall-building-face-1702123263": {
+    {
       "id": "tall-building-face-1702123263",
       "wireIds": [
         "tall-building-wire-868197991"
       ]
     },
-    "tall-building-face-1704761419": {
+    {
       "id": "tall-building-face-1704761419",
       "wireIds": [
         "tall-building-wire-1176044982"
       ]
     },
-    "tall-building-face-1729911847": {
+    {
       "id": "tall-building-face-1729911847",
       "wireIds": [
         "tall-building-wire-1887356260"
       ]
     },
-    "tall-building-face-1741474668": {
+    {
       "id": "tall-building-face-1741474668",
       "wireIds": [
         "tall-building-wire-2038955179"
       ]
     },
-    "tall-building-face-1741534057": {
+    {
       "id": "tall-building-face-1741534057",
       "wireIds": [
         "tall-building-wire-1166014203"
       ]
     },
-    "tall-building-face-1744861431": {
+    {
       "id": "tall-building-face-1744861431",
       "wireIds": [
         "tall-building-wire-1967591753"
       ]
     },
-    "tall-building-face-1757488521": {
+    {
       "id": "tall-building-face-1757488521",
       "wireIds": [
         "tall-building-wire-1248924008"
       ]
     },
-    "tall-building-face-1800515755": {
+    {
       "id": "tall-building-face-1800515755",
       "wireIds": [
         "tall-building-wire-1927375771"
       ]
     },
-    "tall-building-face-1807955776": {
+    {
       "id": "tall-building-face-1807955776",
       "wireIds": [
         "tall-building-wire-476481792"
       ]
     },
-    "tall-building-face-1890863398": {
+    {
       "id": "tall-building-face-1890863398",
       "wireIds": [
         "tall-building-wire-2079608000"
       ]
     },
-    "tall-building-face-1901238224": {
+    {
       "id": "tall-building-face-1901238224",
       "wireIds": [
         "tall-building-wire-1992670492"
       ]
     },
-    "tall-building-face-1901288073": {
+    {
       "id": "tall-building-face-1901288073",
       "wireIds": [
         "tall-building-wire-2146538646"
       ]
     },
-    "tall-building-face-1905510121": {
+    {
       "id": "tall-building-face-1905510121",
       "wireIds": [
         "tall-building-wire-1580447832"
       ]
     },
-    "tall-building-face-1912925643": {
+    {
       "id": "tall-building-face-1912925643",
       "wireIds": [
         "tall-building-wire-567873027"
       ]
     },
-    "tall-building-face-193824939": {
+    {
       "id": "tall-building-face-193824939",
       "wireIds": [
         "tall-building-wire-446984493"
       ]
     },
-    "tall-building-face-1974621623": {
+    {
       "id": "tall-building-face-1974621623",
       "wireIds": [
         "tall-building-wire-364097118"
       ]
     },
-    "tall-building-face-198699638": {
+    {
       "id": "tall-building-face-198699638",
       "wireIds": [
         "tall-building-wire-762120988"
       ]
     },
-    "tall-building-face-1988214813": {
+    {
       "id": "tall-building-face-1988214813",
       "wireIds": [
         "tall-building-wire-491057513"
       ]
     },
-    "tall-building-face-1997967064": {
+    {
       "id": "tall-building-face-1997967064",
       "wireIds": [
         "tall-building-wire-86258895"
       ]
     },
-    "tall-building-face-2000748018": {
+    {
       "id": "tall-building-face-2000748018",
       "wireIds": [
         "tall-building-wire-219545580"
       ]
     },
-    "tall-building-face-201140427": {
+    {
       "id": "tall-building-face-201140427",
       "wireIds": [
         "tall-building-wire-1345591881"
       ]
     },
-    "tall-building-face-2056359013": {
+    {
       "id": "tall-building-face-2056359013",
       "wireIds": [
         "tall-building-wire-891764572"
       ]
     },
-    "tall-building-face-2080214652": {
+    {
       "id": "tall-building-face-2080214652",
       "wireIds": [
         "tall-building-wire-1613482793"
       ]
     },
-    "tall-building-face-2103843209": {
+    {
       "id": "tall-building-face-2103843209",
       "wireIds": [
         "tall-building-wire-347836931"
       ]
     },
-    "tall-building-face-2144997239": {
+    {
       "id": "tall-building-face-2144997239",
       "wireIds": [
         "tall-building-wire-1311521944"
       ]
     },
-    "tall-building-face-2147140612": {
+    {
       "id": "tall-building-face-2147140612",
       "wireIds": [
         "tall-building-wire-1868449618"
       ]
     },
-    "tall-building-face-278512312": {
+    {
       "id": "tall-building-face-278512312",
       "wireIds": [
         "tall-building-wire-273970647"
       ]
     },
-    "tall-building-face-279411588": {
+    {
       "id": "tall-building-face-279411588",
       "wireIds": [
         "tall-building-wire-1354543953"
       ]
     },
-    "tall-building-face-306724680": {
+    {
       "id": "tall-building-face-306724680",
       "wireIds": [
         "tall-building-wire-1356329952"
       ]
     },
-    "tall-building-face-315602848": {
+    {
       "id": "tall-building-face-315602848",
       "wireIds": [
         "tall-building-wire-603505312"
       ]
     },
-    "tall-building-face-319968775": {
+    {
       "id": "tall-building-face-319968775",
       "wireIds": [
         "tall-building-wire-1350332269"
       ]
     },
-    "tall-building-face-325928460": {
+    {
       "id": "tall-building-face-325928460",
       "wireIds": [
         "tall-building-wire-626090557"
       ]
     },
-    "tall-building-face-328415434": {
+    {
       "id": "tall-building-face-328415434",
       "wireIds": [
         "tall-building-wire-2049704887"
       ]
     },
-    "tall-building-face-358756280": {
+    {
       "id": "tall-building-face-358756280",
       "wireIds": [
         "tall-building-wire-610054554"
       ]
     },
-    "tall-building-face-371129754": {
+    {
       "id": "tall-building-face-371129754",
       "wireIds": [
         "tall-building-wire-115749086"
       ]
     },
-    "tall-building-face-381247057": {
+    {
       "id": "tall-building-face-381247057",
       "wireIds": [
         "tall-building-wire-1006069519"
       ]
     },
-    "tall-building-face-402147777": {
+    {
       "id": "tall-building-face-402147777",
       "wireIds": [
         "tall-building-wire-1516756433"
       ]
     },
-    "tall-building-face-41263267": {
+    {
       "id": "tall-building-face-41263267",
       "wireIds": [
         "tall-building-wire-1994053001"
       ]
     },
-    "tall-building-face-45073977": {
+    {
       "id": "tall-building-face-45073977",
       "wireIds": [
         "tall-building-wire-989728301"
       ]
     },
-    "tall-building-face-458889135": {
+    {
       "id": "tall-building-face-458889135",
       "wireIds": [
         "tall-building-wire-839306283"
       ]
     },
-    "tall-building-face-464570322": {
+    {
       "id": "tall-building-face-464570322",
       "wireIds": [
         "tall-building-wire-1902268288"
       ]
     },
-    "tall-building-face-466900340": {
+    {
       "id": "tall-building-face-466900340",
       "wireIds": [
         "tall-building-wire-1543107201"
       ]
     },
-    "tall-building-face-487839853": {
+    {
       "id": "tall-building-face-487839853",
       "wireIds": [
         "tall-building-wire-1760409450"
       ]
     },
-    "tall-building-face-506445686": {
+    {
       "id": "tall-building-face-506445686",
       "wireIds": [
         "tall-building-wire-1708720817"
       ]
     },
-    "tall-building-face-517352289": {
+    {
       "id": "tall-building-face-517352289",
       "wireIds": [
         "tall-building-wire-1567433026"
       ]
     },
-    "tall-building-face-600466518": {
+    {
       "id": "tall-building-face-600466518",
       "wireIds": [
         "tall-building-wire-729057013"
       ]
     },
-    "tall-building-face-636191280": {
+    {
       "id": "tall-building-face-636191280",
       "wireIds": [
         "tall-building-wire-222381220"
       ]
     },
-    "tall-building-face-650720714": {
+    {
       "id": "tall-building-face-650720714",
       "wireIds": [
         "tall-building-wire-711028844"
       ]
     },
-    "tall-building-face-661706250": {
+    {
       "id": "tall-building-face-661706250",
       "wireIds": [
         "tall-building-wire-958930452"
       ]
     },
-    "tall-building-face-667771314": {
+    {
       "id": "tall-building-face-667771314",
       "wireIds": [
         "tall-building-wire-922137296"
       ]
     },
-    "tall-building-face-669209282": {
+    {
       "id": "tall-building-face-669209282",
       "wireIds": [
         "tall-building-wire-1076794059"
       ]
     },
-    "tall-building-face-684851053": {
+    {
       "id": "tall-building-face-684851053",
       "wireIds": [
         "tall-building-wire-654883347"
       ]
     },
-    "tall-building-face-713414859": {
+    {
       "id": "tall-building-face-713414859",
       "wireIds": [
         "tall-building-wire-1312526901"
       ]
     },
-    "tall-building-face-715647947": {
+    {
       "id": "tall-building-face-715647947",
       "wireIds": [
         "tall-building-wire-989493536"
       ]
     },
-    "tall-building-face-723853012": {
+    {
       "id": "tall-building-face-723853012",
       "wireIds": [
         "tall-building-wire-1020551771"
       ]
     },
-    "tall-building-face-75281746": {
+    {
       "id": "tall-building-face-75281746",
       "wireIds": [
         "tall-building-wire-1857126700"
       ]
     },
-    "tall-building-face-78314107": {
+    {
       "id": "tall-building-face-78314107",
       "wireIds": [
         "tall-building-wire-738452240"
       ]
     },
-    "tall-building-face-795461761": {
+    {
       "id": "tall-building-face-795461761",
       "wireIds": [
         "tall-building-wire-33613871"
       ]
     },
-    "tall-building-face-817045005": {
+    {
       "id": "tall-building-face-817045005",
       "wireIds": [
         "tall-building-wire-867630395"
       ]
     },
-    "tall-building-face-825498428": {
+    {
       "id": "tall-building-face-825498428",
       "wireIds": [
         "tall-building-wire-1094256972"
       ]
     },
-    "tall-building-face-831837007": {
+    {
       "id": "tall-building-face-831837007",
       "wireIds": [
         "tall-building-wire-1744750176"
       ]
     },
-    "tall-building-face-86350609": {
+    {
       "id": "tall-building-face-86350609",
       "wireIds": [
         "tall-building-wire-1622645187"
       ]
     },
-    "tall-building-face-879620636": {
+    {
       "id": "tall-building-face-879620636",
       "wireIds": [
         "tall-building-wire-466639013"
       ]
     },
-    "tall-building-face-964481788": {
+    {
       "id": "tall-building-face-964481788",
       "wireIds": [
         "tall-building-wire-2021193356"
       ]
     }
-  },
-  "shells": {
-    "tall-building-shell-1080615270": {
+  ],
+  "shells": [
+    {
       "id": "tall-building-shell-1080615270",
       "faceIds": [
         "tall-building-face-1180655481",
@@ -2923,7 +2923,7 @@
         "tall-building-face-1205625720"
       ]
     },
-    "tall-building-shell-1104121693": {
+    {
       "id": "tall-building-shell-1104121693",
       "faceIds": [
         "tall-building-face-2147140612",
@@ -2934,7 +2934,7 @@
         "tall-building-face-1645889631"
       ]
     },
-    "tall-building-shell-1164335438": {
+    {
       "id": "tall-building-shell-1164335438",
       "faceIds": [
         "tall-building-face-661706250",
@@ -2945,7 +2945,7 @@
         "tall-building-face-1245274648"
       ]
     },
-    "tall-building-shell-1174176398": {
+    {
       "id": "tall-building-shell-1174176398",
       "faceIds": [
         "tall-building-face-650720714",
@@ -2956,7 +2956,7 @@
         "tall-building-face-517352289"
       ]
     },
-    "tall-building-shell-1251501949": {
+    {
       "id": "tall-building-shell-1251501949",
       "faceIds": [
         "tall-building-face-1162828173",
@@ -2967,7 +2967,7 @@
         "tall-building-face-1309189693"
       ]
     },
-    "tall-building-shell-1389450888": {
+    {
       "id": "tall-building-shell-1389450888",
       "faceIds": [
         "tall-building-face-381247057",
@@ -2978,7 +2978,7 @@
         "tall-building-face-1890863398"
       ]
     },
-    "tall-building-shell-1433169608": {
+    {
       "id": "tall-building-shell-1433169608",
       "faceIds": [
         "tall-building-face-1531618841",
@@ -2989,7 +2989,7 @@
         "tall-building-face-1645250110"
       ]
     },
-    "tall-building-shell-1530475847": {
+    {
       "id": "tall-building-shell-1530475847",
       "faceIds": [
         "tall-building-face-458889135",
@@ -3000,7 +3000,7 @@
         "tall-building-face-2000748018"
       ]
     },
-    "tall-building-shell-1591834811": {
+    {
       "id": "tall-building-shell-1591834811",
       "faceIds": [
         "tall-building-face-1280578556",
@@ -3011,7 +3011,7 @@
         "tall-building-face-1212602398"
       ]
     },
-    "tall-building-shell-1805338394": {
+    {
       "id": "tall-building-shell-1805338394",
       "faceIds": [
         "tall-building-face-102518137",
@@ -3022,7 +3022,7 @@
         "tall-building-face-506445686"
       ]
     },
-    "tall-building-shell-1816957589": {
+    {
       "id": "tall-building-shell-1816957589",
       "faceIds": [
         "tall-building-face-325928460",
@@ -3033,7 +3033,7 @@
         "tall-building-face-10653033"
       ]
     },
-    "tall-building-shell-240457266": {
+    {
       "id": "tall-building-shell-240457266",
       "faceIds": [
         "tall-building-face-1447358525",
@@ -3044,7 +3044,7 @@
         "tall-building-face-279411588"
       ]
     },
-    "tall-building-shell-281535569": {
+    {
       "id": "tall-building-shell-281535569",
       "faceIds": [
         "tall-building-face-2056359013",
@@ -3055,7 +3055,7 @@
         "tall-building-face-1741534057"
       ]
     },
-    "tall-building-shell-323855234": {
+    {
       "id": "tall-building-shell-323855234",
       "faceIds": [
         "tall-building-face-306724680",
@@ -3086,7 +3086,7 @@
         "tall-building-face-661706250"
       ]
     },
-    "tall-building-shell-43151377": {
+    {
       "id": "tall-building-shell-43151377",
       "faceIds": [
         "tall-building-face-817045005",
@@ -3097,7 +3097,7 @@
         "tall-building-face-120591853"
       ]
     },
-    "tall-building-shell-543685653": {
+    {
       "id": "tall-building-shell-543685653",
       "faceIds": [
         "tall-building-face-306724680",
@@ -3108,7 +3108,7 @@
         "tall-building-face-715647947"
       ]
     },
-    "tall-building-shell-567667923": {
+    {
       "id": "tall-building-shell-567667923",
       "faceIds": [
         "tall-building-face-636191280",
@@ -3119,7 +3119,7 @@
         "tall-building-face-1679966150"
       ]
     },
-    "tall-building-shell-695325988": {
+    {
       "id": "tall-building-shell-695325988",
       "faceIds": [
         "tall-building-face-1033221500",
@@ -3130,7 +3130,7 @@
         "tall-building-face-1757488521"
       ]
     },
-    "tall-building-shell-699455166": {
+    {
       "id": "tall-building-shell-699455166",
       "faceIds": [
         "tall-building-face-1988214813",
@@ -3141,7 +3141,7 @@
         "tall-building-face-78314107"
       ]
     },
-    "tall-building-shell-708422272": {
+    {
       "id": "tall-building-shell-708422272",
       "faceIds": [
         "tall-building-face-464570322",
@@ -3152,7 +3152,7 @@
         "tall-building-face-1006266943"
       ]
     },
-    "tall-building-shell-741905040": {
+    {
       "id": "tall-building-shell-741905040",
       "faceIds": [
         "tall-building-face-1741474668",
@@ -3163,7 +3163,7 @@
         "tall-building-face-713414859"
       ]
     },
-    "tall-building-shell-844844587": {
+    {
       "id": "tall-building-shell-844844587",
       "faceIds": [
         "tall-building-face-75281746",
@@ -3174,7 +3174,7 @@
         "tall-building-face-193824939"
       ]
     },
-    "tall-building-shell-851427425": {
+    {
       "id": "tall-building-shell-851427425",
       "faceIds": [
         "tall-building-face-1540528635",
@@ -3185,7 +3185,7 @@
         "tall-building-face-487839853"
       ]
     },
-    "tall-building-shell-901181345": {
+    {
       "id": "tall-building-shell-901181345",
       "faceIds": [
         "tall-building-face-86350609",
@@ -3196,7 +3196,7 @@
         "tall-building-face-328415434"
       ]
     },
-    "tall-building-shell-950784254": {
+    {
       "id": "tall-building-shell-950784254",
       "faceIds": [
         "tall-building-face-2144997239",
@@ -3207,161 +3207,161 @@
         "tall-building-face-1218966062"
       ]
     }
-  },
-  "cells": {
-    "tall-building-cell-1081834846": {
+  ],
+  "cells": [
+    {
       "id": "tall-building-cell-1081834846",
       "shellIds": [
         "tall-building-shell-699455166"
       ]
     },
-    "tall-building-cell-1096094486": {
+    {
       "id": "tall-building-cell-1096094486",
       "shellIds": [
         "tall-building-shell-1104121693"
       ]
     },
-    "tall-building-cell-1279952659": {
+    {
       "id": "tall-building-cell-1279952659",
       "shellIds": [
         "tall-building-shell-950784254"
       ]
     },
-    "tall-building-cell-128407723": {
+    {
       "id": "tall-building-cell-128407723",
       "shellIds": [
         "tall-building-shell-1251501949"
       ]
     },
-    "tall-building-cell-1328253869": {
+    {
       "id": "tall-building-cell-1328253869",
       "shellIds": [
         "tall-building-shell-240457266"
       ]
     },
-    "tall-building-cell-1352884655": {
+    {
       "id": "tall-building-cell-1352884655",
       "shellIds": [
         "tall-building-shell-1164335438"
       ]
     },
-    "tall-building-cell-1483470234": {
+    {
       "id": "tall-building-cell-1483470234",
       "shellIds": [
         "tall-building-shell-844844587"
       ]
     },
-    "tall-building-cell-1566933627": {
+    {
       "id": "tall-building-cell-1566933627",
       "shellIds": [
         "tall-building-shell-543685653"
       ]
     },
-    "tall-building-cell-1625171106": {
+    {
       "id": "tall-building-cell-1625171106",
       "shellIds": [
         "tall-building-shell-901181345"
       ]
     },
-    "tall-building-cell-1742409446": {
+    {
       "id": "tall-building-cell-1742409446",
       "shellIds": [
         "tall-building-shell-741905040"
       ]
     },
-    "tall-building-cell-1787309167": {
+    {
       "id": "tall-building-cell-1787309167",
       "shellIds": [
         "tall-building-shell-1080615270"
       ]
     },
-    "tall-building-cell-1791018247": {
+    {
       "id": "tall-building-cell-1791018247",
       "shellIds": [
         "tall-building-shell-1174176398"
       ]
     },
-    "tall-building-cell-179470786": {
+    {
       "id": "tall-building-cell-179470786",
       "shellIds": [
         "tall-building-shell-567667923"
       ]
     },
-    "tall-building-cell-1881454733": {
+    {
       "id": "tall-building-cell-1881454733",
       "shellIds": [
         "tall-building-shell-1816957589"
       ]
     },
-    "tall-building-cell-1983976325": {
+    {
       "id": "tall-building-cell-1983976325",
       "shellIds": [
         "tall-building-shell-1433169608"
       ]
     },
-    "tall-building-cell-2067663447": {
+    {
       "id": "tall-building-cell-2067663447",
       "shellIds": [
         "tall-building-shell-851427425"
       ]
     },
-    "tall-building-cell-273806170": {
+    {
       "id": "tall-building-cell-273806170",
       "shellIds": [
         "tall-building-shell-1805338394"
       ]
     },
-    "tall-building-cell-391420525": {
+    {
       "id": "tall-building-cell-391420525",
       "shellIds": [
         "tall-building-shell-323855234"
       ]
     },
-    "tall-building-cell-418180204": {
+    {
       "id": "tall-building-cell-418180204",
       "shellIds": [
         "tall-building-shell-281535569"
       ]
     },
-    "tall-building-cell-52113531": {
+    {
       "id": "tall-building-cell-52113531",
       "shellIds": [
         "tall-building-shell-695325988"
       ]
     },
-    "tall-building-cell-554343839": {
+    {
       "id": "tall-building-cell-554343839",
       "shellIds": [
         "tall-building-shell-1591834811"
       ]
     },
-    "tall-building-cell-751631438": {
+    {
       "id": "tall-building-cell-751631438",
       "shellIds": [
         "tall-building-shell-708422272"
       ]
     },
-    "tall-building-cell-869813452": {
+    {
       "id": "tall-building-cell-869813452",
       "shellIds": [
         "tall-building-shell-1389450888"
       ]
     },
-    "tall-building-cell-980890500": {
+    {
       "id": "tall-building-cell-980890500",
       "shellIds": [
         "tall-building-shell-43151377"
       ]
     },
-    "tall-building-cell-981303600": {
+    {
       "id": "tall-building-cell-981303600",
       "shellIds": [
         "tall-building-shell-1530475847"
       ]
     }
-  },
-  "cellComplexes": {
-    "tall-building-cell-complex": {
+  ],
+  "cellComplexes": [
+    {
       "id": "tall-building-cell-complex",
       "cellIds": [
         "tall-building-cell-1566933627",
@@ -3391,13 +3391,13 @@
         "tall-building-cell-1352884655"
       ]
     }
-  },
-  "clusters": {
-    "tall-building-asset": {
+  ],
+  "clusters": [
+    {
       "id": "tall-building-asset",
       "memberIds": [
         "tall-building-cell-complex"
       ]
     }
-  }
+  ]
 }

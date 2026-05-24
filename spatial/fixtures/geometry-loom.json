@@ -1,55 +1,258 @@
 {
   "schema": "spatial.topology/v1",
   "revision": 2,
-  "vertices": {
-    "v0": { "id": "v0", "position": [0, 0, 0] },
-    "v1": { "id": "v1", "position": [5, 0, 0] },
-    "v2": { "id": "v2", "position": [5, 4, 0] },
-    "v3": { "id": "v3", "position": [0, 4, 0] },
-    "v4": { "id": "v4", "position": [1, 1, 1.2] },
-    "v5": { "id": "v5", "position": [3, 2.2, 1.2] },
-    "v6": { "id": "v6", "position": [4.2, 0.8, 1.2] },
-    "v7": { "id": "v7", "position": [2.5, 3.1, 1.2] },
-    "v8": { "id": "v8", "position": [0.8, 2.4, 1.2] },
-    "v9": { "id": "v9", "position": [2.5, 0.3, 2.4] },
-    "v10": { "id": "v10", "position": [4.5, 1.8, 2.4] },
-    "v11": { "id": "v11", "position": [3.8, 3.5, 2.4] }
-  },
-  "edges": {
-    "e0": { "id": "e0", "vertexIds": ["v0", "v1"] },
-    "e1": { "id": "e1", "vertexIds": ["v1", "v2"] },
-    "e2": { "id": "e2", "vertexIds": ["v2", "v3"] },
-    "e3": { "id": "e3", "vertexIds": ["v3", "v0"] },
-    "e4": { "id": "e4", "vertexIds": ["v4", "v5"] },
-    "e5": { "id": "e5", "vertexIds": ["v5", "v6"] },
-    "e6": { "id": "e6", "vertexIds": ["v6", "v7"] },
-    "e7": { "id": "e7", "vertexIds": ["v7", "v8"] },
-    "e8": { "id": "e8", "vertexIds": ["v8", "v4"] },
-    "e9": { "id": "e9", "vertexIds": ["v9", "v10"] },
-    "e10": { "id": "e10", "vertexIds": ["v10", "v11"] },
-    "e11": { "id": "e11", "vertexIds": ["v4", "v9"] }
-  },
-  "wires": {
-    "w-deck": { "id": "w-deck", "edgeIds": ["e0", "e1", "e2", "e3"] },
-    "stub-wire": { "id": "stub-wire", "edgeIds": ["e4", "e5", "e6", "e7", "e8"] },
-    "rail-upper": { "id": "rail-upper", "edgeIds": ["e9", "e10"] }
-  },
-  "faces": {
-    "stub-surface": {
-      "id": "stub-surface",
-      "wireIds": ["w-deck"]
+  "vertices": [
+    {
+      "id": "v0",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "v1",
+      "position": [
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "v10",
+      "position": [
+        4.5,
+        1.8,
+        2.4
+      ]
+    },
+    {
+      "id": "v11",
+      "position": [
+        3.8,
+        3.5,
+        2.4
+      ]
+    },
+    {
+      "id": "v2",
+      "position": [
+        5,
+        4,
+        0
+      ]
+    },
+    {
+      "id": "v3",
+      "position": [
+        0,
+        4,
+        0
+      ]
+    },
+    {
+      "id": "v4",
+      "position": [
+        1,
+        1,
+        1.2
+      ]
+    },
+    {
+      "id": "v5",
+      "position": [
+        3,
+        2.2,
+        1.2
+      ]
+    },
+    {
+      "id": "v6",
+      "position": [
+        4.2,
+        0.8,
+        1.2
+      ]
+    },
+    {
+      "id": "v7",
+      "position": [
+        2.5,
+        3.1,
+        1.2
+      ]
+    },
+    {
+      "id": "v8",
+      "position": [
+        0.8,
+        2.4,
+        1.2
+      ]
+    },
+    {
+      "id": "v9",
+      "position": [
+        2.5,
+        0.3,
+        2.4
+      ]
     }
-  },
-  "shells": {
-    "shell-deck": { "id": "shell-deck", "faceIds": ["stub-surface"] }
-  },
-  "cells": {
-    "void-cap": { "id": "void-cap", "shellIds": ["shell-deck"] }
-  },
-  "cellComplexes": {
-    "loom-complex": { "id": "loom-complex", "cellIds": ["void-cap"] }
-  },
-  "clusters": {
-    "routes": { "id": "routes", "memberIds": ["stub-wire", "rail-upper", "stub-surface"] }
-  }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "vertexIds": [
+        "v0",
+        "v1"
+      ]
+    },
+    {
+      "id": "e1",
+      "vertexIds": [
+        "v1",
+        "v2"
+      ]
+    },
+    {
+      "id": "e10",
+      "vertexIds": [
+        "v10",
+        "v11"
+      ]
+    },
+    {
+      "id": "e11",
+      "vertexIds": [
+        "v4",
+        "v9"
+      ]
+    },
+    {
+      "id": "e2",
+      "vertexIds": [
+        "v2",
+        "v3"
+      ]
+    },
+    {
+      "id": "e3",
+      "vertexIds": [
+        "v3",
+        "v0"
+      ]
+    },
+    {
+      "id": "e4",
+      "vertexIds": [
+        "v4",
+        "v5"
+      ]
+    },
+    {
+      "id": "e5",
+      "vertexIds": [
+        "v5",
+        "v6"
+      ]
+    },
+    {
+      "id": "e6",
+      "vertexIds": [
+        "v6",
+        "v7"
+      ]
+    },
+    {
+      "id": "e7",
+      "vertexIds": [
+        "v7",
+        "v8"
+      ]
+    },
+    {
+      "id": "e8",
+      "vertexIds": [
+        "v8",
+        "v4"
+      ]
+    },
+    {
+      "id": "e9",
+      "vertexIds": [
+        "v9",
+        "v10"
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "id": "rail-upper",
+      "edgeIds": [
+        "e9",
+        "e10"
+      ]
+    },
+    {
+      "id": "stub-wire",
+      "edgeIds": [
+        "e4",
+        "e5",
+        "e6",
+        "e7",
+        "e8"
+      ]
+    },
+    {
+      "id": "w-deck",
+      "edgeIds": [
+        "e0",
+        "e1",
+        "e2",
+        "e3"
+      ]
+    }
+  ],
+  "faces": [
+    {
+      "id": "stub-surface",
+      "wireIds": [
+        "w-deck"
+      ]
+    }
+  ],
+  "shells": [
+    {
+      "id": "shell-deck",
+      "faceIds": [
+        "stub-surface"
+      ]
+    }
+  ],
+  "cells": [
+    {
+      "id": "void-cap",
+      "shellIds": [
+        "shell-deck"
+      ]
+    }
+  ],
+  "cellComplexes": [
+    {
+      "id": "loom-complex",
+      "cellIds": [
+        "void-cap"
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "id": "routes",
+      "memberIds": [
+        "stub-wire",
+        "rail-upper",
+        "stub-surface"
+      ]
+    }
+  ]
 }
