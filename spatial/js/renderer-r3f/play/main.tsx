@@ -176,7 +176,7 @@ function PlayApp() {
 	const interactions = useMemo(() => listSpatialInteractions(), []);
 	const [interactionId, setInteractionId] = useState(() => interactions[0]?.id ?? "");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
+	const [geometryAssetId, setGeometryAssetId] = useState("");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : null), [interactionId]);
 
 	const handleInteractionPick = useCallback(
@@ -191,7 +191,8 @@ function PlayApp() {
 	);
 
 	const interactionTopo = useMemo(() => {
-		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId) ?? GEOMETRY_ASSETS[0]!;
+		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId);
+		if (!asset) return new TopologyGraph();
 		return parseTopologyGraphJson(asset.json) ?? new TopologyGraph();
 	}, [geometryAssetId]);
 
@@ -215,6 +216,7 @@ function PlayApp() {
 				onChange={(e) => setGeometryAssetId(e.target.value)}
 				style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
 			>
+				<option value="">No asset</option>
 				{GEOMETRY_ASSETS.map((g) => (
 					<option key={g.id} value={g.id}>
 						[{g.key}] {g.label}

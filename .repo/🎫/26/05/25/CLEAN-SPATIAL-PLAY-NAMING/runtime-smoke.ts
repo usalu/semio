@@ -1,6 +1,8 @@
-import { chromium } from "playwright";
-
+console.log("[DEBUG] smoke-start");
+const { chromium } = await import("playwright");
+console.log("[DEBUG] playwright-imported");
 const browser = await chromium.launch();
+console.log("[DEBUG] browser-launched");
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const messages: string[] = [];
 page.on("console", (msg) => messages.push(`${msg.type()}: ${msg.text()}`));

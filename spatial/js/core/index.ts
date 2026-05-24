@@ -569,6 +569,13 @@ export type DisplayItemSpec =
 	| { readonly kind: "linear-handle"; readonly id: string; readonly role?: string; readonly axis: Vec3; readonly origin: Expr }
 	| { readonly kind: "box-preview"; readonly id: string; readonly role?: string; readonly cornerA: Expr; readonly cornerB: Expr; readonly height: Expr }
 	| {
+			readonly kind: "preview";
+			readonly id: string;
+			readonly role?: string;
+			readonly previewKind: string;
+			readonly params?: Record<string, Expr>;
+	  }
+	| {
 			readonly kind: "entity-highlight";
 			readonly id: string;
 			readonly role?: string;
@@ -1447,6 +1454,48 @@ function builtinActionDefs(): ActionDef[] {
 			return { data };
 		},
 	};
+	const commandAddPoint: ActionDef = {
+		id: "command.addPoint",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const field = typeof params.field === "string" ? params.field : "points";
+			const key = typeof params.key === "string" ? params.key : null;
+			const point = isVec3(params.point) ? params.point : null;
+			if (!point) return {};
+			const cur = Array.isArray(ctx[field]) ? (ctx[field] as unknown[]) : [];
+			const set: Record<string, unknown> = { [field]: [...cur, point], prevPoint: point, cursor: point };
+			if (key) set[key] = point;
+			return { patch: { set } };
+		},
+	};
+	const commandAddSelection: ActionDef = {
+		id: "command.addSelection",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			const field = typeof params.field === "string" ? params.field : "targets";
+			const key = typeof params.key === "string" ? params.key : null;
+			const targets = Array.isArray(params.targets) ? params.targets : [];
+			const cur = Array.isArray(ctx[field]) ? (ctx[field] as unknown[]) : [];
+			const set: Record<string, unknown> = { [field]: [...cur, ...targets] };
+			const first = targets[0];
+			if (key && first && typeof first === "object" && "id" in first) set[key] = String((first as { id: unknown }).id);
+			return { patch: { set } };
+		},
+	};
+	const commandFinish: ActionDef = {
+		id: "command.finish",
+		run: (params) => {
+			const ctx = ctxOf(params as Record<string, unknown>);
+			return {
+				diff: EMPTY_TOPOLOGY_DIFF,
+				data: {
+					commandId: String(params.commandId ?? ""),
+					resultKind: String(params.resultKind ?? "command"),
+					context: structuredClone(ctx),
+				},
+			};
+		},
+	};
 	return [
 		boxAabbFromDiagonalCorners,
 		boxTripletRubber,
@@ -1467,6 +1516,9 @@ function builtinActionDefs(): ActionDef[] {
 		measureVertexDistance,
 		measureFaceArea,
 		measureCellVolume,
+		commandAddPoint,
+		commandAddSelection,
+		commandFinish,
 	];
 }
 // #endregion 🧮ActionRegistry
@@ -1848,6 +1900,17 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 					},
 				});
 				break;
+			case "preview": {
+				const params: Record<string, unknown> = {};
+				for (const [k, v] of Object.entries(it.params ?? {})) params[k] = evalExpr(v, env);
+				items.push({
+					kind: "preview",
+					id: it.id,
+					...(it.role ? { role: it.role } : {}),
+					params: { previewKind: it.previewKind, ...params },
+				});
+				break;
+			}
 			case "entity-highlight": {
 				const idVal = evalExpr(it.entityId, env);
 				items.push({
@@ -2291,6 +2354,578 @@ export function createInteractionRuntime(spec: InteractionSpec, opts: Interactio
 // #endregion 📜Interaction
 
 // #region 📦Interactions
+type ScriptedInputKind = "point" | "number" | "numberOrPoint" | "select" | "adjust" | "ok";
+
+interface ScriptedCommandStep {
+	readonly name: string;
+	readonly prompt: string;
+	readonly input: ScriptedInputKind;
+	readonly next?: string;
+	readonly loop?: boolean;
+	readonly pointKey?: string;
+	readonly pointField?: string;
+	readonly numberEvent?: string;
+	readonly numberField?: string;
+	readonly numberNext?: string;
+	readonly selectionAccept?: readonly TopologyEntityKind[];
+	readonly selectionField?: string;
+	readonly selectionKey?: string;
+	readonly finish?: boolean;
+	readonly close?: boolean;
+	readonly previewKind?: string;
+}
+
+interface ScriptedCommandDef {
+	readonly id: string;
+	readonly label: string;
+	readonly key: string;
+	readonly resultKind: string;
+	readonly steps: readonly ScriptedCommandStep[];
+}
+
+const exprConst = (value: unknown): Expr => ({ kind: "const", value });
+const pathExpr = (root: PathRoot, ...segments: PathSegment[]): Expr => ({ kind: "path", root, segments });
+const fieldSegment = (name: string): PathSegment => ({ kind: "field", name });
+const fieldTarget = (name: string): PathTarget => ({ root: "context", segments: [fieldSegment(name)] });
+const contextPath = (name: string): Expr => pathExpr("context", fieldSegment(name));
+const eventPath = (name: string): Expr => pathExpr("event", fieldSegment(name));
+const assignFieldEffect = (name: string, value: Expr): EffectSpec => ({ op: "assign", target: fieldTarget(name), value });
+const commandActionEffect = (action: string, params: Record<string, Expr>): EffectSpec => ({ op: "action", action, params });
+
+function scriptedCommandPreviewItems(step: ScriptedCommandStep): DisplayItemSpec[] {
+	const items: DisplayItemSpec[] = [
+		{
+			kind: "label",
+			id: `${step.name}-prompt`,
+			role: "prompt",
+			text: step.prompt,
+			position: exprConst([0, 0.25, 1.55]),
+		},
+		{
+			kind: "preview",
+			id: `${step.name}-preview`,
+			role: "preview",
+			previewKind: step.previewKind ?? step.input,
+			params: {
+				cursor: contextPath("cursor"),
+				prevPoint: contextPath("prevPoint"),
+				points: contextPath(step.pointField ?? "points"),
+				targets: contextPath(step.selectionField ?? "targets"),
+			},
+		},
+	];
+	if (step.input === "point" || step.input === "numberOrPoint") {
+		items.push({
+			kind: "point",
+			id: `${step.name}-cursor`,
+			role: "cursor",
+			position: contextPath("cursor"),
+		});
+		items.push({
+			kind: "segment",
+			id: `${step.name}-rubber`,
+			role: "preview",
+			from: contextPath("prevPoint"),
+			to: contextPath("cursor"),
+		});
+	}
+	return items;
+}
+
+function scriptedPointEffects(step: ScriptedCommandStep): EffectSpec[] {
+	return [
+		commandActionEffect("command.addPoint", {
+			field: exprConst(step.pointField ?? "points"),
+			...(step.pointKey ? { key: exprConst(step.pointKey) } : {}),
+			point: eventPath("point"),
+		}),
+	];
+}
+
+function scriptedSelectionEffects(step: ScriptedCommandStep): EffectSpec[] {
+	return [
+		commandActionEffect("command.addSelection", {
+			field: exprConst(step.selectionField ?? "targets"),
+			...(step.selectionKey ? { key: exprConst(step.selectionKey) } : {}),
+			targets: eventPath("targets"),
+		}),
+	];
+}
+
+function scriptedFinishTransitions(step: ScriptedCommandStep): EventHandlerSpec[] {
+	if (!step.finish) return [];
+	return [
+		{
+			event: "confirm",
+			transitions: [{ target: step.next ?? "ready", key: "Enter", label: "Finish" }],
+		},
+		{
+			event: "contextmenu",
+			transitions: [{ target: step.next ?? "ready", key: "RightClick", label: "Finish" }],
+		},
+	];
+}
+
+function scriptedStepState(step: ScriptedCommandStep): StateDefSpec {
+	const on: EventHandlerSpec[] = [];
+	if (step.input === "point" || step.input === "numberOrPoint") {
+		on.push({
+			event: "pointer.move",
+			transitions: [{ transient: true, effects: [assignFieldEffect("cursor", eventPath("point"))] }],
+		});
+		on.push({
+			event: "pointer.down",
+			transitions: [
+				{
+					target: step.loop ? step.name : (step.next ?? "ready"),
+					effects: scriptedPointEffects(step),
+				},
+			],
+		});
+	}
+	if (step.input === "number" || step.input === "numberOrPoint") {
+		on.push({
+			event: step.numberEvent ?? "set.number",
+			transitions: [
+				{
+					target: step.numberNext ?? (step.input === "numberOrPoint" ? "ready" : step.loop ? step.name : (step.next ?? "ready")),
+					key: "n",
+					label: "Apply Number",
+					effects: [assignFieldEffect(step.numberField ?? "number", eventPath("value"))],
+				},
+			],
+		});
+	}
+	if (step.input === "select") {
+		on.push({
+			event: "selection.changed",
+			transitions: [
+				{
+					target: step.loop ? step.name : (step.next ?? "ready"),
+					key: "s",
+					label: "Select",
+					effects: scriptedSelectionEffects(step),
+				},
+			],
+		});
+	}
+	if (step.input === "adjust") {
+		on.push({
+			event: "adjust",
+			transitions: [{ target: step.name, key: "a", label: "Adjust", effects: [assignFieldEffect("adjusted", exprConst(true))] }],
+		});
+		on.push({
+			event: "confirm",
+			transitions: [{ target: step.next ?? "ready", key: "Enter", label: "Accept Adjustments" }],
+		});
+		on.push({
+			event: "contextmenu",
+			transitions: [{ target: step.next ?? "ready", key: "RightClick", label: "Accept Adjustments" }],
+		});
+	}
+	if (step.input === "ok") {
+		on.push({
+			event: "dialog.ok",
+			transitions: [{ target: step.next ?? "ready", key: "o", label: "OK", effects: [assignFieldEffect("dialogAccepted", exprConst(true))] }],
+		});
+	}
+	if (step.close) {
+		on.push({
+			event: "close",
+			transitions: [{ target: "ready", key: "c", label: "Close", effects: [assignFieldEffect("closed", exprConst(true))] }],
+		});
+	}
+	on.push(...scriptedFinishTransitions(step));
+	on.push({ event: "cancel", transitions: [{ target: "idle", key: "x", label: "Cancel" }] });
+	const selection = step.input === "select" && step.selectionAccept ? { accept: step.selectionAccept, multiple: true, prompt: step.prompt } : undefined;
+	return {
+		name: step.name,
+		...(selection ? { selection } : {}),
+		on,
+	};
+}
+
+/** @emoji 🧰 Builds Rhino-style scripted command interactions from compact step declarations. */
+function buildScriptedCommandInteractionSpec(def: ScriptedCommandDef): InteractionSpec {
+	const first = def.steps[0]!;
+	return {
+		schema: "spatial.interaction/v1",
+		id: def.id,
+		version: "1.0.0",
+		label: def.label,
+		interaction: {
+			spatialGroundPick: def.steps.some((step) => step.input === "point" || step.input === "numberOrPoint"),
+			pickDisabledStates: ["idle", "ready", "committed"],
+			groundPointerMoveStates: def.steps
+				.filter((step) => step.input === "point" || step.input === "numberOrPoint")
+				.map((step) => step.name),
+			heightDragStates: [],
+			verticalRodStates: [],
+			heightConfirmState: null,
+		},
+		machine: {
+			initial: "idle",
+			states: [
+				{
+					name: "idle",
+					on: [
+						{
+							event: "start",
+							transitions: [
+								{
+									target: first.name,
+									key: "s",
+									label: "Start",
+									effects: [
+										assignFieldEffect("cursor", exprConst([0, 0, 0])),
+										assignFieldEffect("points", exprConst([])),
+										assignFieldEffect("targets", exprConst([])),
+									],
+								},
+							],
+						},
+					],
+				},
+				...def.steps.map(scriptedStepState),
+				{
+					name: "ready",
+					on: [
+						{
+							event: "confirm",
+							transitions: [{ target: "committed", key: "f", label: "Finalize" }],
+						},
+						{
+							event: "cancel",
+							transitions: [{ target: "idle", key: "x", label: "Cancel" }],
+						},
+					],
+				},
+				{ name: "committed", final: true },
+			],
+		},
+		display: {
+			states: def.steps.map((step) => ({ state: step.name, items: scriptedCommandPreviewItems(step) })),
+		},
+		commit: {
+			fromStates: ["ready"],
+			operation: {
+				kind: "action",
+				action: "command.finish",
+				params: {
+					commandId: exprConst(def.id),
+					resultKind: exprConst(def.resultKind),
+				},
+			},
+		},
+	};
+}
+
+function step(name: string, prompt: string, input: ScriptedInputKind, opts: Omit<ScriptedCommandStep, "name" | "prompt" | "input"> = {}): ScriptedCommandStep {
+	return { name, prompt, input, ...opts };
+}
+
+const SCRIPTED_COMMANDS: readonly ScriptedCommandDef[] = [
+	{
+		id: "curve.line",
+		label: "Line",
+		key: "l",
+		resultKind: "line",
+		steps: [
+			step("start_of_line", "Start of line", "point", { next: "end_of_line", pointKey: "start", previewKind: "point" }),
+			step("end_of_line", "End of line", "point", { pointKey: "end", previewKind: "line" }),
+		],
+	},
+	{
+		id: "curve.polyline",
+		label: "Polyline",
+		key: "p",
+		resultKind: "polyline",
+		steps: [
+			step("start_of_polyline", "Start of polyline", "point", { next: "next_point_of_polyline", previewKind: "point" }),
+			step("next_point_of_polyline", "Next point of polyline", "point", { loop: true, finish: true, close: true, previewKind: "polyline" }),
+		],
+	},
+	{
+		id: "curve.controlPointCurve",
+		label: "Control Point Curve",
+		key: "u",
+		resultKind: "curve",
+		steps: [
+			step("start_of_curve", "Start of curve", "point", { next: "next_control_point", previewKind: "point" }),
+			step("next_control_point", "Next control point", "point", { loop: true, finish: true, previewKind: "control-curve" }),
+		],
+	},
+	{
+		id: "curve.interpolateCurve",
+		label: "InterpCrv",
+		key: "i",
+		resultKind: "interpolateCurve",
+		steps: [
+			step("start_of_curve", "Start of curve", "point", { next: "next_point", previewKind: "point" }),
+			step("next_point", "Next point", "point", { loop: true, finish: true, previewKind: "interpolated-curve" }),
+		],
+	},
+	{
+		id: "curve.circle",
+		label: "Circle",
+		key: "c",
+		resultKind: "circle",
+		steps: [
+			step("center_of_circle", "Center of circle", "point", { next: "radius", pointKey: "center", previewKind: "point" }),
+			step("radius", "Radius", "numberOrPoint", { numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "circle" }),
+		],
+	},
+	{
+		id: "curve.arc",
+		label: "Arc",
+		key: "r",
+		resultKind: "arc",
+		steps: [
+			step("center_of_arc", "Center of arc", "point", { next: "start_of_arc", pointKey: "center", previewKind: "point" }),
+			step("start_of_arc", "Start of arc", "point", { next: "end_point_or_angle", pointKey: "start", previewKind: "circle-outline" }),
+			step("end_point_or_angle", "End point or angle", "numberOrPoint", { numberEvent: "set.angle", numberField: "angle", pointKey: "end", previewKind: "arc" }),
+		],
+	},
+	{
+		id: "surface.plane",
+		label: "Plane",
+		key: "n",
+		resultKind: "plane",
+		steps: [
+			step("first_corner_of_plane", "First corner of plane", "point", { next: "other_corner_or_length", pointKey: "cornerA", previewKind: "point" }),
+			step("other_corner_or_length", "Other corner or length", "point", { pointKey: "cornerB", previewKind: "plane" }),
+		],
+	},
+	{
+		id: "surface.extrudeCrv",
+		label: "ExtrudeCrv",
+		key: "0",
+		resultKind: "extrusion",
+		steps: [
+			step("select_curves_to_extrude", "Select curves to extrude", "select", { loop: true, finish: true, selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "highlight-curves" }),
+			step("extrusion_distance", "Extrusion distance", "numberOrPoint", { numberEvent: "set.distance", numberField: "distance", pointKey: "distancePoint", previewKind: "extrusion" }),
+		],
+	},
+	{
+		id: "surface.loft",
+		label: "Loft",
+		key: "f",
+		resultKind: "loftedSurface",
+		steps: [
+			step("select_curves_to_loft", "Select curves to loft", "select", { loop: true, finish: true, next: "adjust_curve_seams", selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "highlight-curves" }),
+			step("adjust_curve_seams", "Adjust curve seams", "adjust", { next: "loft_options_dialog", previewKind: "seam-arrows" }),
+			step("loft_options_dialog", "Loft options", "ok", { previewKind: "dialog" }),
+		],
+	},
+	{
+		id: "surface.sweep1",
+		label: "Sweep1",
+		key: "w",
+		resultKind: "sweptSurface",
+		steps: [
+			step("select_rail", "Select rail", "select", { next: "select_cross_section_curves", selectionAccept: ["wire", "edge"], selectionKey: "rail", previewKind: "rail" }),
+			step("select_cross_section_curves", "Select cross-section curves", "select", { loop: true, finish: true, next: "adjust_seams", selectionAccept: ["wire", "edge"], selectionField: "sections", previewKind: "cross-sections" }),
+			step("adjust_seams", "Adjust seams", "adjust", { next: "sweep1_options_dialog", previewKind: "seam-arrows" }),
+			step("sweep1_options_dialog", "Sweep1 options", "ok", { previewKind: "dialog" }),
+		],
+	},
+	{
+		id: "surface.sweep2",
+		label: "Sweep2",
+		key: "q",
+		resultKind: "sweptSurface",
+		steps: [
+			step("select_first_rail", "Select first rail", "select", { next: "select_second_rail", selectionAccept: ["wire", "edge"], selectionKey: "railA", previewKind: "rail" }),
+			step("select_second_rail", "Select second rail", "select", { next: "select_cross_section_curves", selectionAccept: ["wire", "edge"], selectionKey: "railB", previewKind: "rail" }),
+			step("select_cross_section_curves", "Select cross-section curves", "select", { loop: true, finish: true, next: "sweep2_options_dialog", selectionAccept: ["wire", "edge"], selectionField: "sections", previewKind: "cross-sections" }),
+			step("sweep2_options_dialog", "Sweep2 options", "ok", { previewKind: "dialog" }),
+		],
+	},
+	{
+		id: "surface.networkSrf",
+		label: "NetworkSrf",
+		key: "k",
+		resultKind: "networkSurface",
+		steps: [
+			step("select_curves_in_network", "Select curves in network", "select", { loop: true, finish: true, next: "networksrf_options_dialog", selectionAccept: ["wire", "edge"], selectionField: "curves", previewKind: "network-curves" }),
+			step("networksrf_options_dialog", "NetworkSrf options", "ok", { previewKind: "dialog" }),
+		],
+	},
+	{
+		id: "solid.sphere",
+		label: "Sphere",
+		key: "h",
+		resultKind: "sphere",
+		steps: [
+			step("center_of_sphere", "Center of sphere", "point", { next: "radius", pointKey: "center", previewKind: "point" }),
+			step("radius", "Radius", "numberOrPoint", { numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "sphere" }),
+		],
+	},
+	{
+		id: "solid.cylinder",
+		label: "Cylinder",
+		key: "y",
+		resultKind: "cylinder",
+		steps: [
+			step("base_of_cylinder", "Base of cylinder", "point", { next: "radius", pointKey: "base", previewKind: "point" }),
+			step("radius", "Radius", "numberOrPoint", { next: "end_of_cylinder", numberNext: "end_of_cylinder", numberEvent: "set.radius", numberField: "radius", pointKey: "radiusPoint", previewKind: "circle" }),
+			step("end_of_cylinder", "End of cylinder", "numberOrPoint", { numberEvent: "set.height", numberField: "height", pointKey: "end", previewKind: "cylinder" }),
+		],
+	},
+	{
+		id: "solid.booleanUnion",
+		label: "BooleanUnion",
+		key: "v",
+		resultKind: "booleanUnion",
+		steps: [step("select_surfaces_or_polysurfaces_to_union", "Select surfaces or polysurfaces to union", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], previewKind: "boolean-union" })],
+	},
+	{
+		id: "solid.booleanDifference",
+		label: "BooleanDifference",
+		key: "g",
+		resultKind: "booleanDifference",
+		steps: [
+			step("select_surfaces_or_polysurfaces_to_subtract_from", "Select surfaces or polysurfaces to subtract from", "select", { loop: true, finish: true, next: "select_surfaces_or_polysurfaces_to_subtract_with", selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "baseObjects", previewKind: "boolean-base" }),
+			step("select_surfaces_or_polysurfaces_to_subtract_with", "Select surfaces or polysurfaces to subtract with", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "cutterObjects", previewKind: "boolean-cutters" }),
+		],
+	},
+	{
+		id: "solid.booleanIntersection",
+		label: "BooleanIntersection",
+		key: "j",
+		resultKind: "booleanIntersection",
+		steps: [
+			step("select_first_set_of_surfaces_or_polysurfaces", "Select first set of surfaces or polysurfaces", "select", { loop: true, finish: true, next: "select_second_set", selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "firstSet", previewKind: "boolean-first" }),
+			step("select_second_set", "Select second set", "select", { loop: true, finish: true, selectionAccept: ["surface", "shell", "cell", "part"], selectionField: "secondSet", previewKind: "boolean-second" }),
+		],
+	},
+	{
+		id: "transform.move",
+		label: "Move",
+		key: "m",
+		resultKind: "move",
+		steps: [
+			step("select_objects_to_move", "Select objects to move", "select", { loop: true, finish: true, next: "point_to_move_from", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("point_to_move_from", "Point to move from", "point", { next: "point_to_move_to", pointKey: "from", previewKind: "point" }),
+			step("point_to_move_to", "Point to move to", "point", { pointKey: "to", previewKind: "move-preview" }),
+		],
+	},
+	{
+		id: "transform.copy",
+		label: "Copy",
+		key: "x",
+		resultKind: "copy",
+		steps: [
+			step("select_objects_to_copy", "Select objects to copy", "select", { loop: true, finish: true, next: "point_to_copy_from", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("point_to_copy_from", "Point to copy from", "point", { next: "point_to_copy_to", pointKey: "from", previewKind: "point" }),
+			step("point_to_copy_to", "Point to copy to", "point", { loop: true, finish: true, pointField: "copyPoints", previewKind: "copy-preview" }),
+		],
+	},
+	{
+		id: "transform.rotate",
+		label: "Rotate",
+		key: "z",
+		resultKind: "rotate",
+		steps: [
+			step("select_objects_to_rotate", "Select objects to rotate", "select", { loop: true, finish: true, next: "center_of_rotation", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("center_of_rotation", "Center of rotation", "point", { next: "angle_or_first_reference_point", pointKey: "center", previewKind: "point" }),
+			step("angle_or_first_reference_point", "Angle or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.angle", numberField: "angle", pointKey: "referenceA", previewKind: "angle-reference" }),
+			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "rotate-preview" }),
+		],
+	},
+	{
+		id: "transform.scale3d",
+		label: "Scale 3D",
+		key: "3",
+		resultKind: "scale3d",
+		steps: [
+			step("select_objects_to_scale", "Select objects to scale", "select", { loop: true, finish: true, next: "origin_point", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("origin_point", "Origin point", "point", { next: "scale_factor_or_first_reference_point", pointKey: "origin", previewKind: "point" }),
+			step("scale_factor_or_first_reference_point", "Scale factor or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.factor", numberField: "factor", pointKey: "referenceA", previewKind: "scale-reference" }),
+			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "scale-preview" }),
+		],
+	},
+	{
+		id: "transform.scale1d",
+		label: "Scale1D",
+		key: "1",
+		resultKind: "scale1d",
+		steps: [
+			step("select_objects_to_scale", "Select objects to scale", "select", { loop: true, finish: true, next: "origin_point", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("origin_point", "Origin point", "point", { next: "scale_factor_or_first_reference_point", pointKey: "origin", previewKind: "point" }),
+			step("scale_factor_or_first_reference_point", "Scale factor or first reference point", "numberOrPoint", { next: "second_reference_point", numberEvent: "set.factor", numberField: "factor", pointKey: "axisPoint", previewKind: "scale-axis" }),
+			step("second_reference_point", "Second reference point", "point", { pointKey: "referenceB", previewKind: "scale1d-preview" }),
+		],
+	},
+	{
+		id: "transform.mirror",
+		label: "Mirror",
+		key: "4",
+		resultKind: "mirror",
+		steps: [
+			step("select_objects_to_mirror", "Select objects to mirror", "select", { loop: true, finish: true, next: "start_of_mirror_plane", selectionAccept: ["vertex", "edge", "wire", "face", "shell", "cell", "surface", "part"], previewKind: "selected-objects" }),
+			step("start_of_mirror_plane", "Start of mirror plane", "point", { next: "end_of_mirror_plane", pointKey: "mirrorStart", previewKind: "point" }),
+			step("end_of_mirror_plane", "End of mirror plane", "point", { pointKey: "mirrorEnd", previewKind: "mirror-preview" }),
+		],
+	},
+	{
+		id: "edit.trim",
+		label: "Trim",
+		key: "t",
+		resultKind: "trim",
+		steps: [
+			step("select_cutting_objects", "Select cutting objects", "select", { loop: true, finish: true, next: "select_object_to_trim", selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "cutters", previewKind: "cutters" }),
+			step("select_object_to_trim", "Select object to trim", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "trimmedObjects", previewKind: "trim-preview" }),
+		],
+	},
+	{
+		id: "edit.split",
+		label: "Split",
+		key: "5",
+		resultKind: "split",
+		steps: [
+			step("select_objects_to_split", "Select objects to split", "select", { loop: true, finish: true, next: "select_cutting_objects", selectionAccept: ["edge", "wire", "face", "surface", "cell", "part"], selectionField: "splitObjects", previewKind: "split-objects" }),
+			step("select_cutting_objects", "Select cutting objects", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], selectionField: "cutters", previewKind: "cutters" }),
+		],
+	},
+	{
+		id: "edit.join",
+		label: "Join",
+		key: "6",
+		resultKind: "join",
+		steps: [step("select_object_for_join", "Select object for join", "select", { loop: true, finish: true, selectionAccept: ["edge", "wire", "face", "surface"], previewKind: "join-selection" })],
+	},
+	{
+		id: "edit.explode",
+		label: "Explode",
+		key: "7",
+		resultKind: "explode",
+		steps: [step("select_objects_to_explode", "Select objects to explode", "select", { loop: true, finish: true, selectionAccept: ["wire", "shell", "cell", "cellComplex", "cluster"], previewKind: "explode-selection" })],
+	},
+	{
+		id: "edit.fillet",
+		label: "Fillet",
+		key: "8",
+		resultKind: "fillet",
+		steps: [
+			step("select_first_curve_to_fillet", "Select first curve to fillet", "select", { next: "select_second_curve_to_fillet", selectionAccept: ["edge", "wire"], selectionKey: "firstCurve", previewKind: "first-curve" }),
+			step("select_second_curve_to_fillet", "Select second curve to fillet", "select", { selectionAccept: ["edge", "wire"], selectionKey: "secondCurve", previewKind: "fillet-preview" }),
+		],
+	},
+	{
+		id: "edit.chamfer",
+		label: "Chamfer",
+		key: "9",
+		resultKind: "chamfer",
+		steps: [
+			step("select_first_curve_to_chamfer", "Select first curve to chamfer", "select", { next: "select_second_curve_to_chamfer", selectionAccept: ["edge", "wire"], selectionKey: "firstCurve", previewKind: "first-curve" }),
+			step("select_second_curve_to_chamfer", "Select second curve to chamfer", "select", { selectionAccept: ["edge", "wire"], selectionKey: "secondCurve", previewKind: "chamfer-preview" }),
+		],
+	},
+];
+
+const SCRIPTED_COMMAND_SPEC_BY_ID = new Map(SCRIPTED_COMMANDS.map((def) => [def.id, buildScriptedCommandInteractionSpec(def)]));
+
 /** @emoji 🧭 Built-in `InteractionSpec` registry (fixtures + host `register`). */
 export class InteractionRegistry {
 	private readonly specs = new Map<string, InteractionSpec>();
@@ -2315,6 +2950,7 @@ export class InteractionRegistry {
 			parseInteractionSpec(offsetSurfaceInteractionJson),
 			parseInteractionSpec(distanceInteractionJson),
 			parseInteractionSpec(areaInteractionJson),
+			...SCRIPTED_COMMANDS.map((def) => SCRIPTED_COMMAND_SPEC_BY_ID.get(def.id) ?? null),
 		];
 		for (const s of xs) {
 			if (s) r.register(s);
@@ -2374,6 +3010,7 @@ export function listSpatialInteractions(): readonly SpatialInteraction[] {
 		{ id: "feature.offsetSurface", label: "Offset surface", key: "o" },
 		{ id: "measure.distance", label: "Distance", key: "d" },
 		{ id: "measure.area", label: "Area", key: "a" },
+		...SCRIPTED_COMMANDS.map(({ id, label, key }) => ({ id, label, key })),
 	];
 }
 
@@ -2404,7 +3041,7 @@ export function loadSpatialInteraction(interactionId: string): InteractionSpec |
 						: interactionId === "measure.area"
 							? areaInteractionJson
 							: null;
-	if (!raw) return null;
+	if (!raw) return SCRIPTED_COMMAND_SPEC_BY_ID.get(interactionId) ?? null;
 	return parseInteractionSpec(raw as unknown);
 }
 // #endregion 📦Interactions

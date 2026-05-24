@@ -126,6 +126,11 @@ function readNumber(v: unknown): number | null {
 	return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
+function readVec3Array(v: unknown): readonly Vec3[] {
+	if (!Array.isArray(v)) return [];
+	return v.filter(isVec3Record) as readonly Vec3[];
+}
+
 const raycastNone: THREE.Object3D["raycast"] = () => undefined;
 // #endregion 📐Layout
 
@@ -556,6 +561,28 @@ function LabelItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	);
 }
 
+function PreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
+	const p = item.params;
+	if (!p) return null;
+	const previewKind = typeof p.previewKind === "string" ? p.previewKind : "preview";
+	const points = readVec3Array(p.points);
+	const cursor = readVec3(p.cursor);
+	const prevPoint = readVec3(p.prevPoint);
+	const linePoints = points.length ? [...points, ...(cursor ? [cursor] : [])] : prevPoint && cursor ? [prevPoint, cursor] : [];
+	return (
+		<group>
+			{linePoints.length >= 2 ? (
+				<Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} />
+			) : null}
+			{cursor ? (
+				<Text position={[cursor[0] + 0.08, cursor[1] + 0.08, cursor[2] + 0.08]} fontSize={0.16} color="#b8c8ff" raycast={raycastNone}>
+					{previewKind}
+				</Text>
+			) : null}
+		</group>
+	);
+}
+
 function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
 	switch (item.kind) {
 		case "box-preview":
@@ -568,6 +595,8 @@ function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
 			return <SegmentItem item={item} />;
 		case "label":
 			return <LabelItem item={item} />;
+		case "preview":
+			return <PreviewItem item={item} />;
 		case "entity-highlight":
 			return null;
 		default:
@@ -1328,6 +1357,13 @@ function replTryParseValueInteraction(line: string, spec: InteractionSpec, state
 			const W = Number(parts[1]);
 			if (!Number.isFinite(L) || !Number.isFinite(W)) return null;
 			return { kind: "set.footprint", value: { length: L, width: W }, modifiers: {} };
+		}
+		if (row.eventKind.startsWith("set.")) {
+			const alias = row.eventKind.slice("set.".length).toLowerCase();
+			if (head !== row.key.toLowerCase() && head !== alias && head !== "number" && head !== "n") continue;
+			const v = Number(tail);
+			if (!Number.isFinite(v)) return null;
+			return { kind: row.eventKind, value: v, modifiers: {} };
 		}
 	}
 	return null;
