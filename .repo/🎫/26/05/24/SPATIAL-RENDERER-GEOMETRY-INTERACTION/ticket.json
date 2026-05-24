@@ -1,0 +1,13 @@
+{
+  "title": "Spatial Renderer Geometry Interaction",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Every spatial factory optionally receives a geometry. Make sure state machines can select, snap, and related interactions against that geometry, implemented directly in the renderer.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1471"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8344ab61b29b4640aec49216f6ddbe3c"
+  ]
+}

@@ -37,7 +37,12 @@
           ]
         }
       ]
-    }
+    },
+    "boxModePoint": { "==": [{ "path": "boxMode" }, "point"] },
+    "boxModeDiagonal": { "==": [{ "path": "boxMode" }, "diagonal"] },
+    "boxModeThreePoint": { "==": [{ "path": "boxMode" }, "threePoint"] },
+    "boxModeVertical": { "==": [{ "path": "boxMode" }, "vertical"] },
+    "boxModeCenter": { "==": [{ "path": "boxMode" }, "center"] }
   },
   "history": {
     "excludeEvents": ["pointer.move"]
@@ -48,46 +53,227 @@
       "idle": {
         "on": {
           "start": {
-            "target": "pickingFirstCorner",
+            "target": "first_corner",
             "actions": [
-              { "op": "assign", "path": "cursor", "value": { "const": [0, 0, 0] } }
+              { "op": "assign", "path": "cursor", "value": { "const": [0, 0, 0] } },
+              { "op": "assign", "path": "boxMode", "value": "point" }
             ]
           }
         }
       },
-      "pickingFirstCorner": {
+      "first_corner": {
         "on": {
           "pointer.move": {
             "transient": true,
             "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
           },
-          "pointer.down": {
-            "target": "pickingSecondCorner",
-            "actions": [
-              { "op": "assign", "path": "origin", "value": { "$event": "point" } },
-              { "op": "clear", "path": "cursor" }
-            ]
-          },
+          "mode.point": { "actions": [{ "op": "assign", "path": "boxMode", "value": "point" }] },
+          "mode.diagonal": { "actions": [{ "op": "assign", "path": "boxMode", "value": "diagonal" }] },
+          "mode.threePoint": { "actions": [{ "op": "assign", "path": "boxMode", "value": "threePoint" }] },
+          "mode.vertical": { "actions": [{ "op": "assign", "path": "boxMode", "value": "vertical" }] },
+          "mode.center": { "actions": [{ "op": "assign", "path": "boxMode", "value": "center" }] },
+          "pointer.down": [
+            {
+              "guard": "boxModePoint",
+              "target": "first_corner_other_or_length",
+              "actions": [
+                { "op": "assign", "path": "origin", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeDiagonal",
+              "target": "diagonal_rubber",
+              "actions": [
+                { "op": "assign", "path": "diagA", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeThreePoint",
+              "target": "three_point_edge",
+              "actions": [
+                { "op": "assign", "path": "p0", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            },
+            {
+              "guard": "boxModeVertical",
+              "target": "vertical_end",
+              "actions": [
+                { "op": "assign", "path": "origin", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" },
+                { "op": "box.initPeakAboveOrigin" }
+              ]
+            },
+            {
+              "guard": "boxModeCenter",
+              "target": "center_corner",
+              "actions": [
+                { "op": "assign", "path": "rectCenter", "value": { "$event": "point" } },
+                { "op": "clear", "path": "cursor" }
+              ]
+            }
+          ],
           "cancel": { "target": "cancelled" }
         }
       },
-      "pickingSecondCorner": {
+      "first_corner_other_or_length": {
         "on": {
           "pointer.move": {
             "transient": true,
             "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
           },
           "pointer.down": {
-            "target": "pickingHeight",
+            "target": "first_corner_height",
             "actions": [
               { "op": "assign", "path": "corner", "value": { "$event": "point" } },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
+          },
+          "mode.cube": { "target": "cube_other_corner" },
+          "mode.length": { "target": "first_corner_length_prompt" },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "first_corner_length_prompt": {
+        "on": {
+          "set.footprint": {
+            "target": "first_corner_height",
+            "actions": [
+              { "op": "box.cornerFromLengthWidth" },
               { "op": "assign", "path": "height", "value": 0.25 }
             ]
           },
           "cancel": { "target": "cancelled" }
         }
       },
-      "pickingHeight": {
+      "diagonal_rubber": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [
+              { "op": "box.aabbFromDiagonalCorners" },
+              { "op": "assign", "path": "height", "value": 0.25 }
+            ]
+          },
+          "mode.cube": {
+            "target": "cube_diagonal_rubber",
+            "actions": [{ "op": "clear", "path": "corner" }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "cube_diagonal_rubber": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "corner", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.aabbFromDiagonalCorners" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "three_point_edge": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
+          },
+          "pointer.down": {
+            "target": "three_point_width",
+            "actions": [
+              { "op": "assign", "path": "p1", "value": { "$event": "point" } },
+              { "op": "clear", "path": "cursor" }
+            ]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "three_point_width": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.tripletRubber" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.tripletCommit" }, { "op": "assign", "path": "height", "value": 0.25 }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "vertical_end": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.peakFromOriginZ" }]
+          },
+          "pointer.down": { "target": "vertical_width" },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "vertical_width": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.verticalRubberCorner" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.verticalFinalizeFootprint" }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "center_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.rubberCornerFromCenter" }]
+          },
+          "pointer.down": {
+            "target": "first_corner_height",
+            "actions": [{ "op": "box.rubberCornerFromCenter" }, { "op": "assign", "path": "height", "value": 0.25 }]
+          },
+          "mode.cube": { "target": "cube_center_corner" },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "cube_center_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.rubberSquareFromCenter" }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.rubberSquareFromCenter" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "cube_other_corner": {
+        "on": {
+          "pointer.move": {
+            "transient": true,
+            "actions": [{ "op": "box.snapSquareFootprint" }]
+          },
+          "pointer.down": {
+            "target": "ready",
+            "actions": [{ "op": "box.snapSquareFootprint" }, { "op": "box.setCubeHeightFromFootprint" }]
+          },
+          "cancel": { "target": "cancelled" }
+        }
+      },
+      "first_corner_height": {
         "on": {
           "pointer.move": {
             "transient": true,
@@ -133,7 +319,7 @@
   },
   "display": {
     "states": {
-      "pickingFirstCorner": [
+      "first_corner": [
         {
           "kind": "point",
           "id": "first-cursor",
@@ -145,12 +331,12 @@
           "id": "hint-first",
           "role": "prompt",
           "params": {
-            "text": "Move to preview origin; click grid to place first corner (Z≈0)",
-            "position": { "const": [0, 0.25, 1.4] }
+            "text": "Choose mode (panel), then click construction plane (XY @ Z=0)",
+            "position": { "const": [0, 0.25, 1.45] }
           }
         }
       ],
-      "pickingSecondCorner": [
+      "first_corner_other_or_length": [
         {
           "kind": "point",
           "id": "origin-marker",
@@ -168,13 +354,184 @@
           }
         }
       ],
-      "pickingHeight": [
+      "first_corner_length_prompt": [
+        {
+          "kind": "label",
+          "id": "hint-lw",
+          "role": "prompt",
+          "params": {
+            "text": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)",
+            "position": { "const": [0, 0.25, 1.55] }
+          }
+        },
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        }
+      ],
+      "diagonal_rubber": [
+        {
+          "kind": "point",
+          "id": "diag-a",
+          "role": "anchor",
+          "params": { "position": { "path": "diagA" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "diagA" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_diagonal_rubber": [
+        {
+          "kind": "point",
+          "id": "diag-a",
+          "role": "anchor",
+          "params": { "position": { "path": "diagA" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "diagA" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "three_point_edge": [
+        {
+          "kind": "point",
+          "id": "p0-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "p0" } }
+        },
+        {
+          "kind": "segment",
+          "id": "edge-rubber",
+          "role": "preview",
+          "params": {
+            "from": { "path": "p0" },
+            "to": { "path": "cursor" }
+          }
+        }
+      ],
+      "three_point_width": [
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "previewA" },
+            "cornerB": { "path": "previewB" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "vertical_end": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "segment",
+          "id": "z-peek",
+          "role": "handle",
+          "params": {
+            "from": { "path": "origin" },
+            "to": { "path": "peak" }
+          }
+        }
+      ],
+      "vertical_width": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "center_corner": [
+        {
+          "kind": "point",
+          "id": "center-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "rectCenter" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_center_corner": [
+        {
+          "kind": "point",
+          "id": "center-mark",
+          "role": "anchor",
+          "params": { "position": { "path": "rectCenter" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "cube_other_corner": [
+        {
+          "kind": "point",
+          "id": "origin-marker",
+          "role": "anchor",
+          "params": { "position": { "path": "origin" } }
+        },
+        {
+          "kind": "box-preview",
+          "id": "preview",
+          "role": "preview",
+          "params": {
+            "cornerA": { "path": "origin" },
+            "cornerB": { "path": "corner" },
+            "height": { "const": 0.01 }
+          }
+        }
+      ],
+      "first_corner_height": [
         {
           "kind": "label",
           "id": "hint-height",
           "role": "prompt",
           "params": {
-            "text": "Drag green slab for height (min 1cm). Apply height, then click grid or use Accept below.",
+            "text": "Height (Z): drag teal wall, Apply height, click plane, or Accept",
             "position": { "const": [0, 0.25, 1.55] }
           }
         },

@@ -29,3 +29,12 @@ Verified: `bun nx run @spatial/js-renderer-r3f:test`.
 - **Cause:** Factory/brep use **footprint XY** and **height Z**; `GroundPickPlane` used a mesh in **world XZ** (Y-up floor) but still emitted `[p.x, p.y, planeZ]`, so **world `p.z` was dropped** → cursor moved on **one axis** only.
 - **Fix:** Pick mesh is **XY at world `z = planeZ`** (no `rotation.x = -π/2`). `GridHelper` gets `rotation.x = π/2` and a tiny **+Z** offset so lines sit on the same working plane as the box preview.
 
+---
+
+## 2026-05-24 — Multi-mode box statechart
+
+- `spatial/fixtures/factory.json` — States per user diagram (Point / Diagonal / 3Point / Vertical / Center / Cube / Length); guarded `pointer.down` lists; `display.segment` for edges; `vertical_end` uses `peak` + Z rod.
+- `spatial/js/core/index.ts` — Transition arrays; `min`/`max` expr; imperative `box.*` ops.
+- `spatial/js/renderer-r3f/index.tsx` + `play/main.tsx` — Segment primitive, vertical Z rod, mode UI.
+
+Verified: `bun nx run @spatial/js-core:test`, `bun nx run @spatial/js-renderer-r3f:test`.

@@ -222,6 +222,14 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 		if (!isVec3(va) || !isVec3(vb)) return undefined;
 		return vec3Distance(va, vb);
 	}
+	if ("min" in expr) {
+		const pair = (expr as { min: [Expr, Expr] }).min;
+		return Math.min(Number(evalExpr(pair[0], env)), Number(evalExpr(pair[1], env)));
+	}
+	if ("max" in expr) {
+		const pair = (expr as { max: [Expr, Expr] }).max;
+		return Math.max(Number(evalExpr(pair[0], env)), Number(evalExpr(pair[1], env)));
+	}
 	const binKeys = ["==", "!=", ">", "<", ">=", "<=", "+", "-", "*", "/"] as const;
 	for (const k of binKeys) {
 		if (k in expr) {
@@ -283,7 +291,7 @@ export interface FactorySpec {
 			string,
 			{
 				readonly final?: boolean;
-				readonly on?: Record<string, TransitionSpec>;
+				readonly on?: Record<string, TransitionSpec | readonly TransitionSpec[]>;
 			}
 		>;
 	};
@@ -588,6 +596,127 @@ function resolveTemplate(value: unknown, env: ExprEnv): unknown {
 	return out;
 }
 
+function transitionChoices(raw: TransitionSpec | readonly TransitionSpec[] | undefined): readonly TransitionSpec[] {
+	if (raw === undefined) return [];
+	return (Array.isArray(raw) ? raw : [raw]) as readonly TransitionSpec[];
+}
+
+/** @emoji 📦 Applies imperative `box.*` footprint helpers used by `spatial/fixtures/factory.json`. */
+function applyBoxGeometryOp(ctx: Record<string, unknown>, event: FactoryEvent, op: string): void {
+	const pt = (event as { point?: unknown }).point;
+	const P = isVec3(pt) ? pt : null;
+	const val = (event as { value?: unknown }).value;
+	if (op === "box.aabbFromDiagonalCorners") {
+		const a = ctx.diagA;
+		if (!isVec3(a) || !P) return;
+		const z = a[2];
+		ctx.origin = [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as unknown as Vec3;
+		ctx.corner = [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as unknown as Vec3;
+		delete ctx.diagA;
+		return;
+	}
+	if (op === "box.tripletRubber") {
+		const p0 = ctx.p0;
+		const p1 = ctx.p1;
+		if (!isVec3(p0) || !isVec3(p1) || !P) return;
+		const z = p0[2];
+		ctx.previewA = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		ctx.previewB = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.tripletCommit") {
+		const p0 = ctx.p0;
+		const p1 = ctx.p1;
+		if (!isVec3(p0) || !isVec3(p1) || !P) return;
+		const z = p0[2];
+		ctx.origin = [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		ctx.corner = [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as unknown as Vec3;
+		delete ctx.p0;
+		delete ctx.p1;
+		delete ctx.previewA;
+		delete ctx.previewB;
+		return;
+	}
+	if (op === "box.snapSquareFootprint") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		const dx = P[0] - o[0];
+		const dy = P[1] - o[1];
+		const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
+		const sx = dx >= 0 ? 1 : -1;
+		const sy = dy >= 0 ? 1 : -1;
+		ctx.corner = [o[0] + sx * s, o[1] + sy * s, o[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.setCubeHeightFromFootprint") {
+		const o = ctx.origin;
+		const c = ctx.corner;
+		if (!isVec3(o) || !isVec3(c)) return;
+		const dx = Math.abs(c[0] - o[0]);
+		const dy = Math.abs(c[1] - o[1]);
+		ctx.height = Math.max(dx, dy, 0.01);
+		return;
+	}
+	if (op === "box.rubberCornerFromCenter") {
+		const c = ctx.rectCenter;
+		if (!isVec3(c) || !P) return;
+		ctx.origin = [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
+		ctx.corner = [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.rubberSquareFromCenter") {
+		const c = ctx.rectCenter;
+		if (!isVec3(c) || !P) return;
+		const ox = Math.min(2 * c[0] - P[0], P[0]);
+		const oy = Math.min(2 * c[1] - P[1], P[1]);
+		const cx = Math.max(2 * c[0] - P[0], P[0]);
+		const cy = Math.max(2 * c[1] - P[1], P[1]);
+		const w = cx - ox;
+		const d = cy - oy;
+		const s = Math.max(w, d, 1e-9);
+		ctx.origin = [c[0] - s / 2, c[1] - s / 2, c[2]] as unknown as Vec3;
+		ctx.corner = [c[0] + s / 2, c[1] + s / 2, c[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.verticalFinalizeFootprint") {
+		const o = ctx.origin;
+		const pk = ctx.peak;
+		if (!isVec3(o) || !isVec3(pk) || !P) return;
+		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
+		ctx.height = Math.max(0.01, Math.abs(pk[2] - o[2]));
+		delete ctx.peak;
+		return;
+	}
+	if (op === "box.initPeakAboveOrigin") {
+		const o = ctx.origin;
+		if (!isVec3(o)) return;
+		ctx.peak = [o[0], o[1], o[2] + 0.25] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.peakFromOriginZ") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		ctx.peak = [o[0], o[1], P[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.verticalRubberCorner") {
+		const o = ctx.origin;
+		if (!isVec3(o) || !P) return;
+		ctx.corner = [P[0], P[1], o[2]] as unknown as Vec3;
+		return;
+	}
+	if (op === "box.cornerFromLengthWidth") {
+		const o = ctx.origin;
+		if (!isVec3(o) || val === null || typeof val !== "object") return;
+		const rec = val as Record<string, unknown>;
+		const L = Number(rec.length);
+		const W = Number(rec.width);
+		if (!Number.isFinite(L) || !Number.isFinite(W)) return;
+		ctx.corner = [o[0] + L, o[1] + W, o[2]] as unknown as Vec3;
+		return;
+	}
+}
+
 async function applyActionAsync(
 	a: ActionSpec,
 	ctx: Record<string, unknown>,
@@ -603,6 +732,8 @@ async function applyActionAsync(
 		const params = resolveTemplate(a.params ?? {}, { context: ctx, event }) as Record<string, unknown>;
 		const res = await kernel.query(a.query, params);
 		setPath(ctx, a.assignTo, res);
+	} else if (typeof a.op === "string" && a.op.startsWith("box.")) {
+		applyBoxGeometryOp(ctx, event, a.op);
 	}
 }
 
@@ -638,17 +769,21 @@ export class StatechartRuntime {
 	async send(event: FactoryEvent, kernel?: KernelAdapter): Promise<{ ok: boolean; transient?: boolean }> {
 		const st = this.spec.machine.states[this.state];
 		if (!st?.on) return { ok: false };
-		const tr = st.on[event.kind];
-		if (!tr) return { ok: false };
-		if (tr.guard) {
-			const g = this.spec.guards?.[tr.guard];
-			if (!g || !evalGuard(g, { context: this.context, event })) return { ok: false };
+		const raw = st.on[event.kind];
+		const choices = transitionChoices(raw);
+		if (choices.length === 0) return { ok: false };
+		for (const tr of choices) {
+			if (tr.guard) {
+				const g = this.spec.guards?.[tr.guard];
+				if (!g || !evalGuard(g, { context: this.context, event })) continue;
+			}
+			for (const a of tr.actions ?? []) {
+				await applyActionAsync(a, this.context, event, kernel);
+			}
+			if (tr.target) this.state = tr.target;
+			return { ok: true, transient: Boolean(tr.transient) };
 		}
-		for (const a of tr.actions ?? []) {
-			await applyActionAsync(a, this.context, event, kernel);
-		}
-		if (tr.target) this.state = tr.target;
-		return { ok: true, transient: Boolean(tr.transient) };
+		return { ok: false };
 	}
 }
 // #endregion 🎬Statechart
@@ -949,6 +1084,10 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core expr", () => {
+		it("evaluates numeric min expr", () => {
+			const e = { min: [{ const: 3 }, { const: 7 }] } as Expr;
+			expect(evalExpr(e, { context: {} })).toBe(3);
+		});
 		it("evaluates guards used by box factory", () => {
 			const g = {
 				all: [
@@ -982,7 +1121,7 @@ if (import.meta.vitest) {
 			});
 			await rt.send({ kind: "start" });
 			let snap = rt.getSnapshot();
-			expect(snap.state).toBe("pickingFirstCorner");
+			expect(snap.state).toBe("first_corner");
 			expect(snap.context.cursor).toEqual([0, 0, 0]);
 			expect(snap.display.items.find((i) => i.id === "first-cursor")?.params?.position).toEqual([0, 0, 0]);
 			await rt.send({ kind: "pointer.move", point: [-1, 2.5, 0] as Vec3, modifiers: {} });
@@ -991,7 +1130,7 @@ if (import.meta.vitest) {
 			expect(snap.display.items.find((i) => i.id === "first-cursor")?.params?.position).toEqual([-1, 2.5, 0]);
 			await rt.send({ kind: "pointer.down", point: [3, 1, 0] as Vec3, modifiers: {} });
 			snap = rt.getSnapshot();
-			expect(snap.state).toBe("pickingSecondCorner");
+			expect(snap.state).toBe("first_corner_other_or_length");
 			expect(snap.context.cursor).toBeUndefined();
 		});
 
