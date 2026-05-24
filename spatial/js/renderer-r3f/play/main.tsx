@@ -20,6 +20,9 @@ import {
 import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json" };
 import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
 import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
+import geometrySmallBuilding from "../../../fixtures/small-building.topology.json" with { type: "json" };
+import geometryTallBuilding from "../../../fixtures/tall-building.topology.json" with { type: "json" };
+import geometryLargeBuilding from "../../../fixtures/large-building.topology.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import { FactoryCanvas, FactorySpatialView, useFactorySnapshot } from "../index.tsx";
@@ -29,6 +32,9 @@ const GEOMETRY_ASSETS = [
 	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule (8 verts)", json: geometryNakagin as Record<string, unknown> },
 	{ id: "geometry-loom", key: "l", label: "Loom deck + pent loop + rail", json: geometryLoom as Record<string, unknown> },
 	{ id: "geometry-routes", key: "r", label: "Multi-route lattice (24 verts)", json: geometryRoutes as Record<string, unknown> },
+	{ id: "small-building", key: "s", label: "Small building (264 verts)", json: geometrySmallBuilding as Record<string, unknown> },
+	{ id: "tall-building", key: "t", label: "Tall building (680 verts)", json: geometryTallBuilding as Record<string, unknown> },
+	{ id: "large-building", key: "b", label: "Large building (12,370 verts)", json: geometryLargeBuilding as Record<string, unknown> },
 ] as const;
 //#endregion
 

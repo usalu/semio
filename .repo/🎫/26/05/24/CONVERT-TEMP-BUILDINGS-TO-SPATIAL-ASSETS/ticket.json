@@ -3,11 +3,13 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Convert the temporary building data into spatial asset JSON once. Focus on producing correct JSON assets and avoid broader code changes.",
+  "summary": "Converted temp building BREP JSON payloads into spatial topology fixture JSON assets. Generated small, tall, and large building topology files with mesh surface data wrapped in schema-valid face/shell/cell/cellComplex/cluster records. Validated JSON syntax, core parser hydration, triangle indices, and topology schema shape.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1472"
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪6d4f0428fb4249f195235648088164bc"
+    "⚪6d4f0428fb4249f195235648088164bc",
+    "⚪8adf690ad43c4d8c84ac23f3c5077885"
   ]
 }

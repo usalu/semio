@@ -1,0 +1,4172 @@
+{
+  "schema": "spatial.topology/v1",
+  "revision": 1,
+  "vertices": {
+    "small-building-v0": {
+      "id": "small-building-v0",
+      "position": [
+        264.77594,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v1": {
+      "id": "small-building-v1",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v2": {
+      "id": "small-building-v2",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v3": {
+      "id": "small-building-v3",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v4": {
+      "id": "small-building-v4",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v5": {
+      "id": "small-building-v5",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v6": {
+      "id": "small-building-v6",
+      "position": [
+        264.77594,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v7": {
+      "id": "small-building-v7",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v8": {
+      "id": "small-building-v8",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v9": {
+      "id": "small-building-v9",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v10": {
+      "id": "small-building-v10",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v11": {
+      "id": "small-building-v11",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v12": {
+      "id": "small-building-v12",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v13": {
+      "id": "small-building-v13",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v14": {
+      "id": "small-building-v14",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v15": {
+      "id": "small-building-v15",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v16": {
+      "id": "small-building-v16",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v17": {
+      "id": "small-building-v17",
+      "position": [
+        264.77594,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v18": {
+      "id": "small-building-v18",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v19": {
+      "id": "small-building-v19",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v20": {
+      "id": "small-building-v20",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v21": {
+      "id": "small-building-v21",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v22": {
+      "id": "small-building-v22",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v23": {
+      "id": "small-building-v23",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v24": {
+      "id": "small-building-v24",
+      "position": [
+        264.77594,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v25": {
+      "id": "small-building-v25",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v26": {
+      "id": "small-building-v26",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v27": {
+      "id": "small-building-v27",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v28": {
+      "id": "small-building-v28",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v29": {
+      "id": "small-building-v29",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v30": {
+      "id": "small-building-v30",
+      "position": [
+        264.77594,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v31": {
+      "id": "small-building-v31",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v32": {
+      "id": "small-building-v32",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v33": {
+      "id": "small-building-v33",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v34": {
+      "id": "small-building-v34",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v35": {
+      "id": "small-building-v35",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v36": {
+      "id": "small-building-v36",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v37": {
+      "id": "small-building-v37",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v38": {
+      "id": "small-building-v38",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v39": {
+      "id": "small-building-v39",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v40": {
+      "id": "small-building-v40",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v41": {
+      "id": "small-building-v41",
+      "position": [
+        264.77594,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v42": {
+      "id": "small-building-v42",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v43": {
+      "id": "small-building-v43",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v44": {
+      "id": "small-building-v44",
+      "position": [
+        264.77594,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v45": {
+      "id": "small-building-v45",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v46": {
+      "id": "small-building-v46",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v47": {
+      "id": "small-building-v47",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v48": {
+      "id": "small-building-v48",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v49": {
+      "id": "small-building-v49",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v50": {
+      "id": "small-building-v50",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v51": {
+      "id": "small-building-v51",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v52": {
+      "id": "small-building-v52",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v53": {
+      "id": "small-building-v53",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v54": {
+      "id": "small-building-v54",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v55": {
+      "id": "small-building-v55",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v56": {
+      "id": "small-building-v56",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v57": {
+      "id": "small-building-v57",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v58": {
+      "id": "small-building-v58",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v59": {
+      "id": "small-building-v59",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v60": {
+      "id": "small-building-v60",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v61": {
+      "id": "small-building-v61",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v62": {
+      "id": "small-building-v62",
+      "position": [
+        264.77594,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v63": {
+      "id": "small-building-v63",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v64": {
+      "id": "small-building-v64",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v65": {
+      "id": "small-building-v65",
+      "position": [
+        264.77594,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v66": {
+      "id": "small-building-v66",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v67": {
+      "id": "small-building-v67",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v68": {
+      "id": "small-building-v68",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v69": {
+      "id": "small-building-v69",
+      "position": [
+        264.77594,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v70": {
+      "id": "small-building-v70",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v71": {
+      "id": "small-building-v71",
+      "position": [
+        264.77594,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v72": {
+      "id": "small-building-v72",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v73": {
+      "id": "small-building-v73",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v74": {
+      "id": "small-building-v74",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v75": {
+      "id": "small-building-v75",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v76": {
+      "id": "small-building-v76",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v77": {
+      "id": "small-building-v77",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v78": {
+      "id": "small-building-v78",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v79": {
+      "id": "small-building-v79",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v80": {
+      "id": "small-building-v80",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v81": {
+      "id": "small-building-v81",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v82": {
+      "id": "small-building-v82",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v83": {
+      "id": "small-building-v83",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v84": {
+      "id": "small-building-v84",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v85": {
+      "id": "small-building-v85",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v86": {
+      "id": "small-building-v86",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v87": {
+      "id": "small-building-v87",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v88": {
+      "id": "small-building-v88",
+      "position": [
+        310.695953,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v89": {
+      "id": "small-building-v89",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v90": {
+      "id": "small-building-v90",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v91": {
+      "id": "small-building-v91",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v92": {
+      "id": "small-building-v92",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v93": {
+      "id": "small-building-v93",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v94": {
+      "id": "small-building-v94",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v95": {
+      "id": "small-building-v95",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v96": {
+      "id": "small-building-v96",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v97": {
+      "id": "small-building-v97",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v98": {
+      "id": "small-building-v98",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v99": {
+      "id": "small-building-v99",
+      "position": [
+        395.975952,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v100": {
+      "id": "small-building-v100",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v101": {
+      "id": "small-building-v101",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v102": {
+      "id": "small-building-v102",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v103": {
+      "id": "small-building-v103",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v104": {
+      "id": "small-building-v104",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v105": {
+      "id": "small-building-v105",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v106": {
+      "id": "small-building-v106",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v107": {
+      "id": "small-building-v107",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v108": {
+      "id": "small-building-v108",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v109": {
+      "id": "small-building-v109",
+      "position": [
+        310.695953,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v110": {
+      "id": "small-building-v110",
+      "position": [
+        395.975952,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v111": {
+      "id": "small-building-v111",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v112": {
+      "id": "small-building-v112",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v113": {
+      "id": "small-building-v113",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v114": {
+      "id": "small-building-v114",
+      "position": [
+        395.975952,
+        440.427948,
+        0
+      ]
+    },
+    "small-building-v115": {
+      "id": "small-building-v115",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v116": {
+      "id": "small-building-v116",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v117": {
+      "id": "small-building-v117",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v118": {
+      "id": "small-building-v118",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v119": {
+      "id": "small-building-v119",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v120": {
+      "id": "small-building-v120",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v121": {
+      "id": "small-building-v121",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v122": {
+      "id": "small-building-v122",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v123": {
+      "id": "small-building-v123",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v124": {
+      "id": "small-building-v124",
+      "position": [
+        310.695953,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v125": {
+      "id": "small-building-v125",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v126": {
+      "id": "small-building-v126",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v127": {
+      "id": "small-building-v127",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v128": {
+      "id": "small-building-v128",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v129": {
+      "id": "small-building-v129",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v130": {
+      "id": "small-building-v130",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v131": {
+      "id": "small-building-v131",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v132": {
+      "id": "small-building-v132",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v133": {
+      "id": "small-building-v133",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v134": {
+      "id": "small-building-v134",
+      "position": [
+        264.77594,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v135": {
+      "id": "small-building-v135",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v136": {
+      "id": "small-building-v136",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v137": {
+      "id": "small-building-v137",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v138": {
+      "id": "small-building-v138",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v139": {
+      "id": "small-building-v139",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v140": {
+      "id": "small-building-v140",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v141": {
+      "id": "small-building-v141",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v142": {
+      "id": "small-building-v142",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v143": {
+      "id": "small-building-v143",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v144": {
+      "id": "small-building-v144",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v145": {
+      "id": "small-building-v145",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v146": {
+      "id": "small-building-v146",
+      "position": [
+        264.77594,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v147": {
+      "id": "small-building-v147",
+      "position": [
+        264.77594,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v148": {
+      "id": "small-building-v148",
+      "position": [
+        264.77594,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v149": {
+      "id": "small-building-v149",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v150": {
+      "id": "small-building-v150",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v151": {
+      "id": "small-building-v151",
+      "position": [
+        264.77594,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v152": {
+      "id": "small-building-v152",
+      "position": [
+        264.77594,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v153": {
+      "id": "small-building-v153",
+      "position": [
+        264.77594,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v154": {
+      "id": "small-building-v154",
+      "position": [
+        264.77594,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v155": {
+      "id": "small-building-v155",
+      "position": [
+        264.77594,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v156": {
+      "id": "small-building-v156",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v157": {
+      "id": "small-building-v157",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v158": {
+      "id": "small-building-v158",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v159": {
+      "id": "small-building-v159",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v160": {
+      "id": "small-building-v160",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v161": {
+      "id": "small-building-v161",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v162": {
+      "id": "small-building-v162",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v163": {
+      "id": "small-building-v163",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v164": {
+      "id": "small-building-v164",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v165": {
+      "id": "small-building-v165",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v166": {
+      "id": "small-building-v166",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v167": {
+      "id": "small-building-v167",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v168": {
+      "id": "small-building-v168",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v169": {
+      "id": "small-building-v169",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v170": {
+      "id": "small-building-v170",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v171": {
+      "id": "small-building-v171",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v172": {
+      "id": "small-building-v172",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v173": {
+      "id": "small-building-v173",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v174": {
+      "id": "small-building-v174",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v175": {
+      "id": "small-building-v175",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v176": {
+      "id": "small-building-v176",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v177": {
+      "id": "small-building-v177",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v178": {
+      "id": "small-building-v178",
+      "position": [
+        310.695953,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v179": {
+      "id": "small-building-v179",
+      "position": [
+        310.695953,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v180": {
+      "id": "small-building-v180",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v181": {
+      "id": "small-building-v181",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v182": {
+      "id": "small-building-v182",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v183": {
+      "id": "small-building-v183",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v184": {
+      "id": "small-building-v184",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v185": {
+      "id": "small-building-v185",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v186": {
+      "id": "small-building-v186",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v187": {
+      "id": "small-building-v187",
+      "position": [
+        395.975952,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v188": {
+      "id": "small-building-v188",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v189": {
+      "id": "small-building-v189",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v190": {
+      "id": "small-building-v190",
+      "position": [
+        356.615936,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v191": {
+      "id": "small-building-v191",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v192": {
+      "id": "small-building-v192",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v193": {
+      "id": "small-building-v193",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v194": {
+      "id": "small-building-v194",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v195": {
+      "id": "small-building-v195",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v196": {
+      "id": "small-building-v196",
+      "position": [
+        356.615936,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v197": {
+      "id": "small-building-v197",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v198": {
+      "id": "small-building-v198",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v199": {
+      "id": "small-building-v199",
+      "position": [
+        395.975952,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v200": {
+      "id": "small-building-v200",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v201": {
+      "id": "small-building-v201",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v202": {
+      "id": "small-building-v202",
+      "position": [
+        395.975952,
+        501.107971,
+        0
+      ]
+    },
+    "small-building-v203": {
+      "id": "small-building-v203",
+      "position": [
+        395.975952,
+        538.827942,
+        0
+      ]
+    },
+    "small-building-v204": {
+      "id": "small-building-v204",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v205": {
+      "id": "small-building-v205",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v206": {
+      "id": "small-building-v206",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v207": {
+      "id": "small-building-v207",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v208": {
+      "id": "small-building-v208",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v209": {
+      "id": "small-building-v209",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v210": {
+      "id": "small-building-v210",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v211": {
+      "id": "small-building-v211",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v212": {
+      "id": "small-building-v212",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v213": {
+      "id": "small-building-v213",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v214": {
+      "id": "small-building-v214",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v215": {
+      "id": "small-building-v215",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v216": {
+      "id": "small-building-v216",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v217": {
+      "id": "small-building-v217",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v218": {
+      "id": "small-building-v218",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v219": {
+      "id": "small-building-v219",
+      "position": [
+        310.695953,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v220": {
+      "id": "small-building-v220",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v221": {
+      "id": "small-building-v221",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v222": {
+      "id": "small-building-v222",
+      "position": [
+        310.695953,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v223": {
+      "id": "small-building-v223",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v224": {
+      "id": "small-building-v224",
+      "position": [
+        395.975952,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v225": {
+      "id": "small-building-v225",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v226": {
+      "id": "small-building-v226",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v227": {
+      "id": "small-building-v227",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v228": {
+      "id": "small-building-v228",
+      "position": [
+        395.975952,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v229": {
+      "id": "small-building-v229",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v230": {
+      "id": "small-building-v230",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v231": {
+      "id": "small-building-v231",
+      "position": [
+        395.975952,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v232": {
+      "id": "small-building-v232",
+      "position": [
+        395.975952,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v233": {
+      "id": "small-building-v233",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v234": {
+      "id": "small-building-v234",
+      "position": [
+        310.695953,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v235": {
+      "id": "small-building-v235",
+      "position": [
+        395.975952,
+        440.427948,
+        34.439999
+      ]
+    },
+    "small-building-v236": {
+      "id": "small-building-v236",
+      "position": [
+        310.695953,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v237": {
+      "id": "small-building-v237",
+      "position": [
+        310.695953,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v238": {
+      "id": "small-building-v238",
+      "position": [
+        395.975952,
+        440.427948,
+        69.699997
+      ]
+    },
+    "small-building-v239": {
+      "id": "small-building-v239",
+      "position": [
+        395.975952,
+        489.62796,
+        106.599998
+      ]
+    },
+    "small-building-v240": {
+      "id": "small-building-v240",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v241": {
+      "id": "small-building-v241",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v242": {
+      "id": "small-building-v242",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v243": {
+      "id": "small-building-v243",
+      "position": [
+        395.975952,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v244": {
+      "id": "small-building-v244",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v245": {
+      "id": "small-building-v245",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v246": {
+      "id": "small-building-v246",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v247": {
+      "id": "small-building-v247",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v248": {
+      "id": "small-building-v248",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v249": {
+      "id": "small-building-v249",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v250": {
+      "id": "small-building-v250",
+      "position": [
+        395.975952,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v251": {
+      "id": "small-building-v251",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v252": {
+      "id": "small-building-v252",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v253": {
+      "id": "small-building-v253",
+      "position": [
+        395.975952,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v254": {
+      "id": "small-building-v254",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v255": {
+      "id": "small-building-v255",
+      "position": [
+        395.975952,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v256": {
+      "id": "small-building-v256",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v257": {
+      "id": "small-building-v257",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v258": {
+      "id": "small-building-v258",
+      "position": [
+        395.975952,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v259": {
+      "id": "small-building-v259",
+      "position": [
+        395.975952,
+        538.827942,
+        69.699997
+      ]
+    },
+    "small-building-v260": {
+      "id": "small-building-v260",
+      "position": [
+        356.615936,
+        501.107971,
+        97.989998
+      ]
+    },
+    "small-building-v261": {
+      "id": "small-building-v261",
+      "position": [
+        356.615936,
+        501.107971,
+        34.439999
+      ]
+    },
+    "small-building-v262": {
+      "id": "small-building-v262",
+      "position": [
+        356.615936,
+        538.827942,
+        34.439999
+      ]
+    },
+    "small-building-v263": {
+      "id": "small-building-v263",
+      "position": [
+        356.615936,
+        538.827942,
+        69.699997
+      ]
+    }
+  },
+  "edges": {},
+  "wires": {
+    "small-building-mesh-wire": {
+      "id": "small-building-mesh-wire",
+      "edgeIds": [],
+      "closed": true
+    }
+  },
+  "faces": {
+    "small-building-mesh-face": {
+      "id": "small-building-mesh-face",
+      "outerWireId": "small-building-mesh-wire",
+      "surface": {
+        "kind": "mesh",
+        "vertices": [
+          [
+            264.77594,
+            538.827942,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            538.827942,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            264.77594,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            440.427948,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            0
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            538.827942,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            0
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            0
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            0
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            264.77594,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            264.77594,
+            489.62796,
+            106.599998
+          ],
+          [
+            264.77594,
+            440.427948,
+            69.699997
+          ],
+          [
+            264.77594,
+            489.62796,
+            106.599998
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            264.77594,
+            440.427948,
+            34.439999
+          ],
+          [
+            264.77594,
+            501.107971,
+            34.439999
+          ],
+          [
+            264.77594,
+            440.427948,
+            69.699997
+          ],
+          [
+            264.77594,
+            489.62796,
+            106.599998
+          ],
+          [
+            264.77594,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            34.439999
+          ],
+          [
+            310.695953,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            395.975952,
+            538.827942,
+            0
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            0
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            0
+          ],
+          [
+            395.975952,
+            538.827942,
+            0
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            34.439999
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            310.695953,
+            501.107971,
+            97.989998
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            395.975952,
+            489.62796,
+            106.599998
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            395.975952,
+            440.427948,
+            69.699997
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            489.62796,
+            106.599998
+          ],
+          [
+            395.975952,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            310.695953,
+            440.427948,
+            34.439999
+          ],
+          [
+            395.975952,
+            440.427948,
+            34.439999
+          ],
+          [
+            310.695953,
+            489.62796,
+            106.599998
+          ],
+          [
+            310.695953,
+            440.427948,
+            69.699997
+          ],
+          [
+            395.975952,
+            440.427948,
+            69.699997
+          ],
+          [
+            395.975952,
+            489.62796,
+            106.599998
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            501.107971,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            395.975952,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ],
+          [
+            395.975952,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            501.107971,
+            97.989998
+          ],
+          [
+            395.975952,
+            538.827942,
+            69.699997
+          ],
+          [
+            356.615936,
+            501.107971,
+            97.989998
+          ],
+          [
+            356.615936,
+            501.107971,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            34.439999
+          ],
+          [
+            356.615936,
+            538.827942,
+            69.699997
+          ]
+        ],
+        "triangles": [
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            6,
+            5,
+            4
+          ],
+          [
+            6,
+            7,
+            5
+          ],
+          [
+            10,
+            9,
+            8
+          ],
+          [
+            10,
+            11,
+            9
+          ],
+          [
+            15,
+            13,
+            12
+          ],
+          [
+            15,
+            12,
+            14
+          ],
+          [
+            18,
+            17,
+            16
+          ],
+          [
+            18,
+            19,
+            17
+          ],
+          [
+            22,
+            23,
+            20
+          ],
+          [
+            21,
+            22,
+            20
+          ],
+          [
+            25,
+            26,
+            27
+          ],
+          [
+            25,
+            27,
+            24
+          ],
+          [
+            31,
+            29,
+            28
+          ],
+          [
+            31,
+            28,
+            30
+          ],
+          [
+            33,
+            32,
+            34
+          ],
+          [
+            33,
+            34,
+            35
+          ],
+          [
+            38,
+            37,
+            36
+          ],
+          [
+            38,
+            39,
+            37
+          ],
+          [
+            41,
+            40,
+            42
+          ],
+          [
+            41,
+            42,
+            43
+          ],
+          [
+            45,
+            46,
+            44
+          ],
+          [
+            47,
+            46,
+            45
+          ],
+          [
+            49,
+            50,
+            51
+          ],
+          [
+            48,
+            49,
+            51
+          ],
+          [
+            52,
+            54,
+            55
+          ],
+          [
+            52,
+            55,
+            53
+          ],
+          [
+            57,
+            59,
+            56
+          ],
+          [
+            56,
+            59,
+            58
+          ],
+          [
+            61,
+            60,
+            62
+          ],
+          [
+            63,
+            61,
+            62
+          ],
+          [
+            65,
+            64,
+            66
+          ],
+          [
+            65,
+            66,
+            67
+          ],
+          [
+            68,
+            70,
+            71
+          ],
+          [
+            68,
+            71,
+            69
+          ],
+          [
+            75,
+            74,
+            72
+          ],
+          [
+            74,
+            73,
+            72
+          ],
+          [
+            78,
+            76,
+            77
+          ],
+          [
+            78,
+            79,
+            76
+          ],
+          [
+            81,
+            80,
+            82
+          ],
+          [
+            82,
+            80,
+            83
+          ],
+          [
+            87,
+            84,
+            85
+          ],
+          [
+            87,
+            85,
+            86
+          ],
+          [
+            90,
+            88,
+            89
+          ],
+          [
+            90,
+            91,
+            88
+          ],
+          [
+            94,
+            95,
+            92
+          ],
+          [
+            93,
+            94,
+            92
+          ],
+          [
+            99,
+            96,
+            97
+          ],
+          [
+            99,
+            97,
+            98
+          ],
+          [
+            103,
+            101,
+            100
+          ],
+          [
+            103,
+            104,
+            101
+          ],
+          [
+            102,
+            103,
+            100
+          ],
+          [
+            105,
+            106,
+            107
+          ],
+          [
+            107,
+            106,
+            108
+          ],
+          [
+            112,
+            110,
+            109
+          ],
+          [
+            112,
+            113,
+            110
+          ],
+          [
+            111,
+            112,
+            109
+          ],
+          [
+            115,
+            114,
+            116
+          ],
+          [
+            115,
+            116,
+            117
+          ],
+          [
+            118,
+            119,
+            120
+          ],
+          [
+            118,
+            120,
+            121
+          ],
+          [
+            122,
+            123,
+            124
+          ],
+          [
+            122,
+            124,
+            125
+          ],
+          [
+            126,
+            127,
+            128
+          ],
+          [
+            126,
+            128,
+            129
+          ],
+          [
+            126,
+            129,
+            130
+          ],
+          [
+            133,
+            134,
+            132
+          ],
+          [
+            131,
+            133,
+            132
+          ],
+          [
+            136,
+            137,
+            135
+          ],
+          [
+            138,
+            137,
+            136
+          ],
+          [
+            141,
+            139,
+            142
+          ],
+          [
+            142,
+            139,
+            140
+          ],
+          [
+            145,
+            144,
+            143
+          ],
+          [
+            145,
+            146,
+            144
+          ],
+          [
+            148,
+            147,
+            149
+          ],
+          [
+            148,
+            149,
+            150
+          ],
+          [
+            153,
+            154,
+            155
+          ],
+          [
+            153,
+            155,
+            152
+          ],
+          [
+            151,
+            153,
+            152
+          ],
+          [
+            157,
+            158,
+            159
+          ],
+          [
+            156,
+            157,
+            159
+          ],
+          [
+            161,
+            160,
+            162
+          ],
+          [
+            162,
+            160,
+            163
+          ],
+          [
+            164,
+            167,
+            165
+          ],
+          [
+            165,
+            167,
+            166
+          ],
+          [
+            169,
+            168,
+            170
+          ],
+          [
+            171,
+            169,
+            170
+          ],
+          [
+            172,
+            173,
+            174
+          ],
+          [
+            172,
+            174,
+            175
+          ],
+          [
+            178,
+            177,
+            179
+          ],
+          [
+            177,
+            176,
+            179
+          ],
+          [
+            183,
+            182,
+            180
+          ],
+          [
+            182,
+            181,
+            180
+          ],
+          [
+            186,
+            184,
+            185
+          ],
+          [
+            186,
+            187,
+            184
+          ],
+          [
+            189,
+            188,
+            190
+          ],
+          [
+            190,
+            188,
+            191
+          ],
+          [
+            194,
+            192,
+            193
+          ],
+          [
+            195,
+            192,
+            194
+          ],
+          [
+            198,
+            196,
+            197
+          ],
+          [
+            198,
+            199,
+            196
+          ],
+          [
+            202,
+            203,
+            200
+          ],
+          [
+            201,
+            202,
+            200
+          ],
+          [
+            204,
+            205,
+            206
+          ],
+          [
+            204,
+            206,
+            207
+          ],
+          [
+            211,
+            209,
+            208
+          ],
+          [
+            211,
+            208,
+            210
+          ],
+          [
+            213,
+            215,
+            212
+          ],
+          [
+            216,
+            215,
+            213
+          ],
+          [
+            215,
+            214,
+            212
+          ],
+          [
+            218,
+            217,
+            219
+          ],
+          [
+            219,
+            217,
+            220
+          ],
+          [
+            220,
+            217,
+            221
+          ],
+          [
+            226,
+            224,
+            225
+          ],
+          [
+            223,
+            224,
+            226
+          ],
+          [
+            222,
+            223,
+            226
+          ],
+          [
+            228,
+            227,
+            229
+          ],
+          [
+            228,
+            229,
+            230
+          ],
+          [
+            228,
+            230,
+            231
+          ],
+          [
+            232,
+            233,
+            234
+          ],
+          [
+            235,
+            232,
+            234
+          ],
+          [
+            236,
+            237,
+            238
+          ],
+          [
+            236,
+            238,
+            239
+          ],
+          [
+            241,
+            242,
+            243
+          ],
+          [
+            240,
+            241,
+            243
+          ],
+          [
+            245,
+            247,
+            244
+          ],
+          [
+            244,
+            247,
+            246
+          ],
+          [
+            248,
+            250,
+            249
+          ],
+          [
+            248,
+            251,
+            250
+          ],
+          [
+            255,
+            253,
+            252
+          ],
+          [
+            255,
+            252,
+            254
+          ],
+          [
+            256,
+            257,
+            258
+          ],
+          [
+            256,
+            258,
+            259
+          ],
+          [
+            262,
+            261,
+            263
+          ],
+          [
+            261,
+            260,
+            263
+          ]
+        ]
+      }
+    }
+  },
+  "shells": {
+    "small-building-shell": {
+      "id": "small-building-shell",
+      "faceIds": [
+        "small-building-mesh-face"
+      ]
+    }
+  },
+  "cells": {
+    "small-building-cell": {
+      "id": "small-building-cell",
+      "shellIds": [
+        "small-building-shell"
+      ]
+    }
+  },
+  "cellComplexes": {
+    "small-building-complex": {
+      "id": "small-building-complex",
+      "cellIds": [
+        "small-building-cell"
+      ],
+      "sharedFaceIds": []
+    }
+  },
+  "clusters": {
+    "small-building-asset": {
+      "id": "small-building-asset",
+      "memberIds": [
+        "small-building-complex"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10600 @@
+{
+  "schema": "spatial.topology/v1",
+  "revision": 1,
+  "vertices": {
+    "tall-building-v0": {
+      "id": "tall-building-v0",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v1": {
+      "id": "tall-building-v1",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v2": {
+      "id": "tall-building-v2",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v3": {
+      "id": "tall-building-v3",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v4": {
+      "id": "tall-building-v4",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v5": {
+      "id": "tall-building-v5",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v6": {
+      "id": "tall-building-v6",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v7": {
+      "id": "tall-building-v7",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v8": {
+      "id": "tall-building-v8",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v9": {
+      "id": "tall-building-v9",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v10": {
+      "id": "tall-building-v10",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v11": {
+      "id": "tall-building-v11",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v12": {
+      "id": "tall-building-v12",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v13": {
+      "id": "tall-building-v13",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v14": {
+      "id": "tall-building-v14",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v15": {
+      "id": "tall-building-v15",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v16": {
+      "id": "tall-building-v16",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v17": {
+      "id": "tall-building-v17",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v18": {
+      "id": "tall-building-v18",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v19": {
+      "id": "tall-building-v19",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v20": {
+      "id": "tall-building-v20",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v21": {
+      "id": "tall-building-v21",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v22": {
+      "id": "tall-building-v22",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v23": {
+      "id": "tall-building-v23",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v24": {
+      "id": "tall-building-v24",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v25": {
+      "id": "tall-building-v25",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v26": {
+      "id": "tall-building-v26",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v27": {
+      "id": "tall-building-v27",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v28": {
+      "id": "tall-building-v28",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v29": {
+      "id": "tall-building-v29",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v30": {
+      "id": "tall-building-v30",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v31": {
+      "id": "tall-building-v31",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v32": {
+      "id": "tall-building-v32",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v33": {
+      "id": "tall-building-v33",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v34": {
+      "id": "tall-building-v34",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v35": {
+      "id": "tall-building-v35",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v36": {
+      "id": "tall-building-v36",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v37": {
+      "id": "tall-building-v37",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v38": {
+      "id": "tall-building-v38",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v39": {
+      "id": "tall-building-v39",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v40": {
+      "id": "tall-building-v40",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v41": {
+      "id": "tall-building-v41",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v42": {
+      "id": "tall-building-v42",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v43": {
+      "id": "tall-building-v43",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v44": {
+      "id": "tall-building-v44",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v45": {
+      "id": "tall-building-v45",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v46": {
+      "id": "tall-building-v46",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v47": {
+      "id": "tall-building-v47",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v48": {
+      "id": "tall-building-v48",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v49": {
+      "id": "tall-building-v49",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v50": {
+      "id": "tall-building-v50",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v51": {
+      "id": "tall-building-v51",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v52": {
+      "id": "tall-building-v52",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v53": {
+      "id": "tall-building-v53",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v54": {
+      "id": "tall-building-v54",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v55": {
+      "id": "tall-building-v55",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v56": {
+      "id": "tall-building-v56",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v57": {
+      "id": "tall-building-v57",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v58": {
+      "id": "tall-building-v58",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v59": {
+      "id": "tall-building-v59",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v60": {
+      "id": "tall-building-v60",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v61": {
+      "id": "tall-building-v61",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v62": {
+      "id": "tall-building-v62",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v63": {
+      "id": "tall-building-v63",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v64": {
+      "id": "tall-building-v64",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v65": {
+      "id": "tall-building-v65",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v66": {
+      "id": "tall-building-v66",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v67": {
+      "id": "tall-building-v67",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v68": {
+      "id": "tall-building-v68",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v69": {
+      "id": "tall-building-v69",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v70": {
+      "id": "tall-building-v70",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v71": {
+      "id": "tall-building-v71",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v72": {
+      "id": "tall-building-v72",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v73": {
+      "id": "tall-building-v73",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v74": {
+      "id": "tall-building-v74",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v75": {
+      "id": "tall-building-v75",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v76": {
+      "id": "tall-building-v76",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v77": {
+      "id": "tall-building-v77",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v78": {
+      "id": "tall-building-v78",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v79": {
+      "id": "tall-building-v79",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v80": {
+      "id": "tall-building-v80",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v81": {
+      "id": "tall-building-v81",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v82": {
+      "id": "tall-building-v82",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v83": {
+      "id": "tall-building-v83",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v84": {
+      "id": "tall-building-v84",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v85": {
+      "id": "tall-building-v85",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v86": {
+      "id": "tall-building-v86",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v87": {
+      "id": "tall-building-v87",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v88": {
+      "id": "tall-building-v88",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v89": {
+      "id": "tall-building-v89",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v90": {
+      "id": "tall-building-v90",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v91": {
+      "id": "tall-building-v91",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v92": {
+      "id": "tall-building-v92",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v93": {
+      "id": "tall-building-v93",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v94": {
+      "id": "tall-building-v94",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v95": {
+      "id": "tall-building-v95",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v96": {
+      "id": "tall-building-v96",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v97": {
+      "id": "tall-building-v97",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v98": {
+      "id": "tall-building-v98",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v99": {
+      "id": "tall-building-v99",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v100": {
+      "id": "tall-building-v100",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v101": {
+      "id": "tall-building-v101",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v102": {
+      "id": "tall-building-v102",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v103": {
+      "id": "tall-building-v103",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v104": {
+      "id": "tall-building-v104",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v105": {
+      "id": "tall-building-v105",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v106": {
+      "id": "tall-building-v106",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v107": {
+      "id": "tall-building-v107",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v108": {
+      "id": "tall-building-v108",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v109": {
+      "id": "tall-building-v109",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v110": {
+      "id": "tall-building-v110",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v111": {
+      "id": "tall-building-v111",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v112": {
+      "id": "tall-building-v112",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v113": {
+      "id": "tall-building-v113",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v114": {
+      "id": "tall-building-v114",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v115": {
+      "id": "tall-building-v115",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v116": {
+      "id": "tall-building-v116",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v117": {
+      "id": "tall-building-v117",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v118": {
+      "id": "tall-building-v118",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v119": {
+      "id": "tall-building-v119",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v120": {
+      "id": "tall-building-v120",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v121": {
+      "id": "tall-building-v121",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v122": {
+      "id": "tall-building-v122",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v123": {
+      "id": "tall-building-v123",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v124": {
+      "id": "tall-building-v124",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v125": {
+      "id": "tall-building-v125",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v126": {
+      "id": "tall-building-v126",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v127": {
+      "id": "tall-building-v127",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v128": {
+      "id": "tall-building-v128",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v129": {
+      "id": "tall-building-v129",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v130": {
+      "id": "tall-building-v130",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v131": {
+      "id": "tall-building-v131",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v132": {
+      "id": "tall-building-v132",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v133": {
+      "id": "tall-building-v133",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v134": {
+      "id": "tall-building-v134",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v135": {
+      "id": "tall-building-v135",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v136": {
+      "id": "tall-building-v136",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v137": {
+      "id": "tall-building-v137",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v138": {
+      "id": "tall-building-v138",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v139": {
+      "id": "tall-building-v139",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v140": {
+      "id": "tall-building-v140",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v141": {
+      "id": "tall-building-v141",
+      "position": [
+        -5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v142": {
+      "id": "tall-building-v142",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v143": {
+      "id": "tall-building-v143",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v144": {
+      "id": "tall-building-v144",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v145": {
+      "id": "tall-building-v145",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v146": {
+      "id": "tall-building-v146",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v147": {
+      "id": "tall-building-v147",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v148": {
+      "id": "tall-building-v148",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v149": {
+      "id": "tall-building-v149",
+      "position": [
+        -10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v150": {
+      "id": "tall-building-v150",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v151": {
+      "id": "tall-building-v151",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v152": {
+      "id": "tall-building-v152",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v153": {
+      "id": "tall-building-v153",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v154": {
+      "id": "tall-building-v154",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v155": {
+      "id": "tall-building-v155",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v156": {
+      "id": "tall-building-v156",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v157": {
+      "id": "tall-building-v157",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v158": {
+      "id": "tall-building-v158",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v159": {
+      "id": "tall-building-v159",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v160": {
+      "id": "tall-building-v160",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v161": {
+      "id": "tall-building-v161",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v162": {
+      "id": "tall-building-v162",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v163": {
+      "id": "tall-building-v163",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v164": {
+      "id": "tall-building-v164",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v165": {
+      "id": "tall-building-v165",
+      "position": [
+        -5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v166": {
+      "id": "tall-building-v166",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v167": {
+      "id": "tall-building-v167",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v168": {
+      "id": "tall-building-v168",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v169": {
+      "id": "tall-building-v169",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v170": {
+      "id": "tall-building-v170",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v171": {
+      "id": "tall-building-v171",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v172": {
+      "id": "tall-building-v172",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v173": {
+      "id": "tall-building-v173",
+      "position": [
+        -10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v174": {
+      "id": "tall-building-v174",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v175": {
+      "id": "tall-building-v175",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v176": {
+      "id": "tall-building-v176",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v177": {
+      "id": "tall-building-v177",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v178": {
+      "id": "tall-building-v178",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v179": {
+      "id": "tall-building-v179",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v180": {
+      "id": "tall-building-v180",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v181": {
+      "id": "tall-building-v181",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v182": {
+      "id": "tall-building-v182",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v183": {
+      "id": "tall-building-v183",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v184": {
+      "id": "tall-building-v184",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v185": {
+      "id": "tall-building-v185",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v186": {
+      "id": "tall-building-v186",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v187": {
+      "id": "tall-building-v187",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v188": {
+      "id": "tall-building-v188",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v189": {
+      "id": "tall-building-v189",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v190": {
+      "id": "tall-building-v190",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v191": {
+      "id": "tall-building-v191",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v192": {
+      "id": "tall-building-v192",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v193": {
+      "id": "tall-building-v193",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v194": {
+      "id": "tall-building-v194",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v195": {
+      "id": "tall-building-v195",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v196": {
+      "id": "tall-building-v196",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v197": {
+      "id": "tall-building-v197",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v198": {
+      "id": "tall-building-v198",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v199": {
+      "id": "tall-building-v199",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v200": {
+      "id": "tall-building-v200",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v201": {
+      "id": "tall-building-v201",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v202": {
+      "id": "tall-building-v202",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v203": {
+      "id": "tall-building-v203",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v204": {
+      "id": "tall-building-v204",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v205": {
+      "id": "tall-building-v205",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v206": {
+      "id": "tall-building-v206",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v207": {
+      "id": "tall-building-v207",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v208": {
+      "id": "tall-building-v208",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v209": {
+      "id": "tall-building-v209",
+      "position": [
+        5,
+        -5,
+        0
+      ]
+    },
+    "tall-building-v210": {
+      "id": "tall-building-v210",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v211": {
+      "id": "tall-building-v211",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v212": {
+      "id": "tall-building-v212",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v213": {
+      "id": "tall-building-v213",
+      "position": [
+        5,
+        5,
+        0
+      ]
+    },
+    "tall-building-v214": {
+      "id": "tall-building-v214",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v215": {
+      "id": "tall-building-v215",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v216": {
+      "id": "tall-building-v216",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v217": {
+      "id": "tall-building-v217",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v218": {
+      "id": "tall-building-v218",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v219": {
+      "id": "tall-building-v219",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v220": {
+      "id": "tall-building-v220",
+      "position": [
+        10,
+        -10,
+        0
+      ]
+    },
+    "tall-building-v221": {
+      "id": "tall-building-v221",
+      "position": [
+        10,
+        10,
+        0
+      ]
+    },
+    "tall-building-v222": {
+      "id": "tall-building-v222",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v223": {
+      "id": "tall-building-v223",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v224": {
+      "id": "tall-building-v224",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v225": {
+      "id": "tall-building-v225",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v226": {
+      "id": "tall-building-v226",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v227": {
+      "id": "tall-building-v227",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v228": {
+      "id": "tall-building-v228",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v229": {
+      "id": "tall-building-v229",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v230": {
+      "id": "tall-building-v230",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v231": {
+      "id": "tall-building-v231",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v232": {
+      "id": "tall-building-v232",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v233": {
+      "id": "tall-building-v233",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v234": {
+      "id": "tall-building-v234",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v235": {
+      "id": "tall-building-v235",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v236": {
+      "id": "tall-building-v236",
+      "position": [
+        -5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v237": {
+      "id": "tall-building-v237",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v238": {
+      "id": "tall-building-v238",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v239": {
+      "id": "tall-building-v239",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v240": {
+      "id": "tall-building-v240",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v241": {
+      "id": "tall-building-v241",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v242": {
+      "id": "tall-building-v242",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v243": {
+      "id": "tall-building-v243",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v244": {
+      "id": "tall-building-v244",
+      "position": [
+        -10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v245": {
+      "id": "tall-building-v245",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v246": {
+      "id": "tall-building-v246",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v247": {
+      "id": "tall-building-v247",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v248": {
+      "id": "tall-building-v248",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v249": {
+      "id": "tall-building-v249",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v250": {
+      "id": "tall-building-v250",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v251": {
+      "id": "tall-building-v251",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v252": {
+      "id": "tall-building-v252",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v253": {
+      "id": "tall-building-v253",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v254": {
+      "id": "tall-building-v254",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v255": {
+      "id": "tall-building-v255",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v256": {
+      "id": "tall-building-v256",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v257": {
+      "id": "tall-building-v257",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v258": {
+      "id": "tall-building-v258",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v259": {
+      "id": "tall-building-v259",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v260": {
+      "id": "tall-building-v260",
+      "position": [
+        -5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v261": {
+      "id": "tall-building-v261",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v262": {
+      "id": "tall-building-v262",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v263": {
+      "id": "tall-building-v263",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v264": {
+      "id": "tall-building-v264",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v265": {
+      "id": "tall-building-v265",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v266": {
+      "id": "tall-building-v266",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v267": {
+      "id": "tall-building-v267",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v268": {
+      "id": "tall-building-v268",
+      "position": [
+        -10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v269": {
+      "id": "tall-building-v269",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v270": {
+      "id": "tall-building-v270",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v271": {
+      "id": "tall-building-v271",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v272": {
+      "id": "tall-building-v272",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v273": {
+      "id": "tall-building-v273",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v274": {
+      "id": "tall-building-v274",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v275": {
+      "id": "tall-building-v275",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v276": {
+      "id": "tall-building-v276",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v277": {
+      "id": "tall-building-v277",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v278": {
+      "id": "tall-building-v278",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v279": {
+      "id": "tall-building-v279",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v280": {
+      "id": "tall-building-v280",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v281": {
+      "id": "tall-building-v281",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v282": {
+      "id": "tall-building-v282",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v283": {
+      "id": "tall-building-v283",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v284": {
+      "id": "tall-building-v284",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v285": {
+      "id": "tall-building-v285",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v286": {
+      "id": "tall-building-v286",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v287": {
+      "id": "tall-building-v287",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v288": {
+      "id": "tall-building-v288",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v289": {
+      "id": "tall-building-v289",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v290": {
+      "id": "tall-building-v290",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v291": {
+      "id": "tall-building-v291",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v292": {
+      "id": "tall-building-v292",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v293": {
+      "id": "tall-building-v293",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v294": {
+      "id": "tall-building-v294",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v295": {
+      "id": "tall-building-v295",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v296": {
+      "id": "tall-building-v296",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v297": {
+      "id": "tall-building-v297",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v298": {
+      "id": "tall-building-v298",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v299": {
+      "id": "tall-building-v299",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v300": {
+      "id": "tall-building-v300",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v301": {
+      "id": "tall-building-v301",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v302": {
+      "id": "tall-building-v302",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v303": {
+      "id": "tall-building-v303",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v304": {
+      "id": "tall-building-v304",
+      "position": [
+        5,
+        -5,
+        10
+      ]
+    },
+    "tall-building-v305": {
+      "id": "tall-building-v305",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v306": {
+      "id": "tall-building-v306",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v307": {
+      "id": "tall-building-v307",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v308": {
+      "id": "tall-building-v308",
+      "position": [
+        5,
+        5,
+        10
+      ]
+    },
+    "tall-building-v309": {
+      "id": "tall-building-v309",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v310": {
+      "id": "tall-building-v310",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v311": {
+      "id": "tall-building-v311",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v312": {
+      "id": "tall-building-v312",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v313": {
+      "id": "tall-building-v313",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v314": {
+      "id": "tall-building-v314",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v315": {
+      "id": "tall-building-v315",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v316": {
+      "id": "tall-building-v316",
+      "position": [
+        10,
+        10,
+        10
+      ]
+    },
+    "tall-building-v317": {
+      "id": "tall-building-v317",
+      "position": [
+        10,
+        -10,
+        10
+      ]
+    },
+    "tall-building-v318": {
+      "id": "tall-building-v318",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v319": {
+      "id": "tall-building-v319",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v320": {
+      "id": "tall-building-v320",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v321": {
+      "id": "tall-building-v321",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v322": {
+      "id": "tall-building-v322",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v323": {
+      "id": "tall-building-v323",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v324": {
+      "id": "tall-building-v324",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v325": {
+      "id": "tall-building-v325",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v326": {
+      "id": "tall-building-v326",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v327": {
+      "id": "tall-building-v327",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v328": {
+      "id": "tall-building-v328",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v329": {
+      "id": "tall-building-v329",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v330": {
+      "id": "tall-building-v330",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v331": {
+      "id": "tall-building-v331",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v332": {
+      "id": "tall-building-v332",
+      "position": [
+        -5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v333": {
+      "id": "tall-building-v333",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v334": {
+      "id": "tall-building-v334",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v335": {
+      "id": "tall-building-v335",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v336": {
+      "id": "tall-building-v336",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v337": {
+      "id": "tall-building-v337",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v338": {
+      "id": "tall-building-v338",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v339": {
+      "id": "tall-building-v339",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v340": {
+      "id": "tall-building-v340",
+      "position": [
+        -10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v341": {
+      "id": "tall-building-v341",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v342": {
+      "id": "tall-building-v342",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v343": {
+      "id": "tall-building-v343",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v344": {
+      "id": "tall-building-v344",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v345": {
+      "id": "tall-building-v345",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v346": {
+      "id": "tall-building-v346",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v347": {
+      "id": "tall-building-v347",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v348": {
+      "id": "tall-building-v348",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v349": {
+      "id": "tall-building-v349",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v350": {
+      "id": "tall-building-v350",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v351": {
+      "id": "tall-building-v351",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v352": {
+      "id": "tall-building-v352",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v353": {
+      "id": "tall-building-v353",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v354": {
+      "id": "tall-building-v354",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v355": {
+      "id": "tall-building-v355",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v356": {
+      "id": "tall-building-v356",
+      "position": [
+        -5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v357": {
+      "id": "tall-building-v357",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v358": {
+      "id": "tall-building-v358",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v359": {
+      "id": "tall-building-v359",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v360": {
+      "id": "tall-building-v360",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v361": {
+      "id": "tall-building-v361",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v362": {
+      "id": "tall-building-v362",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v363": {
+      "id": "tall-building-v363",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v364": {
+      "id": "tall-building-v364",
+      "position": [
+        -10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v365": {
+      "id": "tall-building-v365",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v366": {
+      "id": "tall-building-v366",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v367": {
+      "id": "tall-building-v367",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v368": {
+      "id": "tall-building-v368",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v369": {
+      "id": "tall-building-v369",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v370": {
+      "id": "tall-building-v370",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v371": {
+      "id": "tall-building-v371",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v372": {
+      "id": "tall-building-v372",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v373": {
+      "id": "tall-building-v373",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v374": {
+      "id": "tall-building-v374",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v375": {
+      "id": "tall-building-v375",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v376": {
+      "id": "tall-building-v376",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v377": {
+      "id": "tall-building-v377",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v378": {
+      "id": "tall-building-v378",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v379": {
+      "id": "tall-building-v379",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v380": {
+      "id": "tall-building-v380",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v381": {
+      "id": "tall-building-v381",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v382": {
+      "id": "tall-building-v382",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v383": {
+      "id": "tall-building-v383",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v384": {
+      "id": "tall-building-v384",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v385": {
+      "id": "tall-building-v385",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v386": {
+      "id": "tall-building-v386",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v387": {
+      "id": "tall-building-v387",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v388": {
+      "id": "tall-building-v388",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v389": {
+      "id": "tall-building-v389",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v390": {
+      "id": "tall-building-v390",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v391": {
+      "id": "tall-building-v391",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v392": {
+      "id": "tall-building-v392",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v393": {
+      "id": "tall-building-v393",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v394": {
+      "id": "tall-building-v394",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v395": {
+      "id": "tall-building-v395",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v396": {
+      "id": "tall-building-v396",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v397": {
+      "id": "tall-building-v397",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v398": {
+      "id": "tall-building-v398",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v399": {
+      "id": "tall-building-v399",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v400": {
+      "id": "tall-building-v400",
+      "position": [
+        5,
+        -5,
+        20
+      ]
+    },
+    "tall-building-v401": {
+      "id": "tall-building-v401",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v402": {
+      "id": "tall-building-v402",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v403": {
+      "id": "tall-building-v403",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v404": {
+      "id": "tall-building-v404",
+      "position": [
+        5,
+        5,
+        20
+      ]
+    },
+    "tall-building-v405": {
+      "id": "tall-building-v405",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v406": {
+      "id": "tall-building-v406",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v407": {
+      "id": "tall-building-v407",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v408": {
+      "id": "tall-building-v408",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v409": {
+      "id": "tall-building-v409",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v410": {
+      "id": "tall-building-v410",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v411": {
+      "id": "tall-building-v411",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v412": {
+      "id": "tall-building-v412",
+      "position": [
+        10,
+        10,
+        20
+      ]
+    },
+    "tall-building-v413": {
+      "id": "tall-building-v413",
+      "position": [
+        10,
+        -10,
+        20
+      ]
+    },
+    "tall-building-v414": {
+      "id": "tall-building-v414",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v415": {
+      "id": "tall-building-v415",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v416": {
+      "id": "tall-building-v416",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v417": {
+      "id": "tall-building-v417",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v418": {
+      "id": "tall-building-v418",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v419": {
+      "id": "tall-building-v419",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v420": {
+      "id": "tall-building-v420",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v421": {
+      "id": "tall-building-v421",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v422": {
+      "id": "tall-building-v422",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v423": {
+      "id": "tall-building-v423",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v424": {
+      "id": "tall-building-v424",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v425": {
+      "id": "tall-building-v425",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v426": {
+      "id": "tall-building-v426",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v427": {
+      "id": "tall-building-v427",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v428": {
+      "id": "tall-building-v428",
+      "position": [
+        -5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v429": {
+      "id": "tall-building-v429",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v430": {
+      "id": "tall-building-v430",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v431": {
+      "id": "tall-building-v431",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v432": {
+      "id": "tall-building-v432",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v433": {
+      "id": "tall-building-v433",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v434": {
+      "id": "tall-building-v434",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v435": {
+      "id": "tall-building-v435",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v436": {
+      "id": "tall-building-v436",
+      "position": [
+        -10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v437": {
+      "id": "tall-building-v437",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v438": {
+      "id": "tall-building-v438",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v439": {
+      "id": "tall-building-v439",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v440": {
+      "id": "tall-building-v440",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v441": {
+      "id": "tall-building-v441",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v442": {
+      "id": "tall-building-v442",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v443": {
+      "id": "tall-building-v443",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v444": {
+      "id": "tall-building-v444",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v445": {
+      "id": "tall-building-v445",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v446": {
+      "id": "tall-building-v446",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v447": {
+      "id": "tall-building-v447",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v448": {
+      "id": "tall-building-v448",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v449": {
+      "id": "tall-building-v449",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v450": {
+      "id": "tall-building-v450",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v451": {
+      "id": "tall-building-v451",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v452": {
+      "id": "tall-building-v452",
+      "position": [
+        -5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v453": {
+      "id": "tall-building-v453",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v454": {
+      "id": "tall-building-v454",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v455": {
+      "id": "tall-building-v455",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v456": {
+      "id": "tall-building-v456",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v457": {
+      "id": "tall-building-v457",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v458": {
+      "id": "tall-building-v458",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v459": {
+      "id": "tall-building-v459",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v460": {
+      "id": "tall-building-v460",
+      "position": [
+        -10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v461": {
+      "id": "tall-building-v461",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v462": {
+      "id": "tall-building-v462",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v463": {
+      "id": "tall-building-v463",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v464": {
+      "id": "tall-building-v464",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v465": {
+      "id": "tall-building-v465",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v466": {
+      "id": "tall-building-v466",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v467": {
+      "id": "tall-building-v467",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v468": {
+      "id": "tall-building-v468",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v469": {
+      "id": "tall-building-v469",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v470": {
+      "id": "tall-building-v470",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v471": {
+      "id": "tall-building-v471",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v472": {
+      "id": "tall-building-v472",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v473": {
+      "id": "tall-building-v473",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v474": {
+      "id": "tall-building-v474",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v475": {
+      "id": "tall-building-v475",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v476": {
+      "id": "tall-building-v476",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v477": {
+      "id": "tall-building-v477",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v478": {
+      "id": "tall-building-v478",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v479": {
+      "id": "tall-building-v479",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v480": {
+      "id": "tall-building-v480",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v481": {
+      "id": "tall-building-v481",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v482": {
+      "id": "tall-building-v482",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v483": {
+      "id": "tall-building-v483",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v484": {
+      "id": "tall-building-v484",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v485": {
+      "id": "tall-building-v485",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v486": {
+      "id": "tall-building-v486",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v487": {
+      "id": "tall-building-v487",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v488": {
+      "id": "tall-building-v488",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v489": {
+      "id": "tall-building-v489",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v490": {
+      "id": "tall-building-v490",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v491": {
+      "id": "tall-building-v491",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v492": {
+      "id": "tall-building-v492",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v493": {
+      "id": "tall-building-v493",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v494": {
+      "id": "tall-building-v494",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v495": {
+      "id": "tall-building-v495",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v496": {
+      "id": "tall-building-v496",
+      "position": [
+        5,
+        -5,
+        30
+      ]
+    },
+    "tall-building-v497": {
+      "id": "tall-building-v497",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v498": {
+      "id": "tall-building-v498",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v499": {
+      "id": "tall-building-v499",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v500": {
+      "id": "tall-building-v500",
+      "position": [
+        5,
+        5,
+        30
+      ]
+    },
+    "tall-building-v501": {
+      "id": "tall-building-v501",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v502": {
+      "id": "tall-building-v502",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v503": {
+      "id": "tall-building-v503",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v504": {
+      "id": "tall-building-v504",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v505": {
+      "id": "tall-building-v505",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v506": {
+      "id": "tall-building-v506",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v507": {
+      "id": "tall-building-v507",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v508": {
+      "id": "tall-building-v508",
+      "position": [
+        10,
+        10,
+        30
+      ]
+    },
+    "tall-building-v509": {
+      "id": "tall-building-v509",
+      "position": [
+        10,
+        -10,
+        30
+      ]
+    },
+    "tall-building-v510": {
+      "id": "tall-building-v510",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v511": {
+      "id": "tall-building-v511",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v512": {
+      "id": "tall-building-v512",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v513": {
+      "id": "tall-building-v513",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v514": {
+      "id": "tall-building-v514",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v515": {
+      "id": "tall-building-v515",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v516": {
+      "id": "tall-building-v516",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v517": {
+      "id": "tall-building-v517",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v518": {
+      "id": "tall-building-v518",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v519": {
+      "id": "tall-building-v519",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v520": {
+      "id": "tall-building-v520",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v521": {
+      "id": "tall-building-v521",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v522": {
+      "id": "tall-building-v522",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v523": {
+      "id": "tall-building-v523",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v524": {
+      "id": "tall-building-v524",
+      "position": [
+        -5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v525": {
+      "id": "tall-building-v525",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v526": {
+      "id": "tall-building-v526",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v527": {
+      "id": "tall-building-v527",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v528": {
+      "id": "tall-building-v528",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v529": {
+      "id": "tall-building-v529",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v530": {
+      "id": "tall-building-v530",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v531": {
+      "id": "tall-building-v531",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v532": {
+      "id": "tall-building-v532",
+      "position": [
+        -10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v533": {
+      "id": "tall-building-v533",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v534": {
+      "id": "tall-building-v534",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v535": {
+      "id": "tall-building-v535",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v536": {
+      "id": "tall-building-v536",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v537": {
+      "id": "tall-building-v537",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v538": {
+      "id": "tall-building-v538",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v539": {
+      "id": "tall-building-v539",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v540": {
+      "id": "tall-building-v540",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v541": {
+      "id": "tall-building-v541",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v542": {
+      "id": "tall-building-v542",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v543": {
+      "id": "tall-building-v543",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v544": {
+      "id": "tall-building-v544",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v545": {
+      "id": "tall-building-v545",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v546": {
+      "id": "tall-building-v546",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v547": {
+      "id": "tall-building-v547",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v548": {
+      "id": "tall-building-v548",
+      "position": [
+        -5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v549": {
+      "id": "tall-building-v549",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v550": {
+      "id": "tall-building-v550",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v551": {
+      "id": "tall-building-v551",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v552": {
+      "id": "tall-building-v552",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v553": {
+      "id": "tall-building-v553",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v554": {
+      "id": "tall-building-v554",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v555": {
+      "id": "tall-building-v555",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v556": {
+      "id": "tall-building-v556",
+      "position": [
+        -10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v557": {
+      "id": "tall-building-v557",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v558": {
+      "id": "tall-building-v558",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v559": {
+      "id": "tall-building-v559",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v560": {
+      "id": "tall-building-v560",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v561": {
+      "id": "tall-building-v561",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v562": {
+      "id": "tall-building-v562",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v563": {
+      "id": "tall-building-v563",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v564": {
+      "id": "tall-building-v564",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v565": {
+      "id": "tall-building-v565",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v566": {
+      "id": "tall-building-v566",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v567": {
+      "id": "tall-building-v567",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v568": {
+      "id": "tall-building-v568",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v569": {
+      "id": "tall-building-v569",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v570": {
+      "id": "tall-building-v570",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v571": {
+      "id": "tall-building-v571",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v572": {
+      "id": "tall-building-v572",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v573": {
+      "id": "tall-building-v573",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v574": {
+      "id": "tall-building-v574",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v575": {
+      "id": "tall-building-v575",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v576": {
+      "id": "tall-building-v576",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v577": {
+      "id": "tall-building-v577",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v578": {
+      "id": "tall-building-v578",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v579": {
+      "id": "tall-building-v579",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v580": {
+      "id": "tall-building-v580",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v581": {
+      "id": "tall-building-v581",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v582": {
+      "id": "tall-building-v582",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v583": {
+      "id": "tall-building-v583",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v584": {
+      "id": "tall-building-v584",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v585": {
+      "id": "tall-building-v585",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v586": {
+      "id": "tall-building-v586",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v587": {
+      "id": "tall-building-v587",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v588": {
+      "id": "tall-building-v588",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v589": {
+      "id": "tall-building-v589",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v590": {
+      "id": "tall-building-v590",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v591": {
+      "id": "tall-building-v591",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v592": {
+      "id": "tall-building-v592",
+      "position": [
+        5,
+        -5,
+        40
+      ]
+    },
+    "tall-building-v593": {
+      "id": "tall-building-v593",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v594": {
+      "id": "tall-building-v594",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v595": {
+      "id": "tall-building-v595",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v596": {
+      "id": "tall-building-v596",
+      "position": [
+        5,
+        5,
+        40
+      ]
+    },
+    "tall-building-v597": {
+      "id": "tall-building-v597",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v598": {
+      "id": "tall-building-v598",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v599": {
+      "id": "tall-building-v599",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v600": {
+      "id": "tall-building-v600",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v601": {
+      "id": "tall-building-v601",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v602": {
+      "id": "tall-building-v602",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v603": {
+      "id": "tall-building-v603",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v604": {
+      "id": "tall-building-v604",
+      "position": [
+        10,
+        10,
+        40
+      ]
+    },
+    "tall-building-v605": {
+      "id": "tall-building-v605",
+      "position": [
+        10,
+        -10,
+        40
+      ]
+    },
+    "tall-building-v606": {
+      "id": "tall-building-v606",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v607": {
+      "id": "tall-building-v607",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v608": {
+      "id": "tall-building-v608",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v609": {
+      "id": "tall-building-v609",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v610": {
+      "id": "tall-building-v610",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v611": {
+      "id": "tall-building-v611",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v612": {
+      "id": "tall-building-v612",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v613": {
+      "id": "tall-building-v613",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v614": {
+      "id": "tall-building-v614",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v615": {
+      "id": "tall-building-v615",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v616": {
+      "id": "tall-building-v616",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v617": {
+      "id": "tall-building-v617",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v618": {
+      "id": "tall-building-v618",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v619": {
+      "id": "tall-building-v619",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v620": {
+      "id": "tall-building-v620",
+      "position": [
+        -5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v621": {
+      "id": "tall-building-v621",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v622": {
+      "id": "tall-building-v622",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v623": {
+      "id": "tall-building-v623",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v624": {
+      "id": "tall-building-v624",
+      "position": [
+        -5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v625": {
+      "id": "tall-building-v625",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v626": {
+      "id": "tall-building-v626",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v627": {
+      "id": "tall-building-v627",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v628": {
+      "id": "tall-building-v628",
+      "position": [
+        -10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v629": {
+      "id": "tall-building-v629",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v630": {
+      "id": "tall-building-v630",
+      "position": [
+        -10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v631": {
+      "id": "tall-building-v631",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v632": {
+      "id": "tall-building-v632",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v633": {
+      "id": "tall-building-v633",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v634": {
+      "id": "tall-building-v634",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v635": {
+      "id": "tall-building-v635",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v636": {
+      "id": "tall-building-v636",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v637": {
+      "id": "tall-building-v637",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v638": {
+      "id": "tall-building-v638",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v639": {
+      "id": "tall-building-v639",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v640": {
+      "id": "tall-building-v640",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v641": {
+      "id": "tall-building-v641",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v642": {
+      "id": "tall-building-v642",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v643": {
+      "id": "tall-building-v643",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v644": {
+      "id": "tall-building-v644",
+      "position": [
+        -5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v645": {
+      "id": "tall-building-v645",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v646": {
+      "id": "tall-building-v646",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v647": {
+      "id": "tall-building-v647",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v648": {
+      "id": "tall-building-v648",
+      "position": [
+        -5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v649": {
+      "id": "tall-building-v649",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v650": {
+      "id": "tall-building-v650",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v651": {
+      "id": "tall-building-v651",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v652": {
+      "id": "tall-building-v652",
+      "position": [
+        -10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v653": {
+      "id": "tall-building-v653",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v654": {
+      "id": "tall-building-v654",
+      "position": [
+        -10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v655": {
+      "id": "tall-building-v655",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v656": {
+      "id": "tall-building-v656",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v657": {
+      "id": "tall-building-v657",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v658": {
+      "id": "tall-building-v658",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v659": {
+      "id": "tall-building-v659",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v660": {
+      "id": "tall-building-v660",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v661": {
+      "id": "tall-building-v661",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v662": {
+      "id": "tall-building-v662",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v663": {
+      "id": "tall-building-v663",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v664": {
+      "id": "tall-building-v664",
+      "position": [
+        5,
+        -5,
+        50
+      ]
+    },
+    "tall-building-v665": {
+      "id": "tall-building-v665",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v666": {
+      "id": "tall-building-v666",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v667": {
+      "id": "tall-building-v667",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v668": {
+      "id": "tall-building-v668",
+      "position": [
+        5,
+        5,
+        50
+      ]
+    },
+    "tall-building-v669": {
+      "id": "tall-building-v669",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v670": {
+      "id": "tall-building-v670",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v671": {
+      "id": "tall-building-v671",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v672": {
+      "id": "tall-building-v672",
+      "position": [
+        5,
+        -5,
+        64
+      ]
+    },
+    "tall-building-v673": {
+      "id": "tall-building-v673",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    },
+    "tall-building-v674": {
+      "id": "tall-building-v674",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v675": {
+      "id": "tall-building-v675",
+      "position": [
+        5,
+        5,
+        64
+      ]
+    },
+    "tall-building-v676": {
+      "id": "tall-building-v676",
+      "position": [
+        10,
+        10,
+        50
+      ]
+    },
+    "tall-building-v677": {
+      "id": "tall-building-v677",
+      "position": [
+        10,
+        -10,
+        50
+      ]
+    },
+    "tall-building-v678": {
+      "id": "tall-building-v678",
+      "position": [
+        10,
+        10,
+        60
+      ]
+    },
+    "tall-building-v679": {
+      "id": "tall-building-v679",
+      "position": [
+        10,
+        -10,
+        60
+      ]
+    }
+  },
+  "edges": {},
+  "wires": {
+    "tall-building-mesh-wire": {
+      "id": "tall-building-mesh-wire",
+      "edgeIds": [],
+      "closed": true
+    }
+  },
+  "faces": {
+    "tall-building-mesh-face": {
+      "id": "tall-building-mesh-face",
+      "outerWireId": "tall-building-mesh-wire",
+      "surface": {
+        "kind": "mesh",
+        "vertices": [
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            -5,
+            -5,
+            0
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            -10,
+            -10,
+            0
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -5,
+            5,
+            0
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            -10,
+            10,
+            0
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            5,
+            -5,
+            0
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            10,
+            -10,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            10
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            10
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            -10,
+            10,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            -5,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            5,
+            10
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            10,
+            -10,
+            10
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            20
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            20
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            -10,
+            10,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            5,
+            20
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            10,
+            10,
+            20
+          ],
+          [
+            10,
+            -10,
+            20
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            30
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            30
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            -10,
+            10,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            -5,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            5,
+            30
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            10,
+            10,
+            30
+          ],
+          [
+            10,
+            -10,
+            30
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            40
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            40
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            -10,
+            10,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            -5,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            5,
+            40
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            10,
+            10,
+            40
+          ],
+          [
+            10,
+            -10,
+            40
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            10,
+            -10,
+            60
+          ],
+          [
+            -5,
+            -5,
+            50
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            -5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            10,
+            -10,
+            60
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            -10,
+            -10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            -10,
+            -10,
+            60
+          ],
+          [
+            10,
+            -10,
+            60
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            -5,
+            5,
+            50
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            -5,
+            5,
+            64
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            -10,
+            10,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            -10,
+            10,
+            60
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            -5,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            10,
+            -10,
+            60
+          ],
+          [
+            5,
+            5,
+            50
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            5,
+            -5,
+            64
+          ],
+          [
+            10,
+            -10,
+            60
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            5,
+            5,
+            64
+          ],
+          [
+            10,
+            10,
+            50
+          ],
+          [
+            10,
+            -10,
+            50
+          ],
+          [
+            10,
+            10,
+            60
+          ],
+          [
+            10,
+            -10,
+            60
+          ]
+        ],
+        "triangles": [
+          [
+            3,
+            0,
+            1
+          ],
+          [
+            3,
+            1,
+            2
+          ],
+          [
+            4,
+            7,
+            5
+          ],
+          [
+            5,
+            7,
+            6
+          ],
+          [
+            10,
+            8,
+            9
+          ],
+          [
+            10,
+            11,
+            8
+          ],
+          [
+            13,
+            12,
+            14
+          ],
+          [
+            14,
+            12,
+            15
+          ],
+          [
+            17,
+            18,
+            19
+          ],
+          [
+            17,
+            19,
+            16
+          ],
+          [
+            20,
+            23,
+            21
+          ],
+          [
+            21,
+            23,
+            22
+          ],
+          [
+            24,
+            27,
+            25
+          ],
+          [
+            25,
+            27,
+            26
+          ],
+          [
+            29,
+            30,
+            28
+          ],
+          [
+            31,
+            30,
+            29
+          ],
+          [
+            32,
+            35,
+            33
+          ],
+          [
+            33,
+            35,
+            34
+          ],
+          [
+            39,
+            36,
+            37
+          ],
+          [
+            39,
+            37,
+            38
+          ],
+          [
+            41,
+            43,
+            40
+          ],
+          [
+            40,
+            43,
+            42
+          ],
+          [
+            47,
+            44,
+            45
+          ],
+          [
+            47,
+            45,
+            46
+          ],
+          [
+            49,
+            51,
+            48
+          ],
+          [
+            48,
+            51,
+            50
+          ],
+          [
+            55,
+            53,
+            52
+          ],
+          [
+            55,
+            52,
+            54
+          ],
+          [
+            57,
+            59,
+            56
+          ],
+          [
+            56,
+            59,
+            58
+          ],
+          [
+            63,
+            61,
+            60
+          ],
+          [
+            63,
+            60,
+            62
+          ],
+          [
+            65,
+            67,
+            64
+          ],
+          [
+            64,
+            67,
+            66
+          ],
+          [
+            71,
+            69,
+            68
+          ],
+          [
+            71,
+            68,
+            70
+          ],
+          [
+            73,
+            75,
+            72
+          ],
+          [
+            72,
+            75,
+            74
+          ],
+          [
+            79,
+            77,
+            76
+          ],
+          [
+            79,
+            76,
+            78
+          ],
+          [
+            81,
+            83,
+            80
+          ],
+          [
+            80,
+            83,
+            82
+          ],
+          [
+            87,
+            85,
+            84
+          ],
+          [
+            87,
+            84,
+            86
+          ],
+          [
+            89,
+            91,
+            88
+          ],
+          [
+            88,
+            91,
+            90
+          ],
+          [
+            95,
+            93,
+            92
+          ],
+          [
+            95,
+            92,
+            94
+          ],
+          [
+            97,
+            99,
+            96
+          ],
+          [
+            96,
+            99,
+            98
+          ],
+          [
+            103,
+            101,
+            100
+          ],
+          [
+            103,
+            100,
+            102
+          ],
+          [
+            105,
+            107,
+            104
+          ],
+          [
+            104,
+            107,
+            106
+          ],
+          [
+            111,
+            109,
+            108
+          ],
+          [
+            111,
+            108,
+            110
+          ],
+          [
+            113,
+            115,
+            112
+          ],
+          [
+            112,
+            115,
+            114
+          ],
+          [
+            119,
+            117,
+            116
+          ],
+          [
+            119,
+            116,
+            118
+          ],
+          [
+            122,
+            120,
+            121
+          ],
+          [
+            122,
+            123,
+            120
+          ],
+          [
+            127,
+            125,
+            124
+          ],
+          [
+            127,
+            124,
+            126
+          ],
+          [
+            131,
+            128,
+            129
+          ],
+          [
+            131,
+            129,
+            130
+          ],
+          [
+            133,
+            134,
+            132
+          ],
+          [
+            135,
+            134,
+            133
+          ],
+          [
+            136,
+            137,
+            138
+          ],
+          [
+            136,
+            138,
+            139
+          ],
+          [
+            140,
+            142,
+            141
+          ],
+          [
+            143,
+            142,
+            140
+          ],
+          [
+            146,
+            147,
+            144
+          ],
+          [
+            145,
+            146,
+            144
+          ],
+          [
+            148,
+            151,
+            149
+          ],
+          [
+            149,
+            151,
+            150
+          ],
+          [
+            152,
+            155,
+            153
+          ],
+          [
+            153,
+            155,
+            154
+          ],
+          [
+            156,
+            159,
+            157
+          ],
+          [
+            157,
+            159,
+            158
+          ],
+          [
+            160,
+            162,
+            161
+          ],
+          [
+            163,
+            162,
+            160
+          ],
+          [
+            164,
+            165,
+            166
+          ],
+          [
+            164,
+            166,
+            167
+          ],
+          [
+            171,
+            169,
+            168
+          ],
+          [
+            171,
+            168,
+            170
+          ],
+          [
+            175,
+            172,
+            173
+          ],
+          [
+            175,
+            173,
+            174
+          ],
+          [
+            179,
+            177,
+            176
+          ],
+          [
+            179,
+            176,
+            178
+          ],
+          [
+            182,
+            181,
+            183
+          ],
+          [
+            183,
+            181,
+            180
+          ],
+          [
+            186,
+            185,
+            184
+          ],
+          [
+            186,
+            187,
+            185
+          ],
+          [
+            188,
+            189,
+            190
+          ],
+          [
+            190,
+            189,
+            191
+          ],
+          [
+            193,
+            194,
+            195
+          ],
+          [
+            193,
+            195,
+            192
+          ],
+          [
+            197,
+            199,
+            196
+          ],
+          [
+            196,
+            199,
+            198
+          ],
+          [
+            200,
+            203,
+            201
+          ],
+          [
+            201,
+            203,
+            202
+          ],
+          [
+            207,
+            206,
+            204
+          ],
+          [
+            206,
+            205,
+            204
+          ],
+          [
+            209,
+            208,
+            210
+          ],
+          [
+            210,
+            208,
+            211
+          ],
+          [
+            214,
+            212,
+            213
+          ],
+          [
+            214,
+            215,
+            212
+          ],
+          [
+            217,
+            216,
+            218
+          ],
+          [
+            217,
+            218,
+            219
+          ],
+          [
+            223,
+            220,
+            221
+          ],
+          [
+            223,
+            221,
+            222
+          ],
+          [
+            227,
+            225,
+            224
+          ],
+          [
+            227,
+            224,
+            226
+          ],
+          [
+            231,
+            230,
+            228
+          ],
+          [
+            230,
+            229,
+            228
+          ],
+          [
+            233,
+            232,
+            234
+          ],
+          [
+            233,
+            234,
+            235
+          ],
+          [
+            237,
+            238,
+            236
+          ],
+          [
+            239,
+            238,
+            237
+          ],
+          [
+            242,
+            243,
+            240
+          ],
+          [
+            241,
+            242,
+            240
+          ],
+          [
+            245,
+            247,
+            244
+          ],
+          [
+            244,
+            247,
+            246
+          ],
+          [
+            249,
+            251,
+            248
+          ],
+          [
+            248,
+            251,
+            250
+          ],
+          [
+            253,
+            255,
+            252
+          ],
+          [
+            252,
+            255,
+            254
+          ],
+          [
+            257,
+            258,
+            256
+          ],
+          [
+            259,
+            258,
+            257
+          ],
+          [
+            261,
+            260,
+            262
+          ],
+          [
+            261,
+            262,
+            263
+          ],
+          [
+            267,
+            265,
+            264
+          ],
+          [
+            267,
+            264,
+            266
+          ],
+          [
+            271,
+            269,
+            268
+          ],
+          [
+            271,
+            268,
+            270
+          ],
+          [
+            275,
+            273,
+            272
+          ],
+          [
+            275,
+            272,
+            274
+          ],
+          [
+            278,
+            277,
+            279
+          ],
+          [
+            279,
+            277,
+            276
+          ],
+          [
+            282,
+            281,
+            280
+          ],
+          [
+            282,
+            283,
+            281
+          ],
+          [
+            284,
+            285,
+            286
+          ],
+          [
+            286,
+            285,
+            287
+          ],
+          [
+            289,
+            290,
+            291
+          ],
+          [
+            289,
+            291,
+            288
+          ],
+          [
+            293,
+            295,
+            292
+          ],
+          [
+            292,
+            295,
+            294
+          ],
+          [
+            297,
+            299,
+            296
+          ],
+          [
+            296,
+            299,
+            298
+          ],
+          [
+            300,
+            301,
+            302
+          ],
+          [
+            302,
+            301,
+            303
+          ],
+          [
+            304,
+            305,
+            306
+          ],
+          [
+            306,
+            305,
+            307
+          ],
+          [
+            310,
+            309,
+            308
+          ],
+          [
+            310,
+            311,
+            309
+          ],
+          [
+            313,
+            312,
+            314
+          ],
+          [
+            313,
+            314,
+            315
+          ],
+          [
+            319,
+            317,
+            316
+          ],
+          [
+            319,
+            316,
+            318
+          ],
+          [
+            323,
+            321,
+            320
+          ],
+          [
+            323,
+            320,
+            322
+          ],
+          [
+            327,
+            326,
+            324
+          ],
+          [
+            326,
+            325,
+            324
+          ],
+          [
+            329,
+            328,
+            330
+          ],
+          [
+            329,
+            330,
+            331
+          ],
+          [
+            333,
+            334,
+            332
+          ],
+          [
+            335,
+            334,
+            333
+          ],
+          [
+            339,
+            336,
+            337
+          ],
+          [
+            339,
+            337,
+            338
+          ],
+          [
+            341,
+            343,
+            340
+          ],
+          [
+            340,
+            343,
+            342
+          ],
+          [
+            345,
+            347,
+            344
+          ],
+          [
+            344,
+            347,
+            346
+          ],
+          [
+            349,
+            351,
+            348
+          ],
+          [
+            348,
+            351,
+            350
+          ],
+          [
+            353,
+            354,
+            352
+          ],
+          [
+            355,
+            354,
+            353
+          ],
+          [
+            357,
+            356,
+            358
+          ],
+          [
+            357,
+            358,
+            359
+          ],
+          [
+            361,
+            360,
+            362
+          ],
+          [
+            361,
+            362,
+            363
+          ],
+          [
+            367,
+            365,
+            364
+          ],
+          [
+            367,
+            364,
+            366
+          ],
+          [
+            371,
+            369,
+            368
+          ],
+          [
+            371,
+            368,
+            370
+          ],
+          [
+            374,
+            373,
+            375
+          ],
+          [
+            375,
+            373,
+            372
+          ],
+          [
+            378,
+            377,
+            376
+          ],
+          [
+            378,
+            379,
+            377
+          ],
+          [
+            380,
+            381,
+            382
+          ],
+          [
+            382,
+            381,
+            383
+          ],
+          [
+            385,
+            386,
+            387
+          ],
+          [
+            385,
+            387,
+            384
+          ],
+          [
+            389,
+            391,
+            388
+          ],
+          [
+            388,
+            391,
+            390
+          ],
+          [
+            393,
+            395,
+            392
+          ],
+          [
+            392,
+            395,
+            394
+          ],
+          [
+            396,
+            397,
+            398
+          ],
+          [
+            398,
+            397,
+            399
+          ],
+          [
+            400,
+            401,
+            402
+          ],
+          [
+            402,
+            401,
+            403
+          ],
+          [
+            406,
+            405,
+            404
+          ],
+          [
+            406,
+            407,
+            405
+          ],
+          [
+            409,
+            408,
+            410
+          ],
+          [
+            409,
+            410,
+            411
+          ],
+          [
+            415,
+            413,
+            412
+          ],
+          [
+            415,
+            412,
+            414
+          ],
+          [
+            419,
+            417,
+            416
+          ],
+          [
+            419,
+            416,
+            418
+          ],
+          [
+            420,
+            423,
+            421
+          ],
+          [
+            421,
+            423,
+            422
+          ],
+          [
+            425,
+            424,
+            426
+          ],
+          [
+            425,
+            426,
+            427
+          ],
+          [
+            429,
+            430,
+            428
+          ],
+          [
+            431,
+            430,
+            429
+          ],
+          [
+            434,
+            435,
+            432
+          ],
+          [
+            433,
+            434,
+            432
+          ],
+          [
+            437,
+            439,
+            436
+          ],
+          [
+            436,
+            439,
+            438
+          ],
+          [
+            441,
+            443,
+            440
+          ],
+          [
+            440,
+            443,
+            442
+          ],
+          [
+            444,
+            445,
+            446
+          ],
+          [
+            446,
+            445,
+            447
+          ],
+          [
+            449,
+            450,
+            448
+          ],
+          [
+            451,
+            450,
+            449
+          ],
+          [
+            453,
+            452,
+            454
+          ],
+          [
+            453,
+            454,
+            455
+          ],
+          [
+            459,
+            457,
+            456
+          ],
+          [
+            459,
+            456,
+            458
+          ],
+          [
+            463,
+            461,
+            460
+          ],
+          [
+            463,
+            460,
+            462
+          ],
+          [
+            467,
+            465,
+            464
+          ],
+          [
+            467,
+            464,
+            466
+          ],
+          [
+            470,
+            469,
+            471
+          ],
+          [
+            471,
+            469,
+            468
+          ],
+          [
+            474,
+            473,
+            472
+          ],
+          [
+            474,
+            475,
+            473
+          ],
+          [
+            476,
+            477,
+            478
+          ],
+          [
+            478,
+            477,
+            479
+          ],
+          [
+            481,
+            482,
+            483
+          ],
+          [
+            481,
+            483,
+            480
+          ],
+          [
+            485,
+            487,
+            484
+          ],
+          [
+            484,
+            487,
+            486
+          ],
+          [
+            489,
+            491,
+            488
+          ],
+          [
+            488,
+            491,
+            490
+          ],
+          [
+            492,
+            493,
+            494
+          ],
+          [
+            494,
+            493,
+            495
+          ],
+          [
+            496,
+            497,
+            498
+          ],
+          [
+            498,
+            497,
+            499
+          ],
+          [
+            502,
+            501,
+            500
+          ],
+          [
+            502,
+            503,
+            501
+          ],
+          [
+            505,
+            504,
+            506
+          ],
+          [
+            505,
+            506,
+            507
+          ],
+          [
+            511,
+            509,
+            508
+          ],
+          [
+            511,
+            508,
+            510
+          ],
+          [
+            515,
+            513,
+            512
+          ],
+          [
+            515,
+            512,
+            514
+          ],
+          [
+            519,
+            518,
+            516
+          ],
+          [
+            518,
+            517,
+            516
+          ],
+          [
+            521,
+            520,
+            522
+          ],
+          [
+            521,
+            522,
+            523
+          ],
+          [
+            525,
+            526,
+            524
+          ],
+          [
+            527,
+            526,
+            525
+          ],
+          [
+            531,
+            528,
+            529
+          ],
+          [
+            531,
+            529,
+            530
+          ],
+          [
+            533,
+            535,
+            532
+          ],
+          [
+            532,
+            535,
+            534
+          ],
+          [
+            537,
+            539,
+            536
+          ],
+          [
+            536,
+            539,
+            538
+          ],
+          [
+            541,
+            543,
+            540
+          ],
+          [
+            540,
+            543,
+            542
+          ],
+          [
+            545,
+            546,
+            544
+          ],
+          [
+            547,
+            546,
+            545
+          ],
+          [
+            549,
+            548,
+            550
+          ],
+          [
+            549,
+            550,
+            551
+          ],
+          [
+            553,
+            552,
+            554
+          ],
+          [
+            553,
+            554,
+            555
+          ],
+          [
+            559,
+            557,
+            556
+          ],
+          [
+            559,
+            556,
+            558
+          ],
+          [
+            563,
+            561,
+            560
+          ],
+          [
+            563,
+            560,
+            562
+          ],
+          [
+            566,
+            565,
+            567
+          ],
+          [
+            567,
+            565,
+            564
+          ],
+          [
+            571,
+            569,
+            568
+          ],
+          [
+            570,
+            571,
+            568
+          ],
+          [
+            574,
+            572,
+            575
+          ],
+          [
+            572,
+            573,
+            575
+          ],
+          [
+            578,
+            577,
+            576
+          ],
+          [
+            578,
+            579,
+            577
+          ],
+          [
+            581,
+            583,
+            580
+          ],
+          [
+            580,
+            583,
+            582
+          ],
+          [
+            585,
+            587,
+            584
+          ],
+          [
+            584,
+            587,
+            586
+          ],
+          [
+            588,
+            589,
+            590
+          ],
+          [
+            590,
+            589,
+            591
+          ],
+          [
+            592,
+            593,
+            594
+          ],
+          [
+            594,
+            593,
+            595
+          ],
+          [
+            598,
+            597,
+            596
+          ],
+          [
+            598,
+            599,
+            597
+          ],
+          [
+            601,
+            600,
+            602
+          ],
+          [
+            601,
+            602,
+            603
+          ],
+          [
+            607,
+            605,
+            604
+          ],
+          [
+            607,
+            604,
+            606
+          ],
+          [
+            611,
+            609,
+            608
+          ],
+          [
+            611,
+            608,
+            610
+          ],
+          [
+            612,
+            615,
+            613
+          ],
+          [
+            613,
+            615,
+            614
+          ],
+          [
+            616,
+            618,
+            619
+          ],
+          [
+            617,
+            616,
+            619
+          ],
+          [
+            621,
+            623,
+            620
+          ],
+          [
+            623,
+            622,
+            620
+          ],
+          [
+            624,
+            625,
+            626
+          ],
+          [
+            624,
+            626,
+            627
+          ],
+          [
+            629,
+            631,
+            628
+          ],
+          [
+            628,
+            631,
+            630
+          ],
+          [
+            633,
+            635,
+            632
+          ],
+          [
+            632,
+            635,
+            634
+          ],
+          [
+            636,
+            637,
+            638
+          ],
+          [
+            638,
+            637,
+            639
+          ],
+          [
+            641,
+            643,
+            640
+          ],
+          [
+            643,
+            642,
+            640
+          ],
+          [
+            644,
+            646,
+            647
+          ],
+          [
+            645,
+            644,
+            647
+          ],
+          [
+            649,
+            648,
+            650
+          ],
+          [
+            649,
+            650,
+            651
+          ],
+          [
+            655,
+            653,
+            652
+          ],
+          [
+            655,
+            652,
+            654
+          ],
+          [
+            657,
+            659,
+            656
+          ],
+          [
+            656,
+            659,
+            658
+          ],
+          [
+            660,
+            661,
+            662
+          ],
+          [
+            662,
+            661,
+            663
+          ],
+          [
+            666,
+            664,
+            667
+          ],
+          [
+            664,
+            665,
+            667
+          ],
+          [
+            671,
+            669,
+            668
+          ],
+          [
+            670,
+            671,
+            668
+          ],
+          [
+            674,
+            672,
+            673
+          ],
+          [
+            674,
+            675,
+            672
+          ],
+          [
+            679,
+            677,
+            676
+          ],
+          [
+            679,
+            676,
+            678
+          ]
+        ]
+      }
+    }
+  },
+  "shells": {
+    "tall-building-shell": {
+      "id": "tall-building-shell",
+      "faceIds": [
+        "tall-building-mesh-face"
+      ]
+    }
+  },
+  "cells": {
+    "tall-building-cell": {
+      "id": "tall-building-cell",
+      "shellIds": [
+        "tall-building-shell"
+      ]
+    }
+  },
+  "cellComplexes": {
+    "tall-building-complex": {
+      "id": "tall-building-complex",
+      "cellIds": [
+        "tall-building-cell"
+      ],
+      "sharedFaceIds": []
+    }
+  },
+  "clusters": {
+    "tall-building-asset": {
+      "id": "tall-building-asset",
+      "memberIds": [
+        "tall-building-complex"
+      ]
+    }
+  }
+}
