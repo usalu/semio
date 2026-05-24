@@ -1,4 +1,8 @@
-import { Workbench, type UiScene3DHostSurfaceNode, type UiTableHostSurfaceNode } from "@elements/framework";
+// #region 🧲Header
+/** @emoji 🚀 Spatial play React host — mounts {@link @elements/playground} via {@link @elements/framework-react} (not imported by framework-free play core). */
+// #endregion 🧲Header
+
+import { type UiScene3DHostSurfaceNode, type UiTableHostSurfaceNode } from "@elements/framework";
 import {
 	LevelProvider,
 	WorkbenchView,
@@ -9,10 +13,15 @@ import {
 	registerUiTableSurfaceHost,
 	useApp,
 } from "@elements/framework-react";
+import {
+	SpatialDetailsPanel,
+	SpatialSurface,
+	SpatialWorkbenchPanel,
+	type SpatialSurfaceSnapshot,
+} from "@elements/geometry-spatial-react";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
-import { SpatialDetailsPanel, SpatialSurface, SpatialWorkbenchPanel, type SpatialSurfaceSnapshot } from "@elements/geometry-spatial-react";
 import {
 	SPATIAL_PLAY_CONTROLLER_ID,
 	SPATIAL_PLAY_DETAILS_ICON_ID,
@@ -21,11 +30,10 @@ import {
 	SPATIAL_PLAY_SCENE3D_SURFACE_ID,
 	SPATIAL_PLAY_WORKBENCH_ICON_ID,
 	SpatialPlayShellController,
-	buildSpatialWorkbenchApp,
-	registerSpatialPlayDeclarativeBodies,
-} from "./index.ts";
+	bootstrapSpatialPlayWorkbench,
+} from "./play/index.ts";
 
-import "./globals.css";
+import "./play/globals.css";
 
 const EMPTY_KINDS = Object.fromEntries(
 	["topology", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster"].map((kind) => [kind, true]),
@@ -80,8 +88,7 @@ function SpatialScene3DSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial viewport binding</div>;
 	}
-	const snapshot = useSpatialPlaySnapshot();
-	return <SpatialSurface snapshot={snapshot} />;
+	return <SpatialSurface snapshot={useSpatialPlaySnapshot()} />;
 }
 
 function SpatialWorkbenchPanelHost({ node }: { readonly node: UiTableHostSurfaceNode }): React.ReactElement {
@@ -106,8 +113,7 @@ function SpatialDetailsPanelHost({ node }: { readonly node: UiTableHostSurfaceNo
 	if (node.controllerId !== SPATIAL_PLAY_CONTROLLER_ID) {
 		return <div className="p-2 text-xs text-muted-foreground">Invalid spatial details panel binding</div>;
 	}
-	const snapshot = useSpatialPlaySnapshot();
-	return <SpatialDetailsPanel snapshot={snapshot} />;
+	return <SpatialDetailsPanel snapshot={useSpatialPlaySnapshot()} />;
 }
 
 let spatialPlayChromeRegistered = false;
@@ -120,27 +126,18 @@ function registerSpatialPlayChrome(): void {
 	registerUiScene3DSurfaceHost(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SpatialScene3DSurfaceHost);
 	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, SpatialWorkbenchPanelHost);
 	registerUiTableSurfaceHost(SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, SpatialDetailsPanelHost);
-	registerSpatialPlayDeclarativeBodies();
-}
-
-/** @emoji 🚀 Builds the workbench around the declarative spatial play surface. */
-export async function bootstrapSpatialWorkbench() {
-	registerSpatialPlayChrome();
-	const workbench = new Workbench();
-	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());
-	workbench.addApp(buildSpatialWorkbenchApp(controller));
-	return workbench;
 }
 
 /** @emoji 🚀 Vite host entry: mounts spatial play into `#root`. */
 export async function mountSpatialPlay(): Promise<void> {
-	const workbench = await bootstrapSpatialWorkbench();
+	registerSpatialPlayChrome();
+	const workbench = bootstrapSpatialPlayWorkbench();
 	mountReactApp(
 		<LevelProvider>
 			<WorkbenchView
 				workbench={workbench}
 				className={getLevelBgClass(0)}
-				defaultAppId="elements-geometry-spatial"
+				defaultAppId={workbench.getApps()[0]?.id}
 				initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
 			/>
 		</LevelProvider>,

@@ -16,6 +16,27 @@ export {
 export type { Workbench } from "@elements/framework";
 
 export {
+	registerElementIcon,
+	registerShellTabIcon,
+	registerWindowBody,
+	registerSidePanelBody,
+	shellWindowKindsToGolden,
+	shellSideTabsToPanelTabs,
+	shellFooterToFooterItems,
+	shellToolsToAppTools,
+	mergeConfigEntries,
+} from "./shell-bridge.tsx";
+
+export {
+	AppContext,
+	useApp,
+	type AppContextValue,
+	type AppProps,
+	type UIPanelVisibility,
+	type WorkbenchViewProps,
+} from "./workbench-app-context.tsx";
+
+export {
 	WorkbenchView,
 	mountReactApp,
 	mountAsyncReactApp,

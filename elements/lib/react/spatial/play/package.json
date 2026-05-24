@@ -12,7 +12,8 @@
 		"test": "bun nx run @elements/geometry-spatial-play:test"
 	},
 	"exports": {
-		".": "./index.ts"
+		".": "./index.ts",
+		"./host": "../spatial-play-host.tsx"
 	},
 	"dependencies": {
 		"@elements/framework": "workspace:*",

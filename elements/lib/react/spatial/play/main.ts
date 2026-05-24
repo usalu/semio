@@ -5,5 +5,5 @@
 //#region 🔖Mount
 import "./globals.css";
 
-void import("./host.tsx").then((m) => void m.mountSpatialPlay());
+void import("../spatial-play-host.tsx").then((m) => void m.mountSpatialPlay());
 //#endregion 🔖Mount

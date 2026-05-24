@@ -268,6 +268,28 @@ export function createPlaygroundWorkbench(
 	workbench.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
 	return workbench;
 }
+
+export interface BootstrapPlaygroundWorkbenchOptions extends BuildPlaygroundWorkbenchAppOptions {
+	/** @emoji 📝 When true (default), registers standard playground declarative bodies before returning. */
+	readonly registerDeclarativeBodies?: boolean;
+	readonly declarativeBodies?: RegisterPlaygroundDeclarativeBodiesOptions;
+	/** @emoji 🧱 Reuse an existing workbench shell (controller must use its {@link CommandBus}). */
+	readonly workbench?: Workbench;
+}
+
+/** @emoji 🚀 One-shot playground setup: optional declarative registration + one playground app. */
+export function bootstrapPlaygroundWorkbench(
+	ids: PlaygroundIds,
+	controller: PlaygroundController<string>,
+	options?: BootstrapPlaygroundWorkbenchOptions,
+): Workbench {
+	if (options?.registerDeclarativeBodies !== false) {
+		registerPlaygroundDeclarativeBodies(ids, options?.declarativeBodies);
+	}
+	const workbench = options?.workbench ?? new Workbench();
+	workbench.addApp(buildPlaygroundWorkbenchApp(ids, controller, options));
+	return workbench;
+}
 //#endregion 🔖Workbench
 
 //#region 🧪Tests
@@ -320,6 +342,16 @@ if (import.meta.vitest) {
 			expect(ctrl.selectedId).toBe("entity-a");
 			bus.dispatch(TEST_IDS.controllerId, "toggleVisibleKind", { kind: "a" });
 			expect(ctrl.selectedId).toBeNull();
+		});
+	});
+
+	describe("bootstrapPlaygroundWorkbench", () => {
+		it("registers declarative bodies and adds one app", () => {
+			const bus = new CommandBus();
+			const ctrl = new DemoPlaygroundController(bus, () => undefined);
+			const wb = bootstrapPlaygroundWorkbench(TEST_IDS, ctrl);
+			expect(wb.apps.length).toBeGreaterThan(0);
+			expect(getDeclarativeWindowBodyFactory(TEST_IDS.mainBodyKey)).toBeTypeOf("function");
 		});
 	});
 

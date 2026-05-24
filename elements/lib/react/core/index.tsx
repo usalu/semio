@@ -22955,220 +22955,17 @@ const UIToolbar: React.FC<{
 // #endregion 📔UIToolbar
 
 // #region 🧱ShellWorkbenchBridge
-
-const elementIconNodes = new Map<string, React.ReactNode>();
-
-/** @emoji 🖼 Registers a static icon node resolved by `iconId` for toolbars, footers, and tabs. */
-export function registerElementIcon(iconId: string, node: React.ReactNode): void {
-	elementIconNodes.set(iconId, node);
-}
-
-const shellTabIcons = new Map<string, LucideIcon>();
-
-/** @emoji 🖼 Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
-export function registerShellTabIcon(iconId: string, Icon: LucideIcon): void {
-	shellTabIcons.set(iconId, Icon);
-}
-
-const windowBodyByKey = new Map<string, React.ComponentType<any>>();
-
-/** @emoji 🪟 Binds a `bodyKey` from {@link WorkbenchWindowKind} to a React window body component. */
-export function registerWindowBody(bodyKey: string, Component: React.ComponentType<any>): void {
-	windowBodyByKey.set(bodyKey, Component);
-}
-
-const sidePanelBodyByKey = new Map<string, React.ComponentType<any>>();
-
-/** @emoji 📑 Binds a `bodyKey` from {@link ShellSideTabSpec} to a React panel body component. */
-export function registerSidePanelBody(bodyKey: string, Component: React.ComponentType<any>): void {
-	sidePanelBodyByKey.set(bodyKey, Component);
-}
-
-const declarativeWindowBodyComponents = new Map<string, React.FC>();
-
-function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string): React.FC {
-	const cacheKey = `${bodyKey}\0${windowKindId}`;
-	let component = declarativeWindowBodyComponents.get(cacheKey);
-	if (!component) {
-		component = function ShellDeclarativeWindowBody() {
-			const { workbench, activeModeId } = useApp();
-			const generation = React.useSyncExternalStore(
-				(listener) => workbench.subscribe(listener),
-				() => workbench.generation,
-				() => 0,
-			);
-			const ctx: ShellWindowBodyViewContext = {
-				workbench,
-				windowKindId,
-				bodyKey,
-				activeModeId: activeModeId ?? null,
-				generation,
-			};
-			const factory = getDeclarativeWindowBodyFactory(bodyKey);
-			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
-		};
-		declarativeWindowBodyComponents.set(cacheKey, component);
-	}
-	return component;
-}
-
-const declarativeSidePanelBodyComponents = new Map<string, React.FC>();
-
-function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): React.FC {
-	const cacheKey = `${bodyKey}\0${tabId}`;
-	let component = declarativeSidePanelBodyComponents.get(cacheKey);
-	if (!component) {
-		component = function ShellDeclarativeSidePanelBody() {
-			const { workbench, activeModeId } = useApp();
-			const generation = React.useSyncExternalStore(
-				(listener) => workbench.subscribe(listener),
-				() => workbench.generation,
-				() => 0,
-			);
-			const ctx: ShellSidePanelBodyViewContext = {
-				workbench,
-				windowKindId: tabId,
-				bodyKey,
-				activeModeId: activeModeId ?? null,
-				generation,
-			};
-			const factory = getDeclarativeSidePanelBodyFactory(bodyKey);
-			const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${bodyKey}"` };
-			return <UiRenderer node={node} commandBus={workbench.commandBus} />;
-		};
-		declarativeSidePanelBodyComponents.set(cacheKey, component);
-	}
-	return component;
-}
-
-function shellWindowKindsToGolden(windowKinds: readonly WorkbenchWindowKind[], bus: CommandBus): UIWindowKindDefinition[] {
-	const goldenMeasures = (wk: WorkbenchWindowKind) => shellMeasuresToGolden(wk.measures, bus);
-	return windowKinds.map((wk) => {
-		const declarativeFactory = getDeclarativeWindowBodyFactory(wk.bodyKey);
-		if (declarativeFactory) {
-			return { id: wk.id, label: wk.label, component: getDeclarativeWindowBodyComponent(wk.id, wk.bodyKey), measures: goldenMeasures(wk) };
-		}
-		const Body =
-			windowBodyByKey.get(wk.bodyKey) ??
-			(() => (
-				<div className="p-2 text-xs text-muted-foreground">
-					Missing window body &quot;{wk.bodyKey}&quot;
-				</div>
-			));
-		return { id: wk.id, label: wk.label, component: Body, measures: goldenMeasures(wk) };
-	});
-}
-
-function shellMeasuresToGolden(measures: readonly ShellWindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
-	if (!measures.length) return undefined;
-	return measures.map((measure) => {
-		if (measure.kind === "select") {
-			return {
-				id: measure.id,
-				kind: "select",
-				label: measure.label,
-				value: measure.value,
-				items: measure.items.map((item) => ({ id: item.id, value: item.value, label: item.label })),
-				onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
-			};
-		}
-		return { id: measure.id, kind: "display", content: null };
-	});
-}
-
-function shellTabIconComponent(iconId: string): React.ComponentType<{ size?: number }> {
-	return function ShellResolvedTabIcon({ size = 16 }: { size?: number }) {
-		const node = elementIconNodes.get(iconId);
-		if (node) {
-			return (
-				<span className="inline-flex items-center justify-center" style={{ width: size, height: size }}>
-					{node}
-				</span>
-			);
-		}
-		const Lucide = shellTabIcons.get(iconId);
-		return Lucide ? <Lucide size={size} /> : <span style={{ display: "inline-block", width: size }} data-missing-icon={iconId} />;
-	};
-}
-
-function shellSideTabsToPanelTabs(tabs: readonly ShellSideTabSpec[], bus: CommandBus): SidePanelTabConfig[] {
-	return tabs.map((tab, orderIndex) => {
-		const declarativeFactory = getDeclarativeSidePanelBodyFactory(tab.bodyKey);
-		const Body = declarativeFactory
-			? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey)
-			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
-		return new StaticSidePanelTabDefinition({
-			id: tab.id,
-			icon: shellTabIconComponent(tab.iconId),
-			order: tab.order ?? orderIndex,
-			tree: new StaticTreePanelDefinition({
-				sections: [{ id: `${tab.id}.body`, content: <Body /> }],
-			}),
-		}).resolveTab();
-	});
-}
-
-function shellFooterToFooterItems(items: readonly ShellFooterItem[], bus: CommandBus): FooterItem[] {
-	return items.map((item) => ({
-		id: item.id,
-		text: item.text,
-		order: item.order,
-		className: item.className,
-		disabled: item.disabled,
-		icon: item.iconId ? elementIconNodes.get(item.iconId) : undefined,
-		onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
-	}));
-}
-
-function shellToolToToolbarItem(item: ShellToolItem, bus: CommandBus): UIToolbarItem {
-	if (item.kind === "separator") {
-		return { id: item.id, kind: "separator", order: item.order };
-	}
-	const iconNode = item.iconId ? elementIconNodes.get(item.iconId) : undefined;
-	if (item.kind === "toggle") {
-		return {
-			id: item.id,
-			kind: "toggle",
-			icon: iconNode,
-			label: item.label,
-			text: item.text,
-			order: item.order,
-			pressed: item.pressed,
-			onPressedChange: (pressed: boolean) => {
-				if (item.controllerId && item.command) bus.dispatch(item.controllerId, item.command, { ...((item.args as object | undefined) ?? {}), pressed });
-			},
-		};
-	}
-	return {
-		id: item.id,
-		icon: iconNode,
-		label: item.label,
-		text: item.text,
-		order: item.order,
-		onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
-	};
-}
-
-function shellToolsToAppTools(tools: ShellAppTools | undefined, bus: CommandBus): AppTools | undefined {
-	if (!tools) return undefined;
-	const merged: AppTools = {};
-	for (const category of APP_TOOL_CATEGORY_ORDER) {
-		const list = tools[category];
-		if (!list?.length) continue;
-		merged[category] = list.map((entry) => shellToolToToolbarItem(entry, bus));
-	}
-	return Object.keys(merged).length > 0 ? merged : undefined;
-}
-
-function mergeConfigEntries<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
-  if (!base?.length && !extension?.length) return undefined;
-  const merged = new Map<string, T>();
-  base?.forEach((entry) => merged.set(entry.id, entry));
-  extension?.forEach((entry) => merged.set(entry.id, entry));
-	return [...merged.values()];
-}
-
+export {
+	registerElementIcon,
+	registerShellTabIcon,
+	registerWindowBody,
+	registerSidePanelBody,
+	shellWindowKindsToGolden,
+	shellSideTabsToPanelTabs,
+	shellFooterToFooterItems,
+	shellToolsToAppTools,
+	mergeConfigEntries,
+} from "@elements/framework-react";
 // #endregion 🧱ShellWorkbenchBridge
 
 /**
@@ -23238,63 +23035,14 @@ export function useUIHistory(initialUri = "/"): {
   return { history, uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate };
 }
 
-/**
- * Props for the UI composite component.
- * Navbar is fixed: [back] [forward] [up] [app nav (if >1 app)] [uri (flex-1)] [search] [find] [panel toggles].
- **/
-export interface WorkbenchViewProps {
-	workbench: Workbench;
-	defaultAppId?: string;
-	uri?: string;
-	onNavigate?: (uri: string) => void;
-	canGoBack?: boolean;
-	onGoBack?: () => void;
-	canGoForward?: boolean;
-	onGoForward?: () => void;
-	canGoUp?: boolean;
-	onGoUp?: () => void;
-	mobile?: boolean;
-	mobileQuery?: string;
-	className?: string;
-	/** @emoji 🪟 Replaces shell-derived window kinds (e.g. floating measure overlays) while keeping shell chrome. */
-	resolvedWindowKindsOverride?: UIWindowKindDefinition[];
-	/** @emoji 🧰 Custom toolbar shown instead of the shell toolbar when shell tools are empty (or always use as sole toolbar). */
-	slotToolbar?: React.ReactNode;
-	/** @emoji 👣 Extra footer items merged after shell footers. */
-	extraFooterItems?: FooterItem[];
-	/** @emoji 📑 Merges legacy {@link SidePanelTabConfig} rows into workbench/details stacks (library + inspector trees). */
-	augmentPanelTabs?: Partial<Record<"workbench" | "details", SidePanelTabConfig[]>>;
-	/** @emoji 📂 Initial left/right panel visibility (e.g. open library + inspector on load). */
-	initialPanelVisibility?: UIPanelVisibility;
-}
+export type {
+	WorkbenchViewProps,
+	AppProps,
+	AppContextValue,
+	UIPanelVisibility,
+} from "@elements/framework-react";
 
-/** @emoji 🧭 @deprecated Use {@link WorkbenchViewProps}; kept for incremental migration. */
-export type AppProps = WorkbenchViewProps;
-
-export interface UIPanelVisibility {
-	leftSidePanel: boolean;
-	rightSidePanel: boolean;
-}
-
-export interface AppContextValue {
-	workbench: Workbench;
-	activeAppId: string;
-	setActiveAppId: (id: string) => void;
-	activeApp: ResolvedWorkbenchAppState;
-	activeModeId: string | null;
-	setActiveModeId: (id: string) => void;
-	apps: WorkbenchApp[];
-	panelVisibility: UIPanelVisibility;
-	togglePanel: (panel: keyof UIPanelVisibility) => void;
-	uri: string;
-	navigate: (uri: string) => void;
-	canGoBack: boolean;
-	goBack: () => void;
-	canGoForward: boolean;
-	goForward: () => void;
-	canGoUp: boolean;
-	goUp: () => void;
-}
+export { AppContext, useApp } from "@elements/framework-react";
 
 type ElementsDomRoot = HTMLElement & { __elementsReactRoot?: Root };
 
@@ -23335,17 +23083,6 @@ export function mountReactApp(element: React.ReactElement, rootId = "root"): voi
 
 export async function mountAsyncReactApp(loadWorkbench: () => Promise<Workbench>, rootId = "root"): Promise<void> {
 	ReactUI.mount(await loadWorkbench(), rootId);
-}
-
-export const AppContext = React.createContext<AppContextValue | undefined>(undefined);
-
-/**
- * Hook to access the UI context.
- **/
-export function useApp(): AppContextValue {
-  const ctx = React.useContext(AppContext);
-  if (!ctx) throw new Error("useApp must be used within a WorkbenchView");
-  return ctx;
 }
 
 const APP_WORKBENCH_TAB_ID = "workbench";

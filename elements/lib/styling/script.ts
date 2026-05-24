@@ -112,13 +112,13 @@ export function generateStylingArtifacts(): void {
 	writeFileSync(join(semioNetPaletteDir, "Palette.g.cs"), emitCSharpPalette(tokens), "utf8");
 }
 
-const command = process.argv[2];
-if (command === "generate") {
-	generateStylingArtifacts();
-	console.log("[DEBUG] elements/lib/styling: wrote generated/*.css, js/palette.css, Palette.g.cs");
-} else if (!import.meta.main) {
-	// imported as module
-} else {
-	console.error("usage: bun ./script.ts generate");
-	process.exit(1);
+if (import.meta.main) {
+	const command = process.argv[2];
+	if (command === "generate") {
+		generateStylingArtifacts();
+		console.log("elements/lib/styling: wrote generated/*.css, js/palette.css, Palette.g.cs");
+	} else {
+		console.error("usage: bun ./script.ts generate");
+		process.exit(1);
+	}
 }

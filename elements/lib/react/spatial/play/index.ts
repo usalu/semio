@@ -2,19 +2,11 @@
 // 💻 elements/spatial/play/index.ts — Framework-free spatial play on {@link @elements/playground} (no React).
 // #endregion 🧲Header
 
-import {
-	CommandBus,
-	Workbench,
-	buildScene3dWindowBody,
-	type ShellSidePanelBodyViewContext,
-	type ShellWindowBodyViewContext,
-	type UiNode,
-} from "@elements/framework";
+import { CommandBus, Workbench, buildScene3dWindowBody, getDeclarativeWindowBodyFactory } from "@elements/framework";
 import {
 	PlaygroundController,
+	bootstrapPlaygroundWorkbench,
 	buildPlaygroundWorkbenchApp,
-	createPlaygroundWorkbench,
-	registerPlaygroundDeclarativeBodies,
 	type PlaygroundIds,
 } from "@elements/playground";
 
@@ -195,47 +187,18 @@ export function buildSpatialWorkbenchApp(controller: SpatialPlayShellController)
 	return buildPlaygroundWorkbenchApp(SPATIAL_PLAY_IDS, controller);
 }
 
+/** @emoji 🚀 Framework-free spatial playground: {@link bootstrapPlaygroundWorkbench} + spatial controller. */
+export function bootstrapSpatialPlayWorkbench(): Workbench {
+	const workbench = new Workbench();
+	const controller = new SpatialPlayShellController(workbench.commandBus, () => workbench.notify());
+	return bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, controller, { workbench });
+}
+
+/** @emoji 🚀 Creates spatial play workbench without registering declarative bodies (tests). */
 export function createSpatialPlayWorkbench(controller: SpatialPlayShellController): Workbench {
-	return createPlaygroundWorkbench(SPATIAL_PLAY_IDS, controller);
-}
-
-function spatialControllerFromContext(
-	ctx: ShellWindowBodyViewContext | ShellSidePanelBodyViewContext,
-): SpatialPlayShellController | undefined {
-	return ctx.workbench.getActiveApp()?.controller as SpatialPlayShellController | undefined;
-}
-
-/** @emoji 🧩 Declarative main window: fullscreen scene3d canvas only. */
-export function buildSpatialPlayDeclarativeBody(ctx: ShellWindowBodyViewContext): UiNode {
-	if (!spatialControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing spatial controller" };
-	}
-	return buildScene3dWindowBody(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID);
-}
-
-/** @emoji 🧩 Declarative workbench side tab (entity browser). */
-export function buildSpatialWorkbenchDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
-	if (!spatialControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing spatial controller" };
-	}
-	return { type: "table", surfaceId: SPATIAL_PLAY_PANEL_WORKBENCH_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
-}
-
-/** @emoji 🧩 Declarative details side tab (selection inspector). */
-export function buildSpatialDetailsDeclarativePanel(ctx: ShellSidePanelBodyViewContext): UiNode {
-	if (!spatialControllerFromContext(ctx)) {
-		return { type: "text", value: "Missing spatial controller" };
-	}
-	return { type: "table", surfaceId: SPATIAL_PLAY_PANEL_DETAILS_SURFACE_ID, controllerId: SPATIAL_PLAY_CONTROLLER_ID };
-}
-
-/** @emoji 📝 Registers spatial declarative bodies on the framework host. */
-export function registerSpatialPlayDeclarativeBodies(): void {
-	registerPlaygroundDeclarativeBodies(SPATIAL_PLAY_IDS, {
-		buildMainWindow: buildSpatialPlayDeclarativeBody,
-		buildWorkbenchPanel: buildSpatialWorkbenchDeclarativePanel,
-		buildDetailsPanel: buildSpatialDetailsDeclarativePanel,
-	});
+	const workbench = new Workbench();
+	workbench.addApp(buildSpatialWorkbenchApp(controller));
+	return workbench;
 }
 //#endregion 🔖Controller
 
@@ -319,11 +282,12 @@ if (import.meta.vitest) {
 
 		it("declarative window body is a lone scene3d surface", async () => {
 			const fixture = await loadTopologicFixtureV1(topologyJson as unknown);
+			expect(fixture).not.toBeNull();
 			const bus = new CommandBus();
 			const wb = new Workbench();
 			const ctrl = new SpatialPlayShellController(bus, () => wb.notify(), fixture);
-			wb.addApp(buildSpatialWorkbenchApp(ctrl));
-			const tree = buildSpatialPlayDeclarativeBody({
+			bootstrapPlaygroundWorkbench(SPATIAL_PLAY_IDS, ctrl, { workbench: wb });
+			const tree = getDeclarativeWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)?.({
 				workbench: wb,
 				windowKindId: SPATIAL_PLAY_WINDOW_ID,
 				bodyKey: SPATIAL_PLAY_BODY_KEY,
@@ -331,6 +295,12 @@ if (import.meta.vitest) {
 				generation: wb.generation,
 			});
 			expect(tree).toEqual(buildScene3dWindowBody(SPATIAL_PLAY_SCENE3D_SURFACE_ID, SPATIAL_PLAY_CONTROLLER_ID));
+		});
+
+		it("bootstrapSpatialPlayWorkbench registers playground declarative bodies", () => {
+			const wb = bootstrapSpatialPlayWorkbench();
+			expect(wb.apps.length).toBeGreaterThan(0);
+			expect(getDeclarativeWindowBodyFactory(SPATIAL_PLAY_BODY_KEY)).toBeTypeOf("function");
 		});
 	});
 }

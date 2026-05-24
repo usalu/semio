@@ -6,13 +6,10 @@ export {
 	WorkbenchView,
 	mountReactApp,
 	mountAsyncReactApp,
-	useApp,
-	registerElementIcon,
 	getLevelBgClass,
 	LevelProvider,
 	ReactUI,
-	type WorkbenchViewProps,
-	type AppProps,
-	type AppContextValue,
-	type UIPanelVisibility,
 } from "@elements/ui";
+
+export { useApp, type AppContextValue, type AppProps, type UIPanelVisibility, type WorkbenchViewProps } from "./workbench-app-context.tsx";
+export { registerElementIcon } from "./shell-bridge.tsx";
