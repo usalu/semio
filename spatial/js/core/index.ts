@@ -298,10 +298,22 @@ export interface FactorySpec {
 	readonly display?: {
 		readonly states?: Record<string, readonly DisplayItemSpec[]>;
 	};
+	readonly interaction?: FactorySpatialInteractionConfig;
 	readonly commit: {
 		readonly when?: string;
+		readonly fromStates?: readonly string[];
 		readonly operation: { readonly kind: string; readonly params: Record<string, unknown> };
 	};
+}
+
+/** @emoji 🎮 Host + viewport hints for spatial picking (declared per factory preset). */
+export interface FactorySpatialInteractionConfig {
+	readonly spatialGroundPick?: boolean;
+	readonly pickDisabledStates?: readonly string[];
+	readonly groundPointerMoveStates?: readonly string[];
+	readonly heightDragStates?: readonly string[];
+	readonly verticalRodStates?: readonly string[];
+	readonly heightConfirmState?: string | null;
 }
 
 export interface TransitionSpec {
@@ -309,6 +321,8 @@ export interface TransitionSpec {
 	readonly guard?: string;
 	readonly transient?: boolean;
 	readonly actions?: readonly ActionSpec[];
+	readonly key?: string;
+	readonly label?: string;
 }
 
 export interface ActionSpec {
@@ -596,9 +610,63 @@ function resolveTemplate(value: unknown, env: ExprEnv): unknown {
 	return out;
 }
 
-function transitionChoices(raw: TransitionSpec | readonly TransitionSpec[] | undefined): readonly TransitionSpec[] {
+export function expandMachineTransitions(
+	raw: TransitionSpec | readonly TransitionSpec[] | undefined,
+): readonly TransitionSpec[] {
 	if (raw === undefined) return [];
 	return (Array.isArray(raw) ? raw : [raw]) as readonly TransitionSpec[];
+}
+
+const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
+
+/** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
+export interface FactorySpatialInteractionResolved {
+	readonly spatialGroundPick: boolean;
+	readonly pickDisabledStates: readonly string[];
+	readonly groundPointerMoveStates: readonly string[];
+	readonly heightDragStates: readonly string[];
+	readonly verticalRodStates: readonly string[];
+	readonly heightConfirmState: string | null;
+}
+
+/** @emoji ⌨️ Merges `spec.interaction` with safe defaults for hosts and `FactorySpatialView`. */
+export function mergeSpatialInteraction(spec: FactorySpec): FactorySpatialInteractionResolved {
+	const i = spec.interaction;
+	const basePickDisabled = ["idle", "ready", "committed", "cancelled"] as const;
+	return {
+		spatialGroundPick: Boolean(i?.spatialGroundPick),
+		pickDisabledStates: i?.pickDisabledStates ?? [...basePickDisabled],
+		groundPointerMoveStates: i?.groundPointerMoveStates ?? [],
+		heightDragStates: i?.heightDragStates ?? [],
+		verticalRodStates: i?.verticalRodStates ?? [],
+		heightConfirmState: i?.heightConfirmState === undefined ? null : i.heightConfirmState,
+	};
+}
+
+/** @emoji ⌨️ One host-triggerable transition row for palette + command input (see `TransitionSpec.key`). */
+export interface FactoryKeybindRow {
+	readonly eventKind: string;
+	readonly key: string;
+	readonly label: string;
+}
+
+/** @emoji ⌨️ Lists keyed transitions for the active state (excludes pointer + selection). */
+export function listKeyedFactoryTransitions(spec: FactorySpec, state: string): readonly FactoryKeybindRow[] {
+	const st = spec.machine.states[state];
+	if (!st?.on) return [];
+	const out: FactoryKeybindRow[] = [];
+	for (const [eventKind, raw] of Object.entries(st.on)) {
+		if (HOST_KEYBIND_EXCLUDED_KINDS.has(eventKind)) continue;
+		for (const tr of expandMachineTransitions(raw)) {
+			if (tr.transient) continue;
+			const key = tr.key;
+			const label = tr.label;
+			if (typeof key !== "string" || key.length === 0) continue;
+			if (typeof label !== "string" || label.length === 0) continue;
+			out.push({ eventKind, key, label });
+		}
+	}
+	return out;
 }
 
 /** @emoji 📦 Applies imperative `box.*` footprint helpers used by `spatial/fixtures/factory.json`. */
@@ -770,7 +838,7 @@ export class StatechartRuntime {
 		const st = this.spec.machine.states[this.state];
 		if (!st?.on) return { ok: false };
 		const raw = st.on[event.kind];
-		const choices = transitionChoices(raw);
+		const choices = expandMachineTransitions(raw);
 		if (choices.length === 0) return { ok: false };
 		for (const tr of choices) {
 			if (tr.guard) {
@@ -892,6 +960,7 @@ export interface FactorySnapshot {
 	readonly revision: number;
 	readonly context: Record<string, unknown>;
 	readonly display: DisplayModel;
+	readonly spatialInteraction: FactorySpatialInteractionResolved;
 	readonly capabilities: { readonly canCommit: boolean; readonly canCancel: boolean; readonly canUndo: boolean; readonly canRedo: boolean };
 	readonly diagnostics: readonly Diagnostic[];
 }
@@ -929,7 +998,8 @@ export class FactoryRuntime {
 
 	private canCommit(): boolean {
 		const st = this.sm.getState();
-		if (st !== "ready") return false;
+		const allowed = this.spec.commit.fromStates ?? ["ready"];
+		if (!allowed.includes(st)) return false;
 		const w = this.spec.commit.when;
 		if (w) {
 			const g = this.spec.guards?.[w];
@@ -944,14 +1014,16 @@ export class FactoryRuntime {
 		const ctx = this.sm.getContext();
 		const st = this.sm.getState();
 		const display = resolveDisplay(this.spec, st, ctx);
+		const spatialInteraction = mergeSpatialInteraction(this.spec);
 		this.snapshotCache = {
 			factoryId: this.spec.id,
 			state: st,
 			revision: this.revision,
 			context: this.cloneCtx(ctx),
 			display,
+			spatialInteraction,
 			capabilities: {
-				canCommit: this.canCommit() && st === "ready",
+				canCommit: this.canCommit(),
 				canCancel: st !== "committed" && st !== "cancelled",
 				canUndo: this.snapStack.length > 0,
 				canRedo: false,
@@ -1000,7 +1072,9 @@ export class FactoryRuntime {
 	/** @emoji 🏭 Executes `commit.operation` against `kernel` and records a `DocumentCommand`. */
 	async commit(): Promise<CellRef | null> {
 		const st = this.sm.getState();
-		if (st !== "ready" && st !== "committed") return null;
+		if (st === "committed" || st === "cancelled") return null;
+		const allowed = this.spec.commit.fromStates ?? ["ready"];
+		if (!allowed.includes(st)) return null;
 		if (!this.canCommit()) return null;
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;

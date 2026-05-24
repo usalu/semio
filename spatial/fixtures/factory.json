@@ -3,6 +3,31 @@
   "id": "primitive.box",
   "version": "1.0.0",
   "label": "Box",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "ready",
+      "committed",
+      "cancelled",
+      "first_corner_length_prompt"
+    ],
+    "groundPointerMoveStates": [
+      "first_corner",
+      "first_corner_other_or_length",
+      "diagonal_rubber",
+      "cube_diagonal_rubber",
+      "cube_other_corner",
+      "three_point_edge",
+      "three_point_width",
+      "vertical_width",
+      "center_corner",
+      "cube_center_corner"
+    ],
+    "heightDragStates": ["first_corner_height"],
+    "verticalRodStates": ["vertical_end"],
+    "heightConfirmState": "first_corner_height"
+  },
   "requires": {
     "kernel": {
       "operations": ["cell.createBox", "entity.tessellate"],
@@ -54,6 +79,8 @@
         "on": {
           "start": {
             "target": "first_corner",
+            "key": "s",
+            "label": "Start",
             "actions": [
               { "op": "assign", "path": "cursor", "value": { "const": [0, 0, 0] } },
               { "op": "assign", "path": "boxMode", "value": "point" }
@@ -67,11 +94,31 @@
             "transient": true,
             "actions": [{ "op": "assign", "path": "cursor", "value": { "$event": "point" } }]
           },
-          "mode.point": { "actions": [{ "op": "assign", "path": "boxMode", "value": "point" }] },
-          "mode.diagonal": { "actions": [{ "op": "assign", "path": "boxMode", "value": "diagonal" }] },
-          "mode.threePoint": { "actions": [{ "op": "assign", "path": "boxMode", "value": "threePoint" }] },
-          "mode.vertical": { "actions": [{ "op": "assign", "path": "boxMode", "value": "vertical" }] },
-          "mode.center": { "actions": [{ "op": "assign", "path": "boxMode", "value": "center" }] },
+          "mode.point": {
+            "key": "t",
+            "label": "Point",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "point" }]
+          },
+          "mode.diagonal": {
+            "key": "d",
+            "label": "Diagonal",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "diagonal" }]
+          },
+          "mode.threePoint": {
+            "key": "p",
+            "label": "3Point",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "threePoint" }]
+          },
+          "mode.vertical": {
+            "key": "v",
+            "label": "Vertical",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "vertical" }]
+          },
+          "mode.center": {
+            "key": "e",
+            "label": "Center",
+            "actions": [{ "op": "assign", "path": "boxMode", "value": "center" }]
+          },
           "pointer.down": [
             {
               "guard": "boxModePoint",
@@ -115,7 +162,7 @@
               ]
             }
           ],
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_other_or_length": {
@@ -131,21 +178,23 @@
               { "op": "assign", "path": "height", "value": 0.25 }
             ]
           },
-          "mode.cube": { "target": "cube_other_corner" },
-          "mode.length": { "target": "first_corner_length_prompt" },
-          "cancel": { "target": "cancelled" }
+          "mode.cube": { "target": "cube_other_corner", "key": "u", "label": "Cube" },
+          "mode.length": { "target": "first_corner_length_prompt", "key": "l", "label": "Length" },
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_length_prompt": {
         "on": {
           "set.footprint": {
             "target": "first_corner_height",
+            "key": "w",
+            "label": "Apply L×W",
             "actions": [
               { "op": "box.cornerFromLengthWidth" },
               { "op": "assign", "path": "height", "value": 0.25 }
             ]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "diagonal_rubber": {
@@ -163,9 +212,11 @@
           },
           "mode.cube": {
             "target": "cube_diagonal_rubber",
+            "key": "u",
+            "label": "Cube",
             "actions": [{ "op": "clear", "path": "corner" }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "cube_diagonal_rubber": {
@@ -178,7 +229,7 @@
             "target": "ready",
             "actions": [{ "op": "box.aabbFromDiagonalCorners" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "three_point_edge": {
@@ -194,7 +245,7 @@
               { "op": "clear", "path": "cursor" }
             ]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "three_point_width": {
@@ -207,7 +258,7 @@
             "target": "first_corner_height",
             "actions": [{ "op": "box.tripletCommit" }, { "op": "assign", "path": "height", "value": 0.25 }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "vertical_end": {
@@ -217,7 +268,7 @@
             "actions": [{ "op": "box.peakFromOriginZ" }]
           },
           "pointer.down": { "target": "vertical_width" },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "vertical_width": {
@@ -230,7 +281,7 @@
             "target": "first_corner_height",
             "actions": [{ "op": "box.verticalFinalizeFootprint" }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "center_corner": {
@@ -243,8 +294,8 @@
             "target": "first_corner_height",
             "actions": [{ "op": "box.rubberCornerFromCenter" }, { "op": "assign", "path": "height", "value": 0.25 }]
           },
-          "mode.cube": { "target": "cube_center_corner" },
-          "cancel": { "target": "cancelled" }
+          "mode.cube": { "target": "cube_center_corner", "key": "u", "label": "Cube" },
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "cube_center_corner": {
@@ -257,7 +308,7 @@
             "target": "ready",
             "actions": [{ "op": "box.rubberSquareFromCenter" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "cube_other_corner": {
@@ -270,7 +321,7 @@
             "target": "ready",
             "actions": [{ "op": "box.snapSquareFootprint" }, { "op": "box.setCubeHeightFromFootprint" }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "first_corner_height": {
@@ -298,19 +349,28 @@
           },
           "set.height": {
             "target": "ready",
+            "key": "h",
+            "label": "Apply typed height",
             "actions": [{ "op": "assign", "path": "height", "value": { "$event": "value" } }]
           },
           "confirm": {
             "target": "ready",
-            "guard": "hasValidBox"
+            "guard": "hasValidBox",
+            "key": "Enter",
+            "label": "Accept height"
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "ready": {
         "on": {
-          "confirm": { "target": "committed", "guard": "hasValidBox" },
-          "cancel": { "target": "cancelled" }
+          "confirm": {
+            "target": "committed",
+            "guard": "hasValidBox",
+            "key": "f",
+            "label": "Finalize"
+          },
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "committed": { "final": true },
@@ -571,6 +631,7 @@
   },
   "commit": {
     "when": "hasValidBox",
+    "fromStates": ["ready"],
     "operation": {
       "kind": "cell.createBox",
       "params": {

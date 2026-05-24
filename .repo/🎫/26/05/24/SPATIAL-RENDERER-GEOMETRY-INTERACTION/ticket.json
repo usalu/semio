@@ -1,8 +1,9 @@
 {
   "title": "Spatial Renderer Geometry Interaction",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Every spatial factory optionally receives a geometry. Make sure state machines can select, snap, and related interactions against that geometry, implemented directly in the renderer.",
+  "summary": "Implemented and verified optional renderer-side topology geometry interaction for spatial factories. FactorySpatialView accepts optional topology geometry, renders pickable snap/select targets, and forwards factory pointer events with snap and selection metadata while preserving existing point callbacks. The play app loads the geometry fixture and sends enriched events to the factory runtime. Verified renderer tests, fresh build, and dev-server smoke logs.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1471"
   },
