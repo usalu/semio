@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 const frameworkCore = resolve(root, "../../framework/core/index.ts");
 const frameworkReact = resolve(root, "../../framework/renderer/react/index.tsx");
-const frameworkReactWorkbench = resolve(root, "../../framework/renderer/react/workbench-bridge.tsx");
+const frameworkReactWorkbench = frameworkReact;
 const uiCore = resolve(root, "../core/index.tsx");
 
 /** @emoji 🧪 Vitest entry for `@elements/board` inlined source tests (`import.meta.vitest` blocks). */

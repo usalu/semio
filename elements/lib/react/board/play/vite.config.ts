@@ -22,7 +22,7 @@ export default defineConfig({
 			"@elements/ui": path.resolve(__dirname, "../../core/index.tsx"),
 			"@elements/framework": path.resolve(__dirname, "../../../framework/core/index.ts"),
 			"@elements/framework-react": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
-			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/workbench-bridge.tsx"),
+			"@elements/framework-react/workbench": path.resolve(__dirname, "../../../framework/renderer/react/index.tsx"),
 		},
 	},
 	server: {

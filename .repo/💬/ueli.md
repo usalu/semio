@@ -379,6 +379,7 @@ We are starting a new a new architecture.
 @elements/lib/playground is the first framework, just for building playgrounds (one app, one window kind, one fixture, selection, filter, workbench, details, options).
 Every downstream project MUST NOT import from @elements/lib/react and MUST only import from @elements/lib/framework .
 First goal: Get @elements/lib/react/core free from the depency of @elements/lib/framework
+Work in monolithic files but make sure to refactor/extend/change everything to achieve the architecture.
 
 Finish implementing @elements/lib/playground and setup @elements/lib/react/spatial/play to use the new playground.
 
