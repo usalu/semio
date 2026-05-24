@@ -742,20 +742,6 @@ Render both in play inside two different window kinds.
 
 ---
 
-## 🔬coda
-
-coda:
-
-coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
-
-coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
-Follow:
-Electron main starts helper on app launch or first use
-Communicate via structured JSON messages over stdio
-Add request IDs for request/response correlation
-Add timeouts, heartbeats, and auto-restart
-Keep the renderer isolated from native details
-
 ## 🏘️semio
 
 ###
@@ -9016,7 +9002,21 @@ Names and description are not consistent with cli:
 - fix
 - tree
 
-## history
+## 🔬coda
+
+coda:
+
+coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
+
+coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
+Follow:
+Electron main starts helper on app launch or first use
+Communicate via structured JSON messages over stdio
+Add request IDs for request/response correlation
+Add timeouts, heartbeats, and auto-restart
+Keep the renderer isolated from native details
+
+## 📜history
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.

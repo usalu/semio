@@ -2,19 +2,21 @@
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	createCommandRuntime as createFactoryRuntime,
-	listKeyedCommandTransitions as listKeyedFactoryTransitions,
-	listSpatialCommandPresets as listSpatialFactoryPresets,
-	type SpatialCommandPreset as SpatialFactoryPreset,
-	loadSpatialCommandPreset as loadSpatialFactoryPreset,
+	createCommandRuntime,
+	isEmptyTopologyDiff,
+	listKeyedCommandTransitions,
+	listSpatialCommandPresets,
+	type SpatialCommandPreset,
+	loadSpatialCommandPreset,
 	parseTopologyGraphJson,
-	resolveSpatialCommandPresetKey as resolveSpatialFactoryPresetKey,
-	type CommandEvent as FactoryEvent,
-	type CommandKeybindRow as FactoryKeybindRow,
-	type CommandRuntime as FactoryRuntime,
-	type CommandSpec as FactorySpec,
+	resolveSpatialCommandPresetKey,
+	type CommandEvent,
+	type CommandKeybindRow,
+	type CommandRuntime,
+	type CommandSpec,
 	type ModelDocument,
 	TopologyGraph,
+	type TopologyEntityKind,
 	type Vec3,
 } from "@spatial/js-core";
 import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json" };
@@ -25,7 +27,7 @@ import geometryTallBuilding from "../../../fixtures/tall-building.topology.json"
 import geometryLargeBuilding from "../../../fixtures/large-building.topology.json" with { type: "json" };
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
-import { FactoryCanvas, FactorySpatialView, useFactorySnapshot } from "../index.tsx";
+import { CommandCanvas, CommandSpatialView, useCommandSnapshot } from "../index.tsx";
 
 //#region 🔖GeometryCatalog
 const GEOMETRY_ASSETS = [
@@ -39,15 +41,15 @@ const GEOMETRY_ASSETS = [
 //#endregion
 
 //#region 🔖CommandParsing
-type PlaySuggestKind = "factory" | "transition" | "host";
+type PlaySuggestKind = "preset" | "transition" | "host";
 
 interface PlaySuggestion {
 	readonly kind: PlaySuggestKind;
 	readonly key: string;
 	readonly label: string;
 	readonly detail: string;
-	readonly transition?: FactoryKeybindRow;
-	readonly factoryId?: string;
+	readonly transition?: CommandKeybindRow;
+	readonly commandId?: string;
 	readonly onRun: () => void;
 }
 
@@ -62,13 +64,13 @@ function firstFaceId(topo: TopologyGraph): string | null {
 }
 
 function buildDispatchEvent(
-	row: FactoryKeybindRow,
+	row: CommandKeybindRow,
 	opts: {
-		readonly factoryId: string;
+		readonly commandId: string;
 		readonly topo: TopologyGraph;
 	},
-): FactoryEvent | null {
-	const { factoryId, topo } = opts;
+): CommandEvent | null {
+	const { commandId, topo } = opts;
 	if (row.eventKind === "set.height") {
 		return null;
 	}
@@ -79,28 +81,28 @@ function buildDispatchEvent(
 		return null;
 	}
 	if (row.eventKind === "selection.changed") {
-		if (factoryId === "feature.extrudeWire") {
+		if (commandId === "feature.extrudeWire") {
 			const wid = firstWireId(topo);
 			if (!wid) return null;
-			return { kind: "selection.changed", wireId: wid, modifiers: {} };
+			return { kind: "selection.changed", targets: [{ kind: "wire", id: wid, editable: true }], modifiers: {} };
 		}
-		if (factoryId === "feature.offsetSurface") {
+		if (commandId === "feature.offsetSurface") {
 			const fid = firstFaceId(topo);
 			if (!fid) return null;
-			return { kind: "selection.changed", surfaceId: fid, modifiers: {} };
+			return { kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }], modifiers: {} };
 		}
-		return { kind: "selection.changed", modifiers: {} };
+		return null;
 	}
 	return { kind: row.eventKind, modifiers: {} };
 }
 
-function tryParseValueCommand(line: string, spec: FactorySpec, state: string): FactoryEvent | null {
+function tryParseValueCommand(line: string, spec: CommandSpec, state: string): CommandEvent | null {
 	const t = line.trim();
 	const m = t.match(/^(\S+)\s+(.+)$/);
 	if (!m) return null;
 	const head = m[1]!.toLowerCase();
 	const tail = m[2]!.trim();
-	const rows = listKeyedFactoryTransitions(spec, state);
+	const rows = listKeyedCommandTransitions(spec, state);
 	for (const row of rows) {
 		if (row.eventKind === "set.height") {
 			if (head !== row.key.toLowerCase() && head !== "height") continue;
@@ -136,16 +138,16 @@ function filterSuggestions(query: string, all: readonly PlaySuggestion[]): PlayS
 	return all.filter((s) => suggestionHaystack(s).includes(q));
 }
 
-function factorySuggestionsFrom(all: readonly PlaySuggestion[]): PlaySuggestion[] {
-	return all.filter((s) => s.kind === "factory");
+function presetSuggestionsFrom(all: readonly PlaySuggestion[]): PlaySuggestion[] {
+	return all.filter((s) => s.kind === "preset");
 }
 
-/** @emoji 🧭 Palette rows: factories stay visible; filter narrows the rest without hiding presets. */
+/** @emoji 🧭 Palette rows: command presets stay visible; filter narrows the rest without hiding presets. */
 function paletteRows(cmdLine: string, all: readonly PlaySuggestion[]): PlaySuggestion[] {
-	const fac = factorySuggestionsFrom(all);
+	const fac = presetSuggestionsFrom(all);
 	const hit = filterSuggestions(cmdLine, all);
 	if (!cmdLine.trim()) return hit;
-	const rest = hit.filter((s) => s.kind !== "factory");
+	const rest = hit.filter((s) => s.kind !== "preset");
 	const seen = new Set<string>();
 	const out: PlaySuggestion[] = [];
 	for (const s of [...fac, ...rest]) {
@@ -177,7 +179,7 @@ function presentationWithUnderlinedKey(key: string, label: string): ReactNode {
 	);
 }
 
-function factoryPresetFromShortcutKey(evKey: string, presets: readonly SpatialFactoryPreset[]): SpatialFactoryPreset | null {
+function commandPresetFromShortcutKey(evKey: string, presets: readonly SpatialCommandPreset[]): SpatialCommandPreset | null {
 	if (evKey.length !== 1) return null;
 	const k = evKey.toLowerCase();
 	for (const p of presets) {
@@ -189,10 +191,10 @@ function factoryPresetFromShortcutKey(evKey: string, presets: readonly SpatialFa
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
-	readonly presets: ReturnType<typeof listSpatialFactoryPresets>;
-	readonly factoryId: string;
-	readonly spec: FactorySpec;
-	readonly onFactoryId: (id: string) => void;
+	readonly presets: ReturnType<typeof listSpatialCommandPresets>;
+	readonly commandId: string;
+	readonly spec: CommandSpec;
+	readonly onCommandId: (id: string) => void;
 	readonly documentModel: ModelDocument;
 	readonly geometryAssetId: string;
 	readonly onGeometryAssetId: (id: string) => void;
@@ -200,24 +202,24 @@ interface PlaySessionProps {
 
 function PlaySession({
 	presets,
-	factoryId,
+	commandId,
 	spec,
-	onFactoryId,
+	onCommandId,
 	documentModel,
 	geometryAssetId,
 	onGeometryAssetId,
 }: PlaySessionProps) {
 	const kernel = useMemo(() => new BrepjsKernel(), []);
-	const rt = useMemo<FactoryRuntime>(
+	const rt = useMemo<CommandRuntime>(
 		() =>
-			createFactoryRuntime(spec, {
+			createCommandRuntime(spec, {
 				kernel,
 				document: documentModel,
 				stateEngine: statelyStateEngineProvider,
 			}),
 		[spec, kernel, documentModel],
 	);
-	const snapshot = useFactorySnapshot(rt);
+	const snapshot = useCommandSnapshot(rt);
 	const [lastCell, setLastCell] = useState<string | null>(null);
 	const [cmdLine, setCmdLine] = useState("");
 	const [suggestOpen, setSuggestOpen] = useState(true);
@@ -250,8 +252,8 @@ function PlaySession({
 	}, [rt, documentModel.topology]);
 
 	const dispatchTransition = useCallback(
-		(row: FactoryKeybindRow) => {
-			const ev = buildDispatchEvent(row, { factoryId: spec.id, topo: documentModel.topology });
+		(row: CommandKeybindRow) => {
+			const ev = buildDispatchEvent(row, { commandId: spec.id, topo: documentModel.topology });
 			if (ev) void rt.send(ev);
 		},
 		[rt, spec.id, documentModel.topology],
@@ -259,7 +261,7 @@ function PlaySession({
 
 	const allSuggestions = useMemo((): PlaySuggestion[] => {
 		const st = snapshot.state;
-		const rows = listKeyedFactoryTransitions(spec, st);
+		const rows = listKeyedCommandTransitions(spec, st);
 		const out: PlaySuggestion[] = [];
 		for (const p of presets) {
 			out.push({
@@ -267,8 +269,8 @@ function PlaySession({
 				key: p.key,
 				label: p.label,
 				detail: p.id,
-				factoryId: p.id,
-				onRun: () => onFactoryId(p.id),
+				commandId: p.id,
+				onRun: () => onCommandId(p.id),
 			});
 		}
 		for (const row of rows) {
@@ -296,7 +298,7 @@ function PlaySession({
 			onRun: () => rt.undo(),
 		});
 		return out;
-	}, [presets, spec, snapshot.state, onFactoryId, dispatchTransition, onCommit, rt]);
+	}, [presets, spec, snapshot.state, onCommandId, dispatchTransition, onCommit, rt]);
 
 	const filtered = useMemo(() => paletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 
@@ -323,13 +325,13 @@ function PlaySession({
 			setCmdLine("");
 			return true;
 		}
-		const presetHit = resolveSpatialFactoryPresetKey(raw);
+		const presetHit = resolveSpatialCommandPresetKey(raw);
 		if (presetHit) {
-			onFactoryId(presetHit.id);
+			onCommandId(presetHit.id);
 			setCmdLine("");
 			return true;
 		}
-		const rows = listKeyedFactoryTransitions(spec, rt.getSnapshot().state);
+		const rows = listKeyedCommandTransitions(spec, rt.getSnapshot().state);
 		for (const row of rows) {
 			if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") {
 				continue;
@@ -351,7 +353,7 @@ function PlaySession({
 			return true;
 		}
 		return false;
-	}, [cmdLine, spec, rt, dispatchTransition, onFactoryId, onCommit]);
+	}, [cmdLine, spec, rt, dispatchTransition, onCommandId, onCommit]);
 
 	const onInputKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -396,12 +398,12 @@ function PlaySession({
 			const t = e.target;
 			const one = e.key.length === 1 ? e.key : "";
 			if (one) {
-				const fac = factoryPresetFromShortcutKey(one, presets);
+				const fac = commandPresetFromShortcutKey(one, presets);
 				if (fac) {
 					if (isTextTypingTarget(t) && t !== cmdRef.current) return;
 					e.preventDefault();
 					e.stopPropagation();
-					onFactoryId(fac.id);
+					onCommandId(fac.id);
 					setCmdLineRef.current("");
 					return;
 				}
@@ -421,10 +423,10 @@ function PlaySession({
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, onCommit, presets, onFactoryId]);
+	}, [rt, onCommit, presets, onCommandId]);
 
 	const onGroundPick = useCallback(
-		(_p: Vec3, _ev: FactoryEvent) => {
+		(_p: Vec3, _ev: CommandEvent) => {
 			const st = rt.getSnapshot().state;
 			const hi = rt.getSnapshot().spatialInteraction.heightConfirmState;
 			if (hi && st === hi) {
@@ -461,16 +463,16 @@ function PlaySession({
 
 	return (
 		<div style={{ display: "flex", height: "100vh", fontFamily: "system-ui", color: "#e8e8f0" }}>
-			<div style={{ flex: 1, minWidth: 0 }} key={factoryId}>
-				<FactoryCanvas>
-					<FactorySpatialView
+			<div style={{ flex: 1, minWidth: 0 }} key={commandId}>
+				<CommandCanvas>
+					<CommandSpatialView
 						snapshot={snapshot}
 						onGroundPick={onGroundPick}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={documentModel.topology}
 					/>
-				</FactoryCanvas>
+				</CommandCanvas>
 			</div>
 			<aside
 				style={{
@@ -502,7 +504,7 @@ function PlaySession({
 					</select>
 				</label>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Factory <code>{factoryId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+					Factory <code>{commandId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
 				</div>
 				<div style={{ fontSize: 12 }}>Can commit {String(snapshot.capabilities.canCommit)} · undo {String(snapshot.capabilities.canUndo)}</div>
 				<div style={{ position: "relative" }}>
@@ -596,21 +598,21 @@ function PlaySession({
 
 //#region 🔖PlayApp
 function PlayApp() {
-	const presets = useMemo(() => listSpatialFactoryPresets(), []);
-	const [factoryId, setFactoryId] = useState(() => presets[0]?.id ?? "");
-	const [factoryBootId, setFactoryBootId] = useState(0);
+	const presets = useMemo(() => listSpatialCommandPresets(), []);
+	const [commandId, setCommandId] = useState(() => presets[0]?.id ?? "");
+	const [commandBootId, setCommandBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState<string>(GEOMETRY_ASSETS[0]!.id);
-	const spec = useMemo<FactorySpec | null>(() => (factoryId ? loadSpatialFactoryPreset(factoryId) : null), [factoryId]);
+	const spec = useMemo<CommandSpec | null>(() => (commandId ? loadSpatialCommandPreset(commandId) : null), [commandId]);
 
-	const handleFactoryPick = useCallback(
+	const handleCommandPick = useCallback(
 		(id: string) => {
-			if (id === factoryId) setFactoryBootId((b) => b + 1);
+			if (id === commandId) setCommandBootId((b) => b + 1);
 			else {
-				setFactoryId(id);
-				setFactoryBootId(0);
+				setCommandId(id);
+				setCommandBootId(0);
 			}
 		},
-		[factoryId],
+		[commandId],
 	);
 
 	const interactionTopo = useMemo(() => {
@@ -624,8 +626,8 @@ function PlayApp() {
 	}, [interactionTopo]);
 
 	useEffect(() => {
-		if (!factoryId && presets[0]) setFactoryId(presets[0].id);
-	}, [factoryId, presets]);
+		if (!commandId && presets[0]) setCommandId(presets[0].id);
+	}, [commandId, presets]);
 
 	if (!presets.length) {
 		return <div style={{ padding: 16, color: "#f88" }}>No spatial factory presets registered.</div>;
@@ -633,8 +635,8 @@ function PlayApp() {
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
-				Unknown factory <code>{factoryId}</code>.
-				<button type="button" onClick={() => setFactoryId(presets[0]!.id)}>
+				Unknown factory <code>{commandId}</code>.
+				<button type="button" onClick={() => setCommandId(presets[0]!.id)}>
 					Reset
 				</button>
 			</div>
@@ -643,11 +645,11 @@ function PlayApp() {
 
 	return (
 		<PlaySession
-			key={`${factoryId}:${factoryBootId}`}
+			key={`${commandId}:${commandBootId}`}
 			presets={presets}
-			factoryId={factoryId}
+			commandId={commandId}
 			spec={spec}
-			onFactoryId={handleFactoryPick}
+			onCommandId={handleCommandPick}
 			documentModel={documentModel}
 			geometryAssetId={geometryAssetId}
 			onGeometryAssetId={setGeometryAssetId}

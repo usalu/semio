@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `FactoryDisplay`, ground picking, interaction adapter, `FactoryCanvas`, and snapshot hooks. See `spatial/fixtures/factory.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F `CommandDisplay`, ground picking, interaction adapter, `CommandCanvas`, and snapshot hooks. See `spatial/fixtures/box.command.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -9,19 +9,19 @@ import { useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { MOUSE } from "three";
 import * as THREE from "three";
 import {
-	buildBoxCommandSpec as buildBoxFactorySpec,
+	buildBoxCommandSpec,
 	cellRef,
-	createCommandRuntime as createFactoryRuntime,
+	createCommandRuntime,
 	TopologyGraph,
+	type CommandEvent,
+	type CommandRuntime,
+	type CommandRuntimeOptions,
+	type CommandSnapshot,
+	type CommandSpec,
 	type DisplayItem,
 	type DisplayModel,
 	type EdgeRecord,
 	type FaceRecord,
-	type CommandEvent as FactoryEvent,
-	type CommandRuntime as FactoryRuntime,
-	type CommandRuntimeOptions as FactoryRuntimeOptions,
-	type CommandSnapshot as FactorySnapshot,
-	type CommandSpec as FactorySpec,
 	type KernelAdapter,
 	type MeshPreview,
 	type TopologyGraphJson,
@@ -68,16 +68,16 @@ const raycastNone: THREE.Object3D["raycast"] = () => undefined;
 // #endregion 📐Layout
 
 // #region 🧲TopologyTargets
-export type FactoryInteractionKind = "pointer.down" | "pointer.move";
+export type CommandInteractionKind = "pointer.down" | "pointer.move";
 
-export interface FactoryInteractionTarget {
+export interface CommandInteractionTarget {
 	readonly kind: "vertex" | "edge" | "face" | "cell" | "cellComplex" | "cluster";
 	readonly id: string;
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
 }
 
-export type FactoryInteractionGeometry = TopologyGraph | TopologyGraphJson;
+export type CommandInteractionGeometry = TopologyGraph | TopologyGraphJson;
 
 function topologyRecords<T>(records: Record<string, T> | undefined): readonly T[] {
 	return records ? Object.values(records) : [];
@@ -115,14 +115,14 @@ function topologyFacePoints(
 	return [...unique.values()];
 }
 
-function topologyAllVertexPoints(geometry: FactoryInteractionGeometry): readonly Vec3[] {
+function topologyAllVertexPoints(geometry: CommandInteractionGeometry): readonly Vec3[] {
 	return topologyRecords(geometry.vertices).map((vertex) => vertex.position);
 }
 
 /** @emoji 🧲 Builds renderer-side snap/select targets from optional factory topology geometry. */
-export function createFactoryInteractionTargets(geometry: FactoryInteractionGeometry | null | undefined): readonly FactoryInteractionTarget[] {
+export function createCommandInteractionTargets(geometry: CommandInteractionGeometry | null | undefined): readonly CommandInteractionTarget[] {
 	if (!geometry) return [];
-	const targets: FactoryInteractionTarget[] = [];
+	const targets: CommandInteractionTarget[] = [];
 	for (const vertex of topologyRecords(geometry.vertices)) {
 		targets.push({ kind: "vertex", id: vertex.id, point: vertex.position });
 	}
@@ -151,12 +151,12 @@ export function createFactoryInteractionTargets(geometry: FactoryInteractionGeom
 }
 
 /** @emoji 🧲 Creates a statechart event carrying snapped point plus selected topology metadata. */
-export function createFactoryInteractionEvent(
-	kind: FactoryInteractionKind,
+export function createCommandInteractionEvent(
+	kind: CommandInteractionKind,
 	point: Vec3,
-	target: FactoryInteractionTarget | null,
-	modifiers: FactoryEvent["modifiers"] = {},
-): FactoryEvent {
+	target: CommandInteractionTarget | null,
+	modifiers: CommandEvent["modifiers"] = {},
+): CommandEvent {
 	return target
 		? {
 				kind,
@@ -301,7 +301,7 @@ function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
 }
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
-export function FactoryDisplay({ model }: { readonly model: DisplayModel }): ReactNode {
+export function CommandDisplay({ model }: { readonly model: DisplayModel }): ReactNode {
 	return (
 		<group>
 			{model.items.map((item) => (
@@ -447,16 +447,16 @@ function VerticalZDragRod({
 	);
 }
 
-/** @emoji 🎮 Maps R3F pointer events to `FactoryEvent` envelopes (point + modifiers). */
+/** @emoji 🎮 Maps R3F pointer events to `CommandEvent` envelopes (point + modifiers). */
 export function createR3FInteractionAdapter() {
 	const toPoint = (event: ThreeEvent<PointerEvent>): Vec3 => [event.point.x, event.point.y, event.point.z];
 	return {
-		pointerMove: (event: ThreeEvent<PointerEvent>): FactoryEvent => ({
+		pointerMove: (event: ThreeEvent<PointerEvent>): CommandEvent => ({
 			kind: "pointer.move",
 			point: toPoint(event),
 			modifiers: pointerModifiers(event),
 		}),
-		pointerDown: (event: ThreeEvent<PointerEvent>): FactoryEvent => ({
+		pointerDown: (event: ThreeEvent<PointerEvent>): CommandEvent => ({
 			kind: "pointer.down",
 			point: toPoint(event),
 			modifiers: pointerModifiers(event),
@@ -486,23 +486,23 @@ function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonl
 	};
 }
 
-function FactoryInteractionTargetNode({
+function CommandInteractionTargetNode({
 	target,
-	onFactoryEvent,
+	onCommandEvent,
 	onPick,
 	onPointerMove,
 	pointerMoveEnabled,
 }: {
-	readonly target: FactoryInteractionTarget;
-	readonly onFactoryEvent?: (event: FactoryEvent) => void;
-	readonly onPick?: (point: Vec3, event: FactoryEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: FactoryEvent) => void;
+	readonly target: CommandInteractionTarget;
+	readonly onCommandEvent?: (event: CommandEvent) => void;
+	readonly onPick?: (point: Vec3, event: CommandEvent) => void;
+	readonly onPointerMove?: (point: Vec3, event: CommandEvent) => void;
 	readonly pointerMoveEnabled: boolean;
 }): ReactNode {
-	const emit = (kind: FactoryInteractionKind, e: ThreeEvent<PointerEvent>) => {
+	const emit = (kind: CommandInteractionKind, e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
-		const event = createFactoryInteractionEvent(kind, [e.point.x, e.point.y, e.point.z], target, pointerModifiers(e));
-		onFactoryEvent?.(event);
+		const event = createCommandInteractionEvent(kind, [e.point.x, e.point.y, e.point.z], target, pointerModifiers(e));
+		onCommandEvent?.(event);
 		if (kind === "pointer.down") onPick?.(target.point, event);
 		if (kind === "pointer.move" && pointerMoveEnabled) onPointerMove?.(target.point, event);
 	};
@@ -535,31 +535,31 @@ function FactoryInteractionTargetNode({
 }
 
 /** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
-export function FactoryInteractionGeometryLayer({
+export function CommandInteractionGeometryLayer({
 	geometry,
-	onFactoryEvent,
+	onCommandEvent,
 	onPick,
 	onPointerMove,
 	pointerMoveEnabled = false,
 }: {
-	readonly geometry?: FactoryInteractionGeometry | null;
-	readonly onFactoryEvent?: (event: FactoryEvent) => void;
-	readonly onPick?: (point: Vec3, event: FactoryEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: FactoryEvent) => void;
+	readonly geometry?: CommandInteractionGeometry | null;
+	readonly onCommandEvent?: (event: CommandEvent) => void;
+	readonly onPick?: (point: Vec3, event: CommandEvent) => void;
+	readonly onPointerMove?: (point: Vec3, event: CommandEvent) => void;
 	readonly pointerMoveEnabled?: boolean;
 }): ReactNode {
 	const topoRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const targets = useMemo(() => createFactoryInteractionTargets(geometry), [geometry, topoRevision]);
+	const targets = useMemo(() => createCommandInteractionTargets(geometry), [geometry, topoRevision]);
 	return (
 		<group>
 			{targets.map((target) => (
-				<FactoryInteractionTargetNode
+				<CommandInteractionTargetNode
 					key={`${target.kind}:${target.id}`}
 					target={target}
-					onFactoryEvent={onFactoryEvent}
+					onCommandEvent={onCommandEvent}
 					onPick={onPick}
 					onPointerMove={onPointerMove}
 					pointerMoveEnabled={pointerMoveEnabled}
@@ -592,13 +592,13 @@ function TessellatedCommitMesh({ mesh: preview }: { readonly mesh: MeshPreview }
 // #endregion 🧊CommittedMesh
 
 // #region 🪝Hooks
-/** @emoji 🪝 Memoized `createFactoryRuntime` for React hosts. */
-export function useFactoryRuntime(spec: FactorySpec, opts: FactoryRuntimeOptions): FactoryRuntime {
-	return useMemo(() => createFactoryRuntime(spec, opts), [spec, opts]);
+/** @emoji 🪝 Memoized `createCommandRuntime` for React hosts. */
+export function useCommandRuntime(spec: CommandSpec, opts: CommandRuntimeOptions): CommandRuntime {
+	return useMemo(() => createCommandRuntime(spec, opts), [spec, opts]);
 }
 
-/** @emoji 🪝 Subscribes to `FactoryRuntime` revision updates for React hosts. */
-export function useFactorySnapshot(rt: FactoryRuntime): FactorySnapshot {
+/** @emoji 🪝 Subscribes to `CommandRuntime` revision updates for React hosts. */
+export function useCommandSnapshot(rt: CommandRuntime): CommandSnapshot {
 	return useSyncExternalStore(
 		(cb) => rt.subscribe(cb),
 		() => rt.getSnapshot(),
@@ -608,12 +608,12 @@ export function useFactorySnapshot(rt: FactoryRuntime): FactorySnapshot {
 // #endregion 🪝Hooks
 
 // #region 🪩Canvas
-export interface FactoryCanvasProps {
+export interface CommandCanvasProps {
 	readonly children: ReactNode;
 }
 
 /** @emoji 🪩 Root `<Canvas>` preset for factory viewports. */
-export function FactoryCanvas({ children }: FactoryCanvasProps): ReactNode {
+export function CommandCanvas({ children }: CommandCanvasProps): ReactNode {
 	return (
 		<Canvas style={{ height: "100%", width: "100%" }} camera={{ position: [10, 10, 8], fov: 45 }}>
 			<color attach="background" args={["#080810"]} />
@@ -622,27 +622,27 @@ export function FactoryCanvas({ children }: FactoryCanvasProps): ReactNode {
 	);
 }
 
-export interface FactorySpatialViewProps {
-	readonly snapshot: FactorySnapshot;
-	readonly onGroundPick?: (point: Vec3, event: FactoryEvent) => void;
+export interface CommandSpatialViewProps {
+	readonly snapshot: CommandSnapshot;
+	readonly onGroundPick?: (point: Vec3, event: CommandEvent) => void;
 	/** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
-	readonly onScenePointerMove?: (point: Vec3, event: FactoryEvent) => void;
-	readonly onFactoryEvent?: (event: FactoryEvent) => void;
+	readonly onScenePointerMove?: (point: Vec3, event: CommandEvent) => void;
+	readonly onCommandEvent?: (event: CommandEvent) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshPreview | null;
-	readonly geometry?: FactoryInteractionGeometry | null;
+	readonly geometry?: CommandInteractionGeometry | null;
 }
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
-export function FactorySpatialView({
+export function CommandSpatialView({
 	snapshot,
 	onGroundPick,
 	onScenePointerMove,
-	onFactoryEvent,
+	onCommandEvent,
 	pickEnabled = true,
 	committedMesh,
 	geometry,
-}: FactorySpatialViewProps): ReactNode {
+}: CommandSpatialViewProps): ReactNode {
 	const hostPickGate = pickEnabled !== false;
 	const gridHelper = useMemo(() => {
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
@@ -670,13 +670,13 @@ export function FactorySpatialView({
 	const pickPlaneEnabled =
 		hostPickGate && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
 	const onGroundPickEvent = (point: Vec3) => {
-		const event = createFactoryInteractionEvent("pointer.down", point, null);
-		onFactoryEvent?.(event);
+		const event = createCommandInteractionEvent("pointer.down", point, null);
+		onCommandEvent?.(event);
 		onGroundPick?.(point, event);
 	};
 	const onScenePointerMoveEvent = (point: Vec3) => {
-		const event = createFactoryInteractionEvent("pointer.move", point, null);
-		onFactoryEvent?.(event);
+		const event = createCommandInteractionEvent("pointer.move", point, null);
+		onCommandEvent?.(event);
 		onScenePointerMove?.(point, event);
 	};
 	return (
@@ -698,9 +698,9 @@ export function FactorySpatialView({
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
 			/>
-			<FactoryInteractionGeometryLayer
+			<CommandInteractionGeometryLayer
 				geometry={geometry}
-				onFactoryEvent={onFactoryEvent}
+				onCommandEvent={onCommandEvent}
 				onPick={onGroundPick}
 				onPointerMove={onScenePointerMove}
 				pointerMoveEnabled={groundMoveOn || heightMoveOn || zRodMoveOn}
@@ -716,7 +716,7 @@ export function FactorySpatialView({
 			{zRodMoveOn && origin ? (
 				<VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} />
 			) : null}
-			<FactoryDisplay model={snapshot.display} />
+			<CommandDisplay model={snapshot.display} />
 			{committedMesh ? <TessellatedCommitMesh mesh={committedMesh} /> : null}
 		</>
 	);
@@ -757,7 +757,7 @@ if (import.meta.vitest) {
 		});
 
 		it("creates snap and selection metadata for topology targets", () => {
-			const targets = createFactoryInteractionTargets({
+			const targets = createCommandInteractionTargets({
 				schema: "spatial.topology/v1",
 				revision: 1,
 				vertices: {
@@ -772,7 +772,7 @@ if (import.meta.vitest) {
 				clusters: {},
 			});
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
-			expect(createFactoryInteractionEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
+			expect(createCommandInteractionEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
 				point: [1, 2, 3],
 				modifiers: { shift: true },
@@ -797,13 +797,13 @@ if (import.meta.vitest) {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
 			}
-			const spec = buildBoxFactorySpec();
-			const runtime = createFactoryRuntime(spec, {
+			const spec = buildBoxCommandSpec();
+			const runtime = createCommandRuntime(spec, {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			const snapshot = runtime.getSnapshot();
-			expect(snapshot.factoryId).toBe(spec.id);
+			expect(snapshot.commandId).toBe(spec.id);
 			expect(snapshot.state).toBe(spec.machine.initial);
 		});
 	});

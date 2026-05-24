@@ -1,35 +1,42 @@
 // #region 🧲Header
-/** @emoji 🎭 `@spatial/js-machine-stately` — XState `StateEngine` for `FactorySpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
+/** @emoji 🎭 `@spatial/js-machine-stately` — XState `StateEngine` for `CommandSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
 import { createActor, setup } from "xstate";
 import {
 	applyTransition,
-	buildBoxCommandSpec as buildBoxFactorySpec,
+	buildAreaCommandSpec,
+	buildBoxCommandSpec,
+	buildDistanceCommandSpec,
 	cellRef,
-	createCommandRuntime as createFactoryRuntime,
+	createCommandRuntime,
 	expandMachineTransitions,
+	isEmptyTopologyDiff,
 	pureTsStateEngineProvider,
-	type CommandEvent as FactoryEvent,
-	type CommandRuntime as FactoryRuntime,
-	type CommandSpec as FactorySpec,
+	type CommandEvent,
+	type CommandRuntime,
+	type CommandSpec,
+	type EdgeRef,
+	type FaceRef,
 	type KernelAdapter,
 	type StateEngine,
 	type StateEngineProvider,
 	type StateEngineSendResult,
 	TopologyGraph,
 	type Vec3,
+	type VertexRef,
+	type WireRef,
 } from "@spatial/js-core";
 // #endregion 📥Imports
 
 // #region 🎭AdvanceEvent
-type StatelyAdvance = { type: "__advance"; factoryKind: string; branch: number };
+type StatelyAdvance = { type: "__advance"; commandKind: string; branch: number };
 // #endregion 🎭AdvanceEvent
 
 // #region 🎭MachineBuild
 /** @emoji 🎭 Builds a flat XState chart isomorphic to `spec.machine` (`__advance` encodes branch index). */
-function buildStatelyMachine(spec: FactorySpec, initial: string) {
+function buildStatelyMachine(spec: CommandSpec, initial: string) {
 	const states: Record<
 		string,
 		{
@@ -51,7 +58,7 @@ function buildStatelyMachine(spec: FactorySpec, initial: string) {
 					const tr = choices[i]!;
 					const tgt = (tr.target ?? sId) as string;
 					rows.push({
-						guard: ({ event }) => event.factoryKind === eventKind && event.branch === i,
+						guard: ({ event }) => event.commandKind === eventKind && event.branch === i,
 						target: tgt,
 					});
 				}
@@ -62,7 +69,7 @@ function buildStatelyMachine(spec: FactorySpec, initial: string) {
 	return setup({
 		types: { events: {} as StatelyAdvance },
 	}).createMachine({
-		id: `spatial-factory-${spec.id}`,
+		id: `spatial-command-${spec.id}`,
 		initial,
 		states,
 	});
@@ -72,14 +79,14 @@ function buildStatelyMachine(spec: FactorySpec, initial: string) {
 // #region 🎭StatelyStateEngine
 /** @emoji 🎭 XState-backed `StateEngine`; `send` runs `applyTransition` then syncs the actor via `__advance`. */
 export class StatelyStateEngine implements StateEngine {
-	private factoryState: string;
-	private readonly factoryContext: Record<string, unknown> = {};
+	private commandState: string;
+	private readonly commandContext: Record<string, unknown> = {};
 	private machine: ReturnType<typeof buildStatelyMachine>;
 	private actor!: { stop: () => void; start: () => void; send: (e: StatelyAdvance) => void; getSnapshot: () => { value: unknown } };
 
-	constructor(private readonly spec: FactorySpec) {
-		this.factoryState = spec.machine.initial;
-		this.machine = buildStatelyMachine(spec, this.factoryState);
+	constructor(private readonly spec: CommandSpec) {
+		this.commandState = spec.machine.initial;
+		this.machine = buildStatelyMachine(spec, this.commandState);
 		this.bootActor();
 	}
 
@@ -95,34 +102,34 @@ export class StatelyStateEngine implements StateEngine {
 	}
 
 	getState(): string {
-		return this.factoryState;
+		return this.commandState;
 	}
 
 	getContext(): Record<string, unknown> {
-		return this.factoryContext;
+		return this.commandContext;
 	}
 
 	reset(): void {
-		for (const k of Object.keys(this.factoryContext)) delete this.factoryContext[k];
-		this.factoryState = this.spec.machine.initial;
-		this.rebuildMachine(this.factoryState);
+		for (const k of Object.keys(this.commandContext)) delete this.commandContext[k];
+		this.commandState = this.spec.machine.initial;
+		this.rebuildMachine(this.commandState);
 	}
 
 	restore(state: string, context: Record<string, unknown>): void {
-		for (const k of Object.keys(this.factoryContext)) delete this.factoryContext[k];
-		Object.assign(this.factoryContext, context);
-		this.factoryState = state;
+		for (const k of Object.keys(this.commandContext)) delete this.commandContext[k];
+		Object.assign(this.commandContext, context);
+		this.commandState = state;
 		this.rebuildMachine(state);
 	}
 
-	async send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
-		if (String(this.actor.getSnapshot().value) !== this.factoryState) {
-			this.rebuildMachine(this.factoryState);
+	async send(event: CommandEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult> {
+		if (String(this.actor.getSnapshot().value) !== this.commandState) {
+			this.rebuildMachine(this.commandState);
 		}
-		const r = await applyTransition(this.spec, this.factoryState, this.factoryContext, event, kernel);
+		const r = await applyTransition(this.spec, this.commandState, this.commandContext, event, kernel);
 		if (!r.ok) return { ok: false };
-		this.factoryState = r.nextState;
-		this.actor.send({ type: "__advance", factoryKind: event.kind, branch: r.branchIndex });
+		this.commandState = r.nextState;
+		this.actor.send({ type: "__advance", commandKind: event.kind, branch: r.branchIndex });
 		return { ok: true, transient: r.transient };
 	}
 }
@@ -132,7 +139,7 @@ export class StatelyStateEngine implements StateEngine {
 /** @emoji 🎭 `StateEngineProvider` wiring `StatelyStateEngine` (XState v5). */
 export const statelyStateEngineProvider: StateEngineProvider = {
 	id: "xstate-stately",
-	create(spec: FactorySpec): StateEngine {
+	create(spec: CommandSpec): StateEngine {
 		return new StatelyStateEngine(spec);
 	},
 };
@@ -161,25 +168,55 @@ if (import.meta.vitest) {
 		}
 	}
 
-	async function assertSnapshotsEqual(a: FactoryRuntime, b: FactoryRuntime) {
+	async function assertSnapshotsEqual(a: CommandRuntime, b: CommandRuntime) {
 		const sa = a.getSnapshot();
 		const sb = b.getSnapshot();
 		expect(sb.state).toBe(sa.state);
 		expect(sb.context).toEqual(sa.context);
 		expect(sb.capabilities).toEqual(sa.capabilities);
+		expect(sb.lastResponse?.ok).toBe(sa.lastResponse?.ok);
+		expect(sb.lastResponse?.data).toEqual(sa.lastResponse?.data);
+		expect(sb.lastResponse?.diff).toEqual(sa.lastResponse?.diff);
+	}
+
+	class MeasureParityKernel implements KernelAdapter {
+		readonly id = "stub-measure-parity";
+		readonly operations = ["surface.resolveFaces", "measure.distance", "measure.area"] as const;
+		async createBoxFromCorners() {
+			return cellRef("unused");
+		}
+		async volume() {
+			return 0;
+		}
+		async tessellate() {
+			return { positions: new Float32Array(), indices: new Uint32Array() };
+		}
+		async query(name: string, params: Record<string, unknown>) {
+			if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
+			return undefined;
+		}
+		async vertexDistance(a: VertexRef, b: VertexRef, topo: TopologyGraph) {
+			const pa = topo.vertices[String(a)]?.position;
+			const pb = topo.vertices[String(b)]?.position;
+			if (!pa || !pb) return 0;
+			return Math.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]);
+		}
+		async faceArea(_f: FaceRef, _topo: TopologyGraph) {
+			return 42;
+		}
 	}
 
 	describe("@spatial/js-machine-stately", () => {
-		it("matches pure-ts factory snapshots through box workflow + commit", async () => {
-			const spec = buildBoxFactorySpec();
+		it("matches pure-ts command snapshots through box workflow + commit", async () => {
+			const spec = buildBoxCommandSpec();
 			const k1 = new StubKernel();
 			const k2 = new StubKernel();
-			const rtPure = createFactoryRuntime(spec, {
+			const rtPure = createCommandRuntime(spec, {
 				kernel: k1,
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
-			const rtSt = createFactoryRuntime(spec, {
+			const rtSt = createCommandRuntime(spec, {
 				kernel: k2,
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
@@ -203,16 +240,16 @@ if (import.meta.vitest) {
 			expect(k1.lastBox).toEqual(k2.lastBox);
 		});
 
-		it("matches pure-ts after factory-local undo", async () => {
-			const spec = buildBoxFactorySpec();
+		it("matches pure-ts after command-local undo", async () => {
+			const spec = buildBoxCommandSpec();
 			const k1 = new StubKernel();
 			const k2 = new StubKernel();
-			const rtPure = createFactoryRuntime(spec, {
+			const rtPure = createCommandRuntime(spec, {
 				kernel: k1,
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
-			const rtSt = createFactoryRuntime(spec, {
+			const rtSt = createCommandRuntime(spec, {
 				kernel: k2,
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
@@ -225,6 +262,73 @@ if (import.meta.vitest) {
 			rtPure.undo();
 			rtSt.undo();
 			await assertSnapshotsEqual(rtPure, rtSt);
+		});
+
+		it("matches pure-ts distance + area measure commits (response parity)", async () => {
+			const distSpec = buildDistanceCommandSpec();
+			const areaSpec = buildAreaCommandSpec();
+			const mkTopo = () => {
+				const t = new TopologyGraph();
+				const v0 = "v0" as VertexRef;
+				const v1 = "v1" as VertexRef;
+				t.vertices[v0] = { id: v0, position: [0, 0, 0] };
+				t.vertices[v1] = { id: v1, position: [3, 4, 0] };
+				const wf = "w0" as WireRef;
+				const e0 = "e0" as EdgeRef;
+				const f0 = "f0" as FaceRef;
+				t.edges[e0] = { id: e0, vertexIds: [v0, v1] };
+				t.wires[wf] = { id: wf, edgeIds: [e0] };
+				t.faces[f0] = { id: f0, wireIds: [wf] };
+				return t;
+			};
+			const k1d = new MeasureParityKernel();
+			const k2d = new MeasureParityKernel();
+			const rtPd = createCommandRuntime(distSpec, {
+				kernel: k1d,
+				document: { topology: mkTopo(), nodes: [] },
+				stateEngine: pureTsStateEngineProvider,
+			});
+			const rtSd = createCommandRuntime(distSpec, {
+				kernel: k2d,
+				document: { topology: mkTopo(), nodes: [] },
+				stateEngine: statelyStateEngineProvider,
+			});
+			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
+			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
+			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
+			await rtSd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v1", editable: true }], modifiers: {} });
+			await rtPd.send({ kind: "confirm", modifiers: {} });
+			await rtSd.send({ kind: "confirm", modifiers: {} });
+			const rd = await rtPd.commit();
+			const sd = await rtSd.commit();
+			expect(rd.data).toBe(5);
+			expect(sd.data).toBe(5);
+			expect(isEmptyTopologyDiff(rd.diff)).toBe(true);
+			expect(isEmptyTopologyDiff(sd.diff)).toBe(true);
+			await assertSnapshotsEqual(rtPd, rtSd);
+
+			const k1a = new MeasureParityKernel();
+			const k2a = new MeasureParityKernel();
+			const rtPa = createCommandRuntime(areaSpec, {
+				kernel: k1a,
+				document: { topology: mkTopo(), nodes: [] },
+				stateEngine: pureTsStateEngineProvider,
+			});
+			const rtSa = createCommandRuntime(areaSpec, {
+				kernel: k2a,
+				document: { topology: mkTopo(), nodes: [] },
+				stateEngine: statelyStateEngineProvider,
+			});
+			await rtPa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
+			await rtSa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
+			await rtPa.send({ kind: "confirm", modifiers: {} });
+			await rtSa.send({ kind: "confirm", modifiers: {} });
+			const ra = await rtPa.commit();
+			const sa = await rtSa.commit();
+			expect(ra.data).toBe(42);
+			expect(sa.data).toBe(42);
+			expect(isEmptyTopologyDiff(ra.diff)).toBe(true);
+			await assertSnapshotsEqual(rtPa, rtSa);
 		});
 	});
 }

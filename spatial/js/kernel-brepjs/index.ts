@@ -123,8 +123,8 @@ export class BrepjsKernel implements KernelAdapter {
 	async edgeLength(e: EdgeRef, topo: TopologyGraph): Promise<number> {
 		const ed = topo.edges[String(e)];
 		if (!ed) return 0;
-		const pa = topo.vertices[ed.vertexA]?.position;
-		const pb = topo.vertices[ed.vertexB]?.position;
+		const pa = topo.vertices[String(ed.vertexIds[0])]?.position;
+		const pb = topo.vertices[String(ed.vertexIds[1])]?.position;
 		if (!pa || !pb) return 0;
 		return vec3Distance(pa, pb);
 	}
@@ -132,17 +132,21 @@ export class BrepjsKernel implements KernelAdapter {
 	async faceArea(f: FaceRef, topo: TopologyGraph): Promise<number> {
 		const fr = topo.faces[String(f)];
 		if (!fr) return 0;
-		if (fr.surface.kind === "planar") return 1;
-		const verts = fr.surface.vertices;
-		const tris = fr.surface.triangles;
+		const points = fr.wireIds.flatMap((wireId) => {
+			const wire = topo.wires[String(wireId)];
+			return (wire?.edgeIds ?? []).flatMap((edgeId) => {
+				const edge = topo.edges[String(edgeId)];
+				const vertexId = edge?.vertexIds[0];
+				const point = vertexId ? topo.vertices[String(vertexId)]?.position : undefined;
+				return point ? [point] : [];
+			});
+		});
+		if (points.length < 3) return 0;
 		let s = 0;
-		for (const tri of tris) {
-			const i0 = tri[0]!;
-			const i1 = tri[1]!;
-			const i2 = tri[2]!;
-			const a = verts[i0]!;
-			const b = verts[i1]!;
-			const c = verts[i2]!;
+		const a = points[0]!;
+		for (let i = 1; i < points.length - 1; i++) {
+			const b = points[i]!;
+			const c = points[i + 1]!;
 			const ax = b[0] - a[0];
 			const ay = b[1] - a[1];
 			const az = b[2] - a[2];
@@ -192,24 +196,29 @@ if (import.meta.vitest) {
 			expect(vol).toBeCloseTo(24, 3);
 		});
 
-		it("createBoxFromCornersDiff includes one face bucket", async () => {
+		it("tessellate returns non-empty mesh for a box", async () => {
 			const cell = await kernel.createBoxFromCorners({
 				cornerA: [0, 0, 0],
-				cornerB: [1, 0, 0],
+				cornerB: [1, 1, 0],
 				height: 1,
 			});
+			const meshPreview = await kernel.tessellate(cell, 1e-3);
+			expect(meshPreview.indices.length).toBeGreaterThan(0);
+			expect(meshPreview.positions.length).toBeGreaterThan(0);
+		});
+
+		it("createBoxFromCornersDiff includes one face bucket", async () => {
 			const r = await kernel.createBoxFromCornersDiff({
 				cornerA: [0, 0, 0],
-				cornerB: [1, 0, 0],
+				cornerB: [1, 1, 0],
 				height: 1,
 			});
 			expect(r.cell).toBeDefined();
 			expect(Object.keys(r.diff.faces?.added ?? {}).length).toBeGreaterThan(0);
-			await kernel.volume(cell);
+			expect(await kernel.volume(r.cell)).toBeGreaterThan(0);
 		});
 
 		it("vertexDistance matches graph positions", async () => {
-			const { TopologyGraph } = await import("@spatial/js-core");
 			const g = new TopologyGraph();
 			const va = "va" as VertexRef;
 			const vb = "vb" as VertexRef;
@@ -218,22 +227,26 @@ if (import.meta.vitest) {
 			expect(await kernel.vertexDistance(va, vb, g)).toBe(5);
 		});
 
-		it("faceArea sums mesh triangles", async () => {
-			const { TopologyGraph, type FaceRef } = await import("@spatial/js-core");
+		it("faceArea sums boundary wire triangles", async () => {
 			const g = new TopologyGraph();
 			const fid = "f0" as FaceRef;
+			const wid = "w0" as WireRef;
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const v2 = "v2" as VertexRef;
+			const e0 = "e0" as EdgeRef;
+			const e1 = "e1" as EdgeRef;
+			const e2 = "e2" as EdgeRef;
+			g.vertices[v0] = { id: v0, position: [0, 0, 0] };
+			g.vertices[v1] = { id: v1, position: [1, 0, 0] };
+			g.vertices[v2] = { id: v2, position: [0, 1, 0] };
+			g.edges[e0] = { id: e0, vertexIds: [v0, v1] };
+			g.edges[e1] = { id: e1, vertexIds: [v1, v2] };
+			g.edges[e2] = { id: e2, vertexIds: [v2, v0] };
+			g.wires[wid] = { id: wid, edgeIds: [e0, e1, e2] };
 			g.faces[fid] = {
 				id: fid,
-				outerWireId: "w0" as import("@spatial/js-core").WireRef,
-				surface: {
-					kind: "mesh",
-					vertices: [
-						[0, 0, 0],
-						[1, 0, 0],
-						[0, 1, 0],
-					],
-					triangles: [[0, 1, 2]],
-				},
+				wireIds: [wid],
 			};
 			const a = await kernel.faceArea(fid, g);
 			expect(a).toBeCloseTo(0.5, 5);
