@@ -1,5 +1,5 @@
 // #region ­ƒº▓Header
-/** 🧱 `@elements/framework` — Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS Code–style `contributes` + `activate`), and {@link Workbench} → {@link WorkbenchApp} → {@link WorkbenchMode}. */
+/** ­ƒº▒ `@elements/ui-shell` ÔÇö Framework-free workbench graph, declarative {@link UiNode} bodies, {@link ShellExtensionHost} (VS CodeÔÇôstyle `contributes` + `activate`), and {@link Workbench} ÔåÆ {@link WorkbenchApp} ÔåÆ {@link WorkbenchMode}. */
 // #endregion ­ƒº▓Header
 
 //#region ­ƒöûJsonValue
@@ -855,7 +855,7 @@ if (import.meta.vitest) {
 						buildScene3dWindowBody("s", "c"),
 					],
 				}),
-			).toThrow(/table, scene3d, or board/);
+			).toThrow(/scene3d or board/);
 		});
 	});
 

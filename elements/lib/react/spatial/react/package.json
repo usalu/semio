@@ -12,6 +12,7 @@
 		".": "./index.tsx"
 	},
 	"dependencies": {
+		"@elements/framework-react": "workspace:*",
 		"@elements/geometry-spatial-js": "workspace:*",
 		"@elements/ui": "workspace:*",
 		"@react-three/drei": "^10.7.7",

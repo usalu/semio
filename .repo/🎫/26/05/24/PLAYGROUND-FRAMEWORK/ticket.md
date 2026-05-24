@@ -7,6 +7,7 @@
 ## Summary
 
 - Renamed `@elements/ui-shell` → `@elements/framework` (pure TS workbench core).
+- Restored corrupted `framework/core/index.ts` (concurrent edit had stripped `Workbench` class names).
 - Added `@elements/playground` — one-app shell with selection/filter toolbars and workbench + details side tabs; `PlaygroundController` base class.
 - Added `@elements/framework-react` — declarative `UiNode` renderer; `./workbench` subpath bridges `WorkbenchView` / `mountReactApp` (until full extraction from `@elements/ui`).
 - Refactored `@elements/geometry-spatial-play` to extend playground; host imports framework + framework-react only (not `@elements/ui`).
@@ -22,3 +23,5 @@
 - `elements/lib/react/board/play/index.ts`, `board-play-host.tsx`
 - `package.json` (workspaces)
 - `semio/client/lib/sketchpad/js/*` (framework import)
+- `elements/lib/react/board/play/*`, `board-play-host.tsx`, `vitest.config.ts`, `project.json`, `package.json` (board play uses `bootstrapBoardPlayWorkbench`, framework-react shell imports)
+- `elements/lib/playground/index.ts` (`registerPlaygroundSidePanelBodies`)

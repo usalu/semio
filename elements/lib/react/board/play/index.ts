@@ -5,7 +5,6 @@
 import {
 	CommandBus,
 	Controller,
-	registerDeclarativeSidePanelBody,
 	registerDeclarativeWindowBody,
 	ShellExtension,
 	type ShellExtensionContext,
@@ -21,6 +20,8 @@ import {
 	type UiNode,
 	type WindowLayout,
 } from "@elements/framework";
+
+import { registerPlaygroundSidePanelBodies } from "@elements/playground";
 
 import nakaginFixtureJson from "./fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -239,9 +240,11 @@ export function registerBoardPlayDeclarativeBodies(): void {
 	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
 	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
 	registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
-	registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
-	registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
-	registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
+	registerPlaygroundSidePanelBodies([
+		{ bodyKey: BOARD_PLAY_LIBRARY_TAB_BODY_KEY, build: buildBoardPlayLibraryDeclarativePanel },
+		{ bodyKey: BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, build: buildBoardPlayInspectorDeclarativePanel },
+		{ bodyKey: BOARD_PLAY_SETTINGS_TAB_BODY_KEY, build: buildBoardPlaySettingsDeclarativePanel },
+	]);
 }
 
 //#region 🔖Extension
@@ -277,7 +280,12 @@ export const BOARD_PLAY_EXTENSION_MANIFEST: ShellExtensionManifest = {
 export const boardPlayExtension: ShellExtension = {
 	id: BOARD_PLAY_EXTENSION_MANIFEST.id,
 	activate(context: ShellExtensionContext): void {
-		registerBoardPlayDeclarativeBodies();
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_OVERVIEW, buildBoardPlayOverviewDeclarativeBody);
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_DETAIL, buildBoardPlayDetailDeclarativeBody);
+		context.registerDeclarativeWindowBody(BOARD_PLAY_BODY_KEY_SELECTION, buildBoardPlaySelectionDeclarativeBody);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_LIBRARY_TAB_BODY_KEY, buildBoardPlayLibraryDeclarativePanel);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_INSPECTOR_TAB_BODY_KEY, buildBoardPlayInspectorDeclarativePanel);
+		context.registerDeclarativeSidePanelBody(BOARD_PLAY_SETTINGS_TAB_BODY_KEY, buildBoardPlaySettingsDeclarativePanel);
 	},
 };
 

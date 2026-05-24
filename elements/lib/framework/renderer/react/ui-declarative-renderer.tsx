@@ -225,3 +225,48 @@ export function UiRenderer({ node, commandBus }: UiRendererProps): React.ReactEl
 	return renderNode(node, commandBus, false);
 }
 //#endregion 🔖Renderer
+
+//#region 🧪Tests
+	if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+	const { renderToStaticMarkup } = await import("react-dom/server");
+	const { CommandBus, Controller } = await import("@elements/framework");
+
+	describe("UiRenderer", () => {
+		it("renders text and dispatches button commands", () => {
+			const bus = new CommandBus();
+			let dispatched = "";
+			class TCtrl extends Controller {
+				constructor() {
+					super("ctrl", bus, () => undefined);
+				}
+				override run(command: string): void {
+					dispatched = command;
+				}
+			}
+			new TCtrl();
+			const markup = renderToStaticMarkup(
+				<UiRenderer
+					commandBus={bus}
+					node={{
+						type: "stack",
+						direction: "vertical",
+						children: [
+							{ type: "text", value: "hello" },
+							{
+								type: "button",
+								label: "Go",
+								command: { controllerId: "ctrl", command: "go" },
+							},
+						],
+					}}
+				/>,
+			);
+			expect(markup).toContain("hello");
+			expect(markup).toContain("Go");
+			bus.dispatch("ctrl", "go");
+			expect(dispatched).toBe("go");
+		});
+	});
+}
+//#endregion 🧪Tests

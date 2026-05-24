@@ -10,10 +10,11 @@
     "build": "bun nx run @elements/board:build",
     "test": "bun nx run @elements/board:test"
   },
-  "dependencies": {
-    "@elements/framework": "workspace:*",
-    "@elements/framework-react": "workspace:*",
-    "@elements/ui": "workspace:*",
+	"dependencies": {
+		"@elements/framework": "workspace:*",
+		"@elements/framework-react": "workspace:*",
+		"@elements/playground": "workspace:*",
+		"@elements/ui": "workspace:*",
     "its-fine": "^2.0.0",
     "lucide-react": "^0.536.0",
     "react": "^19.2.3",

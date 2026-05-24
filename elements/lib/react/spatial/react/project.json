@@ -5,7 +5,7 @@
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"cwd": "elements/spatial/react",
+				"cwd": "elements/lib/react/spatial/react",
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}

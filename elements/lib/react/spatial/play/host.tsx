@@ -1,13 +1,14 @@
 import { Workbench, type UiScene3DHostSurfaceNode, type UiTableHostSurfaceNode } from "@elements/framework";
-import { registerUiScene3DSurfaceHost, registerUiTableSurfaceHost } from "@elements/framework-react";
 import {
 	LevelProvider,
 	WorkbenchView,
 	getLevelBgClass,
 	mountReactApp,
 	registerElementIcon,
+	registerUiScene3DSurfaceHost,
+	registerUiTableSurfaceHost,
 	useApp,
-} from "@elements/framework-react/workbench";
+} from "@elements/framework-react";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 

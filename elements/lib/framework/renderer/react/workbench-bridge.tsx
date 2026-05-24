@@ -10,6 +10,7 @@ export {
 	registerElementIcon,
 	getLevelBgClass,
 	LevelProvider,
+	ReactUI,
 	type WorkbenchViewProps,
 	type AppProps,
 	type AppContextValue,

@@ -1,18 +1,23 @@
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
+const frameworkCore = resolve(root, "../../framework/core/index.ts");
+const frameworkReact = resolve(root, "../../framework/renderer/react/index.tsx");
+const frameworkReactWorkbench = resolve(root, "../../framework/renderer/react/workbench-bridge.tsx");
+const uiCore = resolve(root, "../core/index.tsx");
 
 /** @emoji 🧪 Vitest entry for `@elements/board` inlined source tests (`import.meta.vitest` blocks). */
 export default defineConfig({
 	root,
 	resolve: {
 		alias: {
-			"@elements/framework": `${root}/../../../framework/core/index.ts`,
-			"@elements/framework-react": `${root}/../../../framework/renderer/react/index.tsx`,
-			"@elements/framework-react/workbench": `${root}/../../../framework/renderer/react/workbench-bridge.tsx`,
-			"@elements/ui": `${root}/../core/index.tsx`,
+			"@elements/framework": frameworkCore,
+			"@elements/framework-react": frameworkReact,
+			"@elements/framework-react/workbench": frameworkReactWorkbench,
+			"@elements/playground": resolve(root, "../../playground/index.ts"),
+			"@elements/ui": uiCore,
 		},
 	},
 	test: {

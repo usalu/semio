@@ -14,3 +14,18 @@ export {
 } from "./ui-declarative-renderer.tsx";
 
 export type { Workbench } from "@elements/framework";
+
+export {
+	WorkbenchView,
+	mountReactApp,
+	mountAsyncReactApp,
+	useApp,
+	registerElementIcon,
+	getLevelBgClass,
+	LevelProvider,
+	ReactUI,
+	type WorkbenchViewProps,
+	type AppProps,
+	type AppContextValue,
+	type UIPanelVisibility,
+} from "./workbench-bridge.tsx";
