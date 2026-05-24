@@ -3,7 +3,12 @@
   "compilerOptions": {
     "rootDir": ".",
     "jsx": "react-jsx",
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@spatial/js-core": ["../core/index.ts"],
+      "@spatial/js-kernel-brepjs": ["../kernel-brepjs/index.ts"]
+    }
   },
-  "include": ["index.tsx", "play/main.tsx"]
+  "include": ["index.tsx", "play/main.tsx", "play/vite.config.ts"]
 }

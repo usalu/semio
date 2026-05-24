@@ -7,15 +7,18 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
 	root,
 	resolve: {
-		alias: [{ find: "@spatial/js-core", replacement: resolve(root, "../core/index.ts") }],
+		alias: [
+			{ find: "@spatial/js-core", replacement: resolve(root, "../core/index.ts") },
+			{ find: "@spatial/js-kernel-brepjs", replacement: resolve(root, "../kernel-brepjs/index.ts") },
+		],
 	},
-	test: {
+		test: {
 		mode: "test",
 		environment: "jsdom",
 		testTimeout: 120_000,
 		fileParallelism: false,
 		maxConcurrency: 1,
-		include: ["index.tsx", "play/index.ts"],
-		includeSource: ["index.tsx", "play/index.ts"],
+		include: ["index.tsx"],
+		includeSource: ["index.tsx"],
 	},
 });

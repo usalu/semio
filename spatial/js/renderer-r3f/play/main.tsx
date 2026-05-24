@@ -6,6 +6,7 @@ import {
 	createFactoryRuntime,
 	type FactoryRuntime,
 	TopologyGraph,
+	type Vec3,
 } from "@spatial/js-core";
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import {
