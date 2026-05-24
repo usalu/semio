@@ -9,13 +9,15 @@
 	"main": "./index.ts",
 	"types": "./index.ts",
 	"exports": {
-		".": "./index.ts"
+		".": "./index.ts",
+		"./fixtures/topology.json": "./fixtures/topology.json"
 	},
 	"dependencies": {
 		"brepjs": "^18.20.3",
 		"brepjs-opencascade": "^0.15.6"
 	},
 	"devDependencies": {
+		"jsdom": "^26.1.0",
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.4"
 	},

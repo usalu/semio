@@ -1,4 +1,4 @@
-import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "../../renderer/react/index.tsx";
+import { Button, Input, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass, useApp } from "@elements/ui";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
@@ -21,7 +21,7 @@ import {
 	type SpatialSurfaceSnapshot,
 	type TopologicTransform,
 	type TopologicKind,
-} from "../js/index.ts";
+} from "@elements/geometry-spatial-js";
 
 //#region 🔖Helpers
 function nextSpatialTransformPosition(transform: TopologicTransform | undefined, position: readonly [number, number, number]): TopologicTransform {
@@ -435,7 +435,7 @@ export const SpatialDetailsPanelBody: React.FC = () => {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	const topologyJson = (await import("../fixtures/topology.json")).default;
+	const topologyJson = (await import("@elements/geometry-spatial-js/fixtures/topology.json")).default;
 
 	describe("spatial react surface", () => {
 		it("uses dedicated workbench and details panels for filtering and selection", async () => {

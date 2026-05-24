@@ -6,7 +6,7 @@
 			"executor": "nx:run-commands",
 			"options": {
 				"cwd": "elements/spatial/js",
-				"command": "bun ../script.ts js test",
+				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}
 		}

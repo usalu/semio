@@ -8,7 +8,6 @@
     "elements/core/*",
     "elements/renderer/*",
     "elements/renderer/react/windows/*",
-    "elements/spatial",
     "elements/spatial/*",
     "elements/styling",
     "elements/client/lib/*",

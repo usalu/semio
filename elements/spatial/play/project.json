@@ -6,7 +6,7 @@
 			"executor": "nx:run-commands",
 			"options": {
 				"cwd": "elements/spatial/play",
-				"command": "bun ../script.ts play dev --port 6017",
+				"command": "bun ./script.ts dev --port 6017",
 				"env": {
 					"CHOKIDAR_USEPOLLING": "1"
 				},
@@ -17,7 +17,7 @@
 			"executor": "nx:run-commands",
 			"options": {
 				"cwd": "elements/spatial/play",
-				"command": "bun ../script.ts play build",
+				"command": "bun ./script.ts build",
 				"forwardAllArgs": true
 			}
 		},
@@ -25,7 +25,7 @@
 			"executor": "nx:run-commands",
 			"options": {
 				"cwd": "elements/spatial/play",
-				"command": "bun ../script.ts play test",
+				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}
 		}

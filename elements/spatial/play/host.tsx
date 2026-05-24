@@ -2,7 +2,7 @@ import {
 	Workbench,
 	type UiPanelHostSurfaceNode,
 	type UiScene3DHostSurfaceNode,
-	} from "../../core/index.ts";
+} from "@elements/ui-shell";
 import {
 	LevelProvider,
 	WorkbenchView,
@@ -14,11 +14,11 @@ import {
 	registerUiPanelSurfaceHost,
 	registerUiScene3DSurfaceHost,
 	useApp,
-} from "../../renderer/react/index.tsx";
+} from "@elements/ui";
 import { ListFilter, ScanSearch } from "lucide-react";
 import * as React from "react";
 
-import { SpatialDetailsPanel, SpatialSurface, SpatialWorkbenchPanel, type SpatialSurfaceSnapshot } from "../react/index.tsx";
+import { SpatialDetailsPanel, SpatialSurface, SpatialWorkbenchPanel, type SpatialSurfaceSnapshot } from "@elements/geometry-spatial-react";
 import {
 	SPATIAL_PLAY_BODY_KEY,
 	SPATIAL_PLAY_CONTROLLER_ID,

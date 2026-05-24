@@ -14,9 +14,9 @@ import {
 	type ShellWindowBodyViewContext,
 	type ShellToolItem,
 	type UiNode,
-} from "../../core/index.ts";
+} from "@elements/ui-shell";
 
-import topologyJson from "../fixtures/topology.json";
+import topologyJson from "@elements/geometry-spatial-js/fixtures/topology.json";
 import {
 	TOPOLOGIC_KINDS,
 	buildSpatialDetailsPanelState,
@@ -33,7 +33,7 @@ import {
 	type TopologicFixtureV1,
 	type TopologicKind,
 	type TopologicTransform,
-} from "../js/index.ts";
+} from "@elements/geometry-spatial-js";
 
 //#region 🔖Helpers
 function kindLabel(kind: TopologicKind): string {

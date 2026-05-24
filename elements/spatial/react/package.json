@@ -21,6 +21,7 @@
 		"three": "^0.180.0"
 	},
 	"devDependencies": {
+		"jsdom": "^26.1.0",
 		"@types/react": "^19.2.8",
 		"@types/react-dom": "^19.2.3",
 		"@types/three": "^0.180.0",

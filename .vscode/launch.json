@@ -226,7 +226,7 @@
       "name": "🛠️dev📐elements🖱️geometry🧭spatial",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/geometry-spatial:dev",
+      "command": "bun nx run @elements/geometry-spatial-play:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
