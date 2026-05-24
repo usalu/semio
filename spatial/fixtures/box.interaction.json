@@ -2314,6 +2314,46 @@
             }
           }
         ]
+      },
+      {
+        "state": "committed",
+        "items": [
+          {
+            "kind": "box-preview",
+            "id": "preview-committed",
+            "role": "preview",
+            "cornerA": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "origin"
+                }
+              ]
+            },
+            "cornerB": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "corner"
+                }
+              ]
+            },
+            "height": {
+              "kind": "path",
+              "root": "context",
+              "segments": [
+                {
+                  "kind": "field",
+                  "name": "height"
+                }
+              ]
+            }
+          }
+        ]
       }
     ]
   },

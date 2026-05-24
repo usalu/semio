@@ -1941,7 +1941,7 @@ export class InteractionRuntime {
 		for (const l of this.listeners) l();
 	}
 
-	/** @emoji 📜 Dispatches a typed command event through the statechart + optional kernel queries. */
+	/** @emoji 📜 Dispatches a typed interaction event through the statechart + optional kernel queries. */
 	async send(event: InteractionEvent): Promise<void> {
 		if (event.kind === "selection.changed") {
 			const sel = getActiveSelectionSpec(this.spec, this.sm.getState());
@@ -2293,9 +2293,20 @@ if (import.meta.vitest) {
 			expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
 			expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
 		});
-		it("InteractionRegistry.withBuiltins contains box preset id", () => {
+		it("register replaces a built-in action id", () => {
+			const r = ActionRegistry.withBuiltins();
+			const before = r.get("measure.faceArea")?.label;
+			r.register({
+				id: "measure.faceArea",
+				label: "override",
+				run: () => ({ data: 99 }),
+			});
+			expect(r.get("measure.faceArea")?.label).toBe("override");
+			expect(before).not.toBe("override");
+		});
+		it("InteractionRegistry.withBuiltins get matches buildBoxInteractionSpec", () => {
 			const reg = InteractionRegistry.withBuiltins();
-			expect(reg.get("primitive.box")?.id).toBe(buildBoxInteractionSpec().id);
+			expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
 		});
 		it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
 			class StubKernel implements KernelAdapter {
@@ -2355,7 +2366,7 @@ if (import.meta.vitest) {
 			expect(selectionEventMatches(spec, bad)).toBe(false);
 		});
 	});
-	describe("@spatial/js-core command box", () => {
+	describe("@spatial/js-core interaction box", () => {
 		it("tracks first-corner cursor on the grid after start", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub";
@@ -2388,6 +2399,37 @@ if (import.meta.vitest) {
 			snap = rt.getSnapshot();
 			expect(snap.state).toBe("first_corner_other_or_length");
 			expect(snap.context.cursor).toBeUndefined();
+		});
+
+		it("pushes interaction-local undo snapshot on each non-transient transition", async () => {
+			class StubKernel implements KernelAdapter {
+				readonly id = "stub-undo";
+				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
+				async createBoxFromCorners() {
+					return cellRef("stub");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const spec = buildBoxInteractionSpec();
+			const rt = createInteractionRuntime(spec, {
+				kernel: new StubKernel(),
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
+			expect(rt.getSnapshot().capabilities.canUndo).toBe(false);
+			await rt.send({ kind: "start" });
+			expect(rt.getSnapshot().capabilities.canUndo).toBe(true);
+			const afterStart = rt.getSnapshot().state;
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+			expect(rt.getSnapshot().capabilities.canUndo).toBe(true);
+			await rt.undo();
+			expect(rt.getSnapshot().state).toBe(afterStart);
+			await rt.undo();
+			expect(rt.getSnapshot().state).toBe(spec.machine.initial);
 		});
 
 		it("runs box workflow with a recording kernel stub (no solid modeling in core)", async () => {
@@ -2430,7 +2472,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core stateEngine option", () => {
-		it("explicit pure-ts provider matches default command snapshots", async () => {
+		it("explicit pure-ts provider matches default interaction snapshots", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub-opt";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
@@ -2599,8 +2641,8 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core command session undo redo", () => {
-		it("supports redo after undo during an active command and clears redo on new branch", async () => {
+	describe("@spatial/js-core interaction session undo redo", () => {
+		it("supports redo after undo during an active interaction and clears redo on new branch", async () => {
 			class StubKernel implements KernelAdapter {
 				readonly id = "stub-s";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
@@ -2663,6 +2705,22 @@ if (import.meta.vitest) {
 			expect(Object.keys(g.faces).length).toBe(1);
 			rt.undo();
 			expect(Object.keys(g.faces).length).toBe(0);
+		});
+	});
+
+	describe("@spatial/js-core box display committed", () => {
+		it("keeps box-preview visible for committed state", () => {
+			const spec = buildBoxInteractionSpec();
+			const ctx: Record<string, unknown> = {
+				origin: [0, 0, 0] as Vec3,
+				corner: [2, 3, 0] as Vec3,
+				height: 4,
+			};
+			const d = resolveDisplay(spec, "committed", ctx);
+			const prev = d.items.find((i) => i.kind === "box-preview" && i.id === "preview-committed");
+			expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
+			expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
+			expect(prev?.params?.height).toBe(4);
 		});
 	});
 }

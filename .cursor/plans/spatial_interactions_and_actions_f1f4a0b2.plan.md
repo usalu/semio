@@ -7,37 +7,37 @@ todos:
     status: completed
   - id: core-rename
     content: Rename Command*/ActionSpec symbols and regions in spatial/js/core/index.ts; remove legacy normalizer + excludeEvents
-    status: in_progress
+    status: completed
   - id: action-registry
     content: Add ActionRegistry + built-in pure actions (geometry-in/out + 12 ex-box.transform helpers + createBoxFrom3Points) in core
-    status: pending
+    status: completed
   - id: interaction-registry
     content: Add InteractionRegistry + withBuiltins loading the 5 fixtures in core
-    status: pending
+    status: completed
   - id: effect-action-routing
     content: Replace box.transform op with EffectSpec {op:'action'}; collapse commit.operation to {kind:'action', action, params}; wire runtime through ActionRegistry
-    status: pending
+    status: completed
   - id: fixtures
     content: Rename *.command.json -> *.interaction.json, bump schema to spatial.interaction/v1, rewrite actions->effects and commit.operation; delete orphaned factory.json variants
     status: completed
   - id: schema
     content: Update spatial/schema/json/ schema files for the new field/schema names
-    status: pending
+    status: completed
   - id: stately
     content: Mirror renames in spatial/js/machine-stately/index.ts (types + view docs)
-    status: pending
+    status: completed
   - id: renderer
     content: Mirror renames in spatial/js/renderer-r3f/index.tsx (CommandRepl->InteractionRepl etc.)
-    status: pending
+    status: completed
   - id: play-cli
     content: Update spatial/js/renderer-r3f/play/main.tsx and spatial/js/cli imports/symbols
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing vitest suites in core + stately + renderer-r3f to cover registries, effect/action routing, transition-undo-for-all-states, parity
-    status: pending
+    status: completed
   - id: verify-close
     content: Run bun nx test/lint for the three packages, then ticket_close with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

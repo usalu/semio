@@ -1517,6 +1517,13 @@ if (import.meta.vitest) {
 			expect(pres.canRedo).toBe(true);
 		});
 	});
+
+	describe("@spatial/js-renderer-r3f interaction repl", () => {
+		it("exports InteractionRepl and useInteractionRuntime for hosts", () => {
+			expect(typeof InteractionRepl).toBe("function");
+			expect(typeof useInteractionRuntime).toBe("function");
+		});
+	});
 }
 // #endregion 🧪Tests
 
