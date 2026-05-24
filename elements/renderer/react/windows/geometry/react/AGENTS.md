@@ -1,3 +1,0 @@
-- You MUST use the topologic wasm bindings for all computations related to geometry.
-  - You MUST NOT use three.js for any processing of geometry.
-  - You MUST use three.js only for rendering the geometry.

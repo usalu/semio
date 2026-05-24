@@ -12,7 +12,7 @@
 // Docs entrypoint that mounts the Sketchpad React component with StrictMode.
 // Entrypoint MUST render into the root element defined in the docs index.html.
 
-import { Sketchpad } from "@semio/sketchpad";
+import { Sketchpad } from "../js";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import "./globals.css";

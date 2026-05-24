@@ -20,7 +20,7 @@ import {
   Kit,
   KitFullDtoSchema,
 } from "@semio/react";
-import { Sketchpad, ensureSketchpadDeclarativeShell } from "@semio/sketchpad";
+import { Sketchpad, ensureSketchpadDeclarativeShell } from "../../lib/sketchpad/js";
 import { createRoot } from "react-dom/client";
 
 declare global {

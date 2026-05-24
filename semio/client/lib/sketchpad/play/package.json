@@ -8,7 +8,6 @@
   "dependencies": {
     "@elements/ui": "*",
     "@semio/js": "*",
-    "@semio/react": "*",
     "@semio/sketchpad": "*"
   },
   "author": {
