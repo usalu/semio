@@ -3,6 +3,14 @@
   "id": "feature.offsetSurface",
   "version": "1.0.0",
   "label": "Offset Surface",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": ["idle", "selectSurface", "setDistance", "committed", "cancelled"],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
   "requires": {
     "kernel": {
       "operations": ["surface.resolveFaces", "face.offset", "entity.tessellate"],
@@ -29,6 +37,8 @@
         "on": {
           "selection.changed": {
             "target": "setDistance",
+            "key": "i",
+            "label": "Pick surface",
             "actions": [
               { "op": "assign", "path": "surfaceId", "value": { "$event": "surfaceId" } },
               {
@@ -39,16 +49,23 @@
               }
             ]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "setDistance": {
         "on": {
           "set.distance": {
+            "key": "n",
+            "label": "Apply offset",
             "actions": [{ "op": "assign", "path": "distance", "value": { "$event": "value" } }]
           },
-          "confirm": { "target": "committed", "guard": "hasSurfaceAndDistance" },
-          "cancel": { "target": "cancelled" }
+          "confirm": {
+            "target": "committed",
+            "guard": "hasSurfaceAndDistance",
+            "key": "Enter",
+            "label": "Commit offset"
+          },
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "committed": { "final": true },
@@ -69,6 +86,7 @@
   },
   "commit": {
     "when": "hasSurfaceAndDistance",
+    "fromStates": ["setDistance"],
     "operation": {
       "kind": "face.offset",
       "params": {

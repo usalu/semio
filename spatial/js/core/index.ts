@@ -617,7 +617,7 @@ export function expandMachineTransitions(
 	return (Array.isArray(raw) ? raw : [raw]) as readonly TransitionSpec[];
 }
 
-const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down", "selection.changed"]);
+const HOST_KEYBIND_EXCLUDED_KINDS = new Set(["pointer.move", "pointer.down"]);
 
 /** @emoji ⌨️ Resolved spatial host hints (defaults disable ground picking). */
 export interface FactorySpatialInteractionResolved {
@@ -1073,8 +1073,6 @@ export class FactoryRuntime {
 	async commit(): Promise<CellRef | null> {
 		const st = this.sm.getState();
 		if (st === "committed" || st === "cancelled") return null;
-		const allowed = this.spec.commit.fromStates ?? ["ready"];
-		if (!allowed.includes(st)) return null;
 		if (!this.canCommit()) return null;
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
@@ -1144,6 +1142,29 @@ export function buildOffsetSurfaceFactorySpec(): FactorySpec {
 	const s = parseFactorySpec(offsetSurfaceFactoryJson);
 	if (!s) throw new Error("spatial/fixtures/offset-surface.factory.json invalid");
 	return s;
+}
+
+/** @emoji 📚 Built-in factory preset ids for host dropdowns (`spatial/fixtures/*.factory.json`). */
+export function listSpatialFactoryPresets(): readonly { readonly id: string; readonly label: string }[] {
+	return [
+		{ id: "primitive.box", label: "Box" },
+		{ id: "feature.extrudeWire", label: "Extrude wire" },
+		{ id: "feature.offsetSurface", label: "Offset surface" },
+	];
+}
+
+/** @emoji 📚 Loads a built-in factory preset by stable `id` (see `listSpatialFactoryPresets`). */
+export function loadSpatialFactoryPreset(presetId: string): FactorySpec | null {
+	const raw =
+		presetId === "primitive.box"
+			? boxFactoryJson
+			: presetId === "feature.extrudeWire"
+				? extrudeFactoryJson
+				: presetId === "feature.offsetSurface"
+					? offsetSurfaceFactoryJson
+					: null;
+	if (!raw) return null;
+	return parseFactorySpec(raw as unknown);
 }
 // #endregion 📦Factories
 

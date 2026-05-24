@@ -95,6 +95,8 @@
         "target": { "type": "string" },
         "guard": { "type": "string" },
         "transient": { "type": "boolean" },
+        "key": { "type": "string" },
+        "label": { "type": "string" },
         "actions": {
           "type": "array",
           "items": { "$ref": "#/$defs/action" }

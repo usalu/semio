@@ -3,6 +3,14 @@
   "id": "feature.extrudeWire",
   "version": "1.0.0",
   "label": "Extrude Wire",
+  "interaction": {
+    "spatialGroundPick": false,
+    "pickDisabledStates": ["idle", "selectWire", "setDistance", "committed", "cancelled"],
+    "groundPointerMoveStates": [],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
   "requires": {
     "kernel": {
       "operations": ["wire.extrudeToCell", "entity.tessellate"],
@@ -28,18 +36,27 @@
         "on": {
           "selection.changed": {
             "target": "setDistance",
+            "key": "i",
+            "label": "Pick wire",
             "actions": [{ "op": "assign", "path": "wireId", "value": { "$event": "wireId" } }]
           },
-          "cancel": { "target": "cancelled" }
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "setDistance": {
         "on": {
           "set.distance": {
+            "key": "n",
+            "label": "Apply distance",
             "actions": [{ "op": "assign", "path": "distance", "value": { "$event": "value" } }]
           },
-          "confirm": { "target": "committed", "guard": "hasWireAndDistance" },
-          "cancel": { "target": "cancelled" }
+          "confirm": {
+            "target": "committed",
+            "guard": "hasWireAndDistance",
+            "key": "Enter",
+            "label": "Commit extrude"
+          },
+          "cancel": { "target": "cancelled", "key": "x", "label": "Cancel" }
         }
       },
       "committed": { "final": true },
@@ -60,6 +77,7 @@
   },
   "commit": {
     "when": "hasWireAndDistance",
+    "fromStates": ["setDistance"],
     "operation": {
       "kind": "wire.extrudeToCell",
       "params": {

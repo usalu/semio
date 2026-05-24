@@ -642,6 +642,7 @@ export function FactorySpatialView({
 	committedMesh,
 	geometry,
 }: FactorySpatialViewProps): ReactNode {
+	const hostPickGate = pickEnabled !== false;
 	const gridHelper = useMemo(() => {
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
 		g.rotation.x = Math.PI / 2;
@@ -651,26 +652,22 @@ export function FactorySpatialView({
 	const ctx = snapshot.context;
 	const origin = vec3FromSnapshotContext(ctx, "origin");
 	const corner = vec3FromSnapshotContext(ctx, "corner");
-	const groundPointerMoveStates = new Set([
-		"first_corner",
-		"first_corner_other_or_length",
-		"diagonal_rubber",
-		"cube_diagonal_rubber",
-		"cube_other_corner",
-		"three_point_edge",
-		"three_point_width",
-		"vertical_width",
-		"center_corner",
-		"cube_center_corner",
-	]);
-	const groundMoveOn = groundPointerMoveStates.has(snapshot.state) && Boolean(onScenePointerMove);
+	const si = snapshot.spatialInteraction;
+	const groundMoveOn =
+		si.spatialGroundPick && si.groundPointerMoveStates.includes(snapshot.state) && Boolean(onScenePointerMove);
 	const heightMoveOn =
-		snapshot.state === "first_corner_height" &&
+		si.spatialGroundPick &&
+		si.heightDragStates.includes(snapshot.state) &&
 		Boolean(onScenePointerMove) &&
 		origin !== null &&
 		corner !== null;
 	const zRodMoveOn =
-		snapshot.state === "vertical_end" && Boolean(onScenePointerMove) && origin !== null;
+		si.spatialGroundPick &&
+		si.verticalRodStates.includes(snapshot.state) &&
+		Boolean(onScenePointerMove) &&
+		origin !== null;
+	const pickPlaneEnabled =
+		hostPickGate && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
 	const onGroundPickEvent = (point: Vec3) => {
 		const event = createFactoryInteractionEvent("pointer.down", point, null);
 		onFactoryEvent?.(event);
@@ -695,7 +692,7 @@ export function FactorySpatialView({
 			/>
 			<primitive object={gridHelper} />
 			<GroundPickPlane
-				enabled={pickEnabled}
+				enabled={pickPlaneEnabled}
 				onPick={onGroundPickEvent}
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
