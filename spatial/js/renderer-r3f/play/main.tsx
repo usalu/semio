@@ -182,7 +182,7 @@ function PlayApp() {
 	const interactions = useMemo(() => listSpatialInteractions(), []);
 	const [interactionId, setInteractionId] = useState(() => interactions[0]?.id ?? "");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [geometryAssetId, setGeometryAssetId] = useState("tall-building");
+	const [geometryAssetId, setGeometryAssetId] = useState("");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : null), [interactionId]);
 
 	const handleInteractionPick = useCallback(

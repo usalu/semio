@@ -12,6 +12,7 @@ import * as THREE from "three";
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
 import {
+	abortActiveInteractionSession,
 	applyTopologyDiff,
 	boxTopologyDiff,
 	buildBoxInteractionSpec,
@@ -20,6 +21,7 @@ import {
 	DerivedViewService,
 	topologyCellAabb,
 	DocumentHistory,
+	edgeSamplePoints,
 	isInteractionSessionActive,
 	parseTopologyGraphJson,
 	listKeyedInteractionTransitions,
@@ -448,7 +450,7 @@ function topologyVertexPoint(vertices: Record<string, VertexRecord>, id: string)
 }
 
 function topologyEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRecord): readonly Vec3[] {
-	return edge.vertexIds.map((id) => topologyVertexPoint(vertices, id)).filter((p): p is Vec3 => Boolean(p));
+	return edgeSamplePoints(vertices, edge, 32);
 }
 
 function topologyFacePoints(
@@ -1644,7 +1646,7 @@ function SpatialPickTargetNode({
 	);
 }
 
-/** @emoji 🧵 Draws all topology edges for imported factory geometry (play building assets). */
+/** @emoji 🧵 Draws all topology edges for imported factory geometry. */
 function TopologyFactoryWireframeLayer({ geometry }: { readonly geometry?: SpatialPickGeometry | null }): ReactNode {
 	const segments = useMemo(() => {
 		if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
@@ -2026,46 +2028,94 @@ function replSuggestionHaystack(s: ReplSuggestion): string {
 	return `${s.key} ${s.label} ${s.detail}`.toLowerCase();
 }
 
-function replFilterSuggestions(query: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
-	const q = query.trim().toLowerCase();
-	if (!q) return [...all];
-	return all.filter((s) => replSuggestionHaystack(s).includes(q));
+function replRankScore(query: string, s: ReplSuggestion): number {
+	const ql = query.trim().toLowerCase();
+	if (!ql) return -1;
+	const key = s.key.toLowerCase();
+	const label = s.label.toLowerCase();
+	const detail = s.detail.toLowerCase();
+	if (key.startsWith(ql)) return 4000 - key.length;
+	if (label.startsWith(ql)) return 3000 - label.length;
+	if (detail.startsWith(ql)) return 2000 - detail.length;
+	if (replSuggestionHaystack(s).includes(ql)) return 1000;
+	return -1;
 }
 
-function replInteractionSuggestionsFrom(all: readonly ReplSuggestion[]): ReplSuggestion[] {
-	return all.filter((s) => s.kind === "interaction");
+export function replFilterSuggestions(query: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
+	const q = query.trim();
+	if (!q) return [];
+	return all
+		.map((s) => ({ s, score: replRankScore(q, s) }))
+		.filter((row) => row.score >= 0)
+		.sort((a, b) => b.score - a.score)
+		.map((row) => row.s);
 }
 
-function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
-	const fac = replInteractionSuggestionsFrom(all);
-	const hit = replFilterSuggestions(cmdLine, all);
-	if (!cmdLine.trim()) return hit;
-	const rest = hit.filter((s) => s.kind !== "interaction");
-	const seen = new Set<string>();
-	const out: ReplSuggestion[] = [];
-	for (const s of [...fac, ...rest]) {
-		const k = `${s.kind}:${s.key}:${s.detail}`;
-		if (seen.has(k)) continue;
-		seen.add(k);
-		out.push(s);
+/** @emoji ⌨️ Inline completion suffix for the active suggestion (longest prefix match on key, label, or detail). */
+export function replCompletionSuffix(query: string, suggestion: ReplSuggestion | undefined): string {
+	if (!query.trim() || !suggestion) return "";
+	const q = query;
+	const ql = q.toLowerCase();
+	let best = "";
+	for (const text of [suggestion.label, suggestion.detail, suggestion.key]) {
+		if (!text.toLowerCase().startsWith(ql)) continue;
+		const suffix = text.slice(q.length);
+		if (suffix.length > best.length) best = suffix;
 	}
-	return out;
+	return best;
+}
+
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked matches. */
+export function replActiveCompletionSuffix(query: string, matches: readonly ReplSuggestion[], index: number): string {
+	if (!query.trim() || !matches.length) return "";
+	const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
+	const seen = new Set<ReplSuggestion>();
+	for (const s of order) {
+		if (seen.has(s)) continue;
+		seen.add(s);
+		const suffix = replCompletionSuffix(query, s);
+		if (suffix) return suffix;
+	}
+	return "";
+}
+
+export function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
+	return replFilterSuggestions(cmdLine, all);
 }
 
 function replIsQueryTypingTarget(t: EventTarget | null): boolean {
 	return t instanceof HTMLTextAreaElement;
 }
 
-function replPresentationWithUnderlinedKey(key: string, label: string): ReactNode {
-	const ix = label.toLowerCase().indexOf(key.toLowerCase());
-	if (ix < 0) return label;
-	return (
-		<>
-			{label.slice(0, ix)}
-			<span style={{ textDecoration: "underline", fontWeight: 700 }}>{label.slice(ix, ix + key.length)}</span>
-			{label.slice(ix + key.length)}
-		</>
-	);
+function replShouldRepeatInteractionOnSpace(
+	event: {
+		readonly key: string;
+		readonly ctrlKey: boolean;
+		readonly metaKey: boolean;
+		readonly altKey: boolean;
+		readonly defaultPrevented: boolean;
+		readonly isComposing: boolean;
+		readonly target: EventTarget | null;
+	},
+	state: {
+		readonly interactionActive: boolean;
+		readonly cmdTarget: EventTarget | null;
+	},
+): boolean {
+	if (event.defaultPrevented || event.isComposing || state.interactionActive) return false;
+	if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
+	if (replIsQueryTypingTarget(event.target)) return false;
+	return event.target !== state.cmdTarget;
+}
+
+function replEscapeAction(state: {
+	readonly interactionActive: boolean;
+	readonly cmdLine: string;
+	readonly hasSelectionMenu: boolean;
+}): "abort" | "dismiss" | "none" {
+	if (state.interactionActive) return "abort";
+	if (state.cmdLine.trim() || state.hasSelectionMenu) return "dismiss";
+	return "none";
 }
 
 function replStartEvent(selection: SelectionTarget | null): InteractionEvent {
@@ -2151,7 +2201,6 @@ export function InteractionRepl({
 		[baseDisplay, allArchivedBoxLayouts],
 	);
 	const [cmdLine, setCmdLine] = useState("");
-	const [suggestOpen, setSuggestOpen] = useState(true);
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [selectionKindToggles, setSelectionKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
 		defaultSpatialPickKindToggles(),
@@ -2164,9 +2213,38 @@ export function InteractionRepl({
 	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
+	const suppressAutoStartOnceRef = useRef(false);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
+
+	const dismissReplChrome = useCallback(() => {
+		setCmdLine("");
+		setSelectionMenu(null);
+		setHoveredPickKey(null);
+	}, []);
+
+	const cancelActiveInteraction = useCallback(() => {
+		if (!abortActiveInteractionSession(rt)) return false;
+		suppressAutoStartOnceRef.current = true;
+		setSelectedPickKey(null);
+		setSelectedSelectionTarget(null);
+		dismissReplChrome();
+		return true;
+	}, [rt, dismissReplChrome]);
+
+	const handleEscapeKey = useCallback(() => {
+		switch (replEscapeAction({ interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
+			case "abort":
+				cancelActiveInteraction();
+				return;
+			case "dismiss":
+				dismissReplChrome();
+				return;
+			default:
+				return;
+		}
+	}, [interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction]);
 
 	const startRuntime = useCallback(async () => {
 		await rt.send(replStartEvent(selectedSelectionTarget));
@@ -2175,23 +2253,27 @@ export function InteractionRepl({
 	}, [rt, selectedSelectionTarget]);
 
 	useEffect(() => {
+		if (suppressAutoStartOnceRef.current) {
+			suppressAutoStartOnceRef.current = false;
+			return;
+		}
 		const snap = rt.getSnapshot();
 		const initial = spec.machine.initial;
 		if (snap.state !== initial) return;
-		const stDef = spec.machine.states.find((s) => s.name === snap.state);
-		if (stDef?.on?.some((h) => h.event === "start")) {
-			void startRuntime();
-			return;
-		}
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
 		if (replSelectionAccepted(accept, selectedSelectionTarget)) void rt.send(replSelectionEvent(selectedSelectionTarget));
-	}, [rt, spec, startRuntime, selectedSelectionTarget]);
+	}, [rt, spec, selectedSelectionTarget]);
 
 	useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
 		rt.cancel();
 		void startRuntime();
 	}, [sessionRestartNonce, rt, startRuntime]);
+
+	const repeatCurrentInteraction = useCallback(() => {
+		rt.cancel();
+		void startRuntime();
+	}, [rt, startRuntime]);
 
 	useEffect(() => {
 		if (!derived) return;
@@ -2334,6 +2416,10 @@ export function InteractionRepl({
 	}, [interactions, transitionRows, onInteractionId, dispatchTransition]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+	const completionSuffix = useMemo(
+		() => replActiveCompletionSuffix(cmdLine, filtered, activeIndex),
+		[cmdLine, filtered, activeIndex],
+	);
 
 	useEffect(() => {
 		setActiveIndex((i) => (filtered.length ? Math.min(i, filtered.length - 1) : 0));
@@ -2342,7 +2428,6 @@ export function InteractionRepl({
 	const runSuggestion = useCallback((s: ReplSuggestion) => {
 		s.onRun();
 		setCmdLine("");
-		setSuggestOpen(true);
 		setActiveIndex(0);
 	}, []);
 
@@ -2377,7 +2462,6 @@ export function InteractionRepl({
 		(row: InteractionKeybindRow) => {
 			if (row.eventKind.startsWith("set.")) {
 				setCmdLine(`${row.key} `);
-				setSuggestOpen(true);
 				window.setTimeout(() => cmdRef.current?.focus(), 0);
 				return;
 			}
@@ -2390,26 +2474,27 @@ export function InteractionRepl({
 		(e: KeyboardEvent<HTMLInputElement>) => {
 			if (e.key === "Escape") {
 				e.preventDefault();
-				setCmdLine("");
-				setSuggestOpen(true);
+				handleEscapeKey();
 				return;
 			}
 			if (e.key === "ArrowDown" && filtered.length) {
 				e.preventDefault();
-				setSuggestOpen(true);
 				setActiveIndex((i) => (i + 1) % filtered.length);
 				return;
 			}
 			if (e.key === "ArrowUp" && filtered.length) {
 				e.preventDefault();
-				setSuggestOpen(true);
 				setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length);
 				return;
 			}
 			if (e.key === "Tab" && filtered.length) {
 				e.preventDefault();
-				setSuggestOpen(true);
-				runSuggestion(filtered[activeIndex]!);
+				const suffix = replActiveCompletionSuffix(cmdLine, filtered, activeIndex);
+				if (suffix) {
+					setCmdLine(cmdLine + suffix);
+					return;
+				}
+				runSuggestion(filtered[activeIndex] ?? filtered[0]!);
 				return;
 			}
 			if (e.key === "Enter") {
@@ -2419,7 +2504,7 @@ export function InteractionRepl({
 				return;
 			}
 		},
-		[filtered, activeIndex, runSuggestion, trySubmitLine],
+		[filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey],
 	);
 
 	useEffect(() => {
@@ -2441,20 +2526,24 @@ export function InteractionRepl({
 				rt.redo();
 				return;
 			}
+			if (replShouldRepeatInteractionOnSpace(e, { interactionActive, cmdTarget: cmdRef.current })) {
+				e.preventDefault();
+				e.stopPropagation();
+				repeatCurrentInteraction();
+				return;
+			}
 			if (t !== cmdRef.current && e.key === "Backspace") {
 				e.preventDefault();
 				e.stopPropagation();
 				cmdRef.current?.focus();
 				setCmdLineRef.current((prev) => prev.slice(0, -1));
-				setSuggestOpen(true);
 				return;
 			}
 			if (t !== cmdRef.current && e.key === "Escape") {
 				e.preventDefault();
 				e.stopPropagation();
 				cmdRef.current?.focus();
-				setCmdLineRef.current("");
-				setSuggestOpen(true);
+				handleEscapeKey();
 				return;
 			}
 			if (t !== cmdRef.current && e.key === "Enter") {
@@ -2469,12 +2558,11 @@ export function InteractionRepl({
 			e.preventDefault();
 			e.stopPropagation();
 			cmdRef.current?.focus();
-			setSuggestOpen(true);
 			setCmdLineRef.current((prev) => `${prev}${one}`);
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, cmdLine, trySubmitLine]);
+	}, [rt, cmdLine, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -2496,8 +2584,6 @@ export function InteractionRepl({
 	const pickPlaneOn = snapshot.spatialInteraction.spatialGroundPick
 		? !snapshot.spatialInteraction.pickDisabledStates.includes(snapshot.state)
 		: false;
-
-	const kindLabel = (k: ReplSuggestKind) => (k === "interaction" ? "Interaction" : "Transition");
 
 	const lr = snapshot.lastResponse;
 
@@ -2621,79 +2707,56 @@ export function InteractionRepl({
 						</button>
 					))}
 				</div>
-				<div style={{ position: "relative" }}>
+				<div
+					style={{
+						display: "grid",
+						borderRadius: 6,
+						background: "#0e0e16",
+						border: "1px solid #3a4762",
+					}}
+				>
 					<input
 						ref={cmdRef}
 						type="text"
 						autoComplete="off"
+						spellCheck={false}
 						value={cmdLine}
-						onChange={(e) => {
-							setCmdLine(e.target.value);
-							setSuggestOpen(true);
-						}}
-						onFocus={() => setSuggestOpen(true)}
-						onBlur={() => {
-							window.setTimeout(() => setSuggestOpen(false), 120);
-						}}
+						onChange={(e) => setCmdLine(e.target.value)}
 						onKeyDown={onInputKeyDown}
 						placeholder="Type an interaction or transition"
 						style={{
+							gridArea: "1 / 1",
 							width: "100%",
 							boxSizing: "border-box",
 							padding: "8px 9px",
 							borderRadius: 6,
-							background: "#0e0e16",
+							background: "transparent",
 							color: "#e8e8f0",
-							border: "1px solid #3a4762",
+							border: "none",
+							outline: "none",
 							fontSize: 13,
+							fontFamily: "inherit",
+							lineHeight: "normal",
 						}}
 					/>
-					{suggestOpen && filtered.length ? (
+					{completionSuffix ? (
 						<div
-							onPointerDown={(e) => e.stopPropagation()}
+							aria-hidden
 							style={{
-								position: "absolute",
-								left: 0,
-								right: 0,
-								top: "100%",
-								marginTop: 4,
-								maxHeight: 260,
-								overflowY: "auto",
-								background: "#0c0c14",
-								border: "1px solid #3a3a55",
-								borderRadius: 6,
-								zIndex: 10050,
-								boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+								gridArea: "1 / 1",
+								pointerEvents: "none",
+								boxSizing: "border-box",
+								padding: "8px 9px",
+								fontSize: 13,
+								fontFamily: "inherit",
+								lineHeight: "normal",
+								whiteSpace: "pre",
+								overflow: "hidden",
+								color: "#e8e8f0",
 							}}
 						>
-							{filtered.map((s, idx) => (
-								<button
-									key={`${s.kind}-${s.key}-${s.detail}-${idx}`}
-									type="button"
-									onPointerDown={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										runSuggestion(s);
-									}}
-									style={{
-										display: "block",
-										width: "100%",
-										textAlign: "left",
-										padding: "6px 8px",
-										border: "none",
-										borderBottom: "1px solid #1e1e2e",
-										background: idx === activeIndex ? "#1f2f4a" : "transparent",
-										color: "#e8e8f0",
-										cursor: "pointer",
-										fontSize: 12,
-									}}
-									onMouseEnter={() => setActiveIndex(idx)}
-								>
-									<span style={{ opacity: 0.65 }}>{kindLabel(s.kind)}</span>{" "}
-									{replPresentationWithUnderlinedKey(s.key, s.label)}
-									<span style={{ opacity: 0.55, marginLeft: 6 }}>{s.detail}</span>
-								</button>
-							))}
+							<span style={{ color: "transparent" }}>{cmdLine}</span>
+							<span style={{ opacity: 0.45 }}>{completionSuffix}</span>
 						</div>
 					) : null}
 				</div>
@@ -2820,17 +2883,12 @@ if (import.meta.vitest) {
 			expect(segs.length).toBeLessThan(12);
 		});
 
-		it("collectTopologyEdgeSegments draws every B-rep edge for building fixtures", async () => {
-			const { readFileSync } = await import("node:fs");
-			const { dirname, join } = await import("node:path");
-			const { fileURLToPath } = await import("node:url");
-			const raw = JSON.parse(
-				readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "fixtures", "tall-building.topology.json"), "utf8"),
-			);
-			const topo = TopologyGraph.fromJSON(raw);
+		it("collectTopologyEdgeSegments returns one segment per topology edge", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(topo));
 			expect(segs.length).toBe(Object.keys(topo.edges).length);
-			expect(segs.length).toBeGreaterThan(100);
+			expect(segs.length).toBe(12);
 		});
 
 		it("move-preview translates points by cursor minus from", () => {
@@ -3098,6 +3156,106 @@ if (import.meta.vitest) {
 		it("exports InteractionRepl and useInteractionRuntime for hosts", () => {
 			expect(typeof InteractionRepl).toBe("function");
 			expect(typeof useInteractionRuntime).toBe("function");
+		});
+
+		it("repeats the current interaction on bare space only while inactive", () => {
+			const cmd = document.createElement("input");
+			const other = document.createElement("div");
+			const notes = document.createElement("textarea");
+			expect(
+				replShouldRepeatInteractionOnSpace(
+					{
+						key: " ",
+						ctrlKey: false,
+
+			it("escape aborts active interactions before dismissing chrome", () => {
+				expect(replEscapeAction({ interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
+				expect(replEscapeAction({ interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
+				expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
+				expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
+			});
+						metaKey: false,
+						altKey: false,
+						defaultPrevented: false,
+						isComposing: false,
+						target: other,
+					},
+					{ interactionActive: false, cmdTarget: cmd },
+				),
+			).toBe(true);
+			expect(
+				replShouldRepeatInteractionOnSpace(
+					{
+						key: " ",
+						ctrlKey: false,
+						metaKey: false,
+						altKey: false,
+						defaultPrevented: false,
+						isComposing: false,
+						target: other,
+					},
+					{ interactionActive: true, cmdTarget: cmd },
+				),
+			).toBe(false);
+			expect(
+				replShouldRepeatInteractionOnSpace(
+					{
+						key: " ",
+						ctrlKey: false,
+						metaKey: false,
+						altKey: false,
+						defaultPrevented: false,
+						isComposing: false,
+						target: cmd,
+					},
+					{ interactionActive: false, cmdTarget: cmd },
+				),
+			).toBe(false);
+			expect(
+				replShouldRepeatInteractionOnSpace(
+					{
+						key: " ",
+						ctrlKey: false,
+						metaKey: false,
+						altKey: false,
+						defaultPrevented: false,
+						isComposing: false,
+						target: notes,
+					},
+					{ interactionActive: false, cmdTarget: cmd },
+				),
+			).toBe(false);
+			expect(
+				replShouldRepeatInteractionOnSpace(
+					{
+						key: " ",
+						ctrlKey: true,
+						metaKey: false,
+						altKey: false,
+						defaultPrevented: false,
+						isComposing: false,
+						target: other,
+					},
+					{ interactionActive: false, cmdTarget: cmd },
+				),
+			).toBe(false);
+		});
+
+		it("autocomplete helpers rank prefix matches and expose inline suffix", () => {
+			const all: ReplSuggestion[] = [
+				{ kind: "interaction", key: "m", label: "Move", detail: "transform.move", onRun: () => {} },
+				{ kind: "interaction", key: "b", label: "Box", detail: "primitive.box", onRun: () => {} },
+				{ kind: "transition", key: "c", label: "Confirm", detail: "confirm", onRun: () => {} },
+			];
+			expect(replFilterSuggestions("", all)).toEqual([]);
+			expect(replPaletteRows("", all)).toEqual([]);
+			expect(replFilterSuggestions("  ", all)).toEqual([]);
+			expect(replPaletteRows("b", all).map((s) => s.key)).toEqual(["b"]);
+			expect(replPaletteRows("bo", all).map((s) => s.key)).toEqual(["b"]);
+			expect(replCompletionSuffix("b", all[1])).toBe("ox");
+			expect(replCompletionSuffix("bo", all[1])).toBe("x");
+			expect(replActiveCompletionSuffix("b", replPaletteRows("b", all), 0)).toBe("ox");
+			expect(replActiveCompletionSuffix("bo", replPaletteRows("bo", all), 0)).toBe("x");
 		});
 
 		it("derives persistent box footprints from document history", () => {

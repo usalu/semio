@@ -23,11 +23,15 @@ import {
 	type SurfaceView,
 	TopologyGraph,
 	type TopologyDiff,
+	type EdgeCurve,
 	type Vec3,
 	type VertexRef,
 	type WireRef,
 	type SurfaceRef,
 	type PartRef,
+	arcEndFromAngle,
+	arcPlaneFrame,
+	arcSweepRadians,
 	vec3Distance,
 } from "@spatial/js-core";
 // #endregion 📥Imports
@@ -232,29 +236,25 @@ export class BrepjsKernel implements KernelAdapter {
 			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] } } };
 		}
 		if (commandId === "curve.arc") {
-			const center = Array.isArray(params.center) ? params.center as number[] : [0,0,0];
-			const start = Array.isArray(params.start) ? params.start as number[] : null;
-			const end = Array.isArray(params.end) ? params.end as number[] : null;
+			const center = (Array.isArray(params.center) ? params.center : [0, 0, 0]) as Vec3;
+			const start = (Array.isArray(params.start) ? params.start : null) as Vec3 | null;
+			const endRaw = Array.isArray(params.end) ? (params.end as Vec3) : null;
 			const angle = typeof params.angle === "number" ? params.angle : null;
-			let endPos: number[];
-			if (end) {
-				endPos = end;
-			} else if (start && angle !== null) {
-				const r = Math.hypot(start[0]! - center[0]!, start[1]! - center[1]!, start[2]! - center[2]!);
-				const baseAngle = Math.atan2(start[1]! - center[1]!, start[0]! - center[0]!);
-				const radians = (angle * Math.PI) / 180;
-				endPos = [center[0]! + Math.cos(baseAngle + radians) * r, center[1]! + Math.sin(baseAngle + radians) * r, center[2]!];
+			const startPos = start ?? ([1, 0, 0] as Vec3);
+			let endPos: Vec3;
+			if (endRaw) {
+				endPos = endRaw;
+			} else if (angle !== null) {
+				endPos = arcEndFromAngle(center, startPos, angle) ?? startPos;
 			} else {
-				endPos = start ?? [1,0,0];
+				endPos = startPos;
 			}
-			const startPos = start ?? [1,0,0];
-			const v0 = createDummyVertex(center);
-			const v1 = createDummyVertex(startPos);
-			const v2 = createDummyVertex(endPos);
-			const e0 = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
-			const e1 = { id: nextId("e") as EdgeRef, vertexIds: [v1.id, v2.id] };
-			const w = { id: nextId("w") as WireRef, edgeIds: [e0.id, e1.id] };
-			return { diff: { vertices: { added: [v0, v1, v2] }, edges: { added: [e0, e1] }, wires: { added: [w] } } };
+			const vStart = createDummyVertex(startPos);
+			const vEnd = createDummyVertex(endPos);
+			const curve: EdgeCurve = { kind: "arc", center };
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
+			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+			return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
 		}
 		if (commandId === "solid.cylinder" || commandId === "solid.sphere" || commandId === "solid.cone" || commandId.startsWith("solid.")) {
 			const v0 = createDummyVertex([0,0,0]);
@@ -304,6 +304,11 @@ export class BrepjsKernel implements KernelAdapter {
 		const pa = topo.vertices[String(ed.vertexIds[0])]?.position;
 		const pb = topo.vertices[String(ed.vertexIds[1])]?.position;
 		if (!pa || !pb) return 0;
+		if (ed.curve?.kind === "arc") {
+			const frame = arcPlaneFrame(ed.curve.center, pa, pb);
+			if (!frame) return vec3Distance(pa, pb);
+			return frame.radius * arcSweepRadians(frame, pb);
+		}
 		return vec3Distance(pa, pb);
 	}
 
@@ -516,6 +521,48 @@ if (import.meta.vitest) {
 			const parts = await kernel.computePartViews!(topo);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
 			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
+		});
+
+		it("executeCommandDiff curve.arc creates one arc edge between start and end", async () => {
+			const res = await kernel.executeCommandDiff("curve.arc", {
+				center: [0, 0, 0],
+				start: [2, 0, 0],
+				end: [0, 2, 0],
+			});
+			const verts = res.diff.vertices?.added ?? [];
+			const edges = res.diff.edges?.added ?? [];
+			const wires = res.diff.wires?.added ?? [];
+			expect(verts).toHaveLength(2);
+			expect(edges).toHaveLength(1);
+			expect(wires).toHaveLength(1);
+			expect(verts[0]!.position).toEqual([2, 0, 0]);
+			expect(verts[1]!.position).toEqual([0, 2, 0]);
+			expect(edges[0]!.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
+			expect(edges[0]!.vertexIds).toHaveLength(2);
+		});
+
+		it("executeCommandDiff curve.arc computes end from angle when end is missing", async () => {
+			const res = await kernel.executeCommandDiff("curve.arc", {
+				center: [0, 0, 0],
+				start: [1, 0, 0],
+				angle: 90,
+			});
+			const verts = res.diff.vertices?.added ?? [];
+			expect(verts).toHaveLength(2);
+			expect(verts[1]!.position[0]).toBeCloseTo(0, 5);
+			expect(verts[1]!.position[1]).toBeCloseTo(1, 5);
+			expect(res.diff.edges?.added?.[0]?.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
+		});
+
+		it("executeCommandDiff curve.circle reads radiusPoint correctly", async () => {
+			const res = await kernel.executeCommandDiff("curve.circle", {
+				center: [1, 2, 0],
+				radiusPoint: [4, 2, 0],
+			});
+			const verts = res.diff.vertices?.added ?? [];
+			expect(verts).toHaveLength(2);
+			expect(verts[0]!.position).toEqual([1, 2, 0]);
+			expect(verts[1]!.position).toEqual([4, 2, 0]);
 		});
 	});
 }

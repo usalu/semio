@@ -86,6 +86,102 @@ export function vec3Normalize(a: Vec3): Vec3 {
 }
 // #endregion 🧮Vec
 
+// #region 🔵ArcCurve
+/** @emoji 🔵 Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
+export interface ArcPlaneFrame {
+	readonly center: Vec3;
+	readonly radius: number;
+	readonly normal: Vec3;
+	readonly u: Vec3;
+	readonly v: Vec3;
+}
+
+/** @emoji 🔵 Builds arc plane basis; `null` when radius vanishes. */
+export function arcPlaneFrame(center: Vec3, start: Vec3, end: Vec3): ArcPlaneFrame | null {
+	const rs = vec3Sub(start, center);
+	const re = vec3Sub(end, center);
+	const radius = vec3Length(rs);
+	if (radius < 1e-9) return null;
+	let normal = vec3Cross(rs, re);
+	if (vec3Length(normal) < 1e-9) normal = [0, 0, 1];
+	else normal = vec3Normalize(normal);
+	const u = vec3Normalize(rs);
+	const v = vec3Cross(normal, u);
+	return { center, radius, normal, u, v };
+}
+
+/** @emoji 🔵 Positive CCW sweep radians from `start` to `end` in the arc plane. */
+export function arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number {
+	const re = vec3Sub(end, frame.center);
+	let sweep = Math.atan2(vec3Dot(re, frame.v), vec3Dot(re, frame.u));
+	if (sweep < 0) sweep += Math.PI * 2;
+	if (sweep < 1e-9) sweep = Math.PI * 2;
+	return sweep;
+}
+
+/** @emoji 🔵 Tessellates a circular arc through `start` and `end` about `center` (Topologic-style CCW sweep). */
+export function arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 32): readonly Vec3[] {
+	const frame = arcPlaneFrame(center, start, end);
+	if (!frame) return [start, end];
+	const sweep = arcSweepRadians(frame, end);
+	const n = Math.max(2, segments);
+	const pts: Vec3[] = [];
+	for (let i = 0; i <= n; i++) {
+		const a = (i / n) * sweep;
+		pts.push(
+			vec3Add(
+				frame.center,
+				vec3Add(vec3Scale(frame.u, frame.radius * Math.cos(a)), vec3Scale(frame.v, frame.radius * Math.sin(a))),
+			),
+		);
+	}
+	return pts;
+}
+
+/** @emoji 🔵 Plane frame from center and one on-circle point (Z-up fallback when chord is vertical). */
+export function arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneFrame | null {
+	const rs = vec3Sub(onCircle, center);
+	const radius = vec3Length(rs);
+	if (radius < 1e-9) return null;
+	const u = vec3Normalize(rs);
+	let axis: Vec3 = [0, 0, 1];
+	if (Math.abs(vec3Dot(u, axis)) > 0.99) axis = [0, 1, 0];
+	const v = vec3Normalize(vec3Cross(axis, u));
+	const normal = vec3Normalize(vec3Cross(u, v));
+	return { center, radius, normal, u, v };
+}
+
+/** @emoji 🔵 End point on arc at `angleDeg` from `start` about `center`. */
+export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Vec3 | null {
+	const frame = arcFrameFromRadiusPoint(center, start);
+	if (!frame) return null;
+	const radians = (angleDeg * Math.PI) / 180;
+	return vec3Add(
+		frame.center,
+		vec3Add(
+			vec3Scale(frame.u, frame.radius * Math.cos(radians)),
+			vec3Scale(frame.v, frame.radius * Math.sin(radians)),
+		),
+	);
+}
+
+/** @emoji 🔵 Samples polyline points along an edge (arc tessellation or vertex chord). */
+export function edgeSamplePoints(
+	vertices: Readonly<Record<string, VertexRecord>>,
+	edge: EdgeRecord,
+	segments = 32,
+): readonly Vec3[] {
+	const ends = edge.vertexIds
+		.map((id) => vertices[String(id)]?.position)
+		.filter((p): p is Vec3 => Boolean(p));
+	if (ends.length < 2) return ends;
+	if (edge.curve?.kind === "arc") {
+		return arcSamplePoints(edge.curve.center, ends[0]!, ends[1]!, segments);
+	}
+	return ends;
+}
+// #endregion 🔵ArcCurve
+
 // #region 🪪Refs
 /** @emoji 🪪 Opaque branded string ids for editable topology entities. */
 export type VertexRef = string & { readonly __brand: "VertexRef" };
@@ -748,10 +844,16 @@ export interface VertexRecord {
 	readonly position: Vec3;
 }
 
+/** @emoji 🌀 Edge geometry beyond straight vertex chords (Topologic: edge topology vs curve shape). */
+export type EdgeCurve =
+	| { readonly kind: "line" }
+	| { readonly kind: "arc"; readonly center: Vec3 };
+
 /** @emoji 🧱 Edge payload: references one or two boundary vertices. */
 export interface EdgeRecord {
 	readonly id: EdgeRef;
 	readonly vertexIds: readonly VertexRef[];
+	readonly curve?: EdgeCurve;
 }
 
 /** @emoji 🧱 Wire payload: ordered boundary edges. */
@@ -925,37 +1027,11 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 	}
 	return TopologyGraph.fromJSON(raw as TopologyGraphJson);
 }
-
-/** @emoji ✅ Reports cell-complex integrity errors (every cell in exactly one complex, cluster members resolve). */
-export function validateTopologyCellComplexes(topo: TopologyGraph): readonly string[] {
-	const errors: string[] = [];
-	const cellIds = new Set(Object.keys(topo.cells));
-	const inComplex = new Map<string, string>();
-	for (const cc of Object.values(topo.cellComplexes)) {
-		if (!cc.cellIds.length) errors.push(`cellComplex ${cc.id}: empty cellIds`);
-		for (const cid of cc.cellIds) {
-			if (!cellIds.has(cid)) errors.push(`cellComplex ${cc.id}: unknown cell ${cid}`);
-			else if (inComplex.has(cid)) errors.push(`cell ${cid}: in multiple cellComplexes`);
-			else inComplex.set(cid, cc.id);
-		}
-	}
-	for (const cid of cellIds) {
-		if (!inComplex.has(cid)) errors.push(`cell ${cid}: not in any cellComplex`);
-	}
-	for (const cluster of Object.values(topo.clusters)) {
-		for (const mid of cluster.memberIds) {
-			if (!topo.cellComplexes[mid] && !topo.cells[mid] && !topo.clusters[mid]) {
-				errors.push(`cluster ${cluster.id}: unknown member ${mid}`);
-			}
-		}
-	}
-	return errors;
-}
 // #endregion 🧱Topology
 
 // #region 🧮Diff
 export type VertexRecordDiff = { readonly id: VertexRef } & Partial<Pick<VertexRecord, "position">>;
-export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord, "vertexIds">>;
+export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord, "vertexIds" | "curve">>;
 export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord, "edgeIds">>;
 export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds">>;
 export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
@@ -2494,6 +2570,13 @@ export function listKeyedInteractionTransitions(spec: InteractionSpec, state: st
 	return out;
 }
 
+/** @emoji ⎋ Hard-aborts the active interaction session when `capabilities.canCancel`. */
+export function abortActiveInteractionSession(rt: InteractionRuntime): boolean {
+	if (!rt.getSnapshot().capabilities.canCancel) return false;
+	rt.cancel();
+	return true;
+}
+
 /** @emoji 🎬 Minimal async statechart runner for `InteractionSpec.machine`. */
 export class StatechartRuntime implements StateEngine {
 	private state: string;
@@ -3246,6 +3329,33 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("@spatial/js-core arc curve", () => {
+		it("arcSamplePoints quarter arc from center start end", () => {
+			const pts = arcSamplePoints([0, 0, 0], [2, 0, 0], [0, 2, 0], 4);
+			expect(pts[0]).toEqual([2, 0, 0]);
+			expect(pts[pts.length - 1]![0]).toBeCloseTo(0, 5);
+			expect(pts[pts.length - 1]![1]).toBeCloseTo(2, 5);
+		});
+		it("arcEndFromAngle matches 90 degree end", () => {
+			const end = arcEndFromAngle([0, 0, 0], [1, 0, 0], 90);
+			expect(end![0]).toBeCloseTo(0, 5);
+			expect(end![1]).toBeCloseTo(1, 5);
+		});
+		it("edgeSamplePoints tessellates arc edge", () => {
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			const verts = {
+				[v0]: { id: v0, position: [2, 0, 0] as Vec3 },
+				[v1]: { id: v1, position: [0, 2, 0] as Vec3 },
+			};
+			const e = "e0" as EdgeRef;
+			const edge: EdgeRecord = { id: e, vertexIds: [v0, v1], curve: { kind: "arc", center: [0, 0, 0] } };
+			const pts = edgeSamplePoints(verts, edge, 8);
+			expect(pts.length).toBeGreaterThan(2);
+			expect(pts[0]).toEqual([2, 0, 0]);
+		});
+	});
+
 	describe("@spatial/js-core expr", () => {
 		it("evaluates numeric fold min expr", () => {
 			const e: Expr = {
@@ -3401,6 +3511,34 @@ if (import.meta.vitest) {
 			expect(snap.lastResponse?.ok).toBe(true);
 			expect(snap.lastResponse?.diff?.vertices?.added?.length).toBe(2);
 		});
+		it("abortActiveInteractionSession hard-resets an in-progress session", async () => {
+			class CommandKernel implements KernelAdapter {
+				readonly id = "command-abort";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
+			}
+			const spec = loadSpatialInteraction("curve.line")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			await rt.send({ kind: "start" });
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+			expect(rt.getSnapshot().capabilities.canCancel).toBe(true);
+			expect(abortActiveInteractionSession(rt)).toBe(true);
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe(spec.machine.initial);
+			expect(snap.capabilities.canCancel).toBe(false);
+			expect(abortActiveInteractionSession(rt)).toBe(false);
+		});
 		it("collectTargetVertices expands face selection to boundary vertices", () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
@@ -3435,6 +3573,52 @@ if (import.meta.vitest) {
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("point_to_move_from");
 			expect((snap.context.targets as SelectionTarget[]).map((target) => target.id)).toEqual(["c0"]);
+		});
+		it("auto-commits curve.arc as one arc edge between start and end", async () => {
+			const topo = new TopologyGraph();
+			class ArcKernel implements KernelAdapter {
+				readonly id = "arc-command";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async executeCommandDiff(commandId: string, ctx: Record<string, unknown>) {
+					if (commandId !== "curve.arc") return { diff: EMPTY_TOPOLOGY_DIFF };
+					const center = (Array.isArray(ctx.center) ? ctx.center : [0, 0, 0]) as Vec3;
+					const start = (Array.isArray(ctx.start) ? ctx.start : [1, 0, 0]) as Vec3;
+					const end = (Array.isArray(ctx.end) ? ctx.end : start) as Vec3;
+					const v0 = "v0" as VertexRef;
+					const v1 = "v1" as VertexRef;
+					const e = "e0" as EdgeRef;
+					const w = "w0" as WireRef;
+					return {
+						diff: {
+							vertices: { added: [{ id: v0, position: start }, { id: v1, position: end }] },
+							edges: { added: [{ id: e, vertexIds: [v0, v1], curve: { kind: "arc" as const, center } }] },
+							wires: { added: [{ id: w, edgeIds: [e] }] },
+						},
+					};
+				}
+			}
+			const spec = loadSpatialInteraction("curve.arc")!;
+			const rt = createInteractionRuntime(spec, { kernel: new ArcKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start" });
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [2, 0, 0] as Vec3, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [0, 2, 0] as Vec3, modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			const edges = Object.values(topo.edges);
+			expect(edges).toHaveLength(1);
+			expect(edges[0]!.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
+			expect(Object.keys(topo.vertices)).toHaveLength(2);
 		});
 		it("auto-finalizes transform.move on terminal pointer down without alreadyCommitted", async () => {
 			const topo = new TopologyGraph();
@@ -3548,26 +3732,6 @@ if (import.meta.vitest) {
 			expect(Object.keys(g.cells)).toEqual(["box-cell"]);
 		});
 
-		it("building fixtures are proper cell complexes centered near origin", async () => {
-			const { readFileSync } = await import("node:fs");
-			const { dirname, join } = await import("node:path");
-			const { fileURLToPath } = await import("node:url");
-			const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "fixtures");
-			for (const name of ["small-building", "tall-building", "large-building"] as const) {
-				const raw = JSON.parse(readFileSync(join(root, `${name}.topology.json`), "utf8")) as TopologyGraphJson;
-				const g = parseTopologyGraphJson(raw);
-				expect(g).not.toBeNull();
-				expect(validateTopologyCellComplexes(g!)).toEqual([]);
-				expect(raw.cellComplexes).toHaveLength(1);
-				expect(raw.cellComplexes[0]!.cellIds.length).toBe(raw.cells.length);
-				expect(raw.clusters[0]!.memberIds).toEqual([`${name}-cell-complex`]);
-				let maxAbs = 0;
-				for (const v of raw.vertices) {
-					for (const c of v.position) maxAbs = Math.max(maxAbs, Math.abs(c));
-				}
-				expect(maxAbs).toBeLessThan(500);
-			}
-		});
 	});
 	describe("@spatial/js-core selection filter", () => {
 		it("selectionEventMatches rejects kinds outside accept", () => {
