@@ -2173,11 +2173,12 @@ function replShouldRepeatInteractionOnSpace(
 }
 
 function replEscapeAction(state: {
+	readonly hasInteraction: boolean;
 	readonly interactionActive: boolean;
 	readonly cmdLine: string;
 	readonly hasSelectionMenu: boolean;
 }): "abort" | "dismiss" | "none" {
-	if (state.interactionActive) return "abort";
+	if (state.hasInteraction || state.interactionActive) return "abort";
 	if (state.cmdLine.trim() || state.hasSelectionMenu) return "dismiss";
 	return "none";
 }
@@ -2290,18 +2291,21 @@ export function InteractionRepl({
 	}, []);
 
 	const cancelActiveInteraction = useCallback(() => {
-		if (!abortActiveInteractionSession(rt)) return false;
+		const aborted = abortActiveInteractionSession(rt);
+		if (!aborted && !interactionId) return false;
+		if (!aborted) rt.cancel();
 		suppressAutoStartOnceRef.current = true;
 		setSelectedPickKey(null);
 		setSelectedSelectionTarget(null);
 		dismissReplChrome();
+		if (interactionId) onInteractionId("");
 		return true;
-	}, [rt, dismissReplChrome]);
+	}, [rt, interactionId, onInteractionId, dismissReplChrome]);
 
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 
 	const handleEscapeKey = useCallback(() => {
-		switch (replEscapeAction({ interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
+		switch (replEscapeAction({ hasInteraction: Boolean(interactionId), interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
 			case "abort":
 				cancelActiveInteraction();
 				return;
@@ -2311,7 +2315,7 @@ export function InteractionRepl({
 			default:
 				return;
 		}
-	}, [interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction]);
+	}, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction]);
 
 	const startRuntime = useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
@@ -3607,10 +3611,11 @@ if (import.meta.vitest) {
 		});
 
 		it("escape aborts active interactions before dismissing chrome", () => {
-			expect(replEscapeAction({ interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
-			expect(replEscapeAction({ interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
-			expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
-			expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
+			expect(replEscapeAction({ hasInteraction: false, interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
+			expect(replEscapeAction({ hasInteraction: true, interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("abort");
+			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
+			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
+			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
 		});
 
 		it("autocomplete helpers rank prefix matches and expose inline suffix", () => {

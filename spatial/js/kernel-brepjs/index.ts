@@ -1564,6 +1564,8 @@ class BrepjsScratch {
 	readonly regionKeys = new Set<number>();
 	readonly extrudeDir: Vec3 = [0, 0, 0];
 	readonly cutters: ValidSolid[] = [];
+	readonly poleScratch: Vec3[] = [];
+	readonly curveEnds: Vec3[] = [];
 }
 
 const brepjsScratch = new BrepjsScratch();
@@ -1619,22 +1621,22 @@ function topoEdgeToBrepEdge(topo: TopologyGraph, edge: EdgeRecord): Edge | null 
 		return threePointArc(p0, mid, p1);
 	}
 	if (c.kind === "nurbs" && c.poles.length >= 2) {
-		const r = bsplineApprox([...c.poles]);
+		const r = bsplineApprox(c.poles);
 		if (isOk(r)) return r.value;
 	}
 	if (c.kind === "ellipse") {
 		const samples = ellipseSamplePoints(c.center, c.normal, c.majorAxis, c.majorRadius, c.minorRadius, 32);
-		const r = bsplineApprox(samples.length >= 2 ? [...samples] : [p0, p1]);
+		const r = bsplineApprox(samples.length >= 2 ? samples : [p0, p1]);
 		if (isOk(r)) return r.value;
 	}
 	return line(p0, p1);
 }
 
 /** @emoji 🔗 Closed planar brepjs face from a topology wire (OCCT `wireLoop` + `face`). */
-function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef): OrientedFace | null {
+function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef, edges = brepjsScratch.wireEdges): OrientedFace | null {
 	const w = topo.wires[wireId];
 	if (!w?.edgeIds.length) return null;
-	const edges: Edge[] = [];
+	edges.length = 0;
 	for (const eid of w.edgeIds) {
 		const rec = topo.edges[eid];
 		if (!rec) return null;
@@ -1657,27 +1659,30 @@ function extrudeTopoWire(
 ): ValidSolid | null {
 	const planar = topoWireToOrientedFace(topo, wireId as WireRef);
 	if (!planar) return null;
-	const len = vec3Length(direction);
-	const dist = Math.abs(distance) || len || 1e-6;
-	const dir = len > 1e-12 ? vec3Scale(vec3Normalize(direction), dist) : ([0, 0, dist] as Vec3);
-	const solid = extrude(planar, dir);
+	writeExtrudeDir(brepjsScratch.extrudeDir, direction, distance);
+	const solid = extrude(planar, brepjsScratch.extrudeDir);
 	return isOk(solid) ? solid.value : null;
 }
 // #endregion 🔌BrepTopologyBridge
 
 function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], tolerance = 1e-2): readonly Vec3[] {
+	const out = brepjsScratch.regionPoints;
+	const keys = brepjsScratch.regionKeys;
+	out.length = 0;
+	keys.clear();
+	const invTol = 1 / tolerance;
 	try {
-		const m = unwrap(mesh(solid, { tolerance }));
-		const out: Vec3[] = [];
-		const seen = new Set<string>();
-		for (let i = 0; i < m.vertices.length; i += 3) {
-			const p: Vec3 = [m.vertices[i]!, m.vertices[i + 1]!, m.vertices[i + 2]!];
-			const k = p.join(",");
-			if (seen.has(k)) continue;
-			seen.add(k);
-			out.push(p);
+		const verts = unwrap(mesh(solid, { tolerance, cache: true })).vertices;
+		for (let i = 0; i < verts.length; i += 3) {
+			const x = verts[i]!;
+			const y = verts[i + 1]!;
+			const z = verts[i + 2]!;
+			const k = vec3KeyQuantized(x, y, z, invTol);
+			if (keys.has(k)) continue;
+			keys.add(k);
+			out.push([x, y, z]);
 		}
-		return out.length ? out : (fallback ?? []);
+		return out.length ? out.slice() : (fallback ?? []);
 	} catch {
 		return fallback ?? [];
 	}
@@ -1759,18 +1764,14 @@ export class BrepjsKernel implements SpatialKernel {
 	async tessellate(cell: CellRef, tolerance: number): Promise<MeshPreview> {
 		await this.ensureInit();
 		const s = this.solids.get(cell);
-		if (!s) return { positions: new Float32Array(), indices: new Uint32Array() };
-		const m = mesh(s, { tolerance });
-		const positions = new Float32Array(m.vertices);
-		const indices = new Uint32Array(m.triangles);
-		const normals = m.normals.length > 0 ? new Float32Array(m.normals) : undefined;
-		return { positions, indices, normals };
+		if (!s) return EMPTY_MESH_PREVIEW;
+		return meshPreviewFromBrep(s, tolerance);
 	}
 
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			if (ctx?.derived) return [...ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology)];
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology);
 			return [];
 		}
 		return undefined;
@@ -1802,18 +1803,24 @@ export class BrepjsKernel implements SpatialKernel {
 		}
 		if (solid.kind === "cylinder") {
 			const h = Math.max(solid.height, 1e-6);
+			const ax = solid.axis;
+			const axLen = Math.hypot(ax[0], ax[1], ax[2]);
+			const axis: Vec3 = axLen > 1e-12 ? [ax[0] / axLen, ax[1] / axLen, ax[2] / axLen] : [0, 0, 1];
 			return cylinder(solid.radius, h, {
 				at: solid.base,
-				axis: vec3Normalize(solid.axis),
+				axis,
 				centered: false,
 			});
 		}
 		if (solid.kind === "cone") {
 			const r2 = solid.radiusTop ?? 0;
 			const h = Math.max(solid.height, 1e-6);
+			const ax = solid.axis;
+			const axLen = Math.hypot(ax[0], ax[1], ax[2]);
+			const axis: Vec3 = axLen > 1e-12 ? [ax[0] / axLen, ax[1] / axLen, ax[2] / axLen] : [0, 0, 1];
 			return cone(solid.radius, r2, h, {
 				at: solid.base,
-				axis: vec3Normalize(solid.axis),
+				axis,
 				centered: false,
 			});
 		}
@@ -1840,7 +1847,7 @@ export class BrepjsKernel implements SpatialKernel {
 				const sb = this.solids.get(b)!;
 				const hit = unwrap(checkInterference(sa, sb));
 				if (!hit.hasInterference) continue;
-				const inter = unwrap(intersect(sa, sb));
+				const inter = unwrap(intersect(sa, sb, BOOL_NO_EVOLUTION));
 				const vol = unwrap(measureVolume(inter));
 				if (vol <= volEps) continue;
 				const cellA = topo.cells[a];
@@ -1859,13 +1866,14 @@ export class BrepjsKernel implements SpatialKernel {
 		}
 		for (const cid of solidCells) {
 			const base = this.solids.get(cid)!;
-			const cutters: ValidSolid[] = [];
+			const cutters = brepjsScratch.cutters;
+			cutters.length = 0;
 			for (const otherId of solidCells) {
 				if (otherId === cid) continue;
 				const other = this.solids.get(otherId)!;
 				const hit = unwrap(checkInterference(base, other));
 				if (!hit.hasInterference) continue;
-				const interVol = unwrap(measureVolume(unwrap(intersect(base, other))));
+				const interVol = unwrap(measureVolume(unwrap(intersect(base, other, BOOL_NO_EVOLUTION))));
 				if (interVol <= volEps) continue;
 				cutters.push(other);
 			}
@@ -1892,10 +1900,7 @@ export class BrepjsKernel implements SpatialKernel {
 				});
 				continue;
 			}
-			let remaining: ValidSolid = base;
-			for (const other of cutters) {
-				remaining = unwrap(cut(remaining, other));
-			}
+			const remaining = cutters.length === 1 ? unwrap(cut(base, cutters[0]!, BOOL_NO_EVOLUTION)) : unwrap(cutAll(base, cutters, BOOL_NO_EVOLUTION));
 			const diffVol = unwrap(measureVolume(remaining));
 			if (diffVol > volEps) {
 				parts.push({
@@ -1925,7 +1930,13 @@ export class BrepjsKernel implements SpatialKernel {
 			Array.isArray(v) && v.length >= 3 ? ([Number(v[0]), Number(v[1]), Number(v[2])] as Vec3) : fallback;
 		const poleList = (raw: unknown): Vec3[] => {
 			if (!Array.isArray(raw)) return [];
-			return raw.filter((p): p is Vec3 => Array.isArray(p) && p.length >= 3).map((p) => [Number(p[0]), Number(p[1]), Number(p[2])] as Vec3);
+			const out = brepjsScratch.poleScratch;
+			out.length = 0;
+			for (const p of raw) {
+				if (!Array.isArray(p) || p.length < 3) continue;
+				out.push([Number(p[0]), Number(p[1]), Number(p[2])]);
+			}
+			return out.length ? out.slice() : [];
 		};
 
 		const createVertex = (pos: Vec3) => {
@@ -2085,7 +2096,8 @@ export class BrepjsKernel implements SpatialKernel {
 		if (!ed) return 0;
 		const brepEdge = topoEdgeToBrepEdge(topo, ed);
 		if (brepEdge) return unwrap(measureLength(brepEdge));
-		const ends: Vec3[] = [];
+		const ends = brepjsScratch.curveEnds;
+		ends.length = 0;
 		for (const vid of ed.vertexIds) {
 			const p = topo.vertices[String(vid)]?.position;
 			if (p) ends.push(p);
@@ -2195,6 +2207,19 @@ if (import.meta.vitest) {
 			const meshPreview = await kernel.tessellate(cell, 1e-3);
 			expect(meshPreview.indices.length).toBeGreaterThan(0);
 			expect(meshPreview.positions.length).toBeGreaterThan(0);
+		});
+
+		it("tessellate reuses brepjs cached mesh buffers for same cell and tolerance", async () => {
+			const cell = await kernel.createBoxFromCorners({
+				cornerA: [0, 0, 0],
+				cornerB: [1, 1, 0],
+				height: 1,
+			});
+			const tol = 1e-3;
+			const a = await kernel.tessellate(cell, tol);
+			const b = await kernel.tessellate(cell, tol);
+			expect(a.positions).toBe(b.positions);
+			expect(a.indices).toBe(b.indices);
 		});
 
 		it("createBoxFromCornersDiff includes one face bucket", async () => {
