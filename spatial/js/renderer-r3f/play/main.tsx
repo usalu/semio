@@ -132,7 +132,7 @@ function PlaySession({
 	asideExtra,
 	sessionRestartNonce,
 }: PlaySessionProps) {
-	const derived = useMemo(() => new DerivedViewService(), []);
+	const derived = useMemo(() => new DerivedViewService(kernel), [kernel]);
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
@@ -164,6 +164,7 @@ function PlaySession({
 			history={history}
 			document={documentModel}
 			geometry={documentModel.topology}
+			derived={derived}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
 		/>

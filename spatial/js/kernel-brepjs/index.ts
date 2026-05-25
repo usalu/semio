@@ -3,23 +3,30 @@
 // #endregion 🧲Header
 
 // #region 📥Imports
-import { box, initFromOC, measureVolume, mesh, unwrap } from "brepjs";
+import { box, checkInterference, cut, initFromOC, intersect, measureVolume, mesh, unwrap } from "brepjs";
 import type { ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
 	boxTopologyDiff,
 	cellRef,
+	computePartViewsFromTopology,
+	computeSurfaceViewsFromTopology,
 	meshFaceTopologyDiff,
 	type CellRef,
 	type EdgeRef,
 	type FaceRef,
 	type KernelAdapter,
+	type KernelQueryContext,
 	type MeshPreview,
+	type PartView,
+	type SurfaceView,
 	TopologyGraph,
 	type TopologyDiff,
 	type Vec3,
 	type VertexRef,
 	type WireRef,
+	type SurfaceRef,
+	type PartRef,
 	vec3Distance,
 } from "@spatial/js-core";
 // #endregion 📥Imports
@@ -100,13 +107,88 @@ export class BrepjsKernel implements KernelAdapter {
 		return { positions, indices, normals };
 	}
 
-	async query(name: string, params: Record<string, unknown>): Promise<unknown> {
+	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			if (!sid.startsWith("surface-")) return [sid];
-			return [`face-${sid}-a`, `face-${sid}-b`];
+			if (ctx?.derived) return [...ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology)];
+			return [];
 		}
 		return undefined;
+	}
+
+	computeSurfaceViews(topo: TopologyGraph): SurfaceView[] {
+		return computeSurfaceViewsFromTopology(topo);
+	}
+
+	async computePartViews(topo: TopologyGraph): Promise<PartView[]> {
+		await this.ensureInit();
+		const cellIds = Object.keys(topo.cells) as CellRef[];
+		const solidCells = cellIds.filter((id) => this.solids.has(id));
+		if (solidCells.length === 0) return computePartViewsFromTopology(topo);
+		const parts: PartView[] = [];
+		const volEps = 1e-6;
+		for (let i = 0; i < solidCells.length; i++) {
+			for (let j = i + 1; j < solidCells.length; j++) {
+				const a = solidCells[i]!;
+				const b = solidCells[j]!;
+				const sa = this.solids.get(a)!;
+				const sb = this.solids.get(b)!;
+				const hit = unwrap(checkInterference(sa, sb));
+				if (!hit.hasInterference) continue;
+				const inter = unwrap(intersect(sa, sb));
+				const vol = unwrap(measureVolume(inter));
+				if (vol <= volEps) continue;
+				parts.push({
+					id: `part-intersection-${a}-${b}` as PartRef,
+					sourceCellIds: [a, b],
+					overlap: "intersection",
+					volume: vol,
+				});
+			}
+		}
+		for (const cid of solidCells) {
+			let remaining: ValidSolid = this.solids.get(cid)!;
+			let subtracted = false;
+			for (const otherId of solidCells) {
+				if (otherId === cid) continue;
+				const other = this.solids.get(otherId)!;
+				const hit = unwrap(checkInterference(remaining, other));
+				if (!hit.hasInterference) continue;
+				const next = unwrap(cut(remaining, other));
+				const interVol = unwrap(measureVolume(unwrap(intersect(remaining, other))));
+				if (interVol <= volEps) continue;
+				subtracted = true;
+				remaining = next;
+			}
+			if (!subtracted) {
+				parts.push({
+					id: `part-${cid}-none` as PartRef,
+					sourceCellIds: [cid],
+					overlap: "none",
+					volume: unwrap(measureVolume(remaining)),
+				});
+				continue;
+			}
+			const diffVol = unwrap(measureVolume(remaining));
+			if (diffVol > volEps) {
+				parts.push({
+					id: `part-${cid}-difference` as PartRef,
+					sourceCellIds: [cid],
+					overlap: "difference",
+					volume: diffVol,
+				});
+			}
+		}
+		for (const cid of cellIds) {
+			if (this.solids.has(cid)) continue;
+			parts.push({
+				id: `part-${cid}-none` as PartRef,
+				sourceCellIds: [cid],
+				overlap: "none",
+				volume: 0,
+			});
+		}
+		return parts;
 	}
 
 	async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
@@ -340,6 +422,17 @@ if (import.meta.vitest) {
 			g.cells["cb" as CellRef] = { id: "cb" as CellRef, shellIds: [sb] };
 			const xs = await kernel.sharedFacesBetween("ca" as CellRef, "cb" as CellRef, g);
 			expect(xs).toEqual([f]);
+		});
+
+		it("computePartViews splits overlapping brep solids", async () => {
+			const topo = new TopologyGraph();
+			const a = await kernel.createBoxFromCorners({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
+			const b = await kernel.createBoxFromCorners({ cornerA: [1, 0, 0], cornerB: [3, 2, 0], height: 2 });
+			topo.cells[a] = { id: a, shellIds: [] };
+			topo.cells[b] = { id: b, shellIds: [] };
+			const parts = await kernel.computePartViews!(topo);
+			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
+			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
 		});
 	});
 }

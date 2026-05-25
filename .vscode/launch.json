@@ -454,18 +454,21 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧩elements🧭spatial",
+      "name": "🛠️dev🧭spatial",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/spatial-play:dev",
+      "command": "bun nx run @spatial/js-renderer-r3f:dev",
       "cwd": "${workspaceFolder}",
+      "env": {
+        "SPATIAL_R3F_PLAY_PORT": "6020"
+      },
       "presentation": {
         "group": "3_dev",
         "order": 165
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6017)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
         "uriFormat": "%s"
       }
     },

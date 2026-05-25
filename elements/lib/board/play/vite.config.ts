@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/lib/react/board/play/vite.config.ts — Vite dev/build for the board multi-pane play harness.
+// 💻 elements/lib/board/play/vite.config.ts — Vite dev/build for the board multi-pane play harness.
 // #endregion 🧲Header
 
 import tailwindcss from "@tailwindcss/vite";

@@ -270,11 +270,12 @@ export class StatelyStateEngine implements StateEngine {
 		kernel?: KernelAdapter,
 		topology?: TopologyGraph,
 		actions?: ActionRegistry,
+		derived?: import("@spatial/js-core").DerivedViewService,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
 			this.rebuildMachine(this.interactionState);
 		}
-		const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, topology);
+		const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, topology, derived);
 		if (!r.ok) return { ok: false };
 		this.interactionState = r.nextState;
 		this.actor.send({ type: "__advance", interactionKind: event.kind, branch: r.branchIndex });

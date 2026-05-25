@@ -9,6 +9,9 @@ import {
 	ActionRegistry,
 	TopologyGraph,
 	DerivedViewService,
+	applyTopologyDiff,
+	boxTopologyDiff,
+	cellRef,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
@@ -809,9 +812,9 @@ export class KernelIndex {
 		for (const id of Object.keys(this.topo.cellComplexes)) add("cellComplex", id);
 		for (const id of Object.keys(this.topo.clusters)) add("cluster", id);
 		if (this.derived) {
-			const sv = this.derived.computeSurfaces(this.topo.revision, this.topo.faces);
+			const sv = this.derived.computeSurfaces(this.topo);
 			for (const s of sv) add("surface", String(s.id));
-			const pv = this.derived.computeParts(this.topo.revision, this.topo.cells);
+			const pv = this.derived.computeParts(this.topo);
 			for (const p of pv) add("part", String(p.id));
 		}
 		for (const [cid, cell] of Object.entries(this.topo.cells)) {
@@ -1000,11 +1003,11 @@ function* iterateDerives(
 ): Generator<EntityHandle> {
 	if (!derived) return;
 	if (from.kind === "face") {
-		for (const s of derived.computeSurfaces(topo.revision, topo.faces)) {
+		for (const s of derived.computeSurfaces(topo)) {
 			if (s.sourceFaceIds.includes(from.id as FaceRef)) yield { kind: "surface", id: String(s.id) };
 		}
 	} else if (from.kind === "cell") {
-		for (const p of derived.computeParts(topo.revision, topo.cells)) {
+		for (const p of derived.computeParts(topo)) {
 			if (p.sourceCellIds.includes(from.id)) yield { kind: "part", id: String(p.id) };
 		}
 	}
@@ -1368,17 +1371,17 @@ if (import.meta.vitest) {
 
 		it("Surface metadata filter via WHERE", async () => {
 			const topo = new TopologyGraph();
-			const fid = "f0" as FaceRef;
-			topo.faces[fid] = { id: fid, wireIds: [] };
-			const sid = "surface-f0";
-			topo.metadata.setField(sid, "exposure", "external");
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			const derived = new DerivedViewService();
+			const external = derived.computeSurfaces(topo).find((s) => s.exposure === "external");
+			expect(external).toBeDefined();
 			const res = await runConstruct("MATCH (s:Surface) WHERE s.exposure = 'external' RETURN s.id", {
 				topology: topo,
 				kernel: mkKernelStub(),
 				actions: ActionRegistry.withBuiltins(),
-				derived: new DerivedViewService(),
+				derived,
 			});
-			expect(res.rows.some((r) => String(r.c0) === sid)).toBe(true);
+			expect(res.rows.some((r) => String(r.c0) === String(external!.id))).toBe(true);
 		});
 
 		it("CALL createBoxFromCorners yields diff key", async () => {

@@ -48,6 +48,7 @@
     "dev:storybook": "bun ./script.ts dev storybook",
     "dev:board": "bun ./script.ts dev board",
     "dev:scene": "bun ./script.ts dev scene",
+    "dev:spatial": "bun ./script.ts dev spatial",
     "generate": "bun ./script.ts generate",
     "migrate:neo4j": "bun ./.repo/🎫/26/05/15/NEO4J-MODULE-SHELL-REL-TYPE-HAS/migrate.neo4j.script.ts",
     "lint": "bun ./script.ts lint",
