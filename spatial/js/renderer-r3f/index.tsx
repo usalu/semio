@@ -3195,8 +3195,10 @@ export function InteractionRepl({
 // #endregion 🪩Repl
 
 // #region 🧪Tests
+const __spatialR3fTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
+
 if (import.meta.vitest) {
-	import { BrepjsKernel, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialR3fTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -3332,7 +3334,7 @@ if (import.meta.vitest) {
 		it("creates analytic surface and part targets from derived views", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
-			const derived = new DerivedViewService();
+			const derived = new DerivedViewService(new BrepjsKernel());
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			expect(targets.some((t) => t.kind === "surface")).toBe(true);
@@ -3359,7 +3361,7 @@ if (import.meta.vitest) {
 		it("creates selectable targets for every committed box topology kind", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
-			const derived = new DerivedViewService();
+			const derived = new DerivedViewService(new BrepjsKernel());
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			const counts = targets.reduce<Record<string, number>>((acc, target) => {

@@ -399,6 +399,8 @@ This MUST NOT happen.
 
 ## 🧩elements
 
+###
+
 ---
 
 We are starting a new a new architecture.
@@ -417,6 +419,12 @@ Finish implementing @elements/lib/playground and setup @elements/lib/react/spati
 Add a checkbox element which is an action that can be checked and unchecked.
 
 ### ⚛️react
+
+---
+
+Add a commands to ui.
+Commands are registerable at UI-level, App-Level, Mode-Level, WindowKind-Level.
+Depending on what is active they will shown as suggestion or not.
 
 ---
 

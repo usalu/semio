@@ -27,6 +27,7 @@ import {
 	type TopologyDiff,
 	type TopologyEntityKind,
 	type TopologyEntityRef,
+	type Vec3,
 	evalExpr,
 	type ExprEnv,
 } from "@spatial/js-core";
@@ -1108,6 +1109,7 @@ function rowVarsToEnv(
 	row: Row,
 	topo: TopologyGraph,
 	meta: import("@spatial/js-core").EntityMetadataStore,
+	preview: SpatialKernel,
 	derived?: import("@spatial/js-core").DerivedViewService,
 ): ExprEnv {
 	const vars: Record<string, unknown> = {};
@@ -1115,7 +1117,7 @@ function rowVarsToEnv(
 		if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
 		else vars[k] = v;
 	}
-	return { context: {}, vars, topology: topo, metadata: meta, derived };
+	return { context: {}, vars, topology: topo, metadata: meta, derived, preview };
 }
 
 function* expandPattern(
@@ -1186,7 +1188,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				for (const row of expandPattern(ctx.topology, ctx.derived, ctx.kernel, index, st.pattern)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata, ctx.derived));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1196,14 +1198,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "with") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.derived);
+				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived);
 				const out: Row = { ...r };
 				for (const p of st.projections) {
 					const v = evalExpr(p.expr, env);
 					if (p.alias) out[p.alias] = v;
 				}
 				if (st.where) {
-					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.topology, ctx.topology.metadata, ctx.derived));
+					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived));
 					if (!ok) continue;
 				}
 				next.push(out);
@@ -1215,7 +1217,9 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
-				const res = await Promise.resolve(def.run(paramBag, { kernel: ctx.kernel, topology: ctx.topology }));
+				const res = await Promise.resolve(
+					def.run(paramBag, { kernel: ctx.kernel, preview: ctx.kernel, topology: ctx.topology }),
+				);
 				const nr = { ...r };
 				for (const y of st.yieldNames) {
 					if (y === "diff" && res.diff) nr[y] = res.diff;
@@ -1235,7 +1239,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 	let out = rows;
 	if (ret.limit !== undefined) out = out.slice(0, ret.limit);
 	for (const r of out) {
-		const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.derived);
+		const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived);
 		const o: ConstructQueryRow = {};
 		for (let i = 0; i < ret.projections.length; i++) {
 			const p = ret.projections[i]!;
@@ -1292,8 +1296,10 @@ export class ConstructEngine {
 // #endregion Api
 
 // #region 🧪Tests
+const __spatialQueryTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
+
 if (import.meta.vitest) {
-	import { BrepjsKernel, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -1302,6 +1308,10 @@ if (import.meta.vitest) {
 		override readonly operations = [] as const;
 		override async createBoxFromCorners() {
 			return "c0" as CellRef;
+		}
+		override async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
+			const cell = await this.createBoxFromCorners(input);
+			return { cell, diff: this.boxTopologyDiff(input, cell) };
 		}
 		override async volume() {
 			return 0;
@@ -1424,26 +1434,12 @@ if (import.meta.vitest) {
 				"CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [2,3,0], height: 4 }) YIELD diff",
 				{
 					topology: topo,
-					kernel: {
-						id: "stub",
-						operations: [],
-						async createBoxFromCornersDiff() {
-							return { diff: {}, cell: "c1" as CellRef };
-						},
-						async createBoxFromCorners() {
-							return "c1" as CellRef;
-						},
-						async volume() {
-							return 0;
-						},
-						async tessellate() {
-							return { positions: new Float32Array(), indices: new Uint32Array() };
-						},
-					},
+					kernel: new QueryTestKernel(),
 					actions: ActionRegistry.withBuiltins(),
 				},
 			);
 			expect(res.diff).toBeDefined();
+			expect((res.diff?.cells?.added?.length ?? 0) + Object.keys(res.diff?.cells?.added ?? {}).length).toBeGreaterThan(0);
 		});
 	});
 }

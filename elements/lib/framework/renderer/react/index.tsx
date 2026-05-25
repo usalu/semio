@@ -24,6 +24,7 @@ import {
 	ProductRuntime,
 	AppRuntime,
 	ModeRuntime,
+	resolveCommandPaletteItems,
 	WindowKindRuntime,
 	createTabStackLayout,
 	createWindowLayout,
@@ -1829,6 +1830,28 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 				() => 0,
 			);
 			const ctx: WindowBodyViewContext = {
+
+			function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
+				const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
+				const visit = (node: WindowLayout["root"]): string | null => {
+					if (node.kind === "stack") {
+						for (const child of node.children) {
+							if (allowed.has(child.windowKindId)) return child.windowKindId;
+						}
+						return null;
+					}
+					for (const child of node.children) {
+						const match = visit(child);
+						if (match) return match;
+					}
+					return null;
+				};
+				if (layout) {
+					const match = visit(layout.root);
+					if (match) return match;
+				}
+				return windowKinds[0]?.id ?? null;
+			}
 				runtime,
 				windowKindId,
 				bodyKey,
@@ -2299,6 +2322,22 @@ export const ProductView: React.FC<ProductViewProps> = ({
 		activeAppBase.setActiveModeId(id);
 		runtime.notify();
 	};
+	const [activeWindowKindId, setActiveWindowKindId] = React.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
+
+	React.useEffect(() => {
+		setActiveWindowKindId((previous) => {
+			if (previous && activeApp.windowKinds.some((windowKind) => windowKind.id === previous)) return previous;
+			return findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds);
+		});
+	}, [activeApp.defaultLayout, activeApp.windowKinds]);
+
+	const handleActiveWindowChange = React.useCallback(
+		(windowKindId: string) => {
+			setActiveWindowKindId(windowKindId);
+			activeApp.onActiveWindowChange?.(windowKindId);
+		},
+		[activeApp],
+	);
 
 	const mergedTools = React.useMemo(
 		() => mergeToolbarViewTools(declareToolsToViewTools(runtime.globalTools, runtime.commandBus), declareToolsToViewTools(activeApp.tools, runtime.commandBus)),
@@ -2459,7 +2498,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 
 	const searchItemsResolved = React.useMemo(
 		() =>
-			runtime.searchItems.map((row) => ({
+			resolveCommandPaletteItems(runtime, activeApp, activeWindowKindId).map((row) => ({
 				id: row.id,
 				label: row.label,
 				description: row.description,
@@ -2467,7 +2506,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 				icon: row.iconId ? resolveElementIcon(row.iconId) : undefined,
 				onSelect: () => runtime.commandBus.dispatch(row.controllerId, row.command, row.args),
 			})),
-		[runtime, shellGen],
+		[runtime, activeApp, activeWindowKindId, shellGen],
 	);
 
 	const goldenWindowKinds = React.useMemo(
@@ -2550,7 +2589,7 @@ export const ProductView: React.FC<ProductViewProps> = ({
 									  )
 									: (activeApp.defaultLayout as WindowLayout)
 							}
-							onActiveWindowChange={activeApp.onActiveWindowChange}
+							onActiveWindowChange={handleActiveWindowChange}
 						/>
 					}
 				/>

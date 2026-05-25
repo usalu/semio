@@ -296,8 +296,10 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 // #endregion 🎭Provider
 
 // #region 🧪Tests
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
+
 if (import.meta.vitest) {
-	import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
+	const { BrepjsKernel } = __spatialStatelyTestKernel!;
 	const { describe, expect, it } = import.meta.vitest;
 
 	class StubKernel extends BrepjsKernel {

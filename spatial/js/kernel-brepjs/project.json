@@ -4,6 +4,7 @@
   "targets": {
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "spatial/js/kernel-brepjs",
         "command": "bun ./script.ts test",

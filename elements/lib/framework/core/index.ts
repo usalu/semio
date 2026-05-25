@@ -273,6 +273,25 @@ export function listPopulatedToolCategories(tools?: AppTools): AppToolCategory[]
 }
 //#endregion 🔖Toolbar
 
+//#region 🔖CommandsPalette
+/** @emoji 🔎 Command palette row spec resolved in React (icons + `onSelect`). */
+export interface SearchItemSpec {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly category?: string;
+	readonly iconId?: string;
+	readonly controllerId: string;
+	readonly command: string;
+	readonly args?: unknown;
+}
+
+/** @emoji 🔀 Merges command palette rows by `id`, favoring the more specific extension. */
+export function mergeSearchItems(base?: readonly SearchItemSpec[], extension?: readonly SearchItemSpec[]): SearchItemSpec[] | undefined {
+	return mergeById(base, extension);
+}
+//#endregion 🔖CommandsPalette
+
 //#region 🔖SideTab
 /** @emoji 📑 Side panel tab addressing a React-registered `bodyKey` tree host. */
 export interface SideTabSpec {
@@ -432,6 +451,7 @@ export interface SurfaceBinding<TApi, TContribution> {
 export class WindowKindRuntime {
 	readonly capabilities: Capability[] = [];
 	readonly surfaces: SurfaceDefinition[] = [];
+	commands: SearchItemSpec[] = [];
 
 	constructor(
 		readonly id: string,
@@ -450,6 +470,7 @@ export class WindowKindRuntime {
 /** @emoji 🎚 Single app mode: toolbars, window kinds, and side tab specs. */
 export class ModeRuntime {
 	tools: AppTools = {};
+	commands: SearchItemSpec[] = [];
 	windowKinds: WindowKindRuntime[] = [];
 	defaultLayout?: WindowLayout;
 	leftTabs: SideTabSpec[] = [];
@@ -501,6 +522,7 @@ export interface ResolvedAppState {
 	readonly label: string;
 	readonly iconId: string | undefined;
 	readonly tools: AppTools | undefined;
+	readonly commands: SearchItemSpec[];
 	readonly windowKinds: readonly WindowKindRuntime[];
 	readonly defaultLayout: WindowLayout;
 	readonly leftTabs: SideTabSpec[];
@@ -526,6 +548,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
 		label: mode?.label ?? app.label,
 		iconId: mode?.iconId ?? app.iconId,
 		tools: mergeAppTools(app.tools, mode?.tools),
+		commands: mergeSearchItems(app.commands, mode?.commands) ?? app.commands,
 		windowKinds: mergedWindowKinds,
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		leftTabs: mergedLeft,
@@ -550,6 +573,7 @@ export class AppRuntime {
 	windowKinds: WindowKindRuntime[] = [];
 	defaultLayout!: WindowLayout;
 	tools: AppTools = {};
+	commands: SearchItemSpec[] = [];
 	leftTabs: SideTabSpec[] = [];
 	rightTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
@@ -611,6 +635,7 @@ export class ProductRuntime {
 	onGoForward?: () => void;
 	onGoUp?: () => void;
 	globalTools: AppTools | undefined;
+	commands: readonly SearchItemSpec[] = [];
 	globalFooterItems: FooterItem[] = [];
 	searchItems: readonly SearchItemSpec[] = [];
 	mobile: boolean | undefined;
@@ -649,19 +674,14 @@ export class ProductRuntime {
 		this.notify();
 	}
 }
-
-/** @emoji 🔎 Command palette row spec resolved in React (icons + `onSelect`). */
-export interface SearchItemSpec {
-	readonly id: string;
-	readonly label: string;
-	readonly description?: string;
-	readonly category?: string;
-	readonly iconId?: string;
-	readonly controllerId: string;
-	readonly command: string;
-	readonly args?: unknown;
-}
 //#endregion 🔖ProductRuntime
+
+/** @emoji 🧭 Resolves the command palette rows visible for the active UI/app/mode/window scope. */
+export function resolveCommandPaletteItems(runtime: ProductRuntime, app: ResolvedAppState, activeWindowKindId?: string | null): SearchItemSpec[] {
+	const uiCommands = mergeSearchItems(runtime.searchItems, runtime.commands) ?? runtime.commands;
+	const windowKind = activeWindowKindId ? app.windowKinds.find((entry) => entry.id === activeWindowKindId) : undefined;
+	return mergeSearchItems(mergeSearchItems(uiCommands, app.commands), windowKind?.commands) ?? [];
+}
 
 //#region 🔖WindowBodyViewContext
 /** @emoji 🪟 View context for declarative window bodies: product snapshot without DOM or React roots. */
@@ -974,10 +994,15 @@ export class PluginContext {
 		for (const spec of this.manifest.contributes.apps ?? []) {
 			const controller = getController(spec.controllerId);
 			if (!controller) continue;
-			const windowKinds = spec.windowKinds.map((wk) => new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+			const windowKinds = spec.windowKinds.map((wk) => {
+				const windowKind = new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures);
+				if (wk.commands?.length) windowKind.commands = [...wk.commands];
+				return windowKind;
+			});
 			const app = new AppRuntime(spec.id, spec.label, spec.iconId, controller, spec.defaultLayout, windowKinds);
 			if (spec.defaultModeId) app.defaultModeId = spec.defaultModeId;
 			if (spec.tools) app.tools = spec.tools;
+			if (spec.commands?.length) app.commands = [...spec.commands];
 			if (spec.leftTabs?.length) app.leftTabs = [...spec.leftTabs];
 			if (spec.rightTabs?.length) app.rightTabs = [...spec.rightTabs];
 			if (spec.footerItems?.length) app.footerItems = [...spec.footerItems];
@@ -985,8 +1010,13 @@ export class PluginContext {
 			for (const modeSpec of spec.modes ?? []) {
 				const mode = new ModeRuntime(modeSpec.id, modeSpec.label, modeSpec.iconId);
 				if (modeSpec.tools) mode.tools = modeSpec.tools;
+				if (modeSpec.commands?.length) mode.commands = [...modeSpec.commands];
 				if (modeSpec.windowKinds?.length) {
-					mode.windowKinds = modeSpec.windowKinds.map((wk) => new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures));
+					mode.windowKinds = modeSpec.windowKinds.map((wk) => {
+						const windowKind = new WindowKindRuntime(wk.id, wk.label, wk.bodyKey, wk.iconId, wk.measures);
+						if (wk.commands?.length) windowKind.commands = [...wk.commands];
+						return windowKind;
+					});
 				}
 				if (modeSpec.defaultLayout) mode.defaultLayout = modeSpec.defaultLayout;
 				app.addMode(mode);
@@ -1029,6 +1059,7 @@ export interface PluginManifestAppContribute {
 		readonly bodyKey: string;
 		readonly iconId?: string;
 		readonly measures?: readonly WindowMeasure[];
+		readonly commands?: readonly SearchItemSpec[];
 	}[];
 	readonly defaultLayout: WindowLayout;
 	readonly defaultModeId?: string;
@@ -1037,10 +1068,12 @@ export interface PluginManifestAppContribute {
 		readonly label: string;
 		readonly iconId?: string;
 		readonly tools?: AppTools;
-		readonly windowKinds?: readonly { readonly id: string; readonly label: string; readonly bodyKey: string; readonly iconId?: string; readonly measures?: readonly WindowMeasure[] }[];
+		readonly commands?: readonly SearchItemSpec[];
+		readonly windowKinds?: readonly { readonly id: string; readonly label: string; readonly bodyKey: string; readonly iconId?: string; readonly measures?: readonly WindowMeasure[]; readonly commands?: readonly SearchItemSpec[] }[];
 		readonly defaultLayout?: WindowLayout;
 	}[];
 	readonly tools?: AppTools;
+	readonly commands?: readonly SearchItemSpec[];
 	readonly leftTabs?: readonly SideTabSpec[];
 	readonly rightTabs?: readonly SideTabSpec[];
 	readonly footerItems?: readonly FooterItem[];
@@ -1368,5 +1401,33 @@ if (import.meta.vitest) {
 			host.disposeAll();
 		});
 	});
+
+		describe("resolveCommandPaletteItems", () => {
+			it("merges ui, app, mode, and active window kind commands by active scope", () => {
+				const runtime = new ProductRuntime();
+				runtime.commands = [{ id: "ui", label: "UI", controllerId: "ctrl", command: "ui" }];
+				runtime.searchItems = [{ id: "legacy", label: "Legacy", controllerId: "ctrl", command: "legacy" }];
+				class TCtrl extends Controller {
+					constructor() {
+						super("ctrl", runtime.commandBus, () => runtime.notify());
+					}
+					run(): void {}
+				}
+				const baseWindow = new WindowKindRuntime("base", "Base", "base.body");
+				baseWindow.commands = [{ id: "base-window", label: "Base Window", controllerId: "ctrl", command: "base-window" }];
+				const app = new AppRuntime("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"]), [baseWindow]);
+				app.commands = [{ id: "app", label: "App", controllerId: "ctrl", command: "app" }];
+				const inspect = new ModeRuntime("inspect", "Inspect", undefined);
+				inspect.commands = [{ id: "mode", label: "Mode", controllerId: "ctrl", command: "mode" }];
+				const inspectWindow = new WindowKindRuntime("inspect", "Inspect", "inspect.body");
+				inspectWindow.commands = [{ id: "inspect-window", label: "Inspect Window", controllerId: "ctrl", command: "inspect-window" }];
+				inspect.windowKinds = [inspectWindow];
+				app.addMode(inspect);
+				const resolved = resolveAppState(app, "inspect");
+
+				expect(resolveCommandPaletteItems(runtime, resolved, "inspect").map((item) => item.id)).toEqual(["legacy", "ui", "app", "mode", "inspect-window"]);
+				expect(resolveCommandPaletteItems(runtime, resolved, "base").map((item) => item.id)).toEqual(["legacy", "ui", "app", "mode", "base-window"]);
+			});
+		});
 }
 //#endregion 🧪Tests

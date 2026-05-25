@@ -28,6 +28,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "spatial/js/renderer-r3f",
         "command": "bun ./script.ts test",
