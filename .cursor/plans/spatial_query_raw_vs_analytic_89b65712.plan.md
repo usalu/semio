@@ -4,34 +4,34 @@ overview: Refactor the spatial `construct` query language so raw topology is rea
 todos:
   - id: lexer_parser
     content: Add UNWIND/AS tokens, unwindClause rule, and yieldItem aliases to the query parser
-    status: in_progress
+    status: completed
   - id: ast_planner
     content: Extend AST/Planner with UnwindClauseAst + generic yield-key binding
-    status: pending
+    status: completed
   - id: executor
     content: Implement UNWIND executor step and generic ActionResult key resolution
-    status: pending
+    status: completed
   - id: parse_guard
     content: Reject MATCH on Surface/Part/Volume at parse time with actionable error
-    status: pending
+    status: completed
   - id: index_cleanup
     content: Remove implicit Surface/Part computation from KernelIndex and drop DERIVES relation
-    status: pending
+    status: completed
   - id: volume_view
     content: Add VolumeView type, brand, DerivedViewService.computeVolumes, SpatialKernel.computeVolumeViews
-    status: pending
+    status: completed
   - id: view_actions
     content: Register view.surfaces / view.parts / view.volumes built-in actions
-    status: pending
+    status: completed
   - id: kernel_brepjs
     content: Implement BrepjsKernel.computeVolumeViews via boolean union
-    status: pending
+    status: completed
   - id: docs
     content: "Update spatial/AGENTS.md: drop Skin, add Volume, document analytic-via-CALL rule"
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing test regions to cover parse rejection, CALL+UNWIND analytic flow, multi-key YIELD, and computeVolumes
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: decompose
     content: Implement decomposeCells using brepjs split + per-piece containment tagging in a new region
-    status: in_progress
+    status: completed
   - id: selfmerge
     content: Implement selfMergeTopologyDiff with deterministic, idempotent ids for vertices/edges/wires/faces
-    status: pending
+    status: completed
   - id: views
     content: Implement partViewsFromAtomics and surfaceViewsFromAtomics (face-adjacency exposure)
-    status: pending
+    status: completed
   - id: wire
     content: Rewire BrepjsKernel.computeSurfaceViews / computePartViews to use the new pipeline and apply the merge diff
-    status: pending
+    status: completed
   - id: cleanup
     content: Delete superseded helpers (computeBooleanPartRecordsFromSolids, computeSurfaceViewsFromPartRecords, point-probe exposure helpers); keep AABB fallback only for the no-solid path
-    status: pending
+    status: completed
   - id: tests
     content: Extend the kernel-brepjs vitest spec with overlap, triple-pairwise, and SelfMerge idempotency cases
-    status: pending
+    status: completed
   - id: close
     content: Close the ticket via ticket_close with summary and changed files
-    status: pending
+    status: completed
 isProject: false
 ---
 

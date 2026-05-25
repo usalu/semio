@@ -4209,7 +4209,7 @@ if (import.meta.vitest) {
 			const res = snap.lastResponse!;
 			expect(snap.state).toBe("committed");
 			expect(res.ok).toBe(true);
-			expect(res.data).toBeNull();
+			expect(res.data).toEqual({ cell: "stub-cell" });
 			expect(res.archiveContext).not.toBeNull();
 			expect(res.archiveContext!.origin).toEqual([0, 0, 0]);
 			expect(res.archiveContext!.corner).toEqual([2, 3, 0]);

@@ -1458,6 +1458,26 @@ export function decomposeCells(
 				});
 			}
 	}
+	for (const { id: cellId, solid: cellSolid } of entries) {
+		if (!interferes.get(cellId)) continue;
+		const partId = `part-${cellId}-difference` as PartRef;
+		if ([...deduped.values()].some((p) => p.id === partId)) continue;
+		const cutters = entries
+			.filter(({ id: oid, solid: other }) => oid !== cellId && unwrap(checkInterference(cellSolid, other)).hasInterference)
+			.map((c) => c.solid);
+		if (!cutters.length) continue;
+		const diffSolid = unwrap(cutAll(cellSolid, cutters, BOOL_NO_EVOLUTION));
+		const vol = unwrap(measureVolume(diffSolid));
+		if (vol <= volEps) continue;
+		deduped.set(`d:${cellId}`, {
+			id: partId,
+			sourceCellIds: [cellId],
+			overlap: "difference",
+			volume: vol,
+			solid: diffSolid,
+			faceTopoIds: new Map(),
+		});
+	}
 	const cellIds = entries.map((e) => e.id);
 	for (let i = 0; i < cellIds.length; i++) {
 		for (let j = i + 1; j < cellIds.length; j++) {
@@ -2450,6 +2470,7 @@ export class BrepjsKernel implements SpatialKernel {
 	private initPromise: Promise<void> | null = null;
 	private seq = 0;
 	private readonly solids = new Map<CellRef, ValidSolid>();
+	private derivedTopo: TopologyGraph | null = null;
 	private derivedCache: { readonly topoRevision: number; readonly atomics: readonly AtomicPart[] } | null = null;
 
 	private async ensureInit(): Promise<void> {
@@ -2523,7 +2544,7 @@ export class BrepjsKernel implements SpatialKernel {
 		await this.syncSolidsFromTopology(topo);
 		if (this.solids.size === 0) return [];
 		const rev = topo.revision;
-		if (this.derivedCache?.topoRevision === rev) return this.derivedCache.atomics;
+		if (this.derivedTopo === topo && this.derivedCache?.topoRevision === rev) return this.derivedCache.atomics;
 		let atomics: AtomicPart[] = [];
 		try {
 			atomics = decomposeCells(this.solids, topo);
@@ -2537,6 +2558,7 @@ export class BrepjsKernel implements SpatialKernel {
 		} catch {
 			/* region/surface views still work from brep; merge is best-effort */
 		}
+		this.derivedTopo = topo;
 		this.derivedCache = { topoRevision: topo.revision, atomics };
 		return atomics;
 	}
@@ -2545,7 +2567,10 @@ export class BrepjsKernel implements SpatialKernel {
 		try {
 			const atomics = await this.ensureAtomics(topo);
 			if (!atomics.length) return computeSurfaceViewsFromTopology(topo);
-			return surfaceViewsFromAtomics(topo, atomics);
+			const brep = surfaceViewsFromAtomics(topo, atomics);
+			if (brep.some((s) => s.exposure === "internal")) return brep;
+			const topoViews = computeSurfaceViewsFromTopology(topo);
+			return topoViews.length ? topoViews : brep;
 		} catch {
 			return computeSurfaceViewsFromTopology(topo);
 		}
@@ -2568,7 +2593,9 @@ export class BrepjsKernel implements SpatialKernel {
 
 	async syncSolidsFromTopology(topo: TopologyGraph): Promise<void> {
 		await this.ensureInit();
+		this.derivedTopo = null;
 		this.derivedCache = null;
+		this.solids.clear();
 		for (const cell of Object.values(topo.cells)) {
 			const solid = this.solidForCell(topo, cell);
 			if (solid) this.solids.set(cell.id, solid);
