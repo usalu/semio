@@ -308,7 +308,6 @@ function PlayApp() {
 
 	return (
 		<PlaySession
-			key={interactionId}
 			interactions={interactions}
 			interactionId={interactionId}
 			spec={spec}

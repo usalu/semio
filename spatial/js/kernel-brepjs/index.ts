@@ -36,6 +36,7 @@ import {
 import type { Edge, OrientedFace, ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
+	applyTopologyDiff,
 	cellRef,
 	type Aabb,
 	type AnchorAttachment,
@@ -797,11 +798,10 @@ export function cellSolidAabb(solid: CellSolid): { readonly min: Vec3; readonly 
 	};
 }
 
-/** @emoji 📐 Axis-aligned bounds of a cell from analytic solid or shell face vertices. */
+/** @emoji 📐 Axis-aligned bounds of a cell from shell vertices when present, else analytic `CellSolid`. */
 export function topologyCellAabb(topo: TopologyGraph, cell: CellRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
-	if (cell.solid) return cellSolidAabb(cell.solid);
 	const points = derivedCellPoints(topo, cell);
-	if (points.length === 0) return null;
+	if (points.length === 0) return cell.solid ? cellSolidAabb(cell.solid) : null;
 	let minX = Infinity;
 	let minY = Infinity;
 	let minZ = Infinity;
@@ -835,6 +835,12 @@ function derivedCanonicalPlaneKey(normal: Vec3, centroid: Vec3, scale: number): 
 	const q = (v: number) => Math.round(v / tol) * tol;
 	const d = vec3Dot(n, centroid);
 	return `${q(n[0])},${q(n[1])},${q(n[2])}:${q(d)}`;
+}
+
+function derivedCanonicalRectKey(rect: Rect2, scale: number): string {
+	const tol = Math.max(scale * 1e-6, 1e-4);
+	const q = (v: number) => Math.round(v / tol) * tol;
+	return `${q(rect.u0)},${q(rect.u1)},${q(rect.v0)},${q(rect.v1)}`;
 }
 
 type Aabb = { readonly min: Vec3; readonly max: Vec3 };
@@ -1162,9 +1168,61 @@ export function aabbOverlapUnionVolume(cell: Aabb, cutters: readonly Aabb[]): nu
 	return aabbUnionVolume(pieces);
 }
 
-/** @emoji 📐 Sample points in `cell \\ ∪(cell ∩ cutter)` for difference-part pick hulls. */
+function aabbSubtractSingle(cell: Aabb, hole: Aabb, eps = 1e-9): Aabb[] {
+	const inter = aabbIntersect(cell, hole);
+	if (!inter || aabbVolume(inter) <= eps) return [cell];
+	const out: Aabb[] = [];
+	if (cell.min[0] < inter.min[0] - eps) {
+		out.push({ min: [cell.min[0], cell.min[1], cell.min[2]], max: [inter.min[0], cell.max[1], cell.max[2]] });
+	}
+	if (inter.max[0] < cell.max[0] - eps) {
+		out.push({ min: [inter.max[0], cell.min[1], cell.min[2]], max: [cell.max[0], cell.max[1], cell.max[2]] });
+	}
+	if (cell.min[1] < inter.min[1] - eps) {
+		out.push({ min: [inter.min[0], cell.min[1], cell.min[2]], max: [inter.max[0], inter.min[1], cell.max[2]] });
+	}
+	if (inter.max[1] < cell.max[1] - eps) {
+		out.push({ min: [inter.min[0], inter.max[1], cell.min[2]], max: [inter.max[0], cell.max[1], cell.max[2]] });
+	}
+	if (cell.min[2] < inter.min[2] - eps) {
+		out.push({ min: [inter.min[0], inter.min[1], cell.min[2]], max: [inter.max[0], inter.max[1], inter.min[2]] });
+	}
+	if (inter.max[2] < cell.max[2] - eps) {
+		out.push({ min: [inter.min[0], inter.min[1], inter.max[2]], max: [inter.max[0], inter.max[1], cell.max[2]] });
+	}
+	return out.filter((p) => aabbVolume(p) > eps);
+}
+
+/** @emoji 📐 Axis-aligned pieces of `cell \\ ⋃(cell ∩ cutter)` (volumetric difference decomposition). */
+export function aabbDifferencePieces(cell: Aabb, cutters: readonly Aabb[], volEps = 1e-6): Aabb[] {
+	let pieces: Aabb[] = [cell];
+	for (const cutter of cutters) {
+		const hole = aabbIntersect(cell, cutter);
+		if (!hole || aabbVolume(hole) <= volEps) continue;
+		const next: Aabb[] = [];
+		for (const piece of pieces) next.push(...aabbSubtractSingle(piece, hole, volEps));
+		pieces = next.filter((p) => aabbVolume(p) > volEps);
+	}
+	return pieces;
+}
+
+/** @emoji 📐 Corner hull of `cell \\ ∪(cell ∩ cutter)` for difference-part pick targets. */
 export function aabbDifferenceRegionPoints(cell: Aabb, cutters: readonly Aabb[], grid = 5): readonly Vec3[] {
 	if (cutters.length === 0) return aabbCornerPoints(cell.min, cell.max);
+	const pieces = aabbDifferencePieces(cell, cutters);
+	if (pieces.length > 0) {
+		const pts: Vec3[] = [];
+		const seen = new Set<string>();
+		for (const piece of pieces) {
+			for (const p of aabbCornerPoints(piece.min, piece.max)) {
+				const k = p.join(",");
+				if (seen.has(k)) continue;
+				seen.add(k);
+				pts.push(p);
+			}
+		}
+		if (pts.length) return pts;
+	}
 	return aabbLatticePoints(cell, grid).filter((p) => !pointInCellOverlap(p, cell, cutters));
 }
 
@@ -1193,7 +1251,7 @@ function derivedPushSurfacePatch(
 	rect: Rect2,
 	frame: FacePlaneFrame,
 ): void {
-	const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
+	const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}:${derivedCanonicalRectKey(rect, scale)}`;
 	const patchPts = derivedRectToPoints(frame, rect);
 	const area = derivedRectArea(rect);
 	const hit = grouped.get(key);
@@ -1346,7 +1404,7 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			const other = aabbs.get(otherId);
 			if (!other) continue;
 			const inter = aabbIntersect(box, other);
-			if (inter && aabbVolume(inter) > volEps) cutters.push(other);
+			if (inter && aabbVolume(inter) > volEps) cutters.push(inter);
 		}
 		if (cutters.length === 0) {
 			parts.push({
@@ -1781,18 +1839,26 @@ export class BrepjsKernel implements SpatialKernel {
 		return computeSurfaceViewsFromTopology(topo);
 	}
 
+	/** @emoji 🧊 Authoritative brep for a cell: analytic `CellSolid`, then cache, then topology hull. */
+	solidForCell(topo: TopologyGraph, cell: CellRecord): ValidSolid | null {
+		if (cell.solid) return this.solidFromCellSolid(cell.solid);
+		const cached = this.solids.get(cell.id);
+		if (cached) return cached;
+		const points = derivedCellPoints(topo, cell);
+		if (points.length > 0) {
+			const aabb = aabbFromPoints(points, 0);
+			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
+		}
+		const aabb = topologyCellAabb(topo, cell);
+		if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
+		return null;
+	}
+
 	async syncSolidsFromTopology(topo: TopologyGraph): Promise<void> {
 		await this.ensureInit();
 		for (const cell of Object.values(topo.cells)) {
-			const ref = cell.id;
-			if (this.solids.has(ref)) continue;
-			if (cell.solid) {
-				this.solids.set(ref, this.solidFromCellSolid(cell.solid));
-				continue;
-			}
-			const aabb = topologyCellAabb(topo, cell);
-			if (!aabb) continue;
-			this.solids.set(ref, this.solidFromAabb(aabb.min, aabb.max));
+			const solid = this.solidForCell(topo, cell);
+			if (solid) this.solids.set(cell.id, solid);
 		}
 	}
 
@@ -1839,6 +1905,11 @@ export class BrepjsKernel implements SpatialKernel {
 		if (solidCells.length === 0) return computePartViewsFromTopology(topo);
 		const parts: PartView[] = [];
 		const volEps = 1e-6;
+		let cellVolSum = 0;
+		for (const cid of solidCells) {
+			const base = this.solids.get(cid)!;
+			cellVolSum += unwrap(measureVolume(base));
+		}
 		for (let i = 0; i < solidCells.length; i++) {
 			for (let j = i + 1; j < solidCells.length; j++) {
 				const a = solidCells[i]!;
@@ -1873,8 +1944,6 @@ export class BrepjsKernel implements SpatialKernel {
 				const other = this.solids.get(otherId)!;
 				const hit = unwrap(checkInterference(base, other));
 				if (!hit.hasInterference) continue;
-				const interVol = unwrap(measureVolume(unwrap(intersect(base, other, BOOL_NO_EVOLUTION))));
-				if (interVol <= volEps) continue;
 				cutters.push(other);
 			}
 			const cellRec = topo.cells[cid];
@@ -1886,7 +1955,8 @@ export class BrepjsKernel implements SpatialKernel {
 				if (!otherCell || !cellAabb) continue;
 				const otherAabb = topologyCellAabb(topo, otherCell);
 				if (!otherAabb) continue;
-				if (aabbIntersect(cellAabb, otherAabb)) cutterAabbs.push(otherAabb);
+				const cut = aabbIntersect(cellAabb, otherAabb);
+				if (cut && aabbVolume(cut) > volEps) cutterAabbs.push(cut);
 			}
 			const diffFallback = cellAabb && cutterAabbs.length ? aabbDifferenceRegionPoints(cellAabb, cutterAabbs) : undefined;
 			const noneFallback = cellAabb ? aabbCornerPoints(cellAabb.min, cellAabb.max) : undefined;
@@ -1900,7 +1970,10 @@ export class BrepjsKernel implements SpatialKernel {
 				});
 				continue;
 			}
-			const remaining = cutters.length === 1 ? unwrap(cut(base, cutters[0]!, BOOL_NO_EVOLUTION)) : unwrap(cutAll(base, cutters, BOOL_NO_EVOLUTION));
+			const remaining =
+				cutters.length === 1
+					? unwrap(cut(base, cutters[0]!, BOOL_NO_EVOLUTION))
+					: unwrap(cutAll(base, cutters, BOOL_NO_EVOLUTION));
 			const diffVol = unwrap(measureVolume(remaining));
 			if (diffVol > volEps) {
 				parts.push({
@@ -1911,6 +1984,10 @@ export class BrepjsKernel implements SpatialKernel {
 					regionPoints: brepSolidRegionPoints(remaining, diffFallback),
 				});
 			}
+		}
+		const partVolSum = parts.reduce((acc, p) => acc + p.volume, 0);
+		if (parts.some((p) => p.overlap === "intersection") && partVolSum >= cellVolSum - volEps) {
+			return computePartViewsFromTopology(topo);
 		}
 		for (const cid of cellIds) {
 			if (this.solids.has(cid)) continue;
@@ -2233,6 +2310,27 @@ if (import.meta.vitest) {
 			expect(await kernel.volume(r.cell)).toBeGreaterThan(0);
 		});
 
+		it("topologyCellAabb follows moved shell vertices when CellSolid is stale", () => {
+			const topo = new TopologyGraph();
+			const cell = cellRef("box");
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			const rec = topo.cells[cell]!;
+			rec.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 };
+			const before = topologyCellAabb(topo, rec)!;
+			let topId = Object.keys(topo.vertices)[0]!;
+			let topZ = topo.vertices[topId]!.position[2];
+			for (const [id, vert] of Object.entries(topo.vertices)) {
+				if (vert.position[2] > topZ) {
+					topZ = vert.position[2];
+					topId = id;
+				}
+			}
+			const top = topo.vertices[topId]!;
+			topo.vertices[topId] = { id: top.id, position: [top.position[0], top.position[1], top.position[2] + 2] };
+			const after = topologyCellAabb(topo, rec)!;
+			expect(after.max[2]).toBeGreaterThan(before.max[2] + 1);
+		});
+
 		it("vertexDistance matches graph positions", async () => {
 			const g = new TopologyGraph();
 			const va = "va" as VertexRef;
@@ -2304,6 +2402,15 @@ if (import.meta.vitest) {
 			expect(xs).toEqual([f]);
 		});
 
+		it("aabbDifferencePieces volume equals cell minus intersection overlap", () => {
+			const cell = { min: [0, 0, 0] as Vec3, max: [2, 2, 2] as Vec3 };
+			const other = { min: [1, 1, 0] as Vec3, max: [3, 3, 2] as Vec3 };
+			const inter = aabbIntersect(cell, other)!;
+			const pieces = aabbDifferencePieces(cell, [inter]);
+			const pieceVol = pieces.reduce((acc, p) => acc + aabbVolume(p), 0);
+			expect(pieceVol).toBeCloseTo(aabbVolume(cell) - aabbVolume(inter), 4);
+		});
+
 		it("computePartViews splits overlapping brep solids", async () => {
 			const topo = new TopologyGraph();
 			const a = await kernel.createBoxFromCorners({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
@@ -2317,6 +2424,53 @@ if (import.meta.vitest) {
 			const diffA = parts.find((p) => p.id === `part-${a}-difference`);
 			expect(diffA?.volume).toBeLessThan(8);
 			expect((diffA?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(8, 2);
+		});
+
+		it("computePartViews part volume sum is below cell volume sum for overlapping boxes", async () => {
+			const topo = new TopologyGraph();
+			const a = cellRef("a");
+			const b = cellRef("b");
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, a));
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, b));
+			await kernel.syncSolidsFromTopology(topo);
+			const volA = await kernel.volume(a);
+			const volB = await kernel.volume(b);
+			const parts = await kernel.computePartViews!(topo);
+			const inter = parts.find((p) => p.overlap === "intersection");
+			const diffA = parts.find((p) => p.id === `part-${a}-difference`);
+			const diffB = parts.find((p) => p.id === `part-${b}-difference`);
+			const partSum = parts.reduce((acc, p) => acc + p.volume, 0);
+			expect(partSum).toBeLessThan(volA + volB);
+			expect(partSum).toBeCloseTo(volA + volB - (inter?.volume ?? 0), 2);
+			expect((diffA?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(volA, 2);
+			expect((diffB?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(volB, 2);
+			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
+			const inInter = (p: Vec3) =>
+				p[0] > interBox.min[0] + 1e-4 &&
+				p[0] < interBox.max[0] - 1e-4 &&
+				p[1] > interBox.min[1] + 1e-4 &&
+				p[1] < interBox.max[1] - 1e-4 &&
+				p[2] > interBox.min[2] + 1e-4 &&
+				p[2] < interBox.max[2] - 1e-4;
+			expect(diffA?.regionPoints?.every((p) => !inInter(p))).toBe(true);
+			expect(diffB?.regionPoints?.every((p) => !inInter(p))).toBe(true);
+		});
+
+		it("computePartViews uses analytic brep for overlapping spheres not topology aabb", async () => {
+			const topo = new TopologyGraph();
+			const a = cellRef("sa");
+			const b = cellRef("sb");
+			topo.cells[a] = { id: a, shellIds: [], solid: { kind: "sphere", center: [0, 0, 0], radius: 1 } };
+			topo.cells[b] = { id: b, shellIds: [], solid: { kind: "sphere", center: [0.5, 0, 0], radius: 1 } };
+			await kernel.syncSolidsFromTopology(topo);
+			const volA = await kernel.volume(a);
+			const volB = await kernel.volume(b);
+			expect(volA).toBeCloseTo((4 / 3) * Math.PI, 2);
+			const parts = await kernel.computePartViews!(topo);
+			const partSum = parts.reduce((acc, p) => acc + p.volume, 0);
+			expect(partSum).toBeLessThan(volA + volB);
+			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
+			expect(parts.filter((p) => p.overlap === "difference").length).toBe(2);
 		});
 
 		it("executeCommandDiff curve.arc places end vertex on circle not off-circle pick", async () => {

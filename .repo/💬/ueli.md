@@ -2565,6 +2565,12 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+The boolean logic is still not right.
+This is a very complex operation.
+On analytic view all boolean intersections of all cells are found and then from every cell the intersections are removed by boolean difference.
+Currently the difference parts are still original. You can tests this easily by taking two intersecting box cells, then calculating the volume and adding it up. Then analyze the cells and total volume of all the parts must be less.
+Make sure it is general for cells (any brep) and not just for boxes.
+
 ---
 
 Introduce new editable geometry entity: Anchor

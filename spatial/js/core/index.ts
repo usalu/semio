@@ -3443,6 +3443,46 @@ if (import.meta.vitest) {
 			expect(topInternal).toBeDefined();
 			const xs = topInternal!.regionPoints!.map((p) => p[0]);
 			expect(M.maxN(xs) - M.minN(xs)).toBeCloseTo(1, 4);
+			const regionSpan = (pts: readonly Vec3[]) => {
+				const xs = pts.map((p) => p[0]);
+				const ys = pts.map((p) => p[1]);
+				const zs = pts.map((p) => p[2]);
+				return {
+					x: M.maxN(xs) - M.minN(xs),
+					y: M.maxN(ys) - M.minN(ys),
+					z: M.maxN(zs) - M.minN(zs),
+				};
+			};
+			const topExternalA = surfaces.filter(
+				(s) =>
+					s.exposure === "external" &&
+					s.stance === "horizontal" &&
+					s.regionPoints?.every((p) => M.abs(p[2] - 2) < 1e-5 && p[0] <= 2 + 1e-5 && p[1] <= 2 + 1e-5),
+			);
+			expect(topExternalA.length).toBeGreaterThan(1);
+			expect(topExternalA.reduce((acc, s) => acc + s.area, 0)).toBeCloseTo(3, 3);
+			for (const s of topExternalA) {
+				const span = regionSpan(s.regionPoints!);
+				expect(span.x * span.y).toBeCloseTo(s.area, 3);
+				expect(span.x * span.y).toBeLessThan(4);
+			}
+		});
+
+		it("splits vertical faces where overlap cuts through the face height", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [4, 1, 0], height: 1 }, cellRef("slab")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [3, 0, 0], cornerB: [4, 1, 0], height: 3 }, cellRef("tower")));
+			const surfaces = computeSurfaceViewsFromTopology(topo);
+			const towerFaceX0 = surfaces.filter(
+				(s) =>
+					s.exposure === "external" &&
+					s.stance === "vertical" &&
+					s.sourceFaceIds.some((id) => String(id).includes("box-tower-face-x0")),
+			);
+			expect(towerFaceX0.length).toBe(1);
+			const zs = towerFaceX0[0]!.regionPoints!.map((p) => p[2]);
+			expect(M.minN(zs)).toBeGreaterThan(1 - 1e-5);
+			expect(M.maxN(zs) - M.minN(zs)).toBeCloseTo(2, 3);
 		});
 
 		it("partitions overlapping box cells by intersection volume", () => {
@@ -3453,6 +3493,10 @@ if (import.meta.vitest) {
 			const inter = parts.find((p) => p.overlap === "intersection");
 			expect(inter?.volume).toBeCloseTo(2, 4);
 			expect(parts.filter((p) => p.overlap === "difference").length).toBe(2);
+			const diffA = parts.find((p) => p.id === "part-a-difference");
+			const diffB = parts.find((p) => p.id === "part-b-difference");
+			expect(diffA?.volume).toBeCloseTo(6, 4);
+			expect(diffB?.volume).toBeCloseTo(6, 4);
 		});
 
 		it("keeps part volumes shape-invariant for two overlapping boxes", () => {
@@ -3465,12 +3509,25 @@ if (import.meta.vitest) {
 			const inter = parts.find((p) => p.overlap === "intersection");
 			const interVol = inter?.volume ?? 0;
 			const sum = parts.reduce((acc, p) => acc + p.volume, 0);
-			expect(interVol).toBeCloseTo(2, 1);
+			expect(interVol).toBeCloseTo(2, 3);
 			expect(sum).toBeGreaterThan(0);
-			expect(sum).toBeLessThanOrEqual(volA + volB);
+			expect(sum).toBeLessThan(volA + volB);
+			expect(sum).toBeCloseTo(volA + volB - interVol, 3);
 			const diffA = parts.find((p) => p.id === "part-a-difference");
 			const diffB = parts.find((p) => p.id === "part-b-difference");
-			expect((diffA?.volume ?? 0) + (diffB?.volume ?? 0) + interVol).toBeCloseTo(sum, 1);
+			expect(diffA?.volume).toBeCloseTo(volA - interVol, 3);
+			expect(diffB?.volume).toBeCloseTo(volB - interVol, 3);
+			expect((diffA?.volume ?? 0) + interVol).toBeCloseTo(volA, 3);
+			expect((diffB?.volume ?? 0) + interVol).toBeCloseTo(volB, 3);
+			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
+			const inInterInterior = (p: Vec3) =>
+				p[0] > interBox.min[0] + 1e-5 &&
+				p[0] < interBox.max[0] - 1e-5 &&
+				p[1] > interBox.min[1] + 1e-5 &&
+				p[1] < interBox.max[1] - 1e-5 &&
+				p[2] > interBox.min[2] + 1e-5 &&
+				p[2] < interBox.max[2] - 1e-5;
+			expect(diffA?.regionPoints?.every((p) => !inInterInterior(p))).toBe(true);
 		});
 
 		it("keeps surface areas shape-invariant for two overlapping boxes", () => {

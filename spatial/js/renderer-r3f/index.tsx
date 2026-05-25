@@ -55,7 +55,7 @@ import {
 } from "@spatial/js-core";
 
 export type { SpatialComputeMode };
-import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+import { aabbDifferenceRegionPoints, PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
 // #endregion 📥Imports
 
 // #region ⚡R3FPreviewKernel
@@ -240,6 +240,26 @@ export function transformPointsForPreviewKind(
 	preview: SpatialPreviewKernel = scenePreview(),
 ): (point: Vec3) => Vec3 {
 	return preview.transformPointsForPreviewKind(previewKind, params);
+}
+
+/** @emoji 🖼️ Active topology point transform from move/copy/mirror/rotate/scale preview display items. */
+export function topologyPreviewTransformFromDisplay(model: DisplayModel): ((point: Vec3) => Vec3) | null {
+	for (const item of model.items) {
+		if (item.kind !== "preview" || !item.params) continue;
+		const previewKind = typeof item.params.previewKind === "string" ? item.params.previewKind : "";
+		if (!previewKindUsesTopologyWireframe(previewKind)) continue;
+		if (
+			previewKind === "move-preview" ||
+			previewKind === "copy-preview" ||
+			previewKind === "mirror-preview" ||
+			previewKind === "rotate-preview" ||
+			previewKind === "scale-preview" ||
+			previewKind === "scale1d-preview"
+		) {
+			return transformPointsForPreviewKind(previewKind, item.params);
+		}
+	}
+	return null;
 }
 
 function previewKindUsesTopologyWireframe(previewKind: string): boolean {
@@ -650,9 +670,25 @@ function partPickPoints(
 	part: PartView,
 	fallback: readonly Vec3[],
 ): readonly Vec3[] {
+	if (part.regionPoints?.length) return part.regionPoints;
 	if (part.overlap === "intersection" && part.sourceCellIds.length >= 2) {
 		const inter = intersectCellAabbs(topo, part.sourceCellIds);
 		if (inter) return aabbCornerPoints(inter.min, inter.max);
+	}
+	if (part.overlap === "difference" && part.sourceCellIds.length === 1) {
+		const cell = topo.cells[part.sourceCellIds[0]!];
+		const box = cell ? scenePreview().topologyCellAabb(topo, cell) : null;
+		if (box) {
+			const cutters: { readonly min: Vec3; readonly max: Vec3 }[] = [];
+			for (const [otherId, otherCell] of Object.entries(topo.cells)) {
+				if (otherId === part.sourceCellIds[0]) continue;
+				const other = scenePreview().topologyCellAabb(topo, otherCell);
+				if (!other) continue;
+				const cut = scenePreview().aabbIntersect(box, other);
+				if (cut) cutters.push(cut);
+			}
+			if (cutters.length) return aabbDifferenceRegionPoints(box, cutters);
+		}
 	}
 	const fromCells = uniqueTopologyPoints(part.sourceCellIds.flatMap((cellId) => topologyEntityPoints(buckets, "cell", cellId)));
 	return fromCells.length ? fromCells : fallback;
@@ -684,9 +720,7 @@ function createAnalyticSpatialPickTargets(
 		});
 	}
 	for (const part of derived.computeParts(topo)) {
-		const merged = uniqueTopologyPoints(
-			part.regionPoints?.length ? part.regionPoints : partPickPoints(topo, buckets, part, all),
-		);
+		const merged = uniqueTopologyPoints(partPickPoints(topo, buckets, part, all));
 		const point = topologyPointCentroid(merged) ?? allCenter;
 		if (!point) continue;
 		targets.push({
@@ -989,7 +1023,6 @@ function TopologyTargetPreviewMeshes({
 				out.push({ key: `${target.kind}:${target.id}:v`, center: pts[0], size: [0.1, 0.1, 0.1] });
 				continue;
 			}
-			if (target.kind === "edge" || target.kind === "wire") continue;
 			const bounds = targetBounds(pts);
 			if (!bounds) continue;
 			out.push({ key: `${target.kind}:${target.id}`, center: bounds.center, size: bounds.size });
@@ -1045,22 +1078,13 @@ function PreviewItem({
 		return (
 			<group>
 				{ghost ? (
-					<>
-						<TopologyTargetPreviewMeshes
-							geometry={geometry}
-							targets={targets}
-							transform={(pt) => pt}
-							color={meshColor}
-							opacity={meshOpacity}
-						/>
-						<TopologyTargetWireframes
-							geometry={geometry}
-							targets={targets}
-							transform={(pt) => pt}
-							color="#4a6088"
-							opacity={0.35}
-						/>
-					</>
+					<TopologyTargetWireframes
+						geometry={geometry}
+						targets={targets}
+						transform={(pt) => pt}
+						color="#4a6088"
+						opacity={0.35}
+					/>
 				) : null}
 				<TopologyTargetPreviewMeshes
 					geometry={geometry}
@@ -1559,6 +1583,7 @@ function SpatialSelectionRayCatcher({
 function SpatialPickTargetNode({
 	target,
 	targets,
+	topologyPreviewTransform = null,
 	onInteractionEvent,
 	onPick,
 	onPointerMove,
@@ -1574,6 +1599,7 @@ function SpatialPickTargetNode({
 }: {
 	readonly target: SpatialPickTarget;
 	readonly targets: readonly SpatialPickTarget[];
+	readonly topologyPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
 	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
@@ -1587,6 +1613,9 @@ function SpatialPickTargetNode({
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 }): ReactNode {
+	const mapPt = topologyPreviewTransform ?? ((p: Vec3) => p);
+	const displayPoint = mapPt(target.point);
+	const displayPoints = target.points?.map(mapPt);
 	const targetKey = spatialPickTargetKey(target);
 	const hovered = hoveredTargetKey === targetKey;
 	const selected = selectedTargetKey === targetKey;
@@ -1625,7 +1654,7 @@ function SpatialPickTargetNode({
 	if (target.kind === "vertex" || target.kind === "anchor") {
 		return (
 			<mesh
-				position={target.point}
+				position={displayPoint}
 				userData={userData}
 				onPointerDown={onPointerDown}
 				onPointerMove={onPointerMoveH}
@@ -1637,11 +1666,11 @@ function SpatialPickTargetNode({
 			</mesh>
 		);
 	}
-	if (target.points && target.points.length >= 2 && (target.kind === "edge" || target.kind === "wire")) {
+	if (displayPoints && displayPoints.length >= 2 && (target.kind === "edge" || target.kind === "wire")) {
 		return (
 			<Line
 				userData={userData}
-				points={target.points.map((p) => [p[0], p[1], p[2]])}
+				points={displayPoints.map((p) => [p[0], p[1], p[2]])}
 				color={style.color}
 				lineWidth={style.lineWidth}
 				onPointerDown={onPointerDown}
@@ -1650,7 +1679,7 @@ function SpatialPickTargetNode({
 			/>
 		);
 	}
-	const bounds = target.points ? targetBounds(target.points) : null;
+	const bounds = displayPoints ? targetBounds(displayPoints) : null;
 	if (!bounds) return null;
 	return (
 		<mesh
@@ -1709,6 +1738,7 @@ export function SpatialPickGeometryLayer({
 	viewKind = "raw",
 	derived,
 	derivedRevision = 0,
+	topologyPreviewTransform = null,
 	onInteractionEvent,
 	onPick,
 	onPointerMove,
@@ -1726,6 +1756,7 @@ export function SpatialPickGeometryLayer({
 	readonly viewKind?: SpatialPickViewKind;
 	readonly derived?: DerivedViewService | null;
 	readonly derivedRevision?: number;
+	readonly topologyPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
 	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
@@ -1763,6 +1794,7 @@ export function SpatialPickGeometryLayer({
 					key={`${target.kind}:${target.id}`}
 					target={target}
 					targets={enabledTargets}
+					topologyPreviewTransform={topologyPreviewTransform}
 					onInteractionEvent={onInteractionEvent}
 					onPick={onPick}
 					onPointerMove={onPointerMove}
@@ -1893,6 +1925,10 @@ export function InteractionSpatialView({
 		return g;
 	}, []);
 	const ctx = snapshot.context;
+	const topologyPreviewTransform = useMemo(
+		() => topologyPreviewTransformFromDisplay(displayModel ?? snapshot.display),
+		[displayModel, snapshot.display],
+	);
 	const origin = vec3FromSnapshotContext(ctx, "origin");
 	const corner = vec3FromSnapshotContext(ctx, "corner");
 	const si = snapshot.spatialInteraction;
@@ -1951,6 +1987,7 @@ export function InteractionSpatialView({
 				viewKind={pickViewKind}
 				derived={derived}
 				derivedRevision={derivedRevision}
+				topologyPreviewTransform={topologyPreviewTransform}
 				onInteractionEvent={onInteractionEvent}
 				onPick={undefined}
 				onPointerMove={onScenePointerMove}
@@ -1993,6 +2030,10 @@ interface ReplSuggestion {
 	readonly transition?: InteractionKeybindRow;
 	readonly interactionId?: string;
 	readonly onRun: () => void;
+}
+
+function replCommandTextWithoutSpaces(text: string): string {
+	return text.replace(/\s+/g, "");
 }
 
 function replFirstWireId(topo: TopologyGraph): string | null {
@@ -2142,9 +2183,20 @@ function replExactInteractionSuggestion(query: string, all: readonly ReplSuggest
 	return null;
 }
 
-function replAutocompleteInteractionOnSpace(query: string, all: readonly ReplSuggestion[], armed: boolean): ReplSuggestion | null {
-	if (!armed) return null;
-	return replExactInteractionSuggestion(query, all);
+function replInteractionSuggestionOnSpace(query: string, matches: readonly ReplSuggestion[], all: readonly ReplSuggestion[]): ReplSuggestion | null {
+	const exact = replExactInteractionSuggestion(query, all);
+	if (exact) return exact;
+	return matches.find((suggestion) => suggestion.kind === "interaction") ?? null;
+}
+
+function replInteractionIdOnSpace(
+	query: string,
+	matches: readonly ReplSuggestion[],
+	all: readonly ReplSuggestion[],
+	lastFinalizedInteractionId: string,
+): string | null {
+	if (!query.trim()) return lastFinalizedInteractionId || null;
+	return replInteractionSuggestionOnSpace(query, matches, all)?.interactionId ?? null;
 }
 
 function replIsQueryTypingTarget(t: EventTarget | null): boolean {
@@ -2274,7 +2326,7 @@ export function InteractionRepl({
 	const [selectedPickKey, setSelectedPickKey] = useState<string | null>(null);
 	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
 	const [interactionMenuOpen, setInteractionMenuOpen] = useState(false);
-	const [spaceExecArmed, setSpaceExecArmed] = useState(false);
+	const [lastFinalizedInteractionId, setLastFinalizedInteractionId] = useState("");
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
 	const suppressAutoStartOnceRef = useRef(false);
@@ -2287,7 +2339,6 @@ export function InteractionRepl({
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
 		setInteractionMenuOpen(false);
-		setSpaceExecArmed(false);
 	}, []);
 
 	const cancelActiveInteraction = useCallback(() => {
@@ -2303,6 +2354,10 @@ export function InteractionRepl({
 	}, [rt, interactionId, onInteractionId, dismissReplChrome]);
 
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
+
+	useEffect(() => {
+		if (interactionId && snapshot.lastResponse?.ok) setLastFinalizedInteractionId(interactionId);
+	}, [interactionId, snapshot.lastResponse]);
 
 	const handleEscapeKey = useCallback(() => {
 		switch (replEscapeAction({ hasInteraction: Boolean(interactionId), interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
@@ -2363,6 +2418,16 @@ export function InteractionRepl({
 		setSelectedPickKey(null);
 		setSelectedSelectionTarget(null);
 	}, [geometry, derivedRevision]);
+
+	useEffect(() => {
+		setCmdLine("");
+		setActiveIndex(0);
+		setSelectionMenu(null);
+		setHoveredPickKey(null);
+		setSelectedPickKey(null);
+		setSelectedSelectionTarget(null);
+		setInteractionMenuOpen(false);
+	}, [interactionId, rt]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const activeSelectionAccept = useMemo(
@@ -2497,8 +2562,19 @@ export function InteractionRepl({
 		setCmdLine("");
 		setActiveIndex(0);
 		setInteractionMenuOpen(false);
-		setSpaceExecArmed(false);
 	}, []);
+
+	const runInteractionIdFromSpace = useCallback(
+		(id: string | null): boolean => {
+			if (!id) return false;
+			onInteractionId(id);
+			setCmdLine("");
+			setActiveIndex(0);
+			setInteractionMenuOpen(false);
+			return true;
+		},
+		[onInteractionId],
+	);
 
 	const trySubmitLine = useCallback((): boolean => {
 		const raw = cmdLine.trim();
@@ -2530,7 +2606,7 @@ export function InteractionRepl({
 	const runTransitionRow = useCallback(
 		(row: InteractionKeybindRow) => {
 			if (row.eventKind.startsWith("set.")) {
-				setCmdLine(`${row.key} `);
+				setCmdLine(row.key);
 				window.setTimeout(() => cmdRef.current?.focus(), 0);
 				return;
 			}
@@ -2547,13 +2623,11 @@ export function InteractionRepl({
 				return;
 			}
 			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
-				const interactionSuggestion = replAutocompleteInteractionOnSpace(cmdLine, allSuggestions, spaceExecArmed);
-				if (interactionSuggestion) {
-					e.preventDefault();
-					runSuggestion(interactionSuggestion);
-					return;
-				}
-				setSpaceExecArmed(false);
+				e.preventDefault();
+				const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId);
+				if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
+				setInteractionMenuOpen(false);
+				return;
 			}
 			if (e.key === "ArrowDown" && filtered.length) {
 				e.preventDefault();
@@ -2571,8 +2645,7 @@ export function InteractionRepl({
 				e.preventDefault();
 				const suffix = replActiveCompletionSuffix(cmdLine, filtered, activeIndex);
 				if (suffix) {
-					setCmdLine(cmdLine + suffix);
-					setSpaceExecArmed(true);
+					setCmdLine(replCommandTextWithoutSpaces(cmdLine + suffix));
 					return;
 				}
 				runSuggestion(filtered[activeIndex] ?? filtered[0]!);
@@ -2586,7 +2659,7 @@ export function InteractionRepl({
 				return;
 			}
 		},
-		[cmdLine, allSuggestions, spaceExecArmed, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey],
+		[cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace],
 	);
 
 	useEffect(() => {
@@ -2608,10 +2681,13 @@ export function InteractionRepl({
 				rt.redo();
 				return;
 			}
-			if (replShouldRepeatInteractionOnSpace(e, { interactionActive, cmdTarget: cmdRef.current })) {
+			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
-				repeatCurrentInteraction();
+				const matches = replPaletteRows(cmdLine, allSuggestions);
+				const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId);
+				if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
+				else if (replShouldRepeatInteractionOnSpace(e, { interactionActive, cmdTarget: cmdRef.current })) repeatCurrentInteraction();
 				return;
 			}
 			if (t !== cmdRef.current && e.key === "Backspace") {
@@ -2619,7 +2695,6 @@ export function InteractionRepl({
 				e.stopPropagation();
 				cmdRef.current?.focus();
 				setCmdLineRef.current((prev) => prev.slice(0, -1));
-				setSpaceExecArmed(false);
 				return;
 			}
 			if (t !== cmdRef.current && e.key === "Escape") {
@@ -2641,12 +2716,11 @@ export function InteractionRepl({
 			e.preventDefault();
 			e.stopPropagation();
 			cmdRef.current?.focus();
-			setCmdLineRef.current((prev) => `${prev}${one}`);
-			setSpaceExecArmed(false);
+			setCmdLineRef.current((prev) => replCommandTextWithoutSpaces(`${prev}${one}`));
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, cmdLine, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction]);
+	}, [rt, cmdLine, allSuggestions, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -2681,7 +2755,7 @@ export function InteractionRepl({
 				background: "#080810",
 			}}
 		>
-			<div style={{ flex: 1, minWidth: 0 }} key={interactionId}>
+			<div style={{ flex: 1, minWidth: 0 }}>
 				<InteractionCanvas>
 					<InteractionSpatialView
 						previewKernel={rt.previewKernel()}
@@ -2835,9 +2909,8 @@ export function InteractionRepl({
 						spellCheck={false}
 						value={cmdLine}
 						onChange={(e) => {
-							setCmdLine(e.target.value);
+							setCmdLine(replCommandTextWithoutSpaces(e.target.value));
 							if (interactionMenuOpen) setInteractionMenuOpen(true);
-							setSpaceExecArmed(false);
 						}}
 						onKeyDown={onInputKeyDown}
 						placeholder="Type an interaction or transition"
@@ -3230,6 +3303,25 @@ if (import.meta.vitest) {
 			expect(segs.length).toBe(12);
 		});
 
+		it("topologyPreviewTransformFromDisplay reads active move-preview transform", () => {
+			const map = topologyPreviewTransformFromDisplay({
+				items: [
+					{
+						kind: "preview",
+						id: "p",
+						role: "preview",
+						params: {
+							previewKind: "move-preview",
+							from: [0, 0, 0],
+							cursor: [1, 2, 0],
+						},
+					},
+				],
+			});
+			expect(map).not.toBeNull();
+			expect(map!([0, 0, 0])).toEqual([1, 2, 0]);
+		});
+
 		it("move-preview translates points by cursor minus from", () => {
 			const map = transformPointsForPreviewKind("move-preview", {
 				from: [0, 0, 0],
@@ -3620,13 +3712,15 @@ if (import.meta.vitest) {
 
 		it("autocomplete helpers rank prefix matches and expose inline suffix", () => {
 			const all: ReplSuggestion[] = [
-				{ kind: "interaction", key: "m", label: "Move", detail: "transform.move", onRun: () => {} },
-				{ kind: "interaction", key: "b", label: "Box", detail: "primitive.box", onRun: () => {} },
+				{ kind: "interaction", key: "m", label: "Move", detail: "transform.move", interactionId: "transform.move", onRun: () => {} },
+				{ kind: "interaction", key: "b", label: "Box", detail: "primitive.box", interactionId: "primitive.box", onRun: () => {} },
 				{ kind: "transition", key: "c", label: "Confirm", detail: "confirm", onRun: () => {} },
 			];
 			expect(replFilterSuggestions("", all)).toEqual([]);
 			expect(replPaletteRows("", all)).toEqual([]);
 			expect(replFilterSuggestions("  ", all)).toEqual([]);
+			expect(replCommandTextWithoutSpaces("b ")).toBe("b");
+			expect(replCommandTextWithoutSpaces("Apply Number")).toBe("ApplyNumber");
 			expect(replPaletteRows("b", all).map((s) => s.key)).toEqual(["b"]);
 			expect(replPaletteRows("bo", all).map((s) => s.key)).toEqual(["b"]);
 			expect(replCompletionSuffix("b", all[1])).toBe("ox");
@@ -3635,10 +3729,13 @@ if (import.meta.vitest) {
 			expect(replActiveCompletionSuffix("bo", replPaletteRows("bo", all), 0)).toBe("x");
 			expect(replInteractionSuggestions("", all).map((s) => s.key)).toEqual(["m", "b"]);
 			expect(replInteractionSuggestions("bo", all).map((s) => s.key)).toEqual(["b"]);
-			expect(replAutocompleteInteractionOnSpace("Box", all, true)?.detail).toBe("primitive.box");
-			expect(replAutocompleteInteractionOnSpace("primitive.box", all, true)?.detail).toBe("primitive.box");
-			expect(replAutocompleteInteractionOnSpace("confirm", all, true)).toBeNull();
-			expect(replAutocompleteInteractionOnSpace("Box", all, false)).toBeNull();
+			expect(replInteractionSuggestionOnSpace("b", replPaletteRows("b", all), all)?.detail).toBe("primitive.box");
+			expect(replInteractionSuggestionOnSpace("Box", replPaletteRows("Box", all), all)?.detail).toBe("primitive.box");
+			expect(replInteractionSuggestionOnSpace("primitive.box", replPaletteRows("primitive.box", all), all)?.detail).toBe("primitive.box");
+			expect(replInteractionSuggestionOnSpace("confirm", replPaletteRows("confirm", all), all)).toBeNull();
+			expect(replInteractionIdOnSpace("", [], all, "primitive.box")).toBe("primitive.box");
+			expect(replInteractionIdOnSpace("b", replPaletteRows("b", all), all, "transform.move")).toBe("primitive.box");
+			expect(replInteractionIdOnSpace("", [], all, "")).toBeNull();
 		});
 
 		it("derives persistent box footprints from document history", () => {
