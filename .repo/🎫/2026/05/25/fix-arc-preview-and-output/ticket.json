@@ -1,0 +1,6 @@
+{
+  "title": "Fix Arc Preview and Output",
+  "status": "open",
+  "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

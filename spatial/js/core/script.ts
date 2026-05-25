@@ -29,6 +29,10 @@ function migrateTopologyFixture(obj: Record<string, unknown>): Record<string, un
 }
 // #endregion 🧱MigrateTopologyFixtures
 
+// #region 🏢ConvertBuildingFixtures
+const convertBuildingsScript = join(cwd, "..", "..", "..", ".repo", "🎫", "26", "05", "25", "FIX-BUILDING-CELL-COMPLEX-PLAY", "convert-buildings.ts");
+// #endregion 🏢ConvertBuildingFixtures
+
 if (command === "test") {
 	const r = spawnSync("bunx", ["vitest", "run", "--config", "vitest.config.ts", ...extra], {
 		cwd,
@@ -55,7 +59,12 @@ if (command === "test") {
 		console.log("[DEBUG] migrated", p);
 	}
 	process.exit(0);
+} else if (command === "convert-building-fixtures") {
+	const r = spawnSync("bun", [convertBuildingsScript], { cwd, stdio: "inherit", shell: true, env: process.env });
+	process.exit(r.status ?? 1);
 } else {
-	console.error("usage: bun ./script.ts test [args…] | bun ./script.ts migrate-topology-fixtures");
+	console.error(
+		"usage: bun ./script.ts test [args…] | bun ./script.ts migrate-topology-fixtures | bun ./script.ts convert-building-fixtures",
+	);
 	process.exit(1);
 }

@@ -97,13 +97,18 @@ function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime
 //#endregion
 
 //#region 🔖GeometryCatalog
+function topologyVertexCount(json: Record<string, unknown>): number {
+	const verts = json.vertices;
+	return Array.isArray(verts) ? verts.length : 0;
+}
+
 const GEOMETRY_ASSETS = [
-	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule (8 verts)", json: geometryNakagin as Record<string, unknown> },
+	{ id: "nakagin-slice", key: "a", label: "Nakagin capsule", json: geometryNakagin as Record<string, unknown> },
 	{ id: "geometry-loom", key: "l", label: "Loom deck + pent loop + rail", json: geometryLoom as Record<string, unknown> },
-	{ id: "geometry-routes", key: "r", label: "Multi-route lattice (24 verts)", json: geometryRoutes as Record<string, unknown> },
-	{ id: "small-building", key: "s", label: "Small building (264 verts)", json: geometrySmallBuilding as Record<string, unknown> },
-	{ id: "tall-building", key: "t", label: "Tall building (680 verts)", json: geometryTallBuilding as Record<string, unknown> },
-	{ id: "large-building", key: "b", label: "Large building (12,370 verts)", json: geometryLargeBuilding as Record<string, unknown> },
+	{ id: "geometry-routes", key: "r", label: "Multi-route lattice", json: geometryRoutes as Record<string, unknown> },
+	{ id: "small-building", key: "s", label: "Small building", json: geometrySmallBuilding as Record<string, unknown> },
+	{ id: "tall-building", key: "t", label: "Tall building", json: geometryTallBuilding as Record<string, unknown> },
+	{ id: "large-building", key: "b", label: "Large building", json: geometryLargeBuilding as Record<string, unknown> },
 ] as const;
 //#endregion
 
@@ -177,7 +182,7 @@ function PlayApp() {
 	const interactions = useMemo(() => listSpatialInteractions(), []);
 	const [interactionId, setInteractionId] = useState(() => interactions[0]?.id ?? "");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [geometryAssetId, setGeometryAssetId] = useState("");
+	const [geometryAssetId, setGeometryAssetId] = useState("tall-building");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : null), [interactionId]);
 
 	const handleInteractionPick = useCallback(
@@ -220,7 +225,7 @@ function PlayApp() {
 				<option value="">No asset</option>
 				{GEOMETRY_ASSETS.map((g) => (
 					<option key={g.id} value={g.id}>
-						[{g.key}] {g.label}
+						[{g.key}] {g.label} ({topologyVertexCount(g.json)} verts)
 					</option>
 				))}
 			</select>

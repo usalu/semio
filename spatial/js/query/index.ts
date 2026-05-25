@@ -21,6 +21,7 @@ import {
 	type ExprField,
 	type ExprVar,
 	type CellRef,
+	type CellComplexRef,
 	type FaceRef,
 	type KernelAdapter,
 	type ShellRef,
@@ -950,11 +951,23 @@ function* iterateContainsInverse(topo: TopologyGraph, from: EntityHandle): Gener
 		for (const [eid, e] of Object.entries(topo.edges)) {
 			if (e.vertexIds.includes(from.id)) yield { kind: "edge", id: eid };
 		}
+	} else if (from.kind === "cell") {
+		for (const [ccid, cc] of Object.entries(topo.cellComplexes)) {
+			if (cc.cellIds.includes(from.id)) yield { kind: "cellComplex", id: ccid };
+		}
 	}
 }
 
 function* iterateContainsForward(topo: TopologyGraph, from: EntityHandle): Generator<EntityHandle> {
-	if (from.kind === "shell") {
+	if (from.kind === "cell") {
+		const c = topo.cells[from.id];
+		if (!c) return;
+		for (const sid of c.shellIds) yield { kind: "shell", id: sid };
+	} else if (from.kind === "cellComplex") {
+		const cc = topo.cellComplexes[from.id];
+		if (!cc) return;
+		for (const cid of cc.cellIds) yield { kind: "cell", id: cid };
+	} else if (from.kind === "shell") {
 		const s = topo.shells[from.id];
 		if (!s) return;
 		for (const fid of s.faceIds) yield { kind: "face", id: fid };
@@ -1347,6 +1360,22 @@ if (import.meta.vitest) {
 			});
 			const ids = res.rows.map((r) => r.c0).sort();
 			expect(ids).toEqual(["f0", "f1"]);
+		});
+
+		it("CONTAINS walks cellComplex to cells", async () => {
+			const topo = new TopologyGraph();
+			const c0 = "c0" as CellRef;
+			const c1 = "c1" as CellRef;
+			const cc = "cc0" as CellComplexRef;
+			topo.cells[c0] = { id: c0, shellIds: [] };
+			topo.cells[c1] = { id: c1, shellIds: [] };
+			topo.cellComplexes[cc] = { id: cc, cellIds: [c0, c1] };
+			const res = await runConstruct(`MATCH (cc:CellComplex)-[:CONTAINS]->(c:Cell) RETURN c.id`, {
+				topology: topo,
+				kernel: mkKernelStub(),
+				actions: ActionRegistry.withBuiltins(),
+			});
+			expect(res.rows.map((r) => r.c0).sort()).toEqual(["c0", "c1"]);
 		});
 
 		it("ADJACENT_TO finds cells sharing a face", async () => {

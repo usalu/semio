@@ -925,6 +925,32 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 	}
 	return TopologyGraph.fromJSON(raw as TopologyGraphJson);
 }
+
+/** @emoji ✅ Reports cell-complex integrity errors (every cell in exactly one complex, cluster members resolve). */
+export function validateTopologyCellComplexes(topo: TopologyGraph): readonly string[] {
+	const errors: string[] = [];
+	const cellIds = new Set(Object.keys(topo.cells));
+	const inComplex = new Map<string, string>();
+	for (const cc of Object.values(topo.cellComplexes)) {
+		if (!cc.cellIds.length) errors.push(`cellComplex ${cc.id}: empty cellIds`);
+		for (const cid of cc.cellIds) {
+			if (!cellIds.has(cid)) errors.push(`cellComplex ${cc.id}: unknown cell ${cid}`);
+			else if (inComplex.has(cid)) errors.push(`cell ${cid}: in multiple cellComplexes`);
+			else inComplex.set(cid, cc.id);
+		}
+	}
+	for (const cid of cellIds) {
+		if (!inComplex.has(cid)) errors.push(`cell ${cid}: not in any cellComplex`);
+	}
+	for (const cluster of Object.values(topo.clusters)) {
+		for (const mid of cluster.memberIds) {
+			if (!topo.cellComplexes[mid] && !topo.cells[mid] && !topo.clusters[mid]) {
+				errors.push(`cluster ${cluster.id}: unknown member ${mid}`);
+			}
+		}
+	}
+	return errors;
+}
 // #endregion 🧱Topology
 
 // #region 🧮Diff
@@ -3520,6 +3546,27 @@ if (import.meta.vitest) {
 			expect(Object.keys(g.faces).length).toBe(6);
 			expect(Object.keys(g.shells).length).toBe(1);
 			expect(Object.keys(g.cells)).toEqual(["box-cell"]);
+		});
+
+		it("building fixtures are proper cell complexes centered near origin", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "fixtures");
+			for (const name of ["small-building", "tall-building", "large-building"] as const) {
+				const raw = JSON.parse(readFileSync(join(root, `${name}.topology.json`), "utf8")) as TopologyGraphJson;
+				const g = parseTopologyGraphJson(raw);
+				expect(g).not.toBeNull();
+				expect(validateTopologyCellComplexes(g!)).toEqual([]);
+				expect(raw.cellComplexes).toHaveLength(1);
+				expect(raw.cellComplexes[0]!.cellIds.length).toBe(raw.cells.length);
+				expect(raw.clusters[0]!.memberIds).toEqual([`${name}-cell-complex`]);
+				let maxAbs = 0;
+				for (const v of raw.vertices) {
+					for (const c of v.position) maxAbs = Math.max(maxAbs, Math.abs(c));
+				}
+				expect(maxAbs).toBeLessThan(500);
+			}
 		});
 	});
 	describe("@spatial/js-core selection filter", () => {

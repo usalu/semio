@@ -587,6 +587,18 @@ export function topologyEntityWireSegments(
 	return bb ? bboxWireSegments(bb.min, bb.max) : [];
 }
 
+/** @emoji 📐 All B-rep edge segments for factory topology wireframe display. */
+export function collectTopologyEdgeSegments(
+	buckets: ReturnType<typeof topologyGeometryBuckets>,
+): readonly (readonly [Vec3, Vec3])[] {
+	const out: (readonly [Vec3, Vec3])[] = [];
+	for (const edge of topologyRecords(buckets.edges)) {
+		const pts = topologyEdgePoints(buckets.vertices, edge);
+		if (pts.length >= 2) out.push([pts[0]!, pts[pts.length - 1]!]);
+	}
+	return out;
+}
+
 function intersectCellAabbs(topo: TopologyGraph, cellIds: readonly string[]): { readonly min: Vec3; readonly max: Vec3 } | null {
 	let hit: { readonly min: Vec3; readonly max: Vec3 } | null = null;
 	for (const cellId of cellIds) {
@@ -1051,6 +1063,105 @@ function PreviewItem({
 				{linePoints.length >= 2 ? (
 					<Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#ffff88" lineWidth={2} />
 				) : null}
+			</group>
+		);
+	}
+	// #region 🔵CircleArcPreview
+	if ((previewKind === "circle-outline" || previewKind === "circle") && points.length >= 1 && cursor) {
+		const center = points[0]!;
+		const radius = Math.hypot(cursor[0] - center[0], cursor[1] - center[1], cursor[2] - center[2]);
+		if (radius > 1e-9) {
+			const segments = 64;
+			const circlePts: [number, number, number][] = [];
+			for (let i = 0; i <= segments; i++) {
+				const a = (i / segments) * Math.PI * 2;
+				circlePts.push([center[0] + Math.cos(a) * radius, center[1] + Math.sin(a) * radius, center[2]]);
+			}
+			return (
+				<group>
+					<Line raycast={raycastNone} points={circlePts} color="#88eeff" lineWidth={2} />
+					<Line
+						raycast={raycastNone}
+						points={[[center[0], center[1], center[2]], [cursor[0], cursor[1], cursor[2]]]}
+						color="#ffff88"
+						lineWidth={1.5}
+						dashed
+						dashSize={0.08}
+						gapSize={0.06}
+					/>
+					<mesh position={center} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+				</group>
+			);
+		}
+	}
+	if (previewKind === "arc" && points.length >= 2 && cursor) {
+		const center = points[0]!;
+		const start = points[1]!;
+		const radius = Math.hypot(start[0] - center[0], start[1] - center[1], start[2] - center[2]);
+		if (radius > 1e-9) {
+			const startAngle = Math.atan2(start[1] - center[1], start[0] - center[0]);
+			const endAngle = Math.atan2(cursor[1] - center[1], cursor[0] - center[0]);
+			let sweep = endAngle - startAngle;
+			if (sweep < 0) sweep += Math.PI * 2;
+			if (sweep < 1e-9) sweep = Math.PI * 2;
+			const segments = Math.max(32, Math.ceil(sweep / (Math.PI / 32)));
+			const arcPts: [number, number, number][] = [];
+			for (let i = 0; i <= segments; i++) {
+				const a = startAngle + (i / segments) * sweep;
+				arcPts.push([center[0] + Math.cos(a) * radius, center[1] + Math.sin(a) * radius, center[2]]);
+			}
+			return (
+				<group>
+					<Line raycast={raycastNone} points={arcPts} color="#88eeff" lineWidth={2} />
+					<Line
+						raycast={raycastNone}
+						points={[[center[0], center[1], center[2]], [start[0], start[1], start[2]]]}
+						color="#ffff88"
+						lineWidth={1.5}
+						dashed
+						dashSize={0.08}
+						gapSize={0.06}
+					/>
+					<Line
+						raycast={raycastNone}
+						points={[[center[0], center[1], center[2]], [cursor[0], cursor[1], cursor[2]]]}
+						color="#ffff88"
+						lineWidth={1.5}
+						dashed
+						dashSize={0.08}
+						gapSize={0.06}
+					/>
+					<mesh position={center} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+					<mesh position={start} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+				</group>
+			);
+		}
+	}
+	// #endregion 🔵CircleArcPreview
+	if (previewKind === "interpolated-curve" && linePoints.length >= 2) {
+		const splinePoints = linePoints.map((pt) => new THREE.Vector3(pt[0], pt[1], pt[2]));
+		const curve = new THREE.CatmullRomCurve3(splinePoints);
+		const segments = Math.max(64, splinePoints.length * 16);
+		const sampled = curve.getPoints(segments).map((v): [number, number, number] => [v.x, v.y, v.z]);
+		const placedCount = cursor ? splinePoints.length - 1 : splinePoints.length;
+		return (
+			<group>
+				<Line raycast={raycastNone} points={sampled} color="#88eeff" lineWidth={2} />
+				{splinePoints.slice(0, placedCount).map((v, i) => (
+					<mesh key={i} position={[v.x, v.y, v.z]} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+				))}
 			</group>
 		);
 	}
@@ -1533,6 +1644,33 @@ function SpatialPickTargetNode({
 	);
 }
 
+/** @emoji 🧵 Draws all topology edges for imported factory geometry (play building assets). */
+function TopologyFactoryWireframeLayer({ geometry }: { readonly geometry?: SpatialPickGeometry | null }): ReactNode {
+	const segments = useMemo(() => {
+		if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
+		return collectTopologyEdgeSegments(topologyGeometryBuckets(geometry));
+	}, [geometry]);
+	if (!segments.length) return null;
+	return (
+		<group renderOrder={0}>
+			{segments.map(([a, b], i) => (
+				<Line
+					key={`factory-edge-${i}`}
+					raycast={raycastNone}
+					points={[
+						[a[0], a[1], a[2]],
+						[b[0], b[1], b[2]],
+					]}
+					color="#b8c8e8"
+					lineWidth={1.5}
+					transparent
+					opacity={0.72}
+				/>
+			))}
+		</group>
+	);
+}
+
 /** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
 export function SpatialPickGeometryLayer({
 	geometry,
@@ -1764,6 +1902,7 @@ export function InteractionSpatialView({
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
 			/>
+			<TopologyFactoryWireframeLayer geometry={geometry} />
 			<SpatialPickGeometryLayer
 				geometry={geometry}
 				viewKind={pickViewKind}
@@ -2679,6 +2818,19 @@ if (import.meta.vitest) {
 			const segs = topologyEntityWireSegments(buckets, "face", faceId);
 			expect(segs.length).toBeGreaterThanOrEqual(4);
 			expect(segs.length).toBeLessThan(12);
+		});
+
+		it("collectTopologyEdgeSegments draws every B-rep edge for building fixtures", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const raw = JSON.parse(
+				readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "fixtures", "tall-building.topology.json"), "utf8"),
+			);
+			const topo = TopologyGraph.fromJSON(raw);
+			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(topo));
+			expect(segs.length).toBe(Object.keys(topo.edges).length);
+			expect(segs.length).toBeGreaterThan(100);
 		});
 
 		it("move-preview translates points by cursor minus from", () => {

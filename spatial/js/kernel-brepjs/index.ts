@@ -222,7 +222,7 @@ export class BrepjsKernel implements KernelAdapter {
 			return { id: id as VertexRef, position: [pos[0], pos[1], pos[2]] as Vec3 };
 		};
 
-		if (commandId === "curve.circle" || commandId === "curve.arc") {
+		if (commandId === "curve.circle") {
 			const center = Array.isArray(params.center) ? params.center as number[] : [0,0,0];
 			const radiusPoint = Array.isArray(params.radiusPoint) ? params.radiusPoint as number[] : [1,0,0];
 			const v0 = createDummyVertex(center);
@@ -230,6 +230,31 @@ export class BrepjsKernel implements KernelAdapter {
 			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
 			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] } } };
+		}
+		if (commandId === "curve.arc") {
+			const center = Array.isArray(params.center) ? params.center as number[] : [0,0,0];
+			const start = Array.isArray(params.start) ? params.start as number[] : null;
+			const end = Array.isArray(params.end) ? params.end as number[] : null;
+			const angle = typeof params.angle === "number" ? params.angle : null;
+			let endPos: number[];
+			if (end) {
+				endPos = end;
+			} else if (start && angle !== null) {
+				const r = Math.hypot(start[0]! - center[0]!, start[1]! - center[1]!, start[2]! - center[2]!);
+				const baseAngle = Math.atan2(start[1]! - center[1]!, start[0]! - center[0]!);
+				const radians = (angle * Math.PI) / 180;
+				endPos = [center[0]! + Math.cos(baseAngle + radians) * r, center[1]! + Math.sin(baseAngle + radians) * r, center[2]!];
+			} else {
+				endPos = start ?? [1,0,0];
+			}
+			const startPos = start ?? [1,0,0];
+			const v0 = createDummyVertex(center);
+			const v1 = createDummyVertex(startPos);
+			const v2 = createDummyVertex(endPos);
+			const e0 = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
+			const e1 = { id: nextId("e") as EdgeRef, vertexIds: [v1.id, v2.id] };
+			const w = { id: nextId("w") as WireRef, edgeIds: [e0.id, e1.id] };
+			return { diff: { vertices: { added: [v0, v1, v2] }, edges: { added: [e0, e1] }, wires: { added: [w] } } };
 		}
 		if (commandId === "solid.cylinder" || commandId === "solid.sphere" || commandId === "solid.cone" || commandId.startsWith("solid.")) {
 			const v0 = createDummyVertex([0,0,0]);
