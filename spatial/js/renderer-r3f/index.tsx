@@ -4,7 +4,7 @@
 
 // #region 📥Imports
 import { Line, OrbitControls, Text } from "@react-three/drei";
-import { Canvas, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { MOUSE } from "three";
 import * as THREE from "three";
@@ -1761,68 +1761,6 @@ function spatialSelectionTarget(target: SpatialPickTarget) {
 	return { kind: target.kind, id: target.id, editable: true };
 }
 
-/** @emoji 🎯 One invisible catcher for topology selection clicks and hover (avoids per-target mesh raycasts). */
-function SpatialPickRayCatcher({
-	targets,
-	selectionAccept,
-	selectionKindToggles,
-	hoverKindToggles = {},
-	analyticToggles = {},
-	hostSelectionEnabled = false,
-	onSelectionRequest,
-	onHoverTarget,
-}: {
-	readonly targets: readonly SpatialPickTarget[];
-	readonly selectionAccept: readonly TopologyEntityKind[];
-	readonly selectionKindToggles: SpatialPickKindToggles;
-	readonly hoverKindToggles?: SpatialPickKindToggles;
-	readonly analyticToggles?: SpatialAnalyticToggles;
-	readonly hostSelectionEnabled?: boolean;
-	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
-	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
-}): ReactNode {
-	const selectionOn = selectionAccept.length > 0 && Boolean(onSelectionRequest);
-	const hoverOn = Boolean(onHoverTarget);
-	if (!selectionOn && !hoverOn) return null;
-	const hoverFrameRef = useRef(0);
-	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-		if (!selectionOn || !onSelectionRequest) return;
-		if (hostSelectionEnabled) {
-			e.stopPropagation();
-			return;
-		}
-		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
-		if (candidates.length === 0) return;
-		e.stopPropagation();
-		const native = e.nativeEvent;
-		onSelectionRequest({
-			targets: candidates,
-			point: [e.point.x, e.point.y, e.point.z],
-			client: { x: native.clientX, y: native.clientY },
-			modifiers: pointerModifiers(e),
-		});
-	};
-	const onPointerMove = (e: ThreeEvent<PointerEvent>) => {
-		if (!hoverOn || !onHoverTarget) return;
-		if (e.buttons !== 0) {
-			onHoverTarget(null);
-			return;
-		}
-		const frame = performance.now();
-		if (frame - hoverFrameRef.current < 32) return;
-		hoverFrameRef.current = frame;
-		const target = pickHoverTargetFromRay(e.ray, targets, hoverKindToggles, analyticToggles);
-		onHoverTarget(target);
-	};
-	const onPointerOut = () => onHoverTarget?.(null);
-	return (
-		<mesh onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerOut={onPointerOut} renderOrder={-10}>
-			<sphereGeometry args={[80, 16, 16]} />
-			<meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.BackSide} />
-		</mesh>
-	);
-}
-
 /** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
 export function pickHoverTargetFromRay(
 	ray: THREE.Ray,
@@ -1926,12 +1864,6 @@ export function SpatialPickGeometryLayer({
 	derived,
 	derivedRevision = 0,
 	topologyPreviewTransform = null,
-	onInteractionEvent,
-	onPick,
-	onPointerMove,
-	onSelectionRequest,
-	onHoverTarget,
-	pointerMoveEnabled = false,
 	selectionAccept = [],
 	selectionKindToggles = {},
 	hoverKindToggles = {},
@@ -1939,19 +1871,12 @@ export function SpatialPickGeometryLayer({
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
-	hostSelectionEnabled = false,
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly viewKind?: SpatialPickViewKind;
 	readonly derived?: DerivedViewService | null;
 	readonly derivedRevision?: number;
 	readonly topologyPreviewTransform?: ((point: Vec3) => Vec3) | null;
-	readonly onInteractionEvent?: (event: InteractionEvent) => void;
-	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
-	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
-	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
-	readonly pointerMoveEnabled?: boolean;
 	readonly selectionAccept?: readonly TopologyEntityKind[];
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	readonly hoverKindToggles?: SpatialPickKindToggles;
@@ -1959,7 +1884,6 @@ export function SpatialPickGeometryLayer({
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly selectedTargetKeys?: ReadonlySet<string> | null;
-	readonly hostSelectionEnabled?: boolean;
 }): ReactNode {
 	const topoRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
@@ -1973,16 +1897,6 @@ export function SpatialPickGeometryLayer({
 	}, [viewTargets, selectionKindToggles, hoverKindToggles, analyticToggles]);
 	return (
 		<group>
-			<SpatialPickRayCatcher
-				targets={enabledTargets}
-				selectionAccept={selectionAccept}
-				selectionKindToggles={selectionKindToggles}
-				hoverKindToggles={hoverKindToggles}
-				analyticToggles={analyticToggles}
-				hostSelectionEnabled={hostSelectionEnabled}
-				onSelectionRequest={onSelectionRequest}
-				onHoverTarget={onHoverTarget}
-			/>
 			{enabledTargets.map((target) => (
 				<SpatialPickTargetNode
 					key={`${target.kind}:${target.id}`}
@@ -2041,10 +1955,43 @@ export interface InteractionCanvasProps {
 	readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
 }
 
+/** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
+function InvalidateOnRevision({ revision }: { readonly revision: string | number }): null {
+	const invalidate = useThree((state) => state.invalidate);
+	useEffect(() => {
+		invalidate();
+	}, [revision, invalidate]);
+	return null;
+}
+
+/** @emoji 🛰️ Orbit controls that repaint on demand and never block R3F pointer routing. */
+function SpatialOrbitControls({
+	onCameraNavigate,
+}: {
+	readonly onCameraNavigate?: (active: boolean) => void;
+}): ReactNode {
+	const invalidate = useThree((state) => state.invalidate);
+	return (
+		<OrbitControls
+			makeDefault
+			enableDamping={false}
+			onChange={() => invalidate()}
+			onStart={() => onCameraNavigate?.(true)}
+			onEnd={() => onCameraNavigate?.(false)}
+			mouseButtons={{
+				LEFT: -1 as unknown as MOUSE,
+				MIDDLE: MOUSE.DOLLY,
+				RIGHT: MOUSE.ROTATE,
+			}}
+		/>
+	);
+}
+
 /** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
 export function InteractionCanvas({ children, onCanvasReady }: InteractionCanvasProps): ReactNode {
 	return (
 		<Canvas
+			frameloop="demand"
 			style={{ height: "100%", width: "100%" }}
 			camera={{ up: [0, 0, 1], position: [10, 10, 8], fov: 45 }}
 			onCreated={({ camera, gl }) => onCanvasReady?.({ camera, domElement: gl.domElement })}
@@ -2080,6 +2027,7 @@ export interface InteractionSpatialViewProps {
 	readonly hostSelectionEnabled?: boolean;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
+	readonly onCameraNavigate?: (active: boolean) => void;
 }
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
@@ -2103,9 +2051,8 @@ export function InteractionSpatialView({
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
-	hostSelectionEnabled = false,
 	onSelectionRequest,
-	onHoverTarget,
+	onCameraNavigate,
 }: InteractionSpatialViewProps): ReactNode {
 	useEffect(() => {
 		bindScenePreviewKernel(previewKernel);
@@ -2115,6 +2062,9 @@ export function InteractionSpatialView({
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
 		g.rotation.x = Math.PI / 2;
 		g.position.set(0, 0, 0.002);
+		g.traverse((obj) => {
+			obj.raycast = raycastNone;
+		});
 		return g;
 	}, []);
 	const ctx = snapshot.context;
@@ -2156,17 +2106,10 @@ export function InteractionSpatialView({
 	};
 	return (
 		<>
+			<InvalidateOnRevision revision={`${snapshot.revision}:${derivedRevision}:${hoveredTargetKey ?? ""}`} />
 			<ambientLight intensity={0.45} />
 			<directionalLight position={[12, 18, 10]} intensity={1.1} />
-			<OrbitControls
-				makeDefault
-				enableDamping={false}
-				mouseButtons={{
-					LEFT: -1 as unknown as MOUSE,
-					MIDDLE: MOUSE.DOLLY,
-					RIGHT: MOUSE.ROTATE,
-				}}
-			/>
+			<SpatialOrbitControls onCameraNavigate={onCameraNavigate} />
 			<primitive object={gridHelper} />
 			<GroundPickPlane
 				enabled={pickPlaneEnabled}
@@ -2182,12 +2125,6 @@ export function InteractionSpatialView({
 				derived={derived}
 				derivedRevision={derivedRevision}
 				topologyPreviewTransform={topologyPreviewTransform}
-				onInteractionEvent={onInteractionEvent}
-				onPick={undefined}
-				onPointerMove={onScenePointerMove}
-				onSelectionRequest={onSelectionRequest}
-				onHoverTarget={onHoverTarget}
-				pointerMoveEnabled={groundMoveOn || heightMoveOn || zRodMoveOn}
 				selectionAccept={selectionAccept}
 				selectionKindToggles={selectionKindToggles}
 				hoverKindToggles={hoverKindToggles}
@@ -2195,7 +2132,6 @@ export function InteractionSpatialView({
 				hoveredTargetKey={hoveredTargetKey}
 				selectedTargetKey={selectedTargetKey}
 				selectedTargetKeys={selectedTargetKeys}
-				hostSelectionEnabled={hostSelectionEnabled}
 			/>
 			{heightMoveOn && origin && corner ? (
 				<HeightDragSurface
@@ -2554,6 +2490,7 @@ export function InteractionRepl({
 	const suppressAutoStartOnceRef = useRef(false);
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
+	const cameraNavigatingRef = useRef(false);
 	const selectedPickKeys = useMemo(() => new Set(selectedSelectionTargets.map(spatialSelectionTargetKey)), [selectedSelectionTargets]);
 	const selectedPickKey = selectedSelectionTargets[0] ? spatialSelectionTargetKey(selectedSelectionTargets[0]) : null;
 	const topologyPreviewTransform = useMemo(() => topologyPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
@@ -2634,6 +2571,7 @@ export function InteractionRepl({
 		void startRuntime();
 	}, [rt, startRuntime]);
 
+	const topologyRevision = documentModel.topology.revision;
 	useEffect(() => {
 		if (!derived) return;
 		const topo = documentModel.topology;
@@ -2644,7 +2582,7 @@ export function InteractionRepl({
 		return () => {
 			cancelled = true;
 		};
-	}, [derived, documentModel.topology, geometry, snapshot.revision]);
+	}, [derived, documentModel.topology, topologyRevision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -2730,6 +2668,48 @@ export function InteractionRepl({
 		const key = target ? spatialPickTargetKey(target) : null;
 		setHoveredPickKey((prev) => (prev === key ? prev : key));
 	}, []);
+
+	const onCameraNavigate = useCallback(
+		(active: boolean) => {
+			cameraNavigatingRef.current = active;
+			if (active) onHoverTarget(null);
+		},
+		[onHoverTarget],
+	);
+
+	useEffect(() => {
+		const canvas = canvasBinding?.domElement;
+		const camera = canvasBinding?.camera;
+		if (!canvas || !camera) return;
+		let lastHoverAt = 0;
+		const onMove = (event: PointerEvent) => {
+			if (cameraNavigatingRef.current || event.buttons !== 0) {
+				onHoverTarget(null);
+				return;
+			}
+			const now = performance.now();
+			if (now - lastHoverAt < 32) return;
+			lastHoverAt = now;
+			const rect = canvas.getBoundingClientRect();
+			const hits = spatialPickTargetsFromClientPoint(
+				{ x: event.clientX, y: event.clientY },
+				camera,
+				rect,
+				viewPickTargets,
+				[],
+				selectionKindToggles,
+				analyticToggles,
+			);
+			onHoverTarget(hits[0] ?? null);
+		};
+		const onLeave = () => onHoverTarget(null);
+		canvas.addEventListener("pointermove", onMove, { passive: true });
+		canvas.addEventListener("pointerleave", onLeave, { passive: true });
+		return () => {
+			canvas.removeEventListener("pointermove", onMove);
+			canvas.removeEventListener("pointerleave", onLeave);
+		};
+	}, [canvasBinding, viewPickTargets, selectionKindToggles, analyticToggles, onHoverTarget]);
 
 	const onSpatialInteractionEvent = useCallback(
 		(ev: InteractionEvent) => {
@@ -3156,9 +3136,8 @@ export function InteractionRepl({
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
 						selectedTargetKeys={selectedPickKeys}
-						hostSelectionEnabled={true}
 						onSelectionRequest={onSelectionRequest}
-						onHoverTarget={onHoverTarget}
+						onCameraNavigate={onCameraNavigate}
 					/>
 				</InteractionCanvas>
 				{dragSelection && dragOverlayRect ? (

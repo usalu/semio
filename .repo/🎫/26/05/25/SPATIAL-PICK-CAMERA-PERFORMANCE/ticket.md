@@ -9,9 +9,12 @@ After committing a box, the spatial REPL rendered one raycast-enabled mesh per t
 ## Fix
 
 - Pick-target visuals are display-only (`raycast={raycastNone}`).
-- Selection and hover use a single `SpatialPickRayCatcher` with CPU `spatialPickTargetsFromRay`.
-- Hover is throttled (~32ms) and skipped while any mouse button is held (orbit/dolly).
-- Hover state updates skip React re-renders when the key is unchanged.
+- Hover uses canvas DOM `pointermove` + CPU `spatialPickTargetsFromClientPoint` (no R3F mesh catcher).
+- Removed invisible pick sphere that called `stopPropagation` on every pointer down and blocked `OrbitControls`.
+- Grid helper children use `raycast={raycastNone}` so R3F does not raycast thousands of grid segments.
+- `OrbitControls` `onStart`/`onEnd` pauses hover; canvas uses `frameloop="demand"` with invalidate on camera change.
+- Hover throttled (~32ms); hover state skips React updates when unchanged.
+- `derived.refresh` keyed on topology revision only (not every snapshot bump).
 
 ## Files
 
