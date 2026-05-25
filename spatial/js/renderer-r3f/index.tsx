@@ -5,7 +5,7 @@
 // #region 📥Imports
 import { Line, OrbitControls, Text } from "@react-three/drei";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { MOUSE } from "three";
 import * as THREE from "three";
 
@@ -159,6 +159,13 @@ export function computeBoxPreviewLayout(
 	preview: SpatialPreviewKernel = scenePreview(),
 ): { readonly position: Vec3; readonly scale: Vec3 } {
 	return preview.computeBoxPreviewLayout(cornerA, cornerB, height);
+}
+
+/** @emoji 🟦 Center and radius for the live sphere preview while the radius point is moving. */
+export function computeSpherePreviewLayout(center: Vec3 | null, cursor: Vec3 | null): { readonly position: Vec3; readonly radius: number } | null {
+	if (!center || !cursor) return null;
+	const radius = Math.hypot(cursor[0] - center[0], cursor[1] - center[1], cursor[2] - center[2]);
+	return radius > 1e-9 ? { position: center, radius } : null;
 }
 
 function readVec3(v: unknown): Vec3 | null {
@@ -970,9 +977,11 @@ function LabelItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const text = p.text;
 	if (!pos || typeof text !== "string") return null;
 	return (
-		<Text position={pos} fontSize={0.22} color="#f4f4ff" anchorX="left" anchorY="bottom" raycast={raycastNone}>
-			{text}
-		</Text>
+		<Suspense fallback={null}>
+			<Text position={pos} fontSize={0.22} color="#f4f4ff" anchorX="left" anchorY="bottom" raycast={raycastNone}>
+				{text}
+			</Text>
+		</Suspense>
 	);
 }
 
@@ -1130,6 +1139,44 @@ function PreviewItem({
 				) : null}
 			</group>
 		);
+	}
+	if (previewKind === "sphere" && points.length >= 1 && cursor) {
+		const sphere = computeSpherePreviewLayout(points[0]!, cursor);
+		if (sphere) {
+			return (
+				<group>
+					<mesh position={sphere.position} raycast={raycastNone}>
+						<sphereGeometry args={[sphere.radius, 32, 16]} />
+						<meshStandardMaterial
+							color="#7ab0ff"
+							emissive="#102a66"
+							emissiveIntensity={0.28}
+							transparent
+							opacity={0.34}
+							depthWrite={false}
+							side={THREE.DoubleSide}
+						/>
+					</mesh>
+					<mesh position={sphere.position} raycast={raycastNone}>
+						<sphereGeometry args={[sphere.radius, 32, 16]} />
+						<meshBasicMaterial color="#d7ecff" wireframe transparent opacity={0.55} depthWrite={false} />
+					</mesh>
+					<Line
+						raycast={raycastNone}
+						points={[[sphere.position[0], sphere.position[1], sphere.position[2]], [cursor[0], cursor[1], cursor[2]]]}
+						color="#ffff88"
+						lineWidth={1.5}
+						dashed
+						dashSize={0.08}
+						gapSize={0.06}
+					/>
+					<mesh position={sphere.position} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+				</group>
+			);
+		}
 	}
 	// #region 🔵CircleArcPreview
 	if ((previewKind === "circle-outline" || previewKind === "circle") && points.length >= 1 && cursor) {
@@ -3755,6 +3802,12 @@ if (import.meta.vitest) {
 			expect(L.position[1]).toBeCloseTo(1.5);
 			expect(L.position[2]).toBeCloseTo(2);
 		});
+
+		it("computeSpherePreviewLayout follows the live radius cursor", () => {
+			const L = computeSpherePreviewLayout([1, 2, 3], [4, 6, 3]);
+			expect(L?.position).toEqual([1, 2, 3]);
+			expect(L?.radius).toBeCloseTo(5);
+		});
 	});
 
 	describe("@spatial/js-renderer-r3f interaction adapter", () => {
@@ -3864,8 +3917,8 @@ if (import.meta.vitest) {
 				(t) => t.kind === "part",
 			);
 			expect(partTargets.filter((t) => t.overlap === "difference")).toHaveLength(2);
-			expect(partTargets.some((t) => t.id === "part:part-host-difference")).toBe(true);
-			expect(partTargets.some((t) => t.id === "part:part-punch-difference")).toBe(true);
+			expect(partTargets.some((t) => t.id === "part-host-difference")).toBe(true);
+			expect(partTargets.some((t) => t.id === "part-punch-difference")).toBe(true);
 			expect(partTargets.some((t) => t.overlap === "intersection")).toBe(true);
 			expect(partTargets.every((t) => !t.id.includes("difference-before"))).toBe(true);
 		});

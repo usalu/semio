@@ -3465,7 +3465,7 @@ if (import.meta.vitest) {
 			expect(surfaces[0]!.sourceFaceIds.sort()).toEqual([f0, f1].sort());
 		});
 
-		it("emits intersection parts for cells sharing a face", () => {
+		it("omits volumetric intersection when cells only share a face", () => {
 			const topo = new TopologyGraph();
 			const f = "fs" as FaceRef;
 			topo.faces[f] = { id: f, wireIds: [] };
@@ -3476,7 +3476,7 @@ if (import.meta.vitest) {
 			topo.cells["c0" as CellRef] = { id: "c0" as CellRef, shellIds: [s0] };
 			topo.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [s1] };
 			const parts = computePartViewsFromTopology(topo);
-			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
+			expect(parts.some((p) => p.overlap === "intersection")).toBe(false);
 			expect(parts.filter((p) => p.overlap === "difference").length).toBe(0);
 		});
 
