@@ -3840,7 +3840,7 @@ if (import.meta.vitest) {
 					if (commandId !== "curve.arc") return { diff: EMPTY_TOPOLOGY_DIFF };
 					const center = (Array.isArray(ctx.center) ? ctx.center : [0, 0, 0]) as Vec3;
 					const start = (Array.isArray(ctx.start) ? ctx.start : [1, 0, 0]) as Vec3;
-					const end = (Array.isArray(ctx.end) ? ctx.end : start) as Vec3;
+					const end = arcEndOnCircle(center, start, (Array.isArray(ctx.end) ? ctx.end : start) as Vec3);
 					const v0 = "v0" as VertexRef;
 					const v1 = "v1" as VertexRef;
 					const e = "e0" as EdgeRef;

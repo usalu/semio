@@ -180,7 +180,7 @@ function PlaySession({
 //#region 🔖PlayApp
 function PlayApp() {
 	const interactions = useMemo(() => listSpatialInteractions(), []);
-	const [interactionId, setInteractionId] = useState(() => interactions[0]?.id ?? "");
+	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : null), [interactionId]);
@@ -235,11 +235,39 @@ function PlayApp() {
 	if (!interactions.length) {
 		return <div style={{ padding: 16, color: "#f88" }}>No spatial interactions registered.</div>;
 	}
+	if (!interactionId) {
+		return (
+			<div style={{ padding: 16, color: "#e8e8f0", display: "flex", flexDirection: "column", gap: 12 }}>
+				<div style={{ fontSize: 18, fontWeight: 600 }}>Select an interaction to start play.</div>
+				<div style={{ maxWidth: 240 }}>{asideExtra}</div>
+				<div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 420 }}>
+					{interactions.map((interaction) => (
+						<button
+							key={interaction.id}
+							type="button"
+							onClick={() => setInteractionId(interaction.id)}
+							style={{
+								padding: "10px 12px",
+								borderRadius: 8,
+								border: "1px solid #2a2a3c",
+								background: "#141420",
+								color: "#e8e8f0",
+								textAlign: "left",
+								cursor: "pointer",
+							}}
+						>
+							[{interaction.key}] {interaction.label}
+						</button>
+					))}
+				</div>
+			</div>
+		);
+	}
 	if (!spec) {
 		return (
 			<div style={{ padding: 16, color: "#f88" }}>
 				Unknown interaction <code>{interactionId}</code>.
-				<button type="button" onClick={() => setInteractionId(interactions[0]!.id)}>
+				<button type="button" onClick={() => setInteractionId("")}>
 					Reset
 				</button>
 			</div>

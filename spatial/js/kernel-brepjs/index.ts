@@ -631,7 +631,9 @@ if (import.meta.vitest) {
 			expect(edges).toHaveLength(1);
 			expect(wires).toHaveLength(1);
 			expect(verts[0]!.position).toEqual([2, 0, 0]);
-			expect(verts[1]!.position).toEqual([0, 2, 0]);
+			expect(verts[1]!.position[0]).toBeCloseTo(0, 5);
+			expect(verts[1]!.position[1]).toBeCloseTo(2, 5);
+			expect(verts[1]!.position[2]).toBeCloseTo(0, 5);
 			expect(edges[0]!.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
 			expect(edges[0]!.vertexIds).toHaveLength(2);
 		});
