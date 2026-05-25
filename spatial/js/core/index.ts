@@ -489,7 +489,7 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 			const va = evalExpr(expr.a, env);
 			const vb = evalExpr(expr.b, env);
 			if (!isVec3(va) || !isVec3(vb)) return undefined;
-			return env.preview.vec3Distance(va, vb);
+			return env.preview.M.vec3Distance(va, vb);
 		}
 		case "fold":
 			return expr.op === "min"
@@ -1171,13 +1171,13 @@ export interface SpatialPreviewKernel {
 	vec3Dot(a: Vec3, b: Vec3): number;
 	vec3Cross(a: Vec3, b: Vec3): Vec3;
 	vec3Length(a: Vec3): number;
-	vec3Distance(a: Vec3, b: Vec3): number;
+	M.vec3Distance(a: Vec3, b: Vec3): number;
 	vec3Normalize(a: Vec3): Vec3;
 	arcPlaneFrame(center: Vec3, start: Vec3, end: Vec3): ArcPlaneFrame | null;
 	arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number;
 	arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments?: number): readonly Vec3[];
 	arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneFrame | null;
-	arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3;
+	M.arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3;
 	arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Vec3 | null;
 	circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments?: number): readonly Vec3[];
 	ellipseSamplePoints(
@@ -1191,7 +1191,7 @@ export interface SpatialPreviewKernel {
 	nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan?: number): readonly Vec3[];
 	polylineLength(points: readonly Vec3[]): number;
 	edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number;
-	edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
+	M.edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
 	circleFromCenterRadiusPoint(
 		center: Vec3,
 		radiusPoint: Vec3,
@@ -1202,9 +1202,15 @@ export interface SpatialPreviewKernel {
 	aabbIntersect(a: Aabb, b: Aabb): Aabb | null;
 	cellSolidAabb(solid: CellSolid): Aabb;
 	topologyCellAabb(topo: TopologyGraph, cell: CellRecord): Aabb | null;
-	boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff;
+	M.boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff;
 	meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): TopologyDiff;
 	evaluateAnchorPosition(topo: TopologyGraph, anchor: AnchorRecord): Vec3;
+	anchorPlacementFromEntity(
+		topo: TopologyGraph,
+		kind: AnchorAttachment["kind"],
+		id: string,
+		point: Vec3,
+	): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null;
 	computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number): { readonly position: Vec3; readonly scale: Vec3 };
 	transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>): (point: Vec3) => Vec3;
 	abs(x: number): number;
@@ -1212,6 +1218,11 @@ export interface SpatialPreviewKernel {
 	max2(a: number, b: number): number;
 	minN(nums: readonly number[]): number;
 	maxN(nums: readonly number[]): number;
+	hypot3(x: number, y: number, z: number): number;
+	atan2(y: number, x: number): number;
+	cos(a: number): number;
+	sin(a: number): number;
+	randomTag(prefix: string): string;
 }
 
 /** @emoji 🔌 Precise BREP kernel: preview math + construction, tessellation, derived views. */
@@ -1362,7 +1373,8 @@ function builtinActionDefs(): ActionDef[] {
 	const ctxOf = (p: Record<string, unknown>) => p.__context as Record<string, unknown>;
 	const boxAabbFromDiagonalCorners: ActionDef = {
 		id: "box.aabbFromDiagonalCorners",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const pt = (ev as { point?: unknown }).point;
@@ -1373,8 +1385,8 @@ function builtinActionDefs(): ActionDef[] {
 			return {
 				patch: {
 					set: {
-						origin: [Math.min(a[0], P[0]), Math.min(a[1], P[1]), z] as Vec3,
-						corner: [Math.max(a[0], P[0]), Math.max(a[1], P[1]), z] as Vec3,
+						origin: [pr.min2(a[0], P[0]), pr.min2(a[1], P[1]), z] as Vec3,
+						corner: [pr.max2(a[0], P[0]), pr.max2(a[1], P[1]), z] as Vec3,
 					},
 					del: ["diagA"],
 				},
@@ -1383,7 +1395,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxTripletRubber: ActionDef = {
 		id: "box.tripletRubber",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1394,8 +1407,8 @@ function builtinActionDefs(): ActionDef[] {
 			return {
 				patch: {
 					set: {
-						previewA: [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as Vec3,
-						previewB: [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as Vec3,
+						previewA: [pr.minN([p0[0], p1[0], P[0]]), pr.minN([p0[1], p1[1], P[1]]), z] as Vec3,
+						previewB: [pr.maxN([p0[0], p1[0], P[0]]), pr.maxN([p0[1], p1[1], P[1]]), z] as Vec3,
 					},
 				},
 			};
@@ -1403,7 +1416,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxTripletCommit: ActionDef = {
 		id: "box.tripletCommit",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1414,8 +1428,8 @@ function builtinActionDefs(): ActionDef[] {
 			return {
 				patch: {
 					set: {
-						origin: [Math.min(p0[0], p1[0], P[0]), Math.min(p0[1], p1[1], P[1]), z] as Vec3,
-						corner: [Math.max(p0[0], p1[0], P[0]), Math.max(p0[1], p1[1], P[1]), z] as Vec3,
+						origin: [pr.minN([p0[0], p1[0], P[0]]), pr.minN([p0[1], p1[1], P[1]]), z] as Vec3,
+						corner: [pr.maxN([p0[0], p1[0], P[0]]), pr.maxN([p0[1], p1[1], P[1]]), z] as Vec3,
 					},
 					del: ["p0", "p1", "previewA", "previewB"],
 				},
@@ -1424,7 +1438,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxSnapSquareFootprint: ActionDef = {
 		id: "box.snapSquareFootprint",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1432,7 +1447,7 @@ function builtinActionDefs(): ActionDef[] {
 			if (!isVec3(o) || !P) return {};
 			const dx = P[0] - o[0];
 			const dy = P[1] - o[1];
-			const s = Math.max(Math.abs(dx), Math.abs(dy), 1e-9);
+			const s = pr.max2(pr.abs(dx), pr.abs(dy), 1e-9);
 			const sx = dx >= 0 ? 1 : -1;
 			const sy = dy >= 0 ? 1 : -1;
 			return { patch: { set: { corner: [o[0] + sx * s, o[1] + sy * s, o[2]] as Vec3 } } };
@@ -1440,19 +1455,21 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxSetCubeHeightFromFootprint: ActionDef = {
 		id: "box.setCubeHeightFromFootprint",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const o = ctx.origin;
 			const c = ctx.corner;
 			if (!isVec3(o) || !isVec3(c)) return {};
-			const dx = Math.abs(c[0] - o[0]);
-			const dy = Math.abs(c[1] - o[1]);
-			return { patch: { set: { height: Math.max(dx, dy, 0.01) } } };
+			const dx = pr.abs(c[0] - o[0]);
+			const dy = pr.abs(c[1] - o[1]);
+			return { patch: { set: { height: pr.maxN([dx, dy, 0.01]) } } };
 		},
 	};
 	const boxRubberCornerFromCenter: ActionDef = {
 		id: "box.rubberCornerFromCenter",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1461,8 +1478,8 @@ function builtinActionDefs(): ActionDef[] {
 			return {
 				patch: {
 					set: {
-						origin: [Math.min(2 * c[0] - P[0], P[0]), Math.min(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
-						corner: [Math.max(2 * c[0] - P[0], P[0]), Math.max(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
+						origin: [pr.min2(2 * c[0] - P[0], P[0]), pr.min2(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
+						corner: [pr.max2(2 * c[0] - P[0], P[0]), pr.max2(2 * c[1] - P[1], P[1]), c[2]] as Vec3,
 					},
 				},
 			};
@@ -1470,19 +1487,20 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxRubberSquareFromCenter: ActionDef = {
 		id: "box.rubberSquareFromCenter",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const c = ctx.rectCenter;
 			if (!isVec3(c) || !P) return {};
-			const ox = Math.min(2 * c[0] - P[0], P[0]);
-			const oy = Math.min(2 * c[1] - P[1], P[1]);
-			const cx = Math.max(2 * c[0] - P[0], P[0]);
-			const cy = Math.max(2 * c[1] - P[1], P[1]);
+			const ox = pr.min2(2 * c[0] - P[0], P[0]);
+			const oy = pr.min2(2 * c[1] - P[1], P[1]);
+			const cx = pr.max2(2 * c[0] - P[0], P[0]);
+			const cy = pr.max2(2 * c[1] - P[1], P[1]);
 			const w = cx - ox;
 			const d = cy - oy;
-			const s = Math.max(w, d, 1e-9);
+			const s = pr.maxN([w, d, 1e-9]);
 			return {
 				patch: {
 					set: {
@@ -1495,7 +1513,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxVerticalFinalizeFootprint: ActionDef = {
 		id: "box.verticalFinalizeFootprint",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1504,7 +1523,7 @@ function builtinActionDefs(): ActionDef[] {
 			if (!isVec3(o) || !isVec3(pk) || !P) return {};
 			return {
 				patch: {
-					set: { corner: [P[0], P[1], o[2]] as Vec3, height: Math.max(0.01, Math.abs(pk[2] - o[2])) },
+					set: { corner: [P[0], P[1], o[2]] as Vec3, height: pr.max2(0.01, pr.abs(pk[2] - o[2])) },
 					del: ["peak"],
 				},
 			};
@@ -1512,7 +1531,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxInitPeakAboveOrigin: ActionDef = {
 		id: "box.initPeakAboveOrigin",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const o = ctx.origin;
 			if (!isVec3(o)) return {};
@@ -1521,7 +1541,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxPeakFromOriginZ: ActionDef = {
 		id: "box.peakFromOriginZ",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1532,7 +1553,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxVerticalRubberCorner: ActionDef = {
 		id: "box.verticalRubberCorner",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
@@ -1543,7 +1565,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const boxCornerFromLengthWidth: ActionDef = {
 		id: "box.cornerFromLengthWidth",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const val = (ev as { value?: unknown }).value;
@@ -1569,7 +1592,7 @@ function builtinActionDefs(): ActionDef[] {
 			} else {
 				cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
 			}
-			return { diff: boxTopologyDiff({ cornerA, cornerB, height }, cell) };
+			return { diff: ctx.preview.M.boxTopologyDiff({ cornerA, cornerB, height }, cell) };
 		},
 	};
 	const primitiveCreateBoxFrom3Points: ActionDef = {
@@ -1580,11 +1603,11 @@ function builtinActionDefs(): ActionDef[] {
 			const p2 = params.p2 as Vec3;
 			if (!isVec3(p0) || !isVec3(p1) || !isVec3(p2)) return {};
 			const z = p0[2];
-			const cornerA: Vec3 = [Math.min(p0[0], p1[0], p2[0]), Math.min(p0[1], p1[1], p2[1]), z];
-			const cornerB: Vec3 = [Math.max(p0[0], p1[0], p2[0]), Math.max(p0[1], p1[1], p2[1]), z];
-			const dx = Math.abs(cornerB[0] - cornerA[0]);
-			const dy = Math.abs(cornerB[1] - cornerA[1]);
-			const height = Math.max(dx, dy, 0.01);
+			const cornerA: Vec3 = [pr.minN([p0[0], p1[0], p2[0]]), pr.minN([p0[1], p1[1], p2[1]]), z];
+			const cornerB: Vec3 = [pr.maxN([p0[0], p1[0], p2[0]]), pr.maxN([p0[1], p1[1], p2[1]]), z];
+			const dx = pr.abs(cornerB[0] - cornerA[0]);
+			const dy = pr.abs(cornerB[1] - cornerA[1]);
+			const height = pr.maxN([dx, dy, 0.01]);
 			return await Promise.resolve(primitiveCreateBoxFromCorners.run({ cornerA, cornerB, height }, ctx));
 		},
 	};
@@ -1647,7 +1670,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const commandAddPoint: ActionDef = {
 		id: "command.addPoint",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "points";
 			const key = typeof params.key === "string" ? params.key : null;
@@ -1661,7 +1685,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const commandAddSelection: ActionDef = {
 		id: "command.addSelection",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const ctx = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "targets";
 			const key = typeof params.key === "string" ? params.key : null;
@@ -1698,15 +1723,17 @@ function builtinActionDefs(): ActionDef[] {
 
 	const entityCreateAnchor: ActionDef = {
 		id: "entity.createAnchor",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const hostKind = params.hostKind;
 			const hostId = typeof params.hostId === "string" ? params.hostId : "";
 			const hitPoint = isVec3(params.hitPoint) ? params.hitPoint : null;
 			if (!hitPoint || !hostId) return {};
 			if (hostKind !== "vertex" && hostKind !== "edge" && hostKind !== "wire" && hostKind !== "face" && hostKind !== "cell") return {};
-			const placement = anchorPlacementFromEntity(topology, hostKind, hostId, hitPoint);
+			const placement = pr.anchorPlacementFromEntity(topology, hostKind, hostId, hitPoint);
 			if (!placement) return {};
-			const anchorId = `anchor-${Math.random().toString(36).slice(2, 9)}` as AnchorRef;
+			const anchorId = pr.randomTag("anchor") as AnchorRef;
 			return {
 				diff: {
 					anchors: {
@@ -1720,13 +1747,15 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureTransformMove: ActionDef = {
 		id: "transform.move",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const from = isVec3(params.from) ? params.from : null;
 			const to = isVec3(params.to) ? params.to : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			if (!from || !to || targets.length === 0) return {};
 
-			const delta = vec3Sub(to, from);
+			const delta = pr.vec3Sub(to, from);
 			const vIds = collectTargetVertices(topology, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
 			for (const vid of vIds) {
@@ -1734,7 +1763,7 @@ function builtinActionDefs(): ActionDef[] {
 				if (v) {
 					modifiedVertices.push({
 						id: vid as VertexRef,
-						position: vec3Add(v.position, delta),
+						position: pr.vec3Add(v.position, delta),
 					});
 				}
 			}
@@ -1747,15 +1776,17 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureTransformRotate: ActionDef = {
 		id: "transform.rotate",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const center = isVec3(params.center) ? params.center : null;
 			let angle = typeof params.angle === "number" ? params.angle : null;
 			if (angle === null) {
 				const refA = isVec3(params.referenceA) ? params.referenceA : null;
 				const refB = isVec3(params.referenceB) ? params.referenceB : null;
 				if (center && refA && refB) {
-					const angleA = Math.atan2(refA[1] - center[1], refA[0] - center[0]);
-					const angleB = Math.atan2(refB[1] - center[1], refB[0] - center[0]);
+					const angleA = pr.atan2(refA[1] - center[1], refA[0] - center[0]);
+					const angleB = pr.atan2(refB[1] - center[1], refB[0] - center[0]);
 					angle = angleB - angleA;
 				}
 			}
@@ -1764,8 +1795,8 @@ function builtinActionDefs(): ActionDef[] {
 
 			const vIds = collectTargetVertices(topology, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
-			const cosA = Math.cos(angle);
-			const sinA = Math.sin(angle);
+			const cosA = pr.cos(angle);
+			const sinA = pr.sin(angle);
 			for (const vid of vIds) {
 				const v = topology.vertices[vid];
 				if (v) {
@@ -1790,15 +1821,17 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureTransformScale3D: ActionDef = {
 		id: "transform.scale3d",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const center = isVec3(params.center) ? params.center : null;
 			const refA = isVec3(params.referenceA) ? params.referenceA : null;
 			const refB = isVec3(params.referenceB) ? params.referenceB : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			if (!center || !refA || !refB || targets.length === 0) return {};
 
-			const distA = Math.hypot(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
-			const distB = Math.hypot(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
+			const distA = pr.hypot3(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
+			const distB = pr.hypot3(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
 			if (distA < 1e-6) return {};
 			const scale = distB / distA;
 
@@ -1826,33 +1859,35 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureTransformScale1D: ActionDef = {
 		id: "transform.scale1d",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const center = isVec3(params.center) ? params.center : null;
 			const refA = isVec3(params.referenceA) ? params.referenceA : null;
 			const refB = isVec3(params.referenceB) ? params.referenceB : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			if (!center || !refA || !refB || targets.length === 0) return {};
 
-			const distA = Math.hypot(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
-			const distB = Math.hypot(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
+			const distA = pr.hypot3(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
+			const distB = pr.hypot3(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
 			if (distA < 1e-6) return {};
 			const scale = distB / distA;
 
-			const dir = vec3Normalize(vec3Sub(refA, center));
+			const dir = pr.vec3Normalize(pr.vec3Sub(refA, center));
 
 			const vIds = collectTargetVertices(topology, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
 			for (const vid of vIds) {
 				const v = topology.vertices[vid];
 				if (v) {
-					const delta = vec3Sub(v.position, center);
-					const proj = vec3Dot(delta, dir);
-					const ortho = vec3Sub(delta, vec3Scale(dir, proj));
+					const delta = pr.vec3Sub(v.position, center);
+					const proj = pr.vec3Dot(delta, dir);
+					const ortho = pr.vec3Sub(delta, pr.vec3Scale(dir, proj));
 					const newProj = proj * scale;
-					
+
 					modifiedVertices.push({
 						id: vid as VertexRef,
-						position: vec3Add(center, vec3Add(vec3Scale(dir, newProj), ortho)),
+						position: pr.vec3Add(center, pr.vec3Add(pr.vec3Scale(dir, newProj), ortho)),
 					});
 				}
 			}
@@ -1865,15 +1900,15 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureCurveLine: ActionDef = {
 		id: "curve.line",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const p0 = isVec3(params.p0) ? params.p0 : null;
 			const p1 = isVec3(params.p1) ? params.p1 : null;
 			if (!p0 || !p1) return {};
-			const id = () => `id-${Math.random().toString(36).slice(2, 9)}`;
-			const v0 = id() as VertexRef;
-			const v1 = id() as VertexRef;
-			const e = id() as EdgeRef;
-			const w = id() as WireRef;
+			const v0 = pr.randomTag("v") as VertexRef;
+			const v1 = pr.randomTag("v") as VertexRef;
+			const e = pr.randomTag("e") as EdgeRef;
+			const w = pr.randomTag("w") as WireRef;
 			return {
 				diff: {
 					vertices: { added: [{ id: v0, position: p0 }, { id: v1, position: p1 }] },
@@ -1886,40 +1921,42 @@ function builtinActionDefs(): ActionDef[] {
 
 	const featureCurvePolyline: ActionDef = {
 		id: "curve.polyline",
-		run: (params) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
 			const points = Array.isArray(params.points) ? params.points.filter(isVec3) : [];
 			if (points.length < 2) return {};
-			const id = () => `id-${Math.random().toString(36).slice(2, 9)}`;
 			const diff: TopologyDiff = { vertices: { added: [] }, edges: { added: [] }, wires: { added: [] } };
 			const vIds: VertexRef[] = [];
 			for (const p of points) {
-				const vid = id() as VertexRef;
+				const vid = pr.randomTag("v") as VertexRef;
 				diff.vertices!.added!.push({ id: vid, position: p });
 				vIds.push(vid);
 			}
 			const eIds: EdgeRef[] = [];
 			for (let i = 0; i < vIds.length - 1; i++) {
-				const eid = id() as EdgeRef;
+				const eid = pr.randomTag("e") as EdgeRef;
 				diff.edges!.added!.push({ id: eid, vertexIds: [vIds[i]!, vIds[i + 1]!] });
 				eIds.push(eid);
 			}
-			const w = id() as WireRef;
+			const w = pr.randomTag("w") as WireRef;
 			diff.wires!.added!.push({ id: w, edgeIds: eIds });
 			return { diff };
 		},
 	};
 	const featureTransformCopy: ActionDef = {
 		id: "transform.copy",
-		run: (params, { topology }) => {
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const topology = ctx.topology;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			const from = isVec3(params.from) ? params.from : null;
 			const to = isVec3(params.to) ? params.to : null;
 			if (targets.length === 0 || !from || !to) return {};
 
-			const delta = vec3Sub(to, from);
-			
+			const delta = pr.vec3Sub(to, from);
+
 			const idMap = new Map<string, string>();
-			const nextId = (kind: string) => `id-${kind}-${Math.random().toString(36).slice(2, 9)}`;
+			const nextId = (kind: string) => pr.randomTag(kind);
 			const getMapped = <T extends string>(id: T, kind: string): T => {
 				if (!idMap.has(id)) idMap.set(id, nextId(kind));
 				return idMap.get(id) as T;
@@ -1965,7 +2002,7 @@ function builtinActionDefs(): ActionDef[] {
 
 			for (const vid of vertices) {
 				const v = topology.vertices[vid]!;
-				diff.vertices!.added!.push({ id: getMapped(vid, "v"), position: vec3Add(v.position, delta) });
+				diff.vertices!.added!.push({ id: getMapped(vid, "v"), position: pr.vec3Add(v.position, delta) });
 			}
 			for (const eid of edges) {
 				const e = topology.edges[eid]!;
@@ -2135,6 +2172,7 @@ export interface StateEngine {
 		topology?: TopologyGraph,
 		actions?: ActionRegistry,
 		derived?: DerivedViewService,
+		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult>;
 }
 
@@ -2165,8 +2203,11 @@ export async function applyEffectAsync(
 	topology: TopologyGraph,
 	actions?: ActionRegistry,
 	derived?: DerivedViewService,
+	preview?: SpatialPreviewKernel,
 ): Promise<void> {
-	const env: ExprEnv = { context: ctx, event, topology, derived };
+	const math = preview ?? kernel;
+	if (!math) return;
+	const env: ExprEnv = { context: ctx, event, topology, derived, preview: math };
 	const reg = actions ?? ActionRegistry.withBuiltins();
 	if (a.op === "assign") {
 		const v = evalExpr(a.value, env);
@@ -2198,7 +2239,7 @@ export async function applyEffectAsync(
 			paramBag[k] = evalExpr(ex, env);
 		}
 		const k = kernel ?? (null as unknown as SpatialKernel);
-		const r = await Promise.resolve(def.run(paramBag, { kernel: k, topology }));
+		const r = await Promise.resolve(def.run(paramBag, { kernel: k, preview: math, topology }));
 		if (r.patch) applyActionPatchToContext(ctx, r.patch);
 	}
 }
@@ -2213,6 +2254,7 @@ export async function applyTransition(
 	actions?: ActionRegistry,
 	topology?: TopologyGraph,
 	derived?: DerivedViewService,
+	preview?: SpatialPreviewKernel,
 ): Promise<ApplyTransitionResult> {
 	const topo = topology ?? new TopologyGraph();
 	const st = findState(spec, state);
@@ -2224,10 +2266,11 @@ export async function applyTransition(
 		const tr = choices[i]!;
 		if (tr.guard) {
 			const g = lookupGuard(spec, tr.guard);
-			if (!g || !evalGuard(g, { context, event })) continue;
+			const math = preview ?? kernel;
+			if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
 		}
 		for (const eff of tr.effects ?? []) {
-			await applyEffectAsync(eff, context, event, kernel, topo, actions, derived);
+			await applyEffectAsync(eff, context, event, kernel, topo, actions, derived, preview);
 		}
 		let nextState = state;
 		if (tr.target) {
@@ -2336,8 +2379,9 @@ export class StatechartRuntime implements StateEngine {
 		topology?: TopologyGraph,
 		actions?: ActionRegistry,
 		derived?: DerivedViewService,
+		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult> {
-		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, topology, derived);
+		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, topology, derived, preview);
 		if (r.ok) this.state = r.nextState;
 		return { ok: r.ok, transient: r.transient };
 	}
@@ -2624,7 +2668,8 @@ export class InteractionRuntime {
 		return this.opts.mode ?? "precise";
 	}
 
-	private previewMath(): SpatialPreviewKernel {
+	/** @emoji ⚡ Active preview kernel for the current `mode` (fast renderer vs precise brep). */
+	previewKernel(): SpatialPreviewKernel {
 		const mode = this.computeMode();
 		if (mode === "fast") {
 			const pk = this.opts.previewKernel;
@@ -2637,7 +2682,7 @@ export class InteractionRuntime {
 	private exprEnv(extra?: Partial<ExprEnv>): ExprEnv {
 		return {
 			context: this.sm.getContext(),
-			preview: this.previewMath(),
+			preview: this.previewKernel(),
 			...extra,
 		};
 	}
@@ -2684,13 +2729,13 @@ export class InteractionRuntime {
 		const selectionEvent = this.selectionEventFromStart(event, sel);
 		if (!selectionEvent || !selectionEventMatches(sel, selectionEvent)) return;
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived);
+		const r = await this.sm.send(selectionEvent, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
 		if (!r.ok) return;
 		if (!r.transient) this.snapUndoStack.push({ state: stateBeforeSelection, context: JSON.stringify(beforeCtx) });
 		const stateAfterSelection = this.sm.getState();
 		if (stateAfterSelection === stateBeforeSelection && this.stateHasEvent(stateAfterSelection, "confirm")) {
 			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
-			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived);
+			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
 			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: stateAfterSelection, context: JSON.stringify(beforeConfirmCtx) });
 		}
 	}
@@ -2771,7 +2816,7 @@ export class InteractionRuntime {
 		}
 		const beforeState = this.sm.getState();
 		const beforeCtx = this.cloneCtx(this.sm.getContext());
-		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived);
+		const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
 		if (!r.ok) return;
 		if (!r.transient) {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
@@ -2779,7 +2824,7 @@ export class InteractionRuntime {
 		}
 		if (event.kind === "selection.changed" && this.sm.getState() === beforeState && this.stateHasEvent(this.sm.getState(), "confirm")) {
 			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
-			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived);
+			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
 			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeConfirmCtx) });
 		}
 		if (event.kind === "start") await this.consumeStartSelection(event);
@@ -2879,7 +2924,7 @@ export class InteractionRuntime {
 		if (advanceToFinalState && !this.canCommit()) return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
 		const ctx = this.sm.getContext();
 		const op = this.spec.commit.operation;
-		const env: ExprEnv = { context: ctx, preview: this.previewMath() };
+		const env: ExprEnv = { context: ctx, preview: this.previewKernel() };
 		const k = this.opts.kernel;
 		const topo = this.opts.document.topology;
 		let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
@@ -2891,7 +2936,7 @@ export class InteractionRuntime {
 			for (const [key, ex] of Object.entries(op.params ?? {})) {
 				paramBag[key] = evalExpr(ex, env);
 			}
-			const ar = await Promise.resolve(def.run(paramBag, { kernel: k, preview: this.previewMath(), topology: topo }));
+			const ar = await Promise.resolve(def.run(paramBag, { kernel: k, preview: this.previewKernel(), topology: topo }));
 			diff = ar.diff ?? EMPTY_TOPOLOGY_DIFF;
 			data = ar.data ?? null;
 		} catch (e) {
@@ -2906,7 +2951,7 @@ export class InteractionRuntime {
 		}
 		const inverse = applyTopologyDiff(topo, diff);
 		const archiveContext = this.cloneCtx(this.sm.getContext());
-		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, topo, this.actions);
+		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, topo, this.actions, this.opts.derived, this.previewKernel());
 		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
 		this.lastResponse = res;
 		this.snapUndoStack.length = 0;
@@ -3214,37 +3259,39 @@ export function loadSpatialInteraction(interactionId: string): InteractionSpec |
 
 // #region 🧪Tests
 if (import.meta.vitest) {
+	import { BrepjsKernel, computePartViewsFromTopology, computeSurfaceViewsFromTopology, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("@spatial/js-core vec", () => {
 		it("adds and distances", () => {
-			expect(vec3Distance([0, 0, 0], [3, 4, 0])).toBe(5);
+			expect(M.vec3Distance([0, 0, 0], [3, 4, 0])).toBe(5);
 		});
 	});
 
 	describe("@spatial/js-core edge and cell geometry", () => {
 		it("arcEndOnCircle projects off-circle pick onto arc", () => {
-			const end = arcEndOnCircle([0, 0, 0], [2, 0, 0], [0, 3, 0]);
+			const end = M.arcEndOnCircle([0, 0, 0], [2, 0, 0], [0, 3, 0]);
 			expect(end[0]).toBeCloseTo(0, 5);
 			expect(end[1]).toBeCloseTo(2, 5);
-			expect(vec3Distance([0, 0, 0], end)).toBeCloseTo(2, 5);
+			expect(M.vec3Distance([0, 0, 0], end)).toBeCloseTo(2, 5);
 		});
 		it("arcSamplePoints quarter arc from center start end", () => {
-			const pts = arcSamplePoints([0, 0, 0], [2, 0, 0], [0, 2, 0], 4);
+			const pts = M.arcSamplePoints([0, 0, 0], [2, 0, 0], [0, 2, 0], 4);
 			expect(pts[0]).toEqual([2, 0, 0]);
 			expect(pts[pts.length - 1]![0]).toBeCloseTo(0, 5);
 			expect(pts[pts.length - 1]![1]).toBeCloseTo(2, 5);
 		});
 		it("circleSamplePoints and edgeCurveLength for Geom_Circle", () => {
-			const pts = circleSamplePoints([0, 0, 0], [0, 0, 1], 2, 64);
+			const pts = M.circleSamplePoints([0, 0, 0], [0, 0, 1], 2, 64);
 			expect(pts.length).toBeGreaterThan(8);
-			expect(edgeCurveLength({ kind: "circle", center: [0, 0, 0], normal: [0, 0, 1], radius: 2 }, [[2, 0, 0], [2, 0, 0]])).toBeCloseTo(
-				Math.PI * 4,
+			expect(M.edgeCurveLength({ kind: "circle", center: [0, 0, 0], normal: [0, 0, 1], radius: 2 }, [[2, 0, 0], [2, 0, 0]])).toBeCloseTo(
+				M.cos(0) * 0 + M.sin(0) * 0 + 4 * 3.141592653589793,
 				3,
 			);
 		});
 		it("nurbs edge samples through control poles", () => {
-			const curve = nurbsCurveFromPoles([
+			const curve = M.nurbsCurveFromPoles([
 				[0, 0, 0],
 				[1, 2, 0],
 				[3, 0, 0],
@@ -3256,7 +3303,7 @@ if (import.meta.vitest) {
 				[v1]: { id: v1, position: [3, 0, 0] as Vec3 },
 			};
 			const edge: EdgeRecord = { id: "e" as EdgeRef, vertexIds: [v0, v1], curve };
-			const pts = edgeSamplePoints(verts, edge, 24);
+			const pts = M.edgeSamplePoints(verts, edge, 24);
 			expect(pts.length).toBeGreaterThan(4);
 		});
 		it("cellSolidAabb sphere bounds", () => {
@@ -3367,23 +3414,23 @@ if (import.meta.vitest) {
 
 		it("splits overlapping box faces into external and internal surface patches", () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const surfaces = computeSurfaceViewsFromTopology(topo);
 			expect(surfaces.some((s) => s.exposure === "internal")).toBe(true);
 			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
 			const internal = surfaces.filter((s) => s.exposure === "internal");
 			expect(internal.every((s) => (s.regionPoints?.length ?? 0) >= 4)).toBe(true);
-			const topInternal = internal.find((s) => s.regionPoints?.every((p) => Math.abs(p[2] - 2) < 1e-5));
+			const topInternal = internal.find((s) => s.regionPoints?.every((p) => M.abs(p[2] - 2) < 1e-5));
 			expect(topInternal).toBeDefined();
 			const xs = topInternal!.regionPoints!.map((p) => p[0]);
-			expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(1, 4);
+			expect(M.maxN(xs) - M.minN(xs)).toBeCloseTo(1, 4);
 		});
 
 		it("partitions overlapping box cells by intersection volume", () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const parts = computePartViewsFromTopology(topo);
 			const inter = parts.find((p) => p.overlap === "intersection");
 			expect(inter?.volume).toBeCloseTo(2, 4);
@@ -3392,19 +3439,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core interactions", () => {
-		const DEFAULT_KERNEL: SpatialKernel = {
-			id: "default-test",
-			operations: [] as const,
-			async createBoxFromCorners() {
-				return cellRef("c");
-			},
-			async volume() {
-				return 0;
-			},
-			async tessellate() {
-				return { positions: new Float32Array(), indices: new Uint32Array() };
-			},
-		};
+		const DEFAULT_KERNEL = new BrepjsKernel();
 
 		it("lists stable mnemonic keys for each built-in interaction", () => {
 			const ps = listSpatialInteractions();
@@ -3420,7 +3455,7 @@ if (import.meta.vitest) {
 			}
 		});
 		it("commits createAnchor directly from a hit-point selection", async () => {
-			class AnchorKernel implements SpatialKernel {
+			class AnchorKernel extends BrepjsKernel {
 				readonly id = "anchor-test";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3434,7 +3469,7 @@ if (import.meta.vitest) {
 				}
 			}
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const edgeId = Object.keys(topo.edges)[0]! as EdgeRef;
 			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({
@@ -3452,7 +3487,7 @@ if (import.meta.vitest) {
 			expect(anchors[0]!.position).toEqual([0.4, 0, 0]);
 		});
 		it("commits createAnchor after selecting a host then placing a point", async () => {
-			class AnchorKernel implements SpatialKernel {
+			class AnchorKernel extends BrepjsKernel {
 				readonly id = "anchor-test";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3466,7 +3501,7 @@ if (import.meta.vitest) {
 				}
 			}
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const faceId = Object.keys(topo.faces)[0]! as FaceRef;
 			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({
@@ -3506,7 +3541,7 @@ if (import.meta.vitest) {
 			expect(labels).not.toContain("Cancel");
 		});
 		it("auto-finalizes scripted commands when the terminal input is done", async () => {
-			class CommandKernel implements SpatialKernel {
+			class CommandKernel extends BrepjsKernel {
 				readonly id = "command";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3533,7 +3568,7 @@ if (import.meta.vitest) {
 			expect(snap.lastResponse?.diff?.vertices?.added?.length).toBe(2);
 		});
 		it("abortActiveInteractionSession hard-resets an in-progress session", async () => {
-			class CommandKernel implements SpatialKernel {
+			class CommandKernel extends BrepjsKernel {
 				readonly id = "command-abort";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3561,13 +3596,13 @@ if (import.meta.vitest) {
 		});
 		it("collectTargetVertices expands face selection to boundary vertices", () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const faceId = Object.keys(topo.faces)[0]!;
 			const vIds = collectTargetVertices(topo, [{ kind: "face", id: faceId }]);
 			expect(vIds.size).toBe(4);
 		});
 		it("uses initial selection to skip selection-first command states", async () => {
-			class CommandKernel implements SpatialKernel {
+			class CommandKernel extends BrepjsKernel {
 				readonly id = "command-selection";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3596,7 +3631,7 @@ if (import.meta.vitest) {
 		});
 		it("auto-commits curve.arc as one arc edge between start and end", async () => {
 			const topo = new TopologyGraph();
-			class ArcKernel implements SpatialKernel {
+			class ArcKernel extends BrepjsKernel {
 				readonly id = "arc-command";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3612,7 +3647,7 @@ if (import.meta.vitest) {
 					if (commandId !== "curve.arc") return { diff: EMPTY_TOPOLOGY_DIFF };
 					const center = (Array.isArray(ctx.center) ? ctx.center : [0, 0, 0]) as Vec3;
 					const start = (Array.isArray(ctx.start) ? ctx.start : [1, 0, 0]) as Vec3;
-					const end = arcEndOnCircle(center, start, (Array.isArray(ctx.end) ? ctx.end : start) as Vec3);
+					const end = M.arcEndOnCircle(center, start, (Array.isArray(ctx.end) ? ctx.end : start) as Vec3);
 					const v0 = "v0" as VertexRef;
 					const v1 = "v1" as VertexRef;
 					const e = "e0" as EdgeRef;
@@ -3641,10 +3676,10 @@ if (import.meta.vitest) {
 		});
 		it("auto-finalizes transform.move on terminal pointer down without alreadyCommitted", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const v0 = Object.keys(topo.vertices)[0]!;
 			const p0 = topo.vertices[v0]!.position;
-			class CommandKernel implements SpatialKernel {
+			class CommandKernel extends BrepjsKernel {
 				readonly id = "command-move";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3698,7 +3733,7 @@ if (import.meta.vitest) {
 			expect(reg.get("primitive.box")).toEqual(buildBoxInteractionSpec());
 		});
 		it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-3pt";
 				readonly operations = [] as const;
 				lastInput: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
@@ -3742,7 +3777,7 @@ if (import.meta.vitest) {
 
 		it("boxTopologyDiff creates selectable boundary and volume records", () => {
 			const g = new TopologyGraph();
-			applyTopologyDiff(g, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			applyTopologyDiff(g, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
 			expect(Object.keys(g.vertices).length).toBe(8);
 			expect(Object.keys(g.edges).length).toBe(12);
 			expect(Object.keys(g.wires).length).toBe(6);
@@ -3769,7 +3804,7 @@ if (import.meta.vitest) {
 	});
 	describe("@spatial/js-core interaction box", () => {
 		it("tracks first-corner cursor on the grid after start", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -3802,7 +3837,7 @@ if (import.meta.vitest) {
 		});
 
 		it("pushes interaction-local undo snapshot on each non-transient transition", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-undo";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -3829,7 +3864,7 @@ if (import.meta.vitest) {
 		});
 
 		it("runs box workflow with a recording kernel stub (no solid modeling in core)", async () => {
-			class RecordingStubKernel implements SpatialKernel {
+			class RecordingStubKernel extends BrepjsKernel {
 				readonly id = "recording-stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
@@ -3879,7 +3914,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core stateEngine option", () => {
 		it("explicit pure-ts provider matches default interaction snapshots", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-opt";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -3907,7 +3942,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core measure distance", () => {
 		it("commit returns vertex distance in data", async () => {
-			class MeasKernel implements SpatialKernel {
+			class MeasKernel extends BrepjsKernel {
 				readonly id = "meas";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3927,7 +3962,7 @@ if (import.meta.vitest) {
 					const pa = t.vertices[String(a)]?.position;
 					const pb = t.vertices[String(b)]?.position;
 					if (!pa || !pb) return 0;
-					return vec3Distance(pa, pb);
+					return M.vec3Distance(pa, pb);
 				}
 			}
 			const topo = new TopologyGraph();
@@ -3946,7 +3981,7 @@ if (import.meta.vitest) {
 		});
 
 		it("auto-commits when confirm reaches the final state", async () => {
-			class MeasKernel implements SpatialKernel {
+			class MeasKernel extends BrepjsKernel {
 				readonly id = "meas-auto";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -3962,7 +3997,7 @@ if (import.meta.vitest) {
 					const pa = t.vertices[String(a)]?.position;
 					const pb = t.vertices[String(b)]?.position;
 					if (!pa || !pb) return 0;
-					return vec3Distance(pa, pb);
+					return M.vec3Distance(pa, pb);
 				}
 			}
 			const topo = new TopologyGraph();
@@ -3984,7 +4019,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core measure area", () => {
 		it("commit returns face area in data", async () => {
-			class AreaKernel implements SpatialKernel {
+			class AreaKernel extends BrepjsKernel {
 				readonly id = "area";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -4048,7 +4083,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core measure distance history", () => {
 		it("does not push readonly measure commits onto document history", async () => {
-			class MeasKernel implements SpatialKernel {
+			class MeasKernel extends BrepjsKernel {
 				readonly id = "meas-h";
 				readonly operations = [] as const;
 				async createBoxFromCorners() {
@@ -4068,7 +4103,7 @@ if (import.meta.vitest) {
 					const pa = t.vertices[String(a)]?.position;
 					const pb = t.vertices[String(b)]?.position;
 					if (!pa || !pb) return 0;
-					return vec3Distance(pa, pb);
+					return M.vec3Distance(pa, pb);
 				}
 			}
 			const hist = new DocumentHistory();
@@ -4087,7 +4122,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core interaction session undo redo", () => {
 		it("supports redo after undo during an active interaction and clears redo on new branch", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-s";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -4115,7 +4150,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-core undo routing", () => {
 		it("uses snapshot undo while active and document history when idle", async () => {
-			class StubKernel implements SpatialKernel {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-r";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {

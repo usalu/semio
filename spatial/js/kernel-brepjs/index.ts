@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧭 `@spatial/js-kernel-brepjs` — `KernelAdapter` backed by brepjs + OpenCascade WASM. */
+/** @emoji 🧭 `@spatial/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -7,21 +7,14 @@ import { box, checkInterference, cone, cylinder, cut, initFromOC, intersect, mea
 import type { ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
-	aabbCornerPoints,
-	aabbIntersect,
-	boxTopologyDiff,
 	cellRef,
-	computePartViewsFromTopology,
-	computeSurfaceViewsFromTopology,
-	meshFaceTopologyDiff,
-	topologyCellAabb,
 	type CellRef,
 	type EdgeRef,
 	type FaceRef,
-	type KernelAdapter,
 	type KernelQueryContext,
 	type MeshPreview,
 	type PartView,
+	type SpatialKernel,
 	type SurfaceView,
 	TopologyGraph,
 	type TopologyDiff,
@@ -32,16 +25,26 @@ import {
 	type WireRef,
 	type SurfaceRef,
 	type PartRef,
+} from "@spatial/js-core";
+import {
 	arcEndFromAngle,
 	arcEndOnCircle,
+	aabbCornerPoints,
+	aabbIntersect,
+	boxTopologyDiff,
 	circleFromCenterRadiusPoint,
+	computePartViewsFromTopology,
+	computeSurfaceViewsFromTopology,
 	edgeCurveLength,
+	meshFaceTopologyDiff,
 	nurbsCurveFromPoles,
+	preciseSpatialKernelMath,
+	topologyCellAabb,
 	vec3Distance,
 	vec3Length,
 	vec3Normalize,
 	vec3Sub,
-} from "@spatial/js-core";
+} from "./spatial-kernel-math.ts";
 // #endregion 📥Imports
 
 // #region 🧩OpenCascade
@@ -70,8 +73,14 @@ function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], to
 
 // #region 🔌BrepjsKernel
 /** @emoji 🔌 Holds exact solids keyed by `CellRef` returned from kernel construction ops. */
-export class BrepjsKernel implements KernelAdapter {
+export { preciseSpatialKernelMath, PreciseSpatialKernelMath, computeSurfaceViewsFromTopology, computePartViewsFromTopology } from "./spatial-kernel-math.ts";
+
+export class BrepjsKernel implements SpatialKernel {
 	readonly id = "brepjs-opencascade";
+
+	constructor() {
+		Object.assign(this, preciseSpatialKernelMath);
+	}
 	readonly operations = [
 		"cell.createBox",
 		"wire.extrudeToCell",

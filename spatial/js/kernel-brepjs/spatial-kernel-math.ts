@@ -581,7 +581,13 @@ export function evaluateAnchorPosition(topo: TopologyGraph, anchor: AnchorRecord
 	return pointOnCellAt(topo, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v, anchor.attachment.w) ?? anchor.position;
 }
 
-function anchorPlacementFromEntity(topo: TopologyGraph, kind: AnchorAttachment["kind"], id: string, point: Vec3): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null {
+/** @emoji ⚓ Resolves anchor placement on a topology entity from a pick point. */
+export function anchorPlacementFromEntity(
+	topo: TopologyGraph,
+	kind: AnchorAttachment["kind"],
+	id: string,
+	point: Vec3,
+): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null {
 	if (kind === "vertex") {
 		const vertex = topo.vertices[id];
 		return vertex ? { position: vertex.position, attachment: { kind, id: id as VertexRef } } : null;
@@ -1575,6 +1581,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	boxTopologyDiff = boxTopologyDiff;
 	meshFaceTopologyDiff = meshFaceTopologyDiff;
 	evaluateAnchorPosition = evaluateAnchorPosition;
+	anchorPlacementFromEntity = anchorPlacementFromEntity;
 	computeBoxPreviewLayout = computeBoxPreviewLayout;
 	transformPointsForPreviewKind = transformPointsForPreviewKind;
 	abs = Math.abs;
@@ -1582,6 +1589,11 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	max2 = (a: number, b: number) => (a > b ? a : b);
 	minN = (nums: readonly number[]) => nums.reduce((m, n) => (n < m ? n : m), nums[0] ?? 0);
 	maxN = (nums: readonly number[]) => nums.reduce((m, n) => (n > m ? n : m), nums[0] ?? 0);
+	hypot3 = (x: number, y: number, z: number) => Math.hypot(x, y, z);
+	atan2 = Math.atan2;
+	cos = Math.cos;
+	sin = Math.sin;
+	randomTag = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
 export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();

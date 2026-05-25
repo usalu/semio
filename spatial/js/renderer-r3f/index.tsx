@@ -14,21 +14,14 @@ THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 import {
 	abortActiveInteractionSession,
 	applyTopologyDiff,
-	boxTopologyDiff,
 	buildBoxInteractionSpec,
 	cellRef,
 	createInteractionRuntime,
 	DerivedViewService,
-	evaluateAnchorPosition,
-	topologyCellAabb,
 	DocumentHistory,
-	arcEndOnCircle,
-	arcSamplePoints,
-	edgeSamplePoints,
 	isInteractionSessionActive,
 	parseTopologyGraphJson,
 	listKeyedInteractionTransitions,
-	meshFaceTopologyDiff,
 	resolveSpatialInteractionKey,
 	TopologyGraph,
 	type InteractionEvent,
@@ -45,7 +38,8 @@ import {
 	type DisplayModel,
 	type EdgeRecord,
 	type FaceRecord,
-	type KernelAdapter,
+	type SpatialKernel,
+	type SpatialPreviewKernel,
 	type ModelDocument,
 	type PartView,
 	type SelectionTarget,
@@ -58,7 +52,47 @@ import {
 	type VertexRecord,
 	type WireRecord,
 } from "@spatial/js-core";
+import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
 // #endregion 📥Imports
+
+// #region ⚡R3FPreviewKernel
+/** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
+export class R3FPreviewKernel extends PreciseSpatialKernelMath {
+	override arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 12): readonly Vec3[] {
+		return super.arcSamplePoints(center, start, end, segments);
+	}
+
+	override edgeSamplePoints(
+		vertices: Readonly<Record<string, VertexRecord>>,
+		edge: EdgeRecord,
+		segments = 12,
+	): readonly Vec3[] {
+		return super.edgeSamplePoints(vertices, edge, segments);
+	}
+
+	override circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 24): readonly Vec3[] {
+		return super.circleSamplePoints(center, normal, radius, segments);
+	}
+
+	override nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 6): readonly Vec3[] {
+		return super.nurbsDisplaySamplePoints(poles, segmentsPerSpan);
+	}
+}
+
+/** @emoji ⚡ Default fast preview kernel for play and R3F hosts. */
+export const r3fPreviewKernel = new R3FPreviewKernel();
+
+const scenePreviewKernelRef: { current: SpatialPreviewKernel } = { current: r3fPreviewKernel };
+
+/** @emoji ⚡ Binds the active scene preview kernel (fast vs precise) for R3F wireframe helpers. */
+export function bindScenePreviewKernel(kernel: SpatialPreviewKernel): void {
+	scenePreviewKernelRef.current = kernel;
+}
+
+function scenePreview(): SpatialPreviewKernel {
+	return scenePreviewKernelRef.current;
+}
+// #endregion ⚡R3FPreviewKernel
 
 // #region 🪩ArchivedFootprints
 /** @emoji 📦 Footprint of a finished axis-aligned box for persistent REPL overlays. */
@@ -113,22 +147,9 @@ export function computeBoxPreviewLayout(
 	cornerA: Vec3,
 	cornerB: Vec3,
 	height: number,
+	preview: SpatialPreviewKernel = scenePreview(),
 ): { readonly position: Vec3; readonly scale: Vec3 } {
-	const ax = Math.min(cornerA[0], cornerB[0]);
-	const ay = Math.min(cornerA[1], cornerB[1]);
-	const bx = Math.max(cornerA[0], cornerB[0]);
-	const by = Math.max(cornerA[1], cornerB[1]);
-	const w = bx - ax;
-	const d = by - ay;
-	const h = height;
-	const minZ = Math.min(cornerA[2], cornerB[2]);
-	const cx = (ax + bx) / 2;
-	const cy = (ay + by) / 2;
-	const ez = 1e-9;
-	return {
-		position: [cx, cy, minZ + h / 2],
-		scale: [Math.max(w, ez), Math.max(d, ez), Math.max(h, ez)],
-	};
+	return preview.computeBoxPreviewLayout(cornerA, cornerB, height);
 }
 
 function readVec3(v: unknown): Vec3 | null {
@@ -158,27 +179,11 @@ function translateVec3(p: Vec3, delta: Vec3): Vec3 {
 }
 
 /** @emoji 📦 Axis-aligned bounds for topology highlight wireframes. */
-export function bboxFromPoints(points: readonly Vec3[]): { readonly min: Vec3; readonly max: Vec3 } | null {
-	if (!points.length) return null;
-	let minX = points[0]![0];
-	let minY = points[0]![1];
-	let minZ = points[0]![2];
-	let maxX = minX;
-	let maxY = minY;
-	let maxZ = minZ;
-	for (const p of points) {
-		minX = Math.min(minX, p[0]);
-		minY = Math.min(minY, p[1]);
-		minZ = Math.min(minZ, p[2]);
-		maxX = Math.max(maxX, p[0]);
-		maxY = Math.max(maxY, p[1]);
-		maxZ = Math.max(maxZ, p[2]);
-	}
-	const pad = 0.04;
-	return {
-		min: [minX - pad, minY - pad, minZ - pad],
-		max: [maxX + pad, maxY + pad, maxZ + pad],
-	};
+export function bboxFromPoints(
+	points: readonly Vec3[],
+	preview: SpatialPreviewKernel = scenePreview(),
+): { readonly min: Vec3; readonly max: Vec3 } | null {
+	return preview.aabbFromPoints(points, 0.04);
 }
 
 /** @emoji 📦 Twelve edges of an axis-aligned box for preview line rendering. */
@@ -229,62 +234,9 @@ function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: Top
 export function transformPointsForPreviewKind(
 	previewKind: string,
 	params: Record<string, unknown>,
+	preview: SpatialPreviewKernel = scenePreview(),
 ): (point: Vec3) => Vec3 {
-	const identity = (point: Vec3) => point;
-	const cursor = readVec3(params.cursor);
-	const prevPoint = readVec3(params.prevPoint);
-	const from = readVec3(params.from) ?? prevPoint;
-	const center = readVec3(params.center) ?? readVec3Array(params.points)[0] ?? null;
-	if (previewKind === "move-preview" || previewKind === "copy-preview") {
-		if (!from || !cursor) return identity;
-		const delta = vec3Sub(cursor, from);
-		return (point) => translateVec3(point, delta);
-	}
-	if (previewKind === "mirror-preview") {
-		const planeStart = readVec3(params.mirrorStart) ?? from;
-		if (!planeStart || !cursor) return identity;
-		const dx = cursor[0] - planeStart[0];
-		const dy = cursor[1] - planeStart[1];
-		const len = Math.hypot(dx, dy);
-		if (len < 1e-9) return identity;
-		const nx = -dy / len;
-		const ny = dx / len;
-		return (point) => {
-			const vx = point[0] - planeStart[0];
-			const vy = point[1] - planeStart[1];
-			const dot = vx * nx + vy * ny;
-			return [point[0] - 2 * dot * nx, point[1] - 2 * dot * ny, point[2]];
-		};
-	}
-	if (previewKind === "rotate-preview") {
-		const pivot = center ?? from;
-		const ref = prevPoint;
-		if (!pivot || !ref || !cursor) return identity;
-		const a0 = Math.atan2(ref[1] - pivot[1], ref[0] - pivot[0]);
-		const a1 = Math.atan2(cursor[1] - pivot[1], cursor[0] - pivot[0]);
-		const ang = a1 - a0;
-		const c = Math.cos(ang);
-		const s = Math.sin(ang);
-		return (point) => {
-			const x = point[0] - pivot[0];
-			const y = point[1] - pivot[1];
-			return [pivot[0] + x * c - y * s, pivot[1] + x * s + y * c, point[2]];
-		};
-	}
-	if (previewKind === "scale-preview" || previewKind === "scale1d-preview") {
-		const origin = center ?? from ?? readVec3Array(params.points)[0];
-		const ref = prevPoint ?? from;
-		if (!origin || !ref || !cursor) return identity;
-		const d0 = Math.hypot(ref[0] - origin[0], ref[1] - origin[1]);
-		const d1 = Math.hypot(cursor[0] - origin[0], cursor[1] - origin[1]);
-		const scale = d0 > 1e-9 ? d1 / d0 : 1;
-		return (point) => [
-			origin[0] + (point[0] - origin[0]) * scale,
-			origin[1] + (point[1] - origin[1]) * scale,
-			origin[2] + (point[2] - origin[2]) * scale,
-		];
-	}
-	return identity;
+	return preview.transformPointsForPreviewKind(previewKind, params);
 }
 
 function previewKindUsesTopologyWireframe(previewKind: string): boolean {
@@ -502,7 +454,7 @@ function topologyVertexPoint(vertices: Record<string, VertexRecord>, id: string)
 }
 
 function topologyEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRecord): readonly Vec3[] {
-	return edgeSamplePoints(vertices, edge, 32);
+	return scenePreview().edgeSamplePoints(vertices, edge, 32);
 }
 
 function topologyFacePoints(
@@ -662,7 +614,7 @@ function intersectCellAabbs(topo: TopologyGraph, cellIds: readonly string[]): { 
 	for (const cellId of cellIds) {
 		const cell = topo.cells[cellId];
 		if (!cell) continue;
-		const aabb = topologyCellAabb(topo, cell);
+		const aabb = scenePreview().topologyCellAabb(topo, cell);
 		if (!aabb) continue;
 		if (!hit) {
 			hit = aabb;
@@ -757,7 +709,7 @@ export function createSpatialPickTargets(
 	const targets: SpatialPickTarget[] = [];
 	if (topo) {
 		for (const anchor of topologyRecords(buckets.anchors)) {
-			targets.push({ kind: "anchor", id: anchor.id, point: evaluateAnchorPosition(topo, anchor) });
+			targets.push({ kind: "anchor", id: anchor.id, point: scenePreview().evaluateAnchorPosition(topo, anchor) });
 		}
 	}
 	for (const vertex of topologyRecords(buckets.vertices)) {
@@ -1167,8 +1119,8 @@ function PreviewItem({
 	if (previewKind === "arc" && points.length >= 2 && cursor) {
 		const center = points[0]!;
 		const start = points[1]!;
-		const arcEnd = arcEndOnCircle(center, start, cursor);
-		const arcPts = arcSamplePoints(center, start, arcEnd, 64);
+		const arcEnd = scenePreview().arcEndOnCircle(center, start, cursor);
+		const arcPts = scenePreview().arcSamplePoints(center, start, arcEnd, 64);
 		if (arcPts.length >= 2) {
 			return (
 				<group>
@@ -1880,6 +1832,7 @@ export function InteractionCanvas({ children }: InteractionCanvasProps): ReactNo
 }
 
 export interface InteractionSpatialViewProps {
+	readonly previewKernel?: SpatialPreviewKernel;
 	readonly snapshot: InteractionSnapshot;
 	readonly onGroundPick?: (point: Vec3, event: InteractionEvent) => void;
 	/** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
@@ -1905,6 +1858,7 @@ export interface InteractionSpatialViewProps {
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
 export function InteractionSpatialView({
+	previewKernel = r3fPreviewKernel,
 	snapshot,
 	onGroundPick,
 	onScenePointerMove,
