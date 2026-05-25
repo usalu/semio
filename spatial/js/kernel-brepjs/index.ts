@@ -16,6 +16,7 @@ import {
 	cutAll,
 	extrude,
 	face,
+	getVertices,
 	initFromOC,
 	intersect,
 	isOk,
@@ -27,13 +28,15 @@ import {
 	measureVolume,
 	mesh,
 	offsetFace,
+	shape,
 	sphere,
 	threePointArc,
 	unwrap,
 	vertex as brepVertex,
+	vertexPosition,
 	wireLoop,
 } from "brepjs";
-import type { Edge, OrientedFace, ValidSolid } from "brepjs";
+import type { Edge, Face, OrientedFace, ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
 	applyTopologyDiff,

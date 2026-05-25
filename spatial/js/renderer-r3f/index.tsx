@@ -1518,7 +1518,9 @@ function pointerModifiersFromNativeEvent(event: PointerEvent): InteractionEvent[
 	};
 }
 
-function spatialSelectionModeFromModifiers(modifiers: InteractionEvent["modifiers"] = {}): SpatialSelectionMode {
+function spatialSelectionModeFromModifiers(
+	modifiers: { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean } = {},
+): SpatialSelectionMode {
 	if (modifiers.shift && modifiers.ctrl) return "invertive";
 	if (modifiers.shift) return "additive";
 	if (modifiers.ctrl) return "subtractive";
@@ -1930,6 +1932,8 @@ export function SpatialPickGeometryLayer({
 	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
+	selectedTargetKeys,
+	hostSelectionEnabled = false,
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly viewKind?: SpatialPickViewKind;
@@ -2430,12 +2434,12 @@ function replEscapeAction(state: {
 	return "none";
 }
 
-function replSelectionEvent(selection: SelectionTarget, point?: Vec3): InteractionEvent {
-	return point ? { kind: "selection.changed", targets: [selection], point, modifiers: {} } : { kind: "selection.changed", targets: [selection], modifiers: {} };
+function replSelectionEvent(selection: readonly SelectionTarget[], point?: Vec3): InteractionEvent {
+	return point ? { kind: "selection.changed", targets: selection, point, modifiers: {} } : { kind: "selection.changed", targets: selection, modifiers: {} };
 }
 
-function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: SelectionTarget | null): selection is SelectionTarget {
-	return Boolean(selection && accept.includes(selection.kind));
+function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: readonly SelectionTarget[]): SelectionTarget[] {
+	return selection.filter((target) => accept.includes(target.kind));
 }
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
@@ -2515,21 +2519,38 @@ export function InteractionRepl({
 	);
 	const [analyticToggles, setAnalyticToggles] = useState(() => defaultSpatialAnalyticToggles());
 	const [pickViewKind, setPickViewKind] = useState<SpatialPickViewKind>("raw");
+	const [selectionMethod, setSelectionMethod] = useState<SpatialSelectionMethod>("rectangle");
 	const [derivedRevision, setDerivedRevision] = useState(0);
+	const [dragSelection, setDragSelection] = useState<SpatialDragSelectionState | null>(null);
 	const [selectionMenu, setSelectionMenu] = useState<SpatialSelectionRequest | null>(null);
 	const [hoveredPickKey, setHoveredPickKey] = useState<string | null>(null);
-	const [selectedPickKey, setSelectedPickKey] = useState<string | null>(null);
-	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
+	const [selectedSelectionTargets, setSelectedSelectionTargets] = useState<SelectionTarget[]>([]);
 	const [interactionMenuOpen, setInteractionMenuOpen] = useState(false);
 	const [lastFinalizedInteractionId, setLastFinalizedInteractionId] = useState("");
+	const [canvasBinding, setCanvasBinding] = useState<{ readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement } | null>(null);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
 	const suppressAutoStartOnceRef = useRef(false);
+	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
+	const dragCleanupRef = useRef<(() => void) | null>(null);
+	const selectedPickKeys = useMemo(() => new Set(selectedSelectionTargets.map(spatialSelectionTargetKey)), [selectedSelectionTargets]);
+	const selectedPickKey = selectedSelectionTargets[0] ? spatialSelectionTargetKey(selectedSelectionTargets[0]) : null;
+	const topologyPreviewTransform = useMemo(() => topologyPreviewTransformFromDisplay(mergedDisplay), [mergedDisplay]);
+	const pickGeometryRevision =
+		geometry && typeof geometry === "object" && "revision" in geometry
+			? Number((geometry as { revision?: unknown }).revision)
+			: 0;
+	const pickTargets = useMemo(() => createSpatialPickTargets(geometry, derived), [geometry, pickGeometryRevision, derived, derivedRevision]);
+	const viewPickTargets = useMemo(() => filterSpatialPickTargetsByView(pickTargets, pickViewKind), [pickTargets, pickViewKind]);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
 
 	const dismissReplChrome = useCallback(() => {
+		dragCleanupRef.current?.();
+		dragCleanupRef.current = null;
+		dragSelectionRef.current = null;
+		setDragSelection(null);
 		setCmdLine("");
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
@@ -2541,8 +2562,7 @@ export function InteractionRepl({
 		if (!aborted && !interactionId) return false;
 		if (!aborted) rt.cancel();
 		suppressAutoStartOnceRef.current = true;
-		setSelectedPickKey(null);
-		setSelectedSelectionTarget(null);
+		setSelectedSelectionTargets([]);
 		dismissReplChrome();
 		if (interactionId) onInteractionId("");
 		return true;
@@ -2569,8 +2589,9 @@ export function InteractionRepl({
 
 	const startRuntime = useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
-		if (replSelectionAccepted(accept, selectedSelectionTarget)) await rt.send(replSelectionEvent(selectedSelectionTarget));
-	}, [rt, selectedSelectionTarget]);
+		const accepted = replSelectionAccepted(accept, selectedSelectionTargets);
+		if (accepted.length > 0) await rt.send(replSelectionEvent(accepted));
+	}, [rt, selectedSelectionTargets]);
 
 	useEffect(() => {
 		if (suppressAutoStartOnceRef.current) {
@@ -2578,8 +2599,9 @@ export function InteractionRepl({
 			return;
 		}
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
-		if (replSelectionAccepted(accept, selectedSelectionTarget)) void rt.send(replSelectionEvent(selectedSelectionTarget));
-	}, [rt, selectedSelectionTarget]);
+		const accepted = replSelectionAccepted(accept, selectedSelectionTargets);
+		if (accepted.length > 0) void rt.send(replSelectionEvent(accepted));
+	}, [rt, selectedSelectionTargets]);
 
 	useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
@@ -2610,8 +2632,7 @@ export function InteractionRepl({
 	}, [geometry, snapshot.state, derivedRevision]);
 
 	useEffect(() => {
-		setSelectedPickKey(null);
-		setSelectedSelectionTarget(null);
+		setSelectedSelectionTargets([]);
 	}, [geometry, derivedRevision]);
 
 	useEffect(() => {
@@ -2619,8 +2640,7 @@ export function InteractionRepl({
 		setActiveIndex(0);
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
-		setSelectedPickKey(null);
-		setSelectedSelectionTarget(null);
+		setSelectedSelectionTargets([]);
 		setInteractionMenuOpen(false);
 	}, [interactionId, rt]);
 
@@ -2651,28 +2671,33 @@ export function InteractionRepl({
 		}
 	}, [activeSelectionAccept, activePickViewKinds, pickViewKind]);
 
-	const dispatchSelectionTarget = useCallback(
-		(target: SpatialPickTarget, modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
-			const selection = spatialSelectionTarget(target);
-			setSelectionMenu(null);
-			setHoveredPickKey(null);
-			setSelectedPickKey(spatialSelectionTargetKey(selection));
-			setSelectedSelectionTarget(selection);
-			void rt.send({ ...replSelectionEvent(selection, point), modifiers });
+	const commitSelectionState = useCallback((selection: readonly SelectionTarget[]) => {
+		setSelectionMenu(null);
+		setHoveredPickKey(null);
+		setSelectedSelectionTargets([...selection]);
+	}, []);
+
+	const dispatchSelectionTargets = useCallback(
+		(targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
+			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
+			const modeModifiers = (modifiers ?? {}) as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean };
+			const nextSelection = mergeSelectionTargets(selectedSelectionTargets, picked, spatialSelectionModeFromModifiers(modeModifiers));
+			commitSelectionState(nextSelection);
+			if (picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
-		[rt],
+		[commitSelectionState, rt, selectedSelectionTargets],
 	);
 
 	const onSelectionRequest = useCallback(
 		(request: SpatialSelectionRequest) => {
 			if (request.targets.length === 1) {
-				dispatchSelectionTarget(request.targets[0]!, request.modifiers, request.point);
+				dispatchSelectionTargets([request.targets[0]!], request.modifiers, request.point);
 				return;
 			}
 			setSelectionMenu(request);
 			setHoveredPickKey(request.targets[0] ? spatialPickTargetKey(request.targets[0]) : null);
 		},
-		[dispatchSelectionTarget],
+		[dispatchSelectionTargets],
 	);
 
 	const onHoverTarget = useCallback((target: SpatialPickTarget | null) => {
@@ -2695,16 +2720,142 @@ export function InteractionRepl({
 						kind === "surface" || kind === "part"
 							? { kind, id: snapEv.id, editable: false }
 							: { kind, id: snapEv.id, editable: true };
-					setSelectedPickKey(spatialSelectionTargetKey(selection));
-					setSelectedSelectionTarget(selection);
-					void rt.send({ ...replSelectionEvent(selection, (ev as { point?: Vec3 }).point), modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
+					const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
+					commitSelectionState(mergeSelectionTargets(selectedSelectionTargets, [selection], spatialSelectionModeFromModifiers(modifiers)));
+					void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
 					return;
 				}
 			}
 			if (ev.kind === "pointer.down" || ev.kind === "pointer.move" || ev.kind === "contextmenu") void rt.send(ev);
 		},
-		[rt, activeSelectionAccept],
+		[rt, activeSelectionAccept, commitSelectionState, selectedSelectionTargets],
 	);
+
+	useEffect(() => {
+		const canvas = canvasBinding?.domElement;
+		const camera = canvasBinding?.camera;
+		if (!canvas || !camera || activeSelectionAccept.length === 0) return;
+		const clearDragSelection = () => {
+			dragCleanupRef.current = null;
+			dragSelectionRef.current = null;
+			setDragSelection(null);
+		};
+		const beginDragSelection = (event: PointerEvent) => {
+			if (event.button !== 0) return;
+			dragCleanupRef.current?.();
+			const rect = canvas.getBoundingClientRect();
+			const startClient = { x: event.clientX, y: event.clientY };
+			const initial: SpatialDragSelectionState = {
+				method: selectionMethod,
+				coverage: "full",
+				startClient,
+				currentClient: startClient,
+				path: [startClient],
+				modifiers: pointerModifiersFromNativeEvent(event),
+			};
+			dragSelectionRef.current = initial;
+			const moveSelection = (moveEvent: PointerEvent) => {
+				const current = dragSelectionRef.current;
+				if (!current) return;
+				const nextClient = { x: moveEvent.clientX, y: moveEvent.clientY };
+				const nextPath =
+					current.method === "lasso" && dragDistance(current.path[current.path.length - 1]!, nextClient) >= 2
+						? [...current.path, nextClient]
+						: current.method === "lasso"
+							? current.path
+							: [current.startClient, nextClient];
+				const nextState: SpatialDragSelectionState = {
+					...current,
+					currentClient: nextClient,
+					path: nextPath,
+					coverage: spatialSelectionCoverageFromPath(nextPath),
+					modifiers: pointerModifiersFromNativeEvent(moveEvent),
+				};
+				dragSelectionRef.current = nextState;
+				if (dragDistance(nextState.startClient, nextClient) >= 4) setDragSelection(nextState);
+			};
+			const finishSelection = (upEvent: PointerEvent) => {
+				window.removeEventListener("pointermove", moveSelection, true);
+				window.removeEventListener("pointerup", finishSelection, true);
+				const current = dragSelectionRef.current;
+				clearDragSelection();
+				if (!current) return;
+				const finalState: SpatialDragSelectionState = {
+					...current,
+					currentClient: { x: upEvent.clientX, y: upEvent.clientY },
+					path:
+						current.method === "lasso"
+							? [...current.path, { x: upEvent.clientX, y: upEvent.clientY }]
+							: [current.startClient, { x: upEvent.clientX, y: upEvent.clientY }],
+					modifiers: pointerModifiersFromNativeEvent(upEvent),
+				};
+				const distance = dragDistance(finalState.startClient, finalState.currentClient);
+				if (distance < 4) {
+					const candidates = spatialPickTargetsFromClientPoint(
+						finalState.currentClient,
+						camera,
+						rect,
+						viewPickTargets,
+						activeSelectionAccept,
+						selectionKindToggles,
+						analyticToggles,
+					);
+					if (candidates.length === 0) return;
+					onSelectionRequest({
+						targets: candidates,
+						point: candidates[0]!.point,
+						client: finalState.currentClient,
+						modifiers: finalState.modifiers,
+					});
+					return;
+				}
+				const targets = spatialPickTargetsFromScreenSelection(
+					{ ...finalState, coverage: spatialSelectionCoverageFromPath(finalState.path) },
+					viewPickTargets,
+					camera,
+					canvas.getBoundingClientRect(),
+					activeSelectionAccept,
+					selectionKindToggles,
+					analyticToggles,
+					topologyPreviewTransform,
+				);
+				if (targets.length === 0) {
+					if (
+						spatialSelectionModeFromModifiers(
+							finalState.modifiers as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean },
+						) === "default"
+					) {
+						commitSelectionState([]);
+					}
+					return;
+				}
+				dispatchSelectionTargets(targets, finalState.modifiers);
+			};
+			dragCleanupRef.current = () => {
+				window.removeEventListener("pointermove", moveSelection, true);
+				window.removeEventListener("pointerup", finishSelection, true);
+				clearDragSelection();
+			};
+			window.addEventListener("pointermove", moveSelection, true);
+			window.addEventListener("pointerup", finishSelection, true);
+		};
+		canvas.addEventListener("pointerdown", beginDragSelection, true);
+		return () => {
+			dragCleanupRef.current?.();
+			canvas.removeEventListener("pointerdown", beginDragSelection, true);
+		};
+	}, [
+		activeSelectionAccept,
+		analyticToggles,
+		canvasBinding,
+		commitSelectionState,
+		dispatchSelectionTargets,
+		onSelectionRequest,
+		selectionKindToggles,
+		selectionMethod,
+		topologyPreviewTransform,
+		viewPickTargets,
+	]);
 
 	const dispatchTransition = useCallback(
 		(row: InteractionKeybindRow) => {
@@ -2858,7 +3009,7 @@ export function InteractionRepl({
 	);
 
 	useEffect(() => {
-		const onWinCapture = (e: KeyboardEvent) => {
+		const onWinCapture = (e: globalThis.KeyboardEvent) => {
 			if (e.defaultPrevented || e.isComposing) return;
 			const t = e.target;
 			const one = e.key.length === 1 ? e.key : "";
@@ -2939,6 +3090,11 @@ export function InteractionRepl({
 		: false;
 
 	const lr = snapshot.lastResponse;
+	const dragOverlayRect = canvasBinding?.domElement.getBoundingClientRect() ?? null;
+	const dragOverlayPoints =
+		dragSelection && dragOverlayRect
+			? dragSelection.path.map((point) => ({ x: point.x - dragOverlayRect.left, y: point.y - dragOverlayRect.top }))
+			: [];
 
 	return (
 		<div
@@ -2950,8 +3106,8 @@ export function InteractionRepl({
 				background: "#080810",
 			}}
 		>
-			<div style={{ flex: 1, minWidth: 0 }}>
-				<InteractionCanvas>
+			<div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+				<InteractionCanvas onCanvasReady={setCanvasBinding}>
 					<InteractionSpatialView
 						previewKernel={rt.previewKernel()}
 						snapshot={snapshot}
@@ -2969,10 +3125,45 @@ export function InteractionRepl({
 						analyticToggles={analyticToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
+						selectedTargetKeys={selectedPickKeys}
+						hostSelectionEnabled={true}
 						onSelectionRequest={onSelectionRequest}
 						onHoverTarget={onHoverTarget}
 					/>
 				</InteractionCanvas>
+				{dragSelection && dragOverlayRect ? (
+					<svg
+						width="100%"
+						height="100%"
+						style={{
+							position: "absolute",
+							inset: 0,
+							pointerEvents: "none",
+							zIndex: 4,
+						}}
+					>
+						{dragSelection.method === "rectangle" ? (
+							<rect
+								x={Math.min(dragOverlayPoints[0]?.x ?? 0, dragOverlayPoints[1]?.x ?? 0)}
+								y={Math.min(dragOverlayPoints[0]?.y ?? 0, dragOverlayPoints[1]?.y ?? 0)}
+								width={Math.abs((dragOverlayPoints[1]?.x ?? 0) - (dragOverlayPoints[0]?.x ?? 0))}
+								height={Math.abs((dragOverlayPoints[1]?.y ?? 0) - (dragOverlayPoints[0]?.y ?? 0))}
+								fill="rgba(102, 232, 255, 0.12)"
+								stroke={dragSelection.coverage === "partial" ? "#66e8ff" : "#ffdf7a"}
+								strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
+								strokeWidth={1.5}
+							/>
+						) : (
+							<polygon
+								points={dragOverlayPoints.map((point) => `${point.x},${point.y}`).join(" ")}
+								fill="rgba(102, 232, 255, 0.12)"
+								stroke={dragSelection.coverage === "partial" ? "#66e8ff" : "#ffdf7a"}
+								strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
+								strokeWidth={1.5}
+							/>
+						)}
+					</svg>
+				) : null}
 				{selectionMenu ? (
 					<div
 						onPointerDown={(e) => e.stopPropagation()}
@@ -3011,7 +3202,7 @@ export function InteractionRepl({
 									onPointerDown={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
-										dispatchSelectionTarget(target, selectionMenu.modifiers, selectionMenu.point);
+										dispatchSelectionTargets([target], selectionMenu.modifiers, selectionMenu.point);
 									}}
 									style={{
 										display: "block",
@@ -3256,7 +3447,7 @@ export function InteractionRepl({
 										setPickViewKind(viewKind);
 										setSelectionMenu(null);
 										setHoveredPickKey(null);
-										setSelectedPickKey(null);
+										setSelectedSelectionTargets([]);
 									}}
 									style={{
 										padding: "5px 8px",
@@ -3270,6 +3461,31 @@ export function InteractionRepl({
 									}}
 								>
 									{viewKind}
+								</button>
+							);
+						})}
+					</div>
+					<span>Selection method</span>
+					<div style={{ display: "flex", gap: 6 }}>
+						{(["rectangle", "lasso"] as const).map((method) => {
+							const active = selectionMethod === method;
+							return (
+								<button
+									key={method}
+									type="button"
+									onClick={() => setSelectionMethod(method)}
+									style={{
+										padding: "5px 8px",
+										borderRadius: 999,
+										border: active ? "1px solid #77aaff" : "1px solid #2a2a3a",
+										background: active ? "#1f3656" : "#12121c",
+										color: "#e8e8f0",
+										cursor: "pointer",
+										fontSize: 12,
+										textTransform: "capitalize",
+									}}
+								>
+									{method}
 								</button>
 							);
 						})}
@@ -3312,7 +3528,9 @@ export function InteractionRepl({
 											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
 											setSelectionMenu(null);
 											setHoveredPickKey(null);
-											if (!checked) setSelectedPickKey((key) => (key?.startsWith(`${kind}:`) ? null : key));
+											if (!checked) {
+												setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== kind));
+											}
 										}}
 									/>
 									{kind}
@@ -3350,11 +3568,7 @@ export function InteractionRepl({
 												setSelectionMenu(null);
 												setHoveredPickKey(null);
 												if (!checked) {
-													setSelectedPickKey((key) =>
-														key?.startsWith("surface:") && selectedSelectionTarget?.kind === "surface"
-															? null
-															: key,
-													);
+													setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== "surface"));
 												}
 											}}
 										/>
@@ -3423,7 +3637,7 @@ export function InteractionRepl({
 												setSelectionMenu(null);
 												setHoveredPickKey(null);
 												if (!checked) {
-													setSelectedPickKey((key) => (key?.startsWith("part:") ? null : key));
+													setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== "part"));
 												}
 											}}
 										/>
@@ -3650,8 +3864,8 @@ if (import.meta.vitest) {
 				(t) => t.kind === "part",
 			);
 			expect(partTargets.filter((t) => t.overlap === "difference")).toHaveLength(2);
-			expect(partTargets.some((t) => t.id === "part-host-difference")).toBe(true);
-			expect(partTargets.some((t) => t.id === "part-punch-difference")).toBe(true);
+			expect(partTargets.some((t) => t.id === "part:part-host-difference")).toBe(true);
+			expect(partTargets.some((t) => t.id === "part:part-punch-difference")).toBe(true);
 			expect(partTargets.some((t) => t.overlap === "intersection")).toBe(true);
 			expect(partTargets.every((t) => !t.id.includes("difference-before"))).toBe(true);
 		});
@@ -3764,9 +3978,34 @@ if (import.meta.vitest) {
 
 		it("carries host selection into interaction selection events", () => {
 			const selection: SelectionTarget = { kind: "wire", id: "w0", editable: true };
-			expect(replSelectionAccepted(["wire"], selection)).toBe(true);
-			expect(replSelectionAccepted(["face"], selection)).toBe(false);
-			expect(replSelectionEvent(selection)).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
+			expect(replSelectionAccepted(["wire"], [selection])).toEqual([selection]);
+			expect(replSelectionAccepted(["face"], [selection])).toEqual([]);
+			expect(replSelectionEvent([selection])).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
+		});
+
+		it("merges host selections according to modifiers", () => {
+			const current: SelectionTarget[] = [{ kind: "wire", id: "w0", editable: true }];
+			const next: SelectionTarget[] = [{ kind: "wire", id: "w1", editable: true }];
+			expect(mergeSelectionTargets(current, next, spatialSelectionModeFromModifiers({}))).toEqual(next);
+			expect(mergeSelectionTargets(current, next, spatialSelectionModeFromModifiers({ shift: true }))).toEqual([...current, ...next]);
+			expect(
+				mergeSelectionTargets([...current, ...next], next, spatialSelectionModeFromModifiers({ ctrl: true })),
+			).toEqual(current);
+			expect(
+				mergeSelectionTargets(
+					[...current, ...next],
+					[{ kind: "wire", id: "w0", editable: true }, { kind: "wire", id: "w2", editable: true }],
+					spatialSelectionModeFromModifiers({ shift: true, ctrl: true }),
+				),
+			).toEqual([
+				{ kind: "wire", id: "w1", editable: true },
+				{ kind: "wire", id: "w2", editable: true },
+			]);
+		});
+
+		it("switches drag coverage by initial horizontal direction", () => {
+			expect(spatialSelectionCoverageFromPath([{ x: 10, y: 10 }, { x: 20, y: 12 }])).toBe("full");
+			expect(spatialSelectionCoverageFromPath([{ x: 20, y: 10 }, { x: 10, y: 12 }])).toBe("partial");
 		});
 	});
 
