@@ -94,6 +94,7 @@ export type ClusterRef = string & { readonly __brand: "ClusterRef" };
 /** @emoji 🪞 Derived semantic ids (`Surface`, `Part`) — never directly mutated by factories. */
 export type SurfaceRef = string & { readonly __brand: "SurfaceRef" };
 export type PartRef = string & { readonly __brand: "PartRef" };
+export type VolumeRef = string & { readonly __brand: "VolumeRef" };
 
 /** @emoji 🧱 Editable topology kinds from `spatial/AGENTS.md`. */
 export type EditableEntityKind =
@@ -107,8 +108,8 @@ export type EditableEntityKind =
 	| "cellComplex"
 	| "cluster";
 
-/** @emoji 🪞 Derived topology kinds. */
-export type DerivedEntityKind = "surface" | "part";
+/** @emoji 🪞 Derived topology kinds (query: `CALL view.*` + `UNWIND` only). */
+export type DerivedEntityKind = "surface" | "part" | "volume";
 
 /** @emoji 🧭 Any addressable topology or derived view kind. */
 export type TopologyEntityKind = EditableEntityKind | DerivedEntityKind;
@@ -137,6 +138,7 @@ const TOPOLOGY_ENTITY_KINDS = new Set<string>([
 	"cluster",
 	"surface",
 	"part",
+	"volume",
 ]);
 
 /** @emoji 🪪 One picked topology or derived view target for `selection.changed`. */
@@ -1235,6 +1237,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
 	computeSurfaceViews(topo: TopologyGraph): SurfaceView[] | Promise<SurfaceView[]>;
 	computePartViews(topo: TopologyGraph): PartView[] | Promise<PartView[]>;
+	computeVolumeViews(topo: TopologyGraph): VolumeView[] | Promise<VolumeView[]>;
 	executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }>;
 	extrudeWire(input: { wireId: string; distance: number; direction: Vec3; topology: TopologyGraph }): Promise<CellRef>;
 	offsetFaces(input: { faceIds: readonly string[]; distance: number; topology: TopologyGraph }): Promise<void>;
@@ -1302,7 +1305,12 @@ export interface ActionResult<TData = unknown> {
 
 export type ActionFn<TParams = Record<string, unknown>, TData = unknown> = (
 	params: TParams,
-	ctx: { readonly kernel: SpatialKernel; readonly preview: SpatialPreviewKernel; readonly topology: TopologyGraph },
+	ctx: {
+		readonly kernel: SpatialKernel;
+		readonly preview: SpatialPreviewKernel;
+		readonly topology: TopologyGraph;
+		readonly derived?: DerivedViewService;
+	},
 ) => Promise<ActionResult<TData>> | ActionResult<TData>;
 
 /** @emoji 🧩 Registerable pure spatial action (`id` is stable registry key). */
@@ -1635,10 +1643,13 @@ function builtinActionDefs(): ActionDef[] {
 			if (kernel.createBoxFromCornersDiff) {
 				const r = await kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
 				cell = r.cell;
-			} else {
-				cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
+				return {
+					diff: r.diff,
+					data: { cell },
+				};
 			}
-			return { diff: preview.boxTopologyDiff({ cornerA, cornerB, height }, cell) };
+			cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
+			return { diff: preview.boxTopologyDiff({ cornerA, cornerB, height }, cell), data: { cell } };
 		},
 	};
 	const primitiveCreateBoxFrom3Points: ActionDef = {
@@ -2006,6 +2017,27 @@ function builtinActionDefs(): ActionDef[] {
 			return { diff };
 		},
 	};
+	const viewSurfaces: ActionDef = {
+		id: "view.surfaces",
+		run: async (_, ctx) => {
+			const data = await Promise.resolve(ctx.kernel.computeSurfaceViews(ctx.topology));
+			return { data };
+		},
+	};
+	const viewParts: ActionDef = {
+		id: "view.parts",
+		run: async (_, ctx) => {
+			const data = await Promise.resolve(ctx.kernel.computePartViews(ctx.topology));
+			return { data };
+		},
+	};
+	const viewVolumes: ActionDef = {
+		id: "view.volumes",
+		run: async (_, ctx) => {
+			const data = await Promise.resolve(ctx.kernel.computeVolumeViews(ctx.topology));
+			return { data };
+		},
+	};
 	const featureTransformCopy: ActionDef = {
 		id: "transform.copy",
 		run: (params, ctx) => {
@@ -2093,6 +2125,9 @@ function builtinActionDefs(): ActionDef[] {
 	};
 
 	return [
+		viewSurfaces,
+		viewParts,
+		viewVolumes,
 		entityCreateAnchor,
 		boxAabbFromDiagonalCorners,
 		boxTripletRubber,
@@ -2147,17 +2182,28 @@ export interface PartView {
 	/** @emoji 🪞 Pick/display hull for the semantic cell partition (not the whole source cell). */
 	readonly regionPoints?: readonly Vec3[];
 }
-/** @emoji 🪞 Computes derived `SurfaceView` / `PartView` via optional kernel booleans. */
+
+/** @emoji 🪞 Semantic `Volume` view: boolean union of closed shells in a cell group. */
+export interface VolumeView {
+	readonly id: VolumeRef;
+	readonly sourceCellIds: readonly CellRef[];
+	readonly volume: number;
+	readonly regionPoints?: readonly Vec3[];
+}
+
+/** @emoji 🪞 Computes derived `SurfaceView` / `PartView` / `VolumeView` via optional kernel booleans. */
 export class DerivedViewService {
 	private surfaceRevision = -1;
 	private partRevision = -1;
+	private volumeRevision = -1;
 	private surfaces: SurfaceView[] = [];
 	private parts: PartView[] = [];
+	private volumes: VolumeView[] = [];
 	private refreshGen = 0;
 
 	constructor(private readonly kernel: SpatialKernel) {}
 
-	/** @emoji 🪞 Recomputes surfaces and parts (awaits kernel booleans when present). */
+	/** @emoji 🪞 Recomputes surfaces, parts, and volumes (awaits kernel booleans when present). */
 	async refresh(topo: TopologyGraph): Promise<void> {
 		const gen = ++this.refreshGen;
 		this.surfaces = await Promise.resolve(this.kernel.computeSurfaceViews(topo));
@@ -2166,6 +2212,9 @@ export class DerivedViewService {
 		this.parts = await Promise.resolve(this.kernel.computePartViews(topo));
 		if (gen !== this.refreshGen) return;
 		this.partRevision = topo.revision;
+		this.volumes = await Promise.resolve(this.kernel.computeVolumeViews(topo));
+		if (gen !== this.refreshGen) return;
+		this.volumeRevision = topo.revision;
 	}
 
 	/** @emoji 🪞 Returns cached surfaces for `topo.revision` (empty until `refresh` catches up). */
@@ -2177,6 +2226,12 @@ export class DerivedViewService {
 	/** @emoji 🪞 Returns cached parts for `topo.revision` (empty until `refresh` catches up). */
 	computeParts(topo: TopologyGraph): PartView[] {
 		if (this.partRevision === topo.revision) return this.parts;
+		return [];
+	}
+
+	/** @emoji 🪞 Returns cached volumes for `topo.revision` (empty until `refresh` catches up). */
+	computeVolumes(topo: TopologyGraph): VolumeView[] {
+		if (this.volumeRevision === topo.revision) return this.volumes;
 		return [];
 	}
 

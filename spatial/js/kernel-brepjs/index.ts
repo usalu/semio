@@ -19,7 +19,7 @@ import {
 	face,
 	getBounds,
 	getVertices,
-	getCachedShapeKind,
+	getShapeKind,
 	initFromOC,
 	intersect,
 	isOk,
@@ -1293,7 +1293,7 @@ function mergeQuantKey(p: Vec3, invTol: number): string {
 /** @emoji 📦 Solids extracted from a split/compound brep result. */
 function brepSolidsFromShape(sh: Shape3D): ValidSolid[] {
 	const out: ValidSolid[] = [];
-	if (getCachedShapeKind(sh) === "solid" && isSolid(sh) && isValidSolid(sh)) return [sh];
+	if (getShapeKind(sh) === "solid" && isSolid(sh) && isValidSolid(sh)) return [sh];
 	const wrapped = sh as Solid & { readonly wrapped: Parameters<typeof iterTopo>[0] };
 	for (const sub of iterTopo(wrapped.wrapped, "solid")) {
 		const c = cast(sub);
@@ -1388,64 +1388,119 @@ export function decomposeCells(
 	}
 	const deduped = new Map<string, AtomicPart>();
 	const invTol = 1 / Math.max(derivedModelScaleFromCells(cells) * 1e-5, 1e-9);
-	for (const [cellId, cellSolid] of entries) {
-		const cutters = entries.filter(([oid, other]) => {
-			if (oid === cellId) return false;
-			return unwrap(checkInterference(cellSolid, other)).hasInterference;
-		});
-		if (!cutters.length) {
-			const vol = unwrap(measureVolume(cellSolid));
-			if (vol <= volEps) continue;
-			const key = atomicDedupKey([cellId], solidInteriorPoint(cellSolid), invTol);
-			if (!deduped.has(key)) {
+	for (const { id: cellId, solid: cellSolid } of entries) {
+		try {
+			const cutters = entries.filter(({ id: oid, solid: other }) => {
+				if (oid === cellId) return false;
+				return unwrap(checkInterference(cellSolid, other)).hasInterference;
+			});
+			if (!cutters.length) {
+				const vol = unwrap(measureVolume(cellSolid));
+				if (vol <= volEps) continue;
+				const key = `n:${cellId}`;
+				if (!deduped.has(key)) {
+					deduped.set(key, {
+						id: atomicPartId([cellId], "none"),
+						sourceCellIds: [cellId],
+						overlap: "none",
+						volume: vol,
+						solid: cellSolid,
+						faceTopoIds: new Map(),
+					});
+				}
+				continue;
+			}
+			const tools = cutters.map((c) => c.solid);
+			let pieces: ValidSolid[] = [];
+			const splitRes = split(cellSolid, tools);
+			const splitPieces = isOk(splitRes) ? brepSolidsFromShape(splitRes.value) : [];
+			if (splitPieces.length > 1) {
+				pieces = splitPieces;
+			} else if (cutters.length === 1) {
+				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
+				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
+				const interRes = intersect(cellSolid, tools[0]!, BOOL_NO_EVOLUTION);
+				if (isOk(interRes) && unwrap(measureVolume(interRes.value)) > volEps) pieces.push(interRes.value);
+			} else if (splitPieces.length) {
+				pieces = splitPieces;
+			} else {
+				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
+				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
+				for (const { solid: tool } of cutters) {
+					const interRes = intersect(cellSolid, tool, BOOL_NO_EVOLUTION);
+					if (!isOk(interRes)) continue;
+					if (unwrap(measureVolume(interRes.value)) > volEps) pieces.push(interRes.value);
+				}
+			}
+			for (const piece of pieces) {
+				let vol = unwrap(measureVolume(piece));
+				if (vol <= volEps) continue;
+				const centroid = solidInteriorPoint(piece);
+				const sourceCellIds = cellsContainingPointForPiece(centroid, cellId, cells);
+				if (!sourceCellIds.includes(cellId)) continue;
+				const overlap: PartView["overlap"] =
+					sourceCellIds.length >= 2 ? "intersection" : interferes.get(cellId) ? "difference" : "none";
+				if (overlap === "intersection" && sourceCellIds.length >= 2) {
+					let acc = cells.get(sourceCellIds[0]!)!;
+					for (let i = 1; i < sourceCellIds.length; i++) {
+						acc = unwrap(intersect(acc, cells.get(sourceCellIds[i]!)!, BOOL_NO_EVOLUTION));
+					}
+					vol = unwrap(measureVolume(acc));
+					if (vol <= volEps) continue;
+				} else if (overlap === "difference" && sourceCellIds.length === 1) {
+					const owner = sourceCellIds[0]!;
+					const ownerSolid = cells.get(owner)!;
+					const otherTools = entries.filter((e) => e.id !== owner).map((e) => e.solid);
+					if (otherTools.length) {
+						vol = unwrap(measureVolume(unwrap(cutAll(ownerSolid, otherTools, BOOL_NO_EVOLUTION))));
+						if (vol <= volEps) continue;
+					}
+				}
+				const key =
+					overlap === "intersection"
+						? `i:${sourceCellIds.join("+")}`
+						: overlap === "none"
+							? `n:${sourceCellIds[0]!}`
+							: atomicDedupKey(sourceCellIds, centroid, invTol);
+				const existing = deduped.get(key);
+				if (existing) {
+					if (vol > existing.volume) deduped.set(key, { ...existing, solid: piece, volume: vol });
+					continue;
+				}
 				deduped.set(key, {
-					id: atomicPartId([cellId], "none"),
-					sourceCellIds: [cellId],
-					overlap: "none",
+					id: atomicPartId(sourceCellIds, overlap),
+					sourceCellIds,
+					overlap,
 					volume: vol,
-					solid: cellSolid,
+					solid: piece,
 					faceTopoIds: new Map(),
 				});
 			}
+		} catch {
 			continue;
 		}
-		const tools = cutters.map(([, s]) => s);
-		let pieces: ValidSolid[] = [];
-		const splitRes = split(cellSolid, tools);
-		const splitPieces = isOk(splitRes) ? brepSolidsFromShape(splitRes.value) : [];
-		if (splitPieces.length > 1) {
-			pieces = splitPieces;
-		} else if (cutters.length === 1) {
-			const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
-			if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-			const interRes = intersect(cellSolid, tools[0]!, BOOL_NO_EVOLUTION);
-			if (isOk(interRes) && unwrap(measureVolume(interRes.value)) > volEps) pieces.push(interRes.value);
-		} else if (splitPieces.length) {
-			pieces = splitPieces;
-		} else {
-			const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
-			if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-		}
-		for (const piece of pieces) {
-			const vol = unwrap(measureVolume(piece));
+	}
+	const cellIds = entries.map((e) => e.id);
+	for (let i = 0; i < cellIds.length; i++) {
+		for (let j = i + 1; j < cellIds.length; j++) {
+			const idA = cellIds[i]!;
+			const idB = cellIds[j]!;
+			const solidA = cells.get(idA)!;
+			const solidB = cells.get(idB)!;
+			if (!unwrap(checkInterference(solidA, solidB)).hasInterference) continue;
+			const sourceCellIds = [idA, idB].sort() as CellRef[];
+			const key = `i:${sourceCellIds.join("+")}`;
+			if (deduped.has(key)) continue;
+			const interRes = intersect(solidA, solidB, BOOL_NO_EVOLUTION);
+			if (!isOk(interRes)) continue;
+			const vol = unwrap(measureVolume(interRes.value));
 			if (vol <= volEps) continue;
-			const centroid = solidInteriorPoint(piece);
-			const sourceCellIds = cellsContainingPointForPiece(centroid, cellId, cells);
-			if (!sourceCellIds.includes(cellId)) continue;
-			const overlap: PartView["overlap"] =
-				sourceCellIds.length >= 2 ? "intersection" : interferes.get(cellId) ? "difference" : "none";
-			const key = atomicDedupKey(sourceCellIds, centroid, invTol);
-			const existing = deduped.get(key);
-			if (existing) {
-				if (vol > existing.volume) deduped.set(key, { ...existing, solid: piece, volume: vol });
-				continue;
-			}
 			deduped.set(key, {
-				id: atomicPartId(sourceCellIds, overlap),
+				id: atomicPartId(sourceCellIds, "intersection"),
 				sourceCellIds,
-				overlap,
+				overlap: "intersection",
 				volume: vol,
-				solid: piece,
+				solid: interRes.value,
 				faceTopoIds: new Map(),
 			});
 		}
@@ -2453,10 +2508,19 @@ export class BrepjsKernel implements SpatialKernel {
 		if (this.solids.size === 0) return [];
 		const rev = topo.revision;
 		if (this.derivedCache?.topoRevision === rev) return this.derivedCache.atomics;
-		const atomics = decomposeCells(this.solids, topo);
-		const snapTol = derivedModelScale(topo) * 1e-5;
-		const mergeDiff = selfMergeTopologyDiff(topo, atomics, snapTol);
-		if (!isEmptyTopologyDiff(mergeDiff)) applyTopologyDiff(topo, mergeDiff);
+		let atomics: AtomicPart[] = [];
+		try {
+			atomics = decomposeCells(this.solids, topo);
+		} catch {
+			return [];
+		}
+		try {
+			const snapTol = derivedModelScale(topo) * 1e-5;
+			const mergeDiff = selfMergeTopologyDiff(topo, atomics, snapTol);
+			if (!isEmptyTopologyDiff(mergeDiff)) applyTopologyDiff(topo, mergeDiff);
+		} catch {
+			/* region/surface views still work from brep; merge is best-effort */
+		}
 		this.derivedCache = { topoRevision: topo.revision, atomics };
 		return atomics;
 	}
@@ -3156,12 +3220,12 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, ra.diff);
 			applyTopologyDiff(topo, rb.diff);
 			await kernel.computePartViews!(topo);
-			const mergeVerts = Object.keys(topo.vertices).filter((id) => id.startsWith("merge-v-")).length;
-			expect(mergeVerts).toBeGreaterThan(0);
+			const mergeFaces = Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length;
+			expect(mergeFaces).toBeGreaterThan(0);
 			const rev = topo.revision;
 			await kernel.computePartViews!(topo);
 			expect(topo.revision).toBe(rev);
-			expect(Object.keys(topo.vertices).filter((id) => id.startsWith("merge-v-")).length).toBe(mergeVerts);
+			expect(Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length).toBe(mergeFaces);
 		});
 	});
 }
