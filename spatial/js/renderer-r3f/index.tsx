@@ -1803,6 +1803,11 @@ function spatialSelectionTarget(target: SpatialPickTarget) {
 	return { kind: target.kind, id: target.id, editable: true };
 }
 
+/** @emoji 🎯 Host topology picking stays on while an interaction is idle or committed (palette selection alone must not hide targets). */
+export function replHostTopologyPickingEnabled(interactionActive: boolean): boolean {
+	return !interactionActive;
+}
+
 /** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
 export function pickHoverTargetFromRay(
 	ray: THREE.Ray,
@@ -1837,9 +1842,15 @@ function SpatialPickTargetNode({
 	const userData = { spatialPickKey: targetKey };
 	if (target.kind === "vertex" || target.kind === "anchor") {
 		return (
-			<mesh position={displayPoint} userData={userData} raycast={raycastNone} renderOrder={4}>
+			<mesh position={displayPoint} userData={userData} raycast={raycastNone} renderOrder={8}>
 				<sphereGeometry args={[selected || hovered ? 0.12 : 0.085, 16, 16]} />
-				<meshStandardMaterial color={style.color} emissive={style.emissive} emissiveIntensity={0.45} />
+				<meshStandardMaterial
+					color={style.color}
+					emissive={style.emissive}
+					emissiveIntensity={0.45}
+					depthTest={false}
+					transparent
+				/>
 			</mesh>
 		);
 	}
@@ -2674,9 +2685,10 @@ export function InteractionRepl({
 	}, [rt, startRuntime]);
 
 	const topologyRevision = documentModel.topology.revision;
-	const hostPickingEnabled = !interactionId;
+	const hostPickingEnabled = replHostTopologyPickingEnabled(interactionActive);
 	useEffect(() => {
-		if (!derived || interactionId) return;
+		if (!derived) return;
+		if (interactionActive && pickViewKind !== "analytic") return;
 		const topo = documentModel.topology;
 		let cancelled = false;
 		const run = () => {
@@ -2691,7 +2703,7 @@ export function InteractionRepl({
 			if (idle) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
-	}, [derived, documentModel.topology, topologyRevision, interactionId]);
+	}, [derived, documentModel.topology, topologyRevision, interactionActive, pickViewKind]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -4076,6 +4088,11 @@ if (import.meta.vitest) {
 					overlap: { none: true, difference: true, intersection: false },
 				}).map(spatialPickTargetKey),
 			).toEqual(["surface:s-ext-h", "surface:s-int-v", "part:p-none"]);
+		});
+
+		it("replHostTopologyPickingEnabled stays on for committed palette sessions", () => {
+			expect(replHostTopologyPickingEnabled(false)).toBe(true);
+			expect(replHostTopologyPickingEnabled(true)).toBe(false);
 		});
 
 		it("keeps targets rendered when selection or hover toggles enable their kind", () => {

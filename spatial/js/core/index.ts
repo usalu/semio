@@ -2263,15 +2263,38 @@ export class DerivedViewService {
 	/** @emoji 🪞 Recomputes surfaces, parts, and volumes (awaits kernel booleans when present). */
 	async refresh(topo: TopologyGraph): Promise<void> {
 		const gen = ++this.refreshGen;
-		this.surfaces = await Promise.resolve(this.kernel.computeSurfaceViews(topo));
+		const kernel = this.kernel as SpatialKernel & {
+			refreshDerivedViews?: (t: TopologyGraph) => Promise<{
+				readonly surfaces: SurfaceView[];
+				readonly parts: PartView[];
+				readonly volumes: VolumeView[];
+			}>;
+		};
+		if (kernel.refreshDerivedViews) {
+			const bundle = await kernel.refreshDerivedViews(topo);
+			if (gen !== this.refreshGen) return;
+			const rev = topo.revision;
+			this.surfaces = bundle.surfaces;
+			this.parts = bundle.parts;
+			this.volumes = bundle.volumes;
+			this.surfaceRevision = rev;
+			this.partRevision = rev;
+			this.volumeRevision = rev;
+			return;
+		}
+		const surfaces = await Promise.resolve(this.kernel.computeSurfaceViews(topo));
 		if (gen !== this.refreshGen) return;
-		this.surfaceRevision = topo.revision;
-		this.parts = await Promise.resolve(this.kernel.computePartViews(topo));
+		const parts = await Promise.resolve(this.kernel.computePartViews(topo));
 		if (gen !== this.refreshGen) return;
-		this.partRevision = topo.revision;
-		this.volumes = await Promise.resolve(this.kernel.computeVolumeViews(topo));
+		const volumes = await Promise.resolve(this.kernel.computeVolumeViews(topo));
 		if (gen !== this.refreshGen) return;
-		this.volumeRevision = topo.revision;
+		const rev = topo.revision;
+		this.surfaces = surfaces;
+		this.parts = parts;
+		this.volumes = volumes;
+		this.surfaceRevision = rev;
+		this.partRevision = rev;
+		this.volumeRevision = rev;
 	}
 
 	/** @emoji 🪞 Returns cached surfaces for `topo.revision` (empty until `refresh` catches up). */
@@ -3731,6 +3754,25 @@ if (import.meta.vitest) {
 			expect(derived.computeParts(topo)).toEqual([]);
 			await derived.refresh(topo);
 			expect(derived.computeParts(topo).length).toBeGreaterThan(0);
+		});
+
+		it("derived refresh exposes surfaces and parts at the same topology revision", async () => {
+			const kernel = new BrepjsKernel();
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const derived = new DerivedViewService(kernel);
+			await derived.refresh(topo);
+			const rev = topo.revision;
+			expect(derived.computeSurfaces(topo).length).toBeGreaterThan(0);
+			expect(derived.computeParts(topo).length).toBeGreaterThan(0);
+			expect(derived.computeSurfaces(topo).some((s) => s.exposure === "internal")).toBe(true);
+			topo.bump();
+			expect(derived.computeSurfaces(topo)).toEqual([]);
+			expect(derived.computeParts(topo)).toEqual([]);
+			await derived.refresh(topo);
+			expect(derived.computeSurfaces(topo).length).toBeGreaterThan(0);
+			expect(topo.revision).toBe(rev + 1);
 		});
 
 		it("play commit punch through shorter box yields one unioned difference per cell", async () => {

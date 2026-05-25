@@ -1819,18 +1819,26 @@ export function partViewsFromAtomics(topo: TopologyGraph, atomics: readonly Atom
 	const parts: PartView[] = atomics.map((a) => {
 		const regionPoints: Vec3[] = [];
 		const seen = new Set<string>();
-		for (const fid of a.faceTopoIds.values()) {
+		const pushPoint = (p: Vec3) => {
+			const k = p.join(",");
+			if (seen.has(k)) return;
+			seen.add(k);
+			regionPoints.push(p);
+		};
+		for (const [brepFace, fid] of a.faceTopoIds) {
+			let fromTopo = false;
 			for (const wid of topo.faces[fid]?.wireIds ?? []) {
 				for (const eid of topo.wires[wid]?.edgeIds ?? []) {
 					for (const vid of topo.edges[eid]?.vertexIds ?? []) {
 						const p = topo.vertices[vid]?.position;
 						if (!p) continue;
-						const k = p.join(",");
-						if (seen.has(k)) continue;
-						seen.add(k);
-						regionPoints.push(p);
+						fromTopo = true;
+						pushPoint(p);
 					}
 				}
+			}
+			if (!fromTopo) {
+				for (const v of getVertices(brepFace)) pushPoint(vertexPosition(v));
 			}
 		}
 		return {
@@ -2334,8 +2342,7 @@ export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();
 const isBrepjsTestRun =
 	import.meta.env.VITEST === true ||
 	import.meta.env.MODE === "test" ||
-	import.meta.vitest === true ||
-	process.env.VITEST === "true";
+	import.meta.vitest === true;
 
 const openCascadeWasmNeedsNodeResolve =
 	(import.meta.env.VITEST || import.meta.env.MODE === "test") &&
@@ -2574,8 +2581,20 @@ class BrepjsWasmEngine {
 	private initPromise: Promise<void> | null = null;
 	private seq = 0;
 	private readonly solids = new Map<CellRef, ValidSolid>();
-	private derivedTopo: TopologyGraph | null = null;
-	private derivedCache: { readonly topoRevision: number; readonly atomics: readonly AtomicPart[] } | null = null;
+	private solidsTopoKey: string | null = null;
+	private derivedCache: { readonly topoKey: string; readonly atomics: readonly AtomicPart[] } | null = null;
+
+	/** @emoji 🧪 Clears solids and derived cache (vitest shared kernel). */
+	resetDerivedPipeline(): void {
+		this.solids.clear();
+		this.solidsTopoKey = null;
+		this.derivedCache = null;
+	}
+
+	private topoDerivedKey(topo: TopologyGraph): string {
+		const cells = (Object.keys(topo.cells) as CellRef[]).sort().join(",");
+		return `${topo.revision}:${cells}:${Object.keys(topo.vertices).length}:${Object.keys(topo.faces).length}`;
+	}
 
 	async ensureInit(): Promise<void> {
 		if (!this.initPromise) {
@@ -2668,26 +2687,55 @@ class BrepjsWasmEngine {
 
 	private async ensureAtomics(topo: TopologyGraph): Promise<readonly AtomicPart[]> {
 		await this.ensureInit();
+		const topoKey = this.topoDerivedKey(topo);
+		if (this.derivedCache?.topoKey === topoKey) return this.derivedCache.atomics;
 		await this.syncSolidsFromTopology(topo);
-		if (this.solids.size === 0) return [];
-		const rev = topo.revision;
-		if (this.derivedTopo === topo && this.derivedCache?.topoRevision === rev) return this.derivedCache.atomics;
+		if (this.solids.size === 0) {
+			this.derivedCache = { topoKey, atomics: [] };
+			return [];
+		}
 		let atomics: AtomicPart[] = [];
 		try {
 			atomics = decomposeCells(this.solids, topo);
 		} catch {
+			this.derivedCache = { topoKey, atomics: [] };
 			return [];
 		}
 		try {
 			const snapTol = derivedModelScale(topo) * 1e-5;
-			const mergeDiff = selfMergeTopologyDiff(topo, atomics, snapTol);
-			if (!isEmptyTopologyDiff(mergeDiff)) applyTopologyDiff(topo, mergeDiff);
+			selfMergeTopologyDiff(topo, atomics, snapTol);
 		} catch {
-			/* region/surface views still work from brep; merge is best-effort */
+			/* faceTopoIds best-effort for analytic surfaces/parts */
 		}
-		this.derivedTopo = topo;
-		this.derivedCache = { topoRevision: topo.revision, atomics };
+		this.derivedCache = { topoKey, atomics };
 		return atomics;
+	}
+
+	/** @emoji 🪞 One WASM pass: atomics then surface/part/volume views (avoids triple decompose per refresh). */
+	async refreshDerivedViews(topo: TopologyGraph): Promise<{
+		readonly surfaces: SurfaceView[];
+		readonly parts: PartView[];
+		readonly volumes: VolumeView[];
+	}> {
+		const atomics = await this.ensureAtomics(topo);
+		let surfaces: SurfaceView[];
+		if (!atomics.length) {
+			surfaces = computeSurfaceViewsFromTopology(topo);
+		} else {
+			try {
+				const brep = surfaceViewsFromAtomics(topo, atomics);
+				if (brep.some((s) => s.exposure === "internal")) surfaces = brep;
+				else {
+					const topoViews = computeSurfaceViewsFromTopology(topo);
+					surfaces = topoViews.length ? topoViews : brep;
+				}
+			} catch {
+				surfaces = computeSurfaceViewsFromTopology(topo);
+			}
+		}
+		const parts = atomics.length ? partViewsFromAtomics(topo, atomics) : computePartViewsFromTopology(topo);
+		const volumes = await this.computeVolumeViews(topo);
+		return { surfaces, parts, volumes };
 	}
 
 	async computeSurfaceViews(topo: TopologyGraph): Promise<SurfaceView[]> {
@@ -2720,13 +2768,15 @@ class BrepjsWasmEngine {
 
 	async syncSolidsFromTopology(topo: TopologyGraph): Promise<void> {
 		await this.ensureInit();
-		this.derivedTopo = null;
+		const topoKey = this.topoDerivedKey(topo);
+		if (this.solidsTopoKey === topoKey && this.solids.size > 0) return;
 		this.derivedCache = null;
 		this.solids.clear();
 		for (const cell of Object.values(topo.cells)) {
 			const solid = this.solidForCell(topo, cell);
 			if (solid) this.solids.set(cell.id, solid);
 		}
+		this.solidsTopoKey = topoKey;
 	}
 
 	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `CellSolid` (sphere/cylinder/cone/box). */
@@ -3116,7 +3166,7 @@ class BrepjsWorkerClient {
 	}
 
 	constructor() {
-		const workerDisabled = isBrepjsTestRun || openCascadeWasmVitestAsset;
+		const workerDisabled = isBrepjsTestRun || openCascadeWasmNeedsNodeResolve;
 		if (!workerDisabled && typeof Worker !== "undefined") {
 			try {
 				this.worker = new Worker(new URL("./index.ts", import.meta.url), { type: "module" });
@@ -3243,6 +3293,19 @@ export class BrepjsKernel implements SpatialKernel {
 
 	async computeVolumeViews(topo: TopologyGraph): Promise<VolumeView[]> {
 		return this.wasm.rpc("computeVolumeViews", [topo]);
+	}
+
+	async refreshDerivedViews(topo: TopologyGraph): Promise<{
+		readonly surfaces: SurfaceView[];
+		readonly parts: PartView[];
+		readonly volumes: VolumeView[];
+	}> {
+		return this.wasm.rpc("refreshDerivedViews", [topo]);
+	}
+
+	/** @emoji 🧪 Clears worker derived pipeline state between vitest cases. */
+	async resetDerivedPipelineForTest(): Promise<void> {
+		return this.wasm.rpc("resetDerivedPipeline", []);
 	}
 
 	async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }> {
@@ -3376,10 +3439,14 @@ if (isBrepjsDedicatedWorker()) {
 
 // #region 🧪Tests
 if (import.meta.vitest) {
-	const { describe, expect, it } = import.meta.vitest;
+	const { beforeEach, describe, expect, it } = import.meta.vitest;
 
 	describe("@spatial/js-kernel-brepjs", () => {
 		const kernel = new BrepjsKernel();
+
+		beforeEach(async () => {
+			await kernel.resetDerivedPipelineForTest();
+		});
 
 		it("createBoxFromCorners volume matches axis-aligned footprint×height", async () => {
 			const cell = await kernel.createBoxFromCorners({
@@ -3745,7 +3812,7 @@ if (import.meta.vitest) {
 			expect(inter.every((p) => p.sourceCellIds.length < 3)).toBe(true);
 		});
 
-		it("selfMerge topology diff is empty on second derived refresh", async () => {
+		it("refreshDerivedViews does not bump topology revision", async () => {
 			const topo = new TopologyGraph();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 });
@@ -3755,14 +3822,14 @@ if (import.meta.vitest) {
 			const cellB = topo.cells[rb.cell]!;
 			cellA.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 };
 			cellB.solid = { kind: "box", cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 };
-			const parts1 = await kernel.computePartViews!(topo);
-			expect(parts1.length).toBeGreaterThan(0);
-			const mergeFaces = Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length;
 			const rev = topo.revision;
-			const parts2 = await kernel.computePartViews!(topo);
+			const first = await kernel.refreshDerivedViews!(topo);
 			expect(topo.revision).toBe(rev);
-			expect(parts2.length).toBe(parts1.length);
-			expect(Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length).toBe(mergeFaces);
+			expect(first.surfaces.length).toBeGreaterThan(0);
+			expect(first.parts.length).toBeGreaterThan(0);
+			const second = await kernel.refreshDerivedViews!(topo);
+			expect(topo.revision).toBe(rev);
+			expect(second.parts.length).toBe(first.parts.length);
 		});
 	});
 }
