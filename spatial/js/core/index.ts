@@ -1171,13 +1171,13 @@ export interface SpatialPreviewKernel {
 	vec3Dot(a: Vec3, b: Vec3): number;
 	vec3Cross(a: Vec3, b: Vec3): Vec3;
 	vec3Length(a: Vec3): number;
-	M.vec3Distance(a: Vec3, b: Vec3): number;
+	vec3Distance(a: Vec3, b: Vec3): number;
 	vec3Normalize(a: Vec3): Vec3;
 	arcPlaneFrame(center: Vec3, start: Vec3, end: Vec3): ArcPlaneFrame | null;
 	arcSweepRadians(frame: ArcPlaneFrame, end: Vec3): number;
 	arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments?: number): readonly Vec3[];
 	arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneFrame | null;
-	M.arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3;
+	arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3;
 	arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Vec3 | null;
 	circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments?: number): readonly Vec3[];
 	ellipseSamplePoints(
@@ -1191,7 +1191,7 @@ export interface SpatialPreviewKernel {
 	nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan?: number): readonly Vec3[];
 	polylineLength(points: readonly Vec3[]): number;
 	edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number;
-	M.edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
+	edgeSamplePoints(vertices: Readonly<Record<string, VertexRecord>>, edge: EdgeRecord, segments?: number): readonly Vec3[];
 	circleFromCenterRadiusPoint(
 		center: Vec3,
 		radiusPoint: Vec3,
@@ -1202,7 +1202,7 @@ export interface SpatialPreviewKernel {
 	aabbIntersect(a: Aabb, b: Aabb): Aabb | null;
 	cellSolidAabb(solid: CellSolid): Aabb;
 	topologyCellAabb(topo: TopologyGraph, cell: CellRecord): Aabb | null;
-	M.boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff;
+	boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff;
 	meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): TopologyDiff;
 	evaluateAnchorPosition(topo: TopologyGraph, anchor: AnchorRecord): Vec3;
 	anchorPlacementFromEntity(
@@ -1375,7 +1375,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.aabbFromDiagonalCorners",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const pt = (ev as { point?: unknown }).point;
 			const P = isVec3(pt) ? pt : null;
@@ -1397,7 +1397,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.tripletRubber",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const p0 = ctx.p0;
@@ -1418,7 +1418,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.tripletCommit",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const p0 = ctx.p0;
@@ -1440,7 +1440,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.snapSquareFootprint",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const o = ctx.origin;
@@ -1457,7 +1457,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.setCubeHeightFromFootprint",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const o = ctx.origin;
 			const c = ctx.corner;
 			if (!isVec3(o) || !isVec3(c)) return {};
@@ -1470,7 +1470,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.rubberCornerFromCenter",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const c = ctx.rectCenter;
@@ -1489,7 +1489,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.rubberSquareFromCenter",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const c = ctx.rectCenter;
@@ -1515,7 +1515,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.verticalFinalizeFootprint",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const o = ctx.origin;
@@ -1533,7 +1533,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.initPeakAboveOrigin",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const o = ctx.origin;
 			if (!isVec3(o)) return {};
 			return { patch: { set: { peak: [o[0], o[1], o[2] + 0.25] as Vec3 } } };
@@ -1543,7 +1543,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.peakFromOriginZ",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const o = ctx.origin;
@@ -1555,7 +1555,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.verticalRubberCorner",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const P = isVec3((ev as { point?: unknown }).point) ? ((ev as { point: Vec3 }).point as Vec3) : null;
 			const o = ctx.origin;
@@ -1567,7 +1567,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "box.cornerFromLengthWidth",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const ev = params.__event as InteractionEvent;
 			const val = (ev as { value?: unknown }).value;
 			const o = ctx.origin;
@@ -1592,12 +1592,13 @@ function builtinActionDefs(): ActionDef[] {
 			} else {
 				cell = await kernel.createBoxFromCorners({ cornerA, cornerB, height });
 			}
-			return { diff: ctx.preview.M.boxTopologyDiff({ cornerA, cornerB, height }, cell) };
+			return { diff: ctx.preview.boxTopologyDiff({ cornerA, cornerB, height }, cell) };
 		},
 	};
 	const primitiveCreateBoxFrom3Points: ActionDef = {
 		id: "primitive.createBoxFrom3Points",
 		run: async (params, ctx) => {
+			const pr = ctx.preview;
 			const p0 = params.p0 as Vec3;
 			const p1 = params.p1 as Vec3;
 			const p2 = params.p2 as Vec3;
@@ -1613,7 +1614,8 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const featureExtrudeWireToCell: ActionDef = {
 		id: "feature.extrudeWireToCell",
-		run: async (params, { kernel }) => {
+		run: async (params, ctx) => {
+			const { kernel, preview } = ctx;
 			const input = {
 				wireId: String(params.wireId),
 				distance: Number(params.distance),
@@ -1622,10 +1624,10 @@ function builtinActionDefs(): ActionDef[] {
 			let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
 			if (kernel.extrudeWireDiff) diff = (await kernel.extrudeWireDiff(input)).diff;
 			else {
-				const cell = (await kernel.extrudeWire?.(input)) ?? null;
+				const cell = await kernel.extrudeWire(input);
 				if (cell) {
-					const preview = await kernel.tessellate(cell, 1e-3);
-					diff = meshFaceTopologyDiff(preview, `f${kernel.id}`);
+					const mesh = await kernel.tessellate(cell, 1e-3);
+					diff = preview.meshFaceTopologyDiff(mesh, `f${kernel.id}`);
 				}
 			}
 			return { diff };
@@ -1672,7 +1674,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "command.addPoint",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "points";
 			const key = typeof params.key === "string" ? params.key : null;
 			const point = isVec3(params.point) ? params.point : null;
@@ -1687,7 +1689,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "command.addSelection",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "targets";
 			const key = typeof params.key === "string" ? params.key : null;
 			const targets = Array.isArray(params.targets) ? params.targets : [];
@@ -1701,7 +1703,7 @@ function builtinActionDefs(): ActionDef[] {
 	const commandFinish: ActionDef = {
 		id: "command.finish",
 		run: async (params, { kernel }) => {
-			const ctx = ctxOf(params as Record<string, unknown>);
+			const bag = ctxOf(params as Record<string, unknown>);
 			const commandId = String(params.commandId ?? "");
 			let diff = EMPTY_TOPOLOGY_DIFF;
 			
@@ -3409,7 +3411,7 @@ if (import.meta.vitest) {
 			topo.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [s1] };
 			const parts = computePartViewsFromTopology(topo);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
-			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
+			expect(parts.filter((p) => p.overlap === "difference").length).toBe(0);
 		});
 
 		it("splits overlapping box faces into external and internal surface patches", () => {
@@ -3435,6 +3437,31 @@ if (import.meta.vitest) {
 			const inter = parts.find((p) => p.overlap === "intersection");
 			expect(inter?.volume).toBeCloseTo(2, 4);
 			expect(parts.filter((p) => p.overlap === "difference").length).toBe(2);
+		});
+
+		it("keeps part volumes shape-invariant for two overlapping boxes", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const parts = computePartViewsFromTopology(topo);
+			const volA = 8;
+			const volB = 8;
+			const interVol = 2;
+			const sum = parts.reduce((acc, p) => acc + p.volume, 0);
+			expect(sum).toBeCloseTo(volA + volB - interVol, 2);
+			const diffA = parts.find((p) => p.id === "part-a-difference");
+			const diffB = parts.find((p) => p.id === "part-b-difference");
+			expect(diffA?.volume).toBeCloseTo(volA - interVol, 2);
+			expect(diffB?.volume).toBeCloseTo(volB - interVol, 2);
+		});
+
+		it("keeps surface areas shape-invariant for two overlapping boxes", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const surfaces = computeSurfaceViewsFromTopology(topo);
+			const surfaceArea = surfaces.reduce((acc, s) => acc + s.area, 0);
+			expect(surfaceArea).toBeCloseTo(48, 0);
 		});
 	});
 
@@ -3768,7 +3795,7 @@ if (import.meta.vitest) {
 				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
 				indices: new Uint32Array([0, 1, 2]),
 			};
-			const d = meshFaceTopologyDiff(mesh, "x");
+			const d = M.meshFaceTopologyDiff(mesh, "x");
 			const inv = applyTopologyDiff(g, d);
 			expect(Object.keys(g.faces).length).toBe(1);
 			applyTopologyDiff(g, inv);
@@ -4055,11 +4082,11 @@ if (import.meta.vitest) {
 			const g = new TopologyGraph();
 			const h = new DocumentHistory();
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
-			const d1 = meshFaceTopologyDiff(mesh, "a");
+			const d1 = M.meshFaceTopologyDiff(mesh, "a");
 			const inv1 = applyTopologyDiff(g, d1);
 			const res1: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null, archiveContext: null };
 			h.record({ id: "m1", interactionId: "c", label: "A", result: res1, backwardsDiff: inv1 });
-			const d2 = meshFaceTopologyDiff(mesh, "b");
+			const d2 = M.meshFaceTopologyDiff(mesh, "b");
 			const inv2 = applyTopologyDiff(g, d2);
 			const res2: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d2, data: null, archiveContext: null };
 			h.record({ id: "m2", interactionId: "c", label: "B", result: res2, backwardsDiff: inv2 });
@@ -4165,7 +4192,7 @@ if (import.meta.vitest) {
 			}
 			const g = new TopologyGraph();
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
-			const d0 = meshFaceTopologyDiff(mesh, "seed");
+			const d0 = M.meshFaceTopologyDiff(mesh, "seed");
 			const inv0 = applyTopologyDiff(g, d0);
 			const hist = new DocumentHistory();
 			hist.record({

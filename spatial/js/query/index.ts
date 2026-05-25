@@ -10,7 +10,6 @@ import {
 	TopologyGraph,
 	DerivedViewService,
 	applyTopologyDiff,
-	boxTopologyDiff,
 	cellRef,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
@@ -23,7 +22,7 @@ import {
 	type CellRef,
 	type CellComplexRef,
 	type FaceRef,
-	type KernelAdapter,
+	type SpatialKernel,
 	type ShellRef,
 	type TopologyDiff,
 	type TopologyEntityKind,
@@ -1029,7 +1028,7 @@ function* iterateDerives(
 function* traverseRel(
 	topo: TopologyGraph,
 	derived: DerivedViewService | undefined,
-	_kernel: KernelAdapter,
+	_kernel: SpatialKernel,
 	index: KernelIndex,
 	from: EntityHandle,
 	relTypes: readonly string[],
@@ -1122,7 +1121,7 @@ function rowVarsToEnv(
 function* expandPattern(
 	topo: TopologyGraph,
 	derived: DerivedViewService | undefined,
-	kernel: KernelAdapter,
+	kernel: SpatialKernel,
 	index: KernelIndex,
 	pat: PatternAst,
 ): Generator<Row> {
@@ -1294,22 +1293,26 @@ export class ConstructEngine {
 
 // #region 🧪Tests
 if (import.meta.vitest) {
+	import { BrepjsKernel, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
-	function mkKernelStub(): KernelAdapter {
-		return {
-			id: "stub-k",
-			operations: [],
-			async createBoxFromCorners() {
-				return "c0" as CellRef;
-			},
-			async volume() {
-				return 0;
-			},
-			async tessellate() {
-				return { positions: new Float32Array(), indices: new Uint32Array() };
-			},
-		};
+	class QueryTestKernel extends BrepjsKernel {
+		override readonly id = "stub-k";
+		override readonly operations = [] as const;
+		override async createBoxFromCorners() {
+			return "c0" as CellRef;
+		}
+		override async volume() {
+			return 0;
+		}
+		override async tessellate() {
+			return { positions: new Float32Array(), indices: new Uint32Array() };
+		}
+	}
+
+	function mkKernelStub(): SpatialKernel {
+		return new QueryTestKernel();
 	}
 
 	function seedCellShellFaces(topo: TopologyGraph): { cell: string; shell: string; faces: string[] } {
@@ -1400,8 +1403,10 @@ if (import.meta.vitest) {
 
 		it("Surface metadata filter via WHERE", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
-			const derived = new DerivedViewService();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			const kernel = new QueryTestKernel();
+			const derived = new DerivedViewService(kernel);
+			await derived.refresh(topo);
 			const external = derived.computeSurfaces(topo).find((s) => s.exposure === "external");
 			expect(external).toBeDefined();
 			const res = await runConstruct("MATCH (s:Surface) WHERE s.exposure = 'external' RETURN s.id", {

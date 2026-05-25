@@ -1199,10 +1199,51 @@ function derivedCellAabbMap(topo: TopologyGraph): Map<string, Aabb> {
 	return out;
 }
 
-function derivedAabbDifferencePoints(cell: Aabb, cutters: readonly Aabb[]): readonly Vec3[] {
-	const corners = aabbCornerPoints(cell.min, cell.max);
-	const outside = corners.filter((p) => cutters.every((c) => !pointInAabb(p, c)));
-	return outside.length ? outside : corners;
+function aabbLatticePoints(cell: Aabb, grid = 5): readonly Vec3[] {
+	const pts: Vec3[] = [];
+	for (let i = 0; i <= grid; i++) {
+		for (let j = 0; j <= grid; j++) {
+			for (let k = 0; k <= grid; k++) {
+				pts.push([
+					cell.min[0] + ((cell.max[0] - cell.min[0]) * i) / grid,
+					cell.min[1] + ((cell.max[1] - cell.min[1]) * j) / grid,
+					cell.min[2] + ((cell.max[2] - cell.min[2]) * k) / grid,
+				]);
+			}
+		}
+	}
+	return pts;
+}
+
+function pointInCellOverlap(p: Vec3, cell: Aabb, cutters: readonly Aabb[]): boolean {
+	for (const cutter of cutters) {
+		const inter = aabbIntersect(cell, cutter);
+		if (inter && pointInAabb(p, inter)) return true;
+	}
+	return false;
+}
+
+/** @emoji 📐 Volume of `cell` covered by union of overlaps with `cutters` (axis-aligned sample). */
+export function aabbOverlapUnionVolume(cell: Aabb, cutters: readonly Aabb[], grid = 6): number {
+	if (cutters.length === 0) return 0;
+	const lattice = aabbLatticePoints(cell, grid);
+	let hit = 0;
+	for (const p of lattice) {
+		if (pointInCellOverlap(p, cell, cutters)) hit++;
+	}
+	return aabbVolume(cell) * (hit / lattice.length);
+}
+
+/** @emoji 📐 Sample points in `cell \\ ∪(cell ∩ cutter)` for difference-part pick hulls. */
+export function aabbDifferenceRegionPoints(cell: Aabb, cutters: readonly Aabb[], grid = 5): readonly Vec3[] {
+	if (cutters.length === 0) return aabbCornerPoints(cell.min, cell.max);
+	return aabbLatticePoints(cell, grid).filter((p) => !pointInCellOverlap(p, cell, cutters));
+}
+
+/** @emoji 📐 Corner hull of `a ∩ b` for intersection-part pick targets. */
+export function aabbIntersectionRegionPoints(a: Aabb, b: Aabb): readonly Vec3[] | undefined {
+	const inter = aabbIntersect(a, b);
+	return inter ? aabbCornerPoints(inter.min, inter.max) : undefined;
 }
 
 type SurfaceGroup = {
@@ -1314,37 +1355,15 @@ export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceVie
 	return out;
 }
 
-/** @emoji 🪞 Partitions cells by overlap (none / difference / intersection) using cell AABBs. */
+/** @emoji 🪞 Partitions cells into disjoint none / difference / intersection parts (shape-invariant). */
 export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 	const cellIds = Object.keys(topo.cells) as CellRef[];
 	const aabbs = derivedCellAabbMap(topo);
 	const faceToCells = derivedFaceToCells(topo);
 	const volEps = 1e-6;
 	const parts: PartView[] = [];
-	const contactPairs = new Set<string>();
-	for (const [faceId, ownerIds] of faceToCells) {
-		if (ownerIds.length < 2) continue;
-		const face = topo.faces[faceId];
-		const regionPoints = face ? derivedFacePoints(topo, face) : [];
-		const contactVol = face ? derivedPolygonArea(regionPoints) : 0;
-		for (let i = 0; i < ownerIds.length; i++) {
-			for (let j = i + 1; j < ownerIds.length; j++) {
-				const a = ownerIds[i]! as CellRef;
-				const b = ownerIds[j]! as CellRef;
-				const pairKey = [a, b].sort().join("|");
-				if (contactPairs.has(pairKey)) continue;
-				contactPairs.add(pairKey);
-				if (parts.some((p) => p.overlap === "intersection" && p.sourceCellIds.includes(a) && p.sourceCellIds.includes(b))) continue;
-				parts.push({
-					id: `part-intersection-${a}-${b}` as PartRef,
-					sourceCellIds: [a, b],
-					overlap: "intersection",
-					volume: contactVol,
-					regionPoints: regionPoints.length ? regionPoints : undefined,
-				});
-			}
-		}
-	}
+	const volumetricPair = new Set<string>();
+
 	for (let i = 0; i < cellIds.length; i++) {
 		for (let j = i + 1; j < cellIds.length; j++) {
 			const a = cellIds[i]!;
@@ -1357,32 +1376,42 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			const vol = aabbVolume(inter);
 			if (vol <= volEps) continue;
 			const pairKey = [a, b].sort().join("|");
-			const existing = parts.find(
-				(p) => p.overlap === "intersection" && p.sourceCellIds.includes(a) && p.sourceCellIds.includes(b),
-			);
-			if (existing) continue;
+			volumetricPair.add(pairKey);
 			parts.push({
 				id: `part-intersection-${a}-${b}` as PartRef,
 				sourceCellIds: [a, b],
 				overlap: "intersection",
 				volume: vol,
-				regionPoints: aabbCornerPoints(inter.min, inter.max),
+				regionPoints: aabbIntersectionRegionPoints(ba, bb),
 			});
-			contactPairs.add(pairKey);
 		}
 	}
-	const cellsWithIntersection = new Set(parts.flatMap((p) => p.sourceCellIds.map(String)));
+
+	for (const [faceId, ownerIds] of faceToCells) {
+		if (ownerIds.length < 2) continue;
+		const face = topo.faces[faceId];
+		const regionPoints = face ? derivedFacePoints(topo, face) : [];
+		for (let i = 0; i < ownerIds.length; i++) {
+			for (let j = i + 1; j < ownerIds.length; j++) {
+				const a = ownerIds[i]! as CellRef;
+				const b = ownerIds[j]! as CellRef;
+				const pairKey = [a, b].sort().join("|");
+				if (volumetricPair.has(pairKey)) continue;
+				if (parts.some((p) => p.overlap === "intersection" && p.sourceCellIds.includes(a) && p.sourceCellIds.includes(b))) continue;
+				parts.push({
+					id: `part-intersection-${a}-${b}` as PartRef,
+					sourceCellIds: [a, b],
+					overlap: "intersection",
+					volume: 0,
+					regionPoints: regionPoints.length ? regionPoints : undefined,
+				});
+			}
+		}
+	}
+
 	for (const cid of cellIds) {
 		const box = aabbs.get(cid);
-		if (!box) {
-			parts.push({
-				id: (cellsWithIntersection.has(cid) ? `part-${cid}-difference` : `part-${cid}-none`) as PartRef,
-				sourceCellIds: [cid],
-				overlap: cellsWithIntersection.has(cid) ? "difference" : "none",
-				volume: 0,
-			});
-			continue;
-		}
+		if (!box) continue;
 		const cutters: Aabb[] = [];
 		for (const otherId of cellIds) {
 			if (otherId === cid) continue;
@@ -1392,36 +1421,25 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			if (inter && aabbVolume(inter) > volEps) cutters.push(other);
 		}
 		if (cutters.length === 0) {
-			if (!cellsWithIntersection.has(cid)) {
-				parts.push({
-					id: `part-${cid}-none` as PartRef,
-					sourceCellIds: [cid],
-					overlap: "none",
-					volume: aabbVolume(box),
-					regionPoints: aabbCornerPoints(box.min, box.max),
-				});
-			} else {
-				parts.push({
-					id: `part-${cid}-difference` as PartRef,
-					sourceCellIds: [cid],
-					overlap: "difference",
-					volume: 0,
-				});
-			}
+			parts.push({
+				id: `part-${cid}-none` as PartRef,
+				sourceCellIds: [cid],
+				overlap: "none",
+				volume: aabbVolume(box),
+				regionPoints: aabbCornerPoints(box.min, box.max),
+			});
 			continue;
 		}
-		let remainingVol = aabbVolume(box);
-		for (const other of cutters) {
-			const inter = aabbIntersect(box, other);
-			if (inter) remainingVol -= aabbVolume(inter);
-		}
-		if (remainingVol > volEps) {
+		const overlapVol = aabbOverlapUnionVolume(box, cutters);
+		const diffVol = Math.max(0, aabbVolume(box) - overlapVol);
+		if (diffVol > volEps) {
+			const regionPoints = aabbDifferenceRegionPoints(box, cutters);
 			parts.push({
 				id: `part-${cid}-difference` as PartRef,
 				sourceCellIds: [cid],
 				overlap: "difference",
-				volume: remainingVol,
-				regionPoints: derivedAabbDifferencePoints(box, cutters),
+				volume: diffVol,
+				regionPoints: regionPoints.length ? regionPoints : undefined,
 			});
 		}
 	}

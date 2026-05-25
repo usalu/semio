@@ -21,7 +21,7 @@ import {
 	type InteractionSpec,
 	type EdgeRef,
 	type FaceRef,
-	type KernelAdapter,
+	type SpatialKernel,
 	type ActionRegistry,
 	type StateEngine,
 	type StateEngineProvider,
@@ -268,7 +268,7 @@ export class StatelyStateEngine implements StateEngine {
 
 	async send(
 		event: InteractionEvent,
-		kernel?: KernelAdapter,
+		kernel?: SpatialKernel,
 		topology?: TopologyGraph,
 		actions?: ActionRegistry,
 		derived?: import("@spatial/js-core").DerivedViewService,
@@ -297,9 +297,10 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 
 // #region 🧪Tests
 if (import.meta.vitest) {
+	import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 	const { describe, expect, it } = import.meta.vitest;
 
-	class StubKernel implements KernelAdapter {
+	class StubKernel extends BrepjsKernel {
 		readonly id = "stub-parity";
 		readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 		lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
@@ -329,7 +330,7 @@ if (import.meta.vitest) {
 		expect(sb.lastResponse?.diff).toEqual(sa.lastResponse?.diff);
 	}
 
-	class MeasureParityKernel implements KernelAdapter {
+	class MeasureParityKernel extends BrepjsKernel {
 		readonly id = "stub-measure-parity";
 		readonly operations = ["surface.resolveFaces", "measure.distance", "measure.area"] as const;
 		async createBoxFromCorners() {

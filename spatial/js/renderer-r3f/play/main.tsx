@@ -9,6 +9,7 @@ import {
 	type InteractionRuntime,
 	type InteractionSpec,
 	type InteractionRuntimeOptions,
+	type SpatialComputeMode,
 	type ModelDocument,
 	TopologyGraph,
 } from "@spatial/js-core";
@@ -24,6 +25,7 @@ import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
 	DocumentHistory,
 	InteractionRepl,
+	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
 } from "../index.tsx";
@@ -139,6 +141,7 @@ interface PlaySessionProps {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: BrepjsKernel;
+	readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
 	readonly sessionRestartNonce: number;
 }
@@ -152,6 +155,7 @@ function PlaySession({
 	documentModel,
 	history,
 	kernel,
+	mode,
 	asideExtra,
 	sessionRestartNonce,
 }: PlaySessionProps) {
@@ -159,13 +163,15 @@ function PlaySession({
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
+			previewKernel: r3fPreviewKernel,
+			mode,
 			document: documentModel,
 			history,
 			stateEngine: statelyStateEngineProvider,
 			query: defaultConstructRunner,
 			derived,
 		}),
-		[kernel, documentModel, history, derived],
+		[kernel, mode, documentModel, history, derived],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
 	const asideWithQuery = useMemo(
@@ -201,6 +207,7 @@ function PlayApp() {
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("");
+	const [mode, setMode] = useState<SpatialComputeMode>("fast");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 
 	const handleInteractionPick = useCallback(
@@ -233,21 +240,56 @@ function PlayApp() {
 	}, [history, geometryAssetId]);
 
 	const asideExtra: ReactNode = (
-		<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-			Geometry asset
-			<select
-				value={geometryAssetId}
-				onChange={(e) => setGeometryAssetId(e.target.value)}
-				style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-			>
-				<option value="">No asset</option>
-				{GEOMETRY_ASSETS.map((g) => (
-					<option key={g.id} value={g.id}>
-						[{g.key}] {g.label} ({topologyVertexCount(g.json)} verts)
-					</option>
-				))}
-			</select>
-		</label>
+		<>
+			<div style={{ display: "flex", gap: 6, fontSize: 12 }}>
+				<span style={{ fontWeight: 600, color: "#c8c8e0", alignSelf: "center" }}>Compute</span>
+				<button
+					type="button"
+					onClick={() => setMode("fast")}
+					style={{
+						flex: 1,
+						padding: "6px 10px",
+						borderRadius: 6,
+						border: "1px solid #2a2a3c",
+						background: mode === "fast" ? "#3a4a6a" : "#1a1a28",
+						color: "#e8e8f0",
+						cursor: "pointer",
+					}}
+				>
+					Fast
+				</button>
+				<button
+					type="button"
+					onClick={() => setMode("precise")}
+					style={{
+						flex: 1,
+						padding: "6px 10px",
+						borderRadius: 6,
+						border: "1px solid #2a2a3c",
+						background: mode === "precise" ? "#3a4a6a" : "#1a1a28",
+						color: "#e8e8f0",
+						cursor: "pointer",
+					}}
+				>
+					Precise
+				</button>
+			</div>
+			<label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+				Geometry asset
+				<select
+					value={geometryAssetId}
+					onChange={(e) => setGeometryAssetId(e.target.value)}
+					style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
+				>
+					<option value="">No asset</option>
+					{GEOMETRY_ASSETS.map((g) => (
+						<option key={g.id} value={g.id}>
+							[{g.key}] {g.label} ({topologyVertexCount(g.json)} verts)
+						</option>
+					))}
+				</select>
+			</label>
+		</>
 	);
 
 	if (!interactions.length) {
@@ -274,6 +316,7 @@ function PlayApp() {
 			documentModel={documentModel}
 			history={history}
 			kernel={kernel}
+			mode={mode}
 			asideExtra={asideExtra}
 			sessionRestartNonce={interactionBootId}
 		/>

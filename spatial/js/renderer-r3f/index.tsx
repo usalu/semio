@@ -51,7 +51,10 @@ import {
 	type Vec3,
 	type VertexRecord,
 	type WireRecord,
+	type SpatialComputeMode,
 } from "@spatial/js-core";
+
+export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
 // #endregion 📥Imports
 
@@ -1879,6 +1882,9 @@ export function InteractionSpatialView({
 	onSelectionRequest,
 	onHoverTarget,
 }: InteractionSpatialViewProps): ReactNode {
+	useEffect(() => {
+		bindScenePreviewKernel(previewKernel);
+	}, [previewKernel]);
 	const hostPickGate = pickEnabled !== false;
 	const gridHelper = useMemo(() => {
 		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
@@ -2674,6 +2680,7 @@ export function InteractionRepl({
 			<div style={{ flex: 1, minWidth: 0 }} key={interactionId}>
 				<InteractionCanvas>
 					<InteractionSpatialView
+						previewKernel={runtime.previewKernel()}
 						snapshot={snapshot}
 						onInteractionEvent={onSpatialInteractionEvent}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
@@ -3189,6 +3196,8 @@ export function InteractionRepl({
 
 // #region 🧪Tests
 if (import.meta.vitest) {
+	import { BrepjsKernel, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("@spatial/js-renderer-r3f preview transforms", () => {
@@ -3199,7 +3208,7 @@ if (import.meta.vitest) {
 
 		it("topologyEntityWireSegments uses face boundary edges not bbox diagonals", () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const faceId = Object.keys(topo.faces)[0]!;
 			const buckets = topologyGeometryBuckets(topo);
 			const segs = topologyEntityWireSegments(buckets, "face", faceId);
@@ -3209,7 +3218,7 @@ if (import.meta.vitest) {
 
 		it("collectTopologyEdgeSegments returns one segment per topology edge", () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(topo));
 			expect(segs.length).toBe(Object.keys(topo.edges).length);
 			expect(segs.length).toBe(12);
@@ -3322,7 +3331,7 @@ if (import.meta.vitest) {
 
 		it("creates analytic surface and part targets from derived views", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
 			const derived = new DerivedViewService();
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
@@ -3349,7 +3358,7 @@ if (import.meta.vitest) {
 
 		it("creates selectable targets for every committed box topology kind", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
 			const derived = new DerivedViewService();
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
@@ -3449,7 +3458,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-renderer-r3f runtime", () => {
 		it("exposes an initial snapshot for the box interaction with a stub kernel", () => {
-			class StubKernel implements KernelAdapter {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -3475,7 +3484,7 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-renderer-r3f repl history", () => {
 		it("getReplHistoryPresentation exposes canRedo after document undo", () => {
-			class StubKernel implements KernelAdapter {
+			class StubKernel extends BrepjsKernel {
 				readonly id = "stub-repl";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
@@ -3490,7 +3499,7 @@ if (import.meta.vitest) {
 			}
 			const g = new TopologyGraph();
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
-			const d0 = meshFaceTopologyDiff(mesh, "x");
+			const d0 = M.meshFaceTopologyDiff(mesh, "x");
 			const inv = applyTopologyDiff(g, d0);
 			const hist = new DocumentHistory();
 			hist.record({
@@ -3628,7 +3637,7 @@ if (import.meta.vitest) {
 		it("derives persistent box footprints from document history", () => {
 			const g = new TopologyGraph();
 			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
-			const d0 = meshFaceTopologyDiff(mesh, "hist-box");
+			const d0 = M.meshFaceTopologyDiff(mesh, "hist-box");
 			const inv = applyTopologyDiff(g, d0);
 			const hist = new DocumentHistory();
 			hist.record({

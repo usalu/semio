@@ -30,7 +30,9 @@ import {
 	arcEndFromAngle,
 	arcEndOnCircle,
 	aabbCornerPoints,
+	aabbDifferenceRegionPoints,
 	aabbIntersect,
+	aabbIntersectionRegionPoints,
 	boxTopologyDiff,
 	circleFromCenterRadiusPoint,
 	computePartViewsFromTopology,
@@ -73,7 +75,14 @@ function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], to
 
 // #region 🔌BrepjsKernel
 /** @emoji 🔌 Holds exact solids keyed by `CellRef` returned from kernel construction ops. */
-export { preciseSpatialKernelMath, PreciseSpatialKernelMath, computeSurfaceViewsFromTopology, computePartViewsFromTopology } from "./spatial-kernel-math.ts";
+export {
+	preciseSpatialKernelMath,
+	PreciseSpatialKernelMath,
+	computeSurfaceViewsFromTopology,
+	computePartViewsFromTopology,
+	aabbDifferenceRegionPoints,
+	aabbIntersectionRegionPoints,
+} from "./spatial-kernel-math.ts";
 
 export class BrepjsKernel implements SpatialKernel {
 	readonly id = "brepjs-opencascade";
@@ -234,8 +243,7 @@ export class BrepjsKernel implements SpatialKernel {
 				const cellB = topo.cells[b];
 				const aabbA = cellA ? topologyCellAabb(topo, cellA) : null;
 				const aabbB = cellB ? topologyCellAabb(topo, cellB) : null;
-				const interAabb = aabbA && aabbB ? aabbIntersect(aabbA, aabbB) : null;
-				const fallback = interAabb ? aabbCornerPoints(interAabb.min, interAabb.max) : undefined;
+				const fallback = aabbA && aabbB ? aabbIntersectionRegionPoints(aabbA, aabbB) : undefined;
 				parts.push({
 					id: `part-intersection-${a}-${b}` as PartRef,
 					sourceCellIds: [a, b],
@@ -246,31 +254,43 @@ export class BrepjsKernel implements SpatialKernel {
 			}
 		}
 		for (const cid of solidCells) {
-			let remaining: ValidSolid = this.solids.get(cid)!;
-			let subtracted = false;
+			const base = this.solids.get(cid)!;
+			const cutters: ValidSolid[] = [];
 			for (const otherId of solidCells) {
 				if (otherId === cid) continue;
 				const other = this.solids.get(otherId)!;
-				const hit = unwrap(checkInterference(remaining, other));
+				const hit = unwrap(checkInterference(base, other));
 				if (!hit.hasInterference) continue;
-				const next = unwrap(cut(remaining, other));
-				const interVol = unwrap(measureVolume(unwrap(intersect(remaining, other))));
+				const interVol = unwrap(measureVolume(unwrap(intersect(base, other))));
 				if (interVol <= volEps) continue;
-				subtracted = true;
-				remaining = next;
+				cutters.push(other);
 			}
 			const cellRec = topo.cells[cid];
 			const cellAabb = cellRec ? topologyCellAabb(topo, cellRec) : null;
-			const cellCorners = cellAabb ? aabbCornerPoints(cellAabb.min, cellAabb.max) : undefined;
-			if (!subtracted) {
+			const cutterAabbs: { readonly min: Vec3; readonly max: Vec3 }[] = [];
+			for (const otherId of solidCells) {
+				if (otherId === cid) continue;
+				const otherCell = topo.cells[otherId];
+				if (!otherCell || !cellAabb) continue;
+				const otherAabb = topologyCellAabb(topo, otherCell);
+				if (!otherAabb) continue;
+				if (aabbIntersect(cellAabb, otherAabb)) cutterAabbs.push(otherAabb);
+			}
+			const diffFallback = cellAabb && cutterAabbs.length ? aabbDifferenceRegionPoints(cellAabb, cutterAabbs) : undefined;
+			const noneFallback = cellAabb ? aabbCornerPoints(cellAabb.min, cellAabb.max) : undefined;
+			if (cutters.length === 0) {
 				parts.push({
 					id: `part-${cid}-none` as PartRef,
 					sourceCellIds: [cid],
 					overlap: "none",
-					volume: unwrap(measureVolume(remaining)),
-					regionPoints: brepSolidRegionPoints(remaining, cellCorners),
+					volume: unwrap(measureVolume(base)),
+					regionPoints: brepSolidRegionPoints(base, noneFallback),
 				});
 				continue;
+			}
+			let remaining: ValidSolid = base;
+			for (const other of cutters) {
+				remaining = unwrap(cut(remaining, other));
 			}
 			const diffVol = unwrap(measureVolume(remaining));
 			if (diffVol > volEps) {
@@ -279,7 +299,7 @@ export class BrepjsKernel implements SpatialKernel {
 					sourceCellIds: [cid],
 					overlap: "difference",
 					volume: diffVol,
-					regionPoints: brepSolidRegionPoints(remaining, cellCorners),
+					regionPoints: brepSolidRegionPoints(remaining, diffFallback),
 				});
 			}
 		}
@@ -646,6 +666,10 @@ if (import.meta.vitest) {
 			const parts = await kernel.computePartViews!(topo);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
 			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
+			const inter = parts.find((p) => p.overlap === "intersection");
+			const diffA = parts.find((p) => p.id === `part-${a}-difference`);
+			expect(diffA?.volume).toBeLessThan(8);
+			expect((diffA?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(8, 2);
 		});
 
 		it("executeCommandDiff curve.arc places end vertex on circle not off-circle pick", async () => {

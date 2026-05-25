@@ -13,6 +13,7 @@
     "chevrotain": "^11.0.3"
   },
   "devDependencies": {
+    "@spatial/js-kernel-brepjs": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
