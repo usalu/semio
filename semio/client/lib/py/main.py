@@ -1861,7 +1861,7 @@ def _bench(name: str, func):
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_json("metabolism.kit.semio.json")
+    kit_metabolism = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
     kit_original = {
         **kit_metabolism,
         "designs": [
@@ -19105,7 +19105,7 @@ def _test_find_design(kit: dict, name: str, parent_name: str = None) -> dict:
 
 
 def _test_flatten(design_name, parent_name=None):
-    kit_dict = _test_load_json("metabolism.kit.semio.json")
+    kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
     design = _test_find_design(kit_dict, design_name, parent_name)
 
     expected_design = next(
@@ -19295,7 +19295,7 @@ def _test_create_glb_blob(
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
-            kit_dict = _test_load_json("metabolism.kit.semio.json")
+            kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             serialized = json.dumps(kit_dict)
             deserialized = json.loads(serialized)
             assert areKitsDictEqual(kit_dict, deserialized), (
@@ -19670,7 +19670,7 @@ class TestFlattenMerkle:
 class TestChange:
     class TestMetabolism:
         def test_kit_change_forward_backward_inverse_behavior(self):
-            kit_original = _test_load_json("metabolism.kit.semio.json")
+            kit_original = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             kit_original["designs"] = [
                 d for d in kit_original.get("designs", []) if not d.get("parent")
             ]
@@ -19961,7 +19961,7 @@ class TestDesignWithDiff:
 class TestValidation:
     class TestMetabolism:
         def test_metabolism_kit_validate_empty_report(self):
-            valid_kit = _test_load_json("metabolism.kit.semio.json")
+            valid_kit = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             valid_result = validateKitDict(valid_kit)
             assert not valid_result.hasErrors()
 
@@ -19975,7 +19975,7 @@ class TestValidation:
             assert areValidationResultsEqual(result, expected)
 
         def test_plain_descriptions_do_not_create_emoji_validation_problems(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
+            kit = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
             kit["description"] = "Plain kit summary"
             for index, entry in enumerate(kit.get("types", [])):
                 entry["description"] = f"Repeated plain description {index % 2}"
@@ -20791,7 +20791,7 @@ class TestKitToMetaShallow:
     """🔖Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        kit_dict = _test_load_json("stores/metabolism/wip/initialKit/kit.semio.json")
         expected_meta = _test_load_json("metabolism.meta.kit.semio.json")
         expected_shallow = _test_load_json("metabolism.shallow.kit.semio.json")
 

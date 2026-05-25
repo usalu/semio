@@ -3699,7 +3699,7 @@ use super::*;
     pub fn load_metabolism_kit_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
-            .join("assets/semio/metabolism.kit.semio.json");
+            .join("assets/semio/metabolism/wip/initialKit/kit.semio.json");
         let data = std::fs::read_to_string(&path).expect("metabolism kit JSON");
         serde_json::from_str(&data).expect("parse metabolism kit JSON")
     }

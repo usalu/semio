@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
 import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
 
 import { CommandForm } from "../../../semio/algorithms/kit-store/CommandForm";

@@ -1,6 +1,6 @@
 {
   "kitHash": {
-    "kit": "metabolism.kit.semio.json",
+    "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
     "expected": "2a7c49348c09e2bcb30a8ebc0224591e8b3041f81748d1acc30f88b9aca63a01",
     "expectedNet48": "3640c4cf3718af017555369e6f2396e7c3b8e0f74830599dad4e3f2ee2c39268"
   },

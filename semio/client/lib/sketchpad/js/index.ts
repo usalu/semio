@@ -45209,7 +45209,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const METABOLISM_ZIP_PATH = path.resolve(__dirname, "../assets/semio/metabolism.zip");
-  const METABOLISM_KIT_JSON_PATH = path.resolve(__dirname, "../assets/semio/metabolism.kit.semio.json");
+  const METABOLISM_KIT_JSON_PATH = path.resolve(__dirname, "../assets/semio/metabolism/wip/initialKit/kit.semio.json");
   const METABOLISM_DIR_PATH = path.resolve(__dirname, "../assets/semio/metabolism");
 
   const TOLERANCE = 0.001;
@@ -45248,7 +45248,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   }
 
   /**
-   * @emoji Â­Æ’Ã´Ã® Folder round-trip: `readKit` may serve JSON (`metabolism.kit.semio.json`) or native `.semio/kit.db` (Rust `save_sqlite`).
+  * @emoji Â­Æ’Ã´Ã® Folder round-trip: `readKit` may serve JSON (`metabolism/wip/initialKit/kit.semio.json`) or native `.semio/kit.db` (Rust `save_sqlite`).
    */
   async function ensureMetabolismFolderKitDbFile(): Promise<void> {
     await loadMetabolismKitFixture();

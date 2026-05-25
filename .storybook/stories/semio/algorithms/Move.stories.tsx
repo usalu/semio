@@ -23,7 +23,7 @@ import {
   type AlgorithmWindowDef,
 } from "@semio/algorithms";
 
-import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
 import { DragPieces, MoveStoryDesign, MoveVector } from "@semio/assets";
 
 const rawDesign = { ...MoveStoryDesign, id: "move-preset-id", name: "Move Preset" };

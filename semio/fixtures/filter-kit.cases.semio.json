@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "nakagin_capsule_tower",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "expectedKit": "nakagin-capsule-tower.filtered.kit.semio.json",
       "designFamilies": []
@@ -11,32 +11,32 @@
   "globCases": [
     {
       "name": "type_include_capsule",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "typeInclude": [
         "Capsule*"
       ]
     },
     {
       "name": "type_exclude_capsule",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "typeExclude": [
         "Capsule*"
       ]
     },
     {
       "name": "design_include_nakagin",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "designInclude": [
         "Nakagin*"
       ]
     },
     {
       "name": "empty_filter",
-      "kit": "metabolism.kit.semio.json"
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json"
     },
     {
       "name": "combined_design_and_type_exclude",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "typeExclude": [
         "Cylindric*"

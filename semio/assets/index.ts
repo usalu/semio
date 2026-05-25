@@ -11,7 +11,7 @@
 //#region 🗃️Exports
 // Re-exports and data constants MUST come from the Metabolism kit assets.
 
-import MetabolismKitData from "./fixtures/metabolism.kit.semio.json";
+import MetabolismKitData from "../fixtures/stores/metabolism/wip/initialKit/kit.semio.json";
 export * from "./icons";
 
 //#region 🔖KitBootstrapHelpers

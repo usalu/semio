@@ -387,7 +387,7 @@ public class Tests
         public void Metabolism_Json_Memory_Json_Json_Zip_Zip_Json()
         {
 
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var json = Utility.Serialize(kit);
             var deserializedKit = Utility.DeserializeKit(json);
             Assert.Equal(Utility.Serialize(kit), Utility.Serialize(deserializedKit!));
@@ -418,7 +418,7 @@ public class Tests
             [Fact]
             public void Metabolism_Kit_Export_Import_Matches_Json()
             {
-                var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+                var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
                 var tempDir = Path.Combine(Path.GetTempPath(), "semio_folder_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 try
@@ -488,7 +488,7 @@ public class Tests
 
         private void TestFlatten(string designName, string? parentName = null)
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = FindDesign(kit, designName, parentName);
 
             var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Id == design.Id);
@@ -716,7 +716,7 @@ public class Tests
         [Fact]
         public void CachedFlattenReusesValues()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var (_, firstCache) = Kit.FlattenDesignCached(kit, design.Id);
             Assert.True(firstCache.Count > 0);
@@ -737,7 +737,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()
         {
-            var kitOriginal = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kitOriginal = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             kitOriginal.Designs = kitOriginal.Designs?.Where(d => d.Parent == null).ToList();
 
             var kitDiff = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
@@ -815,7 +815,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Validate_Empty_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var result = SemioValidator.ValidateKit(kit);
             Assert.Empty(result.Issues);
         }
@@ -870,7 +870,7 @@ public class Tests
         [Fact]
         public void Plain_Descriptions_Do_Not_Create_Emoji_Validation_Issues()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             kit.Description = "Plain kit summary";
             for (var i = 0; i < kit.Types.Count; i++)
                 kit.Types[i].Description = $"Repeated plain description {i % 2}";
@@ -921,7 +921,7 @@ public class Tests
         [Fact]
         public void Design_Pieces_MoveVector_DiffDesign()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = Tests.LoadAsset<Design>("drag/design.semio.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
             var vector = Tests.LoadAsset<MoveVector>("move/vector.semio.json");
@@ -959,7 +959,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Delete_Third_Tambour_And_First_Small_Tower_Connection()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var selection = Tests.LoadAsset<Design>("nakagin-capsule-tower.deleted.selection.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("nakagin-capsule-tower.deleted.design.diff.semio.json");
@@ -1015,7 +1015,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Copy_Paste_Roundtrip()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var pasteTargetDesign = Tests.LoadAsset<Design>("nakagin-capsule-tower.paste.design.semio.json");
             var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.semio.json");
@@ -1340,7 +1340,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".glb");
             Assert.NotNull(result);
@@ -1359,7 +1359,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Gltf_Valid_Json()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
@@ -1372,7 +1372,7 @@ public class Tests
         [Fact]
         public void Invalid_Format_Throws()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             Assert.Throws<ArgumentException>(() => Kit.ExportDesignRepresentation(kit, design.Id, ".invalid"));
         }
@@ -1380,7 +1380,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Scene_Graph_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
@@ -1399,7 +1399,7 @@ public class Tests
         [Fact]
         public void Type_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var type = kit.Types.First();
             var meta = type.ToMeta();
 
@@ -1422,7 +1422,7 @@ public class Tests
         [Fact]
         public void Type_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var type = kit.Types.First();
             var shallow = type.ToShallow();
 
@@ -1450,7 +1450,7 @@ public class Tests
         [Fact]
         public void Design_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var meta = design.ToMeta();
 
@@ -1472,7 +1472,7 @@ public class Tests
         [Fact]
         public void Design_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var shallow = design.ToShallow();
 
@@ -1498,7 +1498,7 @@ public class Tests
         [Fact]
         public void Kit_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var meta = kit.ToMeta();
 
             Assert.Equal(kit.Id, meta.Id);
@@ -1518,7 +1518,7 @@ public class Tests
         [Fact]
         public void Kit_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var shallow = kit.ToShallow();
 
             Assert.Equal(kit.Id, shallow.Id);
@@ -1544,7 +1544,7 @@ public class Tests
         [Fact]
         public void Kit_To_Meta_To_Shallow()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
 
             var meta = kit.ToMeta();
             Assert.NotNull(meta);
@@ -1620,7 +1620,7 @@ public class Tests
         [Fact]
         public void HashKit_Deterministic()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
             Assert.Equal(hash1, hash2);

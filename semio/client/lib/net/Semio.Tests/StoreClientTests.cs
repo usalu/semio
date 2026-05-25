@@ -178,7 +178,7 @@ public sealed class StoreKitIOTests
     [Fact]
     public void Metabolism_KitToInstallDto_Position_Centers_Are_Uv_Objects()
     {
-        var kit = Semio.Tests.Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+        var kit = Semio.Tests.Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
         var dto = StoreKitIO.KitToInstallProjection(kit);
         static void Walk(JToken? t)
         {
@@ -202,7 +202,7 @@ public sealed class StoreKitIOTests
     public void Metabolism_InstallProjection_Roundtrip_When_Store_Present()
     {
         if (!StoreClientTests.StoreBinaryPresent()) return;
-        var kit = Semio.Tests.Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+        var kit = Semio.Tests.Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.semio.json");
         var dir = Path.Combine(Path.GetTempPath(), $"semio-metabolism-e2e-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
         try

@@ -27,7 +27,7 @@ export async function runTests(options: {
     ...process.env,
     SEMIO_EXTENSION_TESTS_PATH: extensionTestsPath,
     SEMIO_E2E_KIT_FOLDER: process.env.SEMIO_E2E_KIT_FOLDER ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism"),
-    SEMIO_E2E_KIT_FILE: process.env.SEMIO_E2E_KIT_FILE ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism.kit.semio.json"),
+    SEMIO_E2E_KIT_FILE: process.env.SEMIO_E2E_KIT_FILE ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism/wip/initialKit/kit.semio.json"),
     ELECTRON_DISABLE_SANDBOX: "1",
   };
   if (options.workspaceFolder) {

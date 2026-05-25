@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "nakagin_capsule_tower",
-      "kit": "metabolism.kit.semio.json",
+      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "diff": "nakgin-capsule-tower.diff.design.semio.json",
       "expected": "nakagin-capsule-tower.with-diff.design.semio.json",
