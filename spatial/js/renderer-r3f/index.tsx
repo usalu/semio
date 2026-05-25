@@ -3167,13 +3167,6 @@ if (import.meta.vitest) {
 					{
 						key: " ",
 						ctrlKey: false,
-
-			it("escape aborts active interactions before dismissing chrome", () => {
-				expect(replEscapeAction({ interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
-				expect(replEscapeAction({ interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
-				expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
-				expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
-			});
 						metaKey: false,
 						altKey: false,
 						defaultPrevented: false,
@@ -3239,6 +3232,13 @@ if (import.meta.vitest) {
 					{ interactionActive: false, cmdTarget: cmd },
 				),
 			).toBe(false);
+		});
+
+		it("escape aborts active interactions before dismissing chrome", () => {
+			expect(replEscapeAction({ interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
+			expect(replEscapeAction({ interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
+			expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
+			expect(replEscapeAction({ interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
 		});
 
 		it("autocomplete helpers rank prefix matches and expose inline suffix", () => {

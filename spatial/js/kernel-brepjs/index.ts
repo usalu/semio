@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 📥Imports
-import { box, checkInterference, cut, initFromOC, intersect, measureVolume, mesh, unwrap } from "brepjs";
+import { box, checkInterference, cone, cylinder, cut, initFromOC, intersect, measureVolume, mesh, sphere, unwrap } from "brepjs";
 import type { ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
@@ -23,6 +23,7 @@ import {
 	type SurfaceView,
 	TopologyGraph,
 	type TopologyDiff,
+	type CellSolid,
 	type EdgeCurve,
 	type Vec3,
 	type VertexRef,
@@ -30,9 +31,13 @@ import {
 	type SurfaceRef,
 	type PartRef,
 	arcEndFromAngle,
-	arcPlaneFrame,
-	arcSweepRadians,
+	circleFromCenterRadiusPoint,
+	edgeCurveLength,
+	nurbsCurveFromPoles,
 	vec3Distance,
+	vec3Length,
+	vec3Normalize,
+	vec3Sub,
 } from "@spatial/js-core";
 // #endregion 📥Imports
 
@@ -140,10 +145,40 @@ export class BrepjsKernel implements KernelAdapter {
 		for (const cell of Object.values(topo.cells)) {
 			const ref = cell.id;
 			if (this.solids.has(ref)) continue;
+			if (cell.solid) {
+				this.solids.set(ref, this.solidFromCellSolid(cell.solid));
+				continue;
+			}
 			const aabb = topologyCellAabb(topo, cell);
 			if (!aabb) continue;
 			this.solids.set(ref, this.solidFromAabb(aabb.min, aabb.max));
 		}
+	}
+
+	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `CellSolid` (sphere/cylinder/cone/box). */
+	solidFromCellSolid(solid: CellSolid): ValidSolid {
+		if (solid.kind === "sphere") {
+			return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
+		}
+		if (solid.kind === "cylinder") {
+			const h = solid.height;
+			const at: [number, number, number] = [
+				solid.base[0] + (solid.axis[0] * h) / 2,
+				solid.base[1] + (solid.axis[1] * h) / 2,
+				solid.base[2] + (solid.axis[2] * h) / 2,
+			];
+			return cylinder(solid.radius, h, { at, centered: true });
+		}
+		if (solid.kind === "cone") {
+			const r2 = solid.radiusTop ?? 0;
+			const at: [number, number, number] = [
+				solid.base[0] + (solid.axis[0] * solid.height) / 2,
+				solid.base[1] + (solid.axis[1] * solid.height) / 2,
+				solid.base[2] + (solid.axis[2] * solid.height) / 2,
+			];
+			return cone(solid.radius, r2, solid.height, { at, centered: true });
+		}
+		return this.solidFromCorners({ cornerA: solid.cornerA, cornerB: solid.cornerB, height: solid.height });
 	}
 
 	async computePartViews(topo: TopologyGraph): Promise<PartView[]> {
@@ -220,57 +255,106 @@ export class BrepjsKernel implements KernelAdapter {
 
 	async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }> {
 		const nextId = (kind: string) => `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
-		
-		const createDummyVertex = (pos: number[]) => {
+		const asVec3 = (v: unknown, fallback: Vec3): Vec3 =>
+			Array.isArray(v) && v.length >= 3 ? ([Number(v[0]), Number(v[1]), Number(v[2])] as Vec3) : fallback;
+		const poleList = (raw: unknown): Vec3[] => {
+			if (!Array.isArray(raw)) return [];
+			return raw.filter((p): p is Vec3 => Array.isArray(p) && p.length >= 3).map((p) => [Number(p[0]), Number(p[1]), Number(p[2])] as Vec3);
+		};
+
+		const createVertex = (pos: Vec3) => {
 			const id = nextId("v");
-			return { id: id as VertexRef, position: [pos[0], pos[1], pos[2]] as Vec3 };
+			return { id: id as VertexRef, position: pos };
 		};
 
 		if (commandId === "curve.circle") {
-			const center = Array.isArray(params.center) ? params.center as number[] : [0,0,0];
-			const radiusPoint = Array.isArray(params.radiusPoint) ? params.radiusPoint as number[] : [1,0,0];
-			const v0 = createDummyVertex(center);
-			const v1 = createDummyVertex(radiusPoint);
-			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
+			const center = asVec3(params.center, [0, 0, 0]);
+			const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+			const geom = circleFromCenterRadiusPoint(center, radiusPoint);
+			if (!geom) return { diff: {} };
+			const v = createVertex(radiusPoint);
+			const curve: EdgeCurve = { kind: "circle", center: geom.center, normal: geom.normal, radius: geom.radius };
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [v.id, v.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
-			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] } } };
+			return { diff: { vertices: { added: [v] }, edges: { added: [e] }, wires: { added: [w] } } };
 		}
 		if (commandId === "curve.arc") {
-			const center = (Array.isArray(params.center) ? params.center : [0, 0, 0]) as Vec3;
-			const start = (Array.isArray(params.start) ? params.start : null) as Vec3 | null;
-			const endRaw = Array.isArray(params.end) ? (params.end as Vec3) : null;
+			const center = asVec3(params.center, [0, 0, 0]);
+			const start = params.start != null ? asVec3(params.start, [1, 0, 0]) : ([1, 0, 0] as Vec3);
+			const endRaw = params.end != null ? asVec3(params.end, start) : null;
 			const angle = typeof params.angle === "number" ? params.angle : null;
-			const startPos = start ?? ([1, 0, 0] as Vec3);
 			let endPos: Vec3;
-			if (endRaw) {
-				endPos = endRaw;
-			} else if (angle !== null) {
-				endPos = arcEndFromAngle(center, startPos, angle) ?? startPos;
-			} else {
-				endPos = startPos;
-			}
-			const vStart = createDummyVertex(startPos);
-			const vEnd = createDummyVertex(endPos);
+			if (endRaw) endPos = endRaw;
+			else if (angle !== null) endPos = arcEndFromAngle(center, start, angle) ?? start;
+			else endPos = start;
+			const vStart = createVertex(start);
+			const vEnd = createVertex(endPos);
 			const curve: EdgeCurve = { kind: "arc", center };
 			const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
 			return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
 		}
-		if (commandId === "solid.cylinder" || commandId === "solid.sphere" || commandId === "solid.cone" || commandId.startsWith("solid.")) {
-			const v0 = createDummyVertex([0,0,0]);
-			const v1 = createDummyVertex([1,1,1]);
-			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
+		if (commandId === "curve.controlPointCurve" || commandId === "curve.interpolateCurve") {
+			const poles = poleList(params.points);
+			const curve = nurbsCurveFromPoles(poles);
+			if (!curve || poles.length < 2) return { diff: {} };
+			const vStart = createVertex(poles[0]!);
+			const vEnd = createVertex(poles[poles.length - 1]!);
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
-			const f = { id: nextId("f") as FaceRef, wireIds: [w.id] };
-			const s = { id: nextId("s") as ShellRef, faceIds: [f.id] };
-			const c = { id: nextId("c") as CellRef, shellIds: [s.id] };
-			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] }, faces: { added: [f] }, shells: { added: [s] }, cells: { added: [c] } } };
+			return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
+		}
+		if (commandId === "solid.sphere") {
+			const center = asVec3(params.center, [0, 0, 0]);
+			const radiusPoint = params.radiusPoint != null ? asVec3(params.radiusPoint, center) : null;
+			const radius =
+				typeof params.radius === "number"
+					? params.radius
+					: radiusPoint
+						? vec3Distance(center, radiusPoint)
+						: 1;
+			const solid: CellSolid = { kind: "sphere", center, radius };
+			const c = { id: nextId("c") as CellRef, shellIds: [], solid };
+			await this.ensureInit();
+			this.solids.set(c.id, this.solidFromCellSolid(solid));
+			return { diff: { cells: { added: [c] } } };
+		}
+		if (commandId === "solid.cylinder") {
+			const base = asVec3(params.base, [0, 0, 0]);
+			const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+			const end = asVec3(params.end, base);
+			const radius = vec3Distance(base, radiusPoint);
+			const axisVec = vec3Sub(end, base);
+			const height = vec3Length(axisVec);
+			const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
+			const solid: CellSolid = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
+			const c = { id: nextId("c") as CellRef, shellIds: [], solid };
+			await this.ensureInit();
+			this.solids.set(c.id, this.solidFromCellSolid(solid));
+			return { diff: { cells: { added: [c] } } };
+		}
+		if (commandId === "solid.cone") {
+			const base = asVec3(params.base, [0, 0, 0]);
+			const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
+			const end = asVec3(params.end, [0, 0, 1] as Vec3);
+			const radius = vec3Distance(base, radiusPoint);
+			const axisVec = vec3Sub(end, base);
+			const height = vec3Length(axisVec);
+			const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
+			const solid: CellSolid = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
+			const c = { id: nextId("c") as CellRef, shellIds: [], solid };
+			await this.ensureInit();
+			this.solids.set(c.id, this.solidFromCellSolid(solid));
+			return { diff: { cells: { added: [c] } } };
+		}
+		if (commandId.startsWith("solid.")) {
+			return { diff: {} };
 		}
 		if (commandId === "transform.mirror") {
-			const v0 = createDummyVertex([0,0,0]);
+			const v0 = createVertex([0, 0, 0]);
 			return { diff: { vertices: { added: [v0] } } };
 		}
-		
+
 		return { diff: {} };
 	}
 
@@ -304,12 +388,7 @@ export class BrepjsKernel implements KernelAdapter {
 		const pa = topo.vertices[String(ed.vertexIds[0])]?.position;
 		const pb = topo.vertices[String(ed.vertexIds[1])]?.position;
 		if (!pa || !pb) return 0;
-		if (ed.curve?.kind === "arc") {
-			const frame = arcPlaneFrame(ed.curve.center, pa, pb);
-			if (!frame) return vec3Distance(pa, pb);
-			return frame.radius * arcSweepRadians(frame, pb);
-		}
-		return vec3Distance(pa, pb);
+		return edgeCurveLength(ed.curve, ed.vertexIds[0] === ed.vertexIds[1] ? [pa] : [pa, pb]);
 	}
 
 	async faceArea(f: FaceRef, topo: TopologyGraph): Promise<number> {

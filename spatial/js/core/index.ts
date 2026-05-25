@@ -86,7 +86,31 @@ export function vec3Normalize(a: Vec3): Vec3 {
 }
 // #endregion 🧮Vec
 
-// #region 🔵ArcCurve
+// #region 🌀EdgeGeometry
+/** @emoji 🌀 OCCT-style edge curve kinds (`Geom_Curve` under a topologic `Edge`). */
+export type EdgeCurve =
+	| { readonly kind: "line" }
+	| { readonly kind: "arc"; readonly center: Vec3 }
+	| { readonly kind: "circle"; readonly center: Vec3; readonly normal: Vec3; readonly radius: number }
+	| {
+			readonly kind: "ellipse";
+			readonly center: Vec3;
+			readonly normal: Vec3;
+			readonly majorAxis: Vec3;
+			readonly majorRadius: number;
+			readonly minorRadius: number;
+	  }
+	| {
+			readonly kind: "nurbs";
+			readonly poles: readonly Vec3[];
+			readonly degree: number;
+			readonly weights?: readonly number[];
+			readonly knots?: readonly number[];
+			readonly multiplicities?: readonly number[];
+			readonly periodic?: boolean;
+			readonly rational?: boolean;
+	  };
+
 /** @emoji 🔵 Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
 export interface ArcPlaneFrame {
 	readonly center: Vec3;
@@ -165,7 +189,115 @@ export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Ve
 	);
 }
 
-/** @emoji 🔵 Samples polyline points along an edge (arc tessellation or vertex chord). */
+/** @emoji ⭕ Tessellates a full circle (`Geom_Circle`) on plane `normal` through `center`. */
+export function circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 64): readonly Vec3[] {
+	const frame = arcFrameFromRadiusPoint(center, vec3Add(center, vec3Scale(vec3Normalize(normal), radius)));
+	if (!frame) return [center];
+	const n = Math.max(8, segments);
+	const pts: Vec3[] = [];
+	for (let i = 0; i <= n; i++) {
+		const a = (i / n) * Math.PI * 2;
+		pts.push(
+			vec3Add(
+				frame.center,
+				vec3Add(vec3Scale(frame.u, frame.radius * Math.cos(a)), vec3Scale(frame.v, frame.radius * Math.sin(a))),
+			),
+		);
+	}
+	return pts;
+}
+
+/** @emoji 🥚 Tessellates an ellipse (`Geom_Ellipse`) in the plane of `normal` / `majorAxis`. */
+export function ellipseSamplePoints(
+	center: Vec3,
+	normal: Vec3,
+	majorAxis: Vec3,
+	majorRadius: number,
+	minorRadius: number,
+	segments = 64,
+): readonly Vec3[] {
+	const u = vec3Normalize(majorAxis);
+	const v = vec3Normalize(vec3Cross(normal, u));
+	const n = Math.max(8, segments);
+	const pts: Vec3[] = [];
+	for (let i = 0; i <= n; i++) {
+		const a = (i / n) * Math.PI * 2;
+		pts.push(
+			vec3Add(
+				center,
+				vec3Add(vec3Scale(u, majorRadius * Math.cos(a)), vec3Scale(v, minorRadius * Math.sin(a))),
+			),
+		);
+	}
+	return pts;
+}
+
+/** @emoji 📈 Centripetal Catmull–Rom samples through `poles` (display / length estimate for `Geom_BSplineCurve`). */
+export function nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 12): readonly Vec3[] {
+	if (poles.length < 2) return poles;
+	if (poles.length === 2) return poles;
+	const pts: Vec3[] = [];
+	const n = poles.length;
+	for (let i = 0; i < n - 1; i++) {
+		const p0 = poles[Math.max(0, i - 1)]!;
+		const p1 = poles[i]!;
+		const p2 = poles[i + 1]!;
+		const p3 = poles[Math.min(n - 1, i + 2)]!;
+		const segs = i === n - 2 ? segmentsPerSpan : segmentsPerSpan;
+		for (let j = 0; j < (i === n - 2 ? segs : segs); j++) {
+			const t = j / segs;
+			const t2 = t * t;
+			const t3 = t2 * t;
+			pts.push([
+				0.5 *
+					(2 * p1[0] +
+						(-p0[0] + p2[0]) * t +
+						(2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+						(-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+				0.5 *
+					(2 * p1[1] +
+						(-p0[1] + p2[1]) * t +
+						(2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+						(-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
+				0.5 *
+					(2 * p1[2] +
+						(-p0[2] + p2[2]) * t +
+						(2 * p0[2] - 5 * p1[2] + 4 * p2[2] - p3[2]) * t2 +
+						(-p0[2] + 3 * p1[2] - 3 * p2[2] + p3[2]) * t3),
+			]);
+		}
+	}
+	pts.push(poles[n - 1]!);
+	return pts;
+}
+
+/** @emoji 📏 Polyline length from sampled points. */
+export function polylineLength(points: readonly Vec3[]): number {
+	let len = 0;
+	for (let i = 1; i < points.length; i++) len += vec3Distance(points[i - 1]!, points[i]!);
+	return len;
+}
+
+/** @emoji 📏 Curve length from edge curve + boundary vertices (tessellated where non-linear). */
+export function edgeCurveLength(curve: EdgeCurve | undefined, ends: readonly Vec3[]): number {
+	if (ends.length < 2) return 0;
+	const c = curve ?? { kind: "line" as const };
+	if (c.kind === "line") return vec3Distance(ends[0]!, ends[1]!);
+	if (c.kind === "arc") {
+		const frame = arcPlaneFrame(c.center, ends[0]!, ends[1]!);
+		if (!frame) return vec3Distance(ends[0]!, ends[1]!);
+		return frame.radius * arcSweepRadians(frame, ends[1]!);
+	}
+	if (c.kind === "circle") return Math.PI * 2 * c.radius;
+	if (c.kind === "ellipse") {
+		const h = c.majorRadius - c.minorRadius;
+		return Math.PI * (3 * (c.majorRadius + c.minorRadius) - Math.sqrt((3 * c.majorRadius + h) * (c.majorRadius + 3 * h)));
+	}
+	if (c.kind === "nurbs") return polylineLength(nurbsDisplaySamplePoints(c.poles));
+	return vec3Distance(ends[0]!, ends[1]!);
+}
+
+/** @emoji 🔵 Samples points along an edge (exact curve tessellation, not vertex chord). */
 export function edgeSamplePoints(
 	vertices: Readonly<Record<string, VertexRecord>>,
 	edge: EdgeRecord,
@@ -174,13 +306,42 @@ export function edgeSamplePoints(
 	const ends = edge.vertexIds
 		.map((id) => vertices[String(id)]?.position)
 		.filter((p): p is Vec3 => Boolean(p));
-	if (ends.length < 2) return ends;
-	if (edge.curve?.kind === "arc") {
-		return arcSamplePoints(edge.curve.center, ends[0]!, ends[1]!, segments);
+	if (ends.length < 1) return ends;
+	const curve = edge.curve;
+	if (!curve || curve.kind === "line") {
+		if (ends.length >= 2) return ends;
+		return ends;
 	}
-	return ends;
+	if (curve.kind === "arc" && ends.length >= 2) return arcSamplePoints(curve.center, ends[0]!, ends[1]!, segments);
+	if (curve.kind === "circle") return circleSamplePoints(curve.center, curve.normal, curve.radius, Math.max(segments, 64));
+	if (curve.kind === "ellipse") {
+		return ellipseSamplePoints(
+			curve.center,
+			curve.normal,
+			curve.majorAxis,
+			curve.majorRadius,
+			curve.minorRadius,
+			Math.max(segments, 64),
+		);
+	}
+	if (curve.kind === "nurbs") return nurbsDisplaySamplePoints(curve.poles, Math.max(4, Math.ceil(segments / 4)));
+	return ends.length >= 2 ? ends : ends;
 }
-// #endregion 🔵ArcCurve
+
+/** @emoji ⭕ `Geom_Circle` params from center and one on-circle point. */
+export function circleFromCenterRadiusPoint(center: Vec3, radiusPoint: Vec3): { readonly center: Vec3; readonly normal: Vec3; readonly radius: number } | null {
+	const frame = arcFrameFromRadiusPoint(center, radiusPoint);
+	if (!frame) return null;
+	return { center, normal: frame.normal, radius: frame.radius };
+}
+
+/** @emoji 📈 Builds `EdgeCurve` nurbs from control points (Topologic `EdgeUtility::ByNurbsCurve` subset). */
+export function nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null {
+	if (poles.length < 2) return null;
+	const degree = Math.min(3, poles.length - 1);
+	return { kind: "nurbs", poles, degree };
+}
+// #endregion 🌀EdgeGeometry
 
 // #region 🪪Refs
 /** @emoji 🪪 Opaque branded string ids for editable topology entities. */
@@ -844,12 +1005,7 @@ export interface VertexRecord {
 	readonly position: Vec3;
 }
 
-/** @emoji 🌀 Edge geometry beyond straight vertex chords (Topologic: edge topology vs curve shape). */
-export type EdgeCurve =
-	| { readonly kind: "line" }
-	| { readonly kind: "arc"; readonly center: Vec3 };
-
-/** @emoji 🧱 Edge payload: references one or two boundary vertices. */
+/** @emoji 🧱 Edge payload: two boundary vertices; optional `curve` (`Geom_Curve` analog). */
 export interface EdgeRecord {
 	readonly id: EdgeRef;
 	readonly vertexIds: readonly VertexRef[];
@@ -862,10 +1018,26 @@ export interface WireRecord {
 	readonly edgeIds: readonly EdgeRef[];
 }
 
-/** @emoji 🧱 Face payload: boundary wires. */
+/** @emoji 🌊 Face-support geometry (`Geom_Surface` under a topologic `Face`). */
+export type FaceSurface =
+	| { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
+	| { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
+	| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
+	| { readonly kind: "cone"; readonly apex: Vec3; readonly axis: Vec3; readonly radius: number; readonly semiAngle: number }
+	| {
+			readonly kind: "nurbs";
+			readonly poles: readonly (readonly Vec3[])[];
+			readonly uDegree: number;
+			readonly vDegree: number;
+			readonly uKnots?: readonly number[];
+			readonly vKnots?: readonly number[];
+	  };
+
+/** @emoji 🧱 Face payload: trimming wires + optional underlying surface. */
 export interface FaceRecord {
 	readonly id: FaceRef;
 	readonly wireIds: readonly WireRef[];
+	readonly surface?: FaceSurface;
 }
 
 /** @emoji 🧱 Shell payload: connected faces. */
@@ -874,10 +1046,18 @@ export interface ShellRecord {
 	readonly faceIds: readonly FaceRef[];
 }
 
-/** @emoji 🧱 Cell payload: bounded volume via closed shells. */
+/** @emoji 🧊 Analytic cell solid (`BRepPrimAPI` / `Geom` analog under topologic `Cell`). */
+export type CellSolid =
+	| { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
+	| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
+	| { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
+	| { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
+
+/** @emoji 🧱 Cell payload: bounded volume via closed shells and/or analytic solid. */
 export interface CellRecord {
 	readonly id: CellRef;
 	readonly shellIds: readonly ShellRef[];
+	readonly solid?: CellSolid;
 }
 
 /** @emoji 🧱 Cell complex payload: member cells. */
@@ -1033,9 +1213,9 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 export type VertexRecordDiff = { readonly id: VertexRef } & Partial<Pick<VertexRecord, "position">>;
 export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord, "vertexIds" | "curve">>;
 export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord, "edgeIds">>;
-export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds">>;
+export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds" | "surface">>;
 export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
-export type CellRecordDiff = { readonly id: CellRef } & Partial<Pick<CellRecord, "shellIds">>;
+export type CellRecordDiff = { readonly id: CellRef } & Partial<Pick<CellRecord, "shellIds" | "solid">>;
 export type CellComplexRecordDiff = { readonly id: CellComplexRef } & Partial<Pick<CellComplexRecord, "cellIds">>;
 export type ClusterRecordDiff = { readonly id: ClusterRef } & Partial<Pick<ClusterRecord, "memberIds">>;
 
@@ -2191,8 +2371,45 @@ function derivedCellPoints(topo: TopologyGraph, cell: CellRecord): readonly Vec3
 	return [...new Map(points.map((p) => [p.join(","), p])).values()];
 }
 
-/** @emoji 📐 Axis-aligned bounds of a cell from its shell face vertices. */
+/** @emoji 📐 Axis-aligned bounds of analytic `CellSolid` when present. */
+export function cellSolidAabb(solid: CellSolid): { readonly min: Vec3; readonly max: Vec3 } {
+	if (solid.kind === "box") {
+		const ax = Math.min(solid.cornerA[0], solid.cornerB[0]);
+		const ay = Math.min(solid.cornerA[1], solid.cornerB[1]);
+		const bx = Math.max(solid.cornerA[0], solid.cornerB[0]);
+		const by = Math.max(solid.cornerA[1], solid.cornerB[1]);
+		const z0 = Math.min(solid.cornerA[2], solid.cornerB[2]);
+		const z1 = z0 + solid.height;
+		return { min: [ax, ay, z0], max: [bx, by, z1] };
+	}
+	if (solid.kind === "sphere") {
+		const r = solid.radius;
+		return {
+			min: [solid.center[0] - r, solid.center[1] - r, solid.center[2] - r],
+			max: [solid.center[0] + r, solid.center[1] + r, solid.center[2] + r],
+		};
+	}
+	const ax = vec3Normalize(solid.axis);
+	const h = solid.height;
+	const r = solid.kind === "cone" ? Math.max(solid.radius, solid.radiusTop ?? 0) : solid.radius;
+	const end = vec3Add(solid.base, vec3Scale(ax, h));
+	return {
+		min: [
+			Math.min(solid.base[0], end[0]) - r,
+			Math.min(solid.base[1], end[1]) - r,
+			Math.min(solid.base[2], end[2]) - r,
+		],
+		max: [
+			Math.max(solid.base[0], end[0]) + r,
+			Math.max(solid.base[1], end[1]) + r,
+			Math.max(solid.base[2], end[2]) + r,
+		],
+	};
+}
+
+/** @emoji 📐 Axis-aligned bounds of a cell from analytic solid or shell face vertices. */
 export function topologyCellAabb(topo: TopologyGraph, cell: CellRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
+	if (cell.solid) return cellSolidAabb(cell.solid);
 	const points = derivedCellPoints(topo, cell);
 	if (points.length === 0) return null;
 	let minX = Infinity;
