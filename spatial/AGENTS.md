@@ -4,7 +4,7 @@
 
 Topology: A Topology is an abstract superclass.
 
-## Editable
+## Raw (Editable)
 
 Vertex: A Vertex is a zero-dimensional entity equivalent to a geometry point.
 Edge: An Edge is a one-dimensional entity defined by two vertices. It is important to note that while a topologic edge is made of two vertices, its geometry can be a curve with multiple control vertices.
@@ -17,19 +17,14 @@ Cluster: A Cluster is a collection of any topologic entities. It may be contiguo
 
 Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
 
-## Non-editable
+## Analytic (Non-editable)
 
 Surfaces are derived faces that are a combination of Exposure (External or Internal) and Stance (Horizontal or Vertical).
 e.g. two coplanar faces are merged into a single surface
 e.g. when two cells intersect the surface will not be the complete face but it is split into external and internal faces.
 Surfaces are just a different way of "splitting the faces semantically". They are shape-invariant.
 
-Parts are derived cells that are a combination of Overlap (None, Difference, Intersection)
-Parts are just a different way of "splitting the cells semantically". They are shape-invariant.
+Parts are derived closed shells that are a combination of Overlap (None, Difference, Intersection)
+Parts are just a different way of "splitting the closed shells semantically". They are shape-invariant.
 
-Run one boolean intersection on all cells at the same time. Return them as intersection parts. Run for every cell boolean difference where the cutters are all the other intersecting cells. Return them as difference parts.
-Explode all parts and check wheater they are internal (inside other parts) or external, and check wheather the vertices of the parts are mostly horizontal or vertical. All parts and surfaces are made out of vertices that already exist.
-
-Volumes are derived CellGroup
-
-Skin is the
+Volumes are derived closed shells. They are the boolean union of all closed shells.
