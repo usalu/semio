@@ -2647,6 +2647,8 @@ export interface SurfaceView {
 	readonly exposure: "external" | "internal";
 	readonly stance: "horizontal" | "vertical";
 	readonly area: number;
+	/** @emoji 🪞 Pick/display hull when a face is split (subset of the parent face). */
+	readonly regionPoints?: readonly Vec3[];
 }
 
 /** @emoji 🪞 Semantic `Part` view over one or more cells (overlap classification). */
@@ -2655,6 +2657,8 @@ export interface PartView {
 	readonly sourceCellIds: readonly CellRef[];
 	readonly overlap: "none" | "difference" | "intersection";
 	readonly volume: number;
+	/** @emoji 🪞 Pick/display hull for the semantic cell partition (not the whole source cell). */
+	readonly regionPoints?: readonly Vec3[];
 }
 
 function derivedFacePoints(topo: TopologyGraph, face: FaceRecord): readonly Vec3[] {
@@ -2839,28 +2843,266 @@ function derivedCanonicalPlaneKey(normal: Vec3, centroid: Vec3, scale: number): 
 	return `${q(n[0])},${q(n[1])},${q(n[2])}:${q(d)}`;
 }
 
-/** @emoji 🪞 Groups faces by exposure × stance × coplanar plane and merges them into semantic surfaces. */
+type Aabb = { readonly min: Vec3; readonly max: Vec3 };
+type Rect2 = { readonly u0: number; readonly u1: number; readonly v0: number; readonly v1: number };
+type FacePlaneFrame = {
+	readonly normal: Vec3;
+	readonly uAxis: 0 | 1 | 2;
+	readonly vAxis: 0 | 1 | 2;
+	readonly fixedAxis: 0 | 1 | 2;
+	readonly fixed: number;
+};
+
+/** @emoji 📐 Eight corners of an axis-aligned box. */
+export function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
+	return [
+		[min[0], min[1], min[2]],
+		[max[0], min[1], min[2]],
+		[max[0], max[1], min[2]],
+		[min[0], max[1], min[2]],
+		[min[0], min[1], max[2]],
+		[max[0], min[1], max[2]],
+		[max[0], max[1], max[2]],
+		[min[0], max[1], max[2]],
+	];
+}
+
+function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
+	const min: Vec3 = [Math.max(a.min[0], b.min[0]), Math.max(a.min[1], b.min[1]), Math.max(a.min[2], b.min[2])];
+	const max: Vec3 = [Math.min(a.max[0], b.max[0]), Math.min(a.max[1], b.max[1]), Math.min(a.max[2], b.max[2])];
+	if (min[0] >= max[0] || min[1] >= max[1] || min[2] >= max[2]) return null;
+	return { min, max };
+}
+
+function aabbVolume(a: Aabb): number {
+	return Math.max(0, a.max[0] - a.min[0]) * Math.max(0, a.max[1] - a.min[1]) * Math.max(0, a.max[2] - a.min[2]);
+}
+
+function pointInAabb(p: Vec3, a: Aabb, eps = 1e-6): boolean {
+	return (
+		p[0] >= a.min[0] - eps &&
+		p[0] <= a.max[0] + eps &&
+		p[1] >= a.min[1] - eps &&
+		p[1] <= a.max[1] + eps &&
+		p[2] >= a.min[2] - eps &&
+		p[2] <= a.max[2] + eps
+	);
+}
+
+function derivedFacePlaneFrame(points: readonly Vec3[], normal: Vec3): FacePlaneFrame | null {
+	const tol = 1e-5;
+	const ax = Math.abs(normal[0]);
+	const ay = Math.abs(normal[1]);
+	const az = Math.abs(normal[2]);
+	let fixedAxis: 0 | 1 | 2 = 2;
+	if (ax >= ay && ax >= az) fixedAxis = 0;
+	else if (ay >= ax && ay >= az) fixedAxis = 1;
+	const fixedVals = points.map((p) => p[fixedAxis]);
+	if (fixedVals.some((v) => Math.abs(v - fixedVals[0]!) > tol)) return null;
+	const uAxis = (fixedAxis + 1) % 3 as 0 | 1 | 2;
+	const vAxis = (fixedAxis + 2) % 3 as 0 | 1 | 2;
+	return { normal, uAxis, vAxis, fixedAxis, fixed: fixedVals[0]! };
+}
+
+function derivedFaceRectOnPlane(points: readonly Vec3[], frame: FacePlaneFrame): Rect2 | null {
+	if (points.length === 0) return null;
+	let u0 = Infinity;
+	let u1 = -Infinity;
+	let v0 = Infinity;
+	let v1 = -Infinity;
+	for (const p of points) {
+		u0 = Math.min(u0, p[frame.uAxis]);
+		u1 = Math.max(u1, p[frame.uAxis]);
+		v0 = Math.min(v0, p[frame.vAxis]);
+		v1 = Math.max(v1, p[frame.vAxis]);
+	}
+	if (u1 <= u0 || v1 <= v0) return null;
+	return { u0, u1, v0, v1 };
+}
+
+function derivedRectToPoints(frame: FacePlaneFrame, rect: Rect2): readonly Vec3[] {
+	const mk = (u: number, v: number): Vec3 => {
+		const p: Vec3 = [0, 0, 0];
+		p[frame.fixedAxis] = frame.fixed;
+		p[frame.uAxis] = u;
+		p[frame.vAxis] = v;
+		return p;
+	};
+	return [mk(rect.u0, rect.v0), mk(rect.u1, rect.v0), mk(rect.u1, rect.v1), mk(rect.u0, rect.v1)];
+}
+
+function derivedRectArea(rect: Rect2): number {
+	return Math.max(0, rect.u1 - rect.u0) * Math.max(0, rect.v1 - rect.v0);
+}
+
+function derivedRectIntersection(a: Rect2, b: Rect2): Rect2 | null {
+	const u0 = Math.max(a.u0, b.u0);
+	const u1 = Math.min(a.u1, b.u1);
+	const v0 = Math.max(a.v0, b.v0);
+	const v1 = Math.min(a.v1, b.v1);
+	if (u1 <= u0 || v1 <= v0) return null;
+	return { u0, u1, v0, v1 };
+}
+
+function derivedRectSubtract(base: Rect2, holes: readonly Rect2[]): Rect2[] {
+	let pieces: Rect2[] = [base];
+	for (const hole of holes) {
+		const next: Rect2[] = [];
+		for (const piece of pieces) {
+			const hit = derivedRectIntersection(piece, hole);
+			if (!hit) {
+				next.push(piece);
+				continue;
+			}
+			if (piece.v1 > hit.v1) next.push({ u0: piece.u0, u1: piece.u1, v0: hit.v1, v1: piece.v1 });
+			if (piece.v0 < hit.v0) next.push({ u0: piece.u0, u1: piece.u1, v0: piece.v0, v1: hit.v0 });
+			if (piece.u0 < hit.u0) next.push({ u0: piece.u0, u1: hit.u0, v0: hit.v0, v1: hit.v1 });
+			if (piece.u1 > hit.u1) next.push({ u0: hit.u1, u1: piece.u1, v0: hit.v0, v1: hit.v1 });
+		}
+		pieces = next.filter((r) => derivedRectArea(r) > 1e-10);
+	}
+	return pieces;
+}
+
+function derivedAabbSliceOnPlane(aabb: Aabb, frame: FacePlaneFrame, eps = 1e-6): Rect2 | null {
+	if (aabb.min[frame.fixedAxis] - eps > frame.fixed || aabb.max[frame.fixedAxis] + eps < frame.fixed) return null;
+	return {
+		u0: aabb.min[frame.uAxis],
+		u1: aabb.max[frame.uAxis],
+		v0: aabb.min[frame.vAxis],
+		v1: aabb.max[frame.vAxis],
+	};
+}
+
+function derivedUnionRects(rects: readonly Rect2[]): Rect2[] {
+	const out: Rect2[] = [];
+	for (const r of rects) {
+		let merged = false;
+		for (let i = 0; i < out.length; i++) {
+			const hit = derivedRectIntersection(out[i]!, r);
+			if (!hit) continue;
+			const u = out[i]!;
+			out[i] = {
+				u0: Math.min(u.u0, r.u0),
+				u1: Math.max(u.u1, r.u1),
+				v0: Math.min(u.v0, r.v0),
+				v1: Math.max(u.v1, r.v1),
+			};
+			merged = true;
+			break;
+		}
+		if (!merged) out.push(r);
+	}
+	return out;
+}
+
+function derivedCellAabbMap(topo: TopologyGraph): Map<string, Aabb> {
+	const out = new Map<string, Aabb>();
+	for (const cell of Object.values(topo.cells)) {
+		const aabb = topologyCellAabb(topo, cell);
+		if (aabb) out.set(cell.id, aabb);
+	}
+	return out;
+}
+
+function derivedAabbDifferencePoints(cell: Aabb, cutters: readonly Aabb[]): readonly Vec3[] {
+	const corners = aabbCornerPoints(cell.min, cell.max);
+	const outside = corners.filter((p) => cutters.every((c) => !pointInAabb(p, c)));
+	return outside.length ? outside : corners;
+}
+
+type SurfaceGroup = {
+	readonly exposure: "external" | "internal";
+	readonly stance: "horizontal" | "vertical";
+	readonly faceIds: FaceRef[];
+	readonly regionPoints: Vec3[];
+	area: number;
+};
+
+function derivedPushSurfacePatch(
+	grouped: Map<string, SurfaceGroup>,
+	scale: number,
+	normal: Vec3,
+	centroid: Vec3,
+	faceId: FaceRef,
+	exposure: "external" | "internal",
+	stance: "horizontal" | "vertical",
+	rect: Rect2,
+	frame: FacePlaneFrame,
+): void {
+	const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
+	const patchPts = derivedRectToPoints(frame, rect);
+	const area = derivedRectArea(rect);
+	const hit = grouped.get(key);
+	if (hit) {
+		hit.faceIds.push(faceId);
+		hit.area += area;
+		for (const p of patchPts) {
+			const k = p.join(",");
+			if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
+		}
+	} else {
+		grouped.set(key, { exposure, stance, faceIds: [faceId], regionPoints: [...patchPts], area });
+	}
+}
+
+/** @emoji 🪞 Splits faces into external/internal patches (exposure × stance), merging coplanar regions. */
 export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceView[] {
 	const faceToCells = derivedFaceToCells(topo);
+	const cellAabbs = derivedCellAabbMap(topo);
 	const scale = derivedModelScale(topo);
-	const grouped = new Map<
-		string,
-		{ readonly exposure: "external" | "internal"; readonly stance: "horizontal" | "vertical"; readonly faceIds: FaceRef[]; area: number }
-	>();
+	const grouped = new Map<string, SurfaceGroup>();
 	for (const face of Object.values(topo.faces)) {
 		const points = derivedFacePoints(topo, face);
 		const normal = derivedFaceNormal(points);
 		const centroid = derivedPointCentroid(points);
 		if (!normal || !centroid) continue;
-		const exposure = (faceToCells.get(face.id)?.length ?? 0) > 1 ? "internal" : "external";
 		const stance = Math.abs(normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
-		const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
-		const hit = grouped.get(key);
-		if (hit) {
-			hit.faceIds.push(face.id);
-			hit.area += derivedPolygonArea(points);
-		} else {
-			grouped.set(key, { exposure, stance, faceIds: [face.id], area: derivedPolygonArea(points) });
+		const owners = faceToCells.get(face.id) ?? [];
+		const frame = derivedFacePlaneFrame(points, normal);
+		if (!frame) {
+			const exposure = owners.length > 1 ? "internal" : "external";
+			const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
+			const area = derivedPolygonArea(points);
+			const hit = grouped.get(key);
+			if (hit) {
+				hit.faceIds.push(face.id);
+				hit.area += area;
+				for (const p of points) {
+					const k = p.join(",");
+					if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
+				}
+			} else {
+				grouped.set(key, { exposure, stance, faceIds: [face.id], regionPoints: [...points], area });
+			}
+			continue;
+		}
+		const faceRect = derivedFaceRectOnPlane(points, frame);
+		if (!faceRect) continue;
+		if (owners.length > 1) {
+			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, faceRect, frame);
+			continue;
+		}
+		const ownerId = owners[0];
+		const ownerAabb = ownerId ? cellAabbs.get(ownerId) : undefined;
+		const internalRects: Rect2[] = [];
+		if (ownerId && ownerAabb) {
+			for (const [otherId, otherAabb] of cellAabbs) {
+				if (otherId === ownerId) continue;
+				if (!aabbIntersect(ownerAabb, otherAabb)) continue;
+				const slice = derivedAabbSliceOnPlane(otherAabb, frame);
+				if (!slice) continue;
+				const hit = derivedRectIntersection(faceRect, slice);
+				if (hit) internalRects.push(hit);
+			}
+		}
+		const mergedInternal = derivedUnionRects(internalRects);
+		const externalRects = derivedRectSubtract(faceRect, mergedInternal);
+		for (const rect of externalRects) {
+			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "external", stance, rect, frame);
+		}
+		for (const rect of mergedInternal) {
+			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, rect, frame);
 		}
 	}
 	const out: SurfaceView[] = [];
@@ -2868,57 +3110,85 @@ export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceVie
 	for (const group of grouped.values()) {
 		out.push({
 			id: `surface-${group.exposure}-${group.stance}-${idx++}` as SurfaceRef,
-			sourceFaceIds: group.faceIds,
+			sourceFaceIds: [...new Set(group.faceIds)],
 			exposure: group.exposure,
 			stance: group.stance,
 			area: group.area,
+			regionPoints: group.regionPoints,
 		});
 	}
 	return out;
 }
 
-/** @emoji 🪞 Topology-only parts: intersection at shared faces, otherwise one `none` part per cell. */
+/** @emoji 🪞 Partitions cells by overlap (none / difference / intersection) using cell AABBs. */
 export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
-	const faceToCells = derivedFaceToCells(topo);
+	const cellIds = Object.keys(topo.cells) as CellRef[];
+	const aabbs = derivedCellAabbMap(topo);
+	const volEps = 1e-6;
 	const parts: PartView[] = [];
-	const seenPairs = new Set<string>();
-	for (const [faceId, cellIds] of faceToCells) {
-		if (cellIds.length < 2) continue;
-		for (let i = 0; i < cellIds.length; i++) {
-			for (let j = i + 1; j < cellIds.length; j++) {
-				const a = cellIds[i]!;
-				const b = cellIds[j]!;
-				const pairKey = [a, b].sort().join("|");
-				if (seenPairs.has(pairKey)) continue;
-				seenPairs.add(pairKey);
-				const face = topo.faces[faceId];
-				const area = face ? derivedPolygonArea(derivedFacePoints(topo, face)) : 0;
-				parts.push({
-					id: `part-intersection-${a}-${b}` as PartRef,
-					sourceCellIds: [a as CellRef, b as CellRef],
-					overlap: "intersection",
-					volume: area,
-				});
-			}
+	for (let i = 0; i < cellIds.length; i++) {
+		for (let j = i + 1; j < cellIds.length; j++) {
+			const a = cellIds[i]!;
+			const b = cellIds[j]!;
+			const ba = aabbs.get(a);
+			const bb = aabbs.get(b);
+			if (!ba || !bb) continue;
+			const inter = aabbIntersect(ba, bb);
+			if (!inter) continue;
+			const vol = aabbVolume(inter);
+			if (vol <= volEps) continue;
+			parts.push({
+				id: `part-intersection-${a}-${b}` as PartRef,
+				sourceCellIds: [a, b],
+				overlap: "intersection",
+				volume: vol,
+				regionPoints: aabbCornerPoints(inter.min, inter.max),
+			});
 		}
 	}
-	const cellsWithIntersection = new Set(parts.flatMap((p) => p.sourceCellIds.map(String)));
-	for (const cell of Object.values(topo.cells)) {
-		if (cellsWithIntersection.has(cell.id)) {
+	for (const cid of cellIds) {
+		const box = aabbs.get(cid);
+		if (!box) {
 			parts.push({
-				id: `part-${cell.id}-difference` as PartRef,
-				sourceCellIds: [cell.id],
-				overlap: "difference",
+				id: `part-${cid}-none` as PartRef,
+				sourceCellIds: [cid],
+				overlap: "none",
 				volume: 0,
 			});
 			continue;
 		}
-		parts.push({
-			id: `part-${cell.id}-none` as PartRef,
-			sourceCellIds: [cell.id],
-			overlap: "none",
-			volume: 0,
-		});
+		const cutters: Aabb[] = [];
+		for (const otherId of cellIds) {
+			if (otherId === cid) continue;
+			const other = aabbs.get(otherId);
+			if (!other) continue;
+			const inter = aabbIntersect(box, other);
+			if (inter && aabbVolume(inter) > volEps) cutters.push(other);
+		}
+		if (cutters.length === 0) {
+			parts.push({
+				id: `part-${cid}-none` as PartRef,
+				sourceCellIds: [cid],
+				overlap: "none",
+				volume: aabbVolume(box),
+				regionPoints: aabbCornerPoints(box.min, box.max),
+			});
+			continue;
+		}
+		let remainingVol = aabbVolume(box);
+		for (const other of cutters) {
+			const inter = aabbIntersect(box, other);
+			if (inter) remainingVol -= aabbVolume(inter);
+		}
+		if (remainingVol > volEps) {
+			parts.push({
+				id: `part-${cid}-difference` as PartRef,
+				sourceCellIds: [cid],
+				overlap: "difference",
+				volume: remainingVol,
+				regionPoints: derivedAabbDifferencePoints(box, cutters),
+			});
+		}
 	}
 	return parts;
 }

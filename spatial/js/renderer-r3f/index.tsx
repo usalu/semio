@@ -668,7 +668,9 @@ function createAnalyticSpatialPickTargets(
 	const all = topologyAllVertexPoints(buckets.vertices);
 	const allCenter = topologyPointCentroid(all);
 	for (const surface of derived.computeSurfaces(topo)) {
-		const points = surface.sourceFaceIds.flatMap((faceId) => topologyEntityPoints(buckets, "face", faceId));
+		const points = surface.regionPoints?.length
+			? surface.regionPoints
+			: surface.sourceFaceIds.flatMap((faceId) => topologyEntityPoints(buckets, "face", faceId));
 		const merged = uniqueTopologyPoints(points);
 		const point = topologyPointCentroid(merged);
 		if (!point) continue;
@@ -682,7 +684,9 @@ function createAnalyticSpatialPickTargets(
 		});
 	}
 	for (const part of derived.computeParts(topo)) {
-		const merged = uniqueTopologyPoints(partPickPoints(topo, buckets, part, all));
+		const merged = uniqueTopologyPoints(
+			part.regionPoints?.length ? part.regionPoints : partPickPoints(topo, buckets, part, all),
+		);
 		const point = topologyPointCentroid(merged) ?? allCenter;
 		if (!point) continue;
 		targets.push({
@@ -2095,6 +2099,23 @@ export function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[])
 	return replFilterSuggestions(cmdLine, all);
 }
 
+function replExactInteractionSuggestion(query: string, all: readonly ReplSuggestion[]): ReplSuggestion | null {
+	const raw = query.trim().toLowerCase();
+	if (!raw) return null;
+	for (const suggestion of all) {
+		if (suggestion.kind !== "interaction") continue;
+		for (const text of [suggestion.key, suggestion.label, suggestion.detail]) {
+			if (text.toLowerCase() === raw) return suggestion;
+		}
+	}
+	return null;
+}
+
+function replAutocompleteInteractionOnSpace(query: string, all: readonly ReplSuggestion[], armed: boolean): ReplSuggestion | null {
+	if (!armed) return null;
+	return replExactInteractionSuggestion(query, all);
+}
+
 function replIsQueryTypingTarget(t: EventTarget | null): boolean {
 	return t instanceof HTMLTextAreaElement;
 }
@@ -2219,6 +2240,7 @@ export function InteractionRepl({
 	const [hoveredPickKey, setHoveredPickKey] = useState<string | null>(null);
 	const [selectedPickKey, setSelectedPickKey] = useState<string | null>(null);
 	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
+	const [spaceExecArmed, setSpaceExecArmed] = useState(false);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
 	const suppressAutoStartOnceRef = useRef(false);
@@ -2230,6 +2252,7 @@ export function InteractionRepl({
 		setCmdLine("");
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
+		setSpaceExecArmed(false);
 	}, []);
 
 	const cancelActiveInteraction = useCallback(() => {
@@ -2434,6 +2457,7 @@ export function InteractionRepl({
 		s.onRun();
 		setCmdLine("");
 		setActiveIndex(0);
+		setSpaceExecArmed(false);
 	}, []);
 
 	const trySubmitLine = useCallback((): boolean => {
@@ -2482,6 +2506,15 @@ export function InteractionRepl({
 				handleEscapeKey();
 				return;
 			}
+			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
+				const interactionSuggestion = replAutocompleteInteractionOnSpace(cmdLine, allSuggestions, spaceExecArmed);
+				if (interactionSuggestion) {
+					e.preventDefault();
+					runSuggestion(interactionSuggestion);
+					return;
+				}
+				setSpaceExecArmed(false);
+			}
 			if (e.key === "ArrowDown" && filtered.length) {
 				e.preventDefault();
 				setActiveIndex((i) => (i + 1) % filtered.length);
@@ -2497,6 +2530,7 @@ export function InteractionRepl({
 				const suffix = replActiveCompletionSuffix(cmdLine, filtered, activeIndex);
 				if (suffix) {
 					setCmdLine(cmdLine + suffix);
+					setSpaceExecArmed(true);
 					return;
 				}
 				runSuggestion(filtered[activeIndex] ?? filtered[0]!);
@@ -2509,7 +2543,7 @@ export function InteractionRepl({
 				return;
 			}
 		},
-		[filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey],
+		[cmdLine, allSuggestions, spaceExecArmed, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey],
 	);
 
 	useEffect(() => {
@@ -2542,6 +2576,7 @@ export function InteractionRepl({
 				e.stopPropagation();
 				cmdRef.current?.focus();
 				setCmdLineRef.current((prev) => prev.slice(0, -1));
+				setSpaceExecArmed(false);
 				return;
 			}
 			if (t !== cmdRef.current && e.key === "Escape") {
@@ -2564,6 +2599,7 @@ export function InteractionRepl({
 			e.stopPropagation();
 			cmdRef.current?.focus();
 			setCmdLineRef.current((prev) => `${prev}${one}`);
+			setSpaceExecArmed(false);
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
@@ -2726,7 +2762,10 @@ export function InteractionRepl({
 						autoComplete="off"
 						spellCheck={false}
 						value={cmdLine}
-						onChange={(e) => setCmdLine(e.target.value)}
+						onChange={(e) => {
+							setCmdLine(e.target.value);
+							setSpaceExecArmed(false);
+						}}
 						onKeyDown={onInputKeyDown}
 						placeholder="Type an interaction or transition"
 						style={{
@@ -3271,6 +3310,10 @@ if (import.meta.vitest) {
 			expect(replCompletionSuffix("bo", all[1])).toBe("x");
 			expect(replActiveCompletionSuffix("b", replPaletteRows("b", all), 0)).toBe("ox");
 			expect(replActiveCompletionSuffix("bo", replPaletteRows("bo", all), 0)).toBe("x");
+			expect(replAutocompleteInteractionOnSpace("Box", all, true)?.detail).toBe("primitive.box");
+			expect(replAutocompleteInteractionOnSpace("primitive.box", all, true)?.detail).toBe("primitive.box");
+			expect(replAutocompleteInteractionOnSpace("confirm", all, true)).toBeNull();
+			expect(replAutocompleteInteractionOnSpace("Box", all, false)).toBeNull();
 		});
 
 		it("derives persistent box footprints from document history", () => {

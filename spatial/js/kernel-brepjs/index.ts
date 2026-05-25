@@ -48,6 +48,20 @@ const openCascadeWasmUrl = new URL("../node_modules/brepjs-opencascade/src/brepj
 type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
 // #endregion 🧩OpenCascade
 
+function brepSolidRegionPoints(solid: ValidSolid, tolerance = 1e-2): readonly Vec3[] {
+	const m = unwrap(mesh(solid, { tolerance }));
+	const out: Vec3[] = [];
+	const seen = new Set<string>();
+	for (let i = 0; i < m.vertices.length; i += 3) {
+		const p: Vec3 = [m.vertices[i]!, m.vertices[i + 1]!, m.vertices[i + 2]!];
+		const k = p.join(",");
+		if (seen.has(k)) continue;
+		seen.add(k);
+		out.push(p);
+	}
+	return out;
+}
+
 // #region 🔌BrepjsKernel
 /** @emoji 🔌 Holds exact solids keyed by `CellRef` returned from kernel construction ops. */
 export class BrepjsKernel implements KernelAdapter {
@@ -206,6 +220,7 @@ export class BrepjsKernel implements KernelAdapter {
 					sourceCellIds: [a, b],
 					overlap: "intersection",
 					volume: vol,
+					regionPoints: brepSolidRegionPoints(inter),
 				});
 			}
 		}
@@ -229,6 +244,7 @@ export class BrepjsKernel implements KernelAdapter {
 					sourceCellIds: [cid],
 					overlap: "none",
 					volume: unwrap(measureVolume(remaining)),
+					regionPoints: brepSolidRegionPoints(remaining),
 				});
 				continue;
 			}
@@ -239,6 +255,7 @@ export class BrepjsKernel implements KernelAdapter {
 					sourceCellIds: [cid],
 					overlap: "difference",
 					volume: diffVol,
+					regionPoints: brepSolidRegionPoints(remaining),
 				});
 			}
 		}
