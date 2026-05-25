@@ -55,7 +55,13 @@ import {
 } from "@spatial/js-core";
 
 export type { SpatialComputeMode };
-import { aabbDifferenceRegionPoints, PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
+import {
+	aabbDifferenceRegionPoints,
+	computePartViewsFromTopology,
+	computeSurfaceViewsFromTopology,
+	PreciseSpatialKernelMath,
+	preciseSpatialKernelMath,
+} from "@spatial/js-kernel-brepjs";
 // #endregion 📥Imports
 
 // #region ⚡R3FPreviewKernel
@@ -3438,6 +3444,27 @@ if (import.meta.vitest) {
 			const analytic = filterSpatialPickTargetsByView(targets, "analytic");
 			expect(analytic.every((t) => t.kind === "surface" || t.kind === "part")).toBe(true);
 			expect(analytic.length).toBeGreaterThan(0);
+		});
+
+		it("play topology overlapping boxes expose split part pick targets not one cell hull", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 2, 0], height: 2 }, cellRef("punch")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0.25, 0, 0], cornerB: [0.75, 2, 0], height: 2 }, cellRef("host")));
+			const derived = new DerivedViewService({
+				id: "topology-parts",
+				operations: [],
+				computePartViews: (g) => computePartViewsFromTopology(g),
+				computeSurfaceViews: (g) => computeSurfaceViewsFromTopology(g),
+			} as import("@spatial/js-core").SpatialKernel);
+			await derived.refresh(topo);
+			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
+				(t) => t.kind === "part",
+			);
+			expect(partTargets.some((t) => t.id.includes("difference-before"))).toBe(true);
+			expect(partTargets.some((t) => t.id.includes("difference-after"))).toBe(true);
+			expect(partTargets.some((t) => t.overlap === "intersection")).toBe(true);
+			expect(partTargets.length).toBeGreaterThanOrEqual(3);
+			expect(partTargets.every((t) => (t.points?.length ?? 0) >= 4)).toBe(true);
 		});
 
 		it("partitions raw and analytic pick targets", () => {

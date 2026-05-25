@@ -671,10 +671,10 @@ Change selection for composition. In the ui add three toggles: Nodes, Edges, Han
 Extend selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso
-Additionally there are four modes: default (just select new selection), additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
 Make sure that the selection has a special behaviour:
-When ending more left than started then partial selection is enough.
-When ending more right than started then full enclosing is necessary otherwise the edge or node is not selected.
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise the edge or node is not selected.
 Make sure target can be set to nodes, edges, nodes&edges (default)
 holding down left button should trigger
 The order is default selection, then subtractive (hold ctrl to activate), then additive (hold shift to activate), then invertive ( ctrl + shift to activate it),
@@ -2562,6 +2562,17 @@ The passthrough components MUST show all available information. A lot of params 
 Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.cs. Grasshopper is only a thin user interface layer. The modification of local static sqlite kits should be implemented for kit diffs. Use the same commands as in semio.ts
 
 ## 🗿spatial
+
+---
+
+Introduce selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are four modes: default (just select new selection), additive (only add, activates while shift is held), subtractive (only subtract, activates while ctrl is held), invertive (add and subtract depending on the previous selection, activates while shift and ctrl is held)
+Make sure that the selection has a special behaviour:
+When the first selection cursor goes to the left then then partial selection is enough.
+When the first selection cursor goes to the right then full enclosing is necessary otherwise the elemtents are not selected.
+Partial or full is defined by the vertices. Partial means at least one vertex is covered. Full means all the vertices are covered.
 
 ---
 

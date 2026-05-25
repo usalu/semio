@@ -2118,16 +2118,16 @@ export class DerivedViewService {
 		this.partRevision = topo.revision;
 	}
 
-	/** @emoji 🪞 Returns cached surfaces for `topo.revision`. */
+	/** @emoji 🪞 Returns cached surfaces for `topo.revision` (empty until `refresh` catches up). */
 	computeSurfaces(topo: TopologyGraph): SurfaceView[] {
 		if (this.surfaceRevision === topo.revision) return this.surfaces;
-		return this.surfaces;
+		return [];
 	}
 
-	/** @emoji 🪞 Returns cached parts for `topo.revision` (call `refresh` first when kernel parts are async). */
+	/** @emoji 🪞 Returns cached parts for `topo.revision` (empty until `refresh` catches up). */
 	computeParts(topo: TopologyGraph): PartView[] {
 		if (this.partRevision === topo.revision) return this.parts;
-		return this.parts;
+		return [];
 	}
 
 	resolveSurface(surface: SurfaceRef, topo: TopologyGraph): readonly FaceRef[] {
@@ -3492,11 +3492,15 @@ if (import.meta.vitest) {
 			const parts = computePartViewsFromTopology(topo);
 			const inter = parts.find((p) => p.overlap === "intersection");
 			expect(inter?.volume).toBeCloseTo(2, 4);
-			expect(parts.filter((p) => p.overlap === "difference").length).toBe(2);
-			const diffA = parts.find((p) => p.id === "part-a-difference");
-			const diffB = parts.find((p) => p.id === "part-b-difference");
-			expect(diffA?.volume).toBeCloseTo(6, 4);
-			expect(diffB?.volume).toBeCloseTo(6, 4);
+			expect(parts.filter((p) => p.overlap === "difference").length).toBeGreaterThan(2);
+			const diffVolA = parts
+				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("a" as CellRef))
+				.reduce((acc, p) => acc + p.volume, 0);
+			const diffVolB = parts
+				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("b" as CellRef))
+				.reduce((acc, p) => acc + p.volume, 0);
+			expect(diffVolA).toBeCloseTo(6, 4);
+			expect(diffVolB).toBeCloseTo(6, 4);
 		});
 
 		it("keeps part volumes shape-invariant for two overlapping boxes", () => {
@@ -3509,16 +3513,20 @@ if (import.meta.vitest) {
 			const inter = parts.find((p) => p.overlap === "intersection");
 			const interVol = inter?.volume ?? 0;
 			const sum = parts.reduce((acc, p) => acc + p.volume, 0);
+			const diffVolA = parts
+				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("a" as CellRef))
+				.reduce((acc, p) => acc + p.volume, 0);
+			const diffVolB = parts
+				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("b" as CellRef))
+				.reduce((acc, p) => acc + p.volume, 0);
 			expect(interVol).toBeCloseTo(2, 3);
 			expect(sum).toBeGreaterThan(0);
 			expect(sum).toBeLessThan(volA + volB);
 			expect(sum).toBeCloseTo(volA + volB - interVol, 3);
-			const diffA = parts.find((p) => p.id === "part-a-difference");
-			const diffB = parts.find((p) => p.id === "part-b-difference");
-			expect(diffA?.volume).toBeCloseTo(volA - interVol, 3);
-			expect(diffB?.volume).toBeCloseTo(volB - interVol, 3);
-			expect((diffA?.volume ?? 0) + interVol).toBeCloseTo(volA, 3);
-			expect((diffB?.volume ?? 0) + interVol).toBeCloseTo(volB, 3);
+			expect(diffVolA).toBeCloseTo(volA - interVol, 3);
+			expect(diffVolB).toBeCloseTo(volB - interVol, 3);
+			expect(diffVolA + interVol).toBeCloseTo(volA, 3);
+			expect(diffVolB + interVol).toBeCloseTo(volB, 3);
 			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
 			const inInterInterior = (p: Vec3) =>
 				p[0] > interBox.min[0] + 1e-5 &&
@@ -3527,7 +3535,45 @@ if (import.meta.vitest) {
 				p[1] < interBox.max[1] - 1e-5 &&
 				p[2] > interBox.min[2] + 1e-5 &&
 				p[2] < interBox.max[2] - 1e-5;
-			expect(diffA?.regionPoints?.every((p) => !inInterInterior(p))).toBe(true);
+			for (const diff of parts.filter((p) => p.overlap === "difference")) {
+				expect(diff.regionPoints?.every((p) => !inInterInterior(p))).toBe(true);
+			}
+		});
+
+		it("computeParts returns empty until refresh matches topology revision", async () => {
+			const kernel = new BrepjsKernel();
+			const topo = new TopologyGraph();
+			const derived = new DerivedViewService(kernel);
+			expect(derived.computeParts(topo)).toEqual([]);
+			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
+			applyTopologyDiff(topo, r.diff);
+			expect(derived.computeParts(topo)).toEqual([]);
+			await derived.refresh(topo);
+			expect(derived.computeParts(topo).length).toBeGreaterThan(0);
+		});
+
+		it("play commit path splits punch cell into before, intersection, and after", async () => {
+			const kernel = new BrepjsKernel();
+			const topo = new TopologyGraph();
+			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 2, 0], height: 2 });
+			applyTopologyDiff(topo, punch.diff);
+			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0.25, 0, 0], cornerB: [0.75, 2, 0], height: 2 });
+			applyTopologyDiff(topo, host.diff);
+			const derived = new DerivedViewService(kernel);
+			await derived.refresh(topo);
+			const parts = derived.computeParts(topo);
+			const inter = parts.find((p) => p.overlap === "intersection");
+			const before = parts.find((p) => p.id === `part-${punch.cell}-difference-before`);
+			const after = parts.find((p) => p.id === `part-${punch.cell}-difference-after`);
+			expect(inter).toBeDefined();
+			expect(before).toBeDefined();
+			expect(after).toBeDefined();
+			const punchVol = await kernel.volume(punch.cell);
+			expect((before?.volume ?? 0) + (after?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(punchVol, 2);
+			const partSum = parts.reduce((acc, p) => acc + p.volume, 0);
+			const hostVol = await kernel.volume(host.cell);
+			expect(partSum).toBeLessThan(punchVol + hostVol);
+			expect(partSum).toBeCloseTo(punchVol + hostVol - (inter?.volume ?? 0), 2);
 		});
 
 		it("keeps surface areas shape-invariant for two overlapping boxes", () => {
