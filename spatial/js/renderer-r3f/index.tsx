@@ -2680,7 +2680,7 @@ export function InteractionRepl({
 			<div style={{ flex: 1, minWidth: 0 }} key={interactionId}>
 				<InteractionCanvas>
 					<InteractionSpatialView
-						previewKernel={runtime.previewKernel()}
+						previewKernel={rt.previewKernel()}
 						snapshot={snapshot}
 						onInteractionEvent={onSpatialInteractionEvent}
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}

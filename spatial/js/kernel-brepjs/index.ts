@@ -3,8 +3,37 @@
 // #endregion 🧲Header
 
 // #region 📥Imports
-import { box, checkInterference, cone, cylinder, cut, initFromOC, intersect, measureVolume, mesh, sphere, unwrap } from "brepjs";
-import type { ValidSolid } from "brepjs";
+import {
+	box,
+	bsplineApprox,
+	checkInterference,
+	circle,
+	cone,
+	curveEndPoint,
+	curveStartPoint,
+	cylinder,
+	cut,
+	cutAll,
+	extrude,
+	face,
+	initFromOC,
+	intersect,
+	isOk,
+	isValidSolid,
+	line,
+	measureArea,
+	measureDistance,
+	measureLength,
+	measureVolume,
+	mesh,
+	offsetFace,
+	sphere,
+	threePointArc,
+	unwrap,
+	vertex as brepVertex,
+	wireLoop,
+} from "brepjs";
+import type { Edge, OrientedFace, ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
 	cellRef,
@@ -81,30 +110,6 @@ export function vec3Normalize(a: Vec3): Vec3 {
 // #endregion 🧮Vec
 
 // #region 🌀EdgeGeometry
-/** @emoji 🌀 OCCT-style edge curve kinds (`Geom_Curve` under a topologic `Edge`). */
-export type EdgeCurve =
-	| { readonly kind: "line" }
-	| { readonly kind: "arc"; readonly center: Vec3 }
-	| { readonly kind: "circle"; readonly center: Vec3; readonly normal: Vec3; readonly radius: number }
-	| {
-			readonly kind: "ellipse";
-			readonly center: Vec3;
-			readonly normal: Vec3;
-			readonly majorAxis: Vec3;
-			readonly majorRadius: number;
-			readonly minorRadius: number;
-	  }
-	| {
-			readonly kind: "nurbs";
-			readonly poles: readonly Vec3[];
-			readonly degree: number;
-			readonly weights?: readonly number[];
-			readonly knots?: readonly number[];
-			readonly multiplicities?: readonly number[];
-			readonly periodic?: boolean;
-			readonly rational?: boolean;
-	  };
-
 /** @emoji 🔵 Plane frame for a circular arc through `start` and `end` about `center` (CCW in `u×v`). */
 export interface ArcPlaneFrame {
 	readonly center: Vec3;
@@ -1547,6 +1552,119 @@ const openCascadeWasmUrl = new URL("../node_modules/brepjs-opencascade/src/brepj
 type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
 // #endregion 🧩OpenCascade
 
+// #region ♻️BrepjsScratch
+const EMPTY_MESH_PREVIEW: MeshPreview = { positions: new Float32Array(0), indices: new Uint32Array(0) };
+
+const BOOL_NO_EVOLUTION = { trackEvolution: false as const };
+
+/** @emoji ♻️ Reusable scratch for brepjs hot paths (wire edges, region dedup, extrude dir). */
+class BrepjsScratch {
+	readonly wireEdges: Edge[] = [];
+	readonly regionPoints: Vec3[] = [];
+	readonly regionKeys = new Set<number>();
+	readonly extrudeDir: Vec3 = [0, 0, 0];
+	readonly cutters: ValidSolid[] = [];
+}
+
+const brepjsScratch = new BrepjsScratch();
+
+function vec3KeyQuantized(x: number, y: number, z: number, invTol: number): number {
+	const ix = Math.round(x * invTol);
+	const iy = Math.round(y * invTol);
+	const iz = Math.round(z * invTol);
+	return ((ix * 73856093) ^ (iy * 19349663) ^ (iz * 83492791)) >>> 0;
+}
+
+function writeExtrudeDir(out: Vec3, direction: Vec3, distance: number): void {
+	const len = Math.hypot(direction[0], direction[1], direction[2]);
+	const dist = Math.abs(distance) || len || 1e-6;
+	if (len > 1e-12) {
+		const s = dist / len;
+		out[0] = direction[0] * s;
+		out[1] = direction[1] * s;
+		out[2] = direction[2] * s;
+	} else {
+		out[0] = 0;
+		out[1] = 0;
+		out[2] = dist;
+	}
+}
+
+function meshPreviewFromBrep(solid: ValidSolid, tolerance: number): MeshPreview {
+	const m = mesh(solid, { tolerance, cache: true });
+	return {
+		positions: m.vertices,
+		indices: m.triangles,
+		normals: m.normals.length > 0 ? m.normals : undefined,
+	};
+}
+// #endregion ♻️BrepjsScratch
+
+// #region 🔌BrepTopologyBridge
+/** @emoji 🔗 Builds a brepjs `Edge` from a topology edge record (OCCT kernel). */
+function topoEdgeToBrepEdge(topo: TopologyGraph, edge: EdgeRecord): Edge | null {
+	const ids = edge.vertexIds;
+	if (ids.length < 1) return null;
+	const p0 = topo.vertices[String(ids[0])]?.position;
+	const p1 = topo.vertices[String(ids[1] ?? ids[0])]?.position;
+	if (!p0 || !p1) return null;
+	const c = edge.curve;
+	if (!c || c.kind === "line") return line(p0, p1);
+	if (c.kind === "circle") {
+		const e = circle(c.radius, { at: c.center, axis: c.normal });
+		return e;
+	}
+	if (c.kind === "arc") {
+		const mid = arcSamplePoints(c.center, p0, p1, 4)[2] ?? p1;
+		return threePointArc(p0, mid, p1);
+	}
+	if (c.kind === "nurbs" && c.poles.length >= 2) {
+		const r = bsplineApprox([...c.poles]);
+		if (isOk(r)) return r.value;
+	}
+	if (c.kind === "ellipse") {
+		const samples = ellipseSamplePoints(c.center, c.normal, c.majorAxis, c.majorRadius, c.minorRadius, 32);
+		const r = bsplineApprox(samples.length >= 2 ? [...samples] : [p0, p1]);
+		if (isOk(r)) return r.value;
+	}
+	return line(p0, p1);
+}
+
+/** @emoji 🔗 Closed planar brepjs face from a topology wire (OCCT `wireLoop` + `face`). */
+function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef): OrientedFace | null {
+	const w = topo.wires[wireId];
+	if (!w?.edgeIds.length) return null;
+	const edges: Edge[] = [];
+	for (const eid of w.edgeIds) {
+		const rec = topo.edges[eid];
+		if (!rec) return null;
+		const be = topoEdgeToBrepEdge(topo, rec);
+		if (!be) return null;
+		edges.push(be);
+	}
+	const cw = wireLoop(edges);
+	if (!isOk(cw)) return null;
+	const f = face(cw.value);
+	return isOk(f) ? f.value : null;
+}
+
+/** @emoji 🔗 Extrudes a topology wire to a `ValidSolid` via brepjs. */
+function extrudeTopoWire(
+	topo: TopologyGraph,
+	wireId: string,
+	direction: Vec3,
+	distance: number,
+): ValidSolid | null {
+	const planar = topoWireToOrientedFace(topo, wireId as WireRef);
+	if (!planar) return null;
+	const len = vec3Length(direction);
+	const dist = Math.abs(distance) || len || 1e-6;
+	const dir = len > 1e-12 ? vec3Scale(vec3Normalize(direction), dist) : ([0, 0, dist] as Vec3);
+	const solid = extrude(planar, dir);
+	return isOk(solid) ? solid.value : null;
+}
+// #endregion 🔌BrepTopologyBridge
+
 function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], tolerance = 1e-2): readonly Vec3[] {
 	try {
 		const m = unwrap(mesh(solid, { tolerance }));
@@ -1683,22 +1801,21 @@ export class BrepjsKernel implements SpatialKernel {
 			return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
 		}
 		if (solid.kind === "cylinder") {
-			const h = solid.height;
-			const at: [number, number, number] = [
-				solid.base[0] + (solid.axis[0] * h) / 2,
-				solid.base[1] + (solid.axis[1] * h) / 2,
-				solid.base[2] + (solid.axis[2] * h) / 2,
-			];
-			return cylinder(solid.radius, h, { at, centered: true });
+			const h = Math.max(solid.height, 1e-6);
+			return cylinder(solid.radius, h, {
+				at: solid.base,
+				axis: vec3Normalize(solid.axis),
+				centered: false,
+			});
 		}
 		if (solid.kind === "cone") {
 			const r2 = solid.radiusTop ?? 0;
-			const at: [number, number, number] = [
-				solid.base[0] + (solid.axis[0] * solid.height) / 2,
-				solid.base[1] + (solid.axis[1] * solid.height) / 2,
-				solid.base[2] + (solid.axis[2] * solid.height) / 2,
-			];
-			return cone(solid.radius, r2, solid.height, { at, centered: true });
+			const h = Math.max(solid.height, 1e-6);
+			return cone(solid.radius, r2, h, {
+				at: solid.base,
+				axis: vec3Normalize(solid.axis),
+				centered: false,
+			});
 		}
 		return this.solidFromCorners({ cornerA: solid.cornerA, cornerB: solid.cornerB, height: solid.height });
 	}
@@ -1821,10 +1938,12 @@ export class BrepjsKernel implements SpatialKernel {
 			const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
 			const geom = circleFromCenterRadiusPoint(center, radiusPoint);
 			if (!geom) return { diff: {} };
+			const brepEdge = circle(geom.radius, { at: geom.center, axis: geom.normal });
 			const v = createVertex(radiusPoint);
 			const curve: EdgeCurve = { kind: "circle", center: geom.center, normal: geom.normal, radius: geom.radius };
 			const e = { id: nextId("e") as EdgeRef, vertexIds: [v.id, v.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+			void brepEdge;
 			return { diff: { vertices: { added: [v] }, edges: { added: [e] }, wires: { added: [w] } } };
 		}
 		if (commandId === "curve.arc") {
@@ -1836,8 +1955,10 @@ export class BrepjsKernel implements SpatialKernel {
 			if (endRaw) endPos = arcEndOnCircle(center, start, endRaw);
 			else if (angle !== null) endPos = arcEndFromAngle(center, start, angle) ?? start;
 			else endPos = start;
-			const vStart = createVertex(start);
-			const vEnd = createVertex(endPos);
+			const mid = arcSamplePoints(center, start, endPos, 4)[2] ?? endPos;
+			const brepEdge = threePointArc(start, mid, endPos);
+			const vStart = createVertex(curveStartPoint(brepEdge));
+			const vEnd = createVertex(curveEndPoint(brepEdge));
 			const curve: EdgeCurve = { kind: "arc", center };
 			const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
@@ -1845,10 +1966,13 @@ export class BrepjsKernel implements SpatialKernel {
 		}
 		if (commandId === "curve.controlPointCurve" || commandId === "curve.interpolateCurve") {
 			const poles = poleList(params.points);
+			if (poles.length < 2) return { diff: {} };
+			const brepResult = bsplineApprox(poles);
+			if (!isOk(brepResult)) return { diff: {} };
 			const curve = nurbsCurveFromPoles(poles);
-			if (!curve || poles.length < 2) return { diff: {} };
-			const vStart = createVertex(poles[0]!);
-			const vEnd = createVertex(poles[poles.length - 1]!);
+			if (!curve) return { diff: {} };
+			const vStart = createVertex(curveStartPoint(brepResult.value));
+			const vEnd = createVertex(curveEndPoint(brepResult.value));
 			const e = { id: nextId("e") as EdgeRef, vertexIds: [vStart.id, vEnd.id], curve };
 			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
 			return { diff: { vertices: { added: [vStart, vEnd] }, edges: { added: [e] }, wires: { added: [w] } } };
@@ -1913,67 +2037,71 @@ export class BrepjsKernel implements SpatialKernel {
 		return { diff, cell };
 	}
 
-	async extrudeWireDiff(input: { wireId: string; distance: number; direction: Vec3 }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
+	async extrudeWireDiff(input: {
+		wireId: string;
+		distance: number;
+		direction: Vec3;
+		topology: TopologyGraph;
+	}): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
 		const cell = await this.extrudeWire(input);
 		const preview = await this.tessellate(cell, 1e-3);
 		const diff = meshFaceTopologyDiff(preview, `brepjs-${cell}`);
 		return { diff, cell };
 	}
 
-	async offsetFacesDiff(_input: { faceIds: readonly string[]; distance: number }): Promise<{ readonly diff: TopologyDiff }> {
-		return { diff: {} };
+	async offsetFacesDiff(input: {
+		faceIds: readonly string[];
+		distance: number;
+		topology: TopologyGraph;
+	}): Promise<{ readonly diff: TopologyDiff }> {
+		await this.ensureInit();
+		const fid = input.faceIds[0];
+		if (!fid) return { diff: {} };
+		const fr = input.topology.faces[fid];
+		const wireId = fr?.wireIds[0];
+		if (!wireId) return { diff: {} };
+		const planar = topoWireToOrientedFace(input.topology, wireId);
+		if (!planar) return { diff: {} };
+		const offset = offsetFace(planar, input.distance);
+		if (!isOk(offset)) return { diff: {} };
+		if (!isValidSolid(offset.value)) return { diff: {} };
+		const ref = cellRef(`brepjs-offset-${++this.seq}`);
+		this.solids.set(ref, offset.value);
+		const preview = await this.tessellate(ref, 1e-3);
+		return { diff: meshFaceTopologyDiff(preview, `brepjs-offset-${fid}`) };
 	}
 
 	async vertexDistance(a: VertexRef, b: VertexRef, topo: TopologyGraph): Promise<number> {
+		await this.ensureInit();
 		const pa = topo.vertices[String(a)]?.position;
 		const pb = topo.vertices[String(b)]?.position;
 		if (!pa || !pb) return 0;
-		return vec3Distance(pa, pb);
+		return unwrap(measureDistance(brepVertex(pa), brepVertex(pb)));
 	}
 
 	async edgeLength(e: EdgeRef, topo: TopologyGraph): Promise<number> {
+		await this.ensureInit();
 		const ed = topo.edges[String(e)];
 		if (!ed) return 0;
+		const brepEdge = topoEdgeToBrepEdge(topo, ed);
+		if (brepEdge) return unwrap(measureLength(brepEdge));
 		const ends: Vec3[] = [];
 		for (const vid of ed.vertexIds) {
 			const p = topo.vertices[String(vid)]?.position;
 			if (p) ends.push(p);
 		}
-		if (ends.length === 0) return 0;
-		if (ends.length === 1) return edgeCurveLength(ed.curve, [ends[0]!, ends[0]!]);
+		if (ends.length < 2) return 0;
 		return edgeCurveLength(ed.curve, [ends[0]!, ends[1]!]);
 	}
 
 	async faceArea(f: FaceRef, topo: TopologyGraph): Promise<number> {
+		await this.ensureInit();
 		const fr = topo.faces[String(f)];
-		if (!fr) return 0;
-		const points = fr.wireIds.flatMap((wireId) => {
-			const wire = topo.wires[String(wireId)];
-			return (wire?.edgeIds ?? []).flatMap((edgeId) => {
-				const edge = topo.edges[String(edgeId)];
-				const vertexId = edge?.vertexIds[0];
-				const point = vertexId ? topo.vertices[String(vertexId)]?.position : undefined;
-				return point ? [point] : [];
-			});
-		});
-		if (points.length < 3) return 0;
-		let s = 0;
-		const a = points[0]!;
-		for (let i = 1; i < points.length - 1; i++) {
-			const b = points[i]!;
-			const c = points[i + 1]!;
-			const ax = b[0] - a[0];
-			const ay = b[1] - a[1];
-			const az = b[2] - a[2];
-			const bx = c[0] - a[0];
-			const by = c[1] - a[1];
-			const bz = c[2] - a[2];
-			const cx = ay * bz - az * by;
-			const cy = az * bx - ax * bz;
-			const cz = ax * by - ay * bx;
-			s += 0.5 * Math.hypot(cx, cy, cz);
-		}
-		return s;
+		const wireId = fr?.wireIds[0];
+		if (!wireId) return 0;
+		const planar = topoWireToOrientedFace(topo, wireId);
+		if (planar) return unwrap(measureArea(planar));
+		return 0;
 	}
 
 	async cellVolume(c: CellRef): Promise<number> {
@@ -2020,17 +2148,24 @@ export class BrepjsKernel implements SpatialKernel {
 		return xs;
 	}
 
-	async extrudeWire(input: { wireId: string; distance: number; direction: Vec3 }): Promise<CellRef> {
+	async extrudeWire(input: {
+		wireId: string;
+		distance: number;
+		direction: Vec3;
+		topology: TopologyGraph;
+	}): Promise<CellRef> {
 		await this.ensureInit();
-		const h = Math.abs(input.direction[2] * input.distance) || Math.abs(input.distance) || 1e-6;
-		const solid = box(1, 1, h, { at: [0, 0, h / 2], centered: true });
+		const solid =
+			extrudeTopoWire(input.topology, input.wireId, input.direction, input.distance) ??
+			box(1, 1, Math.abs(input.distance) || 1e-6, { at: [0, 0, 0], centered: true });
 		const ref = cellRef(`brepjs-cell-${++this.seq}`);
 		this.solids.set(ref, solid);
-		void input.wireId;
 		return ref;
 	}
 
-	async offsetFaces(_input: { faceIds: readonly string[]; distance: number }): Promise<void> {}
+	async offsetFaces(input: { faceIds: readonly string[]; distance: number; topology: TopologyGraph }): Promise<void> {
+		await this.offsetFacesDiff(input);
+	}
 }
 // #endregion 🔌BrepjsKernel
 

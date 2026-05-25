@@ -1236,8 +1236,8 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	computeSurfaceViews(topo: TopologyGraph): SurfaceView[] | Promise<SurfaceView[]>;
 	computePartViews(topo: TopologyGraph): PartView[] | Promise<PartView[]>;
 	executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }>;
-	extrudeWire(input: { wireId: string; distance: number; direction: Vec3 }): Promise<CellRef>;
-	offsetFaces(input: { faceIds: readonly string[]; distance: number }): Promise<void>;
+	extrudeWire(input: { wireId: string; distance: number; direction: Vec3; topology: TopologyGraph }): Promise<CellRef>;
+	offsetFaces(input: { faceIds: readonly string[]; distance: number; topology: TopologyGraph }): Promise<void>;
 	createBoxFromCornersDiff(input: {
 		cornerA: Vec3;
 		cornerB: Vec3;
@@ -1247,8 +1247,13 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 		wireId: string;
 		distance: number;
 		direction: Vec3;
+		topology: TopologyGraph;
 	}): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }>;
-	offsetFacesDiff(input: { faceIds: readonly string[]; distance: number }): Promise<{ readonly diff: TopologyDiff }>;
+	offsetFacesDiff(input: {
+		faceIds: readonly string[];
+		distance: number;
+		topology: TopologyGraph;
+	}): Promise<{ readonly diff: TopologyDiff }>;
 	vertexDistance(a: VertexRef, b: VertexRef, topo: TopologyGraph): Promise<number>;
 	edgeLength(e: EdgeRef, topo: TopologyGraph): Promise<number>;
 	faceArea(f: FaceRef, topo: TopologyGraph): Promise<number>;
@@ -1621,6 +1626,7 @@ function builtinActionDefs(): ActionDef[] {
 				wireId: String(params.wireId),
 				distance: Number(params.distance),
 				direction: params.direction as Vec3,
+				topology: ctx.topology,
 			};
 			let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
 			if (kernel.extrudeWireDiff) diff = (await kernel.extrudeWireDiff(input)).diff;
@@ -1636,11 +1642,15 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const featureOffsetFaces: ActionDef = {
 		id: "feature.offsetFaces",
-		run: async (params, { kernel }) => {
+		run: async (params, ctx) => {
 			const faceIdsRaw = params.faceIds;
 			const faceIds = Array.isArray(faceIdsRaw) ? (faceIdsRaw as unknown[]).map(String) : [];
 			const diff =
-				(await kernel.offsetFacesDiff?.({ faceIds, distance: Number(params.distance) }))?.diff ?? EMPTY_TOPOLOGY_DIFF;
+				(await kernel.offsetFacesDiff?.({
+					faceIds,
+					distance: Number(params.distance),
+					topology: ctx.topology,
+				}))?.diff ?? EMPTY_TOPOLOGY_DIFF;
 			return { diff };
 		},
 	};
