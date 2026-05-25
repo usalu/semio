@@ -15,11 +15,12 @@ import {
 	cylinder,
 	cut,
 	cutAll,
+	describe as describeBrepShape,
 	extrude,
 	face,
+	fuseAll,
 	getBounds,
 	getVertices,
-	getShapeKind,
 	initFromOC,
 	intersect,
 	isOk,
@@ -63,6 +64,8 @@ import {
 	type PartRef,
 	type PartView,
 	type ShellRef,
+	type VolumeRef,
+	type VolumeView,
 	type SpatialKernel,
 	type SpatialPreviewKernel,
 	type SurfaceRef,
@@ -1293,7 +1296,7 @@ function mergeQuantKey(p: Vec3, invTol: number): string {
 /** @emoji 📦 Solids extracted from a split/compound brep result. */
 function brepSolidsFromShape(sh: Shape3D): ValidSolid[] {
 	const out: ValidSolid[] = [];
-	if (getShapeKind(sh) === "solid" && isSolid(sh) && isValidSolid(sh)) return [sh];
+	if (describeBrepShape(sh).kind === "solid" && isSolid(sh) && isValidSolid(sh)) return [sh];
 	const wrapped = sh as Solid & { readonly wrapped: Parameters<typeof iterTopo>[0] };
 	for (const sub of iterTopo(wrapped.wrapped, "solid")) {
 		const c = cast(sub);
@@ -1375,9 +1378,9 @@ export function decomposeCells(
 		.filter((x): x is { id: CellRef; solid: ValidSolid } => Boolean(x.solid));
 	if (!entries.length) return [];
 	const interferes = new Map<CellRef, boolean>();
-	for (const [id, solid] of entries) {
+	for (const { id, solid } of entries) {
 		let any = false;
-		for (const [oid, other] of entries) {
+		for (const { id: oid, solid: other } of entries) {
 			if (oid === id) continue;
 			if (unwrap(checkInterference(solid, other)).hasInterference) {
 				any = true;
@@ -1389,11 +1392,10 @@ export function decomposeCells(
 	const deduped = new Map<string, AtomicPart>();
 	const invTol = 1 / Math.max(derivedModelScaleFromCells(cells) * 1e-5, 1e-9);
 	for (const { id: cellId, solid: cellSolid } of entries) {
-		try {
-			const cutters = entries.filter(({ id: oid, solid: other }) => {
-				if (oid === cellId) return false;
-				return unwrap(checkInterference(cellSolid, other)).hasInterference;
-			});
+		const cutters = entries.filter(({ id: oid, solid: other }) => {
+			if (oid === cellId) return false;
+			return unwrap(checkInterference(cellSolid, other)).hasInterference;
+		});
 			if (!cutters.length) {
 				const vol = unwrap(measureVolume(cellSolid));
 				if (vol <= volEps) continue;
@@ -1419,49 +1421,28 @@ export function decomposeCells(
 			} else if (cutters.length === 1) {
 				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
 				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-				const interRes = intersect(cellSolid, tools[0]!, BOOL_NO_EVOLUTION);
-				if (isOk(interRes) && unwrap(measureVolume(interRes.value)) > volEps) pieces.push(interRes.value);
 			} else if (splitPieces.length) {
 				pieces = splitPieces;
 			} else {
 				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
 				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-				for (const { solid: tool } of cutters) {
-					const interRes = intersect(cellSolid, tool, BOOL_NO_EVOLUTION);
-					if (!isOk(interRes)) continue;
-					if (unwrap(measureVolume(interRes.value)) > volEps) pieces.push(interRes.value);
-				}
 			}
 			for (const piece of pieces) {
 				let vol = unwrap(measureVolume(piece));
 				if (vol <= volEps) continue;
 				const centroid = solidInteriorPoint(piece);
 				const sourceCellIds = cellsContainingPointForPiece(centroid, cellId, cells);
-				if (!sourceCellIds.includes(cellId)) continue;
-				const overlap: PartView["overlap"] =
-					sourceCellIds.length >= 2 ? "intersection" : interferes.get(cellId) ? "difference" : "none";
-				if (overlap === "intersection" && sourceCellIds.length >= 2) {
-					let acc = cells.get(sourceCellIds[0]!)!;
-					for (let i = 1; i < sourceCellIds.length; i++) {
-						acc = unwrap(intersect(acc, cells.get(sourceCellIds[i]!)!, BOOL_NO_EVOLUTION));
-					}
-					vol = unwrap(measureVolume(acc));
-					if (vol <= volEps) continue;
-				} else if (overlap === "difference" && sourceCellIds.length === 1) {
-					const owner = sourceCellIds[0]!;
-					const ownerSolid = cells.get(owner)!;
-					const otherTools = entries.filter((e) => e.id !== owner).map((e) => e.solid);
+				if (!sourceCellIds.includes(cellId) || sourceCellIds.length >= 2) continue;
+				const overlap: PartView["overlap"] = interferes.get(cellId) ? "difference" : "none";
+				if (overlap === "difference") {
+					const ownerSolid = cells.get(cellId)!;
+					const otherTools = entries.filter((e) => e.id !== cellId).map((e) => e.solid);
 					if (otherTools.length) {
 						vol = unwrap(measureVolume(unwrap(cutAll(ownerSolid, otherTools, BOOL_NO_EVOLUTION))));
 						if (vol <= volEps) continue;
 					}
 				}
-				const key =
-					overlap === "intersection"
-						? `i:${sourceCellIds.join("+")}`
-						: overlap === "none"
-							? `n:${sourceCellIds[0]!}`
-							: atomicDedupKey(sourceCellIds, centroid, invTol);
+				const key = overlap === "none" ? `n:${sourceCellIds[0]!}` : atomicDedupKey(sourceCellIds, centroid, invTol);
 				const existing = deduped.get(key);
 				if (existing) {
 					if (vol > existing.volume) deduped.set(key, { ...existing, solid: piece, volume: vol });
@@ -1476,9 +1457,6 @@ export function decomposeCells(
 					faceTopoIds: new Map(),
 				});
 			}
-		} catch {
-			continue;
-		}
 	}
 	const cellIds = entries.map((e) => e.id);
 	for (let i = 0; i < cellIds.length; i++) {
@@ -2097,6 +2075,44 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 	const records = computeBooleanPartRecordsFromAabbs(topo);
 	return partViewsFromAabbRecords(topo, records);
 }
+
+/** @emoji 🪞 Volumes from topology AABB boolean union per cell complex (or all cells). */
+export function computeVolumeViewsFromTopology(topo: TopologyGraph): VolumeView[] {
+	const cellAabbs = derivedCellAabbMap(topo);
+	const groups: { readonly id: string; readonly cellIds: readonly CellRef[] }[] = [];
+	const complexes = Object.values(topo.cellComplexes);
+	if (complexes.length) {
+		for (const cc of complexes) groups.push({ id: cc.id, cellIds: cc.cellIds });
+	} else {
+		const all = Object.keys(topo.cells) as CellRef[];
+		if (all.length) groups.push({ id: "all", cellIds: all });
+	}
+	const out: VolumeView[] = [];
+	for (const g of groups) {
+		const boxes: Aabb[] = [];
+		for (const cid of g.cellIds) {
+			const b = cellAabbs.get(cid);
+			if (b) boxes.push(b);
+		}
+		if (!boxes.length) continue;
+		const vol = aabbUnionVolume(boxes);
+		if (vol <= 1e-9) continue;
+		const regionPoints = boxes.flatMap((b) => aabbCornerPoints(b.min, b.max));
+		out.push({
+			id: `volume-${g.id}` as VolumeRef,
+			sourceCellIds: [...g.cellIds],
+			volume: vol,
+			regionPoints: regionPoints.length ? regionPoints : undefined,
+		});
+	}
+	return out;
+}
+
+function solidAabbFromBounds(solid: ValidSolid): Aabb | null {
+	const b = getBounds(solid);
+	if (!b) return null;
+	return { min: [b.min[0], b.min[1], b.min[2]], max: [b.max[0], b.max[1], b.max[2]] };
+}
 function readVec3(v: unknown): Vec3 | null {
 	if (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number")) return v as Vec3;
 	return null;
@@ -2597,6 +2613,59 @@ export class BrepjsKernel implements SpatialKernel {
 			return partViewsFromAtomics(topo, atomics);
 		} catch {
 			return computePartViewsFromTopology(topo);
+		}
+	}
+
+	async computeVolumeViews(topo: TopologyGraph): Promise<VolumeView[]> {
+		try {
+			await this.ensureInit();
+			const complexes = Object.values(topo.cellComplexes);
+			const groups: { readonly id: string; readonly cellIds: readonly CellRef[] }[] = [];
+			if (complexes.length) {
+				for (const cc of complexes) groups.push({ id: cc.id, cellIds: cc.cellIds });
+			} else {
+				const all = Object.keys(topo.cells) as CellRef[];
+				if (all.length) groups.push({ id: "all", cellIds: all });
+			}
+			const out: VolumeView[] = [];
+			for (const g of groups) {
+				const solids: ValidSolid[] = [];
+				for (const cid of g.cellIds) {
+					const cell = topo.cells[cid];
+					if (!cell) continue;
+					const s = this.solidForCell(topo, cell);
+					if (s) solids.push(s);
+				}
+				if (!solids.length) continue;
+				let vol = 0;
+				let regionPoints: Vec3[] | undefined;
+				if (solids.length === 1) {
+					vol = measureVolume(solids[0]!);
+					const aabb = solidAabbFromBounds(solids[0]!);
+					if (aabb) regionPoints = [...aabbCornerPoints(aabb.min, aabb.max)];
+				} else {
+					const fused = fuseAll(solids);
+					if (isValidSolid(fused)) {
+						vol = measureVolume(fused);
+						const aabb = solidAabbFromBounds(fused);
+						if (aabb) regionPoints = [...aabbCornerPoints(aabb.min, aabb.max)];
+					} else {
+						const boxes = solids.map((s) => solidAabbFromBounds(s)).filter((x): x is Aabb => x !== null);
+						vol = aabbUnionVolume(boxes);
+						regionPoints = boxes.flatMap((b) => [...aabbCornerPoints(b.min, b.max)]);
+					}
+				}
+				if (vol <= 1e-9) continue;
+				out.push({
+					id: `volume-${g.id}` as VolumeRef,
+					sourceCellIds: [...g.cellIds],
+					volume: vol,
+					regionPoints: regionPoints?.length ? regionPoints : undefined,
+				});
+			}
+			return out.length ? out : computeVolumeViewsFromTopology(topo);
+		} catch {
+			return computeVolumeViewsFromTopology(topo);
 		}
 	}
 

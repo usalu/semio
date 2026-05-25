@@ -456,8 +456,16 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 		case "field": {
 			const o = evalExpr(expr.object, env);
 			const topo = env.topology;
-			if (!topo || !isTopologyEntityRef(o)) return undefined;
-			return readTopologyEntityProperty(topo, env.metadata, o.kind, o.id, expr.name, { derived: env.derived, preview: env.preview });
+			if (topo && isTopologyEntityRef(o)) {
+				return readTopologyEntityProperty(topo, env.metadata, o.kind, o.id, expr.name, {
+					derived: env.derived,
+					preview: env.preview,
+				});
+			}
+			if (o !== null && o !== undefined && typeof o === "object" && !Array.isArray(o)) {
+				return (o as Record<string, unknown>)[expr.name];
+			}
+			return undefined;
 		}
 		case "let": {
 			const next: Record<string, unknown> = {};
@@ -3381,7 +3389,13 @@ const __spatialCoreTestKernel = import.meta.vitest
 	: null;
 
 if (import.meta.vitest) {
-	const { BrepjsKernel, computePartViewsFromTopology, computeSurfaceViewsFromTopology, preciseSpatialKernelMath } =
+	const {
+		BrepjsKernel,
+		computePartViewsFromTopology,
+		computeSurfaceViewsFromTopology,
+		computeVolumeViewsFromTopology,
+		preciseSpatialKernelMath,
+	} =
 		__spatialCoreTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
@@ -3682,6 +3696,28 @@ if (import.meta.vitest) {
 			const surfaceArea = surfaces.reduce((acc, s) => acc + s.area, 0);
 			expect(surfaceArea).toBeCloseTo(48, 0);
 		});
+
+		it("computeVolumeViewsFromTopology unions overlapping box AABBs into one volume", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const volumes = computeVolumeViewsFromTopology(topo);
+			expect(volumes).toHaveLength(1);
+			expect(volumes[0]!.sourceCellIds.sort()).toEqual(["a", "b"].sort());
+			expect(volumes[0]!.volume).toBeGreaterThan(8);
+			expect(volumes[0]!.volume).toBeLessThan(16);
+		});
+
+		it("computeVolumes returns empty until refresh matches topology revision", async () => {
+			const kernel = new BrepjsKernel();
+			const topo = new TopologyGraph();
+			const derived = new DerivedViewService(kernel);
+			expect(derived.computeVolumes(topo)).toEqual([]);
+			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
+			applyTopologyDiff(topo, r.diff);
+			await derived.refresh(topo);
+			expect(derived.computeVolumes(topo).length).toBeGreaterThan(0);
+		});
 	});
 
 	describe("@spatial/js-core interactions", () => {
@@ -3962,6 +3998,9 @@ if (import.meta.vitest) {
 			expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
 			expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
 			expect(ids.has("command.finish")).toBe(true);
+			expect(ids.has("view.surfaces")).toBe(true);
+			expect(ids.has("view.parts")).toBe(true);
+			expect(ids.has("view.volumes")).toBe(true);
 		});
 		it("register replaces a built-in action id", () => {
 			const r = ActionRegistry.withBuiltins();

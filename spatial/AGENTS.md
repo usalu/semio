@@ -27,4 +27,8 @@ Surfaces are just a different way of "splitting the faces semantically". They ar
 Parts are derived closed shells that are a combination of Overlap (None, Difference, Intersection)
 Parts are just a different way of "splitting the closed shells semantically". They are shape-invariant.
 
-Volumes are derived closed shells. They are the boolean union of all closed shells.
+Volumes are derived closed shells. They are the boolean union of all closed shells in a cell group.
+
+## Construct query
+
+Raw topology (`Vertex` … `Cluster`) is matched with `MATCH` only. Analytic views (`Surface`, `Part`, `Volume`) are never matched directly: compute them with `CALL view.surfaces({})` / `view.parts({})` / `view.volumes({})`, `YIELD data AS …`, then `UNWIND … AS …` to filter and return rows. All geometry actions use `CALL <actionId>({ … }) YIELD <key> [, <key> AS <alias> …]`.
