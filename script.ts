@@ -247,15 +247,41 @@ export class DevScript extends Script {
     runCmd("bun", ["nx", "run", "@semio/desktop:dev"], { cwd: this.root });
   }
 
+  private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
+    const scopeSegments: string[] = [];
+    const args: string[] = [];
+    let parsingScope = true;
+    for (const segment of segments) {
+      if (parsingScope && segment !== "--" && !segment.startsWith("-")) {
+        scopeSegments.push(segment);
+        continue;
+      }
+      parsingScope = false;
+      if (segment !== "--") args.push(segment);
+    }
+    const scope = scopeSegments.join("/");
+    if (scope && !/^[a-z0-9][a-z0-9/-]*$/i.test(scope)) {
+      console.error(`[dev.storybook] invalid scope ${JSON.stringify(scope)}`);
+      process.exit(1);
+    }
+    if (scope && !existsSync(join(this.root, ".storybook", "stories", ...scopeSegments))) {
+      console.error(`[dev.storybook] unknown scope ${JSON.stringify(scope)}`);
+      process.exit(1);
+    }
+    return { scope, args };
+  }
+
   private async runStorybook(extra: string[]): Promise<void> {
+    const storybook = this.parseStorybookSegments(extra);
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = process.env.STORYBOOK_PORT ?? "6010";
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
-    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...extra];
+    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...storybook.args];
     runCmd("bunx", storybookArgs, {
       cwd: this.root,
       env: {
         ...process.env,
+        STORYBOOK_SCOPE: storybook.scope,
         WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
         CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
       },

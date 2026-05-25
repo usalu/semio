@@ -28,6 +28,8 @@ const semioJsEntryPath = resolve(repoRootPath, "semio/client/lib/js/index.ts");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
 const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
+const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
+const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
 
 function toVitePath(value: string): string {
 	return value.replaceAll("\\", "/");
@@ -42,7 +44,7 @@ function getAbsolutePath(value: string): string {
 }
 
 const config: StorybookConfig = {
-	stories: ["./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"],
+	stories: [`./stories/${storybookScopePrefix}**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`],
 	addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
 	framework: {
 		name: getAbsolutePath("@storybook/react-vite"),

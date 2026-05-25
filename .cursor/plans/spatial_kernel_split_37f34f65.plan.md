@@ -4,25 +4,25 @@ overview: Pull every math operation out of `spatial/js/core` into a unified `Spa
 todos:
   - id: iface
     content: Add `SpatialPreviewKernel` + `SpatialKernel` interfaces in core (folding in `KernelAdapter`).
-    status: pending
+    status: completed
   - id: strip-core
     content: Delete all math implementations from `spatial/js/core/index.ts`; rewire callers (DerivedViewService, evalExpr, InteractionRuntime) to use kernel methods.
-    status: pending
+    status: completed
   - id: runtime-mode
     content: "Add `previewKernel` + `mode: 'fast' | 'precise'` to `InteractionRuntimeOptions` and route preview vs commit math accordingly in `InteractionRuntime`."
-    status: pending
+    status: completed
   - id: brepjs
     content: Make `BrepjsKernel` implement the full `SpatialKernel` by absorbing the math functions removed from core.
-    status: pending
+    status: completed
   - id: r3f-preview
     content: Add `R3FPreviewKernel` (+ exported singleton) implementing `SpatialPreviewKernel` inside `spatial/js/renderer-r3f/index.tsx`; convert existing local preview math to methods.
-    status: pending
+    status: completed
   - id: play-toggle
     content: Add `Fast | Precise` segmented control to `spatial/js/renderer-r3f/play/main.tsx` and wire it into `rtOpts`.
-    status: pending
+    status: completed
   - id: tests
     content: Update/extend vitest suites in core, kernel-brepjs, and renderer-r3f for the new boundaries; run `bun nx test` for all three.
-    status: pending
+    status: completed
 isProject: false
 ---
 

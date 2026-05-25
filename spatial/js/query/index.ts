@@ -1439,7 +1439,7 @@ if (import.meta.vitest) {
 				},
 			);
 			expect(res.diff).toBeDefined();
-			expect((res.diff?.cells?.added?.length ?? 0) + Object.keys(res.diff?.cells?.added ?? {}).length).toBeGreaterThan(0);
+			expect(res.diff?.cells?.added?.length).toBeGreaterThan(0);
 		});
 	});
 }

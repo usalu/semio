@@ -1811,6 +1811,28 @@ export function registerWindowBody(bodyKey: string, Component: React.ComponentTy
 
 const sidePanelBodyByKey = new Map<string, React.ComponentType<unknown>>();
 
+function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
+	const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
+	const visit = (node: WindowLayout["root"]): string | null => {
+		if (node.kind === "stack") {
+			for (const child of node.children) {
+				if (allowed.has(child.windowKindId)) return child.windowKindId;
+			}
+			return null;
+		}
+		for (const child of node.children) {
+			const match = visit(child);
+			if (match) return match;
+		}
+		return null;
+	};
+	if (layout) {
+		const match = visit(layout.root);
+		if (match) return match;
+	}
+	return windowKinds[0]?.id ?? null;
+}
+
 /** @emoji 📑 Binds a `bodyKey` from {@link SideTabSpec} to a React panel body component. */
 export function registerSidePanelBody(bodyKey: string, Component: React.ComponentType<unknown>): void {
 	sidePanelBodyByKey.set(bodyKey, Component);
@@ -1830,28 +1852,6 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
 				() => 0,
 			);
 			const ctx: WindowBodyViewContext = {
-
-			function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
-				const allowed = new Set(windowKinds.map((windowKind) => windowKind.id));
-				const visit = (node: WindowLayout["root"]): string | null => {
-					if (node.kind === "stack") {
-						for (const child of node.children) {
-							if (allowed.has(child.windowKindId)) return child.windowKindId;
-						}
-						return null;
-					}
-					for (const child of node.children) {
-						const match = visit(child);
-						if (match) return match;
-					}
-					return null;
-				};
-				if (layout) {
-					const match = visit(layout.root);
-					if (match) return match;
-				}
-				return windowKinds[0]?.id ?? null;
-			}
 				runtime,
 				windowKindId,
 				bodyKey,

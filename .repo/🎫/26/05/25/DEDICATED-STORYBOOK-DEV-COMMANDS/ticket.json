@@ -1,0 +1,13 @@
+{
+  "title": "Dedicated Storybook Dev Commands",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Add dedicated dev commands for Storybook so developers can choose technology level and bundle level, such as dev storybook, dev storybook semio, and dev storybook semio ui. Follow bun, nx, script.ts command conventions and validate the commands.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1474"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪168f3549a8fe490ca3bc0e2b7e2ed2d3"
+  ]
+}
