@@ -8,6 +8,9 @@ import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { MOUSE } from "three";
 import * as THREE from "three";
+
+THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+
 import {
 	applyTopologyDiff,
 	boxTopologyDiff,
@@ -1650,7 +1653,7 @@ export interface InteractionCanvasProps {
 /** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
 export function InteractionCanvas({ children }: InteractionCanvasProps): ReactNode {
 	return (
-		<Canvas style={{ height: "100%", width: "100%" }} camera={{ position: [10, 10, 8], fov: 45 }}>
+		<Canvas style={{ height: "100%", width: "100%" }} camera={{ up: [0, 0, 1], position: [10, 10, 8], fov: 45 }}>
 			<color attach="background" args={["#080810"]} />
 			{children}
 		</Canvas>

@@ -605,7 +605,7 @@
   },
   "commit": {
     "fromStates": [
-      "committed"
+      "ready"
     ],
     "operation": {
       "kind": "action",

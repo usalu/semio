@@ -2918,12 +2918,12 @@ export class InteractionRuntime {
 			this.snapRedoStack.length = 0;
 		}
 		if (event.kind === "start") await this.consumeStartSelection(event);
-		if (this.canCommit()) {
-			await this.runCommit(true);
-			return;
-		}
 		if (isFinalInteractionState(this.spec, this.sm.getState())) {
 			await this.runCommit(false);
+			return;
+		}
+		if (this.canCommit()) {
+			await this.runCommit(true);
 			return;
 		}
 		this.emit();
@@ -3373,7 +3373,14 @@ if (import.meta.vitest) {
 			expect(snap.state).toBe("committed");
 			expect(snap.capabilities.canCommit).toBe(false);
 			expect(snap.lastResponse?.ok).toBe(true);
-			expect(snap.lastResponse?.data).toMatchObject({ commandId: "curve.line", resultKind: "line" });
+			expect(snap.lastResponse?.diff?.vertices?.added?.length).toBe(2);
+		});
+		it("collectTargetVertices expands face selection to boundary vertices", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const faceId = Object.keys(topo.faces)[0]!;
+			const vIds = collectTargetVertices(topo, [{ kind: "face", id: faceId }]);
+			expect(vIds.size).toBe(4);
 		});
 		it("uses start selection to skip selection-first command states", async () => {
 			class CommandKernel implements KernelAdapter {
@@ -3402,6 +3409,39 @@ if (import.meta.vitest) {
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("point_to_move_from");
 			expect((snap.context.targets as SelectionTarget[]).map((target) => target.id)).toEqual(["c0"]);
+		});
+		it("auto-finalizes transform.move on terminal pointer down without alreadyCommitted", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const v0 = Object.keys(topo.vertices)[0]!;
+			const p0 = topo.vertices[v0]!.position;
+			class CommandKernel implements KernelAdapter {
+				readonly id = "command-move";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
+			}
+			const spec = loadSpatialInteraction("transform.move")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [p0[0] + 2, p0[1] + 1, p0[2]], modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(snap.lastResponse?.errors).toEqual([]);
+			expect(snap.lastResponse?.diff?.vertices?.modified?.length).toBeGreaterThan(0);
+			expect(topo.vertices[v0]!.position).toEqual([p0[0] + 2, p0[1] + 1, p0[2]]);
 		});
 	});
 
