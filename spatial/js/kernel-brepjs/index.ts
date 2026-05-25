@@ -12,14 +12,21 @@ import {
 	cone,
 	curveEndPoint,
 	curveStartPoint,
+	curveLength,
 	cylinder,
 	cut,
 	cutAll,
+	DisposalScope,
 	describe as describeBrepShape,
 	extrude,
 	face,
 	fuseAll,
 	getBounds,
+	getCurveType,
+	getEdges,
+	getFaces,
+	getHashCode,
+	getSurfaceType,
 	getVertices,
 	initFromOC,
 	intersect,
@@ -33,11 +40,15 @@ import {
 	measureLength,
 	measureVolume,
 	mesh,
+	meshEdges,
+	normalAt,
 	offsetFace,
 	shape,
 	split,
 	sphere,
 	threePointArc,
+	toGroupedBufferGeometryData,
+	toLineGeometryData,
 	unwrap,
 	vertex as brepVertex,
 	vertexPosition,
@@ -60,7 +71,13 @@ import {
 	type FaceRecord,
 	type FaceRef,
 	type KernelQueryContext,
-	type MeshPreview,
+	emptyMeshTransfer,
+	type EdgeGroup,
+	type EdgeInfo,
+	type FaceGroup,
+	type FaceInfo,
+	type MeshTransfer,
+	type TopologyGraphJson,
 	type PartRef,
 	type PartView,
 	type ShellRef,
@@ -646,9 +663,9 @@ export function anchorPlacementFromEntity(
 	return hit ? { position: hit.point, attachment: { kind: "cell", id: id as CellRef, u: hit.u, v: hit.v, w: hit.w } } : null;
 }
 
-export function meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): TopologyDiff {
-	const pos = mesh.positions;
-	const ind = mesh.indices;
+export function meshFaceTopologyDiff(mesh: MeshTransfer, idTag: string): TopologyDiff {
+	const pos = mesh.position;
+	const ind = mesh.index;
 	if (ind.length < 3 || pos.length < 9) return {};
 	const i0 = ind[0]!;
 	const i1 = ind[1]!;
@@ -1609,11 +1626,17 @@ export function selfMergeTopologyDiff(topo: TopologyGraph, atomics: readonly Ato
 		return id;
 	};
 	for (const part of atomics) {
-		for (const brepFace of shape(part.solid).faces()) {
+		let brepFaces: Face[];
+		try {
+			brepFaces = getFaces(part.solid);
+		} catch {
+			continue;
+		}
+		for (const brepFace of brepFaces) {
 			const raw: Vec3[] = [];
 			for (const v of getVertices(brepFace)) raw.push(vertexPosition(v));
 			if (raw.length < 3) continue;
-			const normal = derivedFaceNormal(raw) ?? shape(brepFace).normalAt();
+			const normal = derivedFaceNormal(raw) ?? normalAt(brepFace);
 			const frame = derivedFacePlaneFrame(raw, normal);
 			if (!frame) continue;
 			const sorted = sortPositionsOnPlane(raw, frame);
@@ -2313,22 +2336,9 @@ type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => strin
 // #endregion 🧩OpenCascade
 
 // #region ♻️BrepjsScratch
-const EMPTY_MESH_PREVIEW: MeshPreview = { positions: new Float32Array(0), indices: new Uint32Array(0) };
-
 const BOOL_NO_EVOLUTION = { trackEvolution: false as const };
 
-/** @emoji ♻️ Reusable scratch for brepjs hot paths (wire edges, region dedup, extrude dir). */
-class BrepjsScratch {
-	readonly wireEdges: Edge[] = [];
-	readonly regionPoints: Vec3[] = [];
-	readonly regionKeys = new Set<number>();
-	readonly extrudeDir: Vec3 = [0, 0, 0];
-	readonly cutters: ValidSolid[] = [];
-	readonly poleScratch: Vec3[] = [];
-	readonly curveEnds: Vec3[] = [];
-}
-
-const brepjsScratch = new BrepjsScratch();
+const MESH_TRANSFER_CACHE_MAX = 64;
 
 function vec3KeyQuantized(x: number, y: number, z: number, invTol: number): number {
 	const ix = Math.round(x * invTol);
@@ -2352,12 +2362,89 @@ function writeExtrudeDir(out: Vec3, direction: Vec3, distance: number): void {
 	}
 }
 
-function meshPreviewFromBrep(solid: ValidSolid, tolerance: number): MeshPreview {
-	const m = mesh(solid, { tolerance, cache: true });
+function collectFaceInfos(shape: ValidSolid): FaceInfo[] {
+	let faces: Face[];
+	try {
+		faces = getFaces(shape);
+	} catch {
+		return [];
+	}
+	const infos: FaceInfo[] = [];
+	for (const face of faces) {
+		try {
+			const surfaceTypeResult = getSurfaceType(face);
+			const surfaceType = isOk(surfaceTypeResult) ? String(surfaceTypeResult.value) : "OTHER_SURFACE";
+			const normal = normalAt(face) as [number, number, number];
+			const areaResult = measureArea(face);
+			const area = isOk(areaResult) ? (areaResult.value as number) : Number.NaN;
+			infos.push({ faceId: getHashCode(face), surfaceType, area, normal });
+		} catch {
+			/* skip degenerate face */
+		}
+	}
+	return infos;
+}
+
+function collectEdgeInfos(shape: ValidSolid): EdgeInfo[] {
+	let edges: Edge[];
+	try {
+		edges = getEdges(shape);
+	} catch {
+		return [];
+	}
+	const infos: EdgeInfo[] = [];
+	for (const edge of edges) {
+		try {
+			infos.push({ edgeId: getHashCode(edge), curveType: String(getCurveType(edge)), length: curveLength(edge) });
+		} catch {
+			/* skip degenerate edge */
+		}
+	}
+	return infos;
+}
+
+/** @emoji 🖼️ Tessellates a solid to grouped buffers + B-Rep edge polylines (caller owns solid lifetime). */
+function meshTransferFromBrep(solid: ValidSolid, tolerance: number, collectInspection = true): MeshTransfer {
+	const shapeMesh = mesh(solid, { tolerance, cache: true, angularTolerance: 0.2 });
+	const edgeMesh = meshEdges(solid, { tolerance, cache: true, angularTolerance: 0.2 });
+	const grouped = toGroupedBufferGeometryData(shapeMesh);
+	const lineData = toLineGeometryData(edgeMesh);
+	const transfer: MeshTransfer = {
+		position: grouped.position,
+		normal: grouped.normal,
+		index: grouped.index,
+		edges: lineData.position,
+		faceGroups: collectInspection
+			? grouped.groups.map((g) => ({ start: g.start, count: g.count, faceId: g.faceId }))
+			: [],
+		edgeGroups: collectInspection
+			? (edgeMesh.edgeGroups as { start: number; count: number; edgeId: number }[]).map((g) => ({
+					start: g.start,
+					count: g.count,
+					edgeId: g.edgeId,
+				}))
+			: [],
+		faceInfos: collectInspection ? collectFaceInfos(solid) : [],
+		edgeInfos: collectInspection ? collectEdgeInfos(solid) : [],
+	};
+	return transfer;
+}
+
+function meshTransferTransferables(mesh: MeshTransfer): Transferable[] {
+	return [mesh.position.buffer, mesh.normal.buffer, mesh.index.buffer, mesh.edges.buffer];
+}
+
+function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 	return {
-		positions: m.vertices,
-		indices: m.triangles,
-		normals: m.normals.length > 0 ? m.normals : undefined,
+		position: new Float32Array(mesh.position),
+		normal: new Float32Array(mesh.normal),
+		index: new Uint32Array(mesh.index),
+		edges: new Float32Array(mesh.edges),
+		faceGroups: mesh.faceGroups.map((g) => ({ ...g })),
+		edgeGroups: mesh.edgeGroups.map((g) => ({ ...g })),
+		faceInfos: mesh.faceInfos.map((f) => ({ ...f, normal: [...f.normal] as [number, number, number] })),
+		edgeInfos: mesh.edgeInfos.map((e) => ({ ...e })),
+		color: mesh.color,
 	};
 }
 // #endregion ♻️BrepjsScratch
@@ -2393,10 +2480,10 @@ function topoEdgeToBrepEdge(topo: TopologyGraph, edge: EdgeRecord): Edge | null 
 }
 
 /** @emoji 🔗 Closed planar brepjs face from a topology wire (OCCT `wireLoop` + `face`). */
-function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef, edges = brepjsScratch.wireEdges): OrientedFace | null {
+function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef): OrientedFace | null {
 	const w = topo.wires[wireId];
 	if (!w?.edgeIds.length) return null;
-	edges.length = 0;
+	const edges: Edge[] = [];
 	for (const eid of w.edgeIds) {
 		const rec = topo.edges[eid];
 		if (!rec) return null;
@@ -2419,17 +2506,16 @@ function extrudeTopoWire(
 ): ValidSolid | null {
 	const planar = topoWireToOrientedFace(topo, wireId as WireRef);
 	if (!planar) return null;
-	writeExtrudeDir(brepjsScratch.extrudeDir, direction, distance);
-	const solid = extrude(planar, brepjsScratch.extrudeDir);
+	const extrudeDir: Vec3 = [0, 0, 0];
+	writeExtrudeDir(extrudeDir, direction, distance);
+	const solid = extrude(planar, extrudeDir);
 	return isOk(solid) ? solid.value : null;
 }
 // #endregion 🔌BrepTopologyBridge
 
 function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], tolerance = 1e-2): readonly Vec3[] {
-	const out = brepjsScratch.regionPoints;
-	const keys = brepjsScratch.regionKeys;
-	out.length = 0;
-	keys.clear();
+	const out: Vec3[] = [];
+	const keys = new Set<number>();
 	const invTol = 1 / tolerance;
 	try {
 		const verts = unwrap(mesh(solid, { tolerance, cache: true })).vertices;
@@ -2442,20 +2528,15 @@ function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], to
 			keys.add(k);
 			out.push([x, y, z]);
 		}
-		return out.length ? out.slice() : (fallback ?? []);
+		return out.length ? out : (fallback ?? []);
 	} catch {
 		return fallback ?? [];
 	}
 }
 
-// #region 🔌BrepjsKernel
-/** @emoji 🔌 Holds exact solids keyed by `CellRef` returned from kernel construction ops. */
-export class BrepjsKernel implements SpatialKernel {
-	readonly id = "brepjs-opencascade";
-
-	constructor() {
-		Object.assign(this, preciseSpatialKernelMath);
-	}
+// #region 🔌BrepjsWasmEngine
+/** @emoji 🔌 WASM-side engine: exact solids keyed by `CellRef` (runs in worker or local fallback). */
+class BrepjsWasmEngine {
 	readonly operations = [
 		"cell.createBox",
 		"wire.extrudeToCell",
@@ -2473,7 +2554,7 @@ export class BrepjsKernel implements SpatialKernel {
 	private derivedTopo: TopologyGraph | null = null;
 	private derivedCache: { readonly topoRevision: number; readonly atomics: readonly AtomicPart[] } | null = null;
 
-	private async ensureInit(): Promise<void> {
+	async ensureInit(): Promise<void> {
 		if (!this.initPromise) {
 			this.initPromise = (initOpenCascade as OpenCascadeModuleInit)({
 				locateFile: (path) => (path === "brepjs_single.wasm" ? openCascadeWasmUrl : path),
@@ -2523,11 +2604,34 @@ export class BrepjsKernel implements SpatialKernel {
 		return unwrap(measureVolume(s));
 	}
 
-	async tessellate(cell: CellRef, tolerance: number): Promise<MeshPreview> {
+	private readonly meshCache = new Map<string, MeshTransfer>();
+
+	private meshCacheKey(cell: CellRef, tolerance: number): string {
+		return `${String(cell)}:${tolerance}`;
+	}
+
+	disposeCell(cell: CellRef): void {
+		const prefix = `${String(cell)}:`;
+		for (const key of [...this.meshCache.keys()]) {
+			if (key.startsWith(prefix)) this.meshCache.delete(key);
+		}
+		this.solids.delete(cell);
+	}
+
+	async tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer> {
 		await this.ensureInit();
 		const s = this.solids.get(cell);
-		if (!s) return EMPTY_MESH_PREVIEW;
-		return meshPreviewFromBrep(s, tolerance);
+		if (!s) return emptyMeshTransfer();
+		const key = this.meshCacheKey(cell, tolerance);
+		const cached = this.meshCache.get(key);
+		if (cached) return cloneMeshTransfer(cached);
+		const transfer = meshTransferFromBrep(s, tolerance);
+		if (this.meshCache.size >= MESH_TRANSFER_CACHE_MAX) {
+			const first = this.meshCache.keys().next().value;
+			if (first) this.meshCache.delete(first);
+		}
+		this.meshCache.set(key, cloneMeshTransfer(transfer));
+		return transfer;
 	}
 
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
@@ -2702,13 +2806,12 @@ export class BrepjsKernel implements SpatialKernel {
 			Array.isArray(v) && v.length >= 3 ? ([Number(v[0]), Number(v[1]), Number(v[2])] as Vec3) : fallback;
 		const poleList = (raw: unknown): Vec3[] => {
 			if (!Array.isArray(raw)) return [];
-			const out = brepjsScratch.poleScratch;
-			out.length = 0;
+			const out: Vec3[] = [];
 			for (const p of raw) {
 				if (!Array.isArray(p) || p.length < 3) continue;
 				out.push([Number(p[0]), Number(p[1]), Number(p[2])]);
 			}
-			return out.length ? out.slice() : [];
+			return out;
 		};
 
 		const createVertex = (pos: Vec3) => {
@@ -2868,8 +2971,7 @@ export class BrepjsKernel implements SpatialKernel {
 		if (!ed) return 0;
 		const brepEdge = topoEdgeToBrepEdge(topo, ed);
 		if (brepEdge) return unwrap(measureLength(brepEdge));
-		const ends = brepjsScratch.curveEnds;
-		ends.length = 0;
+		const ends: Vec3[] = [];
 		for (const vid of ed.vertexIds) {
 			const p = topo.vertices[String(vid)]?.position;
 			if (p) ends.push(p);
@@ -2951,7 +3053,296 @@ export class BrepjsKernel implements SpatialKernel {
 		await this.offsetFacesDiff(input);
 	}
 }
+// #endregion 🔌BrepjsWasmEngine
+
+// #region 📨WorkerProtocol
+type BrepjsWorkerRequest =
+	| { readonly type: "init" }
+	| { readonly type: "rpc"; readonly id: string; readonly method: string; readonly args: readonly unknown[] };
+
+type BrepjsWorkerResponse =
+	| { readonly type: "init-done" }
+	| { readonly type: "init-error"; readonly error: string }
+	| { readonly type: "rpc-result"; readonly id: string; readonly result: unknown }
+	| { readonly type: "rpc-error"; readonly id: string; readonly error: string };
+
+function serializeWorkerArg(arg: unknown): unknown {
+	if (arg instanceof TopologyGraph) return { __topoJson: arg.toJSON() };
+	return arg;
+}
+
+function deserializeWorkerArg(arg: unknown): unknown {
+	if (arg && typeof arg === "object" && "__topoJson" in arg) {
+		return TopologyGraph.fromJSON((arg as { readonly __topoJson: TopologyGraphJson }).__topoJson);
+	}
+	return arg;
+}
+// #endregion 📨WorkerProtocol
+
+// #region 🎬BrepjsWorkerClient
+/** @emoji 🎬 Routes brepjs RPC to a dedicated worker or local `BrepjsWasmEngine` (vitest / no Worker). */
+class BrepjsWorkerClient {
+	private readonly localEngine = new BrepjsWasmEngine();
+	private worker: Worker | null = null;
+	private initPromise: Promise<void> | null = null;
+	private readonly pending = new Map<string, { readonly resolve: (v: unknown) => void; readonly reject: (e: Error) => void }>();
+
+	constructor() {
+		if (!import.meta.vitest && typeof Worker !== "undefined") {
+			try {
+				this.worker = new Worker(new URL("./index.ts", import.meta.url), { type: "module" });
+				this.worker.onmessage = (event: MessageEvent<BrepjsWorkerResponse>) => this.onWorkerMessage(event.data);
+			} catch {
+				this.worker = null;
+			}
+		}
+	}
+
+	private onWorkerMessage(msg: BrepjsWorkerResponse): void {
+		if (msg.type === "init-done") {
+			const init = this.pending.get("init");
+			init?.resolve(undefined);
+			this.pending.delete("init");
+			return;
+		}
+		if (msg.type === "init-error") {
+			const init = this.pending.get("init");
+			init?.reject(new Error(msg.error));
+			this.pending.delete("init");
+			return;
+		}
+		if (msg.type === "rpc-result") {
+			const p = this.pending.get(msg.id);
+			p?.resolve(msg.result);
+			this.pending.delete(msg.id);
+			return;
+		}
+		if (msg.type === "rpc-error") {
+			const p = this.pending.get(msg.id);
+			p?.reject(new Error(msg.error));
+			this.pending.delete(msg.id);
+		}
+	}
+
+	async ensureReady(): Promise<void> {
+		if (!this.initPromise) this.initPromise = this.boot();
+		await this.initPromise;
+	}
+
+	private async boot(): Promise<void> {
+		if (!this.worker) {
+			await this.localEngine.ensureInit();
+			return;
+		}
+		await new Promise<void>((resolve, reject) => {
+			this.pending.set("init", { resolve: () => resolve(), reject });
+			this.worker!.postMessage({ type: "init" } satisfies BrepjsWorkerRequest);
+		});
+	}
+
+	async rpc<T>(method: string, args: readonly unknown[]): Promise<T> {
+		await this.ensureReady();
+		const serialized = args.map(serializeWorkerArg);
+		if (!this.worker) {
+			const hydrated = serialized.map(deserializeWorkerArg);
+			const fn = (this.localEngine as Record<string, unknown>)[method];
+			if (typeof fn !== "function") throw new Error(`brepjs rpc: unknown method ${method}`);
+			return (await (fn as (...a: unknown[]) => unknown).apply(this.localEngine, hydrated)) as T;
+		}
+		return new Promise<T>((resolve, reject) => {
+			const id = crypto.randomUUID();
+			this.pending.set(id, {
+				resolve: (v) => resolve(v as T),
+				reject,
+			});
+			this.worker!.postMessage({ type: "rpc", id, method, args: serialized } satisfies BrepjsWorkerRequest);
+		});
+	}
+}
+// #endregion 🎬BrepjsWorkerClient
+
+// #region 🔌BrepjsKernel
+/** @emoji 🔌 `SpatialKernel` facade: preview math on main thread, WASM in worker via `BrepjsWorkerClient`. */
+export class BrepjsKernel implements SpatialKernel {
+	readonly id = "brepjs-opencascade";
+	private readonly wasm = new BrepjsWorkerClient();
+
+	constructor() {
+		Object.assign(this, preciseSpatialKernelMath);
+	}
+
+	readonly operations = [
+		"cell.createBox",
+		"wire.extrudeToCell",
+		"face.offset",
+		"surface.resolveFaces",
+		"entity.tessellate",
+		"measure.distance",
+		"measure.area",
+		"measure.volume",
+	] as const;
+
+	async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<CellRef> {
+		return this.wasm.rpc("createBoxFromCorners", [input]);
+	}
+
+	async volume(cell: CellRef): Promise<number> {
+		return this.wasm.rpc("volume", [cell]);
+	}
+
+	async tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer> {
+		return this.wasm.rpc("tessellate", [cell, tolerance]);
+	}
+
+	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
+		if (name === "surface.resolveFaces") {
+			const sid = String(params.surfaceId ?? "");
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology);
+			return [];
+		}
+		return undefined;
+	}
+
+	async computeSurfaceViews(topo: TopologyGraph): Promise<SurfaceView[]> {
+		return this.wasm.rpc("computeSurfaceViews", [topo]);
+	}
+
+	async computePartViews(topo: TopologyGraph): Promise<PartView[]> {
+		return this.wasm.rpc("computePartViews", [topo]);
+	}
+
+	async computeVolumeViews(topo: TopologyGraph): Promise<VolumeView[]> {
+		return this.wasm.rpc("computeVolumeViews", [topo]);
+	}
+
+	async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }> {
+		return this.wasm.rpc("executeCommandDiff", [commandId, params]);
+	}
+
+	async createBoxFromCornersDiff(input: {
+		cornerA: Vec3;
+		cornerB: Vec3;
+		height: number;
+	}): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
+		return this.wasm.rpc("createBoxFromCornersDiff", [input]);
+	}
+
+	async extrudeWireDiff(input: {
+		wireId: string;
+		distance: number;
+		direction: Vec3;
+		topology: TopologyGraph;
+	}): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
+		return this.wasm.rpc("extrudeWireDiff", [input]);
+	}
+
+	async offsetFacesDiff(input: {
+		faceIds: readonly string[];
+		distance: number;
+		topology: TopologyGraph;
+	}): Promise<{ readonly diff: TopologyDiff }> {
+		return this.wasm.rpc("offsetFacesDiff", [input]);
+	}
+
+	async vertexDistance(a: VertexRef, b: VertexRef, topo: TopologyGraph): Promise<number> {
+		return this.wasm.rpc("vertexDistance", [a, b, topo]);
+	}
+
+	async edgeLength(e: EdgeRef, topo: TopologyGraph): Promise<number> {
+		return this.wasm.rpc("edgeLength", [e, topo]);
+	}
+
+	async faceArea(f: FaceRef, topo: TopologyGraph): Promise<number> {
+		return this.wasm.rpc("faceArea", [f, topo]);
+	}
+
+	async cellVolume(c: CellRef): Promise<number> {
+		return this.wasm.rpc("cellVolume", [c]);
+	}
+
+	async adjacentCells(cell: CellRef, topo: TopologyGraph): Promise<readonly CellRef[]> {
+		return this.wasm.rpc("adjacentCells", [cell, topo]);
+	}
+
+	async sharedFacesBetween(a: CellRef, b: CellRef, topo: TopologyGraph): Promise<readonly FaceRef[]> {
+		return this.wasm.rpc("sharedFacesBetween", [a, b, topo]);
+	}
+
+	async extrudeWire(input: {
+		wireId: string;
+		distance: number;
+		direction: Vec3;
+		topology: TopologyGraph;
+	}): Promise<CellRef> {
+		return this.wasm.rpc("extrudeWire", [input]);
+	}
+
+	async offsetFaces(input: { faceIds: readonly string[]; distance: number; topology: TopologyGraph }): Promise<void> {
+		await this.wasm.rpc("offsetFaces", [input]);
+	}
+
+	disposeCell(cell: CellRef): void {
+		void this.wasm.rpc("disposeCell", [cell]);
+	}
+
+	async syncSolidsFromTopology(topo: TopologyGraph): Promise<void> {
+		await this.wasm.rpc("syncSolidsFromTopology", [topo]);
+	}
+}
 // #endregion 🔌BrepjsKernel
+
+// #region 🌐BrepjsWorkerEntry
+function isBrepjsDedicatedWorker(): boolean {
+	return typeof self !== "undefined" && self.constructor?.name === "DedicatedWorkerGlobalScope";
+}
+
+if (isBrepjsDedicatedWorker()) {
+	let engine: BrepjsWasmEngine | null = null;
+	self.addEventListener("message", (event: MessageEvent<BrepjsWorkerRequest>) => {
+		const msg = event.data;
+		if (msg.type === "init") {
+			void (async () => {
+				try {
+					engine = new BrepjsWasmEngine();
+					await engine.ensureInit();
+					self.postMessage({ type: "init-done" } satisfies BrepjsWorkerResponse);
+				} catch (e) {
+					self.postMessage({
+						type: "init-error",
+						error: e instanceof Error ? e.message : String(e),
+					} satisfies BrepjsWorkerResponse);
+				}
+			})();
+			return;
+		}
+		if (msg.type === "rpc" && engine) {
+			void (async () => {
+				try {
+					const args = msg.args.map(deserializeWorkerArg);
+					const fn = (engine as Record<string, unknown>)[msg.method];
+					if (typeof fn !== "function") throw new Error(`brepjs worker: unknown method ${msg.method}`);
+					const result = await (fn as (...a: unknown[]) => unknown).apply(engine, args);
+					const transfers =
+						result && typeof result === "object" && "position" in result
+							? meshTransferTransferables(result as MeshTransfer)
+							: undefined;
+					if (transfers?.length) {
+						self.postMessage({ type: "rpc-result", id: msg.id, result } satisfies BrepjsWorkerResponse, transfers);
+					} else {
+						self.postMessage({ type: "rpc-result", id: msg.id, result } satisfies BrepjsWorkerResponse);
+					}
+				} catch (e) {
+					self.postMessage({
+						type: "rpc-error",
+						id: msg.id,
+						error: e instanceof Error ? e.message : String(e),
+					} satisfies BrepjsWorkerResponse);
+				}
+			})();
+		}
+	});
+}
+// #endregion 🌐BrepjsWorkerEntry
 
 // #region 🧪Tests
 if (import.meta.vitest) {
@@ -2976,12 +3367,13 @@ if (import.meta.vitest) {
 				cornerB: [1, 1, 0],
 				height: 1,
 			});
-			const meshPreview = await kernel.tessellate(cell, 1e-3);
-			expect(meshPreview.indices.length).toBeGreaterThan(0);
-			expect(meshPreview.positions.length).toBeGreaterThan(0);
+			const meshTransfer = await kernel.tessellate(cell, 1e-3);
+			expect(meshTransfer.index.length).toBeGreaterThan(0);
+			expect(meshTransfer.position.length).toBeGreaterThan(0);
+			expect(meshTransfer.faceGroups.length).toBeGreaterThan(0);
 		});
 
-		it("tessellate reuses brepjs cached mesh buffers for same cell and tolerance", async () => {
+		it("tessellate returns cached mesh with equal buffers for same cell and tolerance", async () => {
 			const cell = await kernel.createBoxFromCorners({
 				cornerA: [0, 0, 0],
 				cornerB: [1, 1, 0],
@@ -2990,8 +3382,22 @@ if (import.meta.vitest) {
 			const tol = 1e-3;
 			const a = await kernel.tessellate(cell, tol);
 			const b = await kernel.tessellate(cell, tol);
-			expect(a.positions).toBe(b.positions);
-			expect(a.indices).toBe(b.indices);
+			expect(a.index.length).toBe(b.index.length);
+			expect(a.position.length).toBe(b.position.length);
+			expect([...a.index]).toEqual([...b.index]);
+		});
+
+		it("disposeCell clears tessellation cache for that cell", async () => {
+			const cell = await kernel.createBoxFromCorners({
+				cornerA: [0, 0, 0],
+				cornerB: [1, 1, 0],
+				height: 1,
+			});
+			const before = await kernel.tessellate(cell, 1e-3);
+			kernel.disposeCell(cell);
+			const after = await kernel.tessellate(cell, 1e-3);
+			expect(after.index.length).toBe(0);
+			expect(before.index.length).toBeGreaterThan(0);
 		});
 
 		it("createBoxFromCornersDiff includes one face bucket", async () => {

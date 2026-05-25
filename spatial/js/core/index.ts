@@ -1213,7 +1213,7 @@ export interface SpatialPreviewKernel {
 	cellSolidAabb(solid: CellSolid): Aabb;
 	topologyCellAabb(topo: TopologyGraph, cell: CellRecord): Aabb | null;
 	boxTopologyDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): TopologyDiff;
-	meshFaceTopologyDiff(mesh: MeshPreview, idTag: string): TopologyDiff;
+	meshFaceTopologyDiff(mesh: MeshTransfer, idTag: string): TopologyDiff;
 	evaluateAnchorPosition(topo: TopologyGraph, anchor: AnchorRecord): Vec3;
 	anchorPlacementFromEntity(
 		topo: TopologyGraph,
@@ -1241,7 +1241,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	readonly operations: readonly string[];
 	createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<CellRef>;
 	volume(cell: CellRef): Promise<number>;
-	tessellate(cell: CellRef, tolerance: number): Promise<MeshPreview>;
+	tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer>;
 	query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
 	computeSurfaceViews(topo: TopologyGraph): SurfaceView[] | Promise<SurfaceView[]>;
 	computePartViews(topo: TopologyGraph): PartView[] | Promise<PartView[]>;
@@ -1273,17 +1273,66 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	sharedFacesBetween(a: CellRef, b: CellRef, topo: TopologyGraph): Promise<readonly FaceRef[]>;
 }
 
-/** @emoji 🖼️ Renderer-neutral mesh preview (positions + triangle indices). */
-export interface MeshPreview {
-	readonly positions: Float32Array;
-	readonly indices: Uint32Array;
-	readonly normals?: Float32Array;
+/** @emoji 🧩 Triangle index range for one B-Rep face (Three.js `addGroup`). */
+export interface FaceGroup {
+	readonly start: number;
+	readonly count: number;
+	readonly faceId: number;
+}
+
+/** @emoji 🧩 Line index range for one B-Rep edge (Three.js edge pick). */
+export interface EdgeGroup {
+	readonly start: number;
+	readonly count: number;
+	readonly edgeId: number;
+}
+
+/** @emoji 🧩 Face metadata for kernel→renderer picking and tooltips. */
+export interface FaceInfo {
+	readonly faceId: number;
+	readonly surfaceType: string;
+	readonly area: number;
+	readonly normal: readonly [number, number, number];
+}
+
+/** @emoji 🧩 Edge metadata for kernel→renderer picking and tooltips. */
+export interface EdgeInfo {
+	readonly edgeId: number;
+	readonly curveType: string;
+	readonly length: number;
+}
+
+/** @emoji 🖼️ Zero-copy tessellation payload (grouped buffers + B-Rep edge polylines). */
+export interface MeshTransfer {
+	readonly position: Float32Array;
+	readonly normal: Float32Array;
+	readonly index: Uint32Array;
+	readonly edges: Float32Array;
+	readonly faceGroups: readonly FaceGroup[];
+	readonly edgeGroups: readonly EdgeGroup[];
+	readonly faceInfos: readonly FaceInfo[];
+	readonly edgeInfos: readonly EdgeInfo[];
+	readonly color?: string;
+}
+
+/** @emoji 🖼️ Empty mesh transfer for stubs and missing cells. */
+export function emptyMeshTransfer(): MeshTransfer {
+	return {
+		position: new Float32Array(0),
+		normal: new Float32Array(0),
+		index: new Uint32Array(0),
+		edges: new Float32Array(0),
+		faceGroups: [],
+		edgeGroups: [],
+		faceInfos: [],
+		edgeInfos: [],
+	};
 }
 
 /** @emoji 🧱 Appends a tessellated commit as one mesh `face` on `TopologyGraph` (in-memory scene growth). */
 export function appendCommittedMeshFaceToTopology(
 	topo: TopologyGraph,
-	mesh: MeshPreview,
+	mesh: MeshTransfer,
 	idTag: string,
 	math: SpatialPreviewKernel,
 ): void {
@@ -3499,9 +3548,15 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core topology commit mesh", () => {
 		it("appendCommittedMeshFaceToTopology adds one mesh face from a triangle mesh", () => {
 			const g = new TopologyGraph();
-			const mesh = {
-				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				indices: new Uint32Array([0, 1, 2]),
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
 			};
 			appendCommittedMeshFaceToTopology(g, mesh, "t0", M);
 			expect(Object.keys(g.faces).length).toBe(1);
@@ -3764,7 +3819,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const topo = new TopologyGraph();
@@ -3796,7 +3851,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const topo = new TopologyGraph();
@@ -3850,7 +3905,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff() {
 					return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -3877,7 +3932,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff() {
 					return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -3911,7 +3966,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff() {
 					return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -3939,7 +3994,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff() {
 					return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -3968,7 +4023,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff(commandId: string, ctx: Record<string, unknown>) {
 					if (commandId !== "curve.arc") return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -4016,7 +4071,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async executeCommandDiff() {
 					return { diff: EMPTY_TOPOLOGY_DIFF };
@@ -4078,7 +4133,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const k = new StubKernel();
@@ -4125,9 +4180,15 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core topology diff", () => {
 		it("applyTopologyDiff then inverse restores counts", () => {
 			const g = new TopologyGraph();
-			const mesh = {
-				positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				indices: new Uint32Array([0, 1, 2]),
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
 			};
 			const d = M.meshFaceTopologyDiff(mesh, "x");
 			const inv = applyTopologyDiff(g, d);
@@ -4175,7 +4236,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const spec = buildBoxInteractionSpec();
@@ -4208,7 +4269,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const spec = buildBoxInteractionSpec();
@@ -4236,10 +4297,16 @@ if (import.meta.vitest) {
 				async volume(): Promise<number> {
 					return 0;
 				}
-				async tessellate(): Promise<MeshPreview> {
+				async tessellate(): Promise<MeshTransfer> {
 					return {
-						positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-						indices: new Uint32Array([0, 1, 2]),
+						position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+						normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+						index: new Uint32Array([0, 1, 2]),
+						edges: new Float32Array(0),
+						faceGroups: [],
+						edgeGroups: [],
+						faceInfos: [],
+						edgeInfos: [],
 					};
 				}
 			}
@@ -4285,7 +4352,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const spec = buildBoxInteractionSpec();
@@ -4313,7 +4380,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async query(name: string, params: Record<string, unknown>) {
 					if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
@@ -4352,7 +4419,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async vertexDistance(a: VertexRef, b: VertexRef, t: TopologyGraph) {
 					const pa = t.vertices[String(a)]?.position;
@@ -4390,7 +4457,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async query(name: string) {
 					if (name === "surface.resolveFaces") return ["f0"];
@@ -4415,7 +4482,16 @@ if (import.meta.vitest) {
 		it("records modifications and undo/redo applies forward and backwards diffs", () => {
 			const g = new TopologyGraph();
 			const h = new DocumentHistory();
-			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
+			};
 			const d1 = M.meshFaceTopologyDiff(mesh, "a");
 			const inv1 = applyTopologyDiff(g, d1);
 			const res1: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff: d1, data: null, archiveContext: null };
@@ -4454,7 +4530,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 				async query(name: string, params: Record<string, unknown>) {
 					if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
@@ -4493,7 +4569,7 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const spec = buildBoxInteractionSpec();
@@ -4521,11 +4597,20 @@ if (import.meta.vitest) {
 					return 0;
 				}
 				async tessellate() {
-					return { positions: new Float32Array(), indices: new Uint32Array() };
+					return emptyMeshTransfer();
 				}
 			}
 			const g = new TopologyGraph();
-			const mesh = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), indices: new Uint32Array([0, 1, 2]) };
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
+			};
 			const d0 = M.meshFaceTopologyDiff(mesh, "seed");
 			const inv0 = applyTopologyDiff(g, d0);
 			const hist = new DocumentHistory();
