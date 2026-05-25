@@ -1374,6 +1374,46 @@ export function collectTargetVertices(topo: TopologyGraph, targets: readonly Sel
 	return out;
 }
 
+function selectionTargetKey(target: SelectionTarget): string {
+	return `${target.kind}:${target.id}`;
+}
+
+function selectionTargetsWithMode(
+	current: readonly SelectionTarget[],
+	next: readonly SelectionTarget[],
+	modifiers: InteractionEvent["modifiers"] = {},
+): SelectionTarget[] {
+	const dedupedNext: SelectionTarget[] = [];
+	const nextKeys = new Set<string>();
+	for (const target of next) {
+		const key = selectionTargetKey(target);
+		if (nextKeys.has(key)) continue;
+		nextKeys.add(key);
+		dedupedNext.push(target);
+	}
+	if (modifiers.shift && modifiers.ctrl) {
+		const currentKeys = new Set(current.map(selectionTargetKey));
+		const kept = current.filter((target) => !nextKeys.has(selectionTargetKey(target)));
+		const added = dedupedNext.filter((target) => !currentKeys.has(selectionTargetKey(target)));
+		return [...kept, ...added];
+	}
+	if (modifiers.shift) {
+		const merged = [...current];
+		const seen = new Set(current.map(selectionTargetKey));
+		for (const target of dedupedNext) {
+			const key = selectionTargetKey(target);
+			if (seen.has(key)) continue;
+			seen.add(key);
+			merged.push(target);
+		}
+		return merged;
+	}
+	if (modifiers.ctrl) {
+		return current.filter((target) => !nextKeys.has(selectionTargetKey(target)));
+	}
+	return dedupedNext;
+}
+
 function builtinActionDefs(): ActionDef[] {
 	const ctxOf = (p: Record<string, unknown>) => p.__context as Record<string, unknown>;
 	const boxAabbFromDiagonalCorners: ActionDef = {
@@ -1703,9 +1743,19 @@ function builtinActionDefs(): ActionDef[] {
 			const bag = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "targets";
 			const key = typeof params.key === "string" ? params.key : null;
-			const targets = Array.isArray(params.targets) ? params.targets : [];
-			const cur = Array.isArray(bag[field]) ? (bag[field] as unknown[]) : [];
-			const set: Record<string, unknown> = { [field]: [...cur, ...targets] };
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			const cur = Array.isArray(bag[field]) ? ((bag[field] as unknown[]).filter((target): target is SelectionTarget => {
+				return Boolean(
+					target &&
+					typeof target === "object" &&
+					"kind" in target &&
+					"id" in target &&
+					typeof (target as { kind?: unknown }).kind === "string" &&
+					typeof (target as { id?: unknown }).id === "string",
+				);
+			})) : [];
+			const modifiers = (params as { __event?: { modifiers?: InteractionEvent["modifiers"] } }).__event?.modifiers ?? {};
+			const set: Record<string, unknown> = { [field]: selectionTargetsWithMode(cur, targets, modifiers) };
 			const first = targets[0];
 			if (key && first && typeof first === "object" && "id" in first) set[key] = String((first as { id: unknown }).id);
 			return { patch: { set } };
@@ -3492,15 +3542,9 @@ if (import.meta.vitest) {
 			const parts = computePartViewsFromTopology(topo);
 			const inter = parts.find((p) => p.overlap === "intersection");
 			expect(inter?.volume).toBeCloseTo(2, 4);
-			expect(parts.filter((p) => p.overlap === "difference").length).toBeGreaterThan(2);
-			const diffVolA = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("a" as CellRef))
-				.reduce((acc, p) => acc + p.volume, 0);
-			const diffVolB = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("b" as CellRef))
-				.reduce((acc, p) => acc + p.volume, 0);
-			expect(diffVolA).toBeCloseTo(6, 4);
-			expect(diffVolB).toBeCloseTo(6, 4);
+			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
+			expect(parts.find((p) => p.id === "part-a-difference")?.volume).toBeCloseTo(6, 4);
+			expect(parts.find((p) => p.id === "part-b-difference")?.volume).toBeCloseTo(6, 4);
 		});
 
 		it("keeps part volumes shape-invariant for two overlapping boxes", () => {
@@ -3513,20 +3557,16 @@ if (import.meta.vitest) {
 			const inter = parts.find((p) => p.overlap === "intersection");
 			const interVol = inter?.volume ?? 0;
 			const sum = parts.reduce((acc, p) => acc + p.volume, 0);
-			const diffVolA = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("a" as CellRef))
-				.reduce((acc, p) => acc + p.volume, 0);
-			const diffVolB = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes("b" as CellRef))
-				.reduce((acc, p) => acc + p.volume, 0);
+			const diffA = parts.find((p) => p.id === "part-a-difference");
+			const diffB = parts.find((p) => p.id === "part-b-difference");
 			expect(interVol).toBeCloseTo(2, 3);
 			expect(sum).toBeGreaterThan(0);
 			expect(sum).toBeLessThan(volA + volB);
 			expect(sum).toBeCloseTo(volA + volB - interVol, 3);
-			expect(diffVolA).toBeCloseTo(volA - interVol, 3);
-			expect(diffVolB).toBeCloseTo(volB - interVol, 3);
-			expect(diffVolA + interVol).toBeCloseTo(volA, 3);
-			expect(diffVolB + interVol).toBeCloseTo(volB, 3);
+			expect(diffA?.volume).toBeCloseTo(volA - interVol, 3);
+			expect(diffB?.volume).toBeCloseTo(volB - interVol, 3);
+			expect((diffA?.volume ?? 0) + interVol).toBeCloseTo(volA, 3);
+			expect((diffB?.volume ?? 0) + interVol).toBeCloseTo(volB, 3);
 			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
 			const inInterInterior = (p: Vec3) =>
 				p[0] > interBox.min[0] + 1e-5 &&
@@ -3552,28 +3592,31 @@ if (import.meta.vitest) {
 			expect(derived.computeParts(topo).length).toBeGreaterThan(0);
 		});
 
-		it("play commit path splits punch cell into before, intersection, and after", async () => {
+		it("play commit punch through shorter box yields one unioned difference per cell", async () => {
 			const kernel = new BrepjsKernel();
 			const topo = new TopologyGraph();
-			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 2, 0], height: 2 });
-			applyTopologyDiff(topo, punch.diff);
-			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0.25, 0, 0], cornerB: [0.75, 2, 0], height: 2 });
+			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 });
 			applyTopologyDiff(topo, host.diff);
+			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 });
+			applyTopologyDiff(topo, punch.diff);
 			const derived = new DerivedViewService(kernel);
 			await derived.refresh(topo);
 			const parts = derived.computeParts(topo);
-			const inter = parts.find((p) => p.overlap === "intersection");
-			const before = parts.find((p) => p.id === `part-${punch.cell}-difference-before`);
-			const after = parts.find((p) => p.id === `part-${punch.cell}-difference-after`);
-			expect(inter).toBeDefined();
-			expect(before).toBeDefined();
-			expect(after).toBeDefined();
-			const punchVol = await kernel.volume(punch.cell);
-			expect((before?.volume ?? 0) + (after?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(punchVol, 2);
-			const partSum = parts.reduce((acc, p) => acc + p.volume, 0);
+			expect(parts.filter((p) => p.overlap === "intersection")).toHaveLength(1);
+			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
+			expect(parts).toHaveLength(3);
+			expect(parts.find((p) => p.id === `part-${host.cell}-difference`)?.volume).toBeGreaterThan(0);
+			expect(parts.find((p) => p.id === `part-${punch.cell}-difference`)).toBeDefined();
+			expect(parts.filter((p) => String(p.id).includes("difference-before"))).toHaveLength(0);
+			expect(parts.filter((p) => String(p.id).includes("difference-after"))).toHaveLength(0);
 			const hostVol = await kernel.volume(host.cell);
-			expect(partSum).toBeLessThan(punchVol + hostVol);
-			expect(partSum).toBeCloseTo(punchVol + hostVol - (inter?.volume ?? 0), 2);
+			const punchVol = await kernel.volume(punch.cell);
+			const interVol = parts.find((p) => p.overlap === "intersection")?.volume ?? 0;
+			const hostDiff = parts.find((p) => p.id === `part-${host.cell}-difference`)?.volume ?? 0;
+			const punchDiff = parts.find((p) => p.id === `part-${punch.cell}-difference`)?.volume ?? 0;
+			expect(hostDiff + interVol).toBeCloseTo(hostVol, 2);
+			expect(punchDiff + interVol).toBeCloseTo(punchVol, 2);
+			expect(parts.reduce((acc, p) => acc + p.volume, 0)).toBeCloseTo(hostVol + punchVol - interVol, 2);
 		});
 
 		it("keeps surface areas shape-invariant for two overlapping boxes", () => {
@@ -3907,6 +3950,37 @@ if (import.meta.vitest) {
 			const p2: Vec3 = [1, 1, 0];
 			await def.run({ p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k, preview: M, topology: topo });
 			expect(k.lastInput).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 3 });
+		});
+		it("command.addSelection applies selection modifiers", async () => {
+			const def = ActionRegistry.withBuiltins().get("command.addSelection")!;
+			const base = [{ kind: "wire", id: "w0", editable: true }] as const;
+			const next = [{ kind: "wire", id: "w1", editable: true }] as const;
+			const additive = await def.run(
+				{ targets: next, __context: { targets: base }, __event: { kind: "selection.changed", modifiers: { shift: true } } },
+				{ kernel: M, preview: M, topology: new TopologyGraph() },
+			);
+			expect((additive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([...base, ...next]);
+			const subtractive = await def.run(
+				{
+					targets: next,
+					__context: { targets: [...base, ...next] },
+					__event: { kind: "selection.changed", modifiers: { ctrl: true } },
+				},
+				{ kernel: M, preview: M, topology: new TopologyGraph() },
+			);
+			expect((subtractive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual(base);
+			const invertive = await def.run(
+				{
+					targets: [{ kind: "wire", id: "w0", editable: true }, { kind: "wire", id: "w2", editable: true }],
+					__context: { targets: [...base, ...next] },
+					__event: { kind: "selection.changed", modifiers: { shift: true, ctrl: true } },
+				},
+				{ kernel: M, preview: M, topology: new TopologyGraph() },
+			);
+			expect((invertive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([
+				{ kind: "wire", id: "w1", editable: true },
+				{ kind: "wire", id: "w2", editable: true },
+			]);
 		});
 	});
 	describe("@spatial/js-core topology diff", () => {

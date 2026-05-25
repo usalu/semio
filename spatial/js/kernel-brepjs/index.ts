@@ -1234,84 +1234,26 @@ export function aabbDifferenceRegionPoints(cell: Aabb, cutters: readonly Aabb[],
 	return aabbLatticePoints(cell, grid).filter((p) => !pointInCellOverlap(p, cell, cutters));
 }
 
-function aabbOverlapUnionBounds(pieces: readonly Aabb[]): Aabb | null {
-	if (!pieces.length) return null;
-	let minX = Infinity;
-	let minY = Infinity;
-	let minZ = Infinity;
-	let maxX = -Infinity;
-	let maxY = -Infinity;
-	let maxZ = -Infinity;
-	for (const p of pieces) {
-		minX = Math.min(minX, p.min[0]);
-		minY = Math.min(minY, p.min[1]);
-		minZ = Math.min(minZ, p.min[2]);
-		maxX = Math.max(maxX, p.max[0]);
-		maxY = Math.max(maxY, p.max[1]);
-		maxZ = Math.max(maxZ, p.max[2]);
-	}
-	return { min: [minX, minY, minZ], max: [maxX, maxY, maxZ] };
-}
-
-function aabbClip(box: Aabb, axis: 0 | 1 | 2, lo: number, hi: number, eps = 1e-9): Aabb | null {
-	if (hi <= lo + eps) return null;
-	const min: Vec3 = [box.min[0], box.min[1], box.min[2]];
-	const max: Vec3 = [box.max[0], box.max[1], box.max[2]];
-	min[axis] = lo;
-	max[axis] = hi;
-	if (min[0] >= max[0] || min[1] >= max[1] || min[2] >= max[2]) return null;
-	return { min, max };
-}
-
-function aabbNearlyEquals(a: Aabb, b: Aabb, scale: number, eps = 1e-6): boolean {
-	const tol = Math.max(scale * eps, 1e-6);
-	const near = (x: number, y: number) => Math.abs(x - y) <= tol;
-	return (
-		near(a.min[0], b.min[0]) &&
-		near(a.min[1], b.min[1]) &&
-		near(a.min[2], b.min[2]) &&
-		near(a.max[0], b.max[0]) &&
-		near(a.max[1], b.max[1]) &&
-		near(a.max[2], b.max[2])
-	);
-}
-
-function differencePartSlug(piece: Aabb, box: Aabb, union: Aabb, index: number): string {
-	const scale = Math.hypot(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) || 1;
-	const volEps = Math.max(scale * 1e-6, 1e-6);
-	for (const axis of [0, 1, 2] as const) {
-		const before = aabbClip(box, axis, box.min[axis], union.min[axis]);
-		if (before && aabbVolume(before) > volEps && union.min[axis] > box.min[axis] + volEps && aabbNearlyEquals(piece, before, scale)) {
-			return "difference-before";
-		}
-		const after = aabbClip(box, axis, union.max[axis], box.max[axis]);
-		if (after && aabbVolume(after) > volEps && union.max[axis] < box.max[axis] - volEps && aabbNearlyEquals(piece, after, scale)) {
-			return "difference-after";
-		}
-	}
-	return `difference-${index}`;
-}
-
-function pushCellDifferencePartViews(parts: PartView[], cid: CellRef, box: Aabb, cutters: readonly Aabb[], volEps: number): void {
-	const pieces = aabbDifferencePieces(box, cutters, volEps);
-	if (!pieces.length) return;
-	const union = aabbOverlapUnionBounds(cutters);
-	const used = new Set<string>();
-	for (let i = 0; i < pieces.length; i++) {
-		const piece = pieces[i]!;
-		const vol = aabbVolume(piece);
-		if (vol <= volEps) continue;
-		let slug = union ? differencePartSlug(piece, box, union, i) : `difference-${i}`;
-		if (used.has(slug)) slug = `difference-${i}`;
-		used.add(slug);
-		parts.push({
-			id: `part-${cid}-${slug}` as PartRef,
-			sourceCellIds: [cid],
-			overlap: "difference",
-			volume: vol,
-			regionPoints: aabbCornerPoints(piece.min, piece.max),
-		});
-	}
+/** @emoji 🪞 One `cell \\ ⋃(cell ∩ cutter)` difference part (boolean union, not AABB piece split). */
+function pushCellDifferencePartView(
+	parts: PartView[],
+	cid: CellRef,
+	box: Aabb,
+	cutters: readonly Aabb[],
+	volEps: number,
+	regionPoints?: readonly Vec3[],
+): void {
+	const overlapVol = aabbOverlapUnionVolume(box, cutters);
+	const diffVol = Math.max(0, aabbVolume(box) - overlapVol);
+	if (diffVol <= volEps) return;
+	const pts = regionPoints?.length ? regionPoints : aabbDifferenceRegionPoints(box, cutters);
+	parts.push({
+		id: `part-${cid}-difference` as PartRef,
+		sourceCellIds: [cid],
+		overlap: "difference",
+		volume: diffVol,
+		regionPoints: pts.length ? pts : undefined,
+	});
 }
 
 /** @emoji 📐 Corner hull of `a ∩ b` for intersection-part pick targets. */
@@ -1504,7 +1446,7 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			});
 			continue;
 		}
-		pushCellDifferencePartViews(parts, cid, box, cutters, volEps);
+		pushCellDifferencePartView(parts, cid, box, cutters, volEps);
 	}
 	return parts;
 }
@@ -2046,23 +1988,20 @@ export class BrepjsKernel implements SpatialKernel {
 				});
 				continue;
 			}
-			if (cellAabb) {
-				pushCellDifferencePartViews(parts, cid, cellAabb, cutterAabbs, volEps);
-			} else {
-				const remaining =
-					cutters.length === 1
-						? unwrap(cut(base, cutters[0]!, BOOL_NO_EVOLUTION))
-						: unwrap(cutAll(base, cutters, BOOL_NO_EVOLUTION));
-				const diffVol = unwrap(measureVolume(remaining));
-				if (diffVol > volEps) {
-					parts.push({
-						id: `part-${cid}-difference` as PartRef,
-						sourceCellIds: [cid],
-						overlap: "difference",
-						volume: diffVol,
-						regionPoints: brepSolidRegionPoints(remaining, undefined),
-					});
-				}
+			const diffFallback = cellAabb && cutterAabbs.length ? aabbDifferenceRegionPoints(cellAabb, cutterAabbs) : undefined;
+			const remaining =
+				cutters.length === 1
+					? unwrap(cut(base, cutters[0]!, BOOL_NO_EVOLUTION))
+					: unwrap(cutAll(base, cutters, BOOL_NO_EVOLUTION));
+			const diffVol = unwrap(measureVolume(remaining));
+			if (diffVol > volEps) {
+				parts.push({
+					id: `part-${cid}-difference` as PartRef,
+					sourceCellIds: [cid],
+					overlap: "difference",
+					volume: diffVol,
+					regionPoints: brepSolidRegionPoints(remaining, diffFallback),
+				});
 			}
 		}
 		const partVolSum = parts.reduce((acc, p) => acc + p.volume, 0);
@@ -2499,13 +2438,11 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, rb.diff);
 			const parts = await kernel.computePartViews!(topo);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
-			expect(parts.filter((p) => p.overlap === "difference").length).toBeGreaterThan(1);
+			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
 			const inter = parts.find((p) => p.overlap === "intersection");
-			const diffVolA = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes(ra.cell))
-				.reduce((acc, p) => acc + p.volume, 0);
-			expect(diffVolA).toBeLessThan(8);
-			expect(diffVolA + (inter?.volume ?? 0)).toBeCloseTo(8, 2);
+			const diffA = parts.find((p) => p.id === `part-${ra.cell}-difference`);
+			expect(diffA?.volume).toBeLessThan(8);
+			expect((diffA?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(8, 2);
 		});
 
 		it("computePartViews part volume sum is below cell volume sum for overlapping boxes", async () => {
@@ -2518,17 +2455,13 @@ if (import.meta.vitest) {
 			const volB = await kernel.volume(rb.cell);
 			const parts = await kernel.computePartViews!(topo);
 			const inter = parts.find((p) => p.overlap === "intersection");
-			const diffVolA = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes(ra.cell))
-				.reduce((acc, p) => acc + p.volume, 0);
-			const diffVolB = parts
-				.filter((p) => p.overlap === "difference" && p.sourceCellIds.includes(rb.cell))
-				.reduce((acc, p) => acc + p.volume, 0);
+			const diffA = parts.find((p) => p.id === `part-${ra.cell}-difference`);
+			const diffB = parts.find((p) => p.id === `part-${rb.cell}-difference`);
 			const partSum = parts.reduce((acc, p) => acc + p.volume, 0);
 			expect(partSum).toBeLessThan(volA + volB);
 			expect(partSum).toBeCloseTo(volA + volB - (inter?.volume ?? 0), 2);
-			expect(diffVolA + (inter?.volume ?? 0)).toBeCloseTo(volA, 2);
-			expect(diffVolB + (inter?.volume ?? 0)).toBeCloseTo(volB, 2);
+			expect((diffA?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(volA, 2);
+			expect((diffB?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(volB, 2);
 			const interBox = { min: [1, 1, 0] as Vec3, max: [2, 2, 2] as Vec3 };
 			const inInter = (p: Vec3) =>
 				p[0] > interBox.min[0] + 1e-4 &&
@@ -2542,21 +2475,26 @@ if (import.meta.vitest) {
 			}
 		});
 
-		it("computePartViews splits punch cell into before intersection and after", async () => {
+		it("computePartViews emits one boolean difference per cell for punch through host", async () => {
 			const topo = new TopologyGraph();
-			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 2, 0], height: 2 });
-			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0.25, 0, 0], cornerB: [0.75, 2, 0], height: 2 });
-			applyTopologyDiff(topo, punch.diff);
+			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 });
+			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 });
 			applyTopologyDiff(topo, host.diff);
+			applyTopologyDiff(topo, punch.diff);
 			const parts = await kernel.computePartViews!(topo);
-			expect(parts.find((p) => p.id === `part-${punch.cell}-difference-before`)).toBeDefined();
-			expect(parts.find((p) => p.id === `part-${punch.cell}-difference-after`)).toBeDefined();
-			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
+			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
+			expect(parts.find((p) => p.id === `part-${host.cell}-difference`)).toBeDefined();
+			expect(parts.find((p) => p.id === `part-${punch.cell}-difference`)).toBeDefined();
+			const hostVol = await kernel.volume(host.cell);
 			const punchVol = await kernel.volume(punch.cell);
-			const before = parts.find((p) => p.id === `part-${punch.cell}-difference-before`);
-			const after = parts.find((p) => p.id === `part-${punch.cell}-difference-after`);
-			const inter = parts.find((p) => p.overlap === "intersection");
-			expect((before?.volume ?? 0) + (after?.volume ?? 0) + (inter?.volume ?? 0)).toBeCloseTo(punchVol, 2);
+			const interVol = parts.find((p) => p.overlap === "intersection")?.volume ?? 0;
+			const hostDiff = parts.find((p) => p.id === `part-${host.cell}-difference`)?.volume ?? 0;
+			expect(hostDiff).toBeCloseTo(hostVol - interVol, 2);
+			expect(hostDiff + interVol).toBeCloseTo(hostVol, 2);
+			expect((parts.find((p) => p.id === `part-${punch.cell}-difference`)?.volume ?? 0) + interVol).toBeCloseTo(
+				punchVol,
+				2,
+			);
 		});
 
 		it("computePartViews uses analytic brep for overlapping spheres not topology aabb", async () => {

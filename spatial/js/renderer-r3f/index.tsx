@@ -354,6 +354,19 @@ export interface SpatialSelectionRequest {
 	readonly modifiers: InteractionEvent["modifiers"];
 }
 
+type SpatialSelectionMethod = "rectangle" | "lasso";
+type SpatialSelectionCoverage = "partial" | "full";
+type SpatialSelectionMode = "default" | "additive" | "subtractive" | "invertive";
+
+interface SpatialDragSelectionState {
+	readonly method: SpatialSelectionMethod;
+	readonly coverage: SpatialSelectionCoverage;
+	readonly startClient: { readonly x: number; readonly y: number };
+	readonly currentClient: { readonly x: number; readonly y: number };
+	readonly path: readonly { readonly x: number; readonly y: number }[];
+	readonly modifiers: InteractionEvent["modifiers"];
+}
+
 export type SpatialPickGeometry = TopologyGraph | TopologyGraphJson;
 
 export function spatialPickTargetKey(target: SpatialPickTarget): string {
@@ -1496,6 +1509,152 @@ function targetRayScore(ray: THREE.Ray, target: SpatialPickTarget): number | nul
 	return ray.origin.distanceTo(hit) + spatialPickPriority[target.kind] * 1e-4;
 }
 
+function pointerModifiersFromNativeEvent(event: PointerEvent): InteractionEvent["modifiers"] {
+	return {
+		alt: event.altKey,
+		ctrl: event.ctrlKey,
+		meta: event.metaKey,
+		shift: event.shiftKey,
+	};
+}
+
+function spatialSelectionModeFromModifiers(modifiers: InteractionEvent["modifiers"] = {}): SpatialSelectionMode {
+	if (modifiers.shift && modifiers.ctrl) return "invertive";
+	if (modifiers.shift) return "additive";
+	if (modifiers.ctrl) return "subtractive";
+	return "default";
+}
+
+function uniqueSelectionTargets(targets: readonly SelectionTarget[]): SelectionTarget[] {
+	const out: SelectionTarget[] = [];
+	const seen = new Set<string>();
+	for (const target of targets) {
+		const key = spatialSelectionTargetKey(target);
+		if (seen.has(key)) continue;
+		seen.add(key);
+		out.push(target);
+	}
+	return out;
+}
+
+function mergeSelectionTargets(
+	current: readonly SelectionTarget[],
+	next: readonly SelectionTarget[],
+	mode: SpatialSelectionMode,
+): SelectionTarget[] {
+	const uniqueNext = uniqueSelectionTargets(next);
+	const nextKeys = new Set(uniqueNext.map(spatialSelectionTargetKey));
+	if (mode === "default") return uniqueNext;
+	if (mode === "additive") {
+		const seen = new Set(current.map(spatialSelectionTargetKey));
+		const merged = [...current];
+		for (const target of uniqueNext) {
+			const key = spatialSelectionTargetKey(target);
+			if (seen.has(key)) continue;
+			seen.add(key);
+			merged.push(target);
+		}
+		return merged;
+	}
+	if (mode === "subtractive") return current.filter((target) => !nextKeys.has(spatialSelectionTargetKey(target)));
+	const currentKeys = new Set(current.map(spatialSelectionTargetKey));
+	return [
+		...current.filter((target) => !nextKeys.has(spatialSelectionTargetKey(target))),
+		...uniqueNext.filter((target) => !currentKeys.has(spatialSelectionTargetKey(target))),
+	];
+}
+
+function dragDistance(a: { readonly x: number; readonly y: number }, b: { readonly x: number; readonly y: number }): number {
+	return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+function spatialSelectionCoverageFromPath(path: readonly { readonly x: number; readonly y: number }[]): SpatialSelectionCoverage {
+	const start = path[0];
+	if (!start) return "full";
+	for (const point of path.slice(1)) {
+		const dx = point.x - start.x;
+		if (Math.abs(dx) < 2) continue;
+		return dx < 0 ? "partial" : "full";
+	}
+	const end = path[path.length - 1] ?? start;
+	return end.x < start.x ? "partial" : "full";
+}
+
+function pointInRectangle(
+	point: { readonly x: number; readonly y: number },
+	rect: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
+): boolean {
+	return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+}
+
+function pointInPolygon(point: { readonly x: number; readonly y: number }, polygon: readonly { readonly x: number; readonly y: number }[]): boolean {
+	let inside = false;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		const a = polygon[i]!;
+		const b = polygon[j]!;
+		const intersects = a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / ((b.y - a.y) || 1e-9) + a.x;
+		if (intersects) inside = !inside;
+	}
+	return inside;
+}
+
+function projectPointToClient(point: Vec3, camera: THREE.Camera, rect: DOMRect): { readonly x: number; readonly y: number } | null {
+	const projected = new THREE.Vector3(point[0], point[1], point[2]).project(camera);
+	if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || !Number.isFinite(projected.z)) return null;
+	if (projected.z < -1 || projected.z > 1) return null;
+	return {
+		x: rect.left + ((projected.x + 1) / 2) * rect.width,
+		y: rect.top + ((1 - projected.y) / 2) * rect.height,
+	};
+}
+
+function spatialPickTargetsFromClientPoint(
+	client: { readonly x: number; readonly y: number },
+	camera: THREE.Camera,
+	rect: DOMRect,
+	targets: readonly SpatialPickTarget[],
+	selectionAccept: readonly TopologyEntityKind[],
+	kindToggles: SpatialPickKindToggles,
+	analyticToggles: SpatialAnalyticToggles = {},
+): SpatialPickTarget[] {
+	const pointer = new THREE.Vector2(((client.x - rect.left) / rect.width) * 2 - 1, -(((client.y - rect.top) / rect.height) * 2 - 1));
+	const raycaster = new THREE.Raycaster();
+	raycaster.setFromCamera(pointer, camera);
+	return spatialPickTargetsFromRay(raycaster.ray, targets, selectionAccept, kindToggles, analyticToggles);
+}
+
+function spatialPickTargetsFromScreenSelection(
+	drag: SpatialDragSelectionState,
+	targets: readonly SpatialPickTarget[],
+	camera: THREE.Camera,
+	rect: DOMRect,
+	selectionAccept: readonly TopologyEntityKind[],
+	kindToggles: SpatialPickKindToggles,
+	analyticToggles: SpatialAnalyticToggles = {},
+	topologyPreviewTransform?: ((point: Vec3) => Vec3) | null,
+): SpatialPickTarget[] {
+	const selectable = filterSpatialPickTargetsAnalytic(filterSpatialPickTargets(targets, selectionAccept, kindToggles), analyticToggles);
+	const mapPoint = topologyPreviewTransform ?? ((point: Vec3) => point);
+	const rectBounds = {
+		left: Math.min(drag.startClient.x, drag.currentClient.x),
+		right: Math.max(drag.startClient.x, drag.currentClient.x),
+		top: Math.min(drag.startClient.y, drag.currentClient.y),
+		bottom: Math.max(drag.startClient.y, drag.currentClient.y),
+	};
+	const contains =
+		drag.method === "rectangle"
+			? (point: { readonly x: number; readonly y: number }) => pointInRectangle(point, rectBounds)
+			: (point: { readonly x: number; readonly y: number }) => pointInPolygon(point, drag.path);
+	return selectable.filter((target) => {
+		const points = (target.points?.length ? target.points : [target.point]).map(mapPoint);
+		const projected = points
+			.map((point) => projectPointToClient(point, camera, rect))
+			.filter((point): point is { readonly x: number; readonly y: number } => point !== null);
+		if (projected.length === 0) return false;
+		return drag.coverage === "partial" ? projected.some(contains) : projected.every(contains);
+	});
+}
+
 function spatialPickTargetsFromRay(
 	ray: THREE.Ray,
 	targets: readonly SpatialPickTarget[],
@@ -1557,16 +1716,22 @@ function SpatialSelectionRayCatcher({
 	selectionAccept,
 	selectionKindToggles,
 	analyticToggles = {},
+	hostSelectionEnabled = false,
 	onSelectionRequest,
 }: {
 	readonly targets: readonly SpatialPickTarget[];
 	readonly selectionAccept: readonly TopologyEntityKind[];
 	readonly selectionKindToggles: SpatialPickKindToggles;
 	readonly analyticToggles?: SpatialAnalyticToggles;
+	readonly hostSelectionEnabled?: boolean;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 }): ReactNode {
 	if (selectionAccept.length === 0 || !onSelectionRequest) return null;
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+		if (hostSelectionEnabled) {
+			e.stopPropagation();
+			return;
+		}
 		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
 		if (candidates.length === 0) return;
 		e.stopPropagation();
@@ -1602,6 +1767,8 @@ function SpatialPickTargetNode({
 	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
+	selectedTargetKeys,
+	hostSelectionEnabled = false,
 }: {
 	readonly target: SpatialPickTarget;
 	readonly targets: readonly SpatialPickTarget[];
@@ -1618,13 +1785,15 @@ function SpatialPickTargetNode({
 	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
+	readonly selectedTargetKeys?: ReadonlySet<string> | null;
+	readonly hostSelectionEnabled?: boolean;
 }): ReactNode {
 	const mapPt = topologyPreviewTransform ?? ((p: Vec3) => p);
 	const displayPoint = mapPt(target.point);
 	const displayPoints = target.points?.map(mapPt);
 	const targetKey = spatialPickTargetKey(target);
 	const hovered = hoveredTargetKey === targetKey;
-	const selected = selectedTargetKey === targetKey;
+	const selected = selectedTargetKeys?.has(targetKey) ?? selectedTargetKey === targetKey;
 	const style = targetStyle(target, hovered, selected);
 	const emit = (kind: SpatialPickKind, e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
@@ -1634,6 +1803,10 @@ function SpatialPickTargetNode({
 		if (kind === "pointer.move" && pointerMoveEnabled) onPointerMove?.(target.point, event);
 	};
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+		if (hostSelectionEnabled && selectionAccept.length > 0) {
+			e.stopPropagation();
+			return;
+		}
 		e.stopPropagation();
 		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
 		if (selectionAccept.length > 0 && candidates.length > 0 && onSelectionRequest) {
@@ -1775,6 +1948,8 @@ export function SpatialPickGeometryLayer({
 	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
+	readonly selectedTargetKeys?: ReadonlySet<string> | null;
+	readonly hostSelectionEnabled?: boolean;
 }): ReactNode {
 	const topoRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
@@ -1793,6 +1968,7 @@ export function SpatialPickGeometryLayer({
 				selectionAccept={selectionAccept}
 				selectionKindToggles={selectionKindToggles}
 				analyticToggles={analyticToggles}
+				hostSelectionEnabled={hostSelectionEnabled}
 				onSelectionRequest={onSelectionRequest}
 			/>
 			{enabledTargets.map((target) => (
@@ -1813,6 +1989,8 @@ export function SpatialPickGeometryLayer({
 					analyticToggles={analyticToggles}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
+					selectedTargetKeys={selectedTargetKeys}
+					hostSelectionEnabled={hostSelectionEnabled}
 				/>
 			))}
 		</group>
@@ -1860,12 +2038,17 @@ export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnaps
 // #region 🪩Canvas
 export interface InteractionCanvasProps {
 	readonly children: ReactNode;
+	readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
 }
 
 /** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
-export function InteractionCanvas({ children }: InteractionCanvasProps): ReactNode {
+export function InteractionCanvas({ children, onCanvasReady }: InteractionCanvasProps): ReactNode {
 	return (
-		<Canvas style={{ height: "100%", width: "100%" }} camera={{ up: [0, 0, 1], position: [10, 10, 8], fov: 45 }}>
+		<Canvas
+			style={{ height: "100%", width: "100%" }}
+			camera={{ up: [0, 0, 1], position: [10, 10, 8], fov: 45 }}
+			onCreated={({ camera, gl }) => onCanvasReady?.({ camera, domElement: gl.domElement })}
+		>
 			<color attach="background" args={["#080810"]} />
 			{children}
 		</Canvas>
@@ -1893,6 +2076,8 @@ export interface InteractionSpatialViewProps {
 	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
+	readonly selectedTargetKeys?: ReadonlySet<string> | null;
+	readonly hostSelectionEnabled?: boolean;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
 }
@@ -1917,6 +2102,8 @@ export function InteractionSpatialView({
 	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
+	selectedTargetKeys,
+	hostSelectionEnabled = false,
 	onSelectionRequest,
 	onHoverTarget,
 }: InteractionSpatialViewProps): ReactNode {
@@ -2006,6 +2193,8 @@ export function InteractionSpatialView({
 				analyticToggles={analyticToggles}
 				hoveredTargetKey={hoveredTargetKey}
 				selectedTargetKey={selectedTargetKey}
+				selectedTargetKeys={selectedTargetKeys}
+				hostSelectionEnabled={hostSelectionEnabled}
 			/>
 			{heightMoveOn && origin && corner ? (
 				<HeightDragSurface
@@ -3446,10 +3635,10 @@ if (import.meta.vitest) {
 			expect(analytic.length).toBeGreaterThan(0);
 		});
 
-		it("play topology overlapping boxes expose split part pick targets not one cell hull", async () => {
+		it("play topology punch through host exposes one difference pick target per cell", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 2, 0], height: 2 }, cellRef("punch")));
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0.25, 0, 0], cornerB: [0.75, 2, 0], height: 2 }, cellRef("host")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
 			const derived = new DerivedViewService({
 				id: "topology-parts",
 				operations: [],
@@ -3460,11 +3649,11 @@ if (import.meta.vitest) {
 			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
 				(t) => t.kind === "part",
 			);
-			expect(partTargets.some((t) => t.id.includes("difference-before"))).toBe(true);
-			expect(partTargets.some((t) => t.id.includes("difference-after"))).toBe(true);
+			expect(partTargets.filter((t) => t.overlap === "difference")).toHaveLength(2);
+			expect(partTargets.some((t) => t.id === "part-host-difference")).toBe(true);
+			expect(partTargets.some((t) => t.id === "part-punch-difference")).toBe(true);
 			expect(partTargets.some((t) => t.overlap === "intersection")).toBe(true);
-			expect(partTargets.length).toBeGreaterThanOrEqual(3);
-			expect(partTargets.every((t) => (t.points?.length ?? 0) >= 4)).toBe(true);
+			expect(partTargets.every((t) => !t.id.includes("difference-before"))).toBe(true);
 		});
 
 		it("partitions raw and analytic pick targets", () => {
