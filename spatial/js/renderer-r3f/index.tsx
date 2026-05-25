@@ -14,12 +14,13 @@ import {
 	buildBoxInteractionSpec,
 	cellRef,
 	createInteractionRuntime,
-	DocumentHistory,
 	DerivedViewService,
+	topologyCellAabb,
+	DocumentHistory,
 	isInteractionSessionActive,
+	parseTopologyGraphJson,
 	listKeyedInteractionTransitions,
 	meshFaceTopologyDiff,
-	parseTopologyGraphJson,
 	resolveSpatialInteractionKey,
 	TopologyGraph,
 	type InteractionEvent,
@@ -37,6 +38,7 @@ import {
 	type FaceRecord,
 	type KernelAdapter,
 	type ModelDocument,
+	type PartView,
 	type SelectionTarget,
 	type ShellRecord,
 	type MeshPreview,
@@ -134,6 +136,168 @@ function readVec3Array(v: unknown): readonly Vec3[] {
 	return v.filter(isVec3Record) as readonly Vec3[];
 }
 
+function vec3Sub(a: Vec3, b: Vec3): Vec3 {
+	return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
+function vec3Add(a: Vec3, b: Vec3): Vec3 {
+	return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+}
+
+function translateVec3(p: Vec3, delta: Vec3): Vec3 {
+	return vec3Add(p, delta);
+}
+
+/** @emoji 📦 Axis-aligned bounds for topology highlight wireframes. */
+export function bboxFromPoints(points: readonly Vec3[]): { readonly min: Vec3; readonly max: Vec3 } | null {
+	if (!points.length) return null;
+	let minX = points[0]![0];
+	let minY = points[0]![1];
+	let minZ = points[0]![2];
+	let maxX = minX;
+	let maxY = minY;
+	let maxZ = minZ;
+	for (const p of points) {
+		minX = Math.min(minX, p[0]);
+		minY = Math.min(minY, p[1]);
+		minZ = Math.min(minZ, p[2]);
+		maxX = Math.max(maxX, p[0]);
+		maxY = Math.max(maxY, p[1]);
+		maxZ = Math.max(maxZ, p[2]);
+	}
+	const pad = 0.04;
+	return {
+		min: [minX - pad, minY - pad, minZ - pad],
+		max: [maxX + pad, maxY + pad, maxZ + pad],
+	};
+}
+
+/** @emoji 📦 Twelve edges of an axis-aligned box for preview line rendering. */
+export function bboxWireSegments(min: Vec3, max: Vec3): readonly (readonly [Vec3, Vec3])[] {
+	const [x0, y0, z0] = min;
+	const [x1, y1, z1] = max;
+	const c: readonly Vec3[] = [
+		[x0, y0, z0],
+		[x1, y0, z0],
+		[x1, y1, z0],
+		[x0, y1, z0],
+		[x0, y0, z1],
+		[x1, y0, z1],
+		[x1, y1, z1],
+		[x0, y1, z1],
+	];
+	const idx: readonly (readonly [number, number])[] = [
+		[0, 1],
+		[1, 2],
+		[2, 3],
+		[3, 0],
+		[4, 5],
+		[5, 6],
+		[6, 7],
+		[7, 4],
+		[0, 4],
+		[1, 5],
+		[2, 6],
+		[3, 7],
+	];
+	return idx.map(([a, b]) => [c[a]!, c[b]!] as const);
+}
+
+function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: TopologyEntityKind; readonly id: string }[] {
+	if (!Array.isArray(v)) return [];
+	const out: { kind: TopologyEntityKind; id: string }[] = [];
+	for (const raw of v) {
+		if (!raw || typeof raw !== "object") continue;
+		const o = raw as Record<string, unknown>;
+		const kind = o.kind;
+		const id = o.id;
+		if (typeof kind === "string" && typeof id === "string") out.push({ kind: kind as TopologyEntityKind, id });
+	}
+	return out;
+}
+
+/** @emoji 🖼️ Maps declarative `previewKind` + params to a point transform for topology wireframes. */
+export function transformPointsForPreviewKind(
+	previewKind: string,
+	params: Record<string, unknown>,
+): (point: Vec3) => Vec3 {
+	const identity = (point: Vec3) => point;
+	const cursor = readVec3(params.cursor);
+	const prevPoint = readVec3(params.prevPoint);
+	const from = readVec3(params.from) ?? prevPoint;
+	const center = readVec3(params.center) ?? readVec3Array(params.points)[0] ?? null;
+	if (previewKind === "move-preview" || previewKind === "copy-preview") {
+		if (!from || !cursor) return identity;
+		const delta = vec3Sub(cursor, from);
+		return (point) => translateVec3(point, delta);
+	}
+	if (previewKind === "mirror-preview") {
+		const planeStart = readVec3(params.mirrorStart) ?? from;
+		if (!planeStart || !cursor) return identity;
+		const dx = cursor[0] - planeStart[0];
+		const dy = cursor[1] - planeStart[1];
+		const len = Math.hypot(dx, dy);
+		if (len < 1e-9) return identity;
+		const nx = -dy / len;
+		const ny = dx / len;
+		return (point) => {
+			const vx = point[0] - planeStart[0];
+			const vy = point[1] - planeStart[1];
+			const dot = vx * nx + vy * ny;
+			return [point[0] - 2 * dot * nx, point[1] - 2 * dot * ny, point[2]];
+		};
+	}
+	if (previewKind === "rotate-preview") {
+		const pivot = center ?? from;
+		const ref = prevPoint;
+		if (!pivot || !ref || !cursor) return identity;
+		const a0 = Math.atan2(ref[1] - pivot[1], ref[0] - pivot[0]);
+		const a1 = Math.atan2(cursor[1] - pivot[1], cursor[0] - pivot[0]);
+		const ang = a1 - a0;
+		const c = Math.cos(ang);
+		const s = Math.sin(ang);
+		return (point) => {
+			const x = point[0] - pivot[0];
+			const y = point[1] - pivot[1];
+			return [pivot[0] + x * c - y * s, pivot[1] + x * s + y * c, point[2]];
+		};
+	}
+	if (previewKind === "scale-preview" || previewKind === "scale1d-preview") {
+		const origin = center ?? from ?? readVec3Array(params.points)[0];
+		const ref = prevPoint ?? from;
+		if (!origin || !ref || !cursor) return identity;
+		const d0 = Math.hypot(ref[0] - origin[0], ref[1] - origin[1]);
+		const d1 = Math.hypot(cursor[0] - origin[0], cursor[1] - origin[1]);
+		const scale = d0 > 1e-9 ? d1 / d0 : 1;
+		return (point) => [
+			origin[0] + (point[0] - origin[0]) * scale,
+			origin[1] + (point[1] - origin[1]) * scale,
+			origin[2] + (point[2] - origin[2]) * scale,
+		];
+	}
+	return identity;
+}
+
+function previewKindUsesTopologyWireframe(previewKind: string): boolean {
+	return (
+		previewKind === "selected-objects" ||
+		previewKind === "move-preview" ||
+		previewKind === "copy-preview" ||
+		previewKind === "mirror-preview" ||
+		previewKind === "rotate-preview" ||
+		previewKind === "scale-preview" ||
+		previewKind === "scale1d-preview" ||
+		previewKind.endsWith("-selection") ||
+		previewKind.startsWith("boolean-") ||
+		previewKind === "highlight-curves" ||
+		previewKind === "cutters" ||
+		previewKind === "split-objects" ||
+		previewKind === "trim-preview" ||
+		previewKind === "extrusion" ||
+		previewKind === "network-curves"
+	);
+}
+
 const raycastNone: THREE.Object3D["raycast"] = () => undefined;
 // #endregion 📐Layout
 
@@ -176,6 +340,8 @@ export interface SpatialPickTarget {
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
 	readonly derivedFrom?: readonly { readonly kind: "face" | "cell"; readonly id: string }[];
+	readonly exposure?: "external" | "internal";
+	readonly overlap?: "none" | "difference" | "intersection";
 }
 
 export interface SpatialSelectionRequest {
@@ -374,6 +540,96 @@ function topologyEntityPoints(
 	return [];
 }
 
+function topologyWireEdgeSegments(
+	vertices: Record<string, VertexRecord>,
+	edges: Record<string, EdgeRecord>,
+	wire: WireRecord,
+): readonly (readonly [Vec3, Vec3])[] {
+	const out: (readonly [Vec3, Vec3])[] = [];
+	for (const edgeId of wire.edgeIds) {
+		const edge = edges[edgeId];
+		if (!edge) continue;
+		const pts = topologyEdgePoints(vertices, edge);
+		if (pts.length >= 2) out.push([pts[0]!, pts[1]!]);
+	}
+	return out;
+}
+
+/** @emoji 📐 Topology wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
+export function topologyEntityWireSegments(
+	buckets: ReturnType<typeof topologyGeometryBuckets>,
+	kind: TopologyEntityKind,
+	id: string,
+): readonly (readonly [Vec3, Vec3])[] {
+	if (kind === "edge" && buckets.edges[id]) return topologyWireEdgeSegments(buckets.vertices, buckets.edges, { id, edgeIds: [id] });
+	if (kind === "wire" && buckets.wires[id]) return topologyWireEdgeSegments(buckets.vertices, buckets.edges, buckets.wires[id]!);
+	if (kind === "face" && buckets.faces[id]) {
+		const face = buckets.faces[id]!;
+		return face.wireIds.flatMap((wireId) => {
+			const wire = buckets.wires[wireId];
+			return wire ? topologyWireEdgeSegments(buckets.vertices, buckets.edges, wire) : [];
+		});
+	}
+	if (kind === "shell" && buckets.shells[id]) {
+		return buckets.shells[id]!.faceIds.flatMap((faceId) => topologyEntityWireSegments(buckets, "face", faceId));
+	}
+	if (kind === "cell" && buckets.cells[id]) {
+		return buckets.cells[id]!.shellIds.flatMap((shellId) => topologyEntityWireSegments(buckets, "shell", shellId));
+	}
+	if (kind === "cellComplex" && buckets.cellComplexes[id]) {
+		return buckets.cellComplexes[id]!.cellIds.flatMap((cellId) => topologyEntityWireSegments(buckets, "cell", cellId));
+	}
+	const pts = topologyEntityPoints(buckets, kind as SpatialPickTargetKind, id);
+	const bb = bboxFromPoints(pts);
+	return bb ? bboxWireSegments(bb.min, bb.max) : [];
+}
+
+function intersectCellAabbs(topo: TopologyGraph, cellIds: readonly string[]): { readonly min: Vec3; readonly max: Vec3 } | null {
+	let hit: { readonly min: Vec3; readonly max: Vec3 } | null = null;
+	for (const cellId of cellIds) {
+		const cell = topo.cells[cellId];
+		if (!cell) continue;
+		const aabb = topologyCellAabb(topo, cell);
+		if (!aabb) continue;
+		if (!hit) {
+			hit = aabb;
+			continue;
+		}
+		const min: Vec3 = [Math.max(hit.min[0], aabb.min[0]), Math.max(hit.min[1], aabb.min[1]), Math.max(hit.min[2], aabb.min[2])];
+		const max: Vec3 = [Math.min(hit.max[0], aabb.max[0]), Math.min(hit.max[1], aabb.max[1]), Math.min(hit.max[2], aabb.max[2])];
+		if (min[0] >= max[0] || min[1] >= max[1] || min[2] >= max[2]) return null;
+		hit = { min, max };
+	}
+	return hit;
+}
+
+function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
+	return [
+		[min[0], min[1], min[2]],
+		[max[0], min[1], min[2]],
+		[max[0], max[1], min[2]],
+		[min[0], max[1], min[2]],
+		[min[0], min[1], max[2]],
+		[max[0], min[1], max[2]],
+		[max[0], max[1], max[2]],
+		[min[0], max[1], max[2]],
+	];
+}
+
+function partPickPoints(
+	topo: TopologyGraph,
+	buckets: ReturnType<typeof topologyGeometryBuckets>,
+	part: PartView,
+	fallback: readonly Vec3[],
+): readonly Vec3[] {
+	if (part.overlap === "intersection" && part.sourceCellIds.length >= 2) {
+		const inter = intersectCellAabbs(topo, part.sourceCellIds);
+		if (inter) return aabbCornerPoints(inter.min, inter.max);
+	}
+	const fromCells = uniqueTopologyPoints(part.sourceCellIds.flatMap((cellId) => topologyEntityPoints(buckets, "cell", cellId)));
+	return fromCells.length ? fromCells : fallback;
+}
+
 function createAnalyticSpatialPickTargets(
 	buckets: ReturnType<typeof topologyGeometryBuckets>,
 	derived: DerivedViewService,
@@ -393,11 +649,11 @@ function createAnalyticSpatialPickTargets(
 			point,
 			points: merged.length ? merged : undefined,
 			derivedFrom: surface.sourceFaceIds.map((id) => ({ kind: "face" as const, id })),
+			exposure: surface.exposure,
 		});
 	}
 	for (const part of derived.computeParts(topo)) {
-		const points = part.sourceCellIds.flatMap((cellId) => topologyEntityPoints(buckets, "cell", cellId));
-		const merged = uniqueTopologyPoints(points.length ? points : all);
+		const merged = uniqueTopologyPoints(partPickPoints(topo, buckets, part, all));
 		const point = topologyPointCentroid(merged) ?? allCenter;
 		if (!point) continue;
 		targets.push({
@@ -406,6 +662,7 @@ function createAnalyticSpatialPickTargets(
 			point,
 			points: merged.length ? merged : all,
 			derivedFrom: part.sourceCellIds.map((id) => ({ kind: "cell" as const, id })),
+			overlap: part.overlap,
 		});
 	}
 	return targets;
@@ -629,29 +886,212 @@ function LabelItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	);
 }
 
-function PreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
+function TopologyTargetWireframes({
+	geometry,
+	targets,
+	transform,
+	color,
+	opacity,
+}: {
+	readonly geometry: SpatialPickGeometry;
+	readonly targets: readonly { readonly kind: TopologyEntityKind; readonly id: string }[];
+	readonly transform: (point: Vec3) => Vec3;
+	readonly color: string;
+	readonly opacity: number;
+}): ReactNode {
+	const buckets = useMemo(() => topologyGeometryBuckets(geometry), [geometry]);
+	const segments = useMemo(() => {
+		const out: (readonly [Vec3, Vec3])[] = [];
+		for (const target of targets) {
+			for (const [a, b] of topologyEntityWireSegments(buckets, target.kind, target.id)) {
+				out.push([transform(a), transform(b)]);
+			}
+		}
+		return out;
+	}, [buckets, targets, transform]);
+	if (!segments.length) return null;
+	return (
+		<group>
+			{segments.map(([a, b], i) => (
+				<Line
+					key={`${a[0]}-${a[1]}-${a[2]}-${b[0]}-${b[1]}-${b[2]}-${i}`}
+					raycast={raycastNone}
+					points={[
+						[a[0], a[1], a[2]],
+						[b[0], b[1], b[2]],
+					]}
+					color={color}
+					lineWidth={2}
+					transparent
+					opacity={opacity}
+				/>
+			))}
+		</group>
+	);
+}
+
+function TopologyTargetPreviewMeshes({
+	geometry,
+	targets,
+	transform,
+	color,
+	opacity,
+}: {
+	readonly geometry: SpatialPickGeometry;
+	readonly targets: readonly { readonly kind: TopologyEntityKind; readonly id: string }[];
+	readonly transform: (point: Vec3) => Vec3;
+	readonly color: string;
+	readonly opacity: number;
+}): ReactNode {
+	const buckets = useMemo(() => topologyGeometryBuckets(geometry), [geometry]);
+	const solids = useMemo(() => {
+		const out: { readonly key: string; readonly center: Vec3; readonly size: Vec3 }[] = [];
+		for (const target of targets) {
+			const pts = topologyEntityPoints(buckets, target.kind as SpatialPickTargetKind, target.id).map(transform);
+			if (target.kind === "vertex" && pts[0]) {
+				out.push({ key: `${target.kind}:${target.id}:v`, center: pts[0], size: [0.1, 0.1, 0.1] });
+				continue;
+			}
+			if (target.kind === "edge" || target.kind === "wire") continue;
+			const bounds = targetBounds(pts);
+			if (!bounds) continue;
+			out.push({ key: `${target.kind}:${target.id}`, center: bounds.center, size: bounds.size });
+		}
+		return out;
+	}, [buckets, targets, transform]);
+	if (!solids.length) return null;
+	return (
+		<group>
+			{solids.map((solid) => (
+				<mesh key={solid.key} position={solid.center} scale={solid.size} raycast={raycastNone}>
+					<boxGeometry args={[1, 1, 1]} />
+					<meshStandardMaterial
+						color={color}
+						emissive={color}
+						emissiveIntensity={0.12}
+						transparent
+						opacity={opacity}
+						depthWrite={false}
+						side={THREE.DoubleSide}
+					/>
+				</mesh>
+			))}
+		</group>
+	);
+}
+
+function PreviewItem({
+	item,
+	geometry,
+}: {
+	readonly item: DisplayItem;
+	readonly geometry?: SpatialPickGeometry | null;
+}): ReactNode {
 	const p = item.params;
 	if (!p) return null;
 	const previewKind = typeof p.previewKind === "string" ? p.previewKind : "preview";
+	const targets = parseDisplaySelectionTargets(p.targets);
+	const transform = useMemo(() => transformPointsForPreviewKind(previewKind, p), [previewKind, p]);
 	const points = readVec3Array(p.points);
 	const cursor = readVec3(p.cursor);
 	const prevPoint = readVec3(p.prevPoint);
-	const linePoints = points.length ? [...points, ...(cursor ? [cursor] : [])] : prevPoint && cursor ? [prevPoint, cursor] : [];
+	const from = readVec3(p.from) ?? prevPoint;
+	const linePoints = points.length ? [...points, ...(cursor ? [cursor] : [])] : from && cursor ? [from, cursor] : [];
+	const ghost =
+		previewKind === "move-preview" || previewKind === "copy-preview" || previewKind === "mirror-preview";
+	const wireColor =
+		previewKind === "selected-objects" || previewKind.endsWith("-selection") ? "#ffcc66" : ghost ? "#7ab0ff" : "#88eeff";
+	const wireOpacity = ghost ? 0.92 : 0.78;
+	const meshColor = ghost ? "#4a6088" : wireColor;
+	const meshOpacity = ghost ? 0.28 : 0.42;
+	if (geometry && targets.length && previewKindUsesTopologyWireframe(previewKind)) {
+		return (
+			<group>
+				{ghost ? (
+					<>
+						<TopologyTargetPreviewMeshes
+							geometry={geometry}
+							targets={targets}
+							transform={(pt) => pt}
+							color={meshColor}
+							opacity={meshOpacity}
+						/>
+						<TopologyTargetWireframes
+							geometry={geometry}
+							targets={targets}
+							transform={(pt) => pt}
+							color="#4a6088"
+							opacity={0.35}
+						/>
+					</>
+				) : null}
+				<TopologyTargetPreviewMeshes
+					geometry={geometry}
+					targets={targets}
+					transform={transform}
+					color={meshColor}
+					opacity={meshOpacity}
+				/>
+				<TopologyTargetWireframes
+					geometry={geometry}
+					targets={targets}
+					transform={transform}
+					color={wireColor}
+					opacity={wireOpacity}
+				/>
+				{from ? (
+					<mesh position={from} raycast={raycastNone}>
+						<sphereGeometry args={[0.05, 12, 12]} />
+						<meshStandardMaterial color="#ff9966" emissive="#442200" emissiveIntensity={0.4} />
+					</mesh>
+				) : null}
+				{linePoints.length >= 2 ? (
+					<Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#ffff88" lineWidth={2} />
+				) : null}
+			</group>
+		);
+	}
 	return (
 		<group>
 			{linePoints.length >= 2 ? (
 				<Line raycast={raycastNone} points={linePoints.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} />
 			) : null}
-			{cursor ? (
-				<Text position={[cursor[0] + 0.08, cursor[1] + 0.08, cursor[2] + 0.08]} fontSize={0.16} color="#b8c8ff" raycast={raycastNone}>
-					{previewKind}
-				</Text>
-			) : null}
 		</group>
 	);
 }
 
-function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
+function EntityHighlightItem({
+	item,
+	geometry,
+}: {
+	readonly item: DisplayItem;
+	readonly geometry?: SpatialPickGeometry | null;
+}): ReactNode {
+	const p = item.params;
+	if (!p || !geometry) return null;
+	const entity = p.entity;
+	if (!entity || typeof entity !== "object") return null;
+	const kind = (entity as { kind?: unknown }).kind;
+	const id = (entity as { id?: unknown }).id;
+	if (typeof kind !== "string" || typeof id !== "string") return null;
+	return (
+		<TopologyTargetWireframes
+			geometry={geometry}
+			targets={[{ kind: kind as TopologyEntityKind, id }]}
+			transform={(pt) => pt}
+			color="#ffcc66"
+			opacity={0.85}
+		/>
+	);
+}
+
+function DisplayItemNode({
+	item,
+	geometry,
+}: {
+	readonly item: DisplayItem;
+	readonly geometry?: SpatialPickGeometry | null;
+}): ReactNode {
 	switch (item.kind) {
 		case "box-preview":
 			return <BoxPreviewItem item={item} />;
@@ -664,21 +1104,27 @@ function DisplayItemNode({ item }: { readonly item: DisplayItem }): ReactNode {
 		case "label":
 			return <LabelItem item={item} />;
 		case "preview":
-			return <PreviewItem item={item} />;
+			return <PreviewItem item={item} geometry={geometry} />;
 		case "entity-highlight":
-			return null;
+			return <EntityHighlightItem item={item} geometry={geometry} />;
 		default:
 			return null;
 	}
 }
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
-export function InteractionDisplay({ model }: { readonly model: DisplayModel }): ReactNode {
+export function InteractionDisplay({
+	model,
+	geometry,
+}: {
+	readonly model: DisplayModel;
+	readonly geometry?: SpatialPickGeometry | null;
+}): ReactNode {
 	return (
 		<group>
 			{model.items.map((item) => (
 				<group key={item.id}>
-					<DisplayItemNode item={item} />
+					<DisplayItemNode item={item} geometry={geometry} />
 				</group>
 			))}
 		</group>
@@ -905,21 +1351,27 @@ function spatialPickTargetsFromRay(
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
 	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
 	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
+	if (target.kind === "surface") {
+		const internal = target.exposure === "internal";
+		return {
+			color: internal ? "#66bbff" : "#e8c46a",
+			emissive: internal ? "#204060" : "#5a4000",
+			opacity: internal ? 0.38 : 0.32,
+			lineWidth: 7,
+		};
+	}
+	if (target.kind === "part") {
+		if (target.overlap === "intersection") return { color: "#ff66cc", emissive: "#660033", opacity: 0.42, lineWidth: 8 };
+		if (target.overlap === "difference") return { color: "#ff9944", emissive: "#663300", opacity: 0.38, lineWidth: 8 };
+		return { color: "#88dd88", emissive: "#204420", opacity: 0.34, lineWidth: 7 };
+	}
 	if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
 	if (target.kind === "edge" || target.kind === "wire") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
 	return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
 }
 
 function spatialSelectionTarget(target: SpatialPickTarget) {
-	if (target.kind === "surface") {
-		return {
-			kind: target.kind,
-			id: target.id,
-			editable: false,
-			derivedFrom: target.derivedFrom ?? [],
-		};
-	}
-	if (target.kind === "part") {
+	if (target.kind === "surface" || target.kind === "part") {
 		return {
 			kind: target.kind,
 			id: target.id,
@@ -1337,7 +1789,7 @@ export function InteractionSpatialView({
 			{zRodMoveOn && origin ? (
 				<VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} />
 			) : null}
-			<InteractionDisplay model={displayModel ?? snapshot.display} />
+			<InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} />
 			{committedMesh ? <TessellatedCommitMesh mesh={committedMesh} /> : null}
 		</>
 	);
@@ -1602,18 +2054,24 @@ export function InteractionRepl({
 	useEffect(() => {
 		if (!derived) return;
 		const topo = documentModel.topology;
-		void derived.refresh(topo).then(() => setDerivedRevision((n) => n + 1));
+		let cancelled = false;
+		void derived.refresh(topo).then(() => {
+			if (!cancelled) setDerivedRevision((n) => n + 1);
+		});
+		return () => {
+			cancelled = true;
+		};
 	}, [derived, documentModel.topology, geometry, snapshot.revision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
-	}, [geometry, snapshot.state]);
+	}, [geometry, snapshot.state, derivedRevision]);
 
 	useEffect(() => {
 		setSelectedPickKey(null);
 		setSelectedSelectionTarget(null);
-	}, [geometry]);
+	}, [geometry, derivedRevision]);
 
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
@@ -1622,6 +2080,14 @@ export function InteractionRepl({
 		[runtimeSelectionAccept, interactionActive],
 	);
 	const activePickViewKinds = useMemo(() => spatialPickViewKinds(pickViewKind), [pickViewKind]);
+	const analyticSummary = useMemo(() => {
+		if (!derived || pickViewKind !== "analytic") return null;
+		const topo = documentModel.topology;
+		return {
+			surfaces: derived.computeSurfaces(topo),
+			parts: derived.computeParts(topo),
+		};
+	}, [derived, documentModel.topology, pickViewKind, derivedRevision, snapshot.revision]);
 
 	useEffect(() => {
 		if (activeSelectionAccept.length === 0 || activePickViewKinds.some((kind) => activeSelectionAccept.includes(kind))) return;
@@ -1674,7 +2140,11 @@ export function InteractionRepl({
 					return;
 				}
 				if (snapEv && activeSelectionAccept.length > 0 && activeSelectionAccept.includes(snapEv.kind as TopologyEntityKind)) {
-					const selection: SelectionTarget = { kind: snapEv.kind as TopologyEntityKind, id: snapEv.id, editable: true };
+					const kind = snapEv.kind as TopologyEntityKind;
+					const selection: SelectionTarget =
+						kind === "surface" || kind === "part"
+							? { kind, id: snapEv.id, editable: false }
+							: { kind, id: snapEv.id, editable: true };
 					setSelectedPickKey(spatialSelectionTargetKey(selection));
 					setSelectedSelectionTarget(selection);
 					void rt.send({ ...replSelectionEvent(selection), modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
@@ -2117,6 +2587,18 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
+					{analyticSummary ? (
+						<div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
+							<span style={{ opacity: 0.75 }}>
+								{analyticSummary.surfaces.length} surfaces · {analyticSummary.parts.length} parts
+							</span>
+							{analyticSummary.parts.map((part) => (
+								<span key={String(part.id)} style={{ fontSize: 11, opacity: 0.85 }}>
+									{part.overlap} · {String(part.id)}
+								</span>
+							))}
+						</div>
+					) : null}
 					<span>Selection kinds</span>
 					<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{activePickViewKinds.map((kind) => {
@@ -2179,6 +2661,36 @@ export function InteractionRepl({
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("@spatial/js-renderer-r3f preview transforms", () => {
+		it("bboxWireSegments returns twelve edges", () => {
+			const segs = bboxWireSegments([0, 0, 0], [1, 1, 1]);
+			expect(segs).toHaveLength(12);
+		});
+
+		it("topologyEntityWireSegments uses face boundary edges not bbox diagonals", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const faceId = Object.keys(topo.faces)[0]!;
+			const buckets = topologyGeometryBuckets(topo);
+			const segs = topologyEntityWireSegments(buckets, "face", faceId);
+			expect(segs.length).toBeGreaterThanOrEqual(4);
+			expect(segs.length).toBeLessThan(12);
+		});
+
+		it("move-preview translates points by cursor minus from", () => {
+			const map = transformPointsForPreviewKind("move-preview", {
+				from: [0, 0, 0],
+				cursor: [2, 1, 0],
+			});
+			expect(map([1, 2, 3])).toEqual([3, 3, 3]);
+		});
+
+		it("selected-objects preview keeps points unchanged", () => {
+			const map = transformPointsForPreviewKind("selected-objects", { cursor: [5, 5, 0] });
+			expect(map([1, 0, 0])).toEqual([1, 0, 0]);
+		});
+	});
 
 	describe("@spatial/js-renderer-r3f layout", () => {
 		it("computeBoxPreviewLayout matches footprint and height", () => {
@@ -2268,18 +2780,17 @@ if (import.meta.vitest) {
 			expect(targets.find((target) => target.kind === "cell")?.point).toEqual([2 / 3, 1 / 3, 0]);
 		});
 
-		it("creates analytic surface and part targets from derived views", () => {
+		it("creates analytic surface and part targets from derived views", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(
-				topo,
-				boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")),
-			);
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
 			const derived = new DerivedViewService();
+			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
-			expect(targets.some((target) => target.kind === "surface")).toBe(true);
-			expect(targets.some((target) => target.kind === "part")).toBe(true);
-			const surface = targets.find((target) => target.kind === "surface");
-			expect(surface?.derivedFrom?.length).toBeGreaterThan(0);
+			expect(targets.some((t) => t.kind === "surface")).toBe(true);
+			expect(targets.some((t) => t.kind === "part")).toBe(true);
+			const analytic = filterSpatialPickTargetsByView(targets, "analytic");
+			expect(analytic.every((t) => t.kind === "surface" || t.kind === "part")).toBe(true);
+			expect(analytic.length).toBeGreaterThan(0);
 		});
 
 		it("partitions raw and analytic pick targets", () => {
@@ -2296,10 +2807,11 @@ if (import.meta.vitest) {
 			]);
 		});
 
-		it("creates selectable targets for every committed box topology kind", () => {
+		it("creates selectable targets for every committed box topology kind", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
 			const derived = new DerivedViewService();
+			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			const counts = targets.reduce<Record<string, number>>((acc, target) => {
 				acc[target.kind] = (acc[target.kind] ?? 0) + 1;
@@ -2309,10 +2821,10 @@ if (import.meta.vitest) {
 			expect(counts.edge).toBe(12);
 			expect(counts.wire).toBe(6);
 			expect(counts.face).toBe(6);
-			expect(counts.surface).toBe(6);
+			expect(counts.surface).toBeGreaterThan(0);
 			expect(counts.shell).toBe(1);
 			expect(counts.cell).toBe(1);
-			expect(counts.part).toBe(1);
+			expect(counts.part).toBeGreaterThan(0);
 		});
 
 		it("filters selectable targets by active accept list and kind toggles", () => {

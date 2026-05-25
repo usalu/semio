@@ -812,15 +812,47 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "transform.scale1d",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "transform.scale1d"
+        "center": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "center"
+            }
+          ]
         },
-        "resultKind": {
-          "kind": "const",
-          "value": "scale1d"
+        "referenceA": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "referenceA"
+            }
+          ]
+        },
+        "referenceB": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "referenceB"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
         }
       }
     }

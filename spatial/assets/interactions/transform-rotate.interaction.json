@@ -812,15 +812,57 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "transform.rotate",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "transform.rotate"
+        "center": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "center"
+            }
+          ]
         },
-        "resultKind": {
-          "kind": "const",
-          "value": "rotate"
+        "referenceA": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "referenceA"
+            }
+          ]
+        },
+        "referenceB": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "referenceB"
+            }
+          ]
+        },
+        "angle": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "angle"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
         }
       }
     }

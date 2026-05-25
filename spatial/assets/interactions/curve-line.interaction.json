@@ -461,15 +461,35 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "curve.line",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "curve.line"
+        "p0": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "index",
+              "value": 0
+            }
+          ]
         },
-        "resultKind": {
-          "kind": "const",
-          "value": "line"
+        "p1": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "index",
+              "value": 1
+            }
+          ]
         }
       }
     }

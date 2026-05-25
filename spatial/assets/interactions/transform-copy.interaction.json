@@ -615,15 +615,37 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "transform.copy",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "transform.copy"
+        "from": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "from"
+            }
+          ]
         },
-        "resultKind": {
-          "kind": "const",
-          "value": "copy"
+        "to": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "to"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
         }
       }
     }

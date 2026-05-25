@@ -1220,6 +1220,7 @@ export interface KernelAdapter {
 	query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
 	computeSurfaceViews?(topo: TopologyGraph): SurfaceView[] | Promise<SurfaceView[]>;
 	computePartViews?(topo: TopologyGraph): PartView[] | Promise<PartView[]>;
+	executeCommandDiff?(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }>;
 	extrudeWire?(input: { wireId: string; distance: number; direction: Vec3 }): Promise<CellRef>;
 	offsetFaces?(input: { faceIds: readonly string[]; distance: number }): Promise<void>;
 	createBoxFromCornersDiff?(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }>;
@@ -1287,6 +1288,36 @@ export class ActionRegistry {
 		for (const d of builtinActionDefs()) r.register(d);
 		return r;
 	}
+}
+
+/** @emoji 🎯 Collects vertex ids reachable from transform/edit selection targets. */
+export function collectTargetVertices(topo: TopologyGraph, targets: readonly SelectionTarget[]): Set<string> {
+	const out = new Set<string>();
+	const walk = (kind: TopologyEntityKind, id: string) => {
+		if (kind === "vertex") {
+			if (topo.vertices[id]) out.add(id);
+		} else if (kind === "edge") {
+			const e = topo.edges[id];
+			if (e) for (const v of e.vertexIds) walk("vertex", v);
+		} else if (kind === "wire") {
+			const w = topo.wires[id];
+			if (w) for (const e of w.edgeIds) walk("edge", e);
+		} else if (kind === "face") {
+			const f = topo.faces[id];
+			if (f) for (const w of f.wireIds) walk("wire", w);
+		} else if (kind === "shell") {
+			const s = topo.shells[id];
+			if (s) for (const f of s.faceIds) walk("face", f);
+		} else if (kind === "cell") {
+			const c = topo.cells[id];
+			if (c) for (const s of c.shellIds) walk("shell", s);
+		} else if (kind === "cellComplex") {
+			const cc = topo.cellComplexes[id];
+			if (cc) for (const c of cc.cellIds) walk("cell", c);
+		}
+	};
+	for (const t of targets) walk(t.kind, t.id);
+	return out;
 }
 
 function builtinActionDefs(): ActionDef[] {
@@ -1606,18 +1637,301 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const commandFinish: ActionDef = {
 		id: "command.finish",
-		run: (params) => {
+		run: async (params, { kernel }) => {
 			const ctx = ctxOf(params as Record<string, unknown>);
+			const commandId = String(params.commandId ?? "");
+			let diff = EMPTY_TOPOLOGY_DIFF;
+			
+			if (kernel.executeCommandDiff) {
+				const res = await kernel.executeCommandDiff(commandId, ctx);
+				if (res && res.diff) diff = res.diff;
+			}
+			
 			return {
-				diff: EMPTY_TOPOLOGY_DIFF,
+				diff,
 				data: {
-					commandId: String(params.commandId ?? ""),
+					commandId,
 					resultKind: String(params.resultKind ?? "command"),
 					context: structuredClone(ctx),
 				},
 			};
 		},
 	};
+
+	const featureTransformMove: ActionDef = {
+		id: "transform.move",
+		run: (params, { topology }) => {
+			const from = isVec3(params.from) ? params.from : null;
+			const to = isVec3(params.to) ? params.to : null;
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			if (!from || !to || targets.length === 0) return {};
+
+			const delta = vec3Sub(to, from);
+			const vIds = collectTargetVertices(topology, targets);
+			const modifiedVertices: VertexRecordDiff[] = [];
+			for (const vid of vIds) {
+				const v = topology.vertices[vid];
+				if (v) {
+					modifiedVertices.push({
+						id: vid as VertexRef,
+						position: vec3Add(v.position, delta),
+					});
+				}
+			}
+
+			return {
+				diff: modifiedVertices.length > 0 ? { vertices: { modified: modifiedVertices } } : EMPTY_TOPOLOGY_DIFF,
+			};
+		},
+	};
+
+	const featureTransformRotate: ActionDef = {
+		id: "transform.rotate",
+		run: (params, { topology }) => {
+			const center = isVec3(params.center) ? params.center : null;
+			let angle = typeof params.angle === "number" ? params.angle : null;
+			if (angle === null) {
+				const refA = isVec3(params.referenceA) ? params.referenceA : null;
+				const refB = isVec3(params.referenceB) ? params.referenceB : null;
+				if (center && refA && refB) {
+					const angleA = Math.atan2(refA[1] - center[1], refA[0] - center[0]);
+					const angleB = Math.atan2(refB[1] - center[1], refB[0] - center[0]);
+					angle = angleB - angleA;
+				}
+			}
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			if (!center || typeof angle !== "number" || targets.length === 0) return {};
+
+			const vIds = collectTargetVertices(topology, targets);
+			const modifiedVertices: VertexRecordDiff[] = [];
+			const cosA = Math.cos(angle);
+			const sinA = Math.sin(angle);
+			for (const vid of vIds) {
+				const v = topology.vertices[vid];
+				if (v) {
+					const dx = v.position[0] - center[0];
+					const dy = v.position[1] - center[1];
+					modifiedVertices.push({
+						id: vid as VertexRef,
+						position: [
+							center[0] + dx * cosA - dy * sinA,
+							center[1] + dx * sinA + dy * cosA,
+							v.position[2],
+						],
+					});
+				}
+			}
+
+			return {
+				diff: modifiedVertices.length > 0 ? { vertices: { modified: modifiedVertices } } : EMPTY_TOPOLOGY_DIFF,
+			};
+		},
+	};
+
+	const featureTransformScale3D: ActionDef = {
+		id: "transform.scale3d",
+		run: (params, { topology }) => {
+			const center = isVec3(params.center) ? params.center : null;
+			const refA = isVec3(params.referenceA) ? params.referenceA : null;
+			const refB = isVec3(params.referenceB) ? params.referenceB : null;
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			if (!center || !refA || !refB || targets.length === 0) return {};
+
+			const distA = Math.hypot(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
+			const distB = Math.hypot(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
+			if (distA < 1e-6) return {};
+			const scale = distB / distA;
+
+			const vIds = collectTargetVertices(topology, targets);
+			const modifiedVertices: VertexRecordDiff[] = [];
+			for (const vid of vIds) {
+				const v = topology.vertices[vid];
+				if (v) {
+					modifiedVertices.push({
+						id: vid as VertexRef,
+						position: [
+							center[0] + (v.position[0] - center[0]) * scale,
+							center[1] + (v.position[1] - center[1]) * scale,
+							center[2] + (v.position[2] - center[2]) * scale,
+						],
+					});
+				}
+			}
+
+			return {
+				diff: modifiedVertices.length > 0 ? { vertices: { modified: modifiedVertices } } : EMPTY_TOPOLOGY_DIFF,
+			};
+		},
+	};
+
+	const featureTransformScale1D: ActionDef = {
+		id: "transform.scale1d",
+		run: (params, { topology }) => {
+			const center = isVec3(params.center) ? params.center : null;
+			const refA = isVec3(params.referenceA) ? params.referenceA : null;
+			const refB = isVec3(params.referenceB) ? params.referenceB : null;
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			if (!center || !refA || !refB || targets.length === 0) return {};
+
+			const distA = Math.hypot(refA[0] - center[0], refA[1] - center[1], refA[2] - center[2]);
+			const distB = Math.hypot(refB[0] - center[0], refB[1] - center[1], refB[2] - center[2]);
+			if (distA < 1e-6) return {};
+			const scale = distB / distA;
+
+			const dir = vec3Normalize(vec3Sub(refA, center));
+
+			const vIds = collectTargetVertices(topology, targets);
+			const modifiedVertices: VertexRecordDiff[] = [];
+			for (const vid of vIds) {
+				const v = topology.vertices[vid];
+				if (v) {
+					const delta = vec3Sub(v.position, center);
+					const proj = vec3Dot(delta, dir);
+					const ortho = vec3Sub(delta, vec3Scale(dir, proj));
+					const newProj = proj * scale;
+					
+					modifiedVertices.push({
+						id: vid as VertexRef,
+						position: vec3Add(center, vec3Add(vec3Scale(dir, newProj), ortho)),
+					});
+				}
+			}
+
+			return {
+				diff: modifiedVertices.length > 0 ? { vertices: { modified: modifiedVertices } } : EMPTY_TOPOLOGY_DIFF,
+			};
+		},
+	};
+
+	const featureCurveLine: ActionDef = {
+		id: "curve.line",
+		run: (params) => {
+			const p0 = isVec3(params.p0) ? params.p0 : null;
+			const p1 = isVec3(params.p1) ? params.p1 : null;
+			if (!p0 || !p1) return {};
+			const id = () => `id-${Math.random().toString(36).slice(2, 9)}`;
+			const v0 = id() as VertexRef;
+			const v1 = id() as VertexRef;
+			const e = id() as EdgeRef;
+			const w = id() as WireRef;
+			return {
+				diff: {
+					vertices: { added: [{ id: v0, position: p0 }, { id: v1, position: p1 }] },
+					edges: { added: [{ id: e, vertexIds: [v0, v1] }] },
+					wires: { added: [{ id: w, edgeIds: [e] }] },
+				},
+			};
+		},
+	};
+
+	const featureCurvePolyline: ActionDef = {
+		id: "curve.polyline",
+		run: (params) => {
+			const points = Array.isArray(params.points) ? params.points.filter(isVec3) : [];
+			if (points.length < 2) return {};
+			const id = () => `id-${Math.random().toString(36).slice(2, 9)}`;
+			const diff: TopologyDiff = { vertices: { added: [] }, edges: { added: [] }, wires: { added: [] } };
+			const vIds: VertexRef[] = [];
+			for (const p of points) {
+				const vid = id() as VertexRef;
+				diff.vertices!.added!.push({ id: vid, position: p });
+				vIds.push(vid);
+			}
+			const eIds: EdgeRef[] = [];
+			for (let i = 0; i < vIds.length - 1; i++) {
+				const eid = id() as EdgeRef;
+				diff.edges!.added!.push({ id: eid, vertexIds: [vIds[i]!, vIds[i + 1]!] });
+				eIds.push(eid);
+			}
+			const w = id() as WireRef;
+			diff.wires!.added!.push({ id: w, edgeIds: eIds });
+			return { diff };
+		},
+	};
+	const featureTransformCopy: ActionDef = {
+		id: "transform.copy",
+		run: (params, { topology }) => {
+			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
+			const from = isVec3(params.from) ? params.from : null;
+			const to = isVec3(params.to) ? params.to : null;
+			if (targets.length === 0 || !from || !to) return {};
+
+			const delta = vec3Sub(to, from);
+			
+			const idMap = new Map<string, string>();
+			const nextId = (kind: string) => `id-${kind}-${Math.random().toString(36).slice(2, 9)}`;
+			const getMapped = <T extends string>(id: T, kind: string): T => {
+				if (!idMap.has(id)) idMap.set(id, nextId(kind));
+				return idMap.get(id) as T;
+			};
+
+			const diff: TopologyDiff = {
+				vertices: { added: [] },
+				edges: { added: [] },
+				wires: { added: [] },
+				faces: { added: [] },
+				shells: { added: [] },
+				cells: { added: [] },
+			};
+
+			const vertices = new Set<VertexRef>();
+			const edges = new Set<EdgeRef>();
+			const wires = new Set<WireRef>();
+			const faces = new Set<FaceRef>();
+			const shells = new Set<ShellRef>();
+			const cells = new Set<CellRef>();
+
+			const walk = (kind: TopologyEntityKind, id: string) => {
+				if (kind === "vertex") {
+					if (topology.vertices[id]) vertices.add(id as VertexRef);
+				} else if (kind === "edge") {
+					const e = topology.edges[id];
+					if (e) { edges.add(id as EdgeRef); for (const v of e.vertexIds) walk("vertex", v); }
+				} else if (kind === "wire") {
+					const w = topology.wires[id];
+					if (w) { wires.add(id as WireRef); for (const e of w.edgeIds) walk("edge", e); }
+				} else if (kind === "face") {
+					const f = topology.faces[id];
+					if (f) { faces.add(id as FaceRef); for (const w of f.wireIds) walk("wire", w); }
+				} else if (kind === "shell") {
+					const s = topology.shells[id];
+					if (s) { shells.add(id as ShellRef); for (const f of s.faceIds) walk("face", f); }
+				} else if (kind === "cell") {
+					const c = topology.cells[id];
+					if (c) { cells.add(id as CellRef); for (const s of c.shellIds) walk("shell", s); }
+				}
+			};
+			for (const t of targets) walk(t.kind, t.id);
+
+			for (const vid of vertices) {
+				const v = topology.vertices[vid]!;
+				diff.vertices!.added!.push({ id: getMapped(vid, "v"), position: vec3Add(v.position, delta) });
+			}
+			for (const eid of edges) {
+				const e = topology.edges[eid]!;
+				diff.edges!.added!.push({ id: getMapped(eid, "e"), vertexIds: e.vertexIds.map(x => getMapped(x, "v")) });
+			}
+			for (const wid of wires) {
+				const w = topology.wires[wid]!;
+				diff.wires!.added!.push({ id: getMapped(wid, "w"), edgeIds: w.edgeIds.map(x => getMapped(x, "e")) });
+			}
+			for (const fid of faces) {
+				const f = topology.faces[fid]!;
+				diff.faces!.added!.push({ id: getMapped(fid, "f"), wireIds: f.wireIds.map(x => getMapped(x, "w")) });
+			}
+			for (const sid of shells) {
+				const s = topology.shells[sid]!;
+				diff.shells!.added!.push({ id: getMapped(sid, "s"), faceIds: s.faceIds.map(x => getMapped(x, "f")) });
+			}
+			for (const cid of cells) {
+				const c = topology.cells[cid]!;
+				diff.cells!.added!.push({ id: getMapped(cid, "c"), shellIds: c.shellIds.map(x => getMapped(x, "s")) });
+			}
+
+			return { diff };
+		},
+	};
+
 	return [
 		boxAabbFromDiagonalCorners,
 		boxTripletRubber,
@@ -1641,6 +1955,12 @@ function builtinActionDefs(): ActionDef[] {
 		commandAddPoint,
 		commandAddSelection,
 		commandFinish,
+		featureTransformMove,
+		featureTransformRotate,
+		featureTransformScale3D,
+		featureTransformCopy,
+		featureCurveLine,
+		featureCurvePolyline,
 	];
 }
 // #endregion 🧮ActionRegistry
@@ -1663,7 +1983,7 @@ export interface PartView {
 	readonly volume: number;
 }
 
-function topoFacePoints(topo: TopologyGraph, face: FaceRecord): readonly Vec3[] {
+function derivedFacePoints(topo: TopologyGraph, face: FaceRecord): readonly Vec3[] {
 	const points = face.wireIds.flatMap((wireId) => {
 		const wire = topo.wires[wireId];
 		return (wire?.edgeIds ?? []).flatMap((edgeId) => {
@@ -1676,7 +1996,7 @@ function topoFacePoints(topo: TopologyGraph, face: FaceRecord): readonly Vec3[] 
 	return [...new Map(points.map((p) => [p.join(","), p])).values()];
 }
 
-function topoPointCentroid(points: readonly Vec3[]): Vec3 | null {
+function derivedPointCentroid(points: readonly Vec3[]): Vec3 | null {
 	if (points.length === 0) return null;
 	const sum = points.reduce(
 		(acc, p) => [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]] as unknown as Vec3,
@@ -1685,28 +2005,7 @@ function topoPointCentroid(points: readonly Vec3[]): Vec3 | null {
 	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length] as unknown as Vec3;
 }
 
-function topoModelScale(topo: TopologyGraph): number {
-	const verts = Object.values(topo.vertices);
-	if (!verts.length) return 1;
-	let minX = Infinity;
-	let minY = Infinity;
-	let minZ = Infinity;
-	let maxX = -Infinity;
-	let maxY = -Infinity;
-	let maxZ = -Infinity;
-	for (const v of verts) {
-		const p = v.position;
-		minX = Math.min(minX, p[0]);
-		minY = Math.min(minY, p[1]);
-		minZ = Math.min(minZ, p[2]);
-		maxX = Math.max(maxX, p[0]);
-		maxY = Math.max(maxY, p[1]);
-		maxZ = Math.max(maxZ, p[2]);
-	}
-	return Math.hypot(maxX - minX, maxY - minY, maxZ - minZ) || 1;
-}
-
-function topoPolygonArea(points: readonly Vec3[]): number {
+function derivedPolygonArea(points: readonly Vec3[]): number {
 	if (points.length < 3) return 0;
 	const a = points[0]!;
 	let s = 0;
@@ -1727,7 +2026,7 @@ function topoPolygonArea(points: readonly Vec3[]): number {
 	return s;
 }
 
-function topoFaceNormal(points: readonly Vec3[]): Vec3 | null {
+function derivedFaceNormal(points: readonly Vec3[]): Vec3 | null {
 	if (points.length < 3) return null;
 	let nx = 0;
 	let ny = 0;
@@ -1742,7 +2041,28 @@ function topoFaceNormal(points: readonly Vec3[]): Vec3 | null {
 	return vec3Normalize([nx, ny, nz]);
 }
 
-function topoFaceToCells(topo: TopologyGraph): ReadonlyMap<string, readonly string[]> {
+function derivedModelScale(topo: TopologyGraph): number {
+	const verts = Object.values(topo.vertices);
+	if (!verts.length) return 1;
+	let minX = Infinity;
+	let minY = Infinity;
+	let minZ = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	let maxZ = -Infinity;
+	for (const v of verts) {
+		const p = v.position;
+		minX = Math.min(minX, p[0]);
+		minY = Math.min(minY, p[1]);
+		minZ = Math.min(minZ, p[2]);
+		maxX = Math.max(maxX, p[0]);
+		maxY = Math.max(maxY, p[1]);
+		maxZ = Math.max(maxZ, p[2]);
+	}
+	return Math.hypot(maxX - minX, maxY - minY, maxZ - minZ) || 1;
+}
+
+function derivedFaceToCells(topo: TopologyGraph): ReadonlyMap<string, readonly string[]> {
 	const out = new Map<string, string[]>();
 	for (const [cellId, cell] of Object.entries(topo.cells)) {
 		for (const shellId of cell.shellIds) {
@@ -1758,15 +2078,43 @@ function topoFaceToCells(topo: TopologyGraph): ReadonlyMap<string, readonly stri
 	return out;
 }
 
-function topoClassifyExposure(faceId: string, faceToCells: ReadonlyMap<string, readonly string[]>): "external" | "internal" {
-	return (faceToCells.get(faceId)?.length ?? 0) > 1 ? "internal" : "external";
+function derivedCellPoints(topo: TopologyGraph, cell: CellRecord): readonly Vec3[] {
+	const points = cell.shellIds.flatMap((shellId) => {
+		const shell = topo.shells[shellId];
+		return (shell?.faceIds ?? []).flatMap((faceId) => {
+			const face = topo.faces[faceId];
+			return face ? derivedFacePoints(topo, face) : [];
+		});
+	});
+	return [...new Map(points.map((p) => [p.join(","), p])).values()];
 }
 
-function topoClassifyStance(normal: Vec3): "horizontal" | "vertical" {
-	return Math.abs(normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
+/** @emoji 📐 Axis-aligned bounds of a cell from its shell face vertices. */
+export function topologyCellAabb(topo: TopologyGraph, cell: CellRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
+	const points = derivedCellPoints(topo, cell);
+	if (points.length === 0) return null;
+	let minX = Infinity;
+	let minY = Infinity;
+	let minZ = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	let maxZ = -Infinity;
+	for (const p of points) {
+		minX = Math.min(minX, p[0]);
+		minY = Math.min(minY, p[1]);
+		minZ = Math.min(minZ, p[2]);
+		maxX = Math.max(maxX, p[0]);
+		maxY = Math.max(maxY, p[1]);
+		maxZ = Math.max(maxZ, p[2]);
+	}
+	const ez = 1e-6;
+	return {
+		min: [minX, minY, minZ],
+		max: [Math.max(maxX, minX + ez), Math.max(maxY, minY + ez), Math.max(maxZ, minZ + ez)],
+	};
 }
 
-function topoCanonicalPlaneKey(normal: Vec3, centroid: Vec3, scale: number): string {
+function derivedCanonicalPlaneKey(normal: Vec3, centroid: Vec3, scale: number): string {
 	let n = vec3Normalize(normal);
 	if (
 		n[2] < -1e-9 ||
@@ -1782,26 +2130,26 @@ function topoCanonicalPlaneKey(normal: Vec3, centroid: Vec3, scale: number): str
 
 /** @emoji 🪞 Groups faces by exposure × stance × coplanar plane and merges them into semantic surfaces. */
 export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceView[] {
-	const faceToCells = topoFaceToCells(topo);
-	const scale = topoModelScale(topo);
+	const faceToCells = derivedFaceToCells(topo);
+	const scale = derivedModelScale(topo);
 	const grouped = new Map<
 		string,
 		{ readonly exposure: "external" | "internal"; readonly stance: "horizontal" | "vertical"; readonly faceIds: FaceRef[]; area: number }
 	>();
 	for (const face of Object.values(topo.faces)) {
-		const points = topoFacePoints(topo, face);
-		const normal = topoFaceNormal(points);
-		const centroid = topoPointCentroid(points);
+		const points = derivedFacePoints(topo, face);
+		const normal = derivedFaceNormal(points);
+		const centroid = derivedPointCentroid(points);
 		if (!normal || !centroid) continue;
-		const exposure = topoClassifyExposure(face.id, faceToCells);
-		const stance = topoClassifyStance(normal);
-		const key = `${exposure}:${stance}:${topoCanonicalPlaneKey(normal, centroid, scale)}`;
+		const exposure = (faceToCells.get(face.id)?.length ?? 0) > 1 ? "internal" : "external";
+		const stance = Math.abs(normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
+		const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
 		const hit = grouped.get(key);
 		if (hit) {
 			hit.faceIds.push(face.id);
-			hit.area += topoPolygonArea(points);
+			hit.area += derivedPolygonArea(points);
 		} else {
-			grouped.set(key, { exposure, stance, faceIds: [face.id], area: topoPolygonArea(points) });
+			grouped.set(key, { exposure, stance, faceIds: [face.id], area: derivedPolygonArea(points) });
 		}
 	}
 	const out: SurfaceView[] = [];
@@ -1818,48 +2166,90 @@ export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceVie
 	return out;
 }
 
-/** @emoji 🪞 Emits one non-overlapping part per cell when no kernel boolean decomposition is available. */
+/** @emoji 🪞 Topology-only parts: intersection at shared faces, otherwise one `none` part per cell. */
 export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
-	return Object.values(topo.cells).map((cell) => ({
-		id: `part-${cell.id}-none` as PartRef,
-		sourceCellIds: [cell.id],
-		overlap: "none" as const,
-		volume: 0,
-	}));
+	const faceToCells = derivedFaceToCells(topo);
+	const parts: PartView[] = [];
+	const seenPairs = new Set<string>();
+	for (const [faceId, cellIds] of faceToCells) {
+		if (cellIds.length < 2) continue;
+		for (let i = 0; i < cellIds.length; i++) {
+			for (let j = i + 1; j < cellIds.length; j++) {
+				const a = cellIds[i]!;
+				const b = cellIds[j]!;
+				const pairKey = [a, b].sort().join("|");
+				if (seenPairs.has(pairKey)) continue;
+				seenPairs.add(pairKey);
+				const face = topo.faces[faceId];
+				const area = face ? derivedPolygonArea(derivedFacePoints(topo, face)) : 0;
+				parts.push({
+					id: `part-intersection-${a}-${b}` as PartRef,
+					sourceCellIds: [a as CellRef, b as CellRef],
+					overlap: "intersection",
+					volume: area,
+				});
+			}
+		}
+	}
+	const cellsWithIntersection = new Set(parts.flatMap((p) => p.sourceCellIds.map(String)));
+	for (const cell of Object.values(topo.cells)) {
+		if (cellsWithIntersection.has(cell.id)) {
+			parts.push({
+				id: `part-${cell.id}-difference` as PartRef,
+				sourceCellIds: [cell.id],
+				overlap: "difference",
+				volume: 0,
+			});
+			continue;
+		}
+		parts.push({
+			id: `part-${cell.id}-none` as PartRef,
+			sourceCellIds: [cell.id],
+			overlap: "none",
+			volume: 0,
+		});
+	}
+	return parts;
 }
 
-/** @emoji 🪞 Computes derived `SurfaceView` / `PartView` projections via optional kernel adapters. */
+/** @emoji 🪞 Computes derived `SurfaceView` / `PartView` via optional kernel booleans. */
 export class DerivedViewService {
 	private surfaceRevision = -1;
 	private partRevision = -1;
 	private surfaces: SurfaceView[] = [];
 	private parts: PartView[] = [];
+	private refreshGen = 0;
 
 	constructor(private readonly kernel?: KernelAdapter) {}
 
-	/** @emoji 🪞 Recomputes derived views from topology, awaiting kernel booleans when present. */
+	/** @emoji 🪞 Recomputes surfaces and parts (awaits kernel booleans when present). */
 	async refresh(topo: TopologyGraph): Promise<void> {
+		const gen = ++this.refreshGen;
 		const sr = this.kernel?.computeSurfaceViews?.(topo);
 		this.surfaces = sr ? await Promise.resolve(sr) : computeSurfaceViewsFromTopology(topo);
+		if (gen !== this.refreshGen) return;
 		this.surfaceRevision = topo.revision;
 		const pr = this.kernel?.computePartViews?.(topo);
 		this.parts = pr ? await Promise.resolve(pr) : computePartViewsFromTopology(topo);
+		if (gen !== this.refreshGen) return;
 		this.partRevision = topo.revision;
 	}
 
-	/** @emoji 🪞 Returns cached surfaces, recomputing when `topology.revision` changes. */
+	/** @emoji 🪞 Returns cached surfaces for `topo.revision`. */
 	computeSurfaces(topo: TopologyGraph): SurfaceView[] {
 		if (this.surfaceRevision === topo.revision) return this.surfaces;
 		const r = this.kernel?.computeSurfaceViews?.(topo);
+		if (r && typeof (r as Promise<SurfaceView[]>).then === "function") return this.surfaces;
 		this.surfaces = Array.isArray(r) ? r : computeSurfaceViewsFromTopology(topo);
 		this.surfaceRevision = topo.revision;
 		return this.surfaces;
 	}
 
-	/** @emoji 🪞 Returns cached parts, recomputing when `topology.revision` changes. */
+	/** @emoji 🪞 Returns cached parts for `topo.revision` (call `refresh` first when kernel parts are async). */
 	computeParts(topo: TopologyGraph): PartView[] {
 		if (this.partRevision === topo.revision) return this.parts;
 		const r = this.kernel?.computePartViews?.(topo);
+		if (r && typeof (r as Promise<PartView[]>).then === "function") return this.parts;
 		this.parts = Array.isArray(r) ? r : computePartViewsFromTopology(topo);
 		this.partRevision = topo.revision;
 		return this.parts;
@@ -1951,7 +2341,7 @@ export async function applyEffectAsync(
 	actions?: ActionRegistry,
 	derived?: DerivedViewService,
 ): Promise<void> {
-	const env: ExprEnv = { context: ctx, event };
+	const env: ExprEnv = { context: ctx, event, topology, derived };
 	const reg = actions ?? ActionRegistry.withBuiltins();
 	if (a.op === "assign") {
 		const v = evalExpr(a.value, env);
@@ -1967,7 +2357,7 @@ export async function applyEffectAsync(
 		}
 	} else if (a.op === "kernel.query") {
 		const params = kernelQueryParamsToRecord(a.params, env);
-		const queryCtx: KernelQueryContext = { topology, derived };
+		const queryCtx: KernelQueryContext = { topology, derived: env.derived as DerivedViewService | undefined };
 		if (a.query === "surface.resolveFaces" && derived) {
 			const sid = String(params.surfaceId ?? "");
 			writePathTarget(a.assignTo, env, derived.resolveSurface(sid as SurfaceRef, topology));
@@ -2451,11 +2841,6 @@ export class InteractionRuntime {
 		return getActiveSelectionSpec(this.spec, this.sm.getState())?.accept ?? [];
 	}
 
-	/** @emoji 🪞 Optional derived-view service wired at runtime construction. */
-	getDerived(): DerivedViewService | undefined {
-		return this.opts.derived;
-	}
-
 	/** @emoji 🔍 Executes a `construct` script via `opts.query` (host registers `@spatial/js-query`). */
 	async query(text: string): Promise<ConstructQueryResult> {
 		const runner = this.opts.query;
@@ -2888,7 +3273,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core derived views", () => {
-		it("merges coplanar faces into one surface by exposure and stance", () => {
+		it("merges coplanar faces into one surface", () => {
 			const topo = new TopologyGraph();
 			const v0 = "v0" as VertexRef;
 			const v1 = "v1" as VertexRef;
@@ -2917,37 +3302,21 @@ if (import.meta.vitest) {
 			const surfaces = computeSurfaceViewsFromTopology(topo);
 			expect(surfaces).toHaveLength(1);
 			expect(surfaces[0]!.sourceFaceIds.sort()).toEqual([f0, f1].sort());
-			expect(surfaces[0]!.stance).toBe("horizontal");
-			expect(surfaces[0]!.exposure).toBe("external");
 		});
 
-		it("classifies shared faces as internal surfaces", () => {
+		it("emits intersection parts for cells sharing a face", () => {
 			const topo = new TopologyGraph();
 			const f = "fs" as FaceRef;
-			const w = "w0" as WireRef;
-			const v0 = "v0" as VertexRef;
-			const v1 = "v1" as VertexRef;
-			const v2 = "v2" as VertexRef;
-			const e0 = "e0" as EdgeRef;
-			const e1 = "e1" as EdgeRef;
-			const e2 = "e2" as EdgeRef;
-			topo.vertices[v0] = { id: v0, position: [0, 0, 0] };
-			topo.vertices[v1] = { id: v1, position: [1, 0, 0] };
-			topo.vertices[v2] = { id: v2, position: [0, 1, 0] };
-			topo.edges[e0] = { id: e0, vertexIds: [v0, v1] };
-			topo.edges[e1] = { id: e1, vertexIds: [v1, v2] };
-			topo.edges[e2] = { id: e2, vertexIds: [v2, v0] };
-			topo.wires[w] = { id: w, edgeIds: [e0, e1, e2] };
-			topo.faces[f] = { id: f, wireIds: [w] };
+			topo.faces[f] = { id: f, wireIds: [] };
 			const s0 = "s0" as ShellRef;
 			const s1 = "s1" as ShellRef;
 			topo.shells[s0] = { id: s0, faceIds: [f] };
 			topo.shells[s1] = { id: s1, faceIds: [f] };
 			topo.cells["c0" as CellRef] = { id: "c0" as CellRef, shellIds: [s0] };
 			topo.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [s1] };
-			const surfaces = computeSurfaceViewsFromTopology(topo);
-			expect(surfaces).toHaveLength(1);
-			expect(surfaces[0]!.exposure).toBe("internal");
+			const parts = computePartViewsFromTopology(topo);
+			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
+			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
 		});
 	});
 
@@ -2991,6 +3360,9 @@ if (import.meta.vitest) {
 				async tessellate() {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
 				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
 			}
 			const spec = loadSpatialInteraction("curve.line")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
@@ -3015,6 +3387,9 @@ if (import.meta.vitest) {
 				}
 				async tessellate() {
 					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;

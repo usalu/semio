@@ -507,6 +507,16 @@
             "role": "preview",
             "previewKind": "move-preview",
             "params": {
+              "from": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "from"
+                  }
+                ]
+              },
               "cursor": {
                 "kind": "path",
                 "root": "context",
@@ -574,7 +584,7 @@
               "segments": [
                 {
                   "kind": "field",
-                  "name": "prevPoint"
+                  "name": "from"
                 }
               ]
             },
@@ -595,19 +605,41 @@
   },
   "commit": {
     "fromStates": [
-      "ready"
+      "committed"
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "transform.move",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "transform.move"
+        "from": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "from"
+            }
+          ]
         },
-        "resultKind": {
-          "kind": "const",
-          "value": "move"
+        "to": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "to"
+            }
+          ]
+        },
+        "targets": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "targets"
+            }
+          ]
         }
       }
     }

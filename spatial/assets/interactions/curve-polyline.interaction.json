@@ -501,15 +501,17 @@
     ],
     "operation": {
       "kind": "action",
-      "action": "command.finish",
+      "action": "curve.polyline",
       "params": {
-        "commandId": {
-          "kind": "const",
-          "value": "curve.polyline"
-        },
-        "resultKind": {
-          "kind": "const",
-          "value": "polyline"
+        "points": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            }
+          ]
         }
       }
     }

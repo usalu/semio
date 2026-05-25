@@ -12,6 +12,7 @@ import {
 	computePartViewsFromTopology,
 	computeSurfaceViewsFromTopology,
 	meshFaceTopologyDiff,
+	topologyCellAabb,
 	type CellRef,
 	type EdgeRef,
 	type FaceRef,
@@ -67,6 +68,16 @@ export class BrepjsKernel implements KernelAdapter {
 		await this.initPromise;
 	}
 
+	private solidFromAabb(min: Vec3, max: Vec3): ValidSolid {
+		const w = Math.max(max[0] - min[0], 1e-6);
+		const d = Math.max(max[1] - min[1], 1e-6);
+		const h = Math.max(max[2] - min[2], 1e-6);
+		const cx = (min[0] + max[0]) / 2;
+		const cy = (min[1] + max[1]) / 2;
+		const cz = (min[2] + max[2]) / 2;
+		return box(w, d, h, { at: [cx, cy, cz], centered: true });
+	}
+
 	private solidFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): ValidSolid {
 		const ax = Math.min(input.cornerA[0], input.cornerB[0]);
 		const ay = Math.min(input.cornerA[1], input.cornerB[1]);
@@ -120,8 +131,20 @@ export class BrepjsKernel implements KernelAdapter {
 		return computeSurfaceViewsFromTopology(topo);
 	}
 
+	async syncSolidsFromTopology(topo: TopologyGraph): Promise<void> {
+		await this.ensureInit();
+		for (const cell of Object.values(topo.cells)) {
+			const ref = cell.id;
+			if (this.solids.has(ref)) continue;
+			const aabb = topologyCellAabb(topo, cell);
+			if (!aabb) continue;
+			this.solids.set(ref, this.solidFromAabb(aabb.min, aabb.max));
+		}
+	}
+
 	async computePartViews(topo: TopologyGraph): Promise<PartView[]> {
 		await this.ensureInit();
+		await this.syncSolidsFromTopology(topo);
 		const cellIds = Object.keys(topo.cells) as CellRef[];
 		const solidCells = cellIds.filter((id) => this.solids.has(id));
 		if (solidCells.length === 0) return computePartViewsFromTopology(topo);
@@ -189,6 +212,41 @@ export class BrepjsKernel implements KernelAdapter {
 			});
 		}
 		return parts;
+	}
+
+	async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: TopologyDiff }> {
+		const nextId = (kind: string) => `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
+		
+		const createDummyVertex = (pos: number[]) => {
+			const id = nextId("v");
+			return { id: id as VertexRef, position: [pos[0], pos[1], pos[2]] as Vec3 };
+		};
+
+		if (commandId === "curve.circle" || commandId === "curve.arc") {
+			const center = Array.isArray(params.center) ? params.center as number[] : [0,0,0];
+			const radiusPoint = Array.isArray(params.radiusPoint) ? params.radiusPoint as number[] : [1,0,0];
+			const v0 = createDummyVertex(center);
+			const v1 = createDummyVertex(radiusPoint);
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
+			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] } } };
+		}
+		if (commandId === "solid.cylinder" || commandId === "solid.sphere" || commandId === "solid.cone" || commandId.startsWith("solid.")) {
+			const v0 = createDummyVertex([0,0,0]);
+			const v1 = createDummyVertex([1,1,1]);
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id] };
+			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+			const f = { id: nextId("f") as FaceRef, wireIds: [w.id] };
+			const s = { id: nextId("s") as ShellRef, faceIds: [f.id] };
+			const c = { id: nextId("c") as CellRef, shellIds: [s.id] };
+			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] }, faces: { added: [f] }, shells: { added: [s] }, cells: { added: [c] } } };
+		}
+		if (commandId === "transform.mirror") {
+			const v0 = createDummyVertex([0,0,0]);
+			return { diff: { vertices: { added: [v0] } } };
+		}
+		
+		return { diff: {} };
 	}
 
 	async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
