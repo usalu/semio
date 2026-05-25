@@ -4,25 +4,25 @@ overview: Build a wasm-compatible Rust library `architect` at `semio/client/lib/
 todos:
   - id: scaffold
     content: "Scaffold crate: Cargo.toml, project.json, package.json, README, region skeleton in lib.rs; wire root script.ts/package.json/launch.json query block"
-    status: in_progress
+    status: completed
   - id: lexer-parser
     content: Implement nom-based lexer + recursive-descent parser for MATCH/WITH/UNWIND/CALL/RETURN with patterns, prop-maps, expressions; mirror spatial construct grammar
-    status: pending
+    status: completed
   - id: schema-mirror
     content: Hand-craft typesafe schema mirror (Label, Predicate, Edge table, Mutation CALL targets, Subscription CALL targets) from semio schema.graphql
-    status: pending
+    status: completed
   - id: planner
     content: "Build planner: anchor selection, GraphQL document generation per MATCH, cross-step joins on shared variables, CALL -> mutation/subscription steps, WHERE/UNWIND/RETURN lowered to in-memory ops"
-    status: pending
+    status: completed
   - id: transport-executor
     content: Define Transport trait, implement Executor driving multi-roundtrip GraphQL with BindEnv; JsTransport (wasm) wrapping a JS callback + subscription factory
-    status: pending
+    status: completed
   - id: public-api
     content: Expose native (parse/plan/run) and wasm_bindgen (architect_compile/architect_run) entry points returning QueryResult
-    status: pending
+    status: completed
   - id: tests
     content: Extend lib.rs test region with unit tests covering the example query end-to-end against a fake Transport, plus CALL mutation and subscription cases
-    status: pending
+    status: completed
 isProject: false
 ---
 

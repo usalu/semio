@@ -2697,7 +2697,9 @@ class BrepjsWasmEngine {
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology);
+			const topo = ctx?.topology;
+			if (topo?.faces[sid]) return [sid];
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, topo ?? new TopologyGraph());
 			return [];
 		}
 		return undefined;
@@ -2740,15 +2742,15 @@ class BrepjsWasmEngine {
 		if (!atomics.length) {
 			surfaces = computeSurfaceViewsFromTopology(topo);
 		} else {
+			const topoViews = computeSurfaceViewsFromTopology(topo);
 			try {
 				const brep = surfaceViewsFromAtomics(topo, atomics);
-				if (brep.some((s) => s.exposure === "internal")) surfaces = brep;
-				else {
-					const topoViews = computeSurfaceViewsFromTopology(topo);
-					surfaces = topoViews.length ? topoViews : brep;
-				}
+				if (!brep.length) surfaces = topoViews;
+				else if (brep.some((s) => s.exposure === "internal")) {
+					surfaces = brep.some((s) => s.exposure === "external") ? brep : topoViews.length ? topoViews : brep;
+				} else surfaces = topoViews.length ? topoViews : brep;
 			} catch {
-				surfaces = computeSurfaceViewsFromTopology(topo);
+				surfaces = topoViews;
 			}
 		}
 		const parts = atomics.length ? partViewsFromAtomics(topo, atomics) : computePartViewsFromTopology(topo);
@@ -2760,10 +2762,17 @@ class BrepjsWasmEngine {
 		try {
 			const atomics = await this.ensureAtomics(topo);
 			if (!atomics.length) return computeSurfaceViewsFromTopology(topo);
-			const brep = surfaceViewsFromAtomics(topo, atomics);
-			if (brep.some((s) => s.exposure === "internal")) return brep;
 			const topoViews = computeSurfaceViewsFromTopology(topo);
-			return topoViews.length ? topoViews : brep;
+			try {
+				const brep = surfaceViewsFromAtomics(topo, atomics);
+				if (!brep.length) return topoViews;
+				if (brep.some((s) => s.exposure === "internal")) {
+					return brep.some((s) => s.exposure === "external") ? brep : topoViews.length ? topoViews : brep;
+				}
+				return topoViews.length ? topoViews : brep;
+			} catch {
+				return topoViews;
+			}
 		} catch {
 			return computeSurfaceViewsFromTopology(topo);
 		}
@@ -3295,7 +3304,9 @@ export class BrepjsKernel implements SpatialKernel {
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, ctx.topology);
+			const topo = ctx?.topology;
+			if (topo?.faces[sid]) return [sid];
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, topo ?? new TopologyGraph());
 			return [];
 		}
 		return undefined;
@@ -3554,6 +3565,15 @@ if (import.meta.vitest) {
 			g.vertices[va] = { id: va, position: [0, 0, 0] };
 			g.vertices[vb] = { id: vb, position: [3, 4, 0] };
 			expect(await kernel.vertexDistance(va, vb, g)).toBe(5);
+		});
+
+		it("query surface.resolveFaces returns a topology face id when picked directly", async () => {
+			const g = new TopologyGraph();
+			const cell = "box-q" as CellRef;
+			applyTopologyDiff(g, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			const fid = Object.keys(g.faces)[0]!;
+			const resolved = await kernel.query("surface.resolveFaces", { surfaceId: fid }, { topology: g });
+			expect(resolved).toEqual([fid]);
 		});
 
 		it("faceArea sums boundary wire triangles", async () => {

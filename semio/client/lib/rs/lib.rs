@@ -9487,13 +9487,25 @@ pub mod kit_backbone {
         } else {
             (0.0, 0.0)
         };
-        let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.plane"))?;
-        let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.origin"))?;
-        let (ox, oy, oz) = f3(origin)?;
-        let xa = plane_o.get("xAxis").or_else(|| plane_o.get("x_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.xAxis"))?;
-        let (xx, xy, xz) = f3(xa)?;
-        let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.yAxis"))?;
-        let (yx, yy, yz) = f3(ya)?;
+        let plane_o = v.get("plane").and_then(|x| x.as_object());
+        let (ox, oy, oz) = plane_o
+            .and_then(|p| p.get("origin"))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((0.0, 0.0, 0.0));
+        let (xx, xy, xz) = plane_o
+            .and_then(|p| p.get("xAxis").or_else(|| p.get("x_axis")))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((1.0, 0.0, 0.0));
+        let (yx, yy, yz) = plane_o
+            .and_then(|p| p.get("yAxis").or_else(|| p.get("y_axis")))
+            .and_then(|x| x.as_object())
+            .map(f3)
+            .transpose()?
+            .unwrap_or((0.0, 1.0, 0.0));
         Ok(crate::geom::PositionInput {
             center: crate::geom::CoordinateInput { u, v: vv },
             plane: crate::geom::PlaneInput { origin: crate::geom::PointInput { x: ox, y: oy, z: oz }, x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz }, y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz } },
@@ -16443,7 +16455,7 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.new.kit.semio.json");
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
             assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
@@ -16453,8 +16465,53 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
+    fn position_input_defaults_when_plane_fields_missing() {
+        let v = serde_json::json!({ "center": { "u": 1.0, "v": 2.0 } });
+        let p = crate::kit_backbone::position_input_from_json(&v).expect("position");
+        assert_eq!(p.center.u, 1.0);
+        assert_eq!(p.center.v, 2.0);
+        assert_eq!(p.plane.origin.x, 0.0);
+        assert_eq!(p.plane.x_axis.x, 1.0);
+        assert_eq!(p.plane.y_axis.y, 1.0);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn architect_fixtures_hydrate_and_cases_catalog() {
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+        let kit: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(base.join("architect.harness.kit.semio.json")).expect("read harness kit"),
+        )
+        .expect("parse harness kit");
+        let doc: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(base.join("architect.cases.semio.json")).expect("read architect cases"),
+        )
+        .expect("parse cases");
+        assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.semio.json"));
+        let cases = doc["cases"].as_array().expect("cases");
+        assert_eq!(cases.len(), 13);
+        for tier in ["e2e", "memory", "plan", "parse"] {
+            assert!(cases.iter().any(|c| c["tier"] == tier), "missing tier {tier}");
+        }
+        block_on(async {
+            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit)
+                .await
+                .expect("hydrate harness");
+            let mat = rt.wip_graph.materialized_head_kit().await;
+            let mut design_names = Vec::new();
+            for d in mat.designs.read().await.iter() {
+                design_names.push((*d.name.read().await).clone());
+            }
+            assert!(design_names.iter().any(|n| n == "Nakagin Capsule Tower"));
+            assert!(design_names.iter().any(|n| n == "Other Pavilion"));
+            assert_eq!(mat.types.read().await.len(), 3);
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.semio.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/metabolism.kit.light.semio.json");
         let v: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
@@ -16845,7 +16902,7 @@ mod tests {
     /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.semio.json");
+        const FIXTURE: &str = include_str!("../../../fixtures/metabolism.kit.diff.semio.json");
         let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("types").is_some(), "fixture must include types collection");

@@ -820,7 +820,7 @@
           "segments": [
             {
               "kind": "field",
-              "name": "center"
+              "name": "origin"
             }
           ]
         },
@@ -830,7 +830,7 @@
           "segments": [
             {
               "kind": "field",
-              "name": "referenceA"
+              "name": "axisPoint"
             }
           ]
         },

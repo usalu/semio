@@ -54783,8 +54783,38 @@
             ]
         }
     },
-    "authoritative": {},
-    "stage": {},
+    "authoritative": {
+        "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+        "hash": "…",
+        "initialKit": {
+            "hash": "…",
+            "name": "",
+            "types": { "hash": "…", "items": [] },
+            "designs": { "hash": "…", "items": [] }
+        },
+        "theKit": {
+            "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+            "hash": "…",
+            "savedChanges": { "hash": "…", "items": [] },
+            "unsavedChanges": { "hash": "…", "items": [] }
+        }
+    },
+    "stage": {
+        "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+        "hash": "…",
+        "initialKit": {
+            "hash": "…",
+            "name": "",
+            "types": { "hash": "…", "items": [] },
+            "designs": { "hash": "…", "items": [] }
+        },
+        "theKit": {
+            "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+            "hash": "…",
+            "savedChanges": { "hash": "…", "items": [] },
+            "unsavedChanges": { "hash": "…", "items": [] }
+        }
+    },
     "conflicts": {
         "hash": "…",
         "items": []

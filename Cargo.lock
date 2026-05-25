@@ -57,11 +57,13 @@ dependencies = [
 name = "architect"
 version = "0.1.0"
 dependencies = [
+ "async-graphql",
  "console_error_panic_hook",
  "futures-util",
  "js-sys",
  "nom",
  "pin-project-lite",
+ "semio",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

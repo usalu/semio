@@ -14,12 +14,12 @@ import {
 	TopologyGraph,
 } from "@spatial/js-core";
 import { defaultConstructRunner } from "@spatial/js-query";
-import geometryNakagin from "../../../fixtures/geometry.json" with { type: "json" };
-import geometryLoom from "../../../fixtures/geometry-loom.json" with { type: "json" };
-import geometryRoutes from "../../../fixtures/geometry-routes.json" with { type: "json" };
-import geometrySmallBuilding from "../../../fixtures/small-building.topology.json" with { type: "json" };
-import geometryTallBuilding from "../../../fixtures/tall-building.topology.json" with { type: "json" };
-import geometryLargeBuilding from "../../../fixtures/large-building.topology.json" with { type: "json" };
+import geometryNakagin from "../../../fixtures/geometry.json";
+import geometryLoom from "../../../fixtures/geometry-loom.json";
+import geometryRoutes from "../../../fixtures/geometry-routes.json";
+import geometrySmallBuilding from "../../../fixtures/small-building.topology.json";
+import geometryTallBuilding from "../../../fixtures/tall-building.topology.json";
+import geometryLargeBuilding from "../../../fixtures/large-building.topology.json";
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
@@ -206,7 +206,7 @@ function PlayApp() {
 	const interactions = useMemo(() => listSpatialInteractions(), []);
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
-	const [geometryAssetId, setGeometryAssetId] = useState("");
+	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 

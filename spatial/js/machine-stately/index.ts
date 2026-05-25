@@ -27,6 +27,7 @@ import {
 	type StateEngineProvider,
 	type StateEngineSendResult,
 	TopologyGraph,
+	type TopologyDiff,
 	type Vec3,
 	type VertexRef,
 	type WireRef,
@@ -321,6 +322,17 @@ if (import.meta.vitest) {
 		}
 	}
 
+	function normalizeTopologyDiffIds(diff: TopologyDiff): TopologyDiff {
+		const clone = JSON.parse(JSON.stringify(diff)) as TopologyDiff;
+		for (const e of clone.edges?.added ?? []) (e as { id: string }).id = "__edge__";
+		for (const w of clone.wires?.added ?? []) {
+			(w as { id: string }).id = "__wire__";
+			(w as { edgeIds: string[] }).edgeIds = (w as { edgeIds: string[] }).edgeIds.map(() => "__edge__");
+		}
+		for (const a of clone.anchors?.added ?? []) (a as { id: string }).id = "__anchor__";
+		return clone;
+	}
+
 	async function assertSnapshotsEqual(a: InteractionRuntime, b: InteractionRuntime) {
 		const sa = a.getSnapshot();
 		const sb = b.getSnapshot();
@@ -329,7 +341,7 @@ if (import.meta.vitest) {
 		expect(sb.capabilities).toEqual(sa.capabilities);
 		expect(sb.lastResponse?.ok).toBe(sa.lastResponse?.ok);
 		expect(sb.lastResponse?.data).toEqual(sa.lastResponse?.data);
-		expect(sb.lastResponse?.diff).toEqual(sa.lastResponse?.diff);
+		expect(normalizeTopologyDiffIds(sb.lastResponse?.diff ?? {})).toEqual(normalizeTopologyDiffIds(sa.lastResponse?.diff ?? {}));
 	}
 
 	class MeasureParityKernel extends BrepjsKernel {
@@ -456,8 +468,10 @@ if (import.meta.vitest) {
 			const sd = rtSd.getSnapshot().lastResponse!;
 			expect(rd.data).toBe(5);
 			expect(sd.data).toBe(5);
-			expect(isEmptyTopologyDiff(rd.diff)).toBe(true);
-			expect(isEmptyTopologyDiff(sd.diff)).toBe(true);
+			expect(isEmptyTopologyDiff(rd.diff)).toBe(false);
+			expect(isEmptyTopologyDiff(sd.diff)).toBe(false);
+			expect(rd.diff.edges?.added?.length).toBe(1);
+			expect(sd.diff.edges?.added?.length).toBe(1);
 			await assertSnapshotsEqual(rtPd, rtSd);
 
 			const k1a = new MeasureParityKernel();
@@ -478,7 +492,10 @@ if (import.meta.vitest) {
 			const sa = rtSa.getSnapshot().lastResponse!;
 			expect(ra.data).toBe(42);
 			expect(sa.data).toBe(42);
-			expect(isEmptyTopologyDiff(ra.diff)).toBe(true);
+			expect(isEmptyTopologyDiff(ra.diff)).toBe(false);
+			expect(isEmptyTopologyDiff(sa.diff)).toBe(false);
+			expect(ra.diff.anchors?.added?.length).toBe(1);
+			expect(sa.diff.anchors?.added?.length).toBe(1);
 			await assertSnapshotsEqual(rtPa, rtSa);
 		});
 	});

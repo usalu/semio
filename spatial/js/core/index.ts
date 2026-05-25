@@ -37,6 +37,9 @@ import transformMoveInteractionJson from "../../assets/interactions/transform-mo
 import transformRotateInteractionJson from "../../assets/interactions/transform-rotate.interaction.json" with { type: "json" };
 import transformScale1dInteractionJson from "../../assets/interactions/transform-scale1d.interaction.json" with { type: "json" };
 import transformScale3dInteractionJson from "../../assets/interactions/transform-scale3d.interaction.json" with { type: "json" };
+import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
+import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";
+import smallBuildingTopologyFixtureJson from "../../fixtures/small-building.topology.json";
 // #endregion 📥InteractionAssets
 
 // #region 🧮Vec
@@ -189,6 +192,27 @@ export function getActiveSelectionSpec(
 	const st = spec.machine.states.find((s) => s.name === state);
 	const s = st?.selection;
 	return s ?? null;
+}
+
+/** @emoji ✅ Whether Enter/Space can fire a guarded `confirm` transition in `state`. */
+export function interactionCanConfirmSelection(
+	spec: InteractionSpec,
+	state: string,
+	ctx: Record<string, unknown>,
+	preview: SpatialPreviewKernel,
+): boolean {
+	if (!getActiveSelectionSpec(spec, state)) return false;
+	const handler = spec.machine.states.find((s) => s.name === state)?.on?.find((h) => h.event === "confirm");
+	if (!handler) return false;
+	for (const tr of handler.transitions) {
+		if (typeof tr.key !== "string" || tr.key.length === 0) continue;
+		if (tr.guard) {
+			const g = lookupGuard(spec, tr.guard);
+			if (!g || !evalGuard(g, { context: ctx, preview })) continue;
+		}
+		return true;
+	}
+	return false;
 }
 // #endregion 🪪Selection
 
@@ -1037,10 +1061,11 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 	const r = raw as Record<string, unknown>;
 	if (r.schema !== "spatial.topology/v1") return null;
 	const need = ["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"] as const;
+	const json = { ...(raw as TopologyGraphJson) } as Record<string, unknown>;
 	for (const k of need) {
-		if (!Array.isArray(r[k])) return null;
+		if (!Array.isArray(json[k])) json[k] = [];
 	}
-	return TopologyGraph.fromJSON(raw as TopologyGraphJson);
+	return TopologyGraph.fromJSON(json as TopologyGraphJson);
 }
 // #endregion 🧱Topology
 
@@ -1366,7 +1391,7 @@ export interface ActionContextPatch {
 	readonly del?: readonly string[];
 }
 
-/** @emoji 🧩 Pure action output: optional topology `diff`, scalar `data`, or context `patch` for interactive preview fields. */
+/** @emoji 🧩 Pure action output: topology `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
 export interface ActionResult<TData = unknown> {
 	readonly diff?: TopologyDiff;
 	readonly data?: TData;
@@ -1417,6 +1442,35 @@ export class ActionRegistry {
 		for (const d of builtinActionDefs()) r.register(d);
 		return r;
 	}
+}
+
+/** @emoji 📍 Centroid of a face boundary for measure/annotation anchors. */
+function faceAnnotationCentroid(topo: TopologyGraph, face: FaceRecord): Vec3 | null {
+	const pts: Vec3[] = [];
+	for (const wid of face.wireIds) {
+		for (const eid of topo.wires[wid]?.edgeIds ?? []) {
+			for (const vid of topo.edges[eid]?.vertexIds ?? []) {
+				const p = topo.vertices[vid]?.position;
+				if (p) pts.push(p);
+			}
+		}
+	}
+	if (!pts.length) return null;
+	let x = 0;
+	let y = 0;
+	let z = 0;
+	for (const p of pts) {
+		x += p[0];
+		y += p[1];
+		z += p[2];
+	}
+	const n = pts.length;
+	return [x / n, y / n, z / n];
+}
+
+/** @emoji 📏 Measure interactions annotate topology but do not enter document undo history. */
+export function interactionRecordsDocumentHistory(interactionId: string): boolean {
+	return !interactionId.startsWith("measure.");
 }
 
 /** @emoji 🎯 Collects vertex ids reachable from transform/edit selection targets. */
@@ -1787,7 +1841,7 @@ function builtinActionDefs(): ActionDef[] {
 			const faceIdsRaw = params.faceIds;
 			const faceIds = Array.isArray(faceIdsRaw) ? (faceIdsRaw as unknown[]).map(String) : [];
 			const diff =
-				(await kernel.offsetFacesDiff?.({
+				(await ctx.kernel.offsetFacesDiff?.({
 					faceIds,
 					distance: Number(params.distance),
 					topology: ctx.topology,
@@ -1797,21 +1851,48 @@ function builtinActionDefs(): ActionDef[] {
 	};
 	const measureVertexDistance: ActionDef = {
 		id: "measure.vertexDistance",
-		run: async (params, { kernel, topology }) => {
+		run: async (params, { kernel, topology, preview: pr }) => {
 			const a = params.a as VertexRef;
 			const b = params.b as VertexRef;
+			if (!topology.vertices[a] || !topology.vertices[b]) return {};
 			if (!kernel.vertexDistance) throw new Error("kernel.vertexDistance required");
 			const data = await kernel.vertexDistance(a, b, topology);
-			return { data };
+			const eid = pr.randomTag("e") as EdgeRef;
+			const wid = pr.randomTag("w") as WireRef;
+			return {
+				diff: {
+					edges: { added: [{ id: eid, vertexIds: [a, b] }] },
+					wires: { added: [{ id: wid, edgeIds: [eid] }] },
+				},
+				data,
+			};
 		},
 	};
 	const measureFaceArea: ActionDef = {
 		id: "measure.faceArea",
-		run: async (params, { kernel, topology }) => {
+		run: async (params, { kernel, topology, preview: pr }) => {
 			const fid = params.faceId as FaceRef;
+			const face = topology.faces[fid];
+			if (!face) return {};
 			if (!kernel.faceArea) throw new Error("kernel.faceArea required");
 			const data = await kernel.faceArea(fid, topology);
-			return { data };
+			const position = faceAnnotationCentroid(topology, face);
+			if (!position) return { data };
+			const anchorId = pr.randomTag("anchor") as AnchorRef;
+			return {
+				diff: {
+					anchors: {
+						added: [
+							{
+								id: anchorId,
+								position,
+								attachment: { kind: "face", id: fid, u: 0.5, v: 0.5 },
+							},
+						],
+					},
+				},
+				data,
+			};
 		},
 	};
 	const measureCellVolume: ActionDef = {
@@ -1829,8 +1910,13 @@ function builtinActionDefs(): ActionDef[] {
 			const bag = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "points";
 			const key = typeof params.key === "string" ? params.key : null;
-			const point = isVec3(params.point) ? params.point : null;
+			let point = isVec3(params.point) ? params.point : null;
 			if (!point) return {};
+			if (key === "to" && isVec3(bag.from)) {
+				const mode = typeof bag.moveMode === "string" ? bag.moveMode : "free";
+				const n = isVec3(bag.cplaneNormal) ? bag.cplaneNormal : ([0, 0, 1] as Vec3);
+				point = pr.constrainMovePoint(bag.from as Vec3, point, mode, n);
+			}
 			const cur = Array.isArray(bag[field]) ? (bag[field] as unknown[]) : [];
 			const set: Record<string, unknown> = { [field]: [...cur, point], prevPoint: point, cursor: point };
 			if (key) set[key] = point;
@@ -1911,10 +1997,10 @@ function builtinActionDefs(): ActionDef[] {
 			const bag = ctxOf(params as Record<string, unknown>);
 			const commandId = String(params.commandId ?? "");
 			let diff = EMPTY_TOPOLOGY_DIFF;
-			
+			const cmdParams = { ...bag };
 			if (kernel.executeCommandDiff) {
-				const res = await kernel.executeCommandDiff(commandId, params);
-				if (res && res.diff) diff = res.diff;
+				const res = await kernel.executeCommandDiff(commandId, cmdParams);
+				if (res?.diff) diff = res.diff;
 			}
 
 			return {
@@ -2071,8 +2157,16 @@ function builtinActionDefs(): ActionDef[] {
 		run: (params, ctx) => {
 			const pr = ctx.preview;
 			const topology = ctx.topology;
-			const center = isVec3(params.center) ? params.center : null;
-			const refA = isVec3(params.referenceA) ? params.referenceA : null;
+			const center = isVec3(params.center)
+				? params.center
+				: isVec3(params.origin)
+					? params.origin
+					: null;
+			const refA = isVec3(params.referenceA)
+				? params.referenceA
+				: isVec3(params.axisPoint)
+					? params.axisPoint
+					: null;
 			const refB = isVec3(params.referenceB) ? params.referenceB : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			if (!center || !refA || !refB || targets.length === 0) return {};
@@ -2180,8 +2274,11 @@ function builtinActionDefs(): ActionDef[] {
 			const topology = ctx.topology;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			const from = isVec3(params.from) ? params.from : null;
-			const to = isVec3(params.to) ? params.to : null;
-			if (targets.length === 0 || !from || !to) return {};
+			const rawTo = isVec3(params.to) ? params.to : null;
+			if (targets.length === 0 || !from || !rawTo) return {};
+			const mode = typeof params.moveMode === "string" ? params.moveMode : "free";
+			const n = isVec3(params.cplaneNormal) ? params.cplaneNormal : ([0, 0, 1] as Vec3);
+			const to = pr.constrainMovePoint(from, rawTo, mode, n);
 
 			const delta = pr.vec3Sub(to, from);
 
@@ -2291,6 +2388,7 @@ function builtinActionDefs(): ActionDef[] {
 		commandFinish,
 		featureTransformMove,
 		featureTransformRotate,
+		featureTransformScale1D,
 		featureTransformScale3D,
 		featureTransformCopy,
 		featureCurveLine,
@@ -2407,7 +2505,7 @@ export class DerivedViewService {
 /** @emoji 🔍 One named column in a `construct` result row. */
 export type ConstructQueryRow = Readonly<Record<string, unknown>>;
 
-/** @emoji 🔍 `construct` runner output (`rows` always materialized; optional `data`/`diff` from CALL). */
+/** @emoji 🔍 `construct` runner output (`rows` for MATCH; CALL modeling yields `diff` geometry when present). */
 export interface ConstructQueryResult {
 	readonly rows: readonly ConstructQueryRow[];
 	readonly data?: unknown;
@@ -2801,7 +2899,7 @@ export interface InteractionMessage {
 	readonly path?: string;
 }
 
-/** @emoji 📨 Result returned by `InteractionRuntime.commit` (read/write topology + scalar `data`). */
+/** @emoji 📨 Result returned by `InteractionRuntime.commit` — modeling output is always `diff` (topology geometry); `data` is auxiliary. */
 export interface InteractionResponse<TData = unknown> {
 	readonly ok: boolean;
 	readonly errors: readonly InteractionMessage[];
@@ -2980,7 +3078,9 @@ export class InteractionRuntime {
 	}
 
 	private canCommit(): boolean {
-		return this.canCommitFromState(this.sm.getState());
+		const st = this.sm.getState();
+		if (isFinalInteractionState(this.spec, st)) return false;
+		return this.canCommitFromState(st);
 	}
 
 	private canCommitFromState(st: string): boolean {
@@ -3258,7 +3358,7 @@ export class InteractionRuntime {
 		this.snapUndoStack.length = 0;
 		this.snapRedoStack.length = 0;
 		const hist = this.opts.history;
-		if (hist && !isEmptyTopologyDiff(diff)) {
+		if (hist && interactionRecordsDocumentHistory(this.spec.id) && !isEmptyTopologyDiff(diff)) {
 			hist.record({
 				id: `cmd-${this.spec.id}-${this.revision}`,
 				interactionId: this.spec.id,
@@ -3654,6 +3754,21 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("@spatial/js-core topology json", () => {
+		it("parseTopologyGraphJson fills missing entity arrays with empty lists", () => {
+			const topo = parseTopologyGraphJson({
+				schema: "spatial.topology/v1",
+				revision: 1,
+				vertices: [{ id: "v0", position: [0, 0, 0] }],
+				edges: [{ id: "e0", vertexIds: ["v0", "v0"] }],
+			});
+			expect(topo).not.toBeNull();
+			expect(Object.keys(topo!.anchors).length).toBe(0);
+			expect(Object.keys(topo!.vertices).length).toBe(1);
+			expect(Object.keys(topo!.edges).length).toBe(1);
+		});
+	});
+
 	describe("@spatial/js-core topology commit mesh", () => {
 		it("appendCommittedMeshFaceToTopology adds one mesh face from a triangle mesh", () => {
 			const g = new TopologyGraph();
@@ -4016,16 +4131,16 @@ if (import.meta.vitest) {
 				expect(spec?.id).toBe(row.id);
 			}
 		});
-		it("does not expose finalize or cancel transitions for scripted commands", () => {
+		it("does not expose finalize transitions for scripted point commands", () => {
 			const spec = loadSpatialInteraction("curve.line")!;
 			const labels = spec.machine.states.flatMap((state) => state.on?.flatMap((handler) => handler.transitions.map((t) => t.label)) ?? []);
 			expect(labels).not.toContain("Finalize");
-			expect(labels).not.toContain("Cancel");
 		});
 		it("auto-finalizes scripted commands when the terminal input is done", async () => {
 			class CommandKernel extends BrepjsKernel {
 				readonly id = "command";
 				readonly operations = [] as const;
+				lastCmd: Record<string, unknown> | null = null;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4035,19 +4150,23 @@ if (import.meta.vitest) {
 				async tessellate() {
 					return emptyMeshTransfer();
 				}
-				async executeCommandDiff() {
+				async executeCommandDiff(commandId: string, params: Record<string, unknown>) {
+					this.lastCmd = params;
 					return { diff: EMPTY_TOPOLOGY_DIFF };
 				}
 			}
-			const spec = loadSpatialInteraction("curve.line")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const spec = loadSpatialInteraction("curve.arc")!;
+			const kernel = new CommandKernel();
+			const rt = createInteractionRuntime(spec, { kernel, document: { topology: new TopologyGraph(), nodes: [] } });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
-			await rt.send({ kind: "pointer.down", point: [1, 2, 0] as Vec3, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [2, 0, 0] as Vec3, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [0, 2, 0] as Vec3, modifiers: {} });
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("committed");
-			expect(snap.capabilities.canCommit).toBe(false);
 			expect(snap.lastResponse?.ok).toBe(true);
-			expect(snap.lastResponse?.diff?.vertices?.added?.length).toBe(2);
+			expect(kernel.lastCmd?.center).toEqual([0, 0, 0]);
+			expect(kernel.lastCmd?.start).toEqual([2, 0, 0]);
+			expect(kernel.lastCmd?.end).toEqual([0, 2, 0]);
 		});
 		it("abortActiveInteractionSession hard-resets an in-progress session", async () => {
 			class CommandKernel extends BrepjsKernel {
@@ -4284,6 +4403,80 @@ if (import.meta.vitest) {
 			expect(snap.lastResponse?.diff?.vertices?.modified?.length).toBeGreaterThan(0);
 			expect(topo.vertices[v0]!.position).toEqual([p0[0] + 2, p0[1] + 1, p0[2]]);
 		});
+
+		it("transform.copy action constrains vertical delta to Z only", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+			const def = ActionRegistry.withBuiltins().get("transform.copy")!;
+			const from: Vec3 = [0, 0, 0];
+			const r = await Promise.resolve(
+				def.run(
+					{
+						targets: [{ kind: "cell", id: "e2e-box", editable: true }],
+						from,
+						to: [5, 4, 2],
+						moveMode: "vertical",
+					},
+					{ topology: topo, kernel: new BrepjsKernel(), preview: M },
+				),
+			);
+			const added = r.diff?.vertices?.added ?? [];
+			const originals = Object.values(topo.vertices);
+			expect(added.length).toBe(8);
+			for (const v of added) {
+				expect(
+					originals.some(
+						(o) =>
+							Math.abs(v.position[0] - o.position[0]) < 1e-5 &&
+							Math.abs(v.position[1] - o.position[1]) < 1e-5 &&
+							Math.abs(v.position[2] - o.position[2] - 2) < 1e-5,
+					),
+				).toBe(true);
+				expect(
+					originals.some(
+						(o) =>
+							Math.abs(v.position[0] - o.position[0] - 5) < 1e-5 &&
+							Math.abs(v.position[1] - o.position[1] - 4) < 1e-5 &&
+							Math.abs(v.position[2] - o.position[2] - 2) < 1e-5,
+					),
+				).toBe(false);
+			}
+		});
+
+		it("transform.copy session keeps vertical moveMode through pick workflow", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+			const before = Object.keys(topo.vertices).length;
+			const spec = loadSpatialInteraction("transform.copy")!;
+			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			const from = topo.vertices[Object.keys(topo.vertices)[0]!]!.position;
+			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
+			await rt.send({ kind: "confirm", modifiers: {} });
+			await rt.send({ kind: "mode.vertical", modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: from, modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [from[0] + 5, from[1] + 4, from[2] + 2], modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.context.moveMode).toBe("vertical");
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(Object.keys(topo.vertices).length).toBeGreaterThan(before);
+		});
+
+		it("transform.copy confirm without from pick uses selection bbox center", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")));
+			const spec = loadSpatialInteraction("transform.copy")!;
+			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
+			await rt.send({ kind: "confirm", modifiers: {} });
+			await rt.send({ kind: "confirm", modifiers: {} });
+			const from = rt.getSnapshot().context.from as Vec3;
+			expect(from[0]).toBeCloseTo(1, 5);
+			expect(from[1]).toBeCloseTo(1, 5);
+			await rt.send({ kind: "pointer.down", point: [from[0] + 1, from[1], from[2]], modifiers: {} });
+			expect(rt.getSnapshot().state).toBe("committed");
+			expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
+		});
 	});
 
 	describe("@spatial/js-core action and interaction registries", () => {
@@ -4293,6 +4486,9 @@ if (import.meta.vitest) {
 			expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
 			expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
 			expect(ids.has("command.finish")).toBe(true);
+			expect(ids.has("transform.scale1d")).toBe(true);
+			expect(ids.has("transform.copy")).toBe(true);
+			expect(ids.has("feature.offsetFaces")).toBe(true);
 			expect(ids.has("view.surfaces")).toBe(true);
 			expect(ids.has("view.parts")).toBe(true);
 			expect(ids.has("view.volumes")).toBe(true);
@@ -4585,6 +4781,17 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core measure distance", () => {
+		it("measure.faceArea action adds face anchor geometry", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("m-area")));
+			const fid = Object.keys(topo.faces)[0]! as FaceRef;
+			const def = ActionRegistry.withBuiltins().get("measure.faceArea")!;
+			const r = await Promise.resolve(def.run({ faceId: fid }, { topology: topo, kernel: new BrepjsKernel(), preview: M }));
+			expect(r.data).toBeGreaterThan(0);
+			expect(r.diff?.anchors?.added?.length).toBe(1);
+			expect(r.diff!.anchors!.added![0]!.attachment.kind).toBe("face");
+		});
+
 		it("commit returns vertex distance in data", async () => {
 			class MeasKernel extends BrepjsKernel {
 				readonly id = "meas";
@@ -4621,7 +4828,11 @@ if (import.meta.vitest) {
 			const res = rt.getSnapshot().lastResponse!;
 			expect(res.ok).toBe(true);
 			expect(res.data).toBe(5);
-			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
+			expect(isEmptyTopologyDiff(res.diff)).toBe(false);
+			expect(res.diff.edges?.added?.length).toBe(1);
+			expect(res.diff.wires?.added?.length).toBe(1);
+			const edge = res.diff.edges!.added![0]!;
+			expect(edge.vertexIds).toEqual([va, vb]);
 		});
 
 		it("auto-commits when confirm reaches the final state", async () => {
@@ -4662,7 +4873,27 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core measure area", () => {
+		it("resolves face picks through surface.resolveFaces before commit", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("area-box")));
+			const fid = Object.keys(topo.faces)[0]! as FaceRef;
+			const kernel = new BrepjsKernel();
+			const rt = createInteractionRuntime(buildAreaInteractionSpec(), { kernel, document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
+			expect(rt.getSnapshot().context.resolvedFaceIds).toEqual([fid]);
+			await rt.send({ kind: "confirm", modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(typeof snap.lastResponse?.data).toBe("number");
+			expect(isEmptyTopologyDiff(snap.lastResponse!.diff)).toBe(false);
+			expect(snap.lastResponse!.diff.anchors?.added?.length).toBe(1);
+		});
+
 		it("commit returns face area in data", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("area-box")));
+			const fid = Object.keys(topo.faces)[0]! as FaceRef;
 			class AreaKernel extends BrepjsKernel {
 				readonly id = "area";
 				readonly operations = [] as const;
@@ -4675,22 +4906,25 @@ if (import.meta.vitest) {
 				async tessellate() {
 					return emptyMeshTransfer();
 				}
-				async query(name: string) {
-					if (name === "surface.resolveFaces") return ["f0"];
+				async query(name: string, params: Record<string, unknown>) {
+					if (name === "surface.resolveFaces") {
+						const sid = String(params.surfaceId ?? "");
+						return topo.faces[sid as FaceRef] ? [sid] : [];
+					}
 					return undefined;
 				}
 				async faceArea(_f: FaceRef, _t: TopologyGraph) {
 					return 2.5;
 				}
 			}
-			const topo = new TopologyGraph();
 			const spec = buildAreaInteractionSpec();
 			const rt = createInteractionRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
-			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }] });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
 			const res = rt.getSnapshot().lastResponse!;
 			expect(res.ok).toBe(true);
 			expect(res.data).toBe(2.5);
-			expect(isEmptyTopologyDiff(res.diff)).toBe(true);
+			expect(isEmptyTopologyDiff(res.diff)).toBe(false);
+			expect(res.diff.anchors?.added?.length).toBe(1);
 		});
 	});
 
@@ -4735,6 +4969,11 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core measure distance history", () => {
+		it("interactionRecordsDocumentHistory skips measure interactions", () => {
+			expect(interactionRecordsDocumentHistory("measure.distance")).toBe(false);
+			expect(interactionRecordsDocumentHistory("primitive.box")).toBe(true);
+		});
+
 		it("does not push readonly measure commits onto document history", async () => {
 			class MeasKernel extends BrepjsKernel {
 				readonly id = "meas-h";
@@ -4862,6 +5101,479 @@ if (import.meta.vitest) {
 			expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
 			expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
 			expect(prev?.params?.height).toBe(4);
+		});
+	});
+
+	describe("@spatial/js-core interaction e2e fixtures", () => {
+		type InteractionE2EFixtureKind = "loom" | "routes" | "building" | "empty";
+
+		const MOD: InteractionEvent["modifiers"] = {};
+
+		const p = (x: number, y: number, z = 0): Vec3 => [x, y, z];
+
+		const sel = (kind: TopologyEntityKind, id: string, editable = true): SelectionTarget => ({
+			kind,
+			id,
+			editable: kind === "surface" || kind === "part" ? false : editable,
+		});
+
+		const topoFromFixture = (kind: InteractionE2EFixtureKind): TopologyGraph => {
+			if (kind === "empty") return new TopologyGraph();
+			const raw =
+				kind === "loom"
+					? geometryLoomFixtureJson
+					: kind === "routes"
+						? geometryRoutesFixtureJson
+						: smallBuildingTopologyFixtureJson;
+			return parseTopologyGraphJson(raw) ?? new TopologyGraph();
+		};
+
+		const seedBoxCell = (topo: TopologyGraph, tag = "e2e-box"): SelectionTarget => {
+			applyTopologyDiff(
+				topo,
+				M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef(tag)),
+			);
+			return sel("cell", tag);
+		};
+
+		const entityCounts = (topo: TopologyGraph) => ({
+			vertices: Object.keys(topo.vertices).length,
+			edges: Object.keys(topo.edges).length,
+			wires: Object.keys(topo.wires).length,
+			faces: Object.keys(topo.faces).length,
+			cells: Object.keys(topo.cells).length,
+			anchors: Object.keys(topo.anchors).length,
+		});
+
+		const TRANSFORM_IDS = new Set([
+			"transform.move",
+			"transform.copy",
+			"transform.rotate",
+			"transform.mirror",
+			"transform.scale1d",
+			"transform.scale3d",
+		]);
+
+		const BOX_FACE_TOP = "box-e2e-box-face-top";
+
+		const e2eCases: readonly {
+			readonly id: string;
+			readonly fixture: InteractionE2EFixtureKind;
+			readonly steps: readonly InteractionEvent[];
+			readonly seedBox?: boolean;
+			readonly derived?: boolean;
+			readonly spec?: InteractionSpec;
+			readonly assert?: (ctx: {
+				readonly snap: InteractionSnapshot;
+				readonly topo: TopologyGraph;
+				readonly before: ReturnType<typeof entityCounts>;
+				readonly after: ReturnType<typeof entityCounts>;
+			}) => void;
+		}[] = [
+			{
+				id: "entity.createAnchor",
+				fixture: "empty",
+				spec: buildCreateAnchorInteractionSpec(),
+				steps: [
+					{
+						kind: "selection.changed",
+						targets: [sel("edge", `box-e2e-box-eb0`)],
+						point: p(2.5, 0),
+						modifiers: MOD,
+					},
+				],
+				seedBox: true,
+				assert: ({ after }) => expect(after.anchors).toBe(1),
+			},
+			{
+				id: "primitive.box",
+				fixture: "empty",
+				spec: buildBoxInteractionSpec(),
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(3, 2), modifiers: MOD },
+					{ kind: "set.height", value: 1.25, modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.cells).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "feature.extrudeWire",
+				fixture: "loom",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "w-deck")], modifiers: MOD },
+					{ kind: "set.distance", value: 1.2, modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+			},
+			{
+				id: "feature.offsetSurface",
+				fixture: "empty",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("face", BOX_FACE_TOP)], modifiers: MOD },
+					{ kind: "set.distance", value: 0.15, modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+				seedBox: true,
+			},
+			{
+				id: "measure.distance",
+				fixture: "loom",
+				spec: buildDistanceInteractionSpec(),
+				steps: [
+					{ kind: "selection.changed", targets: [sel("vertex", "v0")], modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("vertex", "v1")], modifiers: MOD },
+				],
+				assert: ({ snap, after, before }) => {
+					expect(typeof snap.lastResponse?.data).toBe("number");
+					expect(isEmptyTopologyDiff(snap.lastResponse?.diff)).toBe(false);
+					expect(after.edges).toBeGreaterThan(before.edges);
+				},
+			},
+			{
+				id: "measure.area",
+				fixture: "empty",
+				spec: buildAreaInteractionSpec(),
+				steps: [
+					{ kind: "selection.changed", targets: [sel("face", BOX_FACE_TOP)], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+				seedBox: true,
+				assert: ({ snap, after, before }) => {
+					expect(typeof snap.lastResponse?.data).toBe("number");
+					expect(isEmptyTopologyDiff(snap.lastResponse?.diff)).toBe(false);
+					expect(after.anchors).toBeGreaterThan(before.anchors);
+				},
+			},
+			{
+				id: "curve.line",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(5, 1), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.vertices).toBeGreaterThanOrEqual(2),
+			},
+			{
+				id: "curve.polyline",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(4, 2), modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.vertices).toBeGreaterThanOrEqual(3),
+			},
+			{
+				id: "curve.arc",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 2), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.edges).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "curve.circle",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 0), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.edges).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "curve.controlPointCurve",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 2), modifiers: MOD },
+					{ kind: "pointer.down", point: p(4, 0), modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.edges).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "curve.interpolateCurve",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 1), modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.edges).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "transform.move",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 0.5), modifiers: MOD },
+				],
+				assert: ({ topo }) => {
+					const moved = Object.values(topo.vertices).some((v) => v.position[0] > 0.5);
+					expect(moved).toBe(true);
+				},
+			},
+			{
+				id: "transform.copy",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(4, 0), modifiers: MOD },
+				],
+				assert: ({ after, before }) => expect(after.vertices).toBeGreaterThan(before.vertices),
+			},
+			{
+				id: "transform.rotate",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 1), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 1), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 2), modifiers: MOD },
+				],
+			},
+			{
+				id: "transform.mirror",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(3, 0), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.vertices).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "transform.scale1d",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 0), modifiers: MOD },
+				],
+			},
+			{
+				id: "transform.scale3d",
+				fixture: "empty",
+				steps: [
+					{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 1), modifiers: MOD },
+					{ kind: "pointer.down", point: p(2, 1), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 2), modifiers: MOD },
+				],
+			},
+			{
+				id: "solid.sphere",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1.5, 0), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.cells).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "solid.cylinder",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(1, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(0, 0, 2), modifiers: MOD },
+				],
+				assert: ({ after }) => expect(after.cells).toBeGreaterThanOrEqual(1),
+			},
+			{
+				id: "surface.plane",
+				fixture: "empty",
+				steps: [
+					{ kind: "pointer.down", point: p(0, 0), modifiers: MOD },
+					{ kind: "pointer.down", point: p(4, 0), modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.join",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire"), sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.explode",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.chamfer",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("edge", "re0")], modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("edge", "re1")], modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.fillet",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("edge", "re0")], modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("edge", "re2")], modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.split",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("edge", "re10")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+			},
+			{
+				id: "edit.trim",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("edge", "re0")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+				],
+			},
+			{
+				id: "surface.loft",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire")], modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "dialog.ok", modifiers: MOD },
+				],
+			},
+			{
+				id: "surface.sweep1",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("wire", "spine-b")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "dialog.ok", modifiers: MOD },
+				],
+			},
+			{
+				id: "surface.sweep2",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "selection.changed", targets: [sel("wire", "spine-b")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "dialog.ok", modifiers: MOD },
+				],
+			},
+			{
+				id: "surface.networkSrf",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire"), sel("wire", "orbit-a")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "dialog.ok", modifiers: MOD },
+				],
+			},
+			{
+				id: "surface.extrudeCrv",
+				fixture: "routes",
+				steps: [
+					{ kind: "selection.changed", targets: [sel("wire", "stub-wire")], modifiers: MOD },
+					{ kind: "confirm", modifiers: MOD },
+					{ kind: "set.distance", value: 0.8, modifiers: MOD },
+				],
+			},
+			{
+				id: "solid.booleanUnion",
+				fixture: "building",
+				steps: (() => {
+					const c0 = "small-building-cell-123052045";
+					const c1 = "small-building-cell-1278694563";
+					return [
+						{ kind: "selection.changed", targets: [sel("cell", c0), sel("cell", c1)], modifiers: MOD },
+						{ kind: "confirm", modifiers: MOD },
+					];
+				})(),
+			},
+			{
+				id: "solid.booleanDifference",
+				fixture: "building",
+				steps: (() => {
+					const c0 = "small-building-cell-123052045";
+					const c1 = "small-building-cell-1278694563";
+					return [
+						{ kind: "selection.changed", targets: [sel("cell", c0)], modifiers: MOD },
+						{ kind: "confirm", modifiers: MOD },
+						{ kind: "selection.changed", targets: [sel("cell", c1)], modifiers: MOD },
+						{ kind: "confirm", modifiers: MOD },
+					];
+				})(),
+			},
+			{
+				id: "solid.booleanIntersection",
+				fixture: "building",
+				steps: (() => {
+					const c0 = "small-building-cell-123052045";
+					const c1 = "small-building-cell-1278694563";
+					return [
+						{ kind: "selection.changed", targets: [sel("cell", c0)], modifiers: MOD },
+						{ kind: "confirm", modifiers: MOD },
+						{ kind: "selection.changed", targets: [sel("cell", c1)], modifiers: MOD },
+						{ kind: "confirm", modifiers: MOD },
+					];
+				})(),
+			},
+		];
+
+		it("covers every built-in interaction", () => {
+			const ids = listSpatialInteractions().map((row) => row.id).sort();
+			expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
+		});
+
+		it.each(e2eCases)("$id completes end-to-end on $fixture fixture", async (row) => {
+			const spec = row.spec ?? loadSpatialInteraction(row.id);
+			expect(spec).not.toBeNull();
+			const topo = topoFromFixture(row.fixture);
+			if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(topo);
+			const kernel = new BrepjsKernel();
+			const derived = row.derived ? new DerivedViewService(kernel) : undefined;
+			if (derived) await derived.refresh(topo);
+			const before = entityCounts(topo);
+			const rt = createInteractionRuntime(spec!, {
+				kernel,
+				document: { topology: topo, nodes: [] },
+				derived,
+			});
+			for (const step of row.steps) {
+				await rt.send(step);
+				if (isFinalInteractionState(spec!, rt.getSnapshot().state)) break;
+			}
+			const st = rt.getSnapshot().state;
+			if (st === "ready") await rt.send({ kind: "confirm", modifiers: MOD });
+			const snap = rt.getSnapshot();
+			expect(snap.state, row.id).toBe("committed");
+			expect(snap.lastResponse?.ok, row.id).toBe(true);
+			expect(snap.lastResponse?.errors ?? [], row.id).toEqual([]);
+			row.assert?.({ snap, topo, before, after: entityCounts(topo) });
 		});
 	});
 }

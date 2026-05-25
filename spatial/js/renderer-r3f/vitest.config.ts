@@ -21,6 +21,5 @@ export default defineConfig({
 		fileParallelism: false,
 		maxConcurrency: 1,
 		include: ["index.tsx"],
-		includeSource: ["index.tsx"],
 	},
 });

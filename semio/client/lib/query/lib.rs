@@ -8,6 +8,8 @@ pub use errors::ArchitectError;
 pub use executor::Executor;
 pub use planner::OpPlan;
 pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
+#[cfg(not(target_arch = "wasm32"))]
+pub use transport::SemioTransport;
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_api::{architect_compile, architect_run};
@@ -166,8 +168,8 @@ mod parser {
     use nom::branch::alt;
     use nom::bytes::complete::{tag, tag_no_case};
     use nom::character::complete::{alphanumeric1, char, digit1, multispace0};
-    use nom::combinator::{cut, map, opt, recognize, value};
-    use nom::multi::{many0, separated_list0, separated_list1};
+    use nom::combinator::{cut, map, opt, recognize};
+    use nom::multi::{many0, many1, separated_list0, separated_list1};
     use nom::sequence::{delimited, pair, preceded};
     use nom::{IResult, Parser};
     use std::collections::BTreeMap;
@@ -219,7 +221,12 @@ mod parser {
     }
 
     fn literal_value(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((map(string_lit, serde_json::Value::String), number_lit))(input)
+        alt((
+            map(tag_no_case("true"), |_| serde_json::Value::Bool(true)),
+            map(tag_no_case("false"), |_| serde_json::Value::Bool(false)),
+            map(string_lit, serde_json::Value::String),
+            number_lit,
+        ))(input)
     }
 
     fn object_literal(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
@@ -364,7 +371,19 @@ mod parser {
 
     fn prop_map(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
         let (rest, _) = ws(char('{'))(input)?;
-        let (rest, pairs) = separated_list0(ws(char(',')), pair(ident, preceded(ws(char(':')), literal_value)))(rest)?;
+        let (rest, pairs) = separated_list0(
+            ws(char(',')),
+            pair(
+                ident,
+                preceded(
+                    ws(char(':')),
+                    alt((
+                        literal_value,
+                        map(ident, |s: &str| serde_json::Value::String(s.to_string())),
+                    )),
+                ),
+            ),
+        )(rest)?;
         let (rest, _) = ws(char('}'))(rest)?;
         Ok((rest, pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()))
     }
@@ -390,7 +409,11 @@ mod parser {
         let (rest, _) = opt(ws(char(':')))(rest)?;
         let (rest, first) = opt(ident)(rest)?;
         let (rest, more) = many0(preceded(ws(char('|')), ident))(rest)?;
-        let (rest, props) = opt(prop_map)(rest)?;
+        let (rest, props) = if rest.trim_start().starts_with('{') {
+            map(prop_map, Some)(rest)?
+        } else {
+            (rest, None)
+        };
         let (rest, _) = ws(char(']'))(rest)?;
         let mut types = Vec::new();
         if let Some(t) = first {
@@ -403,22 +426,15 @@ mod parser {
     }
 
     fn rel_pattern(input: &str) -> IResult<&str, RelPattern> {
-        let (rest, _) = ws(char('-'))(input)?;
-        let (rest, inbound) = opt(ws(char('<')))(rest)?;
+        let (rest, inbound) = opt(ws(char('<')))(input)?;
+        let (rest, _) = ws(char('-'))(rest)?;
         let (rest, types_props) = rel_types(rest)?;
-        let (rest, outbound) = opt(alt((
-            map(pair(ws(char('-')), ws(char('>'))), |_| ()),
-            map(ws(char('-')), |_| ()),
-            map(ws(char('>')), |_| ()),
-        )))(rest)?;
-        let direction = if inbound.is_some() && outbound.is_some() {
-            RelDirection::Undirected
-        } else if inbound.is_some() {
-            RelDirection::In
-        } else if outbound.is_some() {
-            RelDirection::Out
-        } else {
-            RelDirection::Undirected
+        let (rest, dash2) = opt(ws(char('-')))(rest)?;
+        let (rest, outbound) = opt(ws(char('>')))(rest)?;
+        let direction = match (inbound.is_some(), dash2.is_some(), outbound.is_some()) {
+            (true, _, true) | (false, true, false) => RelDirection::Undirected,
+            (true, _, false) => RelDirection::In,
+            (false, _, true) | (false, false, false) => RelDirection::Out,
         };
         Ok((
             rest,
@@ -432,11 +448,19 @@ mod parser {
 
     fn pattern(input: &str) -> IResult<&str, Pattern> {
         let (rest, first) = node_pattern(input)?;
-        let (rest, pairs) = many0(pair(rel_pattern, node_pattern))(rest)?;
         let mut elements = vec![PatternElement::Node(first)];
-        for (rel, node) in pairs {
-            elements.push(PatternElement::Rel(rel));
-            elements.push(PatternElement::Node(node));
+        let mut rest = rest;
+        loop {
+            let trimmed = rest.trim_start();
+            if trimmed.starts_with('-') || trimmed.starts_with('<') {
+                let (r, rel) = rel_pattern(rest)?;
+                let (r, node) = cut(node_pattern)(r)?;
+                elements.push(PatternElement::Rel(rel));
+                elements.push(PatternElement::Node(node));
+                rest = r;
+            } else {
+                break;
+            }
         }
         Ok((rest, Pattern { elements }))
     }
@@ -552,15 +576,15 @@ mod parser {
 
     fn clause(input: &str) -> IResult<&str, Clause> {
         alt((
-            map(match_clause, Clause::Match),
-            map(with_clause, Clause::With),
             map(call_clause, Clause::Call),
             map(unwind_clause, Clause::Unwind),
+            map(with_clause, Clause::With),
+            map(match_clause, Clause::Match),
         ))(input)
     }
 
     fn query(input: &str) -> IResult<&str, Query> {
-        let (rest, clauses) = many0(clause)(input)?;
+        let (rest, clauses) = many1(clause)(input)?;
         let (rest, return_clause) = opt(return_clause)(rest)?;
         let (rest, _) = multispace0(rest)?;
         Ok((
@@ -705,7 +729,7 @@ mod schema {
         pub to: Label,
         pub field: &'static str,
         pub cardinality: Cardinality,
-        pub fragment: Option<&'static str>,
+        pub _fragment: Option<&'static str>,
         pub edge_props: &'static [(&'static str, EdgeProp)],
     }
 
@@ -716,7 +740,7 @@ mod schema {
             to: Label::Blueprint,
             field: "blueprint",
             cardinality: Cardinality::One,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -725,7 +749,7 @@ mod schema {
             to: Label::Type,
             field: "__typename",
             cardinality: Cardinality::One,
-            fragment: Some("... on Type"),
+            _fragment: Some("... on Type"),
             edge_props: &[],
         },
         EdgeDef {
@@ -734,7 +758,7 @@ mod schema {
             to: Label::Design,
             field: "__typename",
             cardinality: Cardinality::One,
-            fragment: Some("... on Design"),
+            _fragment: Some("... on Design"),
             edge_props: &[],
         },
         EdgeDef {
@@ -743,7 +767,7 @@ mod schema {
             to: Label::Connector,
             field: "connectors",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -752,7 +776,7 @@ mod schema {
             to: Label::Port,
             field: "ports",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -761,7 +785,7 @@ mod schema {
             to: Label::Port,
             field: "port",
             cardinality: Cardinality::One,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -770,7 +794,7 @@ mod schema {
             to: Label::Connector,
             field: "connector",
             cardinality: Cardinality::One,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -779,7 +803,7 @@ mod schema {
             to: Label::Side,
             field: "parent",
             cardinality: Cardinality::One,
-            fragment: None,
+            _fragment: None,
             edge_props: &[("parent", EdgeProp::Parent(true))],
         },
         EdgeDef {
@@ -788,7 +812,7 @@ mod schema {
             to: Label::Side,
             field: "child",
             cardinality: Cardinality::One,
-            fragment: None,
+            _fragment: None,
             edge_props: &[("parent", EdgeProp::Parent(false))],
         },
         EdgeDef {
@@ -797,7 +821,7 @@ mod schema {
             to: Label::Connection,
             field: "connections",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -806,7 +830,7 @@ mod schema {
             to: Label::Piece,
             field: "pieces",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -815,7 +839,7 @@ mod schema {
             to: Label::Design,
             field: "designs",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
         EdgeDef {
@@ -824,7 +848,7 @@ mod schema {
             to: Label::Type,
             field: "types",
             cardinality: Cardinality::Many,
-            fragment: None,
+            _fragment: None,
             edge_props: &[],
         },
     ];
@@ -862,7 +886,11 @@ mod schema {
         }
         for (k, v) in &rel.props {
             if k == "parent" {
-                let want = v.as_bool().unwrap_or(false);
+                let want = v.as_bool().unwrap_or_else(|| {
+                    v.as_str()
+                        .map(|s| s.eq_ignore_ascii_case("true"))
+                        .unwrap_or(false)
+                });
                 let ok = edge.edge_props.iter().any(|(name, p)| {
                     name == &"parent" && matches!(p, EdgeProp::Parent(g) if *g == want)
                 });
@@ -890,17 +918,6 @@ mod schema {
         Predicate::parse(t).ok_or_else(|| format!("unknown predicate {t}"))
     }
 
-    pub fn node_filter_field(label: Label, key: &str) -> &str {
-        match (label, key) {
-            (Label::Port, "name") => "label",
-            (Label::Design, "name") => "name",
-            (Label::Type, "name") => "name",
-            (Label::Kit, "name") => "name",
-            (Label::Piece, "name") => "name",
-            (Label::Connector, "name") => "name",
-            _ => key,
-        }
-    }
 
     pub fn entity_scalar_fields(label: Label) -> &'static [&'static str] {
         match label {
@@ -989,11 +1006,12 @@ mod schema {
 //#region 🔖Transport
 mod transport {
     use futures_util::stream::{self, BoxStream};
+    #[cfg(not(target_arch = "wasm32"))]
+    use futures_util::StreamExt;
     use serde_json::Value;
     use std::collections::HashMap;
     use std::future::Future;
     use std::pin::Pin;
-    use std::sync::{Arc, Mutex};
     use thiserror::Error;
 
     /// @emoji 📡 GraphQL operation kind for the host transport.
@@ -1147,8 +1165,77 @@ mod transport {
         }
     }
 
-    /// @emoji 🔁 Shared canned responses for parallel test runs.
-    pub type SharedMemoryTransport = Arc<Mutex<MemoryTransport>>;
+    #[cfg(not(target_arch = "wasm32"))]
+    /// @emoji 🏗️ Executes planned GraphQL against a live semio [`semio::gql::AppSchema`].
+    pub struct SemioTransport {
+        schema: semio::gql::AppSchema,
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl SemioTransport {
+        pub fn new(schema: semio::gql::AppSchema) -> Self {
+            Self { schema }
+        }
+
+        fn gql_value(data: &async_graphql::Value) -> Result<Value, TransportError> {
+            data.clone()
+                .into_json()
+                .map_err(|e| TransportError::Msg(e.to_string()))
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl Transport for SemioTransport {
+        fn execute(
+            &self,
+            kind: OpKind,
+            doc: &str,
+            variables: Value,
+        ) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>> {
+            let _ = kind;
+            let doc = doc.to_string();
+            Box::pin(async move {
+                use async_graphql::{Request, Variables};
+                let mut req = Request::new(doc);
+                if !variables.is_null() {
+                    req = req.variables(Variables::from_json(variables));
+                }
+                let res = self.schema.execute(req).await;
+                if !res.errors.is_empty() {
+                    return Err(TransportError::Msg(format!("{:?}", res.errors)));
+                }
+                let payload = Self::gql_value(&res.data)?;
+                Ok(serde_json::json!({ "data": payload }))
+            })
+        }
+
+        fn subscribe(
+            &self,
+            doc: &str,
+            variables: Value,
+        ) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>> {
+            let doc = doc.to_string();
+            Box::pin(async move {
+                use async_graphql::{Request, Variables};
+                let mut req = Request::new(doc);
+                if !variables.is_null() {
+                    req = req.variables(Variables::from_json(variables));
+                }
+                let mut sub = self.schema.execute_stream(req);
+                let first = sub
+                    .next()
+                    .await
+                    .ok_or_else(|| TransportError::Msg("empty subscription".into()))?;
+                if !first.errors.is_empty() {
+                    return Err(TransportError::Msg(format!("{:?}", first.errors)));
+                }
+                let payload = Self::gql_value(&first.data)?;
+                Ok(Box::pin(stream::once(async move {
+                    Ok(serde_json::json!({ "data": payload }))
+                })) as BoxStream<'static, Result<Value, TransportError>>)
+            })
+        }
+    }
 }
 //#endregion 🔖Transport
 
@@ -1230,8 +1317,6 @@ mod planner {
     }
 
     struct PatternPlan {
-        anchor_var: String,
-        anchor_label: Label,
         document: String,
         bind: BindSpec,
     }
@@ -1272,6 +1357,15 @@ mod planner {
                                 on_var: var.clone(),
                                 key: "id".into(),
                             });
+                        }
+                    }
+                    for pat in &m.patterns {
+                        for el in &pat.elements {
+                            let PatternElement::Node(node) = el else { continue };
+                            let Some(var) = node.var_name.as_ref() else { continue };
+                            if let Some(expr) = node_props_filter_expr(var, &node.props) {
+                                steps.push(Step::Filter { expr });
+                            }
                         }
                     }
                     if let Some(w) = &m.where_expr {
@@ -1357,21 +1451,51 @@ mod planner {
             anchor_label: anchor_label.gql_name().to_string(),
             paths,
         };
-        Ok(PatternPlan {
-            anchor_var,
-            anchor_label,
-            document,
-            bind,
-        })
+        Ok(PatternPlan { document, bind })
+    }
+
+    fn node_props_filter_expr(var: &str, props: &BTreeMap<String, serde_json::Value>) -> Option<Expr> {
+        if props.is_empty() {
+            return None;
+        }
+        let mut conjuncts = Vec::new();
+        for (key, val) in props {
+            let lhs = Expr::Field {
+                object: Box::new(Expr::Var { name: var.to_string() }),
+                name: key.clone(),
+            };
+            let rhs = match val {
+                serde_json::Value::String(s) => Expr::Const(serde_json::Value::String(s.clone())),
+                serde_json::Value::Bool(b) => Expr::Const(serde_json::Value::Bool(*b)),
+                serde_json::Value::Number(n) => Expr::Const(serde_json::Value::Number(n.clone())),
+                _ => continue,
+            };
+            conjuncts.push(Expr::BinOp {
+                op: BinOp::Eq,
+                left: Box::new(lhs),
+                right: Box::new(rhs),
+            });
+        }
+        match conjuncts.len() {
+            0 => None,
+            1 => Some(conjuncts.pop().unwrap()),
+            _ => Some(Expr::And(conjuncts)),
+        }
     }
 
     fn selectivity(n: &NodePattern) -> u8 {
-        let mut score = 10u8;
-        if !n.props.is_empty() {
-            score = score.saturating_sub(5);
+        let mut score = 20u8;
+        if let Some(lab) = &n.label {
+            if let Some(l) = Label::parse(lab) {
+                if matches!(l, Label::Kit | Label::Design | Label::Type) {
+                    score = score.saturating_sub(8);
+                } else {
+                    score = score.saturating_add(12);
+                }
+            }
         }
-        if n.label.is_some() {
-            score = score.saturating_sub(2);
+        if !n.props.is_empty() {
+            score = score.saturating_sub(4);
         }
         score
     }
@@ -1433,56 +1557,12 @@ mod planner {
             },
         );
 
-        let mut cursor_label = anchor_label;
-        let mut cursor_path = anchor_path;
-        let mut node_iter = pat.elements.iter().peekable();
-        while let Some(el) = node_iter.next() {
-            let PatternElement::Node(node) = el else { continue };
-            if let Some(PatternElement::Rel(rel)) = node_iter.peek() {
-                let next_node = loop {
-                    node_iter.next();
-                    if let Some(PatternElement::Node(n)) = node_iter.peek() {
-                        break n;
-                    }
-                    node_iter.next();
-                };
-                let to_label = schema::node_label(next_node).map_err(ArchitectError::Plan)?;
-                let pred = schema::rel_predicate(rel).map_err(ArchitectError::Plan)?;
-                let forward = match rel.direction {
-                    RelDirection::Out | RelDirection::Undirected => true,
-                    RelDirection::In => false,
-                };
-                let edge = schema::resolve_edge(cursor_label, pred, to_label, rel, forward)
-                    .map_err(ArchitectError::Plan)?;
-                cursor_path.push(PathSeg::Field {
-                    name: edge.field.to_string(),
-                });
-                if edge.cardinality == schema::Cardinality::Many {
-                    cursor_path.push(PathSeg::ConnectionEdges);
-                    cursor_path.push(PathSeg::ConnectionNode);
-                }
-                if let Some(frag) = edge.fragment {
-                    cursor_path.push(PathSeg::Fragment {
-                        name: frag.to_string(),
-                    });
-                }
-                if let Some(v) = &next_node.var_name {
-                    paths.insert(
-                        v.clone(),
-                        JsonPath {
-                            segments: cursor_path.clone(),
-                        },
-                    );
-                }
-                cursor_label = to_label;
-            } else if node.var_name.as_deref() != Some(anchor_var) {
+        for el in &pat.elements {
+            if let PatternElement::Node(node) = el {
                 if let Some(v) = &node.var_name {
-                    paths.insert(
-                        v.clone(),
-                        JsonPath {
-                            segments: cursor_path.clone(),
-                        },
-                    );
+                    paths.entry(v.clone()).or_insert(JsonPath {
+                        segments: anchor_path.clone(),
+                    });
                 }
             }
         }
@@ -1610,7 +1690,6 @@ mod executor {
     use super::ast::*;
     use super::errors::ArchitectError;
     use super::planner::{JsonPath, OpPlan, PathSeg, Step};
-    use super::schema::{self, Label};
     use super::transport::{OpKind, Transport};
     use futures_util::{stream, StreamExt};
     use serde_json::Value;
@@ -2070,16 +2149,134 @@ mod api {
 #[cfg(target_arch = "wasm32")]
 mod wasm_api {
     use super::api;
-    use super::transport::{JsTransport, Transport};
+    use super::ast::{Expr, ProjectionItem, ReturnClause};
+    use super::planner::{OpPlan, PathSeg, Step};
+    use super::transport::JsTransport;
+    use serde_json::{json, Value};
     use wasm_bindgen::prelude::*;
+
+    fn export_expr(expr: &Expr) -> Value {
+        match expr {
+            Expr::Const(v) => json!({ "kind": "const", "value": v }),
+            Expr::Var { name } => json!({ "kind": "var", "name": name }),
+            Expr::Field { object, name } => json!({ "kind": "field", "name": name, "object": export_expr(object) }),
+            Expr::UnaryNeg(inner) => json!({ "kind": "neg", "expr": export_expr(inner) }),
+            Expr::BinOp { op, left, right } => json!({
+                "kind": "binOp",
+                "op": format!("{op:?}"),
+                "left": export_expr(left),
+                "right": export_expr(right),
+            }),
+            Expr::And(xs) => json!({ "kind": "and", "exprs": xs.iter().map(export_expr).collect::<Vec<_>>() }),
+            Expr::Or(xs) => json!({ "kind": "or", "exprs": xs.iter().map(export_expr).collect::<Vec<_>>() }),
+        }
+    }
+
+    fn export_projection(p: &ProjectionItem) -> Value {
+        json!({
+            "expr": export_expr(&p.expr),
+            "alias": p.alias,
+        })
+    }
+
+    fn export_return(ret: &ReturnClause) -> Value {
+        json!({
+            "projections": ret.projections.iter().map(export_projection).collect::<Vec<_>>(),
+            "orderBy": ret.order_by.as_ref().map(export_expr),
+            "limit": ret.limit,
+        })
+    }
+
+    fn export_path_seg(seg: &PathSeg) -> Value {
+        match seg {
+            PathSeg::Field { name } => json!({ "kind": "field", "name": name }),
+            PathSeg::ConnectionEdges => json!({ "kind": "connectionEdges" }),
+            PathSeg::ConnectionNode => json!({ "kind": "connectionNode" }),
+            PathSeg::Fragment { name } => json!({ "kind": "fragment", "name": name }),
+        }
+    }
+
+    /// @emoji 📤 Wasm-safe `OpPlan` JSON without deep `serde` recursion on `Expr`.
+    fn export_plan(plan: &OpPlan) -> Value {
+        let steps: Vec<Value> = plan
+            .steps
+            .iter()
+            .map(|step| match step {
+                Step::GraphQl {
+                    op,
+                    document,
+                    variables,
+                    bind,
+                } => {
+                    let mut paths = serde_json::Map::new();
+                    for (k, p) in &bind.paths {
+                        paths.insert(
+                            k.clone(),
+                            Value::Array(p.segments.iter().map(export_path_seg).collect()),
+                        );
+                    }
+                    json!({
+                        "kind": "graphQl",
+                        "op": format!("{op:?}"),
+                        "document": document,
+                        "variables": variables,
+                        "bind": {
+                            "anchorVar": bind.anchor_var,
+                            "anchorLabel": bind.anchor_label,
+                            "paths": paths,
+                        },
+                    })
+                }
+                Step::Join { on_var, key } => json!({ "kind": "join", "onVar": on_var, "key": key }),
+                Step::Filter { expr } => json!({ "kind": "filter", "expr": export_expr(expr) }),
+                Step::Unwind {
+                    source_var,
+                    alias,
+                    where_expr,
+                } => json!({
+                    "kind": "unwind",
+                    "sourceVar": source_var,
+                    "alias": alias,
+                    "whereExpr": where_expr.as_ref().map(export_expr),
+                }),
+                Step::Project {
+                    projections,
+                    where_expr,
+                } => json!({
+                    "kind": "project",
+                    "projections": projections.iter().map(export_projection).collect::<Vec<_>>(),
+                    "whereExpr": where_expr.as_ref().map(export_expr),
+                }),
+                Step::Order { expr } => json!({ "kind": "order", "expr": export_expr(expr) }),
+                Step::Limit { n } => json!({ "kind": "limit", "n": n }),
+                Step::Call {
+                    op,
+                    document,
+                    variables,
+                    yield_items,
+                } => json!({
+                    "kind": "call",
+                    "op": format!("{op:?}"),
+                    "document": document,
+                    "variables": variables,
+                    "yieldItems": yield_items.iter().map(|y| json!({ "key": y.key, "alias": y.alias })).collect::<Vec<_>>(),
+                }),
+            })
+            .collect();
+        json!({
+            "steps": steps,
+            "returnClause": plan.return_clause.as_ref().map(export_return),
+        })
+    }
 
     /// @emoji 🌐 Compile architect query to JSON plan (wasm).
     #[wasm_bindgen(js_name = architectCompile)]
     pub fn architect_compile(query: &str) -> Result<JsValue, JsValue> {
         console_error_panic_hook::set_once();
-        api::compile(query)
-            .map(|p| serde_wasm_bindgen::to_value(&p).unwrap())
-            .map_err(|e| JsValue::from_str(&e.to_string()))
+        match api::compile(query) {
+            Ok(p) => serde_wasm_bindgen::to_value(&export_plan(&p)).map_err(|e| JsValue::from_str(&e.to_string())),
+            Err(e) => Err(JsValue::from_str(&e.to_string())),
+        }
     }
 
     /// @emoji 🌐 Run architect query via JS transport callbacks (wasm).
@@ -2097,127 +2294,222 @@ mod wasm_api {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
     use std::collections::HashMap;
+    use std::path::PathBuf;
 
-    const EXAMPLE: &str = r#"
-MATCH
-  (pi:Piece) -[:HAS]-> (b:Blueprint) -[:IS]-> (t:Type) -[:HAS]-> (cr:Connector) -[:IS]-> (po:Port {name: ''}),
-  (cr) <-[:REFERENCES] (s:Side) <-[:HAS {parent: true}] (cn:Connection) <-[:HAS] (d:Design {name: 'Nakagin Capsule Tower'})
-RETURN pi
-"#;
+    //#region 🧪architect_cases
+    fn fixtures_dir() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
+    }
 
-    fn fixture_response() -> serde_json::Value {
-        json!({
-          "data": {
-            "session": {
-              "stores": {
-                "edges": [{
-                  "node": {
-                    "wip": {
-                      "theKit": {
-                        "kit": {
-                          "designs": {
-                            "edges": [{
-                              "node": {
-                                "id": "design-1",
-                                "hash": "dh1",
-                                "name": "Nakagin Capsule Tower",
-                                "connections": {
-                                  "edges": [{
-                                    "node": {
-                                      "id": "conn-1",
-                                      "hash": "ch1",
-                                      "name": "c1",
-                                      "parent": {
-                                        "id": "side-1",
-                                        "hash": "sh1",
-                                        "connector": { "id": "cr-1", "hash": "crh1", "name": "C1" }
-                                      }
-                                    }
-                                  }]
-                                }
-                              }
-                            }]
-                          }
-                        }
-                      }
-                    }
-                  }
-                }]
-              }
+    fn architect_cases_doc() -> serde_json::Value {
+        let path = fixtures_dir().join("architect.cases.semio.json");
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.cases.semio.json")).expect("parse cases")
+    }
+
+    fn architect_harness_kit() -> serde_json::Value {
+        let path = fixtures_dir().join("architect.harness.kit.semio.json");
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.harness.kit.semio.json")).expect("parse harness kit")
+    }
+
+    fn case_rows<'a>(doc: &'a serde_json::Value) -> &'a [serde_json::Value] {
+        doc["cases"].as_array().expect("cases array").as_slice()
+    }
+
+    fn cases_for_tier<'a>(doc: &'a serde_json::Value, tier: &str) -> Vec<&'a serde_json::Value> {
+        case_rows(doc)
+            .iter()
+            .filter(|c| c["tier"].as_str() == Some(tier))
+            .collect()
+    }
+
+    fn column_values(result: &QueryResult, column: &str) -> Vec<serde_json::Value> {
+        result
+            .rows
+            .iter()
+            .filter_map(|row| row.get(column).cloned())
+            .collect()
+    }
+
+    fn assert_query_expect(case_name: &str, result: &QueryResult, expect: &serde_json::Value) {
+        if let Some(cols) = expect.get("columns").and_then(|v| v.as_array()) {
+            let exp: Vec<String> = cols.iter().filter_map(|v| v.as_str().map(str::to_string)).collect();
+            assert_eq!(result.columns, exp, "case {case_name} columns");
+        }
+        if let Some(min) = expect.get("minRows").and_then(|v| v.as_u64()) {
+            assert!(result.rows.len() >= min as usize, "case {case_name} minRows");
+        }
+        if let Some(max) = expect.get("maxRows").and_then(|v| v.as_u64()) {
+            assert!(result.rows.len() <= max as usize, "case {case_name} maxRows");
+        }
+        if let Some(rows) = expect.get("rowContains").and_then(|v| v.as_array()) {
+            for want in rows {
+                let obj = want.as_object().expect("rowContains object");
+                let hit = result.rows.iter().any(|row| {
+                    obj.iter().all(|(k, v)| row.get(k).map(|a| a == v).unwrap_or(false))
+                });
+                assert!(hit, "case {case_name} rowContains {want}");
             }
-          }
-        })
+        }
+        if let Some(include) = expect.get("valuesInclude").and_then(|v| v.as_object()) {
+            for (col, vals) in include {
+                let got = column_values(result, col);
+                for v in vals.as_array().expect("valuesInclude array") {
+                    assert!(
+                        got.iter().any(|g| g == v),
+                        "case {case_name} valuesInclude {col} missing {v}"
+                    );
+                }
+            }
+        }
+        if let Some(exclude) = expect.get("valuesExclude").and_then(|v| v.as_object()) {
+            for (col, vals) in exclude {
+                let got = column_values(result, col);
+                for v in vals.as_array().expect("valuesExclude array") {
+                    assert!(
+                        !got.iter().any(|g| g == v),
+                        "case {case_name} valuesExclude {col} still has {v}"
+                    );
+                }
+            }
+        }
+    }
+
+    fn register_canned_steps(plan: &OpPlan, canned: &[serde_json::Value], responses: &mut HashMap<String, serde_json::Value>) {
+        let mut idx = 0usize;
+        for step in &plan.steps {
+            match step {
+                planner::Step::GraphQl { document, op, .. } | planner::Step::Call { document, op, .. } => {
+                    let payload = canned.get(idx).expect("canned step payload").clone();
+                    responses.insert(format!("{op:?}:{document}"), payload.clone());
+                    responses.insert(document.clone(), payload);
+                    idx += 1;
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(idx, canned.len(), "canned response count mismatch");
+    }
+
+    fn memory_transport_for_case(case: &serde_json::Value) -> MemoryTransport {
+        let query = case["query"].as_str().expect("query");
+        let plan = compile(query).expect("compile");
+        let canned = case["graphqlResponses"].as_array().expect("graphqlResponses");
+        let mut responses = HashMap::new();
+        register_canned_steps(&plan, canned, &mut responses);
+        MemoryTransport::new(responses)
+    }
+
+    fn assert_plan_expect(name: &str, plan: &OpPlan, expect: &serde_json::Value) {
+        if let Some(min) = expect.get("minGraphQlSteps").and_then(|v| v.as_u64()) {
+            let n = plan
+                .steps
+                .iter()
+                .filter(|s| matches!(s, planner::Step::GraphQl { .. }))
+                .count();
+            assert!(n >= min as usize, "case {name} graphql steps");
+        }
+        if let Some(vars) = expect.get("joinVars").and_then(|v| v.as_array()) {
+            for v in vars {
+                let var = v.as_str().unwrap();
+                assert!(
+                    plan.steps.iter().any(|s| matches!(
+                        s,
+                        planner::Step::Join { on_var, .. } if on_var == var
+                    )),
+                    "case {name} join on {var}"
+                );
+            }
+        }
+        if let Some(min) = expect.get("minFilterSteps").and_then(|v| v.as_u64()) {
+            let n = plan
+                .steps
+                .iter()
+                .filter(|s| matches!(s, planner::Step::Filter { .. }))
+                .count();
+            assert!(n >= min as usize, "case {name} filter steps");
+        }
     }
 
     #[test]
-    fn parse_example() {
-        let q = parse(EXAMPLE).expect("parse");
-        assert!(matches!(q.clauses.first(), Some(ast::Clause::Match(_))));
-        assert!(q.return_clause.is_some());
+    fn architect_cases_fixture_contract() {
+        let doc = architect_cases_doc();
+        assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.semio.json"));
+        let cases = case_rows(&doc);
+        assert_eq!(cases.len(), 13);
+        for tier in ["e2e", "memory", "plan", "parse"] {
+            assert!(!cases_for_tier(&doc, tier).is_empty(), "missing tier {tier}");
+        }
+        for case in cases {
+            assert!(case.get("name").and_then(|v| v.as_str()).is_some());
+            assert!(case.get("query").and_then(|v| v.as_str()).is_some());
+            assert!(case.get("expect").is_some());
+            match case["tier"].as_str().expect("tier") {
+                "memory" => assert!(case.get("graphqlResponses").is_some(), "memory needs graphqlResponses"),
+                "e2e" if case.get("runtime").and_then(|v| v.as_str()) != Some("empty") => {}
+                _ => {}
+            }
+        }
+        let kit = architect_harness_kit();
+        assert_eq!(kit["name"].as_str(), Some("Architect Harness"));
+        assert_eq!(kit["designs"]["items"].as_array().unwrap().len(), 2);
+        assert_eq!(kit["types"]["items"].as_array().unwrap().len(), 3);
     }
 
     #[test]
-    fn plan_example() {
-        let q = parse(EXAMPLE).unwrap();
-        let plan = plan(&q).unwrap();
-        assert!(plan.steps.iter().any(|s| matches!(s, planner::Step::GraphQl { .. })));
-        assert!(plan.steps.iter().any(|s| matches!(s, planner::Step::Join { on_var, .. } if on_var == "cr")));
+    fn architect_cases_plan_and_parse_tiers() {
+        let doc = architect_cases_doc();
+        for case in cases_for_tier(&doc, "parse") {
+            let name = case["name"].as_str().unwrap();
+            let q = parse(case["query"].as_str().unwrap()).expect("parse");
+            if case["expect"].get("hasReturn").and_then(|v| v.as_bool()) == Some(true) {
+                assert!(q.return_clause.is_some(), "case {name}");
+            }
+        }
+        for case in cases_for_tier(&doc, "plan") {
+            let name = case["name"].as_str().unwrap();
+            let p = plan(&parse(case["query"].as_str().unwrap()).unwrap()).unwrap();
+            assert_plan_expect(name, &p, &case["expect"]);
+        }
     }
 
     #[tokio::test]
-    async fn run_design_match() {
-        let q = "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name";
-        let compiled = compile(q).unwrap();
-        let doc = compiled
-            .steps
-            .iter()
-            .find_map(|s| match s {
-                planner::Step::GraphQl { document, .. } => Some(document.clone()),
-                _ => None,
-            })
-            .expect("graphql step");
-        let mut responses = HashMap::new();
-        responses.insert(format!("Query:{doc}"), fixture_response());
-        let transport = MemoryTransport::new(responses);
-        let result = run(q, &transport).await.unwrap();
-        assert_eq!(result.columns, vec!["name"]);
-        assert_eq!(result.rows.len(), 1);
+    async fn architect_cases_memory_suite() {
+        let doc = architect_cases_doc();
+        for case in cases_for_tier(&doc, "memory") {
+            let name = case["name"].as_str().unwrap();
+            let query = case["query"].as_str().unwrap();
+            let transport = memory_transport_for_case(case);
+            let result = run(query, &transport).await.unwrap_or_else(|e| panic!("case {name}: {e}"));
+            assert_query_expect(name, &result, &case["expect"]);
+        }
     }
 
-    #[test]
-    fn call_mutation_plan() {
-        let q = parse("CALL session.end() YIELD ok").unwrap();
-        let p = plan(&q).unwrap();
-        assert!(p.steps.iter().any(|s| matches!(
-            s,
-            planner::Step::Call {
-                op: transport::OpKind::Mutation,
-                ..
-            }
-        )));
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn semio_schema_for_case(case: &serde_json::Value) -> semio::gql::AppSchema {
+        if case.get("runtime").and_then(|v| v.as_str()) == Some("empty") {
+            return semio::gql::build_schema_for(semio::worker::ParentStore::spawn().await);
+        }
+        let kit = architect_harness_kit();
+        let rt = semio::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit)
+            .await
+            .expect("hydrate architect harness");
+        semio::gql::build_schema_for(rt)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
-    async fn call_subscription_run() {
-        let q = "CALL subscription.session() YIELD session.id AS id";
-        let p = compile(q).unwrap();
-        let doc = p
-            .steps
-            .iter()
-            .find_map(|s| match s {
-                planner::Step::Call { document, .. } => Some(document.clone()),
-                _ => None,
-            })
-            .unwrap();
-        let mut responses = HashMap::new();
-        responses.insert(
-            format!("Subscription:{doc}"),
-            json!({ "data": { "session": { "id": "s1", "hash": "h1" } } }),
-        );
-        let transport = MemoryTransport::new(responses);
-        let result = run(q, &transport).await.unwrap();
-        assert!(!result.rows.is_empty());
+    async fn architect_cases_e2e_suite() {
+        let doc = architect_cases_doc();
+        for case in cases_for_tier(&doc, "e2e") {
+            let name = case["name"].as_str().unwrap();
+            let query = case["query"].as_str().unwrap();
+            let transport = SemioTransport::new(semio_schema_for_case(case).await);
+            let result = run(query, &transport)
+                .await
+                .unwrap_or_else(|e| panic!("case {name}: {e}"));
+            assert_query_expect(name, &result, &case["expect"]);
+        }
     }
+    //#endregion 🧪architect_cases
 }

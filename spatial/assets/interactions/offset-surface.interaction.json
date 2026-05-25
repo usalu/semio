@@ -281,7 +281,8 @@
   "commit": {
     "when": "hasSurfaceAndDistance",
     "fromStates": [
-      "setDistance"
+      "setDistance",
+      "committed"
     ],
     "operation": {
       "kind": "action",

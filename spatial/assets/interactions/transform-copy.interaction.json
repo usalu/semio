@@ -3,6 +3,41 @@
   "id": "transform.copy",
   "version": "1.0.0",
   "label": "Copy",
+  "guards": [
+    {
+      "name": "hasCopyFrom",
+      "expr": {
+        "kind": "exists",
+        "target": {
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "from"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "noCopyFrom",
+      "expr": {
+        "kind": "not",
+        "arg": {
+          "kind": "exists",
+          "target": {
+            "root": "context",
+            "segments": [
+              {
+                "kind": "field",
+                "name": "from"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [
@@ -81,6 +116,42 @@
                     "value": {
                       "kind": "const",
                       "value": []
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "moveMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "free"
+                    }
+                  },
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cplaneNormal"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": [
+                        0,
+                        0,
+                        1
+                      ]
                     }
                   }
                 ]
@@ -196,6 +267,116 @@
             ]
           },
           {
+            "event": "mode.free",
+            "transitions": [
+              {
+                "key": "f",
+                "label": "Free",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "moveMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "free"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.normal",
+            "transitions": [
+              {
+                "key": "n",
+                "label": "Normal",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "moveMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "normal"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.vertical",
+            "transitions": [
+              {
+                "key": "v",
+                "label": "Vertical",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "moveMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "vertical"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "confirm",
+            "transitions": [
+              {
+                "guard": "hasCopyFrom",
+                "target": "point_to_copy_to",
+                "key": "Enter",
+                "label": "Source point picked"
+              },
+              {
+                "guard": "noCopyFrom",
+                "target": "point_to_copy_to",
+                "key": "Enter",
+                "label": "Use selection center",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.selectionBboxCenter",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "from"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "event": "pointer.down",
             "transitions": [
               {
@@ -228,6 +409,16 @@
                 ]
               }
             ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
           }
         ]
       },
@@ -241,25 +432,129 @@
                 "transient": true,
                 "effects": [
                   {
+                    "op": "action",
+                    "action": "command.constrainMoveCursor",
+                    "params": {
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.free",
+            "transitions": [
+              {
+                "key": "f",
+                "label": "Free",
+                "effects": [
+                  {
                     "op": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
                         {
                           "kind": "field",
-                          "name": "cursor"
+                          "name": "moveMode"
                         }
                       ]
                     },
                     "value": {
-                      "kind": "path",
-                      "root": "event",
+                      "kind": "const",
+                      "value": "free"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.normal",
+            "transitions": [
+              {
+                "key": "n",
+                "label": "Normal",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
                       "segments": [
                         {
                           "kind": "field",
-                          "name": "point"
+                          "name": "moveMode"
                         }
                       ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "normal"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "mode.vertical",
+            "transitions": [
+              {
+                "key": "v",
+                "label": "Vertical",
+                "effects": [
+                  {
+                    "op": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "moveMode"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": "vertical"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "undo.pick",
+            "transitions": [
+              {
+                "target": "point_to_copy_from",
+                "key": "u",
+                "label": "Undo pick",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.undoPick",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "clearKeys": {
+                        "kind": "const",
+                        "value": [
+                          "from",
+                          "to"
+                        ]
+                      }
                     }
                   }
                 ]
@@ -270,7 +565,7 @@
             "event": "pointer.down",
             "transitions": [
               {
-                "target": "point_to_copy_to",
+                "target": "committed",
                 "effects": [
                   {
                     "op": "action",
@@ -278,7 +573,11 @@
                     "params": {
                       "field": {
                         "kind": "const",
-                        "value": "copyPoints"
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "to"
                       },
                       "point": {
                         "kind": "path",
@@ -297,22 +596,12 @@
             ]
           },
           {
-            "event": "confirm",
+            "event": "cancel",
             "transitions": [
               {
-                "target": "committed",
-                "key": "Enter",
-                "label": "Finish"
-              }
-            ]
-          },
-          {
-            "event": "contextmenu",
-            "transitions": [
-              {
-                "target": "committed",
-                "key": "RightClick",
-                "label": "Finish"
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
               }
             ]
           }
@@ -549,7 +838,7 @@
                 "segments": [
                   {
                     "kind": "field",
-                    "name": "copyPoints"
+                    "name": "points"
                   }
                 ]
               },
@@ -560,6 +849,36 @@
                   {
                     "kind": "field",
                     "name": "targets"
+                  }
+                ]
+              },
+              "from": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "from"
+                  }
+                ]
+              },
+              "moveMode": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "moveMode"
+                  }
+                ]
+              },
+              "cplaneNormal": {
+                "kind": "path",
+                "root": "context",
+                "segments": [
+                  {
+                    "kind": "field",
+                    "name": "cplaneNormal"
                   }
                 ]
               }
@@ -611,7 +930,7 @@
   },
   "commit": {
     "fromStates": [
-      "ready"
+      "committed"
     ],
     "operation": {
       "kind": "action",
@@ -644,6 +963,26 @@
             {
               "kind": "field",
               "name": "targets"
+            }
+          ]
+        },
+        "moveMode": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "moveMode"
+            }
+          ]
+        },
+        "cplaneNormal": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "cplaneNormal"
             }
           ]
         }

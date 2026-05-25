@@ -1417,7 +1417,7 @@ export class ConstructEngine {
 const __spatialQueryTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
-	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
+	const { BrepjsKernel, computeSurfaceViewsFromTopology, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -1436,6 +1436,9 @@ if (import.meta.vitest) {
 		}
 		override async tessellate() {
 			return { positions: new Float32Array(), indices: new Uint32Array() };
+		}
+		override async computeSurfaceViews(topo: TopologyGraph) {
+			return computeSurfaceViewsFromTopology(topo);
 		}
 	}
 
@@ -1552,7 +1555,8 @@ if (import.meta.vitest) {
 
 		it("Surface metadata filter via CALL UNWIND WHERE", async () => {
 			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
 			const external = (await kernel.computeSurfaceViews(topo)).find((s) => s.exposure === "external");
 			expect(external).toBeDefined();
