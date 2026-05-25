@@ -134,6 +134,17 @@ export function vec3Distance(a: Vec3, b: Vec3): number {
 }
 
 /** @emoji 📏 Normalizes to unit length when non-zero; otherwise returns `[0,0,1]`. */
+/** @emoji ↕️ Rhino Move constraint: free 3D, Vertical (CPlane Z), Normal (along `cplaneNormal`). */
+export function constrainMovePoint(from: Vec3, to: Vec3, mode: string, cplaneNormal: Vec3 = [0, 0, 1]): Vec3 {
+	const m = mode === "vertical" || mode === "normal" ? mode : "free";
+	if (m === "free") return to;
+	if (m === "vertical") return [from[0], from[1], to[2]];
+	const n = vec3Normalize(cplaneNormal);
+	const d = vec3Sub(to, from);
+	const along = vec3Dot(d, n);
+	return [from[0] + n[0] * along, from[1] + n[1] * along, from[2] + n[2] * along];
+}
+
 export function vec3Normalize(a: Vec3): Vec3 {
 	const l = vec3Length(a);
 	if (l < 1e-12) return [0, 0, 1];
@@ -2237,7 +2248,13 @@ export function transformPointsForPreviewKind(
 	const center = readVec3(params.center) ?? readVec3Array(params.points)[0] ?? null;
 	if (previewKind === "move-preview" || previewKind === "copy-preview") {
 		if (!from || !cursor) return identity;
-		const delta = vec3Sub(cursor, from);
+		const mode = typeof params.moveMode === "string" ? params.moveMode : "free";
+		const cplane =
+			Array.isArray(params.cplaneNormal) && params.cplaneNormal.length === 3
+				? (params.cplaneNormal as Vec3)
+				: ([0, 0, 1] as Vec3);
+		const to = constrainMovePoint(from, cursor, mode, cplane);
+		const delta = vec3Sub(to, from);
 		return (point) => vec3Add(point, delta);
 	}
 	if (previewKind === "mirror-preview") {
@@ -2322,6 +2339,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	anchorPlacementFromEntity = anchorPlacementFromEntity;
 	computeBoxPreviewLayout = computeBoxPreviewLayout;
 	transformPointsForPreviewKind = transformPointsForPreviewKind;
+	constrainMovePoint = constrainMovePoint;
 	abs = Math.abs;
 	min2 = (a: number, b: number) => (a < b ? a : b);
 	max2 = (a: number, b: number) => (a > b ? a : b);

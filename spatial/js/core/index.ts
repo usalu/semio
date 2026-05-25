@@ -780,6 +780,17 @@ function compileInitialState(spec: InteractionSpec, transition: TransitionSpec |
 	};
 }
 
+/** @emoji 📜 Scripted commands that end in `committed` should commit from that state, not missing `ready`. */
+function normalizeCommitFromStates(spec: InteractionSpec): InteractionSpec {
+	const finals = listFinalInteractionStates(spec);
+	const hasReady = spec.machine.states.some((s) => s.name === "ready");
+	if (hasReady || finals.length === 0) return spec;
+	const from = spec.commit.fromStates;
+	const onlyReady = !from || (from.length === 1 && from[0] === "ready");
+	if (!onlyReady) return spec;
+	return { ...spec, commit: { ...spec.commit, fromStates: finals } };
+}
+
 export function initialContextForSpec(spec: InteractionSpec): Record<string, unknown> {
 	return structuredClone(COMPILED_INITIAL_CONTEXTS.get(spec) ?? {});
 }
@@ -788,10 +799,11 @@ export function initialContextForSpec(spec: InteractionSpec): Record<string, unk
 export function compileInteraction(spec: InteractionSpec): InteractionSpec {
 	const start = initialStartTransition(spec);
 	if (!start) {
-		if (!COMPILED_INITIAL_CONTEXTS.has(spec)) COMPILED_INITIAL_CONTEXTS.set(spec, {});
-		return spec;
+		const normalized = normalizeCommitFromStates(spec);
+		if (!COMPILED_INITIAL_CONTEXTS.has(normalized)) COMPILED_INITIAL_CONTEXTS.set(normalized, {});
+		return normalized;
 	}
-	const compiled = compileInitialState(spec, start);
+	const compiled = normalizeCommitFromStates(compileInitialState(spec, start));
 	COMPILED_INITIAL_CONTEXTS.set(compiled, staticInitialContext(spec, start));
 	return compiled;
 }
@@ -1223,6 +1235,7 @@ export interface SpatialPreviewKernel {
 	): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null;
 	computeBoxPreviewLayout(cornerA: Vec3, cornerB: Vec3, height: number): { readonly position: Vec3; readonly scale: Vec3 };
 	transformPointsForPreviewKind(previewKind: string, params: Record<string, unknown>): (point: Vec3) => Vec3;
+	constrainMovePoint(from: Vec3, to: Vec3, mode: string, cplaneNormal?: Vec3): Vec3;
 	abs(x: number): number;
 	min2(a: number, b: number): number;
 	max2(a: number, b: number): number;
@@ -1437,6 +1450,26 @@ export function collectTargetVertices(topo: TopologyGraph, targets: readonly Sel
 	};
 	for (const t of targets) walk(t.kind, t.id);
 	return out;
+}
+
+/** @emoji 📦 Center of the axis-aligned bounds of all vertices in `targets`. */
+export function selectionTargetsCenter(
+	topo: TopologyGraph,
+	targets: readonly SelectionTarget[],
+	preview: SpatialPreviewKernel,
+): Vec3 | null {
+	const pts: Vec3[] = [];
+	for (const vid of collectTargetVertices(topo, targets)) {
+		const v = topo.vertices[vid];
+		if (v) pts.push(v.position);
+	}
+	const box = preview.aabbFromPoints(pts);
+	if (!box) return null;
+	return [
+		(box.min[0] + box.max[0]) / 2,
+		(box.min[1] + box.max[1]) / 2,
+		(box.min[2] + box.max[2]) / 2,
+	];
 }
 
 function selectionTargetKey(target: SelectionTarget): string {
@@ -1804,6 +1837,49 @@ function builtinActionDefs(): ActionDef[] {
 			return { patch: { set } };
 		},
 	};
+	const commandSelectionBboxCenter: ActionDef = {
+		id: "command.selectionBboxCenter",
+		run: (params, ctx) => {
+			const { preview, topology } = ctx;
+			const bag = ctxOf(params as Record<string, unknown>);
+			const field = typeof params.field === "string" ? params.field : "from";
+			const targets = Array.isArray(bag.targets) ? (bag.targets as SelectionTarget[]) : [];
+			const center = selectionTargetsCenter(topology, targets, preview);
+			if (!center) return {};
+			return { patch: { set: { [field]: center, prevPoint: center, cursor: center } } };
+		},
+	};
+	const commandConstrainMoveCursor: ActionDef = {
+		id: "command.constrainMoveCursor",
+		run: (params, ctx) => {
+			const pr = ctx.preview;
+			const bag = ctxOf(params as Record<string, unknown>);
+			const from = isVec3(bag.from) ? bag.from : null;
+			const raw = isVec3(params.point) ? params.point : null;
+			if (!from || !raw) return {};
+			const mode = typeof bag.moveMode === "string" ? bag.moveMode : "free";
+			const n = isVec3(bag.cplaneNormal) ? bag.cplaneNormal : ([0, 0, 1] as Vec3);
+			const cursor = pr.constrainMovePoint(from, raw, mode, n);
+			return { patch: { set: { cursor } } };
+		},
+	};
+	const commandUndoPick: ActionDef = {
+		id: "command.undoPick",
+		run: (params, ctx) => {
+			const bag = ctxOf(params as Record<string, unknown>);
+			const field = typeof params.field === "string" ? params.field : "points";
+			const clearKeys = Array.isArray(params.clearKeys) ? (params.clearKeys as unknown[]).filter((k) => typeof k === "string") : [];
+			const cur = Array.isArray(bag[field]) ? [...(bag[field] as unknown[])] : [];
+			if (cur.length > 0) cur.pop();
+			const set: Record<string, unknown> = { [field]: cur };
+			const last = cur.length > 0 && isVec3(cur[cur.length - 1]) ? (cur[cur.length - 1] as Vec3) : null;
+			if (last) {
+				set.prevPoint = last;
+				set.cursor = last;
+			}
+			return { patch: { set, del: clearKeys.length > 0 ? clearKeys : undefined } };
+		},
+	};
 	const commandAddSelection: ActionDef = {
 		id: "command.addSelection",
 		run: (params, ctx) => {
@@ -1882,10 +1958,12 @@ function builtinActionDefs(): ActionDef[] {
 			const pr = ctx.preview;
 			const topology = ctx.topology;
 			const from = isVec3(params.from) ? params.from : null;
-			const to = isVec3(params.to) ? params.to : null;
+			const rawTo = isVec3(params.to) ? params.to : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
-			if (!from || !to || targets.length === 0) return {};
-
+			if (!from || !rawTo || targets.length === 0) return {};
+			const mode = typeof params.moveMode === "string" ? params.moveMode : "free";
+			const n = isVec3(params.cplaneNormal) ? params.cplaneNormal : ([0, 0, 1] as Vec3);
+			const to = pr.constrainMovePoint(from, rawTo, mode, n);
 			const delta = pr.vec3Sub(to, from);
 			const vIds = collectTargetVertices(topology, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
@@ -2206,6 +2284,9 @@ function builtinActionDefs(): ActionDef[] {
 		measureFaceArea,
 		measureCellVolume,
 		commandAddPoint,
+		commandSelectionBboxCenter,
+		commandConstrainMoveCursor,
+		commandUndoPick,
 		commandAddSelection,
 		commandFinish,
 		featureTransformMove,
@@ -2861,8 +2942,13 @@ export class InteractionRuntime {
 		this.actions = opts.actions ?? ActionRegistry.withBuiltins();
 	}
 
-	
-	private computeMode(): SpatialComputeMode {
+	/** @emoji 🔌 Precise BREP kernel wired into this runtime (tessellation, commit, derived views). */
+	kernel(): SpatialKernel {
+		return this.opts.kernel;
+	}
+
+	/** @emoji ⚡ `fast` uses `previewKernel`; `precise` uses the BREP kernel for preview math too. */
+	computeMode(): SpatialComputeMode {
 		return this.opts.mode ?? "precise";
 	}
 
@@ -4097,6 +4183,73 @@ if (import.meta.vitest) {
 			expect(edges).toHaveLength(1);
 			expect(edges[0]!.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
 			expect(Object.keys(topo.vertices)).toHaveLength(2);
+		});
+		it("normalizes commit fromStates to committed for scripted commands without ready", () => {
+			const spec = loadSpatialInteraction("curve.line")!;
+			expect(spec.commit.fromStates).toEqual(["committed"]);
+		});
+		it("transform.move vertical mode changes Z only", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const v0 = Object.keys(topo.vertices)[0]!;
+			const p0 = topo.vertices[v0]!.position;
+			class CommandKernel extends BrepjsKernel {
+				readonly id = "command-move-vertical";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return emptyMeshTransfer();
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
+			}
+			const spec = loadSpatialInteraction("transform.move")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
+			await rt.send({ kind: "mode.vertical", modifiers: {} });
+			await rt.send({ kind: "pointer.down", point: [p0[0] + 5, p0[1] + 4, p0[2] + 2], modifiers: {} });
+			expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
+			expect(topo.vertices[v0]!.position).toEqual([p0[0], p0[1], p0[2] + 2]);
+		});
+		it("transform.move confirm without pick uses selection bbox center", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 0, 0], height: 0 }, cellRef("box")));
+			const verts = Object.values(topo.vertices);
+			class CommandKernel extends BrepjsKernel {
+				readonly id = "command-move-center";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return emptyMeshTransfer();
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
+			}
+			const spec = loadSpatialInteraction("transform.move")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({
+				kind: "start",
+				targets: verts.map((v) => ({ kind: "vertex" as const, id: v.id, editable: true })),
+				modifiers: {},
+			});
+			expect(rt.getSnapshot().state).toBe("point_to_move_from");
+			await rt.send({ kind: "confirm", modifiers: {} });
+			const from = rt.getSnapshot().context.from as Vec3;
+			expect(from[0]).toBeCloseTo(1, 5);
+			expect(from[1]).toBeCloseTo(0, 5);
 		});
 		it("auto-finalizes transform.move on terminal pointer down without alreadyCommitted", async () => {
 			const topo = new TopologyGraph();

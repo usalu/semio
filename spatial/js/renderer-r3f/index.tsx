@@ -32,6 +32,7 @@ import {
 	type InteractionRuntimeOptions,
 	type InteractionSnapshot,
 	type AnchorRecord,
+	type CellRef,
 	type CellComplexRecord,
 	type CellRecord,
 	type ClusterRecord,
@@ -143,6 +144,94 @@ export function useTessellation(
 		return () => cancelAnimationFrame(rafRef.current);
 	}, [kernel, cell, tolerance]);
 	return mesh;
+}
+
+/** @emoji 📦 Lists `CellRef` ids present on a topology graph (document cells for tessellation). */
+export function listTopologyCellRefs(topo: TopologyGraph | TopologyGraphJson | null): readonly CellRef[] {
+	if (!topo) return [];
+	const graph = topo instanceof TopologyGraph ? topo : parseTopologyGraphJson(topo);
+	if (!graph) return [];
+	return Object.keys(graph.cells).map((id) => cellRef(id));
+}
+
+/** @emoji 🔑 Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
+export function meshTransferContentKey(mesh: MeshTransfer, fallback = 0): string {
+	const p = mesh.position;
+	if (p.length === 0) return `empty-${fallback}`;
+	const mid = ((p.length / 6) | 0) * 3;
+	return `${p.length}-${p[0]}-${p[mid] ?? 0}-${p[p.length - 1] ?? 0}-${mesh.faceGroups.length}`;
+}
+
+/** @emoji 🎞️ Tessellates every topology cell through `SpatialKernel.tessellate` (worker-backed). */
+export function useDocumentMeshes(
+	kernel: SpatialKernel | null,
+	topology: TopologyGraph,
+	tolerance: number,
+): readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[] {
+	const [meshes, setMeshes] = useState<readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[]>([]);
+	const revision = topology.revision;
+	useEffect(() => {
+		if (!kernel) {
+			setMeshes([]);
+			return;
+		}
+		const cells = listTopologyCellRefs(topology);
+		if (cells.length === 0) {
+			setMeshes([]);
+			return;
+		}
+		let cancelled = false;
+		void (async () => {
+			const rows = await Promise.all(
+				cells.map(async (cell) => {
+					try {
+						const mesh = await kernel.tessellate(cell, tolerance);
+						return { cell, mesh };
+					} catch {
+						return null;
+					}
+				}),
+			);
+			if (!cancelled) setMeshes(rows.filter((row): row is { readonly cell: CellRef; readonly mesh: MeshTransfer } => row !== null));
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [kernel, revision, tolerance]);
+	return meshes;
+}
+
+/** @emoji 📐 Axis-aligned bounds of all mesh positions (for camera auto-fit). */
+export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { readonly center: Vec3; readonly radius: number } | null {
+	if (meshes.length === 0) return null;
+	let minX = Infinity;
+	let minY = Infinity;
+	let minZ = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	let maxZ = -Infinity;
+	for (const mesh of meshes) {
+		const pos = mesh.position;
+		for (let i = 0; i < pos.length; i += 3) {
+			const x = pos[i]!;
+			const y = pos[i + 1]!;
+			const z = pos[i + 2]!;
+			if (x < minX) minX = x;
+			if (y < minY) minY = y;
+			if (z < minZ) minZ = z;
+			if (x > maxX) maxX = x;
+			if (y > maxY) maxY = y;
+			if (z > maxZ) maxZ = z;
+		}
+	}
+	const cx = (minX + maxX) / 2;
+	const cy = (minY + maxY) / 2;
+	const cz = (minZ + maxZ) / 2;
+	const dx = maxX - minX;
+	const dy = maxY - minY;
+	const dz = maxZ - minZ;
+	const radius = Math.sqrt(dx * dx + dy * dy + dz * dz) / 2;
+	return { center: [cx, cy, cz], radius: Math.max(radius, 0.5) };
 }
 // #endregion 🎬WorkerClient
 
@@ -1348,13 +1437,32 @@ function EntityHighlightItem({
 	);
 }
 
-function DisplayItemNode({
-	item,
-	geometry,
-}: {
-	readonly item: DisplayItem;
-	readonly geometry?: SpatialPickGeometry | null;
-}): ReactNode {
+function CurveItem({ item }: { readonly item: DisplayItem }): ReactNode {
+	const points = readVec3Array(item.params?.points);
+	if (points.length < 2) return null;
+	return (
+		<Line
+			raycast={raycastNone}
+			points={points.map((pt) => [pt[0], pt[1], pt[2]])}
+			color="#88eeff"
+			lineWidth={2}
+		/>
+	);
+}
+
+function isMeshTransferLike(v: unknown): v is MeshTransfer {
+	if (!v || typeof v !== "object") return false;
+	const m = v as MeshTransfer;
+	return m.position instanceof Float32Array && m.index instanceof Uint32Array && Array.isArray(m.faceGroups);
+}
+
+function MeshItem({ item }: { readonly item: DisplayItem }): ReactNode {
+	const raw = item.params?.mesh ?? item.params?.transfer;
+	if (!isMeshTransferLike(raw)) return null;
+	return <TessellatedCommitMesh mesh={raw} />;
+}
+
+function defaultDisplayItemNode(item: DisplayItem, geometry?: SpatialPickGeometry | null): ReactNode {
 	switch (item.kind) {
 		case "box-preview":
 			return <BoxPreviewItem item={item} />;
@@ -1370,25 +1478,93 @@ function DisplayItemNode({
 			return <PreviewItem item={item} geometry={geometry} />;
 		case "entity-highlight":
 			return <EntityHighlightItem item={item} geometry={geometry} />;
+		case "curve":
+			return <CurveItem item={item} />;
+		case "mesh":
+			return <MeshItem item={item} />;
 		default:
 			return null;
 	}
 }
 
+// #region 🎨HostCustomization
+/** @emoji 🖼️ Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
+export type SpatialDisplayItemRenderer = (
+	item: DisplayItem,
+	geometry: SpatialPickGeometry | null | undefined,
+	defaultRender: () => ReactNode,
+) => ReactNode;
+
+const spatialDisplayItemRenderers = new Map<string, SpatialDisplayItemRenderer>();
+
+/** @emoji 🖼️ Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
+export function registerSpatialDisplayItemKind(kind: string, render: SpatialDisplayItemRenderer): () => void {
+	spatialDisplayItemRenderers.set(kind, render);
+	return () => spatialDisplayItemRenderers.delete(kind);
+}
+
+/** @emoji 🖼️ Looks up a host-registered display kind renderer. */
+export function getSpatialDisplayItemKindRenderer(kind: string): SpatialDisplayItemRenderer | undefined {
+	return spatialDisplayItemRenderers.get(kind);
+}
+
+function renderDisplayItem(
+	item: DisplayItem,
+	geometry: SpatialPickGeometry | null | undefined,
+	renderItem?: SpatialDisplayItemRenderer,
+): ReactNode {
+	const fallback = () => defaultDisplayItemNode(item, geometry);
+	const custom = renderItem ?? spatialDisplayItemRenderers.get(item.kind);
+	return custom ? custom(item, geometry, fallback) : fallback();
+}
+
+/** @emoji 🪩 Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
+export interface InteractionSpatialViewSlots {
+	readonly beforeScene?: ReactNode;
+	readonly afterDisplay?: ReactNode;
+	readonly afterCommitted?: ReactNode;
+	readonly lights?: ReactNode;
+	readonly environment?: ReactNode;
+}
+
+/** @emoji 🎨 Theme tokens for default scene chrome (hosts override per product). */
+export interface InteractionSpatialViewTheme {
+	readonly background?: string;
+	readonly ambientIntensity?: number;
+	readonly directionalIntensity?: number;
+	readonly directionalPosition?: Vec3;
+	readonly gridDivisions?: number;
+	readonly gridSize?: number;
+	readonly groundPlaneColor?: string;
+	readonly groundPlaneOpacity?: number;
+}
+
+export const defaultInteractionSpatialViewTheme: InteractionSpatialViewTheme = {
+	background: "#080810",
+	ambientIntensity: 0.45,
+	directionalIntensity: 1.1,
+	directionalPosition: [12, 18, 10],
+	gridDivisions: 40,
+	gridSize: 40,
+	groundPlaneColor: "#7a9dff",
+	groundPlaneOpacity: 0.18,
+};
+// #endregion 🎨HostCustomization
+
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
 export function InteractionDisplay({
 	model,
 	geometry,
+	renderItem,
 }: {
 	readonly model: DisplayModel;
 	readonly geometry?: SpatialPickGeometry | null;
+	readonly renderItem?: SpatialDisplayItemRenderer;
 }): ReactNode {
 	return (
 		<group>
 			{model.items.map((item) => (
-				<group key={item.id}>
-					<DisplayItemNode item={item} geometry={geometry} />
-				</group>
+				<group key={item.id}>{renderDisplayItem(item, geometry, renderItem)}</group>
 			))}
 		</group>
 	);
@@ -1413,6 +1589,8 @@ export interface GroundPickPlaneProps {
 	readonly onContextPick?: (point: Vec3) => void;
 	readonly onPointerMove?: (point: Vec3) => void;
 	readonly pointerMoveEnabled?: boolean;
+	readonly planeColor?: string;
+	readonly planeOpacity?: number;
 }
 
 export function GroundPickPlane({
@@ -1422,6 +1600,8 @@ export function GroundPickPlane({
 	onContextPick,
 	onPointerMove,
 	pointerMoveEnabled,
+	planeColor = "#7a9dff",
+	planeOpacity = 0.18,
 }: GroundPickPlaneProps): ReactNode {
 	const moveOn = pointerMoveEnabled ?? Boolean(onPointerMove);
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
@@ -1445,7 +1625,7 @@ export function GroundPickPlane({
 	return (
 		<mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onContextMenu={onContextMenu} onPointerMove={onPointerMoveH}>
 			<planeGeometry args={[120, 120]} />
-			<meshBasicMaterial transparent opacity={0.18} color="#7a9dff" side={THREE.DoubleSide} />
+			<meshBasicMaterial transparent opacity={planeOpacity} color={planeColor} side={THREE.DoubleSide} />
 		</mesh>
 	);
 }
@@ -1966,13 +2146,25 @@ export function SpatialPickGeometryLayer({
 // #endregion 🧲TopologyInteraction
 
 // #region 🧊CommittedMesh
-function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
+/** @emoji 🧊 Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
+export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
 	const geo = new THREE.BufferGeometry();
 	geo.setAttribute("position", new THREE.Float32BufferAttribute(data.position, 3));
 	geo.setAttribute("normal", new THREE.Float32BufferAttribute(data.normal, 3));
 	geo.setIndex(new THREE.BufferAttribute(data.index, 1));
 	for (const g of data.faceGroups) geo.addGroup(g.start, g.count, 0);
 	return geo;
+}
+
+/** @emoji 🎯 Maps a picked triangle index to B-Rep `FaceInfo` via grouped buffer ranges. */
+export function resolveFaceInfoFromTriangleIndex(
+	mesh: MeshTransfer,
+	triangleIndex: number | null | undefined,
+): FaceInfo | null {
+	if (triangleIndex === null || triangleIndex === undefined) return null;
+	const group = findFaceGroupAt(mesh.faceGroups, triangleIndex);
+	if (!group) return null;
+	return mesh.faceInfos.find((info) => info.faceId === group.faceId) ?? null;
 }
 
 /** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
@@ -1990,15 +2182,63 @@ function CommittedEdgeOverlay({ data }: { readonly data: MeshTransfer }): ReactN
 	);
 }
 
-function TessellatedCommitMesh({ mesh: data }: { readonly mesh: MeshTransfer }): ReactNode {
+export interface TessellatedCommitMeshProps {
+	readonly mesh: MeshTransfer;
+	readonly pickable?: boolean;
+	readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+	readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+}
+
+/** @emoji 🧊 Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
+export function TessellatedCommitMesh({
+	mesh: data,
+	pickable = false,
+	onFacePointerMove,
+	onFacePointerDown,
+}: TessellatedCommitMeshProps): ReactNode {
 	const geometry = useMemo(
 		() => buildBufferGeometryFromMeshTransfer(data),
 		[data.position, data.normal, data.index, data.faceGroups],
 	);
 	useEffect(() => () => geometry.dispose(), [geometry]);
+	const faceInfoById = useMemo(() => {
+		const map = new Map<number, FaceInfo>();
+		for (const info of data.faceInfos) map.set(info.faceId, info);
+		return map;
+	}, [data.faceInfos]);
+	const resolveFace = useCallback(
+		(event: ThreeEvent<PointerEvent>) => {
+			const group = findFaceGroupAt(data.faceGroups, event.faceIndex ?? -1);
+			if (!group) return null;
+			return faceInfoById.get(group.faceId) ?? null;
+		},
+		[data.faceGroups, faceInfoById],
+	);
+	const meshRaycast = pickable ? undefined : raycastNone;
 	return (
 		<group>
-			<mesh geometry={geometry} raycast={raycastNone}>
+			<mesh
+				geometry={geometry}
+				raycast={meshRaycast}
+				onPointerMove={
+					pickable && onFacePointerMove
+						? (e) => {
+								const info = resolveFace(e);
+								if (info) onFacePointerMove(info, e);
+							}
+						: undefined
+				}
+				onPointerDown={
+					pickable && onFacePointerDown
+						? (e) => {
+								const info = resolveFace(e);
+								if (!info) return;
+								e.stopPropagation();
+								onFacePointerDown(info, e);
+							}
+						: undefined
+				}
+			>
 				<meshStandardMaterial
 					color={data.color ?? "#9ad1ff"}
 					metalness={0}
@@ -2012,6 +2252,34 @@ function TessellatedCommitMesh({ mesh: data }: { readonly mesh: MeshTransfer }):
 				/>
 			</mesh>
 			{data.edges.length > 0 ? <CommittedEdgeOverlay data={data} /> : null}
+		</group>
+	);
+}
+
+/** @emoji 🧊 Renders all committed document cells tessellated by the active kernel. */
+export function CommittedMeshLayer({
+	meshes,
+	pickable = false,
+	onFacePointerMove,
+	onFacePointerDown,
+}: {
+	readonly meshes: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
+	readonly pickable?: boolean;
+	readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+	readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+}): ReactNode {
+	if (meshes.length === 0) return null;
+	return (
+		<group>
+			{meshes.map((row, i) => (
+				<TessellatedCommitMesh
+					key={`${row.cell}:${meshTransferContentKey(row.mesh, i)}`}
+					mesh={row.mesh}
+					pickable={pickable}
+					onFacePointerMove={onFacePointerMove}
+					onFacePointerDown={onFacePointerDown}
+				/>
+			))}
 		</group>
 	);
 }
@@ -2039,6 +2307,35 @@ export interface InteractionCanvasProps {
 	readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
 	/** @emoji 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
 	readonly frameloop?: "always" | "demand";
+	readonly background?: string;
+	readonly cameraPosition?: Vec3;
+	readonly cameraFov?: number;
+	readonly gl?: React.ComponentProps<typeof Canvas>["gl"];
+}
+
+/** @emoji 🛰️ Frames the camera to fit tessellated document meshes (playground-style auto-fit). */
+export function SpatialAutoFit({
+	meshes,
+	padding = 1.25,
+}: {
+	readonly meshes: readonly MeshTransfer[];
+	readonly padding?: number;
+}): null {
+	const { camera } = useThree();
+	const bounds = useMemo(() => boundsFromMeshTransfers(meshes), [meshes]);
+	const lastKey = useRef("");
+	useEffect(() => {
+		if (!bounds) return;
+		const key = meshes.map((m, i) => meshTransferContentKey(m, i)).join("|");
+		if (key === lastKey.current) return;
+		lastKey.current = key;
+		const [cx, cy, cz] = bounds.center;
+		const dist = Math.max(bounds.radius * padding, 2);
+		camera.position.set(cx + dist, cy + dist, cz + dist * 0.85);
+		camera.lookAt(cx, cy, cz);
+		camera.updateProjectionMatrix();
+	}, [bounds, camera, meshes, padding]);
+	return null;
 }
 
 /** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
@@ -2095,15 +2392,24 @@ function SpatialOrbitControls({
 }
 
 /** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
-export function InteractionCanvas({ children, onCanvasReady, frameloop = "demand" }: InteractionCanvasProps): ReactNode {
+export function InteractionCanvas({
+	children,
+	onCanvasReady,
+	frameloop = "demand",
+	background = defaultInteractionSpatialViewTheme.background,
+	cameraPosition = [10, 10, 8],
+	cameraFov = 45,
+	gl,
+}: InteractionCanvasProps): ReactNode {
 	return (
 		<Canvas
 			frameloop={frameloop}
 			style={{ height: "100%", width: "100%" }}
-			camera={{ up: [0, 0, 1], position: [10, 10, 8], fov: 45 }}
-			onCreated={({ camera, gl }) => onCanvasReady?.({ camera, domElement: gl.domElement })}
+			camera={{ up: [0, 0, 1], position: cameraPosition, fov: cameraFov }}
+			gl={gl}
+			onCreated={({ camera, gl: renderer }) => onCanvasReady?.({ camera, domElement: renderer.domElement })}
 		>
-			<color attach="background" args={["#080810"]} />
+			<color attach="background" args={[background ?? "#080810"]} />
 			{children}
 		</Canvas>
 	);
@@ -2118,12 +2424,14 @@ export interface InteractionSpatialViewProps {
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshTransfer | null;
+	readonly committedMeshes?: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly pickViewKind?: SpatialPickViewKind;
 	readonly derived?: DerivedViewService | null;
 	readonly derivedRevision?: number;
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
+	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
 	readonly selectionAccept?: readonly TopologyEntityKind[];
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	readonly hoverKindToggles?: SpatialPickKindToggles;
@@ -2135,8 +2443,14 @@ export interface InteractionSpatialViewProps {
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
 	readonly onCameraNavigate?: (active: boolean) => void;
+	readonly onCommittedFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+	readonly onCommittedFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 	/** @emoji 🧲 When false, skips pick-target meshes (during active interaction sessions). */
 	readonly showPickLayer?: boolean;
+	readonly committedMeshPickable?: boolean;
+	readonly autoFitMeshes?: boolean;
+	readonly theme?: InteractionSpatialViewTheme;
+	readonly slots?: InteractionSpatialViewSlots;
 }
 
 /** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
@@ -2148,11 +2462,13 @@ export function InteractionSpatialView({
 	onInteractionEvent,
 	pickEnabled = true,
 	committedMesh,
+	committedMeshes,
 	geometry,
 	pickViewKind = "raw",
 	derived,
 	derivedRevision = 0,
 	displayModel,
+	renderDisplayItem,
 	selectionAccept = [],
 	selectionKindToggles = {},
 	hoverKindToggles = {},
@@ -2162,21 +2478,36 @@ export function InteractionSpatialView({
 	selectedTargetKeys,
 	onSelectionRequest,
 	onCameraNavigate,
+	onCommittedFacePointerDown,
+	onCommittedFacePointerMove,
 	showPickLayer = true,
+	committedMeshPickable = false,
+	autoFitMeshes = false,
+	theme = defaultInteractionSpatialViewTheme,
+	slots,
 }: InteractionSpatialViewProps): ReactNode {
 	useEffect(() => {
 		bindScenePreviewKernel(previewKernel);
 	}, [previewKernel]);
 	const hostPickGate = pickEnabled !== false;
+	const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
+	const gridDivisions = resolvedTheme.gridDivisions ?? 40;
+	const gridSize = resolvedTheme.gridSize ?? 40;
 	const gridHelper = useMemo(() => {
-		const g = new THREE.GridHelper(40, 40, 0x3a3a55, 0x1c1c28);
+		const g = new THREE.GridHelper(gridSize, gridDivisions, 0x3a3a55, 0x1c1c28);
 		g.rotation.x = Math.PI / 2;
 		g.position.set(0, 0, 0.002);
 		g.traverse((obj) => {
 			obj.raycast = raycastNone;
 		});
 		return g;
-	}, []);
+	}, [gridDivisions, gridSize]);
+	const layerMeshes = useMemo(() => {
+		if (committedMeshes?.length) return committedMeshes;
+		if (committedMesh) return [{ cell: cellRef("committed"), mesh: committedMesh }];
+		return [];
+	}, [committedMeshes, committedMesh]);
+	const autoFitSources = useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
 	const ctx = snapshot.context;
 	const topologyPreviewTransform = useMemo(
 		() => topologyPreviewTransformFromDisplay(displayModel ?? snapshot.display),
@@ -2214,12 +2545,20 @@ export function InteractionSpatialView({
 		onInteractionEvent?.(event);
 		onScenePointerMove?.(point, event);
 	};
+	const dirPos = resolvedTheme.directionalPosition ?? [12, 18, 10];
 	return (
 		<>
+			{slots?.beforeScene}
 			<InvalidateOnRevision revision={`${snapshot.revision}:${derivedRevision}:${hoveredTargetKey ?? ""}`} />
 			<SpatialInvalidator />
-			<ambientLight intensity={0.45} />
-			<directionalLight position={[12, 18, 10]} intensity={1.1} />
+			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} /> : null}
+			{slots?.environment}
+			{slots?.lights ?? (
+				<>
+					<ambientLight intensity={resolvedTheme.ambientIntensity ?? 0.45} />
+					<directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
+				</>
+			)}
 			<SpatialOrbitControls onCameraNavigate={onCameraNavigate} />
 			<primitive object={gridHelper} />
 			<GroundPickPlane
@@ -2228,6 +2567,8 @@ export function InteractionSpatialView({
 				onContextPick={onGroundContextEvent}
 				onPointerMove={onScenePointerMoveEvent}
 				pointerMoveEnabled={groundMoveOn}
+				planeColor={resolvedTheme.groundPlaneColor}
+				planeOpacity={resolvedTheme.groundPlaneOpacity}
 			/>
 			<TopologyFactoryWireframeLayer geometry={geometry} />
 			{showPickLayer ? (
@@ -2257,8 +2598,19 @@ export function InteractionSpatialView({
 			{zRodMoveOn && origin ? (
 				<VerticalZDragRod origin={origin} enabled={zRodMoveOn} onPointerMove={onScenePointerMoveEvent} />
 			) : null}
-			<InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} />
-			{committedMesh ? <TessellatedCommitMesh mesh={committedMesh} /> : null}
+			<CommittedMeshLayer
+				meshes={layerMeshes}
+				pickable={committedMeshPickable}
+				onFacePointerDown={onCommittedFacePointerDown}
+				onFacePointerMove={onCommittedFacePointerMove}
+			/>
+			<InteractionDisplay
+				geometry={geometry}
+				model={displayModel ?? snapshot.display}
+				renderItem={renderDisplayItem}
+			/>
+			{slots?.afterDisplay}
+			{slots?.afterCommitted}
 		</>
 	);
 }
@@ -2554,6 +2906,11 @@ export interface InteractionReplProps {
 	readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
 	/** @emoji 🔁 When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
 	readonly sessionRestartNonce?: number;
+	readonly viewTheme?: InteractionSpatialViewTheme;
+	readonly viewSlots?: InteractionSpatialViewSlots;
+	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
+	readonly autoFitMeshes?: boolean;
+	readonly tessellationTolerance?: number;
 }
 
 /** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
@@ -2570,8 +2927,15 @@ export function InteractionRepl({
 	asideExtra,
 	archivedBoxLayouts = [],
 	sessionRestartNonce = 0,
+	viewTheme,
+	viewSlots,
+	renderDisplayItem,
+	autoFitMeshes = true,
+	tessellationTolerance,
 }: InteractionReplProps): ReactNode {
 	const snapshot = useInteractionSnapshot(rt);
+	const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
+	const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.topology, tessTolerance);
 	const documentArchivedBoxLayouts = useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
 	const allArchivedBoxLayouts = useMemo(
 		() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts],
@@ -3248,10 +3612,12 @@ export function InteractionRepl({
 						onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
+						committedMeshes={committedMeshes}
 						pickViewKind={pickViewKind}
 						derived={derived}
 						derivedRevision={derivedRevision}
 						displayModel={mergedDisplay}
+						renderDisplayItem={renderDisplayItem}
 						selectionAccept={hostPickingEnabled ? activeSelectionAccept : []}
 						selectionKindToggles={selectionKindToggles}
 						hoverKindToggles={selectionKindToggles}
@@ -3262,6 +3628,9 @@ export function InteractionRepl({
 						showPickLayer={hostPickingEnabled}
 						onSelectionRequest={onSelectionRequest}
 						onCameraNavigate={onCameraNavigate}
+						autoFitMeshes={autoFitMeshes}
+						theme={viewTheme}
+						slots={viewSlots}
 					/>
 				</InteractionCanvas>
 				{dragSelection && dragOverlayRect ? (
@@ -4370,6 +4739,67 @@ if (import.meta.vitest) {
 			expect(findFaceGroupAt(groups, 0)?.faceId).toBe(10);
 			expect(findFaceGroupAt(groups, 3)?.faceId).toBe(20);
 			expect(findFaceGroupAt(groups, 99)).toBeNull();
+		});
+
+		it("resolveFaceInfoFromTriangleIndex maps grouped buffers to FaceInfo", () => {
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [{ start: 0, count: 3, faceId: 42 }],
+				edgeGroups: [],
+				faceInfos: [{ faceId: 42, surfaceType: "plane", area: 1, normal: [0, 0, 1] }],
+				edgeInfos: [],
+			};
+			expect(resolveFaceInfoFromTriangleIndex(mesh, 0)?.faceId).toBe(42);
+			expect(resolveFaceInfoFromTriangleIndex(mesh, null)).toBeNull();
+		});
+
+		it("listTopologyCellRefs returns cell ids from a committed box", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
+			expect(listTopologyCellRefs(topo).map(String)).toEqual(["box-cell"]);
+		});
+
+		it("boundsFromMeshTransfers returns center and radius", () => {
+			const mesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0]),
+				normal: new Float32Array(9),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
+			};
+			const b = boundsFromMeshTransfers([mesh]);
+			expect(b?.center[0]).toBeCloseTo(1);
+			expect(b?.center[1]).toBeCloseTo(1);
+			expect(b?.radius).toBeGreaterThan(0);
+		});
+
+		it("registerSpatialDisplayItemKind registers and unregisters host renderers", () => {
+			const render: SpatialDisplayItemRenderer = (_item, _geo, fallback) => fallback();
+			const off = registerSpatialDisplayItemKind("custom-host", render);
+			expect(getSpatialDisplayItemKindRenderer("custom-host")).toBe(render);
+			off();
+			expect(getSpatialDisplayItemKindRenderer("custom-host")).toBeUndefined();
+		});
+
+		it("meshTransferContentKey changes when buffer length changes", () => {
+			const a: MeshTransfer = {
+				position: new Float32Array([0, 0, 0]),
+				normal: new Float32Array([0, 0, 1]),
+				index: new Uint32Array([0]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
+			};
+			const b: MeshTransfer = { ...a, position: new Float32Array([0, 0, 0, 1, 0, 0]) };
+			expect(meshTransferContentKey(a)).not.toBe(meshTransferContentKey(b));
 		});
 
 		it("buildBufferGeometryFromMeshTransfer disposes geometry on unmount", () => {

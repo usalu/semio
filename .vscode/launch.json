@@ -321,6 +321,39 @@
       }
     },
     {
+      "name": "🛠️dev👤semio🏛️architect🧪test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/architect:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 68
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🏛️architect🦀build",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio/architect:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🏛️architect🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts query wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 69.5
+      }
+    },
+    {
       "name": "🛠️dev👤semio🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",

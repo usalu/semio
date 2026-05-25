@@ -157,6 +157,16 @@
                 ]
               }
             ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
+              }
+            ]
           }
         ]
       },
@@ -196,6 +206,35 @@
             ]
           },
           {
+            "event": "undo.pick",
+            "transitions": [
+              {
+                "target": "start_of_line",
+                "key": "u",
+                "label": "Undo pick",
+                "effects": [
+                  {
+                    "op": "action",
+                    "action": "command.undoPick",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "clearKeys": {
+                        "kind": "const",
+                        "value": [
+                          "start",
+                          "end"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "event": "pointer.down",
             "transitions": [
               {
@@ -226,6 +265,16 @@
                     }
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "event": "cancel",
+            "transitions": [
+              {
+                "target": "idle",
+                "key": "x",
+                "label": "Cancel"
               }
             ]
           }

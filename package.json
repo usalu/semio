@@ -69,7 +69,10 @@
     "cpp:build": "bun nx run workspace:cpp-build --",
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun ./script.ts publish",
-    "purge": "bun ./script.ts purge"
+    "purge": "bun ./script.ts purge",
+    "query:build": "bun nx run @semio/architect:build",
+    "query:test": "bun nx run @semio/architect:test",
+    "query:wasm": "bun ./script.ts query wasm"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",

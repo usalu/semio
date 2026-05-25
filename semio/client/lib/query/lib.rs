@@ -2,7 +2,8 @@
 
 #![allow(clippy::too_many_lines)]
 
-pub use api::{compile, parse, plan, run, QueryResult};
+pub use api::{compile, parse, plan, run};
+pub use executor::QueryResult;
 pub use errors::ArchitectError;
 pub use executor::Executor;
 pub use planner::OpPlan;
@@ -164,10 +165,10 @@ mod parser {
     use super::errors::ArchitectError;
     use nom::branch::alt;
     use nom::bytes::complete::{tag, tag_no_case};
-    use nom::character::complete::{alphanumeric1, char, digit1, multispace0, multispace1};
+    use nom::character::complete::{alphanumeric1, char, digit1, multispace0};
     use nom::combinator::{cut, map, opt, recognize, value};
     use nom::multi::{many0, separated_list0, separated_list1};
-    use nom::sequence::{delimited, pair, preceded, terminated};
+    use nom::sequence::{delimited, pair, preceded};
     use nom::{IResult, Parser};
     use std::collections::BTreeMap;
 
@@ -203,7 +204,12 @@ mod parser {
     }
 
     fn number_lit(input: &str) -> IResult<&str, serde_json::Value> {
-        map(ws(recognize(pair(opt(char('-')), alt((recognize(pair(digit1, tag("."), digit1)), digit1))))), |s: &str| {
+        map(
+            ws(recognize(pair(
+                opt(char('-')),
+                alt((recognize(pair(digit1, pair(tag("."), digit1))), digit1)),
+            ))),
+            |s: &str| {
             if s.contains('.') {
                 serde_json::Value::from(s.parse::<f64>().unwrap_or(0.0))
             } else {
@@ -397,34 +403,29 @@ mod parser {
     }
 
     fn rel_pattern(input: &str) -> IResult<&str, RelPattern> {
-        let (rest, dir) = alt((
-            map(preceded(ws(char('<')), preceded(ws(char('-')), rel_types)), |(types, props)| {
-                (RelDirection::In, types, props)
-            }),
-            map(
-                pair(
-                    rel_types,
-                    opt(preceded(
-                        ws(char('-')),
-                        alt((
-                            map(pair(ws(char('-')), ws(char('>'))), |_| RelDirection::Out),
-                            value(RelDirection::Undirected, ws(char('-'))),
-                            value(RelDirection::Out, ws(char('>'))),
-                        )),
-                    )),
-                ),
-                |(types_props, dir_opt)| {
-                    let (types, props) = types_props;
-                    (dir_opt.unwrap_or(RelDirection::Undirected), types, props)
-                },
-            ),
-        ))(input)?;
+        let (rest, _) = ws(char('-'))(input)?;
+        let (rest, inbound) = opt(ws(char('<')))(rest)?;
+        let (rest, types_props) = rel_types(rest)?;
+        let (rest, outbound) = opt(alt((
+            map(pair(ws(char('-')), ws(char('>'))), |_| ()),
+            map(ws(char('-')), |_| ()),
+            map(ws(char('>')), |_| ()),
+        )))(rest)?;
+        let direction = if inbound.is_some() && outbound.is_some() {
+            RelDirection::Undirected
+        } else if inbound.is_some() {
+            RelDirection::In
+        } else if outbound.is_some() {
+            RelDirection::Out
+        } else {
+            RelDirection::Undirected
+        };
         Ok((
             rest,
             RelPattern {
-                types: dir.1,
-                direction: dir.0,
-                props: dir.2,
+                types: types_props.0,
+                direction,
+                props: types_props.1,
             },
         ))
     }
@@ -584,7 +585,7 @@ mod parser {
 
 //#region 🔖Schema
 mod schema {
-    use super::ast::{NodePattern, RelDirection, RelPattern};
+    use super::ast::{NodePattern, RelPattern};
     use std::collections::BTreeMap;
 
     /// @emoji 🏷️ GraphQL object label in architect patterns.
@@ -966,7 +967,7 @@ mod schema {
         CALL_TARGETS
             .iter()
             .copied()
-            .find(|t| t.path == parts.as_slice())
+            .find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b))
             .ok_or_else(|| format!("unknown CALL target {action_id}"))
     }
 
@@ -1155,7 +1156,7 @@ mod transport {
 mod planner {
     use super::ast::*;
     use super::errors::ArchitectError;
-    use super::schema::{self, CallTarget, Label};
+    use super::schema::{self, Label};
     use super::transport::OpKind;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -1256,8 +1257,7 @@ mod planner {
                     }
                     for pat in &m.patterns {
                         let plan = plan_pattern(pat)?;
-                        let sig = plan.document.clone();
-                        if emitted_patterns.insert(sig) {
+                        if emitted_patterns.insert(plan.document.clone()) {
                             steps.push(Step::GraphQl {
                                 op: OpKind::Query,
                                 document: plan.document,
@@ -1265,18 +1265,17 @@ mod planner {
                                 bind: plan.bind,
                             });
                         }
-                        for (var, count) in &shared {
-                            if *count > 1 && join_vars.insert(var.clone()) {
-                                steps.push(Step::Join {
-                                    on_var: var.clone(),
-                                    key: "id".into(),
-                                });
-                            }
+                    }
+                    for (var, count) in &shared {
+                        if *count > 1 && join_vars.insert(var.clone()) {
+                            steps.push(Step::Join {
+                                on_var: var.clone(),
+                                key: "id".into(),
+                            });
                         }
-                        if let Some(w) = &m.where_expr {
-                            steps.push(Step::Filter { expr: w.clone() });
-                        }
-                        let _anchor = plan.anchor_var;
+                    }
+                    if let Some(w) = &m.where_expr {
+                        steps.push(Step::Filter { expr: w.clone() });
                     }
                 }
                 Clause::With(w) => {
@@ -1382,7 +1381,6 @@ mod planner {
         anchor_var: &str,
         anchor_label: Label,
     ) -> Result<(String, BTreeMap<String, JsonPath>), ArchitectError> {
-        let mut selection = String::new();
         let mut paths: BTreeMap<String, JsonPath> = BTreeMap::new();
         let mut anchor_path = vec![
             PathSeg::Field {
@@ -1489,18 +1487,6 @@ mod planner {
             }
         }
 
-        fn render_fields(label: Label, depth: usize) -> String {
-            let scalars = schema::entity_scalar_fields(label)
-                .iter()
-                .map(|s| format!("  {s}"))
-                .collect::<Vec<_>>()
-                .join("\n");
-            if depth == 0 {
-                return scalars;
-            }
-            String::new()
-        }
-
         let mut body = String::from("query ArchitectMatch {\n  session {\n    stores {\n      edges {\n        node {\n          wip {\n            theKit {\n              kit {\n");
         match anchor_label {
             Label::Design => {
@@ -1534,7 +1520,7 @@ mod planner {
                     if let PatternElement::Rel(rel) = elements[i + 1] {
                         if i + 2 < elements.len() {
                             if let PatternElement::Node(next) = elements[i + 2] {
-                                if let (Ok(from), Ok(to)) = (
+                                if let (Some(from), Some(to)) = (
                                     node.label.as_ref().and_then(|l| Label::parse(l)),
                                     next.label.as_ref().and_then(|l| Label::parse(l)),
                                 ) {
@@ -1555,7 +1541,7 @@ mod planner {
                                                 out.push_str(&format!(
                                                     "                      {} {{ edges {{ node {{ {child_scalars} {} }} }} }}\n",
                                                     edge.field,
-                                                    build_rel_tail(elements, i + 2, to)
+                                                    build_rel_tail(&elements, i + 2, to)
                                                 ));
                                             } else {
                                                 let child_scalars =
@@ -1563,7 +1549,7 @@ mod planner {
                                                 out.push_str(&format!(
                                                     "                      {} {{ {child_scalars} {} }}\n",
                                                     edge.field,
-                                                    build_rel_tail(elements, i + 2, to)
+                                                    build_rel_tail(&elements, i + 2, to)
                                                 ));
                                             }
                                         }
@@ -1618,3 +1604,620 @@ mod planner {
     }
 }
 //#endregion 🔖Planner
+
+//#region 🔖Executor
+mod executor {
+    use super::ast::*;
+    use super::errors::ArchitectError;
+    use super::planner::{JsonPath, OpPlan, PathSeg, Step};
+    use super::schema::{self, Label};
+    use super::transport::{OpKind, Transport};
+    use futures_util::{stream, StreamExt};
+    use serde_json::Value;
+    use std::collections::BTreeMap;
+    use std::pin::Pin;
+
+    pub type Row = BTreeMap<String, Value>;
+
+    /// @emoji 📊 Tabular architect result.
+    #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+    pub struct QueryResult {
+        pub columns: Vec<String>,
+        pub rows: Vec<Value>,
+    }
+
+    /// @emoji ⚙️ Runs `OpPlan` against a `Transport`.
+    pub struct Executor;
+
+    impl Executor {
+        pub async fn run(plan: &OpPlan, transport: &dyn Transport) -> Result<QueryResult, ArchitectError> {
+            let mut env = BindEnv::default();
+            for step in &plan.steps {
+                env.apply(step, transport).await?;
+            }
+            env.finish(plan.return_clause.as_ref())
+        }
+
+        pub async fn run_subscription(
+            plan: &OpPlan,
+            transport: &dyn Transport,
+        ) -> Result<
+            Pin<Box<dyn futures_util::Stream<Item = Result<QueryResult, ArchitectError>> + Send>>,
+            ArchitectError,
+        > {
+            let has_sub = plan.steps.iter().any(|s| matches!(s, Step::Call { op: OpKind::Subscription, .. }));
+            if !has_sub {
+                return Err(ArchitectError::Execute("plan has no subscription CALL".into()));
+            }
+            let mut env = BindEnv::default();
+            for step in &plan.steps {
+                match step {
+                    Step::Call {
+                        op: OpKind::Subscription,
+                        document,
+                        variables,
+                        yield_items,
+                    } => {
+                        let mut sub_stream = transport.subscribe(document, variables.clone()).await?;
+                        let yield_items = yield_items.clone();
+                        let ret = plan.return_clause.clone();
+                        let first = sub_stream
+                            .next()
+                            .await
+                            .ok_or_else(|| ArchitectError::Execute("empty subscription stream".into()))??;
+                        env.rows.clear();
+                        env.ingest_call_yield(&first, &yield_items);
+                        let once = stream::once(async move { env.finish(ret.as_ref()) });
+                        return Ok(Box::pin(once));
+                    }
+                    other => env.apply(other, transport).await?,
+                }
+            }
+            Err(ArchitectError::Execute("subscription step not reached".into()))
+        }
+    }
+
+    #[derive(Default)]
+    struct BindEnv {
+        rows: Vec<Row>,
+    }
+
+    impl BindEnv {
+        async fn apply(&mut self, step: &Step, transport: &dyn Transport) -> Result<(), ArchitectError> {
+            match step {
+                Step::GraphQl {
+                    op,
+                    document,
+                    variables,
+                    bind,
+                } => {
+                    let data = transport.execute(*op, document, variables.clone()).await?;
+                    let expanded = extract_rows(&data, bind)?;
+                    if self.rows.is_empty() {
+                        self.rows = expanded;
+                    } else {
+                        self.rows = cartesian_merge(&self.rows, &expanded);
+                    }
+                }
+                Step::Join { on_var, key } => {
+                    self.rows = join_rows(&self.rows, on_var, key);
+                }
+                Step::Filter { expr } => {
+                    self.rows.retain(|row| eval_bool(expr, row));
+                }
+                Step::Unwind {
+                    source_var,
+                    alias,
+                    where_expr,
+                } => {
+                    let mut next = Vec::new();
+                    for row in &self.rows {
+                        let Some(v) = row.get(source_var) else { continue };
+                        let items = v.as_array().cloned().unwrap_or_else(|| vec![v.clone()]);
+                        for item in items {
+                            let mut r = row.clone();
+                            r.insert(alias.clone(), item);
+                            if let Some(w) = where_expr {
+                                if !eval_bool(w, &r) {
+                                    continue;
+                                }
+                            }
+                            next.push(r);
+                        }
+                    }
+                    self.rows = next;
+                }
+                Step::Project {
+                    projections,
+                    where_expr,
+                } => {
+                    let mut next = Vec::new();
+                    for row in &self.rows {
+                        let mut r = Row::new();
+                        for p in projections {
+                            let v = eval_expr(&p.expr, row)?;
+                            let key = p.alias.clone().unwrap_or_else(|| expr_key(&p.expr));
+                            r.insert(key, v);
+                        }
+                        if let Some(w) = where_expr {
+                            if !eval_bool(w, &r) {
+                                continue;
+                            }
+                        }
+                        next.push(r);
+                    }
+                    self.rows = next;
+                }
+                Step::Order { expr } => {
+                    self.rows.sort_by(|a, b| {
+                        let av = eval_expr(expr, a).ok().map(sort_key);
+                        let bv = eval_expr(expr, b).ok().map(sort_key);
+                        av.cmp(&bv)
+                    });
+                }
+                Step::Limit { n } => {
+                    self.rows.truncate(*n);
+                }
+                Step::Call {
+                    op,
+                    document,
+                    variables,
+                    yield_items,
+                } => {
+                    if *op == OpKind::Subscription {
+                        return Ok(());
+                    }
+                    let data = transport.execute(*op, document, variables.clone()).await?;
+                    self.ingest_call_yield(&data, yield_items);
+                }
+            }
+            Ok(())
+        }
+
+        fn ingest_call_yield(&mut self, data: &Value, yield_items: &[YieldItem]) {
+            let mut row = Row::new();
+            if yield_items.is_empty() {
+                row.insert("result".into(), data.clone());
+            } else {
+                for y in yield_items {
+                    let key = y.alias.clone().unwrap_or_else(|| y.key.clone());
+                    let val = resolve_yield(data, &y.key);
+                    row.insert(key, val);
+                }
+            }
+            self.rows = vec![row];
+        }
+
+        fn finish(&self, ret: Option<&ReturnClause>) -> Result<QueryResult, ArchitectError> {
+            let Some(ret) = ret else {
+                return Ok(QueryResult {
+                    columns: vec![],
+                    rows: self
+                        .rows
+                        .iter()
+                        .map(|r| Value::Object(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect()))
+                        .collect(),
+                });
+            };
+            let mut columns = Vec::new();
+            let mut rows = Vec::new();
+            for row in &self.rows {
+                let mut out = Row::new();
+                for p in &ret.projections {
+                    let v = eval_expr(&p.expr, row)?;
+                    let key = p.alias.clone().unwrap_or_else(|| expr_key(&p.expr));
+                    if !columns.contains(&key) {
+                        columns.push(key.clone());
+                    }
+                    out.insert(key, v);
+                }
+                rows.push(Value::Object(out.into_iter().collect()));
+            }
+            Ok(QueryResult { columns, rows })
+        }
+    }
+
+    fn extract_rows(data: &Value, bind: &super::planner::BindSpec) -> Result<Vec<Row>, ArchitectError> {
+        let root = data.get("data").unwrap_or(data);
+        let anchor_path = bind
+            .paths
+            .get(&bind.anchor_var)
+            .ok_or_else(|| ArchitectError::Execute("bind missing anchor path".into()))?;
+        let anchors = read_path(root, anchor_path);
+        if anchors.is_empty() {
+            return Ok(vec![]);
+        }
+        let mut rows = Vec::new();
+        for anchor in anchors {
+            let mut row = Row::new();
+            row.insert(bind.anchor_var.clone(), anchor.clone());
+            for (var, _path) in &bind.paths {
+                if var == &bind.anchor_var {
+                    continue;
+                }
+                if let Some(v) = row.get(&bind.anchor_var) {
+                    row.insert(var.clone(), v.clone());
+                }
+            }
+            rows.push(row);
+        }
+        Ok(rows)
+    }
+
+    fn read_path(root: &Value, path: &JsonPath) -> Vec<Value> {
+        let mut cur = vec![root.clone()];
+        for seg in &path.segments {
+            let mut next = Vec::new();
+            for v in cur {
+                match seg {
+                    PathSeg::Field { name } => {
+                        if let Some(c) = v.get(name) {
+                            next.push(c.clone());
+                        }
+                    }
+                    PathSeg::ConnectionEdges => {
+                        if let Some(edges) = v.get("edges").and_then(|e| e.as_array()) {
+                            for e in edges {
+                                next.push(e.clone());
+                            }
+                        }
+                    }
+                    PathSeg::ConnectionNode => {
+                        if let Some(node) = v.get("node") {
+                            next.push(node.clone());
+                        }
+                    }
+                    PathSeg::Fragment { name } => {
+                        let _ = name;
+                        next.push(v.clone());
+                    }
+                }
+            }
+            cur = next;
+            if cur.is_empty() {
+                break;
+            }
+        }
+        cur
+    }
+
+    fn join_rows(rows: &[Row], on_var: &str, key: &str) -> Vec<Row> {
+        let mut by_key: BTreeMap<String, Vec<Row>> = BTreeMap::new();
+        for row in rows {
+            let Some(ent) = row.get(on_var) else { continue };
+            let id = ent.get(key).and_then(|v| v.as_str()).unwrap_or("").to_string();
+            by_key.entry(id).or_default().push(row.clone());
+        }
+        let mut out = Vec::new();
+        for group in by_key.values() {
+            if group.len() == 1 {
+                out.push(group[0].clone());
+                continue;
+            }
+            let mut merged = group[0].clone();
+            for other in &group[1..] {
+                for (k, v) in other {
+                    merged.entry(k.clone()).or_insert_with(|| v.clone());
+                }
+            }
+            out.push(merged);
+        }
+        out
+    }
+
+    fn cartesian_merge(left: &[Row], right: &[Row]) -> Vec<Row> {
+        if left.is_empty() {
+            return right.to_vec();
+        }
+        if right.is_empty() {
+            return left.to_vec();
+        }
+        let mut out = Vec::new();
+        for a in left {
+            for b in right {
+                let mut m = a.clone();
+                for (k, v) in b {
+                    m.insert(k.clone(), v.clone());
+                }
+                out.push(m);
+            }
+        }
+        out
+    }
+
+    fn resolve_yield(data: &Value, key: &str) -> Value {
+        let root = data.get("data").unwrap_or(data);
+        let mut cur = root.clone();
+        for part in key.split('.') {
+            cur = cur.get(part).cloned().unwrap_or(Value::Null);
+        }
+        cur
+    }
+
+    fn expr_key(e: &Expr) -> String {
+        match e {
+            Expr::Var { name } => name.clone(),
+            Expr::Field { object, name } => format!("{}.{}", expr_key(object), name),
+            _ => "_".into(),
+        }
+    }
+
+    fn eval_bool(expr: &Expr, row: &Row) -> bool {
+        match eval_expr(expr, row) {
+            Ok(Value::Bool(b)) => b,
+            Ok(Value::Null) => false,
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    fn sort_key(v: Value) -> String {
+        match v {
+            Value::String(s) => s,
+            Value::Number(n) => n.to_string(),
+            other => other.to_string(),
+        }
+    }
+
+    fn eval_expr(expr: &Expr, row: &Row) -> Result<Value, ArchitectError> {
+        Ok(match expr {
+            Expr::Const(v) => v.clone(),
+            Expr::Var { name } => row.get(name).cloned().unwrap_or(Value::Null),
+            Expr::Field { object, name } => {
+                let base = eval_expr(object, row)?;
+                base.get(name).cloned().unwrap_or(Value::Null)
+            }
+            Expr::UnaryNeg(inner) => {
+                let v = eval_expr(inner, row)?;
+                json_num(-json_as_f64(&v)?)
+            }
+            Expr::BinOp { op, left, right } => {
+                let l = eval_expr(left, row)?;
+                let r = eval_expr(right, row)?;
+                match op {
+                    BinOp::Eq => Value::Bool(json_eq(&l, &r)),
+                    BinOp::Ne => Value::Bool(!json_eq(&l, &r)),
+                    BinOp::Lt => Value::Bool(json_as_f64(&l)? < json_as_f64(&r)?),
+                    BinOp::Le => Value::Bool(json_as_f64(&l)? <= json_as_f64(&r)?),
+                    BinOp::Gt => Value::Bool(json_as_f64(&l)? > json_as_f64(&r)?),
+                    BinOp::Ge => Value::Bool(json_as_f64(&l)? >= json_as_f64(&r)?),
+                    BinOp::Add => json_num(json_as_f64(&l)? + json_as_f64(&r)?),
+                    BinOp::Sub => json_num(json_as_f64(&l)? - json_as_f64(&r)?),
+                    BinOp::Mul => json_num(json_as_f64(&l)? * json_as_f64(&r)?),
+                    BinOp::Div => json_num(json_as_f64(&l)? / json_as_f64(&r)?),
+                }
+            }
+            Expr::And(xs) => Value::Bool(xs.iter().all(|x| eval_expr(x, row).ok().and_then(|v| v.as_bool()).unwrap_or(false))),
+            Expr::Or(xs) => Value::Bool(xs.iter().any(|x| eval_expr(x, row).ok().and_then(|v| v.as_bool()).unwrap_or(false))),
+        })
+    }
+
+    fn json_eq(a: &Value, b: &Value) -> bool {
+        match (a, b) {
+            (Value::String(x), Value::String(y)) => x == y,
+            (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+            _ => a == b,
+        }
+    }
+
+    fn json_as_f64(v: &Value) -> Result<f64, ArchitectError> {
+        match v {
+            Value::Number(n) => Ok(n.as_f64().unwrap_or(0.0)),
+            Value::String(s) => s.parse().map_err(|_| ArchitectError::Execute(format!("not numeric: {s}"))),
+            _ => Ok(0.0),
+        }
+    }
+
+    fn json_num(n: f64) -> Value {
+        serde_json::Number::from_f64(n)
+            .map(Value::Number)
+            .unwrap_or(Value::Null)
+    }
+
+}
+//#endregion 🔖Executor
+
+//#region 🔖Api
+mod api {
+    use super::ast::Query;
+    use super::errors::ArchitectError;
+    use super::executor::{Executor, QueryResult};
+    use super::parser::parse_query;
+    use super::planner::{plan_query, OpPlan};
+    use super::transport::Transport;
+    use futures_util::StreamExt;
+
+    /// @emoji 🔍 Parse architect source.
+    pub fn parse(text: &str) -> Result<Query, ArchitectError> {
+        parse_query(text)
+    }
+
+    /// @emoji 🧭 Plan architect AST.
+    pub fn plan(ast: &Query) -> Result<OpPlan, ArchitectError> {
+        plan_query(ast)
+    }
+
+    /// @emoji 📜 Compile to `OpPlan` JSON-friendly plan.
+    pub fn compile(text: &str) -> Result<OpPlan, ArchitectError> {
+        plan(&parse(text)?)
+    }
+
+    /// @emoji ▶️ Parse, plan, and execute end-to-end.
+    pub async fn run(text: &str, transport: &dyn Transport) -> Result<QueryResult, ArchitectError> {
+        let ast = parse(text)?;
+        let plan = plan(&ast)?;
+        if plan.steps.iter().any(|s| {
+            matches!(
+                s,
+                super::planner::Step::Call {
+                    op: super::transport::OpKind::Subscription,
+                    ..
+                }
+            )
+        }) {
+            let mut stream = Executor::run_subscription(&plan, transport).await?;
+            if let Some(first) = stream.next().await {
+                return first;
+            }
+            return Err(ArchitectError::Execute("empty subscription stream".into()));
+        }
+        Executor::run(&plan, transport).await
+    }
+
+}
+//#endregion 🔖Api
+
+#[cfg(target_arch = "wasm32")]
+mod wasm_api {
+    use super::api;
+    use super::transport::{JsTransport, Transport};
+    use wasm_bindgen::prelude::*;
+
+    /// @emoji 🌐 Compile architect query to JSON plan (wasm).
+    #[wasm_bindgen(js_name = architectCompile)]
+    pub fn architect_compile(query: &str) -> Result<JsValue, JsValue> {
+        console_error_panic_hook::set_once();
+        api::compile(query)
+            .map(|p| serde_wasm_bindgen::to_value(&p).unwrap())
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// @emoji 🌐 Run architect query via JS transport callbacks (wasm).
+    #[wasm_bindgen(js_name = architectRun)]
+    pub async fn architect_run(query: &str, execute_fn: js_sys::Function, subscribe_fn: js_sys::Function) -> Result<JsValue, JsValue> {
+        console_error_panic_hook::set_once();
+        let transport = JsTransport::new(execute_fn, subscribe_fn);
+        api::run(query, &transport)
+            .await
+            .map(|r| serde_wasm_bindgen::to_value(&r).unwrap())
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use std::collections::HashMap;
+
+    const EXAMPLE: &str = r#"
+MATCH
+  (pi:Piece) -[:HAS]-> (b:Blueprint) -[:IS]-> (t:Type) -[:HAS]-> (cr:Connector) -[:IS]-> (po:Port {name: ''}),
+  (cr) <-[:REFERENCES] (s:Side) <-[:HAS {parent: true}] (cn:Connection) <-[:HAS] (d:Design {name: 'Nakagin Capsule Tower'})
+RETURN pi
+"#;
+
+    fn fixture_response() -> serde_json::Value {
+        json!({
+          "data": {
+            "session": {
+              "stores": {
+                "edges": [{
+                  "node": {
+                    "wip": {
+                      "theKit": {
+                        "kit": {
+                          "designs": {
+                            "edges": [{
+                              "node": {
+                                "id": "design-1",
+                                "hash": "dh1",
+                                "name": "Nakagin Capsule Tower",
+                                "connections": {
+                                  "edges": [{
+                                    "node": {
+                                      "id": "conn-1",
+                                      "hash": "ch1",
+                                      "name": "c1",
+                                      "parent": {
+                                        "id": "side-1",
+                                        "hash": "sh1",
+                                        "connector": { "id": "cr-1", "hash": "crh1", "name": "C1" }
+                                      }
+                                    }
+                                  }]
+                                }
+                              }
+                            }]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }]
+              }
+            }
+          }
+        })
+    }
+
+    #[test]
+    fn parse_example() {
+        let q = parse(EXAMPLE).expect("parse");
+        assert!(matches!(q.clauses.first(), Some(ast::Clause::Match(_))));
+        assert!(q.return_clause.is_some());
+    }
+
+    #[test]
+    fn plan_example() {
+        let q = parse(EXAMPLE).unwrap();
+        let plan = plan(&q).unwrap();
+        assert!(plan.steps.iter().any(|s| matches!(s, planner::Step::GraphQl { .. })));
+        assert!(plan.steps.iter().any(|s| matches!(s, planner::Step::Join { on_var, .. } if on_var == "cr")));
+    }
+
+    #[tokio::test]
+    async fn run_design_match() {
+        let q = "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name";
+        let compiled = compile(q).unwrap();
+        let doc = compiled
+            .steps
+            .iter()
+            .find_map(|s| match s {
+                planner::Step::GraphQl { document, .. } => Some(document.clone()),
+                _ => None,
+            })
+            .expect("graphql step");
+        let mut responses = HashMap::new();
+        responses.insert(format!("Query:{doc}"), fixture_response());
+        let transport = MemoryTransport::new(responses);
+        let result = run(q, &transport).await.unwrap();
+        assert_eq!(result.columns, vec!["name"]);
+        assert_eq!(result.rows.len(), 1);
+    }
+
+    #[test]
+    fn call_mutation_plan() {
+        let q = parse("CALL session.end() YIELD ok").unwrap();
+        let p = plan(&q).unwrap();
+        assert!(p.steps.iter().any(|s| matches!(
+            s,
+            planner::Step::Call {
+                op: transport::OpKind::Mutation,
+                ..
+            }
+        )));
+    }
+
+    #[tokio::test]
+    async fn call_subscription_run() {
+        let q = "CALL subscription.session() YIELD session.id AS id";
+        let p = compile(q).unwrap();
+        let doc = p
+            .steps
+            .iter()
+            .find_map(|s| match s {
+                planner::Step::Call { document, .. } => Some(document.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let mut responses = HashMap::new();
+        responses.insert(
+            format!("Subscription:{doc}"),
+            json!({ "data": { "session": { "id": "s1", "hash": "h1" } } }),
+        );
+        let transport = MemoryTransport::new(responses);
+        let result = run(q, &transport).await.unwrap();
+        assert!(!result.rows.is_empty());
+    }
+}

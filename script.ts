@@ -776,6 +776,29 @@ export class PublishScript extends Script {
 }
 //#endregion 🔖PublishScript
 
+//#region 🔖QueryScript
+export class QueryScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0] ?? "test";
+    const queryDir = join(this.root, "semio/client/lib/query");
+    if (sub === "build") {
+      runCmd(bun, [join(queryDir, "script.ts"), "build"], { cwd: this.root });
+      return;
+    }
+    if (sub === "wasm") {
+      runCmd(bun, [join(queryDir, "script.ts"), "wasm"], { cwd: this.root });
+      return;
+    }
+    if (sub === "test") {
+      runCmd(bun, [join(queryDir, "script.ts"), "test", ...segments.slice(1)], { cwd: this.root });
+      return;
+    }
+    console.error(`[query] unknown subcommand ${JSON.stringify(sub)}`);
+    process.exit(1);
+  }
+}
+//#endregion 🔖QueryScript
+
 //#region 🔖PurgeScript
 export class PurgeScript extends Script {
   run(segments: string[]): void {
@@ -813,12 +836,13 @@ const registry = new Map<string, Script>([
   ["cpp", new CppScript(WORKSPACE_ROOT)],
   ["publish", new PublishScript(WORKSPACE_ROOT)],
   ["purge", new PurgeScript(WORKSPACE_ROOT)],
+  ["query", new QueryScript(WORKSPACE_ROOT)],
 ]);
 
 async function main(): Promise<void> {
   const segments = process.argv.slice(2);
   if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge> [segments…]");
+    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|cpp|publish|purge|query> [segments…]");
     process.exit(1);
   }
   const verb = segments[0];
