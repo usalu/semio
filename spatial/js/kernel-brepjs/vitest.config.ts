@@ -7,6 +7,7 @@ const coreEntry = resolve(root, "../core/index.ts");
 
 export default defineConfig({
 	root,
+	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
 			"@spatial/js-core": coreEntry,

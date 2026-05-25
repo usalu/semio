@@ -11,6 +11,8 @@ const machineStatelyEntry = resolve(dir, "../../machine-stately/index.ts");
 export default defineConfig({
 	root: dir,
 	publicDir: false,
+	assetsInclude: ["**/*.wasm"],
+	worker: { format: "es" },
 	plugins: [react()],
 	resolve: {
 		alias: {

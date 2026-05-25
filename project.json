@@ -37,18 +37,7 @@
         }
       }
     },
-    "🛠️dev📚storybook": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./script.ts dev storybook",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
-      }
-    },
-    "🛠️dev📚storybook🧱elements": {
+    "dev-storybook-elements": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -59,7 +48,7 @@
         }
       }
     },
-    "🛠️dev📚storybook🧱elements🧩board": {
+    "dev-storybook-elements-board": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -70,7 +59,7 @@
         }
       }
     },
-    "🛠️dev📚storybook🧱elements🖱️ui": {
+    "dev-storybook-elements-ui": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -81,7 +70,7 @@
         }
       }
     },
-    "🛠️dev📚storybook🏘️semio": {
+    "dev-storybook-semio": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -92,7 +81,7 @@
         }
       }
     },
-    "🛠️dev📚storybook🏘️semio🧮algorithms": {
+    "dev-storybook-semio-algorithms": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -103,7 +92,7 @@
         }
       }
     },
-    "🛠️dev📚storybook🏘️semio🖱️ui": {
+    "dev-storybook-semio-ui": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {

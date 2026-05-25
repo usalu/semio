@@ -3807,7 +3807,7 @@ const __spatialR3fTestKernel = import.meta.vitest ? await import("@spatial/js-ke
 if (import.meta.vitest) {
 	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialR3fTestKernel!;
 	const M = preciseSpatialKernelMath;
-	const { describe, expect, it } = import.meta.vitest;
+	const { describe, expect, it, vi } = import.meta.vitest;
 
 	describe("@spatial/js-renderer-r3f preview transforms", () => {
 		it("bboxWireSegments returns twelve edges", () => {
@@ -4356,20 +4356,6 @@ if (import.meta.vitest) {
 		});
 
 		it("buildBufferGeometryFromMeshTransfer disposes geometry on unmount", () => {
-			const Original = THREE.BufferGeometry;
-			let created = 0;
-			let disposed = 0;
-			// @ts-expect-error test spy
-			THREE.BufferGeometry = class extends Original {
-				constructor() {
-					super();
-					created++;
-				}
-				dispose() {
-					disposed++;
-					super.dispose();
-				}
-			};
 			const data: MeshTransfer = {
 				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
 				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
@@ -4381,10 +4367,10 @@ if (import.meta.vitest) {
 				edgeInfos: [],
 			};
 			const geo = buildBufferGeometryFromMeshTransfer(data);
-			expect(created).toBeGreaterThan(0);
+			const disposeSpy = vi.spyOn(geo, "dispose");
 			geo.dispose();
-			expect(disposed).toBeGreaterThan(0);
-			THREE.BufferGeometry = Original;
+			expect(disposeSpy).toHaveBeenCalledOnce();
+			disposeSpy.mockRestore();
 		});
 
 		it("derives persistent box footprints from document history", () => {

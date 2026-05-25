@@ -6,6 +6,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
 	root,
+	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: [
 			{ find: "@spatial/js-core", replacement: resolve(root, "../core/index.ts") },

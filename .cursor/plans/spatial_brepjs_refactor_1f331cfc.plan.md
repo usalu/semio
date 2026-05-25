@@ -16,25 +16,25 @@ todos:
     status: completed
   - id: renderer-mesh
     content: Rewrite TessellatedCommitMesh in renderer-r3f/index.tsx to build BufferGeometry from MeshTransfer (position/normal/index + addGroup per faceGroup, polygonOffset) and dispose on unmount.
-    status: in_progress
+    status: completed
   - id: renderer-edges
     content: Add EdgeOverlay LineSegments from MeshTransfer.edges (replace ad-hoc wireframe).
-    status: pending
+    status: completed
   - id: renderer-pick
     content: Switch topology picking to event.faceIndex + faceGroups binary search; keep raycast=none on visuals; preserve existing camera-perf fixes (demand frameloop, DOM hover, deferred derived refresh).
-    status: pending
+    status: completed
   - id: renderer-worker-hook
     content: Add useTessellation hook that requests through the worker client, debounces via rAF, swaps geometries with proper dispose.
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing vitest blocks (kernel-brepjs, renderer-r3f, core) to cover MeshTransfer, faceGroups mapping, cache invalidation, geometry disposal accounting.
-    status: pending
+    status: completed
   - id: validate
     content: Run nx tests, manual REPL freeze + heap-growth smoke (50x box commit loop, log usedJSHeapSize), strip [DEBUG] logs.
-    status: pending
+    status: completed
   - id: ticket-close
     content: Close ticket via repo MCP with summary + touched files.
-    status: pending
+    status: completed
 isProject: false
 ---
 

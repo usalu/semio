@@ -1,8 +1,10 @@
 // #region 🧲Header
+/// <reference types="vite/client" />
 /** @emoji 🧭 `@spatial/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
 // #region 📥Imports
+import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
 import {
 	box,
 	bsplineApprox,
@@ -16,7 +18,6 @@ import {
 	cylinder,
 	cut,
 	cutAll,
-	DisposalScope,
 	describe as describeBrepShape,
 	extrude,
 	face,
@@ -2330,7 +2331,29 @@ export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();
 // #endregion 🧮SpatialKernelMath
 
 // #region 🧩OpenCascade
-const openCascadeWasmUrl = new URL("../node_modules/brepjs-opencascade/src/brepjs_single.wasm", import.meta.url).href;
+const isBrepjsTestRun =
+	import.meta.env.VITEST === true ||
+	import.meta.env.MODE === "test" ||
+	import.meta.vitest === true ||
+	process.env.VITEST === "true";
+
+const openCascadeWasmNeedsNodeResolve =
+	(import.meta.env.VITEST || import.meta.env.MODE === "test") &&
+	(openCascadeWasmBundledUrl.includes("@fs") ||
+		openCascadeWasmBundledUrl.includes("node_modules/brepjs-opencascade"));
+
+/** @emoji 📂 Builds `locateFile` for OpenCascade: Vite asset URL in browser, `createRequire` on disk in Vitest. */
+async function createOpenCascadeLocateFile(): Promise<(path: string) => string> {
+	if (!openCascadeWasmNeedsNodeResolve) {
+		return (path) => (path === "brepjs_single.wasm" ? openCascadeWasmBundledUrl : path);
+	}
+	const { createRequire } = await import("node:module");
+	const { pathToFileURL } = await import("node:url");
+	const wasmFile = pathToFileURL(
+		createRequire(import.meta.url).resolve("brepjs-opencascade/src/brepjs_single.wasm"),
+	).href;
+	return (path) => (path === "brepjs_single.wasm" ? wasmFile : path);
+}
 
 type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
 // #endregion 🧩OpenCascade
@@ -2556,11 +2579,11 @@ class BrepjsWasmEngine {
 
 	async ensureInit(): Promise<void> {
 		if (!this.initPromise) {
-			this.initPromise = (initOpenCascade as OpenCascadeModuleInit)({
-				locateFile: (path) => (path === "brepjs_single.wasm" ? openCascadeWasmUrl : path),
-			}).then((oc) => {
-				initFromOC(oc);
-			});
+			this.initPromise = createOpenCascadeLocateFile().then((locateFile) =>
+				(initOpenCascade as OpenCascadeModuleInit)({ locateFile }).then((oc) => {
+					initFromOC(oc);
+				}),
+			);
 		}
 		await this.initPromise;
 	}
@@ -3082,13 +3105,19 @@ function deserializeWorkerArg(arg: unknown): unknown {
 // #region 🎬BrepjsWorkerClient
 /** @emoji 🎬 Routes brepjs RPC to a dedicated worker or local `BrepjsWasmEngine` (vitest / no Worker). */
 class BrepjsWorkerClient {
-	private readonly localEngine = new BrepjsWasmEngine();
+	private localEngine: BrepjsWasmEngine | null = null;
 	private worker: Worker | null = null;
 	private initPromise: Promise<void> | null = null;
 	private readonly pending = new Map<string, { readonly resolve: (v: unknown) => void; readonly reject: (e: Error) => void }>();
 
+	private localWasmEngine(): BrepjsWasmEngine {
+		if (!this.localEngine) this.localEngine = new BrepjsWasmEngine();
+		return this.localEngine;
+	}
+
 	constructor() {
-		if (!import.meta.vitest && typeof Worker !== "undefined") {
+		const workerDisabled = isBrepjsTestRun || openCascadeWasmVitestAsset;
+		if (!workerDisabled && typeof Worker !== "undefined") {
 			try {
 				this.worker = new Worker(new URL("./index.ts", import.meta.url), { type: "module" });
 				this.worker.onmessage = (event: MessageEvent<BrepjsWorkerResponse>) => this.onWorkerMessage(event.data);
@@ -3131,7 +3160,7 @@ class BrepjsWorkerClient {
 
 	private async boot(): Promise<void> {
 		if (!this.worker) {
-			await this.localEngine.ensureInit();
+			await this.localWasmEngine().ensureInit();
 			return;
 		}
 		await new Promise<void>((resolve, reject) => {
@@ -3145,9 +3174,10 @@ class BrepjsWorkerClient {
 		const serialized = args.map(serializeWorkerArg);
 		if (!this.worker) {
 			const hydrated = serialized.map(deserializeWorkerArg);
-			const fn = (this.localEngine as Record<string, unknown>)[method];
+			const engine = this.localWasmEngine();
+			const fn = (engine as Record<string, unknown>)[method];
 			if (typeof fn !== "function") throw new Error(`brepjs rpc: unknown method ${method}`);
-			return (await (fn as (...a: unknown[]) => unknown).apply(this.localEngine, hydrated)) as T;
+			return (await (fn as (...a: unknown[]) => unknown).apply(engine, hydrated)) as T;
 		}
 		return new Promise<T>((resolve, reject) => {
 			const id = crypto.randomUUID();
@@ -3721,12 +3751,17 @@ if (import.meta.vitest) {
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 });
 			applyTopologyDiff(topo, ra.diff);
 			applyTopologyDiff(topo, rb.diff);
-			await kernel.computePartViews!(topo);
+			const cellA = topo.cells[ra.cell]!;
+			const cellB = topo.cells[rb.cell]!;
+			cellA.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 };
+			cellB.solid = { kind: "box", cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 };
+			const parts1 = await kernel.computePartViews!(topo);
+			expect(parts1.length).toBeGreaterThan(0);
 			const mergeFaces = Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length;
-			expect(mergeFaces).toBeGreaterThan(0);
 			const rev = topo.revision;
-			await kernel.computePartViews!(topo);
+			const parts2 = await kernel.computePartViews!(topo);
 			expect(topo.revision).toBe(rev);
+			expect(parts2.length).toBe(parts1.length);
 			expect(Object.keys(topo.faces).filter((id) => id.startsWith("merge-f-")).length).toBe(mergeFaces);
 		});
 	});

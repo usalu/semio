@@ -72,7 +72,7 @@
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev📚storybook",
+      "name": "dev:storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook",
@@ -83,6 +83,120 @@
       "presentation": {
         "group": "3_dev",
         "order": 10
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:elements",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:elements",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 20
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:elements:board",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:elements:board",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 30
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:elements:ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:elements:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 40
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:semio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 50
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:semio:algorithms",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio:algorithms",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 60
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "dev:storybook:semio:ui",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio:ui",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 70
       },
       "serverReadyAction": {
         "action": "openExternally",
@@ -103,7 +217,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 20,
+        "order": 80,
         "reveal": "always",
         "panel": "dedicated"
       }
@@ -132,7 +246,7 @@
       },
       "presentation": {
         "group": "3_dev",
-        "order": 30,
+        "order": 90,
         "reveal": "always",
         "panel": "dedicated"
       },
@@ -151,7 +265,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
-        "order": 40
+        "order": 100
       }
     },
     {
@@ -513,7 +627,7 @@
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦build📚storybook",
+      "name": "build:storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:storybook",

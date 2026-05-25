@@ -4286,28 +4286,49 @@ if (import.meta.vitest) {
 		});
 
 		it("runs box workflow with a recording kernel stub (no solid modeling in core)", async () => {
-			class RecordingStubKernel extends BrepjsKernel {
+			const stubMesh: MeshTransfer = {
+				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				index: new Uint32Array([0, 1, 2]),
+				edges: new Float32Array(0),
+				faceGroups: [],
+				edgeGroups: [],
+				faceInfos: [],
+				edgeInfos: [],
+			};
+			class RecordingStubKernel implements SpatialKernel {
 				readonly id = "recording-stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
+				constructor() {
+					Object.assign(this, M);
+				}
 				async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<CellRef> {
 					this.lastBox = input;
 					return cellRef("stub-cell");
+				}
+				async createBoxFromCornersDiff(input: {
+					cornerA: Vec3;
+					cornerB: Vec3;
+					height: number;
+				}): Promise<{ readonly diff: TopologyDiff; readonly cell: CellRef }> {
+					const cell = await this.createBoxFromCorners(input);
+					return { diff: M.boxTopologyDiff(input, cell), cell };
 				}
 				async volume(): Promise<number> {
 					return 0;
 				}
 				async tessellate(): Promise<MeshTransfer> {
-					return {
-						position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-						normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-						index: new Uint32Array([0, 1, 2]),
-						edges: new Float32Array(0),
-						faceGroups: [],
-						edgeGroups: [],
-						faceInfos: [],
-						edgeInfos: [],
-					};
+					return stubMesh;
+				}
+				async computeSurfaceViews(topo: TopologyGraph): Promise<SurfaceView[]> {
+					return computeSurfaceViewsFromTopology(topo);
+				}
+				async computePartViews(topo: TopologyGraph): Promise<PartView[]> {
+					return computePartViewsFromTopology(topo);
+				}
+				async computeVolumeViews(topo: TopologyGraph): Promise<VolumeView[]> {
+					return computeVolumeViewsFromTopology(topo);
 				}
 			}
 			const spec = buildBoxInteractionSpec();
