@@ -2099,6 +2099,11 @@ export function replPaletteRows(cmdLine: string, all: readonly ReplSuggestion[])
 	return replFilterSuggestions(cmdLine, all);
 }
 
+function replInteractionSuggestions(query: string, all: readonly ReplSuggestion[]): ReplSuggestion[] {
+	const xs = query.trim() ? replFilterSuggestions(query, all) : all;
+	return xs.filter((suggestion) => suggestion.kind === "interaction");
+}
+
 function replExactInteractionSuggestion(query: string, all: readonly ReplSuggestion[]): ReplSuggestion | null {
 	const raw = query.trim().toLowerCase();
 	if (!raw) return null;
@@ -2240,6 +2245,7 @@ export function InteractionRepl({
 	const [hoveredPickKey, setHoveredPickKey] = useState<string | null>(null);
 	const [selectedPickKey, setSelectedPickKey] = useState<string | null>(null);
 	const [selectedSelectionTarget, setSelectedSelectionTarget] = useState<SelectionTarget | null>(null);
+	const [interactionMenuOpen, setInteractionMenuOpen] = useState(false);
 	const [spaceExecArmed, setSpaceExecArmed] = useState(false);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
@@ -2252,6 +2258,7 @@ export function InteractionRepl({
 		setCmdLine("");
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
+		setInteractionMenuOpen(false);
 		setSpaceExecArmed(false);
 	}, []);
 
@@ -2444,6 +2451,7 @@ export function InteractionRepl({
 	}, [interactions, transitionRows, onInteractionId, dispatchTransition]);
 
 	const filtered = useMemo(() => replPaletteRows(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
+	const interactionMatches = useMemo(() => replInteractionSuggestions(cmdLine, allSuggestions), [cmdLine, allSuggestions]);
 	const completionSuffix = useMemo(
 		() => replActiveCompletionSuffix(cmdLine, filtered, activeIndex),
 		[cmdLine, filtered, activeIndex],
@@ -2457,6 +2465,7 @@ export function InteractionRepl({
 		s.onRun();
 		setCmdLine("");
 		setActiveIndex(0);
+		setInteractionMenuOpen(false);
 		setSpaceExecArmed(false);
 	}, []);
 
@@ -2517,11 +2526,13 @@ export function InteractionRepl({
 			}
 			if (e.key === "ArrowDown" && filtered.length) {
 				e.preventDefault();
+				setInteractionMenuOpen(false);
 				setActiveIndex((i) => (i + 1) % filtered.length);
 				return;
 			}
 			if (e.key === "ArrowUp" && filtered.length) {
 				e.preventDefault();
+				setInteractionMenuOpen(false);
 				setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length);
 				return;
 			}
@@ -2538,6 +2549,7 @@ export function InteractionRepl({
 			}
 			if (e.key === "Enter") {
 				e.preventDefault();
+				setInteractionMenuOpen(false);
 				if (trySubmitLine()) return;
 				if (filtered.length) runSuggestion(filtered[activeIndex]!);
 				return;
@@ -2764,6 +2776,7 @@ export function InteractionRepl({
 						value={cmdLine}
 						onChange={(e) => {
 							setCmdLine(e.target.value);
+							if (interactionMenuOpen) setInteractionMenuOpen(true);
 							setSpaceExecArmed(false);
 						}}
 						onKeyDown={onInputKeyDown}
@@ -2772,7 +2785,7 @@ export function InteractionRepl({
 							gridArea: "1 / 1",
 							width: "100%",
 							boxSizing: "border-box",
-							padding: "8px 9px",
+							padding: "8px 34px 8px 9px",
 							borderRadius: 6,
 							background: "transparent",
 							color: "#e8e8f0",
@@ -2783,6 +2796,34 @@ export function InteractionRepl({
 							lineHeight: "normal",
 						}}
 					/>
+					<button
+						type="button"
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={() => {
+							setInteractionMenuOpen((open) => !open);
+							cmdRef.current?.focus();
+						}}
+						aria-label="Show matching interactions"
+						style={{
+							gridArea: "1 / 1",
+							justifySelf: "end",
+							alignSelf: "center",
+							marginRight: 6,
+							width: 22,
+							height: 22,
+							borderRadius: 4,
+							border: "1px solid #2e3a52",
+							background: interactionMenuOpen ? "#1f3656" : "#141420",
+							color: "#e8e8f0",
+							cursor: "pointer",
+							fontSize: 11,
+							lineHeight: "20px",
+							padding: 0,
+							zIndex: 1,
+						}}
+					>
+						v
+					</button>
 					{completionSuffix ? (
 						<div
 							aria-hidden
@@ -2790,7 +2831,7 @@ export function InteractionRepl({
 								gridArea: "1 / 1",
 								pointerEvents: "none",
 								boxSizing: "border-box",
-								padding: "8px 9px",
+								padding: "8px 34px 8px 9px",
 								fontSize: 13,
 								fontFamily: "inherit",
 								lineHeight: "normal",
@@ -2801,6 +2842,52 @@ export function InteractionRepl({
 						>
 							<span style={{ color: "transparent" }}>{cmdLine}</span>
 							<span style={{ opacity: 0.45 }}>{completionSuffix}</span>
+						</div>
+					) : null}
+					{interactionMenuOpen ? (
+						<div
+							onPointerDown={(e) => e.stopPropagation()}
+							style={{
+								position: "absolute",
+								top: "calc(100% + 6px)",
+								left: 0,
+								right: 0,
+								maxHeight: 220,
+								overflowY: "auto",
+								background: "#10101a",
+								border: "1px solid #4c5a78",
+								borderRadius: 7,
+								boxShadow: "0 10px 28px rgba(0,0,0,0.55)",
+								zIndex: 3,
+								padding: 4,
+							}}
+						>
+							{interactionMatches.length ? (
+								interactionMatches.map((suggestion) => (
+									<button
+										key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`}
+										type="button"
+										onClick={() => runSuggestion(suggestion)}
+										style={{
+											display: "block",
+											width: "100%",
+											border: "none",
+											borderRadius: 5,
+											padding: "6px 7px",
+											textAlign: "left",
+											background: "transparent",
+											color: "#e8e8f0",
+											cursor: "pointer",
+											fontSize: 12,
+										}}
+									>
+										<span style={{ textDecoration: "underline", fontWeight: 700 }}>{suggestion.key}</span> {suggestion.label}
+										<div style={{ fontSize: 11, opacity: 0.7 }}>{suggestion.detail}</div>
+									</button>
+								))
+							) : (
+								<div style={{ padding: "6px 7px", fontSize: 12, opacity: 0.7 }}>No matching interactions.</div>
+							)}
 						</div>
 					) : null}
 				</div>
@@ -3310,6 +3397,8 @@ if (import.meta.vitest) {
 			expect(replCompletionSuffix("bo", all[1])).toBe("x");
 			expect(replActiveCompletionSuffix("b", replPaletteRows("b", all), 0)).toBe("ox");
 			expect(replActiveCompletionSuffix("bo", replPaletteRows("bo", all), 0)).toBe("x");
+			expect(replInteractionSuggestions("", all).map((s) => s.key)).toEqual(["m", "b"]);
+			expect(replInteractionSuggestions("bo", all).map((s) => s.key)).toEqual(["b"]);
 			expect(replAutocompleteInteractionOnSpace("Box", all, true)?.detail).toBe("primitive.box");
 			expect(replAutocompleteInteractionOnSpace("primitive.box", all, true)?.detail).toBe("primitive.box");
 			expect(replAutocompleteInteractionOnSpace("confirm", all, true)).toBeNull();

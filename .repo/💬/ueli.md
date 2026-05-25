@@ -2557,7 +2557,8 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
-spatial:
+---
+
 Introduce new editable geometry entity: Anchor
 
 Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
@@ -2610,6 +2611,16 @@ Make sure that when something is clicked where multiple elements can be selected
 ---
 
 The current json schema is not statically typed. Make sure that keys never are dynamic.
+
+---
+
+Make sure no math is inside the core.
+Everything must be possible exclusively with the kernel (add it to a general interface).
+Make sure the brepjs kernel implements this interface.
+Additionally the renderer interface also implements a subset of operations (optimized for speed in trade for precision).
+Add an option: Fast|Precise to the play.
+When fast is selected everything that is possible is computed by the renderer. Only committed geometry always goes to the kernel.
+When precise is enabled, everything is computed by the kernel and the renderer is only displaying.
 
 ---
 

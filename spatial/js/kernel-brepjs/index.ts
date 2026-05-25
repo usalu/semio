@@ -7,6 +7,8 @@ import { box, checkInterference, cone, cylinder, cut, initFromOC, intersect, mea
 import type { ValidSolid } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
+	aabbCornerPoints,
+	aabbIntersect,
 	boxTopologyDiff,
 	cellRef,
 	computePartViewsFromTopology,
@@ -48,18 +50,22 @@ const openCascadeWasmUrl = new URL("../node_modules/brepjs-opencascade/src/brepj
 type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
 // #endregion 🧩OpenCascade
 
-function brepSolidRegionPoints(solid: ValidSolid, tolerance = 1e-2): readonly Vec3[] {
-	const m = unwrap(mesh(solid, { tolerance }));
-	const out: Vec3[] = [];
-	const seen = new Set<string>();
-	for (let i = 0; i < m.vertices.length; i += 3) {
-		const p: Vec3 = [m.vertices[i]!, m.vertices[i + 1]!, m.vertices[i + 2]!];
-		const k = p.join(",");
-		if (seen.has(k)) continue;
-		seen.add(k);
-		out.push(p);
+function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], tolerance = 1e-2): readonly Vec3[] {
+	try {
+		const m = unwrap(mesh(solid, { tolerance }));
+		const out: Vec3[] = [];
+		const seen = new Set<string>();
+		for (let i = 0; i < m.vertices.length; i += 3) {
+			const p: Vec3 = [m.vertices[i]!, m.vertices[i + 1]!, m.vertices[i + 2]!];
+			const k = p.join(",");
+			if (seen.has(k)) continue;
+			seen.add(k);
+			out.push(p);
+		}
+		return out.length ? out : (fallback ?? []);
+	} catch {
+		return fallback ?? [];
 	}
-	return out;
 }
 
 // #region 🔌BrepjsKernel
@@ -215,12 +221,18 @@ export class BrepjsKernel implements KernelAdapter {
 				const inter = unwrap(intersect(sa, sb));
 				const vol = unwrap(measureVolume(inter));
 				if (vol <= volEps) continue;
+				const cellA = topo.cells[a];
+				const cellB = topo.cells[b];
+				const aabbA = cellA ? topologyCellAabb(topo, cellA) : null;
+				const aabbB = cellB ? topologyCellAabb(topo, cellB) : null;
+				const interAabb = aabbA && aabbB ? aabbIntersect(aabbA, aabbB) : null;
+				const fallback = interAabb ? aabbCornerPoints(interAabb.min, interAabb.max) : undefined;
 				parts.push({
 					id: `part-intersection-${a}-${b}` as PartRef,
 					sourceCellIds: [a, b],
 					overlap: "intersection",
 					volume: vol,
-					regionPoints: brepSolidRegionPoints(inter),
+					regionPoints: brepSolidRegionPoints(inter, fallback),
 				});
 			}
 		}
@@ -238,13 +250,16 @@ export class BrepjsKernel implements KernelAdapter {
 				subtracted = true;
 				remaining = next;
 			}
+			const cellRec = topo.cells[cid];
+			const cellAabb = cellRec ? topologyCellAabb(topo, cellRec) : null;
+			const cellCorners = cellAabb ? aabbCornerPoints(cellAabb.min, cellAabb.max) : undefined;
 			if (!subtracted) {
 				parts.push({
 					id: `part-${cid}-none` as PartRef,
 					sourceCellIds: [cid],
 					overlap: "none",
 					volume: unwrap(measureVolume(remaining)),
-					regionPoints: brepSolidRegionPoints(remaining),
+					regionPoints: brepSolidRegionPoints(remaining, cellCorners),
 				});
 				continue;
 			}
@@ -255,7 +270,7 @@ export class BrepjsKernel implements KernelAdapter {
 					sourceCellIds: [cid],
 					overlap: "difference",
 					volume: diffVol,
-					regionPoints: brepSolidRegionPoints(remaining),
+					regionPoints: brepSolidRegionPoints(remaining, cellCorners),
 				});
 			}
 		}

@@ -2867,7 +2867,8 @@ export function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
 	];
 }
 
-function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
+/** @emoji 📐 Overlap of two axis-aligned bounds (or `null`). */
+export function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
 	const min: Vec3 = [Math.max(a.min[0], b.min[0]), Math.max(a.min[1], b.min[1]), Math.max(a.min[2], b.min[2])];
 	const max: Vec3 = [Math.min(a.max[0], b.max[0]), Math.min(a.max[1], b.max[1]), Math.min(a.max[2], b.max[2])];
 	if (min[0] >= max[0] || min[1] >= max[1] || min[2] >= max[2]) return null;
@@ -3124,8 +3125,33 @@ export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceVie
 export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 	const cellIds = Object.keys(topo.cells) as CellRef[];
 	const aabbs = derivedCellAabbMap(topo);
+	const faceToCells = derivedFaceToCells(topo);
 	const volEps = 1e-6;
 	const parts: PartView[] = [];
+	const contactPairs = new Set<string>();
+	for (const [faceId, ownerIds] of faceToCells) {
+		if (ownerIds.length < 2) continue;
+		const face = topo.faces[faceId];
+		const regionPoints = face ? derivedFacePoints(topo, face) : [];
+		const contactVol = face ? derivedPolygonArea(regionPoints) : 0;
+		for (let i = 0; i < ownerIds.length; i++) {
+			for (let j = i + 1; j < ownerIds.length; j++) {
+				const a = ownerIds[i]! as CellRef;
+				const b = ownerIds[j]! as CellRef;
+				const pairKey = [a, b].sort().join("|");
+				if (contactPairs.has(pairKey)) continue;
+				contactPairs.add(pairKey);
+				if (parts.some((p) => p.overlap === "intersection" && p.sourceCellIds.includes(a) && p.sourceCellIds.includes(b))) continue;
+				parts.push({
+					id: `part-intersection-${a}-${b}` as PartRef,
+					sourceCellIds: [a, b],
+					overlap: "intersection",
+					volume: contactVol,
+					regionPoints: regionPoints.length ? regionPoints : undefined,
+				});
+			}
+		}
+	}
 	for (let i = 0; i < cellIds.length; i++) {
 		for (let j = i + 1; j < cellIds.length; j++) {
 			const a = cellIds[i]!;
@@ -3137,6 +3163,11 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			if (!inter) continue;
 			const vol = aabbVolume(inter);
 			if (vol <= volEps) continue;
+			const pairKey = [a, b].sort().join("|");
+			const existing = parts.find(
+				(p) => p.overlap === "intersection" && p.sourceCellIds.includes(a) && p.sourceCellIds.includes(b),
+			);
+			if (existing) continue;
 			parts.push({
 				id: `part-intersection-${a}-${b}` as PartRef,
 				sourceCellIds: [a, b],
@@ -3144,15 +3175,17 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 				volume: vol,
 				regionPoints: aabbCornerPoints(inter.min, inter.max),
 			});
+			contactPairs.add(pairKey);
 		}
 	}
+	const cellsWithIntersection = new Set(parts.flatMap((p) => p.sourceCellIds.map(String)));
 	for (const cid of cellIds) {
 		const box = aabbs.get(cid);
 		if (!box) {
 			parts.push({
-				id: `part-${cid}-none` as PartRef,
+				id: (cellsWithIntersection.has(cid) ? `part-${cid}-difference` : `part-${cid}-none`) as PartRef,
 				sourceCellIds: [cid],
-				overlap: "none",
+				overlap: cellsWithIntersection.has(cid) ? "difference" : "none",
 				volume: 0,
 			});
 			continue;
@@ -3166,13 +3199,22 @@ export function computePartViewsFromTopology(topo: TopologyGraph): PartView[] {
 			if (inter && aabbVolume(inter) > volEps) cutters.push(other);
 		}
 		if (cutters.length === 0) {
-			parts.push({
-				id: `part-${cid}-none` as PartRef,
-				sourceCellIds: [cid],
-				overlap: "none",
-				volume: aabbVolume(box),
-				regionPoints: aabbCornerPoints(box.min, box.max),
-			});
+			if (!cellsWithIntersection.has(cid)) {
+				parts.push({
+					id: `part-${cid}-none` as PartRef,
+					sourceCellIds: [cid],
+					overlap: "none",
+					volume: aabbVolume(box),
+					regionPoints: aabbCornerPoints(box.min, box.max),
+				});
+			} else {
+				parts.push({
+					id: `part-${cid}-difference` as PartRef,
+					sourceCellIds: [cid],
+					overlap: "difference",
+					volume: 0,
+				});
+			}
 			continue;
 		}
 		let remainingVol = aabbVolume(box);
@@ -4493,6 +4535,31 @@ if (import.meta.vitest) {
 			const parts = computePartViewsFromTopology(topo);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
 			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
+		});
+
+		it("splits overlapping box faces into external and internal surface patches", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const surfaces = computeSurfaceViewsFromTopology(topo);
+			expect(surfaces.some((s) => s.exposure === "internal")).toBe(true);
+			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
+			const internal = surfaces.filter((s) => s.exposure === "internal");
+			expect(internal.every((s) => (s.regionPoints?.length ?? 0) >= 4)).toBe(true);
+			const topInternal = internal.find((s) => s.regionPoints?.every((p) => Math.abs(p[2] - 2) < 1e-5));
+			expect(topInternal).toBeDefined();
+			const xs = topInternal!.regionPoints!.map((p) => p[0]);
+			expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(1, 4);
+		});
+
+		it("partitions overlapping box cells by intersection volume", () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const parts = computePartViewsFromTopology(topo);
+			const inter = parts.find((p) => p.overlap === "intersection");
+			expect(inter?.volume).toBeCloseTo(2, 4);
+			expect(parts.filter((p) => p.overlap === "difference").length).toBe(2);
 		});
 	});
 
