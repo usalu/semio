@@ -2,7 +2,7 @@
   "schema": "spatial.interaction/v1",
   "id": "feature.extrudeWire",
   "version": "1.0.0",
-  "label": "Extrude Wire",
+  "label": "ExtrudeWire",
   "key": "e",
   "interaction": {
     "spatialGroundPick": false,

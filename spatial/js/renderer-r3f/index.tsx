@@ -344,14 +344,26 @@ export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
 
+export type SurfaceExposure = "external" | "internal";
+export type SurfaceStance = "horizontal" | "vertical";
+export type PartOverlap = "none" | "difference" | "intersection";
+
 export interface SpatialPickTarget {
 	readonly kind: SpatialPickTargetKind;
 	readonly id: string;
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
 	readonly derivedFrom?: readonly { readonly kind: "face" | "cell"; readonly id: string }[];
-	readonly exposure?: "external" | "internal";
-	readonly overlap?: "none" | "difference" | "intersection";
+	readonly exposure?: SurfaceExposure;
+	readonly stance?: SurfaceStance;
+	readonly overlap?: PartOverlap;
+}
+
+/** @emoji 🪞 Visibility toggles for analytic surface/part sub-classification in play. */
+export interface SpatialAnalyticToggles {
+	readonly exposure?: Partial<Record<SurfaceExposure, boolean>>;
+	readonly stance?: Partial<Record<SurfaceStance, boolean>>;
+	readonly overlap?: Partial<Record<PartOverlap, boolean>>;
 }
 
 export interface SpatialSelectionRequest {
@@ -373,6 +385,38 @@ function spatialSelectionTargetKey(target: SelectionTarget): string {
 
 function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, boolean> {
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
+}
+
+function defaultSpatialAnalyticToggles(): Required<{
+	exposure: Record<SurfaceExposure, boolean>;
+	stance: Record<SurfaceStance, boolean>;
+	overlap: Record<PartOverlap, boolean>;
+}> {
+	return {
+		exposure: { external: true, internal: true },
+		stance: { horizontal: true, vertical: true },
+		overlap: { none: true, difference: true, intersection: true },
+	};
+}
+
+/** @emoji 🪞 Whether an analytic target passes exposure / stance / overlap toggles. */
+export function spatialPickTargetMatchesAnalyticToggles(
+	target: SpatialPickTarget,
+	toggles: SpatialAnalyticToggles = {},
+): boolean {
+	if (target.kind === "surface") {
+		if (target.exposure && toggles.exposure?.[target.exposure] === false) return false;
+		if (target.stance && toggles.stance?.[target.stance] === false) return false;
+	}
+	if (target.kind === "part" && target.overlap && toggles.overlap?.[target.overlap] === false) return false;
+	return true;
+}
+
+export function filterSpatialPickTargetsAnalytic(
+	targets: readonly SpatialPickTarget[],
+	toggles: SpatialAnalyticToggles = {},
+): SpatialPickTarget[] {
+	return targets.filter((target) => spatialPickTargetMatchesAnalyticToggles(target, toggles));
 }
 
 function spatialPickViewKinds(viewKind: SpatialPickViewKind): readonly SpatialPickTargetKind[] {
@@ -681,6 +725,7 @@ function createAnalyticSpatialPickTargets(
 			points: merged.length ? merged : undefined,
 			derivedFrom: surface.sourceFaceIds.map((id) => ({ kind: "face" as const, id })),
 			exposure: surface.exposure,
+			stance: surface.stance,
 		});
 	}
 	for (const part of derived.computeParts(topo)) {
@@ -1471,30 +1516,38 @@ function spatialPickTargetsFromRay(
 	targets: readonly SpatialPickTarget[],
 	selectionAccept: readonly TopologyEntityKind[],
 	kindToggles: SpatialPickKindToggles,
+	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget[] {
-	return filterSpatialPickTargets(targets, selectionAccept, kindToggles)
+	return filterSpatialPickTargetsAnalytic(filterSpatialPickTargets(targets, selectionAccept, kindToggles), analyticToggles)
 		.map((target) => ({ target, score: targetRayScore(ray, target) }))
 		.filter((hit): hit is { readonly target: SpatialPickTarget; readonly score: number } => hit.score !== null)
 		.sort((a, b) => a.score - b.score)
 		.map((hit) => hit.target);
 }
 
+function surfaceSemanticStyle(exposure: SurfaceExposure, stance: SurfaceStance): { color: string; emissive: string } {
+	if (exposure === "external" && stance === "horizontal") return { color: "#e8c46a", emissive: "#5a4800" };
+	if (exposure === "external" && stance === "vertical") return { color: "#ffb347", emissive: "#6a3a00" };
+	if (exposure === "internal" && stance === "horizontal") return { color: "#44ddff", emissive: "#0a4a60" };
+	return { color: "#7a9cff", emissive: "#1a3066" };
+}
+
+function partSemanticStyle(overlap: PartOverlap): { color: string; emissive: string } {
+	if (overlap === "intersection") return { color: "#ff66cc", emissive: "#660033" };
+	if (overlap === "difference") return { color: "#ff9944", emissive: "#663300" };
+	return { color: "#66e878", emissive: "#1a4a22" };
+}
+
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
 	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.34, lineWidth: 9 };
 	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.28, lineWidth: 8 };
-	if (target.kind === "surface") {
-		const internal = target.exposure === "internal";
-		return {
-			color: internal ? "#66bbff" : "#e8c46a",
-			emissive: internal ? "#204060" : "#5a4000",
-			opacity: internal ? 0.38 : 0.32,
-			lineWidth: 7,
-		};
+	if (target.kind === "surface" && target.exposure && target.stance) {
+		const base = surfaceSemanticStyle(target.exposure, target.stance);
+		return { ...base, opacity: target.exposure === "internal" ? 0.4 : 0.34, lineWidth: 7 };
 	}
-	if (target.kind === "part") {
-		if (target.overlap === "intersection") return { color: "#ff66cc", emissive: "#660033", opacity: 0.42, lineWidth: 8 };
-		if (target.overlap === "difference") return { color: "#ff9944", emissive: "#663300", opacity: 0.38, lineWidth: 8 };
-		return { color: "#88dd88", emissive: "#204420", opacity: 0.34, lineWidth: 7 };
+	if (target.kind === "part" && target.overlap) {
+		const base = partSemanticStyle(target.overlap);
+		return { ...base, opacity: target.overlap === "intersection" ? 0.42 : 0.36, lineWidth: 8 };
 	}
 	if (target.kind === "anchor") return { color: "#9cffc8", emissive: "#1e4d35", opacity: 1, lineWidth: 5 };
 	if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
@@ -1518,16 +1571,18 @@ function SpatialSelectionRayCatcher({
 	targets,
 	selectionAccept,
 	selectionKindToggles,
+	analyticToggles = {},
 	onSelectionRequest,
 }: {
 	readonly targets: readonly SpatialPickTarget[];
 	readonly selectionAccept: readonly TopologyEntityKind[];
 	readonly selectionKindToggles: SpatialPickKindToggles;
+	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
 }): ReactNode {
 	if (selectionAccept.length === 0 || !onSelectionRequest) return null;
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles);
+		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
 		if (candidates.length === 0) return;
 		e.stopPropagation();
 		const native = e.nativeEvent;
@@ -1558,6 +1613,7 @@ function SpatialPickTargetNode({
 	selectionAccept,
 	selectionKindToggles,
 	hoverKindToggles,
+	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 }: {
@@ -1572,6 +1628,7 @@ function SpatialPickTargetNode({
 	readonly selectionAccept: readonly TopologyEntityKind[];
 	readonly selectionKindToggles: SpatialPickKindToggles;
 	readonly hoverKindToggles: SpatialPickKindToggles;
+	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 }): ReactNode {
@@ -1588,7 +1645,7 @@ function SpatialPickTargetNode({
 	};
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
 		e.stopPropagation();
-		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles);
+		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
 		if (selectionAccept.length > 0 && candidates.length > 0 && onSelectionRequest) {
 			const native = e.nativeEvent;
 			onSelectionRequest({
@@ -1602,7 +1659,9 @@ function SpatialPickTargetNode({
 		emit("pointer.down", e);
 	};
 	const onPointerMoveH = (e: ThreeEvent<PointerEvent>) => {
-		onHoverTarget?.(hoverKindToggles[target.kind] !== false ? target : null);
+		const hoverOn =
+			hoverKindToggles[target.kind] !== false && spatialPickTargetMatchesAnalyticToggles(target, analyticToggles);
+		onHoverTarget?.(hoverOn ? target : null);
 		if (!pointerMoveEnabled) return;
 		emit("pointer.move", e);
 	};
@@ -1704,6 +1763,7 @@ export function SpatialPickGeometryLayer({
 	selectionAccept = [],
 	selectionKindToggles = {},
 	hoverKindToggles = {},
+	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 }: {
@@ -1720,6 +1780,7 @@ export function SpatialPickGeometryLayer({
 	readonly selectionAccept?: readonly TopologyEntityKind[];
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	readonly hoverKindToggles?: SpatialPickKindToggles;
+	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 }): ReactNode {
@@ -1729,16 +1790,17 @@ export function SpatialPickGeometryLayer({
 			: 0;
 	const targets = useMemo(() => createSpatialPickTargets(geometry, derived), [geometry, topoRevision, derived, derivedRevision]);
 	const viewTargets = useMemo(() => filterSpatialPickTargetsByView(targets, viewKind), [targets, viewKind]);
-	const enabledTargets = useMemo(
-		() => filterSpatialPickTargetsForAnyToggle(viewTargets, selectionKindToggles, hoverKindToggles),
-		[viewTargets, selectionKindToggles, hoverKindToggles],
-	);
+	const enabledTargets = useMemo(() => {
+		const kindVisible = filterSpatialPickTargetsForAnyToggle(viewTargets, selectionKindToggles, hoverKindToggles);
+		return filterSpatialPickTargetsAnalytic(kindVisible, analyticToggles);
+	}, [viewTargets, selectionKindToggles, hoverKindToggles, analyticToggles]);
 	return (
 		<group>
 			<SpatialSelectionRayCatcher
 				targets={enabledTargets}
 				selectionAccept={selectionAccept}
 				selectionKindToggles={selectionKindToggles}
+				analyticToggles={analyticToggles}
 				onSelectionRequest={onSelectionRequest}
 			/>
 			{enabledTargets.map((target) => (
@@ -1755,6 +1817,7 @@ export function SpatialPickGeometryLayer({
 					selectionAccept={selectionAccept}
 					selectionKindToggles={selectionKindToggles}
 					hoverKindToggles={hoverKindToggles}
+					analyticToggles={analyticToggles}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
 				/>
@@ -1833,6 +1896,7 @@ export interface InteractionSpatialViewProps {
 	readonly selectionAccept?: readonly TopologyEntityKind[];
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	readonly hoverKindToggles?: SpatialPickKindToggles;
+	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
@@ -1855,6 +1919,7 @@ export function InteractionSpatialView({
 	selectionAccept = [],
 	selectionKindToggles = {},
 	hoverKindToggles = {},
+	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 	onSelectionRequest,
@@ -1935,6 +2000,7 @@ export function InteractionSpatialView({
 				selectionAccept={selectionAccept}
 				selectionKindToggles={selectionKindToggles}
 				hoverKindToggles={hoverKindToggles}
+				analyticToggles={analyticToggles}
 				hoveredTargetKey={hoveredTargetKey}
 				selectedTargetKey={selectedTargetKey}
 			/>
@@ -2239,6 +2305,7 @@ export function InteractionRepl({
 	const [selectionKindToggles, setSelectionKindToggles] = useState<Record<SpatialPickTargetKind, boolean>>(() =>
 		defaultSpatialPickKindToggles(),
 	);
+	const [analyticToggles, setAnalyticToggles] = useState(() => defaultSpatialAnalyticToggles());
 	const [pickViewKind, setPickViewKind] = useState<SpatialPickViewKind>("raw");
 	const [derivedRevision, setDerivedRevision] = useState(0);
 	const [selectionMenu, setSelectionMenu] = useState<SpatialSelectionRequest | null>(null);
@@ -2665,6 +2732,7 @@ export function InteractionRepl({
 						selectionAccept={activeSelectionAccept}
 						selectionKindToggles={selectionKindToggles}
 						hoverKindToggles={selectionKindToggles}
+						analyticToggles={analyticToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
 						onSelectionRequest={onSelectionRequest}
@@ -2697,7 +2765,14 @@ export function InteractionRepl({
 								<button
 									key={key}
 									type="button"
-									onPointerEnter={() => setHoveredPickKey(selectionKindToggles[target.kind] ? key : null)}
+									onPointerEnter={() =>
+										setHoveredPickKey(
+											selectionKindToggles[target.kind] !== false &&
+												spatialPickTargetMatchesAnalyticToggles(target, analyticToggles)
+												? key
+												: null,
+										)
+									}
 									onPointerLeave={() => setHoveredPickKey(null)}
 									onPointerDown={(e) => {
 										e.preventDefault();
@@ -2717,7 +2792,25 @@ export function InteractionRepl({
 										fontSize: 12,
 									}}
 								>
+									<span
+										style={{
+											display: "inline-block",
+											width: 8,
+											height: 8,
+											borderRadius: 2,
+											marginRight: 6,
+											background:
+												target.kind === "surface" && target.exposure && target.stance
+													? surfaceSemanticStyle(target.exposure, target.stance).color
+													: target.kind === "part" && target.overlap
+														? partSemanticStyle(target.overlap).color
+														: "#888",
+										}}
+									/>
 									<span style={{ opacity: 0.7 }}>{target.kind}</span>{" "}
+									{target.exposure ? <span style={{ opacity: 0.65 }}>{target.exposure}</span> : null}
+									{target.stance ? <span style={{ opacity: 0.65 }}>·{target.stance}</span> : null}
+									{target.overlap ? <span style={{ opacity: 0.65 }}>{target.overlap}</span> : null}{" "}
 									<code style={{ color: "#ffffff" }}>{target.id}</code>
 								</button>
 							);
@@ -2763,6 +2856,8 @@ export function InteractionRepl({
 				<div
 					style={{
 						display: "grid",
+						position: "relative",
+						overflow: "visible",
 						borderRadius: 6,
 						background: "#0e0e16",
 						border: "1px solid #3a4762",
@@ -2850,8 +2945,9 @@ export function InteractionRepl({
 							style={{
 								position: "absolute",
 								top: "calc(100% + 6px)",
-								left: 0,
 								right: 0,
+								width: 280,
+								maxWidth: "calc(100vw - 32px)",
 								maxHeight: 220,
 								overflowY: "auto",
 								background: "#10101a",
@@ -2869,7 +2965,9 @@ export function InteractionRepl({
 										type="button"
 										onClick={() => runSuggestion(suggestion)}
 										style={{
-											display: "block",
+											display: "flex",
+											flexDirection: "column",
+											gap: 4,
 											width: "100%",
 											border: "none",
 											borderRadius: 5,
@@ -2881,7 +2979,27 @@ export function InteractionRepl({
 											fontSize: 12,
 										}}
 									>
-										<span style={{ textDecoration: "underline", fontWeight: 700 }}>{suggestion.key}</span> {suggestion.label}
+										<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+											<span
+												style={{
+													display: "inline-flex",
+													alignItems: "center",
+													justifyContent: "center",
+													minWidth: 24,
+													height: 20,
+													padding: "0 6px",
+													borderRadius: 999,
+													border: "1px solid #2e3a52",
+													background: "#182238",
+													fontSize: 11,
+													fontWeight: 700,
+													textTransform: "uppercase",
+												}}
+											>
+												{suggestion.key}
+											</span>
+											<span>{suggestion.label}</span>
+										</div>
 										<div style={{ fontSize: 11, opacity: 0.7 }}>{suggestion.detail}</div>
 									</button>
 								))
@@ -2969,6 +3087,119 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
+					{pickViewKind === "analytic" ? (
+						<>
+							<span>Exposure</span>
+							<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["external", "internal"] as const).map((exposure) => (
+									<label
+										key={exposure}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${exposure === "external" ? "#e8c46a" : "#44ddff"}`,
+											background: analyticToggles.exposure[exposure] ? "#1a2638" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={analyticToggles.exposure[exposure]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticToggles((prev) => ({
+													...prev,
+													exposure: { ...prev.exposure, [exposure]: checked },
+												}));
+												setSelectionMenu(null);
+												setHoveredPickKey(null);
+												if (!checked) {
+													setSelectedPickKey((key) =>
+														key?.startsWith("surface:") && selectedSelectionTarget?.kind === "surface"
+															? null
+															: key,
+													);
+												}
+											}}
+										/>
+										{exposure}
+									</label>
+								))}
+							</div>
+							<span>Stance</span>
+							<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["horizontal", "vertical"] as const).map((stance) => (
+									<label
+										key={stance}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${stance === "horizontal" ? "#e8c46a" : "#ffb347"}`,
+											background: analyticToggles.stance[stance] ? "#1a2638" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={analyticToggles.stance[stance]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticToggles((prev) => ({
+													...prev,
+													stance: { ...prev.stance, [stance]: checked },
+												}));
+												setSelectionMenu(null);
+												setHoveredPickKey(null);
+											}}
+										/>
+										{stance}
+									</label>
+								))}
+							</div>
+							<span>Overlap</span>
+							<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["none", "difference", "intersection"] as const).map((overlap) => (
+									<label
+										key={overlap}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${partSemanticStyle(overlap).color}`,
+											background: analyticToggles.overlap[overlap] ? "#1a2638" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={analyticToggles.overlap[overlap]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticToggles((prev) => ({
+													...prev,
+													overlap: { ...prev.overlap, [overlap]: checked },
+												}));
+												setSelectionMenu(null);
+												setHoveredPickKey(null);
+												if (!checked) {
+													setSelectedPickKey((key) => (key?.startsWith("part:") ? null : key));
+												}
+											}}
+										/>
+										{overlap}
+									</label>
+								))}
+							</div>
+						</>
+					) : null}
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
 					{interactionId ? (
@@ -3191,6 +3422,41 @@ if (import.meta.vitest) {
 			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { edge: false }).map(spatialPickTargetKey)).toEqual([
 				"vertex:v0",
 			]);
+		});
+
+		it("filters analytic targets by exposure stance and overlap toggles", () => {
+			const targets: SpatialPickTarget[] = [
+				{
+					kind: "surface",
+					id: "s-ext-h",
+					point: [0, 0, 0],
+					exposure: "external",
+					stance: "horizontal",
+				},
+				{
+					kind: "surface",
+					id: "s-int-v",
+					point: [1, 0, 0],
+					exposure: "internal",
+					stance: "vertical",
+				},
+				{ kind: "part", id: "p-none", point: [0, 0, 0.5], overlap: "none" },
+				{ kind: "part", id: "p-inter", point: [1, 0, 0.5], overlap: "intersection" },
+			];
+			expect(
+				filterSpatialPickTargetsAnalytic(targets, {
+					exposure: { external: true, internal: false },
+					stance: { horizontal: true, vertical: true },
+					overlap: { none: true, difference: true, intersection: true },
+				}).map(spatialPickTargetKey),
+			).toEqual(["surface:s-ext-h", "part:p-none", "part:p-inter"]);
+			expect(
+				filterSpatialPickTargetsAnalytic(targets, {
+					exposure: { external: true, internal: true },
+					stance: { horizontal: true, vertical: true },
+					overlap: { none: true, difference: true, intersection: false },
+				}).map(spatialPickTargetKey),
+			).toEqual(["surface:s-ext-h", "surface:s-int-v", "part:p-none"]);
 		});
 
 		it("keeps targets rendered when selection or hover toggles enable their kind", () => {

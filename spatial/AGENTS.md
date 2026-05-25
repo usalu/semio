@@ -27,6 +27,6 @@ Surfaces are just a different way of "splitting the faces semantically". e.g. th
 Parts are derived cells that are a combination of Overlap (None, Difference, Intersection)
 Parts are just a different way of "splitting the cells semantically". e.g. the total volume or shape doesnt change
 
-Volume is the
+Volumes are derived CellGroup
 
 Skin is the

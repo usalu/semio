@@ -2,7 +2,7 @@
   "schema": "spatial.interaction/v1",
   "id": "transform.scale3d",
   "version": "1.0.0",
-  "label": "Scale 3D",
+  "label": "Scale3D",
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [

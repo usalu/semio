@@ -2,7 +2,7 @@
   "schema": "spatial.interaction/v1",
   "id": "curve.controlPointCurve",
   "version": "1.0.0",
-  "label": "Control Point Curve",
+  "label": "ControlPointCurve",
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": [
