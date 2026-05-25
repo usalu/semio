@@ -359,6 +359,7 @@ export function nurbsCurveFromPoles(poles: readonly Vec3[]): EdgeCurve | null {
 
 // #region 🪪Refs
 /** @emoji 🪪 Opaque branded string ids for editable topology entities. */
+export type AnchorRef = string & { readonly __brand: "AnchorRef" };
 export type VertexRef = string & { readonly __brand: "VertexRef" };
 export type EdgeRef = string & { readonly __brand: "EdgeRef" };
 export type WireRef = string & { readonly __brand: "WireRef" };
@@ -374,6 +375,7 @@ export type PartRef = string & { readonly __brand: "PartRef" };
 
 /** @emoji 🧱 Editable topology kinds from `spatial/AGENTS.md`. */
 export type EditableEntityKind =
+	| "anchor"
 	| "vertex"
 	| "edge"
 	| "wire"
@@ -402,6 +404,7 @@ export type InteractionEvent = { readonly kind: string; readonly [k: string]: un
 
 // #region 🪪Selection
 const TOPOLOGY_ENTITY_KINDS = new Set<string>([
+	"anchor",
 	"vertex",
 	"edge",
 	"wire",
@@ -426,6 +429,7 @@ export interface SelectionTarget {
 export interface SelectionEvent extends InteractionEvent {
 	readonly kind: "selection.changed";
 	readonly targets: readonly SelectionTarget[];
+	readonly point?: Vec3;
 }
 
 /** @emoji 🪪 Per-state declarative filter for raw vs analytic picking. */
@@ -1006,9 +1010,56 @@ export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
 	return spec;
 }
 
-/** @emoji 🧭 Normalizes a parsed interaction (currently identity). */
+const COMPILED_INITIAL_CONTEXTS = new WeakMap<InteractionSpec, Record<string, unknown>>();
+
+function initialStartTransition(spec: InteractionSpec): TransitionSpec | null {
+	const initial = findState(spec, spec.machine.initial);
+	const handler = initial?.on?.find((h) => h.event === "start");
+	const transition = handler?.transitions[0];
+	return transition?.target ? transition : null;
+}
+
+function staticInitialContext(spec: InteractionSpec, transition: TransitionSpec | null): Record<string, unknown> {
+	const context: Record<string, unknown> = {};
+	if (!transition?.effects) return context;
+	const env: ExprEnv = { context, event: { kind: "start" } };
+	for (const effect of transition.effects) {
+		if (effect.op === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
+		else if (effect.op === "clear") clearPathTarget(effect.target, env);
+		else if (effect.op === "append") {
+			const cur = readPathTarget(effect.target, env);
+			const next = Array.isArray(cur) ? [...cur, evalExpr(effect.value, env)] : [evalExpr(effect.value, env)];
+			writePathTarget(effect.target, env, next);
+		}
+	}
+	return context;
+}
+
+function compileInitialState(spec: InteractionSpec, transition: TransitionSpec | null): InteractionSpec {
+	if (!transition?.target) return spec;
+	return {
+		...spec,
+		machine: {
+			...spec.machine,
+			initial: transition.target,
+		},
+	};
+}
+
+export function initialContextForSpec(spec: InteractionSpec): Record<string, unknown> {
+	return structuredClone(COMPILED_INITIAL_CONTEXTS.get(spec) ?? {});
+}
+
+/** @emoji 🧭 Normalizes a parsed interaction so runtime sessions begin in the first active state. */
 export function compileInteraction(spec: InteractionSpec): InteractionSpec {
-	return spec;
+	const start = initialStartTransition(spec);
+	if (!start) {
+		if (!COMPILED_INITIAL_CONTEXTS.has(spec)) COMPILED_INITIAL_CONTEXTS.set(spec, {});
+		return spec;
+	}
+	const compiled = compileInitialState(spec, start);
+	COMPILED_INITIAL_CONTEXTS.set(compiled, staticInitialContext(spec, start));
+	return compiled;
 }
 // #endregion 📜Spec
 
@@ -1017,6 +1068,20 @@ export function compileInteraction(spec: InteractionSpec): InteractionSpec {
 export interface VertexRecord {
 	readonly id: VertexRef;
 	readonly position: Vec3;
+}
+
+export type AnchorAttachment =
+	| { readonly kind: "vertex"; readonly id: VertexRef }
+	| { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
+	| { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
+	| { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
+	| { readonly kind: "cell"; readonly id: CellRef; readonly u: number; readonly v: number; readonly w: number };
+
+/** @emoji 🧱 Anchor payload: parametric point attached to editable topology. */
+export interface AnchorRecord {
+	readonly id: AnchorRef;
+	readonly position: Vec3;
+	readonly attachment: AnchorAttachment;
 }
 
 /** @emoji 🧱 Edge payload: two boundary vertices; optional `curve` (`Geom_Curve` analog). */
@@ -1090,6 +1155,7 @@ export interface ClusterRecord {
 export interface TopologyGraphJson {
 	readonly schema: "spatial.topology/v1";
 	readonly revision: number;
+	readonly anchors: readonly AnchorRecord[];
 	readonly vertices: readonly VertexRecord[];
 	readonly edges: readonly EdgeRecord[];
 	readonly wires: readonly WireRecord[];
@@ -1115,6 +1181,7 @@ function sortedRecordValues<T extends { id: string }>(bucket: Record<string, T>)
 /** @emoji 🧱 Mutable in-memory topology graph with revision counter. */
 export class TopologyGraph {
 	revision = 0;
+	anchors: Record<string, AnchorRecord> = {};
 	vertices: Record<string, VertexRecord> = {};
 	edges: Record<string, EdgeRecord> = {};
 	wires: Record<string, WireRecord> = {};
@@ -1130,6 +1197,7 @@ export class TopologyGraph {
 		return {
 			schema: "spatial.topology/v1",
 			revision: this.revision,
+			anchors: sortedRecordValues(this.anchors),
 			vertices: sortedRecordValues(this.vertices),
 			edges: sortedRecordValues(this.edges),
 			wires: sortedRecordValues(this.wires),
@@ -1145,6 +1213,7 @@ export class TopologyGraph {
 	static fromJSON(j: TopologyGraphJson): TopologyGraph {
 		const g = new TopologyGraph();
 		g.revision = j.revision;
+		g.anchors = recordsById(j.anchors);
 		g.vertices = recordsById(j.vertices);
 		g.edges = recordsById(j.edges);
 		g.wires = recordsById(j.wires);
@@ -1173,6 +1242,12 @@ export function readTopologyEntityProperty(
 	const bag = meta?.get(id);
 	if (bag && name in bag) return (bag as Record<string, unknown>)[name];
 	switch (kind) {
+		case "anchor": {
+			const anchor = topo.anchors[id];
+			if (!anchor) return undefined;
+			if (name === "position") return evaluateAnchorPosition(topo, anchor);
+			return (anchor as unknown as Record<string, unknown>)[name];
+		}
 		case "vertex":
 			return (topo.vertices[id] as unknown as Record<string, unknown> | undefined)?.[name];
 		case "edge":
@@ -1215,7 +1290,7 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 	if (!raw || typeof raw !== "object") return null;
 	const r = raw as Record<string, unknown>;
 	if (r.schema !== "spatial.topology/v1") return null;
-	const need = ["vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"] as const;
+	const need = ["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"] as const;
 	for (const k of need) {
 		if (!Array.isArray(r[k])) return null;
 	}
@@ -1224,6 +1299,7 @@ export function parseTopologyGraphJson(raw: unknown): TopologyGraph | null {
 // #endregion 🧱Topology
 
 // #region 🧮Diff
+export type AnchorRecordDiff = { readonly id: AnchorRef } & Partial<Pick<AnchorRecord, "position" | "attachment">>;
 export type VertexRecordDiff = { readonly id: VertexRef } & Partial<Pick<VertexRecord, "position">>;
 export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord, "vertexIds" | "curve">>;
 export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord, "edgeIds">>;
@@ -1242,6 +1318,7 @@ export interface EntityDiff<TRec, TDiff, TId extends string> {
 
 /** @emoji 🧮 Serializable topology delta applied by `applyTopologyDiff`. */
 export interface TopologyDiff {
+	readonly anchors?: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef>;
 	readonly vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
 	readonly edges?: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef>;
 	readonly wires?: EntityDiff<WireRecord, WireRecordDiff, WireRef>;
@@ -1266,6 +1343,7 @@ function isEntityDiffEmpty<TRec, TDiff, TId extends string>(e: EntityDiff<TRec, 
 export function isEmptyTopologyDiff(d: TopologyDiff | undefined): boolean {
 	if (!d) return true;
 	return (
+		isEntityDiffEmpty(d.anchors) &&
 		isEntityDiffEmpty(d.vertices) &&
 		isEntityDiffEmpty(d.edges) &&
 		isEntityDiffEmpty(d.wires) &&
@@ -1326,6 +1404,7 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
 /** @emoji 🧮 Applies `diff` to `topo` in place; returns an inverse `TopologyDiff` for `applyTopologyDiff` again. */
 export function applyTopologyDiff(topo: TopologyGraph, diff: TopologyDiff): TopologyDiff {
 	const inv: TopologyDiff = {};
+	const aInv: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef> = {};
 	const vInv: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef> = {};
 	const eInv: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
 	const wInv: EntityDiff<WireRecord, WireRecordDiff, WireRef> = {};
@@ -1334,6 +1413,7 @@ export function applyTopologyDiff(topo: TopologyGraph, diff: TopologyDiff): Topo
 	const cInv: EntityDiff<CellRecord, CellRecordDiff, CellRef> = {};
 	const ccInv: EntityDiff<CellComplexRecord, CellComplexRecordDiff, CellComplexRef> = {};
 	const clInv: EntityDiff<ClusterRecord, ClusterRecordDiff, ClusterRef> = {};
+	applyEntityDiff(topo.anchors as Record<string, AnchorRecord>, diff.anchors, aInv);
 	applyEntityDiff(topo.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
 	applyEntityDiff(topo.edges as Record<string, EdgeRecord>, diff.edges, eInv);
 	applyEntityDiff(topo.wires as Record<string, WireRecord>, diff.wires, wInv);
@@ -1342,6 +1422,7 @@ export function applyTopologyDiff(topo: TopologyGraph, diff: TopologyDiff): Topo
 	applyEntityDiff(topo.cells as Record<string, CellRecord>, diff.cells, cInv);
 	applyEntityDiff(topo.cellComplexes as Record<string, CellComplexRecord>, diff.cellComplexes, ccInv);
 	applyEntityDiff(topo.clusters as Record<string, ClusterRecord>, diff.clusters, clInv);
+	if (!isEntityDiffEmpty(aInv)) inv.anchors = aInv;
 	if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
 	if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
 	if (!isEntityDiffEmpty(wInv)) inv.wires = wInv;
@@ -1352,6 +1433,277 @@ export function applyTopologyDiff(topo: TopologyGraph, diff: TopologyDiff): Topo
 	if (!isEntityDiffEmpty(clInv)) inv.clusters = clInv;
 	if (!isEmptyTopologyDiff(diff)) topo.bump();
 	return inv;
+}
+
+function clamp01(value: number): number {
+	return Math.max(0, Math.min(1, value));
+}
+
+function uniqueAnchorCurvePoints(points: readonly Vec3[]): readonly Vec3[] {
+	if (points.length <= 1) return points;
+	const out: Vec3[] = [points[0]!];
+	for (let i = 1; i < points.length; i++) {
+		const prev = out[out.length - 1]!;
+		const next = points[i]!;
+		if (vec3Distance(prev, next) > 1e-9) out.push(next);
+	}
+	return out;
+}
+
+function closestPointOnSegment(a: Vec3, b: Vec3, point: Vec3): { readonly point: Vec3; readonly t: number; readonly distance: number } {
+	const ab = vec3Sub(b, a);
+	const len2 = vec3Dot(ab, ab);
+	if (len2 < 1e-12) return { point: a, t: 0, distance: vec3Distance(a, point) };
+	const t = clamp01(vec3Dot(vec3Sub(point, a), ab) / len2);
+	const hit = vec3Add(a, vec3Scale(ab, t));
+	return { point: hit, t, distance: vec3Distance(hit, point) };
+}
+
+function closestPointOnPolyline(points: readonly Vec3[], point: Vec3): { readonly point: Vec3; readonly t: number } | null {
+	const path = uniqueAnchorCurvePoints(points);
+	if (path.length === 0) return null;
+	if (path.length === 1) return { point: path[0]!, t: 0 };
+	let total = 0;
+	const lengths: number[] = [];
+	for (let i = 1; i < path.length; i++) {
+		const length = vec3Distance(path[i - 1]!, path[i]!);
+		lengths.push(length);
+		total += length;
+	}
+	let best: { readonly point: Vec3; readonly t: number; readonly distance: number } | null = null;
+	let prefix = 0;
+	for (let i = 1; i < path.length; i++) {
+		const segment = closestPointOnSegment(path[i - 1]!, path[i]!, point);
+		const length = lengths[i - 1]!;
+		const normalized = total > 1e-9 ? (prefix + length * segment.t) / total : 0;
+		if (!best || segment.distance < best.distance) best = { point: segment.point, t: normalized, distance: segment.distance };
+		prefix += length;
+	}
+	return best ? { point: best.point, t: best.t } : null;
+}
+
+function curvePointAtNormalizedT(points: readonly Vec3[], t: number): Vec3 | null {
+	const path = uniqueAnchorCurvePoints(points);
+	if (path.length === 0) return null;
+	if (path.length === 1) return path[0]!;
+	let total = 0;
+	const lengths: number[] = [];
+	for (let i = 1; i < path.length; i++) {
+		const length = vec3Distance(path[i - 1]!, path[i]!);
+		lengths.push(length);
+		total += length;
+	}
+	let remaining = clamp01(t) * total;
+	for (let i = 1; i < path.length; i++) {
+		const length = lengths[i - 1]!;
+		if (remaining <= length || i === path.length - 1) {
+			const segT = length > 1e-9 ? remaining / length : 0;
+			return vec3Add(path[i - 1]!, vec3Scale(vec3Sub(path[i]!, path[i - 1]!), segT));
+		}
+		remaining -= length;
+	}
+	return path[path.length - 1]!;
+}
+
+function orthonormalBasis(normal: Vec3): { readonly u: Vec3; readonly v: Vec3 } {
+	const n = vec3Normalize(normal);
+	const seed: Vec3 = Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+	const u = vec3Normalize(vec3Cross(seed, n));
+	const v = vec3Normalize(vec3Cross(n, u));
+	return { u, v };
+}
+
+function faceNormalFromPoints(points: readonly Vec3[]): Vec3 | null {
+	if (points.length < 3) return null;
+	for (let i = 2; i < points.length; i++) {
+		const normal = vec3Cross(vec3Sub(points[i - 1]!, points[0]!), vec3Sub(points[i]!, points[0]!));
+		if (vec3Length(normal) > 1e-9) return vec3Normalize(normal);
+	}
+	return null;
+}
+
+function projectPointToPlane(point: Vec3, origin: Vec3, normal: Vec3): Vec3 {
+	const n = vec3Normalize(normal);
+	return vec3Sub(point, vec3Scale(n, vec3Dot(vec3Sub(point, origin), n)));
+}
+
+function planePlacement(origin: Vec3, normal: Vec3, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } {
+	const hit = projectPointToPlane(point, origin, normal);
+	const basis = orthonormalBasis(normal);
+	const delta = vec3Sub(hit, origin);
+	return { point: hit, u: vec3Dot(delta, basis.u), v: vec3Dot(delta, basis.v) };
+}
+
+function cylinderPlacement(origin: Vec3, axis: Vec3, radius: number, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } {
+	const axisN = vec3Normalize(axis);
+	const basis = orthonormalBasis(axisN);
+	const delta = vec3Sub(point, origin);
+	const axial = vec3Dot(delta, axisN);
+	const radialRaw = vec3Sub(delta, vec3Scale(axisN, axial));
+	const radialDir = vec3Length(radialRaw) > 1e-9 ? vec3Normalize(radialRaw) : basis.u;
+	const hit = vec3Add(origin, vec3Add(vec3Scale(axisN, axial), vec3Scale(radialDir, radius)));
+	return { point: hit, u: Math.atan2(vec3Dot(radialDir, basis.v), vec3Dot(radialDir, basis.u)), v: axial };
+}
+
+function spherePlacement(center: Vec3, radius: number, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } {
+	const delta = vec3Sub(point, center);
+	const dir = vec3Length(delta) > 1e-9 ? vec3Normalize(delta) : ([1, 0, 0] as Vec3);
+	const hit = vec3Add(center, vec3Scale(dir, radius));
+	return { point: hit, u: Math.atan2(dir[1], dir[0]), v: Math.asin(Math.max(-1, Math.min(1, dir[2]))) };
+}
+
+function conePlacement(apex: Vec3, axis: Vec3, semiAngle: number, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } {
+	const axisN = vec3Normalize(axis);
+	const basis = orthonormalBasis(axisN);
+	const delta = vec3Sub(point, apex);
+	const height = Math.max(0, vec3Dot(delta, axisN));
+	const radialRaw = vec3Sub(delta, vec3Scale(axisN, height));
+	const radialDir = vec3Length(radialRaw) > 1e-9 ? vec3Normalize(radialRaw) : basis.u;
+	const radius = Math.tan(semiAngle) * height;
+	const hit = vec3Add(apex, vec3Add(vec3Scale(axisN, height), vec3Scale(radialDir, radius)));
+	return { point: hit, u: Math.atan2(vec3Dot(radialDir, basis.v), vec3Dot(radialDir, basis.u)), v: height };
+}
+
+function wireCurvePoints(topo: TopologyGraph, wire: WireRecord): readonly Vec3[] {
+	const points: Vec3[] = [];
+	for (const edgeId of wire.edgeIds) {
+		const edge = topo.edges[edgeId];
+		if (!edge) continue;
+		for (const point of uniqueAnchorCurvePoints(edgeSamplePoints(topo.vertices, edge, 64))) {
+			const prev = points[points.length - 1];
+			if (!prev || vec3Distance(prev, point) > 1e-9) points.push(point);
+		}
+	}
+	return points;
+}
+
+function closestPointOnAabbSurface(min: Vec3, max: Vec3, point: Vec3): Vec3 {
+	const clamped: Vec3 = [
+		Math.max(min[0], Math.min(max[0], point[0])),
+		Math.max(min[1], Math.min(max[1], point[1])),
+		Math.max(min[2], Math.min(max[2], point[2])),
+	];
+	const dx = Math.min(Math.abs(clamped[0] - min[0]), Math.abs(max[0] - clamped[0]));
+	const dy = Math.min(Math.abs(clamped[1] - min[1]), Math.abs(max[1] - clamped[1]));
+	const dz = Math.min(Math.abs(clamped[2] - min[2]), Math.abs(max[2] - clamped[2]));
+	if (dx <= dy && dx <= dz) clamped[0] = Math.abs(clamped[0] - min[0]) <= Math.abs(max[0] - clamped[0]) ? min[0] : max[0];
+	else if (dy <= dz) clamped[1] = Math.abs(clamped[1] - min[1]) <= Math.abs(max[1] - clamped[1]) ? min[1] : max[1];
+	else clamped[2] = Math.abs(clamped[2] - min[2]) <= Math.abs(max[2] - clamped[2]) ? min[2] : max[2];
+	return clamped;
+}
+
+function facePlacement(topo: TopologyGraph, face: FaceRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } | null {
+	if (face.surface?.kind === "plane") return planePlacement(face.surface.origin, face.surface.normal, point);
+	if (face.surface?.kind === "cylinder") return cylinderPlacement(face.surface.origin, face.surface.axis, face.surface.radius, point);
+	if (face.surface?.kind === "sphere") return spherePlacement(face.surface.center, face.surface.radius, point);
+	if (face.surface?.kind === "cone") return conePlacement(face.surface.apex, face.surface.axis, face.surface.semiAngle, point);
+	const points = derivedFacePoints(topo, face);
+	const origin = derivedPointCentroid(points);
+	const normal = faceNormalFromPoints(points);
+	if (!origin || !normal) return null;
+	return planePlacement(origin, normal, point);
+}
+
+function pointOnFaceAt(topo: TopologyGraph, faceId: FaceRef, u: number, v: number): Vec3 | null {
+	const face = topo.faces[faceId];
+	if (!face) return null;
+	if (face.surface?.kind === "plane") {
+		const basis = orthonormalBasis(face.surface.normal);
+		return vec3Add(face.surface.origin, vec3Add(vec3Scale(basis.u, u), vec3Scale(basis.v, v)));
+	}
+	if (face.surface?.kind === "cylinder") {
+		const axisN = vec3Normalize(face.surface.axis);
+		const basis = orthonormalBasis(axisN);
+		const radial = vec3Add(vec3Scale(basis.u, Math.cos(u)), vec3Scale(basis.v, Math.sin(u)));
+		return vec3Add(face.surface.origin, vec3Add(vec3Scale(axisN, v), vec3Scale(radial, face.surface.radius)));
+	}
+	if (face.surface?.kind === "sphere") {
+		return vec3Add(face.surface.center, [Math.cos(v) * Math.cos(u) * face.surface.radius, Math.cos(v) * Math.sin(u) * face.surface.radius, Math.sin(v) * face.surface.radius]);
+	}
+	if (face.surface?.kind === "cone") {
+		const axisN = vec3Normalize(face.surface.axis);
+		const basis = orthonormalBasis(axisN);
+		const radial = vec3Add(vec3Scale(basis.u, Math.cos(u)), vec3Scale(basis.v, Math.sin(u)));
+		const radius = Math.tan(face.surface.semiAngle) * v;
+		return vec3Add(face.surface.apex, vec3Add(vec3Scale(axisN, v), vec3Scale(radial, radius)));
+	}
+	const points = derivedFacePoints(topo, face);
+	const origin = derivedPointCentroid(points);
+	const normal = faceNormalFromPoints(points);
+	if (!origin || !normal) return null;
+	const basis = orthonormalBasis(normal);
+	return vec3Add(origin, vec3Add(vec3Scale(basis.u, u), vec3Scale(basis.v, v)));
+}
+
+function cellPlacement(topo: TopologyGraph, cell: CellRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number; readonly w: number } | null {
+	const bounds = topologyCellAabb(topo, cell);
+	if (!bounds) return null;
+	const hit = closestPointOnAabbSurface(bounds.min, bounds.max, point);
+	const sx = Math.max(bounds.max[0] - bounds.min[0], 1e-9);
+	const sy = Math.max(bounds.max[1] - bounds.min[1], 1e-9);
+	const sz = Math.max(bounds.max[2] - bounds.min[2], 1e-9);
+	return {
+		point: hit,
+		u: clamp01((hit[0] - bounds.min[0]) / sx),
+		v: clamp01((hit[1] - bounds.min[1]) / sy),
+		w: clamp01((hit[2] - bounds.min[2]) / sz),
+	};
+}
+
+function pointOnCellAt(topo: TopologyGraph, cellId: CellRef, u: number, v: number, w: number): Vec3 | null {
+	const cell = topo.cells[cellId];
+	if (!cell) return null;
+	const bounds = topologyCellAabb(topo, cell);
+	if (!bounds) return null;
+	const point: Vec3 = [
+		bounds.min[0] + clamp01(u) * (bounds.max[0] - bounds.min[0]),
+		bounds.min[1] + clamp01(v) * (bounds.max[1] - bounds.min[1]),
+		bounds.min[2] + clamp01(w) * (bounds.max[2] - bounds.min[2]),
+	];
+	return closestPointOnAabbSurface(bounds.min, bounds.max, point);
+}
+
+export function evaluateAnchorPosition(topo: TopologyGraph, anchor: AnchorRecord): Vec3 {
+	if (anchor.attachment.kind === "vertex") return topo.vertices[anchor.attachment.id]?.position ?? anchor.position;
+	if (anchor.attachment.kind === "edge") {
+		const edge = topo.edges[anchor.attachment.id];
+		return edge ? curvePointAtNormalizedT(edgeSamplePoints(topo.vertices, edge, 64), anchor.attachment.t) ?? anchor.position : anchor.position;
+	}
+	if (anchor.attachment.kind === "wire") {
+		const wire = topo.wires[anchor.attachment.id];
+		return wire ? curvePointAtNormalizedT(wireCurvePoints(topo, wire), anchor.attachment.t) ?? anchor.position : anchor.position;
+	}
+	if (anchor.attachment.kind === "face") return pointOnFaceAt(topo, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v) ?? anchor.position;
+	return pointOnCellAt(topo, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v, anchor.attachment.w) ?? anchor.position;
+}
+
+function anchorPlacementFromEntity(topo: TopologyGraph, kind: AnchorAttachment["kind"], id: string, point: Vec3): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null {
+	if (kind === "vertex") {
+		const vertex = topo.vertices[id];
+		return vertex ? { position: vertex.position, attachment: { kind, id: id as VertexRef } } : null;
+	}
+	if (kind === "edge") {
+		const edge = topo.edges[id];
+		if (!edge) return null;
+		const hit = closestPointOnPolyline(edgeSamplePoints(topo.vertices, edge, 64), point);
+		return hit ? { position: hit.point, attachment: { kind, id: id as EdgeRef, t: hit.t } } : null;
+	}
+	if (kind === "wire") {
+		const wire = topo.wires[id];
+		if (!wire) return null;
+		const hit = closestPointOnPolyline(wireCurvePoints(topo, wire), point);
+		return hit ? { position: hit.point, attachment: { kind, id: id as WireRef, t: hit.t } } : null;
+	}
+	if (kind === "face") {
+		const face = topo.faces[id];
+		if (!face) return null;
+		const hit = facePlacement(topo, face, point);
+		return hit ? { position: hit.point, attachment: { kind, id: id as FaceRef, u: hit.u, v: hit.v } } : null;
+	}
+	const cell = topo.cells[id];
+	if (!cell) return null;
+	const hit = cellPlacement(topo, cell, point);
+	return hit ? { position: hit.point, attachment: { kind: "cell", id: id as CellRef, u: hit.u, v: hit.v, w: hit.w } } : null;
 }
 
 /** @emoji 🧮 One tessellated triangle mesh as a single `FaceRecord` plus boundary topology. */
@@ -1590,7 +1942,10 @@ export class ActionRegistry {
 export function collectTargetVertices(topo: TopologyGraph, targets: readonly SelectionTarget[]): Set<string> {
 	const out = new Set<string>();
 	const walk = (kind: TopologyEntityKind, id: string) => {
-		if (kind === "vertex") {
+		if (kind === "anchor") {
+			const anchor = topo.anchors[id];
+			if (anchor?.attachment.kind === "vertex") out.add(anchor.attachment.id);
+		} else if (kind === "vertex") {
 			if (topo.vertices[id]) out.add(id);
 		} else if (kind === "edge") {
 			const e = topo.edges[id];
@@ -1954,6 +2309,28 @@ function builtinActionDefs(): ActionDef[] {
 		},
 	};
 
+	const entityCreateAnchor: ActionDef = {
+		id: "entity.createAnchor",
+		run: (params, { topology }) => {
+			const hostKind = params.hostKind;
+			const hostId = typeof params.hostId === "string" ? params.hostId : "";
+			const hitPoint = isVec3(params.hitPoint) ? params.hitPoint : null;
+			if (!hitPoint || !hostId) return {};
+			if (hostKind !== "vertex" && hostKind !== "edge" && hostKind !== "wire" && hostKind !== "face" && hostKind !== "cell") return {};
+			const placement = anchorPlacementFromEntity(topology, hostKind, hostId, hitPoint);
+			if (!placement) return {};
+			const anchorId = `anchor-${Math.random().toString(36).slice(2, 9)}` as AnchorRef;
+			return {
+				diff: {
+					anchors: {
+						added: [{ id: anchorId, position: placement.position, attachment: placement.attachment }],
+					},
+				},
+				data: { anchorId, attachment: placement.attachment, position: placement.position },
+			};
+		},
+	};
+
 	const featureTransformMove: ActionDef = {
 		id: "transform.move",
 		run: (params, { topology }) => {
@@ -2229,6 +2606,7 @@ function builtinActionDefs(): ActionDef[] {
 	};
 
 	return [
+		entityCreateAnchor,
 		boxAabbFromDiagonalCorners,
 		boxTripletRubber,
 		boxTripletCommit,
@@ -2740,7 +3118,7 @@ export async function applyTransition(
 		let nextState = state;
 		if (tr.target) {
 			nextState = tr.target;
-			if (tr.target === spec.machine.initial) {
+			if (tr.target === spec.machine.initial && tr.target !== state) {
 				for (const k of Object.keys(context)) delete context[k];
 			}
 		}
@@ -2811,10 +3189,11 @@ export function abortActiveInteractionSession(rt: InteractionRuntime): boolean {
 /** @emoji 🎬 Minimal async statechart runner for `InteractionSpec.machine`. */
 export class StatechartRuntime implements StateEngine {
 	private state: string;
-	private context: Record<string, unknown> = {};
+	private context: Record<string, unknown>;
 
 	constructor(private readonly spec: InteractionSpec) {
 		this.state = spec.machine.initial;
+		this.context = initialContextForSpec(spec);
 	}
 
 	getState(): string {
@@ -2827,7 +3206,7 @@ export class StatechartRuntime implements StateEngine {
 
 	reset(): void {
 		this.state = this.spec.machine.initial;
-		this.context = {};
+		this.context = initialContextForSpec(this.spec);
 	}
 
 	/** @emoji 🎬 Restores a prior `state` + `context` snapshot (interaction-local undo). */
@@ -3100,7 +3479,7 @@ export interface InteractionRuntimeOptions {
 
 /** @emoji 🧭 True while the statechart is between `machine.initial` and a declared final state. */
 export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
-	return state !== spec.machine.initial && !isFinalInteractionState(spec, state);
+	return !isFinalInteractionState(spec, state);
 }
 
 /** @emoji 📜 Headless + interactive interaction controller (`send`, `commit`, `undo`). */
@@ -3203,8 +3582,9 @@ export class InteractionRuntime {
 		const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
 		const hist = this.opts.history;
 		const active = this.inActiveInteraction();
-		const canUndo = this.snapUndoStack.length > 0 || (!active && Boolean(hist?.peekUndo()));
-		const canRedo = this.snapRedoStack.length > 0 || (!active && Boolean(hist?.peekRedo()));
+		const pristineInitial = st === this.spec.machine.initial && this.snapUndoStack.length === 0;
+		const canUndo = this.snapUndoStack.length > 0 || ((!active || pristineInitial) && Boolean(hist?.peekUndo()));
+		const canRedo = this.snapRedoStack.length > 0 || ((!active || pristineInitial) && Boolean(hist?.peekRedo()));
 		this.snapshotCache = {
 			interactionId: this.spec.id,
 			state: st,
@@ -3214,7 +3594,7 @@ export class InteractionRuntime {
 			spatialInteraction,
 			capabilities: {
 				canCommit: this.canCommit(),
-				canCancel: this.inActiveInteraction(),
+				canCancel: !isFinalInteractionState(this.spec, this.sm.getState()) && (this.sm.getState() !== this.spec.machine.initial || this.snapUndoStack.length > 0),
 				canUndo,
 				canRedo,
 			},
@@ -3257,6 +3637,11 @@ export class InteractionRuntime {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
 		}
+		if (event.kind === "selection.changed" && this.sm.getState() === beforeState && this.stateHasEvent(this.sm.getState(), "confirm")) {
+			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
+			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived);
+			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeConfirmCtx) });
+		}
 		if (event.kind === "start") await this.consumeStartSelection(event);
 		if (isFinalInteractionState(this.spec, this.sm.getState())) {
 			await this.runCommit(false);
@@ -3270,7 +3655,7 @@ export class InteractionRuntime {
 	}
 
 	undo(): void {
-		if (this.inActiveInteraction()) {
+		if (this.inActiveInteraction() && this.snapUndoStack.length > 0) {
 			const snap = this.snapUndoStack.pop();
 			if (!snap) return;
 			const curState = this.sm.getState();
@@ -3298,7 +3683,7 @@ export class InteractionRuntime {
 	}
 
 	redo(): void {
-		if (this.inActiveInteraction()) {
+		if (this.inActiveInteraction() && this.snapRedoStack.length > 0) {
 			const snap = this.snapRedoStack.pop();
 			if (!snap) return;
 			const curState = this.sm.getState();
@@ -3415,7 +3800,134 @@ export function createInteractionRuntime(spec: InteractionSpec, opts: Interactio
 // #region 📦Interactions
 type BuiltinInteractionFixture = InteractionSpec & { readonly key?: string };
 
+const createAnchorInteractionJson = {
+	schema: "spatial.interaction/v1",
+	id: "entity.createAnchor",
+	version: "1.0.0",
+	label: "Create Anchor",
+	key: "cr",
+	interaction: {
+		spatialGroundPick: false,
+		pickDisabledStates: ["committed"],
+		groundPointerMoveStates: ["placeAnchor"],
+		heightDragStates: [],
+		verticalRodStates: [],
+		heightConfirmState: null,
+	},
+	guards: [
+		{
+			name: "selectionHasPoint",
+			expr: { kind: "exists", target: { root: "event", segments: [{ kind: "field", name: "point" }] } },
+		},
+		{
+			name: "hasHostAndHitPoint",
+			expr: {
+				kind: "all",
+				args: [
+					{ kind: "exists", target: { root: "context", segments: [{ kind: "field", name: "hostKind" }] } },
+					{ kind: "exists", target: { root: "context", segments: [{ kind: "field", name: "hostId" }] } },
+					{ kind: "exists", target: { root: "context", segments: [{ kind: "field", name: "hitPoint" }] } },
+				],
+			},
+		},
+	],
+	machine: {
+		initial: "selectHost",
+		states: [
+			{
+				name: "selectHost",
+				selection: {
+					accept: ["vertex", "edge", "wire", "face", "cell"],
+					multiple: false,
+					prompt: "Pick anchor host",
+				},
+				on: [
+					{
+						event: "selection.changed",
+						transitions: [
+							{
+								target: "committed",
+								guard: "selectionHasPoint",
+								key: "i",
+								label: "Create anchor",
+								effects: [
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hostKind" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "targets" }, { kind: "index", index: 0 }, { kind: "field", name: "kind" }] } },
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hostId" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "targets" }, { kind: "index", index: 0 }, { kind: "field", name: "id" }] } },
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hitPoint" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "point" }] } },
+								],
+							},
+							{
+								target: "placeAnchor",
+								key: "i",
+								label: "Select host",
+								effects: [
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hostKind" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "targets" }, { kind: "index", index: 0 }, { kind: "field", name: "kind" }] } },
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hostId" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "targets" }, { kind: "index", index: 0 }, { kind: "field", name: "id" }] } },
+								],
+							},
+						],
+					},
+					{ event: "cancel", transitions: [{ target: "selectHost", key: "x", label: "Cancel" }] },
+				],
+			},
+			{
+				name: "placeAnchor",
+				on: [
+					{
+						event: "pointer.move",
+						transitions: [
+							{
+								transient: true,
+								effects: [
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "cursor" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "point" }] } },
+								],
+							},
+						],
+					},
+					{
+						event: "pointer.down",
+						transitions: [
+							{
+								target: "committed",
+								key: "Enter",
+								label: "Place anchor",
+								effects: [
+									{ op: "assign", target: { root: "context", segments: [{ kind: "field", name: "hitPoint" }] }, value: { kind: "path", root: "event", segments: [{ kind: "field", name: "point" }] } },
+								],
+							},
+						],
+					},
+					{ event: "cancel", transitions: [{ target: "selectHost", key: "x", label: "Cancel" }] },
+				],
+			},
+			{ name: "committed", final: true },
+		],
+	},
+	display: {
+		states: [
+			{
+				state: "placeAnchor",
+				items: [{ kind: "point", id: "cursor", role: "cursor", position: { kind: "path", root: "context", segments: [{ kind: "field", name: "cursor" }] } }],
+			},
+		],
+	},
+	commit: {
+		when: "hasHostAndHitPoint",
+		fromStates: ["committed"],
+		operation: {
+			kind: "action",
+			action: "entity.createAnchor",
+			params: {
+				hostKind: { kind: "path", root: "context", segments: [{ kind: "field", name: "hostKind" }] },
+				hostId: { kind: "path", root: "context", segments: [{ kind: "field", name: "hostId" }] },
+				hitPoint: { kind: "path", root: "context", segments: [{ kind: "field", name: "hitPoint" }] },
+			},
+		},
+	},
+} as const satisfies BuiltinInteractionFixture;
+
 const builtinInteractionJsons = [
+	createAnchorInteractionJson,
 	boxInteractionJson,
 	extrudeWireInteractionJson,
 	offsetSurfaceInteractionJson,
@@ -3474,7 +3986,10 @@ export class InteractionRegistry {
 
 	static withBuiltins(): InteractionRegistry {
 		const r = new InteractionRegistry();
-		const xs = builtinInteractionJsons.map((raw) => parseInteractionSpec(raw));
+		const xs = builtinInteractionJsons.map((raw) => {
+			const spec = parseInteractionSpec(raw);
+			return spec ? compileInteraction(spec) : null;
+		});
 		for (const s of xs) {
 			if (s) r.register(s);
 		}
@@ -3486,35 +4001,41 @@ export class InteractionRegistry {
 export function buildBoxInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(boxInteractionJson);
 	if (!s) throw new Error("spatial/assets/interactions/box.interaction.json invalid");
-	return s;
+	return compileInteraction(s);
 }
 
 /** @emoji 📦 Parses extrude-wire asset (`spatial/assets/interactions/extrude-wire.interaction.json`). */
 export function buildExtrudeInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(extrudeWireInteractionJson);
 	if (!s) throw new Error("spatial/assets/interactions/extrude-wire.interaction.json invalid");
-	return s;
+	return compileInteraction(s);
 }
 
 /** @emoji 📦 Parses offset-surface asset (`spatial/assets/interactions/offset-surface.interaction.json`). */
 export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(offsetSurfaceInteractionJson);
 	if (!s) throw new Error("spatial/assets/interactions/offset-surface.interaction.json invalid");
-	return s;
+	return compileInteraction(s);
 }
 
 /** @emoji 📦 Parses distance asset (`spatial/assets/interactions/measure-length.interaction.json`). */
 export function buildDistanceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(distanceInteractionJson);
 	if (!s) throw new Error("spatial/assets/interactions/measure-length.interaction.json invalid");
-	return s;
+	return compileInteraction(s);
 }
 
 /** @emoji 📦 Parses area asset (`spatial/assets/interactions/area.interaction.json`). */
 export function buildAreaInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(areaInteractionJson);
 	if (!s) throw new Error("spatial/assets/interactions/area.interaction.json invalid");
-	return s;
+	return compileInteraction(s);
+}
+
+export function buildCreateAnchorInteractionSpec(): InteractionSpec {
+	const s = parseInteractionSpec(createAnchorInteractionJson);
+	if (!s) throw new Error("entity.createAnchor interaction invalid");
+	return compileInteraction(s);
 }
 
 /** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/interactions/*.interaction.json`). */
@@ -3546,7 +4067,8 @@ export function resolveSpatialInteractionKey(token: string): SpatialInteraction 
 /** @emoji 📚 Loads a built-in interaction by stable `id` (see `listSpatialInteractions`). */
 export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
 	const raw = builtinInteractionJsons.find((spec) => spec.id === interactionId);
-	return raw ? parseInteractionSpec(raw) : null;
+	const spec = raw ? parseInteractionSpec(raw) : null;
+	return spec ? compileInteraction(spec) : null;
 }
 // #endregion 📦Interactions
 
@@ -3705,15 +4227,96 @@ if (import.meta.vitest) {
 	});
 
 	describe("@spatial/js-core interactions", () => {
+		const DEFAULT_KERNEL: KernelAdapter = {
+			id: "default-test",
+			operations: [] as const,
+			async createBoxFromCorners() {
+				return cellRef("c");
+			},
+			async volume() {
+				return 0;
+			},
+			async tessellate() {
+				return { positions: new Float32Array(), indices: new Uint32Array() };
+			},
+		};
+
 		it("lists stable mnemonic keys for each built-in interaction", () => {
 			const ps = listSpatialInteractions();
-			expect(ps.slice(0, 5).map((p) => p.key).join("")).toBe("beoda");
+			expect(ps.slice(0, 5).map((p) => p.key).join("")).toBe("crbeod");
 			expect(ps.length).toBeGreaterThanOrEqual(34);
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
 			expect(ps.slice(0, 5).every((p) => p.label.toLowerCase().includes(p.key))).toBe(true);
 		});
+		it("commits createAnchor directly from a hit-point selection", async () => {
+			class AnchorKernel implements KernelAdapter {
+				readonly id = "anchor-test";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const edgeId = Object.keys(topo.edges)[0]! as EdgeRef;
+			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({
+				kind: "selection.changed",
+				targets: [{ kind: "edge", id: edgeId, editable: true }],
+				point: [0.4, 0, 0],
+				modifiers: {},
+			});
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			const anchors = Object.values(topo.anchors);
+			expect(anchors).toHaveLength(1);
+			expect(anchors[0]!.attachment).toEqual({ kind: "edge", id: edgeId, t: 0.4 });
+			expect(anchors[0]!.position).toEqual([0.4, 0, 0]);
+		});
+		it("commits createAnchor after selecting a host then placing a point", async () => {
+			class AnchorKernel implements KernelAdapter {
+				readonly id = "anchor-test";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+			}
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const faceId = Object.keys(topo.faces)[0]! as FaceRef;
+			const rt = createInteractionRuntime(buildCreateAnchorInteractionSpec(), { kernel: new AnchorKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({
+				kind: "selection.changed",
+				targets: [{ kind: "face", id: faceId, editable: true }],
+				modifiers: {},
+			});
+			expect(rt.getSnapshot().state).toBe("placeAnchor");
+			await rt.send({ kind: "pointer.down", point: [0.25, 0.75, 0], modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			const anchors = Object.values(topo.anchors);
+			expect(anchors).toHaveLength(1);
+			expect(anchors[0]!.attachment.kind).toBe("face");
+			expect(anchors[0]!.attachment.id).toBe(faceId);
+			expect(anchors[0]!.position).toEqual([0.25, 0.75, 0]);
+		});
 		it("resolves interaction tokens by key, id, and label slug", () => {
 			expect(resolveSpatialInteractionKey("b")?.id).toBe("primitive.box");
+			expect(resolveSpatialInteractionKey("cr")?.id).toBe("entity.createAnchor");
 			expect(resolveSpatialInteractionKey("primitive.box")?.key).toBe("b");
 			expect(resolveSpatialInteractionKey("extrudewire")?.id).toBe("feature.extrudeWire");
 			expect(resolveSpatialInteractionKey("d")?.id).toBe("measure.distance");
@@ -3750,7 +4353,6 @@ if (import.meta.vitest) {
 			}
 			const spec = loadSpatialInteraction("curve.line")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
-			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [1, 2, 0] as Vec3, modifiers: {} });
 			const snap = rt.getSnapshot();
@@ -3778,7 +4380,6 @@ if (import.meta.vitest) {
 			}
 			const spec = loadSpatialInteraction("curve.line")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
-			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			expect(rt.getSnapshot().capabilities.canCancel).toBe(true);
 			expect(abortActiveInteractionSession(rt)).toBe(true);
@@ -3794,7 +4395,7 @@ if (import.meta.vitest) {
 			const vIds = collectTargetVertices(topo, [{ kind: "face", id: faceId }]);
 			expect(vIds.size).toBe(4);
 		});
-		it("uses start selection to skip selection-first command states", async () => {
+		it("uses initial selection to skip selection-first command states", async () => {
 			class CommandKernel implements KernelAdapter {
 				readonly id = "command-selection";
 				readonly operations = [] as const;
@@ -3814,7 +4415,7 @@ if (import.meta.vitest) {
 			const spec = loadSpatialInteraction("transform.move")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
 			await rt.send({
-				kind: "start",
+				kind: "selection.changed",
 				targets: [{ kind: "cell", id: "c0", editable: true }],
 				modifiers: {},
 			});
@@ -3856,7 +4457,6 @@ if (import.meta.vitest) {
 			}
 			const spec = loadSpatialInteraction("curve.arc")!;
 			const rt = createInteractionRuntime(spec, { kernel: new ArcKernel(), document: { topology: topo, nodes: [] } });
-			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [0, 2, 0] as Vec3, modifiers: {} });
@@ -3891,7 +4491,7 @@ if (import.meta.vitest) {
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
-			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [p0[0] + 2, p0[1] + 1, p0[2]], modifiers: {} });
 			const snap = rt.getSnapshot();
@@ -4016,7 +4616,6 @@ if (import.meta.vitest) {
 				kernel: new StubKernel(),
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
-			await rt.send({ kind: "start" });
 			let snap = rt.getSnapshot();
 			expect(snap.state).toBe("first_corner");
 			expect(snap.context.cursor).toEqual([0, 0, 0]);
@@ -4051,15 +4650,11 @@ if (import.meta.vitest) {
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			expect(rt.getSnapshot().capabilities.canUndo).toBe(false);
-			await rt.send({ kind: "start" });
-			expect(rt.getSnapshot().capabilities.canUndo).toBe(true);
-			const afterStart = rt.getSnapshot().state;
+			const initial = rt.getSnapshot().state;
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			expect(rt.getSnapshot().capabilities.canUndo).toBe(true);
 			await rt.undo();
-			expect(rt.getSnapshot().state).toBe(afterStart);
-			await rt.undo();
-			expect(rt.getSnapshot().state).toBe(spec.machine.initial);
+			expect(rt.getSnapshot().state).toBe(initial);
 		});
 
 		it("runs box workflow with a recording kernel stub (no solid modeling in core)", async () => {
@@ -4085,7 +4680,6 @@ if (import.meta.vitest) {
 			const topo = new TopologyGraph();
 			const kernel = new RecordingStubKernel();
 			const rt = createInteractionRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
-			await rt.send({ kind: "start" });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "set.height", value: 4, modifiers: {} });
@@ -4134,8 +4728,6 @@ if (import.meta.vitest) {
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
-			await rt0.send({ kind: "start" });
-			await rt1.send({ kind: "start" });
 			expect(rt1.getSnapshot().state).toBe(rt0.getSnapshot().state);
 			expect(rt1.getSnapshot().context).toEqual(rt0.getSnapshot().context);
 			expect(rt1.getSnapshot().capabilities).toEqual(rt0.getSnapshot().capabilities);
@@ -4339,13 +4931,13 @@ if (import.meta.vitest) {
 			}
 			const spec = buildBoxInteractionSpec();
 			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
-			await rt.send({ kind: "start" });
 			expect(rt.getSnapshot().state).toBe("first_corner");
 			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			rt.undo();
-			expect(rt.getSnapshot().state).toBe("idle");
+			expect(rt.getSnapshot().state).toBe("first_corner");
 			expect(rt.getSnapshot().capabilities.canRedo).toBe(true);
-			await rt.send({ kind: "start" });
+			await rt.send({ kind: "pointer.down", point: [1, 0, 0] as Vec3, modifiers: {} });
 			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
 		});
 	});
@@ -4380,9 +4972,9 @@ if (import.meta.vitest) {
 			expect(Object.keys(g.faces).length).toBe(1);
 			const spec = buildBoxInteractionSpec();
 			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
-			await rt.send({ kind: "start" });
+			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			rt.undo();
-			expect(rt.getSnapshot().state).toBe("idle");
+			expect(rt.getSnapshot().state).toBe("first_corner");
 			expect(Object.keys(g.faces).length).toBe(1);
 			rt.undo();
 			expect(Object.keys(g.faces).length).toBe(0);
@@ -4406,4 +4998,3 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
-

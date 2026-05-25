@@ -15,6 +15,8 @@ Cell: A Cell is a three-dimensional region defined by a collection of closed She
 CellComplex: A CellComplex is a contiguous collection of Cells where adjacent Cells are connected by shared Faces. It is non-manifold.
 Cluster: A Cluster is a collection of any topologic entities. It may be contiguous or not and may be manifold or non-manifold. Clusters can be nested within other Clusters.
 
+Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
+
 ## Non-editable
 
 Surfaces are derived faces that are a combination of Exposure (External or Internal) and Stance (Horizontal or Vertical).
@@ -24,3 +26,7 @@ Surfaces are just a different way of "splitting the faces semantically". e.g. th
 
 Parts are derived cells that are a combination of Overlap (None, Difference, Intersection)
 Parts are just a different way of "splitting the cells semantically". e.g. the total volume or shape doesnt change
+
+Volume is the
+
+Skin is the

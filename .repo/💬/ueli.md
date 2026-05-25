@@ -2557,6 +2557,17 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+spatial:
+Introduce new editable geometry entity: Anchor
+
+Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
+
+Add new interaction createAnchor (first select or when only one matching entity is selected assume the user wants this one. then evaluate the geometry by taking the closest point of the cursor on the geometry).
+
+Add all different actions that exists and that are needed for the interaction.
+
+---
+
 Introduce a new cypher inspired query language called "construct". It must be cypher inspired.
 Implement the efficient engine in c:\git\semio\spatial\js\query\index.ts . Use chevrotain for ast.
 Extend the core, the kernel, etc to be able to resolve them.

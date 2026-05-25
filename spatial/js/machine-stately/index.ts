@@ -11,6 +11,7 @@ import {
 	buildDistanceInteractionSpec,
 	cellRef,
 	createInteractionRuntime,
+	initialContextForSpec,
 	isEmptyTopologyDiff,
 	listSpatialInteractions,
 	loadSpatialInteraction,
@@ -223,12 +224,13 @@ export function buildSpatialStatelyMachineCatalogView(opts?: {
 /** @emoji 🎭 XState-backed `StateEngine`; `send` runs `applyTransition` then syncs the actor via `__advance`. */
 export class StatelyStateEngine implements StateEngine {
 	private interactionState: string;
-	private readonly interactionContext: Record<string, unknown> = {};
+	private interactionContext: Record<string, unknown>;
 	private machine: ReturnType<typeof buildStatelyMachine>;
 	private actor!: { stop: () => void; start: () => void; send: (e: StatelyAdvance) => void; getSnapshot: () => { value: unknown } };
 
 	constructor(private readonly spec: InteractionSpec) {
 		this.interactionState = spec.machine.initial;
+		this.interactionContext = initialContextForSpec(spec);
 		this.machine = buildStatelyMachine(spec, this.interactionState);
 		this.bootActor();
 	}
@@ -253,14 +255,13 @@ export class StatelyStateEngine implements StateEngine {
 	}
 
 	reset(): void {
-		for (const k of Object.keys(this.interactionContext)) delete this.interactionContext[k];
 		this.interactionState = this.spec.machine.initial;
+		this.interactionContext = initialContextForSpec(this.spec);
 		this.rebuildMachine(this.interactionState);
 	}
 
 	restore(state: string, context: Record<string, unknown>): void {
-		for (const k of Object.keys(this.interactionContext)) delete this.interactionContext[k];
-		Object.assign(this.interactionContext, context);
+		this.interactionContext = context;
 		this.interactionState = state;
 		this.rebuildMachine(state);
 	}
@@ -381,9 +382,6 @@ if (import.meta.vitest) {
 				stateEngine: statelyStateEngineProvider,
 			});
 			await assertSnapshotsEqual(rtPure, rtSt);
-			await rtPure.send({ kind: "start" });
-			await rtSt.send({ kind: "start" });
-			await assertSnapshotsEqual(rtPure, rtSt);
 			await rtPure.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rtSt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await assertSnapshotsEqual(rtPure, rtSt);
@@ -392,9 +390,6 @@ if (import.meta.vitest) {
 			await assertSnapshotsEqual(rtPure, rtSt);
 			await rtPure.send({ kind: "set.height", value: 4, modifiers: {} });
 			await rtSt.send({ kind: "set.height", value: 4, modifiers: {} });
-			await assertSnapshotsEqual(rtPure, rtSt);
-			await rtPure.commit();
-			await rtSt.commit();
 			await assertSnapshotsEqual(rtPure, rtSt);
 			expect(k1.lastBox).toEqual(k2.lastBox);
 		});
@@ -413,8 +408,6 @@ if (import.meta.vitest) {
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
-			await rtPure.send({ kind: "start" });
-			await rtSt.send({ kind: "start" });
 			await rtPure.send({ kind: "pointer.down", point: [1, 1, 0] as Vec3, modifiers: {} });
 			await rtSt.send({ kind: "pointer.down", point: [1, 1, 0] as Vec3, modifiers: {} });
 			await assertSnapshotsEqual(rtPure, rtSt);

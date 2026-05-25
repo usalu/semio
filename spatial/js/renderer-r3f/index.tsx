@@ -19,6 +19,7 @@ import {
 	cellRef,
 	createInteractionRuntime,
 	DerivedViewService,
+	evaluateAnchorPosition,
 	topologyCellAabb,
 	DocumentHistory,
 	arcEndOnCircle,
@@ -35,6 +36,7 @@ import {
 	type InteractionRuntime,
 	type InteractionRuntimeOptions,
 	type InteractionSnapshot,
+	type AnchorRecord,
 	type CellComplexRecord,
 	type CellRecord,
 	type ClusterRecord,
@@ -313,12 +315,13 @@ export type SpatialPickKind = "pointer.down" | "pointer.move";
 
 export type SpatialPickTargetKind = Extract<
 	TopologyEntityKind,
-	"vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster" | "surface" | "part"
+	"anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster" | "surface" | "part"
 >;
 
 export type SpatialPickViewKind = "raw" | "analytic";
 
 export const SPATIAL_RAW_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
+	"anchor",
 	"vertex",
 	"edge",
 	"wire",
@@ -401,6 +404,7 @@ function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<strin
 
 /** @emoji 🧲 Normalizes `TopologyGraphJson` array buckets to the record shape used by interaction math. */
 function topologyGeometryBuckets(g: SpatialPickGeometry): {
+	readonly anchors: Record<string, AnchorRecord>;
 	readonly vertices: Record<string, VertexRecord>;
 	readonly edges: Record<string, EdgeRecord>;
 	readonly wires: Record<string, WireRecord>;
@@ -412,6 +416,7 @@ function topologyGeometryBuckets(g: SpatialPickGeometry): {
 } {
 	if (g instanceof TopologyGraph) {
 		return {
+			anchors: g.anchors,
 			vertices: g.vertices,
 			edges: g.edges,
 			wires: g.wires,
@@ -423,6 +428,7 @@ function topologyGeometryBuckets(g: SpatialPickGeometry): {
 		};
 	}
 	return {
+		anchors: asRecordBucket((g as TopologyGraphJson & { readonly anchors?: readonly AnchorRecord[] }).anchors),
 		vertices: asRecordBucket(g.vertices),
 		edges: asRecordBucket(g.edges),
 		wires: asRecordBucket(g.wires),
@@ -526,6 +532,10 @@ function topologyEntityPoints(
 	kind: SpatialPickTargetKind,
 	id: string,
 ): readonly Vec3[] {
+	if (kind === "anchor") {
+		const anchor = buckets.anchors[id];
+		return anchor ? [anchor.position] : [];
+	}
 	if (kind === "vertex") return buckets.vertices[id]?.position ? [buckets.vertices[id]!.position] : [];
 	if (kind === "edge" && buckets.edges[id]) return topologyEdgePoints(buckets.vertices, buckets.edges[id]!);
 	if (kind === "wire" && buckets.wires[id]) return topologyWirePoints(buckets.vertices, buckets.edges, buckets.wires[id]!);
@@ -694,7 +704,13 @@ export function createSpatialPickTargets(
 ): readonly SpatialPickTarget[] {
 	if (!geometry) return [];
 	const buckets = topologyGeometryBuckets(geometry);
+	const topo = geometry instanceof TopologyGraph ? geometry : parseTopologyGraphJson(geometry as TopologyGraphJson);
 	const targets: SpatialPickTarget[] = [];
+	if (topo) {
+		for (const anchor of topologyRecords(buckets.anchors)) {
+			targets.push({ kind: "anchor", id: anchor.id, point: evaluateAnchorPosition(topo, anchor) });
+		}
+	}
 	for (const vertex of topologyRecords(buckets.vertices)) {
 		targets.push({ kind: "vertex", id: vertex.id, point: vertex.position });
 	}
@@ -751,8 +767,6 @@ export function createSpatialPickTargets(
 		const point = topologyPointCentroid(points) ?? allCenter;
 		if (point) targets.push({ kind: "cluster", id: cluster.id, point, points: points.length ? points : all });
 	}
-	const topo =
-		geometry instanceof TopologyGraph ? geometry : parseTopologyGraphJson(geometry as TopologyGraphJson);
 	if (derived && topo) targets.push(...createAnalyticSpatialPickTargets(buckets, derived, topo));
 	return targets;
 }
@@ -783,7 +797,7 @@ export function createSpatialPickEvent(
 	return target
 		? {
 				kind,
-				point: target.point,
+				point,
 				modifiers,
 				snap: { kind: target.kind, id: target.id, point: target.point },
 				selection: { kind: target.kind, id: target.id },
@@ -1425,6 +1439,7 @@ function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonl
 }
 
 const spatialPickPriority: Record<SpatialPickTargetKind, number> = {
+	anchor: 0,
 	vertex: 0,
 	edge: 1,
 	wire: 2,
@@ -1461,8 +1476,8 @@ function spatialPickTargetsFromRay(
 }
 
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
-	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
-	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
+	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.34, lineWidth: 9 };
+	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.28, lineWidth: 8 };
 	if (target.kind === "surface") {
 		const internal = target.exposure === "internal";
 		return {
@@ -1477,6 +1492,7 @@ function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: bool
 		if (target.overlap === "difference") return { color: "#ff9944", emissive: "#663300", opacity: 0.38, lineWidth: 8 };
 		return { color: "#88dd88", emissive: "#204420", opacity: 0.34, lineWidth: 7 };
 	}
+	if (target.kind === "anchor") return { color: "#9cffc8", emissive: "#1e4d35", opacity: 1, lineWidth: 5 };
 	if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
 	if (target.kind === "edge" || target.kind === "wire") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
 	return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
@@ -1588,7 +1604,7 @@ function SpatialPickTargetNode({
 	};
 	const onPointerOut = () => onHoverTarget?.(null);
 	const userData = { spatialPickKey: targetKey };
-	if (target.kind === "vertex") {
+	if (target.kind === "vertex" || target.kind === "anchor") {
 		return (
 			<mesh
 				position={target.point}
@@ -2114,12 +2130,8 @@ function replEscapeAction(state: {
 	return "none";
 }
 
-function replStartEvent(selection: SelectionTarget | null): InteractionEvent {
-	return selection ? { kind: "start", targets: [selection], selection, modifiers: {} } : { kind: "start", modifiers: {} };
-}
-
-function replSelectionEvent(selection: SelectionTarget): InteractionEvent {
-	return { kind: "selection.changed", targets: [selection], modifiers: {} };
+function replSelectionEvent(selection: SelectionTarget, point?: Vec3): InteractionEvent {
+	return point ? { kind: "selection.changed", targets: [selection], point, modifiers: {} } : { kind: "selection.changed", targets: [selection], modifiers: {} };
 }
 
 function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: SelectionTarget | null): selection is SelectionTarget {
@@ -2245,7 +2257,6 @@ export function InteractionRepl({
 	}, [interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction]);
 
 	const startRuntime = useCallback(async () => {
-		await rt.send(replStartEvent(selectedSelectionTarget));
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
 		if (replSelectionAccepted(accept, selectedSelectionTarget)) await rt.send(replSelectionEvent(selectedSelectionTarget));
 	}, [rt, selectedSelectionTarget]);
@@ -2255,12 +2266,9 @@ export function InteractionRepl({
 			suppressAutoStartOnceRef.current = false;
 			return;
 		}
-		const snap = rt.getSnapshot();
-		const initial = spec.machine.initial;
-		if (snap.state !== initial) return;
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
 		if (replSelectionAccepted(accept, selectedSelectionTarget)) void rt.send(replSelectionEvent(selectedSelectionTarget));
-	}, [rt, spec, selectedSelectionTarget]);
+	}, [rt, selectedSelectionTarget]);
 
 	useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
@@ -2323,13 +2331,13 @@ export function InteractionRepl({
 	}, [activeSelectionAccept, activePickViewKinds, pickViewKind]);
 
 	const dispatchSelectionTarget = useCallback(
-		(target: SpatialPickTarget, modifiers: InteractionEvent["modifiers"] = {}) => {
+		(target: SpatialPickTarget, modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
 			const selection = spatialSelectionTarget(target);
 			setSelectionMenu(null);
 			setHoveredPickKey(null);
 			setSelectedPickKey(spatialSelectionTargetKey(selection));
 			setSelectedSelectionTarget(selection);
-			void rt.send({ ...replSelectionEvent(selection), modifiers });
+			void rt.send({ ...replSelectionEvent(selection, point), modifiers });
 		},
 		[rt],
 	);
@@ -2337,7 +2345,7 @@ export function InteractionRepl({
 	const onSelectionRequest = useCallback(
 		(request: SpatialSelectionRequest) => {
 			if (request.targets.length === 1) {
-				dispatchSelectionTarget(request.targets[0]!, request.modifiers);
+				dispatchSelectionTarget(request.targets[0]!, request.modifiers, request.point);
 				return;
 			}
 			setSelectionMenu(request);
@@ -2368,7 +2376,7 @@ export function InteractionRepl({
 							: { kind, id: snapEv.id, editable: true };
 					setSelectedPickKey(spatialSelectionTargetKey(selection));
 					setSelectedSelectionTarget(selection);
-					void rt.send({ ...replSelectionEvent(selection), modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
+					void rt.send({ ...replSelectionEvent(selection, (ev as { point?: Vec3 }).point), modifiers: (ev as { modifiers?: Record<string, unknown> }).modifiers ?? {} });
 					return;
 				}
 			}
@@ -2646,7 +2654,7 @@ export function InteractionRepl({
 									onPointerDown={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
-										dispatchSelectionTarget(target, selectionMenu.modifiers);
+										dispatchSelectionTarget(target, selectionMenu.modifiers, selectionMenu.point);
 									}}
 									style={{
 										display: "block",
@@ -2837,7 +2845,15 @@ export function InteractionRepl({
 					</div>
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
-					Interaction <code>{interactionId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+					{interactionId ? (
+						<>
+							Interaction <code>{interactionId}</code> · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+						</>
+					) : (
+						<>
+							No interaction selected · state <code>{snapshot.state}</code> · rev {snapshot.revision}
+						</>
+					)}
 				</div>
 				<div style={{ fontSize: 12, borderTop: "1px solid #2a2a3a", paddingTop: 8 }}>
 					<strong>Last response</strong>
@@ -2935,6 +2951,7 @@ if (import.meta.vitest) {
 			const targets = createSpatialPickTargets({
 				schema: "spatial.topology/v1",
 				revision: 1,
+				anchors: [],
 				vertices: [{ id: "v0", position: [1, 2, 3] }],
 				edges: [],
 				wires: [],
@@ -2947,7 +2964,7 @@ if (import.meta.vitest) {
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
-				point: [1, 2, 3],
+				point: [9, 9, 9],
 				modifiers: { shift: true },
 				snap: { kind: "vertex", id: "v0", point: [1, 2, 3] },
 				selection: { kind: "vertex", id: "v0" },
@@ -2958,6 +2975,7 @@ if (import.meta.vitest) {
 			const targets = createSpatialPickTargets({
 				schema: "spatial.topology/v1",
 				revision: 1,
+				anchors: [{ id: "a0", position: [0.25, 0.25, 0], attachment: { kind: "vertex", id: "v0" } }],
 				vertices: [
 					{ id: "v0", position: [0, 0, 0] },
 					{ id: "v1", position: [1, 0, 0] },
@@ -2975,6 +2993,7 @@ if (import.meta.vitest) {
 				clusters: [{ id: "cl0", memberIds: ["c0"] }],
 			});
 			expect(targets.map((target) => target.kind)).toEqual([
+				"anchor",
 				"vertex",
 				"vertex",
 				"vertex",
@@ -3074,9 +3093,8 @@ if (import.meta.vitest) {
 			]);
 		});
 
-		it("carries host selection into interaction start events", () => {
+		it("carries host selection into interaction selection events", () => {
 			const selection: SelectionTarget = { kind: "wire", id: "w0", editable: true };
-			expect(replStartEvent(selection)).toEqual({ kind: "start", targets: [selection], selection, modifiers: {} });
 			expect(replSelectionAccepted(["wire"], selection)).toBe(true);
 			expect(replSelectionAccepted(["face"], selection)).toBe(false);
 			expect(replSelectionEvent(selection)).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
