@@ -33,13 +33,64 @@
         "position": { "$ref": "#/$defs/vec3" }
       }
     },
+    "edgeCurve": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "line" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center"],
+          "properties": { "kind": { "const": "arc" }, "center": { "$ref": "#/$defs/vec3" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "normal", "radius"],
+          "properties": {
+            "kind": { "const": "circle" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "normal", "majorAxis", "majorRadius", "minorRadius"],
+          "properties": {
+            "kind": { "const": "ellipse" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" },
+            "majorAxis": { "$ref": "#/$defs/vec3" },
+            "majorRadius": { "type": "number", "exclusiveMinimum": 0 },
+            "minorRadius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "poles", "degree"],
+          "properties": {
+            "kind": { "const": "nurbs" },
+            "poles": { "type": "array", "items": { "$ref": "#/$defs/vec3" }, "minItems": 2 },
+            "degree": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "weights": { "type": "array", "items": { "type": "number" } },
+            "knots": { "type": "array", "items": { "type": "number" } },
+            "multiplicities": { "type": "array", "items": { "type": "integer" } },
+            "periodic": { "type": "boolean" },
+            "rational": { "type": "boolean" }
+          }
+        }
+      ]
+    },
     "edge": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "vertexIds"],
       "properties": {
         "id": { "type": "string" },
-        "vertexIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 }
+        "vertexIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 },
+        "curve": { "$ref": "#/$defs/edgeCurve" }
       }
     },
     "wire": {
@@ -51,13 +102,38 @@
         "edgeIds": { "type": "array", "items": { "type": "string" } }
       }
     },
+    "faceSurface": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "origin", "normal"],
+          "properties": {
+            "kind": { "const": "plane" },
+            "origin": { "$ref": "#/$defs/vec3" },
+            "normal": { "$ref": "#/$defs/vec3" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "radius"],
+          "properties": {
+            "kind": { "const": "sphere" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
     "face": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "wireIds"],
       "properties": {
         "id": { "type": "string" },
-        "wireIds": { "type": "array", "items": { "type": "string" } }
+        "wireIds": { "type": "array", "items": { "type": "string" } },
+        "surface": { "$ref": "#/$defs/faceSurface" }
       }
     },
     "shell": {
@@ -69,13 +145,51 @@
         "faceIds": { "type": "array", "items": { "type": "string" } }
       }
     },
+    "cellSolid": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "cornerA", "cornerB", "height"],
+          "properties": {
+            "kind": { "const": "box" },
+            "cornerA": { "$ref": "#/$defs/vec3" },
+            "cornerB": { "$ref": "#/$defs/vec3" },
+            "height": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "center", "radius"],
+          "properties": {
+            "kind": { "const": "sphere" },
+            "center": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "base", "axis", "radius", "height"],
+          "properties": {
+            "kind": { "const": "cylinder" },
+            "base": { "$ref": "#/$defs/vec3" },
+            "axis": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
     "cell": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "shellIds"],
       "properties": {
         "id": { "type": "string" },
-        "shellIds": { "type": "array", "items": { "type": "string" } }
+        "shellIds": { "type": "array", "items": { "type": "string" } },
+        "solid": { "$ref": "#/$defs/cellSolid" }
       }
     },
     "cellComplex": {

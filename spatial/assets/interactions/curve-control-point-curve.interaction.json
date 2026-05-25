@@ -469,7 +469,7 @@
   },
   "commit": {
     "fromStates": [
-      "ready"
+      "committed"
     ],
     "operation": {
       "kind": "action",

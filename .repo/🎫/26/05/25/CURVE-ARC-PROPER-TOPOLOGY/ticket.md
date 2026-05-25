@@ -1,21 +1,29 @@
-# Curve Arc Proper Topology
+# Curve And Cell Geometry (Topologic Model)
 
 **Repo MCP:** unavailable in this session.
 
 ## Goal
 
-Finalize `curve.arc` as a single circular arc edge (start→end with `curve.kind: arc` + center), not center→start→end polylines. Align sweep sampling with Topologic `Wire.Arc` / interaction preview.
+Separate topologic entities from OCCT-style geometry: curves on `Edge`, surfaces on `Face`, analytic solids on `Cell` (Topologic / `Geom_Curve` / `Geom_Surface` / `BRepPrimAPI` pattern).
 
 ## Summary
 
-- Added `EdgeCurve` (`arc` with `center`) on `EdgeRecord`; arc is one edge from start→end (center is geometry only, not a wire vertex).
-- Shared `arcSamplePoints` / `arcPlaneFrame` / `edgeSamplePoints` in core (Topologic-style CCW sweep in the arc plane).
-- `curve.arc` kernel command and renderer wireframe tessellate the circular arc instead of chord polylines.
-- Fixed `curve-arc.interaction.json` commit `fromStates` to `committed`.
+- **EdgeCurve:** `line`, `arc`, `circle`, `ellipse`, `nurbs` with tessellation + `edgeCurveLength` / `edgeSamplePoints`.
+- **FaceSurface:** `plane`, `cylinder`, `sphere`, `cone`, `nurbs` (schema + types).
+- **CellSolid:** `box`, `sphere`, `cylinder`, `cone` on `CellRecord`; `cellSolidAabb`; brepjs `sphere`/`cylinder`/`cone` in kernel.
+- **Commands:** `curve.arc`, `curve.circle`, `curve.controlPointCurve`, `curve.interpolateCurve`, `solid.sphere`, `solid.cylinder`, `solid.cone`.
+- **Schema:** `spatial/schema/json/topology.json` documents `curve`, `surface`, `solid`.
+- Interaction commit `fromStates` fixed to `committed` on curve/solid assets.
 
 ## Files
 
 - `spatial/js/core/index.ts`
 - `spatial/js/kernel-brepjs/index.ts`
 - `spatial/js/renderer-r3f/index.tsx`
+- `spatial/schema/json/topology.json`
 - `spatial/assets/interactions/curve-arc.interaction.json`
+- `spatial/assets/interactions/curve-circle.interaction.json`
+- `spatial/assets/interactions/curve-control-point-curve.interaction.json`
+- `spatial/assets/interactions/curve-interpolate-curve.interaction.json`
+- `spatial/assets/interactions/solid-sphere.interaction.json`
+- `spatial/assets/interactions/solid-cylinder.interaction.json`

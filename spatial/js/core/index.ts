@@ -175,6 +175,20 @@ export function arcFrameFromRadiusPoint(center: Vec3, onCircle: Vec3): ArcPlaneF
 	return { center, radius, normal, u, v };
 }
 
+/** @emoji 🔵 On-circle arc end from pick direction (same sweep as preview / `arcSamplePoints`, not raw cursor). */
+export function arcEndOnCircle(center: Vec3, start: Vec3, pick: Vec3): Vec3 {
+	const frame = arcPlaneFrame(center, start, pick);
+	if (!frame) return pick;
+	const sweep = arcSweepRadians(frame, pick);
+	return vec3Add(
+		frame.center,
+		vec3Add(
+			vec3Scale(frame.u, frame.radius * Math.cos(sweep)),
+			vec3Scale(frame.v, frame.radius * Math.sin(sweep)),
+		),
+	);
+}
+
 /** @emoji 🔵 End point on arc at `angleDeg` from `start` about `center`. */
 export function arcEndFromAngle(center: Vec3, start: Vec3, angleDeg: number): Vec3 | null {
 	const frame = arcFrameFromRadiusPoint(center, start);
@@ -3546,30 +3560,47 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("@spatial/js-core arc curve", () => {
+	describe("@spatial/js-core edge and cell geometry", () => {
+		it("arcEndOnCircle projects off-circle pick onto arc", () => {
+			const end = arcEndOnCircle([0, 0, 0], [2, 0, 0], [0, 3, 0]);
+			expect(end[0]).toBeCloseTo(0, 5);
+			expect(end[1]).toBeCloseTo(2, 5);
+			expect(vec3Distance([0, 0, 0], end)).toBeCloseTo(2, 5);
+		});
 		it("arcSamplePoints quarter arc from center start end", () => {
 			const pts = arcSamplePoints([0, 0, 0], [2, 0, 0], [0, 2, 0], 4);
 			expect(pts[0]).toEqual([2, 0, 0]);
 			expect(pts[pts.length - 1]![0]).toBeCloseTo(0, 5);
 			expect(pts[pts.length - 1]![1]).toBeCloseTo(2, 5);
 		});
-		it("arcEndFromAngle matches 90 degree end", () => {
-			const end = arcEndFromAngle([0, 0, 0], [1, 0, 0], 90);
-			expect(end![0]).toBeCloseTo(0, 5);
-			expect(end![1]).toBeCloseTo(1, 5);
+		it("circleSamplePoints and edgeCurveLength for Geom_Circle", () => {
+			const pts = circleSamplePoints([0, 0, 0], [0, 0, 1], 2, 64);
+			expect(pts.length).toBeGreaterThan(8);
+			expect(edgeCurveLength({ kind: "circle", center: [0, 0, 0], normal: [0, 0, 1], radius: 2 }, [[2, 0, 0], [2, 0, 0]])).toBeCloseTo(
+				Math.PI * 4,
+				3,
+			);
 		});
-		it("edgeSamplePoints tessellates arc edge", () => {
+		it("nurbs edge samples through control poles", () => {
+			const curve = nurbsCurveFromPoles([
+				[0, 0, 0],
+				[1, 2, 0],
+				[3, 0, 0],
+			] as Vec3[])!;
 			const v0 = "v0" as VertexRef;
 			const v1 = "v1" as VertexRef;
 			const verts = {
-				[v0]: { id: v0, position: [2, 0, 0] as Vec3 },
-				[v1]: { id: v1, position: [0, 2, 0] as Vec3 },
+				[v0]: { id: v0, position: [0, 0, 0] as Vec3 },
+				[v1]: { id: v1, position: [3, 0, 0] as Vec3 },
 			};
-			const e = "e0" as EdgeRef;
-			const edge: EdgeRecord = { id: e, vertexIds: [v0, v1], curve: { kind: "arc", center: [0, 0, 0] } };
-			const pts = edgeSamplePoints(verts, edge, 8);
-			expect(pts.length).toBeGreaterThan(2);
-			expect(pts[0]).toEqual([2, 0, 0]);
+			const edge: EdgeRecord = { id: "e" as EdgeRef, vertexIds: [v0, v1], curve };
+			const pts = edgeSamplePoints(verts, edge, 24);
+			expect(pts.length).toBeGreaterThan(4);
+		});
+		it("cellSolidAabb sphere bounds", () => {
+			const b = cellSolidAabb({ kind: "sphere", center: [1, 2, 3], radius: 5 });
+			expect(b.min).toEqual([-4, -3, -2]);
+			expect(b.max).toEqual([6, 7, 8]);
 		});
 	});
 

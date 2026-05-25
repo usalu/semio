@@ -31,6 +31,7 @@ import {
 	type SurfaceRef,
 	type PartRef,
 	arcEndFromAngle,
+	arcEndOnCircle,
 	circleFromCenterRadiusPoint,
 	edgeCurveLength,
 	nurbsCurveFromPoles,
@@ -284,7 +285,7 @@ export class BrepjsKernel implements KernelAdapter {
 			const endRaw = params.end != null ? asVec3(params.end, start) : null;
 			const angle = typeof params.angle === "number" ? params.angle : null;
 			let endPos: Vec3;
-			if (endRaw) endPos = endRaw;
+			if (endRaw) endPos = arcEndOnCircle(center, start, endRaw);
 			else if (angle !== null) endPos = arcEndFromAngle(center, start, angle) ?? start;
 			else endPos = start;
 			const vStart = createVertex(start);
@@ -385,10 +386,14 @@ export class BrepjsKernel implements KernelAdapter {
 	async edgeLength(e: EdgeRef, topo: TopologyGraph): Promise<number> {
 		const ed = topo.edges[String(e)];
 		if (!ed) return 0;
-		const pa = topo.vertices[String(ed.vertexIds[0])]?.position;
-		const pb = topo.vertices[String(ed.vertexIds[1])]?.position;
-		if (!pa || !pb) return 0;
-		return edgeCurveLength(ed.curve, ed.vertexIds[0] === ed.vertexIds[1] ? [pa] : [pa, pb]);
+		const ends: Vec3[] = [];
+		for (const vid of ed.vertexIds) {
+			const p = topo.vertices[String(vid)]?.position;
+			if (p) ends.push(p);
+		}
+		if (ends.length === 0) return 0;
+		if (ends.length === 1) return edgeCurveLength(ed.curve, [ends[0]!, ends[0]!]);
+		return edgeCurveLength(ed.curve, [ends[0]!, ends[1]!]);
 	}
 
 	async faceArea(f: FaceRef, topo: TopologyGraph): Promise<number> {
@@ -602,6 +607,17 @@ if (import.meta.vitest) {
 			expect(parts.some((p) => p.overlap === "difference")).toBe(true);
 		});
 
+		it("executeCommandDiff curve.arc places end vertex on circle not off-circle pick", async () => {
+			const res = await kernel.executeCommandDiff("curve.arc", {
+				center: [0, 0, 0],
+				start: [2, 0, 0],
+				end: [0, 3, 0],
+			});
+			const verts = res.diff.vertices?.added ?? [];
+			expect(verts[1]!.position[0]).toBeCloseTo(0, 5);
+			expect(verts[1]!.position[1]).toBeCloseTo(2, 5);
+		});
+
 		it("executeCommandDiff curve.arc creates one arc edge between start and end", async () => {
 			const res = await kernel.executeCommandDiff("curve.arc", {
 				center: [0, 0, 0],
@@ -633,15 +649,41 @@ if (import.meta.vitest) {
 			expect(res.diff.edges?.added?.[0]?.curve).toEqual({ kind: "arc", center: [0, 0, 0] });
 		});
 
-		it("executeCommandDiff curve.circle reads radiusPoint correctly", async () => {
+		it("executeCommandDiff curve.circle creates closed circle edge with Geom_Circle metadata", async () => {
 			const res = await kernel.executeCommandDiff("curve.circle", {
 				center: [1, 2, 0],
 				radiusPoint: [4, 2, 0],
 			});
 			const verts = res.diff.vertices?.added ?? [];
-			expect(verts).toHaveLength(2);
-			expect(verts[0]!.position).toEqual([1, 2, 0]);
-			expect(verts[1]!.position).toEqual([4, 2, 0]);
+			const edges = res.diff.edges?.added ?? [];
+			expect(verts).toHaveLength(1);
+			expect(verts[0]!.position).toEqual([4, 2, 0]);
+			expect(edges[0]!.curve).toEqual({ kind: "circle", center: [1, 2, 0], normal: [0, 0, 1], radius: 3 });
+			expect(edges[0]!.vertexIds[0]).toBe(edges[0]!.vertexIds[1]);
+		});
+
+		it("executeCommandDiff solid.sphere stores CellSolid and brepjs solid", async () => {
+			const res = await kernel.executeCommandDiff("solid.sphere", {
+				center: [0, 0, 0],
+				radius: 2,
+			});
+			const cells = res.diff.cells?.added ?? [];
+			expect(cells[0]!.solid).toEqual({ kind: "sphere", center: [0, 0, 0], radius: 2 });
+			const vol = await kernel.volume(cells[0]!.id);
+			expect(vol).toBeCloseTo((4 / 3) * Math.PI * 8, 1);
+		});
+
+		it("executeCommandDiff curve.controlPointCurve creates nurbs edge", async () => {
+			const res = await kernel.executeCommandDiff("curve.controlPointCurve", {
+				points: [
+					[0, 0, 0],
+					[1, 2, 0],
+					[3, 1, 0],
+				],
+			});
+			const edges = res.diff.edges?.added ?? [];
+			expect(edges[0]!.curve?.kind).toBe("nurbs");
+			if (edges[0]!.curve?.kind === "nurbs") expect(edges[0]!.curve.poles).toHaveLength(3);
 		});
 	});
 }

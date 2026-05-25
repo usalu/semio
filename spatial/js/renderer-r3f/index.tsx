@@ -21,6 +21,8 @@ import {
 	DerivedViewService,
 	topologyCellAabb,
 	DocumentHistory,
+	arcEndOnCircle,
+	arcSamplePoints,
 	edgeSamplePoints,
 	isInteractionSessionActive,
 	parseTopologyGraphJson,
@@ -1102,22 +1104,12 @@ function PreviewItem({
 	if (previewKind === "arc" && points.length >= 2 && cursor) {
 		const center = points[0]!;
 		const start = points[1]!;
-		const radius = Math.hypot(start[0] - center[0], start[1] - center[1], start[2] - center[2]);
-		if (radius > 1e-9) {
-			const startAngle = Math.atan2(start[1] - center[1], start[0] - center[0]);
-			const endAngle = Math.atan2(cursor[1] - center[1], cursor[0] - center[0]);
-			let sweep = endAngle - startAngle;
-			if (sweep < 0) sweep += Math.PI * 2;
-			if (sweep < 1e-9) sweep = Math.PI * 2;
-			const segments = Math.max(32, Math.ceil(sweep / (Math.PI / 32)));
-			const arcPts: [number, number, number][] = [];
-			for (let i = 0; i <= segments; i++) {
-				const a = startAngle + (i / segments) * sweep;
-				arcPts.push([center[0] + Math.cos(a) * radius, center[1] + Math.sin(a) * radius, center[2]]);
-			}
+		const arcEnd = arcEndOnCircle(center, start, cursor);
+		const arcPts = arcSamplePoints(center, start, arcEnd, 64);
+		if (arcPts.length >= 2) {
 			return (
 				<group>
-					<Line raycast={raycastNone} points={arcPts} color="#88eeff" lineWidth={2} />
+					<Line raycast={raycastNone} points={arcPts.map((pt) => [pt[0], pt[1], pt[2]])} color="#88eeff" lineWidth={2} />
 					<Line
 						raycast={raycastNone}
 						points={[[center[0], center[1], center[2]], [start[0], start[1], start[2]]]}
@@ -1129,7 +1121,7 @@ function PreviewItem({
 					/>
 					<Line
 						raycast={raycastNone}
-						points={[[center[0], center[1], center[2]], [cursor[0], cursor[1], cursor[2]]]}
+						points={[[center[0], center[1], center[2]], [arcEnd[0], arcEnd[1], arcEnd[2]]]}
 						color="#ffff88"
 						lineWidth={1.5}
 						dashed
@@ -1143,6 +1135,10 @@ function PreviewItem({
 					<mesh position={start} raycast={raycastNone}>
 						<sphereGeometry args={[0.04, 10, 10]} />
 						<meshStandardMaterial color="#ffcc66" emissive="#553300" emissiveIntensity={0.35} />
+					</mesh>
+					<mesh position={arcEnd} raycast={raycastNone}>
+						<sphereGeometry args={[0.04, 10, 10]} />
+						<meshStandardMaterial color="#88eeff" emissive="#113344" emissiveIntensity={0.35} />
 					</mesh>
 				</group>
 			);
@@ -2233,6 +2229,8 @@ export function InteractionRepl({
 		return true;
 	}, [rt, dismissReplChrome]);
 
+	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
+
 	const handleEscapeKey = useCallback(() => {
 		switch (replEscapeAction({ interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
 			case "abort":
@@ -2297,7 +2295,6 @@ export function InteractionRepl({
 		setSelectedSelectionTarget(null);
 	}, [geometry, derivedRevision]);
 
-	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const activeSelectionAccept = useMemo(
 		() => (runtimeSelectionAccept.length > 0 ? runtimeSelectionAccept : interactionActive ? [] : SPATIAL_PICK_TARGET_KINDS),
