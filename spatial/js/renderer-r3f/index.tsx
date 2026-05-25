@@ -19,6 +19,7 @@ import {
 	createInteractionRuntime,
 	DerivedViewService,
 	DocumentHistory,
+	InteractionRegistry,
 	isInteractionSessionActive,
 	parseTopologyGraphJson,
 	listKeyedInteractionTransitions,
@@ -1760,23 +1761,32 @@ function spatialSelectionTarget(target: SpatialPickTarget) {
 	return { kind: target.kind, id: target.id, editable: true };
 }
 
-function SpatialSelectionRayCatcher({
+/** @emoji 🎯 One invisible catcher for topology selection clicks and hover (avoids per-target mesh raycasts). */
+function SpatialPickRayCatcher({
 	targets,
 	selectionAccept,
 	selectionKindToggles,
+	hoverKindToggles = {},
 	analyticToggles = {},
 	hostSelectionEnabled = false,
 	onSelectionRequest,
+	onHoverTarget,
 }: {
 	readonly targets: readonly SpatialPickTarget[];
 	readonly selectionAccept: readonly TopologyEntityKind[];
 	readonly selectionKindToggles: SpatialPickKindToggles;
+	readonly hoverKindToggles?: SpatialPickKindToggles;
 	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hostSelectionEnabled?: boolean;
 	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
+	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
 }): ReactNode {
-	if (selectionAccept.length === 0 || !onSelectionRequest) return null;
+	const selectionOn = selectionAccept.length > 0 && Boolean(onSelectionRequest);
+	const hoverOn = Boolean(onHoverTarget);
+	if (!selectionOn && !hoverOn) return null;
+	const hoverFrameRef = useRef(0);
 	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+		if (!selectionOn || !onSelectionRequest) return;
 		if (hostSelectionEnabled) {
 			e.stopPropagation();
 			return;
@@ -1792,50 +1802,50 @@ function SpatialSelectionRayCatcher({
 			modifiers: pointerModifiers(e),
 		});
 	};
+	const onPointerMove = (e: ThreeEvent<PointerEvent>) => {
+		if (!hoverOn || !onHoverTarget) return;
+		if (e.buttons !== 0) {
+			onHoverTarget(null);
+			return;
+		}
+		const frame = performance.now();
+		if (frame - hoverFrameRef.current < 32) return;
+		hoverFrameRef.current = frame;
+		const target = pickHoverTargetFromRay(e.ray, targets, hoverKindToggles, analyticToggles);
+		onHoverTarget(target);
+	};
+	const onPointerOut = () => onHoverTarget?.(null);
 	return (
-		<mesh onPointerDown={onPointerDown} renderOrder={-10}>
+		<mesh onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerOut={onPointerOut} renderOrder={-10}>
 			<sphereGeometry args={[80, 16, 16]} />
 			<meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.BackSide} />
 		</mesh>
 	);
 }
 
+/** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
+export function pickHoverTargetFromRay(
+	ray: THREE.Ray,
+	targets: readonly SpatialPickTarget[],
+	hoverKindToggles: SpatialPickKindToggles = {},
+	analyticToggles: SpatialAnalyticToggles = {},
+): SpatialPickTarget | null {
+	return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles, analyticToggles)[0] ?? null;
+}
+
+/** @emoji 👁️ Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
 function SpatialPickTargetNode({
 	target,
-	targets,
 	topologyPreviewTransform = null,
-	onInteractionEvent,
-	onPick,
-	onPointerMove,
-	onSelectionRequest,
-	onHoverTarget,
-	pointerMoveEnabled,
-	selectionAccept,
-	selectionKindToggles,
-	hoverKindToggles,
-	analyticToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
-	hostSelectionEnabled = false,
 }: {
 	readonly target: SpatialPickTarget;
-	readonly targets: readonly SpatialPickTarget[];
 	readonly topologyPreviewTransform?: ((point: Vec3) => Vec3) | null;
-	readonly onInteractionEvent?: (event: InteractionEvent) => void;
-	readonly onPick?: (point: Vec3, event: InteractionEvent) => void;
-	readonly onPointerMove?: (point: Vec3, event: InteractionEvent) => void;
-	readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
-	readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
-	readonly pointerMoveEnabled: boolean;
-	readonly selectionAccept: readonly TopologyEntityKind[];
-	readonly selectionKindToggles: SpatialPickKindToggles;
-	readonly hoverKindToggles: SpatialPickKindToggles;
-	readonly analyticToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly selectedTargetKeys?: ReadonlySet<string> | null;
-	readonly hostSelectionEnabled?: boolean;
 }): ReactNode {
 	const mapPt = topologyPreviewTransform ?? ((p: Vec3) => p);
 	const displayPoint = mapPt(target.point);
@@ -1844,51 +1854,10 @@ function SpatialPickTargetNode({
 	const hovered = hoveredTargetKey === targetKey;
 	const selected = selectedTargetKeys?.has(targetKey) ?? selectedTargetKey === targetKey;
 	const style = targetStyle(target, hovered, selected);
-	const emit = (kind: SpatialPickKind, e: ThreeEvent<PointerEvent>) => {
-		e.stopPropagation();
-		const event = createSpatialPickEvent(kind, [e.point.x, e.point.y, e.point.z], target, pointerModifiers(e));
-		onInteractionEvent?.(event);
-		if (kind === "pointer.down") onPick?.(target.point, event);
-		if (kind === "pointer.move" && pointerMoveEnabled) onPointerMove?.(target.point, event);
-	};
-	const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-		if (hostSelectionEnabled && selectionAccept.length > 0) {
-			e.stopPropagation();
-			return;
-		}
-		e.stopPropagation();
-		const candidates = spatialPickTargetsFromRay(e.ray, targets, selectionAccept, selectionKindToggles, analyticToggles);
-		if (selectionAccept.length > 0 && candidates.length > 0 && onSelectionRequest) {
-			const native = e.nativeEvent;
-			onSelectionRequest({
-				targets: candidates,
-				point: [e.point.x, e.point.y, e.point.z],
-				client: { x: native.clientX, y: native.clientY },
-				modifiers: pointerModifiers(e),
-			});
-			return;
-		}
-		emit("pointer.down", e);
-	};
-	const onPointerMoveH = (e: ThreeEvent<PointerEvent>) => {
-		const hoverOn =
-			hoverKindToggles[target.kind] !== false && spatialPickTargetMatchesAnalyticToggles(target, analyticToggles);
-		onHoverTarget?.(hoverOn ? target : null);
-		if (!pointerMoveEnabled) return;
-		emit("pointer.move", e);
-	};
-	const onPointerOut = () => onHoverTarget?.(null);
 	const userData = { spatialPickKey: targetKey };
 	if (target.kind === "vertex" || target.kind === "anchor") {
 		return (
-			<mesh
-				position={displayPoint}
-				userData={userData}
-				onPointerDown={onPointerDown}
-				onPointerMove={onPointerMoveH}
-				onPointerOut={onPointerOut}
-				renderOrder={4}
-			>
+			<mesh position={displayPoint} userData={userData} raycast={raycastNone} renderOrder={4}>
 				<sphereGeometry args={[selected || hovered ? 0.12 : 0.085, 16, 16]} />
 				<meshStandardMaterial color={style.color} emissive={style.emissive} emissiveIntensity={0.45} />
 			</mesh>
@@ -1898,27 +1867,17 @@ function SpatialPickTargetNode({
 		return (
 			<Line
 				userData={userData}
+				raycast={raycastNone}
 				points={displayPoints.map((p) => [p[0], p[1], p[2]])}
 				color={style.color}
 				lineWidth={style.lineWidth}
-				onPointerDown={onPointerDown}
-				onPointerMove={onPointerMoveH}
-				onPointerOut={onPointerOut}
 			/>
 		);
 	}
 	const bounds = displayPoints ? targetBounds(displayPoints) : null;
 	if (!bounds) return null;
 	return (
-		<mesh
-			position={bounds.center}
-			scale={bounds.size}
-			userData={userData}
-			onPointerDown={onPointerDown}
-			onPointerMove={onPointerMoveH}
-			onPointerOut={onPointerOut}
-			renderOrder={1}
-		>
+		<mesh position={bounds.center} scale={bounds.size} userData={userData} raycast={raycastNone} renderOrder={1}>
 			<boxGeometry args={[1, 1, 1]} />
 			<meshStandardMaterial
 				color={style.color}
@@ -2014,34 +1973,24 @@ export function SpatialPickGeometryLayer({
 	}, [viewTargets, selectionKindToggles, hoverKindToggles, analyticToggles]);
 	return (
 		<group>
-			<SpatialSelectionRayCatcher
+			<SpatialPickRayCatcher
 				targets={enabledTargets}
 				selectionAccept={selectionAccept}
 				selectionKindToggles={selectionKindToggles}
+				hoverKindToggles={hoverKindToggles}
 				analyticToggles={analyticToggles}
 				hostSelectionEnabled={hostSelectionEnabled}
 				onSelectionRequest={onSelectionRequest}
+				onHoverTarget={onHoverTarget}
 			/>
 			{enabledTargets.map((target) => (
 				<SpatialPickTargetNode
 					key={`${target.kind}:${target.id}`}
 					target={target}
-					targets={enabledTargets}
 					topologyPreviewTransform={topologyPreviewTransform}
-					onInteractionEvent={onInteractionEvent}
-					onPick={onPick}
-					onPointerMove={onPointerMove}
-					onSelectionRequest={onSelectionRequest}
-					onHoverTarget={onHoverTarget}
-					pointerMoveEnabled={pointerMoveEnabled}
-					selectionAccept={selectionAccept}
-					selectionKindToggles={selectionKindToggles}
-					hoverKindToggles={hoverKindToggles}
-					analyticToggles={analyticToggles}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
 					selectedTargetKeys={selectedTargetKeys}
-					hostSelectionEnabled={hostSelectionEnabled}
 				/>
 			))}
 		</group>
@@ -2211,6 +2160,7 @@ export function InteractionSpatialView({
 			<directionalLight position={[12, 18, 10]} intensity={1.1} />
 			<OrbitControls
 				makeDefault
+				enableDamping={false}
 				mouseButtons={{
 					LEFT: -1 as unknown as MOUSE,
 					MIDDLE: MOUSE.DOLLY,
@@ -2485,8 +2435,32 @@ function replSelectionEvent(selection: readonly SelectionTarget[], point?: Vec3)
 	return point ? { kind: "selection.changed", targets: selection, point, modifiers: {} } : { kind: "selection.changed", targets: selection, modifiers: {} };
 }
 
+function replStartEvent(selection: readonly SelectionTarget[]): InteractionEvent {
+	return { kind: "start", targets: selection, modifiers: {} };
+}
+
 function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: readonly SelectionTarget[]): SelectionTarget[] {
 	return selection.filter((target) => accept.includes(target.kind));
+}
+
+function interactionContextTargets(ctx: Record<string, unknown>): readonly SelectionTarget[] {
+	const raw = ctx.targets;
+	if (!Array.isArray(raw)) return [];
+	return raw.filter((target): target is SelectionTarget => {
+		return Boolean(
+			target &&
+			typeof target === "object" &&
+			"kind" in target &&
+			"id" in target &&
+			typeof (target as { kind?: unknown }).kind === "string" &&
+			typeof (target as { id?: unknown }).id === "string",
+		);
+	});
+}
+
+function interactionCanConfirmSelection(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): boolean {
+	if (!listKeyedInteractionTransitions(spec, state).some((row) => row.eventKind === "confirm")) return false;
+	return interactionContextTargets(ctx).length > 0;
 }
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
@@ -2637,18 +2611,17 @@ export function InteractionRepl({
 	const startRuntime = useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
 		const accepted = replSelectionAccepted(accept, selectedSelectionTargets);
-		if (accepted.length > 0) await rt.send(replSelectionEvent(accepted));
+		await rt.send(replStartEvent(accepted));
 	}, [rt, selectedSelectionTargets]);
 
 	useEffect(() => {
+		if (!interactionId) return;
 		if (suppressAutoStartOnceRef.current) {
 			suppressAutoStartOnceRef.current = false;
 			return;
 		}
-		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
-		const accepted = replSelectionAccepted(accept, selectedSelectionTargets);
-		if (accepted.length > 0) void rt.send(replSelectionEvent(accepted));
-	}, [rt, selectedSelectionTargets]);
+		void startRuntime();
+	}, [interactionId, startRuntime]);
 
 	useEffect(() => {
 		if (sessionRestartNonce <= 0) return;
@@ -2687,9 +2660,15 @@ export function InteractionRepl({
 		setActiveIndex(0);
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
-		setSelectedSelectionTargets([]);
 		setInteractionMenuOpen(false);
 	}, [interactionId, rt]);
+
+	const confirmInteractionSelection = useCallback(() => {
+		const snap = rt.getSnapshot();
+		if (!interactionCanConfirmSelection(spec, snap.state, snap.context)) return false;
+		void rt.send({ kind: "confirm", modifiers: {} });
+		return true;
+	}, [rt, spec]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const activeSelectionAccept = useMemo(
@@ -2748,7 +2727,8 @@ export function InteractionRepl({
 	);
 
 	const onHoverTarget = useCallback((target: SpatialPickTarget | null) => {
-		setHoveredPickKey(target ? spatialPickTargetKey(target) : null);
+		const key = target ? spatialPickTargetKey(target) : null;
+		setHoveredPickKey((prev) => (prev === key ? prev : key));
 	}, []);
 
 	const onSpatialInteractionEvent = useCallback(
@@ -3047,12 +3027,13 @@ export function InteractionRepl({
 			if (e.key === "Enter") {
 				e.preventDefault();
 				setInteractionMenuOpen(false);
+				if (!cmdLine.trim() && confirmInteractionSelection()) return;
 				if (trySubmitLine()) return;
 				if (filtered.length) runSuggestion(filtered[activeIndex]!);
 				return;
 			}
 		},
-		[cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace],
+		[cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection],
 	);
 
 	useEffect(() => {
@@ -3077,6 +3058,7 @@ export function InteractionRepl({
 			if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
+				if (!cmdLine.trim() && confirmInteractionSelection()) return;
 				const matches = replPaletteRows(cmdLine, allSuggestions);
 				const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId);
 				if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
@@ -3100,6 +3082,7 @@ export function InteractionRepl({
 			if (t !== cmdRef.current && e.key === "Enter") {
 				e.preventDefault();
 				e.stopPropagation();
+				if (!cmdLine.trim() && confirmInteractionSelection()) return;
 				cmdRef.current?.focus();
 				if (cmdLine.trim()) void trySubmitLine();
 				return;
@@ -3113,7 +3096,7 @@ export function InteractionRepl({
 		};
 		window.addEventListener("keydown", onWinCapture, true);
 		return () => window.removeEventListener("keydown", onWinCapture, true);
-	}, [rt, cmdLine, allSuggestions, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace]);
+	}, [rt, cmdLine, allSuggestions, trySubmitLine, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection]);
 
 	const onScenePointerMove = useCallback(
 		(p: Vec3) => {
@@ -3911,6 +3894,7 @@ if (import.meta.vitest) {
 				operations: [],
 				computePartViews: (g) => computePartViewsFromTopology(g),
 				computeSurfaceViews: (g) => computeSurfaceViewsFromTopology(g),
+				computeVolumeViews: async () => [],
 			} as import("@spatial/js-core").SpatialKernel);
 			await derived.refresh(topo);
 			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
@@ -4029,11 +4013,26 @@ if (import.meta.vitest) {
 			]);
 		});
 
+		it("pickHoverTargetFromRay returns the closest hover-eligible target", () => {
+			const targets: SpatialPickTarget[] = [
+				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+			];
+			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
+			expect(pickHoverTargetFromRay(ray, targets, { vertex: false, face: true })?.id).toBe("f0");
+			expect(pickHoverTargetFromRay(ray, targets, { vertex: false, face: false })).toBeNull();
+		});
+
 		it("carries host selection into interaction selection events", () => {
 			const selection: SelectionTarget = { kind: "wire", id: "w0", editable: true };
 			expect(replSelectionAccepted(["wire"], [selection])).toEqual([selection]);
 			expect(replSelectionAccepted(["face"], [selection])).toEqual([]);
 			expect(replSelectionEvent([selection])).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
+			expect(replStartEvent([selection])).toEqual({ kind: "start", targets: [selection], modifiers: {} });
+			const moveSpec = InteractionRegistry.withBuiltins().get("transform.move")!;
+			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [selection] })).toBe(true);
+			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [] })).toBe(false);
+			expect(interactionCanConfirmSelection(moveSpec, "point_to_move_from", { targets: [selection] })).toBe(false);
 		});
 
 		it("merges host selections according to modifiers", () => {

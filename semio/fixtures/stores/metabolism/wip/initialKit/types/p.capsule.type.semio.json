@@ -1,0 +1,363 @@
+{
+    "id": "357b841f-b121-463c-88a6-153d7cbf272f",
+    "name": "p",
+    "representations": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "f41a27f0-b391-4b97-87a0-9bd48a2383da",
+                "name": "capsule_p",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "23ccc298-3c2e-41d9-bd55-f0aa8be80098",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "2b06ab2a-b6fa-4e2f-888c-f45f6db3968d",
+                "name": "capsule_p_1to500",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "8708fd11-32df-4dbe-a6fd-16b15ef6b3d2",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "62131c40-53f5-4bd3-999b-600fd0ab472f",
+                "name": "capsule_p_1to200",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "555456e5-4660-4162-88e1-7abf2cd35eb9",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "52329ca1-8d97-44c5-9b9e-ce172ca7cfdf",
+                "name": "b3a9105a14",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "a92ebdcd-feda-4770-9d30-b5514e8068a4",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "506e57ea-e82a-4863-b451-6ff87d01574c",
+                "name": "ff37b776dd",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "2e0fc953-d022-49dc-96a9-60c8db12e1cd",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "be6fa74c-846c-44d5-8a1a-3a6952756e72",
+                "name": "capsule_p_collider",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "f89de653-6ae4-460c-b323-8d79609604aa",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "connectors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "8408bbc8-9055-4edc-9276-f1588c8a6c32",
+                "t": 0,
+                "point": {
+                    "x": -0.45,
+                    "y": -2.1,
+                    "z": 2.7755576e-17
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "description": "🪔 The middle of the main entrance door of the upper entrance floor.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "props": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "fc56c02b-cc0c-4b7e-a6fc-4d7ba4b867ed",
+                            "quality": {
+                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "props": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "15d81558-8faf-40e0-87f1-3e59a3d40bd9",
+                "quality": {
+                    "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "back",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "fe173f6e-610e-442a-973a-3221d64614c1",
+                "quality": {
+                    "id": "2b8403af-d98f-5dee-8cd4-200f00259960",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "side",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "99a82a51-f15b-4bdc-a32a-30368e459e88",
+                "quality": {
+                    "id": "9a71931b-2837-571d-9169-83229724d78f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "4.2",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "ccc2e987-042e-43cc-8d09-bb53b055d0fa",
+                "quality": {
+                    "id": "0121fb9c-374e-53aa-8118-4d3eb421337c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.6",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "6c8a4cdb-209e-4503-86b9-25e44631554f",
+                "quality": {
+                    "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.5",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "e6d8b6bf-a5d8-425b-9fbf-998313361688",
+                "quality": {
+                    "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "round",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "e0710bd2-9bd7-4aea-bbd4-ddcc35adf812",
+                "quality": {
+                    "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "8.74",
+                "unit": "m²",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "be4399ca-ef70-4233-b161-20f65d32eff1",
+                "quality": {
+                    "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "82992",
+                "unit": "€",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "7ba4cbad-f312-43c2-bfda-87ac99609ae4",
+                "quality": {
+                    "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "393",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "1af02c91-74d7-4712-ab63-fde9feccc94d",
+                "quality": {
+                    "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "262",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "d1afe05e-72da-429a-b950-6d95047f6e3b",
+                "quality": {
+                    "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "262",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "8ee8ee44-cf6b-47d5-9c8d-d161bcfa240b",
+                "quality": {
+                    "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "13104",
+                "unit": "€/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "ba633fa8-6ccb-453f-9cde-04911f89e5dc",
+                "quality": {
+                    "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "1048",
+                "unit": "€/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c7e1f5b7-68f2-499e-9e75-5ac36aa56fcf",
+                "quality": {
+                    "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "8736.01",
+                "unit": "kgCO2e",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "45e5709a-043c-4704-a731-34546b7e2f4f",
+                "quality": {
+                    "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "stock": 2147483647,
+    "virtual": false,
+    "unit": "m",
+    "createdAt": "2025-11-23T01:10:21.121Z",
+    "updatedAt": "2025-11-23T01:10:21.121Z",
+    "authors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "eb10a789-2af3-41fc-b99b-6778ab94a97e",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "icon": "icons/capsule_p.svg",
+    "image": "images/capsule_p.png",
+    "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
+    "families": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+}

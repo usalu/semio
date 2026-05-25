@@ -1,0 +1,569 @@
+{
+    "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
+    "name": "First Storey",
+    "representations": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "8cd79a7e-706f-43d1-99f9-ffd290bab517",
+                "name": "tambour_first-storey",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "ee7fe950-9f12-4023-a76f-bd98120b4ac3",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "916b6eed-e7c7-4629-8a49-25f5c631c260",
+                "name": "tambour_first-storey_1to500",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "ff3ced51-4ee3-43c3-9785-dbbc3d64ff48",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "94df4683-982a-4668-87f2-1b05a73633b6",
+                "name": "tambour_first-storey_1to200",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "72b9e739-94eb-4980-b277-7004e55fd7a0",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "d27b8fbe-727c-4649-b995-adaf6d0ca917",
+                "name": "89d6e55762",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "dbe8f319-b629-4b00-9669-af09dabae35e",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "1d180008-c0a2-4258-a09b-05419ea36c33",
+                "name": "c5850e2821",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "45c18ed8-3bcc-43b5-93b6-ba06141b9aec",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "cebb9596-3a46-46bd-bac4-f5d7d8aeaeb8",
+                "name": "tambour_first-storey_collider",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "ab1933a0-003c-4003-953e-22621e30ca8c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "connectors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+                "name": "b",
+                "t": 0.5,
+                "point": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -1
+                },
+                "description": "🏆 The bottom system center of the elevator.",
+                "port": {
+                    "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "props": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "daa51153-4972-4a90-acd4-225ad8a4a34c",
+                            "quality": {
+                                "id": "c31cba81-c188-5697-bc48-32ca96a7adeb",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        {
+                            "id": "a296f7c9-2608-47a5-9c16-741d71b2213c",
+                            "quality": {
+                                "id": "f22fdb7a-6cf2-5143-9aa2-f3710eb49a19",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "180",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "8001a609-ea58-4cc1-a1bb-a1e56fbc2f3a",
+                "name": "t",
+                "t": 0,
+                "point": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 3.6666667
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1
+                },
+                "description": "🥇 The top system center of the elevator.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "props": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "5e9b27d1-d2e9-4321-810d-337dc83f8568",
+                            "quality": {
+                                "id": "da620d27-98eb-5f7f-8a80-9b7515d38058",
+                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            },
+                            "value": "",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "425b9604-f2a0-4946-b787-0dda3cf2b571",
+                "name": "sl0_d0",
+                "t": 0.2,
+                "point": {
+                    "x": 2.75,
+                    "y": 0.9,
+                    "z": 0.2
+                },
+                "direction": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🥈 The first door of the side plattform in the east facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "3808c4aa-7df8-4bea-9551-8aeb8d0706c6",
+                "name": "sl0_d1",
+                "t": 0.05,
+                "point": {
+                    "x": 0.9,
+                    "y": 2.75,
+                    "z": 0.2
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "description": "🥉 The second door of the side plattform in the north facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "0afbecf0-ff62-45c1-9d1d-68f4fb3f86cf",
+                "name": "sl0_d2",
+                "t": 0.95,
+                "point": {
+                    "x": -0.9,
+                    "y": 2.75,
+                    "z": 0.2
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "description": "🏅 The third door of the side plattform in the north facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "42b4915c-758a-4283-854b-727b2f3b5c38",
+                "name": "sl0_d3",
+                "t": 0.8,
+                "point": {
+                    "x": -2.75,
+                    "y": 0.9,
+                    "z": 0.2
+                },
+                "direction": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🎗 The fourth door of the side plattform in the west facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "35a06f66-39fb-4670-9599-bbc3b726c01c",
+                "name": "sl1_d0",
+                "t": 0.7,
+                "point": {
+                    "x": -2.75,
+                    "y": -0.9,
+                    "z": 1.1166667
+                },
+                "direction": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🎪 The first door of the main plattform in the west facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "4c37c71e-95c7-4f7a-97d5-5dd68c67078f",
+                "name": "sl1_d1",
+                "t": 0.55,
+                "point": {
+                    "x": -0.9,
+                    "y": -2.75,
+                    "z": 1.1166667
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "description": "🎭 The second door of the main plattform in the south facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b0b26cfc-026d-4909-b41f-3586618904c0",
+                "name": "sl2_d0",
+                "t": 0.45,
+                "point": {
+                    "x": 0.9,
+                    "y": -2.75,
+                    "z": 2.0333333
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "description": "🎨 The first door of the main plattform in the south facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "a863a1bd-26f8-41e5-ab0f-5b60b177cffd",
+                "name": "sl2_d1",
+                "t": 0.3,
+                "point": {
+                    "x": 2.75,
+                    "y": -0.9,
+                    "z": 2.0333333
+                },
+                "direction": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "description": "🎬 The second door of the main plattform in the east facade.",
+                "port": {
+                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "props": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "b1ca8a97-931f-4c91-a22f-fda899b8a06a",
+                "quality": {
+                    "id": "0121fb9c-374e-53aa-8118-4d3eb421337c",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "5.5",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c23f0988-e64c-42e1-8a8b-2c2373981685",
+                "quality": {
+                    "id": "4ee58b7f-fa02-57d2-be88-cb4892dba393",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "1",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c5e64ef8-d764-4792-80fd-37425158b8a2",
+                "quality": {
+                    "id": "32349526-a576-53e0-af16-f878b0def4ec",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2.75",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "1a8c1e0e-12e2-4c65-b62e-dfb5ff4e0a83",
+                "quality": {
+                    "id": "1353a304-141e-5a56-9ff3-8649b37de118",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "north",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "061f4806-5efb-4a4f-ac6c-6d89a2f3c75e",
+                "quality": {
+                    "id": "6835a3c2-0497-52fa-a228-1f165d001efc",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "0.8",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "cfe61be2-2395-400f-aaa2-7dc8a59b74c5",
+                "quality": {
+                    "id": "50f87918-dba9-5648-83d0-5f4ad4187c5d",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "2",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c5b5c1bf-c6d5-40fe-a922-570985752178",
+                "quality": {
+                    "id": "5b3c1358-dbba-5e4a-bc46-0ccb667fa4a4",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "1.15",
+                "unit": "m",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "08030e54-fb42-4fdf-96f9-cd3c63ef9ecb",
+                "quality": {
+                    "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "24.21",
+                "unit": "m²",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "27a7ef4f-dbc6-43c2-a606-6dd2c7d337e4",
+                "quality": {
+                    "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "217800",
+                "unit": "€",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "106bd646-768c-4850-99fc-bf4985a3b777",
+                "quality": {
+                    "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "484",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "4860fbb7-8551-42b8-baa5-a4b75d25a974",
+                "quality": {
+                    "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "242",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "2186da33-42ac-4ff8-9e28-49636f14bc73",
+                "quality": {
+                    "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "484",
+                "unit": "kWh/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "e875b209-9715-48d8-8767-7cc3a0917b49",
+                "quality": {
+                    "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "1016",
+                "unit": "€/a",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "5c1906e3-020d-468a-8707-105a6d349bbd",
+                "quality": {
+                    "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "value": "1500",
+                "unit": "kgCO2e",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "stock": 2147483647,
+    "virtual": false,
+    "unit": "m",
+    "createdAt": "2025-11-23T01:10:21.251Z",
+    "updatedAt": "2025-11-23T01:10:21.251Z",
+    "authors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "9fc865f3-80d3-4b54-84f7-b03d8ff57b3b",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "icon": "icons/tambour_first-storey.svg",
+    "image": "images/tambour_first-storey.svg",
+    "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+    "families": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+}

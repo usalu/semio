@@ -2928,6 +2928,29 @@ export class InteractionRuntime {
 
 	/** @emoji 📜 Dispatches a typed interaction event through the statechart + optional kernel queries. */
 	async send(event: InteractionEvent): Promise<void> {
+		if (event.kind === "start") {
+			await this.consumeStartSelection(event);
+			if (this.stateHasEvent(this.sm.getState(), "start")) {
+				const beforeState = this.sm.getState();
+				const beforeCtx = this.cloneCtx(this.sm.getContext());
+				const r = await this.sm.send(event, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
+				if (!r.ok) return;
+				if (!r.transient) {
+					this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
+					this.snapRedoStack.length = 0;
+				}
+			}
+			if (isFinalInteractionState(this.spec, this.sm.getState())) {
+				await this.runCommit(false);
+				return;
+			}
+			if (this.canCommit()) {
+				await this.runCommit(true);
+				return;
+			}
+			this.emit();
+			return;
+		}
 		if (event.kind === "selection.changed") {
 			const sel = getActiveSelectionSpec(this.spec, this.sm.getState());
 			const sev = event as SelectionEvent;
@@ -2948,12 +2971,6 @@ export class InteractionRuntime {
 			this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeCtx) });
 			this.snapRedoStack.length = 0;
 		}
-		if (event.kind === "selection.changed" && this.sm.getState() === beforeState && this.stateHasEvent(this.sm.getState(), "confirm")) {
-			const beforeConfirmCtx = this.cloneCtx(this.sm.getContext());
-			const cr = await this.sm.send({ kind: "confirm" }, this.opts.kernel, this.opts.document.topology, this.actions, this.opts.derived, this.previewKernel());
-			if (cr.ok && !cr.transient) this.snapUndoStack.push({ state: beforeState, context: JSON.stringify(beforeConfirmCtx) });
-		}
-		if (event.kind === "start") await this.consumeStartSelection(event);
 		if (isFinalInteractionState(this.spec, this.sm.getState())) {
 			await this.runCommit(false);
 			return;
@@ -3903,13 +3920,41 @@ if (import.meta.vitest) {
 			const spec = loadSpatialInteraction("transform.move")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
 			await rt.send({
-				kind: "selection.changed",
+				kind: "start",
 				targets: [{ kind: "cell", id: "c0", editable: true }],
 				modifiers: {},
 			});
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("point_to_move_from");
 			expect((snap.context.targets as SelectionTarget[]).map((target) => target.id)).toEqual(["c0"]);
+		});
+		it("keeps transform.move in object selection until confirm", async () => {
+			class CommandKernel extends BrepjsKernel {
+				readonly id = "command-selection-confirm";
+				readonly operations = [] as const;
+				async createBoxFromCorners() {
+					return cellRef("c");
+				}
+				async volume() {
+					return 0;
+				}
+				async tessellate() {
+					return { positions: new Float32Array(), indices: new Uint32Array() };
+				}
+				async executeCommandDiff() {
+					return { diff: EMPTY_TOPOLOGY_DIFF };
+				}
+			}
+			const spec = loadSpatialInteraction("transform.move")!;
+			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			await rt.send({
+				kind: "selection.changed",
+				targets: [{ kind: "cell", id: "c0", editable: true }],
+				modifiers: {},
+			});
+			expect(rt.getSnapshot().state).toBe("select_objects_to_move");
+			await rt.send({ kind: "confirm", modifiers: {} });
+			expect(rt.getSnapshot().state).toBe("point_to_move_from");
 		});
 		it("auto-commits curve.arc as one arc edge between start and end", async () => {
 			const topo = new TopologyGraph();
@@ -3979,7 +4024,7 @@ if (import.meta.vitest) {
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
 			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
-			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
+			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [p0[0] + 2, p0[1] + 1, p0[2]], modifiers: {} });
 			const snap = rt.getSnapshot();
