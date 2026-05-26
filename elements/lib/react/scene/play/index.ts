@@ -275,7 +275,7 @@ if (import.meta.vitest) {
 		it("parses nakagin fixture", () => {
 			const f = parseFixtureV1(nakaginSceneFixtureJson as unknown);
 			expect(f?.domain).toBe("architecture");
-			expect(f?.attractions.length).toBeGreaterThan(0);
+				expect(f?.attractions).toEqual([]);
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
 

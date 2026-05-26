@@ -3845,13 +3845,14 @@ export class BoardRenderer {
 		}
 		this.canvas.tabIndex = 0;
 		this.canvas.style.touchAction = "none";
+		const eventSurface = this.canvas.parentElement ?? this.canvas;
 		const bindings = new BoardEventBindingController();
-		bindings.listen(this.canvas, "contextmenu", this.handleContextMenu as EventListener);
-		bindings.listen(this.canvas, "pointerdown", this.handlePointerDown as EventListener);
-		bindings.listen(this.canvas, "pointermove", this.handlePointerMove as EventListener);
-		bindings.listen(this.canvas, "pointerup", this.handlePointerUp as EventListener);
-		bindings.listen(this.canvas, "pointerleave", this.handlePointerLeave as EventListener);
-		bindings.listen(this.canvas, "wheel", this.handleWheel as EventListener, { passive: false });
+		bindings.listen(eventSurface, "contextmenu", this.handleContextMenu as EventListener);
+		bindings.listen(eventSurface, "pointerdown", this.handlePointerDown as EventListener);
+		bindings.listen(eventSurface, "pointermove", this.handlePointerMove as EventListener);
+		bindings.listen(eventSurface, "pointerup", this.handlePointerUp as EventListener);
+		bindings.listen(eventSurface, "pointerleave", this.handlePointerLeave as EventListener);
+		bindings.listen(eventSurface, "wheel", this.handleWheel as EventListener, { passive: false });
 		bindings.listen(globalThis, "keydown", this.handleWindowKeyDown as EventListener, true);
 		(this as BoardRenderer & { __eventBindings?: BoardEventBindingController }).__eventBindings = bindings;
 	}
