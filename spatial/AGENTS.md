@@ -32,10 +32,36 @@ An object has geometry and a typology. Optionally it can provide geometry for di
 
 # View
 
-A view is a different perspective on a model.
-A view performs transformations.
-A view derives new target objects and doesnt show the source objects.
+A view is a different computed perspective on a model.
+A view derives new objects and doesnt show the source objects anymore.
+It keeps the link of all involved source objects to the target objects.
 Inside a view, geometry cant be edited because it is not the source geometry.
+
+## Energy
+
+Used for energy calculations.
+
+### Derived Objects
+
+#### Hull
+
+All external surfaces joined to a closed shell.
+
+#### BasePlate
+
+The lowester external horizontal surface.
+
+#### Roof
+
+The highest external horizontal surface.
+
+#### ExternalWall
+
+All joined touching external surfaces of the same material with the windows cut out.
+
+#### Windows
+
+All external windows surfaces.
 
 ## Structural
 
@@ -48,31 +74,9 @@ e.g. two curves with bondable endpoints are joined into one curve.
 e.g. two surfaces that touch are joined into one surface.
 e.g. two solids with touching faces are boolean unioned.
 
-## Energy
+#### Columns
 
-Used for energy calculations.
-
-### Transformation
-
-External surfaces are joined to form a closed shell. The volume is calculated.
-For display the windows are removed from the closed shell and yield an open shell.
-The window surface are added separately.
-
-### Derived Objects
-
-#### Base plate
-
-The lowester external horizontal surface.
-
-#### Roof
-
-The highest external horizontal surface.
-
-#### External Wall
-
-A
-
-####
+#### OneWaySlab
 
 # Attribute
 
@@ -95,12 +99,12 @@ A material can be attatched to any curve, surface or solid.
 {"material":{"concrete":"C30/37"}}
 ```
 
-## U-Value
+## UValue
 
 A U-Value can be attatched to any surface.
 
 ```json
-{ "u-value": "0.158" }
+{ "uValue": "0.158" }
 ```
 
 ## Exposure
@@ -123,10 +127,10 @@ A surface marked as a opening will be trimmed into walls.
 {"opening":"view"}
 ```
 
-## G-Value
+## GValue
 
 A G-Value can be attatched to any surface with the window attribute.
 
 ```json
-{ "g-value": "0.6" }
+{ "gValue": "0.6" }
 ```
