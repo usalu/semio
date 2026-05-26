@@ -4,28 +4,28 @@ overview: Refactor the renderer-r3f selection so the renderer always owns a sing
 todos:
   - id: rename-state
     content: Rename selectedSelectionTargets/interactionSelectionTargets to rendererSelection/interactionSelection across state, props, callbacks, defaults and Omit lists
-    status: in_progress
+    status: completed
   - id: drop-union
     content: Delete mergeReplSelectionLayers and make displayedSelectionTargets pick rendererSelection or interactionSelection based on interactionActive
-    status: pending
+    status: completed
   - id: simplify-finalize
     content: Simplify replFinalizeSelection to use archive.targets when present, else keep rendererSelection unchanged
-    status: pending
+    status: completed
   - id: seed-on-start
     content: Seed interactionSelection from accepted subset of rendererSelection inside startRuntime
-    status: pending
+    status: completed
   - id: single-commit
     content: Collapse the commit/dispatch helpers into one commitSelection that routes by interactionActive
-    status: pending
+    status: completed
   - id: lifecycle-resets
     content: Adjust interactionId/cancel/geometry effects so cancel preserves rendererSelection and only id-invalidating resets clear both
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing test block to cover privacy of interaction selection, finalize with/without archive, start seeding, and display routing
-    status: pending
+    status: completed
   - id: ticket
     content: Open and close repo ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION under runningsketchpad goal
-    status: pending
+    status: completed
 isProject: false
 ---
 

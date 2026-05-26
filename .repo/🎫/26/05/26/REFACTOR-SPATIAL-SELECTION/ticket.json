@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Spatial Selection",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Refactor renderer-r3f selection.",
+  "summary": "Refactored spatial selection: renderer always owns rendererSelection; interactions use private interactionSelection seeded on start; finalize only via archiveContext.targets; removed union merge; single commitSelection path. All 52 renderer-r3f tests pass.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪b43b3f62405d44dbac3dbd24e121be17"
+  ]
+}

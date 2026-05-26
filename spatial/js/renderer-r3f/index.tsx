@@ -596,6 +596,26 @@ export function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, b
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
 }
 
+/** @emoji 👁️ Kind toggles scoped to raw or analytic pick view (other view kinds ignored). */
+export function spatialPickKindTogglesForView(
+	toggles: SpatialPickKindToggles,
+	viewKind: SpatialPickViewKind,
+): SpatialPickKindToggles {
+	const masked: SpatialPickKindToggles = {};
+	for (const kind of spatialPickViewKindSet(viewKind)) {
+		if (toggles[kind] === false) masked[kind] = false;
+	}
+	return masked;
+}
+
+/** @emoji 🪞 Analytic sub-toggles active only in analytic pick view. */
+export function spatialAnalyticTogglesForView(
+	toggles: SpatialAnalyticToggles,
+	viewKind: SpatialPickViewKind,
+): SpatialAnalyticToggles {
+	return viewKind === "analytic" ? toggles : {};
+}
+
 /** @emoji 👁️ Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
 export function filterSpatialPickTargetsForVisibility(
 	targets: readonly SpatialPickTarget[],
@@ -3152,7 +3172,8 @@ function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection:
 	return selection.filter((target) => accept.includes(target.kind));
 }
 
-function interactionContextTargets(ctx: Record<string, unknown>): readonly SelectionTarget[] {
+/** @emoji 🪪 Reads validated `context.targets` for interaction highlight sync. */
+export function replInteractionSelectionFromContext(ctx: Record<string, unknown>): readonly SelectionTarget[] {
 	const raw = ctx.targets;
 	if (!Array.isArray(raw)) return [];
 	return raw.filter((target): target is SelectionTarget => {
@@ -3167,19 +3188,67 @@ function interactionContextTargets(ctx: Record<string, unknown>): readonly Selec
 	});
 }
 
-function interactionArchiveTargets(result: InteractionSnapshot["lastResponse"]): readonly SelectionTarget[] {
-	const ctx = result?.archiveContext;
-	if (!ctx || typeof ctx !== "object") return [];
-	return interactionContextTargets(ctx as Record<string, unknown>);
+/** @emoji 🪪 Shallow equality for ordered selection target lists. */
+export function replSelectionTargetsEqual(a: readonly SelectionTarget[], b: readonly SelectionTarget[]): boolean {
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		const x = a[i]!;
+		const y = b[i]!;
+		if (x.kind !== y.kind || x.id !== y.id || x.editable !== y.editable) return false;
+	}
+	return true;
 }
 
-/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection. */
-export function replDisplayedSelectionTargets(
+function replActiveSelection(
 	interactionActive: boolean,
 	rendererSelection: readonly SelectionTarget[],
 	interactionSelection: readonly SelectionTarget[],
 ): readonly SelectionTarget[] {
 	return interactionActive ? interactionSelection : rendererSelection;
+}
+
+function replApplySelectionPick(
+	current: readonly SelectionTarget[],
+	picked: readonly SelectionTarget[],
+	modifiers: InteractionEvent["modifiers"],
+): SelectionTarget[] {
+	const modeModifiers = (modifiers ?? {}) as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean };
+	return mergeSelectionTargets(current, picked, spatialSelectionModeFromModifiers(modeModifiers));
+}
+
+function interactionArchiveTargets(result: InteractionSnapshot["lastResponse"]): readonly SelectionTarget[] {
+	const ctx = result?.archiveContext;
+	if (!ctx || typeof ctx !== "object") return [];
+	return replInteractionSelectionFromContext(ctx as Record<string, unknown>);
+}
+
+/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to pick view. */
+export function replDisplayedSelectionTargets(
+	interactionActive: boolean,
+	pickViewKind: SpatialPickViewKind,
+	rendererSelection: readonly SelectionTarget[],
+	interactionSelection: readonly SelectionTarget[],
+): readonly SelectionTarget[] {
+	const layer = interactionActive ? interactionSelection : rendererSelection;
+	const allowed = spatialPickViewKindSet(pickViewKind);
+	return layer.filter((target) => allowed.has(target.kind as SpatialPickTargetKind));
+}
+
+/** @emoji 🪪 Merges a pick into the active selection layer without touching the other pick view's targets. */
+export function replMergeSelectionPickInView(
+	interactionActive: boolean,
+	pickViewKind: SpatialPickViewKind,
+	rendererSelection: readonly SelectionTarget[],
+	interactionSelection: readonly SelectionTarget[],
+	picked: readonly SelectionTarget[],
+	modifiers: InteractionEvent["modifiers"] = {},
+): SelectionTarget[] {
+	const allowed = spatialPickViewKindSet(pickViewKind);
+	const layer = interactionActive ? interactionSelection : rendererSelection;
+	const inView = layer.filter((target) => allowed.has(target.kind as SpatialPickTargetKind));
+	const outOfView = layer.filter((target) => !allowed.has(target.kind as SpatialPickTargetKind));
+	const merged = replApplySelectionPick(inView, picked, modifiers);
+	return [...outOfView, ...merged];
 }
 
 /** @emoji 🪪 Applies archived interaction result to renderer selection when present. */
@@ -3511,8 +3580,24 @@ export function InteractionRepl({
 	const cameraNavigatingRef = useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const displayedSelectionTargets = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, rendererSelection, interactionSelection),
-		[interactionActive, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(interactionActive, pickViewKind, rendererSelection, interactionSelection),
+		[interactionActive, pickViewKind, rendererSelection, interactionSelection],
+	);
+	const viewFilterKindToggles = useMemo(
+		() => spatialPickKindTogglesForView(filterKindToggles, pickViewKind),
+		[filterKindToggles, pickViewKind],
+	);
+	const viewSelectionKindToggles = useMemo(
+		() => spatialPickKindTogglesForView(selectionKindToggles, pickViewKind),
+		[selectionKindToggles, pickViewKind],
+	);
+	const viewAnalyticFilterToggles = useMemo(
+		() => spatialAnalyticTogglesForView(analyticFilterToggles, pickViewKind),
+		[analyticFilterToggles, pickViewKind],
+	);
+	const viewAnalyticSelectionToggles = useMemo(
+		() => spatialAnalyticTogglesForView(analyticSelectionToggles, pickViewKind),
+		[analyticSelectionToggles, pickViewKind],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
@@ -3557,7 +3642,7 @@ export function InteractionRepl({
 	useEffect(() => {
 		if (!interactionId || !snapshot.lastResponse?.ok) return;
 		setLastFinalizedInteractionId(interactionId);
-		setRendererSelection((prev) => replFinalizeSelection(prev, snapshot.lastResponse) as SelectionTarget[]);
+		setRendererSelection((prev) => [...replFinalizeSelection(prev, snapshot.lastResponse)]);
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 	}, [interactionId, snapshot.lastResponse, setInteractionSelection, setLastFinalizedInteractionId, setRendererSelection]);
 
@@ -3613,7 +3698,6 @@ export function InteractionRepl({
 	const hostPickingEnabled = replHostTopologyPickingEnabled(interactionId, spec, snapshot.state);
 	useEffect(() => {
 		if (!derived) return;
-		if (interactionActive && pickViewKind !== "analytic") return;
 		const topo = documentModel.topology;
 		let cancelled = false;
 		const run = () => {
@@ -3628,7 +3712,7 @@ export function InteractionRepl({
 			if (idle) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
-	}, [derived, documentModel.topology, topologyRevision, interactionActive, pickViewKind]);
+	}, [derived, documentModel.topology, topologyRevision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -3655,6 +3739,15 @@ export function InteractionRepl({
 		void rt.send({ kind: "confirm", modifiers: {} });
 		return true;
 	}, [rt, spec]);
+
+	useEffect(() => {
+		if (!interactionActive) {
+			setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
+			return;
+		}
+		const machineTargets = replInteractionSelectionFromContext(snapshot.context);
+		setInteractionSelection((prev) => (replSelectionTargetsEqual(prev, machineTargets) ? prev : [...machineTargets]));
+	}, [interactionActive, snapshot.revision, snapshot.context, setInteractionSelection]);
 
 	const runtimeSelectionAccept = useMemo(() => rt.listActiveSelectionAccept(), [rt, snapshot.state]);
 	const activeSelectionAccept = useMemo(
@@ -3696,9 +3789,11 @@ export function InteractionRepl({
 	const dispatchSelectionTargets = useCallback(
 		(targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
 			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
-			const modeModifiers = (modifiers ?? {}) as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean };
-			const currentSelection = interactionActive ? interactionSelection : rendererSelection;
-			const nextSelection = mergeSelectionTargets(currentSelection, picked, spatialSelectionModeFromModifiers(modeModifiers));
+			const nextSelection = replApplySelectionPick(
+				replActiveSelection(interactionActive, rendererSelection, interactionSelection),
+				picked,
+				modifiers,
+			);
 			commitSelection(nextSelection);
 			if (interactionActive && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
@@ -3803,14 +3898,15 @@ export function InteractionRepl({
 						point: (ev as { point?: Vec3 }).point ?? [0, 0, 0],
 					};
 					if (!spatialPickTargetMatchesAnalyticToggles(snapTarget, analyticSelectionToggles)) return;
-					const kind = snapEv.kind as TopologyEntityKind;
-					const selection: SelectionTarget =
-						kind === "surface" || kind === "part"
-							? { kind, id: snapEv.id, editable: false }
-							: { kind, id: snapEv.id, editable: true };
+					const selection = spatialSelectionTarget(snapTarget);
 					const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
-					const currentSelection = interactionActive ? interactionSelection : rendererSelection;
-					commitSelection(mergeSelectionTargets(currentSelection, [selection], spatialSelectionModeFromModifiers(modifiers)));
+					commitSelection(
+						replApplySelectionPick(
+							replActiveSelection(interactionActive, rendererSelection, interactionSelection),
+							[selection],
+							modifiers,
+						),
+					);
 					if (interactionActive) void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
 					return;
 				}
@@ -5455,12 +5551,31 @@ if (import.meta.vitest) {
 			).toEqual([{ kind: "cell", id: "c0", editable: true }]);
 		});
 
-		it("seeds interaction selection from accepted renderer subset on start", () => {
-			const renderer: SelectionTarget[] = [
-				{ kind: "wire", id: "w0", editable: true },
+		it("reads interaction selection from machine context targets", () => {
+			const ctx = {
+				targets: [
+					{ kind: "face", id: "f0", editable: true },
+					{ kind: "wire", id: "w0", editable: true },
+					{ kind: "bad", id: 1 },
+				],
+			};
+			expect(replInteractionSelectionFromContext(ctx)).toEqual([
 				{ kind: "face", id: "f0", editable: true },
-			];
-			expect(replSelectionAccepted(["wire"], renderer)).toEqual([{ kind: "wire", id: "w0", editable: true }]);
+				{ kind: "wire", id: "w0", editable: true },
+			]);
+			expect(replSelectionTargetsEqual([], [])).toBe(true);
+			expect(
+				replSelectionTargetsEqual(
+					[{ kind: "wire", id: "w0", editable: true }],
+					[{ kind: "wire", id: "w0", editable: true }],
+				),
+			).toBe(true);
+			expect(
+				replSelectionTargetsEqual(
+					[{ kind: "wire", id: "w0", editable: true }],
+					[{ kind: "wire", id: "w1", editable: true }],
+				),
+			).toBe(false);
 		});
 
 		it("merges host selections according to modifiers", () => {
