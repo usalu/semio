@@ -30,6 +30,7 @@ import {
 	LineSegments,
 	Mesh,
 	MeshStandardMaterial,
+	MOUSE,
 	Points,
 	PointsMaterial,
 	PerspectiveCamera as ThreePerspectiveCamera,
@@ -2375,7 +2376,9 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	);
 
 	const handlePointerDown = useCallback(
-		(e: { stopPropagation: () => void }) => {
+		(e: { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
+			const pe = e.nativeEvent;
+			if (pe && pe.button !== 0) return;
 			e.stopPropagation();
 			if (attractionDragActive || attractionIndirectPickAwait) return;
 			if (props.disabled) {
@@ -2400,8 +2403,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 	);
 
 	const handlePointerOver = useCallback(
-		(e: { stopPropagation: () => void }) => {
-			e.stopPropagation();
+		() => {
 			if (!props.disabled) {
 				setPointerHovered(true);
 			}
@@ -2409,8 +2411,7 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		[props.disabled],
 	);
 
-	const handlePointerOut = useCallback((e: { stopPropagation: () => void }) => {
-		e.stopPropagation();
+	const handlePointerOut = useCallback(() => {
 		setPointerHovered(false);
 	}, []);
 
@@ -2588,9 +2589,9 @@ export const Vortex = memo(function Vortex(
 
 	const onPointerDown = useCallback(
 		(e: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
-			e.stopPropagation();
 			const pe = e.nativeEvent;
 			if (pe.button !== 0) return;
+			e.stopPropagation();
 			if (reg.blockedVortexFullIds.has(fullId)) return;
 			reg.beginAttractionDragFromVortex(fullId, props.objectId, props.objectKind, props.vortexKind);
 			const el = pe.currentTarget instanceof Element ? pe.currentTarget : null;
@@ -2735,31 +2736,66 @@ export function useSceneRelocate(objectId: string) {
 
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
+type OrbitControlsHandle = {
+	addEventListener: (type: "change" | "start" | "end", listener: () => void) => void;
+	removeEventListener: (type: "change" | "start" | "end", listener: () => void) => void;
+	update: () => void;
+};
+
 //#region ­ƒÄ¼Scene
 function OrbitGated() {
 	const reg = useRegistry();
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
-	return <OrbitControls makeDefault enabled={!gate} />;
+	const invalidate = useThree((s) => s.invalidate);
+	const controlsRef = useRef<OrbitControlsHandle | null>(null);
+	useEffect(() => {
+		const controls = controlsRef.current;
+		if (!controls) return;
+		const handleOrbitChange = () => invalidate();
+		controls.addEventListener("change", handleOrbitChange);
+		controls.addEventListener("start", handleOrbitChange);
+		controls.addEventListener("end", handleOrbitChange);
+		return () => {
+			controls.removeEventListener("change", handleOrbitChange);
+			controls.removeEventListener("start", handleOrbitChange);
+			controls.removeEventListener("end", handleOrbitChange);
+		};
+	}, [invalidate]);
+	useEffect(() => {
+		invalidate();
+	}, [gate, invalidate]);
+	return (
+		<OrbitControls
+			ref={controlsRef}
+			makeDefault
+			enabled={!gate}
+			enablePan
+			enableZoom
+			mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }}
+		/>
+	);
 }
 
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
 function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3 }) {
 	const { camera } = useThree();
 	const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
-	const seededFor = useRef("");
-	const seedKey = `${props.position.join(",")}|${props.target.join(",")}`;
+	const seededPositionFor = useRef("");
+	const seededTargetFor = useRef("");
+	const positionKey = props.position.join(",");
+	const targetKey = props.target.join(",");
 	useLayoutEffect(() => {
-		if (seededFor.current === seedKey) {
-			return;
+		if (seededPositionFor.current !== positionKey) {
+			seededPositionFor.current = positionKey;
+			camera.position.set(props.position[0], props.position[1], props.position[2]);
+			camera.updateProjectionMatrix();
 		}
-		seededFor.current = seedKey;
-		camera.position.set(props.position[0], props.position[1], props.position[2]);
-		camera.updateProjectionMatrix();
-		if (controls?.target) {
+		if (controls?.target && seededTargetFor.current !== targetKey) {
+			seededTargetFor.current = targetKey;
 			controls.target.set(props.target[0], props.target[1], props.target[2]);
 			controls.update();
 		}
-	}, [camera, controls, props.position, props.target, seedKey]);
+	}, [camera, controls, positionKey, props.position, props.target, targetKey]);
 	return null;
 }
 

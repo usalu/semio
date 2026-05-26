@@ -11,17 +11,42 @@ A state can display information based on a set of predefined draw
 
 A model contains objects. Objects can contain child objects.
 
+```json
+{ "objects": [{…}] }
+```
+
 # Typology
 
-# Wall
+A typology is a class of objects.
+Every typology has one or many action to create an object of that typology.
+Every typology may have multiple interactions to derive the paramters for that canonical action.
 
-# Mushroom
+## Wall
+
+```json
+{ "id":"wall","name":"Wall","allowedAttributes":["exposure",…],"derivedProperties":["volume",…],"actions": [{"name":"constructVerticalWall","args":{"height":2.7, "curve":…}},
+    {"name":"constructWallFromBottomAndTop","args":{"bottomCurve":…, "topCurve":…}},
+    {"name":"constructWallFromHorizontalPathAndProfile","args":{"pathCurve":…, "profileCurve":…}},
+    {"name":"constructWallFromHorizontalPathAndProfiles","args":{"pathCurve":…, "profileCurves":[…]}}],
+ "interactions":…}
+```
+
+## MushroomColumn
 
 A mushroom column. One solid geometry.
 
-## View
+```json
+{ "actions": [ {"name":"constructMushroomColumn","args":{"solid":…}},
+    {"name":"constructExtrudedMushroomColumn","args":{"columnProfile":…,"height":2.7, "heightIs":"total","slabSolid":…}},
+    {"name":"constructRectangularMushroomColumnWithQuadraticSlab","args":{"rectangularColumnWidth":0.4, "rectangularColumnBreadth":0.6, "quadraticSlabWidth":2.3}},
+    {"name":"constructRectangularMushroomColumnWithQuadraticSlab","args":{"height":2.7, "heightIs":"column","slabHeight":0.3, "rectangularColumnWidth":0.4, "rectangularColumnBreadth":0.6, "quadraticSlabWidth":2.3}},
+    {"name":"constructFullyQuadraticMushroomColumn","args":{"height":2.7, "heightIs":"total","slabHeight":0.3, "quadraticColumnWidth":0.4, "quadraticSlabWidth":2.3}}],
+ "interactions":…}
+```
 
-### Structural
+### View
+
+#### Structural
 
 A vertical line for the column and a planaer horizontal surface for the top part.
 Additionally has lines for joists.
@@ -29,6 +54,10 @@ Additionally has lines for joists.
 # Object
 
 An object has geometry and a typology. Optionally it can provide geometry for different views.
+
+```json
+{"geometry":{"points":[{"id":}]}}
+```
 
 # View
 
@@ -47,6 +76,10 @@ Used for energy calculations.
 
 All external surfaces joined to a closed shell.
 
+```json
+{"id":"hull","name":"Hull","properties":["volume","heatedvolume",…]}
+```
+
 #### BasePlate
 
 The lowester external horizontal surface.
@@ -63,20 +96,53 @@ All joined touching external surfaces of the same material with the windows cut 
 
 All external windows surfaces.
 
-## Structural
+## Structure
 
-A view used for structural analysis.
+### Derived Objects
 
-### Transformation
+#### ReinforcedConcreteColumn
 
-Join/unions touching geometry with bond attributes.
-e.g. two curves with bondable endpoints are joined into one curve.
-e.g. two surfaces that touch are joined into one surface.
-e.g. two solids with touching faces are boolean unioned.
+#### OneWayReinforcedConcreteSlab
 
-#### Columns
+#### ReinforcedConcreteInternalWall
 
-#### OneWaySlab
+#### ReinforcedConcreteExternalWall
+
+## LineFEM
+
+A view used for Finite-Element-Analysis with line elements.
+
+```json
+{ "id":"linefem","name":"Classic Structural","allows":["lines"],…}
+```
+
+### Derived Objects
+
+#### LineElement
+
+## SurfaceFEM
+
+A view used for Finite-Element-Analysis with surface elements.
+
+```json
+{ "id":"surfacefem","name":"Classic Structural","allows":["surfaces"],…}
+```
+
+### Derived Objects
+
+#### SurfaceElement
+
+## SolidFEM
+
+A view used for Finite-Element-Analysis with solid elements.
+
+```json
+{ "id":"structural","name":"Classic Structural","allows":["solids"],…}
+```
+
+### Derived Objects
+
+#### SolidElement
 
 # Attribute
 
@@ -133,4 +199,22 @@ A G-Value can be attatched to any surface with the window attribute.
 
 ```json
 { "gValue": "0.6" }
+```
+
+# Property
+
+A property is a derived attribute.
+
+## Volume
+
+The volume is derived from a solid.
+
+```json
+{ "id": "volume", "name": "Volume", "unit": "volume" }
+```
+
+## HeatedVolume
+
+```json
+{ "id": "heatedvolume", "name": "Heated Volume", "unit": "volume" }
 ```
