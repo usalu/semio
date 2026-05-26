@@ -8,9 +8,9 @@ import type { CstNode, IToken } from "chevrotain";
 import {
 	ActionRegistry,
 	type ActionResult,
-	TopologyGraph,
+	Model,
 	DerivedViewService,
-	applyTopologyDiff,
+	applyModelDiff,
 	cellRef,
 	isSelectionConstructActionId,
 	type ConstructQueryContext,
@@ -26,9 +26,9 @@ import {
 	type FaceRef,
 	type SpatialKernel,
 	type ShellRef,
-	type TopologyDiff,
-	type TopologyEntityKind,
-	type TopologyEntityRef,
+	type ModelDiff,
+	type ModelEntityKind,
+	type ModelEntityRef,
 	type Vec3,
 	evalExpr,
 	type ExprEnv,
@@ -905,7 +905,7 @@ export function parseConstruct(text: string): ConstructAst {
 // #endregion Ast
 
 // #region Index
-const LABEL_TO_KIND: Record<string, TopologyEntityKind> = {
+const LABEL_TO_KIND: Record<string, ModelEntityKind> = {
 	Vertex: "vertex",
 	Edge: "edge",
 	Wire: "wire",
@@ -917,24 +917,24 @@ const LABEL_TO_KIND: Record<string, TopologyEntityKind> = {
 	Topology: "cluster",
 };
 
-function labelToKind(lab: string | undefined): TopologyEntityKind | undefined {
+function labelToKind(lab: string | undefined): ModelEntityKind | undefined {
 	if (!lab) return undefined;
-	return LABEL_TO_KIND[lab] ?? (lab.toLowerCase() as TopologyEntityKind);
+	return LABEL_TO_KIND[lab] ?? (lab.toLowerCase() as ModelEntityKind);
 }
 
 export class KernelIndex {
 	private revisionAt = -1;
-	private readonly byKind = new Map<TopologyEntityKind, Set<string>>();
+	private readonly byKind = new Map<ModelEntityKind, Set<string>>();
 	private readonly faceToCells = new Map<string, Set<string>>();
 	private readonly edgeToFaces = new Map<string, Set<string>>();
 
-	constructor(private readonly topo: TopologyGraph) {}
+	constructor(private readonly model: Model) {}
 
 	private rebuild(): void {
 		this.byKind.clear();
 		this.faceToCells.clear();
 		this.edgeToFaces.clear();
-		const add = (k: TopologyEntityKind, id: string) => {
+		const add = (k: ModelEntityKind, id: string) => {
 			let s = this.byKind.get(k);
 			if (!s) {
 				s = new Set();
@@ -985,12 +985,12 @@ export class KernelIndex {
 		if (this.revisionAt !== this.topo.revision) this.rebuild();
 	}
 
-	idsForKind(k: TopologyEntityKind): readonly string[] {
+	idsForKind(k: ModelEntityKind): readonly string[] {
 		this.ensure();
 		return [...(this.byKind.get(k) ?? [])];
 	}
 
-	lookupById(id: string): { kind: TopologyEntityKind; id: string } | null {
+	lookupById(id: string): { kind: ModelEntityKind; id: string } | null {
 		this.ensure();
 		for (const [k, s] of this.byKind) {
 			if (s.has(id)) return { kind: k, id };
@@ -1036,33 +1036,33 @@ export class KernelIndex {
 // #endregion Index
 
 // #region Traversers
-export type EntityHandle = TopologyEntityRef;
+export type EntityHandle = ModelEntityRef;
 
-function* iterateBoundedBy(topo: TopologyGraph, from: EntityHandle): Generator<EntityHandle> {
+function* iterateBoundedBy(model: Model, from: EntityHandle): Generator<EntityHandle> {
 	if (from.kind === "face") {
-		const f = topo.faces[from.id];
+		const f = model.faces[from.id];
 		if (!f) return;
 		for (const w of f.wireIds) yield { kind: "wire", id: w };
 	} else if (from.kind === "cell") {
-		const c = topo.cells[from.id];
+		const c = model.cells[from.id];
 		if (!c) return;
 		for (const s of c.shellIds) yield { kind: "shell", id: s };
 	} else if (from.kind === "shell") {
-		const s = topo.shells[from.id];
+		const s = model.shells[from.id];
 		if (!s) return;
 		for (const f of s.faceIds) yield { kind: "face", id: f };
 	} else if (from.kind === "wire") {
-		const w = topo.wires[from.id];
+		const w = model.wires[from.id];
 		if (!w) return;
 		for (const e of w.edgeIds) yield { kind: "edge", id: e };
 	} else if (from.kind === "edge") {
-		const e = topo.edges[from.id];
+		const e = model.edges[from.id];
 		if (!e) return;
 		for (const v of e.vertexIds) yield { kind: "vertex", id: v };
 	}
 }
 
-function* iterateContainsInverse(topo: TopologyGraph, from: EntityHandle): Generator<EntityHandle> {
+function* iterateContainsInverse(model: Model, from: EntityHandle): Generator<EntityHandle> {
 	if (from.kind === "face") {
 		for (const [sid, sh] of Object.entries(topo.shells)) {
 			if (sh.faceIds.includes(from.id as FaceRef)) yield { kind: "shell", id: sid };
@@ -1090,29 +1090,29 @@ function* iterateContainsInverse(topo: TopologyGraph, from: EntityHandle): Gener
 	}
 }
 
-function* iterateContainsForward(topo: TopologyGraph, from: EntityHandle): Generator<EntityHandle> {
+function* iterateContainsForward(model: Model, from: EntityHandle): Generator<EntityHandle> {
 	if (from.kind === "cell") {
-		const c = topo.cells[from.id];
+		const c = model.cells[from.id];
 		if (!c) return;
 		for (const sid of c.shellIds) yield { kind: "shell", id: sid };
 	} else if (from.kind === "cellComplex") {
-		const cc = topo.cellComplexes[from.id];
+		const cc = model.cellComplexes[from.id];
 		if (!cc) return;
 		for (const cid of cc.cellIds) yield { kind: "cell", id: cid };
 	} else if (from.kind === "shell") {
-		const s = topo.shells[from.id];
+		const s = model.shells[from.id];
 		if (!s) return;
 		for (const fid of s.faceIds) yield { kind: "face", id: fid };
 	} else if (from.kind === "face") {
-		const f = topo.faces[from.id];
+		const f = model.faces[from.id];
 		if (!f) return;
 		for (const wid of f.wireIds) yield { kind: "wire", id: wid };
 	} else if (from.kind === "wire") {
-		const w = topo.wires[from.id];
+		const w = model.wires[from.id];
 		if (!w) return;
 		for (const eid of w.edgeIds) yield { kind: "edge", id: eid };
 	} else if (from.kind === "cluster") {
-		const c = topo.clusters[from.id];
+		const c = model.clusters[from.id];
 		if (!c) return;
 		for (const mid of c.memberIds) {
 			const hit = lookupAnyEntity(topo, mid);
@@ -1121,7 +1121,7 @@ function* iterateContainsForward(topo: TopologyGraph, from: EntityHandle): Gener
 	}
 }
 
-function lookupAnyEntity(topo: TopologyGraph, id: string): EntityHandle | null {
+function lookupAnyEntity(model: Model, id: string): EntityHandle | null {
 	if (topo.vertices[id]) return { kind: "vertex", id };
 	if (topo.edges[id]) return { kind: "edge", id };
 	if (topo.wires[id]) return { kind: "wire", id };
@@ -1133,7 +1133,7 @@ function lookupAnyEntity(topo: TopologyGraph, id: string): EntityHandle | null {
 	return null;
 }
 
-function* iterateShares(topo: TopologyGraph, index: KernelIndex, from: EntityHandle): Generator<EntityHandle> {
+function* iterateShares(model: Model, index: KernelIndex, from: EntityHandle): Generator<EntityHandle> {
 	if (from.kind === "edge") {
 		for (const fid of index.facesForEdge(from.id)) yield { kind: "face", id: fid };
 	} else if (from.kind === "vertex") {
@@ -1142,7 +1142,7 @@ function* iterateShares(topo: TopologyGraph, index: KernelIndex, from: EntityHan
 }
 
 function* traverseRel(
-	topo: TopologyGraph,
+	topo: Model,
 	_kernel: SpatialKernel,
 	index: KernelIndex,
 	from: EntityHandle,
@@ -1217,12 +1217,12 @@ export function planConstruct(ast: ConstructAst): ExecutionPlan {
 // #endregion Planner
 
 // #region Executor
-type Row = Record<string, TopologyEntityRef | unknown>;
+type Row = Record<string, ModelEntityRef | unknown>;
 
 function rowVarsToEnv(
 	row: Row,
-	topo: TopologyGraph,
-	meta: import("@spatial/js-core").EntityMetadataStore,
+	topo: Model,
+	meta: import("@spatial/js-core").AttributeStore,
 	preview: SpatialKernel,
 	derived?: import("@spatial/js-core").DerivedViewService,
 ): ExprEnv {
@@ -1231,10 +1231,10 @@ function rowVarsToEnv(
 		if (v && typeof v === "object" && "kind" in (v as object) && "id" in (v as object)) vars[k] = v;
 		else vars[k] = v;
 	}
-	return { context: {}, vars, topology: topo, metadata: meta, derived, preview };
+	return { context: {}, vars, model: model, metadata: meta, derived, preview };
 }
 
-function* expandPattern(topo: TopologyGraph, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
+function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
 	const els = pat.elements;
 	if (!els.length) return;
 	const first = els[0] as NodePatternAst;
@@ -1293,10 +1293,10 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		if (st.kind === "match") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				for (const row of expandPattern(ctx.topology, ctx.kernel, index, st.pattern)) {
+				for (const row of expandPattern(ctx.model, ctx.kernel, index, st.pattern)) {
 					const merged = { ...r, ...row };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1306,14 +1306,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "with") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived);
+				const env = rowVarsToEnv(r, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived);
 				const out: Row = { ...r };
 				for (const p of st.projections) {
 					const v = evalExpr(p.expr, env);
 					if (p.alias) out[p.alias] = v;
 				}
 				if (st.where) {
-					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived));
+					const ok = evalExpr(st.where, rowVarsToEnv(out, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived));
 					if (!ok) continue;
 				}
 				next.push(out);
@@ -1337,7 +1337,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 					def.run(paramBag, {
 						kernel: ctx.kernel,
 						preview: ctx.kernel,
-						topology: ctx.topology,
+						model: ctx.model,
 						derived: ctx.derived,
 					}),
 				);
@@ -1352,13 +1352,13 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "unwind") {
 			const next: Row[] = [];
 			for (const r of rows) {
-				const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived);
+				const env = rowVarsToEnv(r, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived);
 				const src = evalExpr(st.source, env);
 				if (!Array.isArray(src)) continue;
 				for (const item of src) {
 					const merged: Row = { ...r, [st.alias]: item };
 					if (st.where) {
-						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived));
+						const ok = evalExpr(st.where, rowVarsToEnv(merged, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived));
 						if (!ok) continue;
 					}
 					next.push(merged);
@@ -1375,7 +1375,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 	let out = rows;
 	if (ret.limit !== undefined) out = out.slice(0, ret.limit);
 	for (const r of out) {
-		const env = rowVarsToEnv(r, ctx.topology, ctx.topology.metadata, ctx.kernel, ctx.derived);
+		const env = rowVarsToEnv(r, ctx.model, ctx.topology.metadata, ctx.kernel, ctx.derived);
 		const o: ConstructQueryRow = {};
 		for (let i = 0; i < ret.projections.length; i++) {
 			const p = ret.projections[i]!;
@@ -1394,11 +1394,11 @@ export async function runConstruct(text: string, ctx: ConstructQueryContext): Pr
 	const plan = planConstruct(ast);
 	const rows: ConstructQueryRow[] = [];
 	let data: unknown;
-	let diff: TopologyDiff | undefined;
+	let diff: ModelDiff | undefined;
 	for await (const row of executeConstruct(plan, ctx)) {
 		rows.push(row);
 		if (row.data !== undefined) data = row.data;
-		if (row.diff !== undefined) diff = row.diff as TopologyDiff;
+		if (row.diff !== undefined) diff = row.diff as ModelDiff;
 	}
 	return { rows, ...(data !== undefined ? { data } : {}), ...(diff !== undefined ? { diff } : {}) };
 }
@@ -1411,7 +1411,7 @@ export class ConstructEngine {
 	private index: KernelIndex | null = null;
 	private rev = -1;
 
-	constructor(private readonly topology: TopologyGraph) {}
+	constructor(private readonly model: Model) {}
 
 	private ix(): KernelIndex {
 		if (!this.index || this.rev !== this.topology.revision) {
@@ -1432,7 +1432,7 @@ export class ConstructEngine {
 const __spatialQueryTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
-	const { BrepjsKernel, computeSurfaceViewsFromTopology, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
+	const { BrepjsKernel, computeSurfaceViewsFromModel, preciseSpatialKernelMath } = __spatialQueryTestKernel!;
 	const M = preciseSpatialKernelMath;
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -1444,7 +1444,7 @@ if (import.meta.vitest) {
 		}
 		override async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
 			const cell = await this.createBoxFromCorners(input);
-			return { cell, diff: this.boxTopologyDiff(input, cell) };
+			return { cell, diff: this.boxModelDiff(input, cell) };
 		}
 		override async volume() {
 			return 0;
@@ -1452,8 +1452,8 @@ if (import.meta.vitest) {
 		override async tessellate() {
 			return { positions: new Float32Array(), indices: new Uint32Array() };
 		}
-		override async computeSurfaceViews(topo: TopologyGraph) {
-			return computeSurfaceViewsFromTopology(topo);
+		override async computeSurfaceViews(model: Model) {
+			return computeSurfaceViewsFromModel(model);
 		}
 	}
 
@@ -1461,7 +1461,7 @@ if (import.meta.vitest) {
 		return new QueryTestKernel();
 	}
 
-	function seedCellShellFaces(topo: TopologyGraph): { cell: string; shell: string; faces: string[] } {
+	function seedCellShellFaces(model: Model): { cell: string; shell: string; faces: string[] } {
 		const f0 = "f0" as FaceRef;
 		const f1 = "f1" as FaceRef;
 		const sh = "s0" as ShellRef;
@@ -1520,11 +1520,11 @@ if (import.meta.vitest) {
 
 	describe("@spatial/js-query execute", () => {
 		it("MATCH cell shell face chain returns face ids", async () => {
-			const topo = new TopologyGraph();
-			seedCellShellFaces(topo);
+			const model = new Model();
+			seedCellShellFaces(model);
 			const q = `MATCH (c:Cell)-[:BOUNDED_BY]->(:Shell)-[:CONTAINS]->(f:Face) RETURN f.id`;
 			const res = await runConstruct(q, {
-				topology: topo,
+				model: model,
 				kernel: mkKernelStub(),
 				actions: ActionRegistry.withBuiltins(),
 			});
@@ -1533,7 +1533,7 @@ if (import.meta.vitest) {
 		});
 
 		it("CONTAINS walks cellComplex to cells", async () => {
-			const topo = new TopologyGraph();
+			const model = new Model();
 			const c0 = "c0" as CellRef;
 			const c1 = "c1" as CellRef;
 			const cc = "cc0" as CellComplexRef;
@@ -1541,7 +1541,7 @@ if (import.meta.vitest) {
 			topo.cells[c1] = { id: c1, shellIds: [] };
 			topo.cellComplexes[cc] = { id: cc, cellIds: [c0, c1] };
 			const res = await runConstruct(`MATCH (cc:CellComplex)-[:CONTAINS]->(c:Cell) RETURN c.id`, {
-				topology: topo,
+				model: model,
 				kernel: mkKernelStub(),
 				actions: ActionRegistry.withBuiltins(),
 			});
@@ -1549,7 +1549,7 @@ if (import.meta.vitest) {
 		});
 
 		it("ADJACENT_TO finds cells sharing a face", async () => {
-			const topo = new TopologyGraph();
+			const model = new Model();
 			const fShared = "fs" as FaceRef;
 			const sh0 = "s0" as ShellRef;
 			const sh1 = "s1" as ShellRef;
@@ -1559,7 +1559,7 @@ if (import.meta.vitest) {
 			topo.cells["c0" as CellRef] = { id: "c0" as CellRef, shellIds: [sh0] };
 			topo.cells["c1" as CellRef] = { id: "c1" as CellRef, shellIds: [sh1] };
 			const res = await runConstruct("MATCH (a:Cell)-[:ADJACENT_TO]-(b:Cell) RETURN a.id, b.id", {
-				topology: topo,
+				model: model,
 				kernel: mkKernelStub(),
 				actions: ActionRegistry.withBuiltins(),
 			});
@@ -1569,16 +1569,16 @@ if (import.meta.vitest) {
 		});
 
 		it("Surface metadata filter via CALL UNWIND WHERE", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
-			const external = (await kernel.computeSurfaceViews(topo)).find((s) => s.exposure === "external");
+			const external = (await kernel.computeSurfaceViews(model)).find((s) => s.exposure === "external");
 			expect(external).toBeDefined();
 			const res = await runConstruct(
 				"CALL view.surfaces({}) YIELD data AS surfaces UNWIND surfaces AS s WHERE s.exposure = 'external' RETURN s.id",
 				{
-					topology: topo,
+					model: model,
 					kernel,
 					actions: ActionRegistry.withBuiltins(),
 				},
@@ -1587,37 +1587,37 @@ if (import.meta.vitest) {
 		});
 
 		it("CALL view.parts UNWIND returns overlap intersection", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct(
 				"CALL view.parts({}) YIELD data AS parts UNWIND parts AS p WHERE p.overlap = 'intersection' RETURN p.id",
-				{ topology: topo, kernel, actions: ActionRegistry.withBuiltins() },
+				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
 			);
 			expect(res.rows.length).toBeGreaterThan(0);
 			expect(res.rows.every((r) => String(r.c0).includes("intersection") || r.c0 !== undefined)).toBe(true);
 		});
 
 		it("CALL view.volumes UNWIND returns one union volume for overlapping boxes", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct(
 				"CALL view.volumes({}) YIELD data AS volumes UNWIND volumes AS v RETURN v.id, v.volume",
-				{ topology: topo, kernel, actions: ActionRegistry.withBuiltins() },
+				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
 			);
 			expect(res.rows.length).toBe(1);
 			expect(Number(res.rows[0]?.c1)).toBeGreaterThan(8);
 		});
 
 		it("CALL createBoxFromCorners yields diff and data.cell", async () => {
-			const topo = new TopologyGraph();
+			const model = new Model();
 			const res = await runConstruct(
 				"CALL primitive.createBoxFromCorners({ cornerA: [0,0,0], cornerB: [2,3,0], height: 4 }) YIELD diff, data.cell AS cell",
 				{
-					topology: topo,
+					model: model,
 					kernel: new QueryTestKernel(),
 					actions: ActionRegistry.withBuiltins(),
 				},
@@ -1628,12 +1628,12 @@ if (import.meta.vitest) {
 		});
 
 		it("CALL selection.selectAll YIELD targets returns every box topology kind", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const actions = ActionRegistry.withBuiltins();
 			expect(actions.get("selection.selectAll")).not.toBeNull();
 			const res = await runConstruct("CALL selection.selectAll({}) YIELD targets", {
-				topology: topo,
+				model: model,
 				kernel: new QueryTestKernel(),
 				actions,
 			});
@@ -1644,13 +1644,13 @@ if (import.meta.vitest) {
 		});
 
 		it("CALL selection.apply invert uses construct selectionTargets seed", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const seed = [{ kind: "cell", id: "box", editable: true }];
 			const res = await runConstruct(
 				"CALL selection.apply({ operation: 'invert' }) YIELD data.targets AS targets",
 				{
-					topology: topo,
+					model: model,
 					kernel: new QueryTestKernel(),
 					actions: ActionRegistry.withBuiltins(),
 					selectionTargets: seed,
@@ -1662,10 +1662,10 @@ if (import.meta.vitest) {
 		});
 
 		it("CALL selection.selectVertices YIELD targets lists only vertices", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const res = await runConstruct("CALL selection.selectVertices({}) YIELD targets", {
-				topology: topo,
+				model: model,
 				kernel: new QueryTestKernel(),
 				actions: ActionRegistry.withBuiltins(),
 			});
@@ -1675,13 +1675,13 @@ if (import.meta.vitest) {
 		});
 
 		it("CALL selection.selectSurfaces YIELD targets with derived refresh", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const kernel = new QueryTestKernel();
 			const derived = new DerivedViewService(kernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const res = await runConstruct("CALL selection.selectSurfaces({}) YIELD targets", {
-				topology: topo,
+				model: model,
 				kernel,
 				actions: ActionRegistry.withBuiltins(),
 				derived,

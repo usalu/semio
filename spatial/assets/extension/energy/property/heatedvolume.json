@@ -5,9 +5,11 @@
 	"label": "Heated Volume",
 	"description": "Derived heated volume for objects included in the energy view.",
 	"unit": "volume",
-	"sources": [
-		"view.energy"
-	],
+	"sources": {
+		"views": [
+			"energy.energy"
+		]
+	},
 	"output": {
 		"heatedvolume": 0.0
 	}

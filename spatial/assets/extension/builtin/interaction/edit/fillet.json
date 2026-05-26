@@ -347,5 +347,8 @@
       }
     }
   },
-  "key": "8"
+  "key": "8",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

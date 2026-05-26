@@ -612,5 +612,8 @@
       }
     }
   },
-  "key": "4"
+  "key": "4",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

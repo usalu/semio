@@ -687,5 +687,8 @@
       }
     }
   },
-  "key": "r"
+  "key": "r",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

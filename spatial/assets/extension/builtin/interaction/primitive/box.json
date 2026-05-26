@@ -37,14 +37,6 @@
       "operations": [
         "cell.createBox",
         "entity.tessellate"
-      ],
-      "editableEntities": [
-        "vertex",
-        "edge",
-        "wire",
-        "face",
-        "shell",
-        "cell"
       ]
     }
   },
@@ -2399,5 +2391,8 @@
         }
       }
     }
+  },
+  "produces": {
+    "typology": "builtin.c:.git"
   }
 }

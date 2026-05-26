@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.measure.length",
+  "version": "1.0.0",
+  "label": "Length",
+  "description": "Typology produced by measure.length.",
+  "actions": [
+    "builtin.measure.length"
+  ],
+  "interactions": [
+    "measure.length"
+  ]
+}

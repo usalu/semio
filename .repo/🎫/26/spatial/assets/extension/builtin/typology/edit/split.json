@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.edit.split",
+  "version": "1.0.0",
+  "label": "Split",
+  "description": "Typology produced by edit.split.",
+  "actions": [
+    "builtin.edit.split"
+  ],
+  "interactions": [
+    "edit.split"
+  ]
+}

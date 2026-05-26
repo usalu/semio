@@ -1,6 +1,6 @@
 # Core
 
-Extendable spatial framework around persistent topology, runtime execution, and rendering.
+Extendable spatial framework around persistent models, runtime execution, and rendering.
 
 ## Geometry
 
@@ -13,6 +13,7 @@ An extension is a data-only namespace packaged by `extension.json`. It groups de
 All concrete actions, interactions, views, attributes, and properties live as JSON extension assets under `spatial/assets/extension`.
 Each extension has `extension.json` manifest.
 Each view lives in a `<view-id>` folder with a `view.json` file.
+Extension-level typologies are stored in `typology/<categoryFolders..>/<typology-id>.json`.
 Extension-level Actions are stored in `action/<categoryFolders..>/<action-id>.json`. View-level actions are stored in `<view-id>/action/<categoryFolders..>/<action-id>.json`. Same for interactions, attributes and properties.
 
 Everything below this section is part of an extension.

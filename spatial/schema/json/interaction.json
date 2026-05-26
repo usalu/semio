@@ -11,17 +11,40 @@
     "version": { "type": "string" },
     "label": { "type": "string" },
     "context": { "$ref": "#/$defs/contextDecl" },
+    "produces": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typology": { "type": "string", "minLength": 1 }
+      }
+    },
     "requires": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "typologies": { "type": "array", "items": { "type": "string" } },
         "kernel": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "operations": { "type": "array", "items": { "type": "string" } },
-            "editableEntities": { "type": "array", "items": { "type": "string" } },
-            "derivedEntities": { "type": "array", "items": { "type": "string" } }
+            "geometryEntities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "vertex",
+                  "edge",
+                  "wire",
+                  "face",
+                  "shell",
+                  "cell",
+                  "cellComplex",
+                  "cluster",
+                  "anchor"
+                ]
+              }
+            }
           }
         }
       }
@@ -148,18 +171,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "vertex",
-              "edge",
-              "wire",
-              "face",
-              "shell",
-              "cell",
-              "cellComplex",
-              "cluster",
-              "surface",
-              "part"
-            ]
+            "enum": ["object", "attribute", "property"]
           }
         },
         "multiple": { "type": "boolean" },

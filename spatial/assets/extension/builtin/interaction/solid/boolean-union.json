@@ -249,5 +249,8 @@
       }
     }
   },
-  "key": "v"
+  "key": "v",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/typology",
+  "title": "SpatialTypology",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "label", "actions", "interactions"],
+  "properties": {
+    "schema": { "const": "spatial.typology/v1" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "actions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "interactions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "properties": { "type": "array", "items": { "type": "string" } },
+    "attributes": { "type": "array", "items": { "type": "string" } }
+  }
+}

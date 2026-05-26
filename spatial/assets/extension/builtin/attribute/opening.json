@@ -6,7 +6,7 @@
   "description": "Marks a surface opening kind used by downstream view derivations.",
   "field": "opening",
   "targets": [
-    "surface"
+    "object"
   ],
   "value": {
     "kind": "string",
@@ -15,6 +15,11 @@
       "door",
       "passage",
       "view"
+    ]
+  },
+  "geometrySelector": {
+    "kinds": [
+      "surface"
     ]
   }
 }

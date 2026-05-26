@@ -989,5 +989,8 @@
       }
     }
   },
-  "key": "x"
+  "key": "x",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

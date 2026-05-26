@@ -3,11 +3,19 @@
 	"id": "builtin.volume",
 	"version": "1.0.0",
 	"label": "Volume",
-	"description": "Derived volume for solid topology.",
+	"description": "Derived volume for solid objects.",
 	"unit": "volume",
-	"sources": [
-		"solid"
-	],
+	"sources": {
+		"typologies": [
+			"builtin.solid.sphere",
+			"builtin.solid.cylinder",
+			"builtin.primitive.box",
+			"builtin.solid.boolean-union",
+			"builtin.solid.boolean-difference",
+			"builtin.solid.boolean-intersection",
+			"builtin.feature.extrude-wire"
+		]
+	},
 	"output": {
 		"volume": 0.0
 	}

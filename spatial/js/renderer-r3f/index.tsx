@@ -26,26 +26,26 @@ THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
 import {
 	abortActiveInteractionSession,
-	applyTopologyDiff,
+	applyModelDiff,
 	buildBoxInteractionSpec,
 	cellRef,
 	createInteractionRuntime,
 	emptyMeshTransfer,
 	DerivedViewService,
 	DocumentHistory,
-	EMPTY_TOPOLOGY_DIFF,
+	EMPTY_MODEL_DIFF,
 	interactionCanConfirmSelection,
 	InteractionRegistry,
-	isEmptyTopologyDiff,
+	isEmptyModelDiff,
 	isInteractionSessionActive,
 	listSelectionOperationInteractionDefs,
 	selectionOperationUsesDerived,
 	selectionSeedTargetsForOperation,
 	loadSpatialInteraction,
-	parseTopologyGraphJson,
+	parseModelJson,
 	listKeyedInteractionTransitions,
 	resolveSpatialInteractionKey,
-	TopologyGraph,
+	Model,
 	type InteractionEvent,
 	type InteractionKeybindRow,
 	type InteractionRuntime,
@@ -71,8 +71,8 @@ import {
 	type FaceInfo,
 	type MeshTransfer,
 	type SpatialInteraction,
-	type TopologyEntityKind,
-	type TopologyGraphJson,
+	type ModelEntityKind,
+	type ModelJson,
 	type Vec3,
 	type VertexRecord,
 	type WireRecord,
@@ -82,8 +82,8 @@ import {
 export type { SpatialComputeMode };
 import {
 	aabbDifferenceRegionPoints,
-	computePartViewsFromTopology,
-	computeSurfaceViewsFromTopology,
+	computePartViewsFromModel,
+	computeSurfaceViewsFromModel,
 	PreciseSpatialKernelMath,
 	preciseSpatialKernelMath,
 } from "@spatial/js-kernel-brepjs";
@@ -162,9 +162,9 @@ export function useTessellation(
 }
 
 /** @emoji 📦 Lists `CellRef` ids present on a topology graph (document cells for tessellation). */
-export function listTopologyCellRefs(topo: TopologyGraph | TopologyGraphJson | null): readonly CellRef[] {
+export function listTopologyCellRefs(model: Model | ModelJson | null): readonly CellRef[] {
 	if (!topo) return [];
-	const graph = topo instanceof TopologyGraph ? topo : parseTopologyGraphJson(topo);
+	const graph = topo instanceof Model ? topo : parseModelJson(model);
 	if (!graph) return [];
 	return Object.keys(graph.cells).map((id) => cellRef(id));
 }
@@ -180,7 +180,7 @@ export function meshTransferContentKey(mesh: MeshTransfer, fallback = 0): string
 /** @emoji 🎞️ Tessellates every topology cell through `SpatialKernel.tessellate` (worker-backed). */
 export function useDocumentMeshes(
 	kernel: SpatialKernel | null,
-	topology: TopologyGraph,
+	model: Model,
 	tolerance: number,
 ): readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[] {
 	const [meshes, setMeshes] = useState<readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[]>([]);
@@ -429,15 +429,15 @@ export function bboxWireSegments(min: Vec3, max: Vec3): readonly (readonly [Vec3
 	return idx.map(([a, b]) => [c[a]!, c[b]!] as const);
 }
 
-function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: TopologyEntityKind; readonly id: string }[] {
+function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: ModelEntityKind; readonly id: string }[] {
 	if (!Array.isArray(v)) return [];
-	const out: { kind: TopologyEntityKind; id: string }[] = [];
+	const out: { kind: ModelEntityKind; id: string }[] = [];
 	for (const raw of v) {
 		if (!raw || typeof raw !== "object") continue;
 		const o = raw as Record<string, unknown>;
 		const kind = o.kind;
 		const id = o.id;
-		if (typeof kind === "string" && typeof id === "string") out.push({ kind: kind as TopologyEntityKind, id });
+		if (typeof kind === "string" && typeof id === "string") out.push({ kind: kind as ModelEntityKind, id });
 	}
 	return out;
 }
@@ -497,29 +497,55 @@ const raycastNone: THREE.Object3D["raycast"] = () => undefined;
 // #region 🧲TopologyTargets
 export type SpatialPickKind = "pointer.down" | "pointer.move";
 
-export type SpatialPickTargetKind = Extract<
-	TopologyEntityKind,
-	"anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "cell" | "cellComplex" | "cluster" | "surface" | "part"
->;
+/** @emoji 🎯 Object-centric raw pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
+export type SpatialObjectPickTargetKind = "object" | "objectFace" | "objectEdge" | "objectVertex";
+
+export type SpatialPickTargetKind = SpatialObjectPickTargetKind | Extract<ModelEntityKind, "surface" | "part">;
 
 export type SpatialPickViewKind = "raw" | "analytic";
 
-export const SPATIAL_RAW_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
-	"anchor",
-	"vertex",
-	"edge",
-	"wire",
-	"face",
-	"shell",
-	"cell",
-	"cellComplex",
-	"cluster",
+export const SPATIAL_RAW_PICK_TARGET_KINDS: readonly SpatialObjectPickTargetKind[] = [
+	"object",
+	"objectFace",
+	"objectEdge",
+	"objectVertex",
 ];
 
 export const SPATIAL_ANALYTIC_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"surface",
 	"part",
 ];
+
+const GEOMETRY_KIND_TO_OBJECT_PICK: Partial<Record<ModelEntityKind, SpatialObjectPickTargetKind>> = {
+	vertex: "objectVertex",
+	edge: "objectEdge",
+	wire: "objectEdge",
+	face: "objectFace",
+	cell: "object",
+	anchor: "objectVertex",
+};
+
+function spatialPickKindsForSelectionAccept(accept: readonly ModelEntityKind[]): ReadonlySet<SpatialPickTargetKind> | null {
+	if (!accept.length) return null;
+	const out = new Set<SpatialPickTargetKind>();
+	for (const kind of accept) {
+		const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind];
+		if (mapped) out.add(mapped);
+		if (kind === "surface" || kind === "part" || kind === "volume") out.add(kind);
+	}
+	return out;
+}
+
+function kernelGeometryKindForObjectPick(
+	kind: SpatialObjectPickTargetKind,
+	geometryKind?: ModelEntityKind,
+): ModelEntityKind {
+	if (geometryKind) return geometryKind;
+	if (kind === "objectVertex") return "vertex";
+	if (kind === "objectEdge") return "edge";
+	if (kind === "objectFace") return "face";
+	return "cell";
+}
 
 export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	...SPATIAL_RAW_PICK_TARGET_KINDS,
@@ -571,7 +597,7 @@ export interface SpatialDragSelectionState {
 	readonly modifiers: InteractionEvent["modifiers"];
 }
 
-export type SpatialPickGeometry = TopologyGraph | TopologyGraphJson;
+export type SpatialPickGeometry = Model | ModelJson;
 
 export function spatialPickTargetKey(target: SpatialPickTarget): string {
 	return `${target.kind}:${target.id}`;
@@ -675,10 +701,9 @@ export function resolveSpatialSceneVisibility(
 		};
 	}
 	return {
-		showFactoryWireframe: visible("edge") || visible("wire"),
-		showCommittedFaces:
-			visible("face") || visible("shell") || visible("cell") || visible("cellComplex") || visible("cluster"),
-		showCommittedEdges: visible("edge") || visible("wire"),
+		showFactoryWireframe: visible("objectEdge"),
+		showCommittedFaces: visible("objectFace") || visible("object"),
+		showCommittedEdges: visible("objectEdge"),
 	};
 }
 
@@ -742,7 +767,7 @@ function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<strin
 	return Array.isArray(x) ? recordsById(x) : (x as Record<string, T>);
 }
 
-/** @emoji 🧲 Normalizes `TopologyGraphJson` array buckets to the record shape used by interaction math. */
+/** @emoji 🧲 Normalizes `ModelJson` array buckets to the record shape used by interaction math. */
 function topologyGeometryBuckets(g: SpatialPickGeometry): {
 	readonly anchors: Record<string, AnchorRecord>;
 	readonly vertices: Record<string, VertexRecord>;
@@ -754,7 +779,7 @@ function topologyGeometryBuckets(g: SpatialPickGeometry): {
 	readonly cellComplexes: Record<string, CellComplexRecord>;
 	readonly clusters: Record<string, ClusterRecord>;
 } {
-	if (g instanceof TopologyGraph) {
+	if (g instanceof Model) {
 		return {
 			anchors: g.anchors,
 			vertices: g.vertices,
@@ -768,7 +793,7 @@ function topologyGeometryBuckets(g: SpatialPickGeometry): {
 		};
 	}
 	return {
-		anchors: asRecordBucket((g as TopologyGraphJson & { readonly anchors?: readonly AnchorRecord[] }).anchors),
+		anchors: asRecordBucket((g as ModelJson & { readonly anchors?: readonly AnchorRecord[] }).anchors),
 		vertices: asRecordBucket(g.vertices),
 		edges: asRecordBucket(g.edges),
 		wires: asRecordBucket(g.wires),
@@ -911,7 +936,7 @@ function topologyWireEdgeSegments(
 /** @emoji 📐 Topology wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
 export function topologyEntityWireSegments(
 	buckets: ReturnType<typeof topologyGeometryBuckets>,
-	kind: TopologyEntityKind,
+	kind: ModelEntityKind,
 	id: string,
 ): readonly (readonly [Vec3, Vec3])[] {
 	if (kind === "edge" && buckets.edges[id]) {
@@ -951,12 +976,12 @@ export function collectTopologyEdgeSegments(
 	return out;
 }
 
-function intersectCellAabbs(topo: TopologyGraph, cellIds: readonly string[]): { readonly min: Vec3; readonly max: Vec3 } | null {
+function intersectCellAabbs(model: Model, cellIds: readonly string[]): { readonly min: Vec3; readonly max: Vec3 } | null {
 	let hit: { readonly min: Vec3; readonly max: Vec3 } | null = null;
 	for (const cellId of cellIds) {
-		const cell = topo.cells[cellId];
+		const cell = model.cells[cellId];
 		if (!cell) continue;
-		const aabb = scenePreview().topologyCellAabb(topo, cell);
+		const aabb = scenePreview().modelObjectAabb(topo, cell);
 		if (!aabb) continue;
 		if (!hit) {
 			hit = aabb;
@@ -984,7 +1009,7 @@ function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
 }
 
 function partPickPoints(
-	topo: TopologyGraph,
+	topo: Model,
 	buckets: ReturnType<typeof topologyGeometryBuckets>,
 	part: PartView,
 	fallback: readonly Vec3[],
@@ -995,13 +1020,13 @@ function partPickPoints(
 		if (inter) return aabbCornerPoints(inter.min, inter.max);
 	}
 	if (part.overlap === "difference" && part.sourceCellIds.length === 1) {
-		const cell = topo.cells[part.sourceCellIds[0]!];
-		const box = cell ? scenePreview().topologyCellAabb(topo, cell) : null;
+		const cell = model.cells[part.sourceCellIds[0]!];
+		const box = cell ? scenePreview().modelObjectAabb(topo, cell) : null;
 		if (box) {
 			const cutters: { readonly min: Vec3; readonly max: Vec3 }[] = [];
 			for (const [otherId, otherCell] of Object.entries(topo.cells)) {
 				if (otherId === part.sourceCellIds[0]) continue;
-				const other = scenePreview().topologyCellAabb(topo, otherCell);
+				const other = scenePreview().modelObjectAabb(topo, otherCell);
 				if (!other) continue;
 				const cut = scenePreview().aabbIntersect(box, other);
 				if (cut) cutters.push(cut);
@@ -1016,12 +1041,12 @@ function partPickPoints(
 function createAnalyticSpatialPickTargets(
 	buckets: ReturnType<typeof topologyGeometryBuckets>,
 	derived: DerivedViewService,
-	topo: TopologyGraph,
+	topo: Model,
 ): readonly SpatialPickTarget[] {
 	const targets: SpatialPickTarget[] = [];
 	const all = topologyAllVertexPoints(buckets.vertices);
 	const allCenter = topologyPointCentroid(all);
-	for (const surface of derived.computeSurfaces(topo)) {
+	for (const surface of derived.computeSurfaces(model)) {
 		const points = surface.regionPoints?.length
 			? surface.regionPoints
 			: surface.sourceFaceIds.flatMap((faceId) => topologyEntityPoints(buckets, "face", faceId));
@@ -1038,7 +1063,7 @@ function createAnalyticSpatialPickTargets(
 			stance: surface.stance,
 		});
 	}
-	for (const part of derived.computeParts(topo)) {
+	for (const part of derived.computeParts(model)) {
 		const merged = uniqueTopologyPoints(partPickPoints(topo, buckets, part, all));
 		const point = topologyPointCentroid(merged) ?? allCenter;
 		if (!point) continue;
@@ -1061,9 +1086,9 @@ export function createSpatialPickTargets(
 ): readonly SpatialPickTarget[] {
 	if (!geometry) return [];
 	const buckets = topologyGeometryBuckets(geometry);
-	const topo = geometry instanceof TopologyGraph ? geometry : parseTopologyGraphJson(geometry as TopologyGraphJson);
+	const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
 	const targets: SpatialPickTarget[] = [];
-	if (topo) {
+	if (model) {
 		for (const anchor of topologyRecords(buckets.anchors)) {
 			targets.push({ kind: "anchor", id: anchor.id, point: scenePreview().evaluateAnchorPosition(topo, anchor) });
 		}
@@ -1124,16 +1149,16 @@ export function createSpatialPickTargets(
 		const point = topologyPointCentroid(points) ?? allCenter;
 		if (point) targets.push({ kind: "cluster", id: cluster.id, point, points: points.length ? points : all });
 	}
-	if (derived && topo) targets.push(...createAnalyticSpatialPickTargets(buckets, derived, topo));
+	if (derived && model) targets.push(...createAnalyticSpatialPickTargets(buckets, derived, model));
 	return targets;
 }
 
 export function filterSpatialPickTargets(
 	targets: readonly SpatialPickTarget[],
-	accept: readonly TopologyEntityKind[] = [],
+	accept: readonly ModelEntityKind[] = [],
 	toggles: SpatialPickKindToggles = {},
 ): SpatialPickTarget[] {
-	const acceptSet = accept.length ? new Set<TopologyEntityKind>(accept) : null;
+	const acceptSet = accept.length ? new Set<ModelEntityKind>(accept) : null;
 	return targets.filter((target) => toggles[target.kind] !== false && (!acceptSet || acceptSet.has(target.kind)));
 }
 
@@ -1279,7 +1304,7 @@ function TopologyTargetWireframes({
 	opacity,
 }: {
 	readonly geometry: SpatialPickGeometry;
-	readonly targets: readonly { readonly kind: TopologyEntityKind; readonly id: string }[];
+	readonly targets: readonly { readonly kind: ModelEntityKind; readonly id: string }[];
 	readonly transform: (point: Vec3) => Vec3;
 	readonly color: string;
 	readonly opacity: number;
@@ -1323,7 +1348,7 @@ function TopologyTargetPreviewMeshes({
 	opacity,
 }: {
 	readonly geometry: SpatialPickGeometry;
-	readonly targets: readonly { readonly kind: TopologyEntityKind; readonly id: string }[];
+	readonly targets: readonly { readonly kind: ModelEntityKind; readonly id: string }[];
 	readonly transform: (point: Vec3) => Vec3;
 	readonly color: string;
 	readonly opacity: number;
@@ -1583,7 +1608,7 @@ function EntityHighlightItem({
 	return (
 		<TopologyTargetWireframes
 			geometry={geometry}
-			targets={[{ kind: kind as TopologyEntityKind, id }]}
+			targets={[{ kind: kind as ModelEntityKind, id }]}
 			transform={(pt) => pt}
 			color="#ffcc66"
 			opacity={0.85}
@@ -2039,7 +2064,7 @@ function spatialPickTargetsFromClientPoint(
 	camera: THREE.Camera,
 	rect: DOMRect,
 	targets: readonly SpatialPickTarget[],
-	selectionAccept: readonly TopologyEntityKind[],
+	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
 	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget[] {
@@ -2054,7 +2079,7 @@ function spatialPickTargetsFromScreenSelection(
 	targets: readonly SpatialPickTarget[],
 	camera: THREE.Camera,
 	rect: DOMRect,
-	selectionAccept: readonly TopologyEntityKind[],
+	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
 	analyticToggles: SpatialAnalyticToggles = {},
 	topologyPreviewTransform?: ((point: Vec3) => Vec3) | null,
@@ -2084,7 +2109,7 @@ function spatialPickTargetsFromScreenSelection(
 function spatialPickTargetsFromRay(
 	ray: THREE.Ray,
 	targets: readonly SpatialPickTarget[],
-	selectionAccept: readonly TopologyEntityKind[],
+	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
 	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget[] {
@@ -2299,7 +2324,7 @@ export function SpatialPickGeometryLayer({
 	readonly derived?: DerivedViewService | null;
 	readonly derivedRevision?: number;
 	readonly topologyPreviewTransform?: ((point: Vec3) => Vec3) | null;
-	readonly selectionAccept?: readonly TopologyEntityKind[];
+	readonly selectionAccept?: readonly ModelEntityKind[];
 	/** @emoji 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
 	readonly filterKindToggles?: SpatialPickKindToggles;
 	/** @emoji 🪞 Analytic exposure/stance/overlap visibility (independent of selection analytic toggles). */
@@ -2786,7 +2811,7 @@ export interface InteractionSpatialViewProps {
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
 	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
-	readonly selectionAccept?: readonly TopologyEntityKind[];
+	readonly selectionAccept?: readonly ModelEntityKind[];
 	readonly filterKindToggles?: SpatialPickKindToggles;
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	/** @emoji 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
@@ -2832,7 +2857,7 @@ export type InteractionSpatialViewHostCallbacks = Pick<
 export function interactionSpatialGroundPickPlaneEnabled(
 	snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">,
 	pickEnabled: boolean,
-	selectionAccept: readonly TopologyEntityKind[],
+	selectionAccept: readonly ModelEntityKind[],
 ): boolean {
 	const si = snapshot.spatialInteraction;
 	return pickEnabled !== false && si.spatialGroundPick && selectionAccept.length === 0 && !si.pickDisabledStates.includes(snapshot.state);
@@ -3038,30 +3063,30 @@ function replCommandTextWithoutSpaces(text: string): string {
 	return text.replace(/\s+/g, "");
 }
 
-function replFirstWireId(topo: TopologyGraph): string | null {
+function replFirstWireId(model: Model): string | null {
 	const ks = Object.keys(topo.wires);
-	return ks.length ? topo.wires[ks[0]!]!.id : null;
+	return ks.length ? model.wires[ks[0]!]!.id : null;
 }
 
-function replFirstFaceId(topo: TopologyGraph): string | null {
+function replFirstFaceId(model: Model): string | null {
 	const ks = Object.keys(topo.faces);
-	return ks.length ? topo.faces[ks[0]!]!.id : null;
+	return ks.length ? model.faces[ks[0]!]!.id : null;
 }
 
 function replBuildDispatchEvent(
 	row: InteractionKeybindRow,
-	opts: { readonly interactionId: string; readonly topo: TopologyGraph },
+	opts: { readonly interactionId: string; readonly model: Model },
 ): InteractionEvent | null {
 	const { interactionId, topo } = opts;
 	if (row.eventKind === "set.height" || row.eventKind === "set.distance" || row.eventKind === "set.footprint") return null;
 	if (row.eventKind === "selection.changed") {
 		if (interactionId === "feature.extrudeWire") {
-			const wid = replFirstWireId(topo);
+			const wid = replFirstWireId(model);
 			if (!wid) return null;
 			return { kind: "selection.changed", targets: [{ kind: "wire", id: wid, editable: true }], modifiers: {} };
 		}
 		if (interactionId === "feature.offsetSurface") {
-			const fid = replFirstFaceId(topo);
+			const fid = replFirstFaceId(model);
 			if (!fid) return null;
 			return { kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }], modifiers: {} };
 		}
@@ -3245,7 +3270,7 @@ function replStartEvent(selection: readonly SelectionTarget[]): InteractionEvent
 	return { kind: "start", targets: selection, modifiers: {} };
 }
 
-function replSelectionAccepted(accept: readonly TopologyEntityKind[], selection: readonly SelectionTarget[]): SelectionTarget[] {
+function replSelectionAccepted(accept: readonly ModelEntityKind[], selection: readonly SelectionTarget[]): SelectionTarget[] {
 	return selection.filter((target) => accept.includes(target.kind));
 }
 
@@ -3623,7 +3648,7 @@ export function InteractionRepl({
 }: InteractionReplProps): ReactNode {
 	const snapshot = useInteractionSnapshot(rt);
 	const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
-	const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.topology, tessTolerance);
+	const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.model, tessTolerance);
 	const documentArchivedBoxLayouts = useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
 	const allArchivedBoxLayouts = useMemo(
 		() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts],
@@ -3698,7 +3723,7 @@ export function InteractionRepl({
 	const setCmdLineRef = useRef(setCmdLine);
 	const rendererSelectionRef = useRef(rendererSelection);
 	const suppressAutoStartOnceRef = useRef(false);
-	const lastDerivedRefreshRef = useRef<{ readonly topology: TopologyGraph | null; readonly revision: number }>({ topology: null, revision: -1 });
+	const lastDerivedRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number }>({ model: null, revision: -1 });
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = useRef(false);
@@ -3800,7 +3825,7 @@ export function InteractionRepl({
 	}, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction, onEscape, setSelectionMenu, setHoveredPickKey]);
 
 	const startRuntime = useCallback(async () => {
-		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
+		const accept = rt.listActiveSelectionAccept() as readonly ModelEntityKind[];
 		const accepted = replSelectionAccepted(accept, rendererSelectionRef.current);
 		setInteractionSelection(accepted);
 		await rt.send(replStartEvent(accepted));
@@ -3830,14 +3855,14 @@ export function InteractionRepl({
 	const hostPickingEnabled = replHostTopologyPickingEnabled(interactionId, spec, snapshot.state);
 	useEffect(() => {
 		if (!derived) return;
-		const topo = documentModel.topology;
-		const revision = topo.revision;
+		const model = documentModel.topology;
+		const revision = model.revision;
 		if (lastDerivedRefreshRef.current.topology === topo && lastDerivedRefreshRef.current.revision === revision) return;
 		let cancelled = false;
 		const run = () => {
-			void derived.refresh(topo).then(() => {
-				if (cancelled || topo.revision !== revision) return;
-				lastDerivedRefreshRef.current = { topology: topo, revision };
+			void derived.refresh(model).then(() => {
+				if (cancelled || model.revision !== revision) return;
+				lastDerivedRefreshRef.current = { model: model, revision };
 				setDerivedRevision((n) => n + 1);
 			});
 		};
@@ -3848,7 +3873,7 @@ export function InteractionRepl({
 			if (useIdleCallback) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
-	}, [derived, documentModel.topology, topologyRevision]);
+	}, [derived, documentModel.model, topologyRevision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -3893,12 +3918,12 @@ export function InteractionRepl({
 	const activePickViewKinds = useMemo(() => spatialPickViewKinds(pickViewKind), [pickViewKind]);
 	const analyticSummary = useMemo(() => {
 		if (!derived || pickViewKind !== "analytic") return null;
-		const topo = documentModel.topology;
+		const model = documentModel.topology;
 		return {
-			surfaces: derived.computeSurfaces(topo),
-			parts: derived.computeParts(topo),
+			surfaces: derived.computeSurfaces(model),
+			parts: derived.computeParts(model),
 		};
-	}, [derived, documentModel.topology, pickViewKind, derivedRevision, snapshot.revision]);
+	}, [derived, documentModel.model, pickViewKind, derivedRevision, snapshot.revision]);
 
 	const commitSelection = useCallback(
 		(selection: readonly SelectionTarget[]) => {
@@ -4024,7 +4049,7 @@ export function InteractionRepl({
 				if (
 					snapEv &&
 					activeSelectionAccept.length > 0 &&
-					activeSelectionAccept.includes(snapEv.kind as TopologyEntityKind) &&
+					activeSelectionAccept.includes(snapEv.kind as ModelEntityKind) &&
 					viewSelectionKindToggles[snapEv.kind as SpatialPickTargetKind] !== false
 				) {
 					const snapTarget: SpatialPickTarget = {
@@ -4203,10 +4228,10 @@ export function InteractionRepl({
 	const dispatchTransition = useCallback(
 		(row: InteractionKeybindRow) => {
 			onTransitionRun?.(row);
-			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, topo: documentModel.topology });
+			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, model: documentModel.topology });
 			if (ev) void rt.send(ev);
 		},
-		[rt, spec.id, documentModel.topology, onTransitionRun],
+		[rt, spec.id, documentModel.model, onTransitionRun],
 	);
 
 	const transitionRows = useMemo(() => listKeyedInteractionTransitions(spec, snapshot.state), [spec, snapshot.state]);
@@ -5189,19 +5214,19 @@ if (import.meta.vitest) {
 		});
 
 		it("topologyEntityWireSegments uses face boundary edges not bbox diagonals", () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const faceId = Object.keys(topo.faces)[0]!;
-			const buckets = topologyGeometryBuckets(topo);
+			const buckets = topologyGeometryBuckets(model);
 			const segs = topologyEntityWireSegments(buckets, "face", faceId);
 			expect(segs.length).toBeGreaterThanOrEqual(4);
 			expect(segs.length).toBeLessThan(12);
 		});
 
 		it("collectTopologyEdgeSegments returns one segment per topology edge", () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(topo));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(model));
 			expect(segs.length).toBe(Object.keys(topo.edges).length);
 			expect(segs.length).toBe(12);
 		});
@@ -5328,7 +5353,7 @@ if (import.meta.vitest) {
 
 		it("creates snap and selection metadata for topology targets", () => {
 			const targets = createSpatialPickTargets({
-				schema: "spatial.topology/v1",
+				schema: "spatial.model/v1",
 				revision: 1,
 				anchors: [],
 				vertices: [{ id: "v0", position: [1, 2, 3] }],
@@ -5339,7 +5364,7 @@ if (import.meta.vitest) {
 				cells: [],
 				cellComplexes: [],
 				clusters: [],
-			} as unknown as TopologyGraphJson);
+			} as unknown as ModelJson);
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
@@ -5352,7 +5377,7 @@ if (import.meta.vitest) {
 
 		it("creates selectable targets for every editable topology kind", () => {
 			const targets = createSpatialPickTargets({
-				schema: "spatial.topology/v1",
+				schema: "spatial.model/v1",
 				revision: 1,
 				anchors: [{ id: "a0", position: [0.25, 0.25, 0], attachment: { kind: "vertex", id: "v0" } }],
 				vertices: [
@@ -5370,7 +5395,7 @@ if (import.meta.vitest) {
 				cells: [{ id: "c0", shellIds: ["sh0"] }],
 				cellComplexes: [{ id: "cc0", cellIds: ["c0"] }],
 				clusters: [{ id: "cl0", memberIds: ["c0"] }],
-			} as unknown as TopologyGraphJson);
+			} as unknown as ModelJson);
 			expect(targets.map((target) => target.kind)).toEqual([
 				"anchor",
 				"vertex",
@@ -5389,10 +5414,10 @@ if (import.meta.vitest) {
 		});
 
 		it("creates analytic surface and part targets from derived views", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const targets = createSpatialPickTargets(topo, derived);
 			expect(targets.some((t) => t.kind === "surface")).toBe(true);
 			expect(targets.some((t) => t.kind === "part")).toBe(true);
@@ -5402,17 +5427,17 @@ if (import.meta.vitest) {
 		});
 
 		it("play topology punch through host exposes one difference pick target per cell", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
 			const derived = new DerivedViewService({
 				id: "topology-parts",
 				operations: [],
-				computePartViews: (g: TopologyGraph) => computePartViewsFromTopology(g),
-				computeSurfaceViews: (g: TopologyGraph) => computeSurfaceViewsFromTopology(g),
+				computePartViews: (g: Model) => computePartViewsFromModel(g),
+				computeSurfaceViews: (g: Model) => computeSurfaceViewsFromModel(g),
 				computeVolumeViews: async () => [],
 			} as unknown as import("@spatial/js-core").SpatialKernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
 				(t) => t.kind === "part",
 			);
@@ -5438,10 +5463,10 @@ if (import.meta.vitest) {
 		});
 
 		it("creates selectable targets for every committed box topology kind", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const targets = createSpatialPickTargets(topo, derived);
 			const counts = targets.reduce<Record<string, number>>((acc, target) => {
 				acc[target.kind] = (acc[target.kind] ?? 0) + 1;
@@ -5618,10 +5643,10 @@ if (import.meta.vitest) {
 				SpatialPickTargetKind,
 				boolean
 			>;
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const targets = createSpatialPickTargets(topo, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(targets, "raw");
 			const rawFilterToggles = spatialPickKindTogglesForView(onlyVertices, "raw");
@@ -5684,10 +5709,10 @@ if (import.meta.vitest) {
 		});
 
 		it("end-to-end raw and analytic pick view keeps cross-view selection through picks display and clear", async () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(topo);
+			await derived.refresh(model);
 			const allTargets = createSpatialPickTargets(topo, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(allTargets, "raw");
 			const analyticViewTargets = filterSpatialPickTargetsByView(allTargets, "analytic");
@@ -5783,14 +5808,14 @@ if (import.meta.vitest) {
 
 		it("tessellates committed box cells through BrepjsKernel for the display layer", async () => {
 			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-			const topo = new TopologyGraph();
+			const model = new Model();
 			const { diff, cell } = await kernel.createBoxFromCornersDiff({
 				cornerA: [0, 0, 0],
 				cornerB: [1, 1, 0],
 				height: 1,
 			});
-			applyTopologyDiff(topo, diff);
-			expect(listTopologyCellRefs(topo).map(String)).toContain(String(cell));
+			applyModelDiff(topo, diff);
+			expect(listTopologyCellRefs(model).map(String)).toContain(String(cell));
 			const mesh = await kernel.tessellate(cell, 0.001);
 			expect(mesh.position.length).toBeGreaterThan(0);
 			expect(mesh.faceGroups.length).toBeGreaterThan(0);
@@ -5930,7 +5955,7 @@ if (import.meta.vitest) {
 					errors: [],
 					warnings: [],
 					infos: [],
-					diff: M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")),
+					diff: M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")),
 					data: null,
 					archiveContext: { targets: [{ kind: "cell", id: "c0", editable: true }] },
 				}),
@@ -5941,7 +5966,7 @@ if (import.meta.vitest) {
 					errors: [],
 					warnings: [],
 					infos: [],
-					diff: EMPTY_TOPOLOGY_DIFF,
+					diff: EMPTY_MODEL_DIFF,
 					data: null,
 					archiveContext: { targets: [] },
 				}),
@@ -5952,20 +5977,20 @@ if (import.meta.vitest) {
 			it.each(listSelectionOperationInteractionDefs())(
 				"$id runs start→commit and replFinalizeSelection updates renderer selection",
 				async (defn) => {
-					const topo = new TopologyGraph();
-					applyTopologyDiff(
+					const model = new Model();
+					applyModelDiff(
 						topo,
-						M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
+						M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
 					);
 					const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 					const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
-					if (derived) await derived.refresh(topo);
+					if (derived) await derived.refresh(model);
 					const spec = loadSpatialInteraction(defn.id);
 					expect(spec).not.toBeNull();
 					const seed = selectionSeedTargetsForOperation(defn.operation);
 					const rt = createInteractionRuntime(spec!, {
 						kernel,
-						document: { topology: topo, nodes: [] },
+						document: { model: model, nodes: [] },
 						derived,
 					});
 					let rendererSelection: SelectionTarget[] = [...seed];
@@ -5973,7 +5998,7 @@ if (import.meta.vitest) {
 					const snap = rt.getSnapshot();
 					expect(snap.state).toBe("committed");
 					expect(snap.lastResponse?.ok).toBe(true);
-					expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
+					expect(isEmptyModelDiff(snap.lastResponse?.diff ?? EMPTY_MODEL_DIFF)).toBe(true);
 					const archived = replInteractionSelectionFromContext(snap.lastResponse?.archiveContext ?? {});
 					rendererSelection = [...replFinalizeSelection(rendererSelection, snap.lastResponse)];
 					expect(rendererSelection).toEqual(archived);
@@ -6012,17 +6037,17 @@ if (import.meta.vitest) {
 			);
 
 			it("chains selection commands through renderer finalize like a host session", async () => {
-				const topo = new TopologyGraph();
-				applyTopologyDiff(
+				const model = new Model();
+				applyModelDiff(
 					topo,
-					M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")),
+					M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")),
 				);
 				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 				let rendererSelection: SelectionTarget[] = [];
 				const runCommand = async (id: string, seed: readonly SelectionTarget[]) => {
 					const rt = createInteractionRuntime(loadSpatialInteraction(id)!, {
 						kernel,
-						document: { topology: topo, nodes: [] },
+						document: { model: model, nodes: [] },
 					});
 					await rt.send({ kind: "start", targets: seed, modifiers: {} });
 					const snap = rt.getSnapshot();
@@ -6113,7 +6138,7 @@ if (import.meta.vitest) {
 			const spec = buildBoxInteractionSpec();
 			const runtime = createInteractionRuntime(spec, {
 					kernel: new StubKernel() as unknown as SpatialKernel,
-				document: { topology: new TopologyGraph(), nodes: [] },
+				document: { model: new Model(), nodes: [] },
 			});
 			const snapshot = runtime.getSnapshot();
 			expect(snapshot.interactionId).toBe(spec.id);
@@ -6134,7 +6159,7 @@ if (import.meta.vitest) {
 					return emptyMeshTransfer();
 				}
 			}
-			const g = new TopologyGraph();
+			const g = new Model();
 			const mesh: MeshTransfer = {
 				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
 				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
@@ -6145,8 +6170,8 @@ if (import.meta.vitest) {
 				faceInfos: [],
 				edgeInfos: [],
 			};
-			const d0 = M.meshFaceTopologyDiff(mesh, "x");
-			const inv = applyTopologyDiff(g, d0);
+			const d0 = M.meshFaceModelDiff(mesh, "x");
+			const inv = applyModelDiff(g, d0);
 			const hist = new DocumentHistory();
 			hist.record({
 				id: "m0",
@@ -6158,7 +6183,7 @@ if (import.meta.vitest) {
 			const spec = buildBoxInteractionSpec();
 				const rt = createInteractionRuntime(spec, {
 					kernel: new StubKernel() as unknown as SpatialKernel,
-					document: { topology: g, nodes: [] },
+					document: { model: g, nodes: [] },
 					history: hist,
 				});
 			let snap = rt.getSnapshot();
@@ -6321,9 +6346,9 @@ if (import.meta.vitest) {
 		});
 
 		it("listTopologyCellRefs returns cell ids from a committed box", () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
-			expect(listTopologyCellRefs(topo).map(String)).toEqual(["box-cell"]);
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
+			expect(listTopologyCellRefs(model).map(String)).toEqual(["box-cell"]);
 		});
 
 		it("boundsFromMeshTransfers returns center and radius", () => {
@@ -6344,9 +6369,9 @@ if (import.meta.vitest) {
 		});
 
 		it("boundsFromSpatialPickGeometry fits imported topology vertices", () => {
-			const topo = new TopologyGraph();
-			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [10, 20, 0], cornerB: [30, 40, 0], height: 5 }, cellRef("b")));
-			const b = boundsFromSpatialPickGeometry(topo);
+			const model = new Model();
+			applyModelDiff(topo, M.boxModelDiff({ cornerA: [10, 20, 0], cornerB: [30, 40, 0], height: 5 }, cellRef("b")));
+			const b = boundsFromSpatialPickGeometry(model);
 			expect(b).not.toBeNull();
 			expect(b!.center[0]).toBeGreaterThan(5);
 			expect(b!.radius).toBeGreaterThan(1);
@@ -6394,7 +6419,7 @@ if (import.meta.vitest) {
 		});
 
 		it("derives persistent box footprints from document history", () => {
-			const g = new TopologyGraph();
+			const g = new Model();
 			const mesh: MeshTransfer = {
 				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
 				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
@@ -6405,8 +6430,8 @@ if (import.meta.vitest) {
 				faceInfos: [],
 				edgeInfos: [],
 			};
-			const d0 = M.meshFaceTopologyDiff(mesh, "hist-box");
-			const inv = applyTopologyDiff(g, d0);
+			const d0 = M.meshFaceModelDiff(mesh, "hist-box");
+			const inv = applyModelDiff(g, d0);
 			const hist = new DocumentHistory();
 			hist.record({
 				id: "box-1",
@@ -6424,7 +6449,7 @@ if (import.meta.vitest) {
 				backwardsDiff: inv,
 			});
 			expect(archivedBoxesFromHistory(hist)).toEqual([{ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }]);
-			hist.undo({ topology: g, nodes: [] });
+			hist.undo({ model: g, nodes: [] });
 			expect(archivedBoxesFromHistory(hist)).toEqual([]);
 		});
 	});

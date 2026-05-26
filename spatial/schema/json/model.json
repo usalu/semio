@@ -1,28 +1,62 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "spatial://schema/json/topology",
-  "title": "SpatialTopologyGraph",
+  "$id": "spatial://schema/json/model",
+  "title": "SpatialModel",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "revision", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"],
+  "required": ["schema", "revision", "objects", "geometry"],
   "properties": {
-    "schema": { "const": "spatial.topology/v1" },
+    "schema": { "const": "spatial.model/v1" },
     "revision": { "type": "integer", "minimum": 0 },
-    "vertices": { "type": "array", "items": { "$ref": "#/$defs/vertex" } },
-    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
-    "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
-    "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
-    "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
-    "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } },
-    "cellComplexes": { "type": "array", "items": { "$ref": "#/$defs/cellComplex" } },
-    "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } }
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } },
+    "geometry": { "$ref": "#/$defs/kernelGeometry" }
   },
   "$defs": {
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "typologyId", "geometryRef"],
+      "properties": {
+        "id": { "type": "string" },
+        "typologyId": { "type": "string" },
+        "geometryRef": { "type": "string" },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "kernelGeometry": {
+      "type": "object",
+      "description": "Kernel-private brepjs persistence graph.",
+      "additionalProperties": false,
+      "required": ["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"],
+      "properties": {
+        "anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } },
+        "vertices": { "type": "array", "items": { "$ref": "#/$defs/vertex" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+        "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
+        "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
+        "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
+        "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } },
+        "cellComplexes": { "type": "array", "items": { "$ref": "#/$defs/cellComplex" } },
+        "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } }
+      }
+    },
     "vec3": {
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
       "items": { "type": "number" }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "position"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/vec3" }
+      }
     },
     "vertex": {
       "type": "object",

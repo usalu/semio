@@ -23,14 +23,6 @@
         "surface.resolveFaces",
         "face.offset",
         "entity.tessellate"
-      ],
-      "editableEntities": [
-        "face",
-        "shell",
-        "cell"
-      ],
-      "derivedEntities": [
-        "surface"
       ]
     }
   },
@@ -310,5 +302,8 @@
         }
       }
     }
+  },
+  "produces": {
+    "typology": "builtin.c:.git"
   }
 }

@@ -7,7 +7,7 @@ import {
 	isInteractionSessionActive,
 	listSpatialInteractions,
 	loadSpatialInteraction,
-	parseTopologyGraphJson,
+	parseModelJson,
 	type InteractionSnapshot,
 	type InteractionRuntime,
 	type InteractionSpec,
@@ -18,15 +18,15 @@ import {
 	type SurfaceView,
 	type PartView,
 	type VolumeView,
-	TopologyGraph,
+	Model,
 } from "@spatial/js-core";
 import { defaultConstructRunner } from "@spatial/js-query";
 import geometryNakagin from "../../../fixtures/geometry.json";
 import geometryLoom from "../../../fixtures/geometry-loom.json";
 import geometryRoutes from "../../../fixtures/geometry-routes.json";
-import geometrySmallBuilding from "../../../fixtures/small-building.topology.json";
-import geometryTallBuilding from "../../../fixtures/tall-building.topology.json";
-import geometryLargeBuilding from "../../../fixtures/large-building.topology.json";
+import geometrySmallBuilding from "../../../fixtures/small-building.model.json";
+import geometryTallBuilding from "../../../fixtures/tall-building.model.json";
+import geometryLargeBuilding from "../../../fixtures/large-building.model.json";
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
@@ -139,7 +139,7 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 	},
 };
 
-type TopologyJson = ReturnType<TopologyGraph["toJSON"]>;
+type TopologyJson = ReturnType<Model["toJSON"]>;
 
 interface SpatialAnalyticBundle {
 	readonly surfaces: readonly SurfaceView[];
@@ -177,7 +177,7 @@ interface SavePickerWindow extends Window {
 }
 
 function emptyTopologyJson(): TopologyJson {
-	return new TopologyGraph().toJSON();
+	return new Model().toJSON();
 }
 
 function fileStem(name: string): string {
@@ -192,7 +192,7 @@ function fileStem(name: string): string {
 		.replace(/^-+|-+$/g, "") || "spatial";
 }
 
-function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTarget[]): TopologyJson {
+function selectRawTopology(model: Model, selection: readonly SelectionTarget[]): TopologyJson {
 	const anchors = new Set<string>();
 	const vertices = new Set<string>();
 	const edges = new Set<string>();
@@ -241,7 +241,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitAnchor = (id: string): void => {
 		if (anchors.has(id)) return;
-		const rec = topo.anchors[id];
+		const rec = model.anchors[id];
 		if (!rec) return;
 		anchors.add(id);
 		visitById(rec.attachment.id);
@@ -254,7 +254,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitEdge = (id: string): void => {
 		if (edges.has(id)) return;
-		const rec = topo.edges[id];
+		const rec = model.edges[id];
 		if (!rec) return;
 		edges.add(id);
 		for (const vertexId of rec.vertexIds) visitVertex(vertexId);
@@ -262,7 +262,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitWire = (id: string): void => {
 		if (wires.has(id)) return;
-		const rec = topo.wires[id];
+		const rec = model.wires[id];
 		if (!rec) return;
 		wires.add(id);
 		for (const edgeId of rec.edgeIds) visitEdge(edgeId);
@@ -270,7 +270,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitFace = (id: string): void => {
 		if (faces.has(id)) return;
-		const rec = topo.faces[id];
+		const rec = model.faces[id];
 		if (!rec) return;
 		faces.add(id);
 		for (const wireId of rec.wireIds) visitWire(wireId);
@@ -278,7 +278,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitShell = (id: string): void => {
 		if (shells.has(id)) return;
-		const rec = topo.shells[id];
+		const rec = model.shells[id];
 		if (!rec) return;
 		shells.add(id);
 		for (const faceId of rec.faceIds) visitFace(faceId);
@@ -286,7 +286,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitCell = (id: string): void => {
 		if (cells.has(id)) return;
-		const rec = topo.cells[id];
+		const rec = model.cells[id];
 		if (!rec) return;
 		cells.add(id);
 		for (const shellId of rec.shellIds) visitShell(shellId);
@@ -294,7 +294,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitCellComplex = (id: string): void => {
 		if (cellComplexes.has(id)) return;
-		const rec = topo.cellComplexes[id];
+		const rec = model.cellComplexes[id];
 		if (!rec) return;
 		cellComplexes.add(id);
 		for (const cellId of rec.cellIds) visitCell(cellId);
@@ -302,7 +302,7 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const visitCluster = (id: string): void => {
 		if (clusters.has(id)) return;
-		const rec = topo.clusters[id];
+		const rec = model.clusters[id];
 		if (!rec) return;
 		clusters.add(id);
 		for (const memberId of rec.memberIds) visitById(memberId);
@@ -344,28 +344,28 @@ function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTar
 
 	const sortIds = (ids: Set<string>) => [...ids].sort((a, b) => a.localeCompare(b));
 	return {
-		schema: "spatial.topology/v1",
-		revision: topo.revision,
-		anchors: sortIds(anchors).map((id) => topo.anchors[id]!),
-		vertices: sortIds(vertices).map((id) => topo.vertices[id]!),
-		edges: sortIds(edges).map((id) => topo.edges[id]!),
-		wires: sortIds(wires).map((id) => topo.wires[id]!),
-		faces: sortIds(faces).map((id) => topo.faces[id]!),
-		shells: sortIds(shells).map((id) => topo.shells[id]!),
-		cells: sortIds(cells).map((id) => topo.cells[id]!),
-		cellComplexes: sortIds(cellComplexes).map((id) => topo.cellComplexes[id]!),
-		clusters: sortIds(clusters).map((id) => topo.clusters[id]!),
+		schema: "spatial.model/v1",
+		revision: model.revision,
+		anchors: sortIds(anchors).map((id) => model.anchors[id]!),
+		vertices: sortIds(vertices).map((id) => model.vertices[id]!),
+		edges: sortIds(edges).map((id) => model.edges[id]!),
+		wires: sortIds(wires).map((id) => model.wires[id]!),
+		faces: sortIds(faces).map((id) => model.faces[id]!),
+		shells: sortIds(shells).map((id) => model.shells[id]!),
+		cells: sortIds(cells).map((id) => model.cells[id]!),
+		cellComplexes: sortIds(cellComplexes).map((id) => model.cellComplexes[id]!),
+		clusters: sortIds(clusters).map((id) => model.clusters[id]!),
 	};
 }
 
 function createAnalyticBundle(
 	derived: DerivedViewService,
-	topo: TopologyGraph,
+	topo: Model,
 	selection?: readonly SelectionTarget[],
 ): SpatialAnalyticBundle {
-	const allSurfaces = derived.computeSurfaces(topo);
-	const allParts = derived.computeParts(topo);
-	const allVolumes = derived.computeVolumes(topo);
+	const allSurfaces = derived.computeSurfaces(model);
+	const allParts = derived.computeParts(model);
+	const allVolumes = derived.computeVolumes(model);
 	if (!selection) return { surfaces: allSurfaces, parts: allParts, volumes: allVolumes };
 	const selected = new Set(selection.map((target) => `${target.kind}:${target.id}`));
 	return {
@@ -538,12 +538,12 @@ function PlayApp() {
 	}, []);
 
 	const interactionTopo = useMemo(() => {
-		return parseTopologyGraphJson(topologyJson) ?? new TopologyGraph();
+		return parseModelJson(topologyJson) ?? new Model();
 	}, [topologyJson]);
 
 	const documentModel = useMemo((): ModelDocument => {
-		const topo = TopologyGraph.fromJSON(interactionTopo.toJSON());
-		return { topology: topo, nodes: [] };
+		const model = Model.fromJSON(interactionTopo.toJSON());
+		return { model: model, nodes: [] };
 	}, [interactionTopo]);
 	const liveTopology = documentModel.topology;
 
@@ -656,7 +656,7 @@ function PlayApp() {
 				parsed && typeof parsed === "object" && "raw" in (parsed as Record<string, unknown>)
 					? (parsed as Record<string, unknown>).raw
 					: parsed;
-			const topo = parseTopologyGraphJson(raw);
+			const model = parseModelJson(raw);
 			if (!topo) throw new Error("No raw spatial topology found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);

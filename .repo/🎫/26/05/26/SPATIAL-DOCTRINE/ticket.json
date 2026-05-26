@@ -1,0 +1,10 @@
+{
+  "title": "Spatial Doctrine Refactor",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Strip brepjs Vertex…Cluster from public API; extension-based Model/Typology/Object/View doctrine; typology assets; rename topology to model.",
+  "summary": "",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [],
+  "files": []
+}

@@ -486,5 +486,8 @@
       }
     }
   },
-  "key": "i"
+  "key": "i",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

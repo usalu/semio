@@ -867,5 +867,8 @@
       }
     }
   },
-  "key": "z"
+  "key": "z",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

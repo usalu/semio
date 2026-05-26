@@ -22,14 +22,6 @@
       "operations": [
         "wire.extrudeToCell",
         "entity.tessellate"
-      ],
-      "editableEntities": [
-        "vertex",
-        "edge",
-        "wire",
-        "face",
-        "shell",
-        "cell"
       ]
     }
   },
@@ -279,5 +271,8 @@
         }
       }
     }
+  },
+  "produces": {
+    "typology": "builtin.c:.git"
   }
 }

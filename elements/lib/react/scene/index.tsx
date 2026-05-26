@@ -2737,15 +2737,19 @@ export function useSceneRelocate(objectId: string) {
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
 //#region ­ƒÄ¼Scene
-function OrbitGated() {
+function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null }) {
 	const reg = useRegistry();
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	const invalidate = useThree((s) => s.invalidate);
 	useEffect(() => {
 		invalidate();
 	}, [gate, invalidate]);
+	if (!props.camera) {
+		return null;
+	}
 	return (
 		<OrbitControls
+			camera={props.camera}
 			makeDefault
 			enabled={!gate}
 			enableDamping={false}
@@ -2760,14 +2764,21 @@ function OrbitGated() {
 }
 
 /** @emoji ­ƒôÀ Seeds default camera + orbit target once; orbit owns the rig afterward (no controlled-camera feedback loop). */
-function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3 }) {
-	const { camera } = useThree();
+function SceneCameraSeed(props: {
+	readonly camera: ThreePerspectiveCamera | null;
+	readonly position: Vec3;
+	readonly target: Vec3;
+}) {
 	const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
 	const seededPositionFor = useRef("");
 	const seededTargetFor = useRef("");
 	const positionKey = props.position.join(",");
 	const targetKey = props.target.join(",");
 	useLayoutEffect(() => {
+		const camera = props.camera;
+		if (!camera) {
+			return;
+		}
 		if (seededPositionFor.current !== positionKey) {
 			seededPositionFor.current = positionKey;
 			camera.position.set(props.position[0], props.position[1], props.position[2]);
@@ -2778,7 +2789,7 @@ function SceneCameraSeed(props: { readonly position: Vec3; readonly target: Vec3
 			controls.target.set(props.target[0], props.target[1], props.target[2]);
 			controls.update();
 		}
-	}, [camera, controls, positionKey, props.position, props.target, targetKey]);
+	}, [controls, positionKey, props.camera, props.position, props.target, targetKey]);
 	return null;
 }
 
@@ -3444,6 +3455,7 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 function Inner(props: CanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
 	const lodKindRef = useRef<LodKind>("normal");
+	const [sceneCamera, setSceneCamera] = useState<ThreePerspectiveCamera | null>(null);
 	const domain = props.domain ?? DEFAULT_DOMAIN;
 	const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
 	const thresholds = props.lodZoomThresholds ?? lodZoomThresholdsForDomain(domain, distanceReference);
@@ -3487,9 +3499,9 @@ function Inner(props: CanvasProps) {
 				pinnedLod={pinnedLod}
 				onLodChange={props.onLodChange}
 			>
-				<PerspectiveCamera makeDefault near={0.2} far={500_000} fov={50} />
-				<SceneCameraSeed position={pos} target={tgt} />
-				<OrbitGated />
+				<PerspectiveCamera ref={setSceneCamera} makeDefault near={0.2} far={500_000} fov={50} />
+				<SceneCameraSeed camera={sceneCamera} position={pos} target={tgt} />
+				<OrbitGated camera={sceneCamera} />
 				<AttractionThreeBinder />
 				<AttractionWindowBridge />
 				<AttractionRubberBand />

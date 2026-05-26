@@ -6,14 +6,19 @@
   "description": "Marks topology that may be unified geometrically with matching contacts.",
   "field": "bondable",
   "targets": [
-    "curve",
-    "surface",
-    "solid"
+    "object"
   ],
   "value": {
     "kind": "boolean",
     "allowedValues": [
       true
+    ]
+  },
+  "geometrySelector": {
+    "kinds": [
+      "curve",
+      "surface",
+      "solid"
     ]
   }
 }

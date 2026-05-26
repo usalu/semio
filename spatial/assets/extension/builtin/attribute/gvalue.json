@@ -6,9 +6,14 @@
   "description": "Authored solar energy transmittance for window surfaces.",
   "field": "gValue",
   "targets": [
-    "surface"
+    "object"
   ],
   "value": {
     "kind": "string"
+  },
+  "geometrySelector": {
+    "kinds": [
+      "surface"
+    ]
   }
 }

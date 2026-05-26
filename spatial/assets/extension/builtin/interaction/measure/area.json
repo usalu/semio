@@ -165,5 +165,8 @@
         }
       ]
     }
+  },
+  "produces": {
+    "typology": "builtin.c:.git"
   }
 }

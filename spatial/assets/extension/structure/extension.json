@@ -5,6 +5,7 @@
 	"label": "Structure",
 	"description": "Structural analysis extension assets.",
 	"kinds": [
+		"typology",
 		"view"
 	]
 }

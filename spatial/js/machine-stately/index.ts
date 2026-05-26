@@ -12,7 +12,7 @@ import {
 	cellRef,
 	createInteractionRuntime,
 	initialContextForSpec,
-	isEmptyTopologyDiff,
+	isEmptyModelDiff,
 	listSpatialInteractions,
 	loadSpatialInteraction,
 	pureTsStateEngineProvider,
@@ -26,8 +26,8 @@ import {
 	type StateEngine,
 	type StateEngineProvider,
 	type StateEngineSendResult,
-	TopologyGraph,
-	type TopologyDiff,
+	Model,
+	type ModelDiff,
 	type Vec3,
 	type VertexRef,
 	type WireRef,
@@ -270,14 +270,14 @@ export class StatelyStateEngine implements StateEngine {
 	async send(
 		event: InteractionEvent,
 		kernel?: SpatialKernel,
-		topology?: TopologyGraph,
+		topology?: Model,
 		actions?: ActionRegistry,
 		derived?: import("@spatial/js-core").DerivedViewService,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
 			this.rebuildMachine(this.interactionState);
 		}
-		const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, topology, derived);
+		const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, model, derived);
 		if (!r.ok) return { ok: false };
 		this.interactionState = r.nextState;
 		this.actor.send({ type: "__advance", interactionKind: event.kind, branch: r.branchIndex });
@@ -322,8 +322,8 @@ if (import.meta.vitest) {
 		}
 	}
 
-	function normalizeTopologyDiffIds(diff: TopologyDiff): TopologyDiff {
-		const clone = JSON.parse(JSON.stringify(diff)) as TopologyDiff;
+	function normalizeModelDiffIds(diff: ModelDiff): ModelDiff {
+		const clone = JSON.parse(JSON.stringify(diff)) as ModelDiff;
 		for (const e of clone.edges?.added ?? []) (e as { id: string }).id = "__edge__";
 		for (const w of clone.wires?.added ?? []) {
 			(w as { id: string }).id = "__wire__";
@@ -341,7 +341,7 @@ if (import.meta.vitest) {
 		expect(sb.capabilities).toEqual(sa.capabilities);
 		expect(sb.lastResponse?.ok).toBe(sa.lastResponse?.ok);
 		expect(sb.lastResponse?.data).toEqual(sa.lastResponse?.data);
-		expect(normalizeTopologyDiffIds(sb.lastResponse?.diff ?? {})).toEqual(normalizeTopologyDiffIds(sa.lastResponse?.diff ?? {}));
+		expect(normalizeModelDiffIds(sb.lastResponse?.diff ?? {})).toEqual(normalizeModelDiffIds(sa.lastResponse?.diff ?? {}));
 	}
 
 	class MeasureParityKernel extends BrepjsKernel {
@@ -360,13 +360,13 @@ if (import.meta.vitest) {
 			if (name === "surface.resolveFaces") return [String(params.surfaceId ?? "")];
 			return undefined;
 		}
-		async vertexDistance(a: VertexRef, b: VertexRef, topo: TopologyGraph) {
-			const pa = topo.vertices[String(a)]?.position;
-			const pb = topo.vertices[String(b)]?.position;
+		async vertexDistance(a: VertexRef, b: VertexRef, model: Model) {
+			const pa = model.vertices[String(a)]?.position;
+			const pb = model.vertices[String(b)]?.position;
 			if (!pa || !pb) return 0;
 			return Math.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]);
 		}
-		async faceArea(_f: FaceRef, _topo: TopologyGraph) {
+		async faceArea(_f: FaceRef, _topo: Model) {
 			return 42;
 		}
 	}
@@ -388,12 +388,12 @@ if (import.meta.vitest) {
 			const k2 = new StubKernel();
 			const rtPure = createInteractionRuntime(spec, {
 				kernel: k1,
-				document: { topology: new TopologyGraph(), nodes: [] },
+				document: { model: new Model(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSt = createInteractionRuntime(spec, {
 				kernel: k2,
-				document: { topology: new TopologyGraph(), nodes: [] },
+				document: { model: new Model(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await assertSnapshotsEqual(rtPure, rtSt);
@@ -415,12 +415,12 @@ if (import.meta.vitest) {
 			const k2 = new StubKernel();
 			const rtPure = createInteractionRuntime(spec, {
 				kernel: k1,
-				document: { topology: new TopologyGraph(), nodes: [] },
+				document: { model: new Model(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSt = createInteractionRuntime(spec, {
 				kernel: k2,
-				document: { topology: new TopologyGraph(), nodes: [] },
+				document: { model: new Model(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await rtPure.send({ kind: "pointer.down", point: [1, 1, 0] as Vec3, modifiers: {} });
@@ -435,7 +435,7 @@ if (import.meta.vitest) {
 			const distSpec = buildDistanceInteractionSpec();
 			const areaSpec = buildAreaInteractionSpec();
 			const mkTopo = () => {
-				const t = new TopologyGraph();
+				const t = new Model();
 				const v0 = "v0" as VertexRef;
 				const v1 = "v1" as VertexRef;
 				t.vertices[v0] = { id: v0, position: [0, 0, 0] };
@@ -452,12 +452,12 @@ if (import.meta.vitest) {
 			const k2d = new MeasureParityKernel();
 			const rtPd = createInteractionRuntime(distSpec, {
 				kernel: k1d,
-				document: { topology: mkTopo(), nodes: [] },
+				document: { model: mkTopo(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSd = createInteractionRuntime(distSpec, {
 				kernel: k2d,
-				document: { topology: mkTopo(), nodes: [] },
+				document: { model: mkTopo(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
@@ -468,8 +468,8 @@ if (import.meta.vitest) {
 			const sd = rtSd.getSnapshot().lastResponse!;
 			expect(rd.data).toBe(5);
 			expect(sd.data).toBe(5);
-			expect(isEmptyTopologyDiff(rd.diff)).toBe(false);
-			expect(isEmptyTopologyDiff(sd.diff)).toBe(false);
+			expect(isEmptyModelDiff(rd.diff)).toBe(false);
+			expect(isEmptyModelDiff(sd.diff)).toBe(false);
 			expect(rd.diff.edges?.added?.length).toBe(1);
 			expect(sd.diff.edges?.added?.length).toBe(1);
 			await assertSnapshotsEqual(rtPd, rtSd);
@@ -478,12 +478,12 @@ if (import.meta.vitest) {
 			const k2a = new MeasureParityKernel();
 			const rtPa = createInteractionRuntime(areaSpec, {
 				kernel: k1a,
-				document: { topology: mkTopo(), nodes: [] },
+				document: { model: mkTopo(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSa = createInteractionRuntime(areaSpec, {
 				kernel: k2a,
-				document: { topology: mkTopo(), nodes: [] },
+				document: { model: mkTopo(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await rtPa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });
@@ -492,8 +492,8 @@ if (import.meta.vitest) {
 			const sa = rtSa.getSnapshot().lastResponse!;
 			expect(ra.data).toBe(42);
 			expect(sa.data).toBe(42);
-			expect(isEmptyTopologyDiff(ra.diff)).toBe(false);
-			expect(isEmptyTopologyDiff(sa.diff)).toBe(false);
+			expect(isEmptyModelDiff(ra.diff)).toBe(false);
+			expect(isEmptyModelDiff(sa.diff)).toBe(false);
 			expect(ra.diff.anchors?.added?.length).toBe(1);
 			expect(sa.diff.anchors?.added?.length).toBe(1);
 			await assertSnapshotsEqual(rtPa, rtSa);

@@ -4,22 +4,22 @@ overview: Strip the brepjs `Vertex…Cluster` hierarchy and `topology` term from
 todos:
   - id: phase1-ticket
     content: Open ticket and read repo goals
-    status: in_progress
+    status: completed
   - id: phase1-spec
     content: Update spatial/AGENTS.md to publish typology asset path; move legacy Vertex...Cluster notes under kernel-brepjs
-    status: pending
+    status: completed
   - id: phase1-schemas
     content: Rename schema topology.json -> model.json, add typology.json/view.json/extension.json schemas, fix interaction.json enums
-    status: pending
+    status: completed
   - id: phase1-assets
     content: Add typology/ asset folder per extension, rewrite interaction/attribute/property JSONs to drop topology-entity vocabulary
-    status: pending
+    status: completed
   - id: phase1-fixtures
     content: Rename *.topology.json -> *.model.json and migrate fixture envelopes to spatial.model/v1
-    status: pending
+    status: completed
   - id: phase2-core
     content: "Refactor spatial/js/core/index.ts: drop public Vertex...Cluster exports, add Model/Typology/Object/AttributeStore"
-    status: pending
+    status: in_progress
   - id: phase2-kernel
     content: "Subagent: refactor kernel-brepjs to keep brepjs hierarchy private and rename topology-named exports"
     status: pending

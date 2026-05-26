@@ -1,0 +1,13 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.transform.rotate",
+  "version": "1.0.0",
+  "label": "Rotate",
+  "description": "Typology produced by transform.rotate.",
+  "actions": [
+    "builtin.transform.rotate"
+  ],
+  "interactions": [
+    "transform.rotate"
+  ]
+}

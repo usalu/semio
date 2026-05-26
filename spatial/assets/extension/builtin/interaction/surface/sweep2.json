@@ -579,5 +579,8 @@
       }
     }
   },
-  "key": "q"
+  "key": "q",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }

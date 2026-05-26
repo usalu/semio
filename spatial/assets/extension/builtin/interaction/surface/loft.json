@@ -467,5 +467,8 @@
       }
     }
   },
-  "key": "f"
+  "key": "f",
+  "produces": {
+    "typology": "builtin.c:.git"
+  }
 }
