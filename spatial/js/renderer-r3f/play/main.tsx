@@ -1,16 +1,22 @@
 /** @emoji 🎮 Vite entry: geometry catalog + `BrepjsKernel` + `InteractionRepl` + `construct` query runner. */
-import { StrictMode, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
 	DerivedViewService,
+	isInteractionSessionActive,
 	listSpatialInteractions,
 	loadSpatialInteraction,
 	parseTopologyGraphJson,
+	type InteractionSnapshot,
 	type InteractionRuntime,
 	type InteractionSpec,
 	type InteractionRuntimeOptions,
 	type SpatialComputeMode,
 	type ModelDocument,
+	type SelectionTarget,
+	type SurfaceView,
+	type PartView,
+	type VolumeView,
 	TopologyGraph,
 } from "@spatial/js-core";
 import { defaultConstructRunner } from "@spatial/js-query";
@@ -25,9 +31,11 @@ import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
 	DocumentHistory,
 	InteractionRepl,
+	replDisplayedSelectionTargets,
 	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
+	type SpatialPickViewKind,
 } from "../index.tsx";
 
 //#region 🔖ConstructQueryPanel
@@ -130,6 +138,263 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 		operation: { kind: "action", action: "play.repl.noop" },
 	},
 };
+
+type TopologyJson = ReturnType<TopologyGraph["toJSON"]>;
+
+interface SpatialAnalyticBundle {
+	readonly surfaces: readonly SurfaceView[];
+	readonly parts: readonly PartView[];
+	readonly volumes: readonly VolumeView[];
+}
+
+interface SpatialExchangeBundle {
+	readonly raw?: TopologyJson;
+	readonly analytic?: SpatialAnalyticBundle;
+}
+
+interface SaveFilePickerTypeOption {
+	readonly description?: string;
+	readonly accept: Record<string, readonly string[]>;
+}
+
+interface SaveFilePickerOptionsLike {
+	readonly suggestedName?: string;
+	readonly types?: readonly SaveFilePickerTypeOption[];
+	readonly excludeAcceptAllOption?: boolean;
+}
+
+interface FileSystemWritableFileStreamLike {
+	write(data: string): Promise<void>;
+	close(): Promise<void>;
+}
+
+interface FileSystemFileHandleLike {
+	createWritable(): Promise<FileSystemWritableFileStreamLike>;
+}
+
+interface SavePickerWindow extends Window {
+	showSaveFilePicker?: (options?: SaveFilePickerOptionsLike) => Promise<FileSystemFileHandleLike>;
+}
+
+function emptyTopologyJson(): TopologyJson {
+	return new TopologyGraph().toJSON();
+}
+
+function fileStem(name: string): string {
+	const trimmed = name.trim();
+	if (!trimmed) return "spatial";
+	return trimmed
+		.replace(/\.analytic\.spatial\.json$/i, "")
+		.replace(/\.raw\.spatial\.json$/i, "")
+		.replace(/\.spatial\.json$/i, "")
+		.replace(/\.json$/i, "")
+		.replace(/[^a-z0-9._-]+/gi, "-")
+		.replace(/^-+|-+$/g, "") || "spatial";
+}
+
+function selectRawTopology(topo: TopologyGraph, selection: readonly SelectionTarget[]): TopologyJson {
+	const anchors = new Set<string>();
+	const vertices = new Set<string>();
+	const edges = new Set<string>();
+	const wires = new Set<string>();
+	const faces = new Set<string>();
+	const shells = new Set<string>();
+	const cells = new Set<string>();
+	const cellComplexes = new Set<string>();
+	const clusters = new Set<string>();
+
+	const visitById = (id: string): void => {
+		if (topo.anchors[id]) {
+			visitAnchor(id);
+			return;
+		}
+		if (topo.vertices[id]) {
+			visitVertex(id);
+			return;
+		}
+		if (topo.edges[id]) {
+			visitEdge(id);
+			return;
+		}
+		if (topo.wires[id]) {
+			visitWire(id);
+			return;
+		}
+		if (topo.faces[id]) {
+			visitFace(id);
+			return;
+		}
+		if (topo.shells[id]) {
+			visitShell(id);
+			return;
+		}
+		if (topo.cells[id]) {
+			visitCell(id);
+			return;
+		}
+		if (topo.cellComplexes[id]) {
+			visitCellComplex(id);
+			return;
+		}
+		if (topo.clusters[id]) visitCluster(id);
+	};
+
+	const visitAnchor = (id: string): void => {
+		if (anchors.has(id)) return;
+		const rec = topo.anchors[id];
+		if (!rec) return;
+		anchors.add(id);
+		visitById(rec.attachment.id);
+	};
+
+	const visitVertex = (id: string): void => {
+		if (vertices.has(id) || !topo.vertices[id]) return;
+		vertices.add(id);
+	};
+
+	const visitEdge = (id: string): void => {
+		if (edges.has(id)) return;
+		const rec = topo.edges[id];
+		if (!rec) return;
+		edges.add(id);
+		for (const vertexId of rec.vertexIds) visitVertex(vertexId);
+	};
+
+	const visitWire = (id: string): void => {
+		if (wires.has(id)) return;
+		const rec = topo.wires[id];
+		if (!rec) return;
+		wires.add(id);
+		for (const edgeId of rec.edgeIds) visitEdge(edgeId);
+	};
+
+	const visitFace = (id: string): void => {
+		if (faces.has(id)) return;
+		const rec = topo.faces[id];
+		if (!rec) return;
+		faces.add(id);
+		for (const wireId of rec.wireIds) visitWire(wireId);
+	};
+
+	const visitShell = (id: string): void => {
+		if (shells.has(id)) return;
+		const rec = topo.shells[id];
+		if (!rec) return;
+		shells.add(id);
+		for (const faceId of rec.faceIds) visitFace(faceId);
+	};
+
+	const visitCell = (id: string): void => {
+		if (cells.has(id)) return;
+		const rec = topo.cells[id];
+		if (!rec) return;
+		cells.add(id);
+		for (const shellId of rec.shellIds) visitShell(shellId);
+	};
+
+	const visitCellComplex = (id: string): void => {
+		if (cellComplexes.has(id)) return;
+		const rec = topo.cellComplexes[id];
+		if (!rec) return;
+		cellComplexes.add(id);
+		for (const cellId of rec.cellIds) visitCell(cellId);
+	};
+
+	const visitCluster = (id: string): void => {
+		if (clusters.has(id)) return;
+		const rec = topo.clusters[id];
+		if (!rec) return;
+		clusters.add(id);
+		for (const memberId of rec.memberIds) visitById(memberId);
+	};
+
+	for (const target of selection) {
+		switch (target.kind) {
+			case "anchor":
+				visitAnchor(target.id);
+				break;
+			case "vertex":
+				visitVertex(target.id);
+				break;
+			case "edge":
+				visitEdge(target.id);
+				break;
+			case "wire":
+				visitWire(target.id);
+				break;
+			case "face":
+				visitFace(target.id);
+				break;
+			case "shell":
+				visitShell(target.id);
+				break;
+			case "cell":
+				visitCell(target.id);
+				break;
+			case "cellComplex":
+				visitCellComplex(target.id);
+				break;
+			case "cluster":
+				visitCluster(target.id);
+				break;
+			default:
+				break;
+		}
+	}
+
+	const sortIds = (ids: Set<string>) => [...ids].sort((a, b) => a.localeCompare(b));
+	return {
+		schema: "spatial.topology/v1",
+		revision: topo.revision,
+		anchors: sortIds(anchors).map((id) => topo.anchors[id]!),
+		vertices: sortIds(vertices).map((id) => topo.vertices[id]!),
+		edges: sortIds(edges).map((id) => topo.edges[id]!),
+		wires: sortIds(wires).map((id) => topo.wires[id]!),
+		faces: sortIds(faces).map((id) => topo.faces[id]!),
+		shells: sortIds(shells).map((id) => topo.shells[id]!),
+		cells: sortIds(cells).map((id) => topo.cells[id]!),
+		cellComplexes: sortIds(cellComplexes).map((id) => topo.cellComplexes[id]!),
+		clusters: sortIds(clusters).map((id) => topo.clusters[id]!),
+	};
+}
+
+function createAnalyticBundle(
+	derived: DerivedViewService,
+	topo: TopologyGraph,
+	selection?: readonly SelectionTarget[],
+): SpatialAnalyticBundle {
+	const allSurfaces = derived.computeSurfaces(topo);
+	const allParts = derived.computeParts(topo);
+	const allVolumes = derived.computeVolumes(topo);
+	if (!selection) return { surfaces: allSurfaces, parts: allParts, volumes: allVolumes };
+	const selected = new Set(selection.map((target) => `${target.kind}:${target.id}`));
+	return {
+		surfaces: allSurfaces.filter((surface) => selected.has(`surface:${String(surface.id)}`)),
+		parts: allParts.filter((part) => selected.has(`part:${String(part.id)}`)),
+		volumes: allVolumes.filter((volume) => selected.has(`volume:${String(volume.id)}`)),
+	};
+}
+
+async function writeJsonFile(name: string, payload: SpatialExchangeBundle): Promise<void> {
+	const text = `${JSON.stringify(payload, null, 2)}\n`;
+	const pickerWindow = window as SavePickerWindow;
+	if (pickerWindow.showSaveFilePicker) {
+		const handle = await pickerWindow.showSaveFilePicker({
+			suggestedName: name,
+			types: [{ description: "Spatial JSON", accept: { "application/json": [".json", ".spatial.json"] } }],
+		});
+		const writable = await handle.createWritable();
+		await writable.write(text);
+		await writable.close();
+		return;
+	}
+	const href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+	const link = document.createElement("a");
+	link.href = href;
+	link.download = name;
+	link.click();
+	URL.revokeObjectURL(href);
+}
 //#endregion
 
 //#region 🔖PlaySession
@@ -141,9 +406,19 @@ interface PlaySessionProps {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: BrepjsKernel;
+	readonly derived: DerivedViewService;
 	readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
 	readonly sessionRestartNonce: number;
+	readonly pickViewKind: SpatialPickViewKind;
+	readonly onPickViewKind: (value: SpatialPickViewKind) => void;
+	readonly rendererSelection: readonly SelectionTarget[];
+	readonly onRendererSelection: (value: readonly SelectionTarget[]) => void;
+	readonly interactionSelection: readonly SelectionTarget[];
+	readonly onInteractionSelection: (value: readonly SelectionTarget[]) => void;
+	readonly derivedRevision: number;
+	readonly onDerivedRevision: (revision: number) => void;
+	readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -155,11 +430,20 @@ function PlaySession({
 	documentModel,
 	history,
 	kernel,
+	derived,
 	mode,
 	asideExtra,
 	sessionRestartNonce,
+	pickViewKind,
+	onPickViewKind,
+	rendererSelection,
+	onRendererSelection,
+	interactionSelection,
+	onInteractionSelection,
+	derivedRevision,
+	onDerivedRevision,
+	onSnapshot,
 }: PlaySessionProps) {
-	const derived = useMemo(() => new DerivedViewService(kernel), [kernel]);
 	const rtOpts = useMemo(
 		(): InteractionRuntimeOptions => ({
 			kernel,
@@ -196,6 +480,15 @@ function PlaySession({
 			derived={derived}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
+			pickViewKind={pickViewKind}
+			onPickViewKindChange={onPickViewKind}
+			rendererSelection={rendererSelection}
+			onRendererSelectionChange={onRendererSelection}
+			interactionSelection={interactionSelection}
+			onInteractionSelectionChange={onInteractionSelection}
+			derivedRevision={derivedRevision}
+			onDerivedRevisionChange={onDerivedRevision}
+			onSnapshotChange={onSnapshot}
 		/>
 	);
 }
@@ -207,8 +500,23 @@ function PlayApp() {
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
+	const [topologyJson, setTopologyJson] = useState<Record<string, unknown>>(() => {
+		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
+		return asset?.json ?? emptyTopologyJson();
+	});
+	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
+	const [pickViewKind, setPickViewKind] = useState<SpatialPickViewKind>("raw");
+	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
+	const [interactionSelection, setInteractionSelection] = useState<readonly SelectionTarget[]>([]);
+	const [derivedRevision, setDerivedRevision] = useState(0);
+	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
+	const [fileStatus, setFileStatus] = useState<string>("");
+	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
+	const history = useDocumentHistory();
+	const kernel = useMemo(() => new BrepjsKernel(), []);
+	const derived = useMemo(() => new DerivedViewService(kernel), [kernel]);
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -221,23 +529,130 @@ function PlayApp() {
 		[interactionId],
 	);
 
+	const handleGeometryAssetChange = useCallback((id: string) => {
+		setGeometryAssetId(id);
+		setLoadedRawName("");
+		setFileStatus("");
+		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
+		setTopologyJson(asset?.json ?? emptyTopologyJson());
+	}, []);
+
 	const interactionTopo = useMemo(() => {
-		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId);
-		if (!asset) return new TopologyGraph();
-		return parseTopologyGraphJson(asset.json) ?? new TopologyGraph();
-	}, [geometryAssetId]);
+		return parseTopologyGraphJson(topologyJson) ?? new TopologyGraph();
+	}, [topologyJson]);
 
 	const documentModel = useMemo((): ModelDocument => {
 		const topo = TopologyGraph.fromJSON(interactionTopo.toJSON());
 		return { topology: topo, nodes: [] };
 	}, [interactionTopo]);
 
-	const history = useDocumentHistory();
-	const kernel = useMemo(() => new BrepjsKernel(), []);
+	const interactionActive = useMemo(
+		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
+		[spec, snapshot],
+	);
+	const currentSelection = useMemo(
+		() => replDisplayedSelectionTargets(interactionActive, pickViewKind, rendererSelection, interactionSelection),
+		[interactionActive, pickViewKind, rendererSelection, interactionSelection],
+	);
+	const selectedRaw = useMemo(
+		() => currentSelection.filter((target) => target.kind !== "surface" && target.kind !== "part" && target.kind !== "volume"),
+		[currentSelection],
+	);
+	const selectedAnalytic = useMemo(
+		() => currentSelection.filter((target) => target.kind === "surface" || target.kind === "part" || target.kind === "volume"),
+		[currentSelection],
+	);
+	const exportBaseName = useMemo(() => {
+		if (loadedRawName) return fileStem(loadedRawName);
+		const asset = GEOMETRY_ASSETS.find((g) => g.id === geometryAssetId);
+		return fileStem(asset?.id ?? "spatial");
+	}, [geometryAssetId, loadedRawName]);
 
 	useEffect(() => {
 		history.clear();
-	}, [history, geometryAssetId]);
+		setSnapshot(null);
+		setRendererSelection([]);
+		setInteractionSelection([]);
+		setDerivedRevision(0);
+	}, [history, topologyJson]);
+
+	const saveBundle = useCallback(
+		async (name: string, payload: SpatialExchangeBundle, message: string) => {
+			try {
+				await writeJsonFile(name, payload);
+				setFileStatus(message);
+			} catch (error) {
+				setFileStatus(`Save failed: ${String(error)}`);
+			}
+		},
+		[],
+	);
+
+	const handleSaveSelected = useCallback(async () => {
+		if (pickViewKind === "raw") {
+			await saveBundle(
+				`${exportBaseName}.selected.raw.spatial.json`,
+				{ raw: selectRawTopology(interactionTopo, selectedRaw) },
+				`Saved ${selectedRaw.length} selected raw item(s).`,
+			);
+			return;
+		}
+		await saveBundle(
+			`${exportBaseName}.selected.analytic.spatial.json`,
+			{ analytic: createAnalyticBundle(derived, interactionTopo, selectedAnalytic) },
+			`Saved ${selectedAnalytic.length} selected analytic item(s).`,
+		);
+	}, [derived, exportBaseName, interactionTopo, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
+
+	const handleSaveView = useCallback(async () => {
+		if (pickViewKind === "raw") {
+			await saveBundle(
+				`${exportBaseName}.raw.spatial.json`,
+				{ raw: interactionTopo.toJSON() },
+				"Saved the raw view.",
+			);
+			return;
+		}
+		await saveBundle(
+			`${exportBaseName}.analytic.spatial.json`,
+			{ analytic: createAnalyticBundle(derived, interactionTopo) },
+			"Saved the analytic view.",
+		);
+	}, [derived, exportBaseName, interactionTopo, pickViewKind, saveBundle]);
+
+	const handleSaveAll = useCallback(async () => {
+		await saveBundle(
+			`${exportBaseName}.spatial.json`,
+			{ raw: interactionTopo.toJSON(), analytic: createAnalyticBundle(derived, interactionTopo) },
+			"Saved raw and analytic data.",
+		);
+	}, [derived, exportBaseName, interactionTopo, saveBundle]);
+
+	const handleLoadRawRequest = useCallback(() => {
+		loadInputRef.current?.click();
+	}, []);
+
+	const handleLoadRaw = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+		try {
+			const parsed = JSON.parse(await file.text()) as unknown;
+			const raw =
+				parsed && typeof parsed === "object" && "raw" in (parsed as Record<string, unknown>)
+					? (parsed as Record<string, unknown>).raw
+					: parsed;
+			const topo = parseTopologyGraphJson(raw);
+			if (!topo) throw new Error("No raw spatial topology found in file.");
+			setGeometryAssetId("");
+			setLoadedRawName(file.name);
+			setTopologyJson(topo.toJSON());
+			setFileStatus(`Loaded raw topology from ${file.name}.`);
+		} catch (error) {
+			setFileStatus(`Load failed: ${String(error)}`);
+		} finally {
+			event.target.value = "";
+		}
+	}, []);
 
 	const asideExtra: ReactNode = (
 		<>
@@ -278,7 +693,7 @@ function PlayApp() {
 				Geometry asset
 				<select
 					value={geometryAssetId}
-					onChange={(e) => setGeometryAssetId(e.target.value)}
+					onChange={(e) => handleGeometryAssetChange(e.target.value)}
 					style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
 				>
 					<option value="">No asset</option>
@@ -289,6 +704,30 @@ function PlayApp() {
 					))}
 				</select>
 			</label>
+			<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+				<span style={{ fontWeight: 600, color: "#c8c8e0" }}>Files</span>
+				<div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+					<button
+						type="button"
+						onClick={() => void handleSaveSelected()}
+						disabled={pickViewKind === "raw" ? selectedRaw.length === 0 : selectedAnalytic.length === 0}
+						style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
+					>
+						Save (Selected)
+					</button>
+					<button type="button" onClick={() => void handleSaveView()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
+						Save (View)
+					</button>
+					<button type="button" onClick={() => void handleSaveAll()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
+						Save (All)
+					</button>
+					<button type="button" onClick={handleLoadRawRequest} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
+						Load (Raw)
+					</button>
+				</div>
+				<input ref={loadInputRef} type="file" accept=".json,.spatial.json,.raw.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
+				{fileStatus ? <span style={{ color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>{fileStatus}</span> : null}
+			</div>
 		</>
 	);
 
@@ -315,9 +754,19 @@ function PlayApp() {
 			documentModel={documentModel}
 			history={history}
 			kernel={kernel}
+			derived={derived}
 			mode={mode}
 			asideExtra={asideExtra}
 			sessionRestartNonce={interactionBootId}
+			pickViewKind={pickViewKind}
+			onPickViewKind={setPickViewKind}
+			rendererSelection={rendererSelection}
+			onRendererSelection={setRendererSelection}
+			interactionSelection={interactionSelection}
+			onInteractionSelection={setInteractionSelection}
+			derivedRevision={derivedRevision}
+			onDerivedRevision={setDerivedRevision}
+			onSnapshot={setSnapshot}
 		/>
 	);
 }
