@@ -3915,6 +3915,7 @@ function ScenePlaySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfa
 					kindCatalogs={kindCatalogs}
 					kindCompatibility={kindCompatibility}
 					blockedVortexFullIds={blockedVortexFullIds}
+					lodTag={snap.lodTag}
 					lodProps={snap.lodProps}
 					relocateMode={snap.relocateMode}
 					selectedId={snap.selectedId}
@@ -4038,6 +4039,7 @@ class PlaySceneCanvas extends React.Component<{
 	readonly kindCatalogs: KindCatalogBundle | undefined;
 	readonly kindCompatibility: readonly KindCompatEntry[];
 	readonly blockedVortexFullIds: ReadonlySet<string>;
+	readonly lodTag: LodKind;
 	readonly lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
 	readonly relocateMode: RelocateMode;
 	readonly selectedId: string | null;
@@ -4056,27 +4058,33 @@ class PlaySceneCanvas extends React.Component<{
 			throw new Error("SceneObjectStateProvider missing");
 		}
 		return (
-			<Canvas3D
-				className="absolute inset-0"
-				camera={this.props.fixture.camera}
-				domain={this.props.fixture.domain}
-				kindCatalogs={this.props.kindCatalogs}
-				kindCompatibility={this.props.kindCompatibility}
-				blockedVortexFullIds={this.props.blockedVortexFullIds}
-				proximityRadius={24}
-				relocateMode={this.props.relocateMode}
-				showLodGrid
-				gridSnapEnabled
-				{...this.props.lodProps}
-				onLodChange={this.props.onLodChange}
-				onSelect={this.props.onSelect}
-				onConnect={state.handleConnect}
-				onIndirectConnect={this.props.onIndirectConnect}
-				onProximityConnect={this.props.onProximityConnect}
-				onRelocate={state.handleRelocate}
-			>
-				<PlaySceneCanvasContent relocateMode={this.props.relocateMode} selectedId={this.props.selectedId} setSelectedId={this.props.setSelectedId} />
-			</Canvas3D>
+			<>
+				<div className="pointer-events-none absolute left-0 top-0 z-[-1] px-px py-px opacity-0">
+					<div data-e2e-scene-lod>{this.props.lodTag}</div>
+					<div data-e2e-selected>{this.props.selectedId ?? "none"}</div>
+				</div>
+				<Canvas3D
+					className="absolute inset-0"
+					camera={this.props.fixture.camera}
+					domain={this.props.fixture.domain}
+					kindCatalogs={this.props.kindCatalogs}
+					kindCompatibility={this.props.kindCompatibility}
+					blockedVortexFullIds={this.props.blockedVortexFullIds}
+					proximityRadius={24}
+					relocateMode={this.props.relocateMode}
+					showLodGrid
+					gridSnapEnabled
+					{...this.props.lodProps}
+					onLodChange={this.props.onLodChange}
+					onSelect={this.props.onSelect}
+					onConnect={state.handleConnect}
+					onIndirectConnect={this.props.onIndirectConnect}
+					onProximityConnect={this.props.onProximityConnect}
+					onRelocate={state.handleRelocate}
+				>
+					<PlaySceneCanvasContent relocateMode={this.props.relocateMode} selectedId={this.props.selectedId} setSelectedId={this.props.setSelectedId} />
+				</Canvas3D>
+			</>
 		);
 	}
 }
@@ -4099,7 +4107,6 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 	private sceneShell: ProductRuntime | null = null;
 
 	componentDidMount(): void {
-		registerScenePlayChrome();
 		this.applySurfaceChrome();
 		this.persistState();
 		const fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
@@ -4140,6 +4147,7 @@ class PlayInner extends React.Component<{}, PlayInnerState> {
 	}
 
 	render(): React.ReactElement {
+		registerScenePlayChrome();
 		const surfaceFooterItems: FooterItem[] = [
 			{
 				content: <PlaySurfaceFooter device={this.state.device} expertise={this.state.expertise} onDevice={(device) => this.setState({ device })} onExpertise={(expertise) => this.setState({ expertise })} onTheme={(theme) => this.setState({ theme })} theme={this.state.theme} />,

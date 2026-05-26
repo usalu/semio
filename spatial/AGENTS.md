@@ -9,77 +9,67 @@ A state can display information based on a set of predefined draw
 
 # Model
 
-A model contains geometry and topology.
+A model contains objects.
 
-##
+# Object
 
-## Geometry
+An object has geometry. Optionally it can provide geometry for different views.
 
-### Point
+# View
 
-### Curve
+A view is a different perspective on a model.
+A view performs transformations.
+Inside a view, geometry cant be edited because it is not the source geometry.
 
-### Surface
+## Structural Analysis View
 
-### Solid
+Used for structural analysis.
 
-## Topology
+### Transformation
 
-A Topology is an abstract superclass.
+Join/unions touching geometry with bond attributes.
+e.g. two curves with bondable endpoints are joined into one curve.
+e.g. two surfaces that touch are joined into one surface.
+e.g. two solids with touching faces are boolean unioned.
 
-## Raw (Editable)
+## Energy Modelling View
 
-Vertex: A Vertex is a zero-dimensional entity equivalent to a geometry point.
-Edge: An Edge is a one-dimensional entity defined by two vertices. It is important to note that while a topologic edge is made of two vertices, its geometry can be a curve with multiple control vertices.
-Wire: A Wire is a contiguous collection of Edges where adjacent Edges are connected by shared Vertices. It may be open or closed and may be manifold or non-manifold.
-Face: A Face is a two-dimensional region defined by a collection of closed Wires. The geometry of a face can be flat or undulating.
-Shell: A Shell is a contiguous collection of Faces, where adjacent Faces are connected by shared Edges. It may be open or closed and may be manifold or non-manifold.
-Cell: A Cell is a three-dimensional region defined by a collection of closed Shells. It may be manifold or non- manifold.
-CellComplex: A CellComplex is a contiguous collection of Cells where adjacent Cells are connected by shared Faces. It is non-manifold.
-Cluster: A Cluster is a collection of any topologic entities. It may be contiguous or not and may be manifold or non-manifold. Clusters can be nested within other Clusters.
+Used for energy calculations.
 
-Anchor: An Anchor is a parameteric point. It can be attached to a Vertex (no parameter needed), an Edge or Wire (parameter t needed), a Face (parameter u,v needed), a Cell (parameter u,v,w needed).
+### Transformation
 
-## Analytic (Non-editable)
+External surfaces are joined to form a closed shell. The volume is calculated.
+For display the windows are removed from the closed shell and yield an open shell.
+The window surface are added separately.
 
-Surfaces are derived faces that are a combination of Exposure (External or Internal) and Stance (Horizontal or Vertical).
-e.g. two coplanar faces are merged into a single surface
-e.g. when two cells intersect the surface will not be the complete face but it is split into external and internal faces.
-Surfaces are just a different way of "splitting the faces semantically". They are shape-invariant.
+# Attribute
 
-Parts are derived closed shells that are a combination of Overlap (None, Difference, Intersection)
-Parts are just a different way of "splitting the closed shells semantically". They are shape-invariant.
+An attribute is attachable metadata to geometry.
 
-Volumes are derived closed shells. They are the boolean union of all closed shells in a cell group.
+## Bondable
 
-Run one boolean intersection on all cells at the same time. Return them as intersection parts. Run for every cell boolean difference where the cutters are all the other intersecting cells. Return them as difference parts.
-Explode all parts and check wheater they are internal (inside other parts) or external, and check wheather the vertices of the parts are mostly horizontal or vertical. Before returning the surfaces, make sure all that all surfaces of the same stance and exposure are boolean unioned (internal⋂horizontal, internal⋂vertical, external⋂horizontal, external⋂vertical).
+Two bondable contacts means they are unified geometrically.
 
-All parts, surfaces and volumes are made out of vertices that already exist.
+## Concrete
 
-## Construct query
+The concrete class can be attatched to any curve, surface or solid.
 
-Raw topology (`Vertex` … `Cluster`) is matched with `MATCH` only. Analytic views (`Surface`, `Part`, `Volume`) are never matched directly: compute them with `CALL view.surfaces({})` / `view.parts({})` / `view.volumes({})`, `YIELD data AS …`, then `UNWIND … AS …` to filter and return rows. All geometry actions use `CALL <actionId>({ … }) YIELD <key> [, <key> AS <alias> …]`. Selection commands use the same `CALL` surface: `CALL selection.selectAll({}) YIELD targets`, `CALL selection.apply({ operation: 'invert', seedTargets: [] }) YIELD targets`, or any built-in `selection.*` id; omit `seedTargets` to use `ConstructQueryContext.selectionTargets` from the host.
+## U-Value
 
-```json
-{
-    "geometry": {
-        "points": [
-            {
-                "id":"p1",
-                "data": {
-                    "x": 1.2,
-                    …
-                }
-            }
-        ],
-        "curves"
-    },
-    "topology": {
-        "vertices": {
-            "id": "v1",
-            "points": ["p1", …]
-        }
-    }
-}
-```
+A U-Value can be attatched to any surface.
+
+## External
+
+Any surface can be marked as external.
+
+## Window
+
+A surface marked as a window will be trimmed into external walls.
+
+## G-Value
+
+A G-Value can be attatched to any surface with the window attribute.
+
+## Slab
+
+A horizontal surface can be marked as slab.

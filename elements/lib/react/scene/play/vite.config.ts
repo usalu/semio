@@ -5,8 +5,8 @@ import path from "node:path";
 import { defineConfig } from "vite";
 
 const repoRoot = path.resolve(__dirname, "../../../../../");
-const meshRoot = path.resolve(repoRoot, "semio/assets/fixtures/metabolism/representations");
-const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/fixtures/placeholder.glb");
+const meshRoot = path.resolve(repoRoot, "semio/fixtures/metabolism/representations");
+const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/fixtures/placeholder.glb");
 
 export default defineConfig({
 	root: __dirname,

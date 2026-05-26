@@ -71,6 +71,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -90,6 +91,7 @@ import {
 	CommandItem,
 	CommandList,
 	Combobox,
+	ContextMenu,
 	Footer,
 	Input,
 	Layout,
@@ -110,6 +112,7 @@ import {
 	ToolbarDivider,
 	ToolbarItem,
 	ToolbarZone,
+	Window,
 	cn,
 	resolveTranslationLabel,
 	useCommandHotkey,
@@ -831,7 +834,7 @@ const UICanvas: React.FC<{
           controlElement?.click();
         };
 
-        return renderPortalInto(
+		return createPortal(
           <Window
             key={portal.key}
             id={portal.windowKind.id}
@@ -850,7 +853,7 @@ const UICanvas: React.FC<{
               </div>
             </ContextMenu>
           </Window>,
-          portal.element,
+			portal.element,
         );
       })}
     </>
