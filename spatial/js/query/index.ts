@@ -12,6 +12,7 @@ import {
 	DerivedViewService,
 	applyTopologyDiff,
 	cellRef,
+	isSelectionConstructActionId,
 	type ConstructQueryContext,
 	type ConstructQueryResult,
 	type ConstructQueryRow,
@@ -561,6 +562,12 @@ export function resolveActionYield(result: ActionResult, key: string): unknown {
 		if (key === "diff") return result.diff;
 		if (key === "data") return result.data;
 		if (key === "patch") return result.patch;
+		if (key === "targets") {
+			const patchSet = result.patch?.set as { targets?: unknown } | undefined;
+			if (patchSet?.targets !== undefined) return patchSet.targets;
+			const data = result.data as { targets?: unknown } | undefined;
+			return data?.targets;
+		}
 		return (result as Record<string, unknown>)[key];
 	}
 	const [head, ...rest] = key.split(".");
@@ -1318,6 +1325,14 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
+				if (
+					isSelectionConstructActionId(st.actionId) &&
+					paramBag.seedTargets === undefined &&
+					ctx.selectionTargets &&
+					ctx.selectionTargets.length > 0
+				) {
+					paramBag.seedTargets = ctx.selectionTargets;
+				}
 				const res = await Promise.resolve(
 					def.run(paramBag, {
 						kernel: ctx.kernel,
@@ -1610,6 +1625,70 @@ if (import.meta.vitest) {
 			expect(res.diff).toBeDefined();
 			expect(res.diff?.cells?.added?.length).toBeGreaterThan(0);
 			expect(res.rows[0]?.cell).toBeDefined();
+		});
+
+		it("CALL selection.selectAll YIELD targets returns every box topology kind", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const actions = ActionRegistry.withBuiltins();
+			expect(actions.get("selection.selectAll")).not.toBeNull();
+			const res = await runConstruct("CALL selection.selectAll({}) YIELD targets", {
+				topology: topo,
+				kernel: new QueryTestKernel(),
+				actions,
+			});
+			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
+			expect(Array.isArray(targets)).toBe(true);
+			expect(targets!.length).toBeGreaterThan(8);
+			expect(targets!.some((t) => t.kind === "cell" && t.id === "box")).toBe(true);
+		});
+
+		it("CALL selection.apply invert uses construct selectionTargets seed", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const seed = [{ kind: "cell", id: "box", editable: true }];
+			const res = await runConstruct(
+				"CALL selection.apply({ operation: 'invert' }) YIELD data.targets AS targets",
+				{
+					topology: topo,
+					kernel: new QueryTestKernel(),
+					actions: ActionRegistry.withBuiltins(),
+					selectionTargets: seed,
+				},
+			);
+			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
+			expect(targets!.some((t) => t.kind === "cell" && t.id === "box")).toBe(false);
+			expect(targets!.length).toBeGreaterThan(0);
+		});
+
+		it("CALL selection.selectVertices YIELD targets lists only vertices", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const res = await runConstruct("CALL selection.selectVertices({}) YIELD targets", {
+				topology: topo,
+				kernel: new QueryTestKernel(),
+				actions: ActionRegistry.withBuiltins(),
+			});
+			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
+			expect(targets?.length).toBe(8);
+			expect(targets?.every((t) => t.kind === "vertex")).toBe(true);
+		});
+
+		it("CALL selection.selectSurfaces YIELD targets with derived refresh", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const kernel = new QueryTestKernel();
+			const derived = new DerivedViewService(kernel);
+			await derived.refresh(topo);
+			const res = await runConstruct("CALL selection.selectSurfaces({}) YIELD targets", {
+				topology: topo,
+				kernel,
+				actions: ActionRegistry.withBuiltins(),
+				derived,
+			});
+			const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
+			expect(targets!.length).toBeGreaterThan(0);
+			expect(targets!.every((t) => t.kind === "surface")).toBe(true);
 		});
 	});
 }

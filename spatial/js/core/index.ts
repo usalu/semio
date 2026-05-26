@@ -1437,9 +1437,28 @@ export class ActionRegistry {
 		return [...this.defs.values()];
 	}
 
+	/** @emoji 🧩 Runs a registered action (`selection.apply`, geometry actions, …) without an interaction session. */
+	async run(
+		id: string,
+		params: Record<string, unknown>,
+		ctx: {
+			readonly kernel: SpatialKernel;
+			readonly preview: SpatialPreviewKernel;
+			readonly topology: TopologyGraph;
+			readonly derived?: DerivedViewService;
+		},
+	): Promise<ActionResult> {
+		const def = this.get(id);
+		if (!def) throw new Error(`Unknown action: ${id}`);
+		return Promise.resolve(def.run(params, ctx));
+	}
+
 	static withBuiltins(): ActionRegistry {
 		const r = new ActionRegistry();
 		for (const d of builtinActionDefs()) r.register(d);
+		for (const defn of listSelectionOperationInteractionDefs()) {
+			r.register(selectionCommandActionForDef(defn));
+		}
 		return r;
 	}
 }
@@ -1468,9 +1487,9 @@ function faceAnnotationCentroid(topo: TopologyGraph, face: FaceRecord): Vec3 | n
 	return [x / n, y / n, z / n];
 }
 
-/** @emoji 📏 Measure interactions annotate topology but do not enter document undo history. */
+/** @emoji 📏 Measure and selection commands do not enter document undo history. */
 export function interactionRecordsDocumentHistory(interactionId: string): boolean {
-	return !interactionId.startsWith("measure.");
+	return !interactionId.startsWith("measure.") && !interactionId.startsWith("selection.");
 }
 
 /** @emoji 🎯 Collects vertex ids reachable from transform/edit selection targets. */
@@ -1564,6 +1583,252 @@ function selectionTargetsWithMode(
 		return current.filter((target) => !nextKeys.has(selectionTargetKey(target)));
 	}
 	return dedupedNext;
+}
+
+/** @emoji 🪪 Topology + derived kinds used by selection commands (`selectAll`, `invert`, …). */
+export const ALL_TOPOLOGY_SELECTION_KINDS: readonly TopologyEntityKind[] = [
+	"anchor",
+	"vertex",
+	"edge",
+	"wire",
+	"face",
+	"shell",
+	"cell",
+	"cellComplex",
+	"cluster",
+	"surface",
+	"part",
+	"volume",
+];
+
+const TOPOLOGY_SELECTION_KIND_ORDER = new Map<TopologyEntityKind, number>(
+	ALL_TOPOLOGY_SELECTION_KINDS.map((kind, index) => [kind, index]),
+);
+
+/** @emoji 🪪 Built-in selection command operation id (`selection.apply` param). */
+export type SelectionApplyOperation = "selectAll" | "deselectAll" | "invert" | "selectKinds";
+
+/** @emoji 🪪 Headless `selection.apply` / interaction commit input. */
+export interface SelectionApplyParams {
+	readonly operation: SelectionApplyOperation;
+	readonly seedTargets?: readonly SelectionTarget[];
+	readonly kinds?: readonly TopologyEntityKind[];
+}
+
+/** @emoji 🪪 Built-in selection command interaction row (`selection.*` registry). */
+export type SelectionOperationInteractionDef = {
+	readonly id: string;
+	readonly label: string;
+	readonly key: string;
+	readonly operation: SelectionApplyOperation;
+	readonly kinds?: readonly TopologyEntityKind[];
+};
+
+function toSelectionTarget(kind: TopologyEntityKind, id: string): SelectionTarget {
+	const editable = kind !== "surface" && kind !== "part" && kind !== "volume";
+	return { kind, id, editable };
+}
+
+/** @emoji 🪪 Parses `context.targets` or action patch targets into validated `SelectionTarget` rows. */
+export function selectionTargetsFromContext(ctx: Record<string, unknown>): readonly SelectionTarget[] {
+	return parseSelectionTargetsFromUnknown(ctx.targets);
+}
+
+/** @emoji 🪪 Reads `targets` from an `selection.apply` action result patch. */
+export function selectionTargetsFromActionResult(result: ActionResult): readonly SelectionTarget[] {
+	return parseSelectionTargetsFromUnknown(result.patch?.set?.targets);
+}
+
+function parseSelectionTargetsFromUnknown(raw: unknown): SelectionTarget[] {
+	if (!Array.isArray(raw)) return [];
+	const out: SelectionTarget[] = [];
+	for (const item of raw) {
+		if (!item || typeof item !== "object") continue;
+		const kind = (item as { kind?: unknown }).kind;
+		const id = (item as { id?: unknown }).id;
+		if (typeof kind !== "string" || !TOPOLOGY_ENTITY_KINDS.has(kind)) continue;
+		if (typeof id !== "string" || id.length === 0) continue;
+		const editable = (item as { editable?: unknown }).editable;
+		out.push({
+			kind: kind as TopologyEntityKind,
+			id,
+			editable: typeof editable === "boolean" ? editable : kind !== "surface" && kind !== "part" && kind !== "volume",
+		});
+	}
+	return out;
+}
+
+function parseTopologyEntityKinds(raw: unknown): TopologyEntityKind[] {
+	if (!Array.isArray(raw)) return [];
+	const out: TopologyEntityKind[] = [];
+	for (const item of raw) {
+		if (typeof item !== "string" || !TOPOLOGY_ENTITY_KINDS.has(item)) continue;
+		out.push(item as TopologyEntityKind);
+	}
+	return out;
+}
+
+function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTarget[] {
+	return [...targets].sort((a, b) => {
+		const ka = TOPOLOGY_SELECTION_KIND_ORDER.get(a.kind) ?? 999;
+		const kb = TOPOLOGY_SELECTION_KIND_ORDER.get(b.kind) ?? 999;
+		if (ka !== kb) return ka - kb;
+		return a.id.localeCompare(b.id);
+	});
+}
+
+/** @emoji 🪪 Collects stable `SelectionTarget` rows for `kinds` from `topo` (+ derived views when provided). */
+export function collectTopologySelectionTargets(
+	topo: TopologyGraph,
+	kinds: readonly TopologyEntityKind[],
+	derived?: DerivedViewService | null,
+): SelectionTarget[] {
+	const out: SelectionTarget[] = [];
+	const seen = new Set<string>();
+	const push = (kind: TopologyEntityKind, id: string) => {
+		const key = selectionTargetKey({ kind, id, editable: true });
+		if (seen.has(key)) return;
+		seen.add(key);
+		out.push(toSelectionTarget(kind, id));
+	};
+	for (const kind of kinds) {
+		switch (kind) {
+			case "anchor":
+				for (const id of Object.keys(topo.anchors)) push(kind, id);
+				break;
+			case "vertex":
+				for (const id of Object.keys(topo.vertices)) push(kind, id);
+				break;
+			case "edge":
+				for (const id of Object.keys(topo.edges)) push(kind, id);
+				break;
+			case "wire":
+				for (const id of Object.keys(topo.wires)) push(kind, id);
+				break;
+			case "face":
+				for (const id of Object.keys(topo.faces)) push(kind, id);
+				break;
+			case "shell":
+				for (const id of Object.keys(topo.shells)) push(kind, id);
+				break;
+			case "cell":
+				for (const id of Object.keys(topo.cells)) push(kind, id);
+				break;
+			case "cellComplex":
+				for (const id of Object.keys(topo.cellComplexes)) push(kind, id);
+				break;
+			case "cluster":
+				for (const id of Object.keys(topo.clusters)) push(kind, id);
+				break;
+			case "surface":
+				for (const s of derived?.computeSurfaces(topo) ?? []) push(kind, String(s.id));
+				break;
+			case "part":
+				for (const p of derived?.computeParts(topo) ?? []) push(kind, String(p.id));
+				break;
+			case "volume":
+				for (const v of derived?.computeVolumes(topo) ?? []) push(kind, String(v.id));
+				break;
+		}
+	}
+	return sortSelectionTargets(out);
+}
+
+/** @emoji 🪪 Applies `selectAll` / `deselectAll` / `invert` / `selectKinds` to `current` against `topo`. */
+export function applySelectionOperation(
+	operation: SelectionApplyOperation,
+	current: readonly SelectionTarget[],
+	topo: TopologyGraph,
+	kinds: readonly TopologyEntityKind[],
+	derived?: DerivedViewService | null,
+): SelectionTarget[] {
+	if (operation === "deselectAll") return [];
+	const scopeKinds = kinds.length > 0 ? kinds : [...ALL_TOPOLOGY_SELECTION_KINDS];
+	const universe = collectTopologySelectionTargets(topo, scopeKinds, derived);
+	if (operation === "selectAll" || operation === "selectKinds") return universe;
+	const cur = new Set(current.map(selectionTargetKey));
+	return universe.filter((target) => !cur.has(selectionTargetKey(target)));
+}
+
+/** @emoji 🪪 Shared selection command core used by `selection.apply` and headless callers. */
+export function executeSelectionApply(
+	params: SelectionApplyParams,
+	ctx: { readonly topology: TopologyGraph; readonly derived?: DerivedViewService | null },
+): SelectionTarget[] {
+	const seed = params.seedTargets ?? [];
+	const kinds =
+		params.operation === "selectKinds"
+			? [...(params.kinds ?? [])]
+			: params.operation === "invert" || params.operation === "selectAll"
+				? [...ALL_TOPOLOGY_SELECTION_KINDS]
+				: [];
+	return applySelectionOperation(params.operation, seed, ctx.topology, kinds, ctx.derived ?? null);
+}
+
+/** @emoji 🪪 Runs `selection.apply` headless via `ActionRegistry` (no interaction session). */
+export async function runSelectionApply(
+	params: SelectionApplyParams,
+	ctx: {
+		readonly kernel: SpatialKernel;
+		readonly preview: SpatialPreviewKernel;
+		readonly topology: TopologyGraph;
+		readonly derived?: DerivedViewService;
+		readonly actions?: ActionRegistry;
+	},
+): Promise<readonly SelectionTarget[]> {
+	const actions = ctx.actions ?? ActionRegistry.withBuiltins();
+	const result = await actions.run(
+		"selection.apply",
+		{
+			operation: params.operation,
+			seedTargets: params.seedTargets ?? [],
+			...(params.kinds ? { kinds: params.kinds } : {}),
+			__context: {},
+			__event: { kind: "commit" },
+		},
+		ctx,
+	);
+	return selectionTargetsFromActionResult(result);
+}
+
+/** @emoji 🪪 Standard `selection.apply` / `selection.*` construct `CALL` result (`YIELD targets` / `data.targets`). */
+export function selectionCommandActionResult(targets: readonly SelectionTarget[]): ActionResult {
+	return { patch: { set: { targets: [...targets] } }, diff: EMPTY_TOPOLOGY_DIFF, data: { targets } };
+}
+
+/** @emoji 🪪 True when `actionId` is a `selection.*` construct or action (`selection.apply`, `selection.selectAll`, …). */
+export function isSelectionConstructActionId(actionId: string): boolean {
+	return actionId.startsWith("selection.");
+}
+
+function selectionApplyParamsFromRecord(params: Record<string, unknown>): SelectionApplyParams {
+	const bag = (params.__context ?? {}) as Record<string, unknown>;
+	const operation = String(params.operation ?? bag.operation ?? "selectAll") as SelectionApplyOperation;
+	const seed = parseSelectionTargetsFromUnknown(params.seedTargets ?? bag.seedTargets);
+	const kinds = parseTopologyEntityKinds(params.kinds ?? bag.kinds);
+	return { operation, seedTargets: seed, ...(operation === "selectKinds" ? { kinds } : {}) };
+}
+
+function selectionApplyActionDef(): ActionDef {
+	return {
+		id: "selection.apply",
+		run: (params, ctx) => {
+			const targets = executeSelectionApply(selectionApplyParamsFromRecord(params as Record<string, unknown>), ctx);
+			return selectionCommandActionResult(targets);
+		},
+	};
+}
+
+function selectionCommandActionForDef(defn: SelectionOperationInteractionDef): ActionDef {
+	return {
+		id: defn.id,
+		label: defn.label,
+		run: (params, ctx) => {
+			const seed = parseSelectionTargetsFromUnknown(params.seedTargets);
+			const targets = executeSelectionApply(selectionApplyParamsForInteraction(defn, seed), ctx);
+			return selectionCommandActionResult(targets);
+		},
+	};
 }
 
 function builtinActionDefs(): ActionDef[] {
@@ -2385,6 +2650,7 @@ function builtinActionDefs(): ActionDef[] {
 		commandConstrainMoveCursor,
 		commandUndoPick,
 		commandAddSelection,
+		selectionApply,
 		commandFinish,
 		featureTransformMove,
 		featureTransformRotate,
@@ -2518,6 +2784,8 @@ export interface ConstructQueryContext {
 	readonly kernel: SpatialKernel;
 	readonly actions: ActionRegistry;
 	readonly derived?: DerivedViewService;
+	/** @emoji 🪪 Default `seedTargets` for `CALL selection.*` when the call omits `seedTargets`. */
+	readonly selectionTargets?: readonly SelectionTarget[];
 }
 
 /** @emoji 🔍 Async bridge so core never imports `@spatial/js-query`. */
@@ -3184,6 +3452,13 @@ export class InteractionRuntime {
 		for (const l of this.listeners) l();
 	}
 
+	/** @emoji 📜 Merges `start.targets` when `compileInteraction` began in the post-start state without running transition effects. */
+	private applyInstantStartPayload(event: InteractionEvent): void {
+		const raw = event.targets;
+		if (!Array.isArray(raw) || raw.length === 0) return;
+		this.sm.getContext().seedTargets = raw;
+	}
+
 	/** @emoji 📜 Dispatches a typed interaction event through the statechart + optional kernel queries. */
 	async send(event: InteractionEvent): Promise<void> {
 		if (event.kind === "start") {
@@ -3199,10 +3474,12 @@ export class InteractionRuntime {
 				}
 			}
 			if (isFinalInteractionState(this.spec, this.sm.getState())) {
+				this.applyInstantStartPayload(event);
 				await this.runCommit(false);
 				return;
 			}
 			if (this.canCommit()) {
+				this.applyInstantStartPayload(event);
 				await this.runCommit(true);
 				return;
 			}
@@ -3337,7 +3614,10 @@ export class InteractionRuntime {
 			for (const [key, ex] of Object.entries(op.params ?? {})) {
 				paramBag[key] = evalExpr(ex, env);
 			}
-			const ar = await Promise.resolve(def.run(paramBag, { kernel: k, preview: this.previewKernel(), topology: topo }));
+			const ar = await Promise.resolve(
+				def.run(paramBag, { kernel: k, preview: this.previewKernel(), topology: topo, derived: this.opts.derived }),
+			);
+			if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
 			diff = ar.diff ?? EMPTY_TOPOLOGY_DIFF;
 			data = ar.data ?? null;
 		} catch (e) {
@@ -3380,6 +3660,31 @@ export class InteractionRuntime {
 /** @emoji 📜 Constructs a `InteractionRuntime` from a compiled `InteractionSpec`. */
 export function createInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
 	return new InteractionRuntime(compileInteraction(spec), opts);
+}
+
+/** @emoji 🪪 Commits a built-in `selection.*` interaction (same `selection.apply` as headless action). */
+export async function runSelectionOperationInteraction(
+	interactionId: string,
+	opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] },
+): Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }> {
+	const defn = resolveSelectionOperationInteraction(interactionId);
+	if (!defn) throw new Error(`Not a selection operation interaction: ${interactionId}`);
+	const spec = loadSpatialInteraction(interactionId);
+	if (!spec) throw new Error(`Unknown interaction: ${interactionId}`);
+	const derived =
+		opts.derived ??
+		(selectionOperationUsesDerived(defn) ? new DerivedViewService(opts.kernel) : undefined);
+	if (derived) await derived.refresh(opts.document.topology);
+	const rt = createInteractionRuntime(spec, { ...opts, derived });
+	const seedTargets = opts.seedTargets ?? [];
+	await rt.send({ kind: "start", targets: seedTargets, modifiers: {} });
+	const response = rt.getSnapshot().lastResponse;
+	if (!response?.ok) {
+		const msg = response?.errors?.[0]?.message ?? "selection interaction commit failed";
+		throw new Error(msg);
+	}
+	const targets = selectionTargetsFromContext(response.archiveContext ?? {});
+	return { response, targets };
 }
 // #endregion 📜Interaction
 
@@ -3512,8 +3817,135 @@ const createAnchorInteractionJson = {
 	},
 } as const satisfies BuiltinInteractionFixture;
 
+const SELECTION_OPERATION_INTERACTION_DEFS = [
+	{ id: "selection.selectAll", label: "SelectAll", key: "sa", operation: "selectAll" },
+	{ id: "selection.deselectAll", label: "DeselectAll", key: "ds", operation: "deselectAll" },
+	{ id: "selection.invert", label: "InvertSelection", key: "iv", operation: "invert" },
+	{ id: "selection.selectAnchors", label: "SelectAnchors", key: "xa", operation: "selectKinds", kinds: ["anchor"] },
+	{ id: "selection.selectVertices", label: "SelectVertices", key: "xv", operation: "selectKinds", kinds: ["vertex"] },
+	{ id: "selection.selectEdges", label: "SelectEdges", key: "xe", operation: "selectKinds", kinds: ["edge"] },
+	{ id: "selection.selectWires", label: "SelectWires", key: "xw", operation: "selectKinds", kinds: ["wire"] },
+	{ id: "selection.selectFaces", label: "SelectFaces", key: "xf", operation: "selectKinds", kinds: ["face"] },
+	{ id: "selection.selectShells", label: "SelectShells", key: "xs", operation: "selectKinds", kinds: ["shell"] },
+	{ id: "selection.selectCells", label: "SelectCells", key: "xc", operation: "selectKinds", kinds: ["cell"] },
+	{ id: "selection.selectCellComplexes", label: "SelectCellComplexes", key: "xl", operation: "selectKinds", kinds: ["cellComplex"] },
+	{ id: "selection.selectClusters", label: "SelectClusters", key: "xk", operation: "selectKinds", kinds: ["cluster"] },
+	{ id: "selection.selectSurfaces", label: "SelectSurfaces", key: "xn", operation: "selectKinds", kinds: ["surface"] },
+	{ id: "selection.selectParts", label: "SelectParts", key: "xp", operation: "selectKinds", kinds: ["part"] },
+	{ id: "selection.selectVolumes", label: "SelectVolumes", key: "xg", operation: "selectKinds", kinds: ["volume"] },
+] as const satisfies readonly SelectionOperationInteractionDef[];
+
+function buildSelectionOperationInteractionJson(defn: SelectionOperationInteractionDef): BuiltinInteractionFixture {
+	const startEffects: readonly Record<string, unknown>[] = [
+		{
+			op: "assign",
+			target: { root: "context", segments: [{ kind: "field", name: "operation" }] },
+			value: { kind: "const", value: defn.operation },
+		},
+		{
+			op: "assign",
+			target: { root: "context", segments: [{ kind: "field", name: "seedTargets" }] },
+			value: { kind: "path", root: "event", segments: [{ kind: "field", name: "targets" }] },
+		},
+		...(defn.kinds
+			? [
+					{
+						op: "assign",
+						target: { root: "context", segments: [{ kind: "field", name: "kinds" }] },
+						value: { kind: "const", value: defn.kinds },
+					},
+				]
+			: []),
+	];
+	const commitParams: Record<string, unknown> = {
+		operation: { kind: "path", root: "context", segments: [{ kind: "field", name: "operation" }] },
+		seedTargets: { kind: "path", root: "context", segments: [{ kind: "field", name: "seedTargets" }] },
+	};
+	if (defn.kinds) {
+		commitParams.kinds = { kind: "path", root: "context", segments: [{ kind: "field", name: "kinds" }] };
+	}
+	return {
+		schema: "spatial.interaction/v1",
+		id: defn.id,
+		version: "1.0.0",
+		label: defn.label,
+		key: defn.key,
+		interaction: {
+			spatialGroundPick: false,
+			pickDisabledStates: ["committed"],
+			groundPointerMoveStates: [],
+			heightDragStates: [],
+			verticalRodStates: [],
+			heightConfirmState: null,
+		},
+		machine: {
+			initial: "idle",
+			states: [
+				{
+					name: "idle",
+					on: [
+						{
+							event: "start",
+							transitions: [
+								{
+									target: "committed",
+									key: "s",
+									label: defn.label,
+									effects: startEffects,
+								},
+							],
+						},
+					],
+				},
+				{ name: "committed", final: true },
+			],
+		},
+		commit: {
+			fromStates: ["committed"],
+			operation: {
+				kind: "action",
+				action: "selection.apply",
+				params: commitParams,
+			},
+		},
+	} as BuiltinInteractionFixture;
+}
+
+const selectionOperationInteractionFixtures = SELECTION_OPERATION_INTERACTION_DEFS.map((defn) =>
+	buildSelectionOperationInteractionJson(defn),
+);
+
+/** @emoji 🪪 Built-in instant selection command fixtures (`selection.*`). */
+export function listSelectionOperationInteractionDefs(): readonly SelectionOperationInteractionDef[] {
+	return SELECTION_OPERATION_INTERACTION_DEFS;
+}
+
+/** @emoji 🪪 Resolves a built-in `selection.*` interaction row by stable id. */
+export function resolveSelectionOperationInteraction(interactionId: string): SelectionOperationInteractionDef | null {
+	return SELECTION_OPERATION_INTERACTION_DEFS.find((defn) => defn.id === interactionId) ?? null;
+}
+
+/** @emoji 🪪 Maps a `selection.*` interaction id to headless `SelectionApplyParams`. */
+export function selectionApplyParamsForInteraction(
+	defn: SelectionOperationInteractionDef,
+	seedTargets: readonly SelectionTarget[] = [],
+): SelectionApplyParams {
+	return {
+		operation: defn.operation,
+		seedTargets,
+		...(defn.kinds ? { kinds: defn.kinds } : {}),
+	};
+}
+
+const SELECTION_DERIVED_KINDS = new Set<TopologyEntityKind>(["surface", "part", "volume"]);
+
+function selectionOperationUsesDerived(defn: SelectionOperationInteractionDef): boolean {
+	return defn.kinds?.some((kind) => SELECTION_DERIVED_KINDS.has(kind)) ?? false;
+}
+
 const builtinInteractionJsons = [
 	createAnchorInteractionJson,
+	...selectionOperationInteractionFixtures,
 	boxInteractionJson,
 	extrudeWireInteractionJson,
 	offsetSurfaceInteractionJson,
@@ -4040,10 +4472,11 @@ if (import.meta.vitest) {
 
 		it("lists stable mnemonic keys for each built-in interaction", () => {
 			const ps = listSpatialInteractions();
-			expect(ps.slice(0, 5).map((p) => p.key).join("")).toBe("crbeod");
-			expect(ps.length).toBeGreaterThanOrEqual(34);
+			expect(ps.find((p) => p.id === "entity.createAnchor")?.key).toBe("cr");
+			expect(ps.find((p) => p.id === "selection.selectAll")?.key).toBe("sa");
+			expect(ps.find((p) => p.id === "primitive.box")?.key).toBe("b");
+			expect(ps.length).toBeGreaterThanOrEqual(49);
 			expect(new Set(ps.map((p) => p.key)).size).toBe(ps.length);
-			expect(ps.slice(0, 5).every((p) => p.label.toLowerCase().includes(p.key))).toBe(true);
 		});
 		it("uses PascalCase interaction labels without spaces", () => {
 			for (const row of listSpatialInteractions()) {
@@ -4124,6 +4557,8 @@ if (import.meta.vitest) {
 			expect(resolveSpatialInteractionKey("extrudewire")?.id).toBe("feature.extrudeWire");
 			expect(resolveSpatialInteractionKey("d")?.id).toBe("measure.distance");
 			expect(resolveSpatialInteractionKey("curve.line")?.id).toBe("curve.line");
+			expect(resolveSpatialInteractionKey("sa")?.id).toBe("selection.selectAll");
+			expect(resolveSpatialInteractionKey("xv")?.id).toBe("selection.selectVertices");
 		});
 		it("loads every built-in interaction spec", () => {
 			for (const row of listSpatialInteractions()) {
@@ -4492,6 +4927,9 @@ if (import.meta.vitest) {
 			expect(ids.has("view.surfaces")).toBe(true);
 			expect(ids.has("view.parts")).toBe(true);
 			expect(ids.has("view.volumes")).toBe(true);
+			expect(ids.has("selection.apply")).toBe(true);
+			expect(ids.has("selection.selectAll")).toBe(true);
+			expect(ids.has("selection.selectVertices")).toBe(true);
 		});
 		it("register replaces a built-in action id", () => {
 			const r = ActionRegistry.withBuiltins();
@@ -4566,6 +5004,163 @@ if (import.meta.vitest) {
 				{ kind: "wire", id: "w1", editable: true },
 				{ kind: "wire", id: "w2", editable: true },
 			]);
+		});
+		it("selection.apply runs selectAll, deselectAll, invert, and selectKinds", async () => {
+			const def = ActionRegistry.withBuiltins().get("selection.apply")!;
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const seed = [{ kind: "vertex", id: Object.keys(topo.vertices)[0]!, editable: true }] as const;
+			const all = await def.run(
+				{ operation: "selectAll", seedTargets: [], __context: {} },
+				{ kernel: M, preview: M, topology: topo },
+			);
+			const allTargets = (all.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			expect(allTargets.length).toBeGreaterThan(8);
+			expect(allTargets.every((t) => t.kind !== "surface")).toBe(true);
+			const cleared = await def.run(
+				{ operation: "deselectAll", seedTargets: allTargets, __context: {} },
+				{ kernel: M, preview: M, topology: topo },
+			);
+			expect((cleared.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([]);
+			const verts = await def.run(
+				{ operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} },
+				{ kernel: M, preview: M, topology: topo },
+			);
+			const vertTargets = (verts.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			expect(vertTargets.length).toBe(8);
+			expect(vertTargets.every((t) => t.kind === "vertex")).toBe(true);
+			const inverted = await def.run(
+				{ operation: "invert", seedTargets: vertTargets.slice(0, 1), __context: {} },
+				{ kernel: M, preview: M, topology: topo },
+			);
+			const invertedTargets = (inverted.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			expect(invertedTargets.some((t) => t.kind === "vertex")).toBe(true);
+			expect(invertedTargets.some((t) => t.kind === "face")).toBe(true);
+			expect(invertedTargets.find((t) => t.id === vertTargets[0]!.id)).toBeUndefined();
+		});
+		it("selection.selectAll commits archived targets without topology diff", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const spec = loadSpatialInteraction("selection.selectAll")!;
+			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start", targets: [], modifiers: {} });
+			const snap = rt.getSnapshot();
+			expect(snap.state).toBe("committed");
+			expect(snap.lastResponse?.ok).toBe(true);
+			expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
+			const archived = (snap.lastResponse?.archiveContext?.targets ?? []) as SelectionTarget[];
+			expect(archived.length).toBeGreaterThan(8);
+			expect(archived.some((t) => t.kind === "cell")).toBe(true);
+		});
+		it("interactionRecordsDocumentHistory skips selection commands", () => {
+			expect(interactionRecordsDocumentHistory("selection.selectAll")).toBe(false);
+			expect(interactionRecordsDocumentHistory("measure.distance")).toBe(false);
+			expect(interactionRecordsDocumentHistory("primitive.box")).toBe(true);
+		});
+		it("selection.selectAll does not push document history entries", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const hist = new DocumentHistory();
+			const spec = loadSpatialInteraction("selection.selectAll")!;
+			const rt = createInteractionRuntime(spec, {
+				kernel: new BrepjsKernel(),
+				document: { topology: topo, nodes: [] },
+				history: hist,
+			});
+			await rt.send({ kind: "start", targets: [], modifiers: {} });
+			expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
+			expect(hist.entries()).toEqual([]);
+		});
+		it.each(listSelectionOperationInteractionDefs())("resolves selection command key $key → $id", (defn) => {
+			expect(resolveSpatialInteractionKey(defn.key)?.id).toBe(defn.id);
+			expect(resolveSpatialInteractionKey(defn.id)?.id).toBe(defn.id);
+			expect(loadSpatialInteraction(defn.id)?.commit.operation.action).toBe("selection.apply");
+		});
+		it("compiled selection.invert honors start.targets seed payload", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+			const spec = loadSpatialInteraction("selection.invert")!;
+			expect(spec.machine.initial).toBe("committed");
+			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
+			const archived = (rt.getSnapshot().lastResponse?.archiveContext?.targets ?? []) as SelectionTarget[];
+			expect(archived.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
+			expect(archived.length).toBeGreaterThan(0);
+		});
+		it("ActionRegistry.run executes selection.apply headless", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const actions = ActionRegistry.withBuiltins();
+			const result = await actions.run(
+				"selection.apply",
+				{
+					operation: "selectKinds",
+					kinds: ["face"],
+					seedTargets: [],
+					__context: {},
+					__event: { kind: "commit" },
+				},
+				{ kernel: M, preview: M, topology: topo },
+			);
+			const targets = selectionTargetsFromActionResult(result);
+			expect(targets.length).toBe(6);
+			expect(targets.every((t) => t.kind === "face")).toBe(true);
+		});
+		it("runSelectionApply matches executeSelectionApply", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+			const ctx = { kernel: new BrepjsKernel(), preview: M, topology: topo };
+			const params = { operation: "selectAll" as const, seedTargets: [] };
+			const direct = executeSelectionApply(params, { topology: topo });
+			const headless = await runSelectionApply(params, ctx);
+			expect(headless).toEqual(direct);
+		});
+		it.each(listSelectionOperationInteractionDefs())(
+			"runSelectionApply matches runSelectionOperationInteraction for $id",
+			async (defn) => {
+				const topo = new TopologyGraph();
+				applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+				const kernel = new BrepjsKernel();
+				const seed =
+					defn.operation === "invert" || defn.operation === "deselectAll"
+						? ([{ kind: "cell", id: "e2e-box", editable: true }] as const)
+						: [];
+				const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
+				if (derived) await derived.refresh(topo);
+				const params = selectionApplyParamsForInteraction(defn, seed);
+				const headless = await runSelectionApply(params, { kernel, preview: M, topology: topo, derived });
+				const interactive = await runSelectionOperationInteraction(defn.id, {
+					kernel,
+					document: { topology: topo, nodes: [] },
+					derived,
+					seedTargets: seed,
+				});
+				expect(interactive.targets).toEqual(headless);
+			},
+		);
+		it("selection commands chain selectAll → deselectAll → selectVertices → invert", async () => {
+			const topo = new TopologyGraph();
+			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
+			const kernel = new BrepjsKernel();
+			const run = async (id: string, targets: readonly SelectionTarget[]) => {
+				const spec = loadSpatialInteraction(id)!;
+				const rt = createInteractionRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
+				await rt.send({ kind: "start", targets, modifiers: {} });
+				const snap = rt.getSnapshot();
+				expect(snap.state).toBe("committed");
+				expect(snap.lastResponse?.ok).toBe(true);
+				return (snap.lastResponse?.archiveContext?.targets ?? []) as SelectionTarget[];
+			};
+			const all = await run("selection.selectAll", []);
+			expect(all.length).toBeGreaterThan(8);
+			const cleared = await run("selection.deselectAll", all);
+			expect(cleared).toEqual([]);
+			const verts = await run("selection.selectVertices", cleared);
+			expect(verts.length).toBe(8);
+			expect(verts.every((t) => t.kind === "vertex")).toBe(true);
+			const inverted = await run("selection.invert", verts.slice(0, 1));
+			expect(inverted.some((t) => t.kind === "face")).toBe(true);
+			expect(inverted.find((t) => t.id === verts[0]!.id)).toBeUndefined();
 		});
 	});
 	describe("@spatial/js-core topology diff", () => {
@@ -5156,6 +5751,57 @@ if (import.meta.vitest) {
 
 		const BOX_FACE_TOP = "box-e2e-box-face-top";
 
+		const SELECTION_DERIVED_KINDS = new Set<TopologyEntityKind>(["surface", "part", "volume"]);
+
+		const selectionCommandUsesDerived = (defn: SelectionOperationInteractionDef): boolean =>
+			defn.kinds?.some((k) => SELECTION_DERIVED_KINDS.has(k)) ?? false;
+
+		const archivedSelectionTargets = (snap: InteractionSnapshot): SelectionTarget[] => {
+			const raw = snap.lastResponse?.archiveContext?.targets;
+			return Array.isArray(raw) ? (raw as SelectionTarget[]) : [];
+		};
+
+		const assertSelectionCommandArchive = (
+			defn: SelectionOperationInteractionDef,
+			targets: readonly SelectionTarget[],
+			topo: TopologyGraph,
+			derived?: DerivedViewService,
+		): void => {
+			switch (defn.operation) {
+				case "deselectAll":
+					expect(targets).toEqual([]);
+					return;
+				case "selectAll":
+					expect(targets.length).toBeGreaterThanOrEqual(8);
+					expect(targets.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(true);
+					expect(targets.some((t) => t.kind === "vertex")).toBe(true);
+					expect(targets.some((t) => t.kind === "face")).toBe(true);
+					return;
+				case "invert":
+					expect(targets.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
+					expect(targets.length).toBeGreaterThan(0);
+					return;
+				case "selectKinds": {
+					const kinds = defn.kinds ?? [];
+					expect(targets.every((t) => kinds.includes(t.kind))).toBe(true);
+					const expected = collectTopologySelectionTargets(topo, kinds, derived ?? null);
+					expect(targets).toEqual(expected);
+					if (defn.id === "selection.selectVolumes") {
+						expect(targets.every((t) => t.kind === "volume")).toBe(true);
+					} else if (
+						defn.id === "selection.selectAnchors" ||
+						defn.id === "selection.selectCellComplexes" ||
+						defn.id === "selection.selectClusters"
+					) {
+						expect(targets).toEqual([]);
+					} else {
+						expect(targets.length).toBeGreaterThan(0);
+					}
+					return;
+				}
+			}
+		};
+
 		const e2eCases: readonly {
 			readonly id: string;
 			readonly fixture: InteractionE2EFixtureKind;
@@ -5168,6 +5814,7 @@ if (import.meta.vitest) {
 				readonly topo: TopologyGraph;
 				readonly before: ReturnType<typeof entityCounts>;
 				readonly after: ReturnType<typeof entityCounts>;
+				readonly derived?: DerivedViewService;
 			}) => void;
 		}[] = [
 			{
@@ -5542,6 +6189,20 @@ if (import.meta.vitest) {
 					];
 				})(),
 			},
+			...SELECTION_OPERATION_INTERACTION_DEFS.map((defn) => ({
+				id: defn.id,
+				fixture: "empty" as const,
+				seedBox: true,
+				derived: selectionCommandUsesDerived(defn),
+				steps:
+					defn.operation === "invert" || defn.operation === "deselectAll"
+						? ([{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD }] as const)
+						: ([{ kind: "start", targets: [], modifiers: MOD }] as const),
+				assert: ({ snap, topo, derived }) => {
+					expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
+					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), topo, derived);
+				},
+			})),
 		];
 
 		it("covers every built-in interaction", () => {
@@ -5573,7 +6234,7 @@ if (import.meta.vitest) {
 			expect(snap.state, row.id).toBe("committed");
 			expect(snap.lastResponse?.ok, row.id).toBe(true);
 			expect(snap.lastResponse?.errors ?? [], row.id).toEqual([]);
-			row.assert?.({ snap, topo, before, after: entityCounts(topo) });
+			row.assert?.({ snap, topo, before, after: entityCounts(topo), derived });
 		});
 	});
 }

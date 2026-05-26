@@ -31,4 +31,4 @@ Volumes are derived closed shells. They are the boolean union of all closed shel
 
 ## Construct query
 
-Raw topology (`Vertex` … `Cluster`) is matched with `MATCH` only. Analytic views (`Surface`, `Part`, `Volume`) are never matched directly: compute them with `CALL view.surfaces({})` / `view.parts({})` / `view.volumes({})`, `YIELD data AS …`, then `UNWIND … AS …` to filter and return rows. All geometry actions use `CALL <actionId>({ … }) YIELD <key> [, <key> AS <alias> …]`.
+Raw topology (`Vertex` … `Cluster`) is matched with `MATCH` only. Analytic views (`Surface`, `Part`, `Volume`) are never matched directly: compute them with `CALL view.surfaces({})` / `view.parts({})` / `view.volumes({})`, `YIELD data AS …`, then `UNWIND … AS …` to filter and return rows. All geometry actions use `CALL <actionId>({ … }) YIELD <key> [, <key> AS <alias> …]`. Selection commands use the same `CALL` surface: `CALL selection.selectAll({}) YIELD targets`, `CALL selection.apply({ operation: 'invert', seedTargets: [] }) YIELD targets`, or any built-in `selection.*` id; omit `seedTargets` to use `ConstructQueryContext.selectionTargets` from the host.

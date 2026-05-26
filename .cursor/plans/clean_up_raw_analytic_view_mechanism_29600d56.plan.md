@@ -4,25 +4,25 @@ overview: ""
 todos:
   - id: scope-display
     content: Scope replDisplayedSelectionTargets and its call site to current pickViewKind
-    status: in_progress
+    status: completed
   - id: toggle-preserve
     content: Remove selection-clearing and forced auto-switch when toggling view
-    status: pending
+    status: completed
   - id: derived-refresh
     content: Refresh derived view service regardless of interaction/view
-    status: pending
+    status: completed
   - id: view-masked-toggles
     content: Add view-masked toggle helpers and pass them into picking/scene/hover code paths
-    status: pending
+    status: completed
   - id: view-scoped-merge
     content: Make commit/dispatch/snap-pick merge only within current-view entities and preserve out-of-view entries
-    status: pending
+    status: completed
   - id: tests
     content: Extend tests for view-scoped display, view-scoped merge, and view-masked toggle helpers
-    status: pending
+    status: completed
   - id: ticket-close
     content: Close ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION via repo MCP
-    status: pending
+    status: completed
 isProject: false
 ---
 
