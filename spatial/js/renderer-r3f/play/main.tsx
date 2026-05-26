@@ -545,6 +545,7 @@ function PlayApp() {
 		const topo = TopologyGraph.fromJSON(interactionTopo.toJSON());
 		return { topology: topo, nodes: [] };
 	}, [interactionTopo]);
+	const liveTopology = documentModel.topology;
 
 	const interactionActive = useMemo(
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
@@ -594,45 +595,53 @@ function PlayApp() {
 		[],
 	);
 
+	const createLiveAnalyticBundle = useCallback(
+		async (selection?: readonly SelectionTarget[]) => {
+			await derived.refresh(liveTopology);
+			return createAnalyticBundle(derived, liveTopology, selection);
+		},
+		[derived, liveTopology],
+	);
+
 	const handleSaveSelected = useCallback(async () => {
 		if (pickViewKind === "raw") {
 			await saveBundle(
 				`${exportBaseName}.selected.raw.spatial.json`,
-				{ raw: selectRawTopology(interactionTopo, selectedRaw) },
+				{ raw: selectRawTopology(liveTopology, selectedRaw) },
 				`Saved ${selectedRaw.length} selected raw item(s).`,
 			);
 			return;
 		}
 		await saveBundle(
 			`${exportBaseName}.selected.analytic.spatial.json`,
-			{ analytic: createAnalyticBundle(derived, interactionTopo, selectedAnalytic) },
+			{ analytic: await createLiveAnalyticBundle(selectedAnalytic) },
 			`Saved ${selectedAnalytic.length} selected analytic item(s).`,
 		);
-	}, [derived, exportBaseName, interactionTopo, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
 
 	const handleSaveView = useCallback(async () => {
 		if (pickViewKind === "raw") {
 			await saveBundle(
 				`${exportBaseName}.raw.spatial.json`,
-				{ raw: interactionTopo.toJSON() },
+				{ raw: liveTopology.toJSON() },
 				"Saved the raw view.",
 			);
 			return;
 		}
 		await saveBundle(
 			`${exportBaseName}.analytic.spatial.json`,
-			{ analytic: createAnalyticBundle(derived, interactionTopo) },
+			{ analytic: await createLiveAnalyticBundle() },
 			"Saved the analytic view.",
 		);
-	}, [derived, exportBaseName, interactionTopo, pickViewKind, saveBundle]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, pickViewKind, saveBundle]);
 
 	const handleSaveAll = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.spatial.json`,
-			{ raw: interactionTopo.toJSON(), analytic: createAnalyticBundle(derived, interactionTopo) },
+			{ raw: liveTopology.toJSON(), analytic: await createLiveAnalyticBundle() },
 			"Saved raw and analytic data.",
 		);
-	}, [derived, exportBaseName, interactionTopo, saveBundle]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, saveBundle]);
 
 	const handleLoadRawRequest = useCallback(() => {
 		loadInputRef.current?.click();

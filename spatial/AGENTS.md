@@ -1,8 +1,31 @@
-# Command
+# Action
 
-# Geometry
+A function to perform an action. Actions run headless.
 
-Topology: A Topology is an abstract superclass.
+## Interaction
+
+An interaction is a descriptive static state-machine for describing interactions with the renderer.
+A state can display information based on a set of predefined draw
+
+# Model
+
+A model contains geometry and topology.
+
+##
+
+## Geometry
+
+### Point
+
+### Curve
+
+### Surface
+
+### Solid
+
+## Topology
+
+A Topology is an abstract superclass.
 
 ## Raw (Editable)
 
@@ -30,10 +53,33 @@ Parts are just a different way of "splitting the closed shells semantically". Th
 Volumes are derived closed shells. They are the boolean union of all closed shells in a cell group.
 
 Run one boolean intersection on all cells at the same time. Return them as intersection parts. Run for every cell boolean difference where the cutters are all the other intersecting cells. Return them as difference parts.
-Explode all parts and check wheater they are internal (inside other parts) or external, and check wheather the vertices of the parts are mostly horizontal or vertical.
+Explode all parts and check wheater they are internal (inside other parts) or external, and check wheather the vertices of the parts are mostly horizontal or vertical. Before returning the surfaces, make sure all that all surfaces of the same stance and exposure are boolean unioned (internal⋂horizontal, internal⋂vertical, external⋂horizontal, external⋂vertical).
 
 All parts, surfaces and volumes are made out of vertices that already exist.
 
 ## Construct query
 
 Raw topology (`Vertex` … `Cluster`) is matched with `MATCH` only. Analytic views (`Surface`, `Part`, `Volume`) are never matched directly: compute them with `CALL view.surfaces({})` / `view.parts({})` / `view.volumes({})`, `YIELD data AS …`, then `UNWIND … AS …` to filter and return rows. All geometry actions use `CALL <actionId>({ … }) YIELD <key> [, <key> AS <alias> …]`. Selection commands use the same `CALL` surface: `CALL selection.selectAll({}) YIELD targets`, `CALL selection.apply({ operation: 'invert', seedTargets: [] }) YIELD targets`, or any built-in `selection.*` id; omit `seedTargets` to use `ConstructQueryContext.selectionTargets` from the host.
+
+```json
+{
+    "geometry": {
+        "points": [
+            {
+                "id":"p1",
+                "data": {
+                    "x": 1.2,
+                    …
+                }
+            }
+        ],
+        "curves"
+    },
+    "topology": {
+        "vertices": {
+            "id": "v1",
+            "points": ["p1", …]
+        }
+    }
+}
+```

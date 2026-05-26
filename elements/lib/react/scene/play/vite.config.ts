@@ -2,10 +2,9 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-const repoRoot = path.resolve(__dirname, "../../../../../..");
+const repoRoot = path.resolve(__dirname, "../../../../../");
 const meshRoot = path.resolve(repoRoot, "semio/assets/fixtures/metabolism/representations");
 const sharedPlaceholderMesh = path.resolve(repoRoot, "semio/assets/fixtures/placeholder.glb");
 
