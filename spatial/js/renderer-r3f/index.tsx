@@ -38,6 +38,8 @@ import {
 	isEmptyTopologyDiff,
 	isInteractionSessionActive,
 	listSelectionOperationInteractionDefs,
+	selectionOperationUsesDerived,
+	selectionSeedTargetsForOperation,
 	loadSpatialInteraction,
 	parseTopologyGraphJson,
 	listKeyedInteractionTransitions,
@@ -626,6 +628,71 @@ export function filterSpatialPickTargetsForVisibility(
 	filterKindToggles: SpatialPickKindToggles = {},
 ): SpatialPickTarget[] {
 	return targets.filter((target) => filterKindToggles[target.kind] !== false);
+}
+
+/** @emoji 👁️ Effective pick kinds must be both visible and enabled for selection/hover. */
+export function intersectSpatialPickKindToggles(
+	visibleKindToggles: SpatialPickKindToggles = {},
+	selectionKindToggles: SpatialPickKindToggles = {},
+): SpatialPickKindToggles {
+	const merged: SpatialPickKindToggles = {};
+	for (const kind of SPATIAL_PICK_TARGET_KINDS) {
+		if (visibleKindToggles[kind] === false || selectionKindToggles[kind] === false) merged[kind] = false;
+	}
+	return merged;
+}
+
+/** @emoji 🪞 Effective analytic pick filters require both visible and selection analytic toggles. */
+export function intersectSpatialAnalyticToggles(
+	visibleAnalyticToggles: SpatialAnalyticToggles = {},
+	selectionAnalyticToggles: SpatialAnalyticToggles = {},
+): SpatialAnalyticToggles {
+	const merged: SpatialAnalyticToggles = {};
+	for (const exposure of ["external", "internal"] as const) {
+		if (visibleAnalyticToggles.exposure?.[exposure] === false || selectionAnalyticToggles.exposure?.[exposure] === false) {
+			merged.exposure ??= {};
+			merged.exposure[exposure] = false;
+		}
+	}
+	for (const stance of ["horizontal", "vertical"] as const) {
+		if (visibleAnalyticToggles.stance?.[stance] === false || selectionAnalyticToggles.stance?.[stance] === false) {
+			merged.stance ??= {};
+			merged.stance[stance] = false;
+		}
+	}
+	for (const overlap of ["none", "difference", "intersection"] as const) {
+		if (visibleAnalyticToggles.overlap?.[overlap] === false || selectionAnalyticToggles.overlap?.[overlap] === false) {
+			merged.overlap ??= {};
+			merged.overlap[overlap] = false;
+		}
+	}
+	return merged;
+}
+
+/** @emoji 👁️ Resolves which scene layers stay visible for the active pick view and kind toggles. */
+export function resolveSpatialSceneVisibility(
+	viewKind: SpatialPickViewKind,
+	filterKindToggles: SpatialPickKindToggles = {},
+): {
+	readonly showFactoryWireframe: boolean;
+	readonly showCommittedFaces: boolean;
+	readonly showCommittedEdges: boolean;
+} {
+	const visible = (kind: SpatialPickTargetKind) => filterKindToggles[kind] !== false;
+	if (viewKind === "analytic") {
+		const showAnalytic = visible("surface") || visible("part");
+		return {
+			showFactoryWireframe: false,
+			showCommittedFaces: showAnalytic,
+			showCommittedEdges: false,
+		};
+	}
+	return {
+		showFactoryWireframe: visible("edge") || visible("wire"),
+		showCommittedFaces:
+			visible("face") || visible("shell") || visible("cell") || visible("cellComplex") || visible("cluster"),
+		showCommittedEdges: visible("edge") || visible("wire"),
+	};
 }
 
 /** @emoji 🪞 Default analytic visibility/selection filters (all on). */
@@ -2192,7 +2259,13 @@ function SpatialPickTargetNode({
 }
 
 /** @emoji 🧵 Draws all topology edges for imported factory geometry (one batched `lineSegments`). */
-function TopologyFactoryWireframeLayer({ geometry }: { readonly geometry?: SpatialPickGeometry | null }): ReactNode {
+function TopologyFactoryWireframeLayer({
+	geometry,
+	visible = true,
+}: {
+	readonly geometry?: SpatialPickGeometry | null;
+	readonly visible?: boolean;
+}): ReactNode {
 	const segments = useMemo(() => {
 		if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
 		return collectTopologyEdgeSegments(topologyGeometryBuckets(geometry));
@@ -2215,7 +2288,7 @@ function TopologyFactoryWireframeLayer({ geometry }: { readonly geometry?: Spati
 		return geo;
 	}, [segments]);
 	useEffect(() => () => edgeGeometry?.dispose(), [edgeGeometry]);
-	if (!edgeGeometry) return null;
+	if (!visible || !edgeGeometry) return null;
 	return (
 		<lineSegments geometry={edgeGeometry} raycast={raycastNone} renderOrder={0}>
 			<lineBasicMaterial color="#b8c8e8" transparent opacity={0.72} depthTest />
@@ -2307,13 +2380,14 @@ export function resolveFaceInfoFromTriangleIndex(
 }
 
 /** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
-function CommittedEdgeOverlay({ data }: { readonly data: MeshTransfer }): ReactNode {
+function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTransfer; readonly visible?: boolean }): ReactNode {
 	const geometry = useMemo(() => {
 		const geo = new THREE.BufferGeometry();
 		geo.setAttribute("position", new THREE.BufferAttribute(data.edges, 3));
 		return geo;
 	}, [data.edges]);
 	useEffect(() => () => geometry.dispose(), [geometry]);
+	if (!visible) return null;
 	return (
 		<lineSegments geometry={geometry} raycast={raycastNone}>
 			<lineBasicMaterial color="#000000" depthTest />
@@ -2324,6 +2398,8 @@ function CommittedEdgeOverlay({ data }: { readonly data: MeshTransfer }): ReactN
 export interface TessellatedCommitMeshProps {
 	readonly mesh: MeshTransfer;
 	readonly pickable?: boolean;
+	readonly showFaces?: boolean;
+	readonly showEdges?: boolean;
 	readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 	readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 }
@@ -2334,6 +2410,8 @@ export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 export function TessellatedCommitMesh({
 	mesh: data,
 	pickable = false,
+	showFaces = true,
+	showEdges = true,
 	onFacePointerMove,
 	onFacePointerDown,
 }: TessellatedCommitMeshProps): ReactNode {
@@ -2342,6 +2420,7 @@ export function TessellatedCommitMesh({
 		[data.position, data.normal, data.index, data.faceGroups],
 	);
 	useEffect(() => () => geometry.dispose(), [geometry]);
+	if (!showFaces && !showEdges) return null;
 	const faceInfoById = useMemo(() => {
 		const map = new Map<number, FaceInfo>();
 		for (const info of data.faceInfos) map.set(info.faceId, info);
@@ -2358,44 +2437,46 @@ export function TessellatedCommitMesh({
 	const meshRaycast = pickable ? undefined : raycastNone;
 	return (
 		<group>
-			<mesh
-				geometry={geometry}
-				raycast={meshRaycast}
-				onPointerMove={
-					pickable && onFacePointerMove
-						? (e) => {
-								const info = resolveFace(e);
-								if (info) onFacePointerMove(info, e);
-							}
-						: undefined
-				}
-				onPointerDown={
-					pickable && onFacePointerDown
-						? (e) => {
-								const info = resolveFace(e);
-								if (!info) return;
-								e.stopPropagation();
-								onFacePointerDown(info, e);
-							}
-						: undefined
-				}
-			>
-				<meshStandardMaterial
-					color={data.color ?? "#9ad1ff"}
-					metalness={0}
-					roughness={0.45}
-					emissive={data.color ?? "#9ad1ff"}
-					emissiveIntensity={0.08}
-					side={THREE.DoubleSide}
-					polygonOffset
-					polygonOffsetFactor={1}
-					polygonOffsetUnits={1}
-					transparent
-					opacity={COMMITTED_MESH_FACE_OPACITY}
-					depthWrite={false}
-				/>
-			</mesh>
-			{data.edges.length > 0 ? <CommittedEdgeOverlay data={data} /> : null}
+			{showFaces ? (
+				<mesh
+					geometry={geometry}
+					raycast={meshRaycast}
+					onPointerMove={
+						pickable && onFacePointerMove
+							? (e) => {
+									const info = resolveFace(e);
+									if (info) onFacePointerMove(info, e);
+							  }
+							: undefined
+					}
+					onPointerDown={
+						pickable && onFacePointerDown
+							? (e) => {
+									const info = resolveFace(e);
+									if (!info) return;
+									e.stopPropagation();
+									onFacePointerDown(info, e);
+							  }
+							: undefined
+					}
+				>
+					<meshStandardMaterial
+						color={data.color ?? "#9ad1ff"}
+						metalness={0}
+						roughness={0.45}
+						emissive={data.color ?? "#9ad1ff"}
+						emissiveIntensity={0.08}
+						side={THREE.DoubleSide}
+						polygonOffset
+						polygonOffsetFactor={1}
+						polygonOffsetUnits={1}
+						transparent
+						opacity={COMMITTED_MESH_FACE_OPACITY}
+						depthWrite={false}
+					/>
+				</mesh>
+			) : null}
+			{data.edges.length > 0 ? <CommittedEdgeOverlay data={data} visible={showEdges} /> : null}
 		</group>
 	);
 }
@@ -2404,15 +2485,19 @@ export function TessellatedCommitMesh({
 export function CommittedMeshLayer({
 	meshes,
 	pickable = false,
+	showFaces = true,
+	showEdges = true,
 	onFacePointerMove,
 	onFacePointerDown,
 }: {
 	readonly meshes: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
 	readonly pickable?: boolean;
+	readonly showFaces?: boolean;
+	readonly showEdges?: boolean;
 	readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 	readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
 }): ReactNode {
-	if (meshes.length === 0) return null;
+	if (meshes.length === 0 || (!showFaces && !showEdges)) return null;
 	return (
 		<group>
 			{meshes.map((row, i) => (
@@ -2420,6 +2505,8 @@ export function CommittedMeshLayer({
 					key={`${row.cell}:${meshTransferContentKey(row.mesh, i)}`}
 					mesh={row.mesh}
 					pickable={pickable}
+					showFaces={showFaces}
+					showEdges={showEdges}
 					onFacePointerMove={onFacePointerMove}
 					onFacePointerDown={onFacePointerDown}
 				/>
@@ -2877,6 +2964,10 @@ export function InteractionSpatialView({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
+	const sceneVisibility = useMemo(
+		() => resolveSpatialSceneVisibility(pickViewKind, filterKindToggles),
+		[pickViewKind, filterKindToggles],
+	);
 	return (
 		<>
 			{slots?.beforeScene}
@@ -2903,7 +2994,7 @@ export function InteractionSpatialView({
 				planeColor={resolvedTheme.groundPlaneColor}
 				planeOpacity={resolvedTheme.groundPlaneOpacity}
 			/>
-			<TopologyFactoryWireframeLayer geometry={geometry} />
+			<TopologyFactoryWireframeLayer geometry={geometry} visible={sceneVisibility.showFactoryWireframe} />
 			{showPickLayer ? (
 				<SpatialPickGeometryLayer
 					geometry={geometry}
@@ -2933,6 +3024,8 @@ export function InteractionSpatialView({
 			<CommittedMeshLayer
 				meshes={layerMeshes}
 				pickable={committedMeshPickable}
+				showFaces={sceneVisibility.showCommittedFaces}
+				showEdges={sceneVisibility.showCommittedEdges}
 				onFacePointerDown={onCommittedFacePointerDown}
 				onFacePointerMove={onCommittedFacePointerMove}
 			/>
@@ -3622,16 +3715,24 @@ export function InteractionRepl({
 		[filterKindToggles, pickViewKind],
 	);
 	const viewSelectionKindToggles = useMemo(
-		() => spatialPickKindTogglesForView(selectionKindToggles, pickViewKind),
-		[selectionKindToggles, pickViewKind],
+		() =>
+			intersectSpatialPickKindToggles(
+				viewFilterKindToggles,
+				spatialPickKindTogglesForView(selectionKindToggles, pickViewKind),
+			),
+		[selectionKindToggles, pickViewKind, viewFilterKindToggles],
 	);
 	const viewAnalyticFilterToggles = useMemo(
 		() => spatialAnalyticTogglesForView(analyticFilterToggles, pickViewKind),
 		[analyticFilterToggles, pickViewKind],
 	);
 	const viewAnalyticSelectionToggles = useMemo(
-		() => spatialAnalyticTogglesForView(analyticSelectionToggles, pickViewKind),
-		[analyticSelectionToggles, pickViewKind],
+		() =>
+			intersectSpatialAnalyticToggles(
+				viewAnalyticFilterToggles,
+				spatialAnalyticTogglesForView(analyticSelectionToggles, pickViewKind),
+			),
+		[analyticSelectionToggles, pickViewKind, viewAnalyticFilterToggles],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
@@ -5436,7 +5537,7 @@ if (import.meta.vitest) {
 			expect(resolveHostStateNext("a", (s) => `${s}b`)).toBe("ab");
 		});
 
-		it("filterKindToggles control visibility independently of selection toggles", () => {
+		it("effective pick toggles require both visibility and selection toggles", () => {
 			const targets: SpatialPickTarget[] = [
 				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
 				{ kind: "edge", id: "e0", point: [0.5, 0, 0] },
@@ -5448,6 +5549,47 @@ if (import.meta.vitest) {
 			expect(
 				filterSpatialPickTargets(targets, [], { vertex: false, edge: true, face: false }).map(spatialPickTargetKey),
 			).toEqual(["edge:e0"]);
+			expect(intersectSpatialPickKindToggles({ edge: false, face: true }, { edge: true, face: false })).toEqual({
+				edge: false,
+				face: false,
+			});
+			expect(
+				filterSpatialPickTargets(targets, [], intersectSpatialPickKindToggles({ edge: false, face: true }, { edge: true, face: true })).map(
+					spatialPickTargetKey,
+				),
+			).toEqual(["vertex:v0", "face:f0"]);
+		});
+
+		it("effective analytic pick toggles require both visibility and selection analytic filters", () => {
+			expect(
+				intersectSpatialAnalyticToggles(
+					{ exposure: { external: false, internal: true }, stance: { vertical: true, horizontal: true } },
+					{ exposure: { external: true, internal: true }, stance: { vertical: false, horizontal: true } },
+				),
+			).toEqual({ exposure: { external: false }, stance: { vertical: false } });
+		});
+
+		it("resolveSpatialSceneVisibility hides scene geometry when show kinds are unchecked", () => {
+			expect(resolveSpatialSceneVisibility("raw", { edge: false, wire: false, face: false, shell: false, cell: false, cellComplex: false, cluster: false })).toEqual({
+				showFactoryWireframe: false,
+				showCommittedFaces: false,
+				showCommittedEdges: false,
+			});
+			expect(resolveSpatialSceneVisibility("raw", { edge: true, wire: false, face: true })).toEqual({
+				showFactoryWireframe: true,
+				showCommittedFaces: true,
+				showCommittedEdges: true,
+			});
+			expect(resolveSpatialSceneVisibility("analytic", { surface: false, part: false })).toEqual({
+				showFactoryWireframe: false,
+				showCommittedFaces: false,
+				showCommittedEdges: false,
+			});
+			expect(resolveSpatialSceneVisibility("analytic", { surface: true, part: false })).toEqual({
+				showFactoryWireframe: false,
+				showCommittedFaces: true,
+				showCommittedEdges: false,
+			});
 		});
 
 		it("renders pinned selection-menu targets even when filter visibility hides them", () => {
@@ -5498,6 +5640,9 @@ if (import.meta.vitest) {
 			const picked = spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, rawSelectionToggles, {});
 			expect(picked[0]?.kind).toBe("face");
 			expect(pickHoverTargetFromRay(ray, rawViewTargets, rawSelectionToggles, {})?.kind).toBe("face");
+			const hiddenFaceToggles = intersectSpatialPickKindToggles(rawFilterToggles, rawSelectionToggles);
+			expect(spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, hiddenFaceToggles, {})).toEqual([]);
+			expect(pickHoverTargetFromRay(ray, rawViewTargets, hiddenFaceToggles, {})).toBeNull();
 			const analyticViewTargets = filterSpatialPickTargetsByView(targets, "analytic");
 			const onlySurfaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "surface"])) as Record<
 				SpatialPickTargetKind,
@@ -5527,6 +5672,14 @@ if (import.meta.vitest) {
 				spatialAnalyticTogglesForView(analyticFilter, "analytic"),
 			);
 			expect(analyticPick[0]?.kind).toBe("surface");
+			const hiddenAnalyticPick = spatialPickTargetsFromRay(
+				analyticRay,
+				analyticViewTargets,
+				["surface", "part"],
+				intersectSpatialPickKindToggles(spatialPickKindTogglesForView({ surface: false }, "analytic"), analyticSelectionToggles),
+				intersectSpatialAnalyticToggles(spatialAnalyticTogglesForView(analyticFilter, "analytic"), spatialAnalyticTogglesForView(analyticFilter, "analytic")),
+			);
+			expect(hiddenAnalyticPick).toEqual([]);
 		});
 
 		it("end-to-end raw and analytic pick view keeps cross-view selection through picks display and clear", async () => {
@@ -5795,18 +5948,6 @@ if (import.meta.vitest) {
 		});
 
 		describe("selection commands end-to-end", () => {
-			const selectionDerivedKinds = new Set<TopologyEntityKind>(["surface", "part", "volume"]);
-
-			const selectionUsesDerived = (defn: { kinds?: readonly TopologyEntityKind[] }) =>
-				defn.kinds?.some((k) => selectionDerivedKinds.has(k)) ?? false;
-
-			const startTargetsForSelectionCommand = (
-				operation: string,
-			): readonly SelectionTarget[] =>
-				operation === "invert" || operation === "deselectAll"
-					? [{ kind: "cell", id: "e2e-box", editable: true }]
-					: [];
-
 			it.each(listSelectionOperationInteractionDefs())(
 				"$id runs start→commit and replFinalizeSelection updates renderer selection",
 				async (defn) => {
@@ -5816,11 +5957,11 @@ if (import.meta.vitest) {
 						M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
 					);
 					const kernel = new BrepjsKernel();
-					const derived = selectionUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
+					const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
 					if (derived) await derived.refresh(topo);
 					const spec = loadSpatialInteraction(defn.id);
 					expect(spec).not.toBeNull();
-					const seed = startTargetsForSelectionCommand(defn.operation);
+					const seed = selectionSeedTargetsForOperation(defn.operation);
 					const rt = createInteractionRuntime(spec!, {
 						kernel,
 						document: { topology: topo, nodes: [] },

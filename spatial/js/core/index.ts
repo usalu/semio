@@ -1456,7 +1456,7 @@ export class ActionRegistry {
 	static withBuiltins(): ActionRegistry {
 		const r = new ActionRegistry();
 		for (const d of builtinActionDefs()) r.register(d);
-		for (const defn of listSelectionOperationInteractionDefs()) {
+		for (const defn of SELECTION_OPERATION_INTERACTION_DEFS) {
 			r.register(selectionCommandActionForDef(defn));
 		}
 		return r;
@@ -2650,7 +2650,7 @@ function builtinActionDefs(): ActionDef[] {
 		commandConstrainMoveCursor,
 		commandUndoPick,
 		commandAddSelection,
-		selectionApply,
+		selectionApplyActionDef(),
 		commandFinish,
 		featureTransformMove,
 		featureTransformRotate,
@@ -3939,8 +3939,17 @@ export function selectionApplyParamsForInteraction(
 
 const SELECTION_DERIVED_KINDS = new Set<TopologyEntityKind>(["surface", "part", "volume"]);
 
-function selectionOperationUsesDerived(defn: SelectionOperationInteractionDef): boolean {
+/** @emoji 🪪 True when a selection command needs `DerivedViewService` (surface/part/volume). */
+export function selectionOperationUsesDerived(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
 	return defn.kinds?.some((kind) => SELECTION_DERIVED_KINDS.has(kind)) ?? false;
+}
+
+/** @emoji 🪪 Default seed targets for invert/deselectAll (otherwise empty). */
+export function selectionSeedTargetsForOperation(
+	operation: SelectionApplyOperation,
+	seedCell: SelectionTarget = { kind: "cell", id: "e2e-box", editable: true },
+): readonly SelectionTarget[] {
+	return operation === "invert" || operation === "deselectAll" ? [seedCell] : [];
 }
 
 const builtinInteractionJsons = [
@@ -5014,26 +5023,26 @@ if (import.meta.vitest) {
 				{ operation: "selectAll", seedTargets: [], __context: {} },
 				{ kernel: M, preview: M, topology: topo },
 			);
-			const allTargets = (all.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			const allTargets = selectionTargetsFromActionResult(all);
 			expect(allTargets.length).toBeGreaterThan(8);
 			expect(allTargets.every((t) => t.kind !== "surface")).toBe(true);
 			const cleared = await def.run(
 				{ operation: "deselectAll", seedTargets: allTargets, __context: {} },
 				{ kernel: M, preview: M, topology: topo },
 			);
-			expect((cleared.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([]);
+			expect(selectionTargetsFromActionResult(cleared)).toEqual([]);
 			const verts = await def.run(
 				{ operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} },
 				{ kernel: M, preview: M, topology: topo },
 			);
-			const vertTargets = (verts.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			const vertTargets = selectionTargetsFromActionResult(verts);
 			expect(vertTargets.length).toBe(8);
 			expect(vertTargets.every((t) => t.kind === "vertex")).toBe(true);
 			const inverted = await def.run(
 				{ operation: "invert", seedTargets: vertTargets.slice(0, 1), __context: {} },
 				{ kernel: M, preview: M, topology: topo },
 			);
-			const invertedTargets = (inverted.patch?.set as { targets?: readonly SelectionTarget[] }).targets ?? [];
+			const invertedTargets = selectionTargetsFromActionResult(inverted);
 			expect(invertedTargets.some((t) => t.kind === "vertex")).toBe(true);
 			expect(invertedTargets.some((t) => t.kind === "face")).toBe(true);
 			expect(invertedTargets.find((t) => t.id === vertTargets[0]!.id)).toBeUndefined();
@@ -5048,7 +5057,7 @@ if (import.meta.vitest) {
 			expect(snap.state).toBe("committed");
 			expect(snap.lastResponse?.ok).toBe(true);
 			expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
-			const archived = (snap.lastResponse?.archiveContext?.targets ?? []) as SelectionTarget[];
+			const archived = selectionTargetsFromContext(snap.lastResponse?.archiveContext ?? {});
 			expect(archived.length).toBeGreaterThan(8);
 			expect(archived.some((t) => t.kind === "cell")).toBe(true);
 		});
@@ -5083,7 +5092,7 @@ if (import.meta.vitest) {
 			expect(spec.machine.initial).toBe("committed");
 			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
-			const archived = (rt.getSnapshot().lastResponse?.archiveContext?.targets ?? []) as SelectionTarget[];
+			const archived = selectionTargetsFromContext(rt.getSnapshot().lastResponse?.archiveContext ?? {});
 			expect(archived.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
 			expect(archived.length).toBeGreaterThan(0);
 		});
@@ -5121,10 +5130,7 @@ if (import.meta.vitest) {
 				const topo = new TopologyGraph();
 				applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
 				const kernel = new BrepjsKernel();
-				const seed =
-					defn.operation === "invert" || defn.operation === "deselectAll"
-						? ([{ kind: "cell", id: "e2e-box", editable: true }] as const)
-						: [];
+				const seed = selectionSeedTargetsForOperation(defn.operation);
 				const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
 				if (derived) await derived.refresh(topo);
 				const params = selectionApplyParamsForInteraction(defn, seed);
@@ -5751,15 +5757,8 @@ if (import.meta.vitest) {
 
 		const BOX_FACE_TOP = "box-e2e-box-face-top";
 
-		const SELECTION_DERIVED_KINDS = new Set<TopologyEntityKind>(["surface", "part", "volume"]);
-
-		const selectionCommandUsesDerived = (defn: SelectionOperationInteractionDef): boolean =>
-			defn.kinds?.some((k) => SELECTION_DERIVED_KINDS.has(k)) ?? false;
-
-		const archivedSelectionTargets = (snap: InteractionSnapshot): SelectionTarget[] => {
-			const raw = snap.lastResponse?.archiveContext?.targets;
-			return Array.isArray(raw) ? (raw as SelectionTarget[]) : [];
-		};
+		const archivedSelectionTargets = (snap: InteractionSnapshot): readonly SelectionTarget[] =>
+			selectionTargetsFromContext(snap.lastResponse?.archiveContext ?? {});
 
 		const assertSelectionCommandArchive = (
 			defn: SelectionOperationInteractionDef,
@@ -6193,11 +6192,8 @@ if (import.meta.vitest) {
 				id: defn.id,
 				fixture: "empty" as const,
 				seedBox: true,
-				derived: selectionCommandUsesDerived(defn),
-				steps:
-					defn.operation === "invert" || defn.operation === "deselectAll"
-						? ([{ kind: "start", targets: [sel("cell", "e2e-box")], modifiers: MOD }] as const)
-						: ([{ kind: "start", targets: [], modifiers: MOD }] as const),
+				derived: selectionOperationUsesDerived(defn),
+				steps: [{ kind: "start", targets: selectionSeedTargetsForOperation(defn.operation), modifiers: MOD }] as const,
 				assert: ({ snap, topo, derived }) => {
 					expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
 					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), topo, derived);
