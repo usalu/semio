@@ -4,21 +4,17 @@
   "version": "1.0.0",
   "label": "Opening",
   "description": "Marks a surface opening kind used by downstream view derivations.",
+  "field": "opening",
   "targets": [
     "surface"
   ],
-  "examples": [
-    {
-      "opening": "window"
-    },
-    {
-      "opening": "door"
-    },
-    {
-      "opening": "passage"
-    },
-    {
-      "opening": "view"
-    }
-  ]
+  "value": {
+    "kind": "string",
+    "options": [
+      "window",
+      "door",
+      "passage",
+      "view"
+    ]
+  }
 }

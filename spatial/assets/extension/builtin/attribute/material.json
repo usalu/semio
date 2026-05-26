@@ -4,19 +4,27 @@
 	"version": "1.0.0",
 	"label": "Material",
 	"description": "Authored material metadata attachable to curve, surface, or solid topology.",
+	"field": "material",
 	"targets": [
 		"curve",
 		"surface",
 		"solid"
 	],
-	"examples": [
-		{
-			"material": "concrete"
-		},
-		{
-			"material": {
-				"concrete": "C30/37"
+	"value": {
+		"kind": "oneOf",
+		"variants": [
+			{
+				"kind": "string"
+			},
+			{
+				"kind": "record",
+				"keys": {
+					"kind": "string"
+				},
+				"values": {
+					"kind": "string"
+				}
 			}
-		}
-	]
+		]
+	}
 }

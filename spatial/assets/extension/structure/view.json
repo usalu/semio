@@ -23,37 +23,52 @@
     },
     {
       "id": "lineelement",
-      "label": "Line Element"
+      "label": "Line Element",
+      "description": "Derived structural element represented with line topology."
     },
     {
       "id": "surfaceelement",
-      "label": "Surface Element"
+      "label": "Surface Element",
+      "description": "Derived structural element represented with surface topology."
     },
     {
       "id": "solidelement",
-      "label": "Solid Element"
+      "label": "Solid Element",
+      "description": "Derived structural element represented with solid topology."
     }
   ],
-  "variants": [
+  "views": [
     {
       "id": "linefem",
       "label": "Classic Structural",
+      "description": "A view used for Finite-Element-Analysis with line elements.",
       "allows": [
         "lines"
+      ],
+      "derivedObjects": [
+        "lineelement"
       ]
     },
     {
       "id": "surfacefem",
       "label": "Classic Structural",
+      "description": "A view used for Finite-Element-Analysis with surface elements.",
       "allows": [
         "surfaces"
+      ],
+      "derivedObjects": [
+        "surfaceelement"
       ]
     },
     {
       "id": "solidfem",
       "label": "Classic Structural",
+      "description": "A view used for Finite-Element-Analysis with solid elements.",
       "allows": [
         "solids"
+      ],
+      "derivedObjects": [
+        "solidelement"
       ]
     }
   ]

@@ -4,15 +4,15 @@
   "version": "1.0.0",
   "label": "Exposure",
   "description": "Marks whether a surface is internal or external.",
+  "field": "exposure",
   "targets": [
     "surface"
   ],
-  "examples": [
-    {
-      "exposure": "internal"
-    },
-    {
-      "exposure": "external"
-    }
-  ]
+  "value": {
+    "kind": "string",
+    "options": [
+      "internal",
+      "external"
+    ]
+  }
 }

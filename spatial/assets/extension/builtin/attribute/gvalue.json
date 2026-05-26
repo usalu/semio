@@ -4,12 +4,11 @@
   "version": "1.0.0",
   "label": "G-Value",
   "description": "Authored solar energy transmittance for window surfaces.",
+  "field": "gValue",
   "targets": [
     "surface"
   ],
-  "examples": [
-    {
-      "gValue": "0.6"
-    }
-  ]
+  "value": {
+    "kind": "string"
+  }
 }

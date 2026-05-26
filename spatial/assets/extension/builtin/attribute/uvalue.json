@@ -4,12 +4,11 @@
   "version": "1.0.0",
   "label": "U-Value",
   "description": "Authored thermal transmittance for surfaces.",
+  "field": "uValue",
   "targets": [
     "surface"
   ],
-  "examples": [
-    {
-      "uValue": "0.158"
-    }
-  ]
+  "value": {
+    "kind": "string"
+  }
 }
