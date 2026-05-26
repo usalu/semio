@@ -4643,13 +4643,11 @@ if (import.meta.vitest) {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const faceId = Object.keys(topo.faces)[0]!;
-			const vIds = collectTargetVertices(topo, [{ kind: "face", id: faceId }]);
+			const vIds = collectTargetVertices(topo, [{ kind: "face", id: faceId, editable: true }]);
 			expect(vIds.size).toBe(4);
 		});
 		it("uses initial selection to skip selection-first command states", async () => {
 			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-selection";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4664,7 +4662,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new CommandKernel() as unknown as SpatialKernel,
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
 			await rt.send({
 				kind: "start",
 				targets: [{ kind: "cell", id: "c0", editable: true }],
@@ -4676,8 +4677,6 @@ if (import.meta.vitest) {
 		});
 		it("keeps transform.move in object selection until confirm", async () => {
 			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-selection-confirm";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4692,7 +4691,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new CommandKernel() as unknown as SpatialKernel,
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
 			await rt.send({
 				kind: "selection.changed",
 				targets: [{ kind: "cell", id: "c0", editable: true }],
@@ -4705,8 +4707,6 @@ if (import.meta.vitest) {
 		it("auto-commits curve.arc as one arc edge between start and end", async () => {
 			const topo = new TopologyGraph();
 			class ArcKernel extends BrepjsKernel {
-				readonly id = "arc-command";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4718,9 +4718,9 @@ if (import.meta.vitest) {
 				}
 				async executeCommandDiff(commandId: string, ctx: Record<string, unknown>) {
 					if (commandId !== "curve.arc") return { diff: EMPTY_TOPOLOGY_DIFF };
-					const center = (Array.isArray(ctx.center) ? ctx.center : [0, 0, 0]) as Vec3;
-					const start = (Array.isArray(ctx.start) ? ctx.start : [1, 0, 0]) as Vec3;
-					const end = M.arcEndOnCircle(center, start, (Array.isArray(ctx.end) ? ctx.end : start) as Vec3);
+					const center = (Array.isArray(ctx.center) ? ctx.center : [0, 0, 0]) as unknown as Vec3;
+					const start = (Array.isArray(ctx.start) ? ctx.start : [1, 0, 0]) as unknown as Vec3;
+					const end = M.arcEndOnCircle(center, start, (Array.isArray(ctx.end) ? ctx.end : start) as unknown as Vec3);
 					const v0 = "v0" as VertexRef;
 					const v1 = "v1" as VertexRef;
 					const e = "e0" as EdgeRef;
@@ -4735,7 +4735,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("curve.arc")!;
-			const rt = createInteractionRuntime(spec, { kernel: new ArcKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new ArcKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [0, 2, 0] as Vec3, modifiers: {} });
@@ -4757,8 +4760,6 @@ if (import.meta.vitest) {
 			const v0 = Object.keys(topo.vertices)[0]!;
 			const p0 = topo.vertices[v0]!.position;
 			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-move-vertical";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4773,7 +4774,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new CommandKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
 			await rt.send({ kind: "mode.vertical", modifiers: {} });
@@ -4786,8 +4790,6 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 0, 0], height: 0 }, cellRef("box")));
 			const verts = Object.values(topo.vertices);
 			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-move-center";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4802,7 +4804,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new CommandKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({
 				kind: "start",
 				targets: verts.map((v) => ({ kind: "vertex" as const, id: v.id, editable: true })),
@@ -4820,8 +4825,6 @@ if (import.meta.vitest) {
 			const v0 = Object.keys(topo.vertices)[0]!;
 			const p0 = topo.vertices[v0]!.position;
 			class CommandKernel extends BrepjsKernel {
-				readonly id = "command-move";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -4836,7 +4839,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = loadSpatialInteraction("transform.move")!;
-			const rt = createInteractionRuntime(spec, { kernel: new CommandKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new CommandKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "start", targets: [{ kind: "vertex", id: v0, editable: true }], modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: p0, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [p0[0] + 2, p0[1] + 1, p0[2]], modifiers: {} });
@@ -4861,7 +4867,7 @@ if (import.meta.vitest) {
 						to: [5, 4, 2],
 						moveMode: "vertical",
 					},
-					{ topology: topo, kernel: new BrepjsKernel(), preview: M },
+					{ topology: topo, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M },
 				),
 			);
 			const added = r.diff?.vertices?.added ?? [];
@@ -4892,7 +4898,10 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
 			const before = Object.keys(topo.vertices).length;
 			const spec = loadSpatialInteraction("transform.copy")!;
-			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new BrepjsKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			const from = topo.vertices[Object.keys(topo.vertices)[0]!]!.position;
 			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
 			await rt.send({ kind: "confirm", modifiers: {} });
@@ -4910,7 +4919,10 @@ if (import.meta.vitest) {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")));
 			const spec = loadSpatialInteraction("transform.copy")!;
-			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new BrepjsKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
 			await rt.send({ kind: "confirm", modifiers: {} });
 			await rt.send({ kind: "confirm", modifiers: {} });
@@ -4957,8 +4969,6 @@ if (import.meta.vitest) {
 		});
 		it("createBoxFrom3Points forwards triplet footprint to createBoxFromCorners", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-3pt";
-				readonly operations = [] as const;
 				lastInput: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
 				async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
 					this.lastInput = input;
@@ -4980,7 +4990,10 @@ if (import.meta.vitest) {
 			const p0: Vec3 = [0, 0, 0];
 			const p1: Vec3 = [2, 3, 0];
 			const p2: Vec3 = [1, 1, 0];
-			await def.run({ p0, p1, p2, __context: {}, __event: { kind: "x" } }, { kernel: k, preview: M, topology: topo });
+			await def.run(
+				{ p0, p1, p2, __context: {}, __event: { kind: "x" } },
+				{ kernel: k as unknown as SpatialKernel, preview: M, topology: topo },
+			);
 			expect(k.lastInput).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 3 });
 		});
 		it("command.addSelection applies selection modifiers", async () => {
@@ -4989,7 +5002,7 @@ if (import.meta.vitest) {
 			const next = [{ kind: "wire", id: "w1", editable: true }] as const;
 			const additive = await def.run(
 				{ targets: next, __context: { targets: base }, __event: { kind: "selection.changed", modifiers: { shift: true } } },
-				{ kernel: M, preview: M, topology: new TopologyGraph() },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: new TopologyGraph() },
 			);
 			expect((additive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([...base, ...next]);
 			const subtractive = await def.run(
@@ -4998,7 +5011,7 @@ if (import.meta.vitest) {
 					__context: { targets: [...base, ...next] },
 					__event: { kind: "selection.changed", modifiers: { ctrl: true } },
 				},
-				{ kernel: M, preview: M, topology: new TopologyGraph() },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: new TopologyGraph() },
 			);
 			expect((subtractive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual(base);
 			const invertive = await def.run(
@@ -5007,7 +5020,7 @@ if (import.meta.vitest) {
 					__context: { targets: [...base, ...next] },
 					__event: { kind: "selection.changed", modifiers: { shift: true, ctrl: true } },
 				},
-				{ kernel: M, preview: M, topology: new TopologyGraph() },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: new TopologyGraph() },
 			);
 			expect((invertive.patch?.set as { targets?: readonly SelectionTarget[] }).targets).toEqual([
 				{ kind: "wire", id: "w1", editable: true },
@@ -5021,26 +5034,26 @@ if (import.meta.vitest) {
 			const seed = [{ kind: "vertex", id: Object.keys(topo.vertices)[0]!, editable: true }] as const;
 			const all = await def.run(
 				{ operation: "selectAll", seedTargets: [], __context: {} },
-				{ kernel: M, preview: M, topology: topo },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: topo },
 			);
 			const allTargets = selectionTargetsFromActionResult(all);
 			expect(allTargets.length).toBeGreaterThan(8);
 			expect(allTargets.every((t) => t.kind !== "surface")).toBe(true);
 			const cleared = await def.run(
 				{ operation: "deselectAll", seedTargets: allTargets, __context: {} },
-				{ kernel: M, preview: M, topology: topo },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: topo },
 			);
 			expect(selectionTargetsFromActionResult(cleared)).toEqual([]);
 			const verts = await def.run(
 				{ operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} },
-				{ kernel: M, preview: M, topology: topo },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: topo },
 			);
 			const vertTargets = selectionTargetsFromActionResult(verts);
 			expect(vertTargets.length).toBe(8);
 			expect(vertTargets.every((t) => t.kind === "vertex")).toBe(true);
 			const inverted = await def.run(
 				{ operation: "invert", seedTargets: vertTargets.slice(0, 1), __context: {} },
-				{ kernel: M, preview: M, topology: topo },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: topo },
 			);
 			const invertedTargets = selectionTargetsFromActionResult(inverted);
 			expect(invertedTargets.some((t) => t.kind === "vertex")).toBe(true);
@@ -5051,7 +5064,10 @@ if (import.meta.vitest) {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const spec = loadSpatialInteraction("selection.selectAll")!;
-			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new BrepjsKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "start", targets: [], modifiers: {} });
 			const snap = rt.getSnapshot();
 			expect(snap.state).toBe("committed");
@@ -5072,7 +5088,7 @@ if (import.meta.vitest) {
 			const hist = new DocumentHistory();
 			const spec = loadSpatialInteraction("selection.selectAll")!;
 			const rt = createInteractionRuntime(spec, {
-				kernel: new BrepjsKernel(),
+				kernel: new BrepjsKernel() as unknown as SpatialKernel,
 				document: { topology: topo, nodes: [] },
 				history: hist,
 			});
@@ -5090,7 +5106,10 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
 			const spec = loadSpatialInteraction("selection.invert")!;
 			expect(spec.machine.initial).toBe("committed");
-			const rt = createInteractionRuntime(spec, { kernel: new BrepjsKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new BrepjsKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "start", targets: [{ kind: "cell", id: "e2e-box", editable: true }], modifiers: {} });
 			const archived = selectionTargetsFromContext(rt.getSnapshot().lastResponse?.archiveContext ?? {});
 			expect(archived.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
@@ -5109,7 +5128,7 @@ if (import.meta.vitest) {
 					__context: {},
 					__event: { kind: "commit" },
 				},
-				{ kernel: M, preview: M, topology: topo },
+				{ kernel: M as unknown as SpatialKernel, preview: M, topology: topo },
 			);
 			const targets = selectionTargetsFromActionResult(result);
 			expect(targets.length).toBe(6);
@@ -5118,7 +5137,7 @@ if (import.meta.vitest) {
 		it("runSelectionApply matches executeSelectionApply", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
-			const ctx = { kernel: new BrepjsKernel(), preview: M, topology: topo };
+			const ctx = { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, topology: topo };
 			const params = { operation: "selectAll" as const, seedTargets: [] };
 			const direct = executeSelectionApply(params, { topology: topo });
 			const headless = await runSelectionApply(params, ctx);
@@ -5129,7 +5148,7 @@ if (import.meta.vitest) {
 			async (defn) => {
 				const topo = new TopologyGraph();
 				applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
-				const kernel = new BrepjsKernel();
+				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 				const seed = selectionSeedTargetsForOperation(defn.operation);
 				const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
 				if (derived) await derived.refresh(topo);
@@ -5147,7 +5166,7 @@ if (import.meta.vitest) {
 		it("selection commands chain selectAll → deselectAll → selectVertices → invert", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
-			const kernel = new BrepjsKernel();
+			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 			const run = async (id: string, targets: readonly SelectionTarget[]) => {
 				const spec = loadSpatialInteraction(id)!;
 				const rt = createInteractionRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
@@ -5219,8 +5238,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core interaction box", () => {
 		it("tracks first-corner cursor on the grid after start", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("stub");
 				}
@@ -5233,7 +5250,7 @@ if (import.meta.vitest) {
 			}
 			const spec = buildBoxInteractionSpec();
 			const rt = createInteractionRuntime(spec, {
-				kernel: new StubKernel(),
+				kernel: new StubKernel() as unknown as SpatialKernel,
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			let snap = rt.getSnapshot();
@@ -5252,8 +5269,6 @@ if (import.meta.vitest) {
 
 		it("pushes interaction-local undo snapshot on each non-transient transition", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-undo";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("stub");
 				}
@@ -5266,7 +5281,7 @@ if (import.meta.vitest) {
 			}
 			const spec = buildBoxInteractionSpec();
 			const rt = createInteractionRuntime(spec, {
-				kernel: new StubKernel(),
+				kernel: new StubKernel() as unknown as SpatialKernel,
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			expect(rt.getSnapshot().capabilities.canUndo).toBe(false);
@@ -5288,7 +5303,7 @@ if (import.meta.vitest) {
 				faceInfos: [],
 				edgeInfos: [],
 			};
-			class RecordingStubKernel implements SpatialKernel {
+			class RecordingStubKernel {
 				readonly id = "recording-stub";
 				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
@@ -5326,7 +5341,7 @@ if (import.meta.vitest) {
 			const spec = buildBoxInteractionSpec();
 			const topo = new TopologyGraph();
 			const kernel = new RecordingStubKernel();
-			const rt = createInteractionRuntime(spec, { kernel, document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, { kernel: kernel as unknown as SpatialKernel, document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "pointer.down", point: [2, 3, 0] as Vec3, modifiers: {} });
 			await rt.send({ kind: "set.height", value: 4, modifiers: {} });
@@ -5356,8 +5371,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core stateEngine option", () => {
 		it("explicit pure-ts provider matches default interaction snapshots", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-opt";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5369,9 +5382,12 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = buildBoxInteractionSpec();
-			const rt0 = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt0 = createInteractionRuntime(spec, {
+				kernel: new StubKernel() as unknown as SpatialKernel,
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
 			const rt1 = createInteractionRuntime(spec, {
-				kernel: new StubKernel(),
+				kernel: new StubKernel() as unknown as SpatialKernel,
 				document: { topology: new TopologyGraph(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
@@ -5387,7 +5403,9 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("m-area")));
 			const fid = Object.keys(topo.faces)[0]! as FaceRef;
 			const def = ActionRegistry.withBuiltins().get("measure.faceArea")!;
-			const r = await Promise.resolve(def.run({ faceId: fid }, { topology: topo, kernel: new BrepjsKernel(), preview: M }));
+			const r = await Promise.resolve(
+				def.run({ faceId: fid }, { topology: topo, kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M }),
+			);
 			expect(r.data).toBeGreaterThan(0);
 			expect(r.diff?.anchors?.added?.length).toBe(1);
 			expect(r.diff!.anchors!.added![0]!.attachment.kind).toBe("face");
@@ -5395,8 +5413,6 @@ if (import.meta.vitest) {
 
 		it("commit returns vertex distance in data", async () => {
 			class MeasKernel extends BrepjsKernel {
-				readonly id = "meas";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5423,7 +5439,10 @@ if (import.meta.vitest) {
 			topo.vertices[va] = { id: va, position: [0, 0, 0] };
 			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
 			const spec = buildDistanceInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new MeasKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
 			const res = rt.getSnapshot().lastResponse!;
@@ -5438,8 +5457,6 @@ if (import.meta.vitest) {
 
 		it("auto-commits when confirm reaches the final state", async () => {
 			class MeasKernel extends BrepjsKernel {
-				readonly id = "meas-auto";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5461,7 +5478,10 @@ if (import.meta.vitest) {
 			const vb = "v1" as VertexRef;
 			topo.vertices[va] = { id: va, position: [0, 0, 0] };
 			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
-			const rt = createInteractionRuntime(buildDistanceInteractionSpec(), { kernel: new MeasKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(buildDistanceInteractionSpec(), {
+				kernel: new MeasKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
 			const snap = rt.getSnapshot();
@@ -5478,7 +5498,7 @@ if (import.meta.vitest) {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("area-box")));
 			const fid = Object.keys(topo.faces)[0]! as FaceRef;
-			const kernel = new BrepjsKernel();
+			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 			const rt = createInteractionRuntime(buildAreaInteractionSpec(), { kernel, document: { topology: topo, nodes: [] } });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
 			expect(rt.getSnapshot().context.resolvedFaceIds).toEqual([fid]);
@@ -5496,8 +5516,6 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("area-box")));
 			const fid = Object.keys(topo.faces)[0]! as FaceRef;
 			class AreaKernel extends BrepjsKernel {
-				readonly id = "area";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5519,7 +5537,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = buildAreaInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new AreaKernel(), document: { topology: topo, nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new AreaKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+			});
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "face", id: fid, editable: true }] });
 			const res = rt.getSnapshot().lastResponse!;
 			expect(res.ok).toBe(true);
@@ -5577,8 +5598,6 @@ if (import.meta.vitest) {
 
 		it("does not push readonly measure commits onto document history", async () => {
 			class MeasKernel extends BrepjsKernel {
-				readonly id = "meas-h";
-				readonly operations = [] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5606,7 +5625,11 @@ if (import.meta.vitest) {
 			topo.vertices[va] = { id: va, position: [0, 0, 0] };
 			topo.vertices[vb] = { id: vb, position: [3, 4, 0] };
 			const spec = buildDistanceInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new MeasKernel(), document: { topology: topo, nodes: [] }, history: hist });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new MeasKernel() as unknown as SpatialKernel,
+				document: { topology: topo, nodes: [] },
+				history: hist,
+			});
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: va, editable: true }] });
 			await rt.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: vb, editable: true }] });
 			expect(hist.peekUndo()).toBe(null);
@@ -5616,8 +5639,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core interaction session undo redo", () => {
 		it("supports redo after undo during an active interaction and clears redo on new branch", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-s";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5629,7 +5650,10 @@ if (import.meta.vitest) {
 				}
 			}
 			const spec = buildBoxInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: new TopologyGraph(), nodes: [] } });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new StubKernel() as unknown as SpatialKernel,
+				document: { topology: new TopologyGraph(), nodes: [] },
+			});
 			expect(rt.getSnapshot().state).toBe("first_corner");
 			expect(rt.getSnapshot().capabilities.canRedo).toBe(false);
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
@@ -5644,8 +5668,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-core undo routing", () => {
 		it("uses snapshot undo while active and document history when idle", async () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-r";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -5679,7 +5701,11 @@ if (import.meta.vitest) {
 			});
 			expect(Object.keys(g.faces).length).toBe(1);
 			const spec = buildBoxInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
+			const rt = createInteractionRuntime(spec, {
+				kernel: new StubKernel() as unknown as SpatialKernel,
+				document: { topology: g, nodes: [] },
+				history: hist,
+			});
 			await rt.send({ kind: "pointer.down", point: [0, 0, 0] as Vec3, modifiers: {} });
 			rt.undo();
 			expect(rt.getSnapshot().state).toBe("first_corner");
@@ -6192,9 +6218,9 @@ if (import.meta.vitest) {
 				id: defn.id,
 				fixture: "empty" as const,
 				seedBox: true,
-				derived: selectionOperationUsesDerived(defn),
+				derived: selectionOperationUsesDerived(defn as SelectionOperationInteractionDef),
 				steps: [{ kind: "start", targets: selectionSeedTargetsForOperation(defn.operation), modifiers: MOD }] as const,
-				assert: ({ snap, topo, derived }) => {
+				assert: ({ snap, topo, derived }: { snap: InteractionSnapshot; topo: TopologyGraph; derived?: DerivedViewService }) => {
 					expect(isEmptyTopologyDiff(snap.lastResponse?.diff ?? EMPTY_TOPOLOGY_DIFF)).toBe(true);
 					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), topo, derived);
 				},
@@ -6211,7 +6237,7 @@ if (import.meta.vitest) {
 			expect(spec).not.toBeNull();
 			const topo = topoFromFixture(row.fixture);
 			if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(topo);
-			const kernel = new BrepjsKernel();
+			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 			const derived = row.derived ? new DerivedViewService(kernel) : undefined;
 			if (derived) await derived.refresh(topo);
 			const before = entityCounts(topo);

@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+/// <reference types="vitest/importMeta" />
 // #region 🧲Header
 /** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interaction/primitive/box.json`. */
 // #endregion 🧲Header
@@ -31,7 +33,6 @@ import {
 	emptyMeshTransfer,
 	DerivedViewService,
 	DocumentHistory,
-	getActiveSelectionSpec,
 	EMPTY_TOPOLOGY_DIFF,
 	interactionCanConfirmSelection,
 	InteractionRegistry,
@@ -91,25 +92,20 @@ import {
 // #region ⚡R3FPreviewKernel
 /** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
 export class R3FPreviewKernel extends PreciseSpatialKernelMath {
-	override arcSamplePoints(center: Vec3, start: Vec3, end: Vec3, segments = 12): readonly Vec3[] {
-		return super.arcSamplePoints(center, start, end, segments);
-	}
+	override arcSamplePoints = (center: Vec3, start: Vec3, end: Vec3, segments = 12): readonly Vec3[] =>
+		preciseSpatialKernelMath.arcSamplePoints(center, start, end, segments);
 
-	override edgeSamplePoints(
+	override edgeSamplePoints = (
 		vertices: Readonly<Record<string, VertexRecord>>,
 		edge: EdgeRecord,
 		segments = 12,
-	): readonly Vec3[] {
-		return super.edgeSamplePoints(vertices, edge, segments);
-	}
+	): readonly Vec3[] => preciseSpatialKernelMath.edgeSamplePoints(vertices, edge, segments);
 
-	override circleSamplePoints(center: Vec3, normal: Vec3, radius: number, segments = 24): readonly Vec3[] {
-		return super.circleSamplePoints(center, normal, radius, segments);
-	}
+	override circleSamplePoints = (center: Vec3, normal: Vec3, radius: number, segments = 24): readonly Vec3[] =>
+		preciseSpatialKernelMath.circleSamplePoints(center, normal, radius, segments);
 
-	override nurbsDisplaySamplePoints(poles: readonly Vec3[], segmentsPerSpan = 6): readonly Vec3[] {
-		return super.nurbsDisplaySamplePoints(poles, segmentsPerSpan);
-	}
+	override nurbsDisplaySamplePoints = (poles: readonly Vec3[], segmentsPerSpan = 6): readonly Vec3[] =>
+		preciseSpatialKernelMath.nurbsDisplaySamplePoints(poles, segmentsPerSpan);
 }
 
 /** @emoji ⚡ Default fast preview kernel for play and R3F hosts. */
@@ -394,24 +390,12 @@ function readVec3Array(v: unknown): readonly Vec3[] {
 	return v.filter(isVec3Record) as readonly Vec3[];
 }
 
-function vec3Sub(a: Vec3, b: Vec3): Vec3 {
-	return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-}
-
-function vec3Add(a: Vec3, b: Vec3): Vec3 {
-	return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-}
-
-function translateVec3(p: Vec3, delta: Vec3): Vec3 {
-	return vec3Add(p, delta);
-}
-
 /** @emoji 📦 Axis-aligned bounds for topology highlight wireframes. */
 export function bboxFromPoints(
 	points: readonly Vec3[],
 	preview: SpatialPreviewKernel = scenePreview(),
 ): { readonly min: Vec3; readonly max: Vec3 } | null {
-	return preview.aabbFromPoints(points, 0.04);
+	return preview.aabbFromPoints(points);
 }
 
 /** @emoji 📦 Twelve edges of an axis-aligned box for preview line rendering. */
@@ -647,26 +631,29 @@ export function intersectSpatialAnalyticToggles(
 	visibleAnalyticToggles: SpatialAnalyticToggles = {},
 	selectionAnalyticToggles: SpatialAnalyticToggles = {},
 ): SpatialAnalyticToggles {
-	const merged: SpatialAnalyticToggles = {};
+	const exposureState: Partial<Record<SurfaceExposure, boolean>> = {};
+	const stanceState: Partial<Record<SurfaceStance, boolean>> = {};
+	const overlapState: Partial<Record<PartOverlap, boolean>> = {};
 	for (const exposure of ["external", "internal"] as const) {
 		if (visibleAnalyticToggles.exposure?.[exposure] === false || selectionAnalyticToggles.exposure?.[exposure] === false) {
-			merged.exposure ??= {};
-			merged.exposure[exposure] = false;
+			exposureState[exposure] = false;
 		}
 	}
 	for (const stance of ["horizontal", "vertical"] as const) {
 		if (visibleAnalyticToggles.stance?.[stance] === false || selectionAnalyticToggles.stance?.[stance] === false) {
-			merged.stance ??= {};
-			merged.stance[stance] = false;
+			stanceState[stance] = false;
 		}
 	}
 	for (const overlap of ["none", "difference", "intersection"] as const) {
 		if (visibleAnalyticToggles.overlap?.[overlap] === false || selectionAnalyticToggles.overlap?.[overlap] === false) {
-			merged.overlap ??= {};
-			merged.overlap[overlap] = false;
+			overlapState[overlap] = false;
 		}
 	}
-	return merged;
+	return {
+		...(Object.keys(exposureState).length > 0 ? { exposure: exposureState } : {}),
+		...(Object.keys(stanceState).length > 0 ? { stance: stanceState } : {}),
+		...(Object.keys(overlapState).length > 0 ? { overlap: overlapState } : {}),
+	};
 }
 
 /** @emoji 👁️ Resolves which scene layers stay visible for the active pick view and kind toggles. */
@@ -752,7 +739,7 @@ function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string,
 
 function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<string, T> | undefined): Record<string, T> {
 	if (!x) return {};
-	return Array.isArray(x) ? recordsById(x) : x;
+	return Array.isArray(x) ? recordsById(x) : (x as Record<string, T>);
 }
 
 /** @emoji 🧲 Normalizes `TopologyGraphJson` array buckets to the record shape used by interaction math. */
@@ -804,10 +791,6 @@ function topologyPointCentroid(points: readonly Vec3[]): Vec3 | null {
 		[0, 0, 0] as unknown as Vec3,
 	);
 	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length] as unknown as Vec3;
-}
-
-function topologyVertexPoint(vertices: Record<string, VertexRecord>, id: string): Vec3 | null {
-	return vertices[id]?.position ?? null;
 }
 
 function topologyEdgePoints(vertices: Record<string, VertexRecord>, edge: EdgeRecord): readonly Vec3[] {
@@ -931,7 +914,9 @@ export function topologyEntityWireSegments(
 	kind: TopologyEntityKind,
 	id: string,
 ): readonly (readonly [Vec3, Vec3])[] {
-	if (kind === "edge" && buckets.edges[id]) return topologyWireEdgeSegments(buckets.vertices, buckets.edges, { id, edgeIds: [id] });
+	if (kind === "edge" && buckets.edges[id]) {
+		return topologyWireEdgeSegments(buckets.vertices, buckets.edges, { id, edgeIds: [id] } as unknown as WireRecord);
+	}
 	if (kind === "wire" && buckets.wires[id]) return topologyWireEdgeSegments(buckets.vertices, buckets.edges, buckets.wires[id]!);
 	if (kind === "face" && buckets.faces[id]) {
 		const face = buckets.faces[id]!;
@@ -2303,7 +2288,6 @@ export function SpatialPickGeometryLayer({
 	derived,
 	derivedRevision = 0,
 	topologyPreviewTransform = null,
-	selectionAccept = [],
 	filterKindToggles = {},
 	analyticFilterToggles = {},
 	hoveredTargetKey,
@@ -2586,8 +2570,8 @@ export interface InteractionCanvasProps {
 	readonly onPointerLeave?: (event: PointerEvent) => void;
 	readonly onPointerCancel?: (event: PointerEvent) => void;
 	readonly onWheel?: (event: WheelEvent) => void;
-	readonly onContextMenu?: (event: PointerEvent) => void;
-	readonly onDoubleClick?: (event: PointerEvent) => void;
+	readonly onContextMenu?: (event: MouseEvent) => void;
+	readonly onDoubleClick?: (event: MouseEvent) => void;
 	readonly onLostPointerCapture?: (event: PointerEvent) => void;
 }
 
@@ -2670,7 +2654,9 @@ export function applySpatialAutoFitCamera(
 	} else {
 		camera.lookAt(cx, cy, cz);
 	}
-	camera.updateProjectionMatrix();
+	if ("updateProjectionMatrix" in camera && typeof camera.updateProjectionMatrix === "function") {
+		camera.updateProjectionMatrix();
+	}
 }
 
 /** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
@@ -2870,21 +2856,16 @@ export function InteractionSpatialView({
 	renderDisplayItem,
 	selectionAccept = [],
 	filterKindToggles = {},
-	selectionKindToggles = {},
-	hoverKindToggles,
 	analyticFilterToggles,
-	analyticSelectionToggles,
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
-	onSelectionRequest,
 	onCameraNavigate,
 	onCommittedFacePointerDown,
 	onCommittedFacePointerMove,
 	onSnapshotStateChange,
 	onSnapshotRevisionChange,
 	onPickEnabledChange,
-	hostSelectionEnabled = true,
 	showPickLayer = true,
 	committedMeshPickable = false,
 	autoFitMeshes = false,
@@ -2902,7 +2883,6 @@ export function InteractionSpatialView({
 		onSnapshotRevisionChange?.(snapshot.revision);
 	}, [snapshot.revision, onSnapshotRevisionChange]);
 	const resolvedAnalyticFilter = analyticFilterToggles ?? {};
-	const resolvedAnalyticSelection = analyticSelectionToggles ?? {};
 	const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
 	const gridDivisions = resolvedTheme.gridDivisions ?? 40;
 	const gridSize = resolvedTheme.gridSize ?? 40;
@@ -3665,6 +3645,22 @@ export function InteractionRepl({
 		onAnalyticSelectionTogglesChange,
 		() => chromeDefaults.analyticSelectionToggles,
 	);
+	const resolvedAnalyticFilterToggles = useMemo(() => {
+		const defaults = defaultSpatialAnalyticToggles();
+		return {
+			exposure: { ...defaults.exposure, ...analyticFilterToggles.exposure },
+			stance: { ...defaults.stance, ...analyticFilterToggles.stance },
+			overlap: { ...defaults.overlap, ...analyticFilterToggles.overlap },
+		};
+	}, [analyticFilterToggles]);
+	const resolvedAnalyticSelectionToggles = useMemo(() => {
+		const defaults = defaultSpatialAnalyticToggles();
+		return {
+			exposure: { ...defaults.exposure, ...analyticSelectionToggles.exposure },
+			stance: { ...defaults.stance, ...analyticSelectionToggles.stance },
+			overlap: { ...defaults.overlap, ...analyticSelectionToggles.overlap },
+		};
+	}, [analyticSelectionToggles]);
 	const [pickViewKind, setPickViewKind] = useHostState(pickViewKindProp, onPickViewKindChange, () => chromeDefaults.pickViewKind);
 	const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
 	const [derivedRevision, setDerivedRevision] = useHostState(derivedRevisionProp, onDerivedRevisionChange, () => chromeDefaults.derivedRevision);
@@ -3840,11 +3836,11 @@ export function InteractionRepl({
 				if (!cancelled) setDerivedRevision((n) => n + 1);
 			});
 		};
-		const idle = globalThis.requestIdleCallback;
-		const id = idle ? idle(run, { timeout: 250 }) : globalThis.setTimeout(run, 0);
+		const useIdleCallback = typeof globalThis.requestIdleCallback === "function";
+		const id = useIdleCallback ? globalThis.requestIdleCallback(run, { timeout: 250 }) : globalThis.setTimeout(run, 0);
 		return () => {
 			cancelled = true;
-			if (idle) globalThis.cancelIdleCallback(id as number);
+			if (useIdleCallback) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
 	}, [derived, documentModel.topology, topologyRevision]);
@@ -4903,12 +4899,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${exposure === "external" ? "#e8c46a" : "#44ddff"}`,
-											background: analyticFilterToggles.exposure[exposure] ? "#1a3040" : "#12121c",
+											background: resolvedAnalyticFilterToggles.exposure[exposure] ? "#1a3040" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticFilterToggles.exposure[exposure]}
+											checked={resolvedAnalyticFilterToggles.exposure[exposure]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												setAnalyticFilterToggles((prev) => ({
@@ -4934,12 +4930,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${stance === "horizontal" ? "#e8c46a" : "#ffb347"}`,
-											background: analyticFilterToggles.stance[stance] ? "#1a3040" : "#12121c",
+											background: resolvedAnalyticFilterToggles.stance[stance] ? "#1a3040" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticFilterToggles.stance[stance]}
+											checked={resolvedAnalyticFilterToggles.stance[stance]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												setAnalyticFilterToggles((prev) => ({
@@ -4965,12 +4961,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${partSemanticStyle(overlap).color}`,
-											background: analyticFilterToggles.overlap[overlap] ? "#1a3040" : "#12121c",
+											background: resolvedAnalyticFilterToggles.overlap[overlap] ? "#1a3040" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticFilterToggles.overlap[overlap]}
+											checked={resolvedAnalyticFilterToggles.overlap[overlap]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												setAnalyticFilterToggles((prev) => ({
@@ -5034,12 +5030,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${exposure === "external" ? "#e8c46a" : "#44ddff"}`,
-											background: analyticSelectionToggles.exposure[exposure] ? "#1a2638" : "#12121c",
+											background: resolvedAnalyticSelectionToggles.exposure[exposure] ? "#1a2638" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticSelectionToggles.exposure[exposure]}
+											checked={resolvedAnalyticSelectionToggles.exposure[exposure]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												const nextAnalytic = {
@@ -5071,12 +5067,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${stance === "horizontal" ? "#e8c46a" : "#ffb347"}`,
-											background: analyticSelectionToggles.stance[stance] ? "#1a2638" : "#12121c",
+											background: resolvedAnalyticSelectionToggles.stance[stance] ? "#1a2638" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticSelectionToggles.stance[stance]}
+											checked={resolvedAnalyticSelectionToggles.stance[stance]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												const nextAnalytic = {
@@ -5108,12 +5104,12 @@ export function InteractionRepl({
 											border: "1px solid #2a2a3a",
 											borderRadius: 999,
 											borderLeft: `3px solid ${partSemanticStyle(overlap).color}`,
-											background: analyticSelectionToggles.overlap[overlap] ? "#1a2638" : "#12121c",
+											background: resolvedAnalyticSelectionToggles.overlap[overlap] ? "#1a2638" : "#12121c",
 										}}
 									>
 										<input
 											type="checkbox"
-											checked={analyticSelectionToggles.overlap[overlap]}
+											checked={resolvedAnalyticSelectionToggles.overlap[overlap]}
 											onChange={(e) => {
 												const checked = e.target.checked;
 												const nextAnalytic = {
@@ -5338,7 +5334,7 @@ if (import.meta.vitest) {
 				cells: [],
 				cellComplexes: [],
 				clusters: [],
-			});
+			} as unknown as TopologyGraphJson);
 			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
@@ -5369,7 +5365,7 @@ if (import.meta.vitest) {
 				cells: [{ id: "c0", shellIds: ["sh0"] }],
 				cellComplexes: [{ id: "cc0", cellIds: ["c0"] }],
 				clusters: [{ id: "cl0", memberIds: ["c0"] }],
-			});
+			} as unknown as TopologyGraphJson);
 			expect(targets.map((target) => target.kind)).toEqual([
 				"anchor",
 				"vertex",
@@ -5390,7 +5386,7 @@ if (import.meta.vitest) {
 		it("creates analytic surface and part targets from derived views", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
-			const derived = new DerivedViewService(new BrepjsKernel());
+			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			expect(targets.some((t) => t.kind === "surface")).toBe(true);
@@ -5407,10 +5403,10 @@ if (import.meta.vitest) {
 			const derived = new DerivedViewService({
 				id: "topology-parts",
 				operations: [],
-				computePartViews: (g) => computePartViewsFromTopology(g),
-				computeSurfaceViews: (g) => computeSurfaceViewsFromTopology(g),
+				computePartViews: (g: TopologyGraph) => computePartViewsFromTopology(g),
+				computeSurfaceViews: (g: TopologyGraph) => computeSurfaceViewsFromTopology(g),
 				computeVolumeViews: async () => [],
-			} as import("@spatial/js-core").SpatialKernel);
+			} as unknown as import("@spatial/js-core").SpatialKernel);
 			await derived.refresh(topo);
 			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
 				(t) => t.kind === "part",
@@ -5439,7 +5435,7 @@ if (import.meta.vitest) {
 		it("creates selectable targets for every committed box topology kind", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
-			const derived = new DerivedViewService(new BrepjsKernel());
+			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			const counts = targets.reduce<Record<string, number>>((acc, target) => {
@@ -5527,7 +5523,7 @@ if (import.meta.vitest) {
 			}
 			expect(chrome.pickViewKind).toBe("raw");
 			expect(chrome.selectionMethod).toBe("rectangle");
-			expect(chrome.analyticFilterToggles.exposure.external).toBe(true);
+			expect(chrome.analyticFilterToggles.exposure!.external).toBe(true);
 			expect(chrome.cmdLine).toBe("");
 		});
 
@@ -5619,7 +5615,7 @@ if (import.meta.vitest) {
 			>;
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
-			const derived = new DerivedViewService(new BrepjsKernel());
+			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(topo);
 			const targets = createSpatialPickTargets(topo, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(targets, "raw");
@@ -5685,7 +5681,7 @@ if (import.meta.vitest) {
 		it("end-to-end raw and analytic pick view keeps cross-view selection through picks display and clear", async () => {
 			const topo = new TopologyGraph();
 			applyTopologyDiff(topo, M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
-			const derived = new DerivedViewService(new BrepjsKernel());
+			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(topo);
 			const allTargets = createSpatialPickTargets(topo, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(allTargets, "raw");
@@ -5781,7 +5777,7 @@ if (import.meta.vitest) {
 		});
 
 		it("tessellates committed box cells through BrepjsKernel for the display layer", async () => {
-			const kernel = new BrepjsKernel();
+			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 			const topo = new TopologyGraph();
 			const { diff, cell } = await kernel.createBoxFromCornersDiff({
 				cornerA: [0, 0, 0],
@@ -5828,9 +5824,9 @@ if (import.meta.vitest) {
 			expect(replSelectionEvent([selection])).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
 			expect(replStartEvent([selection])).toEqual({ kind: "start", targets: [selection], modifiers: {} });
 			const moveSpec = InteractionRegistry.withBuiltins().get("transform.move")!;
-			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [selection] })).toBe(true);
-			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [] })).toBe(false);
-			expect(interactionCanConfirmSelection(moveSpec, "point_to_move_from", { targets: [selection] })).toBe(false);
+			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [selection] }, preciseSpatialKernelMath)).toBe(true);
+			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [] }, preciseSpatialKernelMath)).toBe(false);
+			expect(interactionCanConfirmSelection(moveSpec, "point_to_move_from", { targets: [selection] }, preciseSpatialKernelMath)).toBe(false);
 		});
 
 		it("routes displayed selection to interaction layer while active and renderer layer when idle", () => {
@@ -5956,7 +5952,7 @@ if (import.meta.vitest) {
 						topo,
 						M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
 					);
-					const kernel = new BrepjsKernel();
+					const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 					const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
 					if (derived) await derived.refresh(topo);
 					const spec = loadSpatialInteraction(defn.id);
@@ -6016,7 +6012,7 @@ if (import.meta.vitest) {
 					topo,
 					M.boxTopologyDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")),
 				);
-				const kernel = new BrepjsKernel();
+				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 				let rendererSelection: SelectionTarget[] = [];
 				const runCommand = async (id: string, seed: readonly SelectionTarget[]) => {
 					const rt = createInteractionRuntime(loadSpatialInteraction(id)!, {
@@ -6099,8 +6095,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-renderer-r3f runtime", () => {
 		it("exposes an initial snapshot for the box interaction with a stub kernel", () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("stub");
 				}
@@ -6113,7 +6107,7 @@ if (import.meta.vitest) {
 			}
 			const spec = buildBoxInteractionSpec();
 			const runtime = createInteractionRuntime(spec, {
-				kernel: new StubKernel(),
+					kernel: new StubKernel() as unknown as SpatialKernel,
 				document: { topology: new TopologyGraph(), nodes: [] },
 			});
 			const snapshot = runtime.getSnapshot();
@@ -6125,8 +6119,6 @@ if (import.meta.vitest) {
 	describe("@spatial/js-renderer-r3f repl history", () => {
 		it("getReplHistoryPresentation exposes canRedo after document undo", () => {
 			class StubKernel extends BrepjsKernel {
-				readonly id = "stub-repl";
-				readonly operations = ["cell.createBox", "entity.tessellate"] as const;
 				async createBoxFromCorners() {
 					return cellRef("c");
 				}
@@ -6159,7 +6151,11 @@ if (import.meta.vitest) {
 				backwardsDiff: inv,
 			});
 			const spec = buildBoxInteractionSpec();
-			const rt = createInteractionRuntime(spec, { kernel: new StubKernel(), document: { topology: g, nodes: [] }, history: hist });
+				const rt = createInteractionRuntime(spec, {
+					kernel: new StubKernel() as unknown as SpatialKernel,
+					document: { topology: g, nodes: [] },
+					history: hist,
+				});
 			let snap = rt.getSnapshot();
 			let pres = getReplHistoryPresentation(spec, snap, hist);
 			expect(pres.canUndo).toBe(true);

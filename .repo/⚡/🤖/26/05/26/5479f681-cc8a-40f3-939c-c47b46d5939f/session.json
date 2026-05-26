@@ -3708,6 +3708,50 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "1e6a1e7aa918baefc152db359aa7c8b71e4db927",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-26T14:11:10Z",
+        "session": "5479f681-cc8a-40f3-939c-c47b46d5939f",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\5479f681-cc8a-40f3-939c-c47b46d5939f.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-26T14:11:09.517Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "5479f681-cc8a-40f3-939c-c47b46d5939f",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\5479f681-cc8a-40f3-939c-c47b46d5939f.jsonl",
+          "prompt": "161installHook.js:1 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "1e6a1e7aa918baefc152db359aa7c8b71e4db927",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-26T14:11:11Z",
+        "session": "5479f681-cc8a-40f3-939c-c47b46d5939f",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\5479f681-cc8a-40f3-939c-c47b46d5939f.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-26T14:11:09.517Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "5479f681-cc8a-40f3-939c-c47b46d5939f",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\5479f681-cc8a-40f3-939c-c47b46d5939f.jsonl",
+          "prompt": "161installHook.js:1 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
     }
   ],
   "plan": {

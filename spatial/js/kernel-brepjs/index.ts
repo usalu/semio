@@ -60,12 +60,12 @@ import {
 	applyTopologyDiff,
 	cellRef,
 	isEmptyTopologyDiff,
-	type Aabb,
 	type AnchorAttachment,
 	type AnchorRecord,
 	type CellRecord,
 	type CellRef,
 	type CellSolid,
+	type EdgeRef,
 	type EdgeCurve,
 	type EdgeRecord,
 	type FaceRecord,
@@ -540,7 +540,7 @@ function wireCurvePoints(topo: TopologyGraph, wire: WireRecord): readonly Vec3[]
 }
 
 function closestPointOnAabbSurface(min: Vec3, max: Vec3, point: Vec3): Vec3 {
-	const clamped: Vec3 = [
+	const clamped: [number, number, number] = [
 		Math.max(min[0], Math.min(max[0], point[0])),
 		Math.max(min[1], Math.min(max[1], point[1])),
 		Math.max(min[2], Math.min(max[2], point[2])),
@@ -551,7 +551,7 @@ function closestPointOnAabbSurface(min: Vec3, max: Vec3, point: Vec3): Vec3 {
 	if (dx <= dy && dx <= dz) clamped[0] = Math.abs(clamped[0] - min[0]) <= Math.abs(max[0] - clamped[0]) ? min[0] : max[0];
 	else if (dy <= dz) clamped[1] = Math.abs(clamped[1] - min[1]) <= Math.abs(max[1] - clamped[1]) ? min[1] : max[1];
 	else clamped[2] = Math.abs(clamped[2] - min[2]) <= Math.abs(max[2] - clamped[2]) ? min[2] : max[2];
-	return clamped;
+	return clamped as Vec3;
 }
 
 function facePlacement(topo: TopologyGraph, face: FaceRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number } | null {
@@ -1079,11 +1079,11 @@ function derivedFaceRectOnPlane(points: readonly Vec3[], frame: FacePlaneFrame):
 
 function derivedRectToPoints(frame: FacePlaneFrame, rect: Rect2): readonly Vec3[] {
 	const mk = (u: number, v: number): Vec3 => {
-		const p: Vec3 = [0, 0, 0];
+		const p: [number, number, number] = [0, 0, 0];
 		p[frame.fixedAxis] = frame.fixed;
 		p[frame.uAxis] = u;
 		p[frame.vAxis] = v;
-		return p;
+		return p as Vec3;
 	};
 	return [mk(rect.u0, rect.v0), mk(rect.u1, rect.v0), mk(rect.u1, rect.v1), mk(rect.u0, rect.v1)];
 }
@@ -1628,12 +1628,12 @@ export function selfMergeTopologyDiff(topo: TopologyGraph, atomics: readonly Ato
 			faces.push({ id: faceId, wireIds: [wid] });
 		}
 	}
-	const diff: TopologyDiff = {};
-	if (verts.length) diff.vertices = { added: verts };
-	if (edges.length) diff.edges = { added: edges };
-	if (wires.length) diff.wires = { added: wires };
-	if (faces.length) diff.faces = { added: faces };
-	return diff;
+	return {
+		...(verts.length ? { vertices: { added: verts } } : {}),
+		...(edges.length ? { edges: { added: edges } } : {}),
+		...(wires.length ? { wires: { added: wires } } : {}),
+		...(faces.length ? { faces: { added: faces } } : {}),
+	};
 }
 // #endregion 🪡SelfMergeDiff
 
@@ -1697,10 +1697,10 @@ function aabbPartRegionPoints(topo: TopologyGraph, part: AabbPartRecord, allPart
 		const snapped = snapPointsToTopology(raw, snap);
 		if (snapped.length) return snapped;
 		if (part.overlap === "difference") {
-			return aabbDifferenceRegionPoints(
+			return [...aabbDifferenceRegionPoints(
 				part.aabb,
 				allParts.filter((o) => o.overlap === "intersection" && o.aabb).map((o) => o.aabb!),
-			);
+			)];
 		}
 	}
 	return undefined;
@@ -1807,7 +1807,7 @@ export function partViewsFromAtomics(topo: TopologyGraph, atomics: readonly Atom
 		}
 		if (!regionPoints.length) {
 			try {
-				for (const v of getVertices(a.solid)) pushPoint(vertexPosition(v));
+				for (const v of getVertices(a.solid)) pushPoint(vertexPosition(v as Parameters<typeof vertexPosition>[0]));
 			} catch {
 				/* brep vertices best-effort */
 			}
@@ -2130,10 +2130,10 @@ export function computeVolumeViewsFromTopology(topo: TopologyGraph): VolumeView[
 function solidAabbFromBounds(solid: ValidSolid): Aabb | null {
 	const b = getBounds(solid);
 	if (!b) return null;
-	return { min: [b.min[0], b.min[1], b.min[2]], max: [b.max[0], b.max[1], b.max[2]] };
+	return { min: [b.xMin, b.yMin, b.zMin], max: [b.xMax, b.yMax, b.zMax] };
 }
 function readVec3(v: unknown): Vec3 | null {
-	if (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number")) return v as Vec3;
+	if (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number")) return v as unknown as Vec3;
 	return null;
 }
 
@@ -2207,7 +2207,7 @@ export function transformPointsForPreviewKind(
 		const mode = typeof params.moveMode === "string" ? params.moveMode : "free";
 		const cplane =
 			Array.isArray(params.cplaneNormal) && params.cplaneNormal.length === 3
-				? (params.cplaneNormal as Vec3)
+				? (params.cplaneNormal as unknown as Vec3)
 				: ([0, 0, 1] as Vec3);
 		const to = constrainMovePoint(from, cursor, mode, cplane);
 		const delta = vec3Sub(to, from);
@@ -2316,7 +2316,7 @@ export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();
 const isBrepjsTestRun =
 	import.meta.env.VITEST === true ||
 	import.meta.env.MODE === "test" ||
-	import.meta.vitest === true;
+	Boolean(import.meta.vitest);
 
 const openCascadeWasmNeedsNodeResolve =
 	(import.meta.env.VITEST || import.meta.env.MODE === "test") &&
@@ -2351,18 +2351,14 @@ function vec3KeyQuantized(x: number, y: number, z: number, invTol: number): numb
 	return ((ix * 73856093) ^ (iy * 19349663) ^ (iz * 83492791)) >>> 0;
 }
 
-function writeExtrudeDir(out: Vec3, direction: Vec3, distance: number): void {
+function extrudeDirection(direction: Vec3, distance: number): Vec3 {
 	const len = Math.hypot(direction[0], direction[1], direction[2]);
 	const dist = Math.abs(distance) || len || 1e-6;
 	if (len > 1e-12) {
 		const s = dist / len;
-		out[0] = direction[0] * s;
-		out[1] = direction[1] * s;
-		out[2] = direction[2] * s;
+		return [direction[0] * s, direction[1] * s, direction[2] * s];
 	} else {
-		out[0] = 0;
-		out[1] = 0;
-		out[2] = dist;
+		return [0, 0, dist];
 	}
 }
 
@@ -2472,12 +2468,12 @@ function topoEdgeToBrepEdge(topo: TopologyGraph, edge: EdgeRecord): Edge | null 
 		return threePointArc(p0, mid, p1);
 	}
 	if (c.kind === "nurbs" && c.poles.length >= 2) {
-		const r = bsplineApprox(c.poles);
+		const r = bsplineApprox([...c.poles]);
 		if (isOk(r)) return r.value;
 	}
 	if (c.kind === "ellipse") {
 		const samples = ellipseSamplePoints(c.center, c.normal, c.majorAxis, c.majorRadius, c.minorRadius, 32);
-		const r = bsplineApprox(samples.length >= 2 ? samples : [p0, p1]);
+		const r = bsplineApprox([...(samples.length >= 2 ? samples : [p0, p1])]);
 		if (isOk(r)) return r.value;
 	}
 	return line(p0, p1);
@@ -2497,7 +2493,7 @@ function topoWireToOrientedFace(topo: TopologyGraph, wireId: WireRef): OrientedF
 	}
 	const cw = wireLoop(edges);
 	if (!isOk(cw)) return null;
-	const f = face(cw.value);
+	const f = face(cw.value as Parameters<typeof face>[0]);
 	return isOk(f) ? f.value : null;
 }
 
@@ -2510,10 +2506,8 @@ function extrudeTopoWire(
 ): ValidSolid | null {
 	const planar = topoWireToOrientedFace(topo, wireId as WireRef);
 	if (!planar) return null;
-	const extrudeDir: Vec3 = [0, 0, 0];
-	writeExtrudeDir(extrudeDir, direction, distance);
-	const solid = extrude(planar, extrudeDir);
-	return isOk(solid) ? solid.value : null;
+	const solid = extrude(planar as Parameters<typeof extrude>[0], extrudeDirection(direction, distance));
+	return isOk(solid) ? (solid.value as ValidSolid) : null;
 }
 // #endregion 🔌BrepTopologyBridge
 
@@ -2522,7 +2516,7 @@ function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], to
 	const keys = new Set<number>();
 	const invTol = 1 / tolerance;
 	try {
-		const verts = unwrap(mesh(solid, { tolerance, cache: true })).vertices;
+		const verts = mesh(solid, { tolerance, cache: true }).vertices;
 		for (let i = 0; i < verts.length; i += 3) {
 			const x = verts[i]!;
 			const y = verts[i + 1]!;
@@ -2818,14 +2812,16 @@ class BrepjsWasmEngine {
 				let vol = 0;
 				let regionPoints: Vec3[] | undefined;
 				if (solids.length === 1) {
-					vol = measureVolume(solids[0]!);
+					const measure = measureVolume(solids[0]!);
+					vol = isOk(measure) ? measure.value : 0;
 					const aabb = solidAabbFromBounds(solids[0]!);
 					if (aabb) regionPoints = [...aabbCornerPoints(aabb.min, aabb.max)];
 				} else {
 					const fused = fuseAll(solids);
-					if (isValidSolid(fused)) {
-						vol = measureVolume(fused);
-						const aabb = solidAabbFromBounds(fused);
+					if (isOk(fused)) {
+						const measure = measureVolume(fused.value);
+						vol = isOk(measure) ? measure.value : 0;
+						const aabb = solidAabbFromBounds(fused.value);
 						if (aabb) regionPoints = [...aabbCornerPoints(aabb.min, aabb.max)];
 					} else {
 						const boxes = solids.map((s) => solidAabbFromBounds(s)).filter((x): x is Aabb => x !== null);
