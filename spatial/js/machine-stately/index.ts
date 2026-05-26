@@ -197,7 +197,7 @@ export function buildSpatialStatelyMachineViewForSpec(
 	};
 }
 
-/** @emoji 📊 Full catalog from `listSpatialInteractions` / optional `interactionIds` filter. */
+/** @emoji 📊 Full catalog from `listSpatialInteractions` (`spatial/assets/extension/builtin/interaction/**` via core `compileInteraction`). */
 export function buildSpatialStatelyMachineCatalogView(opts?: {
 	readonly interactionIds?: readonly string[];
 	readonly generatedAt?: string;
@@ -270,14 +270,25 @@ export class StatelyStateEngine implements StateEngine {
 	async send(
 		event: InteractionEvent,
 		kernel?: SpatialKernel,
-		topology?: Model,
+		model?: Model,
 		actions?: ActionRegistry,
 		derived?: import("@spatial/js-core").DerivedViewService,
+		preview?: import("@spatial/js-core").SpatialPreviewKernel,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
 			this.rebuildMachine(this.interactionState);
 		}
-		const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, model, derived);
+		const r = await applyTransition(
+			this.spec,
+			this.interactionState,
+			this.interactionContext,
+			event,
+			kernel,
+			actions,
+			model,
+			derived,
+			preview,
+		);
 		if (!r.ok) return { ok: false };
 		this.interactionState = r.nextState;
 		this.actor.send({ type: "__advance", interactionKind: event.kind, branch: r.branchIndex });
@@ -324,12 +335,21 @@ if (import.meta.vitest) {
 
 	function normalizeModelDiffIds(diff: ModelDiff): ModelDiff {
 		const clone = JSON.parse(JSON.stringify(diff)) as ModelDiff;
-		for (const e of clone.edges?.added ?? []) (e as { id: string }).id = "__edge__";
+		const stamp = (added: readonly { id: string }[] | undefined, tag: string) => {
+			for (const r of added ?? []) r.id = tag;
+		};
+		stamp(clone.anchors?.added, "__anchor__");
+		stamp(clone.vertices?.added, "__vertex__");
+		stamp(clone.edges?.added, "__edge__");
+		stamp(clone.wires?.added, "__wire__");
+		stamp(clone.faces?.added, "__face__");
+		stamp(clone.shells?.added, "__shell__");
+		stamp(clone.cells?.added, "__cell__");
+		stamp(clone.cellComplexes?.added, "__cellComplex__");
+		stamp(clone.clusters?.added, "__cluster__");
 		for (const w of clone.wires?.added ?? []) {
-			(w as { id: string }).id = "__wire__";
 			(w as { edgeIds: string[] }).edgeIds = (w as { edgeIds: string[] }).edgeIds.map(() => "__edge__");
 		}
-		for (const a of clone.anchors?.added ?? []) (a as { id: string }).id = "__anchor__";
 		return clone;
 	}
 
@@ -366,7 +386,7 @@ if (import.meta.vitest) {
 			if (!pa || !pb) return 0;
 			return Math.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]);
 		}
-		async faceArea(_f: FaceRef, _topo: Model) {
+		async faceArea(_f: FaceRef, _model: Model) {
 			return 42;
 		}
 	}
@@ -375,7 +395,7 @@ if (import.meta.vitest) {
 		it("buildSpatialStatelyMachineCatalogView lists all interactions with edges and mermaid", () => {
 			const doc = buildSpatialStatelyMachineCatalogView();
 			expect(doc.kind).toBe("spatial.stately-machine-view/v1");
-			expect(doc.machines.length).toBeGreaterThanOrEqual(5);
+			expect(doc.machines.length).toBe(listSpatialInteractions().length);
 			const box = doc.machines.find((m) => m.interactionId === "primitive.box");
 			expect(box?.edges.length).toBeGreaterThan(0);
 			expect(box?.mermaid).toContain("primitive_box");
@@ -434,7 +454,7 @@ if (import.meta.vitest) {
 		it("matches pure-ts distance + area measure commits (response parity)", async () => {
 			const distSpec = buildDistanceInteractionSpec();
 			const areaSpec = buildAreaInteractionSpec();
-			const mkTopo = () => {
+			const mkModel = () => {
 				const t = new Model();
 				const v0 = "v0" as VertexRef;
 				const v1 = "v1" as VertexRef;
@@ -452,12 +472,12 @@ if (import.meta.vitest) {
 			const k2d = new MeasureParityKernel();
 			const rtPd = createInteractionRuntime(distSpec, {
 				kernel: k1d,
-				document: { model: mkTopo(), nodes: [] },
+				document: { model: mkModel(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSd = createInteractionRuntime(distSpec, {
 				kernel: k2d,
-				document: { model: mkTopo(), nodes: [] },
+				document: { model: mkModel(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await rtPd.send({ kind: "selection.changed", targets: [{ kind: "vertex", id: "v0", editable: true }], modifiers: {} });
@@ -478,12 +498,12 @@ if (import.meta.vitest) {
 			const k2a = new MeasureParityKernel();
 			const rtPa = createInteractionRuntime(areaSpec, {
 				kernel: k1a,
-				document: { model: mkTopo(), nodes: [] },
+				document: { model: mkModel(), nodes: [] },
 				stateEngine: pureTsStateEngineProvider,
 			});
 			const rtSa = createInteractionRuntime(areaSpec, {
 				kernel: k2a,
-				document: { model: mkTopo(), nodes: [] },
+				document: { model: mkModel(), nodes: [] },
 				stateEngine: statelyStateEngineProvider,
 			});
 			await rtPa.send({ kind: "selection.changed", targets: [{ kind: "face", id: "f0", editable: true }], modifiers: {} });

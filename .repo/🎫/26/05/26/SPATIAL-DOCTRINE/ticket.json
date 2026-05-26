@@ -3,8 +3,13 @@
   "emoji": "🎫",
   "status": "open",
   "description": "Strip brepjs Vertex…Cluster from public API; extension-based Model/Typology/Object/View doctrine; typology assets; rename topology to model.",
-  "summary": "",
+  "summary": "machine-stately: Model/ModelDiff naming, StatelyStateEngine passes model+preview to applyTransition; machine.json regenerated (50 builtins from spatial/assets/extension/builtin/interaction); vitest deduped; @spatial/js-machine-stately:test 4 passed.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [],
-  "files": []
+  "files": [
+    "spatial/js/machine-stately/index.ts",
+    "spatial/js/machine-stately/machine.json",
+    "spatial/js/machine-stately/script.ts",
+    "spatial/js/machine-stately/vitest.config.ts"
+  ]
 }

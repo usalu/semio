@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@spatial/js-machine-stately` task router. */
+/** @emoji 🧭 `@spatial/js-machine-stately` task router; `generate` catalogs `spatial/assets/extension/builtin/interaction/**` via core. */
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { buildSpatialStatelyMachineCatalogView } from "./index.ts";

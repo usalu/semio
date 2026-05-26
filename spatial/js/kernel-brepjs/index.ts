@@ -1,5 +1,6 @@
 // #region 🧲Header
 /// <reference types="vite/client" />
+/// <reference types="vitest/importMeta" />
 /** @emoji 🧭 `@spatial/js-kernel-brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM. */
 // #endregion 🧲Header
 
@@ -60,16 +61,6 @@ import {
 	applyModelDiff,
 	cellRef,
 	isEmptyModelDiff,
-	type AnchorAttachment,
-	type AnchorRecord,
-	type CellRecord,
-	type CellRef,
-	type CellSolid,
-	type EdgeRef,
-	type EdgeCurve,
-	type EdgeRecord,
-	type FaceRecord,
-	type FaceRef,
 	type KernelQueryContext,
 	emptyMeshTransfer,
 	type EdgeGroup,
@@ -77,10 +68,8 @@ import {
 	type FaceGroup,
 	type FaceInfo,
 	type MeshTransfer,
-	type ModelJson,
 	type PartRef,
 	type PartView,
-	type ShellRef,
 	type VolumeRef,
 	type VolumeView,
 	type SpatialKernel,
@@ -89,13 +78,175 @@ import {
 	type SurfaceView,
 	Model,
 	type ModelDiff,
-	type VertexRecord,
-	type VertexRef,
-	type WireRecord,
-	type WireRef,
+	type ModelJson,
 	type Vec3,
 } from "@spatial/js-core";
 // #endregion 📥Imports
+
+// #region 🧱kernelGeometry
+/** @emoji 🧱 Kernel-private brep hierarchy refs and records (not re-exported from `@spatial/js-core`). */
+export namespace kernelGeometry {
+	export type VertexRef = string & { readonly __brand: "VertexRef" };
+	export type EdgeRef = string & { readonly __brand: "EdgeRef" };
+	export type WireRef = string & { readonly __brand: "WireRef" };
+	export type FaceRef = string & { readonly __brand: "FaceRef" };
+	export type ShellRef = string & { readonly __brand: "ShellRef" };
+	export type CellRef = string & { readonly __brand: "CellRef" };
+	export type CellComplexRef = string & { readonly __brand: "CellComplexRef" };
+	export type ClusterRef = string & { readonly __brand: "ClusterRef" };
+	export type AnchorRef = string & { readonly __brand: "AnchorRef" };
+
+	export interface VertexRecord {
+		readonly id: VertexRef;
+		readonly position: Vec3;
+	}
+
+	export type AnchorAttachment =
+		| { readonly kind: "vertex"; readonly id: VertexRef }
+		| { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
+		| { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
+		| { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
+		| { readonly kind: "cell"; readonly id: CellRef; readonly u: number; readonly v: number; readonly w: number };
+
+	export interface AnchorRecord {
+		readonly id: AnchorRef;
+		readonly position: Vec3;
+		readonly attachment: AnchorAttachment;
+	}
+
+	export type EdgeCurve =
+		| { readonly kind: "line" }
+		| { readonly kind: "arc"; readonly center: Vec3 }
+		| { readonly kind: "circle"; readonly center: Vec3; readonly normal: Vec3; readonly radius: number }
+		| {
+				readonly kind: "ellipse";
+				readonly center: Vec3;
+				readonly normal: Vec3;
+				readonly majorAxis: Vec3;
+				readonly majorRadius: number;
+				readonly minorRadius: number;
+		  }
+		| {
+				readonly kind: "nurbs";
+				readonly poles: readonly Vec3[];
+				readonly degree: number;
+				readonly weights?: readonly number[];
+				readonly knots?: readonly number[];
+				readonly multiplicities?: readonly number[];
+				readonly periodic?: boolean;
+				readonly rational?: boolean;
+		  };
+
+	export interface EdgeRecord {
+		readonly id: EdgeRef;
+		readonly vertexIds: readonly VertexRef[];
+		readonly curve?: EdgeCurve;
+	}
+
+	export interface WireRecord {
+		readonly id: WireRef;
+		readonly edgeIds: readonly EdgeRef[];
+	}
+
+	export type FaceSurface =
+		| { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
+		| { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
+		| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
+		| { readonly kind: "cone"; readonly apex: Vec3; readonly axis: Vec3; readonly radius: number; readonly semiAngle: number }
+		| {
+				readonly kind: "nurbs";
+				readonly poles: readonly (readonly Vec3[])[];
+				readonly uDegree: number;
+				readonly vDegree: number;
+				readonly uKnots?: readonly number[];
+				readonly vKnots?: readonly number[];
+		  };
+
+	export interface FaceRecord {
+		readonly id: FaceRef;
+		readonly wireIds: readonly WireRef[];
+		readonly surface?: FaceSurface;
+	}
+
+	export interface ShellRecord {
+		readonly id: ShellRef;
+		readonly faceIds: readonly FaceRef[];
+	}
+
+	export type CellSolid =
+		| { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
+		| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
+		| { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
+		| { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
+
+	export interface CellRecord {
+		readonly id: CellRef;
+		readonly shellIds: readonly ShellRef[];
+		readonly solid?: CellSolid;
+	}
+
+	export interface CellComplexRecord {
+		readonly id: CellComplexRef;
+		readonly cellIds: readonly CellRef[];
+	}
+
+	export interface ClusterRecord {
+		readonly id: ClusterRef;
+		readonly memberIds: readonly string[];
+	}
+
+	export interface KernelGeometryJson {
+		readonly anchors: readonly AnchorRecord[];
+		readonly vertices: readonly VertexRecord[];
+		readonly edges: readonly EdgeRecord[];
+		readonly wires: readonly WireRecord[];
+		readonly faces: readonly FaceRecord[];
+		readonly shells: readonly ShellRecord[];
+		readonly cells: readonly CellRecord[];
+		readonly cellComplexes: readonly CellComplexRecord[];
+		readonly clusters: readonly ClusterRecord[];
+	}
+}
+
+type VertexRef = kernelGeometry.VertexRef;
+type VertexRecord = kernelGeometry.VertexRecord;
+type EdgeRef = kernelGeometry.EdgeRef;
+type WireRef = kernelGeometry.WireRef;
+type FaceRef = kernelGeometry.FaceRef;
+type ShellRef = kernelGeometry.ShellRef;
+type CellRef = kernelGeometry.CellRef;
+type AnchorAttachment = kernelGeometry.AnchorAttachment;
+type AnchorRecord = kernelGeometry.AnchorRecord;
+type EdgeCurve = kernelGeometry.EdgeCurve;
+type EdgeRecord = kernelGeometry.EdgeRecord;
+type WireRecord = kernelGeometry.WireRecord;
+type FaceRecord = kernelGeometry.FaceRecord;
+type ShellRecord = kernelGeometry.ShellRecord;
+type CellSolid = kernelGeometry.CellSolid;
+type CellRecord = kernelGeometry.CellRecord;
+type MutableCellRecord = CellRecord & { solid?: CellSolid };
+
+type KernelGeomBuckets = {
+	anchors: Record<string, AnchorRecord>;
+	vertices: Record<string, VertexRecord>;
+	edges: Record<string, EdgeRecord>;
+	wires: Record<string, WireRecord>;
+	faces: Record<string, FaceRecord>;
+	shells: Record<string, ShellRecord>;
+	cells: Record<string, CellRecord>;
+	cellComplexes: Record<string, kernelGeometry.CellComplexRecord>;
+	clusters: Record<string, kernelGeometry.ClusterRecord>;
+};
+
+type ModelWithGeom = Model & { readonly geometry?: KernelGeomBuckets };
+
+/** @emoji 🧱 Resolves kernel-private brep buckets (`model.geometry` on `Model`, else flat graph fields). */
+function geom(model: Model): KernelGeomBuckets {
+	const g = (model as ModelWithGeom).geometry;
+	if (g) return g;
+	return model as unknown as KernelGeomBuckets;
+}
+// #endregion 🧱kernelGeometry
 
 // #region 🧮SpatialKernelMath
 export function vec3Add(a: Vec3, b: Vec3): Vec3 {
@@ -529,9 +680,9 @@ function conePlacement(apex: Vec3, axis: Vec3, semiAngle: number, point: Vec3): 
 function wireCurvePoints(model: Model, wire: WireRecord): readonly Vec3[] {
 	const points: Vec3[] = [];
 	for (const edgeId of wire.edgeIds) {
-		const edge = model.edges[edgeId];
+		const edge = geom(model).edges[edgeId];
 		if (!edge) continue;
-		for (const point of uniqueAnchorCurvePoints(edgeSamplePoints(topo.vertices, edge, 64))) {
+		for (const point of uniqueAnchorCurvePoints(edgeSamplePoints(geom(model).vertices, edge, 64))) {
 			const prev = points[points.length - 1];
 			if (!prev || vec3Distance(prev, point) > 1e-9) points.push(point);
 		}
@@ -559,7 +710,7 @@ function facePlacement(model: Model, face: FaceRecord, point: Vec3): { readonly 
 	if (face.surface?.kind === "cylinder") return cylinderPlacement(face.surface.origin, face.surface.axis, face.surface.radius, point);
 	if (face.surface?.kind === "sphere") return spherePlacement(face.surface.center, face.surface.radius, point);
 	if (face.surface?.kind === "cone") return conePlacement(face.surface.apex, face.surface.axis, face.surface.semiAngle, point);
-	const points = derivedFacePoints(topo, face);
+	const points = derivedFacePoints(model, face);
 	const origin = derivedPointCentroid(points);
 	const normal = faceNormalFromPoints(points);
 	if (!origin || !normal) return null;
@@ -567,7 +718,7 @@ function facePlacement(model: Model, face: FaceRecord, point: Vec3): { readonly 
 }
 
 function pointOnFaceAt(model: Model, faceId: FaceRef, u: number, v: number): Vec3 | null {
-	const face = model.faces[faceId];
+	const face = geom(model).faces[faceId];
 	if (!face) return null;
 	if (face.surface?.kind === "plane") {
 		const basis = orthonormalBasis(face.surface.normal);
@@ -589,7 +740,7 @@ function pointOnFaceAt(model: Model, faceId: FaceRef, u: number, v: number): Vec
 		const radius = Math.tan(face.surface.semiAngle) * v;
 		return vec3Add(face.surface.apex, vec3Add(vec3Scale(axisN, v), vec3Scale(radial, radius)));
 	}
-	const points = derivedFacePoints(topo, face);
+	const points = derivedFacePoints(model, face);
 	const origin = derivedPointCentroid(points);
 	const normal = faceNormalFromPoints(points);
 	if (!origin || !normal) return null;
@@ -598,7 +749,7 @@ function pointOnFaceAt(model: Model, faceId: FaceRef, u: number, v: number): Vec
 }
 
 function cellPlacement(model: Model, cell: CellRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number; readonly w: number } | null {
-	const bounds = modelObjectAabb(topo, cell);
+	const bounds = modelObjectAabb(model, cell);
 	if (!bounds) return null;
 	const hit = closestPointOnAabbSurface(bounds.min, bounds.max, point);
 	const sx = Math.max(bounds.max[0] - bounds.min[0], 1e-9);
@@ -613,9 +764,9 @@ function cellPlacement(model: Model, cell: CellRecord, point: Vec3): { readonly 
 }
 
 function pointOnCellAt(model: Model, cellId: CellRef, u: number, v: number, w: number): Vec3 | null {
-	const cell = model.cells[cellId];
+	const cell = geom(model).cells[cellId];
 	if (!cell) return null;
-	const bounds = modelObjectAabb(topo, cell);
+	const bounds = modelObjectAabb(model, cell);
 	if (!bounds) return null;
 	const point: Vec3 = [
 		bounds.min[0] + clamp01(u) * (bounds.max[0] - bounds.min[0]),
@@ -626,51 +777,51 @@ function pointOnCellAt(model: Model, cellId: CellRef, u: number, v: number, w: n
 }
 
 export function evaluateAnchorPosition(model: Model, anchor: AnchorRecord): Vec3 {
-	if (anchor.attachment.kind === "vertex") return model.vertices[anchor.attachment.id]?.position ?? anchor.position;
+	if (anchor.attachment.kind === "vertex") return geom(model).vertices[anchor.attachment.id]?.position ?? anchor.position;
 	if (anchor.attachment.kind === "edge") {
-		const edge = model.edges[anchor.attachment.id];
-		return edge ? curvePointAtNormalizedT(edgeSamplePoints(topo.vertices, edge, 64), anchor.attachment.t) ?? anchor.position : anchor.position;
+		const edge = geom(model).edges[anchor.attachment.id];
+		return edge ? curvePointAtNormalizedT(edgeSamplePoints(geom(model).vertices, edge, 64), anchor.attachment.t) ?? anchor.position : anchor.position;
 	}
 	if (anchor.attachment.kind === "wire") {
-		const wire = model.wires[anchor.attachment.id];
-		return wire ? curvePointAtNormalizedT(wireCurvePoints(topo, wire), anchor.attachment.t) ?? anchor.position : anchor.position;
+		const wire = geom(model).wires[anchor.attachment.id];
+		return wire ? curvePointAtNormalizedT(wireCurvePoints(model, wire), anchor.attachment.t) ?? anchor.position : anchor.position;
 	}
-	if (anchor.attachment.kind === "face") return pointOnFaceAt(topo, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v) ?? anchor.position;
-	return pointOnCellAt(topo, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v, anchor.attachment.w) ?? anchor.position;
+	if (anchor.attachment.kind === "face") return pointOnFaceAt(model, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v) ?? anchor.position;
+	return pointOnCellAt(model, anchor.attachment.id, anchor.attachment.u, anchor.attachment.v, anchor.attachment.w) ?? anchor.position;
 }
 
-/** @emoji ⚓ Resolves anchor placement on a topology entity from a pick point. */
+/** @emoji ⚓ Resolves anchor placement on a model entity from a pick point. */
 export function anchorPlacementFromEntity(
-	topo: Model,
+	model: Model,
 	kind: AnchorAttachment["kind"],
 	id: string,
 	point: Vec3,
 ): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null {
 	if (kind === "vertex") {
-		const vertex = model.vertices[id];
+		const vertex = geom(model).vertices[id];
 		return vertex ? { position: vertex.position, attachment: { kind, id: id as VertexRef } } : null;
 	}
 	if (kind === "edge") {
-		const edge = model.edges[id];
+		const edge = geom(model).edges[id];
 		if (!edge) return null;
-		const hit = closestPointOnPolyline(edgeSamplePoints(topo.vertices, edge, 64), point);
+		const hit = closestPointOnPolyline(edgeSamplePoints(geom(model).vertices, edge, 64), point);
 		return hit ? { position: hit.point, attachment: { kind, id: id as EdgeRef, t: hit.t } } : null;
 	}
 	if (kind === "wire") {
-		const wire = model.wires[id];
+		const wire = geom(model).wires[id];
 		if (!wire) return null;
-		const hit = closestPointOnPolyline(wireCurvePoints(topo, wire), point);
+		const hit = closestPointOnPolyline(wireCurvePoints(model, wire), point);
 		return hit ? { position: hit.point, attachment: { kind, id: id as WireRef, t: hit.t } } : null;
 	}
 	if (kind === "face") {
-		const face = model.faces[id];
+		const face = geom(model).faces[id];
 		if (!face) return null;
-		const hit = facePlacement(topo, face, point);
+		const hit = facePlacement(model, face, point);
 		return hit ? { position: hit.point, attachment: { kind, id: id as FaceRef, u: hit.u, v: hit.v } } : null;
 	}
-	const cell = model.cells[id];
+	const cell = geom(model).cells[id];
 	if (!cell) return null;
-	const hit = cellPlacement(topo, cell, point);
+	const hit = cellPlacement(model, cell, point);
 	return hit ? { position: hit.point, attachment: { kind: "cell", id: id as CellRef, u: hit.u, v: hit.v, w: hit.w } } : null;
 }
 
@@ -849,7 +1000,7 @@ export function cellSolidAabb(solid: CellSolid): { readonly min: Vec3; readonly 
 
 /** @emoji 📐 Axis-aligned bounds of a cell from shell vertices when present, else analytic `CellSolid`. */
 export function modelObjectAabb(model: Model, cell: CellRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
-	const points = derivedCellPoints(topo, cell);
+	const points = derivedCellPoints(model, cell);
 	if (points.length === 0) return cell.solid ? cellSolidAabb(cell.solid) : null;
 	let minX = Infinity;
 	let minY = Infinity;
@@ -927,11 +1078,11 @@ export function aabbIntersect(a: Aabb, b: Aabb): Aabb | null {
 
 function derivedFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
 	const points = face.wireIds.flatMap((wireId) => {
-		const wire = model.wires[wireId];
+		const wire = geom(model).wires[wireId];
 		return (wire?.edgeIds ?? []).flatMap((edgeId) => {
-			const edge = model.edges[edgeId];
+			const edge = geom(model).edges[edgeId];
 			return (edge?.vertexIds ?? [])
-				.map((vertexId) => model.vertices[vertexId]?.position)
+				.map((vertexId) => geom(model).vertices[vertexId]?.position)
 				.filter((p): p is Vec3 => Boolean(p));
 		});
 	});
@@ -984,7 +1135,7 @@ function derivedFaceNormal(points: readonly Vec3[]): Vec3 | null {
 }
 
 function derivedModelScale(model: Model): number {
-	const verts = Object.values(topo.vertices);
+	const verts = Object.values(geom(model).vertices);
 	if (!verts.length) return 1;
 	let minX = Infinity;
 	let minY = Infinity;
@@ -1006,9 +1157,9 @@ function derivedModelScale(model: Model): number {
 
 function derivedFaceToCells(model: Model): ReadonlyMap<string, readonly string[]> {
 	const out = new Map<string, string[]>();
-	for (const [cellId, cell] of Object.entries(topo.cells)) {
+	for (const [cellId, cell] of Object.entries(geom(model).cells)) {
 		for (const shellId of cell.shellIds) {
-			const shell = model.shells[shellId];
+			const shell = geom(model).shells[shellId];
 			if (!shell) continue;
 			for (const faceId of shell.faceIds) {
 				const xs = out.get(faceId) ?? [];
@@ -1022,10 +1173,10 @@ function derivedFaceToCells(model: Model): ReadonlyMap<string, readonly string[]
 
 function derivedCellPoints(model: Model, cell: CellRecord): readonly Vec3[] {
 	const points = cell.shellIds.flatMap((shellId) => {
-		const shell = model.shells[shellId];
-		return (shell?.faceIds ?? []).flatMap((faceId) => {
-			const face = model.faces[faceId];
-			return face ? derivedFacePoints(topo, face) : [];
+		const shell = geom(model).shells[shellId];
+		return (shell?.faceIds ?? []).flatMap((faceId: FaceRef) => {
+			const face = geom(model).faces[faceId];
+			return face ? derivedFacePoints(model, face) : [];
 		});
 	});
 	return [...new Map(points.map((p) => [p.join(","), p])).values()];
@@ -1155,8 +1306,8 @@ function derivedUnionRects(rects: readonly Rect2[]): Rect2[] {
 
 function derivedCellAabbMap(model: Model): Map<string, Aabb> {
 	const out = new Map<string, Aabb>();
-	for (const cell of Object.values(topo.cells)) {
-		const aabb = modelObjectAabb(topo, cell);
+	for (const cell of Object.values(geom(model).cells)) {
+		const aabb = modelObjectAabb(model, cell);
 		if (aabb) out.set(cell.id, aabb);
 	}
 	return out;
@@ -1423,10 +1574,10 @@ function intersectAllSolids(solids: readonly ValidSolid[], volEps = 1e-6): Valid
 /** @emoji 🧊 Per cluster: one N-way ∩, per cell one `cutAll` difference, isolated cells → `none`. */
 export function decomposeCells(
 	cells: ReadonlyMap<CellRef, ValidSolid>,
-	topo: Model,
+	model: Model,
 	volEps = 1e-6,
 ): AtomicPart[] {
-	const entries = (Object.keys(topo.cells) as CellRef[])
+	const entries = (Object.keys(geom(model).cells) as CellRef[])
 		.map((id) => ({ id, solid: cells.get(id) }))
 		.filter((x): x is CellSolidEntry => Boolean(x.solid));
 	if (!entries.length) return [];
@@ -1507,18 +1658,18 @@ function derivedModelScaleFromCells(cells: ReadonlyMap<CellRef, ValidSolid>): nu
 // #endregion 🧊AtomicDecomposition
 
 // #region 🪡SelfMergeDiff
-type TopologyVertexSnap = {
+type ModelVertexSnap = {
 	readonly snap: (p: Vec3) => Vec3 | null;
 	readonly resolveId: (p: Vec3) => VertexRef;
 	readonly tolerance: number;
 };
 
-/** @emoji 📍 Snaps positions to existing topology vertices; mints deterministic merge ids. */
-function buildTopologyVertexSnap(model: Model, tolerance: number): TopologyVertexSnap {
+/** @emoji 📍 Snaps positions to existing model vertices; mints deterministic merge ids. */
+function buildModelVertexSnap(model: Model, tolerance: number): ModelVertexSnap {
 	const invTol = 1 / tolerance;
 	const buckets = new Map<number, Vec3[]>();
 	const idByQuant = new Map<string, VertexRef>();
-	for (const v of Object.values(topo.vertices)) {
+	for (const v of Object.values(geom(model).vertices)) {
 		const p = v.position;
 		const k = vec3KeyQuantized(p[0], p[1], p[2], invTol);
 		const xs = buckets.get(k) ?? [];
@@ -1568,7 +1719,7 @@ function sortPositionsOnPlane(points: readonly Vec3[], frame: FacePlaneFrame): V
 
 /** @emoji 🪡 Injects intersection vertices/edges/faces from atomic brep (idempotent SelfMerge). */
 export function selfMergeModelDiff(model: Model, atomics: readonly AtomicPart[], snapTol: number): ModelDiff {
-	const snap = buildTopologyVertexSnap(topo, snapTol);
+	const snap = buildModelVertexSnap(model, snapTol);
 	const verts: VertexRecord[] = [];
 	const edges: EdgeRecord[] = [];
 	const wires: WireRecord[] = [];
@@ -1581,7 +1732,7 @@ export function selfMergeModelDiff(model: Model, atomics: readonly AtomicPart[],
 		const snapped = snap.snap(p);
 		const pos = snapped ?? p;
 		const id = snap.resolveId(pos);
-		if (!topo.vertices[id] && !seenV.has(id)) {
+		if (!geom(model).vertices[id] && !seenV.has(id)) {
 			seenV.add(id);
 			verts.push({ id, position: pos });
 		}
@@ -1606,7 +1757,7 @@ export function selfMergeModelDiff(model: Model, atomics: readonly AtomicPart[],
 			const vKey = [...vIds].sort().join(",");
 			const faceId = `merge-f-${vKey}` as FaceRef;
 			part.faceTopoIds.set(brepFace, faceId);
-			if (topo.faces[faceId] || seenF.has(faceId)) continue;
+			if (geom(model).faces[faceId] || seenF.has(faceId)) continue;
 			seenF.add(faceId);
 			const edgeIds: EdgeRef[] = [];
 			for (let i = 0; i < vIds.length; i++) {
@@ -1614,14 +1765,14 @@ export function selfMergeModelDiff(model: Model, atomics: readonly AtomicPart[],
 				const b = vIds[(i + 1) % vIds.length]!;
 				const eKey = a < b ? `${a}|${b}` : `${b}|${a}`;
 				const eid = `merge-e-${eKey}` as EdgeRef;
-				if (!topo.edges[eid] && !seenE.has(eid)) {
+				if (!geom(model).edges[eid] && !seenE.has(eid)) {
 					seenE.add(eid);
 					edges.push({ id: eid, vertexIds: [a, b] });
 				}
 				edgeIds.push(eid);
 			}
 			const wid = `merge-w-${vKey}` as WireRef;
-			if (!topo.wires[wid] && !seenW.has(wid)) {
+			if (!geom(model).wires[wid] && !seenW.has(wid)) {
 				seenW.add(wid);
 				wires.push({ id: wid, edgeIds });
 			}
@@ -1647,8 +1798,8 @@ type AabbPartRecord = {
 	readonly explodeAabbs: readonly Aabb[];
 };
 
-/** @emoji 📍 Unique topology vertex positions used as region/surface hull points. */
-function snapPointsToTopology(points: readonly Vec3[], snap: TopologyVertexSnap): Vec3[] {
+/** @emoji 📍 Unique model vertex positions used as region/surface hull points. */
+function snapPointsToModelVertices(points: readonly Vec3[], snap: ModelVertexSnap): Vec3[] {
 	const out: Vec3[] = [];
 	const seen = new Set<string>();
 	for (const p of points) {
@@ -1691,10 +1842,10 @@ function intersectAllAabbs(aabbs: readonly Aabb[]): Aabb | null {
 
 function aabbPartRegionPoints(model: Model, part: AabbPartRecord, allParts: readonly AabbPartRecord[]): Vec3[] | undefined {
 	const scale = derivedModelScale(model);
-	const snap = buildTopologyVertexSnap(topo, scale * 1e-5);
+	const snap = buildModelVertexSnap(model, scale * 1e-5);
 	if (part.aabb) {
 		const raw = aabbCornerPoints(part.aabb.min, part.aabb.max);
-		const snapped = snapPointsToTopology(raw, snap);
+		const snapped = snapPointsToModelVertices(raw, snap);
 		if (snapped.length) return snapped;
 		if (part.overlap === "difference") {
 			return [...aabbDifferenceRegionPoints(
@@ -1706,11 +1857,11 @@ function aabbPartRegionPoints(model: Model, part: AabbPartRecord, allParts: read
 	return undefined;
 }
 
-/** @emoji 🪞 Clustered N-way ∩ and per-cell AABB difference (topology fallback). */
+/** @emoji 🪞 Clustered N-way ∩ and per-cell AABB difference (model-graph fallback). */
 function computeBooleanPartRecordsFromAabbs(model: Model): AabbPartRecord[] {
 	const volEps = 1e-6;
 	const aabbs = derivedCellAabbMap(model);
-	const boxes = (Object.keys(topo.cells) as CellRef[])
+	const boxes = (Object.keys(geom(model).cells) as CellRef[])
 		.map((id) => ({ id, box: aabbs.get(id) }))
 		.filter((x): x is AabbCellEntry => Boolean(x.box));
 	if (!boxes.length) return [];
@@ -1766,10 +1917,10 @@ function partViewsFromAabbRecords(model: Model, records: readonly AabbPartRecord
 		sourceCellIds: [...r.sourceCellIds],
 		overlap: r.overlap,
 		volume: r.volume,
-		regionPoints: aabbPartRegionPoints(topo, r, records),
+		regionPoints: aabbPartRegionPoints(model, r, records),
 	}));
 	const covered = new Set(records.flatMap((r) => r.sourceCellIds));
-	for (const cid of Object.keys(topo.cells) as CellRef[]) {
+	for (const cid of Object.keys(geom(model).cells) as CellRef[]) {
 		if (covered.has(cid)) continue;
 		parts.push({ id: `part-${cid}-none` as PartRef, sourceCellIds: [cid], overlap: "none", volume: 0 });
 	}
@@ -1790,10 +1941,10 @@ export function partViewsFromAtomics(model: Model, atomics: readonly AtomicPart[
 		if (a.faceTopoIds.size) {
 			for (const [brepFace, fid] of a.faceTopoIds) {
 				let fromTopo = false;
-				for (const wid of model.faces[fid]?.wireIds ?? []) {
-					for (const eid of model.wires[wid]?.edgeIds ?? []) {
-						for (const vid of model.edges[eid]?.vertexIds ?? []) {
-							const p = model.vertices[vid]?.position;
+				for (const wid of geom(model).faces[fid]?.wireIds ?? []) {
+					for (const eid of geom(model).wires[wid]?.edgeIds ?? []) {
+						for (const vid of geom(model).edges[eid]?.vertexIds ?? []) {
+							const p = geom(model).vertices[vid]?.position;
 							if (!p) continue;
 							fromTopo = true;
 							pushPoint(p);
@@ -1821,7 +1972,7 @@ export function partViewsFromAtomics(model: Model, atomics: readonly AtomicPart[
 		};
 	});
 	const covered = new Set(atomics.flatMap((a) => a.sourceCellIds));
-	for (const cid of Object.keys(topo.cells) as CellRef[]) {
+	for (const cid of Object.keys(geom(model).cells) as CellRef[]) {
 		if (covered.has(cid)) continue;
 		parts.push({ id: `part-${cid}-none` as PartRef, sourceCellIds: [cid], overlap: "none", volume: 0 });
 	}
@@ -1948,8 +2099,8 @@ function collectBrepSurfacePatches(model: Model, atomics: readonly AtomicPart[],
 	return patches;
 }
 
-function collectTopologySurfacePatchesFromParts(
-	topo: Model,
+function collectModelSurfacePatchesFromParts(
+	model: Model,
 	records: readonly AabbPartRecord[],
 	scale: number,
 ): SurfacePatch[] {
@@ -1957,8 +2108,8 @@ function collectTopologySurfacePatchesFromParts(
 	const cellAabbs = derivedCellAabbMap(model);
 	const globalInter = records.find((r) => r.overlap === "intersection")?.explodeAabbs[0];
 	const patches: SurfacePatch[] = [];
-	for (const face of Object.values(topo.faces)) {
-		const points = derivedFacePoints(topo, face);
+	for (const face of Object.values(geom(model).faces)) {
+		const points = derivedFacePoints(model, face);
 		const normal = derivedFaceNormal(points);
 		const centroid = derivedPointCentroid(points);
 		if (!normal || !centroid) continue;
@@ -2023,25 +2174,25 @@ function aabbRecordsFromAtomics(atomics: readonly AtomicPart[]): AabbPartRecord[
 export function surfaceViewsFromAtomics(model: Model, atomics: readonly AtomicPart[]): SurfaceView[] {
 	const scale = derivedModelScale(model);
 	const records = aabbRecordsFromAtomics(atomics);
-	const topoPatches = collectTopologySurfacePatchesFromParts(topo, records, scale);
-	if (topoPatches.length) return unionSurfacePatchesToViews(scale, topoPatches);
-	return unionSurfacePatchesToViews(scale, collectBrepSurfacePatches(topo, atomics, scale));
+	const modelPatches = collectModelSurfacePatchesFromParts(model, records, scale);
+	if (modelPatches.length) return unionSurfacePatchesToViews(scale, modelPatches);
+	return unionSurfacePatchesToViews(scale, collectBrepSurfacePatches(model, atomics, scale));
 }
 
 function surfaceViewsFromAabbPartRecords(model: Model, records: readonly AabbPartRecord[]): SurfaceView[] {
 	const scale = derivedModelScale(model);
-	return unionSurfacePatchesToViews(scale, collectTopologySurfacePatchesFromParts(topo, records, scale));
+	return unionSurfacePatchesToViews(scale, collectModelSurfacePatchesFromParts(model, records, scale));
 }
 // #endregion 🪞DerivedBooleanViews
 
-/** @emoji 🪞 Topology faces only (shared-face shells, no volumetric overlap). */
+/** @emoji 🪞 Model faces only (shared-face shells, no volumetric overlap). */
 function computeSurfaceViewsFromModelFacesOnly(model: Model): SurfaceView[] {
 	const faceToCells = derivedFaceToCells(model);
 	const cellAabbs = derivedCellAabbMap(model);
 	const scale = derivedModelScale(model);
 	const patches: SurfacePatch[] = [];
-	for (const face of Object.values(topo.faces)) {
-		const points = derivedFacePoints(topo, face);
+	for (const face of Object.values(geom(model).faces)) {
+		const points = derivedFacePoints(model, face);
 		const normal = derivedFaceNormal(points);
 		const centroid = derivedPointCentroid(points);
 		if (!normal || !centroid) continue;
@@ -2080,30 +2231,30 @@ function computeSurfaceViewsFromModelFacesOnly(model: Model): SurfaceView[] {
 	return unionSurfacePatchesToViews(scale, patches);
 }
 
-/** @emoji 🪞 Surfaces from topology AABB split when no brep solids are available. */
+/** @emoji 🪞 Surfaces from model-graph AABB split when no brep solids are available. */
 export function computeSurfaceViewsFromModel(model: Model): SurfaceView[] {
-	if (!Object.keys(topo.cells).length) return computeSurfaceViewsFromModelFacesOnly(model);
+	if (!Object.keys(geom(model).cells).length) return computeSurfaceViewsFromModelFacesOnly(model);
 	const records = computeBooleanPartRecordsFromAabbs(model);
 	const volumetric = records.some((r) => r.overlap === "intersection" || r.overlap === "difference");
-	if (volumetric) return surfaceViewsFromAabbPartRecords(topo, records);
+	if (volumetric) return surfaceViewsFromAabbPartRecords(model, records);
 	return computeSurfaceViewsFromModelFacesOnly(model);
 }
 
-/** @emoji 🪞 Parts from topology AABB split when no brep solids are available. */
+/** @emoji 🪞 Parts from model-graph AABB split when no brep solids are available. */
 export function computePartViewsFromModel(model: Model): PartView[] {
 	const records = computeBooleanPartRecordsFromAabbs(model);
-	return partViewsFromAabbRecords(topo, records);
+	return partViewsFromAabbRecords(model, records);
 }
 
-/** @emoji 🪞 Volumes from topology AABB boolean union per cell complex (or all cells). */
+/** @emoji 🪞 Volumes from model-graph AABB boolean union per cell complex (or all cells). */
 export function computeVolumeViewsFromModel(model: Model): VolumeView[] {
 	const cellAabbs = derivedCellAabbMap(model);
 	const groups: { readonly id: string; readonly cellIds: readonly CellRef[] }[] = [];
-	const complexes = Object.values(topo.cellComplexes);
+	const complexes = Object.values(geom(model).cellComplexes);
 	if (complexes.length) {
 		for (const cc of complexes) groups.push({ id: cc.id, cellIds: cc.cellIds });
 	} else {
-		const all = Object.keys(topo.cells) as CellRef[];
+		const all = Object.keys(geom(model).cells) as CellRef[];
 		if (all.length) groups.push({ id: "all", cellIds: all });
 	}
 	const out: VolumeView[] = [];
@@ -2192,7 +2343,7 @@ export function aabbFromPoints(points: readonly Vec3[], pad = 0): Aabb | null {
 	};
 }
 
-/** @emoji 🖼️ Maps declarative previewKind + params to a point transform for topology wireframes. */
+/** @emoji 🖼️ Maps declarative previewKind + params to a point transform for model wireframes. */
 export function transformPointsForPreviewKind(
 	previewKind: string,
 	params: Record<string, unknown>,
@@ -2449,13 +2600,13 @@ function cloneMeshTransfer(mesh: MeshTransfer): MeshTransfer {
 }
 // #endregion ♻️BrepjsScratch
 
-// #region 🔌BrepTopologyBridge
-/** @emoji 🔗 Builds a brepjs `Edge` from a topology edge record (OCCT kernel). */
-function topoEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
+// #region 🔌BrepModelBridge
+/** @emoji 🔗 Builds a brepjs `Edge` from a model edge record (OCCT kernel). */
+function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	const ids = edge.vertexIds;
 	if (ids.length < 1) return null;
-	const p0 = model.vertices[String(ids[0])]?.position;
-	const p1 = model.vertices[String(ids[1] ?? ids[0])]?.position;
+	const p0 = geom(model).vertices[String(ids[0])]?.position;
+	const p1 = geom(model).vertices[String(ids[1] ?? ids[0])]?.position;
 	if (!p0 || !p1) return null;
 	const c = edge.curve;
 	if (!c || c.kind === "line") return line(p0, p1);
@@ -2479,15 +2630,15 @@ function topoEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	return line(p0, p1);
 }
 
-/** @emoji 🔗 Closed planar brepjs face from a topology wire (OCCT `wireLoop` + `face`). */
-function topoWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
-	const w = model.wires[wireId];
+/** @emoji 🔗 Closed planar brepjs face from a model wire (OCCT `wireLoop` + `face`). */
+function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
+	const w = geom(model).wires[wireId];
 	if (!w?.edgeIds.length) return null;
 	const edges: Edge[] = [];
 	for (const eid of w.edgeIds) {
-		const rec = model.edges[eid];
+		const rec = geom(model).edges[eid];
 		if (!rec) return null;
-		const be = topoEdgeToBrepEdge(topo, rec);
+		const be = geomEdgeToBrepEdge(model, rec);
 		if (!be) return null;
 		edges.push(be);
 	}
@@ -2497,19 +2648,19 @@ function topoWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | n
 	return isOk(f) ? f.value : null;
 }
 
-/** @emoji 🔗 Extrudes a topology wire to a `ValidSolid` via brepjs. */
-function extrudeTopoWire(
-	topo: Model,
+/** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs. */
+function extrudeModelWire(
+	model: Model,
 	wireId: string,
 	direction: Vec3,
 	distance: number,
 ): ValidSolid | null {
-	const planar = topoWireToOrientedFace(topo, wireId as WireRef);
+	const planar = geomWireToOrientedFace(model, wireId as WireRef);
 	if (!planar) return null;
 	const solid = extrude(planar as Parameters<typeof extrude>[0], extrudeDirection(direction, distance));
 	return isOk(solid) ? (solid.value as ValidSolid) : null;
 }
-// #endregion 🔌BrepTopologyBridge
+// #endregion 🔌BrepModelBridge
 
 function brepSolidRegionPoints(solid: ValidSolid, fallback?: readonly Vec3[], tolerance = 1e-2): readonly Vec3[] {
 	const out: Vec3[] = [];
@@ -2550,7 +2701,7 @@ class BrepjsWasmEngine {
 	private seq = 0;
 	private readonly solids = new Map<CellRef, ValidSolid>();
 	private solidsTopoKey: string | null = null;
-	private derivedCache: { readonly topoKey: string; readonly atomics: readonly AtomicPart[] } | null = null;
+	private derivedCache: { readonly modelKey: string; readonly atomics: readonly AtomicPart[] } | null = null;
 
 	/** @emoji 🧪 Clears solids and derived cache (vitest shared kernel). */
 	resetDerivedPipeline(): void {
@@ -2559,9 +2710,9 @@ class BrepjsWasmEngine {
 		this.derivedCache = null;
 	}
 
-	private topoDerivedKey(model: Model): string {
-		const cells = (Object.keys(topo.cells) as CellRef[]).sort().join(",");
-		return `${topo.revision}:${cells}:${Object.keys(topo.vertices).length}:${Object.keys(topo.faces).length}`;
+	private modelDerivedKey(model: Model): string {
+		const cells = (Object.keys(geom(model).cells) as CellRef[]).sort().join(",");
+		return `${model.revision}:${cells}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
 	}
 
 	async ensureInit(): Promise<void> {
@@ -2647,9 +2798,9 @@ class BrepjsWasmEngine {
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			const model = ctx?.topology;
-			if (topo?.faces[sid]) return [sid];
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, topo ?? new Model());
+			const model = ctx?.model;
+			if (model && geom(model).faces[sid]) return [sid];
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, model ?? new Model());
 			return [];
 		}
 		return undefined;
@@ -2657,27 +2808,27 @@ class BrepjsWasmEngine {
 
 	private async ensureAtomics(model: Model): Promise<readonly AtomicPart[]> {
 		await this.ensureInit();
-		const topoKey = this.topoDerivedKey(model);
-		if (this.derivedCache?.topoKey === topoKey) return this.derivedCache.atomics;
-		await this.syncSolidsFromTopology(model);
+		const modelKey = this.modelDerivedKey(model);
+		if (this.derivedCache?.modelKey === modelKey) return this.derivedCache.atomics;
+		await this.syncSolidsFromModel(model);
 		if (this.solids.size === 0) {
-			this.derivedCache = { topoKey, atomics: [] };
+			this.derivedCache = { modelKey, atomics: [] };
 			return [];
 		}
 		let atomics: AtomicPart[] = [];
 		try {
 			atomics = decomposeCells(this.solids, model);
 		} catch {
-			this.derivedCache = { topoKey, atomics: [] };
+			this.derivedCache = { modelKey, atomics: [] };
 			return [];
 		}
 		try {
 			const snapTol = derivedModelScale(model) * 1e-5;
-			selfMergeModelDiff(topo, atomics, snapTol);
+			selfMergeModelDiff(model, atomics, snapTol);
 		} catch {
 			/* faceTopoIds best-effort for analytic surfaces/parts */
 		}
-		this.derivedCache = { topoKey, atomics };
+		this.derivedCache = { modelKey, atomics };
 		return atomics;
 	}
 
@@ -2693,13 +2844,13 @@ class BrepjsWasmEngine {
 			surfaces = computeSurfaceViewsFromModel(model);
 		} else {
 			try {
-				surfaces = surfaceViewsFromAtomics(topo, atomics);
+				surfaces = surfaceViewsFromAtomics(model, atomics);
 				if (!surfaces.length) surfaces = computeSurfaceViewsFromModel(model);
 			} catch {
 				surfaces = computeSurfaceViewsFromModel(model);
 			}
 		}
-		const parts = atomics.length ? partViewsFromAtomics(topo, atomics) : computePartViewsFromModel(model);
+		const parts = atomics.length ? partViewsFromAtomics(model, atomics) : computePartViewsFromModel(model);
 		const volumes = await this.computeVolumeViews(model);
 		return { surfaces, parts, volumes };
 	}
@@ -2709,7 +2860,7 @@ class BrepjsWasmEngine {
 			const atomics = await this.ensureAtomics(model);
 			if (!atomics.length) return computeSurfaceViewsFromModel(model);
 			try {
-				const brep = surfaceViewsFromAtomics(topo, atomics);
+				const brep = surfaceViewsFromAtomics(model, atomics);
 				return brep.length ? brep : computeSurfaceViewsFromModel(model);
 			} catch {
 				return computeSurfaceViewsFromModel(model);
@@ -2719,32 +2870,32 @@ class BrepjsWasmEngine {
 		}
 	}
 
-	/** @emoji 🧊 Authoritative brep for a cell: analytic `CellSolid`, then cache, then topology hull. */
+	/** @emoji 🧊 Authoritative brep for a cell: analytic `CellSolid`, then cache, then model-graph hull. */
 	solidForCell(model: Model, cell: CellRecord): ValidSolid | null {
 		if (cell.solid) return this.solidFromCellSolid(cell.solid);
 		const cached = this.solids.get(cell.id);
 		if (cached) return cached;
-		const points = derivedCellPoints(topo, cell);
+		const points = derivedCellPoints(model, cell);
 		if (points.length > 0) {
 			const aabb = aabbFromPoints(points, 0);
 			if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
 		}
-		const aabb = modelObjectAabb(topo, cell);
+		const aabb = modelObjectAabb(model, cell);
 		if (aabb) return this.solidFromAabb(aabb.min, aabb.max);
 		return null;
 	}
 
-	async syncSolidsFromTopology(model: Model): Promise<void> {
+	async syncSolidsFromModel(model: Model): Promise<void> {
 		await this.ensureInit();
-		const topoKey = this.topoDerivedKey(model);
-		if (this.solidsTopoKey === topoKey && this.solids.size > 0) return;
+		const modelKey = this.modelDerivedKey(model);
+		if (this.solidsTopoKey === modelKey && this.solids.size > 0) return;
 		this.derivedCache = null;
 		this.solids.clear();
-		for (const cell of Object.values(topo.cells)) {
-			const solid = this.solidForCell(topo, cell);
+		for (const cell of Object.values(geom(model).cells)) {
+			const solid = this.solidForCell(model, cell);
 			if (solid) this.solids.set(cell.id, solid);
 		}
-		this.solidsTopoKey = topoKey;
+		this.solidsTopoKey = modelKey;
 	}
 
 	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `CellSolid` (sphere/cylinder/cone/box). */
@@ -2782,7 +2933,7 @@ class BrepjsWasmEngine {
 		try {
 			const atomics = await this.ensureAtomics(model);
 			if (!atomics.length) return computePartViewsFromModel(model);
-			return partViewsFromAtomics(topo, atomics);
+			return partViewsFromAtomics(model, atomics);
 		} catch {
 			return computePartViewsFromModel(model);
 		}
@@ -2791,21 +2942,21 @@ class BrepjsWasmEngine {
 	async computeVolumeViews(model: Model): Promise<VolumeView[]> {
 		try {
 			await this.ensureInit();
-			const complexes = Object.values(topo.cellComplexes);
+			const complexes = Object.values(geom(model).cellComplexes);
 			const groups: { readonly id: string; readonly cellIds: readonly CellRef[] }[] = [];
 			if (complexes.length) {
 				for (const cc of complexes) groups.push({ id: cc.id, cellIds: cc.cellIds });
 			} else {
-				const all = Object.keys(topo.cells) as CellRef[];
+				const all = Object.keys(geom(model).cells) as CellRef[];
 				if (all.length) groups.push({ id: "all", cellIds: all });
 			}
 			const out: VolumeView[] = [];
 			for (const g of groups) {
 				const solids: ValidSolid[] = [];
 				for (const cid of g.cellIds) {
-					const cell = model.cells[cid];
+					const cell = geom(model).cells[cid];
 					if (!cell) continue;
-					const s = this.solidForCell(topo, cell);
+					const s = this.solidForCell(model, cell);
 					if (s) solids.push(s);
 				}
 				if (!solids.length) continue;
@@ -2986,37 +3137,38 @@ class BrepjsWasmEngine {
 		await this.ensureInit();
 		const fid = input.faceIds[0];
 		if (!fid) return { diff: {} };
-		const fr = input.topology.faces[fid];
+		const fr = geom(input.model).faces[fid];
 		const wireId = fr?.wireIds[0];
 		if (!wireId) return { diff: {} };
-		const planar = topoWireToOrientedFace(input.model, wireId);
+		const planar = geomWireToOrientedFace(input.model, wireId);
 		if (!planar) return { diff: {} };
 		const offset = offsetFace(planar, input.distance);
 		if (!isOk(offset)) return { diff: {} };
-		if (!isValidSolid(offset.value)) return { diff: {} };
+		const offsetSolid = offset.value;
+		if (!isSolid(offsetSolid) || !isValidSolid(offsetSolid)) return { diff: {} };
 		const ref = cellRef(`brepjs-offset-${++this.seq}`);
-		this.solids.set(ref, offset.value);
+		this.solids.set(ref, offsetSolid);
 		const preview = await this.tessellate(ref, 1e-3);
 		return { diff: meshFaceModelDiff(preview, `brepjs-offset-${fid}`) };
 	}
 
 	async vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number> {
 		await this.ensureInit();
-		const pa = model.vertices[String(a)]?.position;
-		const pb = model.vertices[String(b)]?.position;
+		const pa = geom(model).vertices[String(a)]?.position;
+		const pb = geom(model).vertices[String(b)]?.position;
 		if (!pa || !pb) return 0;
 		return unwrap(measureDistance(brepVertex(pa), brepVertex(pb)));
 	}
 
 	async edgeLength(e: EdgeRef, model: Model): Promise<number> {
 		await this.ensureInit();
-		const ed = model.edges[String(e)];
+		const ed = geom(model).edges[String(e)];
 		if (!ed) return 0;
-		const brepEdge = topoEdgeToBrepEdge(topo, ed);
+		const brepEdge = geomEdgeToBrepEdge(model, ed);
 		if (brepEdge) return unwrap(measureLength(brepEdge));
 		const ends: Vec3[] = [];
 		for (const vid of ed.vertexIds) {
-			const p = model.vertices[String(vid)]?.position;
+			const p = geom(model).vertices[String(vid)]?.position;
 			if (p) ends.push(p);
 		}
 		if (ends.length < 2) return 0;
@@ -3025,10 +3177,10 @@ class BrepjsWasmEngine {
 
 	async faceArea(f: FaceRef, model: Model): Promise<number> {
 		await this.ensureInit();
-		const fr = model.faces[String(f)];
+		const fr = geom(model).faces[String(f)];
 		const wireId = fr?.wireIds[0];
 		if (!wireId) return 0;
-		const planar = topoWireToOrientedFace(topo, wireId);
+		const planar = geomWireToOrientedFace(model, wireId);
 		if (planar) return unwrap(measureArea(planar));
 		return 0;
 	}
@@ -3039,18 +3191,18 @@ class BrepjsWasmEngine {
 
 	async adjacentCells(cell: CellRef, model: Model): Promise<readonly CellRef[]> {
 		const out = new Set<string>();
-		const c = model.cells[String(cell)];
+		const c = geom(model).cells[String(cell)];
 		if (!c) return [];
 		const faces = new Set<string>();
 		for (const sid of c.shellIds) {
-			const sh = model.shells[sid];
+			const sh = geom(model).shells[sid];
 			if (sh) for (const f of sh.faceIds) faces.add(f);
 		}
 		for (const f of faces) {
-			for (const [cid, cellRec] of Object.entries(topo.cells)) {
+			for (const [cid, cellRec] of Object.entries(geom(model).cells)) {
 				if (cid === String(cell)) continue;
 				for (const sid of cellRec.shellIds) {
-					const sh = model.shells[sid];
+					const sh = geom(model).shells[sid];
 					if (sh?.faceIds.includes(f as FaceRef)) out.add(cid);
 				}
 			}
@@ -3059,17 +3211,17 @@ class BrepjsWasmEngine {
 	}
 
 	async sharedFacesBetween(a: CellRef, b: CellRef, model: Model): Promise<readonly FaceRef[]> {
-		const ca = model.cells[String(a)];
-		const cb = model.cells[String(b)];
+		const ca = geom(model).cells[String(a)];
+		const cb = geom(model).cells[String(b)];
 		if (!ca || !cb) return [];
 		const fa = new Set<string>();
 		const fb = new Set<string>();
 		for (const sid of ca.shellIds) {
-			const sh = model.shells[sid];
+			const sh = geom(model).shells[sid];
 			if (sh) for (const fid of sh.faceIds) fa.add(fid);
 		}
 		for (const sid of cb.shellIds) {
-			const sh = model.shells[sid];
+			const sh = geom(model).shells[sid];
 			if (sh) for (const fid of sh.faceIds) fb.add(fid);
 		}
 		const xs: FaceRef[] = [];
@@ -3085,7 +3237,7 @@ class BrepjsWasmEngine {
 	}): Promise<CellRef> {
 		await this.ensureInit();
 		const solid =
-			extrudeTopoWire(input.model, input.wireId, input.direction, input.distance) ??
+			extrudeModelWire(input.model, input.wireId, input.direction, input.distance) ??
 			box(1, 1, Math.abs(input.distance) || 1e-6, { at: [0, 0, 0], centered: true });
 		const ref = cellRef(`brepjs-cell-${++this.seq}`);
 		this.solids.set(ref, solid);
@@ -3110,13 +3262,13 @@ type BrepjsWorkerResponse =
 	| { readonly type: "rpc-error"; readonly id: string; readonly error: string };
 
 function serializeWorkerArg(arg: unknown): unknown {
-	if (arg instanceof Model) return { __topoJson: arg.toJSON() };
+	if (arg instanceof Model) return { __modelJson: arg.toJSON() };
 	return arg;
 }
 
 function deserializeWorkerArg(arg: unknown): unknown {
-	if (arg && typeof arg === "object" && "__topoJson" in arg) {
-		return Model.fromJSON((arg as { readonly __topoJson: ModelJson }).__topoJson);
+	if (arg && typeof arg === "object" && "__modelJson" in arg) {
+		return Model.fromJSON((arg as { readonly __modelJson: ModelJson }).__modelJson);
 	}
 	return arg;
 }
@@ -3195,7 +3347,7 @@ class BrepjsWorkerClient {
 		if (!this.worker) {
 			const hydrated = serialized.map(deserializeWorkerArg);
 			const engine = this.localWasmEngine();
-			const fn = (engine as Record<string, unknown>)[method];
+			const fn = (engine as unknown as Record<string, unknown>)[method];
 			if (typeof fn !== "function") throw new Error(`brepjs rpc: unknown method ${method}`);
 			return (await (fn as (...a: unknown[]) => unknown).apply(engine, hydrated)) as T;
 		}
@@ -3213,13 +3365,9 @@ class BrepjsWorkerClient {
 
 // #region 🔌BrepjsKernel
 /** @emoji 🔌 `SpatialKernel` facade: preview math on main thread, WASM in worker via `BrepjsWorkerClient`. */
-export class BrepjsKernel implements SpatialKernel {
+export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKernel {
 	readonly id = "brepjs-opencascade";
 	private readonly wasm = new BrepjsWorkerClient();
-
-	constructor() {
-		Object.assign(this, preciseSpatialKernelMath);
-	}
 
 	readonly operations = [
 		"cell.createBox",
@@ -3247,24 +3395,24 @@ export class BrepjsKernel implements SpatialKernel {
 	async query(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown> {
 		if (name === "surface.resolveFaces") {
 			const sid = String(params.surfaceId ?? "");
-			const model = ctx?.topology;
-			if (topo?.faces[sid]) return [sid];
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, topo ?? new Model());
+			const model = ctx?.model;
+			if (model && geom(model).faces[sid]) return [sid];
+			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, model ?? new Model());
 			return [];
 		}
 		return undefined;
 	}
 
 	async computeSurfaceViews(model: Model): Promise<SurfaceView[]> {
-		return this.wasm.rpc("computeSurfaceViews", [topo]);
+		return this.wasm.rpc("computeSurfaceViews", [model]);
 	}
 
 	async computePartViews(model: Model): Promise<PartView[]> {
-		return this.wasm.rpc("computePartViews", [topo]);
+		return this.wasm.rpc("computePartViews", [model]);
 	}
 
 	async computeVolumeViews(model: Model): Promise<VolumeView[]> {
-		return this.wasm.rpc("computeVolumeViews", [topo]);
+		return this.wasm.rpc("computeVolumeViews", [model]);
 	}
 
 	async refreshDerivedViews(model: Model): Promise<{
@@ -3272,7 +3420,7 @@ export class BrepjsKernel implements SpatialKernel {
 		readonly parts: PartView[];
 		readonly volumes: VolumeView[];
 	}> {
-		return this.wasm.rpc("refreshDerivedViews", [topo]);
+		return this.wasm.rpc("refreshDerivedViews", [model]);
 	}
 
 	/** @emoji 🧪 Clears worker derived pipeline state between vitest cases. */
@@ -3350,8 +3498,8 @@ export class BrepjsKernel implements SpatialKernel {
 		void this.wasm.rpc("disposeCell", [cell]);
 	}
 
-	async syncSolidsFromTopology(model: Model): Promise<void> {
-		await this.wasm.rpc("syncSolidsFromTopology", [topo]);
+	async syncSolidsFromModel(model: Model): Promise<void> {
+		await this.wasm.rpc("syncSolidsFromModel", [model]);
 	}
 }
 // #endregion 🔌BrepjsKernel
@@ -3384,7 +3532,7 @@ if (isBrepjsDedicatedWorker()) {
 			void (async () => {
 				try {
 					const args = msg.args.map(deserializeWorkerArg);
-					const fn = (engine as Record<string, unknown>)[msg.method];
+					const fn = (engine as unknown as Record<string, unknown>)[msg.method];
 					if (typeof fn !== "function") throw new Error(`brepjs worker: unknown method ${msg.method}`);
 					const result = await (fn as (...a: unknown[]) => unknown).apply(engine, args);
 					const transfers =
@@ -3392,7 +3540,9 @@ if (isBrepjsDedicatedWorker()) {
 							? meshTransferTransferables(result as MeshTransfer)
 							: undefined;
 					if (transfers?.length) {
-						self.postMessage({ type: "rpc-result", id: msg.id, result } satisfies BrepjsWorkerResponse, transfers);
+						self.postMessage({ type: "rpc-result", id: msg.id, result } satisfies BrepjsWorkerResponse, {
+							transfer: transfers,
+						});
 					} else {
 						self.postMessage({ type: "rpc-result", id: msg.id, result } satisfies BrepjsWorkerResponse);
 					}
@@ -3483,21 +3633,21 @@ if (import.meta.vitest) {
 		it("modelObjectAabb follows moved shell vertices when CellSolid is stale", () => {
 			const model = new Model();
 			const cell = cellRef("box");
-			applyModelDiff(topo, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-			const rec = model.cells[cell]!;
+			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			const rec = geom(model).cells[cell]! as MutableCellRecord;
 			rec.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 };
-			const before = modelObjectAabb(topo, rec)!;
-			let topId = Object.keys(topo.vertices)[0]!;
-			let topZ = model.vertices[topId]!.position[2];
-			for (const [id, vert] of Object.entries(topo.vertices)) {
+			const before = modelObjectAabb(model, rec)!;
+			let topId = Object.keys(geom(model).vertices)[0]!;
+			let topZ = geom(model).vertices[topId]!.position[2];
+			for (const [id, vert] of Object.entries(geom(model).vertices)) {
 				if (vert.position[2] > topZ) {
 					topZ = vert.position[2];
 					topId = id;
 				}
 			}
-			const top = model.vertices[topId]!;
-			topo.vertices[topId] = { id: top.id, position: [top.position[0], top.position[1], top.position[2] + 2] };
-			const after = modelObjectAabb(topo, rec)!;
+			const top = geom(model).vertices[topId]!;
+			geom(model).vertices[topId] = { id: top.id, position: [top.position[0], top.position[1], top.position[2] + 2] };
+			const after = modelObjectAabb(model, rec)!;
 			expect(after.max[2]).toBeGreaterThan(before.max[2] + 1);
 		});
 
@@ -3510,11 +3660,11 @@ if (import.meta.vitest) {
 			expect(await kernel.vertexDistance(va, vb, g)).toBe(5);
 		});
 
-		it("query surface.resolveFaces returns a topology face id when picked directly", async () => {
+		it("query surface.resolveFaces returns a model face id when picked directly", async () => {
 			const g = new Model();
 			const cell = "box-q" as CellRef;
 			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-			const fid = Object.keys(g.faces)[0]!;
+			const fid = Object.keys(geom(g).faces)[0]!;
 			const resolved = await kernel.query("surface.resolveFaces", { surfaceId: fid }, { model: g });
 			expect(resolved).toEqual([fid]);
 		});
@@ -3590,12 +3740,12 @@ if (import.meta.vitest) {
 			expect(pieceVol).toBeCloseTo(aabbVolume(cell) - aabbVolume(inter), 4);
 		});
 
-		it("computePartViews splits overlapping brep solids on play commit topology", async () => {
+		it("computePartViews splits overlapping brep solids on play commit model", async () => {
 			const model = new Model();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 0, 0], cornerB: [3, 2, 0], height: 2 });
-			applyModelDiff(topo, ra.diff);
-			applyModelDiff(topo, rb.diff);
+			applyModelDiff(model, ra.diff);
+			applyModelDiff(model, rb.diff);
 			const parts = await kernel.computePartViews!(model);
 			expect(parts.filter((p) => p.overlap === "intersection")).toHaveLength(1);
 			expect(parts.some((p) => p.overlap === "intersection")).toBe(true);
@@ -3610,8 +3760,8 @@ if (import.meta.vitest) {
 			const model = new Model();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 });
-			applyModelDiff(topo, ra.diff);
-			applyModelDiff(topo, rb.diff);
+			applyModelDiff(model, ra.diff);
+			applyModelDiff(model, rb.diff);
 			const volA = await kernel.volume(ra.cell);
 			const volB = await kernel.volume(rb.cell);
 			const parts = await kernel.computePartViews!(model);
@@ -3640,8 +3790,8 @@ if (import.meta.vitest) {
 			const model = new Model();
 			const host = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 });
 			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 });
-			applyModelDiff(topo, host.diff);
-			applyModelDiff(topo, punch.diff);
+			applyModelDiff(model, host.diff);
+			applyModelDiff(model, punch.diff);
 			const parts = await kernel.computePartViews!(model);
 			expect(parts.filter((p) => p.overlap === "difference")).toHaveLength(2);
 			expect(parts.find((p) => p.id === `part-${host.cell}-difference`)).toBeDefined();
@@ -3658,13 +3808,13 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("computePartViews uses analytic brep for overlapping spheres not topology aabb", async () => {
+		it("computePartViews uses analytic brep for overlapping spheres not model-graph aabb", async () => {
 			const model = new Model();
 			const a = cellRef("sa");
 			const b = cellRef("sb");
-			topo.cells[a] = { id: a, shellIds: [], solid: { kind: "sphere", center: [0, 0, 0], radius: 1 } };
-			topo.cells[b] = { id: b, shellIds: [], solid: { kind: "sphere", center: [0.5, 0, 0], radius: 1 } };
-			await kernel.syncSolidsFromTopology(model);
+			geom(model).cells[a] = { id: a, shellIds: [], solid: { kind: "sphere", center: [0, 0, 0], radius: 1 } };
+			geom(model).cells[b] = { id: b, shellIds: [], solid: { kind: "sphere", center: [0.5, 0, 0], radius: 1 } };
+			await kernel.syncSolidsFromModel(model);
 			const volA = await kernel.volume(a);
 			const volB = await kernel.volume(b);
 			expect(volA).toBeCloseTo((4 / 3) * Math.PI, 2);
@@ -3760,8 +3910,8 @@ if (import.meta.vitest) {
 			const model = new Model();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [10, 0, 0], cornerB: [11, 1, 0], height: 1 });
-			applyModelDiff(topo, ra.diff);
-			applyModelDiff(topo, rb.diff);
+			applyModelDiff(model, ra.diff);
+			applyModelDiff(model, rb.diff);
 			const parts = await kernel.computePartViews!(model);
 			expect(parts.filter((p) => p.overlap === "none")).toHaveLength(2);
 			expect(parts.filter((p) => p.overlap === "intersection")).toHaveLength(0);
@@ -3771,8 +3921,8 @@ if (import.meta.vitest) {
 			const model = new Model();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 0, 0], cornerB: [3, 2, 0], height: 2 });
-			applyModelDiff(topo, ra.diff);
-			applyModelDiff(topo, rb.diff);
+			applyModelDiff(model, ra.diff);
+			applyModelDiff(model, rb.diff);
 			const surfaces = await kernel.computeSurfaceViews!(model);
 			expect(surfaces.some((s) => s.exposure === "internal")).toBe(true);
 			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
@@ -3783,32 +3933,32 @@ if (import.meta.vitest) {
 			const a = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [4, 4, 4], height: 4 });
 			const b = await kernel.createBoxFromCornersDiff({ cornerA: [3, 0, 0], cornerB: [5, 2, 2], height: 2 });
 			const c = await kernel.createBoxFromCornersDiff({ cornerA: [0, 3, 0], cornerB: [2, 5, 2], height: 2 });
-			applyModelDiff(topo, a.diff);
-			applyModelDiff(topo, b.diff);
-			applyModelDiff(topo, c.diff);
+			applyModelDiff(model, a.diff);
+			applyModelDiff(model, b.diff);
+			applyModelDiff(model, c.diff);
 			const parts = await kernel.computePartViews!(model);
 			const inter = parts.filter((p) => p.overlap === "intersection");
 			expect(inter.length).toBeLessThanOrEqual(1);
 			expect(parts.filter((p) => p.overlap === "difference").length).toBeGreaterThanOrEqual(2);
 		});
 
-		it("refreshDerivedViews does not bump topology revision", async () => {
+		it("refreshDerivedViews does not bump model revision", async () => {
 			const model = new Model();
 			const ra = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 });
 			const rb = await kernel.createBoxFromCornersDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 });
-			applyModelDiff(topo, ra.diff);
-			applyModelDiff(topo, rb.diff);
-			const cellA = model.cells[ra.cell]!;
-			const cellB = model.cells[rb.cell]!;
+			applyModelDiff(model, ra.diff);
+			applyModelDiff(model, rb.diff);
+			const cellA = geom(model).cells[ra.cell]! as MutableCellRecord;
+			const cellB = geom(model).cells[rb.cell]! as MutableCellRecord;
 			cellA.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 };
 			cellB.solid = { kind: "box", cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 };
 			const rev = model.revision;
 			const first = await kernel.refreshDerivedViews!(model);
-			expect(topo.revision).toBe(rev);
+			expect(model.revision).toBe(rev);
 			expect(first.surfaces.length).toBeGreaterThan(0);
 			expect(first.parts.length).toBeGreaterThan(0);
 			const second = await kernel.refreshDerivedViews!(model);
-			expect(topo.revision).toBe(rev);
+			expect(model.revision).toBe(rev);
 			expect(second.parts.length).toBe(first.parts.length);
 		});
 	});

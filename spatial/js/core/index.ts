@@ -440,7 +440,7 @@ export interface ExprEnv {
 	readonly context: Record<string, unknown>;
 	readonly event?: Record<string, unknown>;
 	readonly vars?: Record<string, unknown>;
-	readonly topology?: Model;
+	readonly model?: Model;
 	readonly metadata?: AttributeStore;
 	readonly derived?: DerivedViewService;
 	readonly preview: SpatialPreviewKernel;
@@ -452,8 +452,8 @@ function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
 		event: base.event,
 		vars: { ...base.vars, ...vars },
 		model: base.model,
-		metadata: base.metadata,
 		derived: base.derived,
+		metadata: base.metadata,
 		preview: base.preview,
 	};
 }
@@ -479,9 +479,9 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
 			return env.vars ? env.vars[expr.name] : undefined;
 		case "field": {
 			const o = evalExpr(expr.object, env);
-			const model = env.topology;
-			if (topo && isModelEntityRef(o)) {
-				return readModelEntityProperty(topo, env.metadata, o.kind, o.id, expr.name, {
+			const model = env.model;
+			if (model && isModelEntityRef(o)) {
+				return readModelEntityProperty(model, env.metadata, o.kind, o.id, expr.name, {
 					derived: env.derived,
 					preview: env.preview,
 				});
@@ -1013,7 +1013,7 @@ export function readModelEntityProperty(
 	if (bag && name in bag) return (bag as Record<string, unknown>)[name];
 	switch (kind) {
 		case "anchor": {
-			const anchor = model.anchors[id];
+			const anchor = topo.anchors[id];
 			if (!anchor) return undefined;
 			if (name === "position") return opts?.preview?.evaluateAnchorPosition(topo, anchor) ?? anchor.position;
 			return (anchor as unknown as Record<string, unknown>)[name];
@@ -1038,7 +1038,7 @@ export function readModelEntityProperty(
 			if (name === "id") return id;
 			const d = opts?.derived;
 			if (!d) return undefined;
-			const hit = d.computeSurfaces(model).find((s) => String(s.id) === id);
+			const hit = d.computeSurfaces(topo).find((s) => String(s.id) === id);
 			if (!hit) return undefined;
 			return (hit as unknown as Record<string, unknown>)[name];
 		}
@@ -1046,7 +1046,7 @@ export function readModelEntityProperty(
 			if (name === "id") return id;
 			const d = opts?.derived;
 			if (!d) return undefined;
-			const hit = d.computeParts(model).find((p) => String(p.id) === id);
+			const hit = d.computeParts(topo).find((p) => String(p.id) === id);
 			if (!hit) return undefined;
 			return (hit as unknown as Record<string, unknown>)[name];
 		}
@@ -1184,15 +1184,15 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
 	const cInv: EntityDiff<CellRecord, CellRecordDiff, CellRef> = {};
 	const ccInv: EntityDiff<CellComplexRecord, CellComplexRecordDiff, CellComplexRef> = {};
 	const clInv: EntityDiff<ClusterRecord, ClusterRecordDiff, ClusterRef> = {};
-	applyEntityDiff(topo.anchors as Record<string, AnchorRecord>, diff.anchors, aInv);
-	applyEntityDiff(topo.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
-	applyEntityDiff(topo.edges as Record<string, EdgeRecord>, diff.edges, eInv);
-	applyEntityDiff(topo.wires as Record<string, WireRecord>, diff.wires, wInv);
-	applyEntityDiff(topo.faces as Record<string, FaceRecord>, diff.faces, fInv);
-	applyEntityDiff(topo.shells as Record<string, ShellRecord>, diff.shells, sInv);
-	applyEntityDiff(topo.cells as Record<string, CellRecord>, diff.cells, cInv);
-	applyEntityDiff(topo.cellComplexes as Record<string, CellComplexRecord>, diff.cellComplexes, ccInv);
-	applyEntityDiff(topo.clusters as Record<string, ClusterRecord>, diff.clusters, clInv);
+	applyEntityDiff(model.anchors as Record<string, AnchorRecord>, diff.anchors, aInv);
+	applyEntityDiff(model.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
+	applyEntityDiff(model.edges as Record<string, EdgeRecord>, diff.edges, eInv);
+	applyEntityDiff(model.wires as Record<string, WireRecord>, diff.wires, wInv);
+	applyEntityDiff(model.faces as Record<string, FaceRecord>, diff.faces, fInv);
+	applyEntityDiff(model.shells as Record<string, ShellRecord>, diff.shells, sInv);
+	applyEntityDiff(model.cells as Record<string, CellRecord>, diff.cells, cInv);
+	applyEntityDiff(model.cellComplexes as Record<string, CellComplexRecord>, diff.cellComplexes, ccInv);
+	applyEntityDiff(model.clusters as Record<string, ClusterRecord>, diff.clusters, clInv);
 	if (!isEntityDiffEmpty(aInv)) inv.anchors = aInv;
 	if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
 	if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
@@ -1500,7 +1500,7 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
 			const anchor = model.anchors[id];
 			if (anchor?.attachment.kind === "vertex") out.add(anchor.attachment.id);
 		} else if (kind === "vertex") {
-			if (topo.vertices[id]) out.add(id);
+			if (model.vertices[id]) out.add(id);
 		} else if (kind === "edge") {
 			const e = model.edges[id];
 			if (e) for (const v of e.vertexIds) walk("vertex", v);
@@ -1721,13 +1721,13 @@ export function collectTopologySelectionTargets(
 				for (const id of Object.keys(topo.clusters)) push(kind, id);
 				break;
 			case "surface":
-				for (const s of derived?.computeSurfaces(model) ?? []) push(kind, String(s.id));
+				for (const s of derived?.computeSurfaces(topo) ?? []) push(kind, String(s.id));
 				break;
 			case "part":
-				for (const p of derived?.computeParts(model) ?? []) push(kind, String(p.id));
+				for (const p of derived?.computeParts(topo) ?? []) push(kind, String(p.id));
 				break;
 			case "volume":
-				for (const v of derived?.computeVolumes(model) ?? []) push(kind, String(v.id));
+				for (const v of derived?.computeVolumes(topo) ?? []) push(kind, String(v.id));
 				break;
 		}
 	}
@@ -2119,9 +2119,9 @@ function builtinActionDefs(): ActionDef[] {
 		run: async (params, { kernel, model, preview: pr }) => {
 			const a = params.a as VertexRef;
 			const b = params.b as VertexRef;
-			if (!topology.vertices[a] || !topology.vertices[b]) return {};
+			if (!model.vertices[a] || !model.vertices[b]) return {};
 			if (!kernel.vertexDistance) throw new Error("kernel.vertexDistance required");
-			const data = await kernel.vertexDistance(a, b, topology);
+			const data = await kernel.vertexDistance(a, b, model);
 			const eid = pr.randomTag("e") as EdgeRef;
 			const wid = pr.randomTag("w") as WireRef;
 			return {
@@ -2137,10 +2137,10 @@ function builtinActionDefs(): ActionDef[] {
 		id: "measure.faceArea",
 		run: async (params, { kernel, model, preview: pr }) => {
 			const fid = params.faceId as FaceRef;
-			const face = topology.faces[fid];
+			const face = model.faces[fid];
 			if (!face) return {};
 			if (!kernel.faceArea) throw new Error("kernel.faceArea required");
-			const data = await kernel.faceArea(fid, topology);
+			const data = await kernel.faceArea(fid, model);
 			const position = faceAnnotationCentroid(model, face);
 			if (!position) return { data };
 			const anchorId = pr.randomTag("anchor") as AnchorRef;
@@ -2191,7 +2191,7 @@ function builtinActionDefs(): ActionDef[] {
 	const commandSelectionBboxCenter: ActionDef = {
 		id: "command.selectionBboxCenter",
 		run: (params, ctx) => {
-			const { preview, topology } = ctx;
+			const { preview, model } = ctx;
 			const bag = ctxOf(params as Record<string, unknown>);
 			const field = typeof params.field === "string" ? params.field : "from";
 			const targets = Array.isArray(bag.targets) ? (bag.targets as SelectionTarget[]) : [];
@@ -2283,7 +2283,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "entity.createAnchor",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const hostKind = params.hostKind;
 			const hostId = typeof params.hostId === "string" ? params.hostId : "";
 			const hitPoint = isVec3(params.hitPoint) ? params.hitPoint : null;
@@ -2307,7 +2307,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "transform.move",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const from = isVec3(params.from) ? params.from : null;
 			const rawTo = isVec3(params.to) ? params.to : null;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
@@ -2319,7 +2319,7 @@ function builtinActionDefs(): ActionDef[] {
 			const vIds = collectTargetVertices(model, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
 			for (const vid of vIds) {
-				const v = topology.vertices[vid];
+				const v = model.vertices[vid];
 				if (v) {
 					modifiedVertices.push({
 						id: vid as VertexRef,
@@ -2338,7 +2338,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "transform.rotate",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const center = isVec3(params.center) ? params.center : null;
 			let angle = typeof params.angle === "number" ? params.angle : null;
 			if (angle === null) {
@@ -2358,7 +2358,7 @@ function builtinActionDefs(): ActionDef[] {
 			const cosA = pr.cos(angle);
 			const sinA = pr.sin(angle);
 			for (const vid of vIds) {
-				const v = topology.vertices[vid];
+				const v = model.vertices[vid];
 				if (v) {
 					const dx = v.position[0] - center[0];
 					const dy = v.position[1] - center[1];
@@ -2383,7 +2383,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "transform.scale3d",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const center = isVec3(params.center) ? params.center : null;
 			const refA = isVec3(params.referenceA) ? params.referenceA : null;
 			const refB = isVec3(params.referenceB) ? params.referenceB : null;
@@ -2398,7 +2398,7 @@ function builtinActionDefs(): ActionDef[] {
 			const vIds = collectTargetVertices(model, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
 			for (const vid of vIds) {
-				const v = topology.vertices[vid];
+				const v = model.vertices[vid];
 				if (v) {
 					modifiedVertices.push({
 						id: vid as VertexRef,
@@ -2421,7 +2421,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "transform.scale1d",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const center = isVec3(params.center)
 				? params.center
 				: isVec3(params.origin)
@@ -2446,7 +2446,7 @@ function builtinActionDefs(): ActionDef[] {
 			const vIds = collectTargetVertices(model, targets);
 			const modifiedVertices: VertexRecordDiff[] = [];
 			for (const vid of vIds) {
-				const v = topology.vertices[vid];
+				const v = model.vertices[vid];
 				if (v) {
 					const delta = pr.vec3Sub(v.position, center);
 					const proj = pr.vec3Dot(delta, dir);
@@ -2514,21 +2514,21 @@ function builtinActionDefs(): ActionDef[] {
 	const viewSurfaces: ActionDef = {
 		id: "view.surfaces",
 		run: async (_, ctx) => {
-			const data = await Promise.resolve(ctx.kernel.computeSurfaceViews(ctx.topology));
+			const data = await Promise.resolve(ctx.kernel.computeSurfaceViews(ctx.model));
 			return { data };
 		},
 	};
 	const viewParts: ActionDef = {
 		id: "view.parts",
 		run: async (_, ctx) => {
-			const data = await Promise.resolve(ctx.kernel.computePartViews(ctx.topology));
+			const data = await Promise.resolve(ctx.kernel.computePartViews(ctx.model));
 			return { data };
 		},
 	};
 	const viewVolumes: ActionDef = {
 		id: "view.volumes",
 		run: async (_, ctx) => {
-			const data = await Promise.resolve(ctx.kernel.computeVolumeViews(ctx.topology));
+			const data = await Promise.resolve(ctx.kernel.computeVolumeViews(ctx.model));
 			return { data };
 		},
 	};
@@ -2536,7 +2536,7 @@ function builtinActionDefs(): ActionDef[] {
 		id: "transform.copy",
 		run: (params, ctx) => {
 			const pr = ctx.preview;
-			const topology = ctx.topology;
+			const model = ctx.model;
 			const targets = Array.isArray(params.targets) ? (params.targets as SelectionTarget[]) : [];
 			const from = isVec3(params.from) ? params.from : null;
 			const rawTo = isVec3(params.to) ? params.to : null;
@@ -2572,48 +2572,48 @@ function builtinActionDefs(): ActionDef[] {
 
 			const walk = (kind: ModelEntityKind, id: string) => {
 				if (kind === "vertex") {
-					if (topology.vertices[id]) vertices.add(id as VertexRef);
+					if (model.vertices[id]) vertices.add(id as VertexRef);
 				} else if (kind === "edge") {
-					const e = topology.edges[id];
+					const e = model.edges[id];
 					if (e) { edges.add(id as EdgeRef); for (const v of e.vertexIds) walk("vertex", v); }
 				} else if (kind === "wire") {
-					const w = topology.wires[id];
+					const w = model.wires[id];
 					if (w) { wires.add(id as WireRef); for (const e of w.edgeIds) walk("edge", e); }
 				} else if (kind === "face") {
-					const f = topology.faces[id];
+					const f = model.faces[id];
 					if (f) { faces.add(id as FaceRef); for (const w of f.wireIds) walk("wire", w); }
 				} else if (kind === "shell") {
-					const s = topology.shells[id];
+					const s = model.shells[id];
 					if (s) { shells.add(id as ShellRef); for (const f of s.faceIds) walk("face", f); }
 				} else if (kind === "cell") {
-					const c = topology.cells[id];
+					const c = model.cells[id];
 					if (c) { cells.add(id as CellRef); for (const s of c.shellIds) walk("shell", s); }
 				}
 			};
 			for (const t of targets) walk(t.kind, t.id);
 
 			for (const vid of vertices) {
-				const v = topology.vertices[vid]!;
+				const v = model.vertices[vid]!;
 				diff.vertices!.added!.push({ id: getMapped(vid, "v"), position: pr.vec3Add(v.position, delta) });
 			}
 			for (const eid of edges) {
-				const e = topology.edges[eid]!;
+				const e = model.edges[eid]!;
 				diff.edges!.added!.push({ id: getMapped(eid, "e"), vertexIds: e.vertexIds.map(x => getMapped(x, "v")) });
 			}
 			for (const wid of wires) {
-				const w = topology.wires[wid]!;
+				const w = model.wires[wid]!;
 				diff.wires!.added!.push({ id: getMapped(wid, "w"), edgeIds: w.edgeIds.map(x => getMapped(x, "e")) });
 			}
 			for (const fid of faces) {
-				const f = topology.faces[fid]!;
+				const f = model.faces[fid]!;
 				diff.faces!.added!.push({ id: getMapped(fid, "f"), wireIds: f.wireIds.map(x => getMapped(x, "w")) });
 			}
 			for (const sid of shells) {
-				const s = topology.shells[sid]!;
+				const s = model.shells[sid]!;
 				diff.shells!.added!.push({ id: getMapped(sid, "s"), faceIds: s.faceIds.map(x => getMapped(x, "f")) });
 			}
 			for (const cid of cells) {
-				const c = topology.cells[cid]!;
+				const c = model.cells[cid]!;
 				diff.cells!.added!.push({ id: getMapped(cid, "c"), shellIds: c.shellIds.map(x => getMapped(x, "s")) });
 			}
 
@@ -2814,7 +2814,7 @@ export interface StateEngine {
 	send(
 		event: InteractionEvent,
 		kernel?: SpatialKernel,
-		topology?: Model,
+		model?: Model,
 		actions?: ActionRegistry,
 		derived?: DerivedViewService,
 		preview?: SpatialPreviewKernel,
@@ -2871,7 +2871,7 @@ export async function applyEffectAsync(
 		const queryCtx: KernelQueryContext = { model, derived: env.derived as DerivedViewService | undefined };
 		if (a.query === "surface.resolveFaces" && derived) {
 			const sid = String(params.surfaceId ?? "");
-			writePathTarget(a.assignTo, env, derived.resolveSurface(sid as SurfaceRef, topology));
+			writePathTarget(a.assignTo, env, derived.resolveSurface(sid as SurfaceRef, model));
 		} else if (kernel?.query) {
 			const res = await kernel.query(a.query, params, queryCtx);
 			writePathTarget(a.assignTo, env, res);
@@ -2884,7 +2884,7 @@ export async function applyEffectAsync(
 			paramBag[k] = evalExpr(ex, env);
 		}
 		const k = kernel ?? (null as unknown as SpatialKernel);
-		const r = await Promise.resolve(def.run(paramBag, { kernel: k, preview: math, topology }));
+		const r = await Promise.resolve(def.run(paramBag, { kernel: k, preview: math, model }));
 		if (r.patch) applyActionPatchToContext(ctx, r.patch);
 	}
 }
@@ -2897,11 +2897,11 @@ export async function applyTransition(
 	event: InteractionEvent,
 	kernel?: SpatialKernel,
 	actions?: ActionRegistry,
-	topology?: Model,
+	model?: Model,
 	derived?: DerivedViewService,
 	preview?: SpatialPreviewKernel,
 ): Promise<ApplyTransitionResult> {
-	const model = topology ?? new Model();
+	const graph = model ?? new Model();
 	const st = findState(spec, state);
 	const handler = st?.on?.find((h) => h.event === event.kind);
 	if (!handler) return { ok: false, nextState: state, branchIndex: -1 };
@@ -2915,7 +2915,7 @@ export async function applyTransition(
 			if (!g || !math || !evalGuard(g, { context, event, preview: math })) continue;
 		}
 		for (const eff of tr.effects ?? []) {
-			await applyEffectAsync(eff, context, event, kernel, model, actions, derived, preview);
+			await applyEffectAsync(eff, context, event, kernel, graph, actions, derived, preview);
 		}
 		let nextState = state;
 		if (tr.target) {
@@ -3021,7 +3021,7 @@ export class StatechartRuntime implements StateEngine {
 	async send(
 		event: InteractionEvent,
 		kernel?: SpatialKernel,
-		topology?: Model,
+		model?: Model,
 		actions?: ActionRegistry,
 		derived?: DerivedViewService,
 		preview?: SpatialPreviewKernel,
@@ -3630,7 +3630,7 @@ export class InteractionRuntime {
 			writePathTarget(outPath, { context: ctx2, event: undefined }, data);
 			data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
 		}
-		const inverse = applyModelDiff(topo, diff);
+		const inverse = applyModelDiff(model, diff);
 		const archiveContext = this.cloneCtx(this.sm.getContext());
 		if (advanceToFinalState) await this.sm.send({ kind: "confirm" }, k, model, this.actions, this.opts.derived, this.previewKernel());
 		const res: InteractionResponse = { ok: true, errors: [], warnings: [], infos: [], diff, data, archiveContext };
@@ -4065,7 +4065,7 @@ export function buildCreateAnchorInteractionSpec(): InteractionSpec {
 	return compileInteraction(s);
 }
 
-/** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/interaction/<group>/*.json`). */
+/** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/extension/builtin/interaction/<group>/*.json`). */
 export interface SpatialInteraction {
 	readonly id: string;
 	readonly label: string;
@@ -4073,7 +4073,7 @@ export interface SpatialInteraction {
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/assets/interaction/<group>/*.json`). */
+/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/assets/extension/builtin/interaction/<group>/*.json`). */
 export function listSpatialInteractions(): readonly SpatialInteraction[] {
 	return builtinInteractionJsons.map(interactionFixtureRow);
 }
@@ -6261,3 +6261,4 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+

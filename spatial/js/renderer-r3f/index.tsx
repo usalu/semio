@@ -163,8 +163,8 @@ export function useTessellation(
 
 /** @emoji 📦 Lists `CellRef` ids present on a topology graph (document cells for tessellation). */
 export function listTopologyCellRefs(model: Model | ModelJson | null): readonly CellRef[] {
-	if (!topo) return [];
-	const graph = topo instanceof Model ? topo : parseModelJson(model);
+	if (!model) return [];
+	const graph = model instanceof Model ? model : parseModelJson(model);
 	if (!graph) return [];
 	return Object.keys(graph.cells).map((id) => cellRef(id));
 }
@@ -184,13 +184,13 @@ export function useDocumentMeshes(
 	tolerance: number,
 ): readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[] {
 	const [meshes, setMeshes] = useState<readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[]>([]);
-	const revision = topology.revision;
+	const revision = model.revision;
 	useEffect(() => {
 		if (!kernel) {
 			setMeshes([]);
 			return;
 		}
-		const cells = listTopologyCellRefs(topology);
+		const cells = listTopologyCellRefs(model);
 		if (cells.length === 0) {
 			setMeshes([]);
 			return;
@@ -529,6 +529,15 @@ function spatialPickKindsForSelectionAccept(accept: readonly ModelEntityKind[]):
 	if (!accept.length) return null;
 	const out = new Set<SpatialPickTargetKind>();
 	for (const kind of accept) {
+		if (
+			kind === "object" ||
+			kind === "objectFace" ||
+			kind === "objectEdge" ||
+			kind === "objectVertex"
+		) {
+			out.add(kind);
+			continue;
+		}
 		const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind];
 		if (mapped) out.add(mapped);
 		if (kind === "surface" || kind === "part" || kind === "volume") out.add(kind);
@@ -564,6 +573,8 @@ export interface SpatialPickTarget {
 	readonly id: string;
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
+	/** @emoji 🧭 Kernel-private geometry entity kind for `object*` picks (e.g. `wire` vs `edge`). */
+	readonly geometryKind?: ModelEntityKind;
 	readonly derivedFrom?: readonly { readonly kind: "face" | "cell"; readonly id: string }[];
 	readonly exposure?: SurfaceExposure;
 	readonly stance?: SurfaceStance;
@@ -890,7 +901,7 @@ function topologyAllVertexPoints(vertices: Record<string, VertexRecord>): readon
 
 function topologyEntityPoints(
 	buckets: ReturnType<typeof topologyGeometryBuckets>,
-	kind: SpatialPickTargetKind,
+	kind: ModelEntityKind,
 	id: string,
 ): readonly Vec3[] {
 	if (kind === "anchor") {
@@ -916,6 +927,18 @@ function topologyEntityPoints(
 	}
 	if (kind === "surface" || kind === "part") return [];
 	return [];
+}
+
+function topologyEntityPointsForPickTarget(
+	buckets: ReturnType<typeof topologyGeometryBuckets>,
+	target: SpatialPickTarget,
+): readonly Vec3[] {
+	if (target.kind === "surface" || target.kind === "part") return [];
+	const geometryKind = kernelGeometryKindForObjectPick(
+		target.kind as SpatialObjectPickTargetKind,
+		target.geometryKind,
+	);
+	return topologyEntityPoints(buckets, geometryKind, target.id);
 }
 
 function topologyWireEdgeSegments(
@@ -959,7 +982,7 @@ export function topologyEntityWireSegments(
 	if (kind === "cellComplex" && buckets.cellComplexes[id]) {
 		return buckets.cellComplexes[id]!.cellIds.flatMap((cellId) => topologyEntityWireSegments(buckets, "cell", cellId));
 	}
-	const pts = topologyEntityPoints(buckets, kind as SpatialPickTargetKind, id);
+	const pts = topologyEntityPoints(buckets, kind, id);
 	const bb = bboxFromPoints(pts);
 	return bb ? bboxWireSegments(bb.min, bb.max) : [];
 }
@@ -1046,7 +1069,7 @@ function createAnalyticSpatialPickTargets(
 	const targets: SpatialPickTarget[] = [];
 	const all = topologyAllVertexPoints(buckets.vertices);
 	const allCenter = topologyPointCentroid(all);
-	for (const surface of derived.computeSurfaces(model)) {
+	for (const surface of derived.computeSurfaces(topo)) {
 		const points = surface.regionPoints?.length
 			? surface.regionPoints
 			: surface.sourceFaceIds.flatMap((faceId) => topologyEntityPoints(buckets, "face", faceId));
@@ -1063,7 +1086,7 @@ function createAnalyticSpatialPickTargets(
 			stance: surface.stance,
 		});
 	}
-	for (const part of derived.computeParts(model)) {
+	for (const part of derived.computeParts(topo)) {
 		const merged = uniqueTopologyPoints(partPickPoints(topo, buckets, part, all));
 		const point = topologyPointCentroid(merged) ?? allCenter;
 		if (!point) continue;
@@ -1088,66 +1111,30 @@ export function createSpatialPickTargets(
 	const buckets = topologyGeometryBuckets(geometry);
 	const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
 	const targets: SpatialPickTarget[] = [];
-	if (model) {
-		for (const anchor of topologyRecords(buckets.anchors)) {
-			targets.push({ kind: "anchor", id: anchor.id, point: scenePreview().evaluateAnchorPosition(topo, anchor) });
-		}
-	}
 	for (const vertex of topologyRecords(buckets.vertices)) {
-		targets.push({ kind: "vertex", id: vertex.id, point: vertex.position });
+		targets.push({ kind: "objectVertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
 	}
 	for (const edge of topologyRecords(buckets.edges)) {
 		const points = topologyEdgePoints(buckets.vertices, edge);
 		const point = topologyPointCentroid(points);
-		if (point) targets.push({ kind: "edge", id: edge.id, point, points });
+		if (point) targets.push({ kind: "objectEdge", geometryKind: "edge", id: edge.id, point, points });
 	}
 	for (const wire of topologyRecords(buckets.wires)) {
 		const points = topologyWirePoints(buckets.vertices, buckets.edges, wire);
 		const point = topologyPointCentroid(points);
-		if (point) targets.push({ kind: "wire", id: wire.id, point, points });
+		if (point) targets.push({ kind: "objectEdge", geometryKind: "wire", id: wire.id, point, points });
 	}
 	for (const face of topologyRecords(buckets.faces)) {
 		const points = topologyFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
 		const point = topologyPointCentroid(points);
-		if (point) targets.push({ kind: "face", id: face.id, point, points });
-	}
-	for (const shell of topologyRecords(buckets.shells)) {
-		const points = topologyShellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, shell);
-		const point = topologyPointCentroid(points);
-		if (point) targets.push({ kind: "shell", id: shell.id, point, points });
+		if (point) targets.push({ kind: "objectFace", geometryKind: "face", id: face.id, point, points });
 	}
 	const all = topologyAllVertexPoints(buckets.vertices);
 	const allCenter = topologyPointCentroid(all);
 	for (const cell of topologyRecords(buckets.cells)) {
 		const points = topologyCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 		const point = topologyPointCentroid(points) ?? allCenter;
-		if (point) targets.push({ kind: "cell", id: cell.id, point, points: points.length ? points : all });
-	}
-	for (const complex of topologyRecords(buckets.cellComplexes)) {
-		const points = topologyCellComplexPoints(
-			buckets.vertices,
-			buckets.edges,
-			buckets.wires,
-			buckets.faces,
-			buckets.shells,
-			buckets.cells,
-			complex,
-		);
-		const point = topologyPointCentroid(points) ?? allCenter;
-		if (point) targets.push({ kind: "cellComplex", id: complex.id, point, points: points.length ? points : all });
-	}
-	for (const cluster of topologyRecords(buckets.clusters)) {
-		const points = uniqueTopologyPoints(
-			cluster.memberIds.flatMap((id) => {
-				for (const kind of SPATIAL_PICK_TARGET_KINDS) {
-					const hit = topologyEntityPoints(buckets, kind, id);
-					if (hit.length) return hit;
-				}
-				return [];
-			}),
-		);
-		const point = topologyPointCentroid(points) ?? allCenter;
-		if (point) targets.push({ kind: "cluster", id: cluster.id, point, points: points.length ? points : all });
+		if (point) targets.push({ kind: "object", geometryKind: "cell", id: cell.id, point, points: points.length ? points : all });
 	}
 	if (derived && model) targets.push(...createAnalyticSpatialPickTargets(buckets, derived, model));
 	return targets;
@@ -1158,8 +1145,10 @@ export function filterSpatialPickTargets(
 	accept: readonly ModelEntityKind[] = [],
 	toggles: SpatialPickKindToggles = {},
 ): SpatialPickTarget[] {
-	const acceptSet = accept.length ? new Set<ModelEntityKind>(accept) : null;
-	return targets.filter((target) => toggles[target.kind] !== false && (!acceptSet || acceptSet.has(target.kind)));
+	const acceptKinds = spatialPickKindsForSelectionAccept(accept);
+	return targets.filter(
+		(target) => toggles[target.kind] !== false && (!acceptKinds || acceptKinds.has(target.kind)),
+	);
 }
 
 /** @emoji 🧲 Creates a statechart event carrying snapped point plus selected topology metadata. */
@@ -1169,13 +1158,17 @@ export function createSpatialPickEvent(
 	target: SpatialPickTarget | null,
 	modifiers: InteractionEvent["modifiers"] = {},
 ): InteractionEvent {
-	return target
+	const geometryKind =
+		target && target.kind !== "surface" && target.kind !== "part"
+			? kernelGeometryKindForObjectPick(target.kind as SpatialObjectPickTargetKind, target.geometryKind)
+			: target?.kind;
+	return target && geometryKind
 		? {
 				kind,
 				point,
 				modifiers,
-				snap: { kind: target.kind, id: target.id, point: target.point },
-				selection: { kind: target.kind, id: target.id },
+				snap: { kind: geometryKind, id: target.id, point: target.point },
+				selection: { kind: geometryKind, id: target.id },
 			}
 		: { kind, point, modifiers };
 }
@@ -1357,7 +1350,7 @@ function TopologyTargetPreviewMeshes({
 	const solids = useMemo(() => {
 		const out: { readonly key: string; readonly center: Vec3; readonly size: Vec3 }[] = [];
 		for (const target of targets) {
-			const pts = topologyEntityPoints(buckets, target.kind as SpatialPickTargetKind, target.id).map(transform);
+			const pts = topologyEntityPointsForPickTarget(buckets, target).map(transform);
 			if (target.kind === "vertex" && pts[0]) {
 				out.push({ key: `${target.kind}:${target.id}:v`, center: pts[0], size: [0.1, 0.1, 0.1] });
 				continue;
@@ -1935,24 +1928,19 @@ function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonl
 }
 
 const spatialPickPriority: Record<SpatialPickTargetKind, number> = {
-	anchor: 0,
-	vertex: 0,
-	edge: 1,
-	wire: 2,
-	face: 3,
+	objectVertex: 0,
+	objectEdge: 1,
+	objectFace: 2,
+	object: 3,
 	surface: 4,
-	shell: 5,
-	cell: 6,
-	part: 7,
-	cellComplex: 8,
-	cluster: 9,
+	part: 5,
 };
 
 function targetRayScore(ray: THREE.Ray, target: SpatialPickTarget): number | null {
 	const points = target.points?.length ? target.points : [target.point];
 	const box = new THREE.Box3();
 	for (const point of points) box.expandByPoint(new THREE.Vector3(point[0], point[1], point[2]));
-	box.expandByScalar(target.kind === "vertex" ? 0.12 : 0.08);
+	box.expandByScalar(target.kind === "objectVertex" ? 0.12 : 0.08);
 	const hit = ray.intersectBox(box, new THREE.Vector3());
 	if (!hit) return null;
 	return ray.origin.distanceTo(hit) + spatialPickPriority[target.kind] * 1e-4;
@@ -2134,8 +2122,8 @@ function partSemanticStyle(overlap: PartOverlap): { color: string; emissive: str
 }
 
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
-	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.34, lineWidth: 9 };
-	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "vertex" || target.kind === "anchor" ? 1 : 0.28, lineWidth: 8 };
+	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "objectVertex" ? 1 : 0.34, lineWidth: 9 };
+	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "objectVertex" ? 1 : 0.28, lineWidth: 8 };
 	if (target.kind === "surface" && target.exposure && target.stance) {
 		const base = surfaceSemanticStyle(target.exposure, target.stance);
 		return { ...base, opacity: target.exposure === "internal" ? 0.4 : 0.34, lineWidth: 7 };
@@ -2144,10 +2132,28 @@ function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: bool
 		const base = partSemanticStyle(target.overlap);
 		return { ...base, opacity: target.overlap === "intersection" ? 0.42 : 0.36, lineWidth: 8 };
 	}
-	if (target.kind === "anchor") return { color: "#9cffc8", emissive: "#1e4d35", opacity: 1, lineWidth: 5 };
-	if (target.kind === "vertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
-	if (target.kind === "edge" || target.kind === "wire") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
+	if (target.kind === "objectVertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
+	if (target.kind === "objectEdge") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
 	return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
+}
+
+function selectionTargetPickKind(target: SelectionTarget): SpatialPickTargetKind | null {
+	if (target.kind === "surface" || target.kind === "part" || target.kind === "volume") return target.kind;
+	return GEOMETRY_KIND_TO_OBJECT_PICK[target.kind] ?? null;
+}
+
+function pinnedPickTargetKeys(keys: ReadonlySet<string>): ReadonlySet<string> {
+	const out = new Set<string>();
+	for (const key of keys) {
+		out.add(key);
+		const colon = key.indexOf(":");
+		if (colon < 0) continue;
+		const kind = key.slice(0, colon);
+		const id = key.slice(colon + 1);
+		const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind as ModelEntityKind];
+		if (mapped) out.add(`${mapped}:${id}`);
+	}
+	return out;
 }
 
 function spatialSelectionTarget(target: SpatialPickTarget) {
@@ -2159,7 +2165,8 @@ function spatialSelectionTarget(target: SpatialPickTarget) {
 			derivedFrom: target.derivedFrom ?? [],
 		};
 	}
-	return { kind: target.kind, id: target.id, editable: true };
+	const geometryKind = kernelGeometryKindForObjectPick(target.kind as SpatialObjectPickTargetKind, target.geometryKind);
+	return { kind: geometryKind, id: target.id, editable: true };
 }
 
 /** @emoji 🎯 Host topology picking stays on without a bound interaction or once the session reaches a final state. */
@@ -2184,19 +2191,20 @@ export function resolveSpatialPickTargetsToRender(
 	analyticFilterToggles: SpatialAnalyticToggles = {},
 	pinnedTargetKeys: ReadonlySet<string> = new Set(),
 ): SpatialPickTarget[] {
+	const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
 	const enabledTargets = filterSpatialPickTargetsAnalytic(
 		filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles),
 		analyticFilterToggles,
 	);
 	const out = enabledTargets.filter((target) => {
 		const key = spatialPickTargetKey(target);
-		if (pinnedTargetKeys.has(key)) return true;
-		return target.kind === "vertex" || target.kind === "anchor";
+		if (pinnedKeys.has(key)) return true;
+		return target.kind === "objectVertex";
 	});
 	const seen = new Set(out.map(spatialPickTargetKey));
 	for (const target of viewTargets) {
 		const key = spatialPickTargetKey(target);
-		if (!pinnedTargetKeys.has(key) || seen.has(key)) continue;
+		if (!pinnedKeys.has(key) || seen.has(key)) continue;
 		out.push(target);
 		seen.add(key);
 	}
@@ -3064,12 +3072,12 @@ function replCommandTextWithoutSpaces(text: string): string {
 }
 
 function replFirstWireId(model: Model): string | null {
-	const ks = Object.keys(topo.wires);
+	const ks = Object.keys(model.wires);
 	return ks.length ? model.wires[ks[0]!]!.id : null;
 }
 
 function replFirstFaceId(model: Model): string | null {
-	const ks = Object.keys(topo.faces);
+	const ks = Object.keys(model.faces);
 	return ks.length ? model.faces[ks[0]!]!.id : null;
 }
 
@@ -3325,7 +3333,8 @@ function replSelectionLayerParts(
 	const inView: SelectionTarget[] = [];
 	const outOfView: SelectionTarget[] = [];
 	for (const target of layer) {
-		if (allowed.has(target.kind as SpatialPickTargetKind)) inView.push(target);
+		const pickKind = selectionTargetPickKind(target);
+		if (pickKind && allowed.has(pickKind)) inView.push(target);
 		else outOfView.push(target);
 	}
 	return { layer, inView, outOfView };
@@ -3338,7 +3347,17 @@ export function replPruneSelectionByKind(
 	kind: SpatialPickTargetKind,
 ): SelectionTarget[] {
 	if (!spatialPickViewKindSet(pickViewKind).has(kind)) return [...selection];
-	return selection.filter((target) => target.kind !== kind);
+	const geometryKind =
+		kind === "objectVertex"
+			? "vertex"
+			: kind === "objectEdge"
+				? "edge"
+				: kind === "objectFace"
+					? "face"
+					: kind === "object"
+						? "cell"
+						: kind;
+	return selection.filter((target) => target.kind !== geometryKind && selectionTargetPickKind(target) !== kind);
 }
 
 /** @emoji 🪪 Drops analytic targets that fail exposure / stance / overlap selection toggles. */
@@ -3851,13 +3870,13 @@ export function InteractionRepl({
 		void startRuntime();
 	}, [rt, startRuntime]);
 
-	const topologyRevision = documentModel.topology.revision;
+	const modelRevision = documentModel.model.revision;
 	const hostPickingEnabled = replHostTopologyPickingEnabled(interactionId, spec, snapshot.state);
 	useEffect(() => {
 		if (!derived) return;
-		const model = documentModel.topology;
+		const model = documentModel.model;
 		const revision = model.revision;
-		if (lastDerivedRefreshRef.current.topology === topo && lastDerivedRefreshRef.current.revision === revision) return;
+		if (lastDerivedRefreshRef.current.model === model && lastDerivedRefreshRef.current.revision === revision) return;
 		let cancelled = false;
 		const run = () => {
 			void derived.refresh(model).then(() => {
@@ -3873,7 +3892,7 @@ export function InteractionRepl({
 			if (useIdleCallback) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
-	}, [derived, documentModel.model, topologyRevision]);
+	}, [derived, documentModel.model, modelRevision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -3918,7 +3937,7 @@ export function InteractionRepl({
 	const activePickViewKinds = useMemo(() => spatialPickViewKinds(pickViewKind), [pickViewKind]);
 	const analyticSummary = useMemo(() => {
 		if (!derived || pickViewKind !== "analytic") return null;
-		const model = documentModel.topology;
+		const model = documentModel.model;
 		return {
 			surfaces: derived.computeSurfaces(model),
 			parts: derived.computeParts(model),
@@ -4228,7 +4247,7 @@ export function InteractionRepl({
 	const dispatchTransition = useCallback(
 		(row: InteractionKeybindRow) => {
 			onTransitionRun?.(row);
-			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, model: documentModel.topology });
+			const ev = replBuildDispatchEvent(row, { interactionId: spec.id, model: documentModel.model });
 			if (ev) void rt.send(ev);
 		},
 		[rt, spec.id, documentModel.model, onTransitionRun],
@@ -5215,8 +5234,8 @@ if (import.meta.vitest) {
 
 		it("topologyEntityWireSegments uses face boundary edges not bbox diagonals", () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const faceId = Object.keys(topo.faces)[0]!;
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			const faceId = Object.keys(model.faces)[0]!;
 			const buckets = topologyGeometryBuckets(model);
 			const segs = topologyEntityWireSegments(buckets, "face", faceId);
 			expect(segs.length).toBeGreaterThanOrEqual(4);
@@ -5225,9 +5244,9 @@ if (import.meta.vitest) {
 
 		it("collectTopologyEdgeSegments returns one segment per topology edge", () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
 			const segs = collectTopologyEdgeSegments(topologyGeometryBuckets(model));
-			expect(segs.length).toBe(Object.keys(topo.edges).length);
+			expect(segs.length).toBe(Object.keys(model.edges).length);
 			expect(segs.length).toBe(12);
 		});
 
@@ -5365,7 +5384,7 @@ if (import.meta.vitest) {
 				cellComplexes: [],
 				clusters: [],
 			} as unknown as ModelJson);
-			expect(targets).toEqual([{ kind: "vertex", id: "v0", point: [1, 2, 3] }]);
+			expect(targets).toEqual([{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
 				kind: "pointer.down",
 				point: [9, 9, 9],
@@ -5397,28 +5416,24 @@ if (import.meta.vitest) {
 				clusters: [{ id: "cl0", memberIds: ["c0"] }],
 			} as unknown as ModelJson);
 			expect(targets.map((target) => target.kind)).toEqual([
-				"anchor",
-				"vertex",
-				"vertex",
-				"vertex",
-				"edge",
-				"edge",
-				"wire",
-				"face",
-				"shell",
-				"cell",
-				"cellComplex",
-				"cluster",
+				"objectVertex",
+				"objectVertex",
+				"objectVertex",
+				"objectEdge",
+				"objectEdge",
+				"objectEdge",
+				"objectFace",
+				"object",
 			]);
-			expect(targets.find((target) => target.kind === "cell")?.point).toEqual([2 / 3, 1 / 3, 0]);
+			expect(targets.find((target) => target.kind === "object")?.point).toEqual([2 / 3, 1 / 3, 0]);
 		});
 
 		it("creates analytic surface and part targets from derived views", async () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(model);
-			const targets = createSpatialPickTargets(topo, derived);
+			const targets = createSpatialPickTargets(model, derived);
 			expect(targets.some((t) => t.kind === "surface")).toBe(true);
 			expect(targets.some((t) => t.kind === "part")).toBe(true);
 			const analytic = filterSpatialPickTargetsByView(targets, "analytic");
@@ -5428,8 +5443,8 @@ if (import.meta.vitest) {
 
 		it("play topology punch through host exposes one difference pick target per cell", async () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
 			const derived = new DerivedViewService({
 				id: "topology-parts",
 				operations: [],
@@ -5438,7 +5453,7 @@ if (import.meta.vitest) {
 				computeVolumeViews: async () => [],
 			} as unknown as import("@spatial/js-core").SpatialKernel);
 			await derived.refresh(model);
-			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(topo, derived), "analytic").filter(
+			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(model, derived), "analytic").filter(
 				(t) => t.kind === "part",
 			);
 			expect(partTargets.filter((t) => t.overlap === "difference")).toHaveLength(2);
@@ -5450,12 +5465,15 @@ if (import.meta.vitest) {
 
 		it("partitions raw and analytic pick targets", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
 				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0] },
 				{ kind: "part", id: "part-c0", point: [0.5, 0.5, 0.5] },
 			];
-			expect(filterSpatialPickTargetsByView(targets, "raw").map(spatialPickTargetKey)).toEqual(["vertex:v0", "face:f0"]);
+			expect(filterSpatialPickTargetsByView(targets, "raw").map(spatialPickTargetKey)).toEqual([
+				"objectVertex:v0",
+				"objectFace:f0",
+			]);
 			expect(filterSpatialPickTargetsByView(targets, "analytic").map(spatialPickTargetKey)).toEqual([
 				"surface:surface-f0",
 				"part:part-c0",
@@ -5464,32 +5482,30 @@ if (import.meta.vitest) {
 
 		it("creates selectable targets for every committed box topology kind", async () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(model);
-			const targets = createSpatialPickTargets(topo, derived);
+			const targets = createSpatialPickTargets(model, derived);
 			const counts = targets.reduce<Record<string, number>>((acc, target) => {
 				acc[target.kind] = (acc[target.kind] ?? 0) + 1;
 				return acc;
 			}, {});
-			expect(counts.vertex).toBe(8);
-			expect(counts.edge).toBe(12);
-			expect(counts.wire).toBe(6);
-			expect(counts.face).toBe(6);
+			expect(counts.objectVertex).toBe(8);
+			expect(counts.objectEdge).toBe(18);
+			expect(counts.objectFace).toBe(6);
 			expect(counts.surface).toBeGreaterThan(0);
-			expect(counts.shell).toBe(1);
-			expect(counts.cell).toBe(1);
+			expect(counts.object).toBe(1);
 			expect(counts.part).toBeGreaterThan(0);
 		});
 
 		it("filters selectable targets by active accept list and kind toggles", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "edge", id: "e0", point: [0.5, 0, 0] },
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "objectEdge", geometryKind: "edge", id: "e0", point: [0.5, 0, 0] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
 			];
-			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { edge: false }).map(spatialPickTargetKey)).toEqual([
-				"vertex:v0",
+			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { objectEdge: false }).map(spatialPickTargetKey)).toEqual([
+				"objectVertex:v0",
 			]);
 		});
 
@@ -5565,25 +5581,29 @@ if (import.meta.vitest) {
 
 		it("effective pick toggles require both visibility and selection toggles", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "edge", id: "e0", point: [0.5, 0, 0] },
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0] },
+				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "objectEdge", geometryKind: "edge", id: "e0", point: [0.5, 0, 0] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
 			];
 			expect(
-				filterSpatialPickTargetsForVisibility(targets, { vertex: true, edge: false, face: true }).map(spatialPickTargetKey),
-			).toEqual(["vertex:v0", "face:f0"]);
+				filterSpatialPickTargetsForVisibility(targets, { objectVertex: true, objectEdge: false, objectFace: true }).map(spatialPickTargetKey),
+			).toEqual(["objectVertex:v0", "objectFace:f0"]);
 			expect(
-				filterSpatialPickTargets(targets, [], { vertex: false, edge: true, face: false }).map(spatialPickTargetKey),
-			).toEqual(["edge:e0"]);
-			expect(intersectSpatialPickKindToggles({ edge: false, face: true }, { edge: true, face: false })).toEqual({
-				edge: false,
-				face: false,
+				filterSpatialPickTargets(targets, [], { objectVertex: false, objectEdge: true, objectFace: false }).map(spatialPickTargetKey),
+			).toEqual(["objectEdge:e0"]);
+			expect(
+				intersectSpatialPickKindToggles({ objectEdge: false, objectFace: true }, { objectEdge: true, objectFace: false }),
+			).toEqual({
+				objectEdge: false,
+				objectFace: false,
 			});
 			expect(
-				filterSpatialPickTargets(targets, [], intersectSpatialPickKindToggles({ edge: false, face: true }, { edge: true, face: true })).map(
-					spatialPickTargetKey,
-				),
-			).toEqual(["vertex:v0", "face:f0"]);
+				filterSpatialPickTargets(
+					targets,
+					[],
+					intersectSpatialPickKindToggles({ objectEdge: false, objectFace: true }, { objectEdge: true, objectFace: true }),
+				).map(spatialPickTargetKey),
+			).toEqual(["objectVertex:v0", "objectFace:f0"]);
 		});
 
 		it("effective analytic pick toggles require both visibility and selection analytic filters", () => {
@@ -5596,12 +5616,19 @@ if (import.meta.vitest) {
 		});
 
 		it("resolveSpatialSceneVisibility hides scene geometry when show kinds are unchecked", () => {
-			expect(resolveSpatialSceneVisibility("raw", { edge: false, wire: false, face: false, shell: false, cell: false, cellComplex: false, cluster: false })).toEqual({
+			expect(
+				resolveSpatialSceneVisibility("raw", {
+					objectEdge: false,
+					objectFace: false,
+					object: false,
+					objectVertex: false,
+				}),
+			).toEqual({
 				showFactoryWireframe: false,
 				showCommittedFaces: false,
 				showCommittedEdges: false,
 			});
-			expect(resolveSpatialSceneVisibility("raw", { edge: true, wire: false, face: true })).toEqual({
+			expect(resolveSpatialSceneVisibility("raw", { objectEdge: true, objectFace: true, object: false })).toEqual({
 				showFactoryWireframe: true,
 				showCommittedFaces: true,
 				showCommittedEdges: true,
@@ -5620,34 +5647,34 @@ if (import.meta.vitest) {
 
 		it("renders pinned selection-menu targets even when filter visibility hides them", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
 				{ kind: "surface", id: "s0", point: [0.5, 0.5, 0], exposure: "internal", stance: "vertical" },
 			];
 			expect(
 				resolveSpatialPickTargetsToRender(
 					targets,
-					{ vertex: true, face: false, surface: false },
+					{ objectVertex: true, objectFace: false, surface: false },
 					{ exposure: { internal: false }, stance: { vertical: true } },
 					new Set(["face:f0", "surface:s0"]),
 				).map(spatialPickTargetKey),
-			).toEqual(["vertex:v0", "face:f0", "surface:s0"]);
+			).toEqual(["objectVertex:v0", "objectFace:f0", "surface:s0"]);
 		});
 
 		it("end-to-end host pick uses selection toggles while layer visibility uses filter toggles", async () => {
-			const onlyVertices = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "vertex"])) as Record<
+			const onlyVertices = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectVertex"])) as Record<
 				SpatialPickTargetKind,
 				boolean
 			>;
-			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "face"])) as Record<
+			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectFace"])) as Record<
 				SpatialPickTargetKind,
 				boolean
 			>;
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(model);
-			const targets = createSpatialPickTargets(topo, derived);
+			const targets = createSpatialPickTargets(model, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(targets, "raw");
 			const rawFilterToggles = spatialPickKindTogglesForView(onlyVertices, "raw");
 			const rawSelectionToggles = spatialPickKindTogglesForView(onlyFaces, "raw");
@@ -5655,17 +5682,17 @@ if (import.meta.vitest) {
 				filterSpatialPickTargetsForVisibility(rawViewTargets, rawFilterToggles),
 				spatialAnalyticTogglesForView({}, "raw"),
 			);
-			expect(layerVisible.every((t) => t.kind === "vertex")).toBe(true);
+			expect(layerVisible.every((t) => t.kind === "objectVertex")).toBe(true);
 			expect(layerVisible).toHaveLength(8);
-			const face = rawViewTargets.find((t) => t.kind === "face");
+			const face = rawViewTargets.find((t) => t.kind === "objectFace");
 			expect(face).toBeTruthy();
 			const ray = new THREE.Ray(
 				new THREE.Vector3(face!.point[0], face!.point[1], face!.point[2] + 4),
 				new THREE.Vector3(0, 0, -1),
 			);
 			const picked = spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, rawSelectionToggles, {});
-			expect(picked[0]?.kind).toBe("face");
-			expect(pickHoverTargetFromRay(ray, rawViewTargets, rawSelectionToggles, {})?.kind).toBe("face");
+			expect(picked[0]?.kind).toBe("objectFace");
+			expect(pickHoverTargetFromRay(ray, rawViewTargets, rawSelectionToggles, {})?.kind).toBe("objectFace");
 			const hiddenFaceToggles = intersectSpatialPickKindToggles(rawFilterToggles, rawSelectionToggles);
 			expect(spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, hiddenFaceToggles, {})).toEqual([]);
 			expect(pickHoverTargetFromRay(ray, rawViewTargets, hiddenFaceToggles, {})).toBeNull();
@@ -5710,19 +5737,19 @@ if (import.meta.vitest) {
 
 		it("end-to-end raw and analytic pick view keeps cross-view selection through picks display and clear", async () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
 			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
 			await derived.refresh(model);
-			const allTargets = createSpatialPickTargets(topo, derived);
+			const allTargets = createSpatialPickTargets(model, derived);
 			const rawViewTargets = filterSpatialPickTargetsByView(allTargets, "raw");
 			const analyticViewTargets = filterSpatialPickTargetsByView(allTargets, "analytic");
-			const face = rawViewTargets.find((t) => t.kind === "face");
+			const face = rawViewTargets.find((t) => t.kind === "objectFace");
 			const surface = analyticViewTargets.find((t) => t.kind === "surface");
 			expect(face).toBeTruthy();
 			expect(surface).toBeTruthy();
 
 			const kindToggles = defaultSpatialPickKindToggles();
-			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "face"])) as Record<
+			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectFace"])) as Record<
 				SpatialPickTargetKind,
 				boolean
 			>;
@@ -5765,7 +5792,7 @@ if (import.meta.vitest) {
 				spatialPickKindTogglesForView(onlyFaces, "raw"),
 				spatialAnalyticTogglesForView(analyticToggles, "raw"),
 			);
-			expect(rawPicked[0]?.kind).toBe("face");
+			expect(rawPicked[0]?.kind).toBe("objectFace");
 			commitViewPick("raw", rawPicked[0] ? [rawPicked[0]] : []);
 			expect(rendererSelection.some((t) => t.kind === "surface")).toBe(true);
 			expect(rendererSelection.some((t) => t.kind === "face")).toBe(true);
@@ -5786,24 +5813,24 @@ if (import.meta.vitest) {
 				spatialAnalyticTogglesForView({ exposure: { external: false, internal: true } }, "analytic"),
 			);
 			if (surface!.exposure === "external") {
-				expect(blockedAnalytic).toHaveLength(0);
+				expect(blockedAnalytic.some((t) => t.kind === "surface" && t.exposure === "external")).toBe(false);
 			}
 			const blockedRaw = spatialPickTargetsFromRay(
 				faceRay,
 				rawViewTargets,
 				SPATIAL_RAW_PICK_TARGET_KINDS,
-				spatialPickKindTogglesForView({ ...kindToggles, face: false }, "raw"),
+				spatialPickKindTogglesForView({ ...kindToggles, objectFace: false }, "raw"),
 				spatialAnalyticTogglesForView(analyticToggles, "raw"),
 			);
-			expect(blockedRaw.some((t) => t.kind === "face")).toBe(false);
+			expect(blockedRaw.some((t) => t.kind === "objectFace")).toBe(false);
 
 			const renderedRaw = resolveSpatialPickTargetsToRender(
 				rawViewTargets,
-				spatialPickKindTogglesForView({ ...kindToggles, face: false }, "raw"),
+				spatialPickKindTogglesForView({ ...kindToggles, objectFace: false }, "raw"),
 				spatialAnalyticTogglesForView(analyticToggles, "raw"),
 				new Set(replDisplayedSelectionTargets(false, "raw", rendererSelection, []).map(spatialSelectionTargetKey)),
 			);
-			expect(renderedRaw.some((t) => t.kind === "face")).toBe(true);
+			expect(renderedRaw.some((t) => t.kind === "objectFace")).toBe(true);
 		});
 
 		it("tessellates committed box cells through BrepjsKernel for the display layer", async () => {
@@ -5814,7 +5841,7 @@ if (import.meta.vitest) {
 				cornerB: [1, 1, 0],
 				height: 1,
 			});
-			applyModelDiff(topo, diff);
+			applyModelDiff(model, diff);
 			expect(listTopologyCellRefs(model).map(String)).toContain(String(cell));
 			const mesh = await kernel.tessellate(cell, 0.001);
 			expect(mesh.position.length).toBeGreaterThan(0);
@@ -5827,24 +5854,24 @@ if (import.meta.vitest) {
 
 		it("ray-picks overlapping face and surface candidates", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
 				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
 			];
 			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
 			expect(spatialPickTargetsFromRay(ray, targets, ["face", "surface"], {}).map(spatialPickTargetKey)).toEqual([
-				"face:f0",
+				"objectFace:f0",
 				"surface:surface-f0",
 			]);
 		});
 
 		it("pickHoverTargetFromRay returns the closest hover-eligible target", () => {
 			const targets: SpatialPickTarget[] = [
-				{ kind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
+				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
+				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
 			];
 			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
-			expect(pickHoverTargetFromRay(ray, targets, { vertex: false, face: true })?.id).toBe("f0");
-			expect(pickHoverTargetFromRay(ray, targets, { vertex: false, face: false })).toBeNull();
+			expect(pickHoverTargetFromRay(ray, targets, { objectVertex: false, objectFace: true })?.id).toBe("f0");
+			expect(pickHoverTargetFromRay(ray, targets, { objectVertex: false, objectFace: false })).toBeNull();
 		});
 
 		it("carries host selection into interaction selection events", () => {
@@ -5899,11 +5926,11 @@ if (import.meta.vitest) {
 		});
 
 		it("spatialPickKindTogglesForView ignores kinds from the inactive pick view", () => {
-			const rawMasked = spatialPickKindTogglesForView({ surface: false, face: false }, "raw");
+			const rawMasked = spatialPickKindTogglesForView({ surface: false, objectFace: false }, "raw");
 			expect(rawMasked.surface).toBeUndefined();
-			expect(rawMasked.face).toBe(false);
-			const analyticMasked = spatialPickKindTogglesForView({ face: false, surface: false }, "analytic");
-			expect(analyticMasked.face).toBeUndefined();
+			expect(rawMasked.objectFace).toBe(false);
+			const analyticMasked = spatialPickKindTogglesForView({ objectFace: false, surface: false }, "analytic");
+			expect(analyticMasked.objectFace).toBeUndefined();
 			expect(analyticMasked.surface).toBe(false);
 		});
 
@@ -5917,7 +5944,7 @@ if (import.meta.vitest) {
 				{ kind: "face", id: "f0", editable: true },
 				{ kind: "surface", id: "s0", editable: false },
 			];
-			expect(replPruneSelectionByKind(selection, "raw", "face")).toEqual([{ kind: "surface", id: "s0", editable: false }]);
+			expect(replPruneSelectionByKind(selection, "raw", "objectFace")).toEqual([{ kind: "surface", id: "s0", editable: false }]);
 			expect(replPruneSelectionByKind(selection, "analytic", "surface")).toEqual([{ kind: "face", id: "f0", editable: true }]);
 		});
 
@@ -5978,8 +6005,7 @@ if (import.meta.vitest) {
 				"$id runs start→commit and replFinalizeSelection updates renderer selection",
 				async (defn) => {
 					const model = new Model();
-					applyModelDiff(
-						topo,
+					applyModelDiff(model,
 						M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
 					);
 					const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -6019,6 +6045,9 @@ if (import.meta.vitest) {
 							defn.id === "selection.selectClusters"
 						) {
 							expect(rendererSelection).toEqual([]);
+						} else if (defn.id === "selection.selectShells") {
+							expect(rendererSelection.every((t) => t.kind === "shell")).toBe(true);
+							expect(rendererSelection.length).toBeGreaterThan(0);
 						} else if (defn.id === "selection.selectVolumes") {
 							expect(rendererSelection.every((t) => t.kind === "volume")).toBe(true);
 						} else {
@@ -6031,15 +6060,20 @@ if (import.meta.vitest) {
 					} else {
 						const pickView: SpatialPickViewKind =
 							defn.kinds?.some((k) => k === "surface" || k === "part") ? "analytic" : "raw";
-						expect(replDisplayedSelectionTargets(false, pickView, rendererSelection, [])).toEqual(rendererSelection);
+						const allowed = spatialPickViewKindSet(pickView);
+						expect(replDisplayedSelectionTargets(false, pickView, rendererSelection, [])).toEqual(
+							rendererSelection.filter((t) => {
+								const pickKind = selectionTargetPickKind(t);
+								return pickKind !== null && allowed.has(pickKind);
+							}),
+						);
 					}
 				},
 			);
 
 			it("chains selection commands through renderer finalize like a host session", async () => {
 				const model = new Model();
-				applyModelDiff(
-					topo,
+				applyModelDiff(model,
 					M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")),
 				);
 				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
@@ -6347,7 +6381,7 @@ if (import.meta.vitest) {
 
 		it("listTopologyCellRefs returns cell ids from a committed box", () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
 			expect(listTopologyCellRefs(model).map(String)).toEqual(["box-cell"]);
 		});
 
@@ -6370,7 +6404,7 @@ if (import.meta.vitest) {
 
 		it("boundsFromSpatialPickGeometry fits imported topology vertices", () => {
 			const model = new Model();
-			applyModelDiff(topo, M.boxModelDiff({ cornerA: [10, 20, 0], cornerB: [30, 40, 0], height: 5 }, cellRef("b")));
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [10, 20, 0], cornerB: [30, 40, 0], height: 5 }, cellRef("b")));
 			const b = boundsFromSpatialPickGeometry(model);
 			expect(b).not.toBeNull();
 			expect(b!.center[0]).toBeGreaterThan(5);

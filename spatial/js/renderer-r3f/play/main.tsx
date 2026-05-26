@@ -107,7 +107,7 @@ function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime
 //#endregion
 
 //#region 🔖GeometryCatalog
-function topologyVertexCount(json: Record<string, unknown>): number {
+function modelVertexCount(json: Record<string, unknown>): number {
 	const verts = json.vertices;
 	return Array.isArray(verts) ? verts.length : 0;
 }
@@ -139,7 +139,7 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 	},
 };
 
-type TopologyJson = ReturnType<Model["toJSON"]>;
+type ModelJsonSnapshot = ReturnType<Model["toJSON"]>;
 
 interface SpatialAnalyticBundle {
 	readonly surfaces: readonly SurfaceView[];
@@ -148,7 +148,7 @@ interface SpatialAnalyticBundle {
 }
 
 interface SpatialExchangeBundle {
-	readonly raw?: TopologyJson;
+	readonly raw?: ModelJsonSnapshot;
 	readonly analytic?: SpatialAnalyticBundle;
 }
 
@@ -176,7 +176,7 @@ interface SavePickerWindow extends Window {
 	showSaveFilePicker?: (options?: SaveFilePickerOptionsLike) => Promise<FileSystemFileHandleLike>;
 }
 
-function emptyTopologyJson(): TopologyJson {
+function emptyModelJson(): ModelJsonSnapshot {
 	return new Model().toJSON();
 }
 
@@ -192,7 +192,7 @@ function fileStem(name: string): string {
 		.replace(/^-+|-+$/g, "") || "spatial";
 }
 
-function selectRawTopology(model: Model, selection: readonly SelectionTarget[]): TopologyJson {
+function selectRawModel(model: Model, selection: readonly SelectionTarget[]): ModelJsonSnapshot {
 	const anchors = new Set<string>();
 	const vertices = new Set<string>();
 	const edges = new Set<string>();
@@ -204,39 +204,39 @@ function selectRawTopology(model: Model, selection: readonly SelectionTarget[]):
 	const clusters = new Set<string>();
 
 	const visitById = (id: string): void => {
-		if (topo.anchors[id]) {
+		if (model.anchors[id]) {
 			visitAnchor(id);
 			return;
 		}
-		if (topo.vertices[id]) {
+		if (model.vertices[id]) {
 			visitVertex(id);
 			return;
 		}
-		if (topo.edges[id]) {
+		if (model.edges[id]) {
 			visitEdge(id);
 			return;
 		}
-		if (topo.wires[id]) {
+		if (model.wires[id]) {
 			visitWire(id);
 			return;
 		}
-		if (topo.faces[id]) {
+		if (model.faces[id]) {
 			visitFace(id);
 			return;
 		}
-		if (topo.shells[id]) {
+		if (model.shells[id]) {
 			visitShell(id);
 			return;
 		}
-		if (topo.cells[id]) {
+		if (model.cells[id]) {
 			visitCell(id);
 			return;
 		}
-		if (topo.cellComplexes[id]) {
+		if (model.cellComplexes[id]) {
 			visitCellComplex(id);
 			return;
 		}
-		if (topo.clusters[id]) visitCluster(id);
+		if (model.clusters[id]) visitCluster(id);
 	};
 
 	const visitAnchor = (id: string): void => {
@@ -248,7 +248,7 @@ function selectRawTopology(model: Model, selection: readonly SelectionTarget[]):
 	};
 
 	const visitVertex = (id: string): void => {
-		if (vertices.has(id) || !topo.vertices[id]) return;
+		if (vertices.has(id) || !model.vertices[id]) return;
 		vertices.add(id);
 	};
 
@@ -476,7 +476,7 @@ function PlaySession({
 			runtime={rt}
 			history={history}
 			document={documentModel}
-			geometry={documentModel.topology}
+			geometry={documentModel.model}
 			derived={derived}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
@@ -500,9 +500,9 @@ function PlayApp() {
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
-	const [topologyJson, setTopologyJson] = useState<unknown>(() => {
+	const [modelJson, setModelJson] = useState<unknown>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
-		return asset?.json ?? emptyTopologyJson();
+		return asset?.json ?? emptyModelJson();
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
@@ -534,18 +534,16 @@ function PlayApp() {
 		setLoadedRawName("");
 		setFileStatus("");
 		const asset = GEOMETRY_ASSETS.find((candidate) => candidate.id === id);
-		setTopologyJson(asset?.json ?? emptyTopologyJson());
+		setModelJson(asset?.json ?? emptyModelJson());
 	}, []);
 
-	const interactionTopo = useMemo(() => {
-		return parseModelJson(topologyJson) ?? new Model();
-	}, [topologyJson]);
+	const interactionModel = useMemo(() => parseModelJson(modelJson) ?? new Model(), [modelJson]);
 
 	const documentModel = useMemo((): ModelDocument => {
-		const model = Model.fromJSON(interactionTopo.toJSON());
+		const model = Model.fromJSON(interactionModel.toJSON());
 		return { model: model, nodes: [] };
-	}, [interactionTopo]);
-	const liveTopology = documentModel.topology;
+	}, [interactionModel]);
+	const liveModel = documentModel.model;
 
 	const interactionActive = useMemo(
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
@@ -581,7 +579,7 @@ function PlayApp() {
 		setRendererSelection([]);
 		setInteractionSelection([]);
 		setDerivedRevision(0);
-	}, [history, topologyJson]);
+	}, [history, modelJson]);
 
 	const saveBundle = useCallback(
 		async (name: string, payload: SpatialExchangeBundle, message: string) => {
@@ -597,17 +595,17 @@ function PlayApp() {
 
 	const createLiveAnalyticBundle = useCallback(
 		async (selection?: readonly SelectionTarget[]) => {
-			await derived.refresh(liveTopology);
-			return createAnalyticBundle(derived, liveTopology, selection);
+			await derived.refresh(liveModel);
+			return createAnalyticBundle(derived, liveModel, selection);
 		},
-		[derived, liveTopology],
+		[derived, liveModel],
 	);
 
 	const handleSaveSelected = useCallback(async () => {
 		if (pickViewKind === "raw") {
 			await saveBundle(
 				`${exportBaseName}.selected.raw.spatial.json`,
-				{ raw: selectRawTopology(liveTopology, selectedRaw) },
+				{ raw: selectRawModel(liveModel, selectedRaw) },
 				`Saved ${selectedRaw.length} selected raw item(s).`,
 			);
 			return;
@@ -617,13 +615,13 @@ function PlayApp() {
 			{ analytic: await createLiveAnalyticBundle(selectedAnalytic) },
 			`Saved ${selectedAnalytic.length} selected analytic item(s).`,
 		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveModel, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
 
 	const handleSaveView = useCallback(async () => {
 		if (pickViewKind === "raw") {
 			await saveBundle(
 				`${exportBaseName}.raw.spatial.json`,
-				{ raw: liveTopology.toJSON() },
+				{ raw: liveModel.toJSON() },
 				"Saved the raw view.",
 			);
 			return;
@@ -633,15 +631,15 @@ function PlayApp() {
 			{ analytic: await createLiveAnalyticBundle() },
 			"Saved the analytic view.",
 		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, pickViewKind, saveBundle]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveModel, pickViewKind, saveBundle]);
 
 	const handleSaveAll = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.spatial.json`,
-			{ raw: liveTopology.toJSON(), analytic: await createLiveAnalyticBundle() },
+			{ raw: liveModel.toJSON(), analytic: await createLiveAnalyticBundle() },
 			"Saved raw and analytic data.",
 		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveTopology, saveBundle]);
+	}, [createLiveAnalyticBundle, exportBaseName, liveModel, saveBundle]);
 
 	const handleLoadRawRequest = useCallback(() => {
 		loadInputRef.current?.click();
@@ -657,11 +655,11 @@ function PlayApp() {
 					? (parsed as Record<string, unknown>).raw
 					: parsed;
 			const model = parseModelJson(raw);
-			if (!topo) throw new Error("No raw spatial topology found in file.");
+			if (!model) throw new Error("No raw spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
-			setTopologyJson(topo.toJSON());
-			setFileStatus(`Loaded raw topology from ${file.name}.`);
+			setModelJson(model.toJSON());
+			setFileStatus(`Loaded raw model from ${file.name}.`);
 		} catch (error) {
 			setFileStatus(`Load failed: ${String(error)}`);
 		} finally {
@@ -714,7 +712,7 @@ function PlayApp() {
 					<option value="">No asset</option>
 					{GEOMETRY_ASSETS.map((g) => (
 						<option key={g.id} value={g.id}>
-							[{g.key}] {g.label} ({topologyVertexCount(g.json)} verts)
+							[{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
 						</option>
 					))}
 				</select>
