@@ -1,0 +1,22 @@
+{
+	"schema": "spatial.attribute/v1",
+	"id": "builtin.material",
+	"version": "1.0.0",
+	"label": "Material",
+	"description": "Authored material metadata attachable to curve, surface, or solid topology.",
+	"targets": [
+		"curve",
+		"surface",
+		"solid"
+	],
+	"examples": [
+		{
+			"material": "concrete"
+		},
+		{
+			"material": {
+				"concrete": "C30/37"
+			}
+		}
+	]
+}

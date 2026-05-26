@@ -1,0 +1,14 @@
+{
+	"schema": "spatial.property/v1",
+	"id": "energy.heatedvolume",
+	"version": "1.0.0",
+	"label": "Heated Volume",
+	"description": "Derived heated volume for objects included in the energy view.",
+	"unit": "volume",
+	"sources": [
+		"view.energy"
+	],
+	"output": {
+		"heatedvolume": 0.0
+	}
+}

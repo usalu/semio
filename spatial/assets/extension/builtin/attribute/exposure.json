@@ -1,0 +1,18 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "builtin.exposure",
+  "version": "1.0.0",
+  "label": "Exposure",
+  "description": "Marks whether a surface is internal or external.",
+  "targets": [
+    "surface"
+  ],
+  "examples": [
+    {
+      "exposure": "internal"
+    },
+    {
+      "exposure": "external"
+    }
+  ]
+}

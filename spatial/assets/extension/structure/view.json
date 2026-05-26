@@ -1,0 +1,60 @@
+{
+  "schema": "spatial.view/v1",
+  "id": "structure",
+  "version": "1.0.0",
+  "label": "Structure",
+  "description": "Computed views used for structural analysis.",
+  "derivedObjects": [
+    {
+      "id": "reinforcedconcretecolumn",
+      "label": "Reinforced Concrete Column"
+    },
+    {
+      "id": "onewayreinforcedconcreteslab",
+      "label": "One Way Reinforced Concrete Slab"
+    },
+    {
+      "id": "reinforcedconcreteinternalwall",
+      "label": "Reinforced Concrete Internal Wall"
+    },
+    {
+      "id": "reinforcedconcreteexternalwall",
+      "label": "Reinforced Concrete External Wall"
+    },
+    {
+      "id": "lineelement",
+      "label": "Line Element"
+    },
+    {
+      "id": "surfaceelement",
+      "label": "Surface Element"
+    },
+    {
+      "id": "solidelement",
+      "label": "Solid Element"
+    }
+  ],
+  "variants": [
+    {
+      "id": "linefem",
+      "label": "Classic Structural",
+      "allows": [
+        "lines"
+      ]
+    },
+    {
+      "id": "surfacefem",
+      "label": "Classic Structural",
+      "allows": [
+        "surfaces"
+      ]
+    },
+    {
+      "id": "solidfem",
+      "label": "Classic Structural",
+      "allows": [
+        "solids"
+      ]
+    }
+  ]
+}

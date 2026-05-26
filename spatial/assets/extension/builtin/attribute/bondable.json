@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "builtin.bondable",
+  "version": "1.0.0",
+  "label": "Bondable",
+  "description": "Marks topology that may be unified geometrically with matching contacts.",
+  "targets": [
+    "curve",
+    "surface",
+    "solid"
+  ],
+  "examples": [
+    {
+      "bondable": true
+    }
+  ]
+}

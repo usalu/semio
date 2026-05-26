@@ -1,0 +1,14 @@
+{
+	"schema": "spatial.property/v1",
+	"id": "builtin.volume",
+	"version": "1.0.0",
+	"label": "Volume",
+	"description": "Derived volume for solid topology.",
+	"unit": "volume",
+	"sources": [
+		"solid"
+	],
+	"output": {
+		"volume": 0.0
+	}
+}

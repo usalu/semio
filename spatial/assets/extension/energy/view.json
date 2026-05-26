@@ -1,0 +1,38 @@
+{
+	"schema": "spatial.view/v1",
+	"id": "energy",
+	"version": "1.0.0",
+	"label": "Energy",
+	"description": "Computed view used for energy analysis.",
+	"derivedObjects": [
+		{
+			"id": "hull",
+			"label": "Hull",
+			"description": "All external surfaces joined to a closed shell.",
+			"properties": [
+				"builtin.volume",
+				"energy.heatedvolume"
+			]
+		},
+		{
+			"id": "baseplate",
+			"label": "Base Plate",
+			"description": "Lowest external horizontal surface."
+		},
+		{
+			"id": "roof",
+			"label": "Roof",
+			"description": "Highest external horizontal surface."
+		},
+		{
+			"id": "externalwall",
+			"label": "External Wall",
+			"description": "Joined touching external surfaces of the same material with openings cut out."
+		},
+		{
+			"id": "windows",
+			"label": "Windows",
+			"description": "All external window surfaces."
+		}
+	]
+}

@@ -1,220 +1,57 @@
 # Action
 
-A function to perform an action. Actions run headless.
+An action is a headless operation exposed by an extension. Actions mutate or derive spatial data without defining renderer behavior.
 
-## Interaction
+# Interaction
 
-An interaction is a descriptive static state-machine for describing interactions with the renderer.
-A state can display information based on a set of predefined draw
+An interaction is a renderer-facing state machine exposed by an extension. It gathers input, previews intent, and usually resolves into one or more actions.
 
 # Model
 
-A model contains objects. Objects can contain child objects.
+A model is the root document for spatial data. It stores objects, their topology references, and the extension data attached to them.
 
 ```json
-{ "objects": [{…}] }
+{ "objects": [{ "id": "object-1", "extensions": {} }] }
 ```
 
-# Typology
+# Topology
 
-A typology is a class of objects.
-Every typology has one or many action to create an object of that typology.
-Every typology may have multiple interactions to derive the paramters for that canonical action.
-
-## Wall
+Topology is the persistent geometric core. It stores the connected spatial graph that objects and derived views reference.
 
 ```json
-{ "id":"wall","name":"Wall","allowedAttributes":["exposure",…],"derivedProperties":["volume",…],"actions": [{"name":"constructVerticalWall","args":{"height":2.7, "curve":…}},
-    {"name":"constructWallFromBottomAndTop","args":{"bottomCurve":…, "topCurve":…}},
-    {"name":"constructWallFromHorizontalPathAndProfile","args":{"pathCurve":…, "profileCurve":…}},
-    {"name":"constructWallFromHorizontalPathAndProfiles","args":{"pathCurve":…, "profileCurves":[…]}}],
- "interactions":…}
+{ "schema": "spatial.topology/v1", "points": [], "edges": [], "faces": [], "cells": [] }
 ```
-
-## MushroomColumn
-
-A mushroom column. One solid geometry.
-
-```json
-{ "actions": [ {"name":"constructMushroomColumn","args":{"solid":…}},
-    {"name":"constructExtrudedMushroomColumn","args":{"columnProfile":…,"height":2.7, "heightIs":"total","slabSolid":…}},
-    {"name":"constructRectangularMushroomColumnWithQuadraticSlab","args":{"rectangularColumnWidth":0.4, "rectangularColumnBreadth":0.6, "quadraticSlabWidth":2.3}},
-    {"name":"constructRectangularMushroomColumnWithQuadraticSlab","args":{"height":2.7, "heightIs":"column","slabHeight":0.3, "rectangularColumnWidth":0.4, "rectangularColumnBreadth":0.6, "quadraticSlabWidth":2.3}},
-    {"name":"constructFullyQuadraticMushroomColumn","args":{"height":2.7, "heightIs":"total","slabHeight":0.3, "quadraticColumnWidth":0.4, "quadraticSlabWidth":2.3}}],
- "interactions":…}
-```
-
-### View
-
-#### Structural
-
-A vertical line for the column and a planaer horizontal surface for the top part.
-Additionally has lines for joists.
 
 # Object
 
-An object has geometry and a typology. Optionally it can provide geometry for different views.
+An object is a node in the model that binds extension data to topology. Objects can form hierarchies and can contribute to derived views.
 
 ```json
-{"geometry":{"points":[{"id":}]}}
+{ "id": "object-1", "topology": { "cells": ["cell-1"] }, "extensions": {} }
 ```
 
 # View
 
-A view is a different computed perspective on a model.
-A view derives new objects and doesnt show the source objects anymore.
-It keeps the link of all involved source objects to the target objects.
-Inside a view, geometry cant be edited because it is not the source geometry.
-
-## Energy
-
-Used for energy calculations.
-
-### Derived Objects
-
-#### Hull
-
-All external surfaces joined to a closed shell.
+A view is a computed perspective on a model. Views derive objects from source objects, preserve traceability back to their sources, and can attach their own extension data.
 
 ```json
-{"id":"hull","name":"Hull","properties":["volume","heatedvolume",…]}
+{ "id": "view-1", "objects": [{ "id": "derived-object-1", "sourceObjectIds": ["object-1"] }] }
 ```
-
-#### BasePlate
-
-The lowester external horizontal surface.
-
-#### Roof
-
-The highest external horizontal surface.
-
-#### ExternalWall
-
-All joined touching external surfaces of the same material with the windows cut out.
-
-#### Windows
-
-All external windows surfaces.
-
-## Structure
-
-### Derived Objects
-
-#### ReinforcedConcreteColumn
-
-#### OneWayReinforcedConcreteSlab
-
-#### ReinforcedConcreteInternalWall
-
-#### ReinforcedConcreteExternalWall
-
-## LineFEM
-
-A view used for Finite-Element-Analysis with line elements.
-
-```json
-{ "id":"linefem","name":"Classic Structural","allows":["lines"],…}
-```
-
-### Derived Objects
-
-#### LineElement
-
-## SurfaceFEM
-
-A view used for Finite-Element-Analysis with surface elements.
-
-```json
-{ "id":"surfacefem","name":"Classic Structural","allows":["surfaces"],…}
-```
-
-### Derived Objects
-
-#### SurfaceElement
-
-## SolidFEM
-
-A view used for Finite-Element-Analysis with solid elements.
-
-```json
-{ "id":"structural","name":"Classic Structural","allows":["solids"],…}
-```
-
-### Derived Objects
-
-#### SolidElement
 
 # Attribute
 
-An attribute is attachable metadata to geometry.
-
-## Bondable
-
-Two bondable contacts means they are unified geometrically.
+An attribute is extension data attached to topology or objects. Attributes describe authored metadata rather than derived results.
 
 ```json
-{ "bondable": true }
-```
-
-## Material
-
-A material can be attatched to any curve, surface or solid.
-
-```json
-{"material":"concrete"}
-{"material":{"concrete":"C30/37"}}
-```
-
-## UValue
-
-A U-Value can be attatched to any surface.
-
-```json
-{ "uValue": "0.158" }
-```
-
-## Exposure
-
-Any surface can be marked with an exposure.
-
-```json
-{"expsoure":"internal"}
-{"expsoure":"external"}
-```
-
-## Opening
-
-A surface marked as a opening will be trimmed into walls.
-
-```json
-{"opening":"window"}
-{"opening":"door"}
-{"opening":"passage"}
-{"opening":"view"}
-```
-
-## GValue
-
-A G-Value can be attatched to any surface with the window attribute.
-
-```json
-{ "gValue": "0.6" }
+{ "material": "concrete" }
 ```
 
 # Property
 
-A property is a derived attribute.
-
-## Volume
-
-The volume is derived from a solid.
+A property is extension data derived from geometry, topology, objects, or views. Properties describe computed results and should be reproducible from source data.
 
 ```json
-{ "id": "volume", "name": "Volume", "unit": "volume" }
+{ "volume": 42.0 }
 ```
 
-## HeatedVolume
-
-```json
-{ "id": "heatedvolume", "name": "Heated Volume", "unit": "volume" }
-```
+All concrete actions, interactions, views, attributes, and properties live as JSON extension assets under `spatial/assets/extension`.

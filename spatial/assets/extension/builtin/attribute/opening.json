@@ -1,0 +1,24 @@
+{
+  "schema": "spatial.attribute/v1",
+  "id": "builtin.opening",
+  "version": "1.0.0",
+  "label": "Opening",
+  "description": "Marks a surface opening kind used by downstream view derivations.",
+  "targets": [
+    "surface"
+  ],
+  "examples": [
+    {
+      "opening": "window"
+    },
+    {
+      "opening": "door"
+    },
+    {
+      "opening": "passage"
+    },
+    {
+      "opening": "view"
+    }
+  ]
+}
