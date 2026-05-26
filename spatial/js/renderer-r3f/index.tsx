@@ -223,12 +223,15 @@ export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { read
 	let maxX = -Infinity;
 	let maxY = -Infinity;
 	let maxZ = -Infinity;
+	let hasFinitePoint = false;
 	for (const mesh of meshes) {
 		const pos = mesh.position;
 		for (let i = 0; i < pos.length; i += 3) {
 			const x = pos[i]!;
 			const y = pos[i + 1]!;
 			const z = pos[i + 2]!;
+			if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) continue;
+			hasFinitePoint = true;
 			if (x < minX) minX = x;
 			if (y < minY) minY = y;
 			if (z < minZ) minZ = z;
@@ -237,6 +240,7 @@ export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { read
 			if (z > maxZ) maxZ = z;
 		}
 	}
+	if (!hasFinitePoint) return null;
 	const cx = (minX + maxX) / 2;
 	const cy = (minY + maxY) / 2;
 	const cz = (minZ + maxZ) / 2;
@@ -2475,7 +2479,7 @@ export function SpatialAutoFit({
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly padding?: number;
 }): null {
-	const { camera, invalidate } = useThree();
+	const { camera, controls, invalidate } = useThree();
 	const geometryRevision =
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
@@ -2491,14 +2495,29 @@ export function SpatialAutoFit({
 		const key = `${geometryRevision}:${meshKey}`;
 		if (key === lastKey.current) return;
 		lastKey.current = key;
-		const [cx, cy, cz] = bounds.center;
-		const dist = Math.max(bounds.radius * padding, 2);
-		camera.position.set(cx + dist, cy + dist, cz + dist * 0.85);
-		camera.lookAt(cx, cy, cz);
-		camera.updateProjectionMatrix();
+		applySpatialAutoFitCamera(camera, bounds, padding, controls);
 		invalidate();
-	}, [bounds, camera, geometryRevision, invalidate, meshes, padding]);
+	}, [bounds, camera, controls, geometryRevision, invalidate, meshes, padding]);
 	return null;
+}
+
+export function applySpatialAutoFitCamera(
+	camera: THREE.Camera,
+	bounds: { readonly center: Vec3; readonly radius: number },
+	padding = 1.25,
+	controls?: unknown,
+): void {
+	const [cx, cy, cz] = bounds.center;
+	const dist = Math.max(bounds.radius * padding, 2);
+	camera.position.set(cx + dist, cy + dist, cz + dist * 0.85);
+	const orbit = controls as { readonly target?: THREE.Vector3; update?: () => void } | undefined;
+	if (orbit?.target) {
+		orbit.target.set(cx, cy, cz);
+		orbit.update?.();
+	} else {
+		camera.lookAt(cx, cy, cz);
+	}
+	camera.updateProjectionMatrix();
 }
 
 /** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
@@ -4874,6 +4893,35 @@ if (import.meta.vitest) {
 			const L = computeSpherePreviewLayout([1, 2, 3], [4, 6, 3]);
 			expect(L?.position).toEqual([1, 2, 3]);
 			expect(L?.radius).toBeCloseTo(5);
+		});
+
+		it("boundsFromMeshTransfers ignores invalid mesh coordinates", () => {
+			const bounds = boundsFromMeshTransfers([
+				{
+					...emptyMeshTransfer(),
+					position: new Float32Array([Number.NaN, Number.POSITIVE_INFINITY, 0]),
+				},
+				{
+					...emptyMeshTransfer(),
+					position: new Float32Array([0, 0, 0, 10, 20, 30]),
+				},
+			]);
+			expect(bounds).toEqual({ center: [5, 10, 15], radius: expect.closeTo(Math.sqrt(1400) / 2) });
+		});
+
+		it("applySpatialAutoFitCamera keeps orbit target aligned with framed bounds", () => {
+			const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+			const target = new THREE.Vector3();
+			let updates = 0;
+			applySpatialAutoFitCamera(camera, { center: [10, 20, 30], radius: 4 }, 1.5, {
+				target,
+				update: () => {
+					updates += 1;
+				},
+			});
+			expect(camera.position.toArray()).toEqual([16, 26, 35.1]);
+			expect(target.toArray()).toEqual([10, 20, 30]);
+			expect(updates).toBe(1);
 		});
 	});
 
