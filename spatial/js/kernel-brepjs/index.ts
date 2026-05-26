@@ -1392,11 +1392,101 @@ function atomicPartId(sourceCellIds: readonly CellRef[], overlap: PartView["over
 	return `part-${sourceCellIds[0]!}-${overlap}` as PartRef;
 }
 
-function atomicDedupKey(sourceCellIds: readonly CellRef[], centroid: Vec3, invTol: number): string {
-	return `${sourceCellIds.join("+")}:${mergeQuantKey(centroid, invTol)}`;
+type CellSolidEntry = { readonly id: CellRef; readonly solid: ValidSolid };
+type AabbCellEntry = { readonly id: CellRef; readonly box: Aabb };
+
+function solidsInterfere(a: ValidSolid, b: ValidSolid): boolean {
+	return unwrap(checkInterference(a, b)).hasInterference;
 }
 
-/** @emoji 🧊 Split each cell against others; tag pieces by containing cells (CellComplex analogue). */
+function aabbCellsInterfere(a: Aabb, b: Aabb, volEps = 1e-6): boolean {
+	const inter = aabbIntersect(a, b);
+	return Boolean(inter && aabbVolume(inter) > volEps);
+}
+
+function buildSolidInterferenceClusters(entries: readonly CellSolidEntry[]): CellSolidEntry[][] {
+	const n = entries.length;
+	if (!n) return [];
+	const parent = entries.map((_, i) => i);
+	const find = (i: number): number => {
+		let r = i;
+		while (parent[r] !== r) r = parent[r]!;
+		let x = i;
+		while (parent[x] !== x) {
+			const p = parent[x]!;
+			parent[x] = r;
+			x = p;
+		}
+		return r;
+	};
+	const unite = (a: number, b: number) => {
+		const ra = find(a);
+		const rb = find(b);
+		if (ra !== rb) parent[rb] = ra;
+	};
+	for (let i = 0; i < n; i++) {
+		for (let j = i + 1; j < n; j++) {
+			if (solidsInterfere(entries[i]!.solid, entries[j]!.solid)) unite(i, j);
+		}
+	}
+	const groups = new Map<number, CellSolidEntry[]>();
+	for (let i = 0; i < n; i++) {
+		const r = find(i);
+		const hit = groups.get(r) ?? [];
+		hit.push(entries[i]!);
+		groups.set(r, hit);
+	}
+	return [...groups.values()];
+}
+
+function buildAabbInterferenceClusters(entries: readonly AabbCellEntry[], volEps = 1e-6): AabbCellEntry[][] {
+	const n = entries.length;
+	if (!n) return [];
+	const parent = entries.map((_, i) => i);
+	const find = (i: number): number => {
+		let r = i;
+		while (parent[r] !== r) r = parent[r]!;
+		let x = i;
+		while (parent[x] !== x) {
+			const p = parent[x]!;
+			parent[x] = r;
+			x = p;
+		}
+		return r;
+	};
+	const unite = (a: number, b: number) => {
+		const ra = find(a);
+		const rb = find(b);
+		if (ra !== rb) parent[rb] = ra;
+	};
+	for (let i = 0; i < n; i++) {
+		for (let j = i + 1; j < n; j++) {
+			if (aabbCellsInterfere(entries[i]!.box, entries[j]!.box, volEps)) unite(i, j);
+		}
+	}
+	const groups = new Map<number, AabbCellEntry[]>();
+	for (let i = 0; i < n; i++) {
+		const r = find(i);
+		const hit = groups.get(r) ?? [];
+		hit.push(entries[i]!);
+		groups.set(r, hit);
+	}
+	return [...groups.values()];
+}
+
+function intersectAllSolids(solids: readonly ValidSolid[], volEps = 1e-6): ValidSolid | null {
+	if (!solids.length) return null;
+	let acc = solids[0]!;
+	for (let i = 1; i < solids.length; i++) {
+		const res = intersect(acc, solids[i]!, BOOL_NO_EVOLUTION);
+		if (!isOk(res)) return null;
+		acc = res.value;
+		if (unwrap(measureVolume(acc)) <= volEps) return null;
+	}
+	return acc;
+}
+
+/** @emoji 🧊 Per cluster: one N-way ∩, per cell one `cutAll` difference, isolated cells → `none`. */
 export function decomposeCells(
 	cells: ReadonlyMap<CellRef, ValidSolid>,
 	topo: TopologyGraph,
@@ -1404,130 +1494,56 @@ export function decomposeCells(
 ): AtomicPart[] {
 	const entries = (Object.keys(topo.cells) as CellRef[])
 		.map((id) => ({ id, solid: cells.get(id) }))
-		.filter((x): x is { id: CellRef; solid: ValidSolid } => Boolean(x.solid));
+		.filter((x): x is CellSolidEntry => Boolean(x.solid));
 	if (!entries.length) return [];
-	const interferes = new Map<CellRef, boolean>();
-	for (const { id, solid } of entries) {
-		let any = false;
-		for (const { id: oid, solid: other } of entries) {
-			if (oid === id) continue;
-			if (unwrap(checkInterference(solid, other)).hasInterference) {
-				any = true;
-				break;
-			}
-		}
-		interferes.set(id, any);
-	}
 	const deduped = new Map<string, AtomicPart>();
-	const invTol = 1 / Math.max(derivedModelScaleFromCells(cells) * 1e-5, 1e-9);
-	for (const { id: cellId, solid: cellSolid } of entries) {
-		const cutters = entries.filter(({ id: oid, solid: other }) => {
-			if (oid === cellId) return false;
-			return unwrap(checkInterference(cellSolid, other)).hasInterference;
-		});
-			if (!cutters.length) {
-				const vol = unwrap(measureVolume(cellSolid));
-				if (vol <= volEps) continue;
-				const key = `n:${cellId}`;
-				if (!deduped.has(key)) {
-					deduped.set(key, {
-						id: atomicPartId([cellId], "none"),
-						sourceCellIds: [cellId],
-						overlap: "none",
-						volume: vol,
-						solid: cellSolid,
-						faceTopoIds: new Map(),
-					});
-				}
-				continue;
-			}
-			const tools = cutters.map((c) => c.solid);
-			let pieces: ValidSolid[] = [];
-			const splitRes = split(cellSolid, tools);
-			const splitPieces = isOk(splitRes) ? brepSolidsFromShape(splitRes.value) : [];
-			if (splitPieces.length > 1) {
-				pieces = splitPieces;
-			} else if (cutters.length === 1) {
-				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
-				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-			} else if (splitPieces.length) {
-				pieces = splitPieces;
-			} else {
-				const rem = unwrap(cutAll(cellSolid, tools, BOOL_NO_EVOLUTION));
-				if (unwrap(measureVolume(rem)) > volEps) pieces.push(rem);
-			}
-			for (const piece of pieces) {
-				let vol = unwrap(measureVolume(piece));
-				if (vol <= volEps) continue;
-				const centroid = solidInteriorPoint(piece);
-				const sourceCellIds = cellsContainingPointForPiece(centroid, cellId, cells);
-				if (!sourceCellIds.includes(cellId) || sourceCellIds.length >= 2) continue;
-				const overlap: PartView["overlap"] = interferes.get(cellId) ? "difference" : "none";
-				if (overlap === "difference") {
-					const ownerSolid = cells.get(cellId)!;
-					const otherTools = entries.filter((e) => e.id !== cellId).map((e) => e.solid);
-					if (otherTools.length) {
-						vol = unwrap(measureVolume(unwrap(cutAll(ownerSolid, otherTools, BOOL_NO_EVOLUTION))));
-						if (vol <= volEps) continue;
-					}
-				}
-				const key = overlap === "none" ? `n:${sourceCellIds[0]!}` : atomicDedupKey(sourceCellIds, centroid, invTol);
-				const existing = deduped.get(key);
-				if (existing) {
-					if (vol > existing.volume) deduped.set(key, { ...existing, solid: piece, volume: vol });
-					continue;
-				}
-				deduped.set(key, {
-					id: atomicPartId(sourceCellIds, overlap),
+	for (const cluster of buildSolidInterferenceClusters(entries)) {
+		if (cluster.length === 1) {
+			const { id, solid } = cluster[0]!;
+			const vol = unwrap(measureVolume(solid));
+			if (vol <= volEps) continue;
+			deduped.set(`n:${id}`, {
+				id: atomicPartId([id], "none"),
+				sourceCellIds: [id],
+				overlap: "none",
+				volume: vol,
+				solid,
+				faceTopoIds: new Map(),
+			});
+			continue;
+		}
+		const sourceCellIds = cluster.map((c) => c.id).sort() as CellRef[];
+		const interSolid = intersectAllSolids(
+			cluster.map((c) => c.solid),
+			volEps,
+		);
+		if (interSolid) {
+			const vol = unwrap(measureVolume(interSolid));
+			if (vol > volEps) {
+				deduped.set(`i:${sourceCellIds.join("+")}`, {
+					id: atomicPartId(sourceCellIds, "intersection"),
 					sourceCellIds,
-					overlap,
+					overlap: "intersection",
 					volume: vol,
-					solid: piece,
+					solid: interSolid,
 					faceTopoIds: new Map(),
 				});
 			}
-	}
-	for (const { id: cellId, solid: cellSolid } of entries) {
-		if (!interferes.get(cellId)) continue;
-		const partId = `part-${cellId}-difference` as PartRef;
-		if ([...deduped.values()].some((p) => p.id === partId)) continue;
-		const cutters = entries
-			.filter(({ id: oid, solid: other }) => oid !== cellId && unwrap(checkInterference(cellSolid, other)).hasInterference)
-			.map((c) => c.solid);
-		if (!cutters.length) continue;
-		const diffSolid = unwrap(cutAll(cellSolid, cutters, BOOL_NO_EVOLUTION));
-		const vol = unwrap(measureVolume(diffSolid));
-		if (vol <= volEps) continue;
-		deduped.set(`d:${cellId}`, {
-			id: partId,
-			sourceCellIds: [cellId],
-			overlap: "difference",
-			volume: vol,
-			solid: diffSolid,
-			faceTopoIds: new Map(),
-		});
-	}
-	const cellIds = entries.map((e) => e.id);
-	for (let i = 0; i < cellIds.length; i++) {
-		for (let j = i + 1; j < cellIds.length; j++) {
-			const idA = cellIds[i]!;
-			const idB = cellIds[j]!;
-			const solidA = cells.get(idA)!;
-			const solidB = cells.get(idB)!;
-			if (!unwrap(checkInterference(solidA, solidB)).hasInterference) continue;
-			const sourceCellIds = [idA, idB].sort() as CellRef[];
-			const key = `i:${sourceCellIds.join("+")}`;
-			if (deduped.has(key)) continue;
-			const interRes = intersect(solidA, solidB, BOOL_NO_EVOLUTION);
-			if (!isOk(interRes)) continue;
-			const vol = unwrap(measureVolume(interRes.value));
+		}
+		for (const { id: cellId, solid: cellSolid } of cluster) {
+			const cutters = cluster.filter((c) => c.id !== cellId).map((c) => c.solid);
+			if (!cutters.length) continue;
+			const partId = `part-${cellId}-difference` as PartRef;
+			if (deduped.has(`d:${cellId}`)) continue;
+			const diffSolid = unwrap(cutAll(cellSolid, cutters, BOOL_NO_EVOLUTION));
+			const vol = unwrap(measureVolume(diffSolid));
 			if (vol <= volEps) continue;
-			deduped.set(key, {
-				id: atomicPartId(sourceCellIds, "intersection"),
-				sourceCellIds,
-				overlap: "intersection",
+			deduped.set(`d:${cellId}`, {
+				id: partId,
+				sourceCellIds: [cellId],
+				overlap: "difference",
 				volume: vol,
-				solid: interRes.value,
+				solid: diffSolid,
 				faceTopoIds: new Map(),
 			});
 		}
@@ -1756,33 +1772,18 @@ function aabbPartRegionPoints(topo: TopologyGraph, part: AabbPartRecord, allPart
 	return undefined;
 }
 
-/** @emoji 🪞 Global ∩ cells, per-cell `cutAll`, topology-only AABB fallback. */
+/** @emoji 🪞 Clustered N-way ∩ and per-cell AABB difference (topology fallback). */
 function computeBooleanPartRecordsFromAabbs(topo: TopologyGraph): AabbPartRecord[] {
-	const cellIds = Object.keys(topo.cells) as CellRef[];
-	const aabbs = derivedCellAabbMap(topo);
 	const volEps = 1e-6;
+	const aabbs = derivedCellAabbMap(topo);
+	const boxes = (Object.keys(topo.cells) as CellRef[])
+		.map((id) => ({ id, box: aabbs.get(id) }))
+		.filter((x): x is AabbCellEntry => Boolean(x.box));
+	if (!boxes.length) return [];
 	const records: AabbPartRecord[] = [];
-	const boxes = cellIds.map((id) => ({ id, box: aabbs.get(id) })).filter((x): x is { id: CellRef; box: Aabb } => Boolean(x.box));
-	if (!boxes.length) return records;
-	const global = intersectAllAabbs(boxes.map((b) => b.box));
-	if (global && aabbVolume(global) > volEps) {
-		records.push({
-			id: "part-intersection" as PartRef,
-			sourceCellIds: boxes.map((b) => b.id),
-			overlap: "intersection",
-			volume: aabbVolume(global),
-			aabb: global,
-			explodeAabbs: [global],
-		});
-	}
-	for (const { id, box } of boxes) {
-		const cutters: Aabb[] = [];
-		for (const other of boxes) {
-			if (other.id === id) continue;
-			const inter = aabbIntersect(box, other.box);
-			if (inter && aabbVolume(inter) > volEps) cutters.push(inter);
-		}
-		if (!cutters.length) {
+	for (const cluster of buildAabbInterferenceClusters(boxes, volEps)) {
+		if (cluster.length === 1) {
+			const { id, box } = cluster[0]!;
 			records.push({
 				id: `part-${id}-none` as PartRef,
 				sourceCellIds: [id],
@@ -1793,18 +1794,34 @@ function computeBooleanPartRecordsFromAabbs(topo: TopologyGraph): AabbPartRecord
 			});
 			continue;
 		}
-		const overlapVol = aabbOverlapUnionVolume(box, cutters);
-		const diffVol = Math.max(0, aabbVolume(box) - overlapVol);
-		if (diffVol <= volEps) continue;
-		const pieces = aabbDifferencePieces(box, cutters);
-		records.push({
-			id: `part-${id}-difference` as PartRef,
-			sourceCellIds: [id],
-			overlap: "difference",
-			volume: diffVol,
-			aabb: box,
-			explodeAabbs: pieces.length ? pieces : [box],
-		});
+		const sourceCellIds = cluster.map((c) => c.id).sort() as CellRef[];
+		const inter = intersectAllAabbs(cluster.map((c) => c.box));
+		if (inter && aabbVolume(inter) > volEps) {
+			records.push({
+				id: atomicPartId(sourceCellIds, "intersection"),
+				sourceCellIds,
+				overlap: "intersection",
+				volume: aabbVolume(inter),
+				aabb: inter,
+				explodeAabbs: [inter],
+			});
+		}
+		for (const { id, box } of cluster) {
+			const cutters = cluster.filter((c) => c.id !== id).map((c) => c.box);
+			if (!cutters.length) continue;
+			const overlapVol = aabbOverlapUnionVolume(box, cutters);
+			const diffVol = Math.max(0, aabbVolume(box) - overlapVol);
+			if (diffVol <= volEps) continue;
+			const pieces = aabbDifferencePieces(box, cutters);
+			records.push({
+				id: `part-${id}-difference` as PartRef,
+				sourceCellIds: [id],
+				overlap: "difference",
+				volume: diffVol,
+				aabb: box,
+				explodeAabbs: pieces.length ? pieces : [box],
+			});
+		}
 	}
 	return records;
 }
@@ -1836,20 +1853,29 @@ export function partViewsFromAtomics(topo: TopologyGraph, atomics: readonly Atom
 			seen.add(k);
 			regionPoints.push(p);
 		};
-		for (const [brepFace, fid] of a.faceTopoIds) {
-			let fromTopo = false;
-			for (const wid of topo.faces[fid]?.wireIds ?? []) {
-				for (const eid of topo.wires[wid]?.edgeIds ?? []) {
-					for (const vid of topo.edges[eid]?.vertexIds ?? []) {
-						const p = topo.vertices[vid]?.position;
-						if (!p) continue;
-						fromTopo = true;
-						pushPoint(p);
+		if (a.faceTopoIds.size) {
+			for (const [brepFace, fid] of a.faceTopoIds) {
+				let fromTopo = false;
+				for (const wid of topo.faces[fid]?.wireIds ?? []) {
+					for (const eid of topo.wires[wid]?.edgeIds ?? []) {
+						for (const vid of topo.edges[eid]?.vertexIds ?? []) {
+							const p = topo.vertices[vid]?.position;
+							if (!p) continue;
+							fromTopo = true;
+							pushPoint(p);
+						}
 					}
 				}
+				if (!fromTopo) {
+					for (const v of getVertices(brepFace)) pushPoint(vertexPosition(v));
+				}
 			}
-			if (!fromTopo) {
-				for (const v of getVertices(brepFace)) pushPoint(vertexPosition(v));
+		}
+		if (!regionPoints.length) {
+			try {
+				for (const v of getVertices(a.solid)) pushPoint(vertexPosition(v));
+			} catch {
+				/* brep vertices best-effort */
 			}
 		}
 		return {
@@ -1868,69 +1894,180 @@ export function partViewsFromAtomics(topo: TopologyGraph, atomics: readonly Atom
 	return parts;
 }
 
-type AtomicFaceEntry = {
-	readonly partId: PartRef;
-	readonly faceId: FaceRef;
-	readonly normal: Vec3;
-	readonly centroid: Vec3;
-	readonly points: readonly Vec3[];
+type SurfacePatch = {
+	readonly exposure: SurfaceView["exposure"];
+	readonly stance: SurfaceView["stance"];
 	readonly frame: FacePlaneFrame;
 	readonly rect: Rect2;
+	readonly faceId?: FaceRef;
 };
 
-/** @emoji 🪞 Surfaces from atomic face adjacency (shared face → internal). */
-export function surfaceViewsFromAtomics(topo: TopologyGraph, atomics: readonly AtomicPart[]): SurfaceView[] {
-	const scale = derivedModelScale(topo);
-	const faceGroups = new Map<string, AtomicFaceEntry[]>();
+function faceStanceFromVertices(points: readonly Vec3[], normal: Vec3, scale: number): SurfaceView["stance"] {
+	if (Math.abs(normal[2]) < Math.SQRT1_2) return "vertical";
+	const tol = scale * 1e-5;
+	const z0 = points[0]![2];
+	if (!points.every((p) => Math.abs(p[2] - z0) <= tol)) return "vertical";
+	return "horizontal";
+}
+
+function faceExposureFromBrepPart(
+	centroid: Vec3,
+	normal: Vec3,
+	self: AtomicPart,
+	parts: readonly AtomicPart[],
+	scale: number,
+): SurfaceView["exposure"] {
+	const off = Math.max(scale * 1e-4, 1e-6);
+	for (const dir of [1, -1] as const) {
+		const probe = vec3Add(centroid, vec3Scale(normal, dir * off));
+		for (const other of parts) {
+			if (other.id === self.id) continue;
+			if (pointInSolidInterior(other.solid, probe, off)) return "internal";
+		}
+	}
+	return "external";
+}
+
+function faceExposureFromAabbPart(
+	centroid: Vec3,
+	self: AabbPartRecord,
+	parts: readonly AabbPartRecord[],
+): SurfaceView["exposure"] {
+	for (const other of parts) {
+		if (other.id === self.id) continue;
+		for (const box of other.explodeAabbs) {
+			if (pointInAabbInterior(centroid, box)) return "internal";
+		}
+	}
+	return "external";
+}
+
+function forEachAabbFace(
+	box: Aabb,
+	fn: (normal: Vec3, frame: FacePlaneFrame, rect: Rect2, centroid: Vec3) => void,
+): void {
+	const { min, max } = box;
+	const specs: readonly { readonly normal: Vec3; readonly fixed: number; readonly fixedAxis: 0 | 1 | 2 }[] = [
+		{ normal: [1, 0, 0], fixed: max[0], fixedAxis: 0 },
+		{ normal: [-1, 0, 0], fixed: min[0], fixedAxis: 0 },
+		{ normal: [0, 1, 0], fixed: max[1], fixedAxis: 1 },
+		{ normal: [0, -1, 0], fixed: min[1], fixedAxis: 1 },
+		{ normal: [0, 0, 1], fixed: max[2], fixedAxis: 2 },
+		{ normal: [0, 0, -1], fixed: min[2], fixedAxis: 2 },
+	];
+	for (const spec of specs) {
+		const uAxis = ((spec.fixedAxis + 1) % 3) as 0 | 1 | 2;
+		const vAxis = ((spec.fixedAxis + 2) % 3) as 0 | 1 | 2;
+		const rect: Rect2 = { u0: min[uAxis], u1: max[uAxis], v0: min[vAxis], v1: max[vAxis] };
+		const frame: FacePlaneFrame = { normal: spec.normal, uAxis, vAxis, fixedAxis: spec.fixedAxis, fixed: spec.fixed };
+		const pts = derivedRectToPoints(frame, rect);
+		const centroid = derivedPointCentroid(pts);
+		if (!centroid) continue;
+		fn(spec.normal, frame, rect, centroid);
+	}
+}
+
+function unionSurfacePatchesToViews(scale: number, patches: readonly SurfacePatch[]): SurfaceView[] {
+	type Bucket = {
+		readonly exposure: SurfaceView["exposure"];
+		readonly stance: SurfaceView["stance"];
+		area: number;
+		regionPoints: Vec3[];
+		faceIds: FaceRef[];
+	};
+	const buckets = new Map<string, Bucket>();
+	for (const patch of patches) {
+		const key = `${patch.exposure}:${patch.stance}`;
+		const hit = buckets.get(key) ?? {
+			exposure: patch.exposure,
+			stance: patch.stance,
+			area: 0,
+			regionPoints: [],
+			faceIds: [],
+		};
+		hit.area += derivedRectArea(patch.rect);
+		for (const p of derivedRectToPoints(patch.frame, patch.rect)) {
+			const k = p.join(",");
+			if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
+		}
+		if (patch.faceId) hit.faceIds.push(patch.faceId);
+		buckets.set(key, hit);
+	}
+	const out: SurfaceView[] = [];
+	for (const exposure of ["internal", "external"] as const) {
+		for (const stance of ["horizontal", "vertical"] as const) {
+			const hit = buckets.get(`${exposure}:${stance}`);
+			if (!hit || hit.area <= 1e-9) continue;
+			out.push({
+				id: `surface-${exposure}-${stance}` as SurfaceRef,
+				sourceFaceIds: [...new Set(hit.faceIds)],
+				exposure,
+				stance,
+				area: hit.area,
+				regionPoints: hit.regionPoints,
+			});
+		}
+	}
+	return out;
+}
+
+function collectBrepSurfacePatches(topo: TopologyGraph, atomics: readonly AtomicPart[], scale: number): SurfacePatch[] {
+	const patches: SurfacePatch[] = [];
 	for (const part of atomics) {
-		for (const [brepFace, faceId] of part.faceTopoIds) {
+		let brepFaces: Face[];
+		try {
+			brepFaces = getFaces(part.solid);
+		} catch {
+			continue;
+		}
+		for (const brepFace of brepFaces) {
 			const points: Vec3[] = [];
-			for (const wid of topo.faces[faceId]?.wireIds ?? []) {
-				for (const eid of topo.wires[wid]?.edgeIds ?? []) {
-					for (const vid of topo.edges[eid]?.vertexIds ?? []) {
-						const p = topo.vertices[vid]?.position;
-						if (p) points.push(p);
-					}
-				}
-			}
-			if (points.length < 3) {
-				for (const v of getVertices(brepFace)) points.push(vertexPosition(v));
-			}
+			for (const v of getVertices(brepFace)) points.push(vertexPosition(v));
 			if (points.length < 3) continue;
 			const normal = derivedFaceNormal(points) ?? shape(brepFace).normalAt();
 			const centroid = derivedPointCentroid(points) ?? shape(brepFace).center();
 			const frame = derivedFacePlaneFrame(points, normal);
 			const rect = frame ? derivedFaceRectOnPlane(points, frame) : null;
 			if (!frame || !rect) continue;
-			const vKey = [...new Set(points.map((p) => mergeQuantKey(p, 1 / (scale * 1e-5))))].sort().join(",");
-			const key = `${derivedCanonicalPlaneKey(normal, centroid, scale)}:${vKey}`;
-			const hit = faceGroups.get(key) ?? [];
-			hit.push({ partId: part.id, faceId, normal, centroid, points, frame, rect });
-			faceGroups.set(key, hit);
+			patches.push({
+				exposure: faceExposureFromBrepPart(centroid, normal, part, atomics, scale),
+				stance: faceStanceFromVertices(points, normal, scale),
+				frame,
+				rect,
+				faceId: part.faceTopoIds.get(brepFace),
+			});
 		}
 	}
-	const grouped = new Map<string, SurfaceGroup>();
-	for (const entries of faceGroups.values()) {
-		const exposure: "external" | "internal" = entries.length >= 2 ? "internal" : "external";
-		const sample = entries[0]!;
-		const stance = Math.abs(sample.normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
-		for (const e of entries) {
-			derivedPushSurfacePatch(grouped, scale, e.normal, e.centroid, e.faceId, exposure, stance, e.rect, e.frame);
+	return patches;
+}
+
+function collectAabbSurfacePatches(topo: TopologyGraph, records: readonly AabbPartRecord[], scale: number): SurfacePatch[] {
+	const patches: SurfacePatch[] = [];
+	for (const part of records) {
+		for (const box of part.explodeAabbs) {
+			forEachAabbFace(box, (normal, frame, rect, centroid) => {
+				const pts = derivedRectToPoints(frame, rect);
+				patches.push({
+					exposure: faceExposureFromAabbPart(centroid, part, records),
+					stance: faceStanceFromVertices(pts, normal, scale),
+					frame,
+					rect,
+				});
+			});
 		}
 	}
-	const out: SurfaceView[] = [];
-	let idx = 0;
-	for (const group of grouped.values()) {
-		out.push({
-			id: `surface-${group.exposure}-${group.stance}-${idx++}` as SurfaceRef,
-			sourceFaceIds: [...new Set(group.faceIds)],
-			exposure: group.exposure,
-			stance: group.stance,
-			area: group.area,
-			regionPoints: group.regionPoints,
-		});
-	}
-	return out;
+	return patches;
+}
+
+/** @emoji 🪞 Exploded part faces → internal/external × horizontal/vertical, four unioned surfaces. */
+export function surfaceViewsFromAtomics(topo: TopologyGraph, atomics: readonly AtomicPart[]): SurfaceView[] {
+	const scale = derivedModelScale(topo);
+	return unionSurfacePatchesToViews(scale, collectBrepSurfacePatches(topo, atomics, scale));
+}
+
+function surfaceViewsFromAabbPartRecords(topo: TopologyGraph, records: readonly AabbPartRecord[]): SurfaceView[] {
+	const scale = derivedModelScale(topo);
+	return unionSurfacePatchesToViews(scale, collectAabbSurfacePatches(topo, records, scale));
 }
 // #endregion 🪞DerivedBooleanViews
 
