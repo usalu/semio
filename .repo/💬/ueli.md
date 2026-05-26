@@ -2565,6 +2565,10 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ---
 
+There should be a general selection state outside the interaction. Every interaction has its own selection state and sometimes the interaction contributes to the selection when they finalize. e.g. SelectAll interaction
+
+---
+
 Introduce selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso
