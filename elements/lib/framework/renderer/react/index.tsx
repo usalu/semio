@@ -1401,7 +1401,6 @@ export function useApp(): AppContextValue {
 //#endregion ­ƒôªworkbench-app-context.tsx
 
 //#region ­ƒôªworkbench-history.tsx
-import * as React from "react";
 
 /** @emoji ­ƒöû Single URI stack entry. */
 export interface UIHistoryEntry {
@@ -1477,26 +1476,6 @@ if (import.meta.vitest) {
 //#endregion ­ƒôªworkbench-history.tsx
 
 //#region ­ƒôªui-declarative-renderer.tsx
-import { CommandBus, Controller } from "@elements/framework";
-import { renderToStaticMarkup } from "react-dom/server";
-import type {
-	UiBoardHostSurfaceNode,
-	UiButtonNode,
-	UiNode,
-	UiPanelHostSurfaceNode,
-	UiTableHostSurfaceNode,
-	UiScene3DHostSurfaceNode,
-	UiSeparatorNode,
-	UiStackNode,
-	UiTextNode,
-} from "@elements/framework";
-import { clsx, type ClassValue } from "clsx";
-import * as React from "react";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]): string {
-	return twMerge(clsx(inputs));
-}
 
 //#region ­ƒöûScene3DRegistry
 type Scene3DSurfaceHost = React.ComponentType<{ readonly node: UiScene3DHostSurfaceNode }>;

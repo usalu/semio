@@ -52,7 +52,9 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../../index.tsx") },
+			{ find: "@elements/ui", replacement: path.resolve(__dirname, "../../core/index.tsx") },
+			{ find: "@elements/framework", replacement: path.resolve(__dirname, "../../../framework/core/index.ts") },
+			{ find: "@elements/framework-react", replacement: path.resolve(__dirname, "../../../framework/renderer/react/index.tsx") },
 			{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },
 		],
 		dedupe: ["three"],

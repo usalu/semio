@@ -1,6 +1,6 @@
 import { Clone, Line, OrbitControls, PerspectiveCamera, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
-import {
+import React, {
 	Children,
 	Suspense,
 	createContext,
@@ -44,6 +44,41 @@ import {
 	type Scene as ThreeScene,
 	type WebGLRenderer,
 } from "three";
+import { ProductRuntime, registerWindowBody, type FooterItem, type UiScene3DHostSurfaceNode } from "@elements/framework";
+import { ProductView, mountReactApp, registerUiScene3DSurfaceHost, useApp } from "@elements/framework-react";
+import {
+	Expertise,
+	LevelProvider,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	applyElementsSurfaceChrome,
+	getLevelBgClass,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+} from "@elements/ui";
+import {
+	LS_DEVICE,
+	LS_EXPERTISE,
+	LS_THEME,
+	PLAY_APP_ID,
+	SCENE_PLAY_BODY_KEY,
+	SCENE_PLAY_CONTROLLER_ID,
+	SCENE_PLAY_SCENE_SURFACE_ID,
+	ScenePlayShellController,
+	buildScenePlayAppRuntime,
+	buildScenePlayDeclarativeBody,
+	parseKindCatalogs,
+	parseKindCompatibility,
+	parseStoredDevice,
+	parseStoredExpertise,
+	parseStoredTheme,
+	type ScenePlaySnapshot,
+} from "./play/index.ts";
+import nakaginSceneFixtureJson from "./play/fixtures/nakagin-capsule-tower.scene.json";
+import "./play/globals.css";
 
 type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
@@ -3307,8 +3342,39 @@ function RegistryProvider({
 			commitIndirectPickPointerDown,
 		],
 	);
+	const coreValue = useMemo(() => {
+		const {
+			attractionDragActive: _attractionDragActive,
+			attractionDragAttractingFullId: _attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds: _attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId: _attractionHoverRingFullId,
+			attractionIndirectPickAwait: _attractionIndirectPickAwait,
+			...core
+		} = value;
+		return core;
+	}, [value]);
+	const dragValue = useMemo<RegistryDragState>(
+		() => ({
+			attractionDragActive: value.attractionDragActive,
+			attractionDragAttractingFullId: value.attractionDragAttractingFullId,
+			attractionCompatibleAttractedFullIds: value.attractionCompatibleAttractedFullIds,
+			attractionHoverRingFullId: value.attractionHoverRingFullId,
+			attractionIndirectPickAwait: value.attractionIndirectPickAwait,
+		}),
+		[
+			value.attractionCompatibleAttractedFullIds,
+			value.attractionDragActive,
+			value.attractionDragAttractingFullId,
+			value.attractionHoverRingFullId,
+			value.attractionIndirectPickAwait,
+		],
+	);
 
-	return <RegistryContext.Provider value={value}>{children}</RegistryContext.Provider>;
+	return (
+		<RegistryCoreContext.Provider value={coreValue}>
+			<RegistryDragContext.Provider value={dragValue}>{children}</RegistryDragContext.Provider>
+		</RegistryCoreContext.Provider>
+	);
 }
 
 function Chunks({
