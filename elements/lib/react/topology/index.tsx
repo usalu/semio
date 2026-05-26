@@ -571,11 +571,11 @@ const TopologySceneCanvas = memo(function TopologySceneCanvas(
 	const onRelocate = useSceneObjectRelocate();
 	const onConnect = useSceneObjectConnect();
 	const { scene: s } = props.bindings;
-	const { camera: _liveCamera, onRelocate: _externalRelocate, ...sceneRest } = props.scene ?? {};
+	const { camera: liveCamera, onRelocate: _externalRelocate, ...sceneRest } = props.scene ?? {};
 	return (
 		<Scene
 			className="min-h-0 flex-1"
-			camera={props.fixture.camera}
+			camera={liveCamera ?? props.fixture.camera}
 			blockedVortexFullIds={props.blocked}
 			{...s}
 			{...sceneRest}
@@ -797,7 +797,7 @@ function TopologySceneSurfaceHost({ node }: { readonly node: UiScene3DHostSurfac
 			bindings={bindings}
 			relocateMode={snapshot.relocateMode}
 			selectedObjectId={snapshot.sceneSelected}
-			scene={{ ...topologySceneChromeDefaults(), ...snapshot.sceneLodProps }}
+			scene={{ ...topologySceneChromeDefaults(), ...snapshot.sceneLodProps, camera: snapshot.sceneCamera ?? snapshot.sceneFixture.camera }}
 		/>
 	);
 }

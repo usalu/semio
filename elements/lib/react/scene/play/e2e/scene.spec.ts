@@ -123,6 +123,47 @@ test("scene click keeps chunked meshes mounted", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
+test("scene camera motion changes canvas pixels", async ({ page }) => {
+	const messages = collectSceneConsole(page);
+	await page.goto("/");
+	const canvas = page.locator("canvas").first();
+	await canvas.waitFor({ state: "visible", timeout: 120_000 });
+	await page.waitForLoadState("networkidle");
+	const box = await canvas.boundingBox();
+	expect(box).not.toBeNull();
+	const cx = box!.x + box!.width * 0.5;
+	const cy = box!.y + box!.height * 0.5;
+	await page.mouse.move(cx, cy);
+	const beforeZoom = await canvas.screenshot();
+	for (let i = 0; i < 6; i += 1) {
+		await page.mouse.wheel(0, -2000);
+	}
+	await expect
+		.poll(
+			async () => {
+				const afterZoom = await canvas.screenshot();
+				return !Buffer.from(beforeZoom).equals(Buffer.from(afterZoom));
+			},
+			{ timeout: 30_000 },
+		)
+		.toBe(true);
+	const beforePan = await canvas.screenshot();
+	await page.mouse.move(cx, cy);
+	await page.mouse.down({ button: "middle" });
+	await page.mouse.move(cx + 140, cy + 80, { steps: 12 });
+	await page.mouse.up({ button: "middle" });
+	await expect
+		.poll(
+			async () => {
+				const afterPan = await canvas.screenshot();
+				return !Buffer.from(beforePan).equals(Buffer.from(afterPan));
+			},
+			{ timeout: 30_000 },
+		)
+		.toBe(true);
+	expectCleanSceneConsole(messages);
+});
+
 test("scene play serves placeholder mesh as binary glb", async ({ request }) => {
 	const response = await request.get("/meshes/placeholder.glb");
 	expect(response.ok()).toBe(true);
