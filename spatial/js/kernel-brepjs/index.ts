@@ -45,7 +45,6 @@ import {
 	normalAt,
 	offsetFace,
 	shape,
-	split,
 	sphere,
 	threePointArc,
 	toGroupedBufferGeometryData,
@@ -1322,71 +1321,6 @@ function mergeQuantKey(p: Vec3, invTol: number): string {
 	return `${qx.toString(36)}:${qy.toString(36)}:${qz.toString(36)}`;
 }
 
-/** @emoji 📦 Solids extracted from a split/compound brep result. */
-function brepSolidsFromShape(sh: Shape3D): ValidSolid[] {
-	const out: ValidSolid[] = [];
-	if (describeBrepShape(sh).kind === "solid" && isSolid(sh) && isValidSolid(sh)) return [sh];
-	const wrapped = sh as Solid & { readonly wrapped: Parameters<typeof iterTopo>[0] };
-	for (const sub of iterTopo(wrapped.wrapped, "solid")) {
-		const c = cast(sub);
-		if (!isOk(c) || !isSolid(c.value) || !isValidSolid(c.value)) continue;
-		out.push(c.value);
-	}
-	if (!out.length && isSolid(sh) && isValidSolid(sh)) out.push(sh);
-	return out;
-}
-
-/** @emoji 📦 True when `p` lies in the interior of `solid` (not only on boundary). */
-function pointInSolidInterior(solid: ValidSolid, p: Vec3, eps = 1e-3): boolean {
-	if (!pointInOrOnSolid(solid, p)) return false;
-	const b = getBounds(solid);
-	return (
-		p[0] > b.xMin + eps &&
-		p[0] < b.xMax - eps &&
-		p[1] > b.yMin + eps &&
-		p[1] < b.yMax - eps &&
-		p[2] > b.zMin + eps &&
-		p[2] < b.zMax - eps
-	);
-}
-
-/** @emoji 📦 Source cells whose interior contains `p`; `ownerCellId` is always included. */
-function cellsContainingPointForPiece(
-	p: Vec3,
-	ownerCellId: CellRef,
-	cells: ReadonlyMap<CellRef, ValidSolid>,
-): CellRef[] {
-	const hit = new Set<CellRef>([ownerCellId]);
-	for (const [id, solid] of cells) {
-		if (id === ownerCellId) continue;
-		if (pointInSolidInterior(solid, p)) hit.add(id);
-	}
-	return [...hit].sort();
-}
-
-/** @emoji 📦 Interior sample point for atomic piece tagging. */
-function solidInteriorPoint(solid: ValidSolid): Vec3 {
-	const b = getBounds(solid);
-	const mid: Vec3 = [(b.xMin + b.xMax) / 2, (b.yMin + b.yMax) / 2, (b.zMin + b.zMax) / 2];
-	if (pointInOrOnSolid(solid, mid)) return mid;
-	const verts = getVertices(solid);
-	if (verts.length) {
-		let sx = 0;
-		let sy = 0;
-		let sz = 0;
-		for (const v of verts) {
-			const p = vertexPosition(v);
-			sx += p[0];
-			sy += p[1];
-			sz += p[2];
-		}
-		const n = verts.length;
-		const c: Vec3 = [sx / n, sy / n, sz / n];
-		if (pointInOrOnSolid(solid, c)) return c;
-	}
-	return mid;
-}
-
 function atomicPartId(sourceCellIds: readonly CellRef[], overlap: PartView["overlap"]): PartRef {
 	if (overlap === "intersection") return `part-${sourceCellIds.join("-")}-intersection` as PartRef;
 	return `part-${sourceCellIds[0]!}-${overlap}` as PartRef;
@@ -1929,51 +1863,6 @@ function faceExposureFromBrepPart(
 	return "external";
 }
 
-function faceExposureFromAabbPart(
-	centroid: Vec3,
-	normal: Vec3,
-	self: AabbPartRecord,
-	parts: readonly AabbPartRecord[],
-	scale: number,
-): SurfaceView["exposure"] {
-	const off = Math.max(scale * 1e-4, 1e-6);
-	for (const dir of [1, -1] as const) {
-		const probe = vec3Add(centroid, vec3Scale(normal, dir * off));
-		for (const other of parts) {
-			if (other.id === self.id) continue;
-			for (const box of other.explodeAabbs) {
-				if (pointInAabbInterior(probe, box)) return "internal";
-			}
-		}
-	}
-	return "external";
-}
-
-function forEachAabbFace(
-	box: Aabb,
-	fn: (normal: Vec3, frame: FacePlaneFrame, rect: Rect2, centroid: Vec3) => void,
-): void {
-	const { min, max } = box;
-	const specs: readonly { readonly normal: Vec3; readonly fixed: number; readonly fixedAxis: 0 | 1 | 2 }[] = [
-		{ normal: [1, 0, 0], fixed: max[0], fixedAxis: 0 },
-		{ normal: [-1, 0, 0], fixed: min[0], fixedAxis: 0 },
-		{ normal: [0, 1, 0], fixed: max[1], fixedAxis: 1 },
-		{ normal: [0, -1, 0], fixed: min[1], fixedAxis: 1 },
-		{ normal: [0, 0, 1], fixed: max[2], fixedAxis: 2 },
-		{ normal: [0, 0, -1], fixed: min[2], fixedAxis: 2 },
-	];
-	for (const spec of specs) {
-		const uAxis = ((spec.fixedAxis + 1) % 3) as 0 | 1 | 2;
-		const vAxis = ((spec.fixedAxis + 2) % 3) as 0 | 1 | 2;
-		const rect: Rect2 = { u0: min[uAxis], u1: max[uAxis], v0: min[vAxis], v1: max[vAxis] };
-		const frame: FacePlaneFrame = { normal: spec.normal, uAxis, vAxis, fixedAxis: spec.fixedAxis, fixed: spec.fixed };
-		const pts = derivedRectToPoints(frame, rect);
-		const centroid = derivedPointCentroid(pts);
-		if (!centroid) continue;
-		fn(spec.normal, frame, rect, centroid);
-	}
-}
-
 function unionSurfacePatchesToViews(scale: number, patches: readonly SurfacePatch[]): SurfaceView[] {
 	type PlaneGroup = { readonly frame: FacePlaneFrame; rects: Rect2[]; faceIds: FaceRef[] };
 	type Bucket = {
@@ -2144,41 +2033,6 @@ function surfaceViewsFromAabbPartRecords(topo: TopologyGraph, records: readonly 
 	return unionSurfacePatchesToViews(scale, collectTopologySurfacePatchesFromParts(topo, records, scale));
 }
 // #endregion 🪞DerivedBooleanViews
-
-type SurfaceGroup = {
-	readonly exposure: "external" | "internal";
-	readonly stance: "horizontal" | "vertical";
-	readonly faceIds: FaceRef[];
-	readonly regionPoints: Vec3[];
-	area: number;
-};
-
-function derivedPushSurfacePatch(
-	grouped: Map<string, SurfaceGroup>,
-	scale: number,
-	normal: Vec3,
-	centroid: Vec3,
-	faceId: FaceRef,
-	exposure: "external" | "internal",
-	stance: "horizontal" | "vertical",
-	rect: Rect2,
-	frame: FacePlaneFrame,
-): void {
-	const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}:${derivedCanonicalRectKey(rect, scale)}`;
-	const patchPts = derivedRectToPoints(frame, rect);
-	const area = derivedRectArea(rect);
-	const hit = grouped.get(key);
-	if (hit) {
-		hit.faceIds.push(faceId);
-		hit.area += area;
-		for (const p of patchPts) {
-			const k = p.join(",");
-			if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
-		}
-	} else {
-		grouped.set(key, { exposure, stance, faceIds: [faceId], regionPoints: [...patchPts], area });
-	}
-}
 
 /** @emoji 🪞 Topology faces only (shared-face shells, no volumetric overlap). */
 function computeSurfaceViewsFromTopologyFacesOnly(topo: TopologyGraph): SurfaceView[] {

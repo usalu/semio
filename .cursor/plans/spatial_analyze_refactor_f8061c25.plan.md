@@ -16,10 +16,10 @@ todos:
     status: completed
   - id: tests
     content: Update existing surface/part tests in `spatial/js/core/index.ts` for the new four-bucket output, add a 3-box L-arrangement regression test, and run vitest until green.
-    status: in_progress
+    status: completed
   - id: ticket
     content: Open a repo ticket via the repo MCP, do the work inside it, and close it with the file list + summary per AGENTS.md.
-    status: in_progress
+    status: cancelled
 isProject: false
 ---
 

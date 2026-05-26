@@ -1,0 +1,57 @@
+{
+  "id": "fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+  "uri": "repo://session/fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+  "client": "copilot-chat",
+  "second": "2026-05-26T13:36:35Z",
+  "checkpoint": "b44f344336c760fade752fd91d52a40b3be88603",
+  "contributor": "unknown",
+  "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "b44f344336c760fade752fd91d52a40b3be88603",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-05-26T13:36:35Z",
+        "session": "fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-26T13:36:34.642Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
+          "source": "new",
+          "model": "gpt-5.4",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b44f344336c760fade752fd91d52a40b3be88603",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-05-26T13:36:36Z",
+        "session": "fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-26T13:36:34.642Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "fc996465-f68f-43d4-8e48-37ea1a3f18d8",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
+          "source": "new",
+          "model": "gpt-5.4",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}
