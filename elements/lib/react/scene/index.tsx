@@ -2736,41 +2736,24 @@ export function useSceneRelocate(objectId: string) {
 
 const EMPTY_BLOCKED_VORTICES: ReadonlySet<string> = new Set();
 
-type OrbitControlsHandle = {
-	addEventListener: (type: "change" | "start" | "end", listener: () => void) => void;
-	removeEventListener: (type: "change" | "start" | "end", listener: () => void) => void;
-	update: () => void;
-};
-
 //#region ­ƒÄ¼Scene
 function OrbitGated() {
 	const reg = useRegistry();
 	const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
 	const invalidate = useThree((s) => s.invalidate);
-	const controlsRef = useRef<OrbitControlsHandle | null>(null);
-	useEffect(() => {
-		const controls = controlsRef.current;
-		if (!controls) return;
-		const handleOrbitChange = () => invalidate();
-		controls.addEventListener("change", handleOrbitChange);
-		controls.addEventListener("start", handleOrbitChange);
-		controls.addEventListener("end", handleOrbitChange);
-		return () => {
-			controls.removeEventListener("change", handleOrbitChange);
-			controls.removeEventListener("start", handleOrbitChange);
-			controls.removeEventListener("end", handleOrbitChange);
-		};
-	}, [invalidate]);
 	useEffect(() => {
 		invalidate();
 	}, [gate, invalidate]);
 	return (
 		<OrbitControls
-			ref={controlsRef}
 			makeDefault
 			enabled={!gate}
+			enableDamping={false}
 			enablePan
 			enableZoom
+			onChange={() => invalidate()}
+			onStart={() => invalidate()}
+			onEnd={() => invalidate()}
 			mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }}
 		/>
 	);
@@ -3535,7 +3518,8 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
 	return (
 		<div
 			className={className}
-			style={{ width: "100%", height: "100%", ...style }}
+			style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
+			onContextMenu={(event) => event.preventDefault()}
 			data-scene-domain={domain}
 			data-scene-root
 			data-scene-lod={shellLod}

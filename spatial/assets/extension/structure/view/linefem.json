@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.view/v1",
+  "id": "linefem",
+  "version": "1.0.0",
+  "label": "Classic Structural",
+  "description": "A view used for Finite-Element-Analysis with line elements.",
+  "allows": [
+    "lines"
+  ],
+  "derivedObjects": [
+    {
+      "id": "lineelement",
+      "label": "Line Element",
+      "description": "Derived structural element represented with line topology."
+    }
+  ]
+}

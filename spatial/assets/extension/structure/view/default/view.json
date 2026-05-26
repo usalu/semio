@@ -36,40 +36,5 @@
       "label": "Solid Element",
       "description": "Derived structural element represented with solid topology."
     }
-  ],
-  "views": [
-    {
-      "id": "linefem",
-      "label": "Classic Structural",
-      "description": "A view used for Finite-Element-Analysis with line elements.",
-      "allows": [
-        "lines"
-      ],
-      "derivedObjects": [
-        "lineelement"
-      ]
-    },
-    {
-      "id": "surfacefem",
-      "label": "Classic Structural",
-      "description": "A view used for Finite-Element-Analysis with surface elements.",
-      "allows": [
-        "surfaces"
-      ],
-      "derivedObjects": [
-        "surfaceelement"
-      ]
-    },
-    {
-      "id": "solidfem",
-      "label": "Classic Structural",
-      "description": "A view used for Finite-Element-Analysis with solid elements.",
-      "allows": [
-        "solids"
-      ],
-      "derivedObjects": [
-        "solidelement"
-      ]
-    }
   ]
 }

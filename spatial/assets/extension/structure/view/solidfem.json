@@ -1,0 +1,17 @@
+{
+  "schema": "spatial.view/v1",
+  "id": "solidfem",
+  "version": "1.0.0",
+  "label": "Classic Structural",
+  "description": "A view used for Finite-Element-Analysis with solid elements.",
+  "allows": [
+    "solids"
+  ],
+  "derivedObjects": [
+    {
+      "id": "solidelement",
+      "label": "Solid Element",
+      "description": "Derived structural element represented with solid topology."
+    }
+  ]
+}
