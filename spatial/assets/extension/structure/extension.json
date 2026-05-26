@@ -1,0 +1,10 @@
+{
+	"schema": "spatial.extension/v1",
+	"id": "structure",
+	"version": "1.0.0",
+	"label": "Structure",
+	"description": "Structural analysis extension assets.",
+	"kinds": [
+		"view"
+	]
+}

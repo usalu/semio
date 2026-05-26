@@ -1,0 +1,13 @@
+{
+	"schema": "spatial.extension/v1",
+	"id": "energy",
+	"version": "1.0.0",
+	"label": "Energy",
+	"description": "Energy analysis extension assets.",
+	"kinds": [
+		"action",
+		"interaction",
+		"property",
+		"view"
+	]
+}

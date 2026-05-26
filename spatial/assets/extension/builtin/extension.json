@@ -1,0 +1,13 @@
+{
+	"schema": "spatial.extension/v1",
+	"id": "builtin",
+	"version": "1.0.0",
+	"label": "Builtin",
+	"description": "Core extension assets shipped with the spatial runtime.",
+	"kinds": [
+		"action",
+		"attribute",
+		"interaction",
+		"property"
+	]
+}
