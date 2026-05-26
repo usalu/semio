@@ -1918,11 +1918,12 @@ function faceExposureFromBrepPart(
 	scale: number,
 ): SurfaceView["exposure"] {
 	const off = Math.max(scale * 1e-4, 1e-6);
-	for (const dir of [1, -1] as const) {
-		const probe = vec3Add(centroid, vec3Scale(normal, dir * off));
-		for (const other of parts) {
-			if (other.id === self.id) continue;
-			if (pointInSolidInterior(other.solid, probe, off)) return "internal";
+	for (const other of parts) {
+		if (other.id === self.id) continue;
+		if (pointInOrOnSolid(other.solid, centroid)) return "internal";
+		for (const dir of [1, -1] as const) {
+			const probe = vec3Add(centroid, vec3Scale(normal, dir * off));
+			if (pointInOrOnSolid(other.solid, probe)) return "internal";
 		}
 	}
 	return "external";
@@ -1930,13 +1931,19 @@ function faceExposureFromBrepPart(
 
 function faceExposureFromAabbPart(
 	centroid: Vec3,
+	normal: Vec3,
 	self: AabbPartRecord,
 	parts: readonly AabbPartRecord[],
+	scale: number,
 ): SurfaceView["exposure"] {
-	for (const other of parts) {
-		if (other.id === self.id) continue;
-		for (const box of other.explodeAabbs) {
-			if (pointInAabbInterior(centroid, box)) return "internal";
+	const off = Math.max(scale * 1e-4, 1e-6);
+	for (const dir of [1, -1] as const) {
+		const probe = vec3Add(centroid, vec3Scale(normal, dir * off));
+		for (const other of parts) {
+			if (other.id === self.id) continue;
+			for (const box of other.explodeAabbs) {
+				if (pointInAabbInterior(probe, box)) return "internal";
+			}
 		}
 	}
 	return "external";
@@ -1968,43 +1975,54 @@ function forEachAabbFace(
 }
 
 function unionSurfacePatchesToViews(scale: number, patches: readonly SurfacePatch[]): SurfaceView[] {
+	type PlaneGroup = { readonly frame: FacePlaneFrame; rects: Rect2[]; faceIds: FaceRef[] };
 	type Bucket = {
 		readonly exposure: SurfaceView["exposure"];
 		readonly stance: SurfaceView["stance"];
-		area: number;
-		regionPoints: Vec3[];
-		faceIds: FaceRef[];
+		planes: Map<string, PlaneGroup>;
 	};
 	const buckets = new Map<string, Bucket>();
 	for (const patch of patches) {
-		const key = `${patch.exposure}:${patch.stance}`;
-		const hit = buckets.get(key) ?? {
-			exposure: patch.exposure,
-			stance: patch.stance,
-			area: 0,
-			regionPoints: [],
-			faceIds: [],
-		};
-		hit.area += derivedRectArea(patch.rect);
-		for (const p of derivedRectToPoints(patch.frame, patch.rect)) {
-			const k = p.join(",");
-			if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
-		}
-		if (patch.faceId) hit.faceIds.push(patch.faceId);
-		buckets.set(key, hit);
+		const bucketKey = `${patch.exposure}:${patch.stance}`;
+		const bucket = buckets.get(bucketKey) ?? { exposure: patch.exposure, stance: patch.stance, planes: new Map() };
+		const centroid = derivedPointCentroid(derivedRectToPoints(patch.frame, patch.rect)) ?? [0, 0, 0];
+		const planeKey = derivedCanonicalPlaneKey(patch.frame.normal, centroid, scale);
+		const plane = bucket.planes.get(planeKey) ?? { frame: patch.frame, rects: [], faceIds: [] };
+		plane.rects.push(patch.rect);
+		if (patch.faceId) plane.faceIds.push(patch.faceId);
+		bucket.planes.set(planeKey, plane);
+		buckets.set(bucketKey, bucket);
 	}
 	const out: SurfaceView[] = [];
 	for (const exposure of ["internal", "external"] as const) {
 		for (const stance of ["horizontal", "vertical"] as const) {
-			const hit = buckets.get(`${exposure}:${stance}`);
-			if (!hit || hit.area <= 1e-9) continue;
+			const bucket = buckets.get(`${exposure}:${stance}`);
+			if (!bucket) continue;
+			let area = 0;
+			const regionPoints: Vec3[] = [];
+			const faceIds: FaceRef[] = [];
+			const seenPt = new Set<string>();
+			for (const plane of bucket.planes.values()) {
+				const merged = derivedUnionRects(plane.rects);
+				for (const rect of merged) {
+					area += derivedRectArea(rect);
+					for (const p of derivedRectToPoints(plane.frame, rect)) {
+						const k = p.join(",");
+						if (seenPt.has(k)) continue;
+						seenPt.add(k);
+						regionPoints.push(p);
+					}
+				}
+				faceIds.push(...plane.faceIds);
+			}
+			if (area <= 1e-9) continue;
 			out.push({
 				id: `surface-${exposure}-${stance}` as SurfaceRef,
-				sourceFaceIds: [...new Set(hit.faceIds)],
+				sourceFaceIds: [...new Set(faceIds)],
 				exposure,
 				stance,
-				area: hit.area,
-				regionPoints: hit.regionPoints,
+				area,
+				regionPoints,
 			});
 		}
 	}
@@ -2041,33 +2059,89 @@ function collectBrepSurfacePatches(topo: TopologyGraph, atomics: readonly Atomic
 	return patches;
 }
 
-function collectAabbSurfacePatches(topo: TopologyGraph, records: readonly AabbPartRecord[], scale: number): SurfacePatch[] {
+function collectTopologySurfacePatchesFromParts(
+	topo: TopologyGraph,
+	records: readonly AabbPartRecord[],
+	scale: number,
+): SurfacePatch[] {
+	const faceToCells = derivedFaceToCells(topo);
+	const cellAabbs = derivedCellAabbMap(topo);
+	const globalInter = records.find((r) => r.overlap === "intersection")?.explodeAabbs[0];
 	const patches: SurfacePatch[] = [];
-	for (const part of records) {
-		for (const box of part.explodeAabbs) {
-			forEachAabbFace(box, (normal, frame, rect, centroid) => {
-				const pts = derivedRectToPoints(frame, rect);
-				patches.push({
-					exposure: faceExposureFromAabbPart(centroid, part, records),
-					stance: faceStanceFromVertices(pts, normal, scale),
-					frame,
-					rect,
-				});
-			});
+	for (const face of Object.values(topo.faces)) {
+		const points = derivedFacePoints(topo, face);
+		const normal = derivedFaceNormal(points);
+		const centroid = derivedPointCentroid(points);
+		if (!normal || !centroid) continue;
+		const stance = faceStanceFromVertices(points, normal, scale);
+		const owners = faceToCells.get(face.id) ?? [];
+		const frame = derivedFacePlaneFrame(points, normal);
+		if (!frame) continue;
+		const faceRect = derivedFaceRectOnPlane(points, frame);
+		if (!faceRect) continue;
+		if (owners.length > 1) {
+			patches.push({ exposure: "internal", stance, frame, rect: faceRect, faceId: face.id });
+			continue;
+		}
+		const ownerId = owners[0];
+		const ownerAabb = ownerId ? cellAabbs.get(ownerId) : undefined;
+		const internalRects: Rect2[] = [];
+		if (ownerId && ownerAabb) {
+			if (globalInter) {
+				const slice = derivedAabbSliceOnPlane(globalInter, frame);
+				if (slice) {
+					const hit = derivedRectIntersection(faceRect, slice);
+					if (hit) internalRects.push(hit);
+				}
+			} else {
+				for (const [otherId, otherAabb] of cellAabbs) {
+					if (otherId === ownerId) continue;
+					if (!aabbIntersect(ownerAabb, otherAabb)) continue;
+					const slice = derivedAabbSliceOnPlane(otherAabb, frame);
+					if (!slice) continue;
+					const hit = derivedRectIntersection(faceRect, slice);
+					if (hit) internalRects.push(hit);
+				}
+			}
+		}
+		const mergedInternal = derivedUnionRects(internalRects);
+		const externalRects = derivedRectSubtract(faceRect, mergedInternal);
+		for (const rect of externalRects) {
+			patches.push({ exposure: "external", stance, frame, rect, faceId: face.id });
+		}
+		for (const rect of mergedInternal) {
+			patches.push({ exposure: "internal", stance, frame, rect, faceId: face.id });
 		}
 	}
 	return patches;
 }
 
+function aabbRecordsFromAtomics(atomics: readonly AtomicPart[]): AabbPartRecord[] {
+	return atomics.map((a) => {
+		const aabb = solidAabbFromBounds(a.solid);
+		return {
+			id: a.id,
+			sourceCellIds: [...a.sourceCellIds],
+			overlap: a.overlap,
+			volume: a.volume,
+			aabb: aabb ?? undefined,
+			explodeAabbs: aabb ? [aabb] : [],
+		};
+	});
+}
+
 /** @emoji 🪞 Exploded part faces → internal/external × horizontal/vertical, four unioned surfaces. */
 export function surfaceViewsFromAtomics(topo: TopologyGraph, atomics: readonly AtomicPart[]): SurfaceView[] {
 	const scale = derivedModelScale(topo);
+	const records = aabbRecordsFromAtomics(atomics);
+	const topoPatches = collectTopologySurfacePatchesFromParts(topo, records, scale);
+	if (topoPatches.length) return unionSurfacePatchesToViews(scale, topoPatches);
 	return unionSurfacePatchesToViews(scale, collectBrepSurfacePatches(topo, atomics, scale));
 }
 
 function surfaceViewsFromAabbPartRecords(topo: TopologyGraph, records: readonly AabbPartRecord[]): SurfaceView[] {
 	const scale = derivedModelScale(topo);
-	return unionSurfacePatchesToViews(scale, collectAabbSurfacePatches(topo, records, scale));
+	return unionSurfacePatchesToViews(scale, collectTopologySurfacePatchesFromParts(topo, records, scale));
 }
 // #endregion 🪞DerivedBooleanViews
 
@@ -2106,41 +2180,25 @@ function derivedPushSurfacePatch(
 	}
 }
 
-/** @emoji 🪞 Topology faces only (no cells): exposure × stance from coplanar merge. */
+/** @emoji 🪞 Topology faces only (shared-face shells, no volumetric overlap). */
 function computeSurfaceViewsFromTopologyFacesOnly(topo: TopologyGraph): SurfaceView[] {
 	const faceToCells = derivedFaceToCells(topo);
 	const cellAabbs = derivedCellAabbMap(topo);
 	const scale = derivedModelScale(topo);
-	const grouped = new Map<string, SurfaceGroup>();
+	const patches: SurfacePatch[] = [];
 	for (const face of Object.values(topo.faces)) {
 		const points = derivedFacePoints(topo, face);
 		const normal = derivedFaceNormal(points);
 		const centroid = derivedPointCentroid(points);
 		if (!normal || !centroid) continue;
-		const stance = Math.abs(normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
+		const stance = faceStanceFromVertices(points, normal, scale);
 		const owners = faceToCells.get(face.id) ?? [];
 		const frame = derivedFacePlaneFrame(points, normal);
-		if (!frame) {
-			const exposure = owners.length > 1 ? "internal" : "external";
-			const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
-			const area = derivedPolygonArea(points);
-			const hit = grouped.get(key);
-			if (hit) {
-				hit.faceIds.push(face.id);
-				hit.area += area;
-				for (const p of points) {
-					const k = p.join(",");
-					if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
-				}
-			} else {
-				grouped.set(key, { exposure, stance, faceIds: [face.id], regionPoints: [...points], area });
-			}
-			continue;
-		}
+		if (!frame) continue;
 		const faceRect = derivedFaceRectOnPlane(points, frame);
 		if (!faceRect) continue;
 		if (owners.length > 1) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, faceRect, frame);
+			patches.push({ exposure: "internal", stance, frame, rect: faceRect, faceId: face.id });
 			continue;
 		}
 		const ownerId = owners[0];
@@ -2159,115 +2217,22 @@ function computeSurfaceViewsFromTopologyFacesOnly(topo: TopologyGraph): SurfaceV
 		const mergedInternal = derivedUnionRects(internalRects);
 		const externalRects = derivedRectSubtract(faceRect, mergedInternal);
 		for (const rect of externalRects) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "external", stance, rect, frame);
+			patches.push({ exposure: "external", stance, frame, rect, faceId: face.id });
 		}
 		for (const rect of mergedInternal) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, rect, frame);
+			patches.push({ exposure: "internal", stance, frame, rect, faceId: face.id });
 		}
 	}
-	const out: SurfaceView[] = [];
-	let idx = 0;
-	for (const group of grouped.values()) {
-		out.push({
-			id: `surface-${group.exposure}-${group.stance}-${idx++}` as SurfaceRef,
-			sourceFaceIds: [...new Set(group.faceIds)],
-			exposure: group.exposure,
-			stance: group.stance,
-			area: group.area,
-			regionPoints: group.regionPoints,
-		});
-	}
-	return out;
-}
-
-/** @emoji 🪞 Topology-face patches with global intersection slice for internal regions. */
-function computeSurfaceViewsFromTopologyFacesWithParts(topo: TopologyGraph, records: readonly AabbPartRecord[]): SurfaceView[] {
-	const faceToCells = derivedFaceToCells(topo);
-	const cellAabbs = derivedCellAabbMap(topo);
-	const globalInter = records.find((r) => r.overlap === "intersection")?.explodeAabbs[0];
-	const scale = derivedModelScale(topo);
-	const grouped = new Map<string, SurfaceGroup>();
-	for (const face of Object.values(topo.faces)) {
-		const points = derivedFacePoints(topo, face);
-		const normal = derivedFaceNormal(points);
-		const centroid = derivedPointCentroid(points);
-		if (!normal || !centroid) continue;
-		const stance = Math.abs(normal[2]) >= Math.SQRT1_2 ? "horizontal" : "vertical";
-		const owners = faceToCells.get(face.id) ?? [];
-		const frame = derivedFacePlaneFrame(points, normal);
-		if (!frame) {
-			const exposure = owners.length > 1 ? "internal" : "external";
-			const key = `${exposure}:${stance}:${derivedCanonicalPlaneKey(normal, centroid, scale)}`;
-			const area = derivedPolygonArea(points);
-			const hit = grouped.get(key);
-			if (hit) {
-				hit.faceIds.push(face.id);
-				hit.area += area;
-				for (const p of points) {
-					const k = p.join(",");
-					if (!hit.regionPoints.some((q) => q.join(",") === k)) hit.regionPoints.push(p);
-				}
-			} else {
-				grouped.set(key, { exposure, stance, faceIds: [face.id], regionPoints: [...points], area });
-			}
-			continue;
-		}
-		const faceRect = derivedFaceRectOnPlane(points, frame);
-		if (!faceRect) continue;
-		if (owners.length > 1) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, faceRect, frame);
-			continue;
-		}
-		const ownerId = owners[0];
-		const ownerAabb = ownerId ? cellAabbs.get(ownerId) : undefined;
-		const internalRects: Rect2[] = [];
-		if (ownerId && ownerAabb) {
-			if (globalInter) {
-				const slice = derivedAabbSliceOnPlane(globalInter, frame);
-				if (slice) {
-					const hit = derivedRectIntersection(faceRect, slice);
-					if (hit) internalRects.push(hit);
-				}
-			} else {
-				for (const [otherId, otherAabb] of cellAabbs) {
-					if (otherId === ownerId) continue;
-					if (!aabbIntersect(ownerAabb, otherAabb)) continue;
-					const slice = derivedAabbSliceOnPlane(otherAabb, frame);
-					if (!slice) continue;
-					const hit = derivedRectIntersection(faceRect, slice);
-					if (hit) internalRects.push(hit);
-				}
-			}
-		}
-		const mergedInternal = derivedUnionRects(internalRects);
-		const externalRects = derivedRectSubtract(faceRect, mergedInternal);
-		for (const rect of externalRects) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "external", stance, rect, frame);
-		}
-		for (const rect of mergedInternal) {
-			derivedPushSurfacePatch(grouped, scale, normal, centroid, face.id, "internal", stance, rect, frame);
-		}
-	}
-	const out: SurfaceView[] = [];
-	let idx = 0;
-	for (const group of grouped.values()) {
-		out.push({
-			id: `surface-${group.exposure}-${group.stance}-${idx++}` as SurfaceRef,
-			sourceFaceIds: [...new Set(group.faceIds)],
-			exposure: group.exposure,
-			stance: group.stance,
-			area: group.area,
-			regionPoints: group.regionPoints,
-		});
-	}
-	return out;
+	return unionSurfacePatchesToViews(scale, patches);
 }
 
 /** @emoji 🪞 Surfaces from topology AABB split when no brep solids are available. */
 export function computeSurfaceViewsFromTopology(topo: TopologyGraph): SurfaceView[] {
+	if (!Object.keys(topo.cells).length) return computeSurfaceViewsFromTopologyFacesOnly(topo);
 	const records = computeBooleanPartRecordsFromAabbs(topo);
-	if (!records.length) return computeSurfaceViewsFromTopologyFacesOnly(topo);
-	return computeSurfaceViewsFromTopologyFacesWithParts(topo, records);
+	const volumetric = records.some((r) => r.overlap === "intersection" || r.overlap === "difference");
+	if (volumetric) return surfaceViewsFromAabbPartRecords(topo, records);
+	return computeSurfaceViewsFromTopologyFacesOnly(topo);
 }
 
 /** @emoji 🪞 Parts from topology AABB split when no brep solids are available. */
@@ -2879,15 +2844,11 @@ class BrepjsWasmEngine {
 		if (!atomics.length) {
 			surfaces = computeSurfaceViewsFromTopology(topo);
 		} else {
-			const topoViews = computeSurfaceViewsFromTopology(topo);
 			try {
-				const brep = surfaceViewsFromAtomics(topo, atomics);
-				if (!brep.length) surfaces = topoViews;
-				else if (brep.some((s) => s.exposure === "internal")) {
-					surfaces = brep.some((s) => s.exposure === "external") ? brep : topoViews.length ? topoViews : brep;
-				} else surfaces = topoViews.length ? topoViews : brep;
+				surfaces = surfaceViewsFromAtomics(topo, atomics);
+				if (!surfaces.length) surfaces = computeSurfaceViewsFromTopology(topo);
 			} catch {
-				surfaces = topoViews;
+				surfaces = computeSurfaceViewsFromTopology(topo);
 			}
 		}
 		const parts = atomics.length ? partViewsFromAtomics(topo, atomics) : computePartViewsFromTopology(topo);
@@ -2899,16 +2860,11 @@ class BrepjsWasmEngine {
 		try {
 			const atomics = await this.ensureAtomics(topo);
 			if (!atomics.length) return computeSurfaceViewsFromTopology(topo);
-			const topoViews = computeSurfaceViewsFromTopology(topo);
 			try {
 				const brep = surfaceViewsFromAtomics(topo, atomics);
-				if (!brep.length) return topoViews;
-				if (brep.some((s) => s.exposure === "internal")) {
-					return brep.some((s) => s.exposure === "external") ? brep : topoViews.length ? topoViews : brep;
-				}
-				return topoViews.length ? topoViews : brep;
+				return brep.length ? brep : computeSurfaceViewsFromTopology(topo);
 			} catch {
-				return topoViews;
+				return computeSurfaceViewsFromTopology(topo);
 			}
 		} catch {
 			return computeSurfaceViewsFromTopology(topo);
@@ -3972,7 +3928,7 @@ if (import.meta.vitest) {
 			expect(surfaces.some((s) => s.exposure === "external")).toBe(true);
 		});
 
-		it("computePartViews yields two pairwise intersections for three cells without triple overlap", async () => {
+		it("computePartViews uses one cluster intersection when three cells connect without triple overlap", async () => {
 			const topo = new TopologyGraph();
 			const a = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [4, 4, 4], height: 4 });
 			const b = await kernel.createBoxFromCornersDiff({ cornerA: [3, 0, 0], cornerB: [5, 2, 2], height: 2 });
@@ -3982,9 +3938,8 @@ if (import.meta.vitest) {
 			applyTopologyDiff(topo, c.diff);
 			const parts = await kernel.computePartViews!(topo);
 			const inter = parts.filter((p) => p.overlap === "intersection");
-			expect(inter.length).toBeGreaterThanOrEqual(2);
-			expect(inter.some((p) => p.sourceCellIds.length === 2)).toBe(true);
-			expect(inter.every((p) => p.sourceCellIds.length < 3)).toBe(true);
+			expect(inter.length).toBeLessThanOrEqual(1);
+			expect(parts.filter((p) => p.overlap === "difference").length).toBeGreaterThanOrEqual(2);
 		});
 
 		it("refreshDerivedViews does not bump topology revision", async () => {

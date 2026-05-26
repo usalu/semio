@@ -4,19 +4,19 @@ overview: Rewrite the spatial analyzer so parts come from one N-way intersection
 todos:
   - id: brep-decompose
     content: Rewrite `decomposeCells` in `spatial/js/kernel-brepjs/index.ts` to cluster cells by interference, run one N-way `intersect` per cluster and one `cutAll` per touched cell, exploding results into AtomicParts.
-    status: in_progress
+    status: completed
   - id: brep-surfaces
     content: Rewrite `surfaceViewsFromAtomics` to explode part faces, classify internal/external via point-in-other-part, classify stance via vertex Z orientation, then boolean-union per (stance, exposure) into exactly four SurfaceViews.
-    status: pending
+    status: completed
   - id: aabb-fallback
     content: Apply the same intersect-then-per-cell-difference + face-classify + per-bucket-union pipeline to the AABB fallback (`computeBooleanPartRecordsFromAabbs` and `computeSurfaceViewsFromTopologyFacesWithParts`).
-    status: pending
+    status: completed
   - id: kernel-glue
     content: Simplify `refreshDerivedViews` / `computeSurfaceViews` / `computePartViews` to return the new brep results directly (no topo-vs-brep heuristic fallback).
-    status: pending
+    status: completed
   - id: tests
     content: Update existing surface/part tests in `spatial/js/core/index.ts` for the new four-bucket output, add a 3-box L-arrangement regression test, and run vitest until green.
-    status: pending
+    status: in_progress
   - id: ticket
     content: Open a repo ticket via the repo MCP, do the work inside it, and close it with the file list + summary per AGENTS.md.
     status: in_progress
