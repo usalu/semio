@@ -3,40 +3,40 @@
 // #endregion 🧲Header
 
 // #region 📥InteractionAssets
-import boxInteractionJson from "../../assets/interactions/box.interaction.json" with { type: "json" };
-import extrudeWireInteractionJson from "../../assets/interactions/extrude-wire.interaction.json" with { type: "json" };
-import offsetSurfaceInteractionJson from "../../assets/interactions/offset-surface.interaction.json" with { type: "json" };
-import distanceInteractionJson from "../../assets/interactions/measure-length.interaction.json" with { type: "json" };
-import areaInteractionJson from "../../assets/interactions/area.interaction.json" with { type: "json" };
-import curveArcInteractionJson from "../../assets/interactions/curve-arc.interaction.json" with { type: "json" };
-import curveCircleInteractionJson from "../../assets/interactions/curve-circle.interaction.json" with { type: "json" };
-import curveControlPointCurveInteractionJson from "../../assets/interactions/curve-control-point-curve.interaction.json" with { type: "json" };
-import curveInterpolateCurveInteractionJson from "../../assets/interactions/curve-interpolate-curve.interaction.json" with { type: "json" };
-import curveLineInteractionJson from "../../assets/interactions/curve-line.interaction.json" with { type: "json" };
-import curvePolylineInteractionJson from "../../assets/interactions/curve-polyline.interaction.json" with { type: "json" };
-import editChamferInteractionJson from "../../assets/interactions/edit-chamfer.interaction.json" with { type: "json" };
-import editExplodeInteractionJson from "../../assets/interactions/edit-explode.interaction.json" with { type: "json" };
-import editFilletInteractionJson from "../../assets/interactions/edit-fillet.interaction.json" with { type: "json" };
-import editJoinInteractionJson from "../../assets/interactions/edit-join.interaction.json" with { type: "json" };
-import editSplitInteractionJson from "../../assets/interactions/edit-split.interaction.json" with { type: "json" };
-import editTrimInteractionJson from "../../assets/interactions/edit-trim.interaction.json" with { type: "json" };
-import solidBooleanDifferenceInteractionJson from "../../assets/interactions/solid-boolean-difference.interaction.json" with { type: "json" };
-import solidBooleanIntersectionInteractionJson from "../../assets/interactions/solid-boolean-intersection.interaction.json" with { type: "json" };
-import solidBooleanUnionInteractionJson from "../../assets/interactions/solid-boolean-union.interaction.json" with { type: "json" };
-import solidCylinderInteractionJson from "../../assets/interactions/solid-cylinder.interaction.json" with { type: "json" };
-import solidSphereInteractionJson from "../../assets/interactions/solid-sphere.interaction.json" with { type: "json" };
-import surfaceExtrudeCrvInteractionJson from "../../assets/interactions/surface-extrude-crv.interaction.json" with { type: "json" };
-import surfaceLoftInteractionJson from "../../assets/interactions/surface-loft.interaction.json" with { type: "json" };
-import surfaceNetworkSrfInteractionJson from "../../assets/interactions/surface-network-srf.interaction.json" with { type: "json" };
-import surfacePlaneInteractionJson from "../../assets/interactions/surface-plane.interaction.json" with { type: "json" };
-import surfaceSweep1InteractionJson from "../../assets/interactions/surface-sweep1.interaction.json" with { type: "json" };
-import surfaceSweep2InteractionJson from "../../assets/interactions/surface-sweep2.interaction.json" with { type: "json" };
-import transformCopyInteractionJson from "../../assets/interactions/transform-copy.interaction.json" with { type: "json" };
-import transformMirrorInteractionJson from "../../assets/interactions/transform-mirror.interaction.json" with { type: "json" };
-import transformMoveInteractionJson from "../../assets/interactions/transform-move.interaction.json" with { type: "json" };
-import transformRotateInteractionJson from "../../assets/interactions/transform-rotate.interaction.json" with { type: "json" };
-import transformScale1dInteractionJson from "../../assets/interactions/transform-scale1d.interaction.json" with { type: "json" };
-import transformScale3dInteractionJson from "../../assets/interactions/transform-scale3d.interaction.json" with { type: "json" };
+import boxInteractionJson from "../../assets/interaction/primitive/box.json" with { type: "json" };
+import extrudeWireInteractionJson from "../../assets/interaction/feature/extrude-wire.json" with { type: "json" };
+import offsetSurfaceInteractionJson from "../../assets/interaction/feature/offset-surface.json" with { type: "json" };
+import distanceInteractionJson from "../../assets/interaction/measure/length.json" with { type: "json" };
+import areaInteractionJson from "../../assets/interaction/measure/area.json" with { type: "json" };
+import curveArcInteractionJson from "../../assets/interaction/curve/arc.json" with { type: "json" };
+import curveCircleInteractionJson from "../../assets/interaction/curve/circle.json" with { type: "json" };
+import curveControlPointCurveInteractionJson from "../../assets/interaction/curve/control-point-curve.json" with { type: "json" };
+import curveInterpolateCurveInteractionJson from "../../assets/interaction/curve/interpolate-curve.json" with { type: "json" };
+import curveLineInteractionJson from "../../assets/interaction/curve/line.json" with { type: "json" };
+import curvePolylineInteractionJson from "../../assets/interaction/curve/polyline.json" with { type: "json" };
+import editChamferInteractionJson from "../../assets/interaction/edit/chamfer.json" with { type: "json" };
+import editExplodeInteractionJson from "../../assets/interaction/edit/explode.json" with { type: "json" };
+import editFilletInteractionJson from "../../assets/interaction/edit/fillet.json" with { type: "json" };
+import editJoinInteractionJson from "../../assets/interaction/edit/join.json" with { type: "json" };
+import editSplitInteractionJson from "../../assets/interaction/edit/split.json" with { type: "json" };
+import editTrimInteractionJson from "../../assets/interaction/edit/trim.json" with { type: "json" };
+import solidBooleanDifferenceInteractionJson from "../../assets/interaction/solid/boolean-difference.json" with { type: "json" };
+import solidBooleanIntersectionInteractionJson from "../../assets/interaction/solid/boolean-intersection.json" with { type: "json" };
+import solidBooleanUnionInteractionJson from "../../assets/interaction/solid/boolean-union.json" with { type: "json" };
+import solidCylinderInteractionJson from "../../assets/interaction/solid/cylinder.json" with { type: "json" };
+import solidSphereInteractionJson from "../../assets/interaction/solid/sphere.json" with { type: "json" };
+import surfaceExtrudeCrvInteractionJson from "../../assets/interaction/surface/extrude-crv.json" with { type: "json" };
+import surfaceLoftInteractionJson from "../../assets/interaction/surface/loft.json" with { type: "json" };
+import surfaceNetworkSrfInteractionJson from "../../assets/interaction/surface/network-srf.json" with { type: "json" };
+import surfacePlaneInteractionJson from "../../assets/interaction/surface/plane.json" with { type: "json" };
+import surfaceSweep1InteractionJson from "../../assets/interaction/surface/sweep1.json" with { type: "json" };
+import surfaceSweep2InteractionJson from "../../assets/interaction/surface/sweep2.json" with { type: "json" };
+import transformCopyInteractionJson from "../../assets/interaction/transform/copy.json" with { type: "json" };
+import transformMirrorInteractionJson from "../../assets/interaction/transform/mirror.json" with { type: "json" };
+import transformMoveInteractionJson from "../../assets/interaction/transform/move.json" with { type: "json" };
+import transformRotateInteractionJson from "../../assets/interaction/transform/rotate.json" with { type: "json" };
+import transformScale1dInteractionJson from "../../assets/interaction/transform/scale1d.json" with { type: "json" };
+import transformScale3dInteractionJson from "../../assets/interaction/transform/scale3d.json" with { type: "json" };
 import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
 import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";
 import smallBuildingTopologyFixtureJson from "../../fixtures/small-building.topology.json";
@@ -4024,38 +4024,38 @@ export class InteractionRegistry {
 	}
 }
 
-/** @emoji 📦 Parses canonical box asset (`spatial/assets/interactions/box.interaction.json`). */
+/** @emoji 📦 Parses canonical box asset (`spatial/assets/interaction/primitive/box.json`). */
 export function buildBoxInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(boxInteractionJson);
-	if (!s) throw new Error("spatial/assets/interactions/box.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interaction/primitive/box.json invalid");
 	return compileInteraction(s);
 }
 
-/** @emoji 📦 Parses extrude-wire asset (`spatial/assets/interactions/extrude-wire.interaction.json`). */
+/** @emoji 📦 Parses extrude-wire asset (`spatial/assets/interaction/feature/extrude-wire.json`). */
 export function buildExtrudeInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(extrudeWireInteractionJson);
-	if (!s) throw new Error("spatial/assets/interactions/extrude-wire.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interaction/feature/extrude-wire.json invalid");
 	return compileInteraction(s);
 }
 
-/** @emoji 📦 Parses offset-surface asset (`spatial/assets/interactions/offset-surface.interaction.json`). */
+/** @emoji 📦 Parses offset-surface asset (`spatial/assets/interaction/feature/offset-surface.json`). */
 export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(offsetSurfaceInteractionJson);
-	if (!s) throw new Error("spatial/assets/interactions/offset-surface.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interaction/feature/offset-surface.json invalid");
 	return compileInteraction(s);
 }
 
-/** @emoji 📦 Parses distance asset (`spatial/assets/interactions/measure-length.interaction.json`). */
+/** @emoji 📦 Parses distance asset (`spatial/assets/interaction/measure/length.json`). */
 export function buildDistanceInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(distanceInteractionJson);
-	if (!s) throw new Error("spatial/assets/interactions/measure-length.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interaction/measure/length.json invalid");
 	return compileInteraction(s);
 }
 
-/** @emoji 📦 Parses area asset (`spatial/assets/interactions/area.interaction.json`). */
+/** @emoji 📦 Parses area asset (`spatial/assets/interaction/measure/area.json`). */
 export function buildAreaInteractionSpec(): InteractionSpec {
 	const s = parseInteractionSpec(areaInteractionJson);
-	if (!s) throw new Error("spatial/assets/interactions/area.interaction.json invalid");
+	if (!s) throw new Error("spatial/assets/interaction/measure/area.json invalid");
 	return compileInteraction(s);
 }
 
@@ -4065,7 +4065,7 @@ export function buildCreateAnchorInteractionSpec(): InteractionSpec {
 	return compileInteraction(s);
 }
 
-/** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/interactions/*.interaction.json`). */
+/** @emoji 📚 Host-facing built-in interaction row (`spatial/assets/interaction/<group>/*.json`). */
 export interface SpatialInteraction {
 	readonly id: string;
 	readonly label: string;
@@ -4073,7 +4073,7 @@ export interface SpatialInteraction {
 	readonly key: string;
 }
 
-/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/assets/interactions/*.interaction.json`). */
+/** @emoji 📚 Built-in interaction ids for host interaction surfaces (`spatial/assets/interaction/<group>/*.json`). */
 export function listSpatialInteractions(): readonly SpatialInteraction[] {
 	return builtinInteractionJsons.map(interactionFixtureRow);
 }

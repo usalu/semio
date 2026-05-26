@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interactions/box.interaction.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interaction/primitive/box.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
