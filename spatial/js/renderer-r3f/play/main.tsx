@@ -3,6 +3,7 @@ import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type Cha
 import { createRoot } from "react-dom/client";
 import {
 	DerivedViewService,
+	DocumentHistory,
 	isInteractionSessionActive,
 	listSpatialInteractions,
 	loadSpatialInteraction,
@@ -29,14 +30,13 @@ import geometryLargeBuilding from "../../../fixtures/large-building.topology.jso
 import { BrepjsKernel } from "@spatial/js-kernel-brepjs";
 import { statelyStateEngineProvider } from "@spatial/js-machine-stately";
 import {
-	DocumentHistory,
 	InteractionRepl,
 	replDisplayedSelectionTargets,
 	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
 	type SpatialPickViewKind,
-} from "../index.tsx";
+} from "../index";
 
 //#region 🔖ConstructQueryPanel
 /** @emoji 🔍 Play-only `construct` runner bound to the live `InteractionRuntime`. */
@@ -405,7 +405,7 @@ interface PlaySessionProps {
 	readonly onInteractionId: (id: string) => void;
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
-	readonly kernel: BrepjsKernel;
+	readonly kernel: InteractionRuntimeOptions["kernel"];
 	readonly derived: DerivedViewService;
 	readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
@@ -500,7 +500,7 @@ function PlayApp() {
 	const [interactionId, setInteractionId] = useState("");
 	const [interactionBootId, setInteractionBootId] = useState(0);
 	const [geometryAssetId, setGeometryAssetId] = useState("small-building");
-	const [topologyJson, setTopologyJson] = useState<Record<string, unknown>>(() => {
+	const [topologyJson, setTopologyJson] = useState<unknown>(() => {
 		const asset = GEOMETRY_ASSETS.find((g) => g.id === "small-building");
 		return asset?.json ?? emptyTopologyJson();
 	});
@@ -515,7 +515,7 @@ function PlayApp() {
 	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
-	const kernel = useMemo(() => new BrepjsKernel(), []);
+	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(() => new BrepjsKernel() as unknown as InteractionRuntimeOptions["kernel"], []);
 	const derived = useMemo(() => new DerivedViewService(kernel), [kernel]);
 
 	const handleInteractionPick = useCallback(
@@ -550,6 +550,12 @@ function PlayApp() {
 		() => Boolean(snapshot) && isInteractionSessionActive(spec ?? PLAY_REPL_SPEC, snapshot?.state ?? "idle"),
 		[spec, snapshot],
 	);
+	const handleSnapshotChange = useCallback((next: InteractionSnapshot) => {
+		setSnapshot((prev) => {
+			if (prev && prev.revision === next.revision && prev.state === next.state) return prev;
+			return next;
+		});
+	}, []);
 	const currentSelection = useMemo(
 		() => replDisplayedSelectionTargets(interactionActive, pickViewKind, rendererSelection, interactionSelection),
 		[interactionActive, pickViewKind, rendererSelection, interactionSelection],
@@ -766,7 +772,7 @@ function PlayApp() {
 			onInteractionSelection={setInteractionSelection}
 			derivedRevision={derivedRevision}
 			onDerivedRevision={setDerivedRevision}
-			onSnapshot={setSnapshot}
+			onSnapshot={handleSnapshotChange}
 		/>
 	);
 }

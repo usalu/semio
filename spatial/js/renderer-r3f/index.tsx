@@ -3698,6 +3698,7 @@ export function InteractionRepl({
 	const setCmdLineRef = useRef(setCmdLine);
 	const rendererSelectionRef = useRef(rendererSelection);
 	const suppressAutoStartOnceRef = useRef(false);
+	const lastDerivedRefreshRef = useRef<{ readonly topology: TopologyGraph | null; readonly revision: number }>({ topology: null, revision: -1 });
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = useRef(false);
@@ -3830,10 +3831,14 @@ export function InteractionRepl({
 	useEffect(() => {
 		if (!derived) return;
 		const topo = documentModel.topology;
+		const revision = topo.revision;
+		if (lastDerivedRefreshRef.current.topology === topo && lastDerivedRefreshRef.current.revision === revision) return;
 		let cancelled = false;
 		const run = () => {
 			void derived.refresh(topo).then(() => {
-				if (!cancelled) setDerivedRevision((n) => n + 1);
+				if (cancelled || topo.revision !== revision) return;
+				lastDerivedRefreshRef.current = { topology: topo, revision };
+				setDerivedRevision((n) => n + 1);
 			});
 		};
 		const useIdleCallback = typeof globalThis.requestIdleCallback === "function";
@@ -3851,8 +3856,8 @@ export function InteractionRepl({
 	}, [geometry, snapshot.state, derivedRevision]);
 
 	useEffect(() => {
-		setRendererSelection([]);
-		setInteractionSelection([]);
+		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
+		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 	}, [geometry, derivedRevision, setRendererSelection, setInteractionSelection]);
 
 	useEffect(() => {
@@ -3861,7 +3866,7 @@ export function InteractionRepl({
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
 		setInteractionMenuOpen(false);
-		setInteractionSelection([]);
+		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
 	}, [interactionId, rt, setInteractionSelection]);
 
 	const confirmInteractionSelection = useCallback(() => {
