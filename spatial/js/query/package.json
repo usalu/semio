@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@spatial/js-query",
   "version": "0.1.0",
-  "description": "🔍 Cypher-inspired construct query language for spatial topology (Chevrotain AST + kernel index).",
+  "description": "🔍 Cypher-inspired construct query language for spatial models (Chevrotain AST + kernel index).",
   "type": "module",
   "private": true,
   "scripts": {

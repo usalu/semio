@@ -3,7 +3,7 @@
   "id": "builtin.material",
   "version": "1.0.0",
   "label": "Material",
-  "description": "Authored material metadata attachable to curve, surface, or solid topology.",
+  "description": "Authored material metadata attachable to curve, surface, or solid geometry.",
   "field": "material",
   "targets": [
     "object"

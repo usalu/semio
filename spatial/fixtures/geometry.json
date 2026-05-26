@@ -1,91 +1,101 @@
 {
-  "schema": "spatial.topology/v1",
+  "schema": "spatial.model/v1",
   "revision": 1,
-  "vertices": [
+  "objects": [
     {
-      "id": "v0",
-      "position": [
-        0,
-        0,
-        0
-      ]
-    },
-    {
-      "id": "v1",
-      "position": [
-        2.4,
-        0,
-        0
-      ]
-    },
-    {
-      "id": "v2",
-      "position": [
-        2.4,
-        8,
-        0
-      ]
-    },
-    {
-      "id": "v3",
-      "position": [
-        0,
-        8,
-        0
-      ]
-    },
-    {
-      "id": "v4",
-      "position": [
-        0,
-        0,
-        3.3
-      ]
-    },
-    {
-      "id": "v5",
-      "position": [
-        2.4,
-        0,
-        3.3
-      ]
-    },
-    {
-      "id": "v6",
-      "position": [
-        2.4,
-        8,
-        3.3
-      ]
-    },
-    {
-      "id": "v7",
-      "position": [
-        0,
-        8,
-        3.3
-      ]
+      "id": "object-capsule-0",
+      "typologyId": "builtin.primitive.box",
+      "geometryRef": "capsule-0"
     }
   ],
-  "edges": [],
-  "wires": [],
-  "faces": [],
-  "shells": [],
-  "cells": [
-    {
-      "id": "capsule-0",
-      "shellIds": [
-        "shell-0"
-      ]
-    }
-  ],
-  "cellComplexes": [
-    {
-      "id": "nakagin-slice",
-      "cellIds": [
-        "capsule-0"
-      ]
-    }
-  ],
-  "clusters": []
+  "geometry": {
+    "anchors": [],
+    "vertices": [
+      {
+        "id": "v0",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "v1",
+        "position": [
+          2.4,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "v2",
+        "position": [
+          2.4,
+          8,
+          0
+        ]
+      },
+      {
+        "id": "v3",
+        "position": [
+          0,
+          8,
+          0
+        ]
+      },
+      {
+        "id": "v4",
+        "position": [
+          0,
+          0,
+          3.3
+        ]
+      },
+      {
+        "id": "v5",
+        "position": [
+          2.4,
+          0,
+          3.3
+        ]
+      },
+      {
+        "id": "v6",
+        "position": [
+          2.4,
+          8,
+          3.3
+        ]
+      },
+      {
+        "id": "v7",
+        "position": [
+          0,
+          8,
+          3.3
+        ]
+      }
+    ],
+    "edges": [],
+    "wires": [],
+    "faces": [],
+    "shells": [],
+    "cells": [
+      {
+        "id": "capsule-0",
+        "shellIds": [
+          "shell-0"
+        ]
+      }
+    ],
+    "cellComplexes": [
+      {
+        "id": "nakagin-slice",
+        "cellIds": [
+          "capsule-0"
+        ]
+      }
+    ],
+    "clusters": []
+  }
 }

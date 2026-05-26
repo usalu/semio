@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@spatial/js-core",
   "version": "0.1.0",
-  "description": "🧭 Spatial factory runtime, topology graph, and kernel contracts (headless).",
+  "description": "🧭 Spatial factory runtime, model graph, and kernel contracts (headless).",
   "type": "module",
   "private": true,
   "scripts": {

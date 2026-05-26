@@ -3,7 +3,7 @@
   "id": "builtin.bondable",
   "version": "1.0.0",
   "label": "Bondable",
-  "description": "Marks topology that may be unified geometrically with matching contacts.",
+  "description": "Marks geometry that may be unified with matching contacts.",
   "field": "bondable",
   "targets": [
     "object"

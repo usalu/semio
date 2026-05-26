@@ -21,11 +21,8 @@ import {
 	type ExprBinop,
 	type ExprField,
 	type ExprVar,
-	type CellRef,
-	type CellComplexRef,
-	type FaceRef,
+	kernelGeometry,
 	type SpatialKernel,
-	type ShellRef,
 	type ModelDiff,
 	type ModelEntityKind,
 	type ModelEntityRef,
@@ -33,6 +30,11 @@ import {
 	evalExpr,
 	type ExprEnv,
 } from "@spatial/js-core";
+
+type CellRef = kernelGeometry.CellRef;
+type CellComplexRef = kernelGeometry.CellComplexRef;
+type FaceRef = kernelGeometry.FaceRef;
+type ShellRef = kernelGeometry.ShellRef;
 // #endregion 📥Imports
 
 // #region Lexer
@@ -538,41 +540,12 @@ const ANALYTIC_CALL_HINT: Record<"surface" | "part" | "volume", string> = {
 	volume: "CALL view.analytic.volumes({}) YIELD data AS volumes UNWIND volumes AS v",
 };
 
-const LEGACY_ENTITY_LABELS = new Set<string>([
-	"Anchor",
-	"Vertex",
-	"Edge",
-	"Wire",
-	"Face",
-	"Shell",
-	"Cell",
-	"CellComplex",
-	"Cluster",
-	"Topology",
-	"Surface",
-	"Part",
-	"Volume",
-]);
-
-const LEGACY_VIEW_CALLS = new Set<string>(["view.surfaces", "view.parts", "view.volumes"]);
-
 function assertConstructAst(ast: ConstructAst): void {
 	for (const cl of ast.clauses) {
-		if (cl.kind === "call" && LEGACY_VIEW_CALLS.has(cl.actionId)) {
-			const derived = cl.actionId.slice("view.".length);
-			throw new Error(`use CALL view.analytic.${derived}({}) instead of ${cl.actionId}`);
-		}
 		if (cl.kind !== "match") continue;
 		for (const pat of cl.patterns) {
 			for (const el of pat.elements) {
 				if (el.kind !== "node") continue;
-				if (el.label && LEGACY_ENTITY_LABELS.has(el.label)) {
-					const hint =
-						el.label === "Surface" || el.label === "Part" || el.label === "Volume"
-							? ANALYTIC_CALL_HINT[el.label.toLowerCase() as "surface" | "part" | "volume"]
-							: `MATCH (n:Object {typology: 'builtin.kernel.${el.label === "CellComplex" ? "cellComplex" : el.label.toLowerCase()}'})`;
-					throw new Error(`${el.label} is not a public construct label; use ${hint}`);
-				}
 				if (el.label && el.label !== "Object") {
 					throw new Error(`unknown node label ${el.label}; use Object {typology: '…'}`);
 				}
@@ -1385,7 +1358,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 		} else if (st.kind === "call") {
 			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 3;
 			const def = viewDerived ? null : ctx.actions.get(st.actionId);
-			if (!viewDerived && !def) continue;
+			if (!viewDerived && !def) throw new Error(`unknown action ${st.actionId}`);
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
@@ -1572,26 +1545,19 @@ if (import.meta.vitest) {
 				expect(c.yieldItems[0]).toEqual({ key: "data", alias: "surfaces" });
 			}
 		});
-		it("rejects legacy CALL view.surfaces", () => {
-			expect(() => parseConstruct("CALL view.surfaces({}) YIELD data AS surfaces")).toThrow(
-				/view\.analytic\.surfaces/,
-			);
-		});
 		it("parses UNWIND with WHERE", () => {
 			const a = parseConstruct("UNWIND surfaces AS s WHERE s.exposure = 'external' RETURN s.id");
 			expect(a.clauses[0]?.kind).toBe("unwind");
 		});
-		it("rejects MATCH on legacy Face label", () => {
-			expect(() => parseConstruct("MATCH (f:Face {id: 'f0'}) RETURN f.id")).toThrow(/builtin\.kernel\.face/);
+		it("rejects unknown node labels", () => {
+			expect(() => parseConstruct("MATCH (f:Face {id: 'f0'}) RETURN f.id")).toThrow(/unknown node label Face/);
+			expect(() => parseConstruct("MATCH (m:Model) RETURN m.id")).toThrow(/unknown node label Model/);
+			expect(() => parseConstruct("MATCH (s:Surface) RETURN s.id")).toThrow(/unknown node label Surface/);
 		});
-		it("rejects MATCH on analytic Surface label", () => {
-			expect(() => parseConstruct("MATCH (s:Surface) RETURN s.id")).toThrow(/view\.analytic\.surfaces/);
-		});
-		it("rejects MATCH on analytic Part label", () => {
-			expect(() => parseConstruct("MATCH (p:Part) RETURN p.id")).toThrow(/view\.analytic\.parts/);
-		});
-		it("rejects MATCH on analytic Volume label", () => {
-			expect(() => parseConstruct("MATCH (v:Volume) RETURN v.id")).toThrow(/view\.analytic\.volumes/);
+		it("rejects MATCH on analytic typology property", () => {
+			expect(() => parseConstruct("MATCH (o:Object {typology: 'builtin.derived.surface'}) RETURN o.id")).toThrow(
+				/builtin\.derived\.surface is analytic/,
+			);
 		});
 	});
 
@@ -1693,6 +1659,17 @@ if (import.meta.vitest) {
 			);
 			expect(res.rows.length).toBe(1);
 			expect(Number(res.rows[0]?.c1)).toBeGreaterThan(8);
+		});
+
+		it("unknown CALL action throws", async () => {
+			const model = new Model();
+			await expect(
+				runConstruct("CALL view.surfaces({}) YIELD data", {
+					model: model,
+					kernel: new QueryTestKernel(),
+					actions: ActionRegistry.withBuiltins(),
+				}),
+			).rejects.toThrow(/unknown action view\.surfaces/);
 		});
 
 		it("CALL createBoxFromCorners yields diff and data.cell", async () => {

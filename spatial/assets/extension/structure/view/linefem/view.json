@@ -11,7 +11,7 @@
     {
       "id": "lineelement",
       "label": "Line Element",
-      "description": "Derived structural element represented with line topology."
+      "description": "Derived structural element represented with line mesh."
     }
   ]
 }

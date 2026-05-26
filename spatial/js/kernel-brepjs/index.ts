@@ -79,134 +79,13 @@ import {
 	Model,
 	type ModelDiff,
 	type ModelJson,
+	kernelGeometry,
 	type Vec3,
 } from "@spatial/js-core";
+export { kernelGeometry };
 // #endregion 📥Imports
 
 // #region 🧱kernelGeometry
-/** @emoji 🧱 Kernel-private brep hierarchy refs and records (not re-exported from `@spatial/js-core`). */
-export namespace kernelGeometry {
-	export type VertexRef = string & { readonly __brand: "VertexRef" };
-	export type EdgeRef = string & { readonly __brand: "EdgeRef" };
-	export type WireRef = string & { readonly __brand: "WireRef" };
-	export type FaceRef = string & { readonly __brand: "FaceRef" };
-	export type ShellRef = string & { readonly __brand: "ShellRef" };
-	export type CellRef = string & { readonly __brand: "CellRef" };
-	export type CellComplexRef = string & { readonly __brand: "CellComplexRef" };
-	export type ClusterRef = string & { readonly __brand: "ClusterRef" };
-	export type AnchorRef = string & { readonly __brand: "AnchorRef" };
-
-	export interface VertexRecord {
-		readonly id: VertexRef;
-		readonly position: Vec3;
-	}
-
-	export type AnchorAttachment =
-		| { readonly kind: "vertex"; readonly id: VertexRef }
-		| { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
-		| { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
-		| { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
-		| { readonly kind: "cell"; readonly id: CellRef; readonly u: number; readonly v: number; readonly w: number };
-
-	export interface AnchorRecord {
-		readonly id: AnchorRef;
-		readonly position: Vec3;
-		readonly attachment: AnchorAttachment;
-	}
-
-	export type EdgeCurve =
-		| { readonly kind: "line" }
-		| { readonly kind: "arc"; readonly center: Vec3 }
-		| { readonly kind: "circle"; readonly center: Vec3; readonly normal: Vec3; readonly radius: number }
-		| {
-				readonly kind: "ellipse";
-				readonly center: Vec3;
-				readonly normal: Vec3;
-				readonly majorAxis: Vec3;
-				readonly majorRadius: number;
-				readonly minorRadius: number;
-		  }
-		| {
-				readonly kind: "nurbs";
-				readonly poles: readonly Vec3[];
-				readonly degree: number;
-				readonly weights?: readonly number[];
-				readonly knots?: readonly number[];
-				readonly multiplicities?: readonly number[];
-				readonly periodic?: boolean;
-				readonly rational?: boolean;
-		  };
-
-	export interface EdgeRecord {
-		readonly id: EdgeRef;
-		readonly vertexIds: readonly VertexRef[];
-		readonly curve?: EdgeCurve;
-	}
-
-	export interface WireRecord {
-		readonly id: WireRef;
-		readonly edgeIds: readonly EdgeRef[];
-	}
-
-	export type FaceSurface =
-		| { readonly kind: "plane"; readonly origin: Vec3; readonly normal: Vec3 }
-		| { readonly kind: "cylinder"; readonly origin: Vec3; readonly axis: Vec3; readonly radius: number }
-		| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
-		| { readonly kind: "cone"; readonly apex: Vec3; readonly axis: Vec3; readonly radius: number; readonly semiAngle: number }
-		| {
-				readonly kind: "nurbs";
-				readonly poles: readonly (readonly Vec3[])[];
-				readonly uDegree: number;
-				readonly vDegree: number;
-				readonly uKnots?: readonly number[];
-				readonly vKnots?: readonly number[];
-		  };
-
-	export interface FaceRecord {
-		readonly id: FaceRef;
-		readonly wireIds: readonly WireRef[];
-		readonly surface?: FaceSurface;
-	}
-
-	export interface ShellRecord {
-		readonly id: ShellRef;
-		readonly faceIds: readonly FaceRef[];
-	}
-
-	export type CellSolid =
-		| { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
-		| { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
-		| { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
-		| { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
-
-	export interface CellRecord {
-		readonly id: CellRef;
-		readonly shellIds: readonly ShellRef[];
-		readonly solid?: CellSolid;
-	}
-
-	export interface CellComplexRecord {
-		readonly id: CellComplexRef;
-		readonly cellIds: readonly CellRef[];
-	}
-
-	export interface ClusterRecord {
-		readonly id: ClusterRef;
-		readonly memberIds: readonly string[];
-	}
-
-	export interface KernelGeometryJson {
-		readonly anchors: readonly AnchorRecord[];
-		readonly vertices: readonly VertexRecord[];
-		readonly edges: readonly EdgeRecord[];
-		readonly wires: readonly WireRecord[];
-		readonly faces: readonly FaceRecord[];
-		readonly shells: readonly ShellRecord[];
-		readonly cells: readonly CellRecord[];
-		readonly cellComplexes: readonly CellComplexRecord[];
-		readonly clusters: readonly ClusterRecord[];
-	}
-}
 
 type VertexRef = kernelGeometry.VertexRef;
 type VertexRecord = kernelGeometry.VertexRecord;

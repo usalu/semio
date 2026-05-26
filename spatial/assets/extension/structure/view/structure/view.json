@@ -24,17 +24,17 @@
     {
       "id": "lineelement",
       "label": "Line Element",
-      "description": "Derived structural element represented with line topology."
+      "description": "Derived structural element represented with line mesh."
     },
     {
       "id": "surfaceelement",
       "label": "Surface Element",
-      "description": "Derived structural element represented with surface topology."
+      "description": "Derived structural element represented with surface mesh."
     },
     {
       "id": "solidelement",
       "label": "Solid Element",
-      "description": "Derived structural element represented with solid topology."
+      "description": "Derived structural element represented with solid mesh."
     }
   ]
 }

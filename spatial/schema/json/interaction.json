@@ -458,12 +458,12 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "topologyEntityKind", "entityId"],
+          "required": ["kind", "id", "geometryEntityKind", "entityId"],
           "properties": {
             "kind": { "const": "entity-highlight" },
             "id": { "type": "string" },
             "role": { "type": "string" },
-            "topologyEntityKind": {
+            "geometryEntityKind": {
               "type": "string",
               "enum": ["vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster", "surface", "part"]
             },

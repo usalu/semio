@@ -19,25 +19,25 @@ todos:
     status: completed
   - id: phase2-core
     content: "Refactor spatial/js/core/index.ts: drop public Vertex...Cluster exports, add Model/Typology/Object/AttributeStore"
-    status: in_progress
+    status: completed
   - id: phase2-kernel
     content: "Subagent: refactor kernel-brepjs to keep brepjs hierarchy private and rename topology-named exports"
-    status: pending
+    status: completed
   - id: phase2-query
     content: "Subagent: rewrite query grammar around Object/Typology and view.<id>.<derived> CALLs"
-    status: pending
+    status: completed
   - id: phase2-machine
     content: "Subagent: refactor machine-stately and regenerate machine.json"
-    status: pending
+    status: completed
   - id: phase2-renderer
     content: "Subagent: refactor renderer-r3f index.tsx + play/main.tsx imports and SpatialPickViewKind"
-    status: pending
+    status: completed
   - id: phase3-tests
     content: Extend existing test files; run nx test across all five packages
-    status: pending
+    status: completed
   - id: phase3-grep
     content: Verify no residual Vertex|Edge|...|TopologyGraph|topology/v1 outside kernel-brepjs
-    status: pending
+    status: in_progress
   - id: phase3-close
     content: ticket_close with summary and full file list
     status: pending

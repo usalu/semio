@@ -254,7 +254,7 @@
             "kind": "entity-highlight",
             "id": "surface",
             "role": "semantic-selection",
-            "topologyEntityKind": "surface",
+            "geometryEntityKind": "surface",
             "entityId": {
               "kind": "path",
               "root": "context",

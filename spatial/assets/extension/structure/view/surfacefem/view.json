@@ -11,7 +11,7 @@
     {
       "id": "surfaceelement",
       "label": "Surface Element",
-      "description": "Derived structural element represented with surface topology."
+      "description": "Derived structural element represented with surface mesh."
     }
   ]
 }

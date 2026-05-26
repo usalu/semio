@@ -41,7 +41,7 @@ import {
 //#region 🔖ConstructQueryPanel
 /** @emoji 🔍 Play-only `construct` runner bound to the live `InteractionRuntime`. */
 function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime }) {
-	const [text, setText] = useState("MATCH (v:Vertex) RETURN v.id LIMIT 8");
+	const [text, setText] = useState("MATCH (o:Object {typology: 'builtin.primitive.box'}) RETURN o.id LIMIT 8");
 	const [out, setOut] = useState("");
 	const [busy, setBusy] = useState(false);
 	const run = useCallback(async () => {
@@ -360,7 +360,7 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 
 function createAnalyticBundle(
 	derived: DerivedViewService,
-	topo: Model,
+	model: Model,
 	selection?: readonly SelectionTarget[],
 ): SpatialAnalyticBundle {
 	const allSurfaces = derived.computeSurfaces(model);

@@ -11,7 +11,7 @@
     {
       "id": "solidelement",
       "label": "Solid Element",
-      "description": "Derived structural element represented with solid topology."
+      "description": "Derived structural element represented with solid mesh."
     }
   ]
 }
