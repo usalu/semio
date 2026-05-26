@@ -2495,15 +2495,29 @@ export type InteractionCanvasHostCallbacks = Pick<
 	| "onLostPointerCapture"
 >;
 
+export type SpatialAutoFitBehavior = "initial" | "changes";
+
+export function spatialAutoFitShouldRun(
+	behavior: SpatialAutoFitBehavior,
+	key: string,
+	lastKey: string,
+	hasApplied: boolean,
+): boolean {
+	if (!key || key === lastKey) return false;
+	return behavior === "changes" || !hasApplied;
+}
+
 /** @emoji 🛰️ Frames the camera to fit committed meshes and/or factory topology (playground auto-fit). */
 export function SpatialAutoFit({
 	meshes,
 	geometry = null,
 	padding = 1.25,
+	behavior = "initial",
 }: {
 	readonly meshes: readonly MeshTransfer[];
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly padding?: number;
+	readonly behavior?: SpatialAutoFitBehavior;
 }): null {
 	const { camera, controls, invalidate } = useThree();
 	const geometryRevision =
@@ -2515,15 +2529,17 @@ export function SpatialAutoFit({
 		[meshes, geometry, geometryRevision],
 	);
 	const lastKey = useRef("");
+	const hasApplied = useRef(false);
 	useEffect(() => {
 		if (!bounds) return;
 		const meshKey = meshes.map((m, i) => meshTransferContentKey(m, i)).join("|");
 		const key = `${geometryRevision}:${meshKey}`;
-		if (key === lastKey.current) return;
+		if (!spatialAutoFitShouldRun(behavior, key, lastKey.current, hasApplied.current)) return;
 		lastKey.current = key;
+		hasApplied.current = true;
 		applySpatialAutoFitCamera(camera, bounds, padding, controls);
 		invalidate();
-	}, [bounds, camera, controls, geometryRevision, invalidate, meshes, padding]);
+	}, [behavior, bounds, camera, controls, geometryRevision, invalidate, meshes, padding]);
 	return null;
 }
 
@@ -2695,6 +2711,7 @@ export interface InteractionSpatialViewProps {
 	readonly showPickLayer?: boolean;
 	readonly committedMeshPickable?: boolean;
 	readonly autoFitMeshes?: boolean;
+	readonly autoFitBehavior?: SpatialAutoFitBehavior;
 	readonly theme?: InteractionSpatialViewTheme;
 	readonly slots?: InteractionSpatialViewSlots;
 }
@@ -2760,6 +2777,7 @@ export function InteractionSpatialView({
 	showPickLayer = true,
 	committedMeshPickable = false,
 	autoFitMeshes = false,
+	autoFitBehavior = "initial",
 	theme = defaultInteractionSpatialViewTheme,
 	slots,
 }: InteractionSpatialViewProps): ReactNode {
@@ -2842,7 +2860,7 @@ export function InteractionSpatialView({
 				revision={`${snapshot.revision}:${derivedRevision}:${geometryRevision}:${hoveredTargetKey ?? ""}`}
 			/>
 			<SpatialInvalidator />
-			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} /> : null}
+			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
 			{slots?.environment}
 			{slots?.lights ?? (
 				<>
@@ -3149,31 +3167,28 @@ function interactionContextTargets(ctx: Record<string, unknown>): readonly Selec
 	});
 }
 
-function mergeReplSelectionLayers(
-	generalSelection: readonly SelectionTarget[],
-	interactionSelection: readonly SelectionTarget[],
-): readonly SelectionTarget[] {
-	const merged = new Map<string, SelectionTarget>();
-	for (const target of generalSelection) merged.set(`${target.kind}:${target.id}`, target);
-	for (const target of interactionSelection) merged.set(`${target.kind}:${target.id}`, target);
-	return [...merged.values()];
-}
-
 function interactionArchiveTargets(result: InteractionSnapshot["lastResponse"]): readonly SelectionTarget[] {
 	const ctx = result?.archiveContext;
 	if (!ctx || typeof ctx !== "object") return [];
 	return interactionContextTargets(ctx as Record<string, unknown>);
 }
 
-function replFinalizeSelection(
-	generalSelection: readonly SelectionTarget[],
+/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection. */
+export function replDisplayedSelectionTargets(
+	interactionActive: boolean,
+	rendererSelection: readonly SelectionTarget[],
 	interactionSelection: readonly SelectionTarget[],
+): readonly SelectionTarget[] {
+	return interactionActive ? interactionSelection : rendererSelection;
+}
+
+/** @emoji 🪪 Applies archived interaction result to renderer selection when present. */
+export function replFinalizeSelection(
+	rendererSelection: readonly SelectionTarget[],
 	result: InteractionSnapshot["lastResponse"],
 ): readonly SelectionTarget[] {
 	const archived = interactionArchiveTargets(result);
-	if (archived.length > 0) return archived;
-	if (interactionSelection.length > 0) return [...interactionSelection];
-	return [...generalSelection];
+	return archived.length > 0 ? archived : rendererSelection;
 }
 
 /** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
@@ -3218,8 +3233,8 @@ export interface InteractionReplHostValues {
 	readonly dragSelection?: SpatialDragSelectionState | null;
 	readonly selectionMenu?: SpatialSelectionRequest | null;
 	readonly hoveredPickKey?: string | null;
-	readonly selectedSelectionTargets?: readonly SelectionTarget[];
-	readonly interactionSelectionTargets?: readonly SelectionTarget[];
+	readonly rendererSelection?: readonly SelectionTarget[];
+	readonly interactionSelection?: readonly SelectionTarget[];
 	readonly interactionMenuOpen?: boolean;
 	readonly lastFinalizedInteractionId?: string;
 }
@@ -3238,8 +3253,8 @@ export interface InteractionReplHostCallbacks {
 	readonly onDragSelectionChange?: (value: SpatialDragSelectionState | null) => void;
 	readonly onSelectionMenuChange?: (value: SpatialSelectionRequest | null) => void;
 	readonly onHoveredPickKeyChange?: (key: string | null) => void;
-	readonly onSelectedSelectionTargetsChange?: (targets: readonly SelectionTarget[]) => void;
-	readonly onInteractionSelectionTargetsChange?: (targets: readonly SelectionTarget[]) => void;
+	readonly onRendererSelectionChange?: (targets: readonly SelectionTarget[]) => void;
+	readonly onInteractionSelectionChange?: (targets: readonly SelectionTarget[]) => void;
 	readonly onInteractionMenuOpenChange?: (open: boolean) => void;
 	readonly onLastFinalizedInteractionIdChange?: (id: string) => void;
 	readonly onCanvasReady?: InteractionCanvasProps["onCanvasReady"];
@@ -3309,8 +3324,8 @@ export function defaultInteractionReplChromeState(): Required<
 		| "dragSelection"
 		| "selectionMenu"
 		| "hoveredPickKey"
-		| "selectedSelectionTargets"
-		| "interactionSelectionTargets"
+		| "rendererSelection"
+		| "interactionSelection"
 		| "interactionMenuOpen"
 		| "lastFinalizedInteractionId"
 	>
@@ -3328,8 +3343,8 @@ export function defaultInteractionReplChromeState(): Required<
 		dragSelection: null,
 		selectionMenu: null,
 		hoveredPickKey: null,
-		selectedSelectionTargets: [],
-		interactionSelectionTargets: [],
+		rendererSelection: [],
+		interactionSelection: [],
 		interactionMenuOpen: false,
 		lastFinalizedInteractionId: "",
 	};
@@ -3353,6 +3368,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
 	readonly viewSlots?: InteractionSpatialViewSlots;
 	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
 	readonly autoFitMeshes?: boolean;
+	readonly autoFitBehavior?: SpatialAutoFitBehavior;
 	readonly tessellationTolerance?: number;
 }
 
@@ -3373,7 +3389,8 @@ export function InteractionRepl({
 	viewTheme,
 	viewSlots,
 	renderDisplayItem,
-	autoFitMeshes = true,
+	autoFitMeshes = false,
+	autoFitBehavior = "initial",
 	tessellationTolerance,
 	cmdLine: cmdLineProp,
 	activeSuggestionIndex: activeSuggestionIndexProp,
@@ -3387,8 +3404,8 @@ export function InteractionRepl({
 	dragSelection: dragSelectionProp,
 	selectionMenu: selectionMenuProp,
 	hoveredPickKey: hoveredPickKeyProp,
-	selectedSelectionTargets: selectedSelectionTargetsProp,
-	interactionSelectionTargets: interactionSelectionTargetsProp,
+	rendererSelection: rendererSelectionProp,
+	interactionSelection: interactionSelectionProp,
 	interactionMenuOpen: interactionMenuOpenProp,
 	lastFinalizedInteractionId: lastFinalizedInteractionIdProp,
 	onCmdLineChange,
@@ -3403,8 +3420,8 @@ export function InteractionRepl({
 	onDragSelectionChange,
 	onSelectionMenuChange,
 	onHoveredPickKeyChange,
-	onSelectedSelectionTargetsChange,
-	onInteractionSelectionTargetsChange,
+	onRendererSelectionChange,
+	onInteractionSelectionChange,
 	onInteractionMenuOpenChange,
 	onLastFinalizedInteractionIdChange,
 	onCanvasReady,
@@ -3458,15 +3475,15 @@ export function InteractionRepl({
 	const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
 	const [selectionMenu, setSelectionMenu] = useHostState(selectionMenuProp, onSelectionMenuChange, () => chromeDefaults.selectionMenu);
 	const [hoveredPickKey, setHoveredPickKey] = useHostState(hoveredPickKeyProp, onHoveredPickKeyChange, () => chromeDefaults.hoveredPickKey);
-	const [selectedSelectionTargets, setSelectedSelectionTargets] = useHostState(
-		selectedSelectionTargetsProp,
-		onSelectedSelectionTargetsChange,
-		() => [...chromeDefaults.selectedSelectionTargets],
+	const [rendererSelection, setRendererSelection] = useHostState(
+		rendererSelectionProp,
+		onRendererSelectionChange,
+		() => [...chromeDefaults.rendererSelection],
 	);
-	const [interactionSelectionTargets, setInteractionSelectionTargets] = useHostState(
-		interactionSelectionTargetsProp,
-		onInteractionSelectionTargetsChange,
-		() => [...chromeDefaults.interactionSelectionTargets],
+	const [interactionSelection, setInteractionSelection] = useHostState(
+		interactionSelectionProp,
+		onInteractionSelectionChange,
+		() => [...chromeDefaults.interactionSelection],
 	);
 	const [interactionMenuOpen, setInteractionMenuOpen] = useHostState(interactionMenuOpenProp, onInteractionMenuOpenChange, () => chromeDefaults.interactionMenuOpen);
 	const [lastFinalizedInteractionId, setLastFinalizedInteractionId] = useHostState(
@@ -3487,13 +3504,15 @@ export function InteractionRepl({
 	}, [snapshot, onSnapshotChange]);
 	const cmdRef = useRef<HTMLInputElement>(null);
 	const setCmdLineRef = useRef(setCmdLine);
+	const rendererSelectionRef = useRef(rendererSelection);
 	const suppressAutoStartOnceRef = useRef(false);
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = useRef(false);
+	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const displayedSelectionTargets = useMemo(
-		() => mergeReplSelectionLayers(selectedSelectionTargets, interactionSelectionTargets),
-		[selectedSelectionTargets, interactionSelectionTargets],
+		() => replDisplayedSelectionTargets(interactionActive, rendererSelection, interactionSelection),
+		[interactionActive, rendererSelection, interactionSelection],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
@@ -3507,6 +3526,10 @@ export function InteractionRepl({
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
+
+	useEffect(() => {
+		rendererSelectionRef.current = rendererSelection;
+	}, [rendererSelection]);
 
 	const dismissReplChrome = useCallback(() => {
 		dragCleanupRef.current?.();
@@ -3524,25 +3547,27 @@ export function InteractionRepl({
 		if (!aborted && !interactionId) return false;
 		if (!aborted) rt.cancel();
 		suppressAutoStartOnceRef.current = true;
-		setInteractionSelectionTargets([]);
+		setInteractionSelection([]);
 		dismissReplChrome();
 		if (interactionId) onInteractionId("");
 		onCancel?.();
 		return true;
-	}, [rt, interactionId, onInteractionId, dismissReplChrome, onCancel, setInteractionSelectionTargets]);
-
-	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
+	}, [rt, interactionId, onInteractionId, dismissReplChrome, onCancel, setInteractionSelection]);
 
 	useEffect(() => {
 		if (!interactionId || !snapshot.lastResponse?.ok) return;
 		setLastFinalizedInteractionId(interactionId);
-		setSelectedSelectionTargets((prev) =>
-			replFinalizeSelection(prev, interactionSelectionTargets, snapshot.lastResponse) as SelectionTarget[],
-		);
-		setInteractionSelectionTargets([]);
-	}, [interactionId, snapshot.lastResponse, interactionSelectionTargets, setInteractionSelectionTargets, setLastFinalizedInteractionId, setSelectedSelectionTargets]);
+		setRendererSelection((prev) => replFinalizeSelection(prev, snapshot.lastResponse) as SelectionTarget[]);
+		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
+	}, [interactionId, snapshot.lastResponse, setInteractionSelection, setLastFinalizedInteractionId, setRendererSelection]);
 
 	const handleEscapeKey = useCallback(() => {
+		if (selectionMenu !== null) {
+			setSelectionMenu(null);
+			setHoveredPickKey(null);
+			onEscape?.();
+			return;
+		}
 		switch (replEscapeAction({ hasInteraction: Boolean(interactionId), interactionActive, cmdLine, hasSelectionMenu: selectionMenu !== null })) {
 			case "abort":
 				cancelActiveInteraction();
@@ -3555,13 +3580,14 @@ export function InteractionRepl({
 			default:
 				return;
 		}
-	}, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction, onEscape]);
+	}, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction, onEscape, setSelectionMenu, setHoveredPickKey]);
 
 	const startRuntime = useCallback(async () => {
 		const accept = rt.listActiveSelectionAccept() as readonly TopologyEntityKind[];
-		const accepted = replSelectionAccepted(accept, selectedSelectionTargets);
+		const accepted = replSelectionAccepted(accept, rendererSelectionRef.current);
+		setInteractionSelection(accepted);
 		await rt.send(replStartEvent(accepted));
-	}, [rt, selectedSelectionTargets]);
+	}, [rt, setInteractionSelection]);
 
 	useEffect(() => {
 		if (!interactionId) return;
@@ -3610,9 +3636,9 @@ export function InteractionRepl({
 	}, [geometry, snapshot.state, derivedRevision]);
 
 	useEffect(() => {
-		setSelectedSelectionTargets([]);
-		setInteractionSelectionTargets([]);
-	}, [geometry, derivedRevision]);
+		setRendererSelection([]);
+		setInteractionSelection([]);
+	}, [geometry, derivedRevision, setRendererSelection, setInteractionSelection]);
 
 	useEffect(() => {
 		setCmdLine("");
@@ -3620,8 +3646,8 @@ export function InteractionRepl({
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
 		setInteractionMenuOpen(false);
-		setInteractionSelectionTargets([]);
-	}, [interactionId, rt]);
+		setInteractionSelection([]);
+	}, [interactionId, rt, setInteractionSelection]);
 
 	const confirmInteractionSelection = useCallback(() => {
 		const snap = rt.getSnapshot();
@@ -3657,39 +3683,26 @@ export function InteractionRepl({
 		}
 	}, [activeSelectionAccept, activePickViewKinds, pickViewKind]);
 
-	const commitGeneralSelectionState = useCallback((selection: readonly SelectionTarget[]) => {
-		setSelectionMenu(null);
-		setHoveredPickKey(null);
-		setSelectedSelectionTargets([...selection]);
-	}, []);
-
-	const commitInteractionSelectionState = useCallback((selection: readonly SelectionTarget[]) => {
-		setSelectionMenu(null);
-		setHoveredPickKey(null);
-		setInteractionSelectionTargets([...selection]);
-	}, []);
-
-	const commitSelectionState = useCallback(
+	const commitSelection = useCallback(
 		(selection: readonly SelectionTarget[]) => {
-			if (interactionActive) {
-				commitInteractionSelectionState(selection);
-				return;
-			}
-			commitGeneralSelectionState(selection);
+			setSelectionMenu(null);
+			setHoveredPickKey(null);
+			if (interactionActive) setInteractionSelection([...selection]);
+			else setRendererSelection([...selection]);
 		},
-		[interactionActive, commitGeneralSelectionState, commitInteractionSelectionState],
+		[interactionActive, setInteractionSelection, setRendererSelection],
 	);
 
 	const dispatchSelectionTargets = useCallback(
 		(targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
 			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
 			const modeModifiers = (modifiers ?? {}) as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean };
-			const currentSelection = interactionActive ? interactionSelectionTargets : selectedSelectionTargets;
+			const currentSelection = interactionActive ? interactionSelection : rendererSelection;
 			const nextSelection = mergeSelectionTargets(currentSelection, picked, spatialSelectionModeFromModifiers(modeModifiers));
-			commitSelectionState(nextSelection);
+			commitSelection(nextSelection);
 			if (interactionActive && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
-		[commitSelectionState, interactionActive, interactionSelectionTargets, rt, selectedSelectionTargets],
+		[commitSelection, interactionActive, interactionSelection, rt, rendererSelection],
 	);
 
 	const onSelectionRequest = useCallback(
@@ -3796,8 +3809,8 @@ export function InteractionRepl({
 							? { kind, id: snapEv.id, editable: false }
 							: { kind, id: snapEv.id, editable: true };
 					const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
-					const currentSelection = interactionActive ? interactionSelectionTargets : selectedSelectionTargets;
-					commitSelectionState(mergeSelectionTargets(currentSelection, [selection], spatialSelectionModeFromModifiers(modifiers)));
+					const currentSelection = interactionActive ? interactionSelection : rendererSelection;
+					commitSelection(mergeSelectionTargets(currentSelection, [selection], spatialSelectionModeFromModifiers(modifiers)));
 					if (interactionActive) void rt.send({ ...replSelectionEvent([selection], (ev as { point?: Vec3 }).point), modifiers });
 					return;
 				}
@@ -3808,10 +3821,10 @@ export function InteractionRepl({
 		[
 			rt,
 			activeSelectionAccept,
-			commitSelectionState,
+			commitSelection,
 			interactionActive,
-			interactionSelectionTargets,
-			selectedSelectionTargets,
+			interactionSelection,
+			rendererSelection,
 			pointerMoveActive,
 			selectionKindToggles,
 			analyticSelectionToggles,
@@ -3913,7 +3926,7 @@ export function InteractionRepl({
 							finalState.modifiers as { readonly alt?: boolean; readonly ctrl?: boolean; readonly meta?: boolean; readonly shift?: boolean },
 						) === "default"
 					) {
-						commitSelectionState([]);
+						commitSelection([]);
 					}
 					return;
 				}
@@ -3936,7 +3949,7 @@ export function InteractionRepl({
 		activeSelectionAccept,
 		analyticSelectionToggles,
 		canvasBinding,
-		commitSelectionState,
+		commitSelection,
 		dispatchSelectionTargets,
 		onSelectionRequest,
 		selectionKindToggles,
@@ -4231,6 +4244,7 @@ export function InteractionRepl({
 						onSelectionRequest={onSelectionRequest}
 						onCameraNavigate={onCameraNavigate}
 						autoFitMeshes={autoFitMeshes}
+						autoFitBehavior={autoFitBehavior}
 						theme={viewTheme}
 						slots={viewSlots}
 						{...spatialViewOverrides}
@@ -4554,8 +4568,8 @@ export function InteractionRepl({
 										setPickViewKind(viewKind);
 										setSelectionMenu(null);
 										setHoveredPickKey(null);
-										setSelectedSelectionTargets([]);
-										setInteractionSelectionTargets([]);
+										setRendererSelection([]);
+										setInteractionSelection([]);
 									}}
 									style={{
 										padding: "5px 8px",
@@ -4760,8 +4774,8 @@ export function InteractionRepl({
 											setSelectionMenu(null);
 											setHoveredPickKey(null);
 											if (!checked) {
-												setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== kind));
-												setInteractionSelectionTargets((prev) => prev.filter((target) => target.kind !== kind));
+												setRendererSelection((prev) => prev.filter((target) => target.kind !== kind));
+												setInteractionSelection((prev) => prev.filter((target) => target.kind !== kind));
 											}
 										}}
 									/>
@@ -4800,8 +4814,8 @@ export function InteractionRepl({
 												setSelectionMenu(null);
 												setHoveredPickKey(null);
 												if (!checked) {
-													setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== "surface"));
-													setInteractionSelectionTargets((prev) => prev.filter((target) => target.kind !== "surface"));
+													setRendererSelection((prev) => prev.filter((target) => target.kind !== "surface"));
+													setInteractionSelection((prev) => prev.filter((target) => target.kind !== "surface"));
 												}
 											}}
 										/>
@@ -4870,8 +4884,8 @@ export function InteractionRepl({
 												setSelectionMenu(null);
 												setHoveredPickKey(null);
 												if (!checked) {
-													setSelectedSelectionTargets((prev) => prev.filter((target) => target.kind !== "part"));
-													setInteractionSelectionTargets((prev) => prev.filter((target) => target.kind !== "part"));
+													setRendererSelection((prev) => prev.filter((target) => target.kind !== "part"));
+													setInteractionSelection((prev) => prev.filter((target) => target.kind !== "part"));
 												}
 											}}
 										/>
@@ -5029,6 +5043,13 @@ if (import.meta.vitest) {
 			expect(camera.position.toArray()).toEqual([16, 26, 35.1]);
 			expect(target.toArray()).toEqual([10, 20, 30]);
 			expect(updates).toBe(1);
+		});
+
+		it("spatialAutoFitShouldRun only repeats in changes mode", () => {
+			expect(spatialAutoFitShouldRun("initial", "a", "", false)).toBe(true);
+			expect(spatialAutoFitShouldRun("initial", "b", "a", true)).toBe(false);
+			expect(spatialAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
+			expect(spatialAutoFitShouldRun("changes", "a", "a", true)).toBe(false);
 		});
 	});
 
@@ -5411,24 +5432,18 @@ if (import.meta.vitest) {
 			expect(interactionCanConfirmSelection(moveSpec, "point_to_move_from", { targets: [selection] })).toBe(false);
 		});
 
-		it("renders general and interaction selections as one merged highlight layer", () => {
-			const general = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
-			const interaction = [
-				{ kind: "wire", id: "w0", editable: true },
-				{ kind: "face", id: "f0", editable: true },
-			] satisfies readonly SelectionTarget[];
-			expect(mergeReplSelectionLayers(general, interaction)).toEqual([
-				{ kind: "wire", id: "w0", editable: true },
-				{ kind: "face", id: "f0", editable: true },
-			]);
+		it("routes displayed selection to interaction layer while active and renderer layer when idle", () => {
+			const renderer = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
+			const interaction = [{ kind: "face", id: "f0", editable: true }] satisfies readonly SelectionTarget[];
+			expect(replDisplayedSelectionTargets(false, renderer, interaction)).toEqual(renderer);
+			expect(replDisplayedSelectionTargets(true, renderer, interaction)).toEqual(interaction);
 		});
 
-		it("promotes finalized interaction selection back into the general selection", () => {
-			const general = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
-			const interaction = [{ kind: "face", id: "f0", editable: true }] satisfies readonly SelectionTarget[];
-			expect(replFinalizeSelection(general, interaction, null)).toEqual(interaction);
+		it("keeps renderer selection unless interaction archives explicit targets", () => {
+			const renderer = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
+			expect(replFinalizeSelection(renderer, null)).toEqual(renderer);
 			expect(
-				replFinalizeSelection(general, [], {
+				replFinalizeSelection(renderer, {
 					ok: true,
 					errors: [],
 					warnings: [],
@@ -5438,6 +5453,14 @@ if (import.meta.vitest) {
 					archiveContext: { targets: [{ kind: "cell", id: "c0", editable: true }] },
 				}),
 			).toEqual([{ kind: "cell", id: "c0", editable: true }]);
+		});
+
+		it("seeds interaction selection from accepted renderer subset on start", () => {
+			const renderer: SelectionTarget[] = [
+				{ kind: "wire", id: "w0", editable: true },
+				{ kind: "face", id: "f0", editable: true },
+			];
+			expect(replSelectionAccepted(["wire"], renderer)).toEqual([{ kind: "wire", id: "w0", editable: true }]);
 		});
 
 		it("merges host selections according to modifiers", () => {
