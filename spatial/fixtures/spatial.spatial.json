@@ -3,26 +3,26 @@
   "revision": 3,
   "objects": [
     {
-      "id": "object-brepjs-cell-1",
+      "id": "object-brepjs-solid-1",
       "typologyId": "builtin.primitive.box",
-      "geometryRef": "brepjs-cell-1"
+      "geometryRef": "brepjs-solid-1"
     },
     {
-      "id": "object-brepjs-cell-2",
+      "id": "object-brepjs-solid-2",
       "typologyId": "builtin.primitive.box",
-      "geometryRef": "brepjs-cell-2"
+      "geometryRef": "brepjs-solid-2"
     },
     {
-      "id": "object-brepjs-cell-3",
+      "id": "object-brepjs-solid-3",
       "typologyId": "builtin.primitive.box",
-      "geometryRef": "brepjs-cell-3"
+      "geometryRef": "brepjs-solid-3"
     }
   ],
   "geometry": {
     "anchors": [],
     "vertices": [
       {
-        "id": "box-brepjs-cell-1-v000",
+        "id": "box-brepjs-solid-1-v000",
         "position": [
           -2.2557001659641873,
           -2.730495277154404,
@@ -30,7 +30,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v001",
+        "id": "box-brepjs-solid-1-v001",
         "position": [
           -2.2557001659641873,
           -2.730495277154404,
@@ -38,7 +38,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v010",
+        "id": "box-brepjs-solid-1-v010",
         "position": [
           -2.2557001659641873,
           4.366758652790643,
@@ -46,7 +46,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v011",
+        "id": "box-brepjs-solid-1-v011",
         "position": [
           -2.2557001659641873,
           4.366758652790643,
@@ -54,7 +54,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v100",
+        "id": "box-brepjs-solid-1-v100",
         "position": [
           2.7530518418449432,
           -2.730495277154404,
@@ -62,7 +62,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v101",
+        "id": "box-brepjs-solid-1-v101",
         "position": [
           2.7530518418449432,
           -2.730495277154404,
@@ -70,7 +70,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v110",
+        "id": "box-brepjs-solid-1-v110",
         "position": [
           2.7530518418449432,
           4.366758652790643,
@@ -78,7 +78,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-1-v111",
+        "id": "box-brepjs-solid-1-v111",
         "position": [
           2.7530518418449432,
           4.366758652790643,
@@ -86,7 +86,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v000",
+        "id": "box-brepjs-solid-2-v000",
         "position": [
           -0.12388492087434066,
           -4.26832289443338,
@@ -94,7 +94,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v001",
+        "id": "box-brepjs-solid-2-v001",
         "position": [
           -0.12388492087434066,
           -4.26832289443338,
@@ -102,7 +102,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v010",
+        "id": "box-brepjs-solid-2-v010",
         "position": [
           -0.12388492087434066,
           -1.2718838242409491,
@@ -110,7 +110,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v011",
+        "id": "box-brepjs-solid-2-v011",
         "position": [
           -0.12388492087434066,
           -1.2718838242409491,
@@ -118,7 +118,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v100",
+        "id": "box-brepjs-solid-2-v100",
         "position": [
           5.916984137950384,
           -4.26832289443338,
@@ -126,7 +126,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v101",
+        "id": "box-brepjs-solid-2-v101",
         "position": [
           5.916984137950384,
           -4.26832289443338,
@@ -134,7 +134,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v110",
+        "id": "box-brepjs-solid-2-v110",
         "position": [
           5.916984137950384,
           -1.2718838242409491,
@@ -142,7 +142,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-2-v111",
+        "id": "box-brepjs-solid-2-v111",
         "position": [
           5.916984137950384,
           -1.2718838242409491,
@@ -150,7 +150,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v000",
+        "id": "box-brepjs-solid-3-v000",
         "position": [
           1.0015136482714695,
           -1.883474807124231,
@@ -158,7 +158,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v001",
+        "id": "box-brepjs-solid-3-v001",
         "position": [
           1.0015136482714695,
           -1.883474807124231,
@@ -166,7 +166,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v010",
+        "id": "box-brepjs-solid-3-v010",
         "position": [
           1.0015136482714695,
           1.4786979068267625,
@@ -174,7 +174,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v011",
+        "id": "box-brepjs-solid-3-v011",
         "position": [
           1.0015136482714695,
           1.4786979068267625,
@@ -182,7 +182,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v100",
+        "id": "box-brepjs-solid-3-v100",
         "position": [
           5.290217515293431,
           -1.883474807124231,
@@ -190,7 +190,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v101",
+        "id": "box-brepjs-solid-3-v101",
         "position": [
           5.290217515293431,
           -1.883474807124231,
@@ -198,7 +198,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v110",
+        "id": "box-brepjs-solid-3-v110",
         "position": [
           5.290217515293431,
           1.4786979068267625,
@@ -206,7 +206,7 @@
         ]
       },
       {
-        "id": "box-brepjs-cell-3-v111",
+        "id": "box-brepjs-solid-3-v111",
         "position": [
           5.290217515293431,
           1.4786979068267625,
@@ -216,572 +216,572 @@
     ],
     "edges": [
       {
-        "id": "box-brepjs-cell-1-eb0",
+        "id": "box-brepjs-solid-1-eb0",
         "vertexIds": [
-          "box-brepjs-cell-1-v000",
-          "box-brepjs-cell-1-v100"
+          "box-brepjs-solid-1-v000",
+          "box-brepjs-solid-1-v100"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-eb1",
+        "id": "box-brepjs-solid-1-eb1",
         "vertexIds": [
-          "box-brepjs-cell-1-v100",
-          "box-brepjs-cell-1-v110"
+          "box-brepjs-solid-1-v100",
+          "box-brepjs-solid-1-v110"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-eb2",
+        "id": "box-brepjs-solid-1-eb2",
         "vertexIds": [
-          "box-brepjs-cell-1-v110",
-          "box-brepjs-cell-1-v010"
+          "box-brepjs-solid-1-v110",
+          "box-brepjs-solid-1-v010"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-eb3",
+        "id": "box-brepjs-solid-1-eb3",
         "vertexIds": [
-          "box-brepjs-cell-1-v010",
-          "box-brepjs-cell-1-v000"
+          "box-brepjs-solid-1-v010",
+          "box-brepjs-solid-1-v000"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-et0",
+        "id": "box-brepjs-solid-1-et0",
         "vertexIds": [
-          "box-brepjs-cell-1-v001",
-          "box-brepjs-cell-1-v101"
+          "box-brepjs-solid-1-v001",
+          "box-brepjs-solid-1-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-et1",
+        "id": "box-brepjs-solid-1-et1",
         "vertexIds": [
-          "box-brepjs-cell-1-v101",
-          "box-brepjs-cell-1-v111"
+          "box-brepjs-solid-1-v101",
+          "box-brepjs-solid-1-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-et2",
+        "id": "box-brepjs-solid-1-et2",
         "vertexIds": [
-          "box-brepjs-cell-1-v111",
-          "box-brepjs-cell-1-v011"
+          "box-brepjs-solid-1-v111",
+          "box-brepjs-solid-1-v011"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-et3",
+        "id": "box-brepjs-solid-1-et3",
         "vertexIds": [
-          "box-brepjs-cell-1-v011",
-          "box-brepjs-cell-1-v001"
+          "box-brepjs-solid-1-v011",
+          "box-brepjs-solid-1-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-ev0",
+        "id": "box-brepjs-solid-1-ev0",
         "vertexIds": [
-          "box-brepjs-cell-1-v000",
-          "box-brepjs-cell-1-v001"
+          "box-brepjs-solid-1-v000",
+          "box-brepjs-solid-1-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-ev1",
+        "id": "box-brepjs-solid-1-ev1",
         "vertexIds": [
-          "box-brepjs-cell-1-v100",
-          "box-brepjs-cell-1-v101"
+          "box-brepjs-solid-1-v100",
+          "box-brepjs-solid-1-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-ev2",
+        "id": "box-brepjs-solid-1-ev2",
         "vertexIds": [
-          "box-brepjs-cell-1-v110",
-          "box-brepjs-cell-1-v111"
+          "box-brepjs-solid-1-v110",
+          "box-brepjs-solid-1-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-ev3",
+        "id": "box-brepjs-solid-1-ev3",
         "vertexIds": [
-          "box-brepjs-cell-1-v010",
-          "box-brepjs-cell-1-v011"
+          "box-brepjs-solid-1-v010",
+          "box-brepjs-solid-1-v011"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-eb0",
+        "id": "box-brepjs-solid-2-eb0",
         "vertexIds": [
-          "box-brepjs-cell-2-v000",
-          "box-brepjs-cell-2-v100"
+          "box-brepjs-solid-2-v000",
+          "box-brepjs-solid-2-v100"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-eb1",
+        "id": "box-brepjs-solid-2-eb1",
         "vertexIds": [
-          "box-brepjs-cell-2-v100",
-          "box-brepjs-cell-2-v110"
+          "box-brepjs-solid-2-v100",
+          "box-brepjs-solid-2-v110"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-eb2",
+        "id": "box-brepjs-solid-2-eb2",
         "vertexIds": [
-          "box-brepjs-cell-2-v110",
-          "box-brepjs-cell-2-v010"
+          "box-brepjs-solid-2-v110",
+          "box-brepjs-solid-2-v010"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-eb3",
+        "id": "box-brepjs-solid-2-eb3",
         "vertexIds": [
-          "box-brepjs-cell-2-v010",
-          "box-brepjs-cell-2-v000"
+          "box-brepjs-solid-2-v010",
+          "box-brepjs-solid-2-v000"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-et0",
+        "id": "box-brepjs-solid-2-et0",
         "vertexIds": [
-          "box-brepjs-cell-2-v001",
-          "box-brepjs-cell-2-v101"
+          "box-brepjs-solid-2-v001",
+          "box-brepjs-solid-2-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-et1",
+        "id": "box-brepjs-solid-2-et1",
         "vertexIds": [
-          "box-brepjs-cell-2-v101",
-          "box-brepjs-cell-2-v111"
+          "box-brepjs-solid-2-v101",
+          "box-brepjs-solid-2-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-et2",
+        "id": "box-brepjs-solid-2-et2",
         "vertexIds": [
-          "box-brepjs-cell-2-v111",
-          "box-brepjs-cell-2-v011"
+          "box-brepjs-solid-2-v111",
+          "box-brepjs-solid-2-v011"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-et3",
+        "id": "box-brepjs-solid-2-et3",
         "vertexIds": [
-          "box-brepjs-cell-2-v011",
-          "box-brepjs-cell-2-v001"
+          "box-brepjs-solid-2-v011",
+          "box-brepjs-solid-2-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-ev0",
+        "id": "box-brepjs-solid-2-ev0",
         "vertexIds": [
-          "box-brepjs-cell-2-v000",
-          "box-brepjs-cell-2-v001"
+          "box-brepjs-solid-2-v000",
+          "box-brepjs-solid-2-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-ev1",
+        "id": "box-brepjs-solid-2-ev1",
         "vertexIds": [
-          "box-brepjs-cell-2-v100",
-          "box-brepjs-cell-2-v101"
+          "box-brepjs-solid-2-v100",
+          "box-brepjs-solid-2-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-ev2",
+        "id": "box-brepjs-solid-2-ev2",
         "vertexIds": [
-          "box-brepjs-cell-2-v110",
-          "box-brepjs-cell-2-v111"
+          "box-brepjs-solid-2-v110",
+          "box-brepjs-solid-2-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-ev3",
+        "id": "box-brepjs-solid-2-ev3",
         "vertexIds": [
-          "box-brepjs-cell-2-v010",
-          "box-brepjs-cell-2-v011"
+          "box-brepjs-solid-2-v010",
+          "box-brepjs-solid-2-v011"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-eb0",
+        "id": "box-brepjs-solid-3-eb0",
         "vertexIds": [
-          "box-brepjs-cell-3-v000",
-          "box-brepjs-cell-3-v100"
+          "box-brepjs-solid-3-v000",
+          "box-brepjs-solid-3-v100"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-eb1",
+        "id": "box-brepjs-solid-3-eb1",
         "vertexIds": [
-          "box-brepjs-cell-3-v100",
-          "box-brepjs-cell-3-v110"
+          "box-brepjs-solid-3-v100",
+          "box-brepjs-solid-3-v110"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-eb2",
+        "id": "box-brepjs-solid-3-eb2",
         "vertexIds": [
-          "box-brepjs-cell-3-v110",
-          "box-brepjs-cell-3-v010"
+          "box-brepjs-solid-3-v110",
+          "box-brepjs-solid-3-v010"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-eb3",
+        "id": "box-brepjs-solid-3-eb3",
         "vertexIds": [
-          "box-brepjs-cell-3-v010",
-          "box-brepjs-cell-3-v000"
+          "box-brepjs-solid-3-v010",
+          "box-brepjs-solid-3-v000"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-et0",
+        "id": "box-brepjs-solid-3-et0",
         "vertexIds": [
-          "box-brepjs-cell-3-v001",
-          "box-brepjs-cell-3-v101"
+          "box-brepjs-solid-3-v001",
+          "box-brepjs-solid-3-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-et1",
+        "id": "box-brepjs-solid-3-et1",
         "vertexIds": [
-          "box-brepjs-cell-3-v101",
-          "box-brepjs-cell-3-v111"
+          "box-brepjs-solid-3-v101",
+          "box-brepjs-solid-3-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-et2",
+        "id": "box-brepjs-solid-3-et2",
         "vertexIds": [
-          "box-brepjs-cell-3-v111",
-          "box-brepjs-cell-3-v011"
+          "box-brepjs-solid-3-v111",
+          "box-brepjs-solid-3-v011"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-et3",
+        "id": "box-brepjs-solid-3-et3",
         "vertexIds": [
-          "box-brepjs-cell-3-v011",
-          "box-brepjs-cell-3-v001"
+          "box-brepjs-solid-3-v011",
+          "box-brepjs-solid-3-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-ev0",
+        "id": "box-brepjs-solid-3-ev0",
         "vertexIds": [
-          "box-brepjs-cell-3-v000",
-          "box-brepjs-cell-3-v001"
+          "box-brepjs-solid-3-v000",
+          "box-brepjs-solid-3-v001"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-ev1",
+        "id": "box-brepjs-solid-3-ev1",
         "vertexIds": [
-          "box-brepjs-cell-3-v100",
-          "box-brepjs-cell-3-v101"
+          "box-brepjs-solid-3-v100",
+          "box-brepjs-solid-3-v101"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-ev2",
+        "id": "box-brepjs-solid-3-ev2",
         "vertexIds": [
-          "box-brepjs-cell-3-v110",
-          "box-brepjs-cell-3-v111"
+          "box-brepjs-solid-3-v110",
+          "box-brepjs-solid-3-v111"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-ev3",
+        "id": "box-brepjs-solid-3-ev3",
         "vertexIds": [
-          "box-brepjs-cell-3-v010",
-          "box-brepjs-cell-3-v011"
+          "box-brepjs-solid-3-v010",
+          "box-brepjs-solid-3-v011"
         ]
       }
     ],
     "wires": [
       {
-        "id": "box-brepjs-cell-1-wire-bottom",
+        "id": "box-brepjs-solid-1-wire-bottom",
         "edgeIds": [
-          "box-brepjs-cell-1-eb0",
-          "box-brepjs-cell-1-eb1",
-          "box-brepjs-cell-1-eb2",
-          "box-brepjs-cell-1-eb3"
+          "box-brepjs-solid-1-eb0",
+          "box-brepjs-solid-1-eb1",
+          "box-brepjs-solid-1-eb2",
+          "box-brepjs-solid-1-eb3"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-wire-top",
+        "id": "box-brepjs-solid-1-wire-top",
         "edgeIds": [
-          "box-brepjs-cell-1-et0",
-          "box-brepjs-cell-1-et1",
-          "box-brepjs-cell-1-et2",
-          "box-brepjs-cell-1-et3"
+          "box-brepjs-solid-1-et0",
+          "box-brepjs-solid-1-et1",
+          "box-brepjs-solid-1-et2",
+          "box-brepjs-solid-1-et3"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-wire-x0",
+        "id": "box-brepjs-solid-1-wire-x0",
         "edgeIds": [
-          "box-brepjs-cell-1-eb3",
-          "box-brepjs-cell-1-ev0",
-          "box-brepjs-cell-1-et3",
-          "box-brepjs-cell-1-ev3"
+          "box-brepjs-solid-1-eb3",
+          "box-brepjs-solid-1-ev0",
+          "box-brepjs-solid-1-et3",
+          "box-brepjs-solid-1-ev3"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-wire-x1",
+        "id": "box-brepjs-solid-1-wire-x1",
         "edgeIds": [
-          "box-brepjs-cell-1-eb1",
-          "box-brepjs-cell-1-ev2",
-          "box-brepjs-cell-1-et1",
-          "box-brepjs-cell-1-ev1"
+          "box-brepjs-solid-1-eb1",
+          "box-brepjs-solid-1-ev2",
+          "box-brepjs-solid-1-et1",
+          "box-brepjs-solid-1-ev1"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-wire-y0",
+        "id": "box-brepjs-solid-1-wire-y0",
         "edgeIds": [
-          "box-brepjs-cell-1-eb0",
-          "box-brepjs-cell-1-ev1",
-          "box-brepjs-cell-1-et0",
-          "box-brepjs-cell-1-ev0"
+          "box-brepjs-solid-1-eb0",
+          "box-brepjs-solid-1-ev1",
+          "box-brepjs-solid-1-et0",
+          "box-brepjs-solid-1-ev0"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-wire-y1",
+        "id": "box-brepjs-solid-1-wire-y1",
         "edgeIds": [
-          "box-brepjs-cell-1-eb2",
-          "box-brepjs-cell-1-ev3",
-          "box-brepjs-cell-1-et2",
-          "box-brepjs-cell-1-ev2"
+          "box-brepjs-solid-1-eb2",
+          "box-brepjs-solid-1-ev3",
+          "box-brepjs-solid-1-et2",
+          "box-brepjs-solid-1-ev2"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-bottom",
+        "id": "box-brepjs-solid-2-wire-bottom",
         "edgeIds": [
-          "box-brepjs-cell-2-eb0",
-          "box-brepjs-cell-2-eb1",
-          "box-brepjs-cell-2-eb2",
-          "box-brepjs-cell-2-eb3"
+          "box-brepjs-solid-2-eb0",
+          "box-brepjs-solid-2-eb1",
+          "box-brepjs-solid-2-eb2",
+          "box-brepjs-solid-2-eb3"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-top",
+        "id": "box-brepjs-solid-2-wire-top",
         "edgeIds": [
-          "box-brepjs-cell-2-et0",
-          "box-brepjs-cell-2-et1",
-          "box-brepjs-cell-2-et2",
-          "box-brepjs-cell-2-et3"
+          "box-brepjs-solid-2-et0",
+          "box-brepjs-solid-2-et1",
+          "box-brepjs-solid-2-et2",
+          "box-brepjs-solid-2-et3"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-x0",
+        "id": "box-brepjs-solid-2-wire-x0",
         "edgeIds": [
-          "box-brepjs-cell-2-eb3",
-          "box-brepjs-cell-2-ev0",
-          "box-brepjs-cell-2-et3",
-          "box-brepjs-cell-2-ev3"
+          "box-brepjs-solid-2-eb3",
+          "box-brepjs-solid-2-ev0",
+          "box-brepjs-solid-2-et3",
+          "box-brepjs-solid-2-ev3"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-x1",
+        "id": "box-brepjs-solid-2-wire-x1",
         "edgeIds": [
-          "box-brepjs-cell-2-eb1",
-          "box-brepjs-cell-2-ev2",
-          "box-brepjs-cell-2-et1",
-          "box-brepjs-cell-2-ev1"
+          "box-brepjs-solid-2-eb1",
+          "box-brepjs-solid-2-ev2",
+          "box-brepjs-solid-2-et1",
+          "box-brepjs-solid-2-ev1"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-y0",
+        "id": "box-brepjs-solid-2-wire-y0",
         "edgeIds": [
-          "box-brepjs-cell-2-eb0",
-          "box-brepjs-cell-2-ev1",
-          "box-brepjs-cell-2-et0",
-          "box-brepjs-cell-2-ev0"
+          "box-brepjs-solid-2-eb0",
+          "box-brepjs-solid-2-ev1",
+          "box-brepjs-solid-2-et0",
+          "box-brepjs-solid-2-ev0"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-wire-y1",
+        "id": "box-brepjs-solid-2-wire-y1",
         "edgeIds": [
-          "box-brepjs-cell-2-eb2",
-          "box-brepjs-cell-2-ev3",
-          "box-brepjs-cell-2-et2",
-          "box-brepjs-cell-2-ev2"
+          "box-brepjs-solid-2-eb2",
+          "box-brepjs-solid-2-ev3",
+          "box-brepjs-solid-2-et2",
+          "box-brepjs-solid-2-ev2"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-bottom",
+        "id": "box-brepjs-solid-3-wire-bottom",
         "edgeIds": [
-          "box-brepjs-cell-3-eb0",
-          "box-brepjs-cell-3-eb1",
-          "box-brepjs-cell-3-eb2",
-          "box-brepjs-cell-3-eb3"
+          "box-brepjs-solid-3-eb0",
+          "box-brepjs-solid-3-eb1",
+          "box-brepjs-solid-3-eb2",
+          "box-brepjs-solid-3-eb3"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-top",
+        "id": "box-brepjs-solid-3-wire-top",
         "edgeIds": [
-          "box-brepjs-cell-3-et0",
-          "box-brepjs-cell-3-et1",
-          "box-brepjs-cell-3-et2",
-          "box-brepjs-cell-3-et3"
+          "box-brepjs-solid-3-et0",
+          "box-brepjs-solid-3-et1",
+          "box-brepjs-solid-3-et2",
+          "box-brepjs-solid-3-et3"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-x0",
+        "id": "box-brepjs-solid-3-wire-x0",
         "edgeIds": [
-          "box-brepjs-cell-3-eb3",
-          "box-brepjs-cell-3-ev0",
-          "box-brepjs-cell-3-et3",
-          "box-brepjs-cell-3-ev3"
+          "box-brepjs-solid-3-eb3",
+          "box-brepjs-solid-3-ev0",
+          "box-brepjs-solid-3-et3",
+          "box-brepjs-solid-3-ev3"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-x1",
+        "id": "box-brepjs-solid-3-wire-x1",
         "edgeIds": [
-          "box-brepjs-cell-3-eb1",
-          "box-brepjs-cell-3-ev2",
-          "box-brepjs-cell-3-et1",
-          "box-brepjs-cell-3-ev1"
+          "box-brepjs-solid-3-eb1",
+          "box-brepjs-solid-3-ev2",
+          "box-brepjs-solid-3-et1",
+          "box-brepjs-solid-3-ev1"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-y0",
+        "id": "box-brepjs-solid-3-wire-y0",
         "edgeIds": [
-          "box-brepjs-cell-3-eb0",
-          "box-brepjs-cell-3-ev1",
-          "box-brepjs-cell-3-et0",
-          "box-brepjs-cell-3-ev0"
+          "box-brepjs-solid-3-eb0",
+          "box-brepjs-solid-3-ev1",
+          "box-brepjs-solid-3-et0",
+          "box-brepjs-solid-3-ev0"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-wire-y1",
+        "id": "box-brepjs-solid-3-wire-y1",
         "edgeIds": [
-          "box-brepjs-cell-3-eb2",
-          "box-brepjs-cell-3-ev3",
-          "box-brepjs-cell-3-et2",
-          "box-brepjs-cell-3-ev2"
+          "box-brepjs-solid-3-eb2",
+          "box-brepjs-solid-3-ev3",
+          "box-brepjs-solid-3-et2",
+          "box-brepjs-solid-3-ev2"
         ]
       }
     ],
     "faces": [
       {
-        "id": "box-brepjs-cell-1-face-bottom",
+        "id": "box-brepjs-solid-1-face-bottom",
         "wireIds": [
-          "box-brepjs-cell-1-wire-bottom"
+          "box-brepjs-solid-1-wire-bottom"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-face-top",
+        "id": "box-brepjs-solid-1-face-top",
         "wireIds": [
-          "box-brepjs-cell-1-wire-top"
+          "box-brepjs-solid-1-wire-top"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-face-x0",
+        "id": "box-brepjs-solid-1-face-x0",
         "wireIds": [
-          "box-brepjs-cell-1-wire-x0"
+          "box-brepjs-solid-1-wire-x0"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-face-x1",
+        "id": "box-brepjs-solid-1-face-x1",
         "wireIds": [
-          "box-brepjs-cell-1-wire-x1"
+          "box-brepjs-solid-1-wire-x1"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-face-y0",
+        "id": "box-brepjs-solid-1-face-y0",
         "wireIds": [
-          "box-brepjs-cell-1-wire-y0"
+          "box-brepjs-solid-1-wire-y0"
         ]
       },
       {
-        "id": "box-brepjs-cell-1-face-y1",
+        "id": "box-brepjs-solid-1-face-y1",
         "wireIds": [
-          "box-brepjs-cell-1-wire-y1"
+          "box-brepjs-solid-1-wire-y1"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-bottom",
+        "id": "box-brepjs-solid-2-face-bottom",
         "wireIds": [
-          "box-brepjs-cell-2-wire-bottom"
+          "box-brepjs-solid-2-wire-bottom"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-top",
+        "id": "box-brepjs-solid-2-face-top",
         "wireIds": [
-          "box-brepjs-cell-2-wire-top"
+          "box-brepjs-solid-2-wire-top"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-x0",
+        "id": "box-brepjs-solid-2-face-x0",
         "wireIds": [
-          "box-brepjs-cell-2-wire-x0"
+          "box-brepjs-solid-2-wire-x0"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-x1",
+        "id": "box-brepjs-solid-2-face-x1",
         "wireIds": [
-          "box-brepjs-cell-2-wire-x1"
+          "box-brepjs-solid-2-wire-x1"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-y0",
+        "id": "box-brepjs-solid-2-face-y0",
         "wireIds": [
-          "box-brepjs-cell-2-wire-y0"
+          "box-brepjs-solid-2-wire-y0"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-face-y1",
+        "id": "box-brepjs-solid-2-face-y1",
         "wireIds": [
-          "box-brepjs-cell-2-wire-y1"
+          "box-brepjs-solid-2-wire-y1"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-bottom",
+        "id": "box-brepjs-solid-3-face-bottom",
         "wireIds": [
-          "box-brepjs-cell-3-wire-bottom"
+          "box-brepjs-solid-3-wire-bottom"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-top",
+        "id": "box-brepjs-solid-3-face-top",
         "wireIds": [
-          "box-brepjs-cell-3-wire-top"
+          "box-brepjs-solid-3-wire-top"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-x0",
+        "id": "box-brepjs-solid-3-face-x0",
         "wireIds": [
-          "box-brepjs-cell-3-wire-x0"
+          "box-brepjs-solid-3-wire-x0"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-x1",
+        "id": "box-brepjs-solid-3-face-x1",
         "wireIds": [
-          "box-brepjs-cell-3-wire-x1"
+          "box-brepjs-solid-3-wire-x1"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-y0",
+        "id": "box-brepjs-solid-3-face-y0",
         "wireIds": [
-          "box-brepjs-cell-3-wire-y0"
+          "box-brepjs-solid-3-wire-y0"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-face-y1",
+        "id": "box-brepjs-solid-3-face-y1",
         "wireIds": [
-          "box-brepjs-cell-3-wire-y1"
+          "box-brepjs-solid-3-wire-y1"
         ]
       }
     ],
     "shells": [
       {
-        "id": "box-brepjs-cell-1-shell",
+        "id": "box-brepjs-solid-1-shell",
         "faceIds": [
-          "box-brepjs-cell-1-face-bottom",
-          "box-brepjs-cell-1-face-top",
-          "box-brepjs-cell-1-face-y0",
-          "box-brepjs-cell-1-face-x1",
-          "box-brepjs-cell-1-face-y1",
-          "box-brepjs-cell-1-face-x0"
+          "box-brepjs-solid-1-face-bottom",
+          "box-brepjs-solid-1-face-top",
+          "box-brepjs-solid-1-face-y0",
+          "box-brepjs-solid-1-face-x1",
+          "box-brepjs-solid-1-face-y1",
+          "box-brepjs-solid-1-face-x0"
         ]
       },
       {
-        "id": "box-brepjs-cell-2-shell",
+        "id": "box-brepjs-solid-2-shell",
         "faceIds": [
-          "box-brepjs-cell-2-face-bottom",
-          "box-brepjs-cell-2-face-top",
-          "box-brepjs-cell-2-face-y0",
-          "box-brepjs-cell-2-face-x1",
-          "box-brepjs-cell-2-face-y1",
-          "box-brepjs-cell-2-face-x0"
+          "box-brepjs-solid-2-face-bottom",
+          "box-brepjs-solid-2-face-top",
+          "box-brepjs-solid-2-face-y0",
+          "box-brepjs-solid-2-face-x1",
+          "box-brepjs-solid-2-face-y1",
+          "box-brepjs-solid-2-face-x0"
         ]
       },
       {
-        "id": "box-brepjs-cell-3-shell",
+        "id": "box-brepjs-solid-3-shell",
         "faceIds": [
-          "box-brepjs-cell-3-face-bottom",
-          "box-brepjs-cell-3-face-top",
-          "box-brepjs-cell-3-face-y0",
-          "box-brepjs-cell-3-face-x1",
-          "box-brepjs-cell-3-face-y1",
-          "box-brepjs-cell-3-face-x0"
+          "box-brepjs-solid-3-face-bottom",
+          "box-brepjs-solid-3-face-top",
+          "box-brepjs-solid-3-face-y0",
+          "box-brepjs-solid-3-face-x1",
+          "box-brepjs-solid-3-face-y1",
+          "box-brepjs-solid-3-face-x0"
         ]
       }
     ],
-    "cells": [
+    "solids": [
       {
-        "id": "brepjs-cell-1",
+        "id": "brepjs-solid-1",
         "shellIds": [
-          "box-brepjs-cell-1-shell"
+          "box-brepjs-solid-1-shell"
         ],
         "solid": {
           "kind": "box",
@@ -799,9 +799,9 @@
         }
       },
       {
-        "id": "brepjs-cell-2",
+        "id": "brepjs-solid-2",
         "shellIds": [
-          "box-brepjs-cell-2-shell"
+          "box-brepjs-solid-2-shell"
         ],
         "solid": {
           "kind": "box",
@@ -819,9 +819,9 @@
         }
       },
       {
-        "id": "brepjs-cell-3",
+        "id": "brepjs-solid-3",
         "shellIds": [
-          "box-brepjs-cell-3-shell"
+          "box-brepjs-solid-3-shell"
         ],
         "solid": {
           "kind": "box",
@@ -839,7 +839,7 @@
         }
       }
     ],
-    "cellComplexes": [],
-    "clusters": []
+    "__removed_cellComplexes": [],
+    "__removed_clusters": []
   }
 }

@@ -3337,7 +3337,7 @@
         ]
       }
     ],
-    "cells": [
+    "solids": [
       {
         "id": "tall-building-cell-1081834846",
         "shellIds": [
@@ -3489,7 +3489,7 @@
         ]
       }
     ],
-    "cellComplexes": [
+    "__removed_cellComplexes": [
       {
         "id": "tall-building-cell-complex",
         "cellIds": [
@@ -3521,7 +3521,7 @@
         ]
       }
     ],
-    "clusters": [
+    "__removed_clusters": [
       {
         "id": "tall-building-asset",
         "memberIds": [

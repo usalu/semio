@@ -82,7 +82,7 @@ type EdgeRef = kernelGeometry.EdgeRef;
 type WireRef = kernelGeometry.WireRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
-type CellRef = kernelGeometry.CellRef;
+type SolidRef = kernelGeometry.SolidRef;
 type SolidRef = kernelGeometry.SolidRef;
 type AnchorAttachment = kernelGeometry.AnchorAttachment;
 type AnchorRecord = kernelGeometry.AnchorRecord;
@@ -91,9 +91,9 @@ type EdgeRecord = kernelGeometry.EdgeRecord;
 type WireRecord = kernelGeometry.WireRecord;
 type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
-type CellSolid = kernelGeometry.CellSolid;
-type CellRecord = kernelGeometry.CellRecord;
-type MutableCellRecord = CellRecord & { solid?: CellSolid };
+type SolidPrimitive = kernelGeometry.SolidPrimitive;
+type SolidRecord = kernelGeometry.SolidRecord;
+type MutableSolidRecord = SolidRecord & { solid?: SolidPrimitive };
 
 type KernelGeomBuckets = {
 	anchors: Record<string, AnchorRecord>;
@@ -102,7 +102,7 @@ type KernelGeomBuckets = {
 	wires: Record<string, WireRecord>;
 	faces: Record<string, FaceRecord>;
 	shells: Record<string, ShellRecord>;
-	cells: Record<string, CellRecord>;
+	solids: Record<string, SolidRecord>;
 };
 
 type ModelWithGeom = Model & { readonly geometry?: KernelGeomBuckets };
@@ -615,7 +615,7 @@ function pointOnFaceAt(model: Model, faceId: FaceRef, u: number, v: number): Vec
 	return vec3Add(origin, vec3Add(vec3Scale(basis.u, u), vec3Scale(basis.v, v)));
 }
 
-function solidPlacement(model: Model, cell: CellRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number; readonly w: number } | null {
+function solidPlacement(model: Model, cell: SolidRecord, point: Vec3): { readonly point: Vec3; readonly u: number; readonly v: number; readonly w: number } | null {
 	const bounds = modelObjectAabb(model, cell);
 	if (!bounds) return null;
 	const hit = closestPointOnAabbSurface(bounds.min, bounds.max, point);
@@ -631,7 +631,7 @@ function solidPlacement(model: Model, cell: CellRecord, point: Vec3): { readonly
 }
 
 function pointOnSolidAt(model: Model, cellId: SolidRef, u: number, v: number, w: number): Vec3 | null {
-	const cell = geom(model).cells[cellId];
+	const cell = geom(model).solids[cellId];
 	if (!cell) return null;
 	const bounds = modelObjectAabb(model, cell);
 	if (!bounds) return null;
@@ -686,7 +686,7 @@ export function anchorPlacementFromEntity(
 		const hit = facePlacement(model, face, point);
 		return hit ? { position: hit.point, attachment: { kind, id: id as FaceRef, u: hit.u, v: hit.v } } : null;
 	}
-	const cell = geom(model).cells[id];
+	const cell = geom(model).solids[id];
 	if (!cell) return null;
 	const hit = solidPlacement(model, cell, point);
 	return hit ? { position: hit.point, attachment: { kind: "solid", id: id as SolidRef, u: hit.u, v: hit.v, w: hit.w } } : null;
@@ -818,19 +818,19 @@ export function boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: numb
 		},
 		faces: { added: [{ id: fb, wireIds: [wb] }, { id: ft, wireIds: [wt] }, { id: fy0, wireIds: [wy0] }, { id: fx1, wireIds: [wx1] }, { id: fy1, wireIds: [wy1] }, { id: fx0, wireIds: [wx0] }] },
 		shells: { added: [{ id: shell, faceIds: [fb, ft, fy0, fx1, fy1, fx0] }] },
-		cells: {
+		solids: {
 			added: [
 				{
 					id: cell,
 					shellIds: [shell],
-					solid: { kind: "box", cornerA: [ax, ay, z0], cornerB: [bx, by, z0], height: z1 - z0 } satisfies CellSolid,
+					solid: { kind: "box", cornerA: [ax, ay, z0], cornerB: [bx, by, z0], height: z1 - z0 } satisfies SolidPrimitive,
 				},
 			],
 		},
 	};
 }
 
-export function CellSolidAabb(solid: CellSolid): { readonly min: Vec3; readonly max: Vec3 } {
+export function SolidPrimitiveAabb(solid: SolidPrimitive): { readonly min: Vec3; readonly max: Vec3 } {
 	if (solid.kind === "box") {
 		const ax = Math.min(solid.cornerA[0], solid.cornerB[0]);
 		const ay = Math.min(solid.cornerA[1], solid.cornerB[1]);
@@ -865,10 +865,10 @@ export function CellSolidAabb(solid: CellSolid): { readonly min: Vec3; readonly 
 	};
 }
 
-/** @emoji 📐 Axis-aligned bounds of a cell from shell vertices when present, else analytic `CellSolid`. */
-export function modelObjectAabb(model: Model, cell: CellRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
+/** @emoji 📐 Axis-aligned bounds of a cell from shell vertices when present, else analytic `SolidPrimitive`. */
+export function modelObjectAabb(model: Model, cell: SolidRecord): { readonly min: Vec3; readonly max: Vec3 } | null {
 	const points = derivedSolidPoints(model, cell);
-	if (points.length === 0) return cell.solid ? CellSolidAabb(cell.solid) : null;
+	if (points.length === 0) return cell.solid ? SolidPrimitiveAabb(cell.solid) : null;
 	let minX = Infinity;
 	let minY = Infinity;
 	let minZ = Infinity;
@@ -937,7 +937,7 @@ function derivedPointCentroid(points: readonly Vec3[]): Vec3 | null {
 	return [sum[0] / points.length, sum[1] / points.length, sum[2] / points.length] as unknown as Vec3;
 }
 
-function derivedSolidPoints(model: Model, cell: CellRecord): readonly Vec3[] {
+function derivedSolidPoints(model: Model, cell: SolidRecord): readonly Vec3[] {
 	const points = cell.shellIds.flatMap((shellId) => {
 		const shell = geom(model).shells[shellId];
 		return (shell?.faceIds ?? []).flatMap((faceId: FaceRef) => {
@@ -1171,7 +1171,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	aabbFromPoints = (pts: readonly Vec3[]) => aabbFromPoints(pts, 0);
 	aabbCornerPoints = aabbCornerPoints;
 	aabbIntersect = aabbIntersect;
-	CellSolidAabb = CellSolidAabb;
+	SolidPrimitiveAabb = SolidPrimitiveAabb;
 	modelObjectAabb = modelObjectAabb;
 	boxModelDiff = boxModelDiff;
 	meshFaceModelDiff = meshFaceModelDiff;
@@ -1438,7 +1438,7 @@ class BrepjsWasmEngine {
 	}
 
 	private modelDerivedKey(model: Model): string {
-		const solids = (Object.keys(geom(model).cells) as SolidRef[]).sort().join(",");
+		const solids = (Object.keys(geom(model).solids) as SolidRef[]).sort().join(",");
 		return `${model.revision}:${cells}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
 	}
 
@@ -1522,9 +1522,9 @@ class BrepjsWasmEngine {
 		return transfer;
 	}
 
-	/** @emoji 🧊 Authoritative brep for a cell: analytic `CellSolid`, then cache, then model-graph hull. */
-	solidForCellRecord(model: Model, cell: CellRecord): ValidSolid | null {
-		if (cell.solid) return this.solidFromCellSolid(cell.solid);
+	/** @emoji 🧊 Authoritative brep for a cell: analytic `SolidPrimitive`, then cache, then model-graph hull. */
+	solidForSolidRecord(model: Model, cell: SolidRecord): ValidSolid | null {
+		if (cell.solid) return this.solidFromSolidPrimitive(cell.solid);
 		const cached = this.solids.get(cell.id);
 		if (cached) return cached;
 		const points = derivedSolidPoints(model, cell);
@@ -1542,15 +1542,15 @@ class BrepjsWasmEngine {
 		const modelKey = this.modelDerivedKey(model);
 		if (this.solidsTopoKey === modelKey && this.solids.size > 0) return;
 		this.solids.clear();
-		for (const cell of Object.values(geom(model).cells)) {
-			const solid = this.solidForCellRecord(model, cell);
+		for (const cell of Object.values(geom(model).solids)) {
+			const solid = this.solidForSolidRecord(model, cell);
 			if (solid) this.solids.set(cell.id, solid);
 		}
 		this.solidsTopoKey = modelKey;
 	}
 
-	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `CellSolid` (sphere/cylinder/cone/box). */
-	solidFromCellSolid(solid: CellSolid): ValidSolid {
+	/** @emoji 🧊 Builds brepjs `ValidSolid` from topologic-style `SolidPrimitive` (sphere/cylinder/cone/box). */
+	solidFromSolidPrimitive(solid: SolidPrimitive): ValidSolid {
 		if (solid.kind === "sphere") {
 			return sphere(solid.radius, { at: [solid.center[0], solid.center[1], solid.center[2]] });
 		}
@@ -1652,11 +1652,11 @@ class BrepjsWasmEngine {
 					: radiusPoint
 						? vec3Distance(center, radiusPoint)
 						: 1;
-			const solid: CellSolid = { kind: "sphere", center, radius };
+			const solid: SolidPrimitive = { kind: "sphere", center, radius };
 			const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
 			await this.ensureInit();
-			this.solids.set(c.id, this.solidFromCellSolid(solid));
-			return { diff: { cells: { added: [c] } } };
+			this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
+			return { diff: { solids: { added: [c] } } };
 		}
 		if (commandId === "solid.cylinder") {
 			const base = asVec3(params.base, [0, 0, 0]);
@@ -1666,11 +1666,11 @@ class BrepjsWasmEngine {
 			const axisVec = vec3Sub(end, base);
 			const height = vec3Length(axisVec);
 			const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
-			const solid: CellSolid = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
+			const solid: SolidPrimitive = { kind: "cylinder", base, axis, radius, height: height > 1e-9 ? height : 1e-6 };
 			const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
 			await this.ensureInit();
-			this.solids.set(c.id, this.solidFromCellSolid(solid));
-			return { diff: { cells: { added: [c] } } };
+			this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
+			return { diff: { solids: { added: [c] } } };
 		}
 		if (commandId === "solid.cone") {
 			const base = asVec3(params.base, [0, 0, 0]);
@@ -1680,11 +1680,11 @@ class BrepjsWasmEngine {
 			const axisVec = vec3Sub(end, base);
 			const height = vec3Length(axisVec);
 			const axis = height > 1e-9 ? vec3Normalize(axisVec) : ([0, 0, 1] as Vec3);
-			const solid: CellSolid = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
+			const solid: SolidPrimitive = { kind: "cone", base, axis, radius, height: height > 1e-9 ? height : 1e-6, radiusTop: 0 };
 			const c = { id: nextId("c") as SolidRef, shellIds: [], solid };
 			await this.ensureInit();
-			this.solids.set(c.id, this.solidFromCellSolid(solid));
-			return { diff: { cells: { added: [c] } } };
+			this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
+			return { diff: { solids: { added: [c] } } };
 		}
 		if (commandId.startsWith("solid.")) {
 			return { diff: {} };
@@ -1777,7 +1777,7 @@ class BrepjsWasmEngine {
 
 	async adjacentSolids(cell: SolidRef, model: Model): Promise<readonly SolidRef[]> {
 		const out = new Set<string>();
-		const c = geom(model).cells[String(cell)];
+		const c = geom(model).solids[String(cell)];
 		if (!c) return [];
 		const faces = new Set<string>();
 		for (const sid of c.shellIds) {
@@ -1785,7 +1785,7 @@ class BrepjsWasmEngine {
 			if (sh) for (const f of sh.faceIds) faces.add(f);
 		}
 		for (const f of faces) {
-			for (const [cid, cellRec] of Object.entries(geom(model).cells)) {
+			for (const [cid, cellRec] of Object.entries(geom(model).solids)) {
 				if (cid === String(cell)) continue;
 				for (const sid of cellRec.shellIds) {
 					const sh = geom(model).shells[sid];
@@ -1797,8 +1797,8 @@ class BrepjsWasmEngine {
 	}
 
 	async sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]> {
-		const ca = geom(model).cells[String(a)];
-		const cb = geom(model).cells[String(b)];
+		const ca = geom(model).solids[String(a)];
+		const cb = geom(model).solids[String(b)];
 		if (!ca || !cb) return [];
 		const fa = new Set<string>();
 		const fb = new Set<string>();
@@ -2184,11 +2184,11 @@ if (import.meta.vitest) {
 			expect(await kernel.volume(r.solid)).toBeGreaterThan(0);
 		});
 
-		it("modelObjectAabb follows moved shell vertices when CellSolid is stale", () => {
+		it("modelObjectAabb follows moved shell vertices when SolidPrimitive is stale", () => {
 			const model = new Model();
 			const cell = kernelGeometry.solidRef("box");
 			applyModelDiff(model, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-			const rec = geom(model).cells[cell]! as MutableCellRecord;
+			const rec = geom(model).solids[cell]! as MutableSolidRecord;
 			rec.solid = { kind: "box", cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 };
 			const before = modelObjectAabb(model, rec)!;
 			let topId = Object.keys(geom(model).vertices)[0]!;
@@ -2344,12 +2344,12 @@ if (import.meta.vitest) {
 			expect(edges[0]!.vertexIds[0]).toBe(edges[0]!.vertexIds[1]);
 		});
 
-		it("executeCommandDiff solid.sphere stores CellSolid and brepjs solid", async () => {
+		it("executeCommandDiff solid.sphere stores SolidPrimitive and brepjs solid", async () => {
 			const res = await kernel.executeCommandDiff("solid.sphere", {
 				center: [0, 0, 0],
 				radius: 2,
 			});
-			const solids = res.diff.cells?.added ?? [];
+			const solids = res.diff.solids?.added ?? [];
 			expect(solids[0]!.solid).toEqual({ kind: "sphere", center: [0, 0, 0], radius: 2 });
 			const vol = await kernel.volume(solids[0]!.id);
 			expect(vol).toBeCloseTo((4 / 3) * Math.PI * 8, 1);

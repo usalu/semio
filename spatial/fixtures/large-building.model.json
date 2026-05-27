@@ -57568,7 +57568,7 @@
         ]
       }
     ],
-    "cells": [
+    "solids": [
       {
         "id": "large-building-cell-1004141672",
         "shellIds": [
@@ -59772,7 +59772,7 @@
         ]
       }
     ],
-    "cellComplexes": [
+    "__removed_cellComplexes": [
       {
         "id": "large-building-cell-complex",
         "cellIds": [
@@ -60146,7 +60146,7 @@
         ]
       }
     ],
-    "clusters": [
+    "__removed_clusters": [
       {
         "id": "large-building-asset",
         "memberIds": [

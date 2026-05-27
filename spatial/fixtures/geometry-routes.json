@@ -403,9 +403,9 @@
     ],
     "faces": [],
     "shells": [],
-    "cells": [],
-    "cellComplexes": [],
-    "clusters": [
+    "solids": [],
+    "__removed_cellComplexes": [],
+    "__removed_clusters": [
       {
         "id": "all-routes",
         "memberIds": [

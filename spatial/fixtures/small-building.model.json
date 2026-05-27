@@ -1682,7 +1682,7 @@
         ]
       }
     ],
-    "cells": [
+    "solids": [
       {
         "id": "small-building-cell-123052045",
         "shellIds": [
@@ -1744,7 +1744,7 @@
         ]
       }
     ],
-    "cellComplexes": [
+    "__removed_cellComplexes": [
       {
         "id": "small-building-cell-complex",
         "cellIds": [
@@ -1761,7 +1761,7 @@
         ]
       }
     ],
-    "clusters": [
+    "__removed_clusters": [
       {
         "id": "small-building-asset",
         "memberIds": [

@@ -32,17 +32,7 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": [
-                  "vertex",
-                  "edge",
-                  "wire",
-                  "face",
-                  "shell",
-                  "cell",
-                  "cellComplex",
-                  "cluster",
-                  "anchor"
-                ]
+                "enum": ["vertex", "edge", "wire", "face", "solid", "anchor"]
               }
             }
           }

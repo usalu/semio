@@ -156,7 +156,7 @@ export type InteractionEvent = { readonly kind: string; readonly [k: string]: un
 // #endregion 🎮InteractionEvent
 
 // #region 🪪Selection
-const MODEL_ENTITY_KINDS = new Set<string>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "cellComplex", "cluster", "object"]);
+const MODEL_ENTITY_KINDS = new Set<string>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "solid", "cellComplex", "cluster", "object", "geometry", "attribute", "model"]);
 
 /** @emoji 🪪 One picked geometry or derived view target for `selection.changed`. */
 export interface SelectionTarget {
@@ -840,29 +840,12 @@ export namespace kernelGeometry {
   export type WireRef = string & { readonly __brand: "WireRef" };
   export type FaceRef = string & { readonly __brand: "FaceRef" };
   export type ShellRef = string & { readonly __brand: "ShellRef" };
-  export type CellRef = string & { readonly __brand: "CellRef" };
-  export type CellComplexRef = string & { readonly __brand: "CellComplexRef" };
-  export type ClusterRef = string & { readonly __brand: "ClusterRef" };
-  export type EditableEntityKind =
-    | "anchor"
-    | "vertex"
-    | "edge"
-    | "wire"
-    | "face"
-    | "shell"
-    | "cell"
-    | "cellComplex"
-    | "cluster";
-  /** @emoji 🪪 Builds a branded `CellRef` from an opaque id string. */
-  export function cellRef(id: string): CellRef {
-    return id as CellRef;
+  export type SolidRef = string & { readonly __brand: "SolidRef" };
+  export type GeometryEntityKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "solid";
+  export type EditableEntityKind = GeometryEntityKind;
+  export function solidRef(id: string): SolidRef {
+    return id as SolidRef;
   }
-  /** @emoji 🪪 Brep worker cache key for a bounded volume (same id space as {@link CellRef}). */
-  export function solidRef(id: string): CellRef {
-    return cellRef(id);
-  }
-  /** @emoji 🪪 Brep cache id alias for {@link CellRef}. */
-  export type SolidRef = CellRef;
 
   // #region 🧱ModelGeometry
   /** @emoji 🧱 Kernel-private vertex payload (brepjs persistence; prefer `Object` at framework level). */
@@ -876,7 +859,7 @@ export namespace kernelGeometry {
     | { readonly kind: "edge"; readonly id: EdgeRef; readonly t: number }
     | { readonly kind: "wire"; readonly id: WireRef; readonly t: number }
     | { readonly kind: "face"; readonly id: FaceRef; readonly u: number; readonly v: number }
-    | { readonly kind: "cell"; readonly id: CellRef; readonly u: number; readonly v: number; readonly w: number };
+    | { readonly kind: "solid"; readonly id: SolidRef; readonly u: number; readonly v: number; readonly w: number };
 
   /** @emoji 🧱 Anchor payload: parametric point attached to kernel geometry. */
   export interface AnchorRecord {
@@ -927,29 +910,17 @@ export namespace kernelGeometry {
   }
 
   /** @emoji 🧊 Analytic cell solid (`BRepPrimAPI` / `Geom` analog under topologic `Cell`). */
-  export type CellSolid =
+  export type SolidPrimitive =
     | { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
     | { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
     | { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
     | { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
 
   /** @emoji 🧱 Cell payload: bounded volume via closed shells and/or analytic solid. */
-  export interface CellRecord {
-    readonly id: CellRef;
+  export interface SolidRecord {
+    readonly id: SolidRef;
     readonly shellIds: readonly ShellRef[];
-    readonly solid?: CellSolid;
-  }
-
-  /** @emoji 🧱 Cell complex payload: member cells. */
-  export interface CellComplexRecord {
-    readonly id: CellComplexRef;
-    readonly cellIds: readonly CellRef[];
-  }
-
-  /** @emoji 🧱 Cluster payload: arbitrary nested membership. */
-  export interface ClusterRecord {
-    readonly id: ClusterRef;
-    readonly memberIds: readonly string[];
+    readonly solid?: SolidPrimitive;
   }
 
   export interface KernelGeometryJson {
@@ -959,7 +930,7 @@ export namespace kernelGeometry {
     readonly wires: readonly WireRecord[];
     readonly faces: readonly FaceRecord[];
     readonly shells: readonly ShellRecord[];
-    readonly cells: readonly CellRecord[];
+    readonly solids: readonly SolidRecord[];
     readonly cellComplexes: readonly CellComplexRecord[];
     readonly clusters: readonly ClusterRecord[];
   }
@@ -971,12 +942,12 @@ type EdgeRef = kernelGeometry.EdgeRef;
 type WireRef = kernelGeometry.WireRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
-type CellRef = kernelGeometry.CellRef;
+type SolidRef = kernelGeometry.SolidRef;
 type CellComplexRef = kernelGeometry.CellComplexRef;
 type ClusterRef = kernelGeometry.ClusterRef;
 type EditableEntityKind = kernelGeometry.EditableEntityKind;
 
-export const cellRef = kernelGeometry.cellRef;
+export const solidRef = kernelGeometry.solidRef;
 export const solidRef = kernelGeometry.solidRef;
 
 /** @emoji 🧭 Selection kinds: kernel geometry entities or extension view `object` rows. */
@@ -991,8 +962,8 @@ type WireRecord = kernelGeometry.WireRecord;
 type FaceSurface = kernelGeometry.FaceSurface;
 type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
-type CellSolid = kernelGeometry.CellSolid;
-type CellRecord = kernelGeometry.CellRecord;
+type SolidPrimitive = kernelGeometry.SolidPrimitive;
+type SolidRecord = kernelGeometry.SolidRecord;
 type KernelGeometryJson = kernelGeometry.KernelGeometryJson;
 
 /** @emoji 🪪 Opaque object id in a model. */
@@ -1039,9 +1010,7 @@ export class Model {
   wires: Record<string, WireRecord> = {};
   faces: Record<string, FaceRecord> = {};
   shells: Record<string, ShellRecord> = {};
-  cells: Record<string, CellRecord> = {};
-  cellComplexes: Record<string, CellComplexRecord> = {};
-  clusters: Record<string, ClusterRecord> = {};
+  solids: Record<string, SolidRecord> = {};
   readonly metadata: AttributeStore = new AttributeStore(() => this.bump());
 
   /** @emoji 🧭 Serializes to `ModelJson` (stable id-sorted arrays). */
@@ -1057,9 +1026,7 @@ export class Model {
         wires: sortedRecordValues(this.wires),
         faces: sortedRecordValues(this.faces),
         shells: sortedRecordValues(this.shells),
-        cells: sortedRecordValues(this.cells),
-        cellComplexes: sortedRecordValues(this.cellComplexes),
-        clusters: sortedRecordValues(this.clusters),
+        solids: sortedRecordValues(this.solids),
       },
     };
   }
@@ -1076,9 +1043,7 @@ export class Model {
     g.wires = recordsById(geo.wires ?? []);
     g.faces = recordsById(geo.faces ?? []);
     g.shells = recordsById(geo.shells ?? []);
-    g.cells = recordsById(geo.cells ?? []);
-    g.cellComplexes = recordsById(geo.cellComplexes ?? []);
-    g.clusters = recordsById(geo.clusters ?? []);
+    g.solids = recordsById(geo.solids ?? []);
     return g;
   }
 
@@ -1119,14 +1084,8 @@ export function readModelEntityProperty(
       return (model.faces[id] as unknown as Record<string, unknown> | undefined)?.[name];
     case "shell":
       return (model.shells[id] as unknown as Record<string, unknown> | undefined)?.[name];
-    case "cell":
-      return (model.cells[id] as unknown as Record<string, unknown> | undefined)?.[name];
-    case "cellComplex":
-      return (model.cellComplexes[id] as unknown as Record<string, unknown> | undefined)?.[name];
-    case "cluster":
-      return (model.clusters[id] as unknown as Record<string, unknown> | undefined)?.[name];
-    case "object": {
-      const hit = opts?.views?.findObject(model, opts.activeViewId ?? null, id);
+    case "solid":
+      return (model.solids[id] as unknown as Record<string, unknown> | undefined)?.[name];
       if (!hit) return undefined;
       if (name === "id") return id;
       if (name === "label") return hit.label;
@@ -1143,9 +1102,9 @@ export function parseModelJson(raw: unknown): Model | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (r.schema !== "spatial.model/v1") return null;
-  const geoKeys = ["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"] as const;
-  if (!Array.isArray(geometry.cells) && Array.isArray(geometry.solids)) geometry.cells = geometry.solids;
+  const geoKeys = ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids", "cellComplexes", "clusters"] as const;
   const geometry: Record<string, unknown> = r.geometry && typeof r.geometry === "object" ? { ...(r.geometry as Record<string, unknown>) } : {};
+  if (!Array.isArray(geometry.solids) && Array.isArray(geometry.solids)) geometry.solids = geometry.solids;
   for (const k of geoKeys) {
     if (!Array.isArray(geometry[k]) && Array.isArray(r[k])) geometry[k] = r[k];
     if (!Array.isArray(geometry[k])) geometry[k] = [];
@@ -1450,7 +1409,7 @@ export class ExtensionViewService {
     if (kind === "face") return [id as FaceRef];
     const row = model.objects[id] ?? sortedRecordValues(model.objects).find((o) => String(o.id) === id);
     if (!row) return [];
-    const cell = model.cells[row.geometryRef];
+    const cell = model.solids[row.geometryRef];
     if (!cell) return [];
     const out: FaceRef[] = [];
     for (const shellId of cell.shellIds) {
@@ -1470,7 +1429,7 @@ export type EdgeRecordDiff = { readonly id: EdgeRef } & Partial<Pick<EdgeRecord,
 export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord, "edgeIds">>;
 export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds" | "surface">>;
 export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
-export type CellRecordDiff = { readonly id: CellRef } & Partial<Pick<CellRecord, "shellIds" | "solid">>;
+export type SolidRecordDiff = { readonly id: SolidRef } & Partial<Pick<SolidRecord, "shellIds" | "solid">>;
 export type CellComplexRecordDiff = { readonly id: CellComplexRef } & Partial<Pick<CellComplexRecord, "cellIds">>;
 export type ClusterRecordDiff = { readonly id: ClusterRef } & Partial<Pick<ClusterRecord, "memberIds">>;
 
@@ -1489,7 +1448,7 @@ export interface ModelDiff {
   readonly wires?: EntityDiff<WireRecord, WireRecordDiff, WireRef>;
   readonly faces?: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef>;
   readonly shells?: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef>;
-  readonly cells?: EntityDiff<CellRecord, CellRecordDiff, CellRef>;
+  readonly solids?: EntityDiff<SolidRecord, SolidRecordDiff, SolidRef>;
 }
 
 export const EMPTY_MODEL_DIFF: ModelDiff = {};
@@ -1512,7 +1471,7 @@ export function isEmptyModelDiff(d: ModelDiff | undefined): boolean {
     isEntityDiffEmpty(d.wires) &&
     isEntityDiffEmpty(d.faces) &&
     isEntityDiffEmpty(d.shells) &&
-    isEntityDiffEmpty(d.cells)
+    isEntityDiffEmpty(d.solids)
   );
 }
 
@@ -1567,21 +1526,21 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   const wInv: EntityDiff<WireRecord, WireRecordDiff, WireRef> = {};
   const fInv: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef> = {};
   const sInv: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef> = {};
-  const cInv: EntityDiff<CellRecord, CellRecordDiff, CellRef> = {};
+  const cInv: EntityDiff<SolidRecord, SolidRecordDiff, SolidRef> = {};
   applyEntityDiff(model.anchors as Record<string, AnchorRecord>, diff.anchors, aInv);
   applyEntityDiff(model.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
   applyEntityDiff(model.edges as Record<string, EdgeRecord>, diff.edges, eInv);
   applyEntityDiff(model.wires as Record<string, WireRecord>, diff.wires, wInv);
   applyEntityDiff(model.faces as Record<string, FaceRecord>, diff.faces, fInv);
   applyEntityDiff(model.shells as Record<string, ShellRecord>, diff.shells, sInv);
-  applyEntityDiff(model.cells as Record<string, CellRecord>, diff.cells, cInv);
+  applyEntityDiff(model.solids as Record<string, SolidRecord>, diff.solids, cInv);
   if (!isEntityDiffEmpty(aInv)) inv.anchors = aInv;
   if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
   if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
   if (!isEntityDiffEmpty(wInv)) inv.wires = wInv;
   if (!isEntityDiffEmpty(fInv)) inv.faces = fInv;
   if (!isEntityDiffEmpty(sInv)) inv.shells = sInv;
-  if (!isEntityDiffEmpty(cInv)) inv.cells = cInv;
+  if (!isEntityDiffEmpty(cInv)) inv.solids = cInv;
   if (!isEmptyModelDiff(diff)) model.bump();
   return inv;
 }
@@ -1617,8 +1576,8 @@ export interface SpatialPreviewKernel {
   aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[];
   aabbIntersect(a: Aabb, b: Aabb): Aabb | null;
   solidPrimitiveAabb(solid: SolidPrimitive): Aabb;
-  modelObjectAabb(model: Model, cell: CellRecord): Aabb | null;
-  boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: CellRef): ModelDiff;
+  modelObjectAabb(model: Model, cell: SolidRecord): Aabb | null;
+  boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: SolidRef): ModelDiff;
   meshFaceModelDiff(mesh: MeshTransfer, idTag: string): ModelDiff;
   evaluateAnchorPosition(model: Model, anchor: AnchorRecord): Vec3;
   anchorPlacementFromEntity(model: Model, kind: AnchorAttachment["kind"], id: string, point: Vec3): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null;
@@ -1641,9 +1600,9 @@ export interface SpatialPreviewKernel {
 export interface SpatialKernel extends SpatialPreviewKernel {
   readonly id: string;
   readonly operations: readonly string[];
-  createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<CellRef>;
-  volume(cell: CellRef): Promise<number>;
-  tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer>;
+  createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef>;
+  volume(cell: SolidRef): Promise<number>;
+  tessellate(cell: SolidRef, tolerance: number): Promise<MeshTransfer>;
   query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
   executeAction?(
     actionId: string,
@@ -1659,15 +1618,15 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }>;
   extrudeWire(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<SolidRef>;
   offsetFaces(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<void>;
-  createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly cell: CellRef }>;
-  extrudeWireDiff(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<{ readonly diff: ModelDiff; readonly cell: CellRef }>;
+  createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }>;
+  extrudeWireDiff(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }>;
   offsetFacesDiff(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<{ readonly diff: ModelDiff }>;
   vertexDistance(a: VertexRef, b: VertexRef, model: Model): Promise<number>;
   edgeLength(e: EdgeRef, model: Model): Promise<number>;
   faceArea(f: FaceRef, model: Model): Promise<number>;
-  cellVolume(c: CellRef): Promise<number>;
-  adjacentCells(cell: CellRef, model: Model): Promise<readonly CellRef[]>;
-  sharedFacesBetween(a: CellRef, b: CellRef, model: Model): Promise<readonly FaceRef[]>;
+  solidVolume(c: SolidRef): Promise<number>;
+  adjacentSolids(cell: SolidRef, model: Model): Promise<readonly SolidRef[]>;
+  sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
 }
 
 /** @emoji 🧩 Triangle index range for one B-Rep face (Three.js `addGroup`). */
@@ -2048,11 +2007,11 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
       const s = model.shells[id];
       if (s) for (const f of s.faceIds) walk("face", f);
     } else if (kind === "cell") {
-      const c = model.cells[id];
+      const c = model.solids[id];
       if (c) for (const s of c.shellIds) walk("shell", s);
     } else if (kind === "cellComplex") {
       const cc = model.cellComplexes[id];
-      if (cc) for (const c of cc.cellIds) walk("cell", c);
+      if (cc) for (const c of cc.cellIds) walk("solid", c);
     }
   };
   for (const t of targets) walk(t.kind, t.id);
@@ -2108,7 +2067,7 @@ function selectionTargetsWithMode(current: readonly SelectionTarget[], next: rea
 }
 
 /** @emoji 🪪 Kernel geometry + extension view `object` kinds used by selection commands. */
-export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "cell", "cellComplex", "cluster", "object"];
+export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "cellComplex", "cluster", "object"];
 
 const MODEL_SELECTION_KIND_ORDER = new Map<ModelEntityKind, number>(ALL_MODEL_SELECTION_KINDS.map((kind, index) => [kind, index]));
 
@@ -2213,8 +2172,8 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
       case "shell":
         for (const id of Object.keys(model.shells)) push(kind, id);
         break;
-      case "cell":
-        for (const id of Object.keys(model.cells)) push(kind, id);
+      case "solid":
+        for (const id of Object.keys(model.solids)) push(kind, id);
         break;
       case "cellComplex":
         for (const id of Object.keys(model.cellComplexes)) push(kind, id);
@@ -3815,7 +3774,7 @@ if (import.meta.vitest) {
       model.objects["object-box"] = {
         id: "object-box" as ObjectRef,
         typologyId: "builtin.primitive.box",
-        geometryRef: String(r.cell),
+        geometryRef: String(r.solid),
       };
       const views = ExtensionViewService.forKernel(kernel);
       await views.refresh(model, "energy.energy");
@@ -3845,7 +3804,7 @@ if (import.meta.vitest) {
       model.objects["object-box"] = {
         id: "object-box" as ObjectRef,
         typologyId: "builtin.primitive.box",
-        geometryRef: String(r.cell),
+        geometryRef: String(r.solid),
       };
       expect(views.resolveFaceIds(model, "object", "object-box").length).toBeGreaterThan(0);
     });

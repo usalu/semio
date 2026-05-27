@@ -80,7 +80,7 @@
     "wires": [],
     "faces": [],
     "shells": [],
-    "cells": [
+    "solids": [
       {
         "id": "capsule-0",
         "shellIds": [
@@ -88,7 +88,7 @@
         ]
       }
     ],
-    "cellComplexes": [
+    "__removed_cellComplexes": [
       {
         "id": "nakagin-slice",
         "cellIds": [
@@ -96,6 +96,6 @@
         ]
       }
     ],
-    "clusters": []
+    "__removed_clusters": []
   }
 }

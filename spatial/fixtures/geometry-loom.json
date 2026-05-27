@@ -238,7 +238,7 @@
         ]
       }
     ],
-    "cells": [
+    "solids": [
       {
         "id": "void-cap",
         "shellIds": [
@@ -246,7 +246,7 @@
         ]
       }
     ],
-    "cellComplexes": [
+    "__removed_cellComplexes": [
       {
         "id": "loom-complex",
         "cellIds": [
@@ -254,7 +254,7 @@
         ]
       }
     ],
-    "clusters": [
+    "__removed_clusters": [
       {
         "id": "routes",
         "memberIds": [

@@ -30,7 +30,7 @@
       "type": "object",
       "description": "Kernel-private brepjs persistence graph.",
       "additionalProperties": false,
-      "required": ["anchors", "vertices", "edges", "wires", "faces", "shells", "cells", "cellComplexes", "clusters"],
+      "required": ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids"],
       "properties": {
         "anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } },
         "vertices": { "type": "array", "items": { "$ref": "#/$defs/vertex" } },
@@ -38,7 +38,7 @@
         "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
         "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
         "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
-        "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } },
+        
         "cellComplexes": { "type": "array", "items": { "$ref": "#/$defs/cellComplex" } },
         "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } }
       }
@@ -216,7 +216,7 @@
         }
       ]
     },
-    "cell": {
+    "solid": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "shellIds"],
