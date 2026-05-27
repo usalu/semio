@@ -463,6 +463,6 @@
   },
   "key": "0",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.surface.extrude-crv"
   }
 }

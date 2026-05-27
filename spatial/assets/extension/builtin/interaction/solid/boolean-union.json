@@ -249,6 +249,6 @@
   },
   "key": "v",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.solid.boolean-union"
   }
 }

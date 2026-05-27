@@ -384,6 +384,6 @@
   },
   "key": "5",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.edit.split"
   }
 }

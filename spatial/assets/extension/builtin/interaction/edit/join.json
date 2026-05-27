@@ -250,6 +250,6 @@
   },
   "key": "6",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.edit.join"
   }
 }

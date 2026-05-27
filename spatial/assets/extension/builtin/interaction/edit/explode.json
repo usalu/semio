@@ -92,7 +92,8 @@
           "accept": [
             "wire",
             "shell",
-            "solid"],
+            "solid"
+          ],
           "multiple": true,
           "prompt": "Select objects to explode"
         },
@@ -249,6 +250,6 @@
   },
   "key": "7",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.edit.explode"
   }
 }

@@ -510,6 +510,6 @@
   },
   "key": "h",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.solid.sphere"
   }
 }

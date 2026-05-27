@@ -219,7 +219,7 @@ export function useDocumentMeshes(
 			const rows = await Promise.all(
 				solids.map(async (solid) => {
 					try {
-						const mesh = await kernel.tessellate(solid, tolerance);
+						const mesh = await kernel.tessellate(solid, tolerance, model);
 						return isRenderableMeshTransfer(mesh) ? { solid, mesh } : null;
 					} catch {
 						return null;
@@ -2172,7 +2172,7 @@ export function resolveFaceInfoFromTriangleIndex(
 	if (triangleIndex === null || triangleIndex === undefined) return null;
 	const group = findFaceGroupAt(mesh.faceGroups, triangleIndex);
 	if (!group) return null;
-	return mesh.faceInfos.find((info) => info.faceId === group.faceId) ?? null;
+	return mesh.faceInfos.find((info) => info.entityId === group.entityId) ?? null;
 }
 
 /** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
@@ -2218,15 +2218,15 @@ export function TessellatedCommitMesh({
 	useEffect(() => () => geometry.dispose(), [geometry]);
 	if (!showFaces && !showEdges) return null;
 	const faceInfoById = useMemo(() => {
-		const map = new Map<number, FaceInfo>();
-		for (const info of data.faceInfos) map.set(info.faceId, info);
+		const map = new Map<string, FaceInfo>();
+		for (const info of data.faceInfos) map.set(String(info.entityId), info);
 		return map;
 	}, [data.faceInfos]);
 	const resolveFace = useCallback(
 		(event: ThreeEvent<PointerEvent>) => {
 			const group = findFaceGroupAt(data.faceGroups, event.faceIndex ?? -1);
 			if (!group) return null;
-			return faceInfoById.get(group.faceId) ?? null;
+			return faceInfoById.get(String(group.entityId)) ?? null;
 		},
 		[data.faceGroups, faceInfoById],
 	);

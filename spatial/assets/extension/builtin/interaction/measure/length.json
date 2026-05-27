@@ -223,6 +223,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.measure.length"
   }
 }

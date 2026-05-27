@@ -867,6 +867,6 @@
   },
   "key": "z",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.transform.rotate"
   }
 }

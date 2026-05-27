@@ -4,7 +4,7 @@ Extendable spatial framework around persistent models, runtime execution, and re
 
 ## Geometry
 
-Directly represented as in [brepjs](https://andymai.github.io/brepjs).
+Directly represented as in [brepjs](https://andymai.github.io/brepjs) but additionally attributes can be added on every entity.
 
 ## Model
 

@@ -488,6 +488,6 @@
   },
   "key": "u",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.curve.control-point-curve"
   }
 }

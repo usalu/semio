@@ -506,7 +506,8 @@
   },
   "commit": {
     "fromStates": [
-      "ready"
+      "end_of_line",
+      "committed"
     ],
     "operation": {
       "kind": "action",
@@ -516,28 +517,16 @@
           "kind": "path",
           "root": "context",
           "segments": [
-            {
-              "kind": "field",
-              "name": "points"
-            },
-            {
-              "kind": "index",
-              "index": 0
-            }
+            { "kind": "field", "name": "points" },
+            { "kind": "field", "name": "start" }
           ]
         },
         "p1": {
           "kind": "path",
           "root": "context",
           "segments": [
-            {
-              "kind": "field",
-              "name": "points"
-            },
-            {
-              "kind": "index",
-              "index": 1
-            }
+            { "kind": "field", "name": "points" },
+            { "kind": "field", "name": "end" }
           ]
         }
       }
@@ -545,6 +534,6 @@
   },
   "key": "l",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.curve.line"
   }
 }

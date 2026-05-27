@@ -1302,6 +1302,48 @@ function modelEdgeIdsForSolid(model: Model, solid: SolidRecord): readonly EdgeRe
 	return out;
 }
 
+function modelFaceNormal(model: Model, fid: FaceRef): Vec3 | null {
+	const face = geom(model).faces[fid];
+	if (!face) return null;
+	if (face.surface?.kind === "plane") return vec3Normalize(face.surface.normal);
+	return faceNormalFromPoints(derivedFacePoints(model, face));
+}
+
+function alignUnmatchedBrepFacesByNormal(
+	model: Model,
+	unmatchedBrepFaces: Face[],
+	faceByHash: Map<number, FaceRef>,
+	modelFaceIds: readonly FaceRef[],
+): void {
+	const available = modelFaceIds.filter((fid) => ![...faceByHash.values()].some((v) => String(v) === String(fid)));
+	for (const brepFace of [...unmatchedBrepFaces]) {
+		let best: FaceRef | null = null;
+		let bestDot = -1;
+		let brepNormal: Vec3;
+		try {
+			brepNormal = vec3Normalize(normalAt(brepFace) as Vec3);
+		} catch {
+			continue;
+		}
+		for (const fid of available) {
+			const mn = modelFaceNormal(model, fid);
+			if (!mn) continue;
+			const d = Math.abs(vec3Dot(brepNormal, mn));
+			if (d > bestDot) {
+				bestDot = d;
+				best = fid;
+			}
+		}
+		if (best && bestDot > 0.85) {
+			faceByHash.set(getHashCode(brepFace), best);
+			const ui = unmatchedBrepFaces.indexOf(brepFace);
+			if (ui >= 0) unmatchedBrepFaces.splice(ui, 1);
+			const ai = available.indexOf(best);
+			if (ai >= 0) available.splice(ai, 1);
+		}
+	}
+}
+
 /** @emoji 🗺️ Maps brepjs `getHashCode` handles to spatial `FaceRef`/`EdgeRef`; brepjs has no geometry userData. */
 function buildBrepEntityMaps(
 	brepSolid: ValidSolid,
@@ -1337,6 +1379,8 @@ function buildBrepEntityMaps(
 				unmatchedFaces.splice(idx, 1);
 			}
 		}
+		const modelFaces = modelFaceIdsForSolid(context.model, context.solidRecord);
+		alignUnmatchedBrepFacesByNormal(context.model, unmatchedFaces, faceByHash, modelFaces);
 		const unmatchedEdges = [...brepEdges];
 		for (const eid of modelEdgeIdsForSolid(context.model, context.solidRecord)) {
 			const er = geom(context.model).edges[eid];
@@ -1737,6 +1781,26 @@ class BrepjsWasmEngine {
 			return { id: id as VertexRef, position: pos };
 		};
 
+		if (commandId === "curve.line") {
+			const p0 = asVec3(params.p0, [0, 0, 0]);
+			const p1 = asVec3(params.p1, [1, 0, 0]);
+			const v0 = createVertex(p0);
+			const v1 = createVertex(p1);
+			const e = { id: nextId("e") as EdgeRef, vertexIds: [v0.id, v1.id], curve: { kind: "line" as const } };
+			const w = { id: nextId("w") as WireRef, edgeIds: [e.id] };
+			return { diff: { vertices: { added: [v0, v1] }, edges: { added: [e] }, wires: { added: [w] } } };
+		}
+		if (commandId === "curve.polyline") {
+			const pts = poleList(params.points);
+			if (pts.length < 2) return { diff: {} };
+			const verts = pts.map((p) => createVertex(p));
+			const edges: EdgeRecord[] = [];
+			for (let i = 0; i < verts.length - 1; i++) {
+				edges.push({ id: nextId("e") as EdgeRef, vertexIds: [verts[i]!.id, verts[i + 1]!.id], curve: { kind: "line" } });
+			}
+			const w = { id: nextId("w") as WireRef, edgeIds: edges.map((e) => e.id) };
+			return { diff: { vertices: { added: verts }, edges: { added: edges }, wires: { added: [w] } } };
+		}
 		if (commandId === "curve.circle") {
 			const center = asVec3(params.center, [0, 0, 0]);
 			const radiusPoint = asVec3(params.radiusPoint, [1, 0, 0]);
@@ -1848,7 +1912,7 @@ class BrepjsWasmEngine {
 		model: Model;
 	}): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
 		const solid = await this.extrudeWire(input);
-		const preview = await this.tessellate(solid, 1e-3);
+		const preview = await this.tessellate(solid, 1e-3, input.model);
 		const diff = meshFaceModelDiff(preview, `brepjs-${solid}`);
 		return { diff, solid };
 	}
@@ -1872,7 +1936,7 @@ class BrepjsWasmEngine {
 		if (!isSolid(offsetSolid) || !isValidSolid(offsetSolid)) return { diff: {} };
 		const ref = kernelGeometry.solidRef(`brepjs-offset-${++this.seq}`);
 		this.solids.set(ref, offsetSolid);
-		const preview = await this.tessellate(ref, 1e-3);
+		const preview = await this.tessellate(ref, 1e-3, input.model);
 		return { diff: meshFaceModelDiff(preview, `brepjs-offset-${fid}`) };
 	}
 
@@ -2282,6 +2346,23 @@ if (import.meta.vitest) {
 			expect(meshTransfer.index.length).toBeGreaterThan(0);
 			expect(meshTransfer.position.length).toBeGreaterThan(0);
 			expect(meshTransfer.faceGroups.length).toBeGreaterThan(0);
+		});
+
+		it("tessellate maps brep faces to model FaceRef entityIds when model is provided", async () => {
+			const g = new Model();
+			const solid = kernelGeometry.solidRef("box-pick");
+			applyModelDiff(g, boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+			await kernel.syncSolidsFromModel(g);
+			const meshTransfer = await kernel.tessellate(solid, 1e-3, g);
+			expect(meshTransfer.faceInfos.length).toBeGreaterThan(0);
+			const modelFaceIds = new Set(Object.keys(g.faces));
+			for (const info of meshTransfer.faceInfos) {
+				expect(typeof info.entityId).toBe("string");
+				expect(modelFaceIds.has(String(info.entityId))).toBe(true);
+			}
+			for (const group of meshTransfer.faceGroups) {
+				expect(modelFaceIds.has(String(group.entityId))).toBe(true);
+			}
 		});
 
 		it("tessellate returns cached mesh with equal buffers for same solid and tolerance", async () => {

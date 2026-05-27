@@ -328,7 +328,7 @@ export function clearPathTarget(t: PathTarget, env: ExprEnv): void {
 // #endregion 🗺️Paths
 
 // #region 🏷️Metadata
-/** @emoji 🏷️ Sidecar semantic fields keyed by geometry or derived entity id; each write bumps hosting `Model.revision`. */
+/** @emoji 🏷️ Sidecar semantic fields keyed by geometry or derived entity id (`FaceRef`, `EdgeRef`, …); never stored on brepjs shapes. */
 export class AttributeStore {
   private readonly byId = new Map<string, Record<string, unknown>>();
 
@@ -1958,8 +1958,9 @@ export async function executeBuiltinActionCapability(
   },
 ): Promise<unknown> {
   const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
-  if (!def?.run) throw new Error(`Unknown action capability: ${actionId}`);
-  return def.run(params, ctx);
+  if (def?.run) return def.run(params, ctx);
+  if (ctx.kernel.executeCommandDiff) return ctx.kernel.executeCommandDiff(actionId, params);
+  throw new Error(`Unknown action capability: ${actionId}`);
 }
 
 async function executeKernelFunction(
@@ -3747,7 +3748,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@spatial/js-core edge and cell geometry", () => {
+  describe("@spatial/js-core edge and solid geometry", () => {
     it("arcEndOnCircle projects off-circle pick onto arc", () => {
       const end = M.arcEndOnCircle([0, 0, 0], [2, 0, 0], [0, 3, 0]);
       expect(end[0]).toBeCloseTo(0, 5);

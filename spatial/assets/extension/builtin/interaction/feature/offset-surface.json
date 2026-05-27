@@ -303,6 +303,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.feature.offset-surface"
   }
 }

@@ -510,6 +510,6 @@
   },
   "key": "c",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.curve.circle"
   }
 }

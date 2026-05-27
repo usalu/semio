@@ -381,6 +381,6 @@
   },
   "key": "j",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.solid.boolean-intersection"
   }
 }

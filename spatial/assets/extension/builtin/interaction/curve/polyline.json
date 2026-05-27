@@ -518,6 +518,6 @@
   },
   "key": "p",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.curve.polyline"
   }
 }

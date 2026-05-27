@@ -35,7 +35,7 @@
   "requires": {
     "kernel": {
       "operations": [
-        "cell.createBox",
+        "solid.createBox",
         "entity.tessellate"
       ]
     }
@@ -2393,6 +2393,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.primitive.box"
   }
 }

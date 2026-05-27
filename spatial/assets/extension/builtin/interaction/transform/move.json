@@ -991,6 +991,6 @@
     }
   },
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.transform.move"
   }
 }

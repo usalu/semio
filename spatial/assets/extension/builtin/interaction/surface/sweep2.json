@@ -581,6 +581,6 @@
   },
   "key": "q",
   "produces": {
-    "typology": "builtin.c:.git"
+    "typology": "builtin.surface.sweep2"
   }
 }
