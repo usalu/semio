@@ -38,9 +38,7 @@
         "wires": { "type": "array", "items": { "$ref": "#/$defs/wire" } },
         "faces": { "type": "array", "items": { "$ref": "#/$defs/face" } },
         "shells": { "type": "array", "items": { "$ref": "#/$defs/shell" } },
-        
-        "cellComplexes": { "type": "array", "items": { "$ref": "#/$defs/cellComplex" } },
-        "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } }
+        "solids": { "type": "array", "items": { "$ref": "#/$defs/solid" } }
       }
     },
     "vec3": {

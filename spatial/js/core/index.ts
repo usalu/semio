@@ -156,7 +156,7 @@ export type InteractionEvent = { readonly kind: string; readonly [k: string]: un
 // #endregion 🎮InteractionEvent
 
 // #region 🪪Selection
-const MODEL_ENTITY_KINDS = new Set<string>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "solid", "cellComplex", "cluster", "object", "geometry", "attribute", "model"]);
+const MODEL_ENTITY_KINDS = new Set<string>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "object", "geometry", "attribute"]);
 
 /** @emoji 🪪 One picked geometry or derived view target for `selection.changed`. */
 export interface SelectionTarget {
@@ -841,7 +841,7 @@ export namespace kernelGeometry {
   export type FaceRef = string & { readonly __brand: "FaceRef" };
   export type ShellRef = string & { readonly __brand: "ShellRef" };
   export type SolidRef = string & { readonly __brand: "SolidRef" };
-  export type GeometryEntityKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "solid";
+  export type GeometryEntityKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
   export type EditableEntityKind = GeometryEntityKind;
   export function solidRef(id: string): SolidRef {
     return id as SolidRef;
@@ -909,14 +909,14 @@ export namespace kernelGeometry {
     readonly faceIds: readonly FaceRef[];
   }
 
-  /** @emoji 🧊 Analytic cell solid (`BRepPrimAPI` / `Geom` analog under topologic `Cell`). */
+  /** @emoji 🧊 Analytic brepjs solid primitive (`box`, `sphere`, `cylinder`, `cone`). */
   export type SolidPrimitive =
     | { readonly kind: "box"; readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number }
     | { readonly kind: "sphere"; readonly center: Vec3; readonly radius: number }
     | { readonly kind: "cylinder"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number }
     | { readonly kind: "cone"; readonly base: Vec3; readonly axis: Vec3; readonly radius: number; readonly height: number; readonly radiusTop?: number };
 
-  /** @emoji 🧱 Cell payload: bounded volume via closed shells and/or analytic solid. */
+  /** @emoji 🧱 Solid payload: closed shells and/or analytic primitive. */
   export interface SolidRecord {
     readonly id: SolidRef;
     readonly shellIds: readonly ShellRef[];
@@ -931,8 +931,6 @@ export namespace kernelGeometry {
     readonly faces: readonly FaceRecord[];
     readonly shells: readonly ShellRecord[];
     readonly solids: readonly SolidRecord[];
-    readonly cellComplexes: readonly CellComplexRecord[];
-    readonly clusters: readonly ClusterRecord[];
   }
 }
 
@@ -943,15 +941,13 @@ type WireRef = kernelGeometry.WireRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
 type SolidRef = kernelGeometry.SolidRef;
-type CellComplexRef = kernelGeometry.CellComplexRef;
-type ClusterRef = kernelGeometry.ClusterRef;
+type GeometryEntityKind = kernelGeometry.GeometryEntityKind;
 type EditableEntityKind = kernelGeometry.EditableEntityKind;
 
 export const solidRef = kernelGeometry.solidRef;
-export const solidRef = kernelGeometry.solidRef;
 
-/** @emoji 🧭 Selection kinds: kernel geometry entities or extension view `object` rows. */
-export type ModelEntityKind = EditableEntityKind | "object";
+/** @emoji 🧭 Framework + brepjs sub-element selection kinds. */
+export type ModelEntityKind = EditableEntityKind | "object" | "geometry" | "attribute";
 // #endregion 🧱kernelGeometry
 
 type VertexRecord = kernelGeometry.VertexRecord;
@@ -1086,12 +1082,18 @@ export function readModelEntityProperty(
       return (model.shells[id] as unknown as Record<string, unknown> | undefined)?.[name];
     case "solid":
       return (model.solids[id] as unknown as Record<string, unknown> | undefined)?.[name];
+    case "object": {
+      const hit = opts?.views?.findObject(model, opts.activeViewId ?? null, id);
       if (!hit) return undefined;
       if (name === "id") return id;
       if (name === "label") return hit.label;
       if (name === "typologyId") return hit.typologyId;
       return (hit as unknown as Record<string, unknown>)[name];
     }
+    case "geometry":
+      return model.solids[id] ? id : undefined;
+    case "attribute":
+      return meta?.get(id)?.[name];
     default:
       return undefined;
   }
@@ -1102,9 +1104,9 @@ export function parseModelJson(raw: unknown): Model | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (r.schema !== "spatial.model/v1") return null;
-  const geoKeys = ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids", "cellComplexes", "clusters"] as const;
+  const geoKeys = ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids"] as const;
   const geometry: Record<string, unknown> = r.geometry && typeof r.geometry === "object" ? { ...(r.geometry as Record<string, unknown>) } : {};
-  if (!Array.isArray(geometry.solids) && Array.isArray(geometry.solids)) geometry.solids = geometry.solids;
+  if (!Array.isArray(geometry.solids) && Array.isArray((geometry as { cells?: unknown }).cells)) geometry.solids = (geometry as { cells: unknown[] }).cells;
   for (const k of geoKeys) {
     if (!Array.isArray(geometry[k]) && Array.isArray(r[k])) geometry[k] = r[k];
     if (!Array.isArray(geometry[k])) geometry[k] = [];
@@ -1430,9 +1432,6 @@ export type WireRecordDiff = { readonly id: WireRef } & Partial<Pick<WireRecord,
 export type FaceRecordDiff = { readonly id: FaceRef } & Partial<Pick<FaceRecord, "wireIds" | "surface">>;
 export type ShellRecordDiff = { readonly id: ShellRef } & Partial<Pick<ShellRecord, "faceIds">>;
 export type SolidRecordDiff = { readonly id: SolidRef } & Partial<Pick<SolidRecord, "shellIds" | "solid">>;
-export type CellComplexRecordDiff = { readonly id: CellComplexRef } & Partial<Pick<CellComplexRecord, "cellIds">>;
-export type ClusterRecordDiff = { readonly id: ClusterRef } & Partial<Pick<ClusterRecord, "memberIds">>;
-
 /** @emoji 🧮 Forward patch bucket for one geometry table (`added` / `modified` / `removed` arrays). */
 export interface EntityDiff<TRec, TDiff, TId extends string> {
   readonly added?: readonly TRec[];
@@ -1827,6 +1826,107 @@ function evalExprRecord(record: Record<string, Expr> | undefined, env: ExprEnv):
   return out;
 }
 
+function vec3Param(params: Record<string, unknown>, name: string, fallback: Vec3 = [0, 0, 0]): Vec3 {
+  const v = params[name];
+  return Array.isArray(v) && v.length >= 3 ? [Number(v[0]), Number(v[1]), Number(v[2])] : fallback;
+}
+
+function numericParam(params: Record<string, unknown>, name: string, fallback = 0): number {
+  const v = params[name];
+  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
+}
+
+async function runCreateBox(params: Record<string, unknown>, ctx: { readonly kernel: SpatialKernel; readonly preview: SpatialPreviewKernel }): Promise<ActionResult> {
+  const cornerA = vec3Param(params, "cornerA", vec3Param(params, "p0"));
+  const cornerB = vec3Param(params, "cornerB", vec3Param(params, "p1", [1, 1, 0]));
+  const p2 = vec3Param(params, "p2", cornerB);
+  const height = numericParam(params, "height", Math.max(Math.abs(p2[0] - cornerA[0]), Math.abs(p2[1] - cornerA[1]), 1));
+  if (ctx.kernel.createBoxFromCornersDiff) {
+    const result = await ctx.kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
+    return { diff: result.diff, data: { solid: result.solid, cell: result.solid } };
+  }
+  const solid = await ctx.kernel.createBoxFromCorners({ cornerA, cornerB, height });
+  return { diff: ctx.preview.boxModelDiff({ cornerA, cornerB, height }, solid), data: { solid } };
+}
+
+function transformDiff(params: Record<string, unknown>, ctx: { readonly model: Model; readonly preview: SpatialPreviewKernel }, copy: boolean): ModelDiff {
+  const targets = parseSelectionTargetsFromUnknown(params.targets ?? params.selection ?? params.seedTargets);
+  const from = vec3Param(params, "from", selectionTargetsCenter(ctx.model, targets, ctx.preview) ?? [0, 0, 0]);
+  const rawTo = vec3Param(params, "to", vec3Param(params, "cursor", from));
+  const to = ctx.preview.constrainMovePoint(from, rawTo, String(params.moveMode ?? params.mode ?? "free"), vec3Param(params, "cplaneNormal", [0, 0, 1]));
+  const delta = ctx.preview.vec3Sub(to, from);
+  const ids = collectTargetVertices(ctx.model, targets);
+  const added: VertexRecord[] = [];
+  const modified: VertexRecordDiff[] = [];
+  for (const id of ids) {
+    const v = ctx.model.vertices[id];
+    if (!v) continue;
+    const moved = { id: (copy ? `${id}-copy-${Math.random().toString(36).slice(2, 8)}` : id) as VertexRef, position: ctx.preview.vec3Add(v.position, delta) };
+    if (copy) added.push(moved);
+    else modified.push(moved);
+  }
+  return { ...(added.length ? { vertices: { added } } : {}), ...(modified.length ? { vertices: { modified } } : {}) };
+}
+
+function anchorAction(params: Record<string, unknown>, ctx: { readonly model: Model; readonly preview: SpatialPreviewKernel }): ActionResult {
+  const hostKind = String(params.hostKind ?? "vertex") as AnchorAttachment["kind"];
+  const hostId = String(params.hostId ?? "");
+  const hitPoint = vec3Param(params, "hitPoint");
+  const placement = ctx.preview.anchorPlacementFromEntity(ctx.model, hostKind, hostId, hitPoint);
+  if (!placement) return { diff: EMPTY_MODEL_DIFF };
+  const anchor: AnchorRecord = { id: `anchor-${Math.random().toString(36).slice(2, 10)}` as AnchorRef, ...placement };
+  return { diff: { anchors: { added: [anchor] } }, data: anchor };
+}
+
+function builtinActionCapabilityDefs(): readonly ActionDef[] {
+  return [
+    selectionApplyActionDef(),
+    ...SELECTION_OPERATION_INTERACTION_DEFS.map(selectionCommandActionForDef),
+    { id: "primitive.createBoxFromCorners", run: runCreateBox },
+    { id: "primitive.createBoxFrom3Points", run: runCreateBox },
+    { id: "box.aabbFromDiagonalCorners", run: runCreateBox },
+    { id: "entity.createAnchor", run: anchorAction },
+    {
+      id: "command.addSelection",
+      run: (params) => selectionCommandActionResult(selectionTargetsWithMode(parseSelectionTargetsFromUnknown(params.current), parseSelectionTargetsFromUnknown(params.targets), (params.modifiers ?? {}) as InteractionEvent["modifiers"])),
+    },
+    {
+      id: "command.selectionBboxCenter",
+      run: (params, ctx) => ({ data: selectionTargetsCenter(ctx.model, parseSelectionTargetsFromUnknown(params.targets), ctx.preview) }),
+    },
+    {
+      id: "command.constrainMoveCursor",
+      run: (params, ctx) => ({ data: ctx.preview.constrainMovePoint(vec3Param(params, "from"), vec3Param(params, "to"), String(params.moveMode ?? "free"), vec3Param(params, "cplaneNormal", [0, 0, 1])) }),
+    },
+    { id: "transform.move", run: (params, ctx) => ({ diff: transformDiff(params, ctx, false) }) },
+    { id: "transform.copy", run: (params, ctx) => ({ diff: transformDiff(params, ctx, true) }) },
+    { id: "transform.rotate", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
+    { id: "transform.scale1d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
+    { id: "transform.scale3d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
+    {
+      id: "measure.vertexDistance",
+      run: async (params, ctx) => ({ data: await ctx.kernel.vertexDistance(String(params.a ?? params.vertexA ?? params.from) as VertexRef, String(params.b ?? params.vertexB ?? params.to) as VertexRef, ctx.model) }),
+    },
+    {
+      id: "measure.faceArea",
+      run: async (params, ctx) => {
+        const faceId = String(params.faceId ?? params.face ?? "");
+        const data = await ctx.kernel.faceArea(faceId as FaceRef, ctx.model);
+        const face = ctx.model.faces[faceId];
+        const position = face ? faceAnnotationCentroid(ctx.model, face) : null;
+        const diff = position ? { anchors: { added: [{ id: `area-${faceId}` as AnchorRef, position, attachment: { kind: "face", id: faceId as FaceRef, u: 0, v: 0 } }] } } : EMPTY_MODEL_DIFF;
+        return { data, diff };
+      },
+    },
+    {
+      id: "measure.solidVolume",
+      run: async (params, ctx) => ({ data: await ctx.kernel.solidVolume(String(params.solidId ?? params.cellId) as SolidRef) }),
+    },
+    { id: "feature.extrudeWireToCell", run: async (params, ctx) => ctx.kernel.extrudeWireDiff ? ctx.kernel.extrudeWireDiff({ wireId: String(params.wireId ?? params.wire ?? ""), distance: numericParam(params, "distance", 1), direction: vec3Param(params, "direction", [0, 0, 1]), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
+    { id: "feature.offsetFaces", run: async (params, ctx) => ctx.kernel.offsetFacesDiff ? ctx.kernel.offsetFacesDiff({ faceIds: Array.isArray(params.faceIds) ? params.faceIds.map(String) : [String(params.faceId ?? "")], distance: numericParam(params, "distance", 1), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
+  ];
+}
+
 export async function executeBuiltinActionCapability(
   actionId: string,
   params: Record<string, unknown>,
@@ -2006,12 +2106,9 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
     } else if (kind === "shell") {
       const s = model.shells[id];
       if (s) for (const f of s.faceIds) walk("face", f);
-    } else if (kind === "cell") {
+    } else if (kind === "solid" || kind === "geometry") {
       const c = model.solids[id];
       if (c) for (const s of c.shellIds) walk("shell", s);
-    } else if (kind === "cellComplex") {
-      const cc = model.cellComplexes[id];
-      if (cc) for (const c of cc.cellIds) walk("solid", c);
     }
   };
   for (const t of targets) walk(t.kind, t.id);
@@ -2067,7 +2164,7 @@ function selectionTargetsWithMode(current: readonly SelectionTarget[], next: rea
 }
 
 /** @emoji 🪪 Kernel geometry + extension view `object` kinds used by selection commands. */
-export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "cellComplex", "cluster", "object"];
+export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = ["anchor", "vertex", "edge", "wire", "face", "solid", "object", "geometry", "attribute"];
 
 const MODEL_SELECTION_KIND_ORDER = new Map<ModelEntityKind, number>(ALL_MODEL_SELECTION_KINDS.map((kind, index) => [kind, index]));
 
@@ -2169,17 +2266,13 @@ export function collectGeometrySelectionTargets(model: Model, kinds: readonly Mo
       case "face":
         for (const id of Object.keys(model.faces)) push(kind, id);
         break;
-      case "shell":
-        for (const id of Object.keys(model.shells)) push(kind, id);
-        break;
       case "solid":
         for (const id of Object.keys(model.solids)) push(kind, id);
         break;
-      case "cellComplex":
-        for (const id of Object.keys(model.cellComplexes)) push(kind, id);
+      case "geometry":
+        for (const id of Object.keys(model.solids)) push(kind, id);
         break;
-      case "cluster":
-        for (const id of Object.keys(model.clusters)) push(kind, id);
+      case "attribute":
         break;
       case "object":
         for (const o of views?.computeObjects(model, activeViewId ?? null) ?? []) push(kind, String(o.id), false);
@@ -3221,7 +3314,7 @@ const createAnchorInteractionJson = {
       {
         name: "selectHost",
         selection: {
-          accept: ["vertex", "edge", "wire", "face", "cell"],
+          accept: ["vertex", "edge", "wire", "face", "solid"],
           multiple: false,
           prompt: "Pick anchor host",
         },
@@ -3363,10 +3456,8 @@ const SELECTION_OPERATION_INTERACTION_DEFS = [
   { id: "selection.selectEdges", label: "SelectEdges", key: "xe", operation: "selectKinds", kinds: ["edge"] },
   { id: "selection.selectWires", label: "SelectWires", key: "xw", operation: "selectKinds", kinds: ["wire"] },
   { id: "selection.selectFaces", label: "SelectFaces", key: "xf", operation: "selectKinds", kinds: ["face"] },
-  { id: "selection.selectShells", label: "SelectShells", key: "xs", operation: "selectKinds", kinds: ["shell"] },
-  { id: "selection.selectCells", label: "SelectCells", key: "xc", operation: "selectKinds", kinds: ["cell"] },
-  { id: "selection.selectCellComplexes", label: "SelectCellComplexes", key: "xl", operation: "selectKinds", kinds: ["cellComplex"] },
-  { id: "selection.selectClusters", label: "SelectClusters", key: "xk", operation: "selectKinds", kinds: ["cluster"] },
+  { id: "selection.selectSolids", label: "SelectSolids", key: "xc", operation: "selectKinds", kinds: ["solid"] },
+  { id: "selection.selectGeometries", label: "SelectGeometries", key: "xg", operation: "selectKinds", kinds: ["geometry"] },
   { id: "selection.selectObjects", label: "SelectObjects", key: "xo", operation: "selectKinds", kinds: ["object"] },
 ] as const satisfies readonly SelectionOperationInteractionDef[];
 
@@ -4184,7 +4275,7 @@ if (import.meta.vitest) {
       expect(isEmptyModelDiff(snap.lastResponse?.diff ?? EMPTY_MODEL_DIFF)).toBe(true);
       const archived = selectionTargetsFromContext(snap.lastResponse?.archiveContext ?? {});
       expect(archived.length).toBeGreaterThan(8);
-      expect(archived.some((t) => t.kind === "cell")).toBe(true);
+      expect(archived.some((t) => t.kind === "solid")).toBe(true);
     });
     it("interactionRecordsDocumentHistory skips selection commands", () => {
       expect(interactionRecordsDocumentHistory("selection.selectAll")).toBe(false);
@@ -4221,7 +4312,7 @@ if (import.meta.vitest) {
       });
       await rt.send({ kind: "start", targets: [{ kind: "solid", id: "e2e-box", editable: true }], modifiers: {} });
       const archived = selectionTargetsFromContext(rt.getSnapshot().lastResponse?.archiveContext ?? {});
-      expect(archived.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
+      expect(archived.some((t) => t.kind === "solid" && t.id === "e2e-box")).toBe(false);
       expect(archived.length).toBeGreaterThan(0);
     });
     it("ActionRegistry.run executes selection.apply headless", async () => {
@@ -4868,12 +4959,12 @@ if (import.meta.vitest) {
           return;
         case "selectAll":
           expect(targets.length).toBeGreaterThanOrEqual(8);
-          expect(targets.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(true);
+          expect(targets.some((t) => t.kind === "solid" && t.id === "e2e-box")).toBe(true);
           expect(targets.some((t) => t.kind === "vertex")).toBe(true);
           expect(targets.some((t) => t.kind === "face")).toBe(true);
           return;
         case "invert":
-          expect(targets.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
+          expect(targets.some((t) => t.kind === "solid" && t.id === "e2e-box")).toBe(false);
           expect(targets.length).toBeGreaterThan(0);
           return;
         case "selectKinds": {
@@ -4881,7 +4972,7 @@ if (import.meta.vitest) {
           expect(targets.every((t) => kinds.includes(t.kind))).toBe(true);
           const expected = collectGeometrySelectionTargets(model, kinds, views ?? null, activeViewId ?? null);
           expect(targets).toEqual(expected);
-          if (defn.id === "selection.selectAnchors" || defn.id === "selection.selectCellComplexes" || defn.id === "selection.selectClusters") {
+          if (defn.id === "selection.selectAnchors") {
             expect(targets).toEqual([]);
           } else {
             expect(targets.length).toBeGreaterThan(0);

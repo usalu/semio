@@ -188,9 +188,9 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	const wires = new Set<string>();
 	const faces = new Set<string>();
 	const shells = new Set<string>();
-	const cells = new Set<string>();
-	const cellComplexes = new Set<string>();
-	const clusters = new Set<string>();
+	const solids = new Set<string>();
+	const ____cellComplexRemovedesRemoved = new Set<string>();
+	const ____clusterRemovedsRemoved = new Set<string>();
 
 	const visitById = (id: string): void => {
 		if (model.anchors[id]) {
@@ -217,15 +217,15 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 			visitShell(id);
 			return;
 		}
-		if (model.cells[id]) {
-			visitCell(id);
+		if (model.solids[id]) {
+			visitSolid(id);
 			return;
 		}
-		if (model.cellComplexes[id]) {
-			visitCellComplex(id);
+		if (model.____cellComplexRemovedesRemoved[id]) {
+			visitSolidComplex(id);
 			return;
 		}
-		if (model.clusters[id]) visitCluster(id);
+		if (model.____clusterRemovedsRemoved[id]) visitCluster(id);
 	};
 
 	const visitAnchor = (id: string): void => {
@@ -273,27 +273,27 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 		for (const faceId of rec.faceIds) visitFace(faceId);
 	};
 
-	const visitCell = (id: string): void => {
-		if (cells.has(id)) return;
-		const rec = model.cells[id];
+	const visitSolid = (id: string): void => {
+		if (solids.has(id)) return;
+		const rec = model.solids[id];
 		if (!rec) return;
-		cells.add(id);
+		solids.add(id);
 		for (const shellId of rec.shellIds) visitShell(shellId);
 	};
 
-	const visitCellComplex = (id: string): void => {
-		if (cellComplexes.has(id)) return;
-		const rec = model.cellComplexes[id];
+	const visitSolidComplex = (id: string): void => {
+		if (____cellComplexRemovedesRemoved.has(id)) return;
+		const rec = model.____cellComplexRemovedesRemoved[id];
 		if (!rec) return;
-		cellComplexes.add(id);
-		for (const cellId of rec.cellIds) visitCell(cellId);
+		____cellComplexRemovedesRemoved.add(id);
+		for (const solidId of rec.solidIds) visitSolid(solidId);
 	};
 
 	const visitCluster = (id: string): void => {
-		if (clusters.has(id)) return;
-		const rec = model.clusters[id];
+		if (____clusterRemovedsRemoved.has(id)) return;
+		const rec = model.____clusterRemovedsRemoved[id];
 		if (!rec) return;
-		clusters.add(id);
+		____clusterRemovedsRemoved.add(id);
 		for (const memberId of rec.memberIds) visitById(memberId);
 	};
 
@@ -317,13 +317,13 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 			case "shell":
 				visitShell(target.id);
 				break;
-			case "cell":
-				visitCell(target.id);
+			case "solid":
+				visitSolid(target.id);
 				break;
-			case "cellComplex":
-				visitCellComplex(target.id);
+			case "__cellComplexRemoved":
+				visitSolidComplex(target.id);
 				break;
-			case "cluster":
+			case "__clusterRemoved":
 				visitCluster(target.id);
 				break;
 			default:
@@ -341,9 +341,9 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 		wires: sortIds(wires).map((id) => model.wires[id]!),
 		faces: sortIds(faces).map((id) => model.faces[id]!),
 		shells: sortIds(shells).map((id) => model.shells[id]!),
-		cells: sortIds(cells).map((id) => model.cells[id]!),
-		cellComplexes: sortIds(cellComplexes).map((id) => model.cellComplexes[id]!),
-		clusters: sortIds(clusters).map((id) => model.clusters[id]!),
+		solids: sortIds(solids).map((id) => model.solids[id]!),
+		____cellComplexRemovedesRemoved: sortIds(____cellComplexRemovedesRemoved).map((id) => model.____cellComplexRemovedesRemoved[id]!),
+		____clusterRemovedsRemoved: sortIds(____clusterRemovedsRemoved).map((id) => model.____clusterRemovedsRemoved[id]!),
 	};
 }
 

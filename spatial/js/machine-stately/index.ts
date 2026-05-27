@@ -9,7 +9,7 @@ import {
 	buildAreaInteractionSpec,
 	buildBoxInteractionSpec,
 	buildDistanceInteractionSpec,
-	cellRef,
+	solidRef,
 	createInteractionRuntime,
 	initialContextForSpec,
 	isEmptyModelDiff,
@@ -320,7 +320,7 @@ if (import.meta.vitest) {
 		lastBox: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
 		async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
 			this.lastBox = input;
-			return cellRef("stub-cell");
+			return solidRef("stub-cell");
 		}
 		async volume() {
 			return 0;
@@ -344,9 +344,9 @@ if (import.meta.vitest) {
 		stamp(clone.wires?.added, "__wire__");
 		stamp(clone.faces?.added, "__face__");
 		stamp(clone.shells?.added, "__shell__");
-		stamp(clone.cells?.added, "__cell__");
-		stamp(clone.cellComplexes?.added, "__cellComplex__");
-		stamp(clone.clusters?.added, "__cluster__");
+		stamp(clone.solids?.added, "__cell__");
+		stamp(clone.____cellComplexRemovedesRemoved?.added, "____cellComplexRemoved__");
+		stamp(clone.____clusterRemovedsRemoved?.added, "____clusterRemoved__");
 		for (const w of clone.wires?.added ?? []) {
 			(w as { edgeIds: string[] }).edgeIds = (w as { edgeIds: string[] }).edgeIds.map(() => "__edge__");
 		}
@@ -368,7 +368,7 @@ if (import.meta.vitest) {
 		readonly id = "stub-measure-parity";
 		readonly operations = ["surface.resolveFaces", "measure.distance", "measure.area"] as const;
 		async createBoxFromCorners() {
-			return cellRef("unused");
+			return solidRef("unused");
 		}
 		async volume() {
 			return 0;

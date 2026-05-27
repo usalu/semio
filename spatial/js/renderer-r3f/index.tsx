@@ -28,7 +28,7 @@ import {
 	abortActiveInteractionSession,
 	applyModelDiff,
 	buildBoxInteractionSpec,
-	cellRef,
+	solidRef,
 	createInteractionRuntime,
 	emptyMeshTransfer,
 	ExtensionViewService,
@@ -75,10 +75,8 @@ import {
 } from "@spatial/js-core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
-type CellRef = kernelGeometry.CellRef;
-type CellComplexRecord = kernelGeometry.CellComplexRecord;
-type CellRecord = kernelGeometry.CellRecord;
-type ClusterRecord = kernelGeometry.ClusterRecord;
+type SolidRef = kernelGeometry.SolidRef;
+type SolidRecord = kernelGeometry.SolidRecord;
 type EdgeRecord = kernelGeometry.EdgeRecord;
 type FaceRecord = kernelGeometry.FaceRecord;
 type ShellRecord = kernelGeometry.ShellRecord;
@@ -142,31 +140,31 @@ export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: num
 /** @emoji 🎞️ Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
 export function useTessellation(
 	kernel: SpatialKernel | null,
-	cell: ReturnType<typeof cellRef> | null,
+	cell: ReturnType<typeof solidRef> | null,
 	tolerance: number,
 ): MeshTransfer | null {
 	const [mesh, setMesh] = useState<MeshTransfer | null>(null);
 	const rafRef = useRef(0);
 	useEffect(() => {
-		if (!kernel || !cell) {
+		if (!kernel || !solid) {
 			setMesh(null);
 			return;
 		}
 		cancelAnimationFrame(rafRef.current);
 		rafRef.current = requestAnimationFrame(() => {
-			void kernel.tessellate(cell, tolerance).then((next) => setMesh(isRenderableMeshTransfer(next) ? next : null));
+			void kernel.tessellate(solid, tolerance).then((next) => setMesh(isRenderableMeshTransfer(next) ? next : null));
 		});
 		return () => cancelAnimationFrame(rafRef.current);
-	}, [kernel, cell, tolerance]);
+	}, [kernel, solid, tolerance]);
 	return mesh;
 }
 
-/** @emoji 📦 Lists `CellRef` ids present on a model graph (document cells for tessellation). */
-export function listModelCellRefs(model: Model | ModelJson | null): readonly CellRef[] {
+/** @emoji 📦 Lists `SolidRef` ids present on a model graph (document solids for tessellation). */
+export function listModelSolidRefs(model: Model | ModelJson | null): readonly SolidRef[] {
 	if (!model) return [];
 	const graph = model instanceof Model ? model : parseModelJson(model);
 	if (!graph) return [];
-	return Object.keys(graph.cells).map((id) => cellRef(id));
+	return Object.keys(graph.solids).map((id) => solidRef(id));
 }
 
 /** @emoji 🔑 Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
@@ -203,23 +201,23 @@ export function useDocumentMeshes(
 	kernel: SpatialKernel | null,
 	model: Model,
 	tolerance: number,
-): readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[] {
-	const [meshes, setMeshes] = useState<readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[]>([]);
+): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
+	const [meshes, setMeshes] = useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
 	const revision = model.revision;
 	useEffect(() => {
 		if (!kernel) {
 			setMeshes([]);
 			return;
 		}
-		const cells = listModelCellRefs(model);
-		if (cells.length === 0) {
+		const solids = listModelSolidRefs(model);
+		if (solids.length === 0) {
 			setMeshes([]);
 			return;
 		}
 		let cancelled = false;
 		void (async () => {
 			const rows = await Promise.all(
-				cells.map(async (cell) => {
+				solids.map(async (cell) => {
 					try {
 						const mesh = await kernel.tessellate(cell, tolerance);
 						return isRenderableMeshTransfer(mesh) ? { cell, mesh } : null;
@@ -228,7 +226,7 @@ export function useDocumentMeshes(
 					}
 				}),
 			);
-			if (!cancelled) setMeshes(rows.filter((row): row is { readonly cell: CellRef; readonly mesh: MeshTransfer } => row !== null));
+			if (!cancelled) setMeshes(rows.filter((row): row is { readonly solid: SolidRef; readonly mesh: MeshTransfer } => row !== null));
 		})();
 		return () => {
 			cancelled = true;
@@ -695,9 +693,9 @@ function geometryBuckets(g: SpatialPickGeometry): {
 	readonly wires: Record<string, WireRecord>;
 	readonly faces: Record<string, FaceRecord>;
 	readonly shells: Record<string, ShellRecord>;
-	readonly cells: Record<string, CellRecord>;
-	readonly cellComplexes: Record<string, CellComplexRecord>;
-	readonly clusters: Record<string, ClusterRecord>;
+	readonly solids: Record<string, CellRecord>;
+	readonly ____cellComplexRemovedesRemoved: Record<string, CellComplexRecord>;
+	readonly ____clusterRemovedsRemoved: Record<string, ClusterRecord>;
 } {
 	if (g instanceof Model) {
 		return {
@@ -707,9 +705,9 @@ function geometryBuckets(g: SpatialPickGeometry): {
 			wires: g.wires,
 			faces: g.faces,
 			shells: g.shells,
-			cells: g.cells,
-			cellComplexes: g.cellComplexes,
-			clusters: g.clusters,
+			solids: g.solids,
+			____cellComplexRemovedesRemoved: g.____cellComplexRemovedesRemoved,
+			____clusterRemovedsRemoved: g.____clusterRemovedsRemoved,
 		};
 	}
 	return {
@@ -719,9 +717,9 @@ function geometryBuckets(g: SpatialPickGeometry): {
 		wires: asRecordBucket(g.wires),
 		faces: asRecordBucket(g.faces),
 		shells: asRecordBucket(g.shells),
-		cells: asRecordBucket(g.cells),
-		cellComplexes: asRecordBucket(g.cellComplexes),
-		clusters: asRecordBucket(g.clusters),
+		solids: asRecordBucket(g.solids),
+		____cellComplexRemovedesRemoved: asRecordBucket(g.____cellComplexRemovedesRemoved),
+		____clusterRemovedsRemoved: asRecordBucket(g.____clusterRemovedsRemoved),
 	};
 }
 
@@ -796,11 +794,11 @@ function geometryCellComplexPoints(
 	wires: Record<string, WireRecord>,
 	faces: Record<string, FaceRecord>,
 	shells: Record<string, ShellRecord>,
-	cells: Record<string, CellRecord>,
+	solids: Record<string, CellRecord>,
 	complex: CellComplexRecord,
 ): readonly Vec3[] {
 	return uniqueGeometryPoints(
-		complex.cellIds.flatMap((id) => (cells[id] ? geometryCellPoints(vertices, edges, wires, faces, shells, cells[id]!) : [])),
+		complex.solidIds.flatMap((id) => (solids[id] ? geometryCellPoints(vertices, edges, wires, faces, shells, solids[id]!) : [])),
 	);
 }
 
@@ -822,16 +820,16 @@ function geometryEntityPoints(
 	if (kind === "wire" && buckets.wires[id]) return geometryWirePoints(buckets.vertices, buckets.edges, buckets.wires[id]!);
 	if (kind === "face" && buckets.faces[id]) return geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces[id]!);
 	if (kind === "shell" && buckets.shells[id]) return geometryShellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells[id]!);
-	if (kind === "cell" && buckets.cells[id]) return geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, buckets.cells[id]!);
-	if (kind === "cellComplex" && buckets.cellComplexes[id]) {
+	if (kind === "cell" && buckets.solids[id]) return geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, buckets.solids[id]!);
+	if (kind === "__cellComplexRemoved" && buckets.____cellComplexRemovedesRemoved[id]) {
 		return geometryCellComplexPoints(
 			buckets.vertices,
 			buckets.edges,
 			buckets.wires,
 			buckets.faces,
 			buckets.shells,
-			buckets.cells,
-			buckets.cellComplexes[id]!,
+			buckets.solids,
+			buckets.____cellComplexRemovedesRemoved[id]!,
 		);
 	}
 	return [];
@@ -883,11 +881,11 @@ export function geometryEntityWireSegments(
 	if (kind === "shell" && buckets.shells[id]) {
 		return buckets.shells[id]!.faceIds.flatMap((faceId) => geometryEntityWireSegments(buckets, "face", faceId));
 	}
-	if (kind === "cell" && buckets.cells[id]) {
-		return buckets.cells[id]!.shellIds.flatMap((shellId) => geometryEntityWireSegments(buckets, "shell", shellId));
+	if (kind === "cell" && buckets.solids[id]) {
+		return buckets.solids[id]!.shellIds.flatMap((shellId) => geometryEntityWireSegments(buckets, "shell", shellId));
 	}
-	if (kind === "cellComplex" && buckets.cellComplexes[id]) {
-		return buckets.cellComplexes[id]!.cellIds.flatMap((cellId) => geometryEntityWireSegments(buckets, "cell", cellId));
+	if (kind === "__cellComplexRemoved" && buckets.____cellComplexRemovedesRemoved[id]) {
+		return buckets.____cellComplexRemovedesRemoved[id]!.solidIds.flatMap((solidId) => geometryEntityWireSegments(buckets, "solid", solidId));
 	}
 	const pts = geometryEntityPoints(buckets, kind, id);
 	const bb = bboxFromPoints(pts);
@@ -913,7 +911,7 @@ function viewObjectPickPoints(model: Model, object: ViewDerivedObject): readonly
 	for (const oid of object.sourceObjectIds) {
 		const row = model.objects[oid];
 		if (!row) continue;
-		const cell = buckets.cells[row.geometryRef];
+		const cell = buckets.solids[row.geometryRef];
 		if (!cell) continue;
 		for (const p of geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell)) {
 			unique.set(p.join(","), p);
@@ -974,10 +972,10 @@ export function createSpatialPickTargets(
 		}
 		const all = geometryAllVertexPoints(buckets.vertices);
 		const allCenter = geometryPointCentroid(all);
-		for (const cell of geometryRecords(buckets.cells)) {
+		for (const cell of geometryRecords(buckets.solids)) {
 			const points = geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 			const point = geometryPointCentroid(points) ?? allCenter;
-			if (point) targets.push({ kind: "object", geometryKind: "cell", id: cell.id, point, points: points.length ? points : all });
+			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
 		}
 	} else if (views) {
 		targets.push(...createViewObjectSpatialPickTargets(views, model, activeViewId));
@@ -2313,7 +2311,7 @@ export function TessellatedCommitMesh({
 	);
 }
 
-/** @emoji 🧊 Renders all committed document cells tessellated by the active kernel. */
+/** @emoji 🧊 Renders all committed document solids tessellated by the active kernel. */
 export function CommittedMeshLayer({
 	meshes,
 	pickable = false,
@@ -2322,7 +2320,7 @@ export function CommittedMeshLayer({
 	onFacePointerMove,
 	onFacePointerDown,
 }: {
-	readonly meshes: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
+	readonly meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
 	readonly pickable?: boolean;
 	readonly showFaces?: boolean;
 	readonly showEdges?: boolean;
@@ -2626,7 +2624,7 @@ export interface InteractionSpatialViewProps {
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly pickEnabled?: boolean;
 	readonly committedMesh?: MeshTransfer | null;
-	readonly committedMeshes?: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
+	readonly committedMeshes?: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly activeViewId?: string | null;
 	readonly views?: ExtensionViewService | null;
@@ -2741,7 +2739,7 @@ export function InteractionSpatialView({
 	}, [gridDivisions, gridSize]);
 	const layerMeshes = useMemo(() => {
 		if (committedMeshes?.length) return committedMeshes;
-		if (committedMesh) return [{ cell: cellRef("committed"), mesh: committedMesh }];
+		if (committedMesh) return [{ cell: solidRef("committed"), mesh: committedMesh }];
 		return [];
 	}, [committedMeshes, committedMesh]);
 	const autoFitSources = useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
@@ -4759,9 +4757,9 @@ if (import.meta.vitest) {
 				wires: [],
 				faces: [],
 				shells: [],
-				cells: [],
-				cellComplexes: [],
-				clusters: [],
+				solids: [],
+				____cellComplexRemovedesRemoved: [],
+				____clusterRemovedsRemoved: [],
 			} as unknown as ModelJson);
 			expect(targets).toEqual([{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({
@@ -4775,7 +4773,7 @@ if (import.meta.vitest) {
 
 		it("adds extension view object picks when activeViewId is set", async () => {
 			const model = new Model();
-			const cell = cellRef("c0");
+			const cell = solidRef("c0");
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
 			model.objects["object-c0"] = {
 				id: "object-c0" as ObjectRef,

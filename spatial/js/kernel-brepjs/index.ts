@@ -1171,7 +1171,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	aabbFromPoints = (pts: readonly Vec3[]) => aabbFromPoints(pts, 0);
 	aabbCornerPoints = aabbCornerPoints;
 	aabbIntersect = aabbIntersect;
-	SolidPrimitiveAabb = SolidPrimitiveAabb;
+	solidPrimitiveAabb = SolidPrimitiveAabb;
 	modelObjectAabb = modelObjectAabb;
 	boxModelDiff = boxModelDiff;
 	meshFaceModelDiff = meshFaceModelDiff;
