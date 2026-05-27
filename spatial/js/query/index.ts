@@ -11,6 +11,8 @@ import {
 	Model,
 	applyModelDiff,
 	buildTypologyToEntityKindMap,
+	applyTransformation,
+	loadTransformation,
 	solidRef,
 	isSelectionConstructActionId,
 	type ConstructQueryContext,
@@ -24,6 +26,7 @@ import {
 	kernelGeometry,
 	type SpatialKernel,
 	type ModelDiff,
+	EMPTY_MODEL_DIFF,
 	type ModelEntityKind,
 	type ModelEntityRef,
 	type Vec3,
@@ -1209,9 +1212,20 @@ function rowVarsToEnv(
 	return { context: {}, vars, model, metadata: meta, views, activeViewId, preview };
 }
 
-/** @emoji 🪞 View-derived CALL targets are not shipped; query `Object` rows on the model instead. */
+/** @emoji 🪞 View-derived CALL targets are not shipped; use `transformation.*` qualified ids instead. */
 async function runViewDerivedCall(actionId: string, _ctx: ConstructQueryContext): Promise<ActionResult> {
 	throw new Error(`View-derived CALL is not available in the model-definition runtime (${actionId})`);
+}
+
+/** @emoji 🔄 Runs a shipped transformation against the construct context model. */
+function runTransformationCall(actionId: string, ctx: ConstructQueryContext): ActionResult {
+	const spec = loadTransformation(actionId);
+	if (!spec) throw new Error(`unknown transformation ${actionId}`);
+	const model = applyTransformation(spec, ctx.model);
+	const objects = Object.keys(model.objects)
+		.sort()
+		.map((key) => model.objects[key]!);
+	return { diff: EMPTY_MODEL_DIFF, data: { model, objects } };
 }
 
 function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
@@ -1301,7 +1315,8 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			rows = next;
 		} else if (st.kind === "call") {
 			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 4;
-			if (!viewDerived && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
+			const transformation = loadTransformation(st.actionId);
+			if (!viewDerived && !transformation && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
@@ -1315,13 +1330,15 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				}
 				const res = viewDerived
 					? await runViewDerivedCall(st.actionId, ctx)
-					: await ctx.actions.run(st.actionId, paramBag, {
-							kernel: ctx.kernel,
-							preview: ctx.kernel,
-							model: ctx.model,
-							views: ctx.views,
-							activeViewId: ctx.activeViewId ?? null,
-						});
+					: transformation
+						? runTransformationCall(st.actionId, ctx)
+						: await ctx.actions.run(st.actionId, paramBag, {
+								kernel: ctx.kernel,
+								preview: ctx.kernel,
+								model: ctx.model,
+								views: ctx.views,
+								activeViewId: ctx.activeViewId ?? null,
+							});
 				const nr = { ...r };
 				for (const y of st.yieldItems) {
 					const v = resolveActionYield(res, y.key);
@@ -1475,13 +1492,13 @@ if (import.meta.vitest) {
 				expect(c.yieldItems[0]?.key).toBe("diff");
 			}
 		});
-		it("parses CALL YIELD with AS alias", () => {
-			const a = parseConstruct("CALL view.energy.energy.hull({}) YIELD data AS hull");
+		it("parses CALL transformation YIELD with AS alias", () => {
+			const a = parseConstruct("CALL aec.building.energy.from_geometry({}) YIELD objects AS energyObjects");
 			const c = a.clauses[0];
 			expect(c?.kind).toBe("call");
 			if (c?.kind === "call") {
-				expect(c.actionId).toBe("view.energy.energy.hull");
-				expect(c.yieldItems[0]).toEqual({ key: "data", alias: "hull" });
+				expect(c.actionId).toBe("aec.building.energy.from_geometry");
+				expect(c.yieldItems[0]).toEqual({ key: "objects", alias: "energyObjects" });
 			}
 		});
 		it("parses UNWIND with WHERE", () => {

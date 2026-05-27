@@ -50,6 +50,16 @@ const modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefin
   import: "default",
 }) as Record<string, unknown>;
 
+const modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const modelDefinitionExtensionManifestModules = import.meta.glob("../../assets/modelDefinition/**/extension.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionTypologyModules);
 }
@@ -63,7 +73,11 @@ function modelDefinitionInteractionCatalog(): readonly unknown[] {
 }
 
 function modelDefinitionManifestCatalog(): readonly unknown[] {
-  return [...Object.values(modelDefinitionManifestModules), ...Object.values(geometryModelDefinitionManifestModule)];
+  return [
+    ...Object.values(modelDefinitionManifestModules),
+    ...Object.values(modelDefinitionExtensionManifestModules),
+    ...Object.values(geometryModelDefinitionManifestModule),
+  ];
 }
 
 function modelDefinitionAttributeCatalog(): readonly unknown[] {
@@ -1035,17 +1049,77 @@ export function quantizeCoord(value: number, decimals = 9): number {
   return Math.round(value * factor) / factor;
 }
 
+/** @emoji #️⃣ Hashes canonical primitive payload bytes. */
+export function hashPrimitivePayload(kind: string, payload: string): GeometryPrimitiveHash {
+  return `${kind[0]}:${fnv1aHex(payload)}` as GeometryPrimitiveHash;
+}
+
 /** @emoji #️⃣ Hashes a vertex position (`spatial/AGENTS.md` primitive hashing). */
 export function hashVertexPosition(position: Vec3): GeometryPrimitiveHash {
   const q = position.map((c) => quantizeCoord(c)) as Vec3;
-  return `v:${fnv1aHex(`${q[0]},${q[1]},${q[2]}`)}` as GeometryPrimitiveHash;
+  return hashPrimitivePayload("vertex", `${q[0]},${q[1]},${q[2]}`);
+}
+
+/** @emoji #️⃣ Hashes an edge by vertex ids and optional curve. */
+export function hashEdgeRecord(edge: EdgeRecord, vertices: Record<string, VertexRecord>): GeometryPrimitiveHash {
+  const positions = edge.vertexIds.map((vid) => {
+    const p = vertices[vid]?.position ?? ([0, 0, 0] as Vec3);
+    return p.map((c) => quantizeCoord(c)).join(",");
+  });
+  const curveKey = edge.curve ? JSON.stringify(edge.curve) : "line";
+  return hashPrimitivePayload("edge", `${edge.vertexIds.join(",")}|${curveKey}|${positions.join(";")}`);
+}
+
+/** @emoji #️⃣ Hashes a wire by sorted edge ids. */
+export function hashWireRecord(wire: WireRecord): GeometryPrimitiveHash {
+  return hashPrimitivePayload("wire", [...wire.edgeIds].sort().join(","));
+}
+
+/** @emoji #️⃣ Hashes a face by sorted wire ids and surface kind. */
+export function hashFaceRecord(face: FaceRecord): GeometryPrimitiveHash {
+  const surfaceKey = face.surface ? JSON.stringify(face.surface) : "none";
+  return hashPrimitivePayload("face", `${[...face.wireIds].sort().join(",")}|${surfaceKey}`);
+}
+
+/** @emoji #️⃣ Hashes a shell by sorted face ids. */
+export function hashShellRecord(shell: ShellRecord): GeometryPrimitiveHash {
+  return hashPrimitivePayload("shell", [...shell.faceIds].sort().join(","));
+}
+
+/** @emoji #️⃣ Hashes a solid by sorted shell ids and solid primitive. */
+export function hashSolidRecord(solid: SolidRecord): GeometryPrimitiveHash {
+  const primitiveKey = solid.solid ? JSON.stringify(solid.solid) : "none";
+  return hashPrimitivePayload("solid", `${[...solid.shellIds].sort().join(",")}|${primitiveKey}`);
+}
+
+/** @emoji #️⃣ Hashes an anchor position and attachment. */
+export function hashAnchorRecord(anchor: AnchorRecord): GeometryPrimitiveHash {
+  return hashPrimitivePayload("anchor", `${anchor.position.map((c) => quantizeCoord(c)).join(",")}|${JSON.stringify(anchor.attachment)}`);
+}
+
+/** @emoji #️⃣ Per-topology primitive hashes for one model (`ModelSpace` geometry fingerprint). */
+export type ModelPrimitiveHashes = Readonly<Partial<Record<TypologyPrimitiveKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
+
+/** @emoji #️⃣ Maps topology tables on `model` to content hashes (every vertex and primitive). */
+export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
+  const out: Partial<Record<TypologyPrimitiveKind, Record<string, GeometryPrimitiveHash>>> = {};
+  const put = (kind: TypologyPrimitiveKind, id: string, hash: GeometryPrimitiveHash): void => {
+    out[kind] ??= {};
+    out[kind]![id] = hash;
+  };
+  for (const [id, row] of Object.entries(model.anchors)) put("anchor", id, hashAnchorRecord(row));
+  for (const [id, row] of Object.entries(model.vertices)) put("vertex", id, hashVertexPosition(row.position));
+  for (const [id, row] of Object.entries(model.edges)) put("edge", id, hashEdgeRecord(row, model.vertices));
+  for (const [id, row] of Object.entries(model.wires)) put("wire", id, hashWireRecord(row));
+  for (const [id, row] of Object.entries(model.faces)) put("face", id, hashFaceRecord(row));
+  for (const [id, row] of Object.entries(model.shells)) put("shell", id, hashShellRecord(row));
+  for (const [id, row] of Object.entries(model.solids)) put("solid", id, hashSolidRecord(row));
+  return out;
 }
 
 /** @emoji #️⃣ Maps every model vertex id to its position hash. */
 export function hashModelVertices(model: Model): Readonly<Record<string, GeometryPrimitiveHash>> {
-  const out: Record<string, GeometryPrimitiveHash> = {};
-  for (const [id, vertex] of Object.entries(model.vertices)) out[id] = hashVertexPosition(vertex.position);
-  return out;
+  return hashModelPrimitives(model).vertex ?? {};
 }
 
 /** @emoji 🗺️ Serializable model space (`spatial.modelspace/v1`). */
@@ -1083,6 +1157,22 @@ export class ModelSpace {
     const out: Record<string, Readonly<Record<string, GeometryPrimitiveHash>>> = {};
     for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelVertices(model);
     return out;
+  }
+
+  /** @emoji #️⃣ Full topology primitive hashes keyed by linked model id. */
+  geometryHashesByModel(): Readonly<Record<string, ModelPrimitiveHashes>> {
+    const out: Record<string, ModelPrimitiveHashes> = {};
+    for (const [modelId, model] of Object.entries(this.models)) out[modelId] = hashModelPrimitives(model);
+    return out;
+  }
+
+  /** @emoji 🔄 Applies a transformation from a linked source model into a new linked target model. */
+  transform(linkedSourceId: string, linkedTargetId: string, spec: TransformationSpec): Model {
+    const source = this.models[linkedSourceId];
+    if (!source) throw new Error(`ModelSpace: unknown source model ${linkedSourceId}`);
+    const target = applyTransformation(spec, source);
+    this.link(linkedTargetId, target);
+    return target;
   }
 
   /** @emoji 🧭 Serializes linked models (stable id order). */
@@ -1518,6 +1608,144 @@ export function listApplicablePropertyDefinitions(model: Model, object: SpatialO
 /** @emoji 📚 Attribute definitions whose `targets` include `targetKind`. */
 export function listAttributeDefinitionsForTarget(targetKind: string): readonly AttributeDefinitionSpec[] {
   return shippedAttributeDefinitionCatalog().filter((defn) => defn.targets.includes(targetKind));
+}
+
+/** @emoji ✅ Validates a value against an attribute definition schema. */
+export function validateAttributeValue(defn: AttributeDefinitionSpec, value: unknown): boolean {
+  const schema = defn.value;
+  if (!schema || typeof schema !== "object") return false;
+  const row = schema as Record<string, unknown>;
+  const kind = row.kind;
+  if (kind === "string") {
+    if (typeof value !== "string") return false;
+    const options = row.options;
+    if (Array.isArray(options) && options.length > 0) return options.includes(value);
+    return true;
+  }
+  if (kind === "number") return typeof value === "number" && Number.isFinite(value);
+  if (kind === "boolean") return typeof value === "boolean";
+  if (kind === "record") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    return true;
+  }
+  if (kind === "oneOf" && Array.isArray(row.variants)) {
+    return row.variants.some((variant) => validateAttributeValue({ ...defn, value: variant }, value));
+  }
+  return false;
+}
+
+/** @emoji 🪪 Qualified transformation id (`modelDefinitionId.transformationId`). */
+export function qualifiedTransformationId(modelDefinitionId: string, transformationId: string): string {
+  return `${modelDefinitionId}.${transformationId}`;
+}
+
+/** @emoji 🔄 Parsed transformation (`spatial.transformation/v1`). */
+export interface TransformationSpec {
+  readonly schema: "spatial.transformation/v1";
+  readonly id: string;
+  readonly version: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly modelDefinitionId: string;
+  readonly source: { readonly modelDefinition: string };
+  readonly target: { readonly modelDefinition: string };
+  readonly typologies: readonly string[];
+}
+
+/** @emoji 🧾 Parses `spatial.transformation/v1` JSON; `modelDefinitionId` comes from the asset folder. */
+export function parseTransformationSpec(raw: unknown, modelDefinitionId: string): TransformationSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (r.schema !== "spatial.transformation/v1") return null;
+  if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
+  const source = r.source as { modelDefinition?: unknown } | undefined;
+  const target = r.target as { modelDefinition?: unknown } | undefined;
+  if (typeof source?.modelDefinition !== "string" || typeof target?.modelDefinition !== "string") return null;
+  if (!Array.isArray(r.typologies) || r.typologies.length === 0) return null;
+  const typologies = r.typologies.filter((row): row is string => typeof row === "string");
+  if (typologies.length !== r.typologies.length) return null;
+  return {
+    schema: "spatial.transformation/v1",
+    id: r.id,
+    version: r.version,
+    label: r.label,
+    description: typeof r.description === "string" ? r.description : undefined,
+    modelDefinitionId,
+    source: { modelDefinition: source.modelDefinition },
+    target: { modelDefinition: target.modelDefinition },
+    typologies,
+  };
+}
+
+function modelDefinitionIdFromTransformationAssetPath(assetPath: string): string | null {
+  const normalized = assetPath.replace(/\\/g, "/");
+  const marker = "/assets/modelDefinition/";
+  const idx = normalized.indexOf(marker);
+  if (idx < 0) return null;
+  const rest = normalized.slice(idx + marker.length);
+  const parts = rest.split("/");
+  const tIdx = parts.indexOf("transformation");
+  if (tIdx <= 0) return null;
+  return parts.slice(0, tIdx).join(".");
+}
+
+function shippedTransformationCatalog(): readonly TransformationSpec[] {
+  const seen = new Set<string>();
+  const out: TransformationSpec[] = [];
+  for (const [path, raw] of Object.entries(modelDefinitionTransformationModules)) {
+    const modelDefinitionId = modelDefinitionIdFromTransformationAssetPath(path);
+    if (!modelDefinitionId) continue;
+    const spec = parseTransformationSpec(raw, modelDefinitionId);
+    if (!spec) continue;
+    const qid = qualifiedTransformationId(spec.modelDefinitionId, spec.id);
+    if (seen.has(qid)) continue;
+    seen.add(qid);
+    out.push(spec);
+  }
+  return out;
+}
+
+/** @emoji 📚 Lists transformation assets under spatial/assets/modelDefinition. */
+export function listModelDefinitionTransformations(): readonly TransformationSpec[] {
+  return shippedTransformationCatalog();
+}
+
+/** @emoji 📚 Loads a transformation by qualified id (`aec.building.energy.from_geometry`). */
+export function loadTransformation(qualifiedId: string): TransformationSpec | null {
+  return shippedTransformationCatalog().find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qualifiedId) ?? null;
+}
+
+/** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
+export function applyTransformation(spec: TransformationSpec, source: Model): Model {
+  const target = new Model();
+  target.revision = source.revision;
+  target.anchors = source.anchors;
+  target.vertices = source.vertices;
+  target.edges = source.edges;
+  target.wires = source.wires;
+  target.faces = source.faces;
+  target.shells = source.shells;
+  target.solids = source.solids;
+  const sourceObjectIds = sortedRecordValues(source.objects).map((row) => String(row.id));
+  const primaryGeometryRef =
+    sourceObjectIds.length > 0
+      ? (source.objects[sourceObjectIds[0]!]?.geometryRef ?? sourceObjectIds[0]!)
+      : (Object.keys(source.solids)[0] ?? "");
+  if (!primaryGeometryRef) {
+    target.bump();
+    return target;
+  }
+  for (const typologyId of spec.typologies) {
+    if (!loadTypology(typologyId)) continue;
+    target.objects[typologyId] = {
+      id: typologyId as ObjectRef,
+      typologyId: typologyId as TypologyRef,
+      geometryRef: primaryGeometryRef,
+      attributes: { sourceObjectIds },
+    };
+  }
+  target.bump();
+  return target;
 }
 
 // #endregion 🧱Model
@@ -3692,9 +3920,51 @@ if (import.meta.vitest) {
       expect(space.get("primary")).toBe(m);
       const hashes = space.vertexHashesByModel();
       expect(Object.keys(hashes.primary ?? {}).length).toBe(8);
+      const geo = space.geometryHashesByModel().primary;
+      expect(Object.keys(geo?.solid ?? {}).length).toBeGreaterThanOrEqual(1);
       const roundTrip = ModelSpace.fromJSON(space.toJSON());
       expect(roundTrip.get("primary")?.revision).toBe(m.revision);
       expect(hashModelVertices(roundTrip.get("primary")!)).toEqual(hashes.primary);
+    });
+    it("hashes edges and solids deterministically", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
+      const hashes = hashModelPrimitives(model);
+      const solidId = Object.keys(model.solids)[0]!;
+      const edgeId = Object.keys(model.edges)[0]!;
+      expect(hashes.solid?.[solidId]).toBeTruthy();
+      expect(hashes.edge?.[edgeId]).toBeTruthy();
+      expect(hashes.solid?.[solidId]).toBe(hashSolidRecord(model.solids[solidId]!));
+    });
+  });
+
+  describe("@spatial/js-core transformations", () => {
+    it("loads and applies from_geometry transformation", () => {
+      const spec = loadTransformation("aec.building.energy.from_geometry");
+      expect(spec?.source.modelDefinition).toBe("builtin");
+      expect(spec?.target.modelDefinition).toBe("aec.building.energy");
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      source.objects["geom"] = {
+        id: "geom" as ObjectRef,
+        typologyId: "builtin.primitive.box" as TypologyRef,
+        geometryRef: "box",
+      };
+      const target = applyTransformation(spec!, source);
+      expect(target.objects["energy.energy.hull"]?.typologyId).toBe("energy.energy.hull");
+      expect(target.solids.box).toBe(source.solids.box);
+      const space = new ModelSpace();
+      space.link("geometry", source);
+      space.transform("geometry", "energy", spec!);
+      expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
+    });
+  });
+
+  describe("@spatial/js-core attribute validation", () => {
+    it("validates opening attribute options", () => {
+      const defn = loadAttributeDefinition("builtin.opening")!;
+      expect(validateAttributeValue(defn, "window")).toBe(true);
+      expect(validateAttributeValue(defn, "invalid")).toBe(false);
     });
   });
 
