@@ -812,7 +812,8 @@ function normalizeCommitFromStates(spec: InteractionSpec): InteractionSpec {
   const from = spec.commit.fromStates;
   const onlyReady = !from || (from.length === 1 && from[0] === "ready");
   if (!onlyReady) return spec;
-  return { ...spec, commit: { ...spec.commit, fromStates: finals } };
+  const fromStates = finals.includes("committed") ? ["committed"] : finals;
+  return { ...spec, commit: { ...spec.commit, fromStates } };
 }
 
 export function initialContextForSpec(spec: InteractionSpec): Record<string, unknown> {
@@ -1840,7 +1841,11 @@ async function runCreateBox(params: Record<string, unknown>, ctx: { readonly ker
   const cornerA = vec3Param(params, "cornerA", vec3Param(params, "p0"));
   const cornerB = vec3Param(params, "cornerB", vec3Param(params, "p1", [1, 1, 0]));
   const p2 = vec3Param(params, "p2", cornerB);
-  const height = numericParam(params, "height", Math.max(Math.abs(p2[0] - cornerA[0]), Math.abs(p2[1] - cornerA[1]), 1));
+  const height = numericParam(
+    params,
+    "height",
+    Math.max(Math.abs(cornerB[0] - cornerA[0]), Math.abs(cornerB[1] - cornerA[1]), Math.abs(p2[2] - cornerA[2]), 1),
+  );
   if (ctx.kernel.createBoxFromCornersDiff) {
     const result = await ctx.kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
     return { diff: result.diff, data: { solid: result.solid } };
@@ -1897,7 +1902,9 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
         if (key) {
           const base = cur && typeof cur === "object" && !Array.isArray(cur) ? { ...(cur as Record<string, unknown>) } : {};
           base[key] = point;
-          return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: base } } };
+          const patch: Record<string, unknown> = { [field]: base };
+          if (field === "points" && (key === "from" || key === "to" || key === "center" || key === "start" || key === "end")) patch[key] = point;
+          return { diff: EMPTY_MODEL_DIFF, patch: { set: patch } };
         }
         const arr = Array.isArray(cur) ? [...(cur as Vec3[])] : [];
         arr.push(point);
@@ -1906,15 +1913,51 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
     },
     {
       id: "command.addSelection",
-      run: (params) => selectionCommandActionResult(selectionTargetsWithMode(parseSelectionTargetsFromUnknown(params.current), parseSelectionTargetsFromUnknown(params.targets), (params.modifiers ?? {}) as InteractionEvent["modifiers"])),
+      run: (params) => {
+        const field = String(params.field ?? "targets");
+        const ctx = (params.__context as Record<string, unknown>) ?? {};
+        const event = params.__event as InteractionEvent | undefined;
+        const current = parseSelectionTargetsFromUnknown(ctx[field] ?? params.current ?? []);
+        const incoming = parseSelectionTargetsFromUnknown(params.targets ?? []);
+        const modifiers = (event?.modifiers ?? params.modifiers ?? {}) as InteractionEvent["modifiers"];
+        const merged = selectionTargetsWithMode(current, incoming, modifiers);
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: merged } }, data: { targets: merged } };
+      },
     },
     {
       id: "command.selectionBboxCenter",
-      run: (params, ctx) => ({ data: selectionTargetsCenter(ctx.model, parseSelectionTargetsFromUnknown(params.targets), ctx.preview) }),
+      run: (params, ctx) => {
+        const field = String(params.field ?? "from");
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const targets = parseSelectionTargetsFromUnknown(params.targets ?? bag.targets ?? []);
+        const center = selectionTargetsCenter(ctx.model, targets, ctx.preview);
+        if (!center) return { diff: EMPTY_MODEL_DIFF };
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: center } }, data: center };
+      },
+    },
+    {
+      id: "command.finish",
+      run: async (params, ctx) => {
+        const commandId = String(params.commandId ?? "");
+        const bag: Record<string, unknown> = { ...((params.__context as Record<string, unknown>) ?? {}) };
+        const points = bag.points;
+        if (points && typeof points === "object" && !Array.isArray(points)) Object.assign(bag, points as Record<string, unknown>);
+        for (const k of ["commandId", "resultKind", "__context", "__event"]) delete bag[k];
+        if (!ctx.kernel.executeCommandDiff) return { diff: EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
+        const { diff } = await ctx.kernel.executeCommandDiff(commandId, bag);
+        return { diff: diff ?? EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
+      },
     },
     {
       id: "command.constrainMoveCursor",
-      run: (params, ctx) => ({ data: ctx.preview.constrainMovePoint(vec3Param(params, "from"), vec3Param(params, "to"), String(params.moveMode ?? "free"), vec3Param(params, "cplaneNormal", [0, 0, 1])) }),
+      run: (params, ctx) => {
+        const bag = (params.__context as Record<string, unknown>) ?? {};
+        const points = bag.points && typeof bag.points === "object" && !Array.isArray(bag.points) ? (bag.points as Record<string, unknown>) : {};
+        const from = vec3Param(params, "from", vec3Param(bag, "from", vec3Param(points, "from")));
+        const to = vec3Param(params, "to", vec3Param(params, "point", from));
+        const cursor = ctx.preview.constrainMovePoint(from, to, String(params.moveMode ?? bag.moveMode ?? "free"), vec3Param(params, "cplaneNormal", vec3Param(bag, "cplaneNormal", [0, 0, 1])));
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: { cursor } }, data: cursor };
+      },
     },
     { id: "transform.move", run: (params, ctx) => ({ diff: transformDiff(params, ctx, false) }) },
     { id: "transform.copy", run: (params, ctx) => ({ diff: transformDiff(params, ctx, true) }) },
@@ -1923,7 +1966,20 @@ function builtinActionCapabilityDefs(): readonly ActionDef[] {
     { id: "transform.scale3d", run: () => ({ diff: EMPTY_MODEL_DIFF }) },
     {
       id: "measure.vertexDistance",
-      run: async (params, ctx) => ({ data: await ctx.kernel.vertexDistance(String(params.a ?? params.vertexA ?? params.from) as VertexRef, String(params.b ?? params.vertexB ?? params.to) as VertexRef, ctx.model) }),
+      run: async (params, ctx) => {
+        const a = String(params.a ?? params.vertexA ?? params.from) as VertexRef;
+        const b = String(params.b ?? params.vertexB ?? params.to) as VertexRef;
+        const data = await ctx.kernel.vertexDistance(a, b, ctx.model);
+        const edgeId = `measure-${a}-${b}` as EdgeRef;
+        const wireId = `measure-wire-${a}-${b}` as WireRef;
+        return {
+          data,
+          diff: {
+            edges: { added: [{ id: edgeId, vertexIds: [a, b] }] },
+            wires: { added: [{ id: wireId, edgeIds: [edgeId] }] },
+          },
+        };
+      },
     },
     {
       id: "measure.faceArea",
@@ -3973,7 +4029,7 @@ if (import.meta.vitest) {
       expect(Object.keys(model.vertices)).toHaveLength(2);
     });
     it("normalizes commit fromStates to committed for scripted commands without ready", () => {
-      const spec = loadSpatialInteraction("curve.line")!;
+      const spec = loadSpatialInteraction("curve.arc")!;
       expect(spec.commit.fromStates).toEqual(["committed"]);
     });
     it("transform.move vertical mode changes Z only", async () => {

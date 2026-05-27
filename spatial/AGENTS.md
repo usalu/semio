@@ -2,10 +2,6 @@
 
 Extendable spatial framework around persistent models, runtime execution, and rendering.
 
-## Geometry
-
-Directly represented as in [brepjs](https://andymai.github.io/brepjs) but additionally attributes can be added on every entity.
-
 ## Model
 
 A model contains objects.
@@ -50,17 +46,17 @@ Every typology has one or many interactions to construct an object of that typol
 
 ## ModelDefinition
 
-A model definition defines typologies, attribute kinds, property kinds.
-
-## Transformation
-
-A transformation derives a target model for a target model definition from a source mode for a source model definition.
+A model definition is a schema for the model shape of a model.
+A model definition contains typologies, attribute definitions and property definitions.
 
 ## AttributeDefinition
 
-An attribute is attachable authored metadata to geometry.
-brepjs currently doesnt support custom metdata, hence you must maintain an id-based external Map.
+A attribute definition is a schema for the attribute shape of a attribute.
 
 ## PropertyDefinition
 
-A property is a derived attribute that is not authored.
+A property definition is a schema for the property shape of a property.
+
+## Transformation
+
+A transformation derives a target model for a target model definition from a source model for a source model definition.

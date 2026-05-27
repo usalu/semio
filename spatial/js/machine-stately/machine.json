@@ -1,7 +1,7 @@
 {
   "kind": "spatial.stately-machine-view/v1",
   "schemaVersion": "1.0",
-  "generatedAt": "2026-05-27T11:45:37.397Z",
+  "generatedAt": "2026-05-27T12:01:38.905Z",
   "machines": [
     {
       "interactionId": "entity.createAnchor",

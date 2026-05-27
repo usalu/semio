@@ -506,7 +506,6 @@
   },
   "commit": {
     "fromStates": [
-      "end_of_line",
       "committed"
     ],
     "operation": {
