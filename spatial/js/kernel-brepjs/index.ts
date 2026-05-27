@@ -10,19 +10,14 @@ import {
 	box,
 	bsplineApprox,
 	cast,
-	checkInterference,
 	circle,
 	cone,
 	curveEndPoint,
 	curveStartPoint,
 	curveLength,
 	cylinder,
-	cut,
-	cutAll,
-	describe as describeBrepShape,
 	extrude,
 	face,
-	fuseAll,
 	getBounds,
 	getCurveType,
 	getEdges,
@@ -31,7 +26,6 @@ import {
 	getSurfaceType,
 	getVertices,
 	initFromOC,
-	intersect,
 	isOk,
 	isSolid,
 	isValidSolid,
@@ -62,22 +56,15 @@ import {
 	cellRef,
 	executeBuiltinActionCapability,
 	isEmptyModelDiff,
-	type KernelQueryContext,
 	emptyMeshTransfer,
+	type ExtensionViewService,
 	type EdgeGroup,
 	type EdgeInfo,
 	type FaceGroup,
 	type FaceInfo,
 	type MeshTransfer,
-	type PartRef,
-	type PartView,
-	type VolumeRef,
-	type VolumeView,
 	type SpatialKernel,
 	type SpatialPreviewKernel,
-	type ExtensionViewService,
-	type SurfaceRef,
-	type SurfaceView,
 	Model,
 	type ModelDiff,
 	type ModelJson,
@@ -2702,7 +2689,6 @@ class BrepjsWasmEngine {
 			const sid = String(params.surfaceId ?? "");
 			const model = ctx?.model;
 			if (model && geom(model).faces[sid]) return [sid];
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, model ?? new Model());
 			return [];
 		}
 		return undefined;
@@ -3299,7 +3285,6 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 			const sid = String(params.surfaceId ?? "");
 			const model = ctx?.model;
 			if (model && geom(model).faces[sid]) return [sid];
-			if (ctx?.derived) return ctx.derived.resolveSurface(sid as SurfaceRef, model ?? new Model());
 			return [];
 		}
 		return undefined;

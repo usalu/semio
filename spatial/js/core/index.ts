@@ -3251,6 +3251,7 @@ function builtinActionCapabilityDefs(): ActionDef[] {
 		commandUndoPick,
 		commandAddSelection,
 		selectionApplyActionDef(),
+		...SELECTION_OPERATION_INTERACTION_DEFS.map((defn) => selectionCommandActionForDef(defn)),
 		commandFinish,
 		featureTransformMove,
 		featureTransformRotate,

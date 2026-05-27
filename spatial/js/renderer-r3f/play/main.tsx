@@ -2,8 +2,8 @@
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	DocumentHistory,
 	ExtensionViewService,
+	DocumentHistory,
 	isInteractionSessionActive,
 	listSpatialInteractions,
 	loadSpatialInteraction,
@@ -138,7 +138,7 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 type ModelJsonSnapshot = ReturnType<Model["toJSON"]>;
 
 interface SpatialExchangeBundle {
-	readonly model?: ModelJsonSnapshot;
+	readonly raw?: ModelJsonSnapshot;
 }
 
 interface SaveFilePickerTypeOption {
@@ -173,7 +173,8 @@ function fileStem(name: string): string {
 	const trimmed = name.trim();
 	if (!trimmed) return "spatial";
 	return trimmed
-		.replace(/\.model\.spatial\.json$/i, "")
+		.replace(/\.analytic\.spatial\.json$/i, "")
+		.replace(/\.raw\.spatial\.json$/i, "")
 		.replace(/\.spatial\.json$/i, "")
 		.replace(/\.json$/i, "")
 		.replace(/[^a-z0-9._-]+/gi, "-")
@@ -478,17 +479,17 @@ function PlayApp() {
 	});
 	const [loadedRawName, setLoadedRawName] = useState("");
 	const [mode, setMode] = useState<SpatialComputeMode>("fast");
-	const [pickViewKind, setPickViewKind] = useState<SpatialPickViewKind>("raw");
+	const [activeViewId, setActiveViewId] = useState<string | null>(null);
 	const [rendererSelection, setRendererSelection] = useState<readonly SelectionTarget[]>([]);
 	const [interactionSelection, setInteractionSelection] = useState<readonly SelectionTarget[]>([]);
-	const [derivedRevision, setDerivedRevision] = useState(0);
+	const [viewsRevision, setViewsRevision] = useState(0);
 	const [snapshot, setSnapshot] = useState<InteractionSnapshot | null>(null);
 	const [fileStatus, setFileStatus] = useState<string>("");
 	const loadInputRef = useRef<HTMLInputElement>(null);
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
 	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(() => new BrepjsKernel() as unknown as InteractionRuntimeOptions["kernel"], []);
-	const views = useMemo(() => ExtensionViewService.forKernel(kernel), [kernel]);
+	const views = useMemo(() => ExtensionViewService.forKernel(kernel as unknown as import("@spatial/js-core").SpatialKernel), [kernel]);
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -528,15 +529,11 @@ function PlayApp() {
 		});
 	}, []);
 	const currentSelection = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, pickViewKind, rendererSelection, interactionSelection),
-		[interactionActive, pickViewKind, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(interactionActive, activeViewId, rendererSelection, interactionSelection),
+		[interactionActive, activeViewId, rendererSelection, interactionSelection],
 	);
-	const selectedRaw = useMemo(
-		() => currentSelection.filter((target) => target.kind !== "surface" && target.kind !== "part" && target.kind !== "volume"),
-		[currentSelection],
-	);
-	const selectedAnalytic = useMemo(
-		() => currentSelection.filter((target) => target.kind === "surface" || target.kind === "part" || target.kind === "volume"),
+	const selectedGeometry = useMemo(
+		() => currentSelection.filter((target) => target.kind !== "object"),
 		[currentSelection],
 	);
 	const exportBaseName = useMemo(() => {
@@ -567,19 +564,15 @@ function PlayApp() {
 
 	const handleSaveSelected = useCallback(async () => {
 		await saveBundle(
-			`${exportBaseName}.selected.model.spatial.json`,
-			{ model: selectRawModel(liveModel, currentSelection) },
-			`Saved ${currentSelection.length} selected item(s).`,
+			`${exportBaseName}.selected.spatial.json`,
+			{ raw: selectRawModel(liveModel, selectedGeometry) },
+			`Saved ${selectedGeometry.length} selected item(s).`,
 		);
-	}, [currentSelection, exportBaseName, liveModel, saveBundle]);
+	}, [exportBaseName, liveModel, saveBundle, selectedGeometry]);
 
 	const handleSaveView = useCallback(async () => {
-		await saveBundle(`${exportBaseName}.model.spatial.json`, { model: liveModel.toJSON() }, "Saved the model.");
+		await saveBundle(`${exportBaseName}.spatial.json`, { raw: liveModel.toJSON() }, "Saved the model.");
 	}, [exportBaseName, liveModel, saveBundle]);
-
-	const handleSaveAll = useCallback(async () => {
-		await handleSaveView();
-	}, [handleSaveView]);
 
 	const handleLoadRawRequest = useCallback(() => {
 		loadInputRef.current?.click();
@@ -595,11 +588,11 @@ function PlayApp() {
 					? (parsed as Record<string, unknown>).raw
 					: parsed;
 			const model = parseModelJson(raw);
-			if (!model) throw new Error("No raw spatial model found in file.");
+			if (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
 			setModelJson(model.toJSON());
-			setFileStatus(`Loaded raw model from ${file.name}.`);
+			setFileStatus(`Loaded model from ${file.name}.`);
 		} catch (error) {
 			setFileStatus(`Load failed: ${String(error)}`);
 		} finally {
@@ -663,7 +656,7 @@ function PlayApp() {
 					<button
 						type="button"
 						onClick={() => void handleSaveSelected()}
-						disabled={currentSelection.length === 0}
+						disabled={selectedGeometry.length === 0}
 						style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
 					>
 						Save (Selected)
@@ -671,14 +664,11 @@ function PlayApp() {
 					<button type="button" onClick={() => void handleSaveView()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
 						Save (View)
 					</button>
-					<button type="button" onClick={() => void handleSaveAll()} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Save (All)
-					</button>
 					<button type="button" onClick={handleLoadRawRequest} style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>
-						Load (Raw)
+						Load
 					</button>
 				</div>
-				<input ref={loadInputRef} type="file" accept=".json,.spatial.json,.model.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
+				<input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
 				{fileStatus ? <span style={{ color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>{fileStatus}</span> : null}
 			</div>
 		</>

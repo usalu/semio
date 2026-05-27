@@ -1,0 +1,8 @@
+{
+  "title": "Scene Cad Fixture Coordinates",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "elements.scene.fixture/v1 extension data in CAD (Z-up); GLB meshes stay glTF Y-up; runtime maps CAD↔Three.js at render boundary.",
+  "summary": "Scene fixtures and extension state use CAD Z-up (x right, y front, z up). Runtime converts CAD↔Three.js at the R3F boundary (sketchpad −90° X); GLB meshes stay glTF Y-up without per-mesh rotation. Nakagin fixture rebaked to CAD; relocate/camera report CAD coords. Fixed vitest @elements/framework-react alias.",
+  "goal": "🎯r2602"
+}

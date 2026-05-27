@@ -35,6 +35,8 @@ import {
 	PointsMaterial,
 	PerspectiveCamera as ThreePerspectiveCamera,
 	Plane,
+	Euler,
+	Matrix4,
 	Quaternion,
 	Raycaster,
 	Vector2,
@@ -391,6 +393,7 @@ export interface FixtureObjectV1 extends ObjectProps {
 	magnets?: MagnetProps[];
 }
 
+/** @emoji 🧭 Scene fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
 export interface FixtureV1 {
 	schema: "elements.scene.fixture/v1";
 	camera: CameraState;
@@ -1496,7 +1499,14 @@ const ObjectItemById = memo(function ObjectItemById(props: {
 			relocate={props.relocate}
 		>
 			{record.vortices.map((v) => (
-				<Vortex key={v.id} objectId={record.id} objectKind={record.objectKind} {...v} />
+				<Vortex
+					key={v.id}
+					objectId={record.id}
+					objectKind={record.objectKind}
+					objectOrigin={record.origin}
+					objectOrientation={record.orientation}
+					{...v}
+				/>
 			))}
 		</ObjectItem>
 	);
@@ -2163,14 +2173,71 @@ function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: number, max
 }
 //#endregion ­ƒº▒Chunking
 
+//#region 🧭Coordinates
+const _eulerCadToThree = new Euler(-Math.PI / 2, 0, 0, "XYZ");
+const _mCadToThree = new Matrix4();
+const _qCadToThree = new Quaternion();
+
+/** @emoji 🧭 Fixed CAD Z-up → Three.js Y-up rotation matrix (matches sketchpad {@link toThreeRotation}). */
+export function cadToThreeMatrix(): Matrix4 {
+	return _mCadToThree.makeRotationFromEuler(_eulerCadToThree);
+}
+
+/** @emoji 🧭 Maps a CAD fixture point to Three.js world coordinates. */
+export function cadVec3ToThree(v: Vec3): Vec3 {
+	const out = new Vector3(v[0], v[1], v[2]).applyMatrix4(cadToThreeMatrix());
+	return [out.x, out.y, out.z];
+}
+
+/** @emoji 🧭 Maps a Three.js point back to CAD fixture coordinates. */
+export function threeVec3ToCad(v: Vector3): Vec3 {
+	const out = v.clone().applyMatrix4(cadToThreeMatrix().clone().invert());
+	return [out.x, out.y, out.z];
+}
+
+/** @emoji 🧭 Maps a CAD fixture quaternion to Three.js. */
+export function cadQuatToThree(q: Quat): Quat {
+	const qCad = new Quaternion(q[0], q[1], q[2], q[3]);
+	const out = _qCadToThree.setFromRotationMatrix(cadToThreeMatrix()).multiply(qCad);
+	return [out.x, out.y, out.z, out.w];
+}
+
+/** @emoji 🧭 Maps a Three.js quaternion back to CAD fixture coordinates. */
+export function threeQuatToCad(q: Quaternion): Quat {
+	const out = _qCadToThree.setFromRotationMatrix(cadToThreeMatrix()).invert().multiply(q);
+	return [out.x, out.y, out.z, out.w];
+}
+
+function quatRotateVec(q: Quat, v: Vec3): Vec3 {
+	const out = new Vector3(v[0], v[1], v[2]).applyQuaternion(new Quaternion(q[0], q[1], q[2], q[3]));
+	return [out.x, out.y, out.z];
+}
+
+/** @emoji 🧭 Maps object-local CAD offset to Three.js parent-group coordinates. */
+export function cadObjectLocalToThreeGroupLocal(
+	local: Vec3,
+	originCad: Vec3,
+	orientationCad: Quat | undefined,
+): Vec3 {
+	const q = orientationCad ?? ([0, 0, 0, 1] as Quat);
+	const worldCad = vec3Add(originCad, quatRotateVec(q, local));
+	const worldThree = new Vector3(...cadVec3ToThree(worldCad));
+	const originThree = new Vector3(...cadVec3ToThree(originCad));
+	const qThree = new Quaternion(...cadQuatToThree(q));
+	const out = worldThree.sub(originThree).applyQuaternion(qThree.invert());
+	return [out.x, out.y, out.z];
+}
+//#endregion 🧭Coordinates
+
 //#region ­ƒºèHelpers
 function vec3ToThree(v: Vec3) {
-	return new Vector3(v[0], v[1], v[2]);
+	return new Vector3(...cadVec3ToThree(v));
 }
 
 function quatToThree(q: Quat | undefined) {
 	if (!q) return new Quaternion();
-	return new Quaternion(q[0], q[1], q[2], q[3]);
+	const c = cadQuatToThree(q);
+	return new Quaternion(c[0], c[1], c[2], c[3]);
 }
 
 function scaleToThree(s: number | Vec3 | undefined): Vector3 {
@@ -2198,7 +2265,8 @@ export function applyObjectPose(
 	orientation: Quat | undefined,
 	scale: number | Vec3 | undefined,
 ): void {
-	group.position.set(origin[0], origin[1], origin[2]);
+	const p = cadVec3ToThree(origin);
+	group.position.set(p[0], p[1], p[2]);
 	group.quaternion.copy(quatToThree(orientation));
 	group.scale.copy(scaleToThree(scale));
 }
@@ -2400,13 +2468,13 @@ const ObjectTransformControls = memo(function ObjectTransformControls(props: {
 					objectId: props.objectId,
 					mode: props.mode,
 					before: {
-						origin: before.origin.toArray() as unknown as Vec3,
-						orientation: before.quat.toArray() as unknown as Quat,
+						origin: threeVec3ToCad(before.origin),
+						orientation: threeQuatToCad(before.quat),
 						scale: before.scale.toArray() as unknown as Vec3,
 					},
 					after: {
-						origin: g.position.toArray() as unknown as Vec3,
-						orientation: g.quaternion.toArray() as unknown as Quat,
+						origin: threeVec3ToCad(g.position),
+						orientation: threeQuatToCad(g.quaternion),
 						scale: g.scale.toArray() as unknown as Vec3,
 					},
 				});
@@ -2637,7 +2705,7 @@ function VortexFallbackMesh(props: {
 }
 
 export const Vortex = memo(function Vortex(
-	props: VortexProps & { objectId: string; objectKind?: string },
+	props: VortexProps & { objectId: string; objectKind?: string; objectOrigin: Vec3; objectOrientation?: Quat },
 ) {
 	const root = useRef<Group | null>(null);
 	const reg = useRegistry();
@@ -2750,12 +2818,17 @@ export const Vortex = memo(function Vortex(
 		? lodVisual.meshUrl
 		: pickClosestMeshUrl(props.handleMeshByLod, lodCtx.lod, props.handleMeshUrl);
 
+	const positionThree = useMemo(
+		() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation),
+		[props.position, props.objectOrigin, props.objectOrientation],
+	);
+
 	const handleMeshStyle = vortexHighlightMeshStyle(highlight);
 	const vis = props.visible !== false;
 	return (
 		<group
 			ref={bindRoot}
-			position={props.position as [number, number, number]}
+			position={positionThree}
 			userData={{ sceneVortexFullId: fullId, vortexKind: props.vortexKind }}
 			data-scene-vortex={fullId}
 			visible={vis}
@@ -2780,9 +2853,15 @@ export const Vortex = memo(function Vortex(
 //#endregion ­ƒîÇVortex
 
 //#region ­ƒº▓Magnet
-export const Magnet = memo(function Magnet(props: MagnetProps) {
+export const Magnet = memo(function Magnet(
+	props: MagnetProps & { objectOrigin: Vec3; objectOrientation?: Quat },
+) {
+	const positionThree = useMemo(
+		() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation),
+		[props.position, props.objectOrigin, props.objectOrientation],
+	);
 	return (
-		<mesh position={props.position as [number, number, number]} userData={{ sceneMagnetId: props.id }}>
+		<mesh position={positionThree} userData={{ sceneMagnetId: props.id }}>
 			<boxGeometry args={[props.size[0], props.size[1], props.size[2]]} />
 			<meshStandardMaterial color="#a78bfa" wireframe />
 		</mesh>
@@ -2908,12 +2987,14 @@ function SceneCameraSeed(props: {
 		}
 		if (seededPositionFor.current !== positionKey) {
 			seededPositionFor.current = positionKey;
-			camera.position.set(props.position[0], props.position[1], props.position[2]);
+			const p = cadVec3ToThree(props.position);
+			camera.position.set(p[0], p[1], p[2]);
 			camera.updateProjectionMatrix();
 		}
 		if (controls?.target && seededTargetFor.current !== targetKey) {
 			seededTargetFor.current = targetKey;
-			controls.target.set(props.target[0], props.target[1], props.target[2]);
+			const t = cadVec3ToThree(props.target);
+			controls.target.set(t[0], t[1], t[2]);
 			controls.update();
 		}
 	}, [controls, positionKey, props.camera, props.position, props.target, targetKey]);
@@ -3022,8 +3103,8 @@ function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: Camer
 		}
 		last.current = snap;
 		onCamera({
-			position: camera.position.toArray() as unknown as Vec3,
-			target: tgt.toArray() as unknown as Vec3,
+			position: threeVec3ToCad(camera.position),
+			target: threeVec3ToCad(tgt),
 			zoom,
 		});
 	});
@@ -3593,8 +3674,8 @@ function Inner(props: CanvasProps) {
 	const manualLod =
 		typeof props.lod === "number" && Number.isFinite(props.lod) && props.lod > 0 ? props.lod : DEFAULT_MANUAL_LOD;
 	const maxDist = 4000;
-	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
-	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
+	const pos = (camProp?.position ?? [420, -420, 320]) as [number, number, number];
+	const tgt = (camProp?.target ?? [0, 0, 40]) as Vec3;
 	const zoom = camProp?.zoom ?? 1;
 	const { chunked, rest } = useMemo(() => splitChunkedSceneChildren(children), [children]);
 	const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
@@ -3774,19 +3855,40 @@ if (import.meta.vitest) {
 			expect(a).not.toBe(b);
 		});
 	});
+	describe("cadVec3ToThree", () => {
+		it("maps CAD Z-up to Three Y-up", () => {
+			const zUp = cadVec3ToThree([0, 0, 1]);
+			expect(zUp[0]).toBeCloseTo(0, 5);
+			expect(zUp[1]).toBeCloseTo(1, 5);
+			expect(zUp[2]).toBeCloseTo(0, 5);
+			const yFront = cadVec3ToThree([0, 1, 0]);
+			expect(yFront[0]).toBeCloseTo(0, 5);
+			expect(yFront[1]).toBeCloseTo(0, 5);
+			expect(yFront[2]).toBeCloseTo(-1, 5);
+		});
+		it("round-trips with threeVec3ToCad", () => {
+			const cad: Vec3 = [12, -4, 7];
+			const back = threeVec3ToCad(new Vector3(...cadVec3ToThree(cad)));
+			expect(back[0]).toBeCloseTo(cad[0], 5);
+			expect(back[1]).toBeCloseTo(cad[1], 5);
+			expect(back[2]).toBeCloseTo(cad[2], 5);
+		});
+	});
 	describe("applyObjectPose", () => {
-		it("places vortex child at expected world offset", () => {
+		it("places vortex child at expected world offset in CAD fixture space", () => {
 			const parent = new Group();
 			const vortex = new Group();
-			vortex.position.set(1, 2, 3);
+			const localThree = cadObjectLocalToThreeGroupLocal([1, 2, 3], [10, 0, 0], [0, 0, 0, 1]);
+			vortex.position.set(localThree[0], localThree[1], localThree[2]);
 			parent.add(vortex);
 			applyObjectPose(parent, [10, 0, 0], [0, 0, 0, 1], 1);
 			updateWorldMatrixChain(vortex);
 			const world = new Vector3();
 			vortex.getWorldPosition(world);
-			expect(world.x).toBeCloseTo(11, 5);
-			expect(world.y).toBeCloseTo(2, 5);
-			expect(world.z).toBeCloseTo(3, 5);
+			const expected = cadVec3ToThree([11, 2, 3]);
+			expect(world.x).toBeCloseTo(expected[0], 5);
+			expect(world.y).toBeCloseTo(expected[1], 5);
+			expect(world.z).toBeCloseTo(expected[2], 5);
 		});
 	});
 	describe("parseFixtureV1", () => {

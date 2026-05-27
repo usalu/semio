@@ -69,6 +69,7 @@ import {
 	type SpatialInteraction,
 	type ModelEntityKind,
 	type ModelJson,
+	type ObjectRef,
 	type Vec3,
 	type SpatialComputeMode,
 } from "@spatial/js-core";
@@ -669,8 +670,10 @@ export function filterSpatialPickTargetsForActiveView(
 	targets: readonly SpatialPickTarget[],
 	activeViewId: string | null,
 ): SpatialPickTarget[] {
-	const allowed = spatialPickKindsForActiveView(activeViewId);
-	return targets.filter((target) => allowed.has(target.kind));
+	if (!activeViewId) {
+		return targets.filter((target) => target.kind !== "object" || target.geometryKind !== undefined);
+	}
+	return targets.filter((target) => target.kind === "object" && target.geometryKind === undefined);
 }
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
@@ -903,8 +906,20 @@ export function collectGeometryEdgeSegments(
 	return out;
 }
 
-function viewObjectPickPoints(object: ViewDerivedObject): readonly Vec3[] {
-	return object.regionPoints?.length ? object.regionPoints : [];
+function viewObjectPickPoints(model: Model, object: ViewDerivedObject): readonly Vec3[] {
+	if (object.regionPoints?.length) return object.regionPoints;
+	const buckets = geometryBuckets(model);
+	const unique = new Map<string, Vec3>();
+	for (const oid of object.sourceObjectIds) {
+		const row = model.objects[oid];
+		if (!row) continue;
+		const cell = buckets.cells[row.geometryRef];
+		if (!cell) continue;
+		for (const p of geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell)) {
+			unique.set(p.join(","), p);
+		}
+	}
+	return [...unique.values()];
 }
 
 function createViewObjectSpatialPickTargets(
@@ -914,7 +929,7 @@ function createViewObjectSpatialPickTargets(
 ): readonly SpatialPickTarget[] {
 	const targets: SpatialPickTarget[] = [];
 	for (const object of views.computeObjects(model, activeViewId)) {
-		const points = viewObjectPickPoints(object);
+		const points = viewObjectPickPoints(model, object);
 		const point = geometryPointCentroid(points);
 		if (!point) continue;
 		targets.push({
@@ -3128,11 +3143,12 @@ function replSelectionLayerParts(
 	const inView: SelectionTarget[] = [];
 	const outOfView: SelectionTarget[] = [];
 	for (const target of layer) {
-		const pickKind = selectionTargetPickKind(target);
-		if (target.kind === "object" && activeViewId) {
-			inView.push(target);
+		if (target.kind === "object") {
+			if (activeViewId) inView.push(target);
+			else outOfView.push(target);
 			continue;
 		}
+		const pickKind = selectionTargetPickKind(target);
 		if (pickKind && allowed.has(pickKind)) inView.push(target);
 		else outOfView.push(target);
 	}
@@ -3767,7 +3783,7 @@ export function InteractionRepl({
 				rect,
 				scopedPickTargets,
 				[],
-				effectiveSelectionKindToggles
+				effectiveSelectionKindToggles,
 			);
 			onHoverTarget(hits[0] ?? null);
 		};
@@ -3778,7 +3794,7 @@ export function InteractionRepl({
 			canvas.removeEventListener("pointermove", onMove);
 			canvas.removeEventListener("pointerleave", onLeave);
 		};
-	}, [canvasBinding, hostPickingEnabled, scopedPickTargets, effectiveSelectionKindToggles, viewSelectionKindToggles, onHoverTarget]);
+	}, [canvasBinding, hostPickingEnabled, scopedPickTargets, effectiveSelectionKindToggles, onHoverTarget]);
 
 	const pointerMoveActive = useMemo(() => {
 		const si = snapshot.spatialInteraction;
@@ -3840,7 +3856,7 @@ export function InteractionRepl({
 			rendererSelection,
 			pointerMoveActive,
 			activeViewId,
-			effectiveSelectionKindToggles
+			effectiveSelectionKindToggles,
 			onInteractionEventProp,
 		],
 	);
@@ -3911,7 +3927,7 @@ export function InteractionRepl({
 						rect,
 						scopedPickTargets,
 						activeSelectionAccept,
-						effectiveSelectionKindToggles
+						effectiveSelectionKindToggles,
 					);
 					if (candidates.length === 0) return;
 					onSelectionRequest({
@@ -3928,7 +3944,7 @@ export function InteractionRepl({
 					camera,
 					canvas.getBoundingClientRect(),
 					activeSelectionAccept,
-					effectiveSelectionKindToggles
+					effectiveSelectionKindToggles,
 					geometryPreviewTransform,
 				);
 				if (targets.length === 0) {
@@ -3969,8 +3985,7 @@ export function InteractionRepl({
 		activeViewId,
 		rendererSelection,
 		selectionMethod,
-		geometryPreviewTransform
-		scopedPickTargets,
+		geometryPreviewTransform,
 		effectiveSelectionKindToggles,
 		hostPickingEnabled,
 	]);
@@ -4639,7 +4654,7 @@ export function InteractionRepl({
 
 					<span>Selection kinds</span>
 					<div role="group" aria-label="Selection kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{activePickViewKinds.map((kind) => {
+						{activePickKinds.map((kind) => {
 							const accepted = activeSelectionAccept.length === 0 || activeSelectionAccept.includes(kind);
 							return (
 								<label
@@ -4663,7 +4678,7 @@ export function InteractionRepl({
 											setSelectionKindToggles((prev) => ({ ...prev, [kind]: checked }));
 											setSelectionMenu(null);
 											setHoveredPickKey(null);
-											if (!checked) applySelectionPrune((prev) => replPruneSelectionByKind(prev, pickViewKind, kind));
+											if (!checked) applySelectionPrune((prev) => replPruneSelectionByKind(prev, activeViewId, kind));
 										}}
 									/>
 									{kind}
@@ -4671,121 +4686,6 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
-					{pickViewKind === "analytic" ? (
-						<>
-							<span>Select exposure</span>
-							<div role="group" aria-label="Select exposure" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-								{(["external", "internal"] as const).map((exposure) => (
-									<label
-										key={`select-exposure-${exposure}`}
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 4,
-											padding: "3px 6px",
-											border: "1px solid #2a2a3a",
-											borderRadius: 999,
-											borderLeft: `3px solid ${exposure === "external" ? "#e8c46a" : "#44ddff"}`,
-											background: resolvedAnalyticSelectionToggles.exposure[exposure] ? "#1a2638" : "#12121c",
-										}}
-									>
-										<input
-											type="checkbox"
-											checked={resolvedAnalyticSelectionToggles.exposure[exposure]}
-											onChange={(e) => {
-												const checked = e.target.checked;
-												const nextAnalytic = {
-													...analyticSelectionToggles,
-													exposure: { ...analyticSelectionToggles.exposure, [exposure]: checked },
-												};
-												setAnalyticSelectionToggles(nextAnalytic);
-												setSelectionMenu(null);
-												setHoveredPickKey(null);
-												if (!checked) {
-													applySelectionPrune((prev) => replPruneSelectionAnalytic(prev, pickTargets, nextAnalytic));
-												}
-											}}
-										/>
-										{exposure}
-									</label>
-								))}
-							</div>
-							<span>Select stance</span>
-							<div role="group" aria-label="Select stance" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-								{(["horizontal", "vertical"] as const).map((stance) => (
-									<label
-										key={`select-stance-${stance}`}
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 4,
-											padding: "3px 6px",
-											border: "1px solid #2a2a3a",
-											borderRadius: 999,
-											borderLeft: `3px solid ${stance === "horizontal" ? "#e8c46a" : "#ffb347"}`,
-											background: resolvedAnalyticSelectionToggles.stance[stance] ? "#1a2638" : "#12121c",
-										}}
-									>
-										<input
-											type="checkbox"
-											checked={resolvedAnalyticSelectionToggles.stance[stance]}
-											onChange={(e) => {
-												const checked = e.target.checked;
-												const nextAnalytic = {
-													...analyticSelectionToggles,
-													stance: { ...analyticSelectionToggles.stance, [stance]: checked },
-												};
-												setAnalyticSelectionToggles(nextAnalytic);
-												setSelectionMenu(null);
-												setHoveredPickKey(null);
-												if (!checked) {
-													applySelectionPrune((prev) => replPruneSelectionAnalytic(prev, pickTargets, nextAnalytic));
-												}
-											}}
-										/>
-										{stance}
-									</label>
-								))}
-							</div>
-							<span>Select overlap</span>
-							<div role="group" aria-label="Select overlap" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-								{(["none", "difference", "intersection"] as const).map((overlap) => (
-									<label
-										key={`select-overlap-${overlap}`}
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 4,
-											padding: "3px 6px",
-											border: "1px solid #2a2a3a",
-											borderRadius: 999,
-											borderLeft: `3px solid ${partSemanticStyle(overlap).color}`,
-											background: resolvedAnalyticSelectionToggles.overlap[overlap] ? "#1a2638" : "#12121c",
-										}}
-									>
-										<input
-											type="checkbox"
-											checked={resolvedAnalyticSelectionToggles.overlap[overlap]}
-											onChange={(e) => {
-												const checked = e.target.checked;
-												const nextAnalytic = {
-													...analyticSelectionToggles,
-													overlap: { ...analyticSelectionToggles.overlap, [overlap]: checked },
-												};
-												setAnalyticSelectionToggles(nextAnalytic);
-												setSelectionMenu(null);
-												setHoveredPickKey(null);
-												if (!checked) {
-													applySelectionPrune((prev) => replPruneSelectionAnalytic(prev, pickTargets, nextAnalytic));
-												}
-											}}
-										/>
-										{overlap}
-									</label>
-								))}
-							</div>
-						</>
-					) : null}
 				</div>
 				<div style={{ fontSize: 12, opacity: 0.85 }}>
 					{interactionId ? (
@@ -4829,139 +4729,8 @@ export function InteractionReplViewport(props: InteractionReplProps): ReactNode 
 const __spatialR3fTestKernel = import.meta.vitest ? await import("@spatial/js-kernel-brepjs") : null;
 
 if (import.meta.vitest) {
-	const { BrepjsKernel, preciseSpatialKernelMath } = __spatialR3fTestKernel!;
-	const M = preciseSpatialKernelMath;
-	const { describe, expect, it, vi } = import.meta.vitest;
-
-	describe("@spatial/js-renderer-r3f preview transforms", () => {
-		it("bboxWireSegments returns twelve edges", () => {
-			const segs = bboxWireSegments([0, 0, 0], [1, 1, 1]);
-			expect(segs).toHaveLength(12);
-		});
-
-		it("geometryEntityWireSegments uses face boundary edges not bbox diagonals", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const faceId = Object.keys(model.faces)[0]!;
-			const buckets = geometryBuckets(model);
-			const segs = geometryEntityWireSegments(buckets, "face", faceId);
-			expect(segs.length).toBeGreaterThanOrEqual(4);
-			expect(segs.length).toBeLessThan(12);
-		});
-
-		it("collectGeometryEdgeSegments returns one segment per geometry edge", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box")));
-			const segs = collectGeometryEdgeSegments(geometryBuckets(model));
-			expect(segs.length).toBe(Object.keys(model.edges).length);
-			expect(segs.length).toBe(12);
-		});
-
-		it("geometryPreviewTransformFromDisplay reads active move-preview transform", () => {
-			const map = geometryPreviewTransformFromDisplay({
-				items: [
-					{
-						kind: "preview",
-						id: "p",
-						role: "preview",
-						params: {
-							previewKind: "move-preview",
-							from: [0, 0, 0],
-							cursor: [1, 2, 0],
-						},
-					},
-				],
-			});
-			expect(map).not.toBeNull();
-			expect(map!([0, 0, 0])).toEqual([1, 2, 0]);
-		});
-
-		it("move-preview translates points by cursor minus from", () => {
-			const map = transformPointsForPreviewKind("move-preview", {
-				from: [0, 0, 0],
-				cursor: [2, 1, 0],
-			});
-			expect(map([1, 2, 3])).toEqual([3, 3, 3]);
-		});
-
-		it("selected-objects preview keeps points unchanged", () => {
-			const map = transformPointsForPreviewKind("selected-objects", { cursor: [5, 5, 0] });
-			expect(map([1, 0, 0])).toEqual([1, 0, 0]);
-		});
-	});
-
-	describe("@spatial/js-renderer-r3f layout", () => {
-		it("computeBoxPreviewLayout matches footprint and height", () => {
-			const L = computeBoxPreviewLayout([0, 0, 0], [2, 3, 0], 4);
-			expect(L.scale[0]).toBeCloseTo(2);
-			expect(L.scale[1]).toBeCloseTo(3);
-			expect(L.scale[2]).toBeCloseTo(4);
-			expect(L.position[0]).toBeCloseTo(1);
-			expect(L.position[1]).toBeCloseTo(1.5);
-			expect(L.position[2]).toBeCloseTo(2);
-		});
-
-		it("computeSpherePreviewLayout follows the live radius cursor", () => {
-			const L = computeSpherePreviewLayout([1, 2, 3], [4, 6, 3]);
-			expect(L?.position).toEqual([1, 2, 3]);
-			expect(L?.radius).toBeCloseTo(5);
-		});
-
-		it("boundsFromMeshTransfers ignores invalid mesh coordinates", () => {
-			const bounds = boundsFromMeshTransfers([
-				{
-					...emptyMeshTransfer(),
-					position: new Float32Array([Number.NaN, Number.POSITIVE_INFINITY, 0]),
-				},
-				{
-					...emptyMeshTransfer(),
-					position: new Float32Array([0, 0, 0, 10, 20, 30]),
-				},
-			]);
-			expect(bounds).toEqual({ center: [5, 10, 15], radius: expect.closeTo(Math.sqrt(1400) / 2) });
-		});
-
-		it("isRenderableMeshTransfer rejects malformed tessellation payloads", () => {
-			expect(
-				isRenderableMeshTransfer({
-					...emptyMeshTransfer(),
-					position: new Float32Array([0, 0, Number.NaN]),
-					normal: new Float32Array([0, 0, 1]),
-					index: new Uint32Array([0]),
-				}),
-			).toBe(false);
-			expect(
-				isRenderableMeshTransfer({
-					...emptyMeshTransfer(),
-					position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-					normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-					index: new Uint32Array([0, 1, 2]),
-				}),
-			).toBe(true);
-		});
-
-		it("applySpatialAutoFitCamera keeps orbit target aligned with framed bounds", () => {
-			const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-			const target = new THREE.Vector3();
-			let updates = 0;
-			applySpatialAutoFitCamera(camera, { center: [10, 20, 30], radius: 4 }, 1.5, {
-				target,
-				update: () => {
-					updates += 1;
-				},
-			});
-			expect(camera.position.toArray()).toEqual([16, 26, 35.1]);
-			expect(target.toArray()).toEqual([10, 20, 30]);
-			expect(updates).toBe(1);
-		});
-
-		it("spatialAutoFitShouldRun only repeats in changes mode", () => {
-			expect(spatialAutoFitShouldRun("initial", "a", "", false)).toBe(true);
-			expect(spatialAutoFitShouldRun("initial", "b", "a", true)).toBe(false);
-			expect(spatialAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
-			expect(spatialAutoFitShouldRun("changes", "a", "a", true)).toBe(false);
-		});
-	});
+	const { BrepjsKernel, preciseSpatialKernelMath: M } = __spatialR3fTestKernel!;
+	const { describe, it, expect } = import.meta.vitest;
 
 	describe("@spatial/js-renderer-r3f interaction adapter", () => {
 		it("keeps active spatial ground picks enabled when host geometry selection is disabled", () => {
@@ -4978,22 +4747,6 @@ if (import.meta.vitest) {
 			} satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
 			expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true, [])).toBe(true);
 			expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true, ["vertex"])).toBe(false);
-		});
-
-		it("maps pointer event data into interaction events", () => {
-			const adapter = createR3FInteractionAdapter();
-			const event = {
-				point: { x: 1, y: 2, z: 3 },
-				altKey: false,
-				ctrlKey: true,
-				metaKey: false,
-				shiftKey: true,
-			} as ThreeEvent<PointerEvent>;
-			expect(adapter.pointerDown(event)).toEqual({
-				kind: "pointer.down",
-				point: [1, 2, 3],
-				modifiers: { alt: false, ctrl: true, meta: false, shift: true },
-			});
 		});
 
 		it("creates snap and selection metadata for geometry targets", () => {
@@ -5020,1111 +4773,77 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("creates selectable targets for every editable geometry kind", () => {
-			const targets = createSpatialPickTargets({
-				schema: "spatial.model/v1",
-				revision: 1,
-				anchors: [{ id: "a0", position: [0.25, 0.25, 0], attachment: { kind: "vertex", id: "v0" } }],
-				vertices: [
-					{ id: "v0", position: [0, 0, 0] },
-					{ id: "v1", position: [1, 0, 0] },
-					{ id: "v2", position: [1, 1, 0] },
-				],
-				edges: [
-					{ id: "e0", vertexIds: ["v0", "v1"] },
-					{ id: "e1", vertexIds: ["v1", "v2"] },
-				],
-				wires: [{ id: "w0", edgeIds: ["e0", "e1"] }],
-				faces: [{ id: "f0", wireIds: ["w0"] }],
-				shells: [{ id: "sh0", faceIds: ["f0"] }],
-				cells: [{ id: "c0", shellIds: ["sh0"] }],
-				cellComplexes: [{ id: "cc0", cellIds: ["c0"] }],
-				clusters: [{ id: "cl0", memberIds: ["c0"] }],
-			} as unknown as ModelJson);
-			expect(targets.map((target) => target.kind)).toEqual([
-				"objectVertex",
-				"objectVertex",
-				"objectVertex",
-				"objectEdge",
-				"objectEdge",
-				"objectEdge",
-				"objectFace",
-				"object",
-			]);
-			expect(targets.find((target) => target.kind === "object")?.point).toEqual([2 / 3, 1 / 3, 0]);
-		});
-
-		it("creates analytic surface and part targets from derived views", async () => {
+		it("adds extension view object picks when activeViewId is set", async () => {
 			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")));
-			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(model);
-			const targets = createSpatialPickTargets(model, derived);
-			expect(targets.some((t) => t.kind === "surface")).toBe(true);
-			expect(targets.some((t) => t.kind === "part")).toBe(true);
-			const analytic = filterSpatialPickTargetsByView(targets, "analytic");
-			expect(analytic.every((t) => t.kind === "surface" || t.kind === "part")).toBe(true);
-			expect(analytic.length).toBeGreaterThan(0);
-		});
-
-		it("play geometry punch through host exposes one difference pick target per cell", async () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 4, 0], height: 4 }, cellRef("host")));
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 }, cellRef("punch")));
-			const derived = new DerivedViewService({
-				id: "geometry-parts",
-				operations: [],
-				computePartViews: (g: Model) => computePartViewsFromModel(g),
-				computeSurfaceViews: (g: Model) => computeSurfaceViewsFromModel(g),
-				computeVolumeViews: async () => [],
-			} as unknown as import("@spatial/js-core").SpatialKernel);
-			await derived.refresh(model);
-			const partTargets = filterSpatialPickTargetsByView(createSpatialPickTargets(model, derived), "analytic").filter(
-				(t) => t.kind === "part",
-			);
-			expect(partTargets.filter((t) => t.overlap === "difference")).toHaveLength(2);
-			expect(partTargets.some((t) => t.id === "part-host-difference")).toBe(true);
-			expect(partTargets.some((t) => t.id === "part-punch-difference")).toBe(true);
-			expect(partTargets.some((t) => t.overlap === "intersection")).toBe(true);
-			expect(partTargets.every((t) => !t.id.includes("difference-before"))).toBe(true);
-		});
-
-		it("partitions raw and analytic pick targets", () => {
-			const targets: SpatialPickTarget[] = [
-				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
-				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0] },
-				{ kind: "part", id: "part-c0", point: [0.5, 0.5, 0.5] },
-			];
-			expect(filterSpatialPickTargetsByView(targets, "raw").map(spatialPickTargetKey)).toEqual([
-				"objectVertex:v0",
-				"objectFace:f0",
-			]);
-			expect(filterSpatialPickTargetsByView(targets, "analytic").map(spatialPickTargetKey)).toEqual([
-				"surface:surface-f0",
-				"part:part-c0",
-			]);
-		});
-
-		it("creates selectable targets for every committed box geometry kind", async () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }, cellRef("box-cell")));
-			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(model);
-			const targets = createSpatialPickTargets(model, derived);
-			const counts = targets.reduce<Record<string, number>>((acc, target) => {
-				acc[target.kind] = (acc[target.kind] ?? 0) + 1;
-				return acc;
-			}, {});
-			expect(counts.objectVertex).toBe(8);
-			expect(counts.objectEdge).toBe(18);
-			expect(counts.objectFace).toBe(6);
-			expect(counts.surface).toBeGreaterThan(0);
-			expect(counts.object).toBe(1);
-			expect(counts.part).toBeGreaterThan(0);
-		});
-
-		it("filters selectable targets by active accept list and kind toggles", () => {
-			const targets: SpatialPickTarget[] = [
-				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "objectEdge", geometryKind: "edge", id: "e0", point: [0.5, 0, 0] },
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
-			];
-			expect(filterSpatialPickTargets(targets, ["vertex", "edge"], { objectEdge: false }).map(spatialPickTargetKey)).toEqual([
-				"objectVertex:v0",
-			]);
-		});
-
-		it("filters analytic targets by exposure stance and overlap toggles", () => {
-			const targets: SpatialPickTarget[] = [
-				{
-					kind: "surface",
-					id: "s-ext-h",
-					point: [0, 0, 0],
-					exposure: "external",
-					stance: "horizontal",
-				},
-				{
-					kind: "surface",
-					id: "s-int-v",
-					point: [1, 0, 0],
-					exposure: "internal",
-					stance: "vertical",
-				},
-				{ kind: "part", id: "p-none", point: [0, 0, 0.5], overlap: "none" },
-				{ kind: "part", id: "p-inter", point: [1, 0, 0.5], overlap: "intersection" },
-			];
-			expect(
-				filterSpatialPickTargetsAnalytic(targets, {
-					exposure: { external: true, internal: false },
-					stance: { horizontal: true, vertical: true },
-					overlap: { none: true, difference: true, intersection: true },
-				}).map(spatialPickTargetKey),
-			).toEqual(["surface:s-ext-h", "part:p-none", "part:p-inter"]);
-			expect(
-				filterSpatialPickTargetsAnalytic(targets, {
-					exposure: { external: true, internal: true },
-					stance: { horizontal: true, vertical: true },
-					overlap: { none: true, difference: true, intersection: false },
-				}).map(spatialPickTargetKey),
-			).toEqual(["surface:s-ext-h", "surface:s-int-v", "part:p-none"]);
-		});
-
-		it("replHostGeometryPickingEnabled stays on for play REPL and committed palette sessions", () => {
-			const playSpec: InteractionSpec = {
-				schema: "spatial.interaction/v1",
-				id: "",
-				version: "1.0.0",
-				label: "Play",
-				machine: { initial: "idle", states: [{ name: "idle" }] },
-				display: { states: [{ state: "idle", items: [] }] },
-				commit: { fromStates: [], operation: { kind: "action", action: "play.repl.noop" } },
+			const cell = cellRef("c0");
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+			model.objects["object-c0"] = {
+				id: "object-c0" as ObjectRef,
+				typologyId: "builtin.primitive.box",
+				geometryRef: String(cell),
 			};
-			expect(replHostGeometryPickingEnabled("", playSpec, "idle")).toBe(true);
-			expect(replHostGeometryPickingEnabled("box", playSpec, "idle")).toBe(false);
-			expect(
-				replHostGeometryPickingEnabled("box", { ...playSpec, machine: { initial: "done", states: [{ name: "done", final: true }] } }, "done"),
-			).toBe(true);
+			const views = ExtensionViewService.forKernel(new BrepjsKernel() as unknown as SpatialKernel);
+			const activeViewId = qualifiedViewId("energy", "energy");
+			await views.refresh(model, activeViewId);
+			const editTargets = createSpatialPickTargets(model, views, null);
+			const viewTargets = createSpatialPickTargets(model, views, activeViewId);
+			expect(editTargets.some((t) => t.kind === "objectVertex")).toBe(true);
+			expect(viewTargets.every((t) => t.kind === "object")).toBe(true);
+			expect(viewTargets.length).toBeGreaterThan(0);
 		});
 
-		it("defaultInteractionReplChromeState seeds full pick and analytic toggles", () => {
-			const chrome = defaultInteractionReplChromeState();
-			for (const kind of SPATIAL_PICK_TARGET_KINDS) {
-				expect(chrome.filterKindToggles[kind]).toBe(true);
-				expect(chrome.selectionKindToggles[kind]).toBe(true);
-			}
-			expect(chrome.pickViewKind).toBe("raw");
-			expect(chrome.selectionMethod).toBe("rectangle");
-			expect(chrome.analyticFilterToggles.exposure!.external).toBe(true);
-			expect(chrome.cmdLine).toBe("");
-		});
-
-		it("resolveHostStateNext applies functional and literal updates", () => {
-			expect(resolveHostStateNext(1, 2)).toBe(2);
-			expect(resolveHostStateNext(3, (n) => n + 4)).toBe(7);
-			expect(resolveHostStateNext("a", (s) => `${s}b`)).toBe("ab");
-		});
-
-		it("effective pick toggles require both visibility and selection toggles", () => {
+		it("filterSpatialPickTargetsForActiveView scopes kernel vs view objects", () => {
 			const targets: SpatialPickTarget[] = [
 				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "objectEdge", geometryKind: "edge", id: "e0", point: [0.5, 0, 0] },
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0] },
+				{ kind: "object", id: "energy.energy.hull", point: [0.5, 0.5, 0.5] },
 			];
-			expect(
-				filterSpatialPickTargetsForVisibility(targets, { objectVertex: true, objectEdge: false, objectFace: true }).map(spatialPickTargetKey),
-			).toEqual(["objectVertex:v0", "objectFace:f0"]);
-			expect(
-				filterSpatialPickTargets(targets, [], { objectVertex: false, objectEdge: true, objectFace: false }).map(spatialPickTargetKey),
-			).toEqual(["objectEdge:e0"]);
-			expect(
-				intersectSpatialPickKindToggles({ objectEdge: false, objectFace: true }, { objectEdge: true, objectFace: false }),
-			).toEqual({
-				objectEdge: false,
-				objectFace: false,
-			});
-			expect(
-				filterSpatialPickTargets(
-					targets,
-					[],
-					intersectSpatialPickKindToggles({ objectEdge: false, objectFace: true }, { objectEdge: true, objectFace: true }),
-				).map(spatialPickTargetKey),
-			).toEqual(["objectVertex:v0", "objectFace:f0"]);
+			expect(filterSpatialPickTargetsForActiveView(targets, null).map(spatialPickTargetKey)).toEqual(["objectVertex:v0"]);
+			expect(filterSpatialPickTargetsForActiveView(targets, "energy.energy").map(spatialPickTargetKey)).toEqual([
+				"object:energy.energy.hull",
+			]);
 		});
 
-		it("effective analytic pick toggles require both visibility and selection analytic filters", () => {
-			expect(
-				intersectSpatialAnalyticToggles(
-					{ exposure: { external: false, internal: true }, stance: { vertical: true, horizontal: true } },
-					{ exposure: { external: true, internal: true }, stance: { vertical: false, horizontal: true } },
-				),
-			).toEqual({ exposure: { external: false }, stance: { vertical: false } });
-		});
-
-		it("resolveSpatialSceneVisibility hides scene geometry when show kinds are unchecked", () => {
-			expect(
-				resolveSpatialSceneVisibility("raw", {
-					objectEdge: false,
-					objectFace: false,
-					object: false,
-					objectVertex: false,
-				}),
-			).toEqual({
-				showFactoryWireframe: false,
-				showCommittedFaces: false,
-				showCommittedEdges: false,
-			});
-			expect(resolveSpatialSceneVisibility("raw", { objectEdge: true, objectFace: true, object: false })).toEqual({
+		it("resolveSpatialSceneVisibility switches edit wireframe vs committed view mesh", () => {
+			expect(resolveSpatialSceneVisibility(null, { objectEdge: true, objectFace: true })).toEqual({
 				showFactoryWireframe: true,
 				showCommittedFaces: true,
 				showCommittedEdges: true,
 			});
-			expect(resolveSpatialSceneVisibility("analytic", { surface: false, part: false })).toEqual({
-				showFactoryWireframe: false,
-				showCommittedFaces: false,
-				showCommittedEdges: false,
-			});
-			expect(resolveSpatialSceneVisibility("analytic", { surface: true, part: false })).toEqual({
+			expect(resolveSpatialSceneVisibility("energy.energy", { object: true })).toEqual({
 				showFactoryWireframe: false,
 				showCommittedFaces: true,
-				showCommittedEdges: false,
+				showCommittedEdges: true,
 			});
 		});
 
-		it("renders pinned selection-menu targets even when filter visibility hides them", () => {
-			const targets: SpatialPickTarget[] = [
-				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
-				{ kind: "surface", id: "s0", point: [0.5, 0.5, 0], exposure: "internal", stance: "vertical" },
-			];
-			expect(
-				resolveSpatialPickTargetsToRender(
-					targets,
-					{ objectVertex: true, objectFace: false, surface: false },
-					{ exposure: { internal: false }, stance: { vertical: true } },
-					new Set(["face:f0", "surface:s0"]),
-				).map(spatialPickTargetKey),
-			).toEqual(["objectVertex:v0", "objectFace:f0", "surface:s0"]);
+		it("defaultInteractionReplChromeState seeds geometry edit by default", () => {
+			const chrome = defaultInteractionReplChromeState();
+			expect(chrome.activeViewId).toBe(null);
+			expect(chrome.filterKindToggles.objectVertex).toBe(true);
 		});
 
-		it("end-to-end host pick uses selection toggles while layer visibility uses filter toggles", async () => {
-			const onlyVertices = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectVertex"])) as Record<
-				SpatialPickTargetKind,
-				boolean
-			>;
-			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectFace"])) as Record<
-				SpatialPickTargetKind,
-				boolean
-			>;
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
-			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(model);
-			const targets = createSpatialPickTargets(model, derived);
-			const rawViewTargets = filterSpatialPickTargetsByView(targets, "raw");
-			const rawFilterToggles = spatialPickKindTogglesForView(onlyVertices, "raw");
-			const rawSelectionToggles = spatialPickKindTogglesForView(onlyFaces, "raw");
-			const layerVisible = filterSpatialPickTargetsAnalytic(
-				filterSpatialPickTargetsForVisibility(rawViewTargets, rawFilterToggles),
-				spatialAnalyticTogglesForView({}, "raw"),
-			);
-			expect(layerVisible.every((t) => t.kind === "objectVertex")).toBe(true);
-			expect(layerVisible).toHaveLength(8);
-			const face = rawViewTargets.find((t) => t.kind === "objectFace");
-			expect(face).toBeTruthy();
-			const ray = new THREE.Ray(
-				new THREE.Vector3(face!.point[0], face!.point[1], face!.point[2] + 4),
-				new THREE.Vector3(0, 0, -1),
-			);
-			const picked = spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, rawSelectionToggles, {});
-			expect(picked[0]?.kind).toBe("objectFace");
-			expect(pickHoverTargetFromRay(ray, rawViewTargets, rawSelectionToggles, {})?.kind).toBe("objectFace");
-			const hiddenFaceToggles = intersectSpatialPickKindToggles(rawFilterToggles, rawSelectionToggles);
-			expect(spatialPickTargetsFromRay(ray, rawViewTargets, SPATIAL_PICK_TARGET_KINDS, hiddenFaceToggles, {})).toEqual([]);
-			expect(pickHoverTargetFromRay(ray, rawViewTargets, hiddenFaceToggles, {})).toBeNull();
-			const analyticViewTargets = filterSpatialPickTargetsByView(targets, "analytic");
-			const onlySurfaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "surface"])) as Record<
-				SpatialPickTargetKind,
-				boolean
-			>;
-			const analyticFilter = defaultSpatialAnalyticToggles();
-			const analyticVisible = filterSpatialPickTargetsAnalytic(
-				filterSpatialPickTargetsForVisibility(
-					analyticViewTargets,
-					spatialPickKindTogglesForView(onlySurfaces, "analytic"),
-				),
-				spatialAnalyticTogglesForView(analyticFilter, "analytic"),
-			);
-			expect(analyticVisible.every((t) => t.kind === "surface")).toBe(true);
-			expect(analyticVisible.length).toBeGreaterThan(0);
-			const surface = analyticVisible[0]!;
-			const analyticRay = new THREE.Ray(
-				new THREE.Vector3(surface.point[0], surface.point[1], surface.point[2] + 4),
-				new THREE.Vector3(0, 0, -1),
-			);
-			const analyticSelectionToggles = spatialPickKindTogglesForView(onlySurfaces, "analytic");
-			const analyticPick = spatialPickTargetsFromRay(
-				analyticRay,
-				analyticViewTargets,
-				["surface", "part"],
-				analyticSelectionToggles,
-				spatialAnalyticTogglesForView(analyticFilter, "analytic"),
-			);
-			expect(analyticPick[0]?.kind).toBe("surface");
-			const hiddenAnalyticPick = spatialPickTargetsFromRay(
-				analyticRay,
-				analyticViewTargets,
-				["surface", "part"],
-				intersectSpatialPickKindToggles(spatialPickKindTogglesForView({ surface: false }, "analytic"), analyticSelectionToggles),
-				intersectSpatialAnalyticToggles(spatialAnalyticTogglesForView(analyticFilter, "analytic"), spatialAnalyticTogglesForView(analyticFilter, "analytic")),
-			);
-			expect(hiddenAnalyticPick).toEqual([]);
-		});
-
-		it("end-to-end raw and analytic pick view keeps cross-view selection through picks display and clear", async () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("box")));
-			const derived = new DerivedViewService(new BrepjsKernel() as unknown as SpatialKernel);
-			await derived.refresh(model);
-			const allTargets = createSpatialPickTargets(model, derived);
-			const rawViewTargets = filterSpatialPickTargetsByView(allTargets, "raw");
-			const analyticViewTargets = filterSpatialPickTargetsByView(allTargets, "analytic");
-			const face = rawViewTargets.find((t) => t.kind === "objectFace");
-			const surface = analyticViewTargets.find((t) => t.kind === "surface");
-			expect(face).toBeTruthy();
-			expect(surface).toBeTruthy();
-
-			const kindToggles = defaultSpatialPickKindToggles();
-			const onlyFaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "objectFace"])) as Record<
-				SpatialPickTargetKind,
-				boolean
-			>;
-			const onlySurfaces = Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((k) => [k, k === "surface"])) as Record<
-				SpatialPickTargetKind,
-				boolean
-			>;
-			const analyticToggles = defaultSpatialAnalyticToggles();
-			const faceRay = new THREE.Ray(
-				new THREE.Vector3(face!.point[0], face!.point[1], face!.point[2] + 4),
-				new THREE.Vector3(0, 0, -1),
-			);
-			const surfaceRay = new THREE.Ray(
-				new THREE.Vector3(surface!.point[0], surface!.point[1], surface!.point[2] + 4),
-				new THREE.Vector3(0, 0, -1),
-			);
-
-			let rendererSelection: SelectionTarget[] = [];
-			const commitViewPick = (view: SpatialPickViewKind, spatialTargets: readonly SpatialPickTarget[]) => {
-				const picked = uniqueSelectionTargets(spatialTargets.map(spatialSelectionTarget));
-				rendererSelection = replMergeSelectionPickInView(false, view, rendererSelection, [], picked, {});
-			};
-
-			const analyticPicked = spatialPickTargetsFromRay(
-				surfaceRay,
-				analyticViewTargets,
-				SPATIAL_ANALYTIC_PICK_TARGET_KINDS,
-				spatialPickKindTogglesForView(onlySurfaces, "analytic"),
-				spatialAnalyticTogglesForView(analyticToggles, "analytic"),
-			);
-			expect(analyticPicked[0]?.kind).toBe("surface");
-			commitViewPick("analytic", analyticPicked[0] ? [analyticPicked[0]] : []);
-			expect(replDisplayedSelectionTargets(false, "analytic", rendererSelection, [])).toEqual(rendererSelection);
-			expect(replDisplayedSelectionTargets(false, "raw", rendererSelection, [])).toEqual([]);
-
-			const rawPicked = spatialPickTargetsFromRay(
-				faceRay,
-				rawViewTargets,
-				SPATIAL_RAW_PICK_TARGET_KINDS,
-				spatialPickKindTogglesForView(onlyFaces, "raw"),
-				spatialAnalyticTogglesForView(analyticToggles, "raw"),
-			);
-			expect(rawPicked[0]?.kind).toBe("objectFace");
-			commitViewPick("raw", rawPicked[0] ? [rawPicked[0]] : []);
-			expect(rendererSelection.some((t) => t.kind === "surface")).toBe(true);
-			expect(rendererSelection.some((t) => t.kind === "face")).toBe(true);
-			expect(replDisplayedSelectionTargets(false, "raw", rendererSelection, []).map((t) => t.kind)).toEqual(["face"]);
-			expect(replDisplayedSelectionTargets(false, "analytic", rendererSelection, []).map((t) => t.kind)).toEqual(["surface"]);
-
-			rendererSelection = replMergeSelectionPickInView(false, "analytic", rendererSelection, [], [], {});
-			expect(rendererSelection.some((t) => t.kind === "face")).toBe(true);
-			expect(rendererSelection.some((t) => t.kind === "surface")).toBe(false);
-			expect(replDisplayedSelectionTargets(false, "raw", rendererSelection, [])).toEqual(rendererSelection);
-			expect(replDisplayedSelectionTargets(false, "analytic", rendererSelection, [])).toEqual([]);
-
-			const blockedAnalytic = spatialPickTargetsFromRay(
-				surfaceRay,
-				analyticViewTargets,
-				SPATIAL_ANALYTIC_PICK_TARGET_KINDS,
-				spatialPickKindTogglesForView(kindToggles, "analytic"),
-				spatialAnalyticTogglesForView({ exposure: { external: false, internal: true } }, "analytic"),
-			);
-			if (surface!.exposure === "external") {
-				expect(blockedAnalytic.some((t) => t.kind === "surface" && t.exposure === "external")).toBe(false);
-			}
-			const blockedRaw = spatialPickTargetsFromRay(
-				faceRay,
-				rawViewTargets,
-				SPATIAL_RAW_PICK_TARGET_KINDS,
-				spatialPickKindTogglesForView({ ...kindToggles, objectFace: false }, "raw"),
-				spatialAnalyticTogglesForView(analyticToggles, "raw"),
-			);
-			expect(blockedRaw.some((t) => t.kind === "objectFace")).toBe(false);
-
-			const renderedRaw = resolveSpatialPickTargetsToRender(
-				rawViewTargets,
-				spatialPickKindTogglesForView({ ...kindToggles, objectFace: false }, "raw"),
-				spatialAnalyticTogglesForView(analyticToggles, "raw"),
-				new Set(replDisplayedSelectionTargets(false, "raw", rendererSelection, []).map(spatialSelectionTargetKey)),
-			);
-			expect(renderedRaw.some((t) => t.kind === "objectFace")).toBe(true);
-		});
-
-		it("tessellates committed box cells through BrepjsKernel for the display layer", async () => {
-			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-			const model = new Model();
-			const { diff, cell } = await kernel.createBoxFromCornersDiff({
-				cornerA: [0, 0, 0],
-				cornerB: [1, 1, 0],
-				height: 1,
-			});
-			applyModelDiff(model, diff);
-			expect(listModelCellRefs(model).map(String)).toContain(String(cell));
-			const mesh = await kernel.tessellate(cell, 0.001);
-			expect(mesh.position.length).toBeGreaterThan(0);
-			expect(mesh.faceGroups.length).toBeGreaterThan(0);
-			expect(resolveFaceInfoFromTriangleIndex(mesh, 0)?.faceId).toBe(mesh.faceGroups[0]!.faceId);
-			const geo = buildBufferGeometryFromMeshTransfer(mesh);
-			expect(geo.getAttribute("position").count).toBeGreaterThan(0);
-			geo.dispose();
-		});
-
-		it("ray-picks overlapping face and surface candidates", () => {
-			const targets: SpatialPickTarget[] = [
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
-				{ kind: "surface", id: "surface-f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
-			];
-			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
-			expect(spatialPickTargetsFromRay(ray, targets, ["face", "surface"], {}).map(spatialPickTargetKey)).toEqual([
-				"objectFace:f0",
-				"surface:surface-f0",
-			]);
-		});
-
-		it("pickHoverTargetFromRay returns the closest hover-eligible target", () => {
-			const targets: SpatialPickTarget[] = [
-				{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
-				{ kind: "objectFace", geometryKind: "face", id: "f0", point: [0.5, 0.5, 0], points: [[0, 0, 0], [1, 0, 0], [1, 1, 0]] },
-			];
-			const ray = new THREE.Ray(new THREE.Vector3(0.5, 0.5, 2), new THREE.Vector3(0, 0, -1));
-			expect(pickHoverTargetFromRay(ray, targets, { objectVertex: false, objectFace: true })?.id).toBe("f0");
-			expect(pickHoverTargetFromRay(ray, targets, { objectVertex: false, objectFace: false })).toBeNull();
-		});
-
-		it("carries host selection into interaction selection events", () => {
-			const selection: SelectionTarget = { kind: "wire", id: "w0", editable: true };
-			expect(replSelectionAccepted(["wire"], [selection])).toEqual([selection]);
-			expect(replSelectionAccepted(["face"], [selection])).toEqual([]);
-			expect(replSelectionEvent([selection])).toEqual({ kind: "selection.changed", targets: [selection], modifiers: {} });
-			expect(replStartEvent([selection])).toEqual({ kind: "start", targets: [selection], modifiers: {} });
-			const moveSpec = InteractionRegistry.withBuiltins().get("transform.move")!;
-			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [selection] }, preciseSpatialKernelMath)).toBe(true);
-			expect(interactionCanConfirmSelection(moveSpec, "select_objects_to_move", { targets: [] }, preciseSpatialKernelMath)).toBe(false);
-			expect(interactionCanConfirmSelection(moveSpec, "point_to_move_from", { targets: [selection] }, preciseSpatialKernelMath)).toBe(false);
-		});
-
-		it("routes displayed selection to interaction layer while active and renderer layer when idle", () => {
-			const renderer = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
-			const interaction = [{ kind: "face", id: "f0", editable: true }] satisfies readonly SelectionTarget[];
-			expect(replDisplayedSelectionTargets(false, "raw", renderer, interaction)).toEqual(renderer);
-			expect(replDisplayedSelectionTargets(true, "raw", renderer, interaction)).toEqual(interaction);
-		});
-
-		it("merges picks within the active pick view without clearing the other view", () => {
-			const renderer: SelectionTarget[] = [
-				{ kind: "wire", id: "w0", editable: true },
-				{ kind: "surface", id: "s0", editable: false },
-			];
-			expect(
-				replMergeSelectionPickInView(false, "raw", renderer, [], [{ kind: "wire", id: "w1", editable: true }], {}),
-			).toEqual([
-				{ kind: "surface", id: "s0", editable: false },
-				{ kind: "wire", id: "w1", editable: true },
-			]);
-		});
-
-		it("scopes displayed selection to the active pick view", () => {
+		it("scopes displayed selection to activeViewId", () => {
 			const renderer = [
 				{ kind: "face", id: "f0", editable: true },
-				{ kind: "surface", id: "s0", editable: false },
+				{ kind: "object", id: "o0", editable: false },
 			] satisfies readonly SelectionTarget[];
-			const interaction = [
+			expect(replDisplayedSelectionTargets(false, null, renderer, [])).toEqual([{ kind: "face", id: "f0", editable: true }]);
+			expect(replDisplayedSelectionTargets(false, "energy.energy", renderer, [])).toEqual([
+				{ kind: "object", id: "o0", editable: false },
+			]);
+		});
+
+		it("merges picks within active view without clearing out-of-view targets", () => {
+			const renderer: SelectionTarget[] = [
 				{ kind: "wire", id: "w0", editable: true },
-				{ kind: "part", id: "p0", editable: false },
-			] satisfies readonly SelectionTarget[];
-			expect(replDisplayedSelectionTargets(false, "raw", renderer, interaction)).toEqual([{ kind: "face", id: "f0", editable: true }]);
-			expect(replDisplayedSelectionTargets(false, "analytic", renderer, interaction)).toEqual([
-				{ kind: "surface", id: "s0", editable: false },
-			]);
-			expect(replDisplayedSelectionTargets(true, "raw", renderer, interaction)).toEqual([{ kind: "wire", id: "w0", editable: true }]);
-			expect(replDisplayedSelectionTargets(true, "analytic", renderer, interaction)).toEqual([
-				{ kind: "part", id: "p0", editable: false },
-			]);
-		});
-
-		it("spatialPickKindTogglesForView ignores kinds from the inactive pick view", () => {
-			const rawMasked = spatialPickKindTogglesForView({ surface: false, objectFace: false }, "raw");
-			expect(rawMasked.surface).toBeUndefined();
-			expect(rawMasked.objectFace).toBe(false);
-			const analyticMasked = spatialPickKindTogglesForView({ objectFace: false, surface: false }, "analytic");
-			expect(analyticMasked.objectFace).toBeUndefined();
-			expect(analyticMasked.surface).toBe(false);
-		});
-
-		it("spatialAnalyticTogglesForView is empty outside analytic pick view", () => {
-			expect(spatialAnalyticTogglesForView({ exposure: { external: false } }, "raw")).toEqual({});
-			expect(spatialAnalyticTogglesForView({ exposure: { external: false } }, "analytic").exposure?.external).toBe(false);
-		});
-
-		it("replPruneSelectionByKind only drops kinds from the active pick view", () => {
-			const selection: SelectionTarget[] = [
-				{ kind: "face", id: "f0", editable: true },
-				{ kind: "surface", id: "s0", editable: false },
-			];
-			expect(replPruneSelectionByKind(selection, "raw", "objectFace")).toEqual([{ kind: "surface", id: "s0", editable: false }]);
-			expect(replPruneSelectionByKind(selection, "analytic", "surface")).toEqual([{ kind: "face", id: "f0", editable: true }]);
-		});
-
-		it("replPruneSelectionAnalytic removes only failing analytic targets", () => {
-			const pickTargets: SpatialPickTarget[] = [
-				{ kind: "surface", id: "s-ext", point: [0, 0, 0], exposure: "external", stance: "horizontal" },
-				{ kind: "surface", id: "s-int", point: [1, 0, 0], exposure: "internal", stance: "vertical" },
-				{ kind: "part", id: "p0", point: [0, 0, 0.5], overlap: "none" },
-			];
-			const selection: SelectionTarget[] = [
-				{ kind: "face", id: "f0", editable: true },
-				{ kind: "surface", id: "s-ext", editable: false },
-				{ kind: "surface", id: "s-int", editable: false },
-				{ kind: "part", id: "p0", editable: false },
+				{ kind: "object", id: "o0", editable: false },
 			];
 			expect(
-				replPruneSelectionAnalytic(selection, pickTargets, {
-					exposure: { external: true, internal: false },
-					stance: { horizontal: true, vertical: true },
-					overlap: { none: true, difference: true, intersection: true },
-				}),
+				replMergeSelectionPickInView(false, null, renderer, [], [{ kind: "wire", id: "w1", editable: true }], {}),
 			).toEqual([
-				{ kind: "face", id: "f0", editable: true },
-				{ kind: "surface", id: "s-ext", editable: false },
-				{ kind: "part", id: "p0", editable: false },
-			]);
-		});
-
-		it("keeps renderer selection unless interaction commits with archiveContext", () => {
-			const renderer = [{ kind: "wire", id: "w0", editable: true }] satisfies readonly SelectionTarget[];
-			expect(replFinalizeSelection(renderer, null)).toEqual(renderer);
-			expect(
-				replFinalizeSelection(renderer, {
-					ok: true,
-					errors: [],
-					warnings: [],
-					infos: [],
-					diff: M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("c0")),
-					data: null,
-					archiveContext: { targets: [{ kind: "cell", id: "c0", editable: true }] },
-				}),
-			).toEqual([{ kind: "cell", id: "c0", editable: true }]);
-			expect(
-				replFinalizeSelection(renderer, {
-					ok: true,
-					errors: [],
-					warnings: [],
-					infos: [],
-					diff: EMPTY_MODEL_DIFF,
-					data: null,
-					archiveContext: { targets: [] },
-				}),
-			).toEqual([]);
-		});
-
-		describe("selection commands end-to-end", () => {
-			it.each(listSelectionOperationInteractionDefs())(
-				"$id runs startÔåÆcommit and replFinalizeSelection updates renderer selection",
-				async (defn) => {
-					const model = new Model();
-					applyModelDiff(model,
-						M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")),
-					);
-					const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-					const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
-					if (derived) await derived.refresh(model);
-					const spec = loadSpatialInteraction(defn.id);
-					expect(spec).not.toBeNull();
-					const seed = selectionSeedTargetsForOperation(defn.operation);
-					const rt = createInteractionRuntime(spec!, {
-						kernel,
-						document: { model: model, nodes: [] },
-						derived,
-					});
-					let rendererSelection: SelectionTarget[] = [...seed];
-					await rt.send({ kind: "start", targets: seed, modifiers: {} });
-					const snap = rt.getSnapshot();
-					expect(snap.state).toBe("committed");
-					expect(snap.lastResponse?.ok).toBe(true);
-					expect(isEmptyModelDiff(snap.lastResponse?.diff ?? EMPTY_MODEL_DIFF)).toBe(true);
-					const archived = replInteractionSelectionFromContext(snap.lastResponse?.archiveContext ?? {});
-					rendererSelection = [...replFinalizeSelection(rendererSelection, snap.lastResponse)];
-					expect(rendererSelection).toEqual(archived);
-					if (defn.operation === "deselectAll") {
-						expect(rendererSelection).toEqual([]);
-					} else if (defn.operation === "selectAll") {
-						expect(rendererSelection.length).toBeGreaterThanOrEqual(8);
-						expect(rendererSelection.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(true);
-					} else if (defn.operation === "invert") {
-						expect(rendererSelection.some((t) => t.kind === "cell" && t.id === "e2e-box")).toBe(false);
-						expect(rendererSelection.length).toBeGreaterThan(0);
-					} else if (defn.kinds?.length === 1) {
-						const kind = defn.kinds[0]!;
-						expect(rendererSelection.every((t) => t.kind === kind)).toBe(true);
-						if (
-							defn.id === "selection.selectAnchors" ||
-							defn.id === "selection.selectCellComplexes" ||
-							defn.id === "selection.selectClusters"
-						) {
-							expect(rendererSelection).toEqual([]);
-						} else if (defn.id === "selection.selectShells") {
-							expect(rendererSelection.every((t) => t.kind === "shell")).toBe(true);
-							expect(rendererSelection.length).toBeGreaterThan(0);
-						} else if (defn.id === "selection.selectVolumes") {
-							expect(rendererSelection.every((t) => t.kind === "volume")).toBe(true);
-						} else {
-							expect(rendererSelection.length).toBeGreaterThan(0);
-						}
-					}
-					if (defn.id === "selection.selectVolumes") {
-						expect(replDisplayedSelectionTargets(false, "raw", rendererSelection, [])).toEqual([]);
-						expect(replDisplayedSelectionTargets(false, "analytic", rendererSelection, [])).toEqual([]);
-					} else {
-						const pickView: SpatialPickViewKind =
-							defn.kinds?.some((k) => k === "surface" || k === "part") ? "analytic" : "raw";
-						const allowed = spatialPickViewKindSet(pickView);
-						expect(replDisplayedSelectionTargets(false, pickView, rendererSelection, [])).toEqual(
-							rendererSelection.filter((t) => {
-								const pickKind = selectionTargetPickKind(t);
-								return pickKind !== null && allowed.has(pickKind);
-							}),
-						);
-					}
-				},
-			);
-
-			it("chains selection commands through renderer finalize like a host session", async () => {
-				const model = new Model();
-				applyModelDiff(model,
-					M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 1 }, cellRef("e2e-box")),
-				);
-				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-				let rendererSelection: SelectionTarget[] = [];
-				const runCommand = async (id: string, seed: readonly SelectionTarget[]) => {
-					const rt = createInteractionRuntime(loadSpatialInteraction(id)!, {
-						kernel,
-						document: { model: model, nodes: [] },
-					});
-					await rt.send({ kind: "start", targets: seed, modifiers: {} });
-					const snap = rt.getSnapshot();
-					expect(snap.lastResponse?.ok).toBe(true);
-					rendererSelection = [...replFinalizeSelection(rendererSelection, snap.lastResponse)];
-				};
-				await runCommand("selection.selectAll", []);
-				expect(rendererSelection.length).toBeGreaterThan(8);
-				await runCommand("selection.selectVertices", rendererSelection);
-				expect(rendererSelection.every((t) => t.kind === "vertex")).toBe(true);
-				await runCommand("selection.deselectAll", rendererSelection);
-				expect(rendererSelection).toEqual([]);
-				await runCommand("selection.selectFaces", []);
-				expect(rendererSelection.every((t) => t.kind === "face")).toBe(true);
-				expect(rendererSelection.length).toBe(6);
-				await runCommand("selection.invert", rendererSelection.slice(0, 1));
-				expect(rendererSelection.some((t) => t.kind === "face")).toBe(true);
-				expect(rendererSelection.some((t) => t.kind === "vertex")).toBe(true);
-			});
-		});
-
-		it("reads interaction selection from machine context targets", () => {
-			const ctx = {
-				targets: [
-					{ kind: "face", id: "f0", editable: true },
-					{ kind: "wire", id: "w0", editable: true },
-					{ kind: "bad", id: 1 },
-				],
-			};
-			expect(replInteractionSelectionFromContext(ctx)).toEqual([
-				{ kind: "face", id: "f0", editable: true },
-				{ kind: "wire", id: "w0", editable: true },
-			]);
-			expect(replSelectionTargetsEqual([], [])).toBe(true);
-			expect(
-				replSelectionTargetsEqual(
-					[{ kind: "wire", id: "w0", editable: true }],
-					[{ kind: "wire", id: "w0", editable: true }],
-				),
-			).toBe(true);
-			expect(
-				replSelectionTargetsEqual(
-					[{ kind: "wire", id: "w0", editable: true }],
-					[{ kind: "wire", id: "w1", editable: true }],
-				),
-			).toBe(false);
-		});
-
-		it("merges host selections according to modifiers", () => {
-			const current: SelectionTarget[] = [{ kind: "wire", id: "w0", editable: true }];
-			const next: SelectionTarget[] = [{ kind: "wire", id: "w1", editable: true }];
-			expect(mergeSelectionTargets(current, next, spatialSelectionModeFromModifiers({}))).toEqual(next);
-			expect(mergeSelectionTargets(current, next, spatialSelectionModeFromModifiers({ shift: true }))).toEqual([...current, ...next]);
-			expect(
-				mergeSelectionTargets([...current, ...next], next, spatialSelectionModeFromModifiers({ ctrl: true })),
-			).toEqual(current);
-			expect(
-				mergeSelectionTargets(
-					[...current, ...next],
-					[{ kind: "wire", id: "w0", editable: true }, { kind: "wire", id: "w2", editable: true }],
-					spatialSelectionModeFromModifiers({ shift: true, ctrl: true }),
-				),
-			).toEqual([
+				{ kind: "object", id: "o0", editable: false },
 				{ kind: "wire", id: "w1", editable: true },
-				{ kind: "wire", id: "w2", editable: true },
 			]);
-		});
-
-		it("switches drag coverage by initial horizontal direction", () => {
-			expect(spatialSelectionCoverageFromPath([{ x: 10, y: 10 }, { x: 20, y: 12 }])).toBe("full");
-			expect(spatialSelectionCoverageFromPath([{ x: 20, y: 10 }, { x: 10, y: 12 }])).toBe("partial");
-		});
-	});
-
-	describe("@spatial/js-renderer-r3f runtime", () => {
-		it("exposes an initial snapshot for the box interaction with a stub kernel", () => {
-			class StubKernel extends BrepjsKernel {
-				async createBoxFromCorners() {
-					return cellRef("stub");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-			}
-			const spec = buildBoxInteractionSpec();
-			const runtime = createInteractionRuntime(spec, {
-					kernel: new StubKernel() as unknown as SpatialKernel,
-				document: { model: new Model(), nodes: [] },
-			});
-			const snapshot = runtime.getSnapshot();
-			expect(snapshot.interactionId).toBe(spec.id);
-			expect(snapshot.state).toBe(spec.machine.initial);
-		});
-	});
-
-	describe("@spatial/js-renderer-r3f repl history", () => {
-		it("getReplHistoryPresentation exposes canRedo after document undo", () => {
-			class StubKernel extends BrepjsKernel {
-				async createBoxFromCorners() {
-					return cellRef("c");
-				}
-				async volume() {
-					return 0;
-				}
-				async tessellate() {
-					return emptyMeshTransfer();
-				}
-			}
-			const g = new Model();
-			const mesh: MeshTransfer = {
-				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-				index: new Uint32Array([0, 1, 2]),
-				edges: new Float32Array(0),
-				faceGroups: [],
-				edgeGroups: [],
-				faceInfos: [],
-				edgeInfos: [],
-			};
-			const d0 = M.meshFaceModelDiff(mesh, "x");
-			const inv = applyModelDiff(g, d0);
-			const hist = new DocumentHistory();
-			hist.record({
-				id: "m0",
-				interactionId: "c",
-				label: "L",
-				result: { ok: true, errors: [], warnings: [], infos: [], diff: d0, data: null, archiveContext: null },
-				backwardsDiff: inv,
-			});
-			const spec = buildBoxInteractionSpec();
-				const rt = createInteractionRuntime(spec, {
-					kernel: new StubKernel() as unknown as SpatialKernel,
-					document: { model: g, nodes: [] },
-					history: hist,
-				});
-			let snap = rt.getSnapshot();
-			let pres = getReplHistoryPresentation(spec, snap, hist);
-			expect(pres.canUndo).toBe(true);
-			expect(pres.canRedo).toBe(false);
-			rt.undo();
-			snap = rt.getSnapshot();
-			pres = getReplHistoryPresentation(spec, snap, hist);
-			expect(pres.canRedo).toBe(true);
-		});
-	});
-
-	describe("@spatial/js-renderer-r3f interaction repl", () => {
-		it("exports InteractionRepl and useInteractionRuntime for hosts", () => {
-			expect(typeof InteractionRepl).toBe("function");
-			expect(typeof useInteractionRuntime).toBe("function");
-		});
-
-		it("repeats the current interaction on bare space only while inactive", () => {
-			const cmd = document.createElement("input");
-			const other = document.createElement("div");
-			const notes = document.createElement("textarea");
-			expect(
-				replShouldRepeatInteractionOnSpace(
-					{
-						key: " ",
-						ctrlKey: false,
-						metaKey: false,
-						altKey: false,
-						defaultPrevented: false,
-						isComposing: false,
-						target: other,
-					},
-					{ interactionActive: false, cmdTarget: cmd },
-				),
-			).toBe(true);
-			expect(
-				replShouldRepeatInteractionOnSpace(
-					{
-						key: " ",
-						ctrlKey: false,
-						metaKey: false,
-						altKey: false,
-						defaultPrevented: false,
-						isComposing: false,
-						target: other,
-					},
-					{ interactionActive: true, cmdTarget: cmd },
-				),
-			).toBe(false);
-			expect(
-				replShouldRepeatInteractionOnSpace(
-					{
-						key: " ",
-						ctrlKey: false,
-						metaKey: false,
-						altKey: false,
-						defaultPrevented: false,
-						isComposing: false,
-						target: cmd,
-					},
-					{ interactionActive: false, cmdTarget: cmd },
-				),
-			).toBe(false);
-			expect(
-				replShouldRepeatInteractionOnSpace(
-					{
-						key: " ",
-						ctrlKey: false,
-						metaKey: false,
-						altKey: false,
-						defaultPrevented: false,
-						isComposing: false,
-						target: notes,
-					},
-					{ interactionActive: false, cmdTarget: cmd },
-				),
-			).toBe(false);
-			expect(
-				replShouldRepeatInteractionOnSpace(
-					{
-						key: " ",
-						ctrlKey: true,
-						metaKey: false,
-						altKey: false,
-						defaultPrevented: false,
-						isComposing: false,
-						target: other,
-					},
-					{ interactionActive: false, cmdTarget: cmd },
-				),
-			).toBe(false);
-		});
-
-		it("escape aborts active interactions before dismissing chrome", () => {
-			expect(replEscapeAction({ hasInteraction: false, interactionActive: true, cmdLine: "height 4", hasSelectionMenu: true })).toBe("abort");
-			expect(replEscapeAction({ hasInteraction: true, interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("abort");
-			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "height 4", hasSelectionMenu: false })).toBe("dismiss");
-			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "", hasSelectionMenu: true })).toBe("dismiss");
-			expect(replEscapeAction({ hasInteraction: false, interactionActive: false, cmdLine: "", hasSelectionMenu: false })).toBe("none");
-		});
-
-		it("autocomplete helpers rank prefix matches and expose inline suffix", () => {
-			const all: ReplSuggestion[] = [
-				{ kind: "interaction", key: "m", label: "Move", detail: "transform.move", interactionId: "transform.move", onRun: () => {} },
-				{ kind: "interaction", key: "b", label: "Box", detail: "primitive.box", interactionId: "primitive.box", onRun: () => {} },
-				{ kind: "transition", key: "c", label: "Confirm", detail: "confirm", onRun: () => {} },
-			];
-			expect(replFilterSuggestions("", all)).toEqual([]);
-			expect(replPaletteRows("", all)).toEqual([]);
-			expect(replFilterSuggestions("  ", all)).toEqual([]);
-			expect(replCommandTextWithoutSpaces("b ")).toBe("b");
-			expect(replCommandTextWithoutSpaces("Apply Number")).toBe("ApplyNumber");
-			expect(replPaletteRows("b", all).map((s) => s.key)).toEqual(["b"]);
-			expect(replPaletteRows("bo", all).map((s) => s.key)).toEqual(["b"]);
-			expect(replCompletionSuffix("b", all[1])).toBe("ox");
-			expect(replCompletionSuffix("bo", all[1])).toBe("x");
-			expect(replActiveCompletionSuffix("b", replPaletteRows("b", all), 0)).toBe("ox");
-			expect(replActiveCompletionSuffix("bo", replPaletteRows("bo", all), 0)).toBe("x");
-			expect(replInteractionSuggestions("", all).map((s) => s.key)).toEqual(["m", "b"]);
-			expect(replInteractionSuggestions("bo", all).map((s) => s.key)).toEqual(["b"]);
-			expect(replInteractionSuggestionOnSpace("b", replPaletteRows("b", all), all)?.detail).toBe("primitive.box");
-			expect(replInteractionSuggestionOnSpace("Box", replPaletteRows("Box", all), all)?.detail).toBe("primitive.box");
-			expect(replInteractionSuggestionOnSpace("primitive.box", replPaletteRows("primitive.box", all), all)?.detail).toBe("primitive.box");
-			expect(replInteractionSuggestionOnSpace("confirm", replPaletteRows("confirm", all), all)).toBeNull();
-			expect(replInteractionIdOnSpace("", [], all, "primitive.box")).toBe("primitive.box");
-			expect(replInteractionIdOnSpace("b", replPaletteRows("b", all), all, "transform.move")).toBe("primitive.box");
-			expect(replInteractionIdOnSpace("", [], all, "")).toBeNull();
-		});
-
-		it("findFaceGroupAt resolves triangle index to face group", () => {
-			const groups: FaceGroup[] = [
-				{ start: 0, count: 9, faceId: 10 },
-				{ start: 9, count: 9, faceId: 20 },
-			];
-			expect(findFaceGroupAt(groups, 0)?.faceId).toBe(10);
-			expect(findFaceGroupAt(groups, 3)?.faceId).toBe(20);
-			expect(findFaceGroupAt(groups, 99)).toBeNull();
-		});
-
-		it("resolveFaceInfoFromTriangleIndex maps grouped buffers to FaceInfo", () => {
-			const mesh: MeshTransfer = {
-				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-				index: new Uint32Array([0, 1, 2]),
-				edges: new Float32Array(0),
-				faceGroups: [{ start: 0, count: 3, faceId: 42 }],
-				edgeGroups: [],
-				faceInfos: [{ faceId: 42, surfaceType: "plane", area: 1, normal: [0, 0, 1] }],
-				edgeInfos: [],
-			};
-			expect(resolveFaceInfoFromTriangleIndex(mesh, 0)?.faceId).toBe(42);
-			expect(resolveFaceInfoFromTriangleIndex(mesh, null)).toBeNull();
-		});
-
-		it("keeps committed mesh faces slightly transparent", () => {
-			expect(COMMITTED_MESH_FACE_OPACITY).toBeGreaterThan(0.5);
-			expect(COMMITTED_MESH_FACE_OPACITY).toBeLessThan(1);
-		});
-
-		it("listModelCellRefs returns cell ids from a committed box", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("box-cell")));
-			expect(listModelCellRefs(model).map(String)).toEqual(["box-cell"]);
-		});
-
-		it("boundsFromMeshTransfers returns center and radius", () => {
-			const mesh: MeshTransfer = {
-				position: new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0]),
-				normal: new Float32Array(9),
-				index: new Uint32Array([0, 1, 2]),
-				edges: new Float32Array(0),
-				faceGroups: [],
-				edgeGroups: [],
-				faceInfos: [],
-				edgeInfos: [],
-			};
-			const b = boundsFromMeshTransfers([mesh]);
-			expect(b?.center[0]).toBeCloseTo(1);
-			expect(b?.center[1]).toBeCloseTo(1);
-			expect(b?.radius).toBeGreaterThan(0);
-		});
-
-		it("boundsFromSpatialPickGeometry fits imported geometry vertices", () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [10, 20, 0], cornerB: [30, 40, 0], height: 5 }, cellRef("b")));
-			const b = boundsFromSpatialPickGeometry(model);
-			expect(b).not.toBeNull();
-			expect(b!.center[0]).toBeGreaterThan(5);
-			expect(b!.radius).toBeGreaterThan(1);
-		});
-
-		it("registerSpatialDisplayItemKind registers and unregisters host renderers", () => {
-			const render: SpatialDisplayItemRenderer = (_item, _geo, fallback) => fallback();
-			const off = registerSpatialDisplayItemKind("custom-host", render);
-			expect(getSpatialDisplayItemKindRenderer("custom-host")).toBe(render);
-			off();
-			expect(getSpatialDisplayItemKindRenderer("custom-host")).toBeUndefined();
-		});
-
-		it("meshTransferContentKey changes when buffer length changes", () => {
-			const a: MeshTransfer = {
-				position: new Float32Array([0, 0, 0]),
-				normal: new Float32Array([0, 0, 1]),
-				index: new Uint32Array([0]),
-				edges: new Float32Array(0),
-				faceGroups: [],
-				edgeGroups: [],
-				faceInfos: [],
-				edgeInfos: [],
-			};
-			const b: MeshTransfer = { ...a, position: new Float32Array([0, 0, 0, 1, 0, 0]) };
-			expect(meshTransferContentKey(a)).not.toBe(meshTransferContentKey(b));
-		});
-
-		it("buildBufferGeometryFromMeshTransfer disposes geometry on unmount", () => {
-			const data: MeshTransfer = {
-				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-				index: new Uint32Array([0, 1, 2]),
-				edges: new Float32Array(0),
-				faceGroups: [{ start: 0, count: 3, faceId: 1 }],
-				edgeGroups: [],
-				faceInfos: [],
-				edgeInfos: [],
-			};
-			const geo = buildBufferGeometryFromMeshTransfer(data);
-			const disposeSpy = vi.spyOn(geo, "dispose");
-			geo.dispose();
-			expect(disposeSpy).toHaveBeenCalledOnce();
-			disposeSpy.mockRestore();
-		});
-
-		it("buildBufferGeometryFromMeshTransfer returns empty geometry for invalid mesh data", () => {
-			const geo = buildBufferGeometryFromMeshTransfer({
-				...emptyMeshTransfer(),
-				position: new Float32Array([0, 0, Number.NaN]),
-				normal: new Float32Array([0, 0, 1]),
-				index: new Uint32Array([0]),
-			});
-			expect(geo.getAttribute("position")).toBeUndefined();
-			geo.dispose();
-		});
-
-		it("derives persistent box footprints from document history", () => {
-			const g = new Model();
-			const mesh: MeshTransfer = {
-				position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-				normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-				index: new Uint32Array([0, 1, 2]),
-				edges: new Float32Array(0),
-				faceGroups: [],
-				edgeGroups: [],
-				faceInfos: [],
-				edgeInfos: [],
-			};
-			const d0 = M.meshFaceModelDiff(mesh, "hist-box");
-			const inv = applyModelDiff(g, d0);
-			const hist = new DocumentHistory();
-			hist.record({
-				id: "box-1",
-				interactionId: "primitive.box",
-				label: "Box",
-				result: {
-					ok: true,
-					errors: [],
-					warnings: [],
-					infos: [],
-					diff: d0,
-					data: null,
-					archiveContext: { origin: [0, 0, 0], corner: [2, 3, 0], height: 4 },
-				},
-				backwardsDiff: inv,
-			});
-			expect(archivedBoxesFromHistory(hist)).toEqual([{ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 }]);
-			hist.undo({ model: g, nodes: [] });
-			expect(archivedBoxesFromHistory(hist)).toEqual([]);
 		});
 	});
 }
-// #endregion ­ƒº¬Tests
-
-export type { MeshTransfer, FaceGroup, FaceInfo };
