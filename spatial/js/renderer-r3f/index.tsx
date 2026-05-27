@@ -157,7 +157,7 @@ export function useTessellation(
 		}
 		cancelAnimationFrame(rafRef.current);
 		rafRef.current = requestAnimationFrame(() => {
-			void kernel.tessellate(cell, tolerance).then(setMesh);
+			void kernel.tessellate(cell, tolerance).then((next) => setMesh(isRenderableMeshTransfer(next) ? next : null));
 		});
 		return () => cancelAnimationFrame(rafRef.current);
 	}, [kernel, cell, tolerance]);
@@ -178,6 +178,27 @@ export function meshTransferContentKey(mesh: MeshTransfer, fallback = 0): string
 	if (p.length === 0) return `empty-${fallback}`;
 	const mid = ((p.length / 6) | 0) * 3;
 	return `${p.length}-${p[0]}-${p[mid] ?? 0}-${p[p.length - 1] ?? 0}-${mesh.faceGroups.length}`;
+}
+
+export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
+	if (mesh.position.length === 0) return false;
+	if (mesh.position.length % 3 !== 0) return false;
+	if (mesh.normal.length !== mesh.position.length) return false;
+	if (mesh.edges.length % 3 !== 0) return false;
+	for (const value of mesh.position) {
+		if (!Number.isFinite(value)) return false;
+	}
+	for (const value of mesh.normal) {
+		if (!Number.isFinite(value)) return false;
+	}
+	for (const value of mesh.edges) {
+		if (!Number.isFinite(value)) return false;
+	}
+	const vertexCount = mesh.position.length / 3;
+	for (const value of mesh.index) {
+		if (!Number.isFinite(value) || value < 0 || value >= vertexCount) return false;
+	}
+	return true;
 }
 
 /** @emoji 🎞️ Tessellates every model cell through `SpatialKernel.tessellate` (worker-backed). */
@@ -204,7 +225,7 @@ export function useDocumentMeshes(
 				cells.map(async (cell) => {
 					try {
 						const mesh = await kernel.tessellate(cell, tolerance);
-						return { cell, mesh };
+						return isRenderableMeshTransfer(mesh) ? { cell, mesh } : null;
 					} catch {
 						return null;
 					}
@@ -2381,6 +2402,7 @@ export function SpatialPickGeometryLayer({
 /** @emoji 🧊 Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
 export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
 	const geo = new THREE.BufferGeometry();
+	if (!isRenderableMeshTransfer(data)) return geo;
 	geo.setAttribute("position", new THREE.Float32BufferAttribute(data.position, 3));
 	geo.setAttribute("normal", new THREE.Float32BufferAttribute(data.normal, 3));
 	geo.setIndex(new THREE.BufferAttribute(data.index, 1));
@@ -5317,6 +5339,25 @@ if (import.meta.vitest) {
 			expect(bounds).toEqual({ center: [5, 10, 15], radius: expect.closeTo(Math.sqrt(1400) / 2) });
 		});
 
+		it("isRenderableMeshTransfer rejects malformed tessellation payloads", () => {
+			expect(
+				isRenderableMeshTransfer({
+					...emptyMeshTransfer(),
+					position: new Float32Array([0, 0, Number.NaN]),
+					normal: new Float32Array([0, 0, 1]),
+					index: new Uint32Array([0]),
+				}),
+			).toBe(false);
+			expect(
+				isRenderableMeshTransfer({
+					...emptyMeshTransfer(),
+					position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+					normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+					index: new Uint32Array([0, 1, 2]),
+				}),
+			).toBe(true);
+		});
+
 		it("applySpatialAutoFitCamera keeps orbit target aligned with framed bounds", () => {
 			const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 			const target = new THREE.Vector3();
@@ -6453,6 +6494,17 @@ if (import.meta.vitest) {
 			geo.dispose();
 			expect(disposeSpy).toHaveBeenCalledOnce();
 			disposeSpy.mockRestore();
+		});
+
+		it("buildBufferGeometryFromMeshTransfer returns empty geometry for invalid mesh data", () => {
+			const geo = buildBufferGeometryFromMeshTransfer({
+				...emptyMeshTransfer(),
+				position: new Float32Array([0, 0, Number.NaN]),
+				normal: new Float32Array([0, 0, 1]),
+				index: new Uint32Array([0]),
+			});
+			expect(geo.getAttribute("position")).toBeUndefined();
+			geo.dispose();
 		});
 
 		it("derives persistent box footprints from document history", () => {
