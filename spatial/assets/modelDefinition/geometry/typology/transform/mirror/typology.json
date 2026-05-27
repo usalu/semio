@@ -5,7 +5,7 @@
   "label": "Mirror",
   "description": "Typology produced by transform.mirror.",
   "actions": [
-    "builtin.transform.mirror"
+    "transform.mirror"
   ],
   "interactions": [
     "transform.mirror"

@@ -5,7 +5,7 @@
   "label": "Move",
   "description": "Typology produced by transform.move.",
   "actions": [
-    "builtin.transform.move"
+    "transform.move"
   ],
   "interactions": [
     "transform.move"

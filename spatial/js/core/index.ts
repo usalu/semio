@@ -207,8 +207,8 @@ export function interactionCanConfirmSelection(spec: InteractionSpec, state: str
 // #endregion 🪪Selection
 
 // #region 🗺️Paths
-/** @emoji 🧭 Root object for segmented path reads (`context` vs `event`). */
-export type PathRoot = "context" | "event";
+/** @emoji 🧭 Root object for segmented path reads (`context`, `event`, or action `params`). */
+export type PathRoot = "context" | "event" | "params";
 
 /** @emoji 🧭 One navigation step: object field or array index (no dynamic JSON keys). */
 export type PathSegment = { readonly kind: "field"; readonly name: string } | { readonly kind: "index"; readonly index: number };
@@ -235,10 +235,15 @@ export function readPathSegments(root: unknown, segments: readonly PathSegment[]
   return cur;
 }
 
+function pathRootRecord(root: PathRoot, env: ExprEnv): unknown {
+  if (root === "context") return env.context;
+  if (root === "params") return env.params ?? {};
+  return env.event;
+}
+
 /** @emoji 🧭 Resolves a `PathTarget` against `ExprEnv`. */
 export function readPathTarget(t: PathTarget, env: ExprEnv): unknown {
-  const root = t.root === "context" ? env.context : env.event;
-  return readPathSegments(root, t.segments);
+  return readPathSegments(pathRootRecord(t.root, env), t.segments);
 }
 
 /** @emoji 🧭 Writes `value` at `segments` under `root` (creates object/array shells). */

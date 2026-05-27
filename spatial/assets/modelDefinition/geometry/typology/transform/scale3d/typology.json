@@ -5,7 +5,7 @@
   "label": "Scale 3D",
   "description": "Typology produced by transform.scale3d.",
   "actions": [
-    "builtin.transform.scale3d"
+    "transform.scale3d"
   ],
   "interactions": [
     "transform.scale3d"

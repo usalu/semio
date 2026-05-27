@@ -5,7 +5,7 @@
   "label": "Rotate",
   "description": "Typology produced by transform.rotate.",
   "actions": [
-    "builtin.transform.rotate"
+    "transform.rotate"
   ],
   "interactions": [
     "transform.rotate"

@@ -5,7 +5,7 @@
   "label": "Scale 1D",
   "description": "Typology produced by transform.scale1d.",
   "actions": [
-    "builtin.transform.scale1d"
+    "transform.scale1d"
   ],
   "interactions": [
     "transform.scale1d"

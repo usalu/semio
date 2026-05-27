@@ -5,7 +5,7 @@
   "label": "Copy",
   "description": "Typology produced by transform.copy.",
   "actions": [
-    "builtin.transform.copy"
+    "transform.copy"
   ],
   "interactions": [
     "transform.copy"

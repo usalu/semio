@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const base = "c:/git/semio/spatial/assets/modelDefinition/geometry/typology/transform";
@@ -34,7 +34,7 @@ for (const row of transforms) {
 	const fileName = row.id.split(".").pop()! + ".json";
 	writeFileSync(join(actionDir, fileName), capabilityDoc(row.id, row.label));
 	const typologyPath = join(base, row.dir, "typology.json");
-	const typology = JSON.parse(Bun.file(typologyPath).text()) as Record<string, unknown>;
+	const typology = JSON.parse(readFileSync(typologyPath, "utf8")) as Record<string, unknown>;
 	typology.actions = [row.id];
 	writeFileSync(typologyPath, `${JSON.stringify(typology, null, 2)}\n`);
 }
