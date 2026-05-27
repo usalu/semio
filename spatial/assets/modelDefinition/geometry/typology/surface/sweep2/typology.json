@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "surface.sweep2"
+  ],
+  "primitiveKinds": [
+    "face"
   ]
 }

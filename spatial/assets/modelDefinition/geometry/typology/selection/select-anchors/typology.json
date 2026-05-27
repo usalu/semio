@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectAnchors"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

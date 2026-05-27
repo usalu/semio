@@ -7,5 +7,6 @@
   "actions": [
     "command.finish"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

@@ -7,10 +7,13 @@ import geometryLoomFixtureJson from "../../fixtures/geometry-loom.json";
 import geometryRoutesFixtureJson from "../../fixtures/geometry-routes.json";
 import smallBuildingModelFixtureJson from "../../fixtures/small-building.model.json";
 
-const modelDefinitionTypologyModules = import.meta.glob("../../assets/modelDefinition/**/typology.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, unknown>;
+const modelDefinitionTypologyModules = import.meta.glob(
+  ["../../assets/modelDefinition/**/typology.json", "../../assets/modelDefinition/**/typology/*.json"],
+  {
+    eager: true,
+    import: "default",
+  },
+) as Record<string, unknown>;
 
 const modelDefinitionActionModules = import.meta.glob("../../assets/modelDefinition/**/action/*.json", {
   eager: true,
@@ -32,6 +35,21 @@ const geometryModelDefinitionManifestModule = import.meta.glob("../../assets/mod
   import: "default",
 }) as Record<string, unknown>;
 
+const modelDefinitionAttributeModules = import.meta.glob("../../assets/modelDefinition/**/attributeDefinition/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const modelDefinitionPropertyDefinitionModules = import.meta.glob("../../assets/modelDefinition/**/propertyDefinition/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDefinition/**/property/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
 function modelDefinitionTypologyCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionTypologyModules);
 }
@@ -46,6 +64,14 @@ function modelDefinitionInteractionCatalog(): readonly unknown[] {
 
 function modelDefinitionManifestCatalog(): readonly unknown[] {
   return [...Object.values(modelDefinitionManifestModules), ...Object.values(geometryModelDefinitionManifestModule)];
+}
+
+function modelDefinitionAttributeCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAttributeModules);
+}
+
+function modelDefinitionPropertyCatalog(): readonly unknown[] {
+  return [...Object.values(modelDefinitionPropertyDefinitionModules), ...Object.values(modelDefinitionPropertyModules)];
 }
 // #endregion 📥ModelDefinitionAssets
 
@@ -1186,6 +1212,9 @@ export function listModelDefinitionManifests(): readonly ModelDefinitionManifest
     .filter((m): m is ModelDefinitionManifest => m !== null);
 }
 
+/** @emoji 🧱 Topology primitive kind allowed on typology objects (`spatial/AGENTS.md`). */
+export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
+
 /** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
   readonly schema: "spatial.typology/v1";
@@ -1193,10 +1222,41 @@ export interface TypologySpec {
   readonly version: string;
   readonly label: string;
   readonly description?: string;
+  readonly primitiveKinds: readonly TypologyPrimitiveKind[];
   readonly actions: readonly string[];
   readonly interactions: readonly string[];
   readonly properties?: readonly string[];
   readonly attributes?: readonly string[];
+}
+
+/** @emoji 🧭 Infers default `primitiveKinds` from a shipped typology id when the asset omits the field. */
+export function inferTypologyPrimitiveKinds(typologyId: string): readonly TypologyPrimitiveKind[] {
+  const id = typologyId.toLowerCase();
+  if (id.includes(".selection.") || id.includes(".command.")) return [];
+  if (id.includes(".measure.") && id.includes("volume")) return [];
+  if (id.includes(".entity.") || id.includes("create-anchor")) return ["anchor"];
+  if (id.includes(".measure.")) return ["anchor"];
+  if (id.includes("energy.energy.") || id.includes("structure.structure.")) return ["solid"];
+  if (id.includes("lineelement") || id.includes("surfaceelement") || id.includes("solidelement")) return ["solid"];
+  if (id.includes(".curve.")) return ["edge", "wire"];
+  if (id.includes(".surface.")) return ["face"];
+  if (id.includes(".primitive.") || id.includes(".solid.")) return ["solid"];
+  if (id.includes(".feature.extrude")) return ["solid"];
+  if (id.includes(".feature.offset")) return ["face", "solid"];
+  if (id.includes(".transform.") || id.includes(".edit.")) return ["vertex", "edge", "wire", "face", "solid"];
+  return ["solid"];
+}
+
+function parseTypologyPrimitiveKinds(raw: unknown, typologyId: string): readonly TypologyPrimitiveKind[] {
+  if (!Array.isArray(raw) || raw.length === 0) return inferTypologyPrimitiveKinds(typologyId);
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const kinds: TypologyPrimitiveKind[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "string") continue;
+    const k = entry as TypologyPrimitiveKind;
+    if (allowed.has(k)) kinds.push(k);
+  }
+  return kinds.length ? kinds : inferTypologyPrimitiveKinds(typologyId);
 }
 
 /** @emoji 🧾 Parses `spatial.typology/v1` JSON or returns `null`. */
@@ -1212,6 +1272,7 @@ export function parseTypologySpec(raw: unknown): TypologySpec | null {
     version: r.version,
     label: r.label,
     description: typeof r.description === "string" ? r.description : undefined,
+    primitiveKinds: parseTypologyPrimitiveKinds(r.primitiveKinds, r.id),
     actions: r.actions as string[],
     interactions: r.interactions as string[],
     properties: Array.isArray(r.properties) ? (r.properties as string[]) : undefined,
@@ -1220,9 +1281,11 @@ export function parseTypologySpec(raw: unknown): TypologySpec | null {
 }
 
 function shippedTypologyCatalog(): readonly TypologySpec[] {
-  return modelDefinitionTypologyCatalog()
-    .map((raw) => parseTypologySpec(raw))
-    .filter((spec): spec is TypologySpec => spec !== null);
+  return dedupeDefinitionCatalog(
+    modelDefinitionTypologyCatalog()
+      .map((raw) => parseTypologySpec(raw))
+      .filter((spec): spec is TypologySpec => spec !== null),
+  );
 }
 
 /** @emoji 📚 Geometry model-definition manifest (`spatial/assets/modelDefinition/geometry/extension.json`). */
@@ -1249,6 +1312,212 @@ export function loadTypology(typologyId: string): TypologySpec | null {
 /** @emoji 📚 Resolves the typology whose `interactions` list includes `interactionId`. */
 export function typologyForInteraction(interactionId: string): TypologySpec | null {
   return shippedTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
+}
+
+/** @emoji 🏷️ Parsed attribute definition (`spatial.attribute/v1`). */
+export interface AttributeDefinitionSpec {
+  readonly schema: "spatial.attribute/v1";
+  readonly id: string;
+  readonly version: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly field: string;
+  readonly targets: readonly string[];
+  readonly value: unknown;
+  readonly geometrySelector?: { readonly kinds: readonly string[] };
+}
+
+/** @emoji 🧾 Parses `spatial.attribute/v1` JSON or returns `null`. */
+export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (r.schema !== "spatial.attribute/v1") return null;
+  if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
+  if (typeof r.field !== "string" || !Array.isArray(r.targets) || r.targets.length === 0) return null;
+  if (!("value" in r)) return null;
+  const selector = r.geometrySelector;
+  const geometrySelector =
+    selector && typeof selector === "object" && Array.isArray((selector as { kinds?: unknown }).kinds)
+      ? { kinds: (selector as { kinds: string[] }).kinds }
+      : undefined;
+  return {
+    schema: "spatial.attribute/v1",
+    id: r.id,
+    version: r.version,
+    label: r.label,
+    description: typeof r.description === "string" ? r.description : undefined,
+    field: r.field,
+    targets: r.targets as string[],
+    value: r.value,
+    geometrySelector,
+  };
+}
+
+/** @emoji 🏷️ Parsed property definition (`spatial.property/v1`). */
+export interface PropertyDefinitionSpec {
+  readonly schema: "spatial.property/v1";
+  readonly id: string;
+  readonly version: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly unit?: string;
+  readonly sources?: Readonly<Record<string, unknown>>;
+  readonly output?: Readonly<Record<string, unknown>>;
+}
+
+/** @emoji 🧾 Parses `spatial.property/v1` JSON or returns `null`. */
+export function parsePropertyDefinitionSpec(raw: unknown): PropertyDefinitionSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (r.schema !== "spatial.property/v1") return null;
+  if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
+  return {
+    schema: "spatial.property/v1",
+    id: r.id,
+    version: r.version,
+    label: r.label,
+    description: typeof r.description === "string" ? r.description : undefined,
+    unit: typeof r.unit === "string" ? r.unit : undefined,
+    sources: r.sources && typeof r.sources === "object" ? (r.sources as Record<string, unknown>) : undefined,
+    output: r.output && typeof r.output === "object" ? (r.output as Record<string, unknown>) : undefined,
+  };
+}
+
+function dedupeDefinitionCatalog<T extends { readonly id: string }>(rows: readonly T[]): readonly T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const row of rows) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    out.push(row);
+  }
+  return out;
+}
+
+function shippedAttributeDefinitionCatalog(): readonly AttributeDefinitionSpec[] {
+  return dedupeDefinitionCatalog(
+    modelDefinitionAttributeCatalog()
+      .map((raw) => parseAttributeDefinitionSpec(raw))
+      .filter((spec): spec is AttributeDefinitionSpec => spec !== null),
+  );
+}
+
+function shippedPropertyDefinitionCatalog(): readonly PropertyDefinitionSpec[] {
+  return dedupeDefinitionCatalog(
+    modelDefinitionPropertyCatalog()
+      .map((raw) => parsePropertyDefinitionSpec(raw))
+      .filter((spec): spec is PropertyDefinitionSpec => spec !== null),
+  );
+}
+
+/** @emoji 📚 Lists attribute definitions from model-definition assets. */
+export function listModelDefinitionAttributeDefinitions(): readonly AttributeDefinitionSpec[] {
+  return shippedAttributeDefinitionCatalog();
+}
+
+/** @emoji 📚 Lists property definitions from model-definition assets. */
+export function listModelDefinitionPropertyDefinitions(): readonly PropertyDefinitionSpec[] {
+  return shippedPropertyDefinitionCatalog();
+}
+
+/** @emoji 📚 Loads an attribute definition by stable `id`. */
+export function loadAttributeDefinition(attributeId: string): AttributeDefinitionSpec | null {
+  return shippedAttributeDefinitionCatalog().find((row) => row.id === attributeId) ?? null;
+}
+
+/** @emoji 📚 Loads a property definition by stable `id`. */
+export function loadPropertyDefinition(propertyId: string): PropertyDefinitionSpec | null {
+  return shippedPropertyDefinitionCatalog().find((row) => row.id === propertyId) ?? null;
+}
+
+/** @emoji 🧭 Resolves the primary topology kind referenced by an object's `geometryRef`. */
+export function resolveGeometryRefPrimitiveKind(model: Model, geometryRef: string): TypologyPrimitiveKind | null {
+  if (model.anchors[geometryRef]) return "anchor";
+  if (model.vertices[geometryRef]) return "vertex";
+  if (model.edges[geometryRef]) return "edge";
+  if (model.wires[geometryRef]) return "wire";
+  if (model.faces[geometryRef]) return "face";
+  if (model.shells[geometryRef]) return "shell";
+  if (model.solids[geometryRef]) return "solid";
+  return null;
+}
+
+/** @emoji ✅ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
+export function typologyAllowsPrimitiveKind(typology: TypologySpec, primitiveKind: TypologyPrimitiveKind): boolean {
+  return typology.primitiveKinds.includes(primitiveKind);
+}
+
+/** @emoji ✅ Whether `object` on `model` satisfies its typology `primitiveKinds`. */
+export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObjectRecord): boolean {
+  const typology = loadTypology(object.typologyId);
+  if (!typology || typology.primitiveKinds.length === 0) return false;
+  const kind = resolveGeometryRefPrimitiveKind(model, object.geometryRef);
+  return kind ? typologyAllowsPrimitiveKind(typology, kind) : false;
+}
+
+/** @emoji 🪪 Kernel topology typology ids used by construct `MATCH` on geometry rows. */
+export const KERNEL_TOPOLOGY_TYPOLOGY_IDS: Readonly<Record<TypologyPrimitiveKind, string>> = {
+  anchor: "builtin.kernel.anchor",
+  vertex: "builtin.kernel.vertex",
+  edge: "builtin.kernel.edge",
+  wire: "builtin.kernel.wire",
+  face: "builtin.kernel.face",
+  shell: "builtin.kernel.shell",
+  solid: "builtin.kernel.solid",
+};
+
+/** @emoji 🧭 Maps typology id → `ModelEntityKind` for construct `Object {typology:…}` patterns. */
+export function buildTypologyToEntityKindMap(): Readonly<Record<string, ModelEntityKind>> {
+  const out: Record<string, ModelEntityKind> = {};
+  for (const [kind, id] of Object.entries(KERNEL_TOPOLOGY_TYPOLOGY_IDS)) out[id] = kind as ModelEntityKind;
+  for (const spec of shippedTypologyCatalog()) {
+    if (spec.primitiveKinds.length !== 1) continue;
+    const kind = spec.primitiveKinds[0]!;
+    if (kind === "anchor" && !spec.id.includes("entity") && !spec.id.includes("measure")) continue;
+    out[spec.id] = kind;
+  }
+  return out;
+}
+
+/** @emoji ✅ Whether a property definition applies to `object` on `model`. */
+export function propertyDefinitionAppliesToObject(defn: PropertyDefinitionSpec, object: SpatialObjectRecord): boolean {
+  const typologies = defn.sources?.typologies;
+  if (Array.isArray(typologies) && typologies.length > 0) return typologies.includes(object.typologyId);
+  const views = defn.sources?.views;
+  if (Array.isArray(views) && views.length > 0) return false;
+  return true;
+}
+
+/** @emoji 📐 Derives property output for one model object from a property definition. */
+export async function derivePropertyValue(
+  defn: PropertyDefinitionSpec,
+  ctx: { readonly model: Model; readonly kernel: SpatialKernel; readonly object: SpatialObjectRecord },
+): Promise<Record<string, unknown>> {
+  if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
+  if (defn.id === "builtin.volume") {
+    const kind = resolveGeometryRefPrimitiveKind(ctx.model, ctx.object.geometryRef);
+    if (kind !== "solid") return { volume: 0 };
+    const volume = await ctx.kernel.solidVolume(ctx.object.geometryRef as SolidRef);
+    return { volume };
+  }
+  if (defn.id === "energy.heatedvolume") {
+    const kind = resolveGeometryRefPrimitiveKind(ctx.model, ctx.object.geometryRef);
+    if (kind !== "solid") return { heatedvolume: 0 };
+    const heatedvolume = await ctx.kernel.solidVolume(ctx.object.geometryRef as SolidRef);
+    return { heatedvolume };
+  }
+  const output = defn.output ?? {};
+  return { ...output };
+}
+
+/** @emoji 📚 Property definitions that apply to `object` on `model`. */
+export function listApplicablePropertyDefinitions(model: Model, object: SpatialObjectRecord): readonly PropertyDefinitionSpec[] {
+  return shippedPropertyDefinitionCatalog().filter((defn) => propertyDefinitionAppliesToObject(defn, object));
+}
+
+/** @emoji 📚 Attribute definitions whose `targets` include `targetKind`. */
+export function listAttributeDefinitionsForTarget(targetKind: string): readonly AttributeDefinitionSpec[] {
+  return shippedAttributeDefinitionCatalog().filter((defn) => defn.targets.includes(targetKind));
 }
 
 // #endregion 🧱Model
@@ -3346,6 +3615,65 @@ if (import.meta.vitest) {
   describe("@spatial/js-core vec", () => {
     it("adds and distances", () => {
       expect(M.vec3Distance([0, 0, 0], [3, 4, 0])).toBe(5);
+    });
+  });
+
+  describe("@spatial/js-core model definition catalogs", () => {
+    it("loads attribute and property definition assets", () => {
+      const attributes = listModelDefinitionAttributeDefinitions();
+      const properties = listModelDefinitionPropertyDefinitions();
+      expect(attributes.length).toBeGreaterThanOrEqual(6);
+      expect(properties.some((row) => row.id === "builtin.volume")).toBe(true);
+      expect(loadAttributeDefinition("builtin.material")?.field).toBe("material");
+      expect(loadPropertyDefinition("builtin.volume")?.unit).toBe("volume");
+    });
+    it("loads geometry and AEC typology assets", () => {
+      const typologies = listModelDefinitionTypologies();
+      expect(typologies.length).toBeGreaterThanOrEqual(67);
+      expect(loadTypology("energy.energy.hull")?.properties).toContain("builtin.volume");
+      expect(loadTypology("builtin.measure.volume")?.primitiveKinds).toEqual([]);
+    });
+    it("assigns primitiveKinds to geometry typologies", () => {
+      const box = loadTypology("builtin.primitive.box");
+      const line = loadTypology("builtin.curve.line");
+      const selectAll = loadTypology("builtin.selection.select-all");
+      expect(box?.primitiveKinds).toEqual(["solid"]);
+      expect(line?.primitiveKinds).toEqual(["edge", "wire"]);
+      expect(selectAll?.primitiveKinds).toEqual([]);
+    });
+    it("derives builtin.volume for solid-backed objects", async () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const object = {
+        id: "obj-a" as ObjectRef,
+        typologyId: "builtin.primitive.box" as TypologyRef,
+        geometryRef: solidId,
+      };
+      const defn = loadPropertyDefinition("builtin.volume")!;
+      const kernel = {
+        solidVolume: async () => 42,
+      } as unknown as SpatialKernel;
+      const out = await derivePropertyValue(defn, { model, kernel, object });
+      expect(out.volume).toBe(42);
+      expect(listApplicablePropertyDefinitions(model, object).map((row) => row.id)).toContain("builtin.volume");
+    });
+    it("validates object geometry against typology primitiveKinds", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
+      const solidId = Object.keys(model.solids)[0]!;
+      model.objects["obj-a"] = {
+        id: "obj-a" as ObjectRef,
+        typologyId: "builtin.primitive.box" as TypologyRef,
+        geometryRef: solidId,
+      };
+      expect(objectMatchesTypologyPrimitives(model, model.objects["obj-a"]!)).toBe(true);
+      model.objects["obj-b"] = {
+        id: "obj-b" as ObjectRef,
+        typologyId: "builtin.selection.select-all" as TypologyRef,
+        geometryRef: solidId,
+      };
+      expect(objectMatchesTypologyPrimitives(model, model.objects["obj-b"]!)).toBe(false);
     });
   });
 

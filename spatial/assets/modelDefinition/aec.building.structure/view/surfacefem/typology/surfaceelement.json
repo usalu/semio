@@ -5,5 +5,8 @@
   "label": "Surface Element",
   "description": "Derived structural element represented with surface mesh.",
   "actions": [],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": [
+    "solid"
+  ]
 }

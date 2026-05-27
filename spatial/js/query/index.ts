@@ -9,8 +9,8 @@ import {
 	ActionRegistry,
 	type ActionResult,
 	Model,
-	qualifiedViewId,
 	applyModelDiff,
+	buildTypologyToEntityKindMap,
 	solidRef,
 	isSelectionConstructActionId,
 	type ConstructQueryContext,
@@ -527,9 +527,8 @@ export interface ReturnClauseAst {
 
 export type ConstructClauseAst = MatchClauseAst | WithClauseAst | CallClauseAst | UnwindClauseAst;
 
-const VIEW_OBJECT_TYPOLOGY_PREFIX = "energy.derived.";
-
 function assertConstructAst(ast: ConstructAst): void {
+	const typologyKinds = buildTypologyToEntityKindMap();
 	for (const cl of ast.clauses) {
 		if (cl.kind !== "match") continue;
 		for (const pat of cl.patterns) {
@@ -539,8 +538,11 @@ function assertConstructAst(ast: ConstructAst): void {
 					throw new Error(`unknown node label ${el.label}; use Object {typology: '…'}`);
 				}
 				const typology = el.props?.typology;
-				if (typeof typology === "string" && typology.includes(".derived.")) {
-					throw new Error(`${typology} is view-derived; use CALL view.<extension>.<viewId>.<derivedObjectId>({})`);
+				if (typeof typology === "string" && (typology.includes(".derived.") || typology.startsWith("view."))) {
+					throw new Error(`${typology} is not a shipped model typology; use kernel topology or model-definition typology ids`);
+				}
+				if (typeof typology === "string" && !(typology in typologyKinds)) {
+					throw new Error(`unknown typology ${typology}; see listModelDefinitionTypologies() or builtin.kernel.* ids`);
 				}
 			}
 		}
@@ -896,21 +898,18 @@ export function parseConstruct(text: string): ConstructAst {
 // #endregion Ast
 
 // #region Index
-const TYPOLOGY_TO_KIND: Record<string, ModelEntityKind> = {
-	"builtin.kernel.anchor": "anchor",
-	"builtin.kernel.vertex": "vertex",
-	"builtin.kernel.edge": "edge",
-	"builtin.kernel.wire": "wire",
-	"builtin.kernel.face": "face",
-	"builtin.kernel.shell": "shell",
-	"builtin.kernel.solid": "solid",
-};
+let typologyToKindCache: Readonly<Record<string, ModelEntityKind>> | null = null;
+
+function typologyToEntityKind(): Readonly<Record<string, ModelEntityKind>> {
+	typologyToKindCache ??= buildTypologyToEntityKindMap();
+	return typologyToKindCache;
+}
 
 function patternEntityKind(node: NodePatternAst): ModelEntityKind | undefined {
 	if (node.label && node.label !== "Object") return undefined;
 	const typology = node.props?.typology;
 	if (typeof typology !== "string") return undefined;
-	return TYPOLOGY_TO_KIND[typology];
+	return typologyToEntityKind()[typology];
 }
 
 export class KernelIndex {
@@ -933,12 +932,14 @@ export class KernelIndex {
 			}
 			s.add(id);
 		};
+		for (const id of Object.keys(this.model.anchors)) add("anchor", id);
 		for (const id of Object.keys(this.model.vertices)) add("vertex", id);
 		for (const id of Object.keys(this.model.edges)) add("edge", id);
 		for (const id of Object.keys(this.model.wires)) add("wire", id);
 		for (const id of Object.keys(this.model.faces)) add("face", id);
 		for (const id of Object.keys(this.model.shells)) add("shell", id);
 		for (const id of Object.keys(this.model.solids)) add("solid", id);
+		for (const id of Object.keys(this.model.objects)) add("object", id);
 		for (const [sid, solid] of Object.entries(this.model.solids)) {
 			for (const shellId of solid.shellIds) {
 				const sh = this.model.shells[shellId];
@@ -1096,6 +1097,7 @@ function* iterateContainsForward(model: Model, from: EntityHandle): Generator<En
 }
 
 function lookupAnyEntity(model: Model, id: string): EntityHandle | null {
+	if (model.anchors[id]) return { kind: "anchor", id };
 	if (model.vertices[id]) return { kind: "vertex", id };
 	if (model.edges[id]) return { kind: "edge", id };
 	if (model.wires[id]) return { kind: "wire", id };
@@ -1491,9 +1493,12 @@ if (import.meta.vitest) {
 			expect(() => parseConstruct("MATCH (m:Model) RETURN m.id")).toThrow(/unknown node label Model/);
 			expect(() => parseConstruct("MATCH (s:Surface) RETURN s.id")).toThrow(/unknown node label Surface/);
 		});
-		it("rejects MATCH on view-derived typology property", () => {
+		it("rejects MATCH on non-shipped typology ids", () => {
 			expect(() => parseConstruct("MATCH (o:Object {typology: 'energy.derived.hull'}) RETURN o.id")).toThrow(
-				/is view-derived/,
+				/not a shipped model typology/,
+			);
+			expect(() => parseConstruct("MATCH (o:Object {typology: 'unknown.typology.foo'}) RETURN o.id")).toThrow(
+				/unknown typology/,
 			);
 		});
 	});
@@ -1617,6 +1622,18 @@ if (import.meta.vitest) {
 			const targets = res.rows[0]?.targets as { kind: string; id: string }[] | undefined;
 			expect(targets?.length).toBe(8);
 			expect(targets?.every((t) => t.kind === "vertex")).toBe(true);
+		});
+
+		it("MATCH builtin.primitive.box typology resolves to solids", async () => {
+			const model = new Model();
+			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+			const res = await runConstruct("MATCH (s:Object {typology: 'builtin.primitive.box'}) RETURN s.id", {
+				model: model,
+				kernel: mkKernelStub(),
+				actions: ActionRegistry.withBuiltins(),
+			});
+			expect(res.rows.length).toBeGreaterThanOrEqual(1);
+			expect(res.rows.some((r) => typeof r.c0 === "string")).toBe(true);
 		});
 
 		it("CALL selection.selectObjects YIELD targets from model objects", async () => {

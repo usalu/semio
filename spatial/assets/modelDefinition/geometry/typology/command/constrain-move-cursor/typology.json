@@ -7,5 +7,6 @@
   "actions": [
     "command.constrainMoveCursor"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

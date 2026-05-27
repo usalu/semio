@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "edit.join"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

@@ -2,47 +2,53 @@
 
 Extendable spatial framework around persistent models, runtime execution, and rendering.
 
-# Primitive
+## Scalar
 
-A primitive is hashed.
+## Primitive
 
-## Geometry
+A primitive is either geometry or topology.
+Primitives consist of scalars, child primitive, referenced primitives and attributes.
+Every primitive has an always up-to-date hash.
+The hash is derived from scalars, child primitive, referenced primitives.
+The hash does not not include attributes.
 
-### Point
+### Geometry
 
-### Curve
+#### Point
 
-#### Line
+##### Curve
 
-#### Circle
+###### Line
 
-#### Ellipse
+###### Circle
 
-#### Parabola
+###### Ellipse
 
-#### Hyperbola
+###### Parabola
 
-#### B-Spline
+###### Hyperbola
 
-#### Bezier
+###### B-Spline
 
-### Surface
+###### Bezier
 
-#### Plane
+##### Surface
 
-#### Cylinder
+##### Plane
 
-#### Cone
+##### Cylinder
 
-#### Sphere
+##### Cone
 
-#### Torus
+##### Sphere
 
-#### B-Spline
+##### Torus
 
-#### Bezier
+##### B-Spline
 
-## Topology
+##### Bezier
+
+### Topology
 
 ### Vertex
 
@@ -60,10 +66,14 @@ A primitive is hashed.
 
 ### Compound
 
+## Attribute
+
+An attribute is attachable authored metadata to primitives.
+
 ## ModelSpace
 
 A model space is a container for linked models.
-Every geometry is hashed (every vertex)
+When a primitive is edited inside a model space, then all primitives withe same hash, are also edited.
 
 ## Model
 
@@ -72,10 +82,6 @@ A model contains objects.
 ### Object
 
 An object is an instance of a typology along with primitives.
-
-#### Attribute
-
-An attribute is attachable authored metadata to primitives.
 
 #### Property
 

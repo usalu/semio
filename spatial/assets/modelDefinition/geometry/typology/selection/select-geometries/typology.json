@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectGeometries"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

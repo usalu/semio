@@ -9,5 +9,9 @@
   ],
   "interactions": [
     "curve.line"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
   ]
 }

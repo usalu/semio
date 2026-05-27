@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "transform.mirror"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

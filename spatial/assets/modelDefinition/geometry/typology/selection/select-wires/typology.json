@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectWires"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

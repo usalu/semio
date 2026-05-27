@@ -5,5 +5,8 @@
   "label": "Line Element",
   "description": "Derived structural element represented with line mesh.",
   "actions": [],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": [
+    "solid"
+  ]
 }

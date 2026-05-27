@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "transform.copy"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

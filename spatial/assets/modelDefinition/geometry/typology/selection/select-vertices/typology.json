@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectVertices"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

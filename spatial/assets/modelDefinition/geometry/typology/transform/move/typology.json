@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "transform.move"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

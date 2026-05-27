@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "transform.rotate"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

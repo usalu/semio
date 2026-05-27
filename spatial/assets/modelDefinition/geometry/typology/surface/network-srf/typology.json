@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "surface.network-srf"
+  ],
+  "primitiveKinds": [
+    "face"
   ]
 }

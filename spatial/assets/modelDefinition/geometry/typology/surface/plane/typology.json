@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "surface.plane"
+  ],
+  "primitiveKinds": [
+    "face"
   ]
 }

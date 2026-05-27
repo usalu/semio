@@ -23,5 +23,8 @@
   ],
   "interactions": [
     "primitive.box"
+  ],
+  "primitiveKinds": [
+    "solid"
   ]
 }

@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectSolids"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

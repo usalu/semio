@@ -7,5 +7,6 @@
   "actions": [
     "selection.invert"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

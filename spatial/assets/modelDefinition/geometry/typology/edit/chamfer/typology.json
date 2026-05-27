@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "edit.chamfer"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

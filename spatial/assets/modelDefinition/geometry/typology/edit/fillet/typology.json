@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "edit.fillet"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

@@ -6,8 +6,12 @@
 	"description": "Derived heated volume for objects included in the energy view.",
 	"unit": "volume",
 	"sources": {
-		"views": [
-			"energy.energy"
+		"typologies": [
+			"energy.energy.hull",
+			"energy.energy.baseplate",
+			"energy.energy.roof",
+			"energy.energy.externalwall",
+			"energy.energy.windows"
 		]
 	},
 	"output": {

@@ -7,5 +7,6 @@
   "actions": [
     "command.addSelection"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

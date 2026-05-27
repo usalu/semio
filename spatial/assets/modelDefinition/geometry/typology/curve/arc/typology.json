@@ -9,5 +9,9 @@
   ],
   "interactions": [
     "curve.arc"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
   ]
 }

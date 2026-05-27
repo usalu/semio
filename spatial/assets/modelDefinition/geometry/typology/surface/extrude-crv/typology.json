@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "surface.extrude-crv"
+  ],
+  "primitiveKinds": [
+    "face"
   ]
 }

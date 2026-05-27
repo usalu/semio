@@ -10,5 +10,8 @@
   ],
   "interactions": [
     "measure.area"
+  ],
+  "primitiveKinds": [
+    "anchor"
   ]
 }

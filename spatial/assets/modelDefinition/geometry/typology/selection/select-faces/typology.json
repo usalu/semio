@@ -7,5 +7,6 @@
   "actions": [
     "selection.selectFaces"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

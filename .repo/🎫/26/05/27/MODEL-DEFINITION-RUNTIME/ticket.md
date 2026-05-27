@@ -7,7 +7,11 @@
 - `@spatial/js-core`: `import.meta.glob` catalogs under `spatial/assets/modelDefinition/**`; `ModelDefinitionManifest`; removed `ExtensionViewService` and energy/structure/building extension bundles.
 - Selection commands are headless `selection.*` actions (no interaction JSON in assets).
 - `ActionRegistry.run` dispatches kernel commands when no declarative spec is registered; `runCommit` no longer requires a pre-registered def.
-- Tests: core 240, kernel-brepjs 19, query 32, renderer-r3f 8, machine-stately 4.
+- `entity.createAnchor` interaction asset + E2E; `ModelSpace` + vertex hashing.
+- Attribute/property definition catalogs; explicit `primitiveKinds` on 67 typology assets; AEC typologies via `typology/*.json` glob.
+- `derivePropertyValue` for `builtin.volume` and `energy.heatedvolume`; `buildTypologyToEntityKindMap` for construct MATCH.
+- `@spatial/js-query`: typology validation, anchor/object index, view-derived rejection without legacy CALL view path.
+- Tests: core 256+, query 33+, kernel-brepjs 19, renderer-r3f 8, machine-stately 4.
 
 ## Files
 

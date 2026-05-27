@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "entity.createAnchor"
+  ],
+  "primitiveKinds": [
+    "anchor"
   ]
 }

@@ -9,5 +9,12 @@
   ],
   "interactions": [
     "transform.scale1d"
+  ],
+  "primitiveKinds": [
+    "vertex",
+    "edge",
+    "wire",
+    "face",
+    "solid"
   ]
 }

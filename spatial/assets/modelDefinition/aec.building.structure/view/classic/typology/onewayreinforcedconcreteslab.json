@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "label": "One Way Reinforced Concrete Slab",
   "actions": [],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": [
+    "solid"
+  ]
 }

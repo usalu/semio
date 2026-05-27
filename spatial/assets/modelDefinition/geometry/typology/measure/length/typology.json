@@ -10,5 +10,8 @@
   ],
   "interactions": [
     "measure.length"
+  ],
+  "primitiveKinds": [
+    "anchor"
   ]
 }

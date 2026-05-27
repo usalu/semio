@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "label": "Reinforced Concrete External Wall",
   "actions": [],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": [
+    "solid"
+  ]
 }

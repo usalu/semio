@@ -10,5 +10,9 @@
   ],
   "interactions": [
     "feature.offset-surface"
+  ],
+  "primitiveKinds": [
+    "face",
+    "solid"
   ]
 }

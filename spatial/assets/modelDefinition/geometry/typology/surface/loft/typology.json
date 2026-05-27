@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "surface.loft"
+  ],
+  "primitiveKinds": [
+    "face"
   ]
 }

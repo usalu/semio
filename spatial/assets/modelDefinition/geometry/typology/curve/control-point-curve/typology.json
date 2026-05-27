@@ -9,5 +9,9 @@
   ],
   "interactions": [
     "curve.control-point-curve"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
   ]
 }

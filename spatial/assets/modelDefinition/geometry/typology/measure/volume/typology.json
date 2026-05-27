@@ -7,5 +7,6 @@
   "actions": [
     "measure.solidVolume"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

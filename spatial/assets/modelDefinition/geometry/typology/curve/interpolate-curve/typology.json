@@ -9,5 +9,9 @@
   ],
   "interactions": [
     "curve.interpolate-curve"
+  ],
+  "primitiveKinds": [
+    "edge",
+    "wire"
   ]
 }

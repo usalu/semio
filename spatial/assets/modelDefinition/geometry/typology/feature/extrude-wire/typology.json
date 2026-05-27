@@ -10,5 +10,8 @@
   ],
   "interactions": [
     "feature.extrude-wire"
+  ],
+  "primitiveKinds": [
+    "solid"
   ]
 }

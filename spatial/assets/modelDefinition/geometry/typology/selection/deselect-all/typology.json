@@ -7,5 +7,6 @@
   "actions": [
     "selection.deselectAll"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }

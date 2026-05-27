@@ -9,5 +9,8 @@
   ],
   "interactions": [
     "solid.boolean-union"
+  ],
+  "primitiveKinds": [
+    "solid"
   ]
 }

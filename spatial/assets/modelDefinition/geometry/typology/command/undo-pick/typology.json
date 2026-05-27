@@ -7,5 +7,6 @@
   "actions": [
     "command.undoPick"
   ],
-  "interactions": []
+  "interactions": [],
+  "primitiveKinds": []
 }
