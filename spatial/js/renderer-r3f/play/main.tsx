@@ -138,7 +138,7 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 type ModelJsonSnapshot = ReturnType<Model["toJSON"]>;
 
 interface SpatialExchangeBundle {
-	readonly raw?: ModelJsonSnapshot;
+	readonly model?: ModelJsonSnapshot;
 }
 
 interface SaveFilePickerTypeOption {
@@ -565,13 +565,13 @@ function PlayApp() {
 	const handleSaveSelected = useCallback(async () => {
 		await saveBundle(
 			`${exportBaseName}.selected.spatial.json`,
-			{ raw: selectRawModel(liveModel, selectedGeometry) },
+			{ model: selectRawModel(liveModel, selectedGeometry) },
 			`Saved ${selectedGeometry.length} selected item(s).`,
 		);
 	}, [exportBaseName, liveModel, saveBundle, selectedGeometry]);
 
 	const handleSaveView = useCallback(async () => {
-		await saveBundle(`${exportBaseName}.spatial.json`, { raw: liveModel.toJSON() }, "Saved the model.");
+		await saveBundle(`${exportBaseName}.spatial.json`, { model: liveModel.toJSON() }, "Saved the model.");
 	}, [exportBaseName, liveModel, saveBundle]);
 
 	const handleLoadRawRequest = useCallback(() => {
@@ -583,11 +583,14 @@ function PlayApp() {
 		if (!file) return;
 		try {
 			const parsed = JSON.parse(await file.text()) as unknown;
-			const raw =
-				parsed && typeof parsed === "object" && "raw" in (parsed as Record<string, unknown>)
-					? (parsed as Record<string, unknown>).raw
-					: parsed;
-			const model = parseModelJson(raw);
+			const envelope = parsed as Record<string, unknown>;
+			const snapshot =
+				envelope && typeof envelope === "object" && "model" in envelope
+					? envelope.model
+					: envelope && typeof envelope === "object" && "raw" in envelope
+						? envelope.raw
+						: parsed;
+			const model = parseModelJson(snapshot);
 			if (!model) throw new Error("No spatial model found in file.");
 			setGeometryAssetId("");
 			setLoadedRawName(file.name);
