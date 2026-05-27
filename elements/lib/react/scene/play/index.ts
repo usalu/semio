@@ -1,6 +1,6 @@
-// #region ­ƒº▓Header
-// ­ƒÆ╗ elements/client/lib/system/renderer/react/scene/play/index.ts ÔÇö Scene play harness: Nakagin fixture metadata, LOD tiers, and localStorage keys (no React; mount via main.ts + scene-play-host).
-// #endregion ­ƒº▓Header
+// #region 🧲Header
+// 💻 elements/client/lib/system/renderer/react/scene/play/index.ts — Scene play harness: Nakagin fixture metadata, LOD controls, and localStorage keys (no React; mount via main.ts + scene-play-host).
+// #endregion 🧲Header
 
 import {
 	CommandBus,
@@ -21,20 +21,21 @@ import {
 
 import nakaginSceneFixtureJson from "./fixtures/nakagin-capsule-tower.scene.json";
 import {
-	LOD_MODE_AUTOMATIC,
-	isLodKind,
-	lodAutomaticSelectLabel,
-	lodCanvasProps,
+	DEFAULT_MANUAL_LOD,
+	SCENE_LOD_SLIDER_MAX,
+	SCENE_LOD_SLIDER_MIN,
+	formatSceneLod,
+	lodFromSliderValue,
 	parseFixtureV1,
+	sceneLodCanvasProps,
+	sliderValueFromLod,
 	type FixtureV1,
 	type KindCatalogBundle,
 	type KindCompatEntry,
-	type LodKind,
-	type LodModeKind,
 	type RelocateMode,
 } from "../index.tsx";
 
-//#region ­ƒº¥Meta
+//#region 🧾Meta
 function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
 	if (!meta || typeof meta !== "object") return [];
 	const arr = (meta as { kindCompatibility?: unknown }).kindCompatibility;
@@ -72,9 +73,9 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
 	if (!kc || typeof kc !== "object") return undefined;
 	return kc as KindCatalogBundle;
 }
-//#endregion ­ƒº¥Meta
+//#endregion 🧾Meta
 
-//#region ­ƒûÑ´©ÅSurface
+//#region 🖥️Surface
 export const LS_THEME = "elements.board-play.surface.theme";
 export const LS_DEVICE = "elements.board-play.surface.device";
 export const LS_EXPERTISE = "elements.board-play.surface.expertise";
@@ -93,31 +94,29 @@ export function parseStoredExpertise(raw: string | null) {
 	if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
 	return Expertise.NORMAL;
 }
-//#endregion ­ƒûÑ´©ÅSurface
+//#endregion 🖥️Surface
 
-//#region ­ƒÄ¼Play
-export const PLAY_LOD_TIERS: LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-
-export function playLodTierMenuLabel(tier: LodKind): string {
-	return tier.charAt(0).toUpperCase() + tier.slice(1);
-}
+//#region 🎬Play
 export const PLAY_APP_ID = "elements-scene-play";
 export const SCENE_PLAY_WINDOW_ID = "scene-main";
 export const SCENE_PLAY_WINDOW_LABEL = "Scene";
 export const SCENE_PLAY_BODY_KEY = "elements.scene.play.window";
 export const SCENE_PLAY_CONTROLLER_ID = "scene-play";
 export const SCENE_PLAY_SCENE_SURFACE_ID = "elements.scene.play.scene/v1";
-//#endregion ­ƒÄ¼Play
+//#endregion 🎬Play
 
 export { parseKindCatalogs, parseKindCompatibility };
 
-//#region ­ƒöûScenePlayController
-/** @emoji ­ƒÄ¼ Framework-free scene play controller: fixture, LOD, selection, and interaction counters. */
+//#region 🔖ScenePlayController
+/** @emoji 🎬 Framework-free scene play controller: fixture, LOD, selection, and interaction counters. */
 export class ScenePlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Scene", undefined);
 	readonly fixture: FixtureV1 | null;
-	private lodMode: LodModeKind;
-	private lodTag: LodKind;
+	private automaticLod: boolean;
+	private depthVariableLod: boolean;
+	private manualLod: number;
+	private lodSlider: number;
+	private lodTag: number;
 	private relocateMode: RelocateMode;
 	private selectedId: string | null;
 	private proximityCount: number;
@@ -127,8 +126,11 @@ export class ScenePlayShellController extends Controller {
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SCENE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.fixture = parseFixtureV1(nakaginSceneFixtureJson as unknown);
-		this.lodMode = LOD_MODE_AUTOMATIC;
-		this.lodTag = "normal";
+		this.automaticLod = true;
+		this.depthVariableLod = false;
+		this.manualLod = DEFAULT_MANUAL_LOD;
+		this.lodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
+		this.lodTag = DEFAULT_MANUAL_LOD;
 		this.relocateMode = "translate";
 		this.selectedId = null;
 		this.proximityCount = 0;
@@ -137,20 +139,39 @@ export class ScenePlayShellController extends Controller {
 		this.rebuildShellMode();
 	}
 
+	private lodMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "toggle",
+				id: `${SCENE_PLAY_WINDOW_ID}-auto`,
+				label: "LOD",
+				text: "Auto zoom",
+				pressed: this.automaticLod,
+				onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setAutoLod" },
+			},
+			{
+				kind: "toggle",
+				id: `${SCENE_PLAY_WINDOW_ID}-depth`,
+				text: "Depth-variable",
+				pressed: this.depthVariableLod,
+				onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setDepthLod" },
+			},
+			{
+				kind: "slider",
+				id: `${SCENE_PLAY_WINDOW_ID}-lod`,
+				label: formatSceneLod(this.lodTag),
+				value: this.lodSlider,
+				min: SCENE_LOD_SLIDER_MIN,
+				max: SCENE_LOD_SLIDER_MAX,
+				step: 1,
+				onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setManualLod" },
+			},
+		];
+	}
+
 	private rebuildShellMode(): void {
-		const lodMeasure: WindowMeasure = {
-			kind: "select",
-			id: `${SCENE_PLAY_WINDOW_ID}-lod`,
-			label: "LOD",
-			value: this.lodMode,
-			items: [
-				{ id: "automatic", value: LOD_MODE_AUTOMATIC, label: lodAutomaticSelectLabel(this.lodTag) },
-				...PLAY_LOD_TIERS.map((tier) => ({ id: tier, value: tier, label: playLodTierMenuLabel(tier) })),
-			],
-			onChange: { controllerId: SCENE_PLAY_CONTROLLER_ID, command: "setLodMode" },
-		};
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, [lodMeasure]),
+			new WindowKindRuntime(SCENE_PLAY_WINDOW_ID, SCENE_PLAY_WINDOW_LABEL, SCENE_PLAY_BODY_KEY, undefined, this.lodMeasures()),
 		];
 		const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
 			id: `scene.relocate.${mode}`,
@@ -168,16 +189,30 @@ export class ScenePlayShellController extends Controller {
 
 	override run(command: string, args?: unknown): void {
 		switch (command) {
-			case "setLodMode": {
-				const value = (args as { value?: string }).value;
-				if (value === LOD_MODE_AUTOMATIC || (typeof value === "string" && isLodKind(value))) {
-					this.lodMode = value as LodModeKind;
+			case "setAutoLod": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") this.automaticLod = pressed;
+				break;
+			}
+			case "setDepthLod": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") this.depthVariableLod = pressed;
+				break;
+			}
+			case "setManualLod": {
+				const value = (args as { value?: number }).value;
+				if (typeof value === "number" && Number.isFinite(value)) {
+					this.lodSlider = value;
+					this.manualLod = lodFromSliderValue(value);
 				}
 				break;
 			}
 			case "setEffectiveLod": {
-				const lod = (args as { lod: LodKind }).lod;
-				if (isLodKind(lod)) this.lodTag = lod;
+				const lod = (args as { lod: number }).lod;
+				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0) {
+					this.lodTag = lod;
+					this.lodSlider = sliderValueFromLod(lod);
+				}
 				break;
 			}
 			case "setRelocateMode": {
@@ -212,8 +247,15 @@ export class ScenePlayShellController extends Controller {
 	getSnapshot(): ScenePlaySnapshot {
 		return {
 			fixture: this.fixture,
-			lodProps: lodCanvasProps(this.lodMode),
+			lodProps: sceneLodCanvasProps({
+				automaticLod: this.automaticLod,
+				depthVariableLod: this.depthVariableLod,
+				manualLod: this.manualLod,
+			}),
 			lodTag: this.lodTag,
+			lodSlider: this.lodSlider,
+			automaticLod: this.automaticLod,
+			depthVariableLod: this.depthVariableLod,
 			relocateMode: this.relocateMode,
 			selectedId: this.selectedId,
 			proximityCount: this.proximityCount,
@@ -223,11 +265,14 @@ export class ScenePlayShellController extends Controller {
 	}
 }
 
-/** @emoji ­ƒô© Host-consumed scene play state (no React/DOM). */
+/** @emoji 📸 Host-consumed scene play state (no React/DOM). */
 export interface ScenePlaySnapshot {
 	readonly fixture: FixtureV1 | null;
-	readonly lodProps: ReturnType<typeof lodCanvasProps>;
-	readonly lodTag: LodKind;
+	readonly lodProps: ReturnType<typeof sceneLodCanvasProps>;
+	readonly lodTag: number;
+	readonly lodSlider: number;
+	readonly automaticLod: boolean;
+	readonly depthVariableLod: boolean;
 	readonly relocateMode: RelocateMode;
 	readonly selectedId: string | null;
 	readonly proximityCount: number;
@@ -253,7 +298,7 @@ function sceneControllerFromContext(ctx: WindowBodyViewContext): ScenePlayShellC
 	return ctx.runtime.getActiveApp()?.controller as ScenePlayShellController | undefined;
 }
 
-/** @emoji ­ƒº® Declarative scene window: fullscreen scene3d only (relocate tools live on {@link ModeRuntime.tools}). */
+/** @emoji 🧩 Declarative scene window: fullscreen scene3d only (relocate tools live on {@link ModeRuntime.tools}). */
 export function buildScenePlayDeclarativeBody(ctx: WindowBodyViewContext): UiNode {
 	const ctrl = sceneControllerFromContext(ctx);
 	if (!ctrl) {
@@ -265,9 +310,9 @@ export function buildScenePlayDeclarativeBody(ctx: WindowBodyViewContext): UiNod
 	}
 	return buildScene3dWindowBody(SCENE_PLAY_SCENE_SURFACE_ID, SCENE_PLAY_CONTROLLER_ID);
 }
-//#endregion ­ƒöûScenePlayController
+//#endregion 🔖ScenePlayController
 
-//#region ­ƒº¬Tests
+//#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
@@ -275,7 +320,7 @@ if (import.meta.vitest) {
 		it("parses nakagin fixture", () => {
 			const f = parseFixtureV1(nakaginSceneFixtureJson as unknown);
 			expect(f?.domain).toBe("architecture");
-				expect(f?.attractions).toEqual([]);
+			expect(f?.attractions).toEqual([]);
 			expect(f?.objects.length).toBeGreaterThan(0);
 		});
 
@@ -295,4 +340,4 @@ if (import.meta.vitest) {
 		});
 	});
 }
-//#endregion ­ƒº¬Tests
+//#endregion 🧪Tests

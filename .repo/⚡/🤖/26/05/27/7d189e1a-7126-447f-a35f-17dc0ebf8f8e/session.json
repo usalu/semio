@@ -1,0 +1,55 @@
+{
+  "id": "7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+  "uri": "repo://session/7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+  "client": "copilot-chat",
+  "second": "2026-05-27T10:07:20Z",
+  "checkpoint": "f5e31bab8c0216e092dd5b52060a4fb09aab5769",
+  "contributor": "unknown",
+  "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7d189e1a-7126-447f-a35f-17dc0ebf8f8e.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "f5e31bab8c0216e092dd5b52060a4fb09aab5769",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-27T10:07:20Z",
+        "session": "7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7d189e1a-7126-447f-a35f-17dc0ebf8f8e.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T10:07:19.284Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7d189e1a-7126-447f-a35f-17dc0ebf8f8e.jsonl",
+          "prompt": "All derivedoObjects in the view are just extension specific typologies. Make a new folder inside the view typology/\u003ctypology-id\u003e.json",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f5e31bab8c0216e092dd5b52060a4fb09aab5769",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-27T10:07:24Z",
+        "session": "7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7d189e1a-7126-447f-a35f-17dc0ebf8f8e.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T10:07:19.284Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "7d189e1a-7126-447f-a35f-17dc0ebf8f8e",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7d189e1a-7126-447f-a35f-17dc0ebf8f8e.jsonl",
+          "prompt": "All derivedoObjects in the view are just extension specific typologies. Make a new folder inside the view typology/\u003ctypology-id\u003e.json",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

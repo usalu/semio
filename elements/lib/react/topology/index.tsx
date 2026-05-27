@@ -33,7 +33,6 @@ import {
 	type FixtureV1 as SceneFixtureV1,
 	type KindCatalogBundle as SceneKindCatalogBundle,
 	type KindCompatEntry as SceneKindCompatEntry,
-	type LodZoomThresholds as SceneLodZoomThresholds,
 	type RelocateMode as SceneRelocateMode,
 } from "../scene/index.tsx";
 
@@ -59,7 +58,7 @@ export function parseTopologyFixtureV1(raw: unknown): TopologyFixtureV1 | null {
 //#endregion ┬¡ãÆ├Â├╗TopologyFixture
 
 //#region ┬¡ãÆ├Â├╣SharedBindings
-/** @emoji ┬¡ãÆ┬║├Ç LOD + grid fields shared by board WASM and scene orbit pseudo-zoom. */
+/** @emoji 🔗 LOD + grid fields shared by board WASM (thresholds) and scene (grid only). */
 export type TopologyLodGridShared = Pick<BoardCanvasProps, "lodZoomThresholds" | "gridFactor" | "gridSnapEnabled">;
 
 /** @emoji ┬¡ãÆ┬║├Ç Parallel link/selection/camera hooks for board vs scene (payload kinds differ per surface). */
@@ -103,9 +102,11 @@ export interface TopologyDualSurfaceBindings {
 	>;
 	readonly scene: Pick<
 		SceneCanvasProps,
-		| "lodZoomThresholds"
 		| "gridFactor"
 		| "gridSnapEnabled"
+		| "automaticLod"
+		| "depthVariableLod"
+		| "lod"
 		| "kindCatalogs"
 		| "kindCompatibility"
 		| "onConnect"
@@ -121,7 +122,6 @@ export interface TopologyDualSurfaceBindings {
 
 /** @emoji ┬¡ãÆ┬║├Ç Splits shared LOD/grid + catalog rows into board and scene canvas prop slices (scene catalogs are structurally aligned JSON). */
 export function buildTopologyDualSurfaceBindings(input: TopologyDualSurfaceBindingInput): TopologyDualSurfaceBindings {
-	const sceneLod = input.lodZoomThresholds as SceneLodZoomThresholds | undefined;
 	const sceneCatalogs = input.kindCatalogs as SceneKindCatalogBundle | undefined;
 	const sceneCompat = input.kindCompatibility as readonly SceneKindCompatEntry[] | undefined;
 	return {
@@ -141,7 +141,6 @@ export function buildTopologyDualSurfaceBindings(input: TopologyDualSurfaceBindi
 			onHover: input.onBoardHover,
 		},
 		scene: {
-			lodZoomThresholds: sceneLod,
 			gridFactor: input.gridFactor,
 			gridSnapEnabled: input.gridSnapEnabled,
 			kindCatalogs: sceneCatalogs,

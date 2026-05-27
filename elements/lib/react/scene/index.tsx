@@ -169,71 +169,43 @@ const SCALE_RATIOS: Record<ScaleKind, readonly [numerator: number, denominator: 
 	"50to1": [50, 1],
 };
 
-const DOMAIN_LOD_SCALES: Record<DomainKind, readonly [ScaleKind, ScaleKind, ScaleKind, ScaleKind, ScaleKind, ScaleKind]> = {
-	urban: ["1to50000", "1to25000", "1to10000", "1to5000", "1to2500", "1to1000"],
-	architecture: ["1to1000", "1to500", "1to333", "1to200", "1to100", "1to50"],
-	detailing: ["1to50", "1to33", "1to25", "1to10", "1to5", "1to1"],
-	engineering: ["1to1", "2to1", "5to1", "10to1", "20to1", "50to1"],
-};
-
 export interface CameraState {
 	position: Vec3;
 	target: Vec3;
 	zoom: number;
 }
 
-/** @emoji ­ƒôÂ Board-aligned scene LOD band label (`data-scene-lod` on the canvas shell). */
-export type LodKind = "minimap" | "overview" | "compact" | "normal" | "detail" | "micro";
+/** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */
+export type SceneLod = number;
 
-/** @emoji ­ƒôÉ LOD zoom boundaries for pseudo-zoom from orbit camera distance (same semantics as board CSS zoom bands). */
-export interface LodZoomThresholds {
-	minimapMaxZoom: number;
-	overviewMaxZoom: number;
-	compactMaxZoom: number;
-	normalMaxZoom: number;
-	detailMaxZoom: number;
+/** @emoji 🎨 Per-LOD mesh URL entry for {@link ObjectProps.meshByLod} and {@link VortexProps.handleMeshByLod}. */
+export interface LodMeshEntry {
+	readonly lod: number;
+	readonly url: string;
 }
 
-function scaleKindZoomAnchor(kind: ScaleKind, reference: number): number {
-	const [numerator, denominator] = SCALE_RATIOS[kind];
-	return (reference * numerator) / denominator;
-}
+/** @emoji 📐 Default manual / slider LOD range (log-scaled). */
+export const DEFAULT_LOD_RANGE = { min: 0.01, max: 100_000 } as const;
 
-function thresholdBetweenZoomAnchors(a: number, b: number): number {
-	return Math.sqrt(a * b);
-}
+/** @emoji 📐 Default scene LOD when neither auto nor depth-variable applies. */
+export const DEFAULT_MANUAL_LOD = 100;
 
-/** @emoji ­ƒôÉ Returns the six canonical scale bands used by a scene domain from minimap through micro. */
-export function lodScaleKindsForDomain(domain: DomainKind): readonly ScaleKind[] {
-	return DOMAIN_LOD_SCALES[domain];
-}
+/** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
+export const SCENE_LOD_SLIDER_MIN = 0;
 
-/** @emoji ­ƒôÉ Derives scene LOD thresholds from the scene domain scale ladder using a positive reference zoom. */
-export function lodZoomThresholdsForDomain(
-	domain: DomainKind,
-	reference = DEFAULT_SCALE_REFERENCE,
-): LodZoomThresholds {
-	const [minimap, overview, compact, normal, detail, micro] = lodScaleKindsForDomain(domain).map((kind) =>
-		scaleKindZoomAnchor(kind, reference),
-	);
-	return {
-		minimapMaxZoom: thresholdBetweenZoomAnchors(minimap, overview),
-		overviewMaxZoom: thresholdBetweenZoomAnchors(overview, compact),
-		compactMaxZoom: thresholdBetweenZoomAnchors(compact, normal),
-		normalMaxZoom: thresholdBetweenZoomAnchors(normal, detail),
-		detailMaxZoom: thresholdBetweenZoomAnchors(detail, micro),
-	};
-}
+/** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
+export const SCENE_LOD_SLIDER_MAX = 1000;
 
-/** @emoji ­ƒôÉ Default LOD thresholds aligned with the architecture scene domain. */
-export const DEFAULT_LOD_ZOOM_THRESHOLDS: LodZoomThresholds = lodZoomThresholdsForDomain(
-	DEFAULT_DOMAIN,
-);
+/** @emoji 📐 Epsilon for scene LOD change notifications. */
+export const SCENE_LOD_EPSILON = 0.01;
 
-/** @emoji ­ƒôÉ Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
+/** @emoji 📐 Attraction snap is disabled at or above this coarse scene LOD (≈ 1:1000). */
+export const SCENE_ATTRACTION_SNAP_MAX_LOD = 1000;
+
+/** @emoji 📐 Large LOD grid quantum in world units (sketch board `BOARD_LOD_GRID_MAJOR_QUANTUM`). */
 export const LOD_GRID_MAJOR_QUANTUM = 10;
 
-/** @emoji ­ƒôÉ Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
+/** @emoji 📐 Default grid factor (sketch board `DEFAULT_BOARD_GRID_FACTOR`). */
 export const DEFAULT_LOD_GRID_FACTOR = 10;
 
 export interface VortexProps {
@@ -244,8 +216,8 @@ export interface VortexProps {
 	radius?: number;
 	visible?: boolean;
 	handleMeshUrl?: string;
-	/** @emoji ­ƒÄ¿ Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
-	handleMeshByLod?: Partial<Record<LodKind, string>>;
+	/** @emoji 🎨 Optional per-LOD GLB URLs for the handle mesh; falls back to {@link handleMeshUrl}. */
+	handleMeshByLod?: readonly LodMeshEntry[];
 	children?: ReactNode;
 }
 
@@ -261,6 +233,8 @@ export interface ObjectProps {
 	id: string;
 	objectKind?: string;
 	meshUrl: string;
+	/** @emoji 🎨 Optional per-LOD GLB URLs; falls back to {@link meshUrl}. */
+	meshByLod?: readonly LodMeshEntry[];
 	/** @emoji ­ƒÄ¿ Explicit mesh style; otherwise derived from disabled, selected, highlighted, hovered. */
 	style?: MeshStyleKind;
 	origin: Vec3;
@@ -381,14 +355,16 @@ export interface CanvasProps {
 	proximityRadius?: number;
 	relocateMode?: RelocateMode;
 	selectionMode?: SelectionMode;
-	/** @emoji ­ƒôÂ LOD zoom thresholds for pseudo-zoom derived from orbit camera distance. */
-	lodZoomThresholds?: LodZoomThresholds;
-	/** @emoji ­ƒôÂ When true (default), orbit pseudo-zoom selects the scene LOD band; when false, {@link lod} pins the tier when set. */
+	/** @emoji 📶 When true (default), orbit camera distance drives scene LOD. */
 	automaticLod?: boolean;
-	/** @emoji ­ƒôÂ Pinned scene LOD when {@link automaticLod} is false; omit to follow orbit pseudo-zoom bands. */
-	lod?: LodKind;
-	/** @emoji ­ƒôÅ Orbit distance at which pseudo-zoom is ~1 (tune to scene extent). */
+	/** @emoji 📶 When true, each object picks LOD from its world distance to the camera. */
+	depthVariableLod?: boolean;
+	/** @emoji 📶 Manual scene LOD when {@link automaticLod} and {@link depthVariableLod} are both false. */
+	lod?: number;
+	/** @emoji 📏 Orbit distance at which scene LOD is ~1 (`distance / reference`). */
 	lodDistanceReference?: number;
+	/** @emoji 📐 Clamp range for manual LOD slider UI. */
+	availableLodRange?: { readonly min: number; readonly max: number };
 	/** @emoji ­ƒôÉ Multiplier for LOD grid steps (board `grid_factor`). */
 	gridFactor?: number;
 	/** @emoji ­ƒôÉ When true, draw a world `GridHelper` stepped by the current LOD band grid. */
@@ -396,8 +372,8 @@ export interface CanvasProps {
 	/** @emoji ­ƒº▓ When true, translate relocate snaps to the finest visible LOD grid step (board `grid_snap_enabled`). */
 	gridSnapEnabled?: boolean;
 	onCamera?: (s: CameraState) => void;
-	/** @emoji ­ƒôÂ Emits whenever the resolved scene LOD band changes. */
-	onLodChange?: (lod: LodKind) => void;
+	/** @emoji 📶 Emits whenever the resolved scene-level LOD changes. */
+	onLodChange?: (lod: number) => void;
 	onSelect?: (snap: SelectionSnapshot) => void;
 	onRelocate?: (p: RelocatePayload) => void;
 	onConnect?: (p: AttractionPayload) => void;
@@ -425,58 +401,102 @@ export interface FixtureV1 {
 }
 //#endregion ­ƒöûKinds
 
-//#region ­ƒôÂLod
-/** @emoji ­ƒôÂ Resolves scene LOD from pseudo-zoom using explicit thresholds (same band order as the sketch board surface). */
-export function resolveLodLabelFromThresholds(zoom: number, t: LodZoomThresholds): LodKind {
-	const z = zoom;
-	if (z < t.minimapMaxZoom) return "minimap";
-	if (z < t.overviewMaxZoom) return "overview";
-	if (z < t.compactMaxZoom) return "compact";
-	if (z < t.normalMaxZoom) return "normal";
-	if (z < t.detailMaxZoom) return "detail";
-	return "micro";
-	}
-
-/** @emoji ­ƒôÅ Maps orbit camera distance to a board-comparable pseudo-zoom (`reference / distance`). */
-export function pseudoZoomFromOrbitDistance(distance: number, reference: number): number {
+//#region 📶Lod
+/** @emoji 📶 Maps orbit camera distance to scene LOD (`distance / reference`). */
+export function lodFromCameraDistance(distance: number, reference: number): number {
 	const d = Math.max(distance, 1e-6);
-	return reference / d;
+	const ref = Math.max(reference, 1e-6);
+	return d / ref;
 }
 
-/** @emoji ­ƒôÉ Visible LOD grid / relocate snap step in world units (mirrors sketch board WASM `lod_visible_grid_snap_step_world`). */
-export function lodVisibleGridSnapStepWorld(lod: LodKind, gridFactor: number): number | null {
-	const f = gridFactor;
-	switch (lod) {
-		case "minimap":
-			return null;
-		case "overview":
-			return 10 * f;
-		case "compact":
-			return 5 * f;
-		case "normal":
-			return 2.5 * f;
-		case "detail":
-			return 0.5 * f;
-		case "micro":
-			return 0.1 * f;
-		default:
-			return null;
+/** @emoji 📶 Picks the closest available LOD; on log-distance ties prefers the smaller (more detailed) LOD. */
+export function pickClosestLod(available: readonly number[], desired: number): number | null {
+	if (!available.length || !Number.isFinite(desired) || desired <= 0) return null;
+	let best = available[0]!;
+	let bestDist = Math.abs(Math.log(best) - Math.log(desired));
+	for (let i = 1; i < available.length; i++) {
+		const rep = available[i]!;
+		if (!Number.isFinite(rep) || rep <= 0) continue;
+		const dist = Math.abs(Math.log(rep) - Math.log(desired));
+		if (dist < bestDist - 1e-12 || (Math.abs(dist - bestDist) <= 1e-12 && rep < best)) {
+			best = rep;
+			bestDist = dist;
+		}
 	}
+	return best;
 }
 
-/** @emoji ­ƒîÇ True when primary handle visuals are drawn (board `draw_handles`: normal | detail | micro). */
-export function handlePrimaryVisualVisibleAtLod(lod: LodKind): boolean {
-	return lod === "normal" || lod === "detail" || lod === "micro";
+/** @emoji 🎨 Resolves a mesh URL from per-LOD entries with {@link pickClosestLod} and optional fallback. */
+export function pickClosestMeshUrl(
+	entries: readonly LodMeshEntry[] | undefined,
+	desired: number,
+	fallback?: string,
+): string | undefined {
+	if (!entries?.length) return fallback;
+	const lods = entries.map((e) => e.lod).filter((lod) => Number.isFinite(lod) && lod > 0);
+	const picked = pickClosestLod(lods, desired);
+	if (picked == null) return fallback;
+	const match = entries.find((e) => e.lod === picked);
+	return match?.url ?? fallback;
 }
 
-/** @emoji ­ƒîÇ Overview uses invisible pick proxies when primary handle GLB is hidden (minimap has no handle picks). */
-export function handlePickProxyAtLod(lod: LodKind): boolean {
-	return lod === "overview" || lod === "compact";
+/** @emoji 📶 Formats scene LOD for `data-scene-lod` and play readouts. */
+export function formatSceneLod(lod: number): string {
+	return Number.isFinite(lod) ? lod.toFixed(2) : "—";
+}
+
+/** @emoji 📶 Maps a linear slider position to log-spaced scene LOD. */
+export function lodFromSliderValue(slider: number, range: { readonly min: number; readonly max: number } = DEFAULT_LOD_RANGE): number {
+	const t = Math.max(0, Math.min(1, (slider - SCENE_LOD_SLIDER_MIN) / (SCENE_LOD_SLIDER_MAX - SCENE_LOD_SLIDER_MIN)));
+	const logMin = Math.log(range.min);
+	const logMax = Math.log(range.max);
+	return Math.exp(logMin + t * (logMax - logMin));
+}
+
+/** @emoji 📶 Maps scene LOD to a linear slider position. */
+export function sliderValueFromLod(lod: number, range: { readonly min: number; readonly max: number } = DEFAULT_LOD_RANGE): number {
+	const clamped = Math.max(range.min, Math.min(range.max, lod));
+	const logMin = Math.log(range.min);
+	const logMax = Math.log(range.max);
+	const t = (Math.log(clamped) - logMin) / (logMax - logMin);
+	return Math.round(SCENE_LOD_SLIDER_MIN + t * (SCENE_LOD_SLIDER_MAX - SCENE_LOD_SLIDER_MIN));
+}
+
+/** @emoji 📶 Maps play / window LOD controls to {@link CanvasProps}. */
+export function sceneLodCanvasProps(state: {
+	readonly automaticLod: boolean;
+	readonly depthVariableLod: boolean;
+	readonly manualLod: number;
+}): Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod"> {
+	return {
+		automaticLod: state.automaticLod,
+		depthVariableLod: state.depthVariableLod,
+		lod: !state.automaticLod && !state.depthVariableLod ? state.manualLod : undefined,
+	};
+}
+
+/** @emoji 📐 Visible LOD grid / relocate snap step in world units. */
+export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
+	if (!Number.isFinite(lod) || lod <= 0) return null;
+	const raw = lod * 0.05 * gridFactor;
+	return raw > 50 * gridFactor ? null : raw;
+}
+
+/** @emoji 🌐 True when primary handle visuals are drawn at the given scene LOD. */
+export function lodHandlePrimaryVisible(lod: number): boolean {
+	return lod <= 200;
+}
+
+/** @emoji 🌐 True when invisible handle pick proxies are used instead of GLB handles. */
+export function lodHandlePickProxy(lod: number): boolean {
+	return lod > 200 && lod <= 1000;
 }
 
 export interface LodContextValue {
-	readonly lod: LodKind;
-	readonly lodGridStepWorld: number | null;
+	readonly lod: number;
+	readonly depthVariable: boolean;
+	readonly lodForWorldPosition: (position: Vec3) => number;
+	readonly gridStepWorld: number | null;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 }
@@ -493,12 +513,12 @@ export function useLod(): LodContextValue {
 function LodGridHelper() {
 	const lod = useLod();
 	const grid = useMemo(() => {
-		const step = lod.lodGridStepWorld;
+		const step = lod.gridStepWorld;
 		if (step == null || !Number.isFinite(step) || step <= 0) return null;
 		const size = 12_000;
 		const divs = Math.min(512, Math.max(2, Math.round(size / step)));
 		return new GridHelper(size, divs, 0x8899aa, 0x445566);
-	}, [lod.lodGridStepWorld]);
+	}, [lod.gridStepWorld]);
 	useEffect(
 		() => () => {
 			grid?.dispose();
@@ -510,44 +530,58 @@ function LodGridHelper() {
 }
 
 function LodFrameRunner(props: {
-	readonly lodKindRef: MutableRefObject<LodKind>;
-	readonly thresholds: LodZoomThresholds;
+	readonly lodRef: MutableRefObject<number>;
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly automaticLod: boolean;
-	readonly pinnedLod: LodKind | undefined;
+	readonly depthVariableLod: boolean;
+	readonly manualLod: number;
 	readonly onCtx: (next: LodContextValue) => void;
-	readonly onLodChange?: (lod: LodKind) => void;
+	readonly onLodChange?: (lod: number) => void;
 }) {
 	const cam = useThree((s) => s.camera);
 	const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
 	const tmpT = useMemo(() => new Vector3(), []);
-	const prevLod = useRef<LodKind | null>(null);
+	const tmpWorld = useMemo(() => new Vector3(), []);
+	const prevLod = useRef<number | null>(null);
 	const ctxSig = useRef("");
+	const depthVariable = props.depthVariableLod;
+	const lodForWorldPositionRef = useRef<(position: Vec3) => number>(() => props.manualLod);
 	useFrame(() => {
 		const tgt = controls?.target ?? tmpT.set(0, 0, 0);
 		const dist = cam.position.distanceTo(tgt);
-		const pseudo = pseudoZoomFromOrbitDistance(dist, props.distanceReference);
-		const next =
-			!props.automaticLod && props.pinnedLod !== undefined
-				? props.pinnedLod
-				: resolveLodLabelFromThresholds(pseudo, props.thresholds);
-		props.lodKindRef.current = next;
-		const lodGridStepWorld = lodVisibleGridSnapStepWorld(next, props.gridFactor);
-		const sig = `${next}|${lodGridStepWorld ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+		const autoLod = lodFromCameraDistance(dist, props.distanceReference);
+		const sceneLod = props.automaticLod
+			? autoLod
+			: props.depthVariableLod
+				? autoLod
+				: props.manualLod;
+		props.lodRef.current = sceneLod;
+		const gridStep = lodGridStepWorld(sceneLod, props.gridFactor);
+		lodForWorldPositionRef.current = (position: Vec3) => {
+			if (!depthVariable) return sceneLod;
+			tmpWorld.set(position[0], position[1], position[2]);
+			const objectDist = cam.position.distanceTo(tmpWorld);
+			return lodFromCameraDistance(objectDist, props.distanceReference);
+		};
+		const sig = depthVariable
+			? `${sceneLod}|depth|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}|${dist}`
+			: `${sceneLod}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
 		if (ctxSig.current !== sig) {
 			ctxSig.current = sig;
 			props.onCtx({
-				lod: next,
-				lodGridStepWorld,
+				lod: sceneLod,
+				depthVariable,
+				lodForWorldPosition: lodForWorldPositionRef.current,
+				gridStepWorld: gridStep,
 				gridFactor: props.gridFactor,
 				gridSnapEnabled: props.gridSnapEnabled,
 			});
 		}
-		if (prevLod.current !== next) {
-			prevLod.current = next;
-			props.onLodChange?.(next);
+		if (prevLod.current === null || Math.abs(prevLod.current - sceneLod) > SCENE_LOD_EPSILON) {
+			prevLod.current = sceneLod;
+			props.onLodChange?.(sceneLod);
 		}
 	});
 	return null;
@@ -555,19 +589,21 @@ function LodFrameRunner(props: {
 
 function LodBridge(props: {
 	readonly children: ReactNode;
-	readonly lodKindRef: MutableRefObject<LodKind>;
-	readonly thresholds: LodZoomThresholds;
+	readonly lodRef: MutableRefObject<number>;
 	readonly distanceReference: number;
 	readonly gridFactor: number;
 	readonly gridSnapEnabled: boolean;
 	readonly showLodGrid: boolean;
 	readonly automaticLod: boolean;
-	readonly pinnedLod: LodKind | undefined;
-	readonly onLodChange?: (lod: LodKind) => void;
+	readonly depthVariableLod: boolean;
+	readonly manualLod: number;
+	readonly onLodChange?: (lod: number) => void;
 }) {
 	const [lodCtx, setLodCtx] = useState<LodContextValue>(() => ({
-		lod: "normal",
-		lodGridStepWorld: lodVisibleGridSnapStepWorld("normal", props.gridFactor),
+		lod: DEFAULT_MANUAL_LOD,
+		depthVariable: false,
+		lodForWorldPosition: () => DEFAULT_MANUAL_LOD,
+		gridStepWorld: lodGridStepWorld(DEFAULT_MANUAL_LOD, props.gridFactor),
 		gridFactor: props.gridFactor,
 		gridSnapEnabled: props.gridSnapEnabled,
 	}));
@@ -575,8 +611,9 @@ function LodBridge(props: {
 		(next: LodContextValue) => {
 			setLodCtx((prev) => {
 				if (
-					prev.lod === next.lod &&
-					prev.lodGridStepWorld === next.lodGridStepWorld &&
+					Math.abs(prev.lod - next.lod) <= SCENE_LOD_EPSILON &&
+					prev.depthVariable === next.depthVariable &&
+					prev.gridStepWorld === next.gridStepWorld &&
 					prev.gridFactor === next.gridFactor &&
 					prev.gridSnapEnabled === next.gridSnapEnabled
 				) {
@@ -591,13 +628,13 @@ function LodBridge(props: {
 	return (
 		<LodContext.Provider value={v}>
 			<LodFrameRunner
-				lodKindRef={props.lodKindRef}
-				thresholds={props.thresholds}
+				lodRef={props.lodRef}
 				distanceReference={props.distanceReference}
 				gridFactor={props.gridFactor}
 				gridSnapEnabled={props.gridSnapEnabled}
 				automaticLod={props.automaticLod}
-				pinnedLod={props.pinnedLod}
+				depthVariableLod={props.depthVariableLod}
+				manualLod={props.manualLod}
 				onCtx={onCtx}
 				onLodChange={props.onLodChange}
 			/>
@@ -606,7 +643,7 @@ function LodBridge(props: {
 		</LodContext.Provider>
 	);
 }
-//#endregion ­ƒôÂLod
+//#endregion 📶Lod
 
 //#region ­ƒº¥Fixture
 function isVec3(v: unknown): v is Vec3 {
@@ -617,30 +654,19 @@ function isQuat(v: unknown): v is Quat {
 	return Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number");
 }
 
-const LOD_KINDS: readonly LodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-
-/** @emoji ­ƒôÂ Select value: orbit pseudo-zoom picks the scene LOD band. */
-export const LOD_MODE_AUTOMATIC = "automatic" as const;
-
-/** @emoji ­ƒôÂ Scene play / window LOD select value (`automatic` or a pinned {@link LodKind}). */
-export type LodModeKind = typeof LOD_MODE_AUTOMATIC | LodKind;
-
-/** @emoji Ô£à True when `label` is a pinned scene LOD tier. */
-export function isLodKind(label: string): label is LodKind {
-	return (LOD_KINDS as readonly string[]).includes(label);
-}
-
-/** @emoji ­ƒôÂ Maps a window LOD select value to {@link CanvasProps} LOD fields. */
-export function lodCanvasProps(mode: LodModeKind): Pick<CanvasProps, "automaticLod" | "lod"> {
-	if (mode === LOD_MODE_AUTOMATIC) {
-		return { automaticLod: true };
+function parseLodMeshEntries(v: unknown): readonly LodMeshEntry[] | undefined {
+	if (!Array.isArray(v)) return undefined;
+	const out: LodMeshEntry[] = [];
+	for (const row of v) {
+		if (!row || typeof row !== "object") continue;
+		const o = row as Record<string, unknown>;
+		const lod = o.lod;
+		const url = o.url;
+		if (typeof lod !== "number" || !Number.isFinite(lod) || lod <= 0) continue;
+		if (typeof url !== "string" || !url.length) continue;
+		out.push({ lod, url });
 	}
-	return { automaticLod: false, lod: mode };
-}
-
-/** @emoji ­ƒôÂ Automatic LOD select row label showing the live orbit-derived tier. */
-export function lodAutomaticSelectLabel(effectiveTier: LodKind): string {
-	return `Automatic ┬À ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
+	return out.length ? out : undefined;
 }
 
 function parseDomainKind(value: unknown): DomainKind {
@@ -661,15 +687,8 @@ function parseDomainKind(value: unknown): DomainKind {
 	}
 }
 
-function parseHandleMeshByLod(v: unknown): Partial<Record<LodKind, string>> | undefined {
-	if (!v || typeof v !== "object") return undefined;
-	const o = v as Record<string, unknown>;
-	const out: Partial<Record<LodKind, string>> = {};
-	for (const k of LOD_KINDS) {
-		const s = o[k];
-		if (typeof s === "string" && s.length) out[k] = s;
-	}
-	return Object.keys(out).length ? out : undefined;
+function parseHandleMeshByLod(v: unknown): readonly LodMeshEntry[] | undefined {
+	return parseLodMeshEntries(v);
 }
 
 export function parseFixtureV1(raw: unknown): FixtureV1 | null {
@@ -724,10 +743,12 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
 				});
 			}
 		}
+		const meshByLod = parseLodMeshEntries(or.meshByLod);
 		objects.push({
 			id: or.id,
 			meshUrl: or.meshUrl,
 			origin,
+			...(meshByLod ? { meshByLod } : {}),
 			...(typeof or.objectKind === "string" ? { objectKind: or.objectKind } : {}),
 			...(typeof or.label === "string" ? { label: or.label } : {}),
 			...(or.wormhole === true ? { wormhole: true } : {}),
@@ -2191,7 +2212,7 @@ function attractionSnapCommitProximityOk(
 }
 
 function nearestAttractionSnapFullId(args: {
-	lod: LodKind;
+	lod: number;
 	pointerWorld: Vector3;
 	attractingFullId: string;
 	compat: ReadonlySet<string>;
@@ -2201,7 +2222,7 @@ function nearestAttractionSnapFullId(args: {
 	getVortexWorld: (id: string) => Vector3 | null;
 	metaRadius: (id: string) => number;
 }): string | null {
-	if (args.lod === "minimap") return null;
+	if (args.lod >= SCENE_ATTRACTION_SNAP_MAX_LOD) return null;
 	const pScr = worldToCanvasPx(args.pointerWorld, args.camera, args.gl);
 	let best: { d: number; id: string } | null = null;
 	for (const tid of args.compat) {
@@ -2427,13 +2448,22 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 		applyObjectPose(g, props.origin, props.orientation, props.scale);
 	}, [poseKey]);
 	const lodCtx = useLod();
+	const [effectiveLod, setEffectiveLod] = useState(() => lodCtx.lodForWorldPosition(props.origin));
+	useFrame(() => {
+		const next = lodCtx.lodForWorldPosition(props.origin);
+		setEffectiveLod((prev) => (Math.abs(prev - next) > SCENE_LOD_EPSILON ? next : prev));
+	});
+	const resolvedMeshUrl =
+		props.meshUrl === PLACEHOLDER_MESH_URL
+			? props.meshUrl
+			: (pickClosestMeshUrl(props.meshByLod, effectiveLod, props.meshUrl) ?? props.meshUrl);
 	const mode = props.relocate ?? relocateMode;
 	const transSnap =
 		mode === "translate" &&
 		lodCtx.gridSnapEnabled &&
-		lodCtx.lodGridStepWorld != null &&
-		lodCtx.lodGridStepWorld > 0
-			? lodCtx.lodGridStepWorld
+		lodCtx.gridStepWorld != null &&
+		lodCtx.gridStepWorld > 0
+			? lodCtx.gridStepWorld
 			: undefined;
 	const showTc =
 		props.selected && activeRelocateObjectId === props.id && props.relocate !== false && tcTarget;
@@ -2454,10 +2484,10 @@ export const ObjectItem = memo(function ObjectItem(props: ObjectProps) {
 					...props.userData,
 				}}
 			>
-				{props.meshUrl === PLACEHOLDER_MESH_URL ? (
+				{resolvedMeshUrl === PLACEHOLDER_MESH_URL ? (
 					<PlaceholderMesh style={meshStyle} />
 				) : (
-					<MeshBody meshUrl={props.meshUrl} style={meshStyle} />
+					<MeshBody meshUrl={resolvedMeshUrl} style={meshStyle} />
 				)}
 				<group userData={{ sceneObjectAttachments: props.id }}>{props.children}</group>
 			</group>
@@ -2577,6 +2607,15 @@ export const Vortex = memo(function Vortex(
 	);
 
 	const lodCtx = useLod();
+	const worldPosRef = useRef(new Vector3());
+	const [effectiveLod, setEffectiveLod] = useState(() => lodCtx.lod);
+	useFrame(() => {
+		if (!root.current) return;
+		updateWorldMatrixChain(root.current);
+		root.current.getWorldPosition(worldPosRef.current);
+		const next = lodCtx.lodForWorldPosition(worldPosRef.current.toArray() as Vec3);
+		setEffectiveLod((prev) => (Math.abs(prev - next) > SCENE_LOD_EPSILON ? next : prev));
+	});
 	const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = reg.attractionDragAttractingFullId === fullId
 		? "attracting"
 		: reg.attractionHoverRingFullId === fullId
@@ -2613,15 +2652,9 @@ export const Vortex = memo(function Vortex(
 				reg.attractionHoverRingFullId === fullId ||
 				reg.attractionCompatibleAttractedFullIds.has(fullId))) ||
 		inIndirectRing;
-	const drawHandleBody = handlePrimaryVisualVisibleAtLod(lodCtx.lod) || linger;
-	const pickProxy = handlePickProxyAtLod(lodCtx.lod) && !drawHandleBody;
-	const meshFromLod = props.handleMeshByLod?.[lodCtx.lod];
-	const meshUrl =
-		typeof meshFromLod === "string" && meshFromLod.length
-			? meshFromLod
-			: typeof props.handleMeshUrl === "string" && props.handleMeshUrl.length
-				? props.handleMeshUrl
-				: undefined;
+	const drawHandleBody = lodHandlePrimaryVisible(effectiveLod) || linger;
+	const pickProxy = lodHandlePickProxy(effectiveLod) && !drawHandleBody;
+	const meshUrl = pickClosestMeshUrl(props.handleMeshByLod, effectiveLod, props.handleMeshUrl);
 
 	const handleMeshStyle = vortexHighlightMeshStyle(highlight);
 	const vis = props.visible !== false;
@@ -2905,7 +2938,7 @@ function CameraReporter({ zoom, onCamera }: { zoom: number; onCamera?: (s: Camer
 
 function RegistryProvider({
 	children,
-	lodKindRef,
+	lodRef,
 	kindCatalogs,
 	kindCompatibility,
 	blockedVortexFullIds,
@@ -2921,7 +2954,7 @@ function RegistryProvider({
 	onRelocate,
 }: {
 	children: ReactNode;
-	lodKindRef: MutableRefObject<LodKind>;
+	lodRef: MutableRefObject<number>;
 	kindCatalogs: KindCatalogBundle | undefined;
 	kindCompatibility: readonly KindCompatEntry[] | undefined;
 	blockedVortexFullIds: ReadonlySet<string>;
@@ -3100,7 +3133,7 @@ function RegistryProvider({
 			const pw = attractionEndWorldRef.current;
 			if (pw) {
 				session.snapAttractedFullId = nearestAttractionSnapFullId({
-					lod: lodKindRef.current,
+					lod: lodRef.current,
 					pointerWorld: pw,
 					attractingFullId: session.attractingFullId,
 					compat: session.compat,
@@ -3112,7 +3145,7 @@ function RegistryProvider({
 				});
 			} else session.snapAttractedFullId = null;
 		},
-		[blockedVortexFullIds, collectPickRoots, lodKindRef, onAttractionTargetRing],
+		[blockedVortexFullIds, collectPickRoots, lodRef, onAttractionTargetRing],
 	);
 
 	const commitAttractionPointer = useCallback(
@@ -3454,16 +3487,17 @@ function splitChunkedSceneChildren(children: ReactNode): { chunked: ReactNode[];
 
 function Inner(props: CanvasProps) {
 	const { camera: camProp, chunkSize = 256, proximityRadius = 12, children } = props;
-	const lodKindRef = useRef<LodKind>("normal");
+	const lodRef = useRef<number>(DEFAULT_MANUAL_LOD);
 	const [sceneCamera, setSceneCamera] = useState<ThreePerspectiveCamera | null>(null);
 	const domain = props.domain ?? DEFAULT_DOMAIN;
 	const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
-	const thresholds = props.lodZoomThresholds ?? lodZoomThresholdsForDomain(domain, distanceReference);
 	const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
 	const gridSnapEnabled = props.gridSnapEnabled ?? false;
 	const showLodGrid = props.showLodGrid === true;
 	const automaticLod = props.automaticLod ?? true;
-	const pinnedLod = !automaticLod && props.lod !== undefined && isLodKind(props.lod) ? props.lod : undefined;
+	const depthVariableLod = props.depthVariableLod ?? false;
+	const manualLod =
+		typeof props.lod === "number" && Number.isFinite(props.lod) && props.lod > 0 ? props.lod : DEFAULT_MANUAL_LOD;
 	const maxDist = 4000;
 	const pos = (camProp?.position ?? [420, 320, 420]) as [number, number, number];
 	const tgt = (camProp?.target ?? [0, 40, 0]) as Vec3;
@@ -3473,7 +3507,7 @@ function Inner(props: CanvasProps) {
 	const blocked = useLiveBlockedVortexFullIds(blockedFallback);
 	return (
 		<RegistryProvider
-			lodKindRef={lodKindRef}
+			lodRef={lodRef}
 			kindCatalogs={props.kindCatalogs}
 			kindCompatibility={props.kindCompatibility}
 			blockedVortexFullIds={blocked}
@@ -3489,14 +3523,14 @@ function Inner(props: CanvasProps) {
 			onRelocate={props.onRelocate}
 		>
 			<LodBridge
-				lodKindRef={lodKindRef}
-				thresholds={thresholds}
+				lodRef={lodRef}
 				distanceReference={distanceReference}
 				gridFactor={gridFactor}
 				gridSnapEnabled={gridSnapEnabled}
 				showLodGrid={showLodGrid}
 				automaticLod={automaticLod}
-				pinnedLod={pinnedLod}
+				depthVariableLod={depthVariableLod}
+				manualLod={manualLod}
 				onLodChange={props.onLodChange}
 			>
 				<PerspectiveCamera ref={setSceneCamera} makeDefault near={0.2} far={500_000} fov={50} />
@@ -3519,10 +3553,11 @@ function Inner(props: CanvasProps) {
 
 export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
 	const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, ...rest } = props;
-	const [shellLod, setShellLod] = useState<LodKind>("normal");
+	const [shellLod, setShellLod] = useState(() => formatSceneLod(DEFAULT_MANUAL_LOD));
 	const handleLod = useCallback(
-		(l: LodKind) => {
-			setShellLod(l);
+		(l: number) => {
+			const label = formatSceneLod(l);
+			setShellLod(label);
 			onLodChange?.(l);
 		},
 		[onLodChange],
@@ -3581,57 +3616,61 @@ export function ScenePlayTestBridge(props: { readonly setSelectedId: (id: string
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
-	describe("lodCanvasProps", () => {
-		it("maps automatic and pinned modes", () => {
-			expect(lodCanvasProps(LOD_MODE_AUTOMATIC)).toEqual({ automaticLod: true });
-			expect(lodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
+	describe("lodFromCameraDistance", () => {
+		it("maps orbit distance to scale ratio", () => {
+			expect(lodFromCameraDistance(100, 100)).toBe(1);
+			expect(lodFromCameraDistance(20000, 100)).toBe(200);
+			expect(lodFromCameraDistance(50, 100)).toBe(0.5);
 		});
 	});
-	describe("lodAutomaticSelectLabel", () => {
-		it("includes the live tier in the automatic row", () => {
-			expect(lodAutomaticSelectLabel("overview")).toBe("Automatic ┬À Overview");
+	describe("pickClosestLod", () => {
+		const available = [50, 200, 1000] as const;
+		it("prefers log-closest and ties toward smaller lod", () => {
+			expect(pickClosestLod(available, 100)).toBe(50);
+			expect(pickClosestLod(available, 500)).toBe(200);
+			expect(pickClosestLod(available, 5000)).toBe(1000);
 		});
 	});
-	describe("resolveLodLabelFromThresholds", () => {
-		it("classifies zoom bands", () => {
-			const t = DEFAULT_LOD_ZOOM_THRESHOLDS;
-			expect(resolveLodLabelFromThresholds(0.1, t)).toBe("minimap");
-			expect(resolveLodLabelFromThresholds(0.2, t)).toBe("overview");
-			expect(resolveLodLabelFromThresholds(0.3, t)).toBe("compact");
-			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
-			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
-			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
+	describe("lodGridStepWorld", () => {
+		it("returns null for very coarse lod and ~5 at lod 100", () => {
+			expect(lodGridStepWorld(5000, 10)).toBe(null);
+			expect(lodGridStepWorld(100, 10)).toBe(50);
 		});
 	});
-	describe("lodZoomThresholdsForDomain", () => {
-		it("derives architecture thresholds from the domain ladder", () => {
-			const t = lodZoomThresholdsForDomain("architecture");
-			expect(resolveLodLabelFromThresholds(0.1, t)).toBe("minimap");
-			expect(resolveLodLabelFromThresholds(0.2, t)).toBe("overview");
-			expect(resolveLodLabelFromThresholds(0.3, t)).toBe("compact");
-			expect(resolveLodLabelFromThresholds(0.5, t)).toBe("normal");
-			expect(resolveLodLabelFromThresholds(1, t)).toBe("detail");
-			expect(resolveLodLabelFromThresholds(2, t)).toBe("micro");
-		});
-		it("stays meter-calibrated when pseudo zoom and thresholds share the same reference", () => {
-			const distanceReference = 900;
-			const t = lodZoomThresholdsForDomain("architecture", distanceReference);
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(800, distanceReference), t)).toBe("minimap");
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(650, distanceReference), t)).toBe("overview");
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(300, distanceReference), t)).toBe("compact");
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(180, distanceReference), t)).toBe("normal");
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(100, distanceReference), t)).toBe("detail");
-			expect(resolveLodLabelFromThresholds(pseudoZoomFromOrbitDistance(50, distanceReference), t)).toBe("micro");
+	describe("lodHandlePrimaryVisible", () => {
+		it("draws handles at detail bands", () => {
+			expect(lodHandlePrimaryVisible(100)).toBe(true);
+			expect(lodHandlePrimaryVisible(201)).toBe(false);
 		});
 	});
-	describe("lodVisibleGridSnapStepWorld", () => {
-		it("returns per-band steps", () => {
-			expect(lodVisibleGridSnapStepWorld("minimap", 10)).toBe(null);
-			expect(lodVisibleGridSnapStepWorld("overview", 10)).toBe(100);
-			expect(lodVisibleGridSnapStepWorld("compact", 10)).toBe(50);
-			expect(lodVisibleGridSnapStepWorld("normal", 10)).toBe(25);
-			expect(lodVisibleGridSnapStepWorld("detail", 10)).toBe(5);
-			expect(lodVisibleGridSnapStepWorld("micro", 10)).toBe(1);
+	describe("lodHandlePickProxy", () => {
+		it("uses pick proxies in mid bands only", () => {
+			expect(lodHandlePickProxy(500)).toBe(true);
+			expect(lodHandlePickProxy(100)).toBe(false);
+			expect(lodHandlePickProxy(2000)).toBe(false);
+		});
+	});
+	describe("sceneLodCanvasProps", () => {
+		it("maps auto, depth, and manual modes", () => {
+			expect(sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: 50 })).toEqual({
+				automaticLod: true,
+				depthVariableLod: false,
+			});
+			expect(sceneLodCanvasProps({ automaticLod: false, depthVariableLod: true, manualLod: 50 })).toEqual({
+				automaticLod: false,
+				depthVariableLod: true,
+			});
+			expect(sceneLodCanvasProps({ automaticLod: false, depthVariableLod: false, manualLod: 42 })).toEqual({
+				automaticLod: false,
+				depthVariableLod: false,
+				lod: 42,
+			});
+		});
+	});
+	describe("sliderValueFromLod", () => {
+		it("round-trips through lodFromSliderValue", () => {
+			const slider = sliderValueFromLod(200);
+			expect(lodFromSliderValue(slider)).toBeCloseTo(200, 0);
 		});
 	});
 	describe("objectPoseKey", () => {
@@ -3685,7 +3724,7 @@ if (import.meta.vitest) {
 			});
 			expect(f?.domain).toBe("urban");
 		});
-		it("parses vortex handleMeshByLod", () => {
+		it("parses meshByLod list entries", () => {
 			const f = parseFixtureV1({
 				schema: "elements.scene.fixture/v1",
 				camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
@@ -3696,19 +3735,25 @@ if (import.meta.vitest) {
 						meshUrl: "/m.glb",
 						origin: [0, 0, 0],
 						orientation: [0, 0, 0, 1],
+						meshByLod: [{ lod: 100, url: "/fine.glb" }],
 						vortices: [
 							{
 								id: "a:v1",
 								position: [0, 0, 0],
 								handleMeshUrl: "/fallback.glb",
-								handleMeshByLod: { detail: "/d.glb", micro: "/u.glb" },
+								handleMeshByLod: [
+									{ lod: 100, url: "/d.glb" },
+									{ lod: 50, url: "/u.glb" },
+								],
 							},
 						],
 					},
 				],
 			});
-			const v = f?.objects[0]?.vortices[0];
-			expect(v?.handleMeshByLod?.detail).toBe("/d.glb");
+			const o = f?.objects[0];
+			expect(o?.meshByLod?.[0]?.url).toBe("/fine.glb");
+			const v = o?.vortices[0];
+			expect(v?.handleMeshByLod?.[0]?.url).toBe("/d.glb");
 			expect(v?.handleMeshUrl).toBe("/fallback.glb");
 		});
 	});
@@ -3915,8 +3960,11 @@ function useScenePlaySnapshot(): ScenePlaySnapshot {
 	return (
 		ctrl?.getSnapshot() ?? {
 			fixture: null,
-			lodProps: { automaticLod: true },
-			lodTag: "normal",
+			lodProps: sceneLodCanvasProps({ automaticLod: true, depthVariableLod: false, manualLod: DEFAULT_MANUAL_LOD }),
+			lodTag: DEFAULT_MANUAL_LOD,
+			lodSlider: sliderValueFromLod(DEFAULT_MANUAL_LOD),
+			automaticLod: true,
+			depthVariableLod: false,
 			relocateMode: "translate",
 			selectedId: null,
 			proximityCount: 0,
@@ -4071,15 +4119,15 @@ class PlaySceneCanvas extends React.Component<{
 	readonly kindCatalogs: KindCatalogBundle | undefined;
 	readonly kindCompatibility: readonly KindCompatEntry[];
 	readonly blockedVortexFullIds: ReadonlySet<string>;
-	readonly lodTag: LodKind;
-	readonly lodProps: Pick<CanvasProps, "automaticLod" | "lod">;
+	readonly lodTag: number;
+	readonly lodProps: Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod">;
 	readonly relocateMode: RelocateMode;
 	readonly selectedId: string | null;
 	readonly setSelectedId: (id: string | null) => void;
 	readonly onSelect: (snap: { objectIds: readonly string[] }) => void;
 	readonly onIndirectConnect: () => void;
 	readonly onProximityConnect: () => void;
-	readonly onLodChange: (lod: LodKind) => void;
+	readonly onLodChange: (lod: number) => void;
 }> {
 	static contextType = SceneObjectStateContext;
 	declare context: React.ContextType<typeof SceneObjectStateContext>;
@@ -4092,7 +4140,7 @@ class PlaySceneCanvas extends React.Component<{
 		return (
 			<>
 				<div className="pointer-events-none absolute left-0 top-0 z-[-1] px-px py-px opacity-0">
-					<div data-e2e-scene-lod>{this.props.lodTag}</div>
+					<div data-e2e-scene-lod>{formatSceneLod(this.props.lodTag)}</div>
 					<div data-e2e-selected>{this.props.selectedId ?? "none"}</div>
 				</div>
 				<Canvas3D

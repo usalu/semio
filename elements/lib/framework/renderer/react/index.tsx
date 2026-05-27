@@ -1891,6 +1891,28 @@ function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: Command
 				onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
 			};
 		}
+		if (measure.kind === "slider") {
+			return {
+				id: measure.id,
+				kind: "slider",
+				label: measure.label,
+				value: measure.value,
+				min: measure.min,
+				max: measure.max,
+				step: measure.step,
+				onValueChange: (value: number) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
+			};
+		}
+		if (measure.kind === "toggle") {
+			return {
+				id: measure.id,
+				kind: "toggle",
+				label: measure.label,
+				text: measure.text,
+				pressed: measure.pressed,
+				onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
+			};
+		}
 		return { id: measure.id, kind: "display", content: null };
 	});
 }

@@ -4,25 +4,25 @@ overview: Replace the 6-tier domain-driven scene LOD with an open, domain-neutra
 todos:
   - id: core
     content: Replace LodKind/thresholds with numeric LOD + helpers (lodFromCameraDistance, pickClosestLod, lodGridStepWorld, lodHandlePrimaryVisible, lodHandlePickProxy) in elements/lib/react/scene/index.tsx
-    status: pending
+    status: completed
   - id: context
     content: Rewrite LodContextValue, LodFrameRunner, LodBridge, and CanvasProps to expose numeric scene LOD + depth-variable per-object lookup
-    status: pending
+    status: completed
   - id: mesh
     content: Update MeshBody and VortexHandle to use pickClosestMeshUrl with depth-variable path; add ObjectProps.meshByLod and rewrite handleMeshByLod as a list
-    status: pending
+    status: completed
   - id: fixture
     content: Rewrite parseFixtureV1 / parseHandleMeshByLod for the new list-based meshByLod shape
-    status: pending
+    status: completed
   - id: framework
     content: Extend WindowMeasure with slider + toggle kinds in elements/lib/framework/core/index.ts and bridge them in elements/lib/framework/renderer/react/index.tsx
-    status: pending
+    status: completed
   - id: play
     content: Rewrite scene play controller to publish auto toggle, depth toggle, and log-scale LOD slider; remove tier menu
-    status: pending
+    status: completed
   - id: tests
     content: Rewrite in-file unit tests and update scene play e2e expectations for numeric LOD
-    status: pending
+    status: completed
 isProject: false
 ---
 

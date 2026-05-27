@@ -17,17 +17,17 @@ function expectCleanSceneConsole(messages: string[]): void {
 	expect(text).not.toContain("An error occurred in the <CanvasImpl> component");
 	expect(text).not.toContain("Maximum call stack size exceeded");
 	expect(text).not.toContain("updateMatrixWorld");
-	expect(text).not.toContain("pseudoZoomFromOrbitDistance is not defined");
+	expect(text).not.toContain("lodFromCameraDistance is not defined");
 }
 
-const SCENE_LOD_TIERS = /^(minimap|overview|compact|normal|detail|micro)$/;
+const SCENE_LOD_NUMERIC = /^\d+(\.\d+)?$/;
 
 async function expectSceneLodReady(page: Page): Promise<void> {
 	await expect
 		.poll(async () => page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 120_000 })
-		.toMatch(SCENE_LOD_TIERS);
+		.toMatch(SCENE_LOD_NUMERIC);
 	await expect(page.locator("[data-e2e-scene-lod]")).toBeVisible({ timeout: 120_000 });
-	await expect.poll(async () => page.locator("[data-e2e-scene-lod]").textContent(), { timeout: 120_000 }).toMatch(SCENE_LOD_TIERS);
+	await expect.poll(async () => page.locator("[data-e2e-scene-lod]").textContent(), { timeout: 120_000 }).toMatch(SCENE_LOD_NUMERIC);
 }
 
 test("scene play loads canvas and fixture", async ({ page }) => {
@@ -43,17 +43,23 @@ test("scene play loads canvas and fixture", async ({ page }) => {
 	expectCleanSceneConsole(messages);
 });
 
-test("scene play LOD measure pins tier on canvas", async ({ page }) => {
+test("scene play LOD measure pins manual lod on canvas", async ({ page }) => {
 	const messages = collectSceneConsole(page);
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
-	await expect(page.locator('[data-measure-id="scene-main-lod"]')).toBeVisible({ timeout: 120_000 });
-	const lodSelect = page.locator('[data-measure-id="scene-main-lod"]');
-	await lodSelect.click();
-	await page.getByRole("option", { name: "Minimap" }).click();
+	await expect(page.locator('[data-measure-id="scene-main-auto"]')).toBeVisible({ timeout: 120_000 });
+	await page.locator('[data-measure-id="scene-main-auto"]').getByRole("button", { name: "Auto zoom" }).click();
+	const slider = page.locator('[data-measure-id="scene-main-lod"] [role="slider"]');
+	await slider.waitFor({ state: "visible", timeout: 30_000 });
+	await slider.focus();
+	for (let i = 0; i < 40; i += 1) {
+		await page.keyboard.press("ArrowRight");
+	}
 	await expect
 		.poll(async () => await page.locator("[data-scene-root]").getAttribute("data-scene-lod"), { timeout: 30_000 })
-		.toBe("minimap");
+		.toMatch(SCENE_LOD_NUMERIC);
+	const pinned = await page.locator("[data-scene-root]").getAttribute("data-scene-lod");
+	expect(Number(pinned)).toBeGreaterThan(1);
 	expectCleanSceneConsole(messages);
 });
 
@@ -104,9 +110,9 @@ test("scene does not return to loading meshes after initial load", async ({ page
 	await page.goto("/");
 	await page.locator("canvas").first().waitFor({ state: "visible", timeout: 120_000 });
 	await page.waitForLoadState("networkidle");
-	await expect(page.getByText("Loading meshesÔÇª")).toHaveCount(0, { timeout: 120_000 });
+	await expect(page.getByText("Loading meshes…")).toHaveCount(0, { timeout: 120_000 });
 	await page.waitForTimeout(2000);
-	await expect(page.getByText("Loading meshesÔÇª")).toHaveCount(0);
+	await expect(page.getByText("Loading meshes…")).toHaveCount(0);
 	expectCleanSceneConsole(messages);
 });
 

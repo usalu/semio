@@ -144,7 +144,27 @@ export interface WindowMeasureSelect {
 	readonly onChange: CommandDescriptor;
 }
 
-export type WindowMeasure = WindowMeasureSelect;
+export interface WindowMeasureSlider {
+	readonly kind: "slider";
+	readonly id: string;
+	readonly label?: string;
+	readonly value: number;
+	readonly min: number;
+	readonly max: number;
+	readonly step?: number;
+	readonly onChange: CommandDescriptor;
+}
+
+export interface WindowMeasureToggle {
+	readonly kind: "toggle";
+	readonly id: string;
+	readonly label?: string;
+	readonly pressed: boolean;
+	readonly text?: string;
+	readonly onChange: CommandDescriptor;
+}
+
+export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
 //#endregion 🔖WindowMeasure
 
 //#region 🔖Layout

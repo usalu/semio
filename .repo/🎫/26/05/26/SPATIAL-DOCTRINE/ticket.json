@@ -1,34 +1,10 @@
 {
   "title": "Spatial Doctrine Refactor",
   "emoji": "🎫",
-  "status": "closed",
-  "description": "Full spatial doctrine refactor: Model/Typology/Object, extension assets, no legacy APIs.",
-  "summary": "Complete. Doctrine: Model (objects + kernel geometry), Typology/Object/View/Extension assets under spatial/assets/extension/builtin/, schemas spatial.model/v1 + typology/view/extension, fixtures *.model.json. Core: Model/ModelDiff, kernelGeometry namespace, 34 typology imports, builtinExtensionManifest, no view.surfaces|parts|volumes actions. Query: Object {typology} only, view.analytic.* CALLs, unknown labels/actions throw. Renderer: geometry/model public APIs. Zero topology/legacy vocabulary under spatial/. Tests: core 316, query 38, kernel 27, machine 4, renderer 77 — all passing.",
+  "status": "open",
+  "description": "Remove raw/analytic views and kernel surface/part logic; extension-based views only.",
+  "summary": "",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [],
-  "files": [
-    "spatial/AGENTS.md",
-    "spatial/js/kernel-brepjs/AGENTS.md",
-    "spatial/schema/json/model.json",
-    "spatial/schema/json/typology.json",
-    "spatial/schema/json/view.json",
-    "spatial/schema/json/extension.json",
-    "spatial/schema/json/interaction.json",
-    "spatial/assets/extension/builtin/typology/**/*.json",
-    "spatial/assets/extension/builtin/interaction/**/*.json",
-    "spatial/assets/extension/builtin/attribute/material.json",
-    "spatial/assets/extension/builtin/attribute/bondable.json",
-    "spatial/assets/extension/structure/view/**/*.json",
-    "spatial/fixtures/*.model.json",
-    "spatial/fixtures/geometry*.json",
-    "spatial/fixtures/*.spatial.json",
-    "spatial/js/core/index.ts",
-    "spatial/js/core/package.json",
-    "spatial/js/query/index.ts",
-    "spatial/js/query/package.json",
-    "spatial/js/kernel-brepjs/index.ts",
-    "spatial/js/machine-stately/index.ts",
-    "spatial/js/renderer-r3f/index.tsx",
-    "spatial/js/renderer-r3f/play/main.tsx"
-  ]
+  "files": []
 }

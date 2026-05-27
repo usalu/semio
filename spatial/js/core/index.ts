@@ -75,6 +75,10 @@ import typologyTransformMoveJson from "../../assets/extension/builtin/typology/t
 import typologyTransformRotateJson from "../../assets/extension/builtin/typology/transform/rotate.json" with { type: "json" };
 import typologyTransformScale1dJson from "../../assets/extension/builtin/typology/transform/scale1d.json" with { type: "json" };
 import typologyTransformScale3dJson from "../../assets/extension/builtin/typology/transform/scale3d.json" with { type: "json" };
+import energyExtensionManifestJson from "../../assets/extension/energy/extension.json" with { type: "json" };
+import energyViewJson from "../../assets/extension/energy/view/energy/view.json" with { type: "json" };
+import structureExtensionManifestJson from "../../assets/extension/structure/extension.json" with { type: "json" };
+import structureViewJson from "../../assets/extension/structure/view/structure/view.json" with { type: "json" };
 // #endregion 📥InteractionAssets
 
 // #region 🧮Vec
@@ -163,16 +167,8 @@ type EditableEntityKind = kernelGeometry.EditableEntityKind;
 
 export const cellRef = kernelGeometry.cellRef;
 
-/** @emoji 🪞 Derived semantic ids (`Surface`, `Part`) — never directly mutated by factories. */
-export type SurfaceRef = string & { readonly __brand: "SurfaceRef" };
-export type PartRef = string & { readonly __brand: "PartRef" };
-export type VolumeRef = string & { readonly __brand: "VolumeRef" };
-
-/** @emoji 🪞 Derived view object kinds (query: `CALL view.*` + `UNWIND` only). */
-export type DerivedEntityKind = "surface" | "part" | "volume";
-
-/** @emoji 🧭 Selection and property address kinds (kernel geometry + derived views). */
-export type ModelEntityKind = EditableEntityKind | DerivedEntityKind;
+/** @emoji 🧭 Selection kinds: kernel geometry entities or extension view `object` rows. */
+export type ModelEntityKind = EditableEntityKind | "object";
 // #endregion 🧱kernelGeometry
 
 // #region 🎮InteractionEvent
@@ -191,9 +187,7 @@ const MODEL_ENTITY_KINDS = new Set<string>([
 	"cell",
 	"cellComplex",
 	"cluster",
-	"surface",
-	"part",
-	"volume",
+	"object",
 ]);
 
 /** @emoji 🪪 One picked geometry or derived view target for `selection.changed`. */
@@ -211,7 +205,7 @@ export interface SelectionEvent extends InteractionEvent {
 	readonly point?: Vec3;
 }
 
-/** @emoji 🪪 Per-state declarative filter for raw vs analytic picking. */
+/** @emoji 🪪 Per-state declarative filter for model vs extension-view picking. */
 export interface SelectionSpec {
 	readonly accept: readonly ModelEntityKind[];
 	readonly multiple?: boolean;
@@ -494,7 +488,8 @@ export interface ExprEnv {
 	readonly vars?: Record<string, unknown>;
 	readonly model?: Model;
 	readonly metadata?: AttributeStore;
-	readonly derived?: DerivedViewService;
+	readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 	readonly preview: SpatialPreviewKernel;
 }
 
@@ -1093,14 +1088,18 @@ export class Model {
 	}
 }
 
-/** @emoji 🧭 Reads `name` from metadata, then geometry records, then optional `DerivedViewService` for `surface` / `part`. */
+/** @emoji 🧭 Reads `name` from metadata, geometry records, or extension view objects. */
 export function readModelEntityProperty(
 	model: Model,
 	meta: AttributeStore | undefined,
 	kind: ModelEntityKind,
 	id: string,
 	name: string,
-	opts?: { readonly derived?: DerivedViewService; readonly preview?: SpatialPreviewKernel },
+	opts?: {
+		readonly views?: ExtensionViewService;
+		readonly activeViewId?: string | null;
+		readonly preview?: SpatialPreviewKernel;
+	},
 ): unknown {
 	const bag = meta?.get(id);
 	if (bag && name in bag) return (bag as Record<string, unknown>)[name];
@@ -1127,20 +1126,12 @@ export function readModelEntityProperty(
 			return (model.cellComplexes[id] as unknown as Record<string, unknown> | undefined)?.[name];
 		case "cluster":
 			return (model.clusters[id] as unknown as Record<string, unknown> | undefined)?.[name];
-		case "surface": {
-			if (name === "id") return id;
-			const d = opts?.derived;
-			if (!d) return undefined;
-			const hit = d.computeSurfaces(model).find((s) => String(s.id) === id);
+		case "object": {
+			const hit = opts?.views?.findObject(model, opts.activeViewId ?? null, id);
 			if (!hit) return undefined;
-			return (hit as unknown as Record<string, unknown>)[name];
-		}
-		case "part": {
 			if (name === "id") return id;
-			const d = opts?.derived;
-			if (!d) return undefined;
-			const hit = d.computeParts(model).find((p) => String(p.id) === id);
-			if (!hit) return undefined;
+			if (name === "label") return hit.label;
+			if (name === "typologyId") return hit.typologyId;
 			return (hit as unknown as Record<string, unknown>)[name];
 		}
 		default:
@@ -1288,6 +1279,167 @@ export function loadTypology(typologyId: string): TypologySpec | null {
 /** @emoji 📚 Resolves the typology whose `interactions` list includes `interactionId`. */
 export function typologyForInteraction(interactionId: string): TypologySpec | null {
 	return builtinTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
+}
+
+/** @emoji 👁️ Parsed extension view asset (`spatial.view/v1`). */
+export interface ViewDerivedObjectSpec {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly properties?: readonly string[];
+}
+
+/** @emoji 👁️ Extension view definition with readonly derived object slots. */
+export interface ViewSpec {
+	readonly schema: "spatial.view/v1";
+	readonly extensionId: string;
+	readonly id: string;
+	readonly version: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly derivedObjects: readonly ViewDerivedObjectSpec[];
+}
+
+/** @emoji 👁️ Qualified view id (`extensionId.viewId`, e.g. `energy.energy`). */
+export function qualifiedViewId(extensionId: string, viewId: string): string {
+	return `${extensionId}.${viewId}`;
+}
+
+/** @emoji 👁️ One readonly object produced by an extension view. */
+export interface ViewDerivedObject {
+	readonly id: ObjectRef;
+	readonly typologyId: string;
+	readonly label: string;
+	readonly sourceObjectIds: readonly ObjectRef[];
+	readonly regionPoints?: readonly Vec3[];
+}
+
+function parseViewSpec(extensionId: string, raw: unknown): ViewSpec | null {
+	if (!raw || typeof raw !== "object") return null;
+	const r = raw as Record<string, unknown>;
+	if (r.schema !== "spatial.view/v1") return null;
+	if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
+	if (!Array.isArray(r.derivedObjects)) return null;
+	const derivedObjects: ViewDerivedObjectSpec[] = [];
+	for (const row of r.derivedObjects) {
+		if (!row || typeof row !== "object") continue;
+		const d = row as Record<string, unknown>;
+		if (typeof d.id !== "string" || typeof d.label !== "string") continue;
+		derivedObjects.push({
+			id: d.id,
+			label: d.label,
+			description: typeof d.description === "string" ? d.description : undefined,
+			properties: Array.isArray(d.properties) ? (d.properties as string[]) : undefined,
+		});
+	}
+	return {
+		schema: "spatial.view/v1",
+		extensionId,
+		id: r.id,
+		version: r.version,
+		label: r.label,
+		description: typeof r.description === "string" ? r.description : undefined,
+		derivedObjects,
+	};
+}
+
+const extensionViewJsons: readonly { readonly extensionId: string; readonly raw: unknown }[] = [
+	{ extensionId: "energy", raw: energyViewJson },
+	{ extensionId: "structure", raw: structureViewJson },
+];
+
+/** @emoji 📚 Lists view assets from shipped extensions (`spatial/assets/extension/*/view/**/view.json`). */
+export function listExtensionViews(): readonly ViewSpec[] {
+	return extensionViewJsons
+		.map(({ extensionId, raw }) => parseViewSpec(extensionId, raw))
+		.filter((spec): spec is ViewSpec => spec !== null);
+}
+
+/** @emoji 📚 Loads a view by qualified id (`energy.energy`). */
+export function loadExtensionView(qualifiedId: string): ViewSpec | null {
+	return listExtensionViews().find((v) => qualifiedViewId(v.extensionId, v.id) === qualifiedId) ?? null;
+}
+
+/** @emoji 📚 Extension manifests shipped beside view assets. */
+export function listExtensionManifests(): readonly ExtensionManifest[] {
+	return [builtinExtensionManifest(), parseExtensionManifest(energyExtensionManifestJson), parseExtensionManifest(structureExtensionManifestJson)].filter(
+		(m): m is ExtensionManifest => m !== null,
+	);
+}
+
+async function computeViewDerivedObjects(spec: ViewSpec, model: Model, _kernel: SpatialKernel): Promise<ViewDerivedObject[]> {
+	const qid = qualifiedViewId(spec.extensionId, spec.id);
+	if (qid !== "energy.energy") {
+		return spec.derivedObjects.map((d) => ({
+			id: `${qid}.${d.id}` as ObjectRef,
+			typologyId: `${spec.extensionId}.derived.${d.id}`,
+			label: d.label,
+			sourceObjectIds: model.objects.map((o) => o.id),
+		}));
+	}
+	const sourceObjectIds = model.objects.map((o) => o.id);
+	return spec.derivedObjects.map((d) => ({
+		id: `${qid}.${d.id}` as ObjectRef,
+		typologyId: `${spec.extensionId}.derived.${d.id}`,
+		label: d.label,
+		sourceObjectIds,
+	}));
+}
+
+/** @emoji 👁️ Computes and caches readonly objects for one active extension view. */
+export class ExtensionViewService {
+	private revision = -1;
+	private activeQualifiedViewId: string | null = null;
+	private objects: ViewDerivedObject[] = [];
+
+	constructor(
+		readonly viewCatalog: readonly ViewSpec[] = listExtensionViews(),
+		private readonly kernel: SpatialKernel,
+	) {}
+
+	/** @emoji 👁️ Recomputes derived objects for `qualifiedViewId` (`null` clears the active view). */
+	async refresh(model: Model, qualifiedViewId: string | null): Promise<void> {
+		this.activeQualifiedViewId = qualifiedViewId;
+		if (!qualifiedViewId) {
+			this.objects = [];
+			this.revision = model.revision;
+			return;
+		}
+		const spec = this.viewCatalog.find((v) => qualifiedViewId(v.extensionId, v.id) === qualifiedViewId) ?? null;
+		this.objects = spec ? await computeViewDerivedObjects(spec, model, this.kernel) : [];
+		this.revision = model.revision;
+	}
+
+	/** @emoji 👁️ Cached derived objects for the active view at `model.revision`. */
+	computeObjects(model: Model, qualifiedViewId: string | null): readonly ViewDerivedObject[] {
+		if (qualifiedViewId !== this.activeQualifiedViewId || this.revision !== model.revision) return [];
+		return this.objects;
+	}
+
+	findObject(model: Model, qualifiedViewId: string | null, objectId: string): ViewDerivedObject | undefined {
+		return this.computeObjects(model, qualifiedViewId).find((o) => String(o.id) === objectId);
+	}
+
+	/** @emoji 🔌 Builds an `ExtensionViewService` wired to `kernel` and shipped view assets. */
+	static forKernel(kernel: SpatialKernel): ExtensionViewService {
+		return new ExtensionViewService(listExtensionViews(), kernel);
+	}
+
+	/** @emoji 🧭 Resolves brep `FaceRef` ids for a geometry `face` pick or a source `object` row. */
+	resolveFaceIds(model: Model, kind: ModelEntityKind, id: string): readonly FaceRef[] {
+		if (kind === "face") return [id as FaceRef];
+		const row = model.objects.find((o) => String(o.id) === id);
+		if (!row) return [];
+		const cell = model.cells[row.geometryRef];
+		if (!cell) return [];
+		const out: FaceRef[] = [];
+		for (const shellId of cell.shellIds) {
+			const shell = model.shells[shellId];
+			if (!shell) continue;
+			for (const faceId of shell.faceIds) out.push(faceId as FaceRef);
+		}
+		return out;
+	}
 }
 // #endregion 🧱Model
 
@@ -1503,9 +1655,6 @@ export interface SpatialKernel extends SpatialPreviewKernel {
 	volume(cell: CellRef): Promise<number>;
 	tessellate(cell: CellRef, tolerance: number): Promise<MeshTransfer>;
 	query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
-	computeSurfaceViews(model: Model): SurfaceView[] | Promise<SurfaceView[]>;
-	computePartViews(model: Model): PartView[] | Promise<PartView[]>;
-	computeVolumeViews(model: Model): VolumeView[] | Promise<VolumeView[]>;
 	executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }>;
 	extrudeWire(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<CellRef>;
 	offsetFaces(input: { faceIds: readonly string[]; distance: number; model: Model }): Promise<void>;
@@ -1602,7 +1751,8 @@ export function appendCommittedMeshFaceToModel(
 /** @emoji 🔌 Optional query context for derived-view resolution in kernel adapters. */
 export interface KernelQueryContext {
 	readonly model: Model;
-	readonly derived?: DerivedViewService;
+	readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 }
 // #endregion 🔌SpatialKernelInterface
 
@@ -1626,7 +1776,8 @@ export type ActionFn<TParams = Record<string, unknown>, TData = unknown> = (
 		readonly kernel: SpatialKernel;
 		readonly preview: SpatialPreviewKernel;
 		readonly model: Model;
-		readonly derived?: DerivedViewService;
+		readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 	},
 ) => Promise<ActionResult<TData>> | ActionResult<TData>;
 
@@ -1667,7 +1818,8 @@ export class ActionRegistry {
 			readonly kernel: SpatialKernel;
 			readonly preview: SpatialPreviewKernel;
 			readonly model: Model;
-			readonly derived?: DerivedViewService;
+			readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 		},
 	): Promise<ActionResult> {
 		const def = this.get(id);
@@ -1807,7 +1959,7 @@ function selectionTargetsWithMode(
 	return dedupedNext;
 }
 
-/** @emoji 🪪 Geometry entity + derived kinds used by selection commands (`selectAll`, `invert`, …). */
+/** @emoji 🪪 Kernel geometry + extension view `object` kinds used by selection commands. */
 export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = [
 	"anchor",
 	"vertex",
@@ -1818,9 +1970,7 @@ export const ALL_MODEL_SELECTION_KINDS: readonly ModelEntityKind[] = [
 	"cell",
 	"cellComplex",
 	"cluster",
-	"surface",
-	"part",
-	"volume",
+	"object",
 ];
 
 const MODEL_SELECTION_KIND_ORDER = new Map<ModelEntityKind, number>(
@@ -1847,8 +1997,7 @@ export type SelectionOperationInteractionDef = {
 };
 
 function toSelectionTarget(kind: ModelEntityKind, id: string): SelectionTarget {
-	const editable = kind !== "surface" && kind !== "part" && kind !== "volume";
-	return { kind, id, editable };
+	return { kind, id, editable: kind !== "object" };
 }
 
 /** @emoji 🪪 Parses `context.targets` or action patch targets into validated `SelectionTarget` rows. */
@@ -1874,7 +2023,7 @@ function parseSelectionTargetsFromUnknown(raw: unknown): SelectionTarget[] {
 		out.push({
 			kind: kind as ModelEntityKind,
 			id,
-			editable: typeof editable === "boolean" ? editable : kind !== "surface" && kind !== "part" && kind !== "volume",
+			editable: typeof editable === "boolean" ? editable : kind !== "object",
 		});
 	}
 	return out;
@@ -1903,15 +2052,16 @@ function sortSelectionTargets(targets: readonly SelectionTarget[]): SelectionTar
 export function collectGeometrySelectionTargets(
 	model: Model,
 	kinds: readonly ModelEntityKind[],
-	derived?: DerivedViewService | null,
+	views?: ExtensionViewService | null,
+	activeViewId?: string | null,
 ): SelectionTarget[] {
 	const out: SelectionTarget[] = [];
 	const seen = new Set<string>();
-	const push = (kind: ModelEntityKind, id: string) => {
-		const key = selectionTargetKey({ kind, id, editable: true });
+	const push = (kind: ModelEntityKind, id: string, editable = true) => {
+		const key = selectionTargetKey({ kind, id, editable });
 		if (seen.has(key)) return;
 		seen.add(key);
-		out.push(toSelectionTarget(kind, id));
+		out.push({ kind, id, editable });
 	};
 	for (const kind of kinds) {
 		switch (kind) {
@@ -1942,14 +2092,8 @@ export function collectGeometrySelectionTargets(
 			case "cluster":
 				for (const id of Object.keys(model.clusters)) push(kind, id);
 				break;
-			case "surface":
-				for (const s of derived?.computeSurfaces(model) ?? []) push(kind, String(s.id));
-				break;
-			case "part":
-				for (const p of derived?.computeParts(model) ?? []) push(kind, String(p.id));
-				break;
-			case "volume":
-				for (const v of derived?.computeVolumes(model) ?? []) push(kind, String(v.id));
+			case "object":
+				for (const o of views?.computeObjects(model, activeViewId ?? null) ?? []) push(kind, String(o.id), false);
 				break;
 		}
 	}
@@ -1962,11 +2106,12 @@ export function applySelectionOperation(
 	current: readonly SelectionTarget[],
 	model: Model,
 	kinds: readonly ModelEntityKind[],
-	derived?: DerivedViewService | null,
+	views?: ExtensionViewService | null,
+	activeViewId?: string | null,
 ): SelectionTarget[] {
 	if (operation === "deselectAll") return [];
 	const scopeKinds = kinds.length > 0 ? kinds : [...ALL_MODEL_SELECTION_KINDS];
-	const universe = collectGeometrySelectionTargets(model, scopeKinds, derived);
+	const universe = collectGeometrySelectionTargets(model, scopeKinds, views, activeViewId);
 	if (operation === "selectAll" || operation === "selectKinds") return universe;
 	const cur = new Set(current.map(selectionTargetKey));
 	return universe.filter((target) => !cur.has(selectionTargetKey(target)));
@@ -1975,7 +2120,7 @@ export function applySelectionOperation(
 /** @emoji 🪪 Shared selection command core used by `selection.apply` and headless callers. */
 export function executeSelectionApply(
 	params: SelectionApplyParams,
-	ctx: { readonly model: Model; readonly derived?: DerivedViewService | null },
+	ctx: { readonly model: Model; readonly views?: ExtensionViewService | null; readonly activeViewId?: string | null },
 ): SelectionTarget[] {
 	const seed = params.seedTargets ?? [];
 	const kinds =
@@ -1984,7 +2129,7 @@ export function executeSelectionApply(
 			: params.operation === "invert" || params.operation === "selectAll"
 				? [...ALL_MODEL_SELECTION_KINDS]
 				: [];
-	return applySelectionOperation(params.operation, seed, ctx.model, kinds, ctx.derived ?? null);
+	return applySelectionOperation(params.operation, seed, ctx.model, kinds, ctx.views ?? null, ctx.activeViewId ?? null);
 }
 
 /** @emoji 🪪 Runs `selection.apply` headless via `ActionRegistry` (no interaction session). */
@@ -1994,7 +2139,8 @@ export async function runSelectionApply(
 		readonly kernel: SpatialKernel;
 		readonly preview: SpatialPreviewKernel;
 		readonly model: Model;
-		readonly derived?: DerivedViewService;
+		readonly views?: ExtensionViewService;
+		readonly activeViewId?: string | null;
 		readonly actions?: ActionRegistry;
 	},
 ): Promise<readonly SelectionTarget[]> {
@@ -2861,109 +3007,6 @@ function builtinActionDefs(): ActionDef[] {
 }
 // #endregion 🧮ActionRegistry
 
-// #region 🪞DerivedViews
-/** @emoji 🪞 Semantic `Surface` view over one or more faces (exposure × stance). */
-export interface SurfaceView {
-	readonly id: SurfaceRef;
-	readonly sourceFaceIds: readonly FaceRef[];
-	readonly exposure: "external" | "internal";
-	readonly stance: "horizontal" | "vertical";
-	readonly area: number;
-	/** @emoji 🪞 Pick/display hull when a face is split (subset of the parent face). */
-	readonly regionPoints?: readonly Vec3[];
-}
-
-/** @emoji 🪞 Semantic `Part` view over one or more cells (overlap classification). */
-export interface PartView {
-	readonly id: PartRef;
-	readonly sourceCellIds: readonly CellRef[];
-	readonly overlap: "none" | "difference" | "intersection";
-	readonly volume: number;
-	/** @emoji 🪞 Pick/display hull for the semantic cell partition (not the whole source cell). */
-	readonly regionPoints?: readonly Vec3[];
-}
-
-/** @emoji 🪞 Semantic `Volume` view: boolean union of closed shells in a cell group. */
-export interface VolumeView {
-	readonly id: VolumeRef;
-	readonly sourceCellIds: readonly CellRef[];
-	readonly volume: number;
-	readonly regionPoints?: readonly Vec3[];
-}
-
-/** @emoji 🪞 Computes derived `SurfaceView` / `PartView` / `VolumeView` via optional kernel booleans. */
-export class DerivedViewService {
-	private surfaceRevision = -1;
-	private partRevision = -1;
-	private volumeRevision = -1;
-	private surfaces: SurfaceView[] = [];
-	private parts: PartView[] = [];
-	private volumes: VolumeView[] = [];
-	private refreshGen = 0;
-
-	constructor(private readonly kernel: SpatialKernel) {}
-
-	/** @emoji 🪞 Recomputes surfaces, parts, and volumes (awaits kernel booleans when present). */
-	async refresh(model: Model): Promise<void> {
-		const gen = ++this.refreshGen;
-		const kernel = this.kernel as SpatialKernel & {
-			refreshDerivedViews?: (t: Model) => Promise<{
-				readonly surfaces: SurfaceView[];
-				readonly parts: PartView[];
-				readonly volumes: VolumeView[];
-			}>;
-		};
-		if (kernel.refreshDerivedViews) {
-			const bundle = await kernel.refreshDerivedViews(model);
-			if (gen !== this.refreshGen) return;
-			const rev = model.revision;
-			this.surfaces = bundle.surfaces;
-			this.parts = bundle.parts;
-			this.volumes = bundle.volumes;
-			this.surfaceRevision = rev;
-			this.partRevision = rev;
-			this.volumeRevision = rev;
-			return;
-		}
-		const surfaces = await Promise.resolve(this.kernel.computeSurfaceViews(model));
-		if (gen !== this.refreshGen) return;
-		const parts = await Promise.resolve(this.kernel.computePartViews(model));
-		if (gen !== this.refreshGen) return;
-		const volumes = await Promise.resolve(this.kernel.computeVolumeViews(model));
-		if (gen !== this.refreshGen) return;
-		const rev = model.revision;
-		this.surfaces = surfaces;
-		this.parts = parts;
-		this.volumes = volumes;
-		this.surfaceRevision = rev;
-		this.partRevision = rev;
-		this.volumeRevision = rev;
-	}
-
-	/** @emoji 🪞 Returns cached surfaces for `model.revision` (empty until `refresh` catches up). */
-	computeSurfaces(model: Model): SurfaceView[] {
-		if (this.surfaceRevision === model.revision) return this.surfaces;
-		return [];
-	}
-
-	/** @emoji 🪞 Returns cached parts for `model.revision` (empty until `refresh` catches up). */
-	computeParts(model: Model): PartView[] {
-		if (this.partRevision === model.revision) return this.parts;
-		return [];
-	}
-
-	/** @emoji 🪞 Returns cached volumes for `model.revision` (empty until `refresh` catches up). */
-	computeVolumes(model: Model): VolumeView[] {
-		if (this.volumeRevision === model.revision) return this.volumes;
-		return [];
-	}
-
-	resolveSurface(surface: SurfaceRef, model: Model): readonly FaceRef[] {
-		const hit = this.computeSurfaces(model).find((s) => String(s.id) === String(surface));
-		return hit ? [...hit.sourceFaceIds] : [];
-	}
-}
-// #endregion 🪞DerivedViews
 
 // #region 🔍ConstructQuery
 /** @emoji 🔍 One named column in a `construct` result row. */
@@ -2981,7 +3024,8 @@ export interface ConstructQueryContext {
 	readonly model: Model;
 	readonly kernel: SpatialKernel;
 	readonly actions: ActionRegistry;
-	readonly derived?: DerivedViewService;
+	readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 	/** @emoji 🪪 Default `seedTargets` for `CALL selection.*` when the call omits `seedTargets`. */
 	readonly selectionTargets?: readonly SelectionTarget[];
 }
@@ -3014,7 +3058,7 @@ export interface StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		derived?: DerivedViewService,
+		derived?: ExtensionViewService,
 		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult>;
 }
@@ -3045,7 +3089,7 @@ export async function applyEffectAsync(
 	kernel: SpatialKernel | undefined,
 	model: Model,
 	actions?: ActionRegistry,
-	derived?: DerivedViewService,
+	derived?: ExtensionViewService,
 	preview?: SpatialPreviewKernel,
 ): Promise<void> {
 	const math = preview ?? kernel;
@@ -3066,7 +3110,7 @@ export async function applyEffectAsync(
 		}
 	} else if (a.op === "kernel.query") {
 		const params = kernelQueryParamsToRecord(a.params, env);
-		const queryCtx: KernelQueryContext = { model, derived: env.derived as DerivedViewService | undefined };
+		const queryCtx: KernelQueryContext = { model, derived: env.derived as ExtensionViewService | undefined };
 		if (a.query === "surface.resolveFaces" && derived) {
 			const sid = String(params.surfaceId ?? "");
 			writePathTarget(a.assignTo, env, derived.resolveSurface(sid as SurfaceRef, model));
@@ -3096,7 +3140,7 @@ export async function applyTransition(
 	kernel?: SpatialKernel,
 	actions?: ActionRegistry,
 	model?: Model,
-	derived?: DerivedViewService,
+	derived?: ExtensionViewService,
 	preview?: SpatialPreviewKernel,
 ): Promise<ApplyTransitionResult> {
 	const graph = model ?? new Model();
@@ -3221,7 +3265,7 @@ export class StatechartRuntime implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		derived?: DerivedViewService,
+		derived?: ExtensionViewService,
 		preview?: SpatialPreviewKernel,
 	): Promise<StateEngineSendResult> {
 		const r = await applyTransition(this.spec, this.state, this.context, event, kernel, actions, model, derived, preview);
@@ -3479,7 +3523,8 @@ export interface InteractionRuntimeOptions {
 	readonly stateEngine?: StateEngineProvider;
 	readonly actions?: ActionRegistry;
 	readonly query?: ConstructRunner;
-	readonly derived?: DerivedViewService;
+	readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 }
 
 export function isInteractionSessionActive(spec: InteractionSpec, state: string): boolean {
@@ -3871,7 +3916,7 @@ export async function runSelectionOperationInteraction(
 	if (!spec) throw new Error(`Unknown interaction: ${interactionId}`);
 	const derived =
 		opts.derived ??
-		(selectionOperationUsesDerived(defn) ? new DerivedViewService(opts.kernel) : undefined);
+		(selectionOperationUsesViewObjects(defn) ? new ExtensionViewService(opts.kernel) : undefined);
 	if (derived) await derived.refresh(opts.document.model);
 	const rt = createInteractionRuntime(spec, { ...opts, derived });
 	const seedTargets = opts.seedTargets ?? [];
@@ -4028,9 +4073,6 @@ const SELECTION_OPERATION_INTERACTION_DEFS = [
 	{ id: "selection.selectCells", label: "SelectCells", key: "xc", operation: "selectKinds", kinds: ["cell"] },
 	{ id: "selection.selectCellComplexes", label: "SelectCellComplexes", key: "xl", operation: "selectKinds", kinds: ["cellComplex"] },
 	{ id: "selection.selectClusters", label: "SelectClusters", key: "xk", operation: "selectKinds", kinds: ["cluster"] },
-	{ id: "selection.selectSurfaces", label: "SelectSurfaces", key: "xn", operation: "selectKinds", kinds: ["surface"] },
-	{ id: "selection.selectParts", label: "SelectParts", key: "xp", operation: "selectKinds", kinds: ["part"] },
-	{ id: "selection.selectVolumes", label: "SelectVolumes", key: "xg", operation: "selectKinds", kinds: ["volume"] },
 ] as const satisfies readonly SelectionOperationInteractionDef[];
 
 function buildSelectionOperationInteractionJson(defn: SelectionOperationInteractionDef): BuiltinInteractionFixture {
@@ -4135,11 +4177,9 @@ export function selectionApplyParamsForInteraction(
 	};
 }
 
-const SELECTION_DERIVED_KINDS = new Set<ModelEntityKind>(["surface", "part", "volume"]);
-
-/** @emoji 🪪 True when a selection command needs `DerivedViewService` (surface/part/volume). */
-export function selectionOperationUsesDerived(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
-	return defn.kinds?.some((kind) => SELECTION_DERIVED_KINDS.has(kind)) ?? false;
+/** @emoji 🪪 True when a selection command needs `ExtensionViewService` (`object` rows). */
+export function selectionOperationUsesViewObjects(defn: Pick<SelectionOperationInteractionDef, "kinds">): boolean {
+	return defn.kinds?.includes("object") ?? false;
 }
 
 /** @emoji 🪪 Default seed targets for invert/deselectAll (otherwise empty). */
@@ -4540,7 +4580,7 @@ if (import.meta.vitest) {
 			applyModelDiff(model, a.diff);
 			applyModelDiff(model, b.diff);
 			applyModelDiff(model, c.diff);
-			const derived = new DerivedViewService(kernel);
+			const derived = new ExtensionViewService(kernel);
 			await derived.refresh(model);
 			const parts = derived.computeParts(model);
 			const surfaces = derived.computeSurfaces(model);
@@ -4589,7 +4629,7 @@ if (import.meta.vitest) {
 		it("computeParts returns empty until refresh matches model revision", async () => {
 			const kernel = new BrepjsKernel();
 			const model = new Model();
-			const derived = new DerivedViewService(kernel);
+			const derived = new ExtensionViewService(kernel);
 			expect(derived.computeParts(model)).toEqual([]);
 			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
 			applyModelDiff(model, r.diff);
@@ -4603,7 +4643,7 @@ if (import.meta.vitest) {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [1, 1, 0], cornerB: [3, 3, 0], height: 2 }, cellRef("b")));
-			const derived = new DerivedViewService(kernel);
+			const derived = new ExtensionViewService(kernel);
 			await derived.refresh(model);
 			const rev = model.revision;
 			expect(derived.computeSurfaces(model).length).toBeGreaterThan(0);
@@ -4624,7 +4664,7 @@ if (import.meta.vitest) {
 			applyModelDiff(model, host.diff);
 			const punch = await kernel.createBoxFromCornersDiff({ cornerA: [0, 1, 0], cornerB: [4, 2, 0], height: 4 });
 			applyModelDiff(model, punch.diff);
-			const derived = new DerivedViewService(kernel);
+			const derived = new ExtensionViewService(kernel);
 			await derived.refresh(model);
 			const parts = derived.computeParts(model);
 			expect(parts.filter((p) => p.overlap === "intersection")).toHaveLength(1);
@@ -4668,7 +4708,7 @@ if (import.meta.vitest) {
 		it("computeVolumes returns empty until refresh matches model revision", async () => {
 			const kernel = new BrepjsKernel();
 			const model = new Model();
-			const derived = new DerivedViewService(kernel);
+			const derived = new ExtensionViewService(kernel);
 			expect(derived.computeVolumes(model)).toEqual([]);
 			const r = await kernel.createBoxFromCornersDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 });
 			applyModelDiff(model, r.diff);
@@ -5364,7 +5404,7 @@ if (import.meta.vitest) {
 				applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cellRef("e2e-box")));
 				const kernel = new BrepjsKernel() as unknown as SpatialKernel;
 				const seed = selectionSeedTargetsForOperation(defn.operation);
-				const derived = selectionOperationUsesDerived(defn) ? new DerivedViewService(kernel) : undefined;
+				const derived = selectionOperationUsesViewObjects(defn) ? new ExtensionViewService(kernel) : undefined;
 				if (derived) await derived.refresh(model);
 				const params = selectionApplyParamsForInteraction(defn, seed);
 				const headless = await runSelectionApply(params, { kernel, preview: M, model: model, derived });
@@ -6004,7 +6044,7 @@ if (import.meta.vitest) {
 			defn: SelectionOperationInteractionDef,
 			targets: readonly SelectionTarget[],
 			model: Model,
-			derived?: DerivedViewService,
+			derived?: ExtensionViewService,
 		): void => {
 			switch (defn.operation) {
 				case "deselectAll":
@@ -6053,7 +6093,8 @@ if (import.meta.vitest) {
 				readonly model: Model;
 				readonly before: ReturnType<typeof entityCounts>;
 				readonly after: ReturnType<typeof entityCounts>;
-				readonly derived?: DerivedViewService;
+				readonly views?: ExtensionViewService;
+	readonly activeViewId?: string | null;
 			}) => void;
 		}[] = [
 			{
@@ -6432,9 +6473,9 @@ if (import.meta.vitest) {
 				id: defn.id,
 				fixture: "empty" as const,
 				seedBox: true,
-				derived: selectionOperationUsesDerived(defn as SelectionOperationInteractionDef),
+				derived: selectionOperationUsesViewObjects(defn as SelectionOperationInteractionDef),
 				steps: [{ kind: "start", targets: selectionSeedTargetsForOperation(defn.operation), modifiers: MOD }] as const,
-				assert: ({ snap, model, derived }: { snap: InteractionSnapshot; model: Model; derived?: DerivedViewService }) => {
+				assert: ({ snap, model, derived }: { snap: InteractionSnapshot; model: Model; derived?: ExtensionViewService }) => {
 					expect(isEmptyModelDiff(snap.lastResponse?.diff ?? EMPTY_MODEL_DIFF)).toBe(true);
 					assertSelectionCommandArchive(defn, archivedSelectionTargets(snap), model, derived);
 				},
@@ -6452,7 +6493,7 @@ if (import.meta.vitest) {
 			const model = topoFromFixture(row.fixture);
 			if (row.seedBox || TRANSFORM_IDS.has(row.id)) seedBoxCell(model);
 			const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-			const derived = row.derived ? new DerivedViewService(kernel) : undefined;
+			const derived = row.derived ? new ExtensionViewService(kernel) : undefined;
 			if (derived) await derived.refresh(model);
 			const before = entityCounts(model);
 			const rt = createInteractionRuntime(spec!, {

@@ -32,14 +32,15 @@ import {
 } from "../../board/index.tsx";
 import nakaginSceneJson from "../../scene/play/fixtures/nakagin-capsule-tower.scene.json";
 import {
-	LOD_MODE_AUTOMATIC as SCENE_LOD_MODE_AUTOMATIC,
-	isLodKind,
-	lodAutomaticSelectLabel as sceneLodAutomaticSelectLabel,
-	lodCanvasProps as sceneLodCanvasProps,
+	DEFAULT_MANUAL_LOD,
+	SCENE_LOD_SLIDER_MAX,
+	SCENE_LOD_SLIDER_MIN,
+	formatSceneLod,
+	lodFromSliderValue,
 	parseFixtureV1,
+	sceneLodCanvasProps,
+	sliderValueFromLod,
 	type FixtureV1 as SceneFixtureV1,
-	type LodKind as SceneLodKind,
-	type LodModeKind as SceneLodModeKind,
 	type RelocateMode as SceneRelocateMode,
 } from "../../scene/index.tsx";
 import { parseTopologyFixtureV1, topologySharedKindsFromPairedMetas } from "../index.tsx";
@@ -58,7 +59,6 @@ export const TOPOLOGY_PLAY_BOARD_SURFACE_ID = "elements.topology.play.board/v1";
 export const TOPOLOGY_PLAY_SCENE_SURFACE_ID = "elements.topology.play.scene/v1";
 
 const TOPOLOGY_PLAY_LOD_TIERS_BOARD: readonly BoardDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
-const TOPOLOGY_PLAY_LOD_TIERS_SCENE: readonly SceneLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 //#endregion ­ƒöûIds
 
 //#region ­ƒöûHelpers
@@ -85,10 +85,13 @@ export interface TopologyPlaySnapshot {
 	readonly sceneCamera: CameraState | null;
 	readonly sceneSelected: string | null;
 	readonly relocateMode: SceneRelocateMode;
-	readonly sceneLodTag: SceneLodKind;
+	readonly sceneLodTag: number;
 	readonly boardLodTag: BoardDrawLodKind;
 	readonly boardLodProps: ReturnType<typeof boardLodCanvasProps>;
 	readonly sceneLodProps: ReturnType<typeof sceneLodCanvasProps>;
+	readonly sceneAutomaticLod: boolean;
+	readonly sceneDepthVariableLod: boolean;
+	readonly sceneLodSlider: number;
 	readonly sharedKinds: ReturnType<typeof topologySharedKindsFromPairedMetas>;
 	readonly connectBoard: number;
 	readonly connectScene: number;
@@ -107,10 +110,13 @@ export class TopologyPlayShellController extends Controller {
 	private sceneSelected: string | null = null;
 	private boardCamera: CameraState | null = this.boardFixture ? { ...this.boardFixture.camera } : null;
 	private sceneCamera: CameraState | null = this.sceneFixture ? { ...this.sceneFixture.camera } : null;
-	private sceneLodTag: SceneLodKind = "normal";
+	private sceneLodTag = DEFAULT_MANUAL_LOD;
+	private sceneAutomaticLod = true;
+	private sceneDepthVariableLod = false;
+	private sceneManualLod = DEFAULT_MANUAL_LOD;
+	private sceneLodSlider = sliderValueFromLod(DEFAULT_MANUAL_LOD);
 	private boardLodTag: BoardDrawLodKind = "normal";
 	private boardLodMode: BoardLodModeKind = BOARD_LOD_MODE_AUTOMATIC;
-	private sceneLodMode: SceneLodModeKind = SCENE_LOD_MODE_AUTOMATIC;
 	private connectBoard = 0;
 	private connectScene = 0;
 	private proximityBoard = 0;
@@ -150,24 +156,40 @@ export class TopologyPlayShellController extends Controller {
 		};
 	}
 
-	private sceneLodMeasure(): WindowMeasure {
-		return {
-			kind: "select",
-			id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-lod`,
-			label: "LOD",
-			value: this.sceneLodMode,
-			items: [
-				{ id: "automatic", label: sceneLodAutomaticSelectLabel(this.sceneLodTag), value: SCENE_LOD_MODE_AUTOMATIC },
-				...TOPOLOGY_PLAY_LOD_TIERS_SCENE.map((tier) => ({ id: tier, label: topologyPlayLodTierMenuLabel(tier), value: tier })),
-			],
-			onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneLodMode" },
-		};
+	private sceneLodMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "toggle",
+				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-auto`,
+				label: "LOD",
+				text: "Auto zoom",
+				pressed: this.sceneAutomaticLod,
+				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneAutoLod" },
+			},
+			{
+				kind: "toggle",
+				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-depth`,
+				text: "Depth-variable",
+				pressed: this.sceneDepthVariableLod,
+				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneDepthLod" },
+			},
+			{
+				kind: "slider",
+				id: `${TOPOLOGY_PLAY_SCENE_WINDOW_ID}-lod`,
+				label: formatSceneLod(this.sceneLodTag),
+				value: this.sceneLodSlider,
+				min: SCENE_LOD_SLIDER_MIN,
+				max: SCENE_LOD_SLIDER_MAX,
+				step: 1,
+				onChange: { controllerId: TOPOLOGY_PLAY_CONTROLLER_ID, command: "setSceneManualLod" },
+			},
+		];
 	}
 
 	getWindowKinds(): readonly WindowKindRuntime[] {
 		return [
 			new WindowKindRuntime(TOPOLOGY_PLAY_BOARD_WINDOW_ID, TOPOLOGY_PLAY_BOARD_WINDOW_LABEL, TOPOLOGY_PLAY_BOARD_BODY_KEY, undefined, [this.boardLodMeasure()]),
-			new WindowKindRuntime(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [this.sceneLodMeasure()]),
+			new WindowKindRuntime(TOPOLOGY_PLAY_SCENE_WINDOW_ID, TOPOLOGY_PLAY_SCENE_WINDOW_LABEL, TOPOLOGY_PLAY_SCENE_BODY_KEY, undefined, [...this.sceneLodMeasures()]),
 		];
 	}
 
@@ -180,10 +202,24 @@ export class TopologyPlayShellController extends Controller {
 				else changed = false;
 				break;
 			}
-			case "setSceneLodMode": {
-				const value = (args as { value?: string }).value;
-				if ((value === SCENE_LOD_MODE_AUTOMATIC || (typeof value === "string" && isLodKind(value))) && this.sceneLodMode !== value) this.sceneLodMode = value as SceneLodModeKind;
+			case "setSceneAutoLod": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean" && this.sceneAutomaticLod !== pressed) this.sceneAutomaticLod = pressed;
 				else changed = false;
+				break;
+			}
+			case "setSceneDepthLod": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean" && this.sceneDepthVariableLod !== pressed) this.sceneDepthVariableLod = pressed;
+				else changed = false;
+				break;
+			}
+			case "setSceneManualLod": {
+				const value = (args as { value?: number }).value;
+				if (typeof value === "number" && Number.isFinite(value)) {
+					this.sceneLodSlider = value;
+					this.sceneManualLod = lodFromSliderValue(value);
+				} else changed = false;
 				break;
 			}
 			case "setBoardLodTag": {
@@ -193,9 +229,11 @@ export class TopologyPlayShellController extends Controller {
 				break;
 			}
 			case "setSceneLodTag": {
-				const lod = (args as { lod: SceneLodKind }).lod;
-				if (this.sceneLodTag !== lod) this.sceneLodTag = lod;
-				else changed = false;
+				const lod = (args as { lod: number }).lod;
+				if (typeof lod === "number" && Number.isFinite(lod) && lod > 0 && this.sceneLodTag !== lod) {
+					this.sceneLodTag = lod;
+					this.sceneLodSlider = sliderValueFromLod(lod);
+				} else changed = false;
 				break;
 			}
 			case "setBoardSelection": {
@@ -263,7 +301,14 @@ export class TopologyPlayShellController extends Controller {
 			sceneLodTag: this.sceneLodTag,
 			boardLodTag: this.boardLodTag,
 			boardLodProps: boardLodCanvasProps(this.boardLodMode),
-			sceneLodProps: sceneLodCanvasProps(this.sceneLodMode),
+			sceneLodProps: sceneLodCanvasProps({
+				automaticLod: this.sceneAutomaticLod,
+				depthVariableLod: this.sceneDepthVariableLod,
+				manualLod: this.sceneManualLod,
+			}),
+			sceneAutomaticLod: this.sceneAutomaticLod,
+			sceneDepthVariableLod: this.sceneDepthVariableLod,
+			sceneLodSlider: this.sceneLodSlider,
 			sharedKinds: topologySharedKindsFromPairedMetas({ boardMeta: this.boardFixture?.meta, sceneMeta: this.sceneFixture?.meta }),
 			connectBoard: this.connectBoard,
 			connectScene: this.connectScene,
