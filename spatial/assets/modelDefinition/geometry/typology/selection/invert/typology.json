@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.invert",
+  "version": "1.0.0",
+  "label": "InvertSelection",
+  "description": "Selection typology for selection.invert.",
+  "actions": [
+    "selection.invert"
+  ],
+  "interactions": []
+}

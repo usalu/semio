@@ -1,0 +1,14 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.feature.offset-surface",
+  "version": "1.0.0",
+  "label": "Offset Surface",
+  "description": "Typology produced by feature.offset-surface.",
+  "actions": [
+    "builtin.feature.offset-surface",
+    "feature.offsetFaces"
+  ],
+  "interactions": [
+    "feature.offset-surface"
+  ]
+}

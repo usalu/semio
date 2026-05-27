@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.deselect-all",
+  "version": "1.0.0",
+  "label": "DeselectAll",
+  "description": "Selection typology for selection.deselectAll.",
+  "actions": [
+    "selection.deselectAll"
+  ],
+  "interactions": []
+}

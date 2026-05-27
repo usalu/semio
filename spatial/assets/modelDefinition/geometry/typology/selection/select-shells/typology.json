@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-shells",
+  "version": "1.0.0",
+  "label": "SelectShells",
+  "description": "Selection typology for selection.selectShells.",
+  "actions": [
+    "selection.selectShells"
+  ],
+  "interactions": []
+}

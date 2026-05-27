@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.command.selection-bbox-center",
+  "version": "1.0.0",
+  "label": "SelectionBboxCenter",
+  "description": "Command typology for command.selectionBboxCenter.",
+  "actions": [
+    "command.selectionBboxCenter"
+  ],
+  "interactions": []
+}

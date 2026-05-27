@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "selection.invert",
+  "version": "1.0.0",
+  "label": "InvertSelection",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.execute",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

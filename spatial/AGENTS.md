@@ -2,21 +2,84 @@
 
 Extendable spatial framework around persistent models, runtime execution, and rendering.
 
+# Primitive
+
+A primitive is hashed.
+
+## Geometry
+
+### Point
+
+### Curve
+
+#### Line
+
+#### Circle
+
+#### Ellipse
+
+#### Parabola
+
+#### Hyperbola
+
+#### B-Spline
+
+#### Bezier
+
+### Surface
+
+#### Plane
+
+#### Cylinder
+
+#### Cone
+
+#### Sphere
+
+#### Torus
+
+#### B-Spline
+
+#### Bezier
+
+## Topology
+
+### Vertex
+
+### Edge
+
+### Wire
+
+### Face
+
+### Shell
+
+### Solid
+
+### CompSolid
+
+### Compound
+
+## ModelSpace
+
+A model space is a container for linked models.
+Every geometry is hashed (every vertex)
+
 ## Model
 
 A model contains objects.
 
 ### Object
 
-An object is an instance of a typology.
+An object is an instance of a typology along with primitives.
 
 #### Attribute
 
-An attribute is attachable authored metadata to objects.
+An attribute is attachable authored metadata to primitives.
 
 #### Property
 
-A property is a derived attribute that is not authored.
+A property is a derived metadata for objects that is not authored.
 
 # ModelDefinition
 
@@ -27,6 +90,7 @@ A model definition do not ship executable code; the runtime interprets their dat
 ## Typology
 
 A typology is a class of objects.
+A typology has a set of allowed primitive kinds.
 Every typology has one or many actions to construct an object of that typology.
 Every typology has one or many interactions to construct an object of that typology.
 

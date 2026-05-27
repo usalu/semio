@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.command.add-selection",
+  "version": "1.0.0",
+  "label": "AddSelection",
+  "description": "Command typology for command.addSelection.",
+  "actions": [
+    "command.addSelection"
+  ],
+  "interactions": []
+}

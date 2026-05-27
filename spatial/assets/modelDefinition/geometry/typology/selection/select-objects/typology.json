@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-objects",
+  "version": "1.0.0",
+  "label": "SelectObjects",
+  "description": "Selection typology for selection.selectObjects.",
+  "actions": [
+    "selection.selectObjects"
+  ],
+  "interactions": []
+}

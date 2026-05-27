@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.measure.volume",
+  "version": "1.0.0",
+  "label": "SolidVolume",
+  "description": "Measure typology for measure.solidVolume.",
+  "actions": [
+    "measure.solidVolume"
+  ],
+  "interactions": []
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-faces",
+  "version": "1.0.0",
+  "label": "SelectFaces",
+  "description": "Selection typology for selection.selectFaces.",
+  "actions": [
+    "selection.selectFaces"
+  ],
+  "interactions": []
+}

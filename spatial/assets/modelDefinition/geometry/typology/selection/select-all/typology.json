@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-all",
+  "version": "1.0.0",
+  "label": "SelectAll",
+  "description": "Selection typology for selection.selectAll.",
+  "actions": [
+    "selection.selectAll"
+  ],
+  "interactions": []
+}

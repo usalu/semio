@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-anchors",
+  "version": "1.0.0",
+  "label": "SelectAnchors",
+  "description": "Selection typology for selection.selectAnchors.",
+  "actions": [
+    "selection.selectAnchors"
+  ],
+  "interactions": []
+}

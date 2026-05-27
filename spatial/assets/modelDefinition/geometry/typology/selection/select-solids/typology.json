@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-solids",
+  "version": "1.0.0",
+  "label": "SelectSolids",
+  "description": "Selection typology for selection.selectSolids.",
+  "actions": [
+    "selection.selectSolids"
+  ],
+  "interactions": []
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.apply",
+  "version": "1.0.0",
+  "label": "SelectionApply",
+  "description": "Selection typology for selection.apply.",
+  "actions": [
+    "selection.apply"
+  ],
+  "interactions": []
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.command.undo-pick",
+  "version": "1.0.0",
+  "label": "UndoPick",
+  "description": "Command typology for command.undoPick.",
+  "actions": [
+    "command.undoPick"
+  ],
+  "interactions": []
+}

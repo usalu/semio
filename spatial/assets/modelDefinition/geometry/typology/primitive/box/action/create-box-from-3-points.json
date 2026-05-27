@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action/v1",
+  "id": "primitive.createBoxFrom3Points",
+  "version": "1.0.0",
+  "label": "CreateBoxFrom3Points",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.execute",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

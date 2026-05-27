@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.selection.select-geometries",
+  "version": "1.0.0",
+  "label": "SelectGeometries",
+  "description": "Selection typology for selection.selectGeometries.",
+  "actions": [
+    "selection.selectGeometries"
+  ],
+  "interactions": []
+}

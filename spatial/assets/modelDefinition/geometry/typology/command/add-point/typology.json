@@ -1,0 +1,11 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "builtin.command.add-point",
+  "version": "1.0.0",
+  "label": "AddPoint",
+  "description": "Command typology for command.addPoint.",
+  "actions": [
+    "command.addPoint"
+  ],
+  "interactions": []
+}
