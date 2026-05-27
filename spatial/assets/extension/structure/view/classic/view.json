@@ -8,9 +8,6 @@
     "structure.structure.reinforcedconcretecolumn",
     "structure.structure.onewayreinforcedconcreteslab",
     "structure.structure.reinforcedconcreteinternalwall",
-    "structure.structure.reinforcedconcreteexternalwall",
-    "structure.structure.lineelement",
-    "structure.structure.surfaceelement",
-    "structure.structure.solidelement"
+    "structure.structure.reinforcedconcreteexternalwall"
   ]
 }

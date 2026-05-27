@@ -1,9 +1,0 @@
-{
-  "schema": "spatial.typology/v1",
-  "id": "structure.structure.lineelement",
-  "version": "1.0.0",
-  "label": "Line Element",
-  "description": "Derived structural element represented with line mesh.",
-  "actions": [],
-  "interactions": []
-}

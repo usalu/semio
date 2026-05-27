@@ -31,15 +31,17 @@ import {
 	cellRef,
 	createInteractionRuntime,
 	emptyMeshTransfer,
-	DerivedViewService,
+	ExtensionViewService,
 	DocumentHistory,
 	EMPTY_MODEL_DIFF,
 	interactionCanConfirmSelection,
 	InteractionRegistry,
 	isEmptyModelDiff,
 	isInteractionSessionActive,
+	listExtensionViews,
 	listSelectionOperationInteractionDefs,
-	selectionOperationUsesDerived,
+	qualifiedViewId,
+	selectionOperationUsesViewObjects,
 	selectionSeedTargetsForOperation,
 	loadSpatialInteraction,
 	parseModelJson,
@@ -58,8 +60,8 @@ import {
 	type SpatialKernel,
 	type SpatialPreviewKernel,
 	type ModelDocument,
-	type PartView,
 	type SelectionTarget,
+	type ViewDerivedObject,
 	type ShellRecord,
 	type FaceGroup,
 	type FaceInfo,
@@ -83,13 +85,7 @@ type VertexRecord = kernelGeometry.VertexRecord;
 type WireRecord = kernelGeometry.WireRecord;
 
 export type { SpatialComputeMode };
-import {
-	aabbDifferenceRegionPoints,
-	computePartViewsFromModel,
-	computeSurfaceViewsFromModel,
-	PreciseSpatialKernelMath,
-	preciseSpatialKernelMath,
-} from "@spatial/js-kernel-brepjs";
+import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
 // #endregion 📥Imports
 
 // #region ⚡R3FPreviewKernel
@@ -524,20 +520,13 @@ export type SpatialPickKind = "pointer.down" | "pointer.move";
 /** @emoji 🎯 Object-centric raw pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
 export type SpatialObjectPickTargetKind = "object" | "objectFace" | "objectEdge" | "objectVertex";
 
-export type SpatialPickTargetKind = SpatialObjectPickTargetKind | Extract<ModelEntityKind, "surface" | "part">;
+export type SpatialPickTargetKind = SpatialObjectPickTargetKind;
 
-export type SpatialPickViewKind = "raw" | "analytic";
-
-export const SPATIAL_RAW_PICK_TARGET_KINDS: readonly SpatialObjectPickTargetKind[] = [
+export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
 	"object",
 	"objectFace",
 	"objectEdge",
 	"objectVertex",
-];
-
-export const SPATIAL_ANALYTIC_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
-	"surface",
-	"part",
 ];
 
 const GEOMETRY_KIND_TO_OBJECT_PICK: Partial<Record<ModelEntityKind, SpatialObjectPickTargetKind>> = {
@@ -564,7 +553,7 @@ function spatialPickKindsForSelectionAccept(accept: readonly ModelEntityKind[]):
 		}
 		const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind];
 		if (mapped) out.add(mapped);
-		if (kind === "surface" || kind === "part" || kind === "volume") out.add(kind);
+		if (kind === "object") out.add("object");
 	}
 	return out;
 }
@@ -580,17 +569,8 @@ function kernelGeometryKindForObjectPick(
 	return "cell";
 }
 
-export const SPATIAL_PICK_TARGET_KINDS: readonly SpatialPickTargetKind[] = [
-	...SPATIAL_RAW_PICK_TARGET_KINDS,
-	...SPATIAL_ANALYTIC_PICK_TARGET_KINDS,
-];
-
 /** @emoji 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
-
-export type SurfaceExposure = "external" | "internal";
-export type SurfaceStance = "horizontal" | "vertical";
-export type PartOverlap = "none" | "difference" | "intersection";
 
 export interface SpatialPickTarget {
 	readonly kind: SpatialPickTargetKind;
@@ -599,17 +579,6 @@ export interface SpatialPickTarget {
 	readonly points?: readonly Vec3[];
 	/** @emoji 🧭 Kernel-private geometry entity kind for `object*` picks (e.g. `wire` vs `edge`). */
 	readonly geometryKind?: ModelEntityKind;
-	readonly derivedFrom?: readonly { readonly kind: "face" | "cell"; readonly id: string }[];
-	readonly exposure?: SurfaceExposure;
-	readonly stance?: SurfaceStance;
-	readonly overlap?: PartOverlap;
-}
-
-/** @emoji 🪞 Visibility toggles for analytic surface/part sub-classification in play. */
-export interface SpatialAnalyticToggles {
-	readonly exposure?: Partial<Record<SurfaceExposure, boolean>>;
-	readonly stance?: Partial<Record<SurfaceStance, boolean>>;
-	readonly overlap?: Partial<Record<PartOverlap, boolean>>;
 }
 
 export interface SpatialSelectionRequest {
@@ -647,26 +616,6 @@ export function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, b
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
 }
 
-/** @emoji 👁️ Kind toggles scoped to raw or analytic pick view (other view kinds ignored). */
-export function spatialPickKindTogglesForView(
-	toggles: SpatialPickKindToggles,
-	viewKind: SpatialPickViewKind,
-): SpatialPickKindToggles {
-	const masked: SpatialPickKindToggles = {};
-	for (const kind of spatialPickViewKindSet(viewKind)) {
-		if (toggles[kind] === false) masked[kind] = false;
-	}
-	return masked;
-}
-
-/** @emoji 🪞 Analytic sub-toggles active only in analytic pick view. */
-export function spatialAnalyticTogglesForView(
-	toggles: SpatialAnalyticToggles,
-	viewKind: SpatialPickViewKind,
-): SpatialAnalyticToggles {
-	return viewKind === "analytic" ? toggles : {};
-}
-
 /** @emoji 👁️ Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
 export function filterSpatialPickTargetsForVisibility(
 	targets: readonly SpatialPickTarget[],
@@ -687,39 +636,9 @@ export function intersectSpatialPickKindToggles(
 	return merged;
 }
 
-/** @emoji 🪞 Effective analytic pick filters require both visible and selection analytic toggles. */
-export function intersectSpatialAnalyticToggles(
-	visibleAnalyticToggles: SpatialAnalyticToggles = {},
-	selectionAnalyticToggles: SpatialAnalyticToggles = {},
-): SpatialAnalyticToggles {
-	const exposureState: Partial<Record<SurfaceExposure, boolean>> = {};
-	const stanceState: Partial<Record<SurfaceStance, boolean>> = {};
-	const overlapState: Partial<Record<PartOverlap, boolean>> = {};
-	for (const exposure of ["external", "internal"] as const) {
-		if (visibleAnalyticToggles.exposure?.[exposure] === false || selectionAnalyticToggles.exposure?.[exposure] === false) {
-			exposureState[exposure] = false;
-		}
-	}
-	for (const stance of ["horizontal", "vertical"] as const) {
-		if (visibleAnalyticToggles.stance?.[stance] === false || selectionAnalyticToggles.stance?.[stance] === false) {
-			stanceState[stance] = false;
-		}
-	}
-	for (const overlap of ["none", "difference", "intersection"] as const) {
-		if (visibleAnalyticToggles.overlap?.[overlap] === false || selectionAnalyticToggles.overlap?.[overlap] === false) {
-			overlapState[overlap] = false;
-		}
-	}
-	return {
-		...(Object.keys(exposureState).length > 0 ? { exposure: exposureState } : {}),
-		...(Object.keys(stanceState).length > 0 ? { stance: stanceState } : {}),
-		...(Object.keys(overlapState).length > 0 ? { overlap: overlapState } : {}),
-	};
-}
-
-/** @emoji 👁️ Resolves which scene layers stay visible for the active pick view and kind toggles. */
+/** @emoji 👁️ Resolves which scene layers stay visible for geometry edit vs an active extension view. */
 export function resolveSpatialSceneVisibility(
-	viewKind: SpatialPickViewKind,
+	activeViewId: string | null,
 	filterKindToggles: SpatialPickKindToggles = {},
 ): {
 	readonly showFactoryWireframe: boolean;
@@ -727,68 +646,31 @@ export function resolveSpatialSceneVisibility(
 	readonly showCommittedEdges: boolean;
 } {
 	const visible = (kind: SpatialPickTargetKind) => filterKindToggles[kind] !== false;
-	if (viewKind === "analytic") {
-		const showAnalytic = visible("surface") || visible("part");
+	if (!activeViewId) {
 		return {
-			showFactoryWireframe: false,
-			showCommittedFaces: showAnalytic,
-			showCommittedEdges: false,
+			showFactoryWireframe: visible("objectEdge"),
+			showCommittedFaces: visible("objectFace") || visible("object"),
+			showCommittedEdges: visible("objectEdge"),
 		};
 	}
 	return {
-		showFactoryWireframe: visible("objectEdge"),
-		showCommittedFaces: visible("objectFace") || visible("object"),
-		showCommittedEdges: visible("objectEdge"),
+		showFactoryWireframe: false,
+		showCommittedFaces: visible("object"),
+		showCommittedEdges: visible("object"),
 	};
 }
 
-/** @emoji 🪞 Default analytic visibility/selection filters (all on). */
-export function defaultSpatialAnalyticToggles(): Required<{
-	exposure: Record<SurfaceExposure, boolean>;
-	stance: Record<SurfaceStance, boolean>;
-	overlap: Record<PartOverlap, boolean>;
-}> {
-	return {
-		exposure: { external: true, internal: true },
-		stance: { horizontal: true, vertical: true },
-		overlap: { none: true, difference: true, intersection: true },
-	};
+function spatialPickKindsForActiveView(activeViewId: string | null): ReadonlySet<SpatialPickTargetKind> {
+	return activeViewId ? new Set<SpatialPickTargetKind>(["object"]) : new Set(SPATIAL_PICK_TARGET_KINDS);
 }
 
-/** @emoji 🪞 Whether an analytic target passes exposure / stance / overlap toggles. */
-export function spatialPickTargetMatchesAnalyticToggles(
-	target: SpatialPickTarget,
-	toggles: SpatialAnalyticToggles = {},
-): boolean {
-	if (target.kind === "surface") {
-		if (target.exposure && toggles.exposure?.[target.exposure] === false) return false;
-		if (target.stance && toggles.stance?.[target.stance] === false) return false;
-	}
-	if (target.kind === "part" && target.overlap && toggles.overlap?.[target.overlap] === false) return false;
-	return true;
-}
-
-export function filterSpatialPickTargetsAnalytic(
+/** @emoji 👁️ Keeps kernel geometry picks in edit mode and extension `object` picks when a view is active. */
+export function filterSpatialPickTargetsForActiveView(
 	targets: readonly SpatialPickTarget[],
-	toggles: SpatialAnalyticToggles = {},
+	activeViewId: string | null,
 ): SpatialPickTarget[] {
-	return targets.filter((target) => spatialPickTargetMatchesAnalyticToggles(target, toggles));
-}
-
-function spatialPickViewKinds(viewKind: SpatialPickViewKind): readonly SpatialPickTargetKind[] {
-	return viewKind === "raw" ? SPATIAL_RAW_PICK_TARGET_KINDS : SPATIAL_ANALYTIC_PICK_TARGET_KINDS;
-}
-
-function spatialPickViewKindSet(viewKind: SpatialPickViewKind): ReadonlySet<SpatialPickTargetKind> {
-	return new Set(spatialPickViewKinds(viewKind));
-}
-
-export function filterSpatialPickTargetsByView(
-	targets: readonly SpatialPickTarget[],
-	viewKind: SpatialPickViewKind,
-): SpatialPickTarget[] {
-	const viewKinds = spatialPickViewKindSet(viewKind);
-	return targets.filter((target) => viewKinds.has(target.kind));
+	const allowed = spatialPickKindsForActiveView(activeViewId);
+	return targets.filter((target) => allowed.has(target.kind));
 }
 
 function recordsById<T extends { id: string }>(xs: readonly T[]): Record<string, T> {
@@ -949,7 +831,6 @@ function geometryEntityPoints(
 			buckets.cellComplexes[id]!,
 		);
 	}
-	if (kind === "surface" || kind === "part") return [];
 	return [];
 }
 
@@ -957,7 +838,6 @@ function geometryEntityPointsForPickTarget(
 	buckets: ReturnType<typeof geometryBuckets>,
 	target: SpatialPickTarget,
 ): readonly Vec3[] {
-	if (target.kind === "surface" || target.kind === "part") return [];
 	const geometryKind = kernelGeometryKindForObjectPick(
 		target.kind as SpatialObjectPickTargetKind,
 		target.geometryKind,
@@ -1023,144 +903,70 @@ export function collectGeometryEdgeSegments(
 	return out;
 }
 
-function intersectCellAabbs(model: Model, cellIds: readonly string[]): { readonly min: Vec3; readonly max: Vec3 } | null {
-	let hit: { readonly min: Vec3; readonly max: Vec3 } | null = null;
-	for (const cellId of cellIds) {
-		const cell = model.cells[cellId];
-		if (!cell) continue;
-		const aabb = scenePreview().modelObjectAabb(model, cell);
-		if (!aabb) continue;
-		if (!hit) {
-			hit = aabb;
-			continue;
-		}
-		const min: Vec3 = [Math.max(hit.min[0], aabb.min[0]), Math.max(hit.min[1], aabb.min[1]), Math.max(hit.min[2], aabb.min[2])];
-		const max: Vec3 = [Math.min(hit.max[0], aabb.max[0]), Math.min(hit.max[1], aabb.max[1]), Math.min(hit.max[2], aabb.max[2])];
-		if (min[0] >= max[0] || min[1] >= max[1] || min[2] >= max[2]) return null;
-		hit = { min, max };
-	}
-	return hit;
+function viewObjectPickPoints(object: ViewDerivedObject): readonly Vec3[] {
+	return object.regionPoints?.length ? object.regionPoints : [];
 }
 
-function aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[] {
-	return [
-		[min[0], min[1], min[2]],
-		[max[0], min[1], min[2]],
-		[max[0], max[1], min[2]],
-		[min[0], max[1], min[2]],
-		[min[0], min[1], max[2]],
-		[max[0], min[1], max[2]],
-		[max[0], max[1], max[2]],
-		[min[0], max[1], max[2]],
-	];
-}
-
-function partPickPoints(
+function createViewObjectSpatialPickTargets(
+	views: ExtensionViewService,
 	model: Model,
-	buckets: ReturnType<typeof geometryBuckets>,
-	part: PartView,
-	fallback: readonly Vec3[],
-): readonly Vec3[] {
-	if (part.regionPoints?.length) return part.regionPoints;
-	if (part.overlap === "intersection" && part.sourceCellIds.length >= 2) {
-		const inter = intersectCellAabbs(model, part.sourceCellIds);
-		if (inter) return aabbCornerPoints(inter.min, inter.max);
-	}
-	if (part.overlap === "difference" && part.sourceCellIds.length === 1) {
-		const cell = model.cells[part.sourceCellIds[0]!];
-		const box = cell ? scenePreview().modelObjectAabb(model, cell) : null;
-		if (box) {
-			const cutters: { readonly min: Vec3; readonly max: Vec3 }[] = [];
-			for (const [otherId, otherCell] of Object.entries(model.cells)) {
-				if (otherId === part.sourceCellIds[0]) continue;
-				const other = scenePreview().modelObjectAabb(model, otherCell);
-				if (!other) continue;
-				const cut = scenePreview().aabbIntersect(box, other);
-				if (cut) cutters.push(cut);
-			}
-			if (cutters.length) return aabbDifferenceRegionPoints(box, cutters);
-		}
-	}
-	const fromCells = uniqueGeometryPoints(part.sourceCellIds.flatMap((cellId) => geometryEntityPoints(buckets, "cell", cellId)));
-	return fromCells.length ? fromCells : fallback;
-}
-
-function createAnalyticSpatialPickTargets(
-	buckets: ReturnType<typeof geometryBuckets>,
-	derived: DerivedViewService,
-	model: Model,
+	activeViewId: string,
 ): readonly SpatialPickTarget[] {
 	const targets: SpatialPickTarget[] = [];
-	const all = geometryAllVertexPoints(buckets.vertices);
-	const allCenter = geometryPointCentroid(all);
-	for (const surface of derived.computeSurfaces(model)) {
-		const points = surface.regionPoints?.length
-			? surface.regionPoints
-			: surface.sourceFaceIds.flatMap((faceId) => geometryEntityPoints(buckets, "face", faceId));
-		const merged = uniqueGeometryPoints(points);
-		const point = geometryPointCentroid(merged);
+	for (const object of views.computeObjects(model, activeViewId)) {
+		const points = viewObjectPickPoints(object);
+		const point = geometryPointCentroid(points);
 		if (!point) continue;
 		targets.push({
-			kind: "surface",
-			id: String(surface.id),
+			kind: "object",
+			id: String(object.id),
 			point,
-			points: merged.length ? merged : undefined,
-			derivedFrom: surface.sourceFaceIds.map((id) => ({ kind: "face" as const, id })),
-			exposure: surface.exposure,
-			stance: surface.stance,
-		});
-	}
-	for (const part of derived.computeParts(model)) {
-		const merged = uniqueGeometryPoints(partPickPoints(model, buckets, part, all));
-		const point = geometryPointCentroid(merged) ?? allCenter;
-		if (!point) continue;
-		targets.push({
-			kind: "part",
-			id: String(part.id),
-			point,
-			points: merged.length ? merged : all,
-			derivedFrom: part.sourceCellIds.map((id) => ({ kind: "cell" as const, id })),
-			overlap: part.overlap,
+			points: points.length ? points : undefined,
 		});
 	}
 	return targets;
 }
 
-/** @emoji 🧲 Builds renderer-side snap/select targets from optional factory model geometry. */
+/** @emoji 🧲 Builds renderer-side snap/select targets from factory geometry and optional extension view objects. */
 export function createSpatialPickTargets(
 	geometry: SpatialPickGeometry | null | undefined,
-	derived?: DerivedViewService | null,
+	views?: ExtensionViewService | null,
+	activeViewId?: string | null,
 ): readonly SpatialPickTarget[] {
 	if (!geometry) return [];
 	const buckets = geometryBuckets(geometry);
 	const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
+	if (!model) return [];
 	const targets: SpatialPickTarget[] = [];
-	for (const vertex of geometryRecords(buckets.vertices)) {
-		targets.push({ kind: "objectVertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
+	if (!activeViewId) {
+		for (const vertex of geometryRecords(buckets.vertices)) {
+			targets.push({ kind: "objectVertex", geometryKind: "vertex", id: vertex.id, point: vertex.position });
+		}
+		for (const edge of geometryRecords(buckets.edges)) {
+			const points = geometryEdgePoints(buckets.vertices, edge);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "objectEdge", geometryKind: "edge", id: edge.id, point, points });
+		}
+		for (const wire of geometryRecords(buckets.wires)) {
+			const points = geometryWirePoints(buckets.vertices, buckets.edges, wire);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "objectEdge", geometryKind: "wire", id: wire.id, point, points });
+		}
+		for (const face of geometryRecords(buckets.faces)) {
+			const points = geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
+			const point = geometryPointCentroid(points);
+			if (point) targets.push({ kind: "objectFace", geometryKind: "face", id: face.id, point, points });
+		}
+		const all = geometryAllVertexPoints(buckets.vertices);
+		const allCenter = geometryPointCentroid(all);
+		for (const cell of geometryRecords(buckets.cells)) {
+			const points = geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
+			const point = geometryPointCentroid(points) ?? allCenter;
+			if (point) targets.push({ kind: "object", geometryKind: "cell", id: cell.id, point, points: points.length ? points : all });
+		}
+	} else if (views) {
+		targets.push(...createViewObjectSpatialPickTargets(views, model, activeViewId));
 	}
-	for (const edge of geometryRecords(buckets.edges)) {
-		const points = geometryEdgePoints(buckets.vertices, edge);
-		const point = geometryPointCentroid(points);
-		if (point) targets.push({ kind: "objectEdge", geometryKind: "edge", id: edge.id, point, points });
-	}
-	for (const wire of geometryRecords(buckets.wires)) {
-		const points = geometryWirePoints(buckets.vertices, buckets.edges, wire);
-		const point = geometryPointCentroid(points);
-		if (point) targets.push({ kind: "objectEdge", geometryKind: "wire", id: wire.id, point, points });
-	}
-	for (const face of geometryRecords(buckets.faces)) {
-		const points = geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, face);
-		const point = geometryPointCentroid(points);
-		if (point) targets.push({ kind: "objectFace", geometryKind: "face", id: face.id, point, points });
-	}
-	const all = geometryAllVertexPoints(buckets.vertices);
-	const allCenter = geometryPointCentroid(all);
-	for (const cell of geometryRecords(buckets.cells)) {
-		const points = geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
-		const point = geometryPointCentroid(points) ?? allCenter;
-		if (point) targets.push({ kind: "object", geometryKind: "cell", id: cell.id, point, points: points.length ? points : all });
-	}
-	if (derived && model) targets.push(...createAnalyticSpatialPickTargets(buckets, derived, model));
 	return targets;
 }
 
@@ -1183,9 +989,11 @@ export function createSpatialPickEvent(
 	modifiers: InteractionEvent["modifiers"] = {},
 ): InteractionEvent {
 	const geometryKind =
-		target && target.kind !== "surface" && target.kind !== "part"
-			? kernelGeometryKindForObjectPick(target.kind as SpatialObjectPickTargetKind, target.geometryKind)
-			: target?.kind;
+		target?.kind === "object" && !target.geometryKind
+			? "object"
+			: target
+				? kernelGeometryKindForObjectPick(target.kind as SpatialObjectPickTargetKind, target.geometryKind)
+				: undefined;
 	return target && geometryKind
 		? {
 				kind,
@@ -2078,12 +1886,11 @@ function spatialPickTargetsFromClientPoint(
 	targets: readonly SpatialPickTarget[],
 	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
-	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget[] {
 	const pointer = new THREE.Vector2(((client.x - rect.left) / rect.width) * 2 - 1, -(((client.y - rect.top) / rect.height) * 2 - 1));
 	const raycaster = new THREE.Raycaster();
 	raycaster.setFromCamera(pointer, camera);
-	return spatialPickTargetsFromRay(raycaster.ray, targets, selectionAccept, kindToggles, analyticToggles);
+	return spatialPickTargetsFromRay(raycaster.ray, targets, selectionAccept, kindToggles);
 }
 
 function spatialPickTargetsFromScreenSelection(
@@ -2093,10 +1900,9 @@ function spatialPickTargetsFromScreenSelection(
 	rect: DOMRect,
 	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
-	analyticToggles: SpatialAnalyticToggles = {},
 	geometryPreviewTransform?: ((point: Vec3) => Vec3) | null,
 ): SpatialPickTarget[] {
-	const selectable = filterSpatialPickTargetsAnalytic(filterSpatialPickTargets(targets, selectionAccept, kindToggles), analyticToggles);
+	const selectable = filterSpatialPickTargets(targets, selectionAccept, kindToggles);
 	const mapPoint = geometryPreviewTransform ?? ((point: Vec3) => point);
 	const rectBounds = {
 		left: Math.min(drag.startClient.x, drag.currentClient.x),
@@ -2123,46 +1929,25 @@ function spatialPickTargetsFromRay(
 	targets: readonly SpatialPickTarget[],
 	selectionAccept: readonly ModelEntityKind[],
 	kindToggles: SpatialPickKindToggles,
-	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget[] {
-	return filterSpatialPickTargetsAnalytic(filterSpatialPickTargets(targets, selectionAccept, kindToggles), analyticToggles)
+	return filterSpatialPickTargets(targets, selectionAccept, kindToggles)
 		.map((target) => ({ target, score: targetRayScore(ray, target) }))
 		.filter((hit): hit is { readonly target: SpatialPickTarget; readonly score: number } => hit.score !== null)
 		.sort((a, b) => a.score - b.score)
 		.map((hit) => hit.target);
 }
 
-function surfaceSemanticStyle(exposure: SurfaceExposure, stance: SurfaceStance): { color: string; emissive: string } {
-	if (exposure === "external" && stance === "horizontal") return { color: "#e8c46a", emissive: "#5a4800" };
-	if (exposure === "external" && stance === "vertical") return { color: "#ffb347", emissive: "#6a3a00" };
-	if (exposure === "internal" && stance === "horizontal") return { color: "#44ddff", emissive: "#0a4a60" };
-	return { color: "#7a9cff", emissive: "#1a3066" };
-}
-
-function partSemanticStyle(overlap: PartOverlap): { color: string; emissive: string } {
-	if (overlap === "intersection") return { color: "#ff66cc", emissive: "#660033" };
-	if (overlap === "difference") return { color: "#ff9944", emissive: "#663300" };
-	return { color: "#66e878", emissive: "#1a4a22" };
-}
-
 function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
 	if (selected) return { color: "#ff77bb", emissive: "#551233", opacity: target.kind === "objectVertex" ? 1 : 0.34, lineWidth: 9 };
 	if (hovered) return { color: "#66e8ff", emissive: "#003844", opacity: target.kind === "objectVertex" ? 1 : 0.28, lineWidth: 8 };
-	if (target.kind === "surface" && target.exposure && target.stance) {
-		const base = surfaceSemanticStyle(target.exposure, target.stance);
-		return { ...base, opacity: target.exposure === "internal" ? 0.4 : 0.34, lineWidth: 7 };
-	}
-	if (target.kind === "part" && target.overlap) {
-		const base = partSemanticStyle(target.overlap);
-		return { ...base, opacity: target.overlap === "intersection" ? 0.42 : 0.36, lineWidth: 8 };
-	}
 	if (target.kind === "objectVertex") return { color: "#ffdf7a", emissive: "#4a3000", opacity: 1, lineWidth: 5 };
 	if (target.kind === "objectEdge") return { color: "#ffd166", emissive: "#4a3000", opacity: 0.8, lineWidth: 5 };
+	if (target.kind === "object" && !target.geometryKind) return { color: "#8ad4ff", emissive: "#103850", opacity: 0.28, lineWidth: 7 };
 	return { color: "#f6c85f", emissive: "#332100", opacity: 0.16, lineWidth: 5 };
 }
 
 function selectionTargetPickKind(target: SelectionTarget): SpatialPickTargetKind | null {
-	if (target.kind === "surface" || target.kind === "part" || target.kind === "volume") return target.kind;
+	if (target.kind === "object") return "object";
 	return GEOMETRY_KIND_TO_OBJECT_PICK[target.kind] ?? null;
 }
 
@@ -2180,14 +1965,9 @@ function pinnedPickTargetKeys(keys: ReadonlySet<string>): ReadonlySet<string> {
 	return out;
 }
 
-function spatialSelectionTarget(target: SpatialPickTarget) {
-	if (target.kind === "surface" || target.kind === "part") {
-		return {
-			kind: target.kind,
-			id: target.id,
-			editable: false,
-			derivedFrom: target.derivedFrom ?? [],
-		};
+function spatialSelectionTarget(target: SpatialPickTarget): SelectionTarget {
+	if (target.kind === "object" && !target.geometryKind) {
+		return { kind: "object", id: target.id, editable: false };
 	}
 	const geometryKind = kernelGeometryKindForObjectPick(target.kind as SpatialObjectPickTargetKind, target.geometryKind);
 	return { kind: geometryKind, id: target.id, editable: true };
@@ -2203,23 +1983,18 @@ export function pickHoverTargetFromRay(
 	ray: THREE.Ray,
 	targets: readonly SpatialPickTarget[],
 	hoverKindToggles: SpatialPickKindToggles = {},
-	analyticToggles: SpatialAnalyticToggles = {},
 ): SpatialPickTarget | null {
-	return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles, analyticToggles)[0] ?? null;
+	return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles)[0] ?? null;
 }
 
 /** @emoji 📌 Keeps hover/selection overlays visible even when the normal visibility filter hides their kind. */
 export function resolveSpatialPickTargetsToRender(
 	viewTargets: readonly SpatialPickTarget[],
 	filterKindToggles: SpatialPickKindToggles = {},
-	analyticFilterToggles: SpatialAnalyticToggles = {},
 	pinnedTargetKeys: ReadonlySet<string> = new Set(),
 ): SpatialPickTarget[] {
 	const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
-	const enabledTargets = filterSpatialPickTargetsAnalytic(
-		filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles),
-		analyticFilterToggles,
-	);
+	const enabledTargets = filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles);
 	const out = enabledTargets.filter((target) => {
 		const key = spatialPickTargetKey(target);
 		if (pinnedKeys.has(key)) return true;
@@ -2257,7 +2032,7 @@ function SpatialPickTargetNode({
 	const selected = selectedTargetKeys?.has(targetKey) ?? selectedTargetKey === targetKey;
 	const style = targetStyle(target, hovered, selected);
 	const userData = { spatialPickKey: targetKey };
-	if (target.kind === "vertex" || target.kind === "anchor") {
+	if (target.kind === "objectVertex") {
 		return (
 			<mesh position={displayPoint} userData={userData} raycast={raycastNone} renderOrder={8}>
 				<sphereGeometry args={[selected || hovered ? 0.12 : 0.085, 16, 16]} />
@@ -2271,7 +2046,7 @@ function SpatialPickTargetNode({
 			</mesh>
 		);
 	}
-	if (displayPoints && displayPoints.length >= 2 && (target.kind === "edge" || target.kind === "wire")) {
+	if (displayPoints && displayPoints.length >= 2 && target.kind === "objectEdge") {
 		return (
 			<Line
 				userData={userData}
@@ -2341,26 +2116,23 @@ function GeometryFactoryWireframeLayer({
 /** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
 export function SpatialPickGeometryLayer({
 	geometry,
-	viewKind = "raw",
-	derived,
-	derivedRevision = 0,
+	activeViewId = null,
+	views,
+	viewsRevision = 0,
 	geometryPreviewTransform = null,
 	filterKindToggles = {},
-	analyticFilterToggles = {},
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
-	readonly viewKind?: SpatialPickViewKind;
-	readonly derived?: DerivedViewService | null;
-	readonly derivedRevision?: number;
+	readonly activeViewId?: string | null;
+	readonly views?: ExtensionViewService | null;
+	readonly viewsRevision?: number;
 	readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly selectionAccept?: readonly ModelEntityKind[];
 	/** @emoji 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
 	readonly filterKindToggles?: SpatialPickKindToggles;
-	/** @emoji 🪞 Analytic exposure/stance/overlap visibility (independent of selection analytic toggles). */
-	readonly analyticFilterToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly selectedTargetKeys?: ReadonlySet<string> | null;
@@ -2369,8 +2141,11 @@ export function SpatialPickGeometryLayer({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const targets = useMemo(() => createSpatialPickTargets(geometry, derived), [geometry, topoRevision, derived, derivedRevision]);
-	const viewTargets = useMemo(() => filterSpatialPickTargetsByView(targets, viewKind), [targets, viewKind]);
+	const targets = useMemo(
+		() => createSpatialPickTargets(geometry, views, activeViewId),
+		[geometry, topoRevision, views, viewsRevision, activeViewId],
+	);
+	const viewTargets = useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeViewId ?? null), [targets, activeViewId]);
 	const pinnedTargetKeys = useMemo(() => {
 		const keys = new Set<string>();
 		if (hoveredTargetKey) keys.add(hoveredTargetKey);
@@ -2379,8 +2154,8 @@ export function SpatialPickGeometryLayer({
 		return keys;
 	}, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
 	const renderedTargets = useMemo(() => {
-		return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, analyticFilterToggles, pinnedTargetKeys);
-	}, [viewTargets, filterKindToggles, analyticFilterToggles, pinnedTargetKeys]);
+		return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys);
+	}, [viewTargets, filterKindToggles, pinnedTargetKeys]);
 	return (
 		<group>
 			{renderedTargets.map((target) => (
@@ -2838,9 +2613,9 @@ export interface InteractionSpatialViewProps {
 	readonly committedMesh?: MeshTransfer | null;
 	readonly committedMeshes?: readonly { readonly cell: CellRef; readonly mesh: MeshTransfer }[];
 	readonly geometry?: SpatialPickGeometry | null;
-	readonly pickViewKind?: SpatialPickViewKind;
-	readonly derived?: DerivedViewService | null;
-	readonly derivedRevision?: number;
+	readonly activeViewId?: string | null;
+	readonly views?: ExtensionViewService | null;
+	readonly viewsRevision?: number;
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
 	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
@@ -2849,8 +2624,6 @@ export interface InteractionSpatialViewProps {
 	readonly selectionKindToggles?: SpatialPickKindToggles;
 	/** @emoji 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
 	readonly hoverKindToggles?: SpatialPickKindToggles;
-	readonly analyticFilterToggles?: SpatialAnalyticToggles;
-	readonly analyticSelectionToggles?: SpatialAnalyticToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
 	readonly selectedTargetKeys?: ReadonlySet<string> | null;
@@ -2907,14 +2680,13 @@ export function InteractionSpatialView({
 	committedMesh,
 	committedMeshes,
 	geometry,
-	pickViewKind = "raw",
-	derived,
-	derivedRevision = 0,
+	activeViewId = null,
+	views,
+	viewsRevision = 0,
 	displayModel,
 	renderDisplayItem,
 	selectionAccept = [],
 	filterKindToggles = {},
-	analyticFilterToggles,
 	hoveredTargetKey,
 	selectedTargetKey,
 	selectedTargetKeys,
@@ -2940,7 +2712,6 @@ export function InteractionSpatialView({
 	useEffect(() => {
 		onSnapshotRevisionChange?.(snapshot.revision);
 	}, [snapshot.revision, onSnapshotRevisionChange]);
-	const resolvedAnalyticFilter = analyticFilterToggles ?? {};
 	const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
 	const gridDivisions = resolvedTheme.gridDivisions ?? 40;
 	const gridSize = resolvedTheme.gridSize ?? 40;
@@ -3003,14 +2774,14 @@ export function InteractionSpatialView({
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
 	const sceneVisibility = useMemo(
-		() => resolveSpatialSceneVisibility(pickViewKind, filterKindToggles),
-		[pickViewKind, filterKindToggles],
+		() => resolveSpatialSceneVisibility(activeViewId, filterKindToggles),
+		[activeViewId, filterKindToggles],
 	);
 	return (
 		<>
 			{slots?.beforeScene}
 			<InvalidateOnRevision
-				revision={`${snapshot.revision}:${derivedRevision}:${geometryRevision}:${hoveredTargetKey ?? ""}`}
+				revision={`${snapshot.revision}:${viewsRevision}:${geometryRevision}:${hoveredTargetKey ?? ""}`}
 			/>
 			<SpatialInvalidator />
 			{autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
@@ -3036,13 +2807,12 @@ export function InteractionSpatialView({
 			{showPickLayer ? (
 				<SpatialPickGeometryLayer
 					geometry={geometry}
-					viewKind={pickViewKind}
-					derived={derived}
-					derivedRevision={derivedRevision}
+					activeViewId={activeViewId}
+					views={views}
+					viewsRevision={viewsRevision}
 					geometryPreviewTransform={geometryPreviewTransform}
 					selectionAccept={selectionAccept}
 					filterKindToggles={filterKindToggles}
-					analyticFilterToggles={resolvedAnalyticFilter}
 					hoveredTargetKey={hoveredTargetKey}
 					selectedTargetKey={selectedTargetKey}
 					selectedTargetKeys={selectedTargetKeys}

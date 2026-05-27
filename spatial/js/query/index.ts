@@ -1334,8 +1334,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 			rows = next;
 		} else if (st.kind === "call") {
 			const viewDerived = st.actionId.startsWith("view.") && st.actionId.split(".").length === 4;
-			const def = viewDerived ? null : ctx.actions.get(st.actionId);
-			if (!viewDerived && !def) throw new Error(`unknown action ${st.actionId}`);
+			if (!viewDerived && !ctx.actions.get(st.actionId)) throw new Error(`unknown action ${st.actionId}`);
 			const next: Row[] = [];
 			for (const r of rows) {
 				const paramBag: Record<string, unknown> = { __context: {}, __event: { kind: "construct.call" }, ...st.args };
@@ -1349,14 +1348,13 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
 				}
 				const res = viewDerived
 					? await runViewDerivedCall(st.actionId, ctx)
-					: await Promise.resolve(
-							def!.run(paramBag, {
-								kernel: ctx.kernel,
-								preview: ctx.kernel,
-								model: ctx.model,
-								views: ctx.views,
-							}),
-						);
+					: await ctx.actions.run(st.actionId, paramBag, {
+							kernel: ctx.kernel,
+							preview: ctx.kernel,
+							model: ctx.model,
+							views: ctx.views,
+							activeViewId: ctx.activeViewId ?? null,
+						});
 				const nr = { ...r };
 				for (const y of st.yieldItems) {
 					const v = resolveActionYield(res, y.key);
@@ -1600,17 +1598,17 @@ if (import.meta.vitest) {
 				kernel,
 				actions: ActionRegistry.withBuiltins(),
 			});
-			const row = res.rows[0]?.data as { id: string; label: string }[] | undefined;
-			expect(Array.isArray(row)).toBe(true);
-			expect(row!.some((o) => String(o.id).endsWith(".hull"))).toBe(true);
+			const row = res.rows[0]?.data as { id: string; label: string } | undefined;
+			expect(row).toBeDefined();
+			expect(String(row!.id).endsWith(".hull")).toBe(true);
 		});
 
-		it("CALL view.energy.energy.hulls UNWIND lists all energy derived slots", async () => {
+		it("CALL view.energy.energy.objects UNWIND lists all energy derived slots", async () => {
 			const model = new Model();
 			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, cellRef("a")));
 			const kernel = new QueryTestKernel();
 			const res = await runConstruct(
-				"CALL view.energy.energy.hulls({}) YIELD data AS hulls UNWIND hulls AS h RETURN h.id",
+				"CALL view.energy.energy.objects({}) YIELD data AS objects UNWIND objects AS o RETURN o.id",
 				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
 			);
 			expect(res.rows.length).toBeGreaterThanOrEqual(5);
@@ -1701,7 +1699,7 @@ if (import.meta.vitest) {
 				kernel,
 				actions: ActionRegistry.withBuiltins(),
 				views,
-				activeViewId,
+				activeViewId: activeViewId,
 			});
 			const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
 			expect(targets!.length).toBeGreaterThan(0);
