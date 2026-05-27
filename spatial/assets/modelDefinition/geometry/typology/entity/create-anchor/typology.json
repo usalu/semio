@@ -7,5 +7,7 @@
   "actions": [
     "entity.createAnchor"
   ],
-  "interactions": []
+  "interactions": [
+    "entity.createAnchor"
+  ]
 }

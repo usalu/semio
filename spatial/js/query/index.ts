@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🔍 `@spatial/js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `CALL view.<extension>.<view>.<derivedObjectId>({})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query`. */
+/** @emoji 🔍 `@spatial/js-query` — Cypher-inspired `construct` language: `MATCH (Object {typology: '…'})`, `KernelIndex` on `Model`, `defaultConstructRunner` for `InteractionRuntime.query` (view `CALL` removed). */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -9,7 +9,6 @@ import {
 	ActionRegistry,
 	type ActionResult,
 	Model,
-	ExtensionViewService,
 	qualifiedViewId,
 	applyModelDiff,
 	solidRef,
@@ -1197,7 +1196,7 @@ function rowVarsToEnv(
 	model: Model,
 	meta: import("@spatial/js-core").AttributeStore,
 	preview: SpatialKernel,
-	views?: ExtensionViewService,
+	views?: null,
 	activeViewId?: string | null,
 ): ExprEnv {
 	const vars: Record<string, unknown> = {};
@@ -1208,21 +1207,9 @@ function rowVarsToEnv(
 	return { context: {}, vars, model, metadata: meta, views, activeViewId, preview };
 }
 
-/** @emoji 🪞 Runs `CALL view.<extensionId>.<viewId>.<derivedObjectId>({})` via `ExtensionViewService`. */
-async function runViewDerivedCall(actionId: string, ctx: ConstructQueryContext): Promise<ActionResult> {
-	const parts = actionId.split(".");
-	if (parts[0] !== "view" || parts.length !== 4) {
-		throw new Error(`expected view.<extensionId>.<viewId>.<derivedObjectId>, got ${actionId}`);
-	}
-	const qid = qualifiedViewId(parts[1]!, parts[2]!);
-	const derivedObjectId = parts[3]!;
-	const views = ctx.views ?? ExtensionViewService.forKernel(ctx.kernel);
-	await views.refresh(ctx.model, qid);
-	const rows = views.computeObjects(ctx.model, qid);
-	if (derivedObjectId === "objects") return { data: rows };
-	const hit = rows.find((o) => String(o.id) === `${qid}.${derivedObjectId}`);
-	if (!hit) throw new Error(`unknown view derived object ${derivedObjectId} in ${qid}`);
-	return { data: hit };
+/** @emoji 🪞 View-derived CALL targets are not shipped; query `Object` rows on the model instead. */
+async function runViewDerivedCall(actionId: string, _ctx: ConstructQueryContext): Promise<ActionResult> {
+	throw new Error(`View-derived CALL is not available in the model-definition runtime (${actionId})`);
 }
 
 function* expandPattern(model: Model, kernel: SpatialKernel, index: KernelIndex, pat: PatternAst): Generator<Row> {
@@ -1548,40 +1535,26 @@ if (import.meta.vitest) {
 			expect(pair).toBeDefined();
 		});
 
-		it("CALL view.energy.energy.hull returns derived hull object", async () => {
+		it("CALL view.* rejects (views removed from model-definition runtime)", async () => {
 			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, solidRef("a")));
-			const kernel = new QueryTestKernel();
-			const res = await runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
-				model: model,
-				kernel,
-				actions: ActionRegistry.withBuiltins(),
-			});
-			const row = res.rows[0]?.data as { id: string; label: string } | undefined;
-			expect(row).toBeDefined();
-			expect(String(row!.id).endsWith(".hull")).toBe(true);
-		});
-
-		it("CALL view.energy.energy.objects UNWIND lists all energy derived slots", async () => {
-			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [2, 2, 0], height: 2 }, solidRef("a")));
-			const kernel = new QueryTestKernel();
-			const res = await runConstruct(
-				"CALL view.energy.energy.objects({}) YIELD data AS objects UNWIND objects AS o RETURN o.id",
-				{ model: model, kernel, actions: ActionRegistry.withBuiltins() },
-			);
-			expect(res.rows.length).toBeGreaterThanOrEqual(5);
+			await expect(
+				runConstruct("CALL view.energy.energy.hull({}) YIELD data", {
+					model: model,
+					kernel: new QueryTestKernel(),
+					actions: ActionRegistry.withBuiltins(),
+				}),
+			).rejects.toThrow(/not available in the model-definition runtime/);
 		});
 
 		it("unknown CALL action throws", async () => {
 			const model = new Model();
 			await expect(
-				runConstruct("CALL view.surfaces({}) YIELD data", {
+				runConstruct("CALL no.such.action({}) YIELD data", {
 					model: model,
 					kernel: new QueryTestKernel(),
 					actions: ActionRegistry.withBuiltins(),
 				}),
-			).rejects.toThrow(/unknown action view\.surfaces/);
+			).rejects.toThrow(/unknown action/i);
 		});
 
 		it("CALL createBoxFromCorners yields diff and data.solid", async () => {
@@ -1646,19 +1619,20 @@ if (import.meta.vitest) {
 			expect(targets?.every((t) => t.kind === "vertex")).toBe(true);
 		});
 
-		it("CALL selection.selectObjects YIELD targets with extension view refresh", async () => {
+		it("CALL selection.selectObjects YIELD targets from model objects", async () => {
 			const model = new Model();
-			applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+			const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
+			applyModelDiff(model, r);
+			model.objects["object-box"] = {
+				id: "object-box" as import("@spatial/js-core").ObjectRef,
+				typologyId: "builtin.primitive.box",
+				geometryRef: String(r.solid ?? "box"),
+			};
 			const kernel = new QueryTestKernel();
-			const views = ExtensionViewService.forKernel(kernel);
-			const activeViewId = qualifiedViewId("energy", "energy");
-			await views.refresh(model, activeViewId);
 			const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {
 				model: model,
 				kernel,
 				actions: ActionRegistry.withBuiltins(),
-				views,
-				activeViewId: activeViewId,
 			});
 			const targets = res.rows[0]?.targets as { kind: string }[] | undefined;
 			expect(targets!.length).toBeGreaterThan(0);

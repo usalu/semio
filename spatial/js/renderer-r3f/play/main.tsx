@@ -2,7 +2,6 @@
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	ExtensionViewService,
 	DocumentHistory,
 	isInteractionSessionActive,
 	listSpatialInteractions,
@@ -346,8 +345,7 @@ interface PlaySessionProps {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: InteractionRuntimeOptions["kernel"];
-	readonly views: ExtensionViewService;
-	readonly mode: SpatialComputeMode;
+		readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
 	readonly sessionRestartNonce: number;
 	readonly activeViewId: string | null;
@@ -457,7 +455,7 @@ function PlayApp() {
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
 	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(() => new BrepjsKernel() as unknown as InteractionRuntimeOptions["kernel"], []);
-	const views = useMemo(() => ExtensionViewService.forKernel(kernel as unknown as import("@spatial/js-core").SpatialKernel), [kernel]);
+	const views = null;
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {

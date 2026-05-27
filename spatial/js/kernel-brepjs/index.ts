@@ -57,7 +57,6 @@ import {
 	isEmptyModelDiff,
 	emptyMeshTransfer,
 	type EdgeCurve,
-	type ExtensionViewService,
 	type EdgeGroup,
 	type EdgeInfo,
 	type FaceGroup,
@@ -1197,7 +1196,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 		ctx: {
 			readonly model: Model;
 			readonly preview: SpatialPreviewKernel;
-			readonly views?: ExtensionViewService;
+			readonly views?: null;
 			readonly activeViewId?: string | null;
 		},
 	): Promise<ActionResult> | ActionResult {

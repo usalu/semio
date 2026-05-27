@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
 // #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interaction/primitive/box.json`. */
+/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/modelDefinition/geometry/typology/primitive/box/interaction/box.json`. */
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -31,14 +31,12 @@ import {
 	solidRef,
 	createInteractionRuntime,
 	emptyMeshTransfer,
-	ExtensionViewService,
 	DocumentHistory,
 	EMPTY_MODEL_DIFF,
 	interactionCanConfirmSelection,
 	InteractionRegistry,
 	isEmptyModelDiff,
 	isInteractionSessionActive,
-	listExtensionViews,
 	listSelectionOperationInteractionDefs,
 	qualifiedViewId,
 	selectionOperationUsesViewObjects,
@@ -886,19 +884,20 @@ function viewObjectPickPoints(model: Model, object: ViewDerivedObject): readonly
 	return [...unique.values()];
 }
 
-function createViewObjectSpatialPickTargets(
-	views: ExtensionViewService,
-	model: Model,
-	activeViewId: string,
-): readonly SpatialPickTarget[] {
+function createModelObjectSpatialPickTargets(model: Model): readonly SpatialPickTarget[] {
 	const targets: SpatialPickTarget[] = [];
-	for (const object of views.computeObjects(model, activeViewId)) {
-		const points = viewObjectPickPoints(model, object);
+	for (const row of Object.values(model.objects)) {
+		const points = viewObjectPickPoints(model, {
+			id: row.id,
+			typologyId: row.typologyId,
+			label: row.typologyId,
+			sourceObjectIds: [row.id],
+		});
 		const point = geometryPointCentroid(points);
 		if (!point) continue;
 		targets.push({
 			kind: "object",
-			id: String(object.id),
+			id: String(row.id),
 			point,
 			points: points.length ? points : undefined,
 		});
@@ -909,7 +908,7 @@ function createViewObjectSpatialPickTargets(
 /** @emoji 🧲 Builds renderer-side snap/select targets from factory geometry and optional extension view objects. */
 export function createSpatialPickTargets(
 	geometry: SpatialPickGeometry | null | undefined,
-	views?: ExtensionViewService | null,
+	_model?: Model | null,
 	activeViewId?: string | null,
 ): readonly SpatialPickTarget[] {
 	if (!geometry) return [];
@@ -943,8 +942,8 @@ export function createSpatialPickTargets(
 			const point = geometryPointCentroid(points) ?? allCenter;
 			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
 		}
-	} else if (views) {
-		targets.push(...createViewObjectSpatialPickTargets(views, model, activeViewId));
+	} else if (activeViewId) {
+		targets.push(...createModelObjectSpatialPickTargets(model));
 	}
 	return targets;
 }
@@ -2106,7 +2105,7 @@ export function SpatialPickGeometryLayer({
 }: {
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly activeViewId?: string | null;
-	readonly views?: ExtensionViewService | null;
+	readonly views?: null;
 	readonly viewsRevision?: number;
 	readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly selectionAccept?: readonly ModelEntityKind[];
@@ -2593,7 +2592,7 @@ export interface InteractionSpatialViewProps {
 	readonly committedMeshes?: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
 	readonly geometry?: SpatialPickGeometry | null;
 	readonly activeViewId?: string | null;
-	readonly views?: ExtensionViewService | null;
+	readonly views?: null;
 	readonly viewsRevision?: number;
 	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
@@ -3331,7 +3330,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
 	readonly history: DocumentHistory;
 	readonly document: ModelDocument;
 	readonly geometry: SpatialPickGeometry | null;
-	readonly views?: ExtensionViewService | null;
+	readonly views?: null;
 	readonly asideExtra?: ReactNode;
 	readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
 	/** @emoji 🔁 When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
@@ -3435,8 +3434,7 @@ export function InteractionRepl({
 	const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
 	const [viewsRevision, setViewsRevision] = useHostState(viewsRevisionProp, onViewsRevisionChange, () => chromeDefaults.viewsRevision);
 	const kernel = rt.kernel();
-	const viewService = useMemo(() => viewsProp ?? ExtensionViewService.forKernel(kernel), [viewsProp, kernel]);
-	const shippedViews = useMemo(() => listExtensionViews(), []);
+	const viewService = viewsProp ?? null;
 	const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
 	const [selectionMenu, setSelectionMenu] = useHostState(selectionMenuProp, onSelectionMenuChange, () => chromeDefaults.selectionMenu);
 	const [hoveredPickKey, setHoveredPickKey] = useHostState(hoveredPickKeyProp, onHoveredPickKeyChange, () => chromeDefaults.hoveredPickKey);
@@ -3592,28 +3590,6 @@ export function InteractionRepl({
 
 	const modelRevision = documentModel.model.revision;
 	const hostPickingEnabled = replHostGeometryPickingEnabled(interactionId, spec, snapshot.state);
-	useEffect(() => {
-		if (!viewService) return;
-		const model = documentModel.model;
-		const revision = model.revision;
-		const prev = lastViewsRefreshRef.current;
-		if (prev.model === model && prev.revision === revision && prev.activeViewId === activeViewId) return;
-		let cancelled = false;
-		const run = () => {
-			void viewService.refresh(model, activeViewId).then(() => {
-				if (cancelled) return;
-				lastViewsRefreshRef.current = { model, revision, activeViewId };
-				setViewsRevision((n) => n + 1);
-			});
-		};
-		const useIdleCallback = typeof globalThis.requestIdleCallback === "function";
-		const id = useIdleCallback ? globalThis.requestIdleCallback(run, { timeout: 250 }) : globalThis.setTimeout(run, 0);
-		return () => {
-			cancelled = true;
-			if (useIdleCallback) globalThis.cancelIdleCallback(id as number);
-			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
-		};
-	}, [viewService, documentModel.model, modelRevision, activeViewId]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
@@ -3657,9 +3633,9 @@ export function InteractionRepl({
 	);
 	const activePickKinds = useMemo(() => [...spatialPickKindsForActiveView(activeViewId)], [activeViewId]);
 	const viewObjectCount = useMemo(() => {
-		if (!activeViewId || !viewService) return 0;
-		return viewService.computeObjects(documentModel.model, activeViewId).length;
-	}, [activeViewId, viewService, documentModel.model, viewsRevision]);
+		if (!activeViewId) return 0;
+		return Object.keys(documentModel.model.objects).length;
+	}, [activeViewId, documentModel.model, viewsRevision]);
 
 	const commitSelection = useCallback(
 		(selection: readonly SelectionTarget[]) => {
@@ -4549,14 +4525,7 @@ export function InteractionRepl({
 							style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
 						>
 							<option value="">Geometry edit</option>
-							{shippedViews.map((view) => {
-								const qid = qualifiedViewId(view.extensionId, view.id);
-								return (
-									<option key={qid} value={qid}>
-										{view.label} ({qid})
-									</option>
-								);
-							})}
+							<option value="objects">Model objects</option>
 						</select>
 					</label>
 					{activeViewId ? (
@@ -4744,11 +4713,9 @@ if (import.meta.vitest) {
 				typologyId: "builtin.primitive.box",
 				geometryRef: String(cell),
 			};
-			const views = ExtensionViewService.forKernel(new BrepjsKernel() as unknown as SpatialKernel);
-			const activeViewId = qualifiedViewId("energy", "energy");
-			await views.refresh(model, activeViewId);
-			const editTargets = createSpatialPickTargets(model, views, null);
-			const viewTargets = createSpatialPickTargets(model, views, activeViewId);
+			const activeViewId = "objects";
+			const editTargets = createSpatialPickTargets(model, null, null);
+			const viewTargets = createSpatialPickTargets(model, null, activeViewId);
 			expect(editTargets.some((t) => t.kind === "objectVertex")).toBe(true);
 			expect(viewTargets.every((t) => t.kind === "object")).toBe(true);
 			expect(viewTargets.length).toBeGreaterThan(0);
@@ -4760,7 +4727,7 @@ if (import.meta.vitest) {
 				{ kind: "object", id: "energy.energy.hull", point: [0.5, 0.5, 0.5] },
 			];
 			expect(filterSpatialPickTargetsForActiveView(targets, null).map(spatialPickTargetKey)).toEqual(["objectVertex:v0"]);
-			expect(filterSpatialPickTargetsForActiveView(targets, "energy.energy").map(spatialPickTargetKey)).toEqual([
+			expect(filterSpatialPickTargetsForActiveView(targets, "objects").map(spatialPickTargetKey)).toEqual([
 				"object:energy.energy.hull",
 			]);
 		});
@@ -4771,7 +4738,7 @@ if (import.meta.vitest) {
 				showCommittedFaces: true,
 				showCommittedEdges: true,
 			});
-			expect(resolveSpatialSceneVisibility("energy.energy", { object: true })).toEqual({
+			expect(resolveSpatialSceneVisibility("objects", { object: true })).toEqual({
 				showFactoryWireframe: false,
 				showCommittedFaces: true,
 				showCommittedEdges: true,

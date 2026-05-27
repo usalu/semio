@@ -198,7 +198,7 @@ export function buildSpatialStatelyMachineViewForSpec(
 	};
 }
 
-/** @emoji 📊 Full catalog from `listSpatialInteractions` (`spatial/assets/extension/builtin/interaction/**` via core `compileInteraction`). */
+/** @emoji 📊 Full catalog from `listSpatialInteractions` (model-definition interaction JSON via core `compileInteraction`). */
 export function buildSpatialStatelyMachineCatalogView(opts?: {
 	readonly interactionIds?: readonly string[];
 	readonly generatedAt?: string;
@@ -273,7 +273,7 @@ export class StatelyStateEngine implements StateEngine {
 		kernel?: SpatialKernel,
 		model?: Model,
 		actions?: ActionRegistry,
-		views?: import("@spatial/js-core").ExtensionViewService,
+		views?: null,
 		preview?: import("@spatial/js-core").SpatialPreviewKernel,
 	): Promise<StateEngineSendResult> {
 		if (String(this.actor.getSnapshot().value) !== this.interactionState) {
