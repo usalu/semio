@@ -2,7 +2,6 @@
 /** @emoji 🧭 `@spatial/js-machine-stately` task router; `generate` catalogs model-definition interactions via core. */
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { buildSpatialStatelyMachineCatalogView } from "./index.ts";
 
 const cwd = import.meta.dir;
 const segs = process.argv.slice(2);
@@ -18,6 +17,7 @@ if (command === "test") {
 	});
 	process.exit(r.status ?? 1);
 } else if (command === "generate") {
+	const { buildSpatialStatelyMachineCatalogView } = await import("./index.ts");
 	let outPath = join(cwd, "machine.json");
 	const interactionIds: string[] = [];
 	for (let i = 0; i < extra.length; i++) {

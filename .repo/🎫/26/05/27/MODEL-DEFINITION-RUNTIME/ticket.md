@@ -11,7 +11,12 @@
 - Attribute/property definition catalogs; explicit `primitiveKinds` on 67 typology assets; AEC typologies via `typology/*.json` glob.
 - `derivePropertyValue` for `builtin.volume` and `energy.heatedvolume`; `buildTypologyToEntityKindMap` for construct MATCH.
 - `@spatial/js-query`: typology validation, anchor/object index, view-derived rejection without legacy CALL view path.
-- Tests: core 256+, query 33+, kernel-brepjs 19, renderer-r3f 8, machine-stately 4.
+- Tests: core 262, query 34, kernel-brepjs 19, renderer-r3f 8, machine-stately 4.
+
+## 2026-05-27 recovery
+
+- Restored `spatial/js/core/index.ts`, `kernel-brepjs/index.ts`, `query/index.ts`, `renderer-r3f/index.tsx`, `machine-stately/index.ts` from commit `5036a2fcd` (PowerShell `>` had truncated `query`; use UTF-8 `bun -e` write).
+- Fixed `machine-stately/script.ts` to lazy-import `index.ts` on `generate` only (Bun lacks `import.meta.glob` at script load).
 
 ## Files
 
