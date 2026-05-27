@@ -935,12 +935,12 @@ export namespace kernelGeometry {
 }
 
 type AnchorRef = kernelGeometry.AnchorRef;
-type VertexRef = kernelGeometry.VertexRef;
-type EdgeRef = kernelGeometry.EdgeRef;
-type WireRef = kernelGeometry.WireRef;
-type FaceRef = kernelGeometry.FaceRef;
-type ShellRef = kernelGeometry.ShellRef;
-type SolidRef = kernelGeometry.SolidRef;
+export type VertexRef = kernelGeometry.VertexRef;
+export type EdgeRef = kernelGeometry.EdgeRef;
+export type WireRef = kernelGeometry.WireRef;
+export type FaceRef = kernelGeometry.FaceRef;
+export type ShellRef = kernelGeometry.ShellRef;
+export type SolidRef = kernelGeometry.SolidRef;
 type GeometryEntityKind = kernelGeometry.GeometryEntityKind;
 type EditableEntityKind = kernelGeometry.EditableEntityKind;
 
@@ -1575,8 +1575,8 @@ export interface SpatialPreviewKernel {
   aabbCornerPoints(min: Vec3, max: Vec3): readonly Vec3[];
   aabbIntersect(a: Aabb, b: Aabb): Aabb | null;
   solidPrimitiveAabb(solid: SolidPrimitive): Aabb;
-  modelObjectAabb(model: Model, cell: SolidRecord): Aabb | null;
-  boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, cell: SolidRef): ModelDiff;
+  modelObjectAabb(model: Model, solid: SolidRecord): Aabb | null;
+  boxModelDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }, solid: SolidRef): ModelDiff;
   meshFaceModelDiff(mesh: MeshTransfer, idTag: string): ModelDiff;
   evaluateAnchorPosition(model: Model, anchor: AnchorRecord): Vec3;
   anchorPlacementFromEntity(model: Model, kind: AnchorAttachment["kind"], id: string, point: Vec3): { readonly position: Vec3; readonly attachment: AnchorAttachment } | null;
@@ -1600,8 +1600,8 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   readonly id: string;
   readonly operations: readonly string[];
   createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef>;
-  volume(cell: SolidRef): Promise<number>;
-  tessellate(cell: SolidRef, tolerance: number): Promise<MeshTransfer>;
+  volume(solid: SolidRef): Promise<number>;
+  tessellate(solid: SolidRef, tolerance: number): Promise<MeshTransfer>;
   query?(name: string, params: Record<string, unknown>, ctx?: KernelQueryContext): Promise<unknown>;
   executeAction?(
     actionId: string,
@@ -1624,7 +1624,7 @@ export interface SpatialKernel extends SpatialPreviewKernel {
   edgeLength(e: EdgeRef, model: Model): Promise<number>;
   faceArea(f: FaceRef, model: Model): Promise<number>;
   solidVolume(c: SolidRef): Promise<number>;
-  adjacentSolids(cell: SolidRef, model: Model): Promise<readonly SolidRef[]>;
+  adjacentSolids(solid: SolidRef, model: Model): Promise<readonly SolidRef[]>;
   sharedFacesBetween(a: SolidRef, b: SolidRef, model: Model): Promise<readonly FaceRef[]>;
 }
 
@@ -1843,7 +1843,7 @@ async function runCreateBox(params: Record<string, unknown>, ctx: { readonly ker
   const height = numericParam(params, "height", Math.max(Math.abs(p2[0] - cornerA[0]), Math.abs(p2[1] - cornerA[1]), 1));
   if (ctx.kernel.createBoxFromCornersDiff) {
     const result = await ctx.kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
-    return { diff: result.diff, data: { solid: result.solid, cell: result.solid } };
+    return { diff: result.diff, data: { solid: result.solid } };
   }
   const solid = await ctx.kernel.createBoxFromCorners({ cornerA, cornerB, height });
   return { diff: ctx.preview.boxModelDiff({ cornerA, cornerB, height }, solid), data: { solid } };
@@ -4182,7 +4182,7 @@ if (import.meta.vitest) {
         lastInput: { cornerA: Vec3; cornerB: Vec3; height: number } | null = null;
         async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
           this.lastInput = input;
-          return { diff: EMPTY_MODEL_DIFF, cell: solidRef("c") };
+          return { diff: EMPTY_MODEL_DIFF, solid: solidRef("c") };
         }
         async createBoxFromCorners() {
           return solidRef("c");
@@ -4513,8 +4513,8 @@ if (import.meta.vitest) {
           return solidRef("stub-cell");
         }
         async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
-          const cell = await this.createBoxFromCorners(input);
-          return { diff: M.boxModelDiff(input, cell), cell };
+          const solid = await this.createBoxFromCorners(input);
+          return { diff: M.boxModelDiff(input, solid), solid };
         }
         async volume(): Promise<number> {
           return 0;
@@ -4534,7 +4534,7 @@ if (import.meta.vitest) {
       const res = snap.lastResponse!;
       expect(snap.state).toBe("committed");
       expect(res.ok).toBe(true);
-      expect(res.data).toEqual({ cell: "stub-cell" });
+      expect(res.data).toEqual({ solid: "stub-cell" });
       expect(res.archiveContext).not.toBeNull();
       expect(res.archiveContext!.origin).toEqual([0, 0, 0]);
       expect(res.archiveContext!.corner).toEqual([2, 3, 0]);

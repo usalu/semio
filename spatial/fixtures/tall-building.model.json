@@ -3488,45 +3488,9 @@
           "tall-building-shell-1530475847"
         ]
       }
-    ],
-    "__removed_cellComplexes": [
-      {
-        "id": "tall-building-cell-complex",
-        "cellIds": [
-          "tall-building-cell-1081834846",
-          "tall-building-cell-1096094486",
-          "tall-building-cell-1279952659",
-          "tall-building-cell-128407723",
-          "tall-building-cell-1328253869",
-          "tall-building-cell-1352884655",
-          "tall-building-cell-1483470234",
-          "tall-building-cell-1566933627",
-          "tall-building-cell-1625171106",
-          "tall-building-cell-1742409446",
-          "tall-building-cell-1787309167",
-          "tall-building-cell-1791018247",
-          "tall-building-cell-179470786",
-          "tall-building-cell-1881454733",
-          "tall-building-cell-1983976325",
-          "tall-building-cell-2067663447",
-          "tall-building-cell-273806170",
-          "tall-building-cell-391420525",
-          "tall-building-cell-418180204",
-          "tall-building-cell-52113531",
-          "tall-building-cell-554343839",
-          "tall-building-cell-751631438",
-          "tall-building-cell-869813452",
-          "tall-building-cell-980890500",
-          "tall-building-cell-981303600"
-        ]
+    ]
       }
-    ],
-    "__removed_clusters": [
-      {
-        "id": "tall-building-asset",
-        "memberIds": [
-          "tall-building-cell-complex"
-        ]
+    ]
       }
     ]
   }

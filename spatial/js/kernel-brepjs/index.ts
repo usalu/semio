@@ -56,6 +56,7 @@ import {
 	executeBuiltinActionCapability,
 	isEmptyModelDiff,
 	emptyMeshTransfer,
+	type EdgeCurve,
 	type ExtensionViewService,
 	type EdgeGroup,
 	type EdgeInfo,
@@ -83,10 +84,8 @@ type WireRef = kernelGeometry.WireRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
 type SolidRef = kernelGeometry.SolidRef;
-type SolidRef = kernelGeometry.SolidRef;
 type AnchorAttachment = kernelGeometry.AnchorAttachment;
 type AnchorRecord = kernelGeometry.AnchorRecord;
-type EdgeCurve = kernelGeometry.EdgeCurve;
 type EdgeRecord = kernelGeometry.EdgeRecord;
 type WireRecord = kernelGeometry.WireRecord;
 type FaceRecord = kernelGeometry.FaceRecord;
@@ -1171,7 +1170,7 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	aabbFromPoints = (pts: readonly Vec3[]) => aabbFromPoints(pts, 0);
 	aabbCornerPoints = aabbCornerPoints;
 	aabbIntersect = aabbIntersect;
-	solidPrimitiveAabb = SolidPrimitiveAabb;
+	solidPrimitiveAabb = solidPrimitiveAabb;
 	modelObjectAabb = modelObjectAabb;
 	boxModelDiff = boxModelDiff;
 	meshFaceModelDiff = meshFaceModelDiff;
@@ -1439,7 +1438,7 @@ class BrepjsWasmEngine {
 
 	private modelDerivedKey(model: Model): string {
 		const solids = (Object.keys(geom(model).solids) as SolidRef[]).sort().join(",");
-		return `${model.revision}:${cells}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
+		return `${model.revision}:${solids}:${Object.keys(geom(model).vertices).length}:${Object.keys(geom(model).faces).length}`;
 	}
 
 	async ensureInit(): Promise<void> {
@@ -1698,9 +1697,9 @@ class BrepjsWasmEngine {
 	}
 
 	async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
-		const cell = await this.createBoxFromCorners(input);
-		const diff = boxModelDiff(input, cell);
-		return { diff, cell };
+		const solid = await this.createBoxFromCorners(input);
+		const diff = boxModelDiff(input, solid);
+		return { diff, solid };
 	}
 
 	async extrudeWireDiff(input: {
@@ -1709,10 +1708,10 @@ class BrepjsWasmEngine {
 		direction: Vec3;
 		model: Model;
 	}): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
-		const cell = await this.extrudeWire(input);
-		const preview = await this.tessellate(cell, 1e-3);
-		const diff = meshFaceModelDiff(preview, `brepjs-${cell}`);
-		return { diff, cell };
+		const solid = await this.extrudeWire(input);
+		const preview = await this.tessellate(solid, 1e-3);
+		const diff = meshFaceModelDiff(preview, `brepjs-${solid}`);
+		return { diff, solid };
 	}
 
 	async offsetFacesDiff(input: {

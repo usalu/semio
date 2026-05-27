@@ -245,23 +245,9 @@
           "shell-deck"
         ]
       }
-    ],
-    "__removed_cellComplexes": [
-      {
-        "id": "loom-complex",
-        "cellIds": [
-          "void-cap"
-        ]
+    ]
       }
-    ],
-    "__removed_clusters": [
-      {
-        "id": "routes",
-        "memberIds": [
-          "stub-wire",
-          "rail-upper",
-          "stub-surface"
-        ]
+    ]
       }
     ]
   }

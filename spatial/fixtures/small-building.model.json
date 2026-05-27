@@ -1743,30 +1743,9 @@
           "small-building-shell-1021196941"
         ]
       }
-    ],
-    "__removed_cellComplexes": [
-      {
-        "id": "small-building-cell-complex",
-        "cellIds": [
-          "small-building-cell-123052045",
-          "small-building-cell-1278694563",
-          "small-building-cell-1726958126",
-          "small-building-cell-177644683",
-          "small-building-cell-346474455",
-          "small-building-cell-509251538",
-          "small-building-cell-531581172",
-          "small-building-cell-548248443",
-          "small-building-cell-916435296",
-          "small-building-cell-920901709"
-        ]
+    ]
       }
-    ],
-    "__removed_clusters": [
-      {
-        "id": "small-building-asset",
-        "memberIds": [
-          "small-building-cell-complex"
-        ]
+    ]
       }
     ]
   }

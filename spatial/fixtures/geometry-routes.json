@@ -403,17 +403,6 @@
     ],
     "faces": [],
     "shells": [],
-    "solids": [],
-    "__removed_cellComplexes": [],
-    "__removed_clusters": [
-      {
-        "id": "all-routes",
-        "memberIds": [
-          "stub-wire",
-          "orbit-a",
-          "spine-b"
-        ]
-      }
-    ]
+    "solids": []
   }
 }

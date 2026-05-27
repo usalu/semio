@@ -140,7 +140,7 @@ export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: num
 /** @emoji 🎞️ Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
 export function useTessellation(
 	kernel: SpatialKernel | null,
-	cell: ReturnType<typeof solidRef> | null,
+	solid: ReturnType<typeof solidRef> | null,
 	tolerance: number,
 ): MeshTransfer | null {
 	const [mesh, setMesh] = useState<MeshTransfer | null>(null);
@@ -196,7 +196,7 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
 	return true;
 }
 
-/** @emoji 🎞️ Tessellates every model cell through `SpatialKernel.tessellate` (worker-backed). */
+/** @emoji 🎞️ Tessellates every model solid through `SpatialKernel.tessellate` (worker-backed). */
 export function useDocumentMeshes(
 	kernel: SpatialKernel | null,
 	model: Model,
@@ -217,10 +217,10 @@ export function useDocumentMeshes(
 		let cancelled = false;
 		void (async () => {
 			const rows = await Promise.all(
-				solids.map(async (cell) => {
+				solids.map(async (solid) => {
 					try {
-						const mesh = await kernel.tessellate(cell, tolerance);
-						return isRenderableMeshTransfer(mesh) ? { cell, mesh } : null;
+						const mesh = await kernel.tessellate(solid, tolerance);
+						return isRenderableMeshTransfer(mesh) ? { solid, mesh } : null;
 					} catch {
 						return null;
 					}
@@ -533,7 +533,7 @@ const GEOMETRY_KIND_TO_OBJECT_PICK: Partial<Record<ModelEntityKind, SpatialObjec
 	edge: "objectEdge",
 	wire: "objectEdge",
 	face: "objectFace",
-	cell: "object",
+	solid: "object",
 	anchor: "objectVertex",
 };
 
@@ -565,7 +565,7 @@ function kernelGeometryKindForObjectPick(
 	if (kind === "objectVertex") return "vertex";
 	if (kind === "objectEdge") return "edge";
 	if (kind === "objectFace") return "face";
-	return "cell";
+	return "solid";
 }
 
 /** @emoji 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
@@ -693,9 +693,7 @@ function geometryBuckets(g: SpatialPickGeometry): {
 	readonly wires: Record<string, WireRecord>;
 	readonly faces: Record<string, FaceRecord>;
 	readonly shells: Record<string, ShellRecord>;
-	readonly solids: Record<string, CellRecord>;
-	readonly ____cellComplexRemovedesRemoved: Record<string, CellComplexRecord>;
-	readonly ____clusterRemovedsRemoved: Record<string, ClusterRecord>;
+	readonly solids: Record<string, SolidRecord>;
 } {
 	if (g instanceof Model) {
 		return {
@@ -706,8 +704,6 @@ function geometryBuckets(g: SpatialPickGeometry): {
 			faces: g.faces,
 			shells: g.shells,
 			solids: g.solids,
-			____cellComplexRemovedesRemoved: g.____cellComplexRemovedesRemoved,
-			____clusterRemovedsRemoved: g.____clusterRemovedsRemoved,
 		};
 	}
 	return {
@@ -718,8 +714,6 @@ function geometryBuckets(g: SpatialPickGeometry): {
 		faces: asRecordBucket(g.faces),
 		shells: asRecordBucket(g.shells),
 		solids: asRecordBucket(g.solids),
-		____cellComplexRemovedesRemoved: asRecordBucket(g.____cellComplexRemovedesRemoved),
-		____clusterRemovedsRemoved: asRecordBucket(g.____clusterRemovedsRemoved),
 	};
 }
 
@@ -775,30 +769,16 @@ function geometryShellPoints(
 	);
 }
 
-function geometryCellPoints(
+function geometrySolidPoints(
 	vertices: Record<string, VertexRecord>,
 	edges: Record<string, EdgeRecord>,
 	wires: Record<string, WireRecord>,
 	faces: Record<string, FaceRecord>,
 	shells: Record<string, ShellRecord>,
-	cell: CellRecord,
+	solid: SolidRecord,
 ): readonly Vec3[] {
 	return uniqueGeometryPoints(
-		cell.shellIds.flatMap((id) => (shells[id] ? geometryShellPoints(vertices, edges, wires, faces, shells[id]!) : [])),
-	);
-}
-
-function geometryCellComplexPoints(
-	vertices: Record<string, VertexRecord>,
-	edges: Record<string, EdgeRecord>,
-	wires: Record<string, WireRecord>,
-	faces: Record<string, FaceRecord>,
-	shells: Record<string, ShellRecord>,
-	solids: Record<string, CellRecord>,
-	complex: CellComplexRecord,
-): readonly Vec3[] {
-	return uniqueGeometryPoints(
-		complex.solidIds.flatMap((id) => (solids[id] ? geometryCellPoints(vertices, edges, wires, faces, shells, solids[id]!) : [])),
+		solid.shellIds.flatMap((id) => (shells[id] ? geometryShellPoints(vertices, edges, wires, faces, shells[id]!) : [])),
 	);
 }
 
@@ -820,18 +800,7 @@ function geometryEntityPoints(
 	if (kind === "wire" && buckets.wires[id]) return geometryWirePoints(buckets.vertices, buckets.edges, buckets.wires[id]!);
 	if (kind === "face" && buckets.faces[id]) return geometryFacePoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces[id]!);
 	if (kind === "shell" && buckets.shells[id]) return geometryShellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells[id]!);
-	if (kind === "cell" && buckets.solids[id]) return geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, buckets.solids[id]!);
-	if (kind === "__cellComplexRemoved" && buckets.____cellComplexRemovedesRemoved[id]) {
-		return geometryCellComplexPoints(
-			buckets.vertices,
-			buckets.edges,
-			buckets.wires,
-			buckets.faces,
-			buckets.shells,
-			buckets.solids,
-			buckets.____cellComplexRemovedesRemoved[id]!,
-		);
-	}
+	if (kind === "solid" && buckets.solids[id]) return geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, buckets.solids[id]!);
 	return [];
 }
 
@@ -881,11 +850,8 @@ export function geometryEntityWireSegments(
 	if (kind === "shell" && buckets.shells[id]) {
 		return buckets.shells[id]!.faceIds.flatMap((faceId) => geometryEntityWireSegments(buckets, "face", faceId));
 	}
-	if (kind === "cell" && buckets.solids[id]) {
+	if (kind === "solid" && buckets.solids[id]) {
 		return buckets.solids[id]!.shellIds.flatMap((shellId) => geometryEntityWireSegments(buckets, "shell", shellId));
-	}
-	if (kind === "__cellComplexRemoved" && buckets.____cellComplexRemovedesRemoved[id]) {
-		return buckets.____cellComplexRemovedesRemoved[id]!.solidIds.flatMap((solidId) => geometryEntityWireSegments(buckets, "solid", solidId));
 	}
 	const pts = geometryEntityPoints(buckets, kind, id);
 	const bb = bboxFromPoints(pts);
@@ -913,7 +879,7 @@ function viewObjectPickPoints(model: Model, object: ViewDerivedObject): readonly
 		if (!row) continue;
 		const cell = buckets.solids[row.geometryRef];
 		if (!cell) continue;
-		for (const p of geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell)) {
+		for (const p of geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell)) {
 			unique.set(p.join(","), p);
 		}
 	}
@@ -973,7 +939,7 @@ export function createSpatialPickTargets(
 		const all = geometryAllVertexPoints(buckets.vertices);
 		const allCenter = geometryPointCentroid(all);
 		for (const cell of geometryRecords(buckets.solids)) {
-			const points = geometryCellPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
+			const points = geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
 			const point = geometryPointCentroid(points) ?? allCenter;
 			if (point) targets.push({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all });
 		}
@@ -2332,7 +2298,7 @@ export function CommittedMeshLayer({
 		<group>
 			{meshes.map((row, i) => (
 				<TessellatedCommitMesh
-					key={`${row.cell}:${meshTransferContentKey(row.mesh, i)}`}
+					key={`${row.solid}:${meshTransferContentKey(row.mesh, i)}`}
 					mesh={row.mesh}
 					pickable={pickable}
 					showFaces={showFaces}
@@ -2739,7 +2705,7 @@ export function InteractionSpatialView({
 	}, [gridDivisions, gridSize]);
 	const layerMeshes = useMemo(() => {
 		if (committedMeshes?.length) return committedMeshes;
-		if (committedMesh) return [{ cell: solidRef("committed"), mesh: committedMesh }];
+		if (committedMesh) return [{ solid: solidRef("committed"), mesh: committedMesh }];
 		return [];
 	}, [committedMeshes, committedMesh]);
 	const autoFitSources = useMemo(() => layerMeshes.map((row) => row.mesh), [layerMeshes]);
@@ -4758,8 +4724,6 @@ if (import.meta.vitest) {
 				faces: [],
 				shells: [],
 				solids: [],
-				____cellComplexRemovedesRemoved: [],
-				____clusterRemovedsRemoved: [],
 			} as unknown as ModelJson);
 			expect(targets).toEqual([{ kind: "objectVertex", geometryKind: "vertex", id: "v0", point: [1, 2, 3] }]);
 			expect(createSpatialPickEvent("pointer.down", [9, 9, 9], targets[0]!, { shift: true })).toEqual({

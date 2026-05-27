@@ -87,15 +87,8 @@
           "shell-0"
         ]
       }
-    ],
-    "__removed_cellComplexes": [
-      {
-        "id": "nakagin-slice",
-        "cellIds": [
-          "capsule-0"
-        ]
+    ]
       }
-    ],
-    "__removed_clusters": []
+    ]
   }
 }
