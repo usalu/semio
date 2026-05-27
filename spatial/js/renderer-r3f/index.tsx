@@ -27,7 +27,6 @@ THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 import {
 	abortActiveInteractionSession,
 	applyModelDiff,
-	buildBoxInteractionSpec,
 	solidRef,
 	createInteractionRuntime,
 	emptyMeshTransfer,

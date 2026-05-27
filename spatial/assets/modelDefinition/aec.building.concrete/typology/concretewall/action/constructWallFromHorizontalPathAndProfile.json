@@ -1,18 +1,20 @@
 {
-	"schema": "spatial.action/v1",
-	"id": "building.wall.constructWallFromHorizontalPathAndProfile",
-	"version": "1.0.0",
-	"label": "Construct Wall From Horizontal Path And Profile",
-	"args": {
-		"pathCurve": null,
-		"profileCurve": null
-	},
-	"parameters": {
-		"pathCurve": { "kind": "unknown" },
-		"profileCurve": { "kind": "unknown" }
-	},
-	"steps": [
-		{ "op": "kernel.call", "function": "spatial.action.execute", "assignTo": "result" },
-		{ "op": "return", "result": { "kind": "var", "name": "result" } }
-	]
+  "schema": "spatial.action/v1",
+  "id": "building.wall.constructWallFromHorizontalPathAndProfile",
+  "version": "1.0.0",
+  "label": "Construct Wall From Horizontal Path And Profile",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
 }

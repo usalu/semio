@@ -2206,8 +2206,6 @@ function anchorAction(params: Record<string, unknown>, ctx: { readonly model: Mo
 
 function builtinActionCapabilityDefs(): readonly ActionDef[] {
   return [
-    selectionApplyActionDef(),
-    ...SELECTION_OPERATION_INTERACTION_DEFS.map(selectionCommandActionForDef),
     { id: "primitive.createBoxFromCorners", run: runCreateBox },
     { id: "primitive.createBoxFrom3Points", run: runCreateBox },
     { id: "box.aabbFromDiagonalCorners", run: runCreateBox },
@@ -2344,7 +2342,7 @@ async function executeKernelFunction(
   functionName: string,
   actionId: string,
   params: Record<string, unknown>,
-  args: Record<string, unknown>,
+  callArgs: Record<string, unknown>,
   ctx: {
     readonly kernel: SpatialKernel;
     readonly preview: SpatialPreviewKernel;
@@ -2353,9 +2351,15 @@ async function executeKernelFunction(
     readonly activeViewId?: string | null;
   },
 ): Promise<unknown> {
-  if (functionName !== "spatial.action.execute") throw new Error(`Unknown kernel function: ${functionName}`);
-  if (ctx.kernel.executeAction) return ctx.kernel.executeAction(actionId, params, args, ctx);
-  return executeBuiltinActionCapability(actionId, params, args, ctx);
+  const merged = { ...params, ...callArgs };
+  if (functionName === "spatial.selection.apply") {
+    return selectionCommandActionResult(executeSelectionApply(selectionApplyParamsFromRecord(merged), ctx));
+  }
+  if (functionName === "spatial.action.capability" || functionName === "spatial.action.execute") {
+    if (ctx.kernel.executeAction) return ctx.kernel.executeAction(actionId, merged, callArgs, ctx);
+    return executeBuiltinActionCapability(actionId, merged, callArgs, ctx);
+  }
+  throw new Error(`Unknown kernel function: ${functionName}`);
 }
 
 export class DeclarativeActionRuntime {
@@ -2451,9 +2455,6 @@ export class ActionRegistry {
   static withBuiltins(): ActionRegistry {
     const r = new ActionRegistry();
     for (const spec of shippedActionCatalog()) r.register({ id: spec.id, label: spec.label, spec });
-    for (const cap of builtinActionCapabilityDefs()) {
-      if (!r.get(cap.id)) r.register(cap);
-    }
     return r;
   }
 }
@@ -2744,28 +2745,6 @@ function selectionApplyParamsFromRecord(params: Record<string, unknown>): Select
   const seed = parseSelectionTargetsFromUnknown(params.seedTargets ?? bag.seedTargets);
   const kinds = parseModelEntityKinds(params.kinds ?? bag.kinds);
   return { operation, seedTargets: seed, ...(operation === "selectKinds" ? { kinds } : {}) };
-}
-
-function selectionApplyActionDef(): ActionDef {
-  return {
-    id: "selection.apply",
-    run: (params, ctx) => {
-      const targets = executeSelectionApply(selectionApplyParamsFromRecord(params as Record<string, unknown>), ctx);
-      return selectionCommandActionResult(targets);
-    },
-  };
-}
-
-function selectionCommandActionForDef(defn: SelectionOperationInteractionDef): ActionDef {
-  return {
-    id: defn.id,
-    label: defn.label,
-    run: (params, ctx) => {
-      const seed = parseSelectionTargetsFromUnknown(params.seedTargets);
-      const targets = executeSelectionApply(selectionApplyParamsForInteraction(defn, seed), ctx);
-      return selectionCommandActionResult(targets);
-    },
-  };
 }
 
 // #region 🔍ConstructQuery
@@ -3678,28 +3657,66 @@ export async function runSelectionOperationInteraction(
 // #region 📦Interactions
 type BuiltinInteractionFixture = InteractionSpec & { readonly key?: string };
 
-const SELECTION_OPERATION_INTERACTION_DEFS = [
-  { id: "selection.selectAll", label: "SelectAll", key: "sa", operation: "selectAll" },
-  { id: "selection.deselectAll", label: "DeselectAll", key: "ds", operation: "deselectAll" },
-  { id: "selection.invert", label: "InvertSelection", key: "iv", operation: "invert" },
-  { id: "selection.selectAnchors", label: "SelectAnchors", key: "xa", operation: "selectKinds", kinds: ["anchor"] },
-  { id: "selection.selectVertices", label: "SelectVertices", key: "xv", operation: "selectKinds", kinds: ["vertex"] },
-  { id: "selection.selectEdges", label: "SelectEdges", key: "xe", operation: "selectKinds", kinds: ["edge"] },
-  { id: "selection.selectWires", label: "SelectWires", key: "xw", operation: "selectKinds", kinds: ["wire"] },
-  { id: "selection.selectFaces", label: "SelectFaces", key: "xf", operation: "selectKinds", kinds: ["face"] },
-  { id: "selection.selectSolids", label: "SelectSolids", key: "xc", operation: "selectKinds", kinds: ["solid"] },
-  { id: "selection.selectGeometries", label: "SelectGeometries", key: "xg", operation: "selectKinds", kinds: ["geometry"] },
-  { id: "selection.selectObjects", label: "SelectObjects", key: "xo", operation: "selectKinds", kinds: ["object"] },
-] as const satisfies readonly SelectionOperationInteractionDef[];
+const SELECTION_INTERACTION_KEYS: Readonly<Record<string, string>> = {
+  "selection.selectAll": "sa",
+  "selection.deselectAll": "ds",
+  "selection.invert": "iv",
+  "selection.selectAnchors": "xa",
+  "selection.selectVertices": "xv",
+  "selection.selectEdges": "xe",
+  "selection.selectWires": "xw",
+  "selection.selectFaces": "xf",
+  "selection.selectSolids": "xc",
+  "selection.selectGeometries": "xg",
+  "selection.selectObjects": "xo",
+};
 
-/** @emoji 🪪 Built-in instant selection command fixtures (`selection.*`). */
+const SELECTION_ACTION_META: Readonly<
+  Record<string, { readonly operation: SelectionApplyOperation; readonly kinds?: readonly ModelEntityKind[] }>
+> = {
+  "selection.selectAll": { operation: "selectAll" },
+  "selection.deselectAll": { operation: "deselectAll" },
+  "selection.invert": { operation: "invert" },
+  "selection.selectAnchors": { operation: "selectKinds", kinds: ["anchor"] },
+  "selection.selectVertices": { operation: "selectKinds", kinds: ["vertex"] },
+  "selection.selectEdges": { operation: "selectKinds", kinds: ["edge"] },
+  "selection.selectWires": { operation: "selectKinds", kinds: ["wire"] },
+  "selection.selectFaces": { operation: "selectKinds", kinds: ["face"] },
+  "selection.selectSolids": { operation: "selectKinds", kinds: ["solid"] },
+  "selection.selectGeometries": { operation: "selectKinds", kinds: ["geometry"] },
+  "selection.selectObjects": { operation: "selectKinds", kinds: ["object"] },
+};
+
+function buildSelectionOperationInteractionDefs(): readonly SelectionOperationInteractionDef[] {
+  const out: SelectionOperationInteractionDef[] = [];
+  for (const typology of listModelDefinitionTypologies()) {
+    const actionId = typology.actions.find((id) => id.startsWith("selection.") && id !== "selection.apply");
+    if (!actionId) continue;
+    const meta = SELECTION_ACTION_META[actionId];
+    const key = SELECTION_INTERACTION_KEYS[actionId];
+    if (!meta || !key) continue;
+    out.push({
+      id: actionId,
+      label: typology.label,
+      key,
+      operation: meta.operation,
+      ...(meta.kinds ? { kinds: [...meta.kinds] } : {}),
+    });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+let selectionOperationInteractionDefsCache: readonly SelectionOperationInteractionDef[] | null = null;
+
+/** @emoji 🪪 Built-in instant selection command fixtures (`selection.*`) from model-definition typologies. */
 export function listSelectionOperationInteractionDefs(): readonly SelectionOperationInteractionDef[] {
-  return SELECTION_OPERATION_INTERACTION_DEFS;
+  selectionOperationInteractionDefsCache ??= buildSelectionOperationInteractionDefs();
+  return selectionOperationInteractionDefsCache;
 }
 
 /** @emoji 🪪 Resolves a built-in `selection.*` interaction row by stable id. */
 export function resolveSelectionOperationInteraction(interactionId: string): SelectionOperationInteractionDef | null {
-  return SELECTION_OPERATION_INTERACTION_DEFS.find((defn) => defn.id === interactionId) ?? null;
+  return listSelectionOperationInteractionDefs().find((defn) => defn.id === interactionId) ?? null;
 }
 
 /** @emoji 🪪 Maps a `selection.*` interaction id to headless `SelectionApplyParams`. */
@@ -3756,44 +3773,37 @@ export class InteractionRegistry {
   }
 }
 
-/** @emoji 📦 Parses primitive.box interaction from model-definition assets. */
+function requireSpatialInteraction(interactionId: string): InteractionSpec {
+  const spec = loadSpatialInteraction(interactionId);
+  if (!spec) throw new Error(`${interactionId} interaction missing from modelDefinition assets`);
+  return spec;
+}
+
+/** @emoji 📦 Compiled `primitive.box` interaction from model-definition assets. */
 export function buildBoxInteractionSpec(): InteractionSpec {
-  const raw = shippedInteractionJsons.find((row) => row.id === "primitive.box");
-  const spec = raw ? parseInteractionSpec(raw) : null;
-  if (!spec) throw new Error("primitive.box interaction missing from modelDefinition assets");
-  return compileInteraction(spec);
+  return requireSpatialInteraction("primitive.box");
 }
 
-/** @emoji 📦 Parses feature.extrude-wire interaction from model-definition assets. */
+/** @emoji 📦 Compiled `feature.extrudeWire` interaction from model-definition assets. */
 export function buildExtrudeInteractionSpec(): InteractionSpec {
-  const raw = shippedInteractionJsons.find((row) => row.id === "feature.extrude-wire");
-  const spec = raw ? parseInteractionSpec(raw) : null;
-  if (!spec) throw new Error("feature.extrude-wire interaction missing");
-  return compileInteraction(spec);
+  return requireSpatialInteraction("feature.extrudeWire");
 }
 
-/** @emoji 📦 Parses feature.offset-surface interaction from model-definition assets. */
+/** @emoji 📦 Compiled `feature.offsetSurface` interaction from model-definition assets. */
 export function buildOffsetSurfaceInteractionSpec(): InteractionSpec {
-  const raw = shippedInteractionJsons.find((row) => row.id === "feature.offset-surface");
-  const spec = raw ? parseInteractionSpec(raw) : null;
-  if (!spec) throw new Error("feature.offset-surface interaction missing");
-  return compileInteraction(spec);
+  return requireSpatialInteraction("feature.offsetSurface");
 }
 
-/** @emoji 📦 Parses measure.length interaction from model-definition assets. */
+/** @emoji 📦 Compiled `measure.length` interaction from model-definition assets. */
 export function buildDistanceInteractionSpec(): InteractionSpec {
-  const raw = shippedInteractionJsons.find((row) => row.id === "measure.distance" || row.id === "measure.length");
-  const spec = raw ? parseInteractionSpec(raw) : null;
-  if (!spec) throw new Error("measure.length interaction missing");
-  return compileInteraction(spec);
+  const spec = loadSpatialInteraction("measure.length") ?? loadSpatialInteraction("measure.distance");
+  if (!spec) throw new Error("measure.length interaction missing from modelDefinition assets");
+  return spec;
 }
 
-/** @emoji 📦 Parses measure.area interaction from model-definition assets. */
+/** @emoji 📦 Compiled `measure.area` interaction from model-definition assets. */
 export function buildAreaInteractionSpec(): InteractionSpec {
-  const raw = shippedInteractionJsons.find((row) => row.id === "measure.area");
-  const spec = raw ? parseInteractionSpec(raw) : null;
-  if (!spec) throw new Error("measure.area interaction missing");
-  return compileInteraction(spec);
+  return requireSpatialInteraction("measure.area");
 }
 
 
@@ -4332,20 +4342,20 @@ if (import.meta.vitest) {
       expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action/v1")).toBe(true);
       expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
       expect(registry.get("command.finish")?.spec?.schema).toBe("spatial.action/v1");
-      expect(registry.get("transform.move")?.run).toBeTypeOf("function");
+      expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
+      expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
     });
-    it("ActionRegistry.withBuiltins registers known geometry actions", () => {
+    it("ActionRegistry.withBuiltins registers declarative model-definition actions only", () => {
       const r = ActionRegistry.withBuiltins();
       const ids = new Set(r.list().map((d) => d.id));
       expect(ids.has("primitive.createBoxFromCorners")).toBe(true);
       expect(ids.has("box.aabbFromDiagonalCorners")).toBe(true);
       expect(ids.has("command.finish")).toBe(true);
-      expect(ids.has("transform.scale1d")).toBe(true);
-      expect(ids.has("transform.copy")).toBe(true);
       expect(ids.has("feature.offsetFaces")).toBe(true);
       expect(ids.has("selection.apply")).toBe(true);
       expect(ids.has("selection.selectAll")).toBe(true);
       expect(ids.has("selection.selectVertices")).toBe(true);
+      expect(r.list().every((def) => def.spec !== undefined && def.run === undefined)).toBe(true);
     });
     it("register replaces a built-in action id", () => {
       const r = ActionRegistry.withBuiltins();
@@ -5544,7 +5554,7 @@ if (import.meta.vitest) {
       expect(e2eCases.map((c) => c.id).sort()).toEqual(ids);
     });
 
-    it.each(SELECTION_OPERATION_INTERACTION_DEFS)("$id selection action completes on seeded box", async (defn) => {
+    it.each(listSelectionOperationInteractionDefs())("$id selection action completes on seeded box", async (defn) => {
       const model = topoFromFixture("empty");
       seedBoxCell(model);
       if (defn.kinds?.includes("object")) {

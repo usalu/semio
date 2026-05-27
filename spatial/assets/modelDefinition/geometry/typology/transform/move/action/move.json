@@ -1,8 +1,8 @@
 {
   "schema": "spatial.action/v1",
-  "id": "box.initPeakAboveOrigin",
+  "id": "transform.move",
   "version": "1.0.0",
-  "label": "BoxInitPeakAboveOrigin",
+  "label": "Move",
   "steps": [
     {
       "op": "kernel.call",

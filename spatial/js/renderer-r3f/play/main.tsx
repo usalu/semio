@@ -103,6 +103,11 @@ function ConstructQueryPanel({ runtime }: { readonly runtime: InteractionRuntime
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
+	const geo = json.geometry;
+	if (geo && typeof geo === "object") {
+		const nested = (geo as Record<string, unknown>).vertices;
+		if (Array.isArray(nested)) return nested.length;
+	}
 	const verts = json.vertices;
 	return Array.isArray(verts) ? verts.length : 0;
 }

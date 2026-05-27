@@ -1,24 +1,20 @@
 {
-	"schema": "spatial.action/v1",
-	"id": "building.mushroomcolumn.constructFullyQuadraticMushroomColumn",
-	"version": "1.0.0",
-	"label": "Construct Fully Quadratic Mushroom Column",
-	"args": {
-		"height": 2.7,
-		"heightIs": "total",
-		"slabHeight": 0.3,
-		"quadraticColumnWidth": 0.4,
-		"quadraticSlabWidth": 2.3
-	},
-	"parameters": {
-		"height": { "kind": "number" },
-		"heightIs": { "kind": "string" },
-		"slabHeight": { "kind": "number" },
-		"quadraticColumnWidth": { "kind": "number" },
-		"quadraticSlabWidth": { "kind": "number" }
-	},
-	"steps": [
-		{ "op": "kernel.call", "function": "spatial.action.execute", "assignTo": "result" },
-		{ "op": "return", "result": { "kind": "var", "name": "result" } }
-	]
+  "schema": "spatial.action/v1",
+  "id": "building.mushroomcolumn.constructFullyQuadraticMushroomColumn",
+  "version": "1.0.0",
+  "label": "Construct Fully Quadratic Mushroom Column",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
 }

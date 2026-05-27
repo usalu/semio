@@ -6,7 +6,23 @@
   "steps": [
     {
       "op": "kernel.call",
-      "function": "spatial.action.execute",
+      "function": "spatial.selection.apply",
+      "args": {
+        "operation": {
+          "kind": "const",
+          "value": "invert"
+        },
+        "seedTargets": {
+          "kind": "path",
+          "root": "params",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "seedTargets"
+            }
+          ]
+        }
+      },
       "assignTo": "result"
     },
     {

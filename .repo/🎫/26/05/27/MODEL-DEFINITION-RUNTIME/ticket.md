@@ -18,6 +18,12 @@
 - Restored `spatial/js/core/index.ts`, `kernel-brepjs/index.ts`, `query/index.ts`, `renderer-r3f/index.tsx`, `machine-stately/index.ts` from commit `5036a2fcd` (PowerShell `>` had truncated `query`; use UTF-8 `bun -e` write).
 - Fixed `machine-stately/script.ts` to lazy-import `index.ts` on `generate` only (Bun lacks `import.meta.glob` at script load).
 
+## Playground (`spatial/js/renderer-r3f/play`)
+
+- Restored `core` + `machine-stately` when minified rewrite broke Vite (`executeBuiltinActionCapability`, `loadSpatialInteraction`).
+- `bun ./script.ts build` and dev on http://127.0.0.1:6020/ verified; launch: `bun nx run @spatial/js-renderer-r3f:dev`.
+- `play/main.tsx`: vertex count reads `geometry.vertices`; `play/vite.config.ts` aliases `@spatial/js-query`.
+
 ## Files
 
 - `spatial/js/core/index.ts`

@@ -6,7 +6,7 @@
   "steps": [
     {
       "op": "kernel.call",
-      "function": "spatial.action.execute",
+      "function": "spatial.action.capability",
       "assignTo": "result"
     },
     {

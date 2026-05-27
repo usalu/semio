@@ -756,6 +756,94 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b6926bedfd26aa154e7040eca3b66785cedac773",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-27T14:35:17Z",
+        "session": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T14:35:16.446Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl",
+          "prompt": "Try Again",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b6926bedfd26aa154e7040eca3b66785cedac773",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-05-27T14:35:19Z",
+        "session": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T14:35:16.446Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl",
+          "prompt": "Try Again",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b6926bedfd26aa154e7040eca3b66785cedac773",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-27T14:35:40Z",
+        "session": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T14:35:40.415Z",
+          "hook_event_name": "Stop",
+          "session_id": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b6926bedfd26aa154e7040eca3b66785cedac773",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-27T14:35:42Z",
+        "session": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-27T14:35:40.415Z",
+          "hook_event_name": "Stop",
+          "session_id": "e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\e9b7563a-1fc3-4329-a7e9-b7fd02a7cb41.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
     }
   ]
 }

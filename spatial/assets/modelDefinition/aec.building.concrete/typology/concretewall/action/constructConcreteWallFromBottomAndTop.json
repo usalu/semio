@@ -1,18 +1,20 @@
 {
-	"schema": "spatial.action/v1",
-	"id": "building.wall.constructWallFromBottomAndTop",
-	"version": "1.0.0",
-	"label": "Construct Wall From Bottom And Top",
-	"args": {
-		"bottomCurve": null,
-		"topCurve": null
-	},
-	"parameters": {
-		"bottomCurve": { "kind": "unknown" },
-		"topCurve": { "kind": "unknown" }
-	},
-	"steps": [
-		{ "op": "kernel.call", "function": "spatial.action.execute", "assignTo": "result" },
-		{ "op": "return", "result": { "kind": "var", "name": "result" } }
-	]
+  "schema": "spatial.action/v1",
+  "id": "building.wall.constructWallFromBottomAndTop",
+  "version": "1.0.0",
+  "label": "Construct Wall From Bottom And Top",
+  "steps": [
+    {
+      "op": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "op": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
 }
