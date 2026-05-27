@@ -707,6 +707,10 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+The extension must be written in cad-coordinate system but all e.g. glb imports are in glb coordinate system. e.g. currently the objects are flipped the cad z axis is currently on the cad y axis.
+
+---
+
 Generalize the concept of lod from a set of domain-driven 6 fixed lods to a open list and domain-neutral list of float. e.g. 50000 stands for 1to50000, 200 for 1to200, 0.5 for 2to1, etc
 Add automatic zoom driven lod, add depth-variable lod (the closer to the camera the more detailed) and a slider for forcing a specific lod.
 If an object doesnt have a representation for a specific lod, take the closest one. On equal distance pick the lower number lod.

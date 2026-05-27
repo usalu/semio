@@ -1,10 +1,10 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-// #region 🧲Header
-/** @emoji 🎬 `@spatial/js-renderer-r3f` — R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interaction/primitive/box.json`. */
-// #endregion 🧲Header
+// #region ­ƒº▓Header
+/** @emoji ­ƒÄ¼ `@spatial/js-renderer-r3f` ÔÇö R3F factory renderer with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `spatial/assets/interaction/primitive/box.json`. */
+// #endregion ­ƒº▓Header
 
-// #region 📥Imports
+// #region ­ƒôÑImports
 import { Line, OrbitControls, Text } from "@react-three/drei";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
@@ -86,10 +86,10 @@ type WireRecord = kernelGeometry.WireRecord;
 
 export type { SpatialComputeMode };
 import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@spatial/js-kernel-brepjs";
-// #endregion 📥Imports
+// #endregion ­ƒôÑImports
 
-// #region ⚡R3FPreviewKernel
-/** @emoji ⚡ Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
+// #region ÔÜíR3FPreviewKernel
+/** @emoji ÔÜí Fast approximate `SpatialPreviewKernel` for live R3F previews (lower tessellation). */
 export class R3FPreviewKernel extends PreciseSpatialKernelMath {
 	override arcSamplePoints = (center: Vec3, start: Vec3, end: Vec3, segments = 12): readonly Vec3[] =>
 		preciseSpatialKernelMath.arcSamplePoints(center, start, end, segments);
@@ -107,12 +107,12 @@ export class R3FPreviewKernel extends PreciseSpatialKernelMath {
 		preciseSpatialKernelMath.nurbsDisplaySamplePoints(poles, segmentsPerSpan);
 }
 
-/** @emoji ⚡ Default fast preview kernel for play and R3F hosts. */
+/** @emoji ÔÜí Default fast preview kernel for play and R3F hosts. */
 export const r3fPreviewKernel = new R3FPreviewKernel();
 
 const scenePreviewKernelRef: { current: SpatialPreviewKernel } = { current: r3fPreviewKernel };
 
-/** @emoji ⚡ Binds the active scene preview kernel (fast vs precise) for R3F wireframe helpers. */
+/** @emoji ÔÜí Binds the active scene preview kernel (fast vs precise) for R3F wireframe helpers. */
 export function bindScenePreviewKernel(kernel: SpatialPreviewKernel): void {
 	scenePreviewKernelRef.current = kernel;
 }
@@ -120,10 +120,10 @@ export function bindScenePreviewKernel(kernel: SpatialPreviewKernel): void {
 function scenePreview(): SpatialPreviewKernel {
 	return scenePreviewKernelRef.current;
 }
-// #endregion ⚡R3FPreviewKernel
+// #endregion ÔÜíR3FPreviewKernel
 
-// #region 🎬WorkerClient
-/** @emoji 🧩 Binary search `faceGroups` by triangle index (playground `ShapeRenderer` pattern). */
+// #region ­ƒÄ¼WorkerClient
+/** @emoji ­ƒº® Binary search `faceGroups` by triangle index (playground `ShapeRenderer` pattern). */
 export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: number): FaceGroup | null {
 	const indexBufferOffset = triangleIndex * 3;
 	let lo = 0;
@@ -138,7 +138,7 @@ export function findFaceGroupAt(groups: readonly FaceGroup[], triangleIndex: num
 	return null;
 }
 
-/** @emoji 🎞️ Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
+/** @emoji ­ƒÄ×´©Å Debounced `SpatialKernel.tessellate` for R3F hosts (worker-backed brepjs). */
 export function useTessellation(
 	kernel: SpatialKernel | null,
 	cell: ReturnType<typeof cellRef> | null,
@@ -160,7 +160,7 @@ export function useTessellation(
 	return mesh;
 }
 
-/** @emoji 📦 Lists `CellRef` ids present on a model graph (document cells for tessellation). */
+/** @emoji ­ƒôª Lists `CellRef` ids present on a model graph (document cells for tessellation). */
 export function listModelCellRefs(model: Model | ModelJson | null): readonly CellRef[] {
 	if (!model) return [];
 	const graph = model instanceof Model ? model : parseModelJson(model);
@@ -168,7 +168,7 @@ export function listModelCellRefs(model: Model | ModelJson | null): readonly Cel
 	return Object.keys(graph.cells).map((id) => cellRef(id));
 }
 
-/** @emoji 🔑 Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
+/** @emoji ­ƒöæ Stable React key from mesh buffer fingerprints (avoids stale geometry reuse). */
 export function meshTransferContentKey(mesh: MeshTransfer, fallback = 0): string {
 	const p = mesh.position;
 	if (p.length === 0) return `empty-${fallback}`;
@@ -197,7 +197,7 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
 	return true;
 }
 
-/** @emoji 🎞️ Tessellates every model cell through `SpatialKernel.tessellate` (worker-backed). */
+/** @emoji ­ƒÄ×´©Å Tessellates every model cell through `SpatialKernel.tessellate` (worker-backed). */
 export function useDocumentMeshes(
 	kernel: SpatialKernel | null,
 	model: Model,
@@ -236,7 +236,7 @@ export function useDocumentMeshes(
 	return meshes;
 }
 
-/** @emoji 📐 Axis-aligned bounds of all mesh positions (for camera auto-fit). */
+/** @emoji ­ƒôÉ Axis-aligned bounds of all mesh positions (for camera auto-fit). */
 export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { readonly center: Vec3; readonly radius: number } | null {
 	if (meshes.length === 0) return null;
 	let minX = Infinity;
@@ -273,7 +273,7 @@ export function boundsFromMeshTransfers(meshes: readonly MeshTransfer[]): { read
 	return { center: [cx, cy, cz], radius: Math.max(radius, 0.5) };
 }
 
-/** @emoji 📐 Axis-aligned bounds of geometry vertex positions (factory / REPL geometry auto-fit). */
+/** @emoji ­ƒôÉ Axis-aligned bounds of geometry vertex positions (factory / REPL geometry auto-fit). */
 export function boundsFromSpatialPickGeometry(
 	geometry: SpatialPickGeometry | null | undefined,
 ): { readonly center: Vec3; readonly radius: number } | null {
@@ -329,10 +329,10 @@ function mergeSpatialSceneBounds(
 	);
 	return { center, radius };
 }
-// #endregion 🎬WorkerClient
+// #endregion ­ƒÄ¼WorkerClient
 
-// #region 🪩ArchivedFootprints
-/** @emoji 📦 Footprint of a finished axis-aligned box for persistent REPL overlays. */
+// #region ­ƒ¬®ArchivedFootprints
+/** @emoji ­ƒôª Footprint of a finished axis-aligned box for persistent REPL overlays. */
 export interface ArchivedBoxLayout {
 	readonly cornerA: Vec3;
 	readonly cornerB: Vec3;
@@ -343,7 +343,7 @@ function isVec3Record(v: unknown): v is Vec3 {
 	return Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === "number");
 }
 
-/** @emoji 📦 Reads `origin`/`corner`/`height` from post-commit interaction context when present. */
+/** @emoji ­ƒôª Reads `origin`/`corner`/`height` from post-commit interaction context when present. */
 export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): ArchivedBoxLayout | null {
 	const o = ctx.origin;
 	const c = ctx.corner;
@@ -376,10 +376,10 @@ function replBaseDisplayForHistory(snapshot: InteractionSnapshot): DisplayModel 
 	if (snapshot.state !== "committed") return snapshot.display;
 	return { ...snapshot.display, items: snapshot.display.items.filter((item) => item.role !== "preview") };
 }
-// #endregion 🪩ArchivedFootprints
+// #endregion ­ƒ¬®ArchivedFootprints
 
-// #region 📐Layout
-/** @emoji 📐 Center and axis-aligned scale for a unit `BoxGeometry` from two XY footprint corners and height. */
+// #region ­ƒôÉLayout
+/** @emoji ­ƒôÉ Center and axis-aligned scale for a unit `BoxGeometry` from two XY footprint corners and height. */
 export function computeBoxPreviewLayout(
 	cornerA: Vec3,
 	cornerB: Vec3,
@@ -389,7 +389,7 @@ export function computeBoxPreviewLayout(
 	return preview.computeBoxPreviewLayout(cornerA, cornerB, height);
 }
 
-/** @emoji 🟦 Center and radius for the live sphere preview while the radius point is moving. */
+/** @emoji ­ƒƒª Center and radius for the live sphere preview while the radius point is moving. */
 export function computeSpherePreviewLayout(center: Vec3 | null, cursor: Vec3 | null): { readonly position: Vec3; readonly radius: number } | null {
 	if (!center || !cursor) return null;
 	const radius = Math.hypot(cursor[0] - center[0], cursor[1] - center[1], cursor[2] - center[2]);
@@ -410,7 +410,7 @@ function readVec3Array(v: unknown): readonly Vec3[] {
 	return v.filter(isVec3Record) as readonly Vec3[];
 }
 
-/** @emoji 📦 Axis-aligned bounds for geometry highlight wireframes. */
+/** @emoji ­ƒôª Axis-aligned bounds for geometry highlight wireframes. */
 export function bboxFromPoints(
 	points: readonly Vec3[],
 	preview: SpatialPreviewKernel = scenePreview(),
@@ -418,7 +418,7 @@ export function bboxFromPoints(
 	return preview.aabbFromPoints(points);
 }
 
-/** @emoji 📦 Twelve edges of an axis-aligned box for preview line rendering. */
+/** @emoji ­ƒôª Twelve edges of an axis-aligned box for preview line rendering. */
 export function bboxWireSegments(min: Vec3, max: Vec3): readonly (readonly [Vec3, Vec3])[] {
 	const [x0, y0, z0] = min;
 	const [x1, y1, z1] = max;
@@ -462,7 +462,7 @@ function parseDisplaySelectionTargets(v: unknown): readonly { readonly kind: Mod
 	return out;
 }
 
-/** @emoji 🖼️ Maps declarative `previewKind` + params to a point transform for geometry wireframes. */
+/** @emoji ­ƒû╝´©Å Maps declarative `previewKind` + params to a point transform for geometry wireframes. */
 export function transformPointsForPreviewKind(
 	previewKind: string,
 	params: Record<string, unknown>,
@@ -471,7 +471,7 @@ export function transformPointsForPreviewKind(
 	return preview.transformPointsForPreviewKind(previewKind, params);
 }
 
-/** @emoji 🖼️ Active geometry point transform from move/copy/mirror/rotate/scale preview display items. */
+/** @emoji ­ƒû╝´©Å Active geometry point transform from move/copy/mirror/rotate/scale preview display items. */
 export function geometryPreviewTransformFromDisplay(model: DisplayModel): ((point: Vec3) => Vec3) | null {
 	for (const item of model.items) {
 		if (item.kind !== "preview" || !item.params) continue;
@@ -512,12 +512,12 @@ function previewKindUsesGeometryWireframe(previewKind: string): boolean {
 }
 
 const raycastNone: THREE.Object3D["raycast"] = () => undefined;
-// #endregion 📐Layout
+// #endregion ­ƒôÉLayout
 
-// #region 🧲GeometryTargets
+// #region ­ƒº▓GeometryTargets
 export type SpatialPickKind = "pointer.down" | "pointer.move";
 
-/** @emoji 🎯 Object-centric raw pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
+/** @emoji ­ƒÄ» Object-centric raw pick kinds for renderer feedback (maps to kernel geometry via {@link SpatialPickTarget.geometryKind}). */
 export type SpatialObjectPickTargetKind = "object" | "objectFace" | "objectEdge" | "objectVertex";
 
 export type SpatialPickTargetKind = SpatialObjectPickTargetKind;
@@ -569,7 +569,7 @@ function kernelGeometryKindForObjectPick(
 	return "cell";
 }
 
-/** @emoji 👁️ Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
+/** @emoji ­ƒæü´©Å Per-kind on/off map for visibility filters or selection/hover gates (`false` disables). */
 export type SpatialPickKindToggles = Partial<Record<SpatialPickTargetKind, boolean>>;
 
 export interface SpatialPickTarget {
@@ -577,7 +577,7 @@ export interface SpatialPickTarget {
 	readonly id: string;
 	readonly point: Vec3;
 	readonly points?: readonly Vec3[];
-	/** @emoji 🧭 Kernel-private geometry entity kind for `object*` picks (e.g. `wire` vs `edge`). */
+	/** @emoji ­ƒº¡ Kernel-private geometry entity kind for `object*` picks (e.g. `wire` vs `edge`). */
 	readonly geometryKind?: ModelEntityKind;
 }
 
@@ -611,12 +611,12 @@ function spatialSelectionTargetKey(target: SelectionTarget): string {
 	return `${target.kind}:${target.id}`;
 }
 
-/** @emoji 👁️ Default all geometry pick kinds enabled (visibility + selection). */
+/** @emoji ­ƒæü´©Å Default all geometry pick kinds enabled (visibility + selection). */
 export function defaultSpatialPickKindToggles(): Record<SpatialPickTargetKind, boolean> {
 	return Object.fromEntries(SPATIAL_PICK_TARGET_KINDS.map((kind) => [kind, true])) as Record<SpatialPickTargetKind, boolean>;
 }
 
-/** @emoji 👁️ Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
+/** @emoji ­ƒæü´©Å Filters pick targets by visibility (show/hide highlights); does not affect ray pick or selection. */
 export function filterSpatialPickTargetsForVisibility(
 	targets: readonly SpatialPickTarget[],
 	filterKindToggles: SpatialPickKindToggles = {},
@@ -624,7 +624,7 @@ export function filterSpatialPickTargetsForVisibility(
 	return targets.filter((target) => filterKindToggles[target.kind] !== false);
 }
 
-/** @emoji 👁️ Effective pick kinds must be both visible and enabled for selection/hover. */
+/** @emoji ­ƒæü´©Å Effective pick kinds must be both visible and enabled for selection/hover. */
 export function intersectSpatialPickKindToggles(
 	visibleKindToggles: SpatialPickKindToggles = {},
 	selectionKindToggles: SpatialPickKindToggles = {},
@@ -636,7 +636,7 @@ export function intersectSpatialPickKindToggles(
 	return merged;
 }
 
-/** @emoji 👁️ Resolves which scene layers stay visible for geometry edit vs an active extension view. */
+/** @emoji ­ƒæü´©Å Resolves which scene layers stay visible for geometry edit vs an active extension view. */
 export function resolveSpatialSceneVisibility(
 	activeViewId: string | null,
 	filterKindToggles: SpatialPickKindToggles = {},
@@ -664,7 +664,7 @@ function spatialPickKindsForActiveView(activeViewId: string | null): ReadonlySet
 	return activeViewId ? new Set<SpatialPickTargetKind>(["object"]) : new Set(SPATIAL_PICK_TARGET_KINDS);
 }
 
-/** @emoji 👁️ Keeps kernel geometry picks in edit mode and extension `object` picks when a view is active. */
+/** @emoji ­ƒæü´©Å Keeps kernel geometry picks in edit mode and extension `object` picks when a view is active. */
 export function filterSpatialPickTargetsForActiveView(
 	targets: readonly SpatialPickTarget[],
 	activeViewId: string | null,
@@ -684,7 +684,7 @@ function asRecordBucket<T extends { id: string }>(x: readonly T[] | Record<strin
 	return Array.isArray(x) ? recordsById(x) : (x as Record<string, T>);
 }
 
-/** @emoji 🧲 Normalizes `ModelJson` array buckets to the record shape used by interaction math. */
+/** @emoji ­ƒº▓ Normalizes `ModelJson` array buckets to the record shape used by interaction math. */
 function geometryBuckets(g: SpatialPickGeometry): {
 	readonly anchors: Record<string, AnchorRecord>;
 	readonly vertices: Record<string, VertexRecord>;
@@ -860,7 +860,7 @@ function geometryWireEdgeSegments(
 	return out;
 }
 
-/** @emoji 📐 Geometry wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
+/** @emoji ­ƒôÉ Geometry wire segments for previews (edges/wires/faces), bbox fallback for aggregates. */
 export function geometryEntityWireSegments(
 	buckets: ReturnType<typeof geometryBuckets>,
 	kind: ModelEntityKind,
@@ -891,7 +891,7 @@ export function geometryEntityWireSegments(
 	return bb ? bboxWireSegments(bb.min, bb.max) : [];
 }
 
-/** @emoji 📐 All B-rep edge segments for factory geometry wireframe display. */
+/** @emoji ­ƒôÉ All B-rep edge segments for factory geometry wireframe display. */
 export function collectGeometryEdgeSegments(
 	buckets: ReturnType<typeof geometryBuckets>,
 ): readonly (readonly [Vec3, Vec3])[] {
@@ -927,7 +927,7 @@ function createViewObjectSpatialPickTargets(
 	return targets;
 }
 
-/** @emoji 🧲 Builds renderer-side snap/select targets from factory geometry and optional extension view objects. */
+/** @emoji ­ƒº▓ Builds renderer-side snap/select targets from factory geometry and optional extension view objects. */
 export function createSpatialPickTargets(
 	geometry: SpatialPickGeometry | null | undefined,
 	views?: ExtensionViewService | null,
@@ -981,7 +981,7 @@ export function filterSpatialPickTargets(
 	);
 }
 
-/** @emoji 🧲 Creates a statechart event carrying snapped point plus selected geometry metadata. */
+/** @emoji ­ƒº▓ Creates a statechart event carrying snapped point plus selected geometry metadata. */
 export function createSpatialPickEvent(
 	kind: SpatialPickKind,
 	point: Vec3,
@@ -1004,9 +1004,9 @@ export function createSpatialPickEvent(
 			}
 		: { kind, point, modifiers };
 }
-// #endregion 🧲GeometryTargets
+// #endregion ­ƒº▓GeometryTargets
 
-// #region 🖼️DisplayPrimitives
+// #region ­ƒû╝´©ÅDisplayPrimitives
 function BoxPreviewItem({ item }: { readonly item: DisplayItem }): ReactNode {
 	const p = item.params;
 	const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), []);
@@ -1314,7 +1314,7 @@ function PreviewItem({
 			);
 		}
 	}
-	// #region 🔵CircleArcPreview
+	// #region ­ƒöÁCircleArcPreview
 	if ((previewKind === "circle-outline" || previewKind === "circle") && points.length >= 1 && cursor) {
 		const center = points[0]!;
 		const radius = Math.hypot(cursor[0] - center[0], cursor[1] - center[1], cursor[2] - center[2]);
@@ -1388,7 +1388,7 @@ function PreviewItem({
 			);
 		}
 	}
-	// #endregion 🔵CircleArcPreview
+	// #endregion ­ƒöÁCircleArcPreview
 	if (previewKind === "interpolated-curve" && linePoints.length >= 2) {
 		const splinePoints = linePoints.map((pt) => new THREE.Vector3(pt[0], pt[1], pt[2]));
 		const curve = new THREE.CatmullRomCurve3(splinePoints);
@@ -1491,8 +1491,8 @@ function defaultDisplayItemNode(item: DisplayItem, geometry?: SpatialPickGeometr
 	}
 }
 
-// #region 🎨HostCustomization
-/** @emoji 🖼️ Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
+// #region ­ƒÄ¿HostCustomization
+/** @emoji ­ƒû╝´©Å Host hook that renders one resolved `DisplayItem` inside `<InteractionDisplay>`. */
 export type SpatialDisplayItemRenderer = (
 	item: DisplayItem,
 	geometry: SpatialPickGeometry | null | undefined,
@@ -1501,13 +1501,13 @@ export type SpatialDisplayItemRenderer = (
 
 const spatialDisplayItemRenderers = new Map<string, SpatialDisplayItemRenderer>();
 
-/** @emoji 🖼️ Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
+/** @emoji ­ƒû╝´©Å Registers a custom display kind; returns unregister. Libraries extend without forking the package. */
 export function registerSpatialDisplayItemKind(kind: string, render: SpatialDisplayItemRenderer): () => void {
 	spatialDisplayItemRenderers.set(kind, render);
 	return () => spatialDisplayItemRenderers.delete(kind);
 }
 
-/** @emoji 🖼️ Looks up a host-registered display kind renderer. */
+/** @emoji ­ƒû╝´©Å Looks up a host-registered display kind renderer. */
 export function getSpatialDisplayItemKindRenderer(kind: string): SpatialDisplayItemRenderer | undefined {
 	return spatialDisplayItemRenderers.get(kind);
 }
@@ -1522,7 +1522,7 @@ function renderDisplayItem(
 	return custom ? custom(item, geometry, fallback) : fallback();
 }
 
-/** @emoji 🪩 Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
+/** @emoji ­ƒ¬® Optional scene slots for host overlays (gizmos, annotations, alternate lighting). */
 export interface InteractionSpatialViewSlots {
 	readonly beforeScene?: ReactNode;
 	readonly afterDisplay?: ReactNode;
@@ -1531,7 +1531,7 @@ export interface InteractionSpatialViewSlots {
 	readonly environment?: ReactNode;
 }
 
-/** @emoji 🎨 Theme tokens for default scene chrome (hosts override per product). */
+/** @emoji ­ƒÄ¿ Theme tokens for default scene chrome (hosts override per product). */
 export interface InteractionSpatialViewTheme {
 	readonly background?: string;
 	readonly ambientIntensity?: number;
@@ -1553,9 +1553,9 @@ export const defaultInteractionSpatialViewTheme: InteractionSpatialViewTheme = {
 	groundPlaneColor: "#7a9dff",
 	groundPlaneOpacity: 0.18,
 };
-// #endregion 🎨HostCustomization
+// #endregion ­ƒÄ¿HostCustomization
 
-/** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
+/** @emoji ­ƒû╝´©Å Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
 export function InteractionDisplay({
 	model,
 	geometry,
@@ -1573,9 +1573,9 @@ export function InteractionDisplay({
 		</group>
 	);
 }
-// #endregion 🖼️DisplayPrimitives
+// #endregion ­ƒû╝´©ÅDisplayPrimitives
 
-// #region 🖱️Interaction
+// #region ­ƒû▒´©ÅInteraction
 function pointerModifiers(event: ThreeEvent<PointerEvent>) {
 	return {
 		alt: event.altKey,
@@ -1585,7 +1585,7 @@ function pointerModifiers(event: ThreeEvent<PointerEvent>) {
 	};
 }
 
-/** @emoji 🖱️ Ground hit-test on the **XY** working plane at fixed world **Z** (= spatial footprint plane; factory height is world Z). */
+/** @emoji ­ƒû▒´©Å Ground hit-test on the **XY** working plane at fixed world **Z** (= spatial footprint plane; factory height is world Z). */
 export interface GroundPickPlaneProps {
 	readonly planeZ?: number;
 	readonly enabled?: boolean;
@@ -1638,7 +1638,7 @@ function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec
 	return readVec3(ctx[key]);
 }
 
-/** @emoji 🖱️ YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |Δz|). */
+/** @emoji ­ƒû▒´©Å YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |╬öz|). */
 function HeightDragSurface({
 	origin,
 	corner,
@@ -1684,7 +1684,7 @@ function HeightDragSurface({
 	);
 }
 
-/** @emoji 🖱️ Z-aligned rod at `origin` so `pointer.move` drives peak height without XY drift. */
+/** @emoji ­ƒû▒´©Å Z-aligned rod at `origin` so `pointer.move` drives peak height without XY drift. */
 function VerticalZDragRod({
 	origin,
 	enabled,
@@ -1720,7 +1720,7 @@ function VerticalZDragRod({
 	);
 }
 
-/** @emoji 🎮 Maps R3F pointer events to `InteractionEvent` envelopes (point + modifiers). */
+/** @emoji ­ƒÄ« Maps R3F pointer events to `InteractionEvent` envelopes (point + modifiers). */
 export function createR3FInteractionAdapter() {
 	const toPoint = (event: ThreeEvent<PointerEvent>): Vec3 => [event.point.x, event.point.y, event.point.z];
 	return {
@@ -1736,9 +1736,9 @@ export function createR3FInteractionAdapter() {
 		}),
 	};
 }
-// #endregion 🖱️Interaction
+// #endregion ­ƒû▒´©ÅInteraction
 
-// #region 🧲GeometryInteraction
+// #region ­ƒº▓GeometryInteraction
 function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonly size: Vec3 } | null {
 	if (points.length === 0) return null;
 	const min = points.reduce(
@@ -1973,12 +1973,12 @@ function spatialSelectionTarget(target: SpatialPickTarget): SelectionTarget {
 	return { kind: geometryKind, id: target.id, editable: true };
 }
 
-/** @emoji 🎯 Host geometry picking stays on without a bound interaction or once the session reaches a final state. */
+/** @emoji ­ƒÄ» Host geometry picking stays on without a bound interaction or once the session reaches a final state. */
 export function replHostGeometryPickingEnabled(interactionId: string, spec: InteractionSpec, state: string): boolean {
 	return !interactionId || !isInteractionSessionActive(spec, state);
 }
 
-/** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
+/** @emoji ­ƒû▒´©Å Returns the closest pick target eligible for hover highlighting along a ray. */
 export function pickHoverTargetFromRay(
 	ray: THREE.Ray,
 	targets: readonly SpatialPickTarget[],
@@ -1987,7 +1987,7 @@ export function pickHoverTargetFromRay(
 	return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles)[0] ?? null;
 }
 
-/** @emoji 📌 Keeps hover/selection overlays visible even when the normal visibility filter hides their kind. */
+/** @emoji ­ƒôî Keeps hover/selection overlays visible even when the normal visibility filter hides their kind. */
 export function resolveSpatialPickTargetsToRender(
 	viewTargets: readonly SpatialPickTarget[],
 	filterKindToggles: SpatialPickKindToggles = {},
@@ -2010,7 +2010,7 @@ export function resolveSpatialPickTargetsToRender(
 	return out;
 }
 
-/** @emoji 👁️ Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
+/** @emoji ­ƒæü´©Å Visual-only pick-target highlight; hit-testing is handled by `SpatialPickRayCatcher`. */
 function SpatialPickTargetNode({
 	target,
 	geometryPreviewTransform = null,
@@ -2075,7 +2075,7 @@ function SpatialPickTargetNode({
 	);
 }
 
-/** @emoji 🧵 Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
+/** @emoji ­ƒºÁ Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
 function GeometryFactoryWireframeLayer({
 	geometry,
 	visible = true,
@@ -2113,7 +2113,7 @@ function GeometryFactoryWireframeLayer({
 	);
 }
 
-/** @emoji 🧲 Renders optional factory geometry as pickable snap/select targets. */
+/** @emoji ­ƒº▓ Renders optional factory geometry as pickable snap/select targets. */
 export function SpatialPickGeometryLayer({
 	geometry,
 	activeViewId = null,
@@ -2131,7 +2131,7 @@ export function SpatialPickGeometryLayer({
 	readonly viewsRevision?: number;
 	readonly geometryPreviewTransform?: ((point: Vec3) => Vec3) | null;
 	readonly selectionAccept?: readonly ModelEntityKind[];
-	/** @emoji 👁️ Which kinds are drawn as pick-target highlights (independent of selection). */
+	/** @emoji ­ƒæü´©Å Which kinds are drawn as pick-target highlights (independent of selection). */
 	readonly filterKindToggles?: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
@@ -2171,10 +2171,10 @@ export function SpatialPickGeometryLayer({
 		</group>
 	);
 }
-// #endregion 🧲GeometryInteraction
+// #endregion ­ƒº▓GeometryInteraction
 
-// #region 🧊CommittedMesh
-/** @emoji 🧊 Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
+// #region ­ƒºèCommittedMesh
+/** @emoji ­ƒºè Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
 export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
 	const geo = new THREE.BufferGeometry();
 	if (!isRenderableMeshTransfer(data)) return geo;
@@ -2185,7 +2185,7 @@ export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.B
 	return geo;
 }
 
-/** @emoji 🎯 Maps a picked triangle index to B-Rep `FaceInfo` via grouped buffer ranges. */
+/** @emoji ­ƒÄ» Maps a picked triangle index to B-Rep `FaceInfo` via grouped buffer ranges. */
 export function resolveFaceInfoFromTriangleIndex(
 	mesh: MeshTransfer,
 	triangleIndex: number | null | undefined,
@@ -2196,7 +2196,7 @@ export function resolveFaceInfoFromTriangleIndex(
 	return mesh.faceInfos.find((info) => info.faceId === group.faceId) ?? null;
 }
 
-/** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
+/** @emoji Ô×û B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
 function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTransfer; readonly visible?: boolean }): ReactNode {
 	const geometry = useMemo(() => {
 		const geo = new THREE.BufferGeometry();
@@ -2223,7 +2223,7 @@ export interface TessellatedCommitMeshProps {
 
 export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 
-/** @emoji 🧊 Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
+/** @emoji ­ƒºè Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
 export function TessellatedCommitMesh({
 	mesh: data,
 	pickable = false,
@@ -2298,7 +2298,7 @@ export function TessellatedCommitMesh({
 	);
 }
 
-/** @emoji 🧊 Renders all committed document cells tessellated by the active kernel. */
+/** @emoji ­ƒºè Renders all committed document cells tessellated by the active kernel. */
 export function CommittedMeshLayer({
 	meshes,
 	pickable = false,
@@ -2331,15 +2331,15 @@ export function CommittedMeshLayer({
 		</group>
 	);
 }
-// #endregion 🧊CommittedMesh
+// #endregion ­ƒºèCommittedMesh
 
-// #region 🪝Hooks
-/** @emoji 🪝 Memoized `createInteractionRuntime` for React hosts. */
+// #region ­ƒ¬ØHooks
+/** @emoji ­ƒ¬Ø Memoized `createInteractionRuntime` for React hosts. */
 export function useInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
 	return useMemo(() => createInteractionRuntime(spec, opts), [spec, opts]);
 }
 
-/** @emoji 🪝 Subscribes to `InteractionRuntime` revision updates for React hosts. */
+/** @emoji ­ƒ¬Ø Subscribes to `InteractionRuntime` revision updates for React hosts. */
 export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnapshot {
 	return useSyncExternalStore(
 		(cb) => rt.subscribe(cb),
@@ -2348,12 +2348,12 @@ export function useInteractionSnapshot(rt: InteractionRuntime): InteractionSnaps
 	);
 }
 
-/** @emoji 🎛️ Resolves functional or literal host-state updates (testable without React). */
+/** @emoji ­ƒÄø´©Å Resolves functional or literal host-state updates (testable without React). */
 export function resolveHostStateNext<T>(value: T, next: T | ((prev: T) => T)): T {
 	return typeof next === "function" ? (next as (prev: T) => T)(value) : next;
 }
 
-/** @emoji 🎛️ Controlled-or-uncontrolled state slice for embeddable spatial hosts. */
+/** @emoji ­ƒÄø´©Å Controlled-or-uncontrolled state slice for embeddable spatial hosts. */
 export function useHostState<T>(
 	controlled: T | undefined,
 	onChange: ((value: T) => void) | undefined,
@@ -2379,13 +2379,13 @@ export function useHostState<T>(
 	);
 	return [value, setValue] as const;
 }
-// #endregion 🪝Hooks
+// #endregion ­ƒ¬ØHooks
 
-// #region 🪩Canvas
+// #region ­ƒ¬®Canvas
 export interface InteractionCanvasProps {
 	readonly children: ReactNode;
 	readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
-	/** @emoji 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
+	/** @emoji ­ƒÄ×´©Å `always` while an interaction session runs; `demand` when idle for GPU savings. */
 	readonly frameloop?: "always" | "demand";
 	readonly background?: string;
 	readonly cameraPosition?: Vec3;
@@ -2408,7 +2408,7 @@ export interface InteractionCanvasProps {
 	readonly onLostPointerCapture?: (event: PointerEvent) => void;
 }
 
-/** @emoji 📡 Host event callbacks accepted by {@link InteractionCanvas}. */
+/** @emoji ­ƒôí Host event callbacks accepted by {@link InteractionCanvas}. */
 export type InteractionCanvasHostCallbacks = Pick<
 	InteractionCanvasProps,
 	| "onCanvasReady"
@@ -2435,7 +2435,7 @@ export function spatialAutoFitShouldRun(
 	return behavior === "changes" || !hasApplied;
 }
 
-/** @emoji 🛰️ Frames the camera to fit committed meshes and/or factory geometry (playground auto-fit). */
+/** @emoji ­ƒø░´©Å Frames the camera to fit committed meshes and/or factory geometry (playground auto-fit). */
 export function SpatialAutoFit({
 	meshes,
 	geometry = null,
@@ -2492,7 +2492,7 @@ export function applySpatialAutoFitCamera(
 	}
 }
 
-/** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
+/** @emoji ­ƒöä Invalidates demand frameloop when host-driven scene visuals change. */
 function InvalidateOnRevision({ revision }: { readonly revision: string | number }): null {
 	const invalidate = useThree((state) => state.invalidate);
 	useEffect(() => {
@@ -2501,7 +2501,7 @@ function InvalidateOnRevision({ revision }: { readonly revision: string | number
 	return null;
 }
 
-/** @emoji 🔄 Keeps demand frameloop alive while the camera moves (playground `Invalidator`). */
+/** @emoji ­ƒöä Keeps demand frameloop alive while the camera moves (playground `Invalidator`). */
 function SpatialInvalidator(): null {
 	const { controls, camera } = useThree();
 	const lastPos = useRef(new THREE.Vector3());
@@ -2522,7 +2522,7 @@ function SpatialInvalidator(): null {
 	return null;
 }
 
-/** @emoji 🛰️ Orbit controls that repaint on demand and never block R3F pointer routing. */
+/** @emoji ­ƒø░´©Å Orbit controls that repaint on demand and never block R3F pointer routing. */
 function SpatialOrbitControls({
 	onCameraNavigate,
 }: {
@@ -2545,7 +2545,7 @@ function SpatialOrbitControls({
 	);
 }
 
-/** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
+/** @emoji ­ƒ¬® Root `<Canvas>` configuration for factory viewports. */
 export function InteractionCanvas({
 	children,
 	onCanvasReady,
@@ -2606,7 +2606,7 @@ export interface InteractionSpatialViewProps {
 	readonly previewKernel?: SpatialPreviewKernel;
 	readonly snapshot: InteractionSnapshot;
 	readonly onGroundPick?: (point: Vec3, event: InteractionEvent) => void;
-	/** @emoji 🖱️ `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
+	/** @emoji ­ƒû▒´©Å `pointer.move` hits ground (XY at fixed Z); height slab passes full 3D. */
 	readonly onScenePointerMove?: (point: Vec3, event: InteractionEvent) => void;
 	readonly onInteractionEvent?: (event: InteractionEvent) => void;
 	readonly pickEnabled?: boolean;
@@ -2616,13 +2616,13 @@ export interface InteractionSpatialViewProps {
 	readonly activeViewId?: string | null;
 	readonly views?: ExtensionViewService | null;
 	readonly viewsRevision?: number;
-	/** @emoji 🖼️ When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
+	/** @emoji ­ƒû╝´©Å When set, drives `InteractionDisplay` instead of `snapshot.display` (e.g. merged archived footprints). */
 	readonly displayModel?: DisplayModel;
 	readonly renderDisplayItem?: SpatialDisplayItemRenderer;
 	readonly selectionAccept?: readonly ModelEntityKind[];
 	readonly filterKindToggles?: SpatialPickKindToggles;
 	readonly selectionKindToggles?: SpatialPickKindToggles;
-	/** @emoji 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
+	/** @emoji ­ƒû▒´©Å Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
 	readonly hoverKindToggles?: SpatialPickKindToggles;
 	readonly hoveredTargetKey?: string | null;
 	readonly selectedTargetKey?: string | null;
@@ -2635,7 +2635,7 @@ export interface InteractionSpatialViewProps {
 	readonly onSnapshotStateChange?: (state: string) => void;
 	readonly onSnapshotRevisionChange?: (revision: number) => void;
 	readonly onPickEnabledChange?: (enabled: boolean) => void;
-	/** @emoji 🧲 When false, skips pick-target meshes (during active interaction sessions). */
+	/** @emoji ­ƒº▓ When false, skips pick-target meshes (during active interaction sessions). */
 	readonly showPickLayer?: boolean;
 	readonly committedMeshPickable?: boolean;
 	readonly autoFitMeshes?: boolean;
@@ -2644,7 +2644,7 @@ export interface InteractionSpatialViewProps {
 	readonly slots?: InteractionSpatialViewSlots;
 }
 
-/** @emoji 📡 Host event callbacks accepted by {@link InteractionSpatialView}. */
+/** @emoji ­ƒôí Host event callbacks accepted by {@link InteractionSpatialView}. */
 export type InteractionSpatialViewHostCallbacks = Pick<
 	InteractionSpatialViewProps,
 	| "onGroundPick"
@@ -2659,7 +2659,7 @@ export type InteractionSpatialViewHostCallbacks = Pick<
 	| "onPickEnabledChange"
 >;
 
-/** @emoji 🖱️ Ground-plane picking is command input and must stay independent from host geometry selection. */
+/** @emoji ­ƒû▒´©Å Ground-plane picking is command input and must stay independent from host geometry selection. */
 export function interactionSpatialGroundPickPlaneEnabled(
 	snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">,
 	pickEnabled: boolean,
@@ -2669,7 +2669,7 @@ export function interactionSpatialGroundPickPlaneEnabled(
 	return pickEnabled !== false && si.spatialGroundPick && selectionAccept.length === 0 && !si.pickDisabledStates.includes(snapshot.state);
 }
 
-/** @emoji 🪩 Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
+/** @emoji ­ƒ¬® Lights, orbit controls, ground picking, factory overlays, optional committed mesh. */
 export function InteractionSpatialView({
 	previewKernel = r3fPreviewKernel,
 	snapshot,
@@ -2847,9 +2847,9 @@ export function InteractionSpatialView({
 		</>
 	);
 }
-// #endregion 🪩Canvas
+// #endregion ­ƒ¬®Canvas
 
-// #region 🪩Repl
+// #region ­ƒ¬®Repl
 type ReplSuggestKind = "interaction" | "transition";
 
 interface ReplSuggestion {
@@ -2964,7 +2964,7 @@ export function replFilterSuggestions(query: string, all: readonly ReplSuggestio
 		.map((row) => row.s);
 }
 
-/** @emoji ⌨️ Inline completion suffix for the active suggestion (longest prefix match on key, label, or detail). */
+/** @emoji Ôî¿´©Å Inline completion suffix for the active suggestion (longest prefix match on key, label, or detail). */
 export function replCompletionSuffix(query: string, suggestion: ReplSuggestion | undefined): string {
 	if (!query.trim() || !suggestion) return "";
 	const q = query;
@@ -2978,7 +2978,7 @@ export function replCompletionSuffix(query: string, suggestion: ReplSuggestion |
 	return best;
 }
 
-/** @emoji ⌨️ First non-empty inline completion suffix across ranked matches. */
+/** @emoji Ôî¿´©Å First non-empty inline completion suffix across ranked matches. */
 export function replActiveCompletionSuffix(query: string, matches: readonly ReplSuggestion[], index: number): string {
 	if (!query.trim() || !matches.length) return "";
 	const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
@@ -3077,7 +3077,7 @@ function replSelectionAccepted(accept: readonly ModelEntityKind[], selection: re
 	return selection.filter((target) => accept.includes(target.kind));
 }
 
-/** @emoji 🪪 Reads validated `context.targets` for interaction highlight sync. */
+/** @emoji ­ƒ¬¬ Reads validated `context.targets` for interaction highlight sync. */
 export function replInteractionSelectionFromContext(ctx: Record<string, unknown>): readonly SelectionTarget[] {
 	const raw = ctx.targets;
 	if (!Array.isArray(raw)) return [];
@@ -3093,7 +3093,7 @@ export function replInteractionSelectionFromContext(ctx: Record<string, unknown>
 	});
 }
 
-/** @emoji 🪪 Shallow equality for ordered selection target lists. */
+/** @emoji ­ƒ¬¬ Shallow equality for ordered selection target lists. */
 export function replSelectionTargetsEqual(a: readonly SelectionTarget[], b: readonly SelectionTarget[]): boolean {
 	if (a.length !== b.length) return false;
 	for (let i = 0; i < a.length; i++) {
@@ -3115,7 +3115,7 @@ function replApplySelectionPick(
 
 function replSelectionLayerParts(
 	interactionActive: boolean,
-	activeViewId: string | null,
+	pickViewKind: SpatialPickViewKind,
 	rendererSelection: readonly SelectionTarget[],
 	interactionSelection: readonly SelectionTarget[],
 ): {
@@ -3124,31 +3124,24 @@ function replSelectionLayerParts(
 	readonly outOfView: readonly SelectionTarget[];
 } {
 	const layer = interactionActive ? interactionSelection : rendererSelection;
-	const allowed = spatialPickKindsForActiveView(activeViewId);
+	const allowed = spatialPickViewKindSet(pickViewKind);
 	const inView: SelectionTarget[] = [];
 	const outOfView: SelectionTarget[] = [];
 	for (const target of layer) {
 		const pickKind = selectionTargetPickKind(target);
-		if (target.kind === "object" && activeViewId) {
-			inView.push(target);
-			continue;
-		}
 		if (pickKind && allowed.has(pickKind)) inView.push(target);
 		else outOfView.push(target);
 	}
 	return { layer, inView, outOfView };
 }
 
-/** @emoji 🪪 Removes in-view targets of a pick kind when its selection toggle is turned off. */
+/** @emoji ­ƒ¬¬ Removes in-view targets of a pick kind when its selection toggle is turned off. */
 export function replPruneSelectionByKind(
 	selection: readonly SelectionTarget[],
-	activeViewId: string | null,
+	pickViewKind: SpatialPickViewKind,
 	kind: SpatialPickTargetKind,
 ): SelectionTarget[] {
-	if (!spatialPickKindsForActiveView(activeViewId).has(kind)) return [...selection];
-	if (kind === "object") {
-		return selection.filter((target) => (activeViewId ? target.kind !== "object" : target.kind !== "cell"));
-	}
+	if (!spatialPickViewKindSet(pickViewKind).has(kind)) return [...selection];
 	const geometryKind =
 		kind === "objectVertex"
 			? "vertex"
@@ -3156,34 +3149,54 @@ export function replPruneSelectionByKind(
 				? "edge"
 				: kind === "objectFace"
 					? "face"
-					: kind;
+					: kind === "object"
+						? "cell"
+						: kind;
 	return selection.filter((target) => target.kind !== geometryKind && selectionTargetPickKind(target) !== kind);
 }
 
-/** @emoji 🪪 Picks the highlight layer: interaction picks while active, else renderer selection, scoped to active view. */
+/** @emoji ­ƒ¬¬ Drops analytic targets that fail exposure / stance / overlap selection toggles. */
+export function replPruneSelectionAnalytic(
+	selection: readonly SelectionTarget[],
+	pickTargets: readonly SpatialPickTarget[],
+	analyticToggles: SpatialAnalyticToggles,
+): SelectionTarget[] {
+	const lookup = new Map<string, SpatialPickTarget>();
+	for (const target of pickTargets) {
+		if (target.kind === "surface" || target.kind === "part") lookup.set(spatialPickTargetKey(target), target);
+	}
+	return selection.filter((target) => {
+		if (target.kind !== "surface" && target.kind !== "part") return true;
+		const spatial = lookup.get(spatialSelectionTargetKey(target));
+		if (!spatial) return true;
+		return spatialPickTargetMatchesAnalyticToggles(spatial, analyticToggles);
+	});
+}
+
+/** @emoji ­ƒ¬¬ Picks the highlight layer: interaction picks while active, else renderer selection, scoped to pick view. */
 export function replDisplayedSelectionTargets(
 	interactionActive: boolean,
-	activeViewId: string | null,
+	pickViewKind: SpatialPickViewKind,
 	rendererSelection: readonly SelectionTarget[],
 	interactionSelection: readonly SelectionTarget[],
 ): readonly SelectionTarget[] {
-	return replSelectionLayerParts(interactionActive, activeViewId, rendererSelection, interactionSelection).inView;
+	return replSelectionLayerParts(interactionActive, pickViewKind, rendererSelection, interactionSelection).inView;
 }
 
-/** @emoji 🪪 Merges a pick into the active selection layer without touching out-of-view targets. */
+/** @emoji ­ƒ¬¬ Merges a pick into the active selection layer without touching the other pick view's targets. */
 export function replMergeSelectionPickInView(
 	interactionActive: boolean,
-	activeViewId: string | null,
+	pickViewKind: SpatialPickViewKind,
 	rendererSelection: readonly SelectionTarget[],
 	interactionSelection: readonly SelectionTarget[],
 	picked: readonly SelectionTarget[],
 	modifiers: InteractionEvent["modifiers"] = {},
 ): SelectionTarget[] {
-	const { inView, outOfView } = replSelectionLayerParts(interactionActive, activeViewId, rendererSelection, interactionSelection);
+	const { inView, outOfView } = replSelectionLayerParts(interactionActive, pickViewKind, rendererSelection, interactionSelection);
 	return [...outOfView, ...replApplySelectionPick(inView, picked, modifiers)];
 }
 
-/** @emoji 🪪 Applies archived interaction result to renderer selection when `archiveContext.targets` is set (including `[]`). */
+/** @emoji ­ƒ¬¬ Applies archived interaction result to renderer selection when `archiveContext.targets` is set (including `[]`). */
 export function replFinalizeSelection(
 	rendererSelection: readonly SelectionTarget[],
 	result: InteractionSnapshot["lastResponse"],
@@ -3193,12 +3206,12 @@ export function replFinalizeSelection(
 	return replInteractionSelectionFromContext(ctx as Record<string, unknown>);
 }
 
-/** @emoji 🪩 Memoized `DocumentHistory` for REPL hosts. */
+/** @emoji ­ƒ¬® Memoized `DocumentHistory` for REPL hosts. */
 export function useDocumentHistory(): DocumentHistory {
 	return useMemo(() => new DocumentHistory(), []);
 }
 
-/** @emoji 🪩 Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
+/** @emoji ­ƒ¬® Labels + capability mirror for undo/redo chrome (uses `InteractionSnapshot.capabilities`). */
 export function getReplHistoryPresentation(
 	spec: InteractionSpec,
 	snap: InteractionSnapshot,
@@ -3215,21 +3228,23 @@ export function getReplHistoryPresentation(
 	};
 }
 
-/** @emoji 🪩 Subscribes to runtime revisions and derives REPL undo/redo labels. */
+/** @emoji ­ƒ¬® Subscribes to runtime revisions and derives REPL undo/redo labels. */
 export function useReplHistoryState(rt: InteractionRuntime, spec: InteractionSpec, history: DocumentHistory) {
 	const snap = useInteractionSnapshot(rt);
 	return useMemo(() => getReplHistoryPresentation(spec, snap, history), [spec, snap, history]);
 }
 
-/** @emoji 🎛️ Optional controlled chrome state for {@link InteractionRepl}. */
+/** @emoji ­ƒÄø´©Å Optional controlled chrome state for {@link InteractionRepl}. */
 export interface InteractionReplHostValues {
 	readonly cmdLine?: string;
 	readonly activeSuggestionIndex?: number;
 	readonly filterKindToggles?: Record<SpatialPickTargetKind, boolean>;
 	readonly selectionKindToggles?: Record<SpatialPickTargetKind, boolean>;
-	readonly activeViewId?: string | null;
+	readonly analyticFilterToggles?: SpatialAnalyticToggles;
+	readonly analyticSelectionToggles?: SpatialAnalyticToggles;
+	readonly pickViewKind?: SpatialPickViewKind;
 	readonly selectionMethod?: SpatialSelectionMethod;
-	readonly viewsRevision?: number;
+	readonly derivedRevision?: number;
 	readonly dragSelection?: SpatialDragSelectionState | null;
 	readonly selectionMenu?: SpatialSelectionRequest | null;
 	readonly hoveredPickKey?: string | null;
@@ -3239,15 +3254,17 @@ export interface InteractionReplHostValues {
 	readonly lastFinalizedInteractionId?: string;
 }
 
-/** @emoji 📡 Optional `on*` host callbacks for {@link InteractionRepl}. */
+/** @emoji ­ƒôí Optional `on*` host callbacks for {@link InteractionRepl}. */
 export interface InteractionReplHostCallbacks {
 	readonly onCmdLineChange?: (value: string) => void;
 	readonly onActiveSuggestionIndexChange?: (index: number) => void;
 	readonly onFilterKindTogglesChange?: (value: Record<SpatialPickTargetKind, boolean>) => void;
 	readonly onSelectionKindTogglesChange?: (value: Record<SpatialPickTargetKind, boolean>) => void;
-	readonly onActiveViewIdChange?: (value: string | null) => void;
+	readonly onAnalyticFilterTogglesChange?: (value: SpatialAnalyticToggles) => void;
+	readonly onAnalyticSelectionTogglesChange?: (value: SpatialAnalyticToggles) => void;
+	readonly onPickViewKindChange?: (value: SpatialPickViewKind) => void;
 	readonly onSelectionMethodChange?: (value: SpatialSelectionMethod) => void;
-	readonly onViewsRevisionChange?: (revision: number) => void;
+	readonly onDerivedRevisionChange?: (revision: number) => void;
 	readonly onDragSelectionChange?: (value: SpatialDragSelectionState | null) => void;
 	readonly onSelectionMenuChange?: (value: SpatialSelectionRequest | null) => void;
 	readonly onHoveredPickKeyChange?: (key: string | null) => void;
@@ -3271,25 +3288,27 @@ export interface InteractionReplHostCallbacks {
 	readonly onEscape?: () => void;
 }
 
-/** @emoji 📐 Layout and partial canvas/spatial-view overrides for {@link InteractionRepl}. */
+/** @emoji ­ƒôÉ Layout and partial canvas/spatial-view overrides for {@link InteractionRepl}. */
 export interface InteractionReplLayoutProps {
 	readonly rootStyle?: CSSProperties;
 	readonly asideStyle?: CSSProperties;
 	readonly showAside?: boolean;
 	readonly frameloop?: InteractionCanvasProps["frameloop"];
 	readonly canvas?: Omit<InteractionCanvasProps, "children">;
-	/** @emoji 🖼️ Spread after REPL wiring; overrides win (use for theme/slots/face handlers, not session pick state). */
+	/** @emoji ­ƒû╝´©Å Spread after REPL wiring; overrides win (use for theme/slots/face handlers, not session pick state). */
 	readonly spatialView?: Omit<
 		InteractionSpatialViewProps,
 		| "snapshot"
 		| "geometry"
 		| "committedMeshes"
 		| "displayModel"
-		| "views"
-		| "viewsRevision"
-		| "activeViewId"
+		| "derived"
+		| "derivedRevision"
+		| "pickViewKind"
 		| "filterKindToggles"
 		| "selectionKindToggles"
+		| "analyticFilterToggles"
+		| "analyticSelectionToggles"
 		| "hoveredTargetKey"
 		| "selectedTargetKey"
 		| "selectedTargetKeys"
@@ -3304,7 +3323,7 @@ export interface InteractionReplLayoutProps {
 	>;
 }
 
-/** @emoji 🎛️ Default uncontrolled chrome for {@link InteractionRepl}. */
+/** @emoji ­ƒÄø´©Å Default uncontrolled chrome for {@link InteractionRepl}. */
 export function defaultInteractionReplChromeState(): Required<
 	Pick<
 		InteractionReplHostValues,
@@ -3312,9 +3331,11 @@ export function defaultInteractionReplChromeState(): Required<
 		| "activeSuggestionIndex"
 		| "filterKindToggles"
 		| "selectionKindToggles"
-		| "activeViewId"
+		| "analyticFilterToggles"
+		| "analyticSelectionToggles"
+		| "pickViewKind"
 		| "selectionMethod"
-		| "viewsRevision"
+		| "derivedRevision"
 		| "dragSelection"
 		| "selectionMenu"
 		| "hoveredPickKey"
@@ -3329,9 +3350,11 @@ export function defaultInteractionReplChromeState(): Required<
 		activeSuggestionIndex: 0,
 		filterKindToggles: defaultSpatialPickKindToggles(),
 		selectionKindToggles: defaultSpatialPickKindToggles(),
-		activeViewId: null,
+		analyticFilterToggles: defaultSpatialAnalyticToggles(),
+		analyticSelectionToggles: defaultSpatialAnalyticToggles(),
+		pickViewKind: "raw",
 		selectionMethod: "rectangle",
-		viewsRevision: 0,
+		derivedRevision: 0,
 		dragSelection: null,
 		selectionMenu: null,
 		hoveredPickKey: null,
@@ -3351,10 +3374,10 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
 	readonly history: DocumentHistory;
 	readonly document: ModelDocument;
 	readonly geometry: SpatialPickGeometry | null;
-	readonly views?: ExtensionViewService | null;
+	readonly derived?: DerivedViewService | null;
 	readonly asideExtra?: ReactNode;
 	readonly archivedBoxLayouts?: readonly ArchivedBoxLayout[];
-	/** @emoji 🔁 When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
+	/** @emoji ­ƒöü When host bumps this positive counter for the same interaction, `cancel()` then `start` without remounting GL. */
 	readonly sessionRestartNonce?: number;
 	readonly viewTheme?: InteractionSpatialViewTheme;
 	readonly viewSlots?: InteractionSpatialViewSlots;
@@ -3364,7 +3387,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
 	readonly tessellationTolerance?: number;
 }
 
-/** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */
+/** @emoji ­ƒ¬® Full spatial REPL: canvas, interaction palette, history controls, last response. */
 export function InteractionRepl({
 	interactions,
 	interactionId,
@@ -3374,7 +3397,7 @@ export function InteractionRepl({
 	history,
 	document: documentModel,
 	geometry,
-	views: viewsProp,
+	derived,
 	asideExtra,
 	archivedBoxLayouts = [],
 	sessionRestartNonce = 0,
@@ -3388,9 +3411,11 @@ export function InteractionRepl({
 	activeSuggestionIndex: activeSuggestionIndexProp,
 	filterKindToggles: filterKindTogglesProp,
 	selectionKindToggles: selectionKindTogglesProp,
-	activeViewId: activeViewIdProp,
+	analyticFilterToggles: analyticFilterTogglesProp,
+	analyticSelectionToggles: analyticSelectionTogglesProp,
+	pickViewKind: pickViewKindProp,
 	selectionMethod: selectionMethodProp,
-	viewsRevision: viewsRevisionProp,
+	derivedRevision: derivedRevisionProp,
 	dragSelection: dragSelectionProp,
 	selectionMenu: selectionMenuProp,
 	hoveredPickKey: hoveredPickKeyProp,
@@ -3402,9 +3427,11 @@ export function InteractionRepl({
 	onActiveSuggestionIndexChange,
 	onFilterKindTogglesChange,
 	onSelectionKindTogglesChange,
-	onActiveViewIdChange,
+	onAnalyticFilterTogglesChange,
+	onAnalyticSelectionTogglesChange,
+	onPickViewKindChange,
 	onSelectionMethodChange,
-	onViewsRevisionChange,
+	onDerivedRevisionChange,
 	onDragSelectionChange,
 	onSelectionMenuChange,
 	onHoveredPickKeyChange,
@@ -3451,12 +3478,31 @@ export function InteractionRepl({
 	const [activeIndex, setActiveIndex] = useHostState(activeSuggestionIndexProp, onActiveSuggestionIndexChange, () => chromeDefaults.activeSuggestionIndex);
 	const [filterKindToggles, setFilterKindToggles] = useHostState(filterKindTogglesProp, onFilterKindTogglesChange, () => chromeDefaults.filterKindToggles);
 	const [selectionKindToggles, setSelectionKindToggles] = useHostState(selectionKindTogglesProp, onSelectionKindTogglesChange, () => chromeDefaults.selectionKindToggles);
-	const [activeViewId, setActiveViewId] = useHostState(activeViewIdProp, onActiveViewIdChange, () => chromeDefaults.activeViewId);
+	const [analyticFilterToggles, setAnalyticFilterToggles] = useHostState(analyticFilterTogglesProp, onAnalyticFilterTogglesChange, () => chromeDefaults.analyticFilterToggles);
+	const [analyticSelectionToggles, setAnalyticSelectionToggles] = useHostState(
+		analyticSelectionTogglesProp,
+		onAnalyticSelectionTogglesChange,
+		() => chromeDefaults.analyticSelectionToggles,
+	);
+	const resolvedAnalyticFilterToggles = useMemo(() => {
+		const defaults = defaultSpatialAnalyticToggles();
+		return {
+			exposure: { ...defaults.exposure, ...analyticFilterToggles.exposure },
+			stance: { ...defaults.stance, ...analyticFilterToggles.stance },
+			overlap: { ...defaults.overlap, ...analyticFilterToggles.overlap },
+		};
+	}, [analyticFilterToggles]);
+	const resolvedAnalyticSelectionToggles = useMemo(() => {
+		const defaults = defaultSpatialAnalyticToggles();
+		return {
+			exposure: { ...defaults.exposure, ...analyticSelectionToggles.exposure },
+			stance: { ...defaults.stance, ...analyticSelectionToggles.stance },
+			overlap: { ...defaults.overlap, ...analyticSelectionToggles.overlap },
+		};
+	}, [analyticSelectionToggles]);
+	const [pickViewKind, setPickViewKind] = useHostState(pickViewKindProp, onPickViewKindChange, () => chromeDefaults.pickViewKind);
 	const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
-	const [viewsRevision, setViewsRevision] = useHostState(viewsRevisionProp, onViewsRevisionChange, () => chromeDefaults.viewsRevision);
-	const kernel = rt.kernel();
-	const viewService = useMemo(() => viewsProp ?? ExtensionViewService.forKernel(kernel), [viewsProp, kernel]);
-	const shippedViews = useMemo(() => listExtensionViews(), []);
+	const [derivedRevision, setDerivedRevision] = useHostState(derivedRevisionProp, onDerivedRevisionChange, () => chromeDefaults.derivedRevision);
 	const [dragSelection, setDragSelection] = useHostState(dragSelectionProp, onDragSelectionChange, () => chromeDefaults.dragSelection);
 	const [selectionMenu, setSelectionMenu] = useHostState(selectionMenuProp, onSelectionMenuChange, () => chromeDefaults.selectionMenu);
 	const [hoveredPickKey, setHoveredPickKey] = useHostState(hoveredPickKeyProp, onHoveredPickKeyChange, () => chromeDefaults.hoveredPickKey);
@@ -3491,26 +3537,38 @@ export function InteractionRepl({
 	const setCmdLineRef = useRef(setCmdLine);
 	const rendererSelectionRef = useRef(rendererSelection);
 	const suppressAutoStartOnceRef = useRef(false);
-	const lastViewsRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number; readonly activeViewId: string | null }>({
-		model: null,
-		revision: -1,
-		activeViewId: null,
-	});
+	const lastDerivedRefreshRef = useRef<{ readonly model: Model | null; readonly revision: number }>({ model: null, revision: -1 });
 	const dragSelectionRef = useRef<SpatialDragSelectionState | null>(null);
 	const dragCleanupRef = useRef<(() => void) | null>(null);
 	const cameraNavigatingRef = useRef(false);
 	const interactionActive = isInteractionSessionActive(spec, snapshot.state);
 	const displayedSelectionTargets = useMemo(
-		() => replDisplayedSelectionTargets(interactionActive, activeViewId, rendererSelection, interactionSelection),
-		[interactionActive, activeViewId, rendererSelection, interactionSelection],
+		() => replDisplayedSelectionTargets(interactionActive, pickViewKind, rendererSelection, interactionSelection),
+		[interactionActive, pickViewKind, rendererSelection, interactionSelection],
 	);
-	const viewFilterKindToggles = useMemo((): SpatialPickKindToggles => {
-		if (!activeViewId) return filterKindToggles;
-		return filterKindToggles.object === false ? { object: false } : { object: true };
-	}, [filterKindToggles, activeViewId]);
-	const effectiveSelectionKindToggles = useMemo(
-		() => intersectSpatialPickKindToggles(viewFilterKindToggles, selectionKindToggles),
-		[selectionKindToggles, viewFilterKindToggles],
+	const viewFilterKindToggles = useMemo(
+		() => spatialPickKindTogglesForView(filterKindToggles, pickViewKind),
+		[filterKindToggles, pickViewKind],
+	);
+	const viewSelectionKindToggles = useMemo(
+		() =>
+			intersectSpatialPickKindToggles(
+				viewFilterKindToggles,
+				spatialPickKindTogglesForView(selectionKindToggles, pickViewKind),
+			),
+		[selectionKindToggles, pickViewKind, viewFilterKindToggles],
+	);
+	const viewAnalyticFilterToggles = useMemo(
+		() => spatialAnalyticTogglesForView(analyticFilterToggles, pickViewKind),
+		[analyticFilterToggles, pickViewKind],
+	);
+	const viewAnalyticSelectionToggles = useMemo(
+		() =>
+			intersectSpatialAnalyticToggles(
+				viewAnalyticFilterToggles,
+				spatialAnalyticTogglesForView(analyticSelectionToggles, pickViewKind),
+			),
+		[analyticSelectionToggles, pickViewKind, viewAnalyticFilterToggles],
 	);
 	const selectedPickKeys = useMemo(() => new Set(displayedSelectionTargets.map(spatialSelectionTargetKey)), [displayedSelectionTargets]);
 	const selectedPickKey = displayedSelectionTargets[0] ? spatialSelectionTargetKey(displayedSelectionTargets[0]) : null;
@@ -3519,11 +3577,8 @@ export function InteractionRepl({
 		geometry && typeof geometry === "object" && "revision" in geometry
 			? Number((geometry as { revision?: unknown }).revision)
 			: 0;
-	const pickTargets = useMemo(
-		() => createSpatialPickTargets(geometry, viewService, activeViewId),
-		[geometry, pickGeometryRevision, viewService, viewsRevision, activeViewId],
-	);
-	const scopedPickTargets = useMemo(() => filterSpatialPickTargetsForActiveView(pickTargets, activeViewId), [pickTargets, activeViewId]);
+	const pickTargets = useMemo(() => createSpatialPickTargets(geometry, derived), [geometry, pickGeometryRevision, derived, derivedRevision]);
+	const viewPickTargets = useMemo(() => filterSpatialPickTargetsByView(pickTargets, pickViewKind), [pickTargets, pickViewKind]);
 	useEffect(() => {
 		setCmdLineRef.current = setCmdLine;
 	}, [setCmdLine]);
@@ -3613,17 +3668,16 @@ export function InteractionRepl({
 	const modelRevision = documentModel.model.revision;
 	const hostPickingEnabled = replHostGeometryPickingEnabled(interactionId, spec, snapshot.state);
 	useEffect(() => {
-		if (!viewService) return;
+		if (!derived) return;
 		const model = documentModel.model;
 		const revision = model.revision;
-		const prev = lastViewsRefreshRef.current;
-		if (prev.model === model && prev.revision === revision && prev.activeViewId === activeViewId) return;
+		if (lastDerivedRefreshRef.current.model === model && lastDerivedRefreshRef.current.revision === revision) return;
 		let cancelled = false;
 		const run = () => {
-			void viewService.refresh(model, activeViewId).then(() => {
-				if (cancelled) return;
-				lastViewsRefreshRef.current = { model, revision, activeViewId };
-				setViewsRevision((n) => n + 1);
+			void derived.refresh(model).then(() => {
+				if (cancelled || model.revision !== revision) return;
+				lastDerivedRefreshRef.current = { model: model, revision };
+				setDerivedRevision((n) => n + 1);
 			});
 		};
 		const useIdleCallback = typeof globalThis.requestIdleCallback === "function";
@@ -3633,17 +3687,17 @@ export function InteractionRepl({
 			if (useIdleCallback) globalThis.cancelIdleCallback(id as number);
 			else globalThis.clearTimeout(id as ReturnType<typeof setTimeout>);
 		};
-	}, [viewService, documentModel.model, modelRevision, activeViewId]);
+	}, [derived, documentModel.model, modelRevision]);
 
 	useEffect(() => {
 		setSelectionMenu(null);
 		setHoveredPickKey(null);
-	}, [geometry, snapshot.state, viewsRevision]);
+	}, [geometry, snapshot.state, derivedRevision]);
 
 	useEffect(() => {
 		setRendererSelection((prev) => (prev.length === 0 ? prev : []));
 		setInteractionSelection((prev) => (prev.length === 0 ? prev : []));
-	}, [geometry, viewsRevision, setRendererSelection, setInteractionSelection]);
+	}, [geometry, derivedRevision, setRendererSelection, setInteractionSelection]);
 
 	useEffect(() => {
 		setCmdLine("");
@@ -3675,11 +3729,15 @@ export function InteractionRepl({
 		() => (runtimeSelectionAccept.length > 0 ? runtimeSelectionAccept : interactionActive ? [] : SPATIAL_PICK_TARGET_KINDS),
 		[runtimeSelectionAccept, interactionActive],
 	);
-	const activePickKinds = useMemo(() => [...spatialPickKindsForActiveView(activeViewId)], [activeViewId]);
-	const viewObjectCount = useMemo(() => {
-		if (!activeViewId || !viewService) return 0;
-		return viewService.computeObjects(documentModel.model, activeViewId).length;
-	}, [activeViewId, viewService, documentModel.model, viewsRevision]);
+	const activePickViewKinds = useMemo(() => spatialPickViewKinds(pickViewKind), [pickViewKind]);
+	const analyticSummary = useMemo(() => {
+		if (!derived || pickViewKind !== "analytic") return null;
+		const model = documentModel.model;
+		return {
+			surfaces: derived.computeSurfaces(model),
+			parts: derived.computeParts(model),
+		};
+	}, [derived, documentModel.model, pickViewKind, derivedRevision, snapshot.revision]);
 
 	const commitSelection = useCallback(
 		(selection: readonly SelectionTarget[]) => {
@@ -3704,7 +3762,7 @@ export function InteractionRepl({
 			const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
 			const nextSelection = replMergeSelectionPickInView(
 				interactionActive,
-				activeViewId,
+				pickViewKind,
 				rendererSelection,
 				interactionSelection,
 				picked,
@@ -3713,7 +3771,7 @@ export function InteractionRepl({
 			commitSelection(nextSelection);
 			if (interactionActive && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
 		},
-		[commitSelection, interactionActive, interactionSelection, activeViewId, rt, rendererSelection],
+		[commitSelection, interactionActive, interactionSelection, pickViewKind, rt, rendererSelection],
 	);
 
 	const onSelectionRequest = useCallback(
@@ -3765,9 +3823,10 @@ export function InteractionRepl({
 				{ x: event.clientX, y: event.clientY },
 				camera,
 				rect,
-				scopedPickTargets,
+				viewPickTargets,
 				[],
-				effectiveSelectionKindToggles
+				viewSelectionKindToggles,
+				viewAnalyticSelectionToggles,
 			);
 			onHoverTarget(hits[0] ?? null);
 		};
@@ -3778,7 +3837,7 @@ export function InteractionRepl({
 			canvas.removeEventListener("pointermove", onMove);
 			canvas.removeEventListener("pointerleave", onLeave);
 		};
-	}, [canvasBinding, hostPickingEnabled, scopedPickTargets, effectiveSelectionKindToggles, viewSelectionKindToggles, onHoverTarget]);
+	}, [canvasBinding, hostPickingEnabled, viewPickTargets, viewSelectionKindToggles, viewAnalyticSelectionToggles, onHoverTarget]);
 
 	const pointerMoveActive = useMemo(() => {
 		const si = snapshot.spatialInteraction;
@@ -3805,19 +3864,20 @@ export function InteractionRepl({
 					snapEv &&
 					activeSelectionAccept.length > 0 &&
 					activeSelectionAccept.includes(snapEv.kind as ModelEntityKind) &&
-					effectiveSelectionKindToggles[snapEv.kind as SpatialPickTargetKind] !== false
+					viewSelectionKindToggles[snapEv.kind as SpatialPickTargetKind] !== false
 				) {
 					const snapTarget: SpatialPickTarget = {
 						kind: snapEv.kind as SpatialPickTargetKind,
 						id: snapEv.id,
 						point: (ev as { point?: Vec3 }).point ?? [0, 0, 0],
 					};
+					if (!spatialPickTargetMatchesAnalyticToggles(snapTarget, viewAnalyticSelectionToggles)) return;
 					const selection = spatialSelectionTarget(snapTarget);
 					const modifiers = (ev as { modifiers?: InteractionEvent["modifiers"] }).modifiers ?? {};
 					commitSelection(
 						replMergeSelectionPickInView(
 							interactionActive,
-							activeViewId,
+							pickViewKind,
 							rendererSelection,
 							interactionSelection,
 							[selection],
@@ -3839,8 +3899,9 @@ export function InteractionRepl({
 			interactionSelection,
 			rendererSelection,
 			pointerMoveActive,
-			activeViewId,
-			effectiveSelectionKindToggles
+			pickViewKind,
+			viewSelectionKindToggles,
+			viewAnalyticSelectionToggles,
 			onInteractionEventProp,
 		],
 	);
@@ -3909,9 +3970,10 @@ export function InteractionRepl({
 						finalState.currentClient,
 						camera,
 						rect,
-						scopedPickTargets,
+						viewPickTargets,
 						activeSelectionAccept,
-						effectiveSelectionKindToggles
+						viewSelectionKindToggles,
+						viewAnalyticSelectionToggles,
 					);
 					if (candidates.length === 0) return;
 					onSelectionRequest({
@@ -3924,11 +3986,12 @@ export function InteractionRepl({
 				}
 				const targets = spatialPickTargetsFromScreenSelection(
 					{ ...finalState, coverage: spatialSelectionCoverageFromPath(finalState.path) },
-					scopedPickTargets,
+					viewPickTargets,
 					camera,
 					canvas.getBoundingClientRect(),
 					activeSelectionAccept,
-					effectiveSelectionKindToggles
+					viewSelectionKindToggles,
+					viewAnalyticSelectionToggles,
 					geometryPreviewTransform,
 				);
 				if (targets.length === 0) {
@@ -3938,7 +4001,7 @@ export function InteractionRepl({
 						) === "default"
 					) {
 						commitSelection(
-							replMergeSelectionPickInView(interactionActive, activeViewId, rendererSelection, interactionSelection, [], finalState.modifiers),
+							replMergeSelectionPickInView(interactionActive, pickViewKind, rendererSelection, interactionSelection, [], finalState.modifiers),
 						);
 					}
 					return;
@@ -3966,12 +4029,13 @@ export function InteractionRepl({
 		interactionActive,
 		interactionSelection,
 		onSelectionRequest,
-		activeViewId,
+		pickViewKind,
 		rendererSelection,
 		selectionMethod,
-		geometryPreviewTransform
-		scopedPickTargets,
-		effectiveSelectionKindToggles,
+		geometryPreviewTransform,
+		viewAnalyticSelectionToggles,
+		viewPickTargets,
+		viewSelectionKindToggles,
 		hostPickingEnabled,
 	]);
 
@@ -4242,14 +4306,16 @@ export function InteractionRepl({
 						pickEnabled={pickPlaneOn}
 						geometry={geometry}
 						committedMeshes={committedMeshes}
-						activeViewId={activeViewId}
-						views={viewService}
-						viewsRevision={viewsRevision}
+						pickViewKind={pickViewKind}
+						derived={derived}
+						derivedRevision={derivedRevision}
 						displayModel={mergedDisplay}
 						renderDisplayItem={renderDisplayItem}
 						selectionAccept={hostPickingEnabled ? activeSelectionAccept : []}
-						filterKindToggles={filterKindToggles}
-						selectionKindToggles={effectiveSelectionKindToggles}
+						filterKindToggles={viewFilterKindToggles}
+						selectionKindToggles={viewSelectionKindToggles}
+						analyticFilterToggles={viewAnalyticFilterToggles}
+						analyticSelectionToggles={viewAnalyticSelectionToggles}
 						hoveredTargetKey={hoveredPickKey}
 						selectedTargetKey={selectedPickKey}
 						selectedTargetKeys={selectedPickKeys}
@@ -4324,7 +4390,12 @@ export function InteractionRepl({
 									key={key}
 									type="button"
 									onPointerEnter={() =>
-										setHoveredPickKey(effectiveSelectionKindToggles[target.kind] !== false ? key : null)
+										setHoveredPickKey(
+											viewSelectionKindToggles[target.kind] !== false &&
+												spatialPickTargetMatchesAnalyticToggles(target, viewAnalyticSelectionToggles)
+												? key
+												: null,
+										)
 									}
 									onPointerLeave={() => setHoveredPickKey(null)}
 									onPointerDown={(e) => {
@@ -4352,10 +4423,18 @@ export function InteractionRepl({
 											height: 8,
 											borderRadius: 2,
 											marginRight: 6,
-											background: targetStyle(target, false, false).color,
+											background:
+												target.kind === "surface" && target.exposure && target.stance
+													? surfaceSemanticStyle(target.exposure, target.stance).color
+													: target.kind === "part" && target.overlap
+														? partSemanticStyle(target.overlap).color
+														: "#888",
 										}}
 									/>
 									<span style={{ opacity: 0.7 }}>{target.kind}</span>{" "}
+									{target.exposure ? <span style={{ opacity: 0.65 }}>{target.exposure}</span> : null}
+									{target.stance ? <span style={{ opacity: 0.65 }}>┬À{target.stance}</span> : null}
+									{target.overlap ? <span style={{ opacity: 0.65 }}>{target.overlap}</span> : null}{" "}
 									<code style={{ color: "#ffffff" }}>{target.id}</code>
 								</button>
 							);
@@ -4557,34 +4636,35 @@ export function InteractionRepl({
 				</div>
 				{asideExtra}
 				<div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
-					<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-						<span>Active view</span>
-						<select
-							value={activeViewId ?? ""}
-							onChange={(e) => {
-								const next = e.target.value || null;
-								setActiveViewId(next);
-								setSelectionMenu(null);
-								setHoveredPickKey(null);
-							}}
-							style={{ padding: 6, borderRadius: 6, background: "#1a1a28", color: "#e8e8f0" }}
-						>
-							<option value="">Geometry edit</option>
-							{shippedViews.map((view) => {
-								const qid = qualifiedViewId(view.extensionId, view.id);
-								return (
-									<option key={qid} value={qid}>
-										{view.label} ({qid})
-									</option>
-								);
-							})}
-						</select>
-					</label>
-					{activeViewId ? (
-						<span style={{ opacity: 0.75 }}>
-							{viewObjectCount} view object{viewObjectCount === 1 ? "" : "s"}
-						</span>
-					) : null}
+					<span>Pick view</span>
+					<div role="group" aria-label="Pick view" style={{ display: "flex", gap: 6 }}>
+						{(["raw", "analytic"] as const).map((viewKind) => {
+							const active = pickViewKind === viewKind;
+							return (
+								<button
+									key={viewKind}
+									type="button"
+									onClick={() => {
+										setPickViewKind(viewKind);
+										setSelectionMenu(null);
+										setHoveredPickKey(null);
+									}}
+									style={{
+										padding: "5px 8px",
+										borderRadius: 999,
+										border: active ? "1px solid #77aaff" : "1px solid #2a2a3a",
+										background: active ? "#1f3656" : "#12121c",
+										color: "#e8e8f0",
+										cursor: "pointer",
+										fontSize: 12,
+										textTransform: "capitalize",
+									}}
+								>
+									{viewKind}
+								</button>
+							);
+						})}
+					</div>
 					<span>Selection method</span>
 					<div role="group" aria-label="Selection method" style={{ display: "flex", gap: 6 }}>
 						{(["rectangle", "lasso"] as const).map((method) => {
@@ -4610,9 +4690,21 @@ export function InteractionRepl({
 							);
 						})}
 					</div>
+					{analyticSummary ? (
+						<div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
+							<span style={{ opacity: 0.75 }}>
+								{analyticSummary.surfaces.length} surfaces ┬À {analyticSummary.parts.length} parts
+							</span>
+							{analyticSummary.parts.map((part) => (
+								<span key={String(part.id)} style={{ fontSize: 11, opacity: 0.85 }}>
+									{part.overlap} ┬À {String(part.id)}
+								</span>
+							))}
+						</div>
+					) : null}
 					<span>Show kinds</span>
 					<div role="group" aria-label="Show kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-						{activePickKinds.map((kind) => (
+						{activePickViewKinds.map((kind) => (
 							<label
 								key={`filter-${kind}`}
 								style={{
@@ -4636,7 +4728,103 @@ export function InteractionRepl({
 							</label>
 						))}
 					</div>
-
+					{pickViewKind === "analytic" ? (
+						<>
+							<span>Show exposure</span>
+							<div role="group" aria-label="Show exposure" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["external", "internal"] as const).map((exposure) => (
+									<label
+										key={`filter-exposure-${exposure}`}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${exposure === "external" ? "#e8c46a" : "#44ddff"}`,
+											background: resolvedAnalyticFilterToggles.exposure[exposure] ? "#1a3040" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={resolvedAnalyticFilterToggles.exposure[exposure]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticFilterToggles((prev) => ({
+													...prev,
+													exposure: { ...prev.exposure, [exposure]: checked },
+												}));
+											}}
+										/>
+										{exposure}
+									</label>
+								))}
+							</div>
+							<span>Show stance</span>
+							<div role="group" aria-label="Show stance" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["horizontal", "vertical"] as const).map((stance) => (
+									<label
+										key={`filter-stance-${stance}`}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${stance === "horizontal" ? "#e8c46a" : "#ffb347"}`,
+											background: resolvedAnalyticFilterToggles.stance[stance] ? "#1a3040" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={resolvedAnalyticFilterToggles.stance[stance]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticFilterToggles((prev) => ({
+													...prev,
+													stance: { ...prev.stance, [stance]: checked },
+												}));
+											}}
+										/>
+										{stance}
+									</label>
+								))}
+							</div>
+							<span>Show overlap</span>
+							<div role="group" aria-label="Show overlap" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+								{(["none", "difference", "intersection"] as const).map((overlap) => (
+									<label
+										key={`filter-overlap-${overlap}`}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											padding: "3px 6px",
+											border: "1px solid #2a2a3a",
+											borderRadius: 999,
+											borderLeft: `3px solid ${partSemanticStyle(overlap).color}`,
+											background: resolvedAnalyticFilterToggles.overlap[overlap] ? "#1a3040" : "#12121c",
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={resolvedAnalyticFilterToggles.overlap[overlap]}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												setAnalyticFilterToggles((prev) => ({
+													...prev,
+													overlap: { ...prev.overlap, [overlap]: checked },
+												}));
+											}}
+										/>
+										{overlap}
+									</label>
+								))}
+							</div>
+						</>
+					) : null}
 					<span>Selection kinds</span>
 					<div role="group" aria-label="Selection kinds" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 						{activePickViewKinds.map((kind) => {

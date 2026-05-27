@@ -2,8 +2,8 @@
 import { StrictMode, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-	DerivedViewService,
 	DocumentHistory,
+	ExtensionViewService,
 	isInteractionSessionActive,
 	listSpatialInteractions,
 	loadSpatialInteraction,
@@ -15,9 +15,6 @@ import {
 	type SpatialComputeMode,
 	type ModelDocument,
 	type SelectionTarget,
-	type SurfaceView,
-	type PartView,
-	type VolumeView,
 	Model,
 } from "@spatial/js-core";
 import { defaultConstructRunner } from "@spatial/js-query";
@@ -35,7 +32,6 @@ import {
 	r3fPreviewKernel,
 	useDocumentHistory,
 	useInteractionRuntime,
-	type SpatialPickViewKind,
 } from "../index";
 
 //#region 🔖ConstructQueryPanel
@@ -141,15 +137,8 @@ const PLAY_REPL_SPEC: InteractionSpec = {
 
 type ModelJsonSnapshot = ReturnType<Model["toJSON"]>;
 
-interface SpatialAnalyticBundle {
-	readonly surfaces: readonly SurfaceView[];
-	readonly parts: readonly PartView[];
-	readonly volumes: readonly VolumeView[];
-}
-
 interface SpatialExchangeBundle {
-	readonly raw?: ModelJsonSnapshot;
-	readonly analytic?: SpatialAnalyticBundle;
+	readonly model?: ModelJsonSnapshot;
 }
 
 interface SaveFilePickerTypeOption {
@@ -184,8 +173,7 @@ function fileStem(name: string): string {
 	const trimmed = name.trim();
 	if (!trimmed) return "spatial";
 	return trimmed
-		.replace(/\.analytic\.spatial\.json$/i, "")
-		.replace(/\.raw\.spatial\.json$/i, "")
+		.replace(/\.model\.spatial\.json$/i, "")
 		.replace(/\.spatial\.json$/i, "")
 		.replace(/\.json$/i, "")
 		.replace(/[^a-z0-9._-]+/gi, "-")
@@ -358,23 +346,6 @@ function selectRawModel(model: Model, selection: readonly SelectionTarget[]): Mo
 	};
 }
 
-function createAnalyticBundle(
-	derived: DerivedViewService,
-	model: Model,
-	selection?: readonly SelectionTarget[],
-): SpatialAnalyticBundle {
-	const allSurfaces = derived.computeSurfaces(model);
-	const allParts = derived.computeParts(model);
-	const allVolumes = derived.computeVolumes(model);
-	if (!selection) return { surfaces: allSurfaces, parts: allParts, volumes: allVolumes };
-	const selected = new Set(selection.map((target) => `${target.kind}:${target.id}`));
-	return {
-		surfaces: allSurfaces.filter((surface) => selected.has(`surface:${String(surface.id)}`)),
-		parts: allParts.filter((part) => selected.has(`part:${String(part.id)}`)),
-		volumes: allVolumes.filter((volume) => selected.has(`volume:${String(volume.id)}`)),
-	};
-}
-
 async function writeJsonFile(name: string, payload: SpatialExchangeBundle): Promise<void> {
 	const text = `${JSON.stringify(payload, null, 2)}\n`;
 	const pickerWindow = window as SavePickerWindow;
@@ -406,18 +377,18 @@ interface PlaySessionProps {
 	readonly documentModel: ModelDocument;
 	readonly history: DocumentHistory;
 	readonly kernel: InteractionRuntimeOptions["kernel"];
-	readonly derived: DerivedViewService;
+	readonly views: ExtensionViewService;
 	readonly mode: SpatialComputeMode;
 	readonly asideExtra: ReactNode;
 	readonly sessionRestartNonce: number;
-	readonly pickViewKind: SpatialPickViewKind;
-	readonly onPickViewKind: (value: SpatialPickViewKind) => void;
+	readonly activeViewId: string | null;
+	readonly onActiveViewId: (value: string | null) => void;
 	readonly rendererSelection: readonly SelectionTarget[];
 	readonly onRendererSelection: (value: readonly SelectionTarget[]) => void;
 	readonly interactionSelection: readonly SelectionTarget[];
 	readonly onInteractionSelection: (value: readonly SelectionTarget[]) => void;
-	readonly derivedRevision: number;
-	readonly onDerivedRevision: (revision: number) => void;
+	readonly viewsRevision: number;
+	readonly onViewsRevision: (revision: number) => void;
 	readonly onSnapshot: (snapshot: InteractionSnapshot) => void;
 }
 
@@ -430,18 +401,18 @@ function PlaySession({
 	documentModel,
 	history,
 	kernel,
-	derived,
+	views,
 	mode,
 	asideExtra,
 	sessionRestartNonce,
-	pickViewKind,
-	onPickViewKind,
+	activeViewId,
+	onActiveViewId,
 	rendererSelection,
 	onRendererSelection,
 	interactionSelection,
 	onInteractionSelection,
-	derivedRevision,
-	onDerivedRevision,
+	viewsRevision,
+	onViewsRevision,
 	onSnapshot,
 }: PlaySessionProps) {
 	const rtOpts = useMemo(
@@ -453,9 +424,10 @@ function PlaySession({
 			history,
 			stateEngine: statelyStateEngineProvider,
 			query: defaultConstructRunner,
-			derived,
+			views,
+			activeViewId,
 		}),
-		[kernel, mode, documentModel, history, derived],
+		[kernel, mode, documentModel, history, views, activeViewId],
 	);
 	const rt = useInteractionRuntime(spec, rtOpts);
 	const asideWithQuery = useMemo(
@@ -477,17 +449,17 @@ function PlaySession({
 			history={history}
 			document={documentModel}
 			geometry={documentModel.model}
-			derived={derived}
+			views={views}
 			asideExtra={asideWithQuery}
 			sessionRestartNonce={sessionRestartNonce}
-			pickViewKind={pickViewKind}
-			onPickViewKindChange={onPickViewKind}
+			activeViewId={activeViewId}
+			onActiveViewIdChange={onActiveViewId}
 			rendererSelection={rendererSelection}
 			onRendererSelectionChange={onRendererSelection}
 			interactionSelection={interactionSelection}
 			onInteractionSelectionChange={onInteractionSelection}
-			derivedRevision={derivedRevision}
-			onDerivedRevisionChange={onDerivedRevision}
+			viewsRevision={viewsRevision}
+			onViewsRevisionChange={onViewsRevision}
 			onSnapshotChange={onSnapshot}
 		/>
 	);
@@ -516,7 +488,7 @@ function PlayApp() {
 	const spec = useMemo<InteractionSpec | null>(() => (interactionId ? loadSpatialInteraction(interactionId) : PLAY_REPL_SPEC), [interactionId]);
 	const history = useDocumentHistory();
 	const kernel = useMemo<InteractionRuntimeOptions["kernel"]>(() => new BrepjsKernel() as unknown as InteractionRuntimeOptions["kernel"], []);
-	const derived = useMemo(() => new DerivedViewService(kernel), [kernel]);
+	const views = useMemo(() => ExtensionViewService.forKernel(kernel), [kernel]);
 
 	const handleInteractionPick = useCallback(
 		(id: string) => {
@@ -578,7 +550,7 @@ function PlayApp() {
 		setSnapshot(null);
 		setRendererSelection([]);
 		setInteractionSelection([]);
-		setDerivedRevision(0);
+		setViewsRevision(0);
 	}, [history, modelJson]);
 
 	const saveBundle = useCallback(
@@ -593,53 +565,21 @@ function PlayApp() {
 		[],
 	);
 
-	const createLiveAnalyticBundle = useCallback(
-		async (selection?: readonly SelectionTarget[]) => {
-			await derived.refresh(liveModel);
-			return createAnalyticBundle(derived, liveModel, selection);
-		},
-		[derived, liveModel],
-	);
-
 	const handleSaveSelected = useCallback(async () => {
-		if (pickViewKind === "raw") {
-			await saveBundle(
-				`${exportBaseName}.selected.raw.spatial.json`,
-				{ raw: selectRawModel(liveModel, selectedRaw) },
-				`Saved ${selectedRaw.length} selected raw item(s).`,
-			);
-			return;
-		}
 		await saveBundle(
-			`${exportBaseName}.selected.analytic.spatial.json`,
-			{ analytic: await createLiveAnalyticBundle(selectedAnalytic) },
-			`Saved ${selectedAnalytic.length} selected analytic item(s).`,
+			`${exportBaseName}.selected.model.spatial.json`,
+			{ model: selectRawModel(liveModel, currentSelection) },
+			`Saved ${currentSelection.length} selected item(s).`,
 		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveModel, pickViewKind, saveBundle, selectedAnalytic, selectedRaw]);
+	}, [currentSelection, exportBaseName, liveModel, saveBundle]);
 
 	const handleSaveView = useCallback(async () => {
-		if (pickViewKind === "raw") {
-			await saveBundle(
-				`${exportBaseName}.raw.spatial.json`,
-				{ raw: liveModel.toJSON() },
-				"Saved the raw view.",
-			);
-			return;
-		}
-		await saveBundle(
-			`${exportBaseName}.analytic.spatial.json`,
-			{ analytic: await createLiveAnalyticBundle() },
-			"Saved the analytic view.",
-		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveModel, pickViewKind, saveBundle]);
+		await saveBundle(`${exportBaseName}.model.spatial.json`, { model: liveModel.toJSON() }, "Saved the model.");
+	}, [exportBaseName, liveModel, saveBundle]);
 
 	const handleSaveAll = useCallback(async () => {
-		await saveBundle(
-			`${exportBaseName}.spatial.json`,
-			{ raw: liveModel.toJSON(), analytic: await createLiveAnalyticBundle() },
-			"Saved raw and analytic data.",
-		);
-	}, [createLiveAnalyticBundle, exportBaseName, liveModel, saveBundle]);
+		await handleSaveView();
+	}, [handleSaveView]);
 
 	const handleLoadRawRequest = useCallback(() => {
 		loadInputRef.current?.click();
@@ -723,7 +663,7 @@ function PlayApp() {
 					<button
 						type="button"
 						onClick={() => void handleSaveSelected()}
-						disabled={pickViewKind === "raw" ? selectedRaw.length === 0 : selectedAnalytic.length === 0}
+						disabled={currentSelection.length === 0}
 						style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
 					>
 						Save (Selected)
@@ -738,7 +678,7 @@ function PlayApp() {
 						Load (Raw)
 					</button>
 				</div>
-				<input ref={loadInputRef} type="file" accept=".json,.spatial.json,.raw.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
+				<input ref={loadInputRef} type="file" accept=".json,.spatial.json,.model.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />
 				{fileStatus ? <span style={{ color: fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "#ff9a9a" : "#a8d8a8" }}>{fileStatus}</span> : null}
 			</div>
 		</>
@@ -767,18 +707,18 @@ function PlayApp() {
 			documentModel={documentModel}
 			history={history}
 			kernel={kernel}
-			derived={derived}
+			views={views}
 			mode={mode}
 			asideExtra={asideExtra}
 			sessionRestartNonce={interactionBootId}
-			pickViewKind={pickViewKind}
-			onPickViewKind={setPickViewKind}
+			activeViewId={activeViewId}
+			onActiveViewId={setActiveViewId}
 			rendererSelection={rendererSelection}
 			onRendererSelection={setRendererSelection}
 			interactionSelection={interactionSelection}
 			onInteractionSelection={setInteractionSelection}
-			derivedRevision={derivedRevision}
-			onDerivedRevision={setDerivedRevision}
+			viewsRevision={viewsRevision}
+			onViewsRevision={setViewsRevision}
 			onSnapshot={handleSnapshotChange}
 		/>
 	);

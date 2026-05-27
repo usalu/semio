@@ -1,0 +1,16 @@
+{
+	"schema": "spatial.action/v1",
+	"id": "building.mushroomcolumn.constructMushroomColumn",
+	"version": "1.0.0",
+	"label": "Construct Mushroom Column",
+	"args": {
+		"solid": null
+	},
+	"parameters": {
+		"solid": { "kind": "unknown" }
+	},
+	"steps": [
+		{ "op": "kernel.call", "function": "spatial.action.execute", "assignTo": "result" },
+		{ "op": "return", "result": { "kind": "var", "name": "result" } }
+	]
+}

@@ -82,6 +82,17 @@ import energyViewTypologyExternalWallJson from "../../assets/extension/energy/vi
 import energyViewTypologyHullJson from "../../assets/extension/energy/view/energy/typology/hull.json" with { type: "json" };
 import energyViewTypologyRoofJson from "../../assets/extension/energy/view/energy/typology/roof.json" with { type: "json" };
 import energyViewTypologyWindowsJson from "../../assets/extension/energy/view/energy/typology/windows.json" with { type: "json" };
+import buildingExtensionManifestJson from "../../assets/extension/building/extension.json" with { type: "json" };
+import buildingActionConstructExtrudedMushroomColumnJson from "../../assets/extension/building/action/mushroomcolumn/construct-extruded-mushroom-column.json" with { type: "json" };
+import buildingActionConstructFullyQuadraticMushroomColumnJson from "../../assets/extension/building/action/mushroomcolumn/construct-fully-quadratic-mushroom-column.json" with { type: "json" };
+import buildingActionConstructMushroomColumnJson from "../../assets/extension/building/action/mushroomcolumn/construct-mushroom-column.json" with { type: "json" };
+import buildingActionConstructRectangularMushroomColumnWithQuadraticSlabJson from "../../assets/extension/building/action/mushroomcolumn/construct-rectangular-mushroom-column-with-quadratic-slab.json" with { type: "json" };
+import buildingActionConstructVerticalWallJson from "../../assets/extension/building/action/wall/construct-vertical-wall.json" with { type: "json" };
+import buildingActionConstructWallFromBottomAndTopJson from "../../assets/extension/building/action/wall/construct-wall-from-bottom-and-top.json" with { type: "json" };
+import buildingActionConstructWallFromHorizontalPathAndProfileJson from "../../assets/extension/building/action/wall/construct-wall-from-horizontal-path-and-profile.json" with { type: "json" };
+import buildingActionConstructWallFromHorizontalPathAndProfilesJson from "../../assets/extension/building/action/wall/construct-wall-from-horizontal-path-and-profiles.json" with { type: "json" };
+import buildingTypologyMushroomColumnJson from "../../assets/extension/building/typology/mushroomcolumn.json" with { type: "json" };
+import buildingTypologyWallJson from "../../assets/extension/building/typology/wall.json" with { type: "json" };
 import structureExtensionManifestJson from "../../assets/extension/structure/extension.json" with { type: "json" };
 import structureLineFemViewJson from "../../assets/extension/structure/view/linefem/view.json" with { type: "json" };
 import structureLineFemViewTypologyLineElementJson from "../../assets/extension/structure/view/linefem/typology/lineelement.json" with { type: "json" };
@@ -138,7 +149,6 @@ export interface ArcPlaneFrame {
 // #endregion 🌀EdgeGeometry
 
 // #region 🧱kernelGeometry
-/** @emoji 🧱 Kernel-private brep hierarchy (use `Object` / `Model` in framework code). */
 export namespace kernelGeometry {
 /** @emoji 🪪 Opaque branded string ids for editable geometry entities. */
 export type AnchorRef = string & { readonly __brand: "AnchorRef" };
@@ -1286,6 +1296,16 @@ function builtinTypologyCatalog(): readonly TypologySpec[] {
 	return builtinTypologyJsons.map((raw) => parseTypologySpec(raw)).filter((spec): spec is TypologySpec => spec !== null);
 }
 
+const extensionTypologyJsons = [buildingTypologyMushroomColumnJson, buildingTypologyWallJson] as const;
+
+function extensionTypologyCatalog(): readonly TypologySpec[] {
+	return extensionTypologyJsons.map((raw) => parseTypologySpec(raw)).filter((spec): spec is TypologySpec => spec !== null);
+}
+
+function shippedTypologyCatalog(): readonly TypologySpec[] {
+	return [...builtinTypologyCatalog(), ...extensionTypologyCatalog(), ...extensionViewTypologyCatalog()];
+}
+
 /** @emoji 📚 Built-in extension manifest (`spatial/assets/extension/builtin/extension.json`). */
 export function builtinExtensionManifest(): ExtensionManifest | null {
 	return parseExtensionManifest(builtinExtensionManifestJson);
@@ -1298,12 +1318,12 @@ export function listBuiltinTypologies(): readonly TypologySpec[] {
 
 /** @emoji 📚 Loads a built-in typology by stable `id`. */
 export function loadTypology(typologyId: string): TypologySpec | null {
-	return builtinTypologyCatalog().find((t) => t.id === typologyId) ?? null;
+	return shippedTypologyCatalog().find((t) => t.id === typologyId) ?? null;
 }
 
 /** @emoji 📚 Resolves the typology whose `interactions` list includes `interactionId`. */
 export function typologyForInteraction(interactionId: string): TypologySpec | null {
-	return builtinTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
+	return shippedTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
 }
 
 /** @emoji 👁️ Extension view definition with readonly derived typology ids. */
@@ -1399,7 +1419,12 @@ export function loadExtensionView(qualifiedId: string): ViewSpec | null {
 
 /** @emoji 📚 Extension manifests shipped beside view assets. */
 export function listExtensionManifests(): readonly ExtensionManifest[] {
-	return [builtinExtensionManifest(), parseExtensionManifest(energyExtensionManifestJson), parseExtensionManifest(structureExtensionManifestJson)].filter(
+	return [
+		builtinExtensionManifest(),
+		parseExtensionManifest(buildingExtensionManifestJson),
+		parseExtensionManifest(energyExtensionManifestJson),
+		parseExtensionManifest(structureExtensionManifestJson),
+	].filter(
 		(m): m is ExtensionManifest => m !== null,
 	);
 }
@@ -1847,6 +1872,7 @@ export interface ActionSpec {
 	readonly id: string;
 	readonly version: string;
 	readonly label?: string;
+	readonly args?: Record<string, unknown>;
 	readonly parameters?: Record<string, ActionParameterSpec>;
 	readonly variables?: readonly { readonly name: string; readonly value: Expr }[];
 	readonly steps: readonly ActionStepSpec[];
@@ -1893,6 +1919,7 @@ export function parseActionSpec(raw: unknown): ActionSpec | null {
 	if (hasExecutableActionField(r)) return null;
 	if (r.schema !== "spatial.action/v1") return null;
 	if (typeof r.id !== "string" || r.id.length === 0 || typeof r.version !== "string") return null;
+	if (r.args !== undefined && (!r.args || typeof r.args !== "object" || Array.isArray(r.args))) return null;
 	if (!Array.isArray(r.steps) || r.steps.length === 0 || !r.steps.every(isActionStepSpec)) return null;
 	const variables = r.variables;
 	if (variables !== undefined) {
@@ -1913,10 +1940,45 @@ export function listBuiltinActionSpecs(): readonly ActionSpec[] {
 		.filter((spec): spec is ActionSpec => spec !== null);
 }
 
+const extensionActionJsons = [
+	buildingActionConstructExtrudedMushroomColumnJson,
+	buildingActionConstructFullyQuadraticMushroomColumnJson,
+	buildingActionConstructMushroomColumnJson,
+	buildingActionConstructRectangularMushroomColumnWithQuadraticSlabJson,
+	buildingActionConstructVerticalWallJson,
+	buildingActionConstructWallFromBottomAndTopJson,
+	buildingActionConstructWallFromHorizontalPathAndProfileJson,
+	buildingActionConstructWallFromHorizontalPathAndProfilesJson,
+] as const;
+
+function shippedActionCatalog(): readonly ActionSpec[] {
+	return [
+		...listBuiltinActionSpecs(),
+		...extensionActionJsons.map((raw) => parseActionSpec(raw)).filter((spec): spec is ActionSpec => spec !== null),
+	];
+}
+
 function evalExprRecord(record: Record<string, Expr> | undefined, env: ExprEnv): Record<string, unknown> {
 	const out: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(record ?? {})) out[k] = evalExpr(v, env);
 	return out;
+}
+
+export async function executeBuiltinActionCapability(
+	actionId: string,
+	params: Record<string, unknown>,
+	args: Record<string, unknown>,
+	ctx: {
+		readonly kernel: SpatialKernel;
+		readonly preview: SpatialPreviewKernel;
+		readonly model: Model;
+		readonly views?: ExtensionViewService;
+		readonly activeViewId?: string | null;
+	},
+): Promise<unknown> {
+	const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
+	if (!def?.run) throw new Error(`Unknown action capability: ${actionId}`);
+	return def.run(params, ctx);
 }
 
 async function executeKernelFunction(
@@ -1934,9 +1996,7 @@ async function executeKernelFunction(
 ): Promise<unknown> {
 	if (functionName !== "spatial.action.execute") throw new Error(`Unknown kernel function: ${functionName}`);
 	if (ctx.kernel.executeAction) return ctx.kernel.executeAction(actionId, params, args, ctx);
-	const def = builtinActionCapabilityDefs().find((d) => d.id === actionId);
-	if (!def?.run) throw new Error(`Unknown action capability: ${actionId}`);
-	return def.run(params, ctx);
+	return executeBuiltinActionCapability(actionId, params, args, ctx);
 }
 
 export class DeclarativeActionRuntime {
@@ -2028,9 +2088,7 @@ export class ActionRegistry {
 
 	static withBuiltins(): ActionRegistry {
 		const r = new ActionRegistry();
-		for (const spec of listBuiltinActionSpecs()) r.register({ id: spec.id, label: spec.label, spec });
-		r.register(selectionApplyActionDef());
-		for (const defn of listSelectionOperationInteractionDefs()) r.register(selectionCommandActionForDef(defn));
+		for (const spec of shippedActionCatalog()) r.register({ id: spec.id, label: spec.label, spec });
 		return r;
 	}
 }
@@ -4972,8 +5030,9 @@ if (import.meta.vitest) {
 			const specs = listBuiltinActionSpecs();
 			const registry = ActionRegistry.withBuiltins();
 			expect(specs.length).toBeGreaterThan(0);
-			expect(registry.list().map((d) => d.id).sort()).toEqual(specs.map((s) => s.id).sort());
-			expect(registry.list().every((d) => d.spec?.schema === "spatial.action/v1" && d.run === undefined)).toBe(true);
+			expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action/v1")).toBe(true);
+			expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
+			expect(registry.list().filter((d) => typeof d.run === "function" && !d.id.startsWith("selection.")).map((d) => d.id)).toEqual([]);
 		});
 		it("ActionRegistry.withBuiltins registers known geometry actions", () => {
 			const r = ActionRegistry.withBuiltins();

@@ -1,0 +1,20 @@
+{
+	"schema": "spatial.typology/v1",
+	"id": "building.wall",
+	"version": "1.0.0",
+	"label": "Wall",
+	"description": "General wall typology for building objects.",
+	"actions": [
+		"building.wall.constructVerticalWall",
+		"building.wall.constructWallFromBottomAndTop",
+		"building.wall.constructWallFromHorizontalPathAndProfile",
+		"building.wall.constructWallFromHorizontalPathAndProfiles"
+	],
+	"interactions": [],
+	"attributes": [
+		"builtin.exposure"
+	],
+	"properties": [
+		"builtin.volume"
+	]
+}

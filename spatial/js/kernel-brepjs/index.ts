@@ -60,6 +60,7 @@ import initOpenCascade from "brepjs-opencascade";
 import {
 	applyModelDiff,
 	cellRef,
+	executeBuiltinActionCapability,
 	isEmptyModelDiff,
 	type KernelQueryContext,
 	emptyMeshTransfer,
@@ -74,11 +75,13 @@ import {
 	type VolumeView,
 	type SpatialKernel,
 	type SpatialPreviewKernel,
+	type ExtensionViewService,
 	type SurfaceRef,
 	type SurfaceView,
 	Model,
 	type ModelDiff,
 	type ModelJson,
+	type ActionResult,
 	kernelGeometry,
 	type Vec3,
 } from "@spatial/js-core";
@@ -2336,6 +2339,26 @@ export class PreciseSpatialKernelMath implements SpatialPreviewKernel {
 	cos = Math.cos;
 	sin = Math.sin;
 	randomTag = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+
+	executeAction(
+		actionId: string,
+		params: Record<string, unknown>,
+		args: Record<string, unknown>,
+		ctx: {
+			readonly model: Model;
+			readonly preview: SpatialPreviewKernel;
+			readonly views?: ExtensionViewService;
+			readonly activeViewId?: string | null;
+		},
+	): Promise<ActionResult> | ActionResult {
+		return executeBuiltinActionCapability(actionId, params, args, {
+			kernel: this as unknown as SpatialKernel,
+			preview: ctx.preview,
+			model: ctx.model,
+			views: ctx.views,
+			activeViewId: ctx.activeViewId,
+		}) as Promise<ActionResult> | ActionResult;
+	}
 }
 
 export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();

@@ -1,0 +1,26 @@
+{
+	"schema": "spatial.action/v1",
+	"id": "building.mushroomcolumn.constructRectangularMushroomColumnWithQuadraticSlab",
+	"version": "1.0.0",
+	"label": "Construct Rectangular Mushroom Column With Quadratic Slab",
+	"args": {
+		"height": 2.7,
+		"heightIs": "column",
+		"slabHeight": 0.3,
+		"rectangularColumnWidth": 0.4,
+		"rectangularColumnBreadth": 0.6,
+		"quadraticSlabWidth": 2.3
+	},
+	"parameters": {
+		"height": { "kind": "number" },
+		"heightIs": { "kind": "string" },
+		"slabHeight": { "kind": "number" },
+		"rectangularColumnWidth": { "kind": "number" },
+		"rectangularColumnBreadth": { "kind": "number" },
+		"quadraticSlabWidth": { "kind": "number" }
+	},
+	"steps": [
+		{ "op": "kernel.call", "function": "spatial.action.execute", "assignTo": "result" },
+		{ "op": "return", "result": { "kind": "var", "name": "result" } }
+	]
+}

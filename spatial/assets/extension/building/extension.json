@@ -1,0 +1,11 @@
+{
+	"schema": "spatial.extension/v1",
+	"id": "building",
+	"version": "1.0.0",
+	"label": "General Building",
+	"description": "General building typologies and canonical construction actions.",
+	"kinds": [
+		"action",
+		"typology"
+	]
+}
